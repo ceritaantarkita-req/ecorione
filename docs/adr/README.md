@@ -1,7 +1,8 @@
 # Architecture Decision Records
 
-Lima belas keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
-mendukungnya. Alasan lengkapnya ada di [`../research.md`](../research.md).
+Enam belas keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
+sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
 | ADR | Keputusan |
 |---|---|
@@ -20,6 +21,7 @@ mendukungnya. Alasan lengkapnya ada di [`../research.md`](../research.md).
 | [13](0013-counterfactual-cost.md) | Akuntansi biaya kontrafaktual |
 | [14](0014-pinned-models.md) | Pin versi model; canary harian |
 | [15](0015-mit-license.md) | Lisensi MIT; hindari sumber AGPL |
+| [16](0016-sync-reachability.md) | Sync v1 memakai tunnel pihak ketiga / self-hosted bridge |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris
