@@ -152,6 +152,7 @@ Roadmap lengkap: [`docs/prd.md`](docs/prd.md) §23. Kontrak HTTP antar-service:
 | [`docs/research.md`](docs/research.md) | Riset & due diligence — alasan tiap keputusan |
 | [`docs/design.md`](docs/design.md) | Identitas visual & UI/UX |
 | [`docs/api-fase1.md`](docs/api-fase1.md) | Kontrak HTTP antar-service Fase 1 |
+| [`docs/fase2.md`](docs/fase2.md) | Rencana Fase 2: server MCP (Connect inbound) + Sync — apa yang harus dibangun, rinci |
 | [`docs/adr/`](docs/adr/) | 15 architecture decision record |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Log keputusan kecil, satu baris per keputusan |
 | [`docs/LICENSING.md`](docs/LICENSING.md) | Model open-core: modul mana selalu open source, mana kandidat berbayar |
