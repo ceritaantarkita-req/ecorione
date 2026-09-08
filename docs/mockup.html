@@ -1,0 +1,417 @@
+<title>Ecorione Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0B0B0C;--surface:#141416;--surface-2:#1B1B1E;--surface-3:#232326;
+    --border:#28282B;--border-soft:#1E1E21;--text:#EDEAE2;--text-muted:#8B8880;
+    --accent:#C9A961;--accent-strong:#DEC383;--accent-ink:#1B1608;
+    --success:#6E9880;--warning:#C08A50;--danger:#B5695D;
+    --radius-s:5px;--radius-m:9px;
+    --font-display:"Fraunces",ui-serif,Georgia,serif;
+    --font-body:"Manrope",ui-sans-serif,system-ui,-apple-system,sans-serif;
+    --font-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#FFFFFF;--surface:#FFFFFF;--surface-2:#F6F5F0;--surface-3:#EFEDE5;
+      --border:#E4E0D4;--border-soft:#EDEAE0;--text:#1C1B17;--text-muted:#7C786D;
+      --accent:#9C7A3B;--accent-strong:#7F642F;--accent-ink:#FFFFFF;
+      --success:#3E6350;--warning:#A15F26;--danger:#883F35;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#FFFFFF;--surface:#FFFFFF;--surface-2:#F6F5F0;--surface-3:#EFEDE5;
+    --border:#E4E0D4;--border-soft:#EDEAE0;--text:#1C1B17;--text-muted:#7C786D;
+    --accent:#9C7A3B;--accent-strong:#7F642F;--accent-ink:#FFFFFF;
+    --success:#3E6350;--warning:#A15F26;--danger:#883F35;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B0B0C;--surface:#141416;--surface-2:#1B1B1E;--surface-3:#232326;
+    --border:#28282B;--border-soft:#1E1E21;--text:#EDEAE2;--text-muted:#8B8880;
+    --accent:#C9A961;--accent-strong:#DEC383;--accent-ink:#1B1608;
+    --success:#6E9880;--warning:#C08A50;--danger:#B5695D;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
+  img{max-width:100%}
+  h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;font-weight:600}
+  table{border-collapse:collapse;width:100%}
+  ::selection{background:var(--accent);color:var(--accent-ink)}
+
+  .util{display:flex;justify-content:space-between;align-items:center;padding:12px 28px;border-bottom:1px solid var(--border-soft);font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);letter-spacing:.04em}
+  .theme-toggle{display:flex;gap:2px}
+  .theme-toggle button{border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:var(--font-mono);font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:.04em}
+  .theme-toggle button + button{border-left:0}
+  .theme-toggle button.active{background:var(--surface-2);color:var(--text)}
+
+  .doc{max-width:940px;margin:0 auto;padding:44px 28px 90px}
+
+  .titleblock{border:1px solid var(--border);margin-bottom:36px}
+  .titleblock-head{padding:22px 24px;border-bottom:1px solid var(--border)}
+  .titleblock-head .kicker{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  .titleblock-head h1{font-size:clamp(24px,3.4vw,32px);margin-top:10px;letter-spacing:-.01em}
+  .titleblock-fields{display:grid;grid-template-columns:repeat(4,1fr)}
+  .tb-field{padding:13px 20px;border-inline-start:1px solid var(--border)}
+  .tb-field:first-child{border-inline-start:0}
+  .tb-field span{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;color:var(--text-muted);text-transform:uppercase}
+  .tb-field strong{display:block;margin-top:5px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+
+  .lede{max-width:64ch;color:var(--text-muted);font-size:15px;line-height:1.75;margin:0 0 56px}
+  .lede strong{color:var(--text);font-weight:600}
+
+  .doc-section{margin-bottom:64px}
+  .doc-section-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-soft)}
+  .doc-section-head h2{font-size:18px;font-weight:600;letter-spacing:-.005em}
+  .doc-section-head .tag{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase}
+  .doc-section-note{color:var(--text-muted);font-size:12.5px;line-height:1.65;max-width:60ch;margin:-8px 0 22px}
+
+  /* plat / plate */
+  figure.plate{margin:0}
+  .plate-frame{border:1px solid var(--border);background:var(--surface)}
+  figcaption{margin-top:11px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);letter-spacing:.03em}
+  figcaption b{color:var(--text);font-weight:600}
+
+  .sitemap{display:block;width:100%;height:auto}
+  .sitemap text{font-family:var(--font-mono)}
+
+  /* spec tables */
+  .spec-table th{text-align:left;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);font-weight:500;padding:0 14px 10px;border-bottom:1px solid var(--border)}
+  .spec-table td{padding:12px 14px;border-bottom:1px solid var(--border-soft);font-size:12.5px;vertical-align:middle}
+  .spec-table tr:last-child td{border-bottom:1px solid var(--border)}
+  .spec-table td.code{font-family:var(--font-mono);color:var(--text-muted);font-size:11px}
+  .swatch-chip{width:20px;height:20px;border:1px solid var(--border);display:inline-block;vertical-align:middle}
+  .spec-table td.hex{font-family:var(--font-mono);color:var(--text-muted);font-size:11px}
+
+  .type-sample{padding:10px 0}
+  .type-sample.display{font-family:var(--font-display);font-size:26px;font-weight:600}
+  .type-sample.body{font-family:var(--font-body);font-size:14.5px;line-height:1.6;max-width:44ch}
+  .type-sample.mono{font-family:var(--font-mono);font-size:12px;color:var(--text-muted)}
+
+  /* fittings */
+  .fit-preview{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .btn{font-family:var(--font-body);font-weight:600;font-size:12.5px;border-radius:var(--radius-s);padding:0 15px;height:33px;display:inline-flex;align-items:center;cursor:pointer;border:1px solid transparent}
+  .btn-primary{background:var(--accent);color:var(--accent-ink)}
+  .btn-secondary{background:transparent;border-color:var(--border);color:var(--text)}
+  .status-chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted)}
+  .status-chip .dot{width:6px;height:6px;border-radius:50%}
+  .status-chip.ok .dot{background:var(--success)}
+  .status-chip.warn .dot{background:var(--warning)}
+  .status-chip.err .dot{background:var(--danger)}
+  .fit-input{font-family:var(--font-mono);font-size:12px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:var(--radius-s);height:32px;padding:0 10px;width:180px}
+
+  /* hub plate contents */
+  .hub-shell{display:grid;grid-template-columns:190px 1fr;min-height:400px}
+  .hub-side{border-inline-end:1px solid var(--border-soft);padding:20px 14px}
+  .hub-nav a{display:flex;align-items:center;padding:8px 10px;font-size:11.5px;font-weight:500;color:var(--text-muted);border-left:2px solid transparent}
+  .hub-nav a.active{color:var(--text);border-left-color:var(--accent);background:var(--surface-2)}
+  .hub-main{padding:26px 28px}
+  .hub-main h3{font-size:17px;font-weight:600}
+  .hub-main .hub-sub{color:var(--text-muted);font-size:11px;margin-top:5px;font-family:var(--font-mono)}
+  .module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;margin-top:22px;background:var(--border-soft);border:1px solid var(--border-soft)}
+  .module-card{padding:15px;background:var(--surface)}
+  .module-card.is-active{box-shadow:inset 2px 0 0 var(--accent)}
+  .module-card strong{display:block;font-size:12.5px;font-weight:600;font-family:var(--font-display)}
+  .module-card p{margin:5px 0 11px;font-size:11px;color:var(--text-muted);line-height:1.5;min-height:30px}
+
+  /* ai plate contents */
+  .chat-shell{display:grid;grid-template-columns:184px 1fr;min-height:420px}
+  .chat-side{border-inline-end:1px solid var(--border-soft);padding:18px 12px}
+  .chat-side .new-chat{width:100%;height:32px;border-radius:var(--radius-s);background:transparent;color:var(--text);border:1px solid var(--border);font-family:var(--font-body);font-weight:600;font-size:11.5px;margin-bottom:14px;cursor:pointer}
+  .chat-list-item{padding:8px 9px;font-size:11.5px;color:var(--text-muted)}
+  .chat-list-item.active{background:var(--surface-2);color:var(--text);font-weight:600}
+  .chat-main{display:flex;flex-direction:column}
+  .chat-log{flex:1;padding:26px 28px;display:flex;flex-direction:column;gap:16px}
+  .msg{max-width:72%;padding:12px 15px;border-radius:var(--radius-m);font-size:13px;line-height:1.6;border:1px solid var(--border-soft)}
+  .msg.user{align-self:flex-end;background:var(--surface-2);border-inline-start:2px solid var(--accent)}
+  .msg.ai{align-self:flex-start;background:var(--surface)}
+  .msg.ai .tool-line{font-family:var(--font-mono);font-size:9.5px;color:var(--text-muted);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border-soft)}
+  .msg code{font-size:11px;background:var(--surface-3);padding:1px 5px;border-radius:4px}
+  .chat-input{margin:0 28px 22px;border:1px solid var(--border);border-radius:var(--radius-m);padding:11px 14px;display:flex;justify-content:space-between;color:var(--text-muted);font-size:12.5px}
+
+  /* revision table */
+  .rev-table td:first-child, .rev-table th:first-child{width:70px}
+  .rev-table td:nth-child(2), .rev-table th:nth-child(2){width:110px;font-variant-numeric:tabular-nums}
+
+  footer{padding:20px 0 0;border-top:1px solid var(--border-soft);color:var(--text-muted);font-size:11.5px;font-family:var(--font-mono);letter-spacing:.02em}
+
+  @media(max-width:760px){
+    .titleblock-fields{grid-template-columns:repeat(2,1fr)}
+    .tb-field:nth-child(3){border-inline-start:0}
+    .hub-shell,.chat-shell{grid-template-columns:1fr}
+    .hub-side,.chat-side{display:none}
+  }
+</style>
+
+<script>
+  try{
+    var __saved = localStorage.getItem('ecorione-theme-preview');
+    document.documentElement.setAttribute('data-theme', __saved === 'dark' ? 'dark' : 'light');
+  }catch(e){ document.documentElement.setAttribute('data-theme','light'); }
+</script>
+
+<div class="util">
+  <span>ECR&#8209;DOC&#8209;001 · Sistem Desain</span>
+  <div class="theme-toggle" role="group" aria-label="Ganti tema pratinjau">
+    <button type="button" data-theme-choice="light" class="active">Terang</button>
+    <button type="button" data-theme-choice="dark">Gelap</button>
+  </div>
+</div>
+
+<div class="doc">
+
+  <div class="titleblock">
+    <div class="titleblock-head">
+      <span class="kicker">Rencana Distrik &amp; Spesifikasi Modul</span>
+      <h1>ecorione</h1>
+    </div>
+    <div class="titleblock-fields">
+      <div class="tb-field"><span>Lembar</span><strong>001 / 001</strong></div>
+      <div class="tb-field"><span>Revisi</span><strong>C</strong></div>
+      <div class="tb-field"><span>Tanggal</span><strong>07&#8209;09&#8209;2026</strong></div>
+      <div class="tb-field"><span>Skala</span><strong>Tanpa ukuran</strong></div>
+    </div>
+  </div>
+
+  <p class="lede">
+    Tiga belas modul InMy lama dikonsolidasikan jadi <strong>satu sistem</strong> — bukan lagi
+    tiga belas produk bermerek sendiri-sendiri. Setelah riset teknis, dua kavling dilebur ke
+    tetangganya, jadi <strong>sebelas</strong>. Denah di bawah menempatkan tiap modul sebagai
+    kavling di sepanjang satu jalur utama (<strong>Hub</strong>): jarak dari pusat kawasan
+    mencerminkan urutan pembangunan, bukan sekadar tata letak.
+  </p>
+
+  <div class="doc-section">
+    <div class="doc-section-head"><h2>Denah Kawasan</h2><span class="tag">Plat 01</span></div>
+    <figure class="plate">
+      <div class="plate-frame">
+        <svg class="sitemap" viewBox="0 0 900 460" role="img" aria-label="Denah kawasan 11 modul ecorione di sepanjang poros Hub">
+          <line x1="30" y1="230" x2="870" y2="230" stroke="var(--accent)" stroke-width="1.6"/>
+          <rect x="367" y="219" width="166" height="22" fill="var(--surface)"/>
+          <text x="450" y="234" text-anchor="middle" font-size="10.5" letter-spacing="1.5" fill="var(--text-muted)">HUB — POROS UTAMA</text>
+
+          <!-- above plots -->
+          <g>
+            <line x1="60" y1="194" x2="60" y2="230" stroke="var(--border)"/>
+            <rect x="27" y="160" width="66" height="34" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="60" y="181" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">Ai</text>
+            <text x="60" y="150" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P0 · INTI</text>
+          </g>
+          <g>
+            <line x1="228" y1="194" x2="228" y2="230" stroke="var(--border)"/>
+            <rect x="195" y="160" width="66" height="34" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="228" y="181" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">Context</text>
+            <text x="228" y="150" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P0 · INTI</text>
+          </g>
+          <g>
+            <line x1="396" y1="194" x2="396" y2="230" stroke="var(--border)"/>
+            <rect x="363" y="160" width="66" height="34" fill="var(--surface)" stroke="var(--border)"/>
+            <text x="396" y="181" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">Space</text>
+            <text x="396" y="150" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P1</text>
+          </g>
+          <g>
+            <line x1="564" y1="194" x2="564" y2="230" stroke="var(--border)"/>
+            <rect x="531" y="160" width="66" height="34" fill="var(--surface)" stroke="var(--border)"/>
+            <text x="564" y="181" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">Artifact</text>
+            <text x="564" y="150" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P1</text>
+          </g>
+          <g>
+            <line x1="732" y1="194" x2="732" y2="230" stroke="var(--border)"/>
+            <rect x="699" y="160" width="66" height="34" fill="var(--surface)" stroke="var(--border)"/>
+            <text x="732" y="181" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">RnD</text>
+            <text x="732" y="150" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P1</text>
+          </g>
+
+          <!-- below plots -->
+          <g>
+            <line x1="144" y1="230" x2="144" y2="266" stroke="var(--border)"/>
+            <rect x="111" y="266" width="66" height="34" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="144" y="288" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">Connect</text>
+            <text x="144" y="314" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P0 · INTI</text>
+          </g>
+          <g>
+            <line x1="312" y1="230" x2="312" y2="266" stroke="var(--border)"/>
+            <rect x="279" y="266" width="66" height="34" fill="var(--surface)" stroke="var(--border)"/>
+            <text x="312" y="288" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">Sync</text>
+            <text x="312" y="314" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P1</text>
+          </g>
+          <g>
+            <line x1="480" y1="230" x2="480" y2="266" stroke="var(--border)"/>
+            <rect x="447" y="266" width="66" height="34" fill="var(--surface)" stroke="var(--border)"/>
+            <text x="480" y="288" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">Flow</text>
+            <text x="480" y="314" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P1</text>
+          </g>
+          <g>
+            <line x1="648" y1="230" x2="648" y2="266" stroke="var(--border)"/>
+            <rect x="615" y="266" width="66" height="34" fill="var(--surface)" stroke="var(--border)"/>
+            <text x="648" y="288" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">Sandbox</text>
+            <text x="648" y="314" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P1</text>
+          </g>
+          <g>
+            <line x1="816" y1="230" x2="816" y2="266" stroke="var(--border)"/>
+            <rect x="783" y="266" width="66" height="34" fill="var(--surface)" stroke="var(--border)" stroke-dasharray="3,3"/>
+            <text x="816" y="288" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">AutoClick</text>
+            <text x="816" y="314" text-anchor="middle" font-size="9" letter-spacing=".5" fill="var(--text-muted)">P2 · CADANGAN</text>
+          </g>
+
+          <!-- kavling yang dilebur pada revisi C -->
+          <g>
+            <line x1="120" y1="378" x2="780" y2="378" stroke="var(--border-soft)" stroke-dasharray="2,4"/>
+            <rect x="352" y="367" width="196" height="22" fill="var(--surface)"/>
+            <text x="450" y="383" text-anchor="middle" font-size="9" letter-spacing=".8" fill="var(--text-muted)">DILEBUR — REVISI C</text>
+            <text x="450" y="409" text-anchor="middle" font-size="9.5" fill="var(--text-muted)">Cache → Connect · IR → Context + Artifact</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Plat 01</b> — Denah kawasan, 11 kavling. Garis tegas emas = kavling inti (P0). Garis putus-putus = kavling cadangan, dibangun hanya jika API tidak mencukupi (P2). Dua kavling lama dilebur ke tetangganya setelah riset teknis.</figcaption>
+    </figure>
+  </div>
+
+  <div class="doc-section">
+    <div class="doc-section-head"><h2>Spesifikasi Material</h2><span class="tag">§ Warna</span></div>
+    <p class="doc-section-note">95% permukaan kawasan netral. Emas (MAT.07) dipakai hanya untuk penanda inti dan aksi utama — bukan warna latar.</p>
+    <table class="spec-table">
+      <thead><tr><th>Kode</th><th>Contoh</th><th>Nama</th><th>Token</th><th>Kegunaan</th></tr></thead>
+      <tbody>
+        <tr><td class="code">MAT.01</td><td><span class="swatch-chip" style="background:var(--bg)"></span></td><td>Dasar</td><td class="hex">--bg</td><td>Latar utama kawasan</td></tr>
+        <tr><td class="code">MAT.02</td><td><span class="swatch-chip" style="background:var(--surface)"></span></td><td>Permukaan</td><td class="hex">--surface</td><td>Panel, kartu, plat</td></tr>
+        <tr><td class="code">MAT.03</td><td><span class="swatch-chip" style="background:var(--border)"></span></td><td>Garis</td><td class="hex">--border</td><td>Pembatas antar elemen</td></tr>
+        <tr><td class="code">MAT.04</td><td><span class="swatch-chip" style="background:var(--text)"></span></td><td>Huruf utama</td><td class="hex">--text</td><td>Teks isi &amp; judul</td></tr>
+        <tr><td class="code">MAT.05</td><td><span class="swatch-chip" style="background:var(--text-muted)"></span></td><td>Huruf redup</td><td class="hex">--text-muted</td><td>Keterangan, label</td></tr>
+        <tr><td class="code">MAT.06</td><td><span class="swatch-chip" style="background:var(--accent)"></span></td><td>Emas</td><td class="hex">--accent</td><td>Penanda kavling inti, aksi utama</td></tr>
+        <tr><td class="code">MAT.07</td><td><span class="swatch-chip" style="background:var(--success)"></span></td><td>Status aktif</td><td class="hex">--success</td><td>Modul berjalan</td></tr>
+        <tr><td class="code">MAT.08</td><td><span class="swatch-chip" style="background:var(--warning)"></span></td><td>Status perhatian</td><td class="hex">--warning</td><td>Modul perlu setup</td></tr>
+        <tr><td class="code">MAT.09</td><td><span class="swatch-chip" style="background:var(--danger)"></span></td><td>Status galat</td><td class="hex">--danger</td><td>Modul error</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="doc-section">
+    <div class="doc-section-head"><h2>Spesifikasi Huruf</h2><span class="tag">§ Tipografi</span></div>
+    <table class="spec-table">
+      <thead><tr><th>Kode</th><th>Contoh</th><th>Peran</th><th>Font · Berat</th></tr></thead>
+      <tbody>
+        <tr><td class="code">HRF.01</td><td><span class="type-sample display">Satu poros, sebelas kavling</span></td><td>Judul / display</td><td class="hex">Fraunces 600</td></tr>
+        <tr><td class="code">HRF.02</td><td><span class="type-sample body">Hub mengotorisasi setiap aksi berisiko sebelum modul lain mengeksekusinya.</span></td><td>Isi / UI</td><td class="hex">Manrope 400</td></tr>
+        <tr><td class="code">HRF.03</td><td><span class="type-sample mono">connect.execute(openrouter) → 200 OK</span></td><td>Kode / data teknis</td><td class="hex">IBM Plex Mono 400</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="doc-section">
+    <div class="doc-section-head"><h2>Perlengkapan</h2><span class="tag">§ Komponen</span></div>
+    <table class="spec-table">
+      <thead><tr><th>Kode</th><th>Pratinjau</th><th>Keterangan</th></tr></thead>
+      <tbody>
+        <tr><td class="code">PRL.01</td><td class="fit-preview"><button class="btn btn-primary">Hubungkan provider</button><button class="btn btn-secondary">Batalkan</button></td><td>Tombol utama &amp; sekunder</td></tr>
+        <tr><td class="code">PRL.02</td><td class="fit-preview"><span class="status-chip ok"><span class="dot"></span>Aktif</span><span class="status-chip warn"><span class="dot"></span>Perlu setup</span><span class="status-chip err"><span class="dot"></span>Error</span></td><td>Indikator status — dot + label, tanpa pill besar</td></tr>
+        <tr><td class="code">PRL.03</td><td class="fit-preview"><input class="fit-input" value="openrouter-utama" readonly></td><td>Bidang input, fokus jadi garis emas tipis</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="doc-section">
+    <div class="doc-section-head"><h2>Hub — kawasan modul</h2><span class="tag">Plat 02</span></div>
+    <figure class="plate">
+      <div class="plate-frame">
+        <div class="hub-shell">
+          <div class="hub-side">
+            <nav class="hub-nav">
+              <a class="active">Kawasan</a>
+              <a>Otorisasi</a>
+              <a>Kesehatan</a>
+              <a>Log aktivitas</a>
+              <a>Pengaturan</a>
+            </nav>
+          </div>
+          <div class="hub-main">
+            <h3>Kawasan modul</h3>
+            <p class="hub-sub">11 terdaftar · 5 aktif · 1 perlu setup</p>
+            <div class="module-grid">
+              <div class="module-card is-active"><strong>Ai</strong><p>Interface chat &amp; agent utama</p><span class="status-chip ok"><span class="dot"></span>Aktif</span></div>
+              <div class="module-card is-active"><strong>Context</strong><p>Memori &amp; retrieval konteks</p><span class="status-chip ok"><span class="dot"></span>Aktif</span></div>
+              <div class="module-card is-active"><strong>Connect</strong><p>Gerbang kredensial provider AI</p><span class="status-chip ok"><span class="dot"></span>Aktif</span></div>
+              <div class="module-card"><strong>Flow</strong><p>Workflow &amp; automation</p><span class="status-chip warn"><span class="dot"></span>Perlu setup</span></div>
+              <div class="module-card"><strong>Sandbox</strong><p>Eksekusi terisolasi — WASM aktif</p><span class="status-chip ok"><span class="dot"></span>Aktif</span></div>
+              <div class="module-card"><strong>RnD</strong><p>Trace &amp; evaluasi</p><span class="status-chip ok"><span class="dot"></span>Aktif</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>Plat 02</b> — Localhost:17000/hub. Garis emas di sisi kiri kartu menandai modul yang sedang berjalan.</figcaption>
+    </figure>
+  </div>
+
+  <div class="doc-section">
+    <div class="doc-section-head"><h2>Ai — jendela kerja</h2><span class="tag">Plat 03</span></div>
+    <figure class="plate">
+      <div class="plate-frame">
+        <div class="chat-shell">
+          <div class="chat-side">
+            <button class="new-chat">+ Percakapan baru</button>
+            <div class="chat-list-item active">Riset kompetitor Q3</div>
+            <div class="chat-list-item">Ringkas kontrak vendor</div>
+            <div class="chat-list-item">Draf workflow onboarding</div>
+          </div>
+          <div class="chat-main">
+            <div class="chat-log">
+              <div class="msg user">Ringkas 3 laporan kompetitor ini, terus rekomendasiin model paling murah yang masih cukup akurat.</div>
+              <div class="msg ai">
+                <div class="tool-line">context.retrieve(namespace:"riset") · connect.route(budget:"hemat")</div>
+                Sudah gue ambil 3 dokumen dari Context. Untuk ringkasan sepanjang ini, Connect merekomendasikan model hemat lewat OpenRouter. Mau lanjut, atau pakai model utama?
+              </div>
+              <div class="msg user">Lanjut pakai yang hemat.</div>
+              <div class="msg ai">
+                <div class="tool-line">connect.execute(openrouter) · artifact.store(ringkasan-q3)</div>
+                Selesai — tersimpan sebagai <code>art_9f2c…</code>, sudah direferensikan balik ke sesi ini.
+              </div>
+            </div>
+            <div class="chat-input"><span>Tanya atau minta Ai kerjakan sesuatu…</span><span>→</span></div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>Plat 03</b> — Localhost:17001/chat. Panggilan modul lain ditulis eksplisit di atas balasan, tak ada yang tersembunyi.</figcaption>
+    </figure>
+  </div>
+
+  <div class="doc-section" style="margin-bottom:0">
+    <div class="doc-section-head"><h2>Riwayat Revisi</h2><span class="tag">§ Log</span></div>
+    <table class="spec-table rev-table">
+      <thead><tr><th>Rev</th><th>Tanggal</th><th>Keterangan</th></tr></thead>
+      <tbody>
+        <tr><td class="code">0.1</td><td class="code">07&#8209;09</td><td>Draf pertama — hangat, terracotta &amp; sage. Ditolak: kurang premium, kurang netral.</td></tr>
+        <tr><td class="code">0.2</td><td class="code">07&#8209;09</td><td>Dasar gelap &amp; emas ditetapkan. Diterima secara warna, tapi bentuk halaman masih pola template generik.</td></tr>
+        <tr><td class="code">0.3</td><td class="code">07&#8209;09</td><td>Bentuk diganti jadi dokumen perencanaan distrik + denah kawasan. Nama modul dilepas dari prefix "InMy", jadi nama internal satu sistem.</td></tr>
+        <tr><td class="code">0.4</td><td class="code">07&#8209;09</td><td>Toggle tema disederhanakan jadi Terang/Gelap. Neutral terang diganti broken white.</td></tr>
+        <tr><td class="code">0.5</td><td class="code">07&#8209;09</td><td>Dasar mode terang diputihkan penuh; kartu dibedakan lewat hairline saja.</td></tr>
+        <tr><td class="code">1.0</td><td class="code">07&#8209;09</td><td>Identitas visual disetujui.</td></tr>
+        <tr><td class="code">C</td><td class="code">07&#8209;09</td><td>Denah kawasan direvisi mengikuti riset teknis (<span class="code">research.md</span>): 13 kavling jadi 11. Cache dilebur ke Connect, IR ke Context + Artifact. RnD naik ke P1, AutoClick turun ke P2.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>ECR&#8209;DOC&#8209;001 · ecorione, sistem desain · dipasangkan dengan prd.md &amp; design.md</footer>
+</div>
+
+<script>
+  (function(){
+    var root = document.documentElement;
+    var buttons = document.querySelectorAll('[data-theme-choice]');
+    function apply(choice){
+      root.setAttribute('data-theme', choice);
+      buttons.forEach(function(b){
+        b.classList.toggle('active', b.getAttribute('data-theme-choice') === choice);
+      });
+      try{ localStorage.setItem('ecorione-theme-preview', choice); }catch(e){}
+    }
+    buttons.forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.getAttribute('data-theme-choice')); });
+    });
+    var current = root.getAttribute('data-theme') || 'light';
+    buttons.forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-theme-choice') === current);
+    });
+  })();
+</script>

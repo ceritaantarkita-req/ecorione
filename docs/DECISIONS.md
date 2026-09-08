@@ -1,0 +1,28 @@
+# Log keputusan
+
+Satu baris per keputusan. Pengganti "closure verdict" formal ekosistem lama — dan
+pengganti commit terpisah untuk tiap keputusan kecil, yang dulu membanjiri git history.
+
+Keputusan yang mengubah invarian di [`../AGENTS.md`](../AGENTS.md) butuh ADR di
+[`adr/`](adr/), bukan baris di sini.
+
+| Tanggal | Keputusan | Referensi |
+|---|---|---|
+| 2026-09-07 | Konsolidasi ekosistem InMy jadi satu sistem bernama ecorione | `prd.md` §1 |
+| 2026-09-07 | Arsitektur hybrid: local-first + sync opsional | `prd.md` §3 |
+| 2026-09-07 | Prefix "InMy" dilepas dari semua nama modul | `prd.md` §19 |
+| 2026-09-07 | Identitas visual: gelap sebagai identitas utama, terang putih penuh | `design.md` |
+| 2026-09-07 | Toggle tema 2 opsi (Terang/Gelap); opsi "Sistem" dihapus | `design.md` §9 |
+| 2026-09-07 | Riset teknis dijalankan sebelum implementasi; 15 ADR lahir dari situ | `research.md` |
+| 2026-09-07 | Modul 13 → 11: Cache dilebur ke Connect, IR ke Context + Artifact | ADR-03, ADR-05 |
+| 2026-09-07 | RnD naik P2 → P1 (trace store + eval harness) | `research.md` §9.1 |
+| 2026-09-07 | AutoClick turun P1 → P2 (escape hatch, bukan jalur utama) | ADR-11 |
+| 2026-09-07 | Sync naik jadi prasyarat pitch inti (jembatan HTTPS untuk AI hosted) | ADR-09 |
+| 2026-09-08 | Brand ID pakai properti fantom, bukan `unique symbol` — `unique symbol` tidak bisa dinamai saat declaration emit (TS4023) | `packages/shared-schema/src/ids.ts` |
+| 2026-09-08 | `scopes` dijaga di runtime, bukan cuma di tipe — tool MCP menerima JSON tanpa tipe | `services/context/src/retrieval.ts` |
+| 2026-09-08 | Vector index punya fallback brute-force; test berjalan di jalur itu supaya tidak bergantung ekstensi | ADR-05 |
+| 2026-09-08 | Fase 1 selesai: `rnd`/`context` HTTP/`connect`/`hub`/`ai` terhubung end-to-end, `pnpm dev` + `test/chat-loop.test.ts` (8 kasus emas) menguji loop sungguhan, bukan cuma unit test per service | `docs/api-fase1.md`, `test/chat-loop.test.ts` |
+| 2026-09-08 | Default path DB tiap service dijangkarkan ke lokasi modul (`import.meta.dirname`), bukan `process.cwd()` — `pnpm --filter` mengubah cwd ke folder paket, default relatif-ke-cwd diam-diam mencar `data/` ke tiap `services/*/` alih-alih satu `./data/` di akar repo | `services/{rnd,context,hub}/src/main.ts` |
+| 2026-09-08 | `better-sqlite3` tidak membuat direktori induk sendiri — tiap `openXDatabase` sekarang `mkdirSync(dirname(path), {recursive:true})` sebelum membuka, supaya `pnpm dev` di clone baru tidak crash karena `./data/` belum ada | `services/{rnd,context,hub}/src/db.ts` |
+| 2026-09-08 | Import relatif produksi di `apps/ai` tidak boleh pakai akhiran `.js` — `tsc`/vitest (resolusi `bundler`) menerimanya, tapi webpack `next dev` tidak bisa meresolusinya sama sekali (beda dari NodeNext di paket/service lain, yang mewajibkan `.js`) | `apps/ai/{app,lib}/**` |
+| 2026-09-08 | `Hub POST /v1/memory/forget` membedakan Context menjawab 4xx (fakta tidak ada/sudah di-invalidate — diteruskan apa adanya) dari Context sungguhan tidak bisa dihubungi (tetap 502 UPSTREAM_UNAVAILABLE) — sebelumnya keduanya disamakan jadi 502, menyesatkan pengguna yang mengklik "lupakan" pada fakta yang sudah lupa | `services/hub/src/http.ts` (`forwardOrUpstreamError`) |

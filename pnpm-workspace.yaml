@@ -1,0 +1,11 @@
+packages:
+  - "packages/*"
+  - "services/*"
+  - "apps/*"
+
+# pnpm 10 memblokir build script dependensi secara default. Dua ini butuh kompilasi
+# native/binary dan memang diperlukan: better-sqlite3 adalah penyimpanan memori (ADR-05),
+# esbuild dipakai vitest.
+onlyBuiltDependencies:
+  - better-sqlite3
+  - esbuild

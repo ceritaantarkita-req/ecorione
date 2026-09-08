@@ -1,0 +1,44 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+*.tsbuildinfo
+.turbo/
+.next/
+
+# runtime data — memori pengguna tidak pernah masuk git
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+data/
+.ecorione/
+
+# kredensial — lihat AGENTS.md, ini tidak pernah boleh ke-commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# telemetry & trace lokal
+traces/
+*.jsonl
+!evals/**/*.jsonl
+
+# editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+
+# test & coverage
+coverage/
+.vitest/

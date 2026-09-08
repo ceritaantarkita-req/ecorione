@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/shared-schema" },
+    { "path": "../../packages/shared-server" },
+    { "path": "../../packages/shared-telemetry" },
+    { "path": "../../packages/context-assembly" }
+  ]
+}

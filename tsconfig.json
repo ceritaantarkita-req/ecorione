@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/shared-schema" },
+    { "path": "./packages/shared-telemetry" },
+    { "path": "./packages/context-assembly" },
+    { "path": "./packages/shared-ui" },
+    { "path": "./packages/shared-server" },
+    { "path": "./services/context" },
+    { "path": "./services/rnd" },
+    { "path": "./services/connect" },
+    { "path": "./services/hub" }
+  ]
+}

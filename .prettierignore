@@ -1,0 +1,10 @@
+dist/
+.next/
+node_modules/
+coverage/
+pnpm-lock.yaml
+*.md
+
+# Sengaja identik byte-per-byte dengan artifact desain yang sudah dipublikasikan.
+# Memformat ulang membuatnya menyimpang dari versi yang sudah disetujui.
+docs/mockup.html

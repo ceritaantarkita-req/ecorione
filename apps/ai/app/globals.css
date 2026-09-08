@@ -1,0 +1,462 @@
+/*
+ * Bagian ini (token + base + fittings) adalah OUTPUT dari
+ * `@ecorione/shared-ui` (`renderThemeCss()` + `renderBaseCss()` + `renderComponentCss()`),
+ * disalin apa adanya ke sini karena Next.js tidak menjalankan JS untuk membangun CSS-nya
+ * saat build. Kalau token berubah, ubah `packages/shared-ui/src/tokens.ts` (yang
+ * turunannya `design.md`), lalu jalankan ulang `renderThemeCss()`/`renderBaseCss()`/
+ * `renderComponentCss()` dan tempel ulang blok di bawah — jangan mengarang nilai baru
+ * langsung di sini.
+ */
+
+/* ecorione — token tema (design.md §2, §3, §6). Dark = default, bukan override. */
+:root {
+  --bg: #0b0b0c;
+  --surface: #151517;
+  --surface-2: #1c1c1f;
+  --surface-3: #232326;
+  --border: #2a2a2d;
+  --border-soft: #1e1e21;
+  --text: #edeae2;
+  --text-muted: #8b8880;
+  --accent: #c9a961;
+  --accent-strong: #dbbe7e;
+  --accent-ink: #1b1608;
+  --success: #5e8770;
+  --warning: #b9793e;
+  --danger: #a6564a;
+
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --radius-sm: 5px;
+  --radius-md: 9px;
+  --radius-lg: 14px;
+  --space-none: 0px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+  --elevation-none: none;
+  --elevation-active-rail: inset 2px 0 0 var(--accent);
+}
+
+/* OS terang + belum ada pilihan eksplisit. :not([data-theme="dark"]) menjaga toggle. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f6f5f0;
+    --surface-3: #efede5;
+    --border: #e4e0d4;
+    --border-soft: #edeae0;
+    --text: #1c1b17;
+    --text-muted: #7c786d;
+    --accent: #9c7a3b;
+    --accent-strong: #7f642f;
+    --accent-ink: #ffffff;
+    --success: #3e6350;
+    --warning: #a15f26;
+    --danger: #883f35;
+  }
+}
+
+/* Pilihan eksplisit Terang — menang atas preferensi OS gelap. */
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f6f5f0;
+  --surface-3: #efede5;
+  --border: #e4e0d4;
+  --border-soft: #edeae0;
+  --text: #1c1b17;
+  --text-muted: #7c786d;
+  --accent: #9c7a3b;
+  --accent-strong: #7f642f;
+  --accent-ink: #ffffff;
+  --success: #3e6350;
+  --warning: #a15f26;
+  --danger: #883f35;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display serif untuk judul, mono untuk data teknis — design.md §3. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+  text-wrap: balance;
+}
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Seleksi teks: bidang gold kecil, satu-satunya pemakaian gold sebagai latar yang
+   diizinkan design.md §2. Jangan pakai --accent untuk latar besar. */
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Focus state harus jelas — design.md §8 (aksesibilitas). */
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --- Perlengkapan (PRL.01-03), `renderComponentCss()` --- */
+
+.ecr-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 12.5px;
+  border-radius: var(--radius-sm);
+  height: 33px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.ecr-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Satu-satunya bidang gold yang diizinkan design.md §2 — kecil, elemen aksi. */
+.ecr-btn--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.ecr-btn--primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.ecr-btn--secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+.ecr-btn--secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.ecr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.ecr-chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.ecr-chip--ok .ecr-chip__dot {
+  background: var(--success);
+}
+.ecr-chip--warn .ecr-chip__dot {
+  background: var(--warning);
+}
+.ecr-chip--err .ecr-chip__dot {
+  background: var(--danger);
+}
+
+.ecr-input {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  height: 32px;
+  padding: 0 10px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* Fokus = garis emas tipis (design.md §7 PRL.03, §8 focus state jelas). */
+.ecr-input:focus-visible {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ============================================================
+ * Halaman chat (apps/ai) — layout spesifik, bukan bagian shared-ui.
+ * ============================================================ */
+
+.ai-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-xl);
+  border-bottom: 1px solid var(--border);
+}
+
+.ai-topbar__title {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.ai-topbar__session {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ai-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--space-xl);
+  padding: var(--space-xl);
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .ai-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ai-conversation {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ai-thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding-bottom: var(--space-lg);
+}
+
+.ai-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: var(--space-2xl) 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.ai-turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.ai-turn--user {
+  align-items: flex-end;
+}
+
+.ai-turn--assistant {
+  align-items: flex-start;
+}
+
+.ai-bubble {
+  max-width: 88%;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ai-turn--user .ai-bubble {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.ai-turn--assistant .ai-bubble {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.ai-turn--assistant .ai-bubble--error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.ai-routing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-left: var(--space-xs);
+}
+
+.ai-routing__model {
+  color: var(--text);
+}
+
+.ai-routing__savings {
+  color: var(--success);
+}
+
+.ai-composer {
+  margin-top: var(--space-lg);
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-end;
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-lg);
+}
+
+.ai-composer__field {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  resize: vertical;
+  min-height: 44px;
+  max-height: 200px;
+}
+
+.ai-composer__field:focus-visible {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.ai-panel {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  position: sticky;
+  top: var(--space-xl);
+}
+
+.ai-panel__title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.ai-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.ai-panel__section-title {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.ai-panel__empty {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ai-core-block {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.ai-fact {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  border-left: 2px solid var(--border);
+  padding: 0 0 0 var(--space-sm);
+}
+
+.ai-fact__body {
+  min-width: 0;
+}
+
+.ai-fact__text {
+  font-size: 12.5px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.ai-fact__score {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.ai-forget-btn {
+  height: 24px;
+  padding: 0 9px;
+  font-size: 11px;
+  flex: none;
+}
+
+.ai-episode {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  border-left: 2px solid var(--border-soft);
+  padding-left: var(--space-sm);
+}

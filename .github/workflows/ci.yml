@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# CI sengaja tipis: format, lint, typecheck, test, secret scan. Ekosistem pendahulunya
+# tenggelam dalam ritual verifikasi berlapis yang tidak menangkap kesalahan nyata
+# (`docs/prd.md` §24). Kalau sebuah cek tidak pernah menemukan bug, ia dihapus.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm run format:check
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test
+
+      # Berjalan terakhir tapi memblokir merge: repo ini akan dipublikasikan, dan satu
+      # kredensial yang pernah ke-commit tetap ada di history selamanya.
+      - name: Secret scan
+        run: pnpm run secret-scan
+
+  # Konvensi penamaan sebagai gerbang, bukan sebagai imbauan di dokumen. Ekosistem lama
+  # gagal justru di sini: prosa dan nama package berbeda selama berbulan-bulan.
+  naming:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # Baris yang memang harus menyebut pola terlarang — daftar nama yang dipensiunkan,
+      # dan test yang memastikan alias ditolak — menandai dirinya dengan
+      # `naming-gate:allow`. Pengecualiannya sempit dan terlihat di diff, bukan
+      # daftar path yang lama-lama jadi tempat sampah.
+      - name: Tidak ada penamaan "InMy" yang tersisa
+        run: |
+          if grep -rniE '\bInMy[A-Z]' \
+              --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \
+              --include='*.json' --include='*.sql' --include='*.yml' --include='*.css' \
+              --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git . \
+              | grep -v 'naming-gate:allow' ; then
+            echo "::error::Penamaan ekosistem lama ditemukan. Lihat AGENTS.md dan docs/prd.md §19."
+            exit 1
+          fi
+          echo "Bersih."
+
+      - name: Tidak ada alias model `-latest` (ADR-14)
+        run: |
+          if grep -rnE '"[a-z0-9./-]+-latest"' \
+              --include='*.ts' --include='*.json' --include='*.yaml' \
+              --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
+              packages services apps 2>/dev/null \
+              | grep -v 'naming-gate:allow' ; then
+            echo "::error::Alias model terdeteksi. Pin versi eksplisit — lihat docs/adr/0014-*.md."
+            exit 1
+          fi
+          echo "Bersih."
