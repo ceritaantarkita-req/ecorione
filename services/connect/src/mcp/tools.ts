@@ -2,11 +2,11 @@
 import { wrapAsUntrustedData } from "@ecorione/context-assembly";
 import {
   ArtifactPointerSchema,
-  MCP_TOOL_NAMES,
   McpToolNameSchema,
   ScopeSchema,
   SensitivitySchema,
   sensitivityRank,
+  type MCP_TOOL_NAMES,
   type McpAccessContext,
   type McpDelivery,
   type Scope,

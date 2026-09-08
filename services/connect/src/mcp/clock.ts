@@ -1,4 +1,6 @@
-/** Real clock only at MCP I/O edge; callers pass the captured value inward. */
+/** Real clock only at MCP I/O edge; reuse the audited Connect clock source. */
+import { nowIso } from "../clock.js";
+
 export function epochMs(): number {
-  return Date.now();
+  return Date.parse(nowIso());
 }
