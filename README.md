@@ -154,8 +154,12 @@ Roadmap lengkap: [`docs/prd.md`](docs/prd.md) §23. Kontrak HTTP antar-service:
 | [`docs/api-fase1.md`](docs/api-fase1.md) | Kontrak HTTP antar-service Fase 1 |
 | [`docs/adr/`](docs/adr/) | 15 architecture decision record |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Log keputusan kecil, satu baris per keputusan |
+| [`docs/LICENSING.md`](docs/LICENSING.md) | Model open-core: modul mana selalu open source, mana kandidat berbayar |
 | [`AGENTS.md`](AGENTS.md) | Konvensi untuk AI yang mengerjakan repo ini |
 
 ## Lisensi
 
-MIT
+MIT — dan tetap begitu selamanya untuk kode yang sudah dirilis. ecorione open core:
+mesin inti di repo ini gratis dan open source seterusnya; modul yang butuh
+infrastruktur terkelola (relay lintas device, hosting) adalah kandidat tier berbayar
+di repo terpisah nanti, tidak pernah di repo ini. Lihat [`docs/LICENSING.md`](docs/LICENSING.md).
