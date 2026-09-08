@@ -1,5 +1,7 @@
 /** HTTP boundary for Context. */
 import {
+  assertId,
+  InvalidIdError,
   makeId,
   ScopeSchema,
   SensitivitySchema,
@@ -21,7 +23,7 @@ import type { VectorIndex } from "./vector.js";
 function toHttpError(err: unknown): unknown {
   if (err instanceof FactNotFoundError) return new NotFoundError(err.message);
   if (err instanceof FactAlreadyInvalidatedError || err instanceof QuarantineRequiredError || err instanceof QuarantineStateError) return new ConflictError(err.message);
-  if (err instanceof ScopeEscalationError || err instanceof ContextError) return new BadRequestError(err.message);
+  if (err instanceof ScopeEscalationError || err instanceof ContextError || err instanceof InvalidIdError) return new BadRequestError(err.message);
   if (err instanceof CoreMemoryWriteForbiddenError) return new ForbiddenError(err.message);
   return err;
 }
@@ -76,6 +78,13 @@ export function buildContextServer(repo: ContextRepository, vectors: VectorIndex
     const body = parseOrBadRequest(AppendEpisodeBodySchema, req.body);
     try { return await reply.code(201).send(repo.appendEpisode({ ...body, id: makeId("episode") })); } catch (err) { throw toHttpError(err); }
   });
+  app.get<{ Params: { id: string } }>("/v1/episodes/:id", async (req) => {
+    try {
+      const episode = repo.getEpisode(assertId("episode", req.params.id));
+      if (episode === null) throw new NotFoundError(`Episode tidak ditemukan: ${req.params.id}`);
+      return episode;
+    } catch (err) { throw toHttpError(err); }
+  });
   app.get("/v1/episodes", async (req) => {
     const q = parseOrBadRequest(ListEpisodesQuerySchema, req.query);
     return { episodes: repo.listEpisodes({
@@ -91,6 +100,13 @@ export function buildContextServer(repo: ContextRepository, vectors: VectorIndex
     const body = parseOrBadRequest(ProposeFactBodySchema, req.body);
     const id = makeId("memoryFact");
     try { repo.proposeFact({ ...body, id }); return await reply.code(201).send({ id }); } catch (err) { throw toHttpError(err); }
+  });
+  app.get<{ Params: { id: string } }>("/v1/facts/:id", async (req) => {
+    try {
+      const fact = repo.getFact(assertId("memoryFact", req.params.id));
+      if (fact === null) throw new NotFoundError(`Fakta tidak ditemukan: ${req.params.id}`);
+      return fact;
+    } catch (err) { throw toHttpError(err); }
   });
   app.post<{ Params: { id: string }; Body: unknown }>("/v1/facts/:id/promote", async (req, reply) => {
     const body = parseOrBadRequest(PromoteFactBodySchema, req.body);

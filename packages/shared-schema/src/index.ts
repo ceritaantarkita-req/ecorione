@@ -11,3 +11,4 @@ export * from "./memory.js";
 export * from "./modules.js";
 export * from "./policy.js";
 export * from "./chat.js";
+export * from "./mcp.js";

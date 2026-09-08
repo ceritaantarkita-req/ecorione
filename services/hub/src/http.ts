@@ -1,4 +1,4 @@
-/** Hub HTTP routes: chat, policy, idempotent side effects, approvals, audit. */
+/** Hub HTTP routes: chat, policy, idempotent side effects, approvals, MCP, audit. */
 import { createHash } from "node:crypto";
 import {
   ActionRequestSchema, ApprovalDecisionSchema, assertId, ChatRequestSchema, ForgetFactRequestSchema,
@@ -12,6 +12,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { HubDatabase } from "./db.js";
 import { nowIso } from "./clock.js";
+import { registerMcpRoutes } from "./mcp.js";
 import { chat, PolicyEngineBugError, UpstreamError, type OrchestrateDeps } from "./orchestrate.js";
 import { evaluatePolicy } from "./policy-engine.js";
 import { ApprovalAlreadyDecidedError, ApprovalNotFoundError, HubRepository, RespondNotAllowedError } from "./repository.js";
@@ -116,6 +117,8 @@ export function buildHubServer(db: HubDatabase, options: BuildHubServerOptions):
       return approval;
     } catch (err) { throw toHttpError(err); }
   });
+
+  registerMcpRoutes(app, repo, { contextUrl: options.contextUrl, internalToken: options.internalToken });
 
   app.get("/v1/audit", async (req) => {
     const q = parseOrBadRequest(AuditQuerySchema, req.query);
