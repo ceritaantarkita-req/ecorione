@@ -12,6 +12,7 @@ export type SpacePage = z.infer<typeof SpacePageSchema>;
 
 export const SPACE_BLOCK_TYPES = ["text", "heading", "list"] as const;
 export const SpaceBlockTypeSchema = z.enum(SPACE_BLOCK_TYPES);
+export type SpaceBlockType = z.infer<typeof SpaceBlockTypeSchema>;
 export const SpaceBlockSchema = z.object({
   id: z.string().regex(/^block_[a-z0-9_-]+$/),
   pageId: SpacePageSchema.shape.id,
