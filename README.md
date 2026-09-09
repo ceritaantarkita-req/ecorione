@@ -52,6 +52,12 @@ External HTTPS acceptance sekarang dibuktikan otomatis dengan public tunnel seme
 
 Ini **tidak** berarti repo mengoperasikan managed relay publik. Authorization server/JWKS dan HTTPS edge tetap komponen deployment operator sampai workstream managed deployment dibuat.
 
+## MCP outbound
+
+Connect juga memiliki outbound MCP manager untuk memakai server MCP pihak lain. Baseline memakai official `@modelcontextprotocol/client@2.0.0`, Streamable HTTP dan stdio yang di-allowlist, workspace-scoped durable registry, named credential references di Connect Vault, explicit per-tool `ActionClass`, Hub policy/approval/audit, serta durable side-effect reservation.
+
+Discovery tidak otomatis mengaktifkan tool. Ambiguous side effect menjadi `MCP_OUTCOME_UNCERTAIN` dan tidak boleh di-retry otomatis; retry yang sudah diketahui ambiguous ditolak sebelum reconnect. Stdio bukan jalur arbitrary plugin execution: executable harus diizinkan exact oleh operator, dan Plugin/Extension Framework tetap workstream terpisah. Lihat [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md).
+
 ## Arsitektur saat ini
 
 Hub adalah supervisor/policy boundary. Tidak ada service yang boleh membuka database service lain secara langsung.
@@ -60,7 +66,7 @@ Hub adalah supervisor/policy boundary. Tidak ada service yang boleh membuka data
 |---|---|---|
 | **Ai** | Chat UI + route `/space` | implemented |
 | **Hub** | Policy, approval, audit, orchestration, Historical Ledger, ECX | implemented |
-| **Connect** | Provider gateway, optimizer, MCP inbound, vault, spend control | implemented |
+| **Connect** | Provider gateway, optimizer, MCP inbound/outbound, vault, spend control | implemented |
 | **Context** | Memori L0–L2 + metadata L3 | implemented |
 | **Sync** | Pairing, E2E encrypted relay, MCP HTTPS bridge | implemented + external transport acceptance |
 | **Artifact** | CAS SHA-256 untuk L3 | implemented |
@@ -119,7 +125,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 - **Fase 3 — CLOSED:** Artifact, Sandbox, Space + runtime acceptance.
 - **Fase 4 — CLOSED:** Flow di Temporal + forced worker crash/recovery.
 - **Fase 5 — DEFERRED BY DESIGN:** belum ada use case non-API konkret yang membenarkan RPA.
-- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, multi-provider hardening, dan external MCP HTTPS acceptance sudah masuk baseline; outbound MCP/plugin, multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
+- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, multi-provider hardening, external MCP HTTPS acceptance, dan outbound MCP manager sudah masuk baseline; plugin framework, multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
 
 ## Invarian penting
 
@@ -140,7 +146,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 
 ## Batasan yang masih nyata
 
-- Ecorione belum memiliki outbound MCP manager/plugin registry generik.
+- Plugin/extension registry + security gate belum ada; outbound MCP manager sudah ada, tetapi arbitrary extension/repository execution tetap tidak didukung.
 - Native OCR/STT/TTS/realtime voice belum menjadi capability runtime.
 - Visual node canvas/custom node SDK belum ada.
 - Data refactor/rebuild governance belum menjadi subsystem eksplisit.
@@ -160,6 +166,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 | [`docs/design.md`](docs/design.md) | Identitas visual & UI/UX |
 | [`docs/blueprint.md`](docs/blueprint.md) | Cetak biru Fase 0–6+ |
 | [`docs/fase6-hardening.md`](docs/fase6-hardening.md) | Baseline hardening + gap aktif |
+| [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md) | Operasi outbound MCP registry, credential, tool, dan failure handling |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Log keputusan aktual |
 | [`docs/verification/`](docs/verification/) | Evidence exact-head/runtime acceptance |
 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |

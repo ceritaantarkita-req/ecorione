@@ -27,11 +27,11 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Current `main` SHA after Phase 4 readiness hotfix merge:
+Baseline `main` tempat Batch 2 branch dibuat:
 
-- `d79793977c9d4ea5d6e472ca4eeeabfed3259e60`
+- `69cffc81694bff30260c1c9aaeae2cf667d5534f`
 
-Current `main` condition:
+Baseline condition sebelum Batch 2:
 
 - Format: PASS
 - Lint: PASS
@@ -41,16 +41,17 @@ Current `main` condition:
 - Production Build: PASS
 - Naming: PASS
 
-Post-merge evidence:
-
-- PR #7 merged with expected-head lock
-- merge SHA: `d79793977c9d4ea5d6e472ca4eeeabfed3259e60`
-- main CI: `34350438424` — full green
-- the previously flaky forced Temporal crash/replacement acceptance passed in the full post-merge suite
+Batch 1 tracker closure sudah merged pada baseline ini.
 
 ### Active branch
 
-No implementation branch is active at this checkpoint. **Batch 2 — Outbound MCP Client + MCP Manager** is the next planned execution batch.
+- branch: `agent/outbound-mcp-manager-20260909`
+- PR: #9 — `feat: add outbound MCP client and manager`
+- Batch 2 status: **IMPLEMENTED / CLOSURE PENDING**
+- clean code candidate sebelum docs: `1cf736611d2b2a2778884d971b1afa92057f37b3`
+- code candidate CI: `34357212048` — full green
+- inbound public HTTPS regression acceptance: `34357212042` — PASS
+- exact docs/final head, merge, dan post-merge `main` verification: pending
 
 ---
 
@@ -217,7 +218,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1 sudah CLOSED**. Sisa roadmap aktif adalah **11 batch besar (Batch 2–12)**.
+Dari current state, **Batch 1 sudah CLOSED** dan **Batch 2 sudah implemented / closure pending**. Setelah Batch 2 ditutup, tersisa **10 batch platform/production (Batch 3–12)**.
 
 ---
 
@@ -257,24 +258,39 @@ Closure result:
 
 ## Batch 2 — Outbound MCP Client + MCP Manager
 
-Status: **NEXT / PLANNED**
+Status: **IMPLEMENTED / CLOSURE PENDING**
 
-Goal: ecorione dapat memakai MCP server pihak lain, bukan hanya menyediakan inbound MCP server.
+Goal: ecorione dapat memakai MCP server pihak lain tanpa membuat transport, credential, policy, approval, atau retry boundary kedua di luar Connect + Hub.
 
-Scope:
+Implemented baseline:
 
-- stdio MCP client
-- Streamable HTTP MCP client
-- MCP server registry
-- workspace-scoped visibility
-- connect/disconnect
-- discovery tools/resources
-- health/status
-- per-tool enable/disable
-- timeout/error isolation
-- credential references melalui Connect/Vault
-- audit + provenance
-- permission boundary
+- official `@modelcontextprotocol/client@2.0.0` exact pin;
+- explicit modern/legacy protocol negotiation dengan `versionNegotiation.mode = "auto"`;
+- Streamable HTTP + stdio; HTTPS wajib kecuali explicit loopback;
+- stdio exact command allowlist fail-closed;
+- durable server registry dengan atomic replacement, lock, mode `0600`, dan workspace-scoped visibility;
+- connection/cache partition per workspace;
+- discovery tools/resources dengan surface failure isolation;
+- explicit per-tool enable/disable + local `ActionClass`;
+- named MCP credential refs terenkripsi dalam Connect Vault `mcp/tokens`;
+- Hub policy, durable approval, dan audit melalui service API; tidak ada cross-service DB access;
+- durable side-effect state `reserved` / `uncertain` / `settled`;
+- invocation provenance menyimpan workspace, operation, server, tool, canonical args digest, timestamp, dan result;
+- idempotency identity memasukkan workspace sehingga dua workspace tidak salah dedupe;
+- known ambiguous retry ditolak sebelum reconnect/discovery; atomic reserve tetap barrier tepat sebelum remote dispatch;
+- remote failure setelah side-effect dispatch menjadi uncertain dan tidak di-retry otomatis;
+- remote success tidak dibuat retryable karena settlement/audit bookkeeping lokal gagal;
+- operator CLI untuk server registry, tool policy, dan Vault credential refs;
+- outbound MCP tidak menjalankan arbitrary GitHub/plugin code.
+
+Evidence sebelum docs closure:
+
+- clean code candidate head: `1cf736611d2b2a2778884d971b1afa92057f37b3`;
+- CI `34357212048` — Naming, Format, Lint, Typecheck, Test, Secret Scan, Production Build PASS;
+- MCP External HTTPS Acceptance `34357212042` — PASS;
+- focused MCP regression setelah durable provenance/preflight fix: 14 tests PASS.
+
+Closure masih pending karena final docs head harus lolos exact-head gate, PR #9 harus merged dengan expected-head lock, dan post-merge `main` harus diverifikasi hijau. Setelah itu tracker boleh mengubah Batch 2 menjadi `CLOSED`; next implementation batch adalah Batch 3.
 
 ---
 
