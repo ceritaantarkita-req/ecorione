@@ -454,11 +454,9 @@ describe("Fase 4 real Temporal restart acceptance", () => {
         hubDb.close();
         rndDb.close();
         provider.server.close();
-        await withTimeout(
-          once(provider.server, "close"),
-          "local provider close",
-          5000,
-        ).catch(() => undefined);
+        await withTimeout(once(provider.server, "close"), "local provider close", 5000).catch(
+          () => undefined,
+        );
         await withTimeout(env.teardown(), "Temporal test environment teardown", 10_000);
         rmSync(root, { recursive: true, force: true });
       }
