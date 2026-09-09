@@ -7,7 +7,7 @@ import {
 } from "@ecorione/shared-schema";
 import { z } from "zod";
 import type { HostedProviderId } from "./provider-types.js";
-import { CostKillSwitchError, ProviderError } from "./providers/errors.js";
+import { CostKillSwitchError, MissingCredentialError, ProviderError } from "./providers/errors.js";
 import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
 
 type SpendBudgetController = Pick<FileSpendBudget, "reserve" | "settle" | "markUncertain">;
@@ -47,6 +47,9 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
           : "Multimodal local reservationUsd harus 0.",
       );
     }
+    if (this.route === "hosted" && options.authorizationBearer === undefined) {
+      throw new Error("Adapter multimodal hosted wajib memakai credential reader milik Connect.");
+    }
     this.authorizationBearer = options.authorizationBearer;
   }
 
@@ -57,6 +60,9 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
   async infer(input: MultimodalInferRequest): Promise<AdapterOutput> {
     const headers: Record<string, string> = { "content-type": "application/json" };
     const bearer = this.authorizationBearer?.();
+    if (this.route === "hosted" && (bearer === undefined || bearer === "")) {
+      throw new MissingCredentialError("Connect multimodal hosted adapter");
+    }
     if (bearer !== undefined) headers.authorization = `Bearer ${bearer}`;
     let response: Response;
     try {
