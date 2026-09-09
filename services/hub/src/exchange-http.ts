@@ -22,7 +22,7 @@ import { planEcx } from "./exchange.js";
 import {
   HistoryAccessDeniedError,
   HistoryIntegrityError,
-  HistoryLedger,
+  type HistoryLedger,
   HistorySessionNotFoundError,
 } from "./history-ledger.js";
 
