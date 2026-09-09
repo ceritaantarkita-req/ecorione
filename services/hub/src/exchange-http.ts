@@ -8,6 +8,7 @@ import {
   type EcxHydratedItem,
   type EcxReference,
   type EventId,
+  type HistoryEventDraft,
   type MemoryFact,
 } from "@ecorione/shared-schema";
 import {
@@ -142,26 +143,25 @@ export function registerExchangeRoutes(
     const response = planEcx(input, { makePacketId: deterministicPacketIds(input) });
     if (input.historySessionId !== undefined) {
       try {
-        for (const packet of response.packets) {
-          ledger.appendNext(input.historySessionId, {
-            id: packet.packetId,
-            recordedAt: input.requestedAt,
-            eventType: "agent.handoff",
-            actor: "hub:exchange",
-            operationId: input.operationId,
-            parentEventId: null,
-            payload: {
-              sender: packet.sender,
-              recipient: packet.recipient,
-              intent: packet.intent,
-              task: packet.task,
-              need: packet.need,
-              refs: packet.refs,
-              budget: packet.budget,
-              responseMode: packet.responseMode,
-            },
-          });
-        }
+        const events = response.packets.map<HistoryEventDraft>((packet) => ({
+          id: packet.packetId,
+          recordedAt: input.requestedAt,
+          eventType: "agent.handoff",
+          actor: "hub:exchange",
+          operationId: input.operationId,
+          parentEventId: null,
+          payload: {
+            sender: packet.sender,
+            recipient: packet.recipient,
+            intent: packet.intent,
+            task: packet.task,
+            need: packet.need,
+            refs: packet.refs,
+            budget: packet.budget,
+            responseMode: packet.responseMode,
+          },
+        }));
+        ledger.appendBatch(input.historySessionId, events);
       } catch (error) {
         if (error instanceof HistorySessionNotFoundError) {
           throw new NotFoundError("History session ECX tidak ditemukan.");
@@ -198,7 +198,10 @@ export function registerExchangeRoutes(
           });
           content = encodeJson(range);
         } catch (error) {
-          if (error instanceof HistorySessionNotFoundError || error instanceof HistoryAccessDeniedError) {
+          if (
+            error instanceof HistorySessionNotFoundError ||
+            error instanceof HistoryAccessDeniedError
+          ) {
             throw new NotFoundError("History reference tidak tersedia untuk grant ini.");
           }
           if (error instanceof HistoryIntegrityError) {
