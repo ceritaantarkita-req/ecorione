@@ -11,6 +11,7 @@
     { "path": "./services/connect" },
     { "path": "./services/hub" },
     { "path": "./services/sync" },
-    { "path": "./services/artifact" }
+    { "path": "./services/artifact" },
+    { "path": "./services/sandbox" }
   ]
 }
