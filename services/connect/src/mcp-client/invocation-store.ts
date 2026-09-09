@@ -13,8 +13,10 @@ import { dirname } from "node:path";
 import {
   OperationIdSchema,
   TimestampSchema,
+  WorkspaceIdSchema,
   type OperationId,
   type Timestamp,
+  type WorkspaceId,
 } from "@ecorione/shared-schema";
 import { z } from "zod";
 import { McpServerIdSchema, type McpServerId } from "./types.js";
@@ -23,6 +25,7 @@ const InvocationStatusSchema = z.enum(["reserved", "uncertain", "settled"]);
 const InvocationEntrySchema = z.object({
   idempotencyKey: z.string().min(8).max(128),
   operationId: OperationIdSchema,
+  workspaceId: WorkspaceIdSchema,
   serverId: McpServerIdSchema,
   toolName: z.string().min(1).max(128),
   argsDigest: z.string().regex(/^[a-f0-9]{64}$/),
@@ -43,6 +46,7 @@ type InvocationFile = z.infer<typeof InvocationFileSchema>;
 export interface McpInvocationReservationInput {
   readonly idempotencyKey: string;
   readonly operationId: OperationId;
+  readonly workspaceId: WorkspaceId;
   readonly serverId: McpServerId;
   readonly toolName: string;
   readonly argsDigest: string;
@@ -164,6 +168,7 @@ function sameInvocation(
   input: McpInvocationReservationInput,
 ): boolean {
   return (
+    entry.workspaceId === input.workspaceId &&
     entry.serverId === input.serverId &&
     entry.toolName === input.toolName &&
     entry.argsDigest === input.argsDigest
@@ -173,11 +178,34 @@ function sameInvocation(
 export class FileMcpInvocationStore {
   constructor(private readonly path: string) {}
 
+  /**
+   * Reject known ambiguous retries before Connect opens a new transport or performs
+   * remote discovery. This is a read-only guard; reserve() remains the atomic race
+   * barrier immediately before the remote side-effect dispatch.
+   */
+  assertPreflightSafe(input: McpInvocationReservationInput): void {
+    const state = readState(this.path);
+    const prior = state.entries.find((entry) => entry.idempotencyKey === input.idempotencyKey);
+    if (prior === undefined) return;
+    if (!sameInvocation(prior, input)) {
+      throw new McpInvocationConflictError(input.idempotencyKey);
+    }
+    if (prior.status !== "settled") {
+      throw new McpInvocationOutcomeUncertainError(input.idempotencyKey, prior.status);
+    }
+  }
+
   reserve(input: McpInvocationReservationInput): McpInvocationReservation {
     const normalized = InvocationEntrySchema.parse({
-      ...input,
+      idempotencyKey: input.idempotencyKey,
+      operationId: input.operationId,
+      workspaceId: input.workspaceId,
+      serverId: input.serverId,
+      toolName: input.toolName,
+      argsDigest: input.argsDigest,
       status: "reserved",
       result: null,
+      createdAt: input.now,
       settledAt: null,
     });
     return withLock(this.path, () => {

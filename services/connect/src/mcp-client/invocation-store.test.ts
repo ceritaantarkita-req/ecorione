@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { OperationIdSchema, TimestampSchema } from "@ecorione/shared-schema";
+import { OperationIdSchema, TimestampSchema, WorkspaceIdSchema } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   FileMcpInvocationStore,
@@ -22,11 +22,13 @@ afterEach(() => {
 
 const now = TimestampSchema.parse("2026-09-09T12:00:00.000Z");
 const operationId = OperationIdSchema.parse("op_call1");
+const workspaceId = WorkspaceIdSchema.parse("ws_a");
 const digest = "a".repeat(64);
 function input(key = "12345678abcdefgh") {
   return {
     idempotencyKey: key,
     operationId,
+    workspaceId,
     serverId: "server-a",
     toolName: "write",
     argsDigest: digest,
@@ -38,7 +40,10 @@ describe("FileMcpInvocationStore", () => {
   it("persists settled result and deduplicates after restart", () => {
     const path = statePath();
     const store = new FileMcpInvocationStore(path);
-    expect(store.reserve(input()).kind).toBe("reserved");
+    const reserved = store.reserve(input());
+    expect(reserved.kind).toBe("reserved");
+    expect(reserved.entry.createdAt).toBe(now);
+    expect(reserved.entry.workspaceId).toBe(workspaceId);
     store.settle("12345678abcdefgh", { content: [{ type: "text", text: "ok" }] }, now);
     const retried = new FileMcpInvocationStore(path).reserve(input());
     expect(retried.kind).toBe("settled");
@@ -62,6 +67,23 @@ describe("FileMcpInvocationStore", () => {
     expect(() => store.reserve({ ...input(), toolName: "other" })).toThrow(
       McpInvocationConflictError,
     );
+  });
+
+  it("rejects known uncertain work during read-only preflight", () => {
+    const store = new FileMcpInvocationStore(statePath());
+    store.reserve(input());
+    store.markUncertain("12345678abcdefgh");
+    expect(() => store.assertPreflightSafe(input())).toThrow(
+      McpInvocationOutcomeUncertainError,
+    );
+  });
+
+  it("rejects the same idempotency key across different workspace provenance", () => {
+    const store = new FileMcpInvocationStore(statePath());
+    store.reserve(input());
+    expect(() =>
+      store.reserve({ ...input(), workspaceId: WorkspaceIdSchema.parse("ws_b") }),
+    ).toThrow(McpInvocationConflictError);
   });
 
   it("fails closed when lock exists", () => {

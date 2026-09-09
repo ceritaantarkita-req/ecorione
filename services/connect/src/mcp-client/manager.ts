@@ -280,6 +280,20 @@ export class McpManager {
     };
 
     await this.governance.authorize(governanceRequest);
+    const reservationInput =
+      idempotencyKey === null
+        ? null
+        : {
+            idempotencyKey,
+            operationId: request.operationId,
+            workspaceId: request.workspaceId,
+            serverId,
+            toolName,
+            argsDigest: argsDigest(request.arguments),
+            now: request.now,
+          };
+    if (reservationInput !== null) this.invocations.assertPreflightSafe(reservationInput);
+
     const client = await this.client(config, request.workspaceId);
     const advertised = await client.listTools(config.requestTimeoutMs);
     if (!advertised.some((tool) => tool.name === toolName)) {
@@ -287,15 +301,8 @@ export class McpManager {
     }
 
     let reservation: McpInvocationReservation | null = null;
-    if (idempotencyKey !== null) {
-      reservation = this.invocations.reserve({
-        idempotencyKey,
-        operationId: request.operationId,
-        serverId,
-        toolName,
-        argsDigest: argsDigest(request.arguments),
-        now: request.now,
-      });
+    if (reservationInput !== null) {
+      reservation = this.invocations.reserve(reservationInput);
       if (reservation.kind === "settled") {
         const result = storedResult(reservation);
         const audit = await bestEffort(() =>

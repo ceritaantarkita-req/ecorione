@@ -193,11 +193,14 @@ describe("McpManager", () => {
     await expect(
       manager.callTool("remote", "write", callRequest("op_first")),
     ).rejects.toBeInstanceOf(McpRemoteOutcomeUncertainError);
-    const calls = factory.byWorkspace.get("ws_a")!.callCount;
+    const failedClient = factory.byWorkspace.get("ws_a")!;
+    const calls = failedClient.callCount;
+    const connections = factory.connectCount;
     await expect(manager.callTool("remote", "write", callRequest("op_second"))).rejects.toThrow(
       /redispatch otomatis ditolak/,
     );
-    expect(factory.byWorkspace.get("ws_a")!.callCount).toBe(calls);
+    expect(failedClient.callCount).toBe(calls);
+    expect(factory.connectCount).toBe(connections);
   });
 
   it("does not make a successful remote result retryable when audit fails", async () => {
