@@ -22,5 +22,9 @@ export async function createFlowWorker(options: FlowWorkerOptions): Promise<Work
     taskQueue: options.taskQueue ?? FLOW_TASK_QUEUE,
     workflowsPath: workflowsPath(),
     activities: createFlowActivities(options),
+    // Agent workflows favor fast crash recovery over keeping a sticky assignment for the
+    // SDK default 10 seconds. The workflow cache remains enabled; only failover latency is
+    // shortened, so a replacement worker can replay durable history promptly after SIGKILL.
+    stickyQueueScheduleToStartTimeout: "1 second",
   });
 }
