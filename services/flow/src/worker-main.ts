@@ -35,7 +35,9 @@ if (process.env.ECORIONE_FLOW_WORKER_READY_IPC === "1" && process.send !== undef
       }
       await new Promise<void>((resolve) => setTimeout(resolve, 10));
     }
-    throw new Error(`Timed out waiting for Flow worker RUNNING state; current=${worker.getState()}`);
+    throw new Error(
+      `Timed out waiting for Flow worker RUNNING state; current=${worker.getState()}`,
+    );
   })();
 
   await Promise.race([
