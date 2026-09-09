@@ -22,7 +22,7 @@ import {
   HistoryAccessDeniedError,
   HistoryEventConflictError,
   HistoryIntegrityError,
-  HistoryLedger,
+  type HistoryLedger,
   HistoryPayloadError,
   HistorySequenceConflictError,
   HistorySessionConflictError,
