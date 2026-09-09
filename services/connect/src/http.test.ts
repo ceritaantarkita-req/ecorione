@@ -110,6 +110,21 @@ describe("POST /v1/complete", () => {
     await app.close();
   });
 
+  it("cost kill switch → 503 eksplisit dan tidak silent fallback", async () => {
+    const app = buildConnectServer({
+      anthropicApiKey: "sk-test",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: false,
+    });
+
+    const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
+    expect(res.statusCode).toBe(503);
+    expect(res.json().error.type).toBe("COST_KILL_SWITCH_ACTIVE");
+    expect(res.json().error.message).toContain("ECORIONE_COST_KILL_SWITCH");
+    await app.close();
+  });
+
   it("provider hosted gagal (network) → 502, bukan 500", async () => {
     anthropicPool
       .intercept({ path: "/v1/messages", method: "POST" })
