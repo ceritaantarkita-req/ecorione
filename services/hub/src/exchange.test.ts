@@ -69,6 +69,22 @@ describe("ECX sparse planner", () => {
     expect(result.metrics.packetBytes).toBe(Buffer.byteLength(encoded, "utf8"));
   });
 
+  it("pointer-first packet stays smaller than an equivalent inline-history fixture", () => {
+    const result = planEcx(request, {
+      makePacketId: () => assertId("event", "evt_ecxpacket003"),
+    });
+    const packet = result.packets[0];
+    expect(packet).toBeDefined();
+    const inlineFixture = {
+      ...packet,
+      refs: [],
+      inlineHistory: "x".repeat(8_000),
+    };
+    expect(result.metrics.packetBytes).toBeLessThan(
+      Buffer.byteLength(JSON.stringify(inlineFixture), "utf8"),
+    );
+  });
+
   it("is deterministic by default and ignores candidate input order", () => {
     const first = planEcx(request);
     const second = planEcx(request);
