@@ -1,4 +1,4 @@
-/** Chat orchestration: Hub → Context → Connect → RnD. */
+/** Chat orchestration: Hub → Historical Ledger + Context → Connect → RnD. */
 import {
   assembleContextPack,
   prefixDigest,
@@ -14,6 +14,7 @@ import {
   type ChatResponse,
   type CoreMemory,
   type Episode,
+  type HistoryEventDraft,
   type OperationId,
   type RetrievalHit,
   type Timestamp,
@@ -24,6 +25,7 @@ import {
   type CallCostRecord,
   type TokenUsage,
 } from "@ecorione/shared-telemetry";
+import type { HistoryLedger } from "./history-ledger.js";
 import { evaluatePolicy } from "./policy-engine.js";
 import type { HubRepository } from "./repository.js";
 
@@ -55,6 +57,7 @@ export class PolicyEngineBugError extends Error {
 }
 export interface OrchestrateDeps {
   readonly repo: HubRepository;
+  readonly history: HistoryLedger;
   readonly contextUrl: string;
   readonly connectUrl: string;
   readonly rndUrl: string;
@@ -136,6 +139,25 @@ export async function chat(
   });
   if (verdict.outcome !== "ALLOW") throw new PolicyEngineBugError(verdict.outcome);
 
+  // Hosted chat is explicitly cloud-eligible. Until per-message classification exists,
+  // maxSensitivity is used as a conservative session label and may only move upward.
+  deps.history.ensureSession({
+    id: req.sessionId,
+    createdAt: now,
+    scope: req.scope,
+    sensitivity: req.maxSensitivity,
+    syncClass: "CLOUD_ALLOWED",
+  });
+  const userHistoryEvent = deps.history.appendNext(req.sessionId, {
+    id: makeId("event"),
+    recordedAt: now,
+    eventType: "user.message",
+    actor: "user",
+    operationId,
+    parentEventId: null,
+    payload: { text: req.message },
+  }).event;
+
   // Chat Fase 1 is hosted. Only memory explicitly eligible for hosted plaintext egress may leave the machine.
   const scope = encodeURIComponent(req.scope);
   const max = encodeURIComponent(req.maxSensitivity);
@@ -211,7 +233,53 @@ export async function chat(
     now,
   });
 
-  // The user chose the hosted chat surface, so these thread episodes are explicitly cloud-eligible.
+  const modelEventId = makeId("event");
+  const assistantEventId = makeId("event");
+  const postProviderEvents: HistoryEventDraft[] = [
+    {
+      id: modelEventId,
+      recordedAt: now,
+      eventType: "model.called",
+      actor: "hub",
+      operationId,
+      parentEventId: userHistoryEvent.id,
+      payload: {
+        requestModel: complete.model,
+        responseModel: complete.responseModel,
+        cacheHit: complete.cacheHit,
+        usage: complete.usage,
+        actualUsd: complete.cost.actualUsd,
+        naiveUsd: complete.cost.naiveUsd,
+        routeReason: complete.routeReason,
+      },
+    },
+    {
+      id: assistantEventId,
+      recordedAt: now,
+      eventType: "agent.message",
+      actor: "assistant",
+      operationId,
+      parentEventId: modelEventId,
+      payload: { text: complete.reply },
+    },
+  ];
+  try {
+    deps.history.appendBatch(req.sessionId, postProviderEvents);
+  } catch (err) {
+    // A completed provider call must not become retryable merely because history telemetry degraded.
+    deps.repo.recordAuditEvent({
+      type: "HISTORY_WRITE_FAILED",
+      operationId,
+      module: "Hub",
+      detail: {
+        phase: "post-provider",
+        error: err instanceof Error ? err.message : String(err),
+      },
+      now,
+    });
+  }
+
+  // Context episodes remain episodic memory; Historical Ledger is chronological/replay state.
   await callContext(deps, "/v1/episodes", {
     method: "POST",
     body: {

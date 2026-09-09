@@ -5,6 +5,7 @@
 import { resolve } from "node:path";
 import { makeId } from "@ecorione/shared-schema";
 import { bindHost, httpJson } from "@ecorione/shared-server";
+import { registerAccessRoutes } from "./access-http.js";
 import { registerArtifactRoutes } from "./artifact-routes.js";
 import { nowIso } from "./clock.js";
 import { openContextDatabase } from "./db.js";
@@ -66,6 +67,7 @@ async function extractLocal(prompt: string): Promise<string> {
 
 const app = buildContextServer(repo, vectors, { token, logger: true, extractLocal });
 registerArtifactRoutes(app, repo);
+registerAccessRoutes(app, repo);
 
 app
   .listen({ port, host: bindHost() })

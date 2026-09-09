@@ -1,4 +1,4 @@
-/** Hub durable state: audit, approvals, idempotent action results. */
+/** Hub durable state: audit, approvals, idempotent action results, historical ledger. */
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { SqliteConstructor, type SqliteDatabase } from "./sqlite.js";
@@ -22,6 +22,42 @@ CREATE TABLE IF NOT EXISTS idempotent_results (
   completed_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_idempotent_results_operation ON idempotent_results(operation_id);
+
+CREATE TABLE IF NOT EXISTS history_sessions (
+  id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  sensitivity TEXT NOT NULL,
+  sync_class TEXT NOT NULL,
+  next_seq INTEGER NOT NULL DEFAULT 0 CHECK(next_seq >= 0),
+  head_hash TEXT
+);
+CREATE TABLE IF NOT EXISTS history_events (
+  id TEXT NOT NULL UNIQUE,
+  session_id TEXT NOT NULL REFERENCES history_sessions(id),
+  seq INTEGER NOT NULL CHECK(seq >= 0),
+  recorded_at TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  operation_id TEXT,
+  parent_event_id TEXT,
+  payload_json TEXT NOT NULL,
+  prev_hash TEXT,
+  hash TEXT NOT NULL,
+  PRIMARY KEY(session_id, seq)
+);
+CREATE INDEX IF NOT EXISTS idx_history_events_operation ON history_events(operation_id);
+CREATE INDEX IF NOT EXISTS idx_history_events_recorded_at ON history_events(recorded_at);
+CREATE TRIGGER IF NOT EXISTS history_events_no_update
+BEFORE UPDATE ON history_events
+BEGIN
+  SELECT RAISE(ABORT, 'history_events are append-only');
+END;
+CREATE TRIGGER IF NOT EXISTS history_events_no_delete
+BEFORE DELETE ON history_events
+BEGIN
+  SELECT RAISE(ABORT, 'history_events are append-only');
+END;
 `;
 export interface HubDatabase {
   readonly raw: SqliteDatabase;
@@ -31,6 +67,7 @@ export interface HubDatabase {
 export function openHubDatabase(path: string = IN_MEMORY): HubDatabase {
   if (path !== IN_MEMORY) mkdirSync(dirname(path), { recursive: true });
   const raw = new SqliteConstructor(path);
+  raw.pragma("foreign_keys = ON");
   if (path !== IN_MEMORY) {
     raw.pragma("journal_mode = WAL");
     raw.pragma("synchronous = NORMAL");
