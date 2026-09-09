@@ -62,7 +62,7 @@ describe("ExtensionManifestSchema", () => {
     const credentialed = manifest();
     credentialed.source = {
       type: "release",
-      url: "https://user:secret@example.com/extension.tgz",
+      url: "https://user:secret@example.com/extension.tgz", // secret-scan:allow — synthetic negative-test fixture
       version: "1.2.3",
       bundleSha256: digest,
     };
