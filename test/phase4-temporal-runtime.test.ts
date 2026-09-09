@@ -83,6 +83,18 @@ async function waitUntil(
   throw new Error(`Timed out waiting for ${label}.`);
 }
 
+async function withTimeout<T>(promise: Promise<T>, label: string, timeoutMs: number): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Timed out waiting for ${label}.`)), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
 interface FastifyLike {
   listen(options: { port: number; host: string }): Promise<string>;
   close(): Promise<void>;
@@ -187,7 +199,7 @@ function assertWorkerAlive(child: ChildProcess, label: string): void {
 async function killWorker(child: ChildProcess): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) return;
   child.kill("SIGKILL");
-  await once(child, "exit");
+  await withTimeout(once(child, "exit"), `worker ${String(child.pid)} exit`, 5000);
 }
 
 async function auditTypes(hubUrl: string, operationId: string): Promise<string[]> {
@@ -389,14 +401,22 @@ describe("Fase 4 real Temporal restart acceptance", () => {
         childThree = workerProcess(runtime);
         await once(childThree, "spawn");
         assertWorkerAlive(childThree, "Replacement worker #3");
-        const decision = await flow.inject({
-          method: "POST",
-          url: `/v1/flows/${started.flowId}/decision`,
-          payload: { decision: "APPROVE", note: "runtime acceptance" },
-        });
+        const decision = await withTimeout(
+          flow.inject({
+            method: "POST",
+            url: `/v1/flows/${started.flowId}/decision`,
+            payload: { decision: "APPROVE", note: "runtime acceptance" },
+          }),
+          "Flow decision commit + Temporal signal",
+          10_000,
+        );
         expect(decision.statusCode).toBe(200);
 
-        const result = (await handle.result()) as {
+        const result = (await withTimeout(
+          handle.result(),
+          "Temporal workflow completion after replacement worker",
+          30_000,
+        )) as {
           transformed: string;
           aiReply: string;
           sandboxReceiptId: string;
@@ -430,8 +450,12 @@ describe("Fase 4 real Temporal restart acceptance", () => {
         hubDb.close();
         rndDb.close();
         provider.server.close();
-        await once(provider.server, "close").catch(() => undefined);
-        await env.teardown();
+        await withTimeout(
+          once(provider.server, "close"),
+          "local provider close",
+          5000,
+        ).catch(() => undefined);
+        await withTimeout(env.teardown(), "Temporal test environment teardown", 10_000);
         rmSync(root, { recursive: true, force: true });
       }
     },
