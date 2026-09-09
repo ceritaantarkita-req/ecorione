@@ -1,5 +1,11 @@
 /** Context metadata client. Artifact never opens Context's SQLite file. */
-import { ArtifactPointerSchema, type ArtifactPointer, type Scope, type Sensitivity, type SyncClass } from "@ecorione/shared-schema";
+import {
+  ArtifactPointerSchema,
+  type ArtifactPointer,
+  type Scope,
+  type Sensitivity,
+  type SyncClass,
+} from "@ecorione/shared-schema";
 import { httpJson } from "@ecorione/shared-server";
 
 export interface ArtifactMetadataClient {
@@ -12,10 +18,16 @@ export interface ArtifactMetadataClient {
   }): Promise<ArtifactPointer>;
 }
 
-export function createContextMetadataClient(baseUrl: string, token?: string): ArtifactMetadataClient {
+export function createContextMetadataClient(
+  baseUrl: string,
+  token?: string,
+): ArtifactMetadataClient {
   return {
     async register(pointer) {
-      const result = await httpJson<unknown>(`${baseUrl}/v1/artifacts`, { token, body: pointer });
+      const result = await httpJson<unknown>(`${baseUrl}/v1/artifacts`, {
+        token,
+        body: pointer,
+      });
       return ArtifactPointerSchema.parse(result);
     },
     async authorize(input) {

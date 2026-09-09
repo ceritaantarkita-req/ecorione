@@ -4,11 +4,7 @@ import { join } from "node:path";
 import { assertId, type PolicyVerdict } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SandboxControlPlane } from "./clients.js";
-import {
-  buildDockerPlan,
-  SandboxBoundaryError,
-  SandboxExecutor,
-} from "./executor.js";
+import { buildDockerPlan, SandboxBoundaryError, SandboxExecutor } from "./executor.js";
 import { SandboxReceiptStore } from "./receipt-store.js";
 
 const roots: string[] = [];

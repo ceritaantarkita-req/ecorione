@@ -68,16 +68,19 @@ export class SpaceStore {
   }
 
   listPages(scope?: Scope): SpacePage[] {
-    const rows = (scope === undefined
-      ? this.db.raw.prepare("SELECT * FROM pages ORDER BY updated_at DESC,id ASC").all()
-      : this.db.raw
-          .prepare("SELECT * FROM pages WHERE scope=? ORDER BY updated_at DESC,id ASC")
-          .all(scope)) as PageRow[];
+    const rows = (
+      scope === undefined
+        ? this.db.raw.prepare("SELECT * FROM pages ORDER BY updated_at DESC,id ASC").all()
+        : this.db.raw
+            .prepare("SELECT * FROM pages WHERE scope=? ORDER BY updated_at DESC,id ASC")
+            .all(scope)
+    ) as PageRow[];
     return rows.map(pageFromRow);
   }
 
   getPage(id: string): { page: SpacePage; blocks: SpaceBlock[] } | null {
-    const row = this.db.raw.prepare("SELECT * FROM pages WHERE id=?").get(id) as PageRow | undefined;
+    const row = this.db.raw.prepare("SELECT * FROM pages WHERE id=?").get(id) as
+      PageRow | undefined;
     if (row === undefined) return null;
     const blocks = this.db.raw
       .prepare("SELECT * FROM blocks WHERE page_id=? ORDER BY position ASC,id ASC")
@@ -89,7 +92,7 @@ export class SpaceStore {
     const changed = this.db.raw
       .prepare("UPDATE pages SET title=?,updated_at=? WHERE id=?")
       .run(title, now, id).changes;
-    return changed === 0 ? null : this.getPage(id)?.page ?? null;
+    return changed === 0 ? null : (this.getPage(id)?.page ?? null);
   }
 
   deletePage(id: string): boolean {
@@ -134,7 +137,8 @@ export class SpaceStore {
     patch: { type?: SpaceBlockType; content?: string; position?: number },
     now: string,
   ): SpaceBlock | null {
-    const row = this.db.raw.prepare("SELECT * FROM blocks WHERE id=?").get(id) as BlockRow | undefined;
+    const row = this.db.raw.prepare("SELECT * FROM blocks WHERE id=?").get(id) as
+      BlockRow | undefined;
     if (row === undefined) return null;
     const current = blockFromRow(row);
     const next = SpaceBlockSchema.parse({

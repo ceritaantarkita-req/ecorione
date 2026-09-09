@@ -20,12 +20,18 @@ const RegisterArtifactBodySchema = ArtifactPointerSchema.extend({
 const AuthorizeArtifactQuerySchema = z.object({
   scope: ScopeSchema,
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
-  hostedEligible: z.enum(["0", "1"]).optional().transform((v) => v === "1"),
+  hostedEligible: z
+    .enum(["0", "1"])
+    .optional()
+    .transform((v) => v === "1"),
 });
 const ListBindingsQuerySchema = z.object({
   scope: ScopeSchema,
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
-  hostedEligible: z.enum(["0", "1"]).optional().transform((v) => v === "1"),
+  hostedEligible: z
+    .enum(["0", "1"])
+    .optional()
+    .transform((v) => v === "1"),
 });
 
 interface BindingRow {
@@ -80,9 +86,10 @@ export function registerArtifactRoutes(app: FastifyInstance, repo: ContextReposi
         sync_class: syncClass,
       });
 
-      const legacy = db.prepare("SELECT scope,sensitivity,sync_class FROM artifact_pointers WHERE id=?").get(pointer.id) as
-        | { scope: string; sensitivity: string; sync_class: string }
-        | undefined;
+      const legacy = db
+        .prepare("SELECT scope,sensitivity,sync_class FROM artifact_pointers WHERE id=?")
+        .get(pointer.id) as
+        { scope: string; sensitivity: string; sync_class: string } | undefined;
       if (
         legacy === undefined ||
         (legacy.scope === pointer.scope &&
@@ -109,7 +116,8 @@ export function registerArtifactRoutes(app: FastifyInstance, repo: ContextReposi
          LIMIT 1`,
       )
       .get(req.params.id, q.scope, ...allowed) as BindingRow | undefined;
-    if (row === undefined) throw new NotFoundError("Artifact tidak tersedia untuk scope/sensitivity pemanggil.");
+    if (row === undefined)
+      throw new NotFoundError("Artifact tidak tersedia untuk scope/sensitivity pemanggil.");
     return rowToPointer(row);
   });
 

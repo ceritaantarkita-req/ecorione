@@ -43,7 +43,8 @@ describe("Space", () => {
     });
     await context.listen({ port: 0, host: "127.0.0.1" });
     const address = context.server.address();
-    if (address === null || typeof address === "string") throw new Error("Context test address gagal.");
+    if (address === null || typeof address === "string")
+      throw new Error("Context test address gagal.");
     const app = buildSpaceServer(new SpaceStore(db), {
       contextUrl: `http://127.0.0.1:${String(address.port)}`,
     });

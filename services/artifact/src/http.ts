@@ -45,7 +45,8 @@ export interface BuildArtifactServerOptions {
 
 function decodeBase64(value: string): Buffer {
   const bytes = Buffer.from(value, "base64");
-  if (bytes.byteLength === 0) throw new BadRequestError("Artifact kosong atau base64 tidak valid.");
+  if (bytes.byteLength === 0)
+    throw new BadRequestError("Artifact kosong atau base64 tidak valid.");
   return bytes;
 }
 
@@ -98,7 +99,11 @@ export function buildArtifactServer(
       return reply.type(pointer.mimeType).send(content);
     } catch (err) {
       if (err instanceof ArtifactIntegrityError) throw err;
-      if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code === "ENOENT") {
+      if (
+        err instanceof Error &&
+        "code" in err &&
+        (err as NodeJS.ErrnoException).code === "ENOENT"
+      ) {
         throw new NotFoundError(`Blob artifact tidak ditemukan: ${id}`);
       }
       throw err;

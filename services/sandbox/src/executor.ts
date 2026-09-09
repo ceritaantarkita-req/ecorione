@@ -35,7 +35,11 @@ function assertWorkspace(root: string, requested: string): string {
   const rootAbs = resolve(root);
   const workspace = resolve(requested);
   const rel = relative(rootAbs, workspace);
-  if (rel === ".." || rel.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) || isAbsolute(rel)) {
+  if (
+    rel === ".." ||
+    rel.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) ||
+    isAbsolute(rel)
+  ) {
     throw new SandboxBoundaryError("Workspace berada di luar ECORIONE_SANDBOX_WORKSPACE_ROOT.");
   }
   if (!existsSync(workspace) || !statSync(workspace).isDirectory()) {
@@ -45,7 +49,8 @@ function assertWorkspace(root: string, requested: string): string {
 }
 
 function tokenize(command: string): string[] {
-  if (SHELL_META.test(command)) throw new SandboxBoundaryError("Shell metacharacter ditolak Tier 0.");
+  if (SHELL_META.test(command))
+    throw new SandboxBoundaryError("Shell metacharacter ditolak Tier 0.");
   const tokens = command.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) throw new SandboxBoundaryError("Command kosong.");
   for (const token of tokens) {
@@ -68,7 +73,9 @@ function assertSafeHostCommand(tokens: readonly string[]): void {
     exe === "git" &&
     sub !== undefined &&
     SAFE_GIT.has(sub) &&
-    !rest.some((arg) => arg === "-C" || arg.startsWith("--git-dir") || arg.startsWith("--work-tree"))
+    !rest.some(
+      (arg) => arg === "-C" || arg.startsWith("--git-dir") || arg.startsWith("--work-tree"),
+    )
   ) {
     return;
   }
@@ -82,7 +89,11 @@ export interface DockerPlan {
   readonly args: readonly string[];
 }
 
-export function buildDockerPlan(workspace: string, command: string, image = "node:22-alpine"): DockerPlan {
+export function buildDockerPlan(
+  workspace: string,
+  command: string,
+  image = "node:22-alpine",
+): DockerPlan {
   tokenize(command);
   return {
     executable: "docker",
@@ -122,8 +133,12 @@ async function runProcess(
     let stderr = "";
     const append = (current: string, chunk: Buffer): string =>
       (current + chunk.toString("utf8")).slice(0, MAX_OUTPUT_BYTES);
-    child.stdout.on("data", (chunk: Buffer) => { stdout = append(stdout, chunk); });
-    child.stderr.on("data", (chunk: Buffer) => { stderr = append(stderr, chunk); });
+    child.stdout.on("data", (chunk: Buffer) => {
+      stdout = append(stdout, chunk);
+    });
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr = append(stderr, chunk);
+    });
     const timer = setTimeout(() => child.kill("SIGKILL"), timeoutMs);
     child.on("error", (err) => {
       clearTimeout(timer);
@@ -136,8 +151,13 @@ async function runProcess(
   });
 }
 
-function runWasm(request: SandboxExecutionRequest): { exitCode: number; stdout: string; stderr: string } {
-  if (request.wasmBase64 === null) throw new SandboxBoundaryError("tier1.5 membutuhkan wasmBase64.");
+function runWasm(request: SandboxExecutionRequest): {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+} {
+  if (request.wasmBase64 === null)
+    throw new SandboxBoundaryError("tier1.5 membutuhkan wasmBase64.");
   const module = new WebAssembly.Module(Buffer.from(request.wasmBase64, "base64"));
   if (WebAssembly.Module.imports(module).length !== 0) {
     throw new SandboxBoundaryError("WASM dengan host imports ditolak: zero ambient authority.");
@@ -188,7 +208,8 @@ export class SandboxExecutor {
     const start = process.hrtime.bigint();
     let result: { exitCode: number; stdout: string; stderr: string };
     if (request.tier === "tier0") {
-      if (request.command === null) throw new SandboxBoundaryError("tier0 membutuhkan command.");
+      if (request.command === null)
+        throw new SandboxBoundaryError("tier0 membutuhkan command.");
       const tokens = tokenize(request.command);
       assertSafeHostCommand(tokens);
       const [exe, ...args] = tokens;
@@ -197,7 +218,8 @@ export class SandboxExecutor {
     } else if (request.tier === "tier1.5") {
       result = runWasm(request);
     } else {
-      if (request.command === null) throw new SandboxBoundaryError("tier1 membutuhkan command.");
+      if (request.command === null)
+        throw new SandboxBoundaryError("tier1 membutuhkan command.");
       const plan = buildDockerPlan(workspace, request.command);
       result = await runProcess(plan.executable, plan.args, workspace);
     }

@@ -1,8 +1,19 @@
 /** Content-addressed byte store for Artifact. */
 import { createHash, randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { artifactIdFromDigest, digestFromArtifactId, type ArtifactId } from "@ecorione/shared-schema";
+import {
+  artifactIdFromDigest,
+  digestFromArtifactId,
+  type ArtifactId,
+} from "@ecorione/shared-schema";
 
 export interface StoredBlob {
   readonly id: ArtifactId;
@@ -32,12 +43,19 @@ export class ArtifactStore {
     mkdirSync(dirname(path), { recursive: true });
     try {
       const stat = statSync(path);
-      if (stat.size !== content.byteLength) throw new ArtifactIntegrityError(`Ukuran blob CAS ${id} tidak cocok.`);
+      if (stat.size !== content.byteLength)
+        throw new ArtifactIntegrityError(`Ukuran blob CAS ${id} tidak cocok.`);
       const existingDigest = createHash("sha256").update(readFileSync(path)).digest("hex");
-      if (existingDigest !== digest) throw new ArtifactIntegrityError(`Hash blob CAS ${id} tidak cocok.`);
+      if (existingDigest !== digest)
+        throw new ArtifactIntegrityError(`Hash blob CAS ${id} tidak cocok.`);
       return { id, digest, path, sizeBytes: content.byteLength, deduplicated: true };
     } catch (err) {
-      if (!(err instanceof Error) || !("code" in err) || (err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+      if (
+        !(err instanceof Error) ||
+        !("code" in err) ||
+        (err as NodeJS.ErrnoException).code !== "ENOENT"
+      )
+        throw err;
     }
 
     const tmp = `${path}.tmp-${process.pid}-${randomUUID()}`;
@@ -45,7 +63,11 @@ export class ArtifactStore {
       writeFileSync(tmp, content, { flag: "wx" });
       renameSync(tmp, path);
     } catch (err) {
-      try { unlinkSync(tmp); } catch { /* no-op */ }
+      try {
+        unlinkSync(tmp);
+      } catch {
+        /* no-op */
+      }
       throw err;
     }
     return { id, digest, path, sizeBytes: content.byteLength, deduplicated: false };
@@ -56,7 +78,8 @@ export class ArtifactStore {
     const path = this.pathForDigest(digest);
     const content = readFileSync(path);
     const actual = createHash("sha256").update(content).digest("hex");
-    if (actual !== digest) throw new ArtifactIntegrityError(`Hash blob CAS ${id} berubah di disk.`);
+    if (actual !== digest)
+      throw new ArtifactIntegrityError(`Hash blob CAS ${id} berubah di disk.`);
     return content;
   }
 }

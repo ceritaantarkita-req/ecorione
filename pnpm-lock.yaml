@@ -114,6 +114,21 @@ importers:
 
   packages/shared-ui: {}
 
+  services/artifact:
+    dependencies:
+      '@ecorione/shared-schema':
+        specifier: workspace:*
+        version: link:../../packages/shared-schema
+      '@ecorione/shared-server':
+        specifier: workspace:*
+        version: link:../../packages/shared-server
+      fastify:
+        specifier: ^5.2.1
+        version: 5.12.3
+      zod:
+        specifier: ^4.1.12
+        version: 4.5.4
+
   services/connect:
     dependencies:
       '@ecorione/context-assembly':
@@ -199,6 +214,43 @@ importers:
       '@ecorione/shared-telemetry':
         specifier: workspace:*
         version: link:../../packages/shared-telemetry
+      better-sqlite3:
+        specifier: ^12.4.1
+        version: 12.11.1
+      fastify:
+        specifier: ^5.2.1
+        version: 5.12.3
+      zod:
+        specifier: ^4.1.12
+        version: 4.5.4
+    devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
+
+  services/sandbox:
+    dependencies:
+      '@ecorione/shared-schema':
+        specifier: workspace:*
+        version: link:../../packages/shared-schema
+      '@ecorione/shared-server':
+        specifier: workspace:*
+        version: link:../../packages/shared-server
+      fastify:
+        specifier: ^5.2.1
+        version: 5.12.3
+      zod:
+        specifier: ^4.1.12
+        version: 4.5.4
+
+  services/space:
+    dependencies:
+      '@ecorione/shared-schema':
+        specifier: workspace:*
+        version: link:../../packages/shared-schema
+      '@ecorione/shared-server':
+        specifier: workspace:*
+        version: link:../../packages/shared-server
       better-sqlite3:
         specifier: ^12.4.1
         version: 12.11.1

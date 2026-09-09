@@ -81,9 +81,14 @@ export default function SpacePageView() {
   return (
     <main style={{ maxWidth: 1040, margin: "0 auto", padding: 32, fontFamily: "sans-serif" }}>
       <header style={{ marginBottom: 32 }}>
-        <a href="/" style={{ color: "inherit" }}>← Ai</a>
+        <a href="/" style={{ color: "inherit" }}>
+          ← Ai
+        </a>
         <h1>Space</h1>
-        <p>Catatan terstruktur dan editor teks memori inti. Core memory tetap disimpan oleh Context.</p>
+        <p>
+          Catatan terstruktur dan editor teks memori inti. Core memory tetap disimpan oleh
+          Context.
+        </p>
       </header>
       {error !== null ? <p role="alert">{error}</p> : null}
       <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
@@ -123,7 +128,11 @@ export default function SpacePageView() {
             ))}
           </div>
           <form onSubmit={saveMemory} style={{ display: "grid", gap: 10 }}>
-            <input value={label} onChange={(event) => setLabel(event.target.value)} placeholder="label" />
+            <input
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              placeholder="label"
+            />
             <input
               value={description}
               onChange={(event) => setDescription(event.target.value)}

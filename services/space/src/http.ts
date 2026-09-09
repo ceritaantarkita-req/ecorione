@@ -47,7 +47,10 @@ export interface BuildSpaceServerOptions {
   readonly internalToken?: string | undefined;
 }
 
-export function buildSpaceServer(store: SpaceStore, options: BuildSpaceServerOptions): FastifyInstance {
+export function buildSpaceServer(
+  store: SpaceStore,
+  options: BuildSpaceServerOptions,
+): FastifyInstance {
   const app = createServer({ name: "space", token: options.token, logger: options.logger });
 
   app.post("/v1/pages", async (req, reply) => {
@@ -70,7 +73,8 @@ export function buildSpaceServer(store: SpaceStore, options: BuildSpaceServerOpt
     return page;
   });
   app.delete<{ Params: { id: string } }>("/v1/pages/:id", async (req, reply) => {
-    if (!store.deletePage(req.params.id)) throw new NotFoundError(`Page tidak ditemukan: ${req.params.id}`);
+    if (!store.deletePage(req.params.id))
+      throw new NotFoundError(`Page tidak ditemukan: ${req.params.id}`);
     return reply.code(204).send();
   });
   app.post<{ Params: { id: string } }>("/v1/pages/:id/blocks", async (req, reply) => {
@@ -86,7 +90,8 @@ export function buildSpaceServer(store: SpaceStore, options: BuildSpaceServerOpt
     return block;
   });
   app.delete<{ Params: { id: string } }>("/v1/blocks/:id", async (req, reply) => {
-    if (!store.deleteBlock(req.params.id)) throw new NotFoundError(`Block tidak ditemukan: ${req.params.id}`);
+    if (!store.deleteBlock(req.params.id))
+      throw new NotFoundError(`Block tidak ditemukan: ${req.params.id}`);
     return reply.code(204).send();
   });
 
