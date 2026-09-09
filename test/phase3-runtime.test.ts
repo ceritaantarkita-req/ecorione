@@ -40,7 +40,8 @@ async function actualContext() {
   registerArtifactRoutes(app, repo);
   await app.listen({ port: 0, host: "127.0.0.1" });
   const address = app.server.address();
-  if (address === null || typeof address === "string") throw new Error("Context address gagal.");
+  if (address === null || typeof address === "string")
+    throw new Error("Context address gagal.");
   return { app, repo, url: `http://127.0.0.1:${String(address.port)}` };
 }
 
@@ -53,11 +54,9 @@ const allowControl: SandboxControlPlane = {
 
 function const42WasmBase64(): string {
   const bytes = Uint8Array.from([
-    0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-    0x01, 0x05, 0x01, 0x60, 0x00, 0x01, 0x7f,
-    0x03, 0x02, 0x01, 0x00,
-    0x07, 0x07, 0x01, 0x03, 0x72, 0x75, 0x6e, 0x00, 0x00,
-    0x0a, 0x06, 0x01, 0x04, 0x00, 0x41, 0x2a, 0x0b,
+    0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x05, 0x01, 0x60, 0x00, 0x01, 0x7f,
+    0x03, 0x02, 0x01, 0x00, 0x07, 0x07, 0x01, 0x03, 0x72, 0x75, 0x6e, 0x00, 0x00, 0x0a, 0x06,
+    0x01, 0x04, 0x00, 0x41, 0x2a, 0x0b,
   ]);
   return Buffer.from(bytes).toString("base64");
 }
@@ -114,7 +113,10 @@ describe("Fase 3 runtime acceptance", () => {
     expect(edited.statusCode).toBe(200);
     expect(context.repo.getCoreMemory({ scopes: ["personal"] }).blocks).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "preferences", value: "Prefer concise technical answers" }),
+        expect.objectContaining({
+          label: "preferences",
+          value: "Prefer concise technical answers",
+        }),
       ]),
     );
 
