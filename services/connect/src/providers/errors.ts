@@ -13,10 +13,10 @@ export class ProviderError extends Error {
   }
 }
 
-/** Kredensial provider hosted belum diisi — gagal jelas, bukan mencoba dan gagal samar. */
+/** Kredensial provider hosted belum tersedia — gagal jelas, bukan mencoba dan gagal samar. */
 export class MissingCredentialError extends Error {
-  constructor(envVar: string) {
-    super(`Kredensial provider belum diisi di .env: ${envVar}.`);
+  constructor(source: string) {
+    super(`Kredensial provider belum tersedia: ${source}.`);
     this.name = "MissingCredentialError";
   }
 }
