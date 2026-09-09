@@ -100,6 +100,9 @@ Fase 5 bukan kegagalan delivery. Blueprint dan ADR-11 justru melarang pembanguna
 - Execution lewat Sandbox.
 - Independent verification dari RnD trace.
 - Worker process crash/replacement acceptance.
+- Durable approval lookup berasal dari Hub, bukan workflow query yang membutuhkan worker aktif.
+- Sticky workflow failover dipersingkat menjadi 1 detik; cache tetap aktif, tetapi task worker yang mati cepat kembali ke non-sticky queue.
+- Milestone node (`approval`, AI, Sandbox, verification, completion) tercatat di RnD untuk diagnosis lintas-boundary.
 
 ### AutoClick
 
@@ -141,7 +144,7 @@ Runtime acceptance menjalankan Docker nyata, bukan hanya mengassert string comma
 
 ### PASS — Flow durability
 
-Acceptance membunuh worker process dan membuktikan workflow yang sama dapat dilanjutkan replacement worker melalui approval/AI/Sandbox/verification.
+Acceptance membunuh worker process dua kali dan membuktikan workflow yang sama dapat dilanjutkan replacement worker melalui durable Hub approval, AI, Sandbox, dan verification. Recovery tidak lagi bergantung pada workflow query untuk mencari operation id.
 
 ### PARTIAL — cost control
 
@@ -161,14 +164,16 @@ Working-tree secret scan ada dan CI hijau. PRD §20 meminta review/full-history 
 
 ## 5. Evidence test/CI
 
-Evidence yang sudah valid sebelum audit akhir:
+Evidence closure utama:
 
 - **Fase 3 strict closure:** run `34301124513`.
 - **Fase 4 code strict closure:** run `34304885390`.
 - **Fase 4 docs/head strict closure:** run `34305530219`.
-- Fase 4 closure menjalankan **51 test files / 328 tests**, termasuk forced Temporal worker recovery dan Docker Fase 3.
+- **Fase 6 baseline hardening + forced-crash recovery:** run `34311242323`.
+- Run terakhir tersebut lulus frozen lockfile, format, lint, typecheck, **333/333 tests**, secret scan, dan production build.
+- Acceptance yang aktif di CI mencakup Docker Tier 1 nyata dan forced Temporal worker crash/replacement.
 
-Fase 6 menambah regression cost kill switch. HEAD setelah laporan ini tetap harus menjalani strict CI final; final run ID sengaja tidak ditulis ke file ini untuk menghindari loop self-referential "ubah run ID → commit → butuh run ID baru". Gunakan status PR/HEAD sebagai bukti final laporan ini.
+Commit dokumen audit ini tetap harus menjalani strict CI karena evidence harus berlaku untuk HEAD yang akan di-merge. Run ID HEAD dokumen tidak ditulis kembali ke file untuk menghindari loop self-referential `ubah run ID → commit → butuh run ID baru`; status PR/HEAD adalah bukti closure terakhir.
 
 ## 6. Production blockers
 
@@ -191,7 +196,7 @@ Fase 6 menambah regression cost kill switch. HEAD setelah laporan ini tetap haru
 
 7. Full-history secret scan/review.
 8. Provider canary harian sesuai PRD, dengan quality floor dan model pin evidence.
-9. RnD product eval suite 30–40 kasus yang benar-benar tugas nyata, k=3. **328 engineering tests bukan pengganti evaluation suite tersebut.**
+9. RnD product eval suite 30–40 kasus yang benar-benar tugas nyata, k=3. **333 engineering tests bukan pengganti evaluation suite tersebut.**
 
 ### P1 — operasional
 
@@ -213,7 +218,7 @@ Tetapi jangan menyebut sistem ini "secure autonomous business platform". Surface
 
 ## 8. Reliability posture
 
-Flow durability adalah peningkatan paling penting: Temporal menjadi satu durability engine, bukan membuat scheduler/database kedua. Forced crash acceptance mengurangi risiko status workflow hilang setelah restart.
+Flow durability adalah peningkatan paling penting: Temporal menjadi satu durability engine, bukan membuat scheduler/database kedua. Forced crash acceptance mengurangi risiko status workflow hilang setelah restart. Sticky assignment sekarang memiliki failover 1 detik, sehingga worker replacement tidak harus menunggu default sticky timeout lama sebelum replay dari history durable.
 
 Sandbox juga memiliki idempotent receipt, jadi retry Flow tidak semestinya mengeksekusi side effect yang sama dua kali pada path yang memakai key stabil.
 
@@ -239,20 +244,17 @@ Perbaikan penting sudah dilakukan:
 4. Production deployment/persistence recipe Temporal + service DB/CAS backup.
 5. Provider canary + RnD eval suite tugas nyata.
 6. Approval UX di Ai.
-7. Baru pilih fungsi bisnis pertama Fase 6+ dan ukur sebelum menaikkan autonomy.
+7. Fitur produk/evidence-driven berikutnya dibangun di branch terpisah dari baseline yang sudah hijau.
 8. AutoClick tetap jangan disentuh sampai use case non-API nyata muncul.
 
 ## 11. Merge posture
 
-Branch kerja **belum merge ke `main`** dan PR tetap draft. Itu benar untuk kondisi sekarang. Sebelum merge:
+Baseline sekarang **layak menjadi development checkpoint** setelah strict CI pada HEAD dokumen ini hijau. User telah memilih menyelesaikan baseline terlebih dahulu sebelum menarik repo ke laptop dan sebelum fitur riset baru ditambahkan.
 
-- strict CI HEAD harus hijau;
-- review diff besar PR #1 secara manusia/peer;
-- putuskan apakah production blockers di atas menjadi prerequisite merge atau milestone setelah merge ke development baseline;
-- jangan mengubah main hanya untuk membuat status terlihat selesai.
+Untuk menjaga history `main` bersih dari lebih dari seratus commit debugging/CI, PR #1 sebaiknya di-**squash merge** setelah gate terakhir hijau. Production blockers di atas tetap menjadi milestone setelah development baseline merge; mereka bukan alasan mempertahankan `main` selamanya pada arsitektur lama.
 
 ## 12. Kesimpulan
 
 Repo sekarang sudah menjadi **development baseline yang koheren dan jauh lebih dekat ke arsitektur PRD dibanding baseline main**, dengan Fase 2–4 benar-benar terimplementasi dan diuji lintas boundary. Keputusan paling benar setelah itu justru **tidak membangun AutoClick** tanpa evidence.
 
-Target berikutnya bukan menambah modul baru. Targetnya menutup boundary production yang masih nyata: credential security, spend control durable, public interoperability, deployment persistence, dan evaluation evidence.
+Baseline selanjutnya dapat dipakai untuk eksperimen/fitur baru hanya dari branch terpisah, sehingga Historical Ledger, komunikasi agent, dan hardening produksi tidak bercampur dengan sejarah audit besar ini.
