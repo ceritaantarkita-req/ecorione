@@ -14,3 +14,4 @@ export * from "./chat.js";
 export * from "./mcp.js";
 export * from "./sync.js";
 export * from "./sandbox.js";
+export * from "./space.js";

@@ -12,6 +12,7 @@
     { "path": "./services/hub" },
     { "path": "./services/sync" },
     { "path": "./services/artifact" },
-    { "path": "./services/sandbox" }
+    { "path": "./services/sandbox" },
+    { "path": "./services/space" }
   ]
 }
