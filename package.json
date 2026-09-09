@@ -18,6 +18,7 @@
     "typecheck": "tsc --build --verbose && pnpm --filter @ecorione/ai run typecheck && tsc --noEmit -p test/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
+    "acceptance:mcp:external": "node scripts/mcp-external-https-acceptance.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
