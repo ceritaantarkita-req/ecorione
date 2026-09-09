@@ -1,7 +1,11 @@
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assertId, type CapabilityAuthorizationResult, type PolicyVerdict } from "@ecorione/shared-schema";
+import {
+  assertId,
+  type CapabilityAuthorizationResult,
+  type PolicyVerdict,
+} from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SandboxControlPlane } from "./clients.js";
 import { buildDockerPlan, SandboxBoundaryError, SandboxExecutor } from "./executor.js";

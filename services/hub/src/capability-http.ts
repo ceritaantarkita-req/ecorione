@@ -58,7 +58,8 @@ export class AuthorityPolicyDeniedError extends Error {
 
 function toHttpError(error: unknown): unknown {
   if (error instanceof CapabilityUnknownError) return new BadRequestError(error.message);
-  if (error instanceof CapabilityIdempotencyConflictError) return new ConflictError(error.message);
+  if (error instanceof CapabilityIdempotencyConflictError)
+    return new ConflictError(error.message);
   if (error instanceof AuthorityApprovalRequiredError) {
     return new HttpError(409, "AUTHORITY_APPROVAL_REQUIRED", error.message, {
       operationId: error.operationId,
@@ -73,7 +74,9 @@ function toHttpError(error: unknown): unknown {
 
 function mutationActionRequest(
   action: "grant" | "revoke",
-  body: z.infer<typeof CapabilityGrantRequestSchema> | z.infer<typeof CapabilityRevokeRequestSchema>,
+  body:
+    | z.infer<typeof CapabilityGrantRequestSchema>
+    | z.infer<typeof CapabilityRevokeRequestSchema>,
 ): ActionRequest {
   return {
     operationId: body.operationId,

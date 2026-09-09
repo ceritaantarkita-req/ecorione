@@ -99,7 +99,11 @@ describe("capability authority HTTP", () => {
     const wrongWorkspace = await app.inject({
       method: "POST",
       url: "/v1/authority/authorize",
-      payload: { ...authPayload, workspaceId: "ws_beta", operationId: "op_authorityhttpauth02" },
+      payload: {
+        ...authPayload,
+        workspaceId: "ws_beta",
+        operationId: "op_authorityhttpauth02",
+      },
     });
     expect(wrongWorkspace.json().outcome).toBe("DENY");
   });
@@ -116,10 +120,18 @@ describe("capability authority HTTP", () => {
       reason: "Operator revokes MCP read.",
       idempotencyKey: "authority-http-revoke-alpha",
     };
-    const first = await app.inject({ method: "POST", url: "/v1/authority/revoke", payload: revoke });
+    const first = await app.inject({
+      method: "POST",
+      url: "/v1/authority/revoke",
+      payload: revoke,
+    });
     expect(first.statusCode).toBe(409);
     await approve(revoke.operationId);
-    const done = await app.inject({ method: "POST", url: "/v1/authority/revoke", payload: revoke });
+    const done = await app.inject({
+      method: "POST",
+      url: "/v1/authority/revoke",
+      payload: revoke,
+    });
     expect(done.statusCode).toBe(200);
     expect(done.json().revoked).toBe(1);
 

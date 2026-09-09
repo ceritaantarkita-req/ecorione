@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  CapabilityDefinitionSchema,
-  CapabilityGrantRequestSchema,
-} from "./capabilities.js";
+import { CapabilityDefinitionSchema, CapabilityGrantRequestSchema } from "./capabilities.js";
 
 const baseGrant = {
   operationId: "op_authoritygrant001",

@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Dua puluh empat keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Dua puluh lima keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
@@ -30,6 +30,7 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [22](0022-provider-framework-and-runtime-abstraction.md) | Connect memakai provider framework + local runtime abstraction |
 | [23](0023-outbound-mcp-client-manager.md) | Connect memiliki outbound MCP client/manager dengan Hub governance |
 | [24](0024-plugin-extension-framework.md) | Hub memiliki plugin/extension control plane dengan immutable provenance dan no host execution |
+| [25](0025-unified-capability-permission-plane.md) | Hub adalah authority plane tunggal untuk workspace-scoped capability grants dan revocation |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris
