@@ -8,84 +8,67 @@ Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. `docs/blueprint.md` 
 
 ### 1. Emergency hosted-cost kill switch
 
-PRD §22 mewajibkan kontrol biaya dengan kill switch. Connect membaca:
-
-```text
-ECORIONE_COST_KILL_SWITCH=1
-```
-
-Jika aktif:
-
-- target hosted ditolak di boundary Connect sebelum provider dipanggil;
-- tidak ada silent fallback ke model lokal;
-- respons HTTP Connect adalah `503` dengan type `COST_KILL_SWITCH_ACTIVE`;
-- target lokal tetap dapat berjalan;
-- semua caller masa kini/future yang memakai Connect ikut terkena gate yang sama.
-
-Kill switch tetap emergency control yang berbeda dari cumulative budget ADR-21.
+Connect membaca `ECORIONE_COST_KILL_SWITCH=1`. Jika aktif, target hosted ditolak di boundary Connect sebelum provider dipanggil; tidak ada silent fallback ke local; HTTP mengembalikan `503 COST_KILL_SWITCH_ACTIVE`; target local tetap berjalan. Kill switch adalah emergency control yang berbeda dari cumulative budget ADR-21.
 
 ### 2. Runtime orchestration per fase
 
-Root package sekarang membedakan:
+Root package membedakan `pnpm dev`, `dev:phase2`, `dev:phase3`, dan `dev:phase4`. Flow tetap membutuhkan Temporal nyata melalui `ECORIONE_TEMPORAL_ADDRESS`; runtime tidak diam-diam menyediakan managed Temporal.
 
-- `pnpm dev` — core P0;
-- `pnpm dev:phase2` — core + MCP HTTP + Sync;
-- `pnpm dev:phase3` — core + Artifact + Sandbox + Space;
-- `pnpm dev:phase4` — Phase 3 + Flow HTTP + Flow worker.
+### 3. Dokumentasi sesuai state aktual
 
-`dev:phase4` tidak diam-diam menyediakan managed Temporal. `ECORIONE_TEMPORAL_ADDRESS` harus menunjuk Temporal yang benar-benar tersedia.
-
-### 3. Dokumentasi dibuat sesuai state aktual
-
-README tidak lagi mengklaim repo berhenti di Fase 1 atau memakai satu SQLite global. `.env.example` membedakan provider key development-only dari credential storage produksi/self-host.
+README, env example, API docs, ADR, decision log, dan hardening docs harus mengikuti implementasi nyata. Klaim production hanya boleh mengikuti evidence closure gate.
 
 ### 4. AutoClick tidak dipaksakan
 
-Fase 5 dicatat `DEFERRED BY DESIGN`. Tidak ada `services/autoclick/` sampai use case non-API nyata memenuhi gate ADR-11.
+Fase 5 tetap `DEFERRED BY DESIGN`. Tidak ada `services/autoclick/` sampai use case non-API nyata memenuhi ADR-11.
 
 ### 5. Production credential vault di Connect
 
-Requirement PRD §14 bahwa raw provider credential hanya dimiliki Connect dan terenkripsi at-rest sekarang punya implementasi konkret di ADR-20:
-
-- vault file hanya menyimpan AES-256-GCM ciphertext + metadata;
-- master key 32 byte dipasok out-of-band dan tidak disimpan bersama ciphertext;
-- provider + purpose + generation diikat sebagai authenticated metadata;
-- provider-secret rotation menaikkan generation dan dibaca Connect tanpa restart;
-- master-key rotation re-encrypt seluruh vault sebagai atomic replacement;
-- wrong key, malformed vault, atau ciphertext tamper gagal tertutup;
-- ketika vault aktif, raw provider key dari `.env` tidak menjadi fallback;
-- administrasi credential memakai CLI operator, bukan HTTP endpoint yang memperlebar exposure raw secret.
-
-Storage ini memenuhi requirement encryption at-rest aplikasi; ia bukan hardware-backed keystore dan tidak mengklaim melindungi secret dari OS/process yang sudah sepenuhnya dikompromikan.
+ADR-20 menyediakan AES-256-GCM file vault, master key out-of-band, provider/purpose scope, provider-secret rotation, master-key rotation, atomic replacement, tamper/wrong-key fail-closed, dan CLI operator. Ketika vault aktif, raw provider key dari env tidak menjadi fallback.
 
 ### 6. Durable cumulative spend budget
 
-ADR-21 menambahkan cumulative hosted-spend admission langsung di Connect provider boundary:
+ADR-21 menambahkan daily/monthly hosted spend budget di Connect provider boundary. State bertahan restart, reservation dibuat sebelum provider dispatch, uncertain reservation tetap dihitung konservatif, writer diserialisasi dengan exclusive lock + atomic replacement, dan actual overrun tetap tersimpan. Budget exceeded menjadi `429 SPEND_BUDGET_EXCEEDED`; store/lock failure menjadi `503 SPEND_BUDGET_UNAVAILABLE`.
 
-- limit daily dan monthly opsional;
-- state bertahan restart di `ECORIONE_SPEND_BUDGET_PATH`;
-- hosted cache-miss harus mendapat reservation sebelum provider dispatch;
-- reservation/uncertain entry tetap dihitung konservatif;
-- exclusive file lock + atomic replacement mencegah dua process mengadmit terhadap snapshot lama yang sama;
-- provider success disettle ke actual cost;
-- actual overrun tetap dicatat dan mengurangi headroom call berikutnya;
-- budget exceeded menjadi `429 SPEND_BUDGET_EXCEEDED`;
-- store/lock failure menjadi `503 SPEND_BUDGET_UNAVAILABLE` dan fail-closed;
-- cache hit internal dan target local tidak memakai hosted spend budget.
+Implementation file ditujukan untuk single-host/self-host. Managed multi-host deployment harus memakai transactional shared store tanpa memindahkan admission keluar dari Connect.
 
-File implementation ini ditujukan untuk single-host/self-host. Managed multi-host deployment harus mengganti storage dengan transactional shared store tanpa memindahkan admission keluar dari Connect.
+### 7. Provider framework + OpenRouter/OpenAI + local runtime abstraction
 
-## Gap hardening yang masih terbuka
+ADR-22 memperluas Connect tanpa memindahkan provider boundary:
 
-Urutan rekomendasi berdasarkan risiko/kejujuran produk:
+- hosted provider baseline: `anthropic`, `openrouter`, `openai`;
+- provider dipilih secara eksplisit lewat process configuration, bukan model output;
+- Credential Vault tetap provider-scoped (`<provider>/messages`);
+- cache key memasukkan provider identity;
+- spend reservation mencatat provider dan berlaku pada semua hosted provider;
+- OpenRouter/OpenAI memakai explicit pinned mapping; alias/auto-router yang dapat drift tetap dilarang;
+- OpenRouter provider-reported `usage.cost` menjadi actual billed cost untuk ledger dan spend settlement ketika tersedia; malformed billed cost fail-closed;
+- OpenAI direct memakai pinned GPT-5.6 identity yang ada di pricing snapshot;
+- local runtime memakai contract `openai-compatible`, sehingga Ollama hanyalah salah satu implementation dan bukan dependency arsitektural wajib;
+- tidak ada silent fallback antar-provider atau hosted→local.
 
-1. **External interoperability acceptance** untuk MCP HTTP melalui tunnel/HTTPS nyata, bukan hanya local/stateless protocol tests.
-2. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
-3. **Provider canary harian** dengan model/provider nyata dan quality floor; CI saat ini deterministic dan tidak membutuhkan kredensial eksternal.
-4. **Full-history secret scan sebelum public release**; current `secret-scan` memindai working tree, bukan seluruh git history.
-5. **Next.js ESLint integration warning** pada production build: build hijau, tetapi plugin Next belum diintegrasikan ke flat ESLint config.
-6. **Cumulative operational metrics** per hari/tugas (cost, quality, p50/p95) agar kenaikan otonomi Fase 6+ benar-benar evidence-driven.
+Pricing snapshot tetap evidence yang harus diverifikasi ulang sebelum public billing/savings claim.
 
-Roadmap platform tambahan setelah hardening baseline dicatat terpisah di blueprint: provider framework/OpenRouter, external MCP/plugin manager, native multimodal, data-refactor/rebuild, dan visual node/block runtime. Masing-masing wajib punya ADR sebelum mengubah invariant lintas service.
+## Gap hardening/platform yang masih terbuka
 
-Tidak satu pun gap di atas dianggap selesai hanya karena ada rencana atau unit test.
+Urutan rekomendasi berdasarkan dependency dan risiko:
+
+1. **External MCP acceptance** melalui tunnel/HTTPS nyata, bukan hanya local/stateless protocol tests.
+2. **Outbound MCP client/manager** untuk memasang dan mengelola MCP eksternal dengan permission/capability scope.
+3. **Plugin/extension framework + security gate** termasuk GitHub-origin extension, manifest, pin revision, sandbox, permission, rollback.
+4. **Native multimodal pipeline**: image/document first-class input, OCR, STT/TTS Indonesia+Inggris, lalu realtime voice.
+5. **Data refactor/rebuild + dataset governance**: authoritative-vs-derived separation, migration, reindex/rebuild, validation, lineage/versioning.
+6. **Unified capability/permission registry + Node Registry** sebagai dasar visual Flow Canvas, core node pack, custom node SDK, dan reusable subflow.
+7. **Space block runtime** ala block workspace tanpa menggandakan source of truth Context/Artifact.
+8. **Data maintenance center + backup/restore/disaster recovery** dengan integrity verification.
+9. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
+10. **Provider canary harian** dengan provider nyata dan quality floor; deterministic CI tetap external-credential-free.
+11. **Full-history secret scan** sebelum public release; working-tree scan saat ini belum cukup.
+12. **Next.js ESLint integration warning** pada production build.
+13. **Cumulative operational metrics + distributed trace** per hari/task/provider/node (cost, quality, p50/p95, errors).
+14. **ECX production efficiency validation** menggunakan traffic metrics nyata sebelum savings claim.
+15. **Chaos/failure + full cross-service E2E acceptance**.
+16. **Final security audit, Settings/Control Center, SDK/docs, installer/upgrade/release closure**.
+17. **AutoClick/RPA** tetap conditional/deferred sampai use case non-API nyata lolos design gate.
+
+Tidak satu pun gap dianggap selesai hanya karena ada ADR, rencana, mock, atau unit test. Setiap workstream harus lolos exact-head closure gate dan post-merge `main` smoke sebelum statusnya berubah menjadi implemented/closed baseline.
