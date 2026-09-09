@@ -404,7 +404,16 @@ describe("Fase 4 real Temporal restart acceptance", () => {
 
         childThree = workerProcess(runtime);
         await once(childThree, "spawn");
-        assertWorkerAlive(childThree, "Replacement worker #3");
+        await waitUntil(async () => {
+          if (childThree === null) throw new Error("Replacement worker #3 hilang.");
+          assertWorkerAlive(childThree, "Replacement worker #3");
+          try {
+            return (await handle.query<OperationId>("operationId")) === started.operationId;
+          } catch {
+            return false;
+          }
+        }, "replacement worker #3 workflow replay");
+
         const decision = await withTimeout(
           flow.inject({
             method: "POST",
@@ -416,16 +425,39 @@ describe("Fase 4 real Temporal restart acceptance", () => {
         );
         expect(decision.statusCode).toBe(200);
 
-        const result = (await withTimeout(
-          handle.result(),
-          "Temporal workflow completion after replacement worker",
-          30_000,
-        )) as {
+        let result: {
           transformed: string;
           aiReply: string;
           sandboxReceiptId: string;
           verified: boolean;
         };
+        try {
+          result = (await withTimeout(
+            handle.result(),
+            "Temporal workflow completion after replacement worker",
+            30_000,
+          )) as typeof result;
+        } catch (error) {
+          const diagnostics = {
+            providerCalls: provider.calls(),
+            audit: await auditTypes(hubUrl, started.operationId).catch(() => []),
+            rootTraces: await traceNames(rndUrl, started.operationId).catch(() => []),
+            executionTraces: await traceNames(
+              rndUrl,
+              `${started.operationId}-execution`,
+            ).catch(() => []),
+            workerExitCode: childThree.exitCode,
+            workerSignalCode: childThree.signalCode,
+            workflowStatus: await handle
+              .describe()
+              .then((description) => description.status.name)
+              .catch(() => "DESCRIBE_FAILED"),
+          };
+          throw new Error(
+            `${error instanceof Error ? error.message : String(error)} diagnostics=${JSON.stringify(diagnostics)}`,
+          );
+        }
+
         expect(result.transformed).toBe("real vertical flow");
         expect(result.aiReply).toBe("AI vertical reply");
         expect(result.sandboxReceiptId).toMatch(/^sbx_/);
@@ -438,6 +470,10 @@ describe("Fase 4 real Temporal restart acceptance", () => {
         const rootTraces = await traceNames(rndUrl, started.operationId);
         expect(rootTraces).toContain("flow.started");
         expect(rootTraces).toContain("flow.approval.waiting");
+        expect(rootTraces).toContain("flow.approval.approved");
+        expect(rootTraces).toContain("flow.ai.completed");
+        expect(rootTraces).toContain("flow.sandbox.completed");
+        expect(rootTraces).toContain("flow.verification.completed");
         expect(rootTraces).toContain("flow.completed");
         const executionTraces = await traceNames(rndUrl, `${started.operationId}-execution`);
         expect(executionTraces).toContain("sandbox.execution.requested");
