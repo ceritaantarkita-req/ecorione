@@ -26,7 +26,10 @@ This note records the candidate evidence used to close Batch 4. Batch 4 is not c
 - Regression hardening run `34376301583`: root Typecheck PASS and focused Chat/MCP/credential/extension/Sandbox authority tests PASS.
 - Exact-head candidate `64564f7e8aa0a09c9738cf74f879fa340ec884d0` exposed three import-only lint errors; Format and Naming already passed.
 - One-shot lint hygiene run `34378863858`: Lint PASS and root Typecheck PASS; helper workflow/script self-removed after committing `d4c1f033c91fe4dc663993077205e82353d6a937`.
-- No policy, authorization, runtime, or data-boundary semantics were weakened to resolve the lint failure.
+- Full CI run `34379033496` on candidate `2dd62714353b9e17923e7d26f5a1c6d01720c2a8` passed Naming, Format, Lint, and Typecheck, then exposed one stale chat-loop audit expectation. Batch 4 intentionally inserts `CAPABILITY_AUTHORIZED` between `POLICY_EVALUATED` and `MODEL_CALLED`; production behavior was correct and only the expected audit sequence required updating.
+- MCP External HTTPS run `34379033356` on that same candidate passed.
+- One-shot chat-loop regression run `34379954762`: root Typecheck PASS and focused `test/chat-loop.test.ts` PASS; helper workflow/script self-removed after committing `11f3956bd3e0c789e9eb09caff8d58cb7a03b2c9`.
+- No policy, authorization, runtime, data-boundary, or recovery semantics were weakened to close these gates.
 
 ## Exact-head closure gates
 
