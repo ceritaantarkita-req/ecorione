@@ -7,10 +7,13 @@ import {
   type ArtifactPointer,
 } from "@ecorione/shared-schema";
 import {
+  BadGatewayError,
   BadRequestError,
   createServer,
+  ForbiddenError,
   NotFoundError,
   parseOrBadRequest,
+  RemoteServiceError,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
@@ -51,6 +54,14 @@ function decodeBase64(value: string): Buffer {
   return bytes;
 }
 
+function mapContextError(error: unknown): unknown {
+  if (!(error instanceof RemoteServiceError)) return error;
+  if (error.statusCode === 404) return new NotFoundError("Artifact tidak tersedia untuk grant ini.");
+  if (error.statusCode === 403) return new ForbiddenError("Artifact ditolak oleh Context.");
+  if (error.statusCode === 400) return new BadRequestError("Metadata Artifact ditolak Context.");
+  return new BadGatewayError("Context metadata Artifact tidak tersedia.");
+}
+
 export function buildArtifactServer(
   store: ArtifactStore,
   metadata: ArtifactMetadataClient,
@@ -76,22 +87,31 @@ export function buildArtifactServer(
       sensitivity: body.sensitivity,
       syncClass: normalizedSyncClass(body.syncClass),
     };
-    const registered = await metadata.register(pointer);
-    return reply.code(stored.deduplicated ? 200 : 201).send({
-      pointer: registered,
-      deduplicated: stored.deduplicated,
-    });
+    try {
+      const registered = await metadata.register(pointer);
+      return reply.code(stored.deduplicated ? 200 : 201).send({
+        pointer: registered,
+        deduplicated: stored.deduplicated,
+      });
+    } catch (error) {
+      throw mapContextError(error);
+    }
   });
 
   app.get<{ Params: { id: string } }>("/v1/artifacts/:id/content", async (req, reply) => {
     const id = parseOrBadRequest(ArtifactIdSchema, req.params.id);
     const query = parseOrBadRequest(ContentQuerySchema, req.query);
-    const pointer = await metadata.authorize({
-      id,
-      scope: query.scope,
-      maxSensitivity: query.maxSensitivity,
-      hostedEligible: query.hostedEligible,
-    });
+    let pointer: ArtifactPointer;
+    try {
+      pointer = await metadata.authorize({
+        id,
+        scope: query.scope,
+        maxSensitivity: query.maxSensitivity,
+        hostedEligible: query.hostedEligible,
+      });
+    } catch (error) {
+      throw mapContextError(error);
+    }
     try {
       const content = store.read(id);
       if (content.byteLength !== pointer.sizeBytes) {
