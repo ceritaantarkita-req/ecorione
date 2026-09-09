@@ -5,9 +5,9 @@ on:
     branches: [main]
   pull_request:
 
-# CI sengaja tipis: format, lint, typecheck, test, secret scan. Ekosistem pendahulunya
-# tenggelam dalam ritual verifikasi berlapis yang tidak menangkap kesalahan nyata
-# (`docs/prd.md` §24). Kalau sebuah cek tidak pernah menemukan bug, ia dihapus.
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v5
@@ -39,15 +39,17 @@ jobs:
         run: pnpm run typecheck
 
       - name: Test
+        env:
+          ECORIONE_PHASE3_DOCKER_ACCEPTANCE: "1"
+          ECORIONE_PHASE4_PROCESS_ACCEPTANCE: "1"
         run: pnpm run test
 
-      # Berjalan terakhir tapi memblokir merge: repo ini akan dipublikasikan, dan satu
-      # kredensial yang pernah ke-commit tetap ada di history selamanya.
       - name: Secret scan
         run: pnpm run secret-scan
 
-  # Konvensi penamaan sebagai gerbang, bukan sebagai imbauan di dokumen. Ekosistem lama
-  # gagal justru di sini: prosa dan nama package berbeda selama berbulan-bulan.
+      - name: Production build
+        run: pnpm run build
+
   naming:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -55,10 +57,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Baris yang memang harus menyebut pola terlarang — daftar nama yang dipensiunkan,
-      # dan test yang memastikan alias ditolak — menandai dirinya dengan
-      # `naming-gate:allow`. Pengecualiannya sempit dan terlihat di diff, bukan
-      # daftar path yang lama-lama jadi tempat sampah.
       - name: Tidak ada penamaan "InMy" yang tersisa
         run: |
           if grep -rniE '\bInMy[A-Z]' \

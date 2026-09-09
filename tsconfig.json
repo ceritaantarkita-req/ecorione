@@ -9,6 +9,11 @@
     { "path": "./services/context" },
     { "path": "./services/rnd" },
     { "path": "./services/connect" },
-    { "path": "./services/hub" }
+    { "path": "./services/hub" },
+    { "path": "./services/sync" },
+    { "path": "./services/artifact" },
+    { "path": "./services/sandbox" },
+    { "path": "./services/space" },
+    { "path": "./services/flow" }
   ]
 }

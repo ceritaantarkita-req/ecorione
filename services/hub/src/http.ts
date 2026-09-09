@@ -1,13 +1,12 @@
-/**
- * Route HTTP Hub — `docs/api-fase1.md` §Hub.
- */
-
+/** Hub HTTP routes: chat, policy, idempotent side effects, approvals, MCP, audit. */
+import { createHash } from "node:crypto";
 import {
   ActionRequestSchema,
   ApprovalDecisionSchema,
   assertId,
   ChatRequestSchema,
   ForgetFactRequestSchema,
+  idempotencyPayload,
   InvalidIdError,
   makeId,
   type ActionRequest,
@@ -26,8 +25,9 @@ import {
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import type { HubDatabase } from "./db.js";
 import { nowIso } from "./clock.js";
+import type { HubDatabase } from "./db.js";
+import { registerMcpRoutes } from "./mcp.js";
 import {
   chat,
   PolicyEngineBugError,
@@ -42,31 +42,15 @@ import {
   RespondNotAllowedError,
 } from "./repository.js";
 
-/** Memetakan error domain ke status HTTP yang tepat — bukan 500 generik untuk semuanya. */
 function toHttpError(err: unknown): unknown {
   if (err instanceof UpstreamError) return new BadGatewayError(err.message);
-  if (err instanceof PolicyEngineBugError) return err; // 500 eksplisit, lihat komentar kelasnya.
+  if (err instanceof PolicyEngineBugError) return err;
   if (err instanceof ApprovalNotFoundError) return new NotFoundError(err.message);
   if (err instanceof ApprovalAlreadyDecidedError) return new ConflictError(err.message);
-  if (err instanceof RespondNotAllowedError) return new BadRequestError(err.message);
-  if (err instanceof InvalidIdError) return new BadRequestError(err.message);
+  if (err instanceof RespondNotAllowedError || err instanceof InvalidIdError)
+    return new BadRequestError(err.message);
   return err;
 }
-
-/**
- * Memetakan kegagalan `httpJson` ke Context saat memanggilnya atas nama input pengguna
- * langsung (mis. `factId` dari `memory.forget`) — beda dari panggilan Context di jalur
- * chat (`orchestrate.ts`), yang seluruh bentuk requestnya dirakit Hub sendiri sehingga
- * 4xx dari sana memang berarti ada yang salah di sisi Hub.
- *
- * Kalau Context menjawab jelas dengan 4xx (mis. 404 fakta tidak ada, 409 sudah
- * di-invalidate — `docs/api-fase1.md` §Context), itu **bukan** "Context tidak bisa
- * dihubungi": itu jawaban domain yang sah untuk input yang pengguna kirim sendiri, dan
- * harus diteruskan apa adanya, bukan disamarkan jadi 502 UPSTREAM_UNAVAILABLE — pengguna
- * yang mengklik "lupakan" pada fakta yang sudah dilupakan di tab lain berhak melihat
- * "sudah dilupakan", bukan "layanan tidak bisa dihubungi". Kegagalan jaringan sungguhan
- * (Context mati, timeout, 5xx) tetap 502, lewat `UpstreamError` seperti biasa.
- */
 function forwardOrUpstreamError(service: string, err: unknown): unknown {
   if (err instanceof RemoteServiceError && err.statusCode >= 400 && err.statusCode < 500) {
     const body = err.body;
@@ -76,33 +60,34 @@ function forwardOrUpstreamError(service: string, err: unknown): unknown {
         : undefined;
     if (typeof errorField === "object" && errorField !== null) {
       const e = errorField as { type?: unknown; message?: unknown; detail?: unknown };
-      const type = typeof e.type === "string" ? e.type : "BAD_REQUEST";
-      const message = typeof e.message === "string" ? e.message : err.message;
-      const detail =
+      return new HttpError(
+        err.statusCode,
+        typeof e.type === "string" ? e.type : "BAD_REQUEST",
+        typeof e.message === "string" ? e.message : err.message,
         typeof e.detail === "object" && e.detail !== null
           ? (e.detail as Record<string, unknown>)
-          : undefined;
-      return new HttpError(err.statusCode, type, message, detail);
+          : undefined,
+      );
     }
   }
   return toHttpError(new UpstreamError(service, err));
 }
-
+function makeIdempotencyKey(req: Pick<ActionRequest, "module" | "tool" | "args">): string {
+  return createHash("sha256").update(idempotencyPayload(req)).digest("hex");
+}
 const DecideBodySchema = z.object({
   decision: ApprovalDecisionSchema,
   note: z.string().max(1024).optional(),
 });
-
-const AuditQuerySchema = z.object({
-  operationId: z.string().min(1).optional(),
-});
-
+const ApprovalLookupQuerySchema = z.object({ idempotencyKey: z.string().min(1).max(512) });
+const AuditQuerySchema = z.object({ operationId: z.string().min(1).optional() });
 export interface BuildHubServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
   readonly contextUrl: string;
   readonly connectUrl: string;
   readonly rndUrl: string;
+  readonly artifactUrl?: string | undefined;
   readonly internalToken?: string | undefined;
 }
 
@@ -120,41 +105,39 @@ export function buildHubServer(
     internalToken: options.internalToken,
   };
 
-  // --- Chat: endpoint inti Fase 1 -------------------------------------------
-
   app.post("/v1/chat", async (req) => {
     const body = parseOrBadRequest(ChatRequestSchema, req.body);
-    const now = nowIso();
     try {
-      return await chat(deps, body, now);
+      return await chat(deps, body, nowIso());
     } catch (err) {
       throw toHttpError(err);
     }
   });
 
-  // --- Forget satu-klik ------------------------------------------------------
-
   app.post("/v1/memory/forget", async (req) => {
     const body = parseOrBadRequest(ForgetFactRequestSchema, req.body);
     const now = nowIso();
     const operationId = makeId("operation");
-
+    const actionBase = {
+      module: "Hub" as const,
+      tool: "memory.forget",
+      args: { factId: body.factId, reason: body.reason },
+    };
+    const idempotencyKey = makeIdempotencyKey(actionBase);
     const actionRequest: ActionRequest = {
       operationId,
-      module: "Hub",
-      tool: "memory.forget",
+      ...actionBase,
       actionClass: "REVERSIBLE_WRITE",
-      args: { factId: body.factId, reason: body.reason },
       scope: "personal",
       sensitivity: "INTERNAL",
       autonomy: "L1",
-      idempotencyKey: null,
+      idempotencyKey,
     };
     repo.recordAuditEvent({
       type: "ACTION_REQUESTED",
       operationId,
       module: "Hub",
-      detail: { tool: actionRequest.tool },
+      detail: { tool: actionRequest.tool, idempotencyKey },
       now,
     });
     const { verdict, rule } = evaluatePolicy(actionRequest);
@@ -166,48 +149,86 @@ export function buildHubServer(
       ruleId: rule.id,
       now,
     });
-
-    // REVERSIBLE_WRITE tidak masuk ALWAYS_GATED — di Fase 1 selalu ALLOW (aturan 4), tapi
-    // gerbangnya tetap dicek eksplisit, bukan diasumsikan (`docs/api-fase1.md` §Hub).
-    if (verdict.outcome !== "ALLOW") {
+    if (verdict.outcome !== "ALLOW")
       throw new BadGatewayError(
         `memory.forget tidak diizinkan policy engine: ${verdict.reason}`,
       );
-    }
 
+    const prior = repo.getIdempotentResult<MemoryFact>(idempotencyKey);
+    if (prior !== null) {
+      repo.recordAuditEvent({
+        type: "ACTION_SKIPPED_IDEMPOTENT",
+        operationId,
+        module: "Hub",
+        detail: { idempotencyKey, priorOperationId: prior.operationId },
+        now,
+      });
+      return prior.result;
+    }
     let fact: MemoryFact;
     try {
       fact = await httpJson<MemoryFact>(
         `${options.contextUrl}/v1/facts/${body.factId}/forget`,
-        {
-          method: "POST",
-          token: options.internalToken,
-          body: { now },
-        },
+        { method: "POST", token: options.internalToken, body: { now } },
       );
     } catch (err) {
       throw forwardOrUpstreamError("Context", err);
     }
-
+    repo.saveIdempotentResult(idempotencyKey, operationId, actionRequest.tool, fact, now);
     repo.recordAuditEvent({
       type: "MEMORY_INVALIDATED",
       operationId,
       module: "Hub",
-      detail: { factId: body.factId, reason: body.reason },
+      detail: { factId: body.factId, reason: body.reason, idempotencyKey },
       now,
     });
-
     return fact;
   });
 
-  // --- Primitif policy umum ---------------------------------------------------
-
   app.post("/v1/actions/evaluate", async (req) => {
     const body = parseOrBadRequest(ActionRequestSchema, req.body);
-    return evaluatePolicy(body).verdict;
+    const now = nowIso();
+    repo.recordAuditEvent({
+      type: "ACTION_REQUESTED",
+      operationId: body.operationId,
+      module: body.module,
+      detail: { tool: body.tool, actionClass: body.actionClass },
+      now,
+    });
+    const evaluation = evaluatePolicy(body);
+    repo.recordAuditEvent({
+      type: "POLICY_EVALUATED",
+      operationId: body.operationId,
+      module: body.module,
+      detail: { outcome: evaluation.verdict.outcome },
+      ruleId: evaluation.rule.id,
+      now,
+    });
+    if (evaluation.verdict.outcome === "REQUIRE_APPROVAL") {
+      repo.ensureApproval({
+        operationId: body.operationId,
+        actionRequest: body,
+        prompt: evaluation.verdict.prompt,
+        now,
+      });
+      repo.recordAuditEvent({
+        type: "APPROVAL_REQUESTED",
+        operationId: body.operationId,
+        module: body.module,
+        detail: { prompt: evaluation.verdict.prompt },
+        ruleId: evaluation.rule.id,
+        now,
+      });
+    }
+    return evaluation.verdict;
   });
 
-  // --- Approval gate -----------------------------------------------------------
+  app.get("/v1/approvals/by-idempotency-key", async (req) => {
+    const query = parseOrBadRequest(ApprovalLookupQuerySchema, req.query);
+    const approval = repo.getApprovalByIdempotencyKey(query.idempotencyKey);
+    if (approval === null) throw new NotFoundError("Approval durable tidak ditemukan.");
+    return approval;
+  });
 
   app.post<{ Params: { operationId: string } }>(
     "/v1/approvals/:operationId/decide",
@@ -237,12 +258,15 @@ export function buildHubServer(
     },
   );
 
-  // --- Audit ---------------------------------------------------------------
-
-  app.get("/v1/audit", async (req) => {
-    const query = parseOrBadRequest(AuditQuerySchema, req.query);
-    return { events: repo.listAuditEvents({ operationId: query.operationId }) };
+  registerMcpRoutes(app, repo, {
+    contextUrl: options.contextUrl,
+    artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
+    internalToken: options.internalToken,
   });
 
+  app.get("/v1/audit", async (req) => {
+    const q = parseOrBadRequest(AuditQuerySchema, req.query);
+    return { events: repo.listAuditEvents({ operationId: q.operationId }) };
+  });
   return app;
 }

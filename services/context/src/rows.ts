@@ -1,12 +1,4 @@
-/**
- * Pemetaan baris SQLite ↔ skema bersama.
- *
- * Dua arah dipisahkan dari repository karena retrieval juga butuh arah baca. Semua
- * pembacaan lewat `*Schema.parse` — bukan paranoia berlebihan: file database bisa disunting
- * tangan, dipulihkan dari backup lama, atau datang lewat Sync. Baris yang melanggar skema
- * harus gagal di batas ini, bukan bocor ke perakitan konteks sebagai objek separuh valid.
- */
-
+/** Pemetaan baris SQLite ↔ shared schema. */
 import {
   ArtifactPointerSchema,
   CoreMemoryBlockSchema,
@@ -22,22 +14,12 @@ import {
 } from "@ecorione/shared-schema";
 import type { BindValue } from "./sqlite.js";
 
-// ---------------------------------------------------------------------------
-// Provenance (didatarkan jadi kolom di semua tabel yang memakainya)
-// ---------------------------------------------------------------------------
-
 export interface ProvenanceColumns {
   source_app: string;
   session_id: string | null;
   tool_call_id: string | null;
   source_uri: string | null;
 }
-
-/**
- * Dibangun sebagai objek longgar lalu divalidasi oleh skema pemanggil. Ini menghindari
- * gesekan `exactOptionalPropertyTypes`: kolom NULL cukup tidak ditulis, bukan ditulis
- * sebagai `undefined`.
- */
 function provenanceObject(row: ProvenanceColumns): Record<string, unknown> {
   const provenance: Record<string, unknown> = { sourceApp: row.source_app };
   if (row.session_id !== null) provenance.sessionId = row.session_id;
@@ -45,8 +27,6 @@ function provenanceObject(row: ProvenanceColumns): Record<string, unknown> {
   if (row.source_uri !== null) provenance.sourceUri = row.source_uri;
   return provenance;
 }
-
-/** `undefined` diterjemahkan ke `null`: driver menolak `undefined` sebagai bind value. */
 export function provenanceParams(p: Provenance): ProvenanceColumns {
   return {
     source_app: p.sourceApp,
@@ -55,10 +35,6 @@ export function provenanceParams(p: Provenance): ProvenanceColumns {
     source_uri: p.sourceUri ?? null,
   };
 }
-
-// ---------------------------------------------------------------------------
-// L0
-// ---------------------------------------------------------------------------
 
 export interface EpisodeRow extends ProvenanceColumns {
   id: string;
@@ -71,7 +47,6 @@ export interface EpisodeRow extends ProvenanceColumns {
   summary: string | null;
   consolidated_at: string | null;
 }
-
 export function rowToEpisode(row: EpisodeRow): Episode {
   return EpisodeSchema.parse({
     id: row.id,
@@ -86,10 +61,6 @@ export function rowToEpisode(row: EpisodeRow): Episode {
     consolidatedAt: row.consolidated_at,
   });
 }
-
-// ---------------------------------------------------------------------------
-// L1
-// ---------------------------------------------------------------------------
 
 export interface FactRow extends ProvenanceColumns {
   id: string;
@@ -109,15 +80,12 @@ export interface FactRow extends ProvenanceColumns {
   sync_class: string;
   trust: string;
 }
-
-/** Daftar kolom eksplisit — `SELECT *` membuat pemetaan ini pecah diam-diam saat skema tumbuh. */
 export const FACT_COLUMNS = `
   id, subject, predicate, object, text, confidence, salience, source_episode_ids,
   t_valid, t_invalid, superseded_by, created_at,
   scope, sensitivity, sync_class, trust,
   source_app, session_id, tool_call_id, source_uri
 `;
-
 export function rowToFact(row: FactRow): MemoryFact {
   return MemoryFactSchema.parse({
     id: row.id,
@@ -139,7 +107,6 @@ export function rowToFact(row: FactRow): MemoryFact {
     provenance: provenanceObject(row),
   });
 }
-
 export function factParams(fact: MemoryFact): Record<string, BindValue> {
   return {
     id: fact.id,
@@ -162,10 +129,6 @@ export function factParams(fact: MemoryFact): Record<string, BindValue> {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Karantina
-// ---------------------------------------------------------------------------
-
 export interface QuarantineRow extends ProvenanceColumns {
   id: string;
   proposed_text: string;
@@ -177,7 +140,6 @@ export interface QuarantineRow extends ProvenanceColumns {
   reviewed_at: string | null;
   promoted_fact_id: string | null;
 }
-
 export function rowToQuarantined(row: QuarantineRow): QuarantinedWrite {
   return QuarantinedWriteSchema.parse({
     id: row.id,
@@ -192,18 +154,17 @@ export function rowToQuarantined(row: QuarantineRow): QuarantinedWrite {
   });
 }
 
-// ---------------------------------------------------------------------------
-// L2 / L3
-// ---------------------------------------------------------------------------
-
 export interface CoreMemoryRow {
   label: string;
   description: string;
   value: string;
   read_only: number;
   updated_at: string;
+  scope: string;
+  sensitivity: string;
+  sync_class: string;
+  trust: string;
 }
-
 export function rowToCoreBlock(row: CoreMemoryRow): CoreMemoryBlock {
   return CoreMemoryBlockSchema.parse({
     label: row.label,
@@ -211,6 +172,10 @@ export function rowToCoreBlock(row: CoreMemoryRow): CoreMemoryBlock {
     value: row.value,
     readOnly: row.read_only === 1,
     updatedAt: row.updated_at,
+    scope: row.scope,
+    sensitivity: row.sensitivity,
+    syncClass: row.sync_class,
+    trust: row.trust,
   });
 }
 
@@ -222,8 +187,8 @@ export interface ArtifactPointerRow {
   size_bytes: number;
   scope: string;
   sensitivity: string;
+  sync_class: string;
 }
-
 export function rowToArtifactPointer(row: ArtifactPointerRow): ArtifactPointer {
   return ArtifactPointerSchema.parse({
     id: row.id,
@@ -233,5 +198,6 @@ export function rowToArtifactPointer(row: ArtifactPointerRow): ArtifactPointer {
     sizeBytes: row.size_bytes,
     scope: row.scope,
     sensitivity: row.sensitivity,
+    syncClass: row.sync_class,
   });
 }

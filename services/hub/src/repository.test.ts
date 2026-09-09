@@ -118,6 +118,21 @@ describe("approvals", () => {
     expect(repo.getApproval("op_nope")).toBeNull();
   });
 
+  it("getApprovalByIdempotencyKey menemukan durable approval tanpa Temporal query", () => {
+    const req = actionRequest({ idempotencyKey: "wf_test:human-approval" });
+    repo.createApproval({
+      operationId: "op_a" as never,
+      actionRequest: req,
+      prompt: "Setujui?",
+      now: T0,
+    });
+
+    const approval = repo.getApprovalByIdempotencyKey("wf_test:human-approval");
+    expect(approval?.operationId).toBe("op_a");
+    expect(approval?.actionRequest.idempotencyKey).toBe("wf_test:human-approval");
+    expect(repo.getApprovalByIdempotencyKey("wf_missing:human-approval")).toBeNull();
+  });
+
   it("decideApproval APPROVE mengubah status dan mencatat decidedAt/decidedBy", () => {
     repo.createApproval({
       operationId: "op_a" as never,

@@ -2,58 +2,51 @@
 
 ecorione open source di bawah [MIT](../LICENSE) — dan tetap begitu selamanya untuk semua
 kode yang sudah dirilis. Dokumen ini menjelaskan batas antara yang **selalu open source**
-dan yang jadi **kandidat komersial** nanti, supaya tidak ada kejutan "rug pull" di
-kemudian hari — komitmen ini sendiri adalah bagian dari kepercayaan yang dijual proyek
-open source.
+dan yang jadi **kandidat komersial** nanti, supaya tidak ada kejutan "rug pull".
 
 ## Prinsip
 
-1. **Kode yang sudah dirilis MIT tidak pernah ditarik balik ke closed source.** Fork
-   siapa pun tetap sah selamanya, sesuai izin lisensi MIT itu sendiri — dokumen ini cuma
-   bisa menentukan lisensi kode yang *belum* ditulis.
-2. **Mesin inti (self-hosted) selalu gratis dan open source.** Kalau bagian ini
-   ditutup, proposisi "local-first, kamu pegang kendali penuh" di `README.md` jadi
-   omong kosong.
-3. **Yang berpotensi berbayar adalah yang butuh infrastruktur terkelola** — relay,
-   hosting, dashboard tim — bukan fitur inti yang jalan di mesin sendiri.
+1. **Kode yang sudah dirilis MIT tidak pernah ditarik balik ke closed source.**
+2. **Mesin inti self-hosted selalu gratis dan open source.** Kalau bagian ini ditutup,
+   proposisi local-first dan kontrol pengguna menjadi tidak bisa diaudit.
+3. **Yang berpotensi berbayar adalah infrastruktur terkelola** — relay publik, hosting,
+   dashboard tim, operasi skala — bukan protokol atau client lokal yang dibutuhkan agar
+   pengguna dapat self-host.
 
 ## Selalu open source (MIT)
 
-Modul yang sudah dibangun di Fase 1, dan akan seterusnya:
-
-| Modul | Kenapa selalu open |
+| Modul / bagian | Kenapa selalu open |
 |---|---|
-| **Ai** | Interface chat — kalau ini closed, orang tidak bisa percaya apa yang dikirim ke model |
-| **Hub** | Policy engine, approval gate, audit log — kontrol otonomi harus bisa diaudit siapa pun |
-| **Connect** | Provider + optimizer — logika biaya/caching harus bisa diverifikasi, bukan dipercaya buta |
-| **Context** | Memori 4 tier — data pengguna disimpan lokal, kode yang menyentuhnya harus terbuka |
-| **RnD** | Trace store + eval harness — transparansi ke bagaimana sistem dievaluasi |
-| `packages/shared-*`, `packages/context-assembly` | Fondasi bersama, tidak ada nilai jual berdiri sendiri |
+| **Ai** | Interface chat; apa yang dikirim ke model harus dapat diaudit |
+| **Hub** | Policy, approval, durable state, audit log |
+| **Connect** | Provider, optimizer, MCP inbound; routing/cost/trust boundary harus dapat diverifikasi |
+| **Context** | Memori 4 tier; data pengguna lokal |
+| **RnD** | Trace + eval evidence |
+| **Sync local/self-hosted** | Device pairing, E2E relay protocol/client, dan MCP bridge lokal adalah bagian dari kemampuan self-hosted; ADR-16 |
+| **Artifact self-hosted** | CAS L3 dan authorization boundary lokal adalah bagian dari kontrol data pengguna |
+| **Space self-hosted** | Notes lokal + editor core-memory harus tetap dapat diaudit dan dijalankan tanpa layanan ecorione |
+| **Sandbox self-hosted** | Policy/execution boundary lokal harus dapat diaudit; kode yang sudah dirilis MIT tidak dapat ditarik kembali |
+| `packages/shared-*`, `packages/context-assembly` | Fondasi kontrak bersama |
 
-## Kandidat tier berbayar (belum dibangun — Fase 3/4 di `prd.md` §23)
+## Kandidat tier berbayar / repo privat
 
-Belum ada kode untuk modul-modul ini, jadi belum ada komitmen lisensi yang mengikat —
-tapi arah saat ini:
-
-| Modul | Kenapa kandidat berbayar |
+| Bagian | Batasnya |
 |---|---|
-| **Sync** | Relay lintas device + jembatan HTTPS publik butuh server yang di-maintain terus — biaya operasional nyata, bukan cuma kode |
-| **Space** | Workspace UI lanjutan — nilai tambah di atas mesin inti, bukan prasyarat pakai ecorione |
-| **Flow** | Workflow di atas durable execution — kebutuhan tim/power-user, bukan pengguna individu |
-| **Sandbox** | Eksekusi terisolasi berskala — governance/compliance yang lebih relevan untuk tim/enterprise |
+| **Managed Sync relay/cloud** | Infrastruktur publik yang dioperasikan ecorione, bukan `services/sync` lokal; biaya uptime/traffic nyata |
+| **Space advanced/team** | Kolaborasi, hosting, governance dan fitur tim di atas backend self-hosted yang terbuka |
+| **Flow managed** | Hosting/operasi durable execution untuk tim; definisi integrasi inti tetap harus dapat diaudit |
+| **Sandbox managed** | Isolasi berskala, governance/compliance, image registry dan operasi enterprise |
 
-**Artifact** dan **AutoClick** belum diputuskan arahnya — keduanya bisa masuk salah satu
-sisi tergantung kebutuhan saat mulai dibangun.
+**AutoClick** belum diputuskan arah komersialnya. Keputusan lisensi tidak boleh mengubah
+lisensi kode MIT yang sudah pernah dirilis.
 
-## Struktur teknis saat modul berbayar mulai dibangun
+## Struktur teknis untuk layanan berbayar
 
-Modul berbayar **tidak masuk repo publik ini**. Rencana: repo privat terpisah (misal
-`ecorione-cloud`) yang mengimpor `@ecorione/shared-schema`, `@ecorione/shared-server`,
-dkk dari repo ini sebagai dependency biasa — bukan fork, bukan modifikasi kode inti.
-Repo publik tidak pernah butuh tahu repo privat itu ada.
+Kode managed/cloud tidak masuk repo publik ini. Repo privat dapat mengimpor paket publik
+`@ecorione/shared-schema`, `@ecorione/shared-server`, dan kontrak lain sebagai dependency;
+repo publik tidak boleh bergantung pada keberadaan repo privat agar mode self-hosted jalan.
 
 ## Mengubah dokumen ini
 
-Perubahan skema (modul pindah kategori, tier baru) dicatat sebagai baris baru di
-[`DECISIONS.md`](DECISIONS.md), mengacu balik ke sini — bukan diam-diam mengedit tabel
-di atas tanpa jejak.
+Perubahan kategori dicatat sebagai baris baru di [`DECISIONS.md`](DECISIONS.md), bukan
+mengubah tabel diam-diam.

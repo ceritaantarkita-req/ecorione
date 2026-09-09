@@ -11,3 +11,8 @@ export * from "./memory.js";
 export * from "./modules.js";
 export * from "./policy.js";
 export * from "./chat.js";
+export * from "./mcp.js";
+export * from "./sync.js";
+export * from "./sandbox.js";
+export * from "./space.js";
+export * from "./flow.js";

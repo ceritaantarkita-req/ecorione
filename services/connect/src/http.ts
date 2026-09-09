@@ -8,15 +8,26 @@ import {
   OperationIdSchema,
   SensitivitySchema,
 } from "@ecorione/shared-schema";
-import { BadGatewayError, createServer, parseOrBadRequest } from "@ecorione/shared-server";
+import {
+  BadGatewayError,
+  createServer,
+  HttpError,
+  parseOrBadRequest,
+} from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { ExactMatchCache } from "./cache.js";
 import { complete, type CompleteDeps } from "./complete.js";
-import { MissingCredentialError, ProviderError } from "./providers/errors.js";
+import {
+  CostKillSwitchError,
+  MissingCredentialError,
+  ProviderError,
+} from "./providers/errors.js";
 
-/** Memetakan kegagalan provider/kredensial ke 502 — bukan 500 (`docs/api-fase1.md`). */
+/** Memetakan kegagalan provider/kredensial/kontrol operator ke error HTTP eksplisit. */
 function toHttpError(err: unknown): unknown {
+  if (err instanceof CostKillSwitchError)
+    return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
   if (err instanceof MissingCredentialError) return new BadGatewayError(err.message);
   if (err instanceof ProviderError) return new BadGatewayError(err.message);
   return err;
@@ -45,6 +56,8 @@ export interface BuildConnectServerOptions {
   readonly anthropicApiKey?: string | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
+  /** Emergency operator cost control. Default true supaya upgrade tidak mengubah perilaku. */
+  readonly hostedCallsEnabled?: boolean | undefined;
   /** Diinjeksikan supaya test bisa memeriksa isi cache secara langsung kalau perlu. */
   readonly cache?: ExactMatchCache | undefined;
 }
@@ -56,6 +69,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localBaseUrl: options.localBaseUrl,
     localModelTag: options.localModelTag,
     cache: options.cache ?? new ExactMatchCache(),
+    hostedCallsEnabled: options.hostedCallsEnabled ?? true,
   };
 
   app.post("/v1/complete", async (req) => {

@@ -9,7 +9,6 @@ interface UserTurn {
   id: string;
   text: string;
 }
-
 interface AssistantTurn {
   kind: "assistant";
   id: string;
@@ -18,38 +17,31 @@ interface AssistantTurn {
   cost: ChatCost;
   memoryUsed: MemoryUsed;
 }
-
 interface ErrorTurn {
   kind: "error";
   id: string;
   message: string;
 }
-
 type Turn = UserTurn | AssistantTurn | ErrorTurn;
-
 let turnCounter = 0;
 function nextTurnId(): string {
   turnCounter += 1;
   return `turn-${turnCounter}`;
 }
-
-/** Format singkat: 0.0034 -> "$0.0034". `savedUsd` bisa 0 (cache miss) — tetap ditampilkan. */
 function formatUsd(value: number): string {
   return `$${value.toFixed(4)}`;
 }
-
+/** shared-telemetry already returns 0..100. */
 function formatPct(value: number): string {
-  return `${(value * 100).toFixed(0)}%`;
+  return `${value.toFixed(0)}%`;
 }
 
 export default function ChatPage() {
-  // Satu sessionId per tab-load — dibuat sekali lewat useRef (docs/api-fase1.md §Ai).
   const sessionIdRef = useRef<string>(makeSessionId());
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
-
   const latestAssistant = [...turns]
     .reverse()
     .find((t): t is AssistantTurn => t.kind === "assistant");
@@ -57,11 +49,9 @@ export default function ChatPage() {
   async function sendMessage(text: string): Promise<void> {
     const trimmed = text.trim();
     if (trimmed.length === 0 || sending) return;
-
     setTurns((prev) => [...prev, { kind: "user", id: nextTurnId(), text: trimmed }]);
     setDraft("");
     setSending(true);
-
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -69,13 +59,17 @@ export default function ChatPage() {
         body: JSON.stringify({ sessionId: sessionIdRef.current, message: trimmed }),
       });
       const body: unknown = await res.json().catch(() => undefined);
-
       if (!res.ok) {
-        const message = extractErrorMessage(body) ?? `Hub membalas status ${res.status}.`;
-        setTurns((prev) => [...prev, { kind: "error", id: nextTurnId(), message }]);
+        setTurns((prev) => [
+          ...prev,
+          {
+            kind: "error",
+            id: nextTurnId(),
+            message: extractErrorMessage(body) ?? `Hub membalas status ${res.status}.`,
+          },
+        ]);
         return;
       }
-
       const chat = body as ChatResponse;
       setTurns((prev) => [
         ...prev,
@@ -107,9 +101,18 @@ export default function ChatPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ factId }),
       });
-      if (!res.ok) return; // biarkan tetap tampil kalau Hub menolak — jangan berpura-pura berhasil
-
-      // Fakta sudah di-invalidate di Context — buang dari semua panel yang menampilkannya.
+      const body: unknown = await res.json().catch(() => undefined);
+      if (!res.ok) {
+        setTurns((prev) => [
+          ...prev,
+          {
+            kind: "error",
+            id: nextTurnId(),
+            message: extractErrorMessage(body) ?? `Gagal melupakan fakta (${res.status}).`,
+          },
+        ]);
+        return;
+      }
       setTurns((prev) =>
         prev.map((t) =>
           t.kind === "assistant"
@@ -127,12 +130,10 @@ export default function ChatPage() {
       setForgettingId(null);
     }
   }
-
   function handleSubmit(e: FormEvent): void {
     e.preventDefault();
     void sendMessage(draft);
   }
-
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>): void {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -148,7 +149,6 @@ export default function ChatPage() {
           {sessionIdRef.current}
         </span>
       </header>
-
       <main className="ai-main">
         <section className="ai-conversation">
           <div className="ai-thread">
@@ -165,7 +165,6 @@ export default function ChatPage() {
               </div>
             ) : null}
           </div>
-
           <form className="ai-composer" onSubmit={handleSubmit}>
             <textarea
               className="ecr-input ai-composer__field"
@@ -184,7 +183,6 @@ export default function ChatPage() {
             </button>
           </form>
         </section>
-
         <aside className="ai-panel">
           <div className="ai-panel__title">Memori yang dipakai</div>
           {latestAssistant === undefined ? (
@@ -205,22 +203,18 @@ export default function ChatPage() {
 }
 
 function TurnView({ turn }: { turn: Turn }) {
-  if (turn.kind === "user") {
+  if (turn.kind === "user")
     return (
       <div className="ai-turn ai-turn--user">
         <div className="ai-bubble">{turn.text}</div>
       </div>
     );
-  }
-
-  if (turn.kind === "error") {
+  if (turn.kind === "error")
     return (
       <div className="ai-turn ai-turn--assistant">
         <div className="ai-bubble ai-bubble--error">{turn.message}</div>
       </div>
     );
-  }
-
   return (
     <div className="ai-turn ai-turn--assistant">
       <div className="ai-bubble">{turn.reply}</div>
@@ -228,12 +222,6 @@ function TurnView({ turn }: { turn: Turn }) {
     </div>
   );
 }
-
-/**
- * Baris routing/biaya — selalu ditampilkan, tidak pernah disembunyikan. "Tidak ada
- * fallback diam-diam" (`prd.md` §7): pengguna harus selalu tahu model apa yang benar-benar
- * menjawab dan apakah cache kena.
- */
 function RoutingLine({ cost }: { cost: ChatCost }) {
   return (
     <div className="ai-routing">
@@ -255,7 +243,6 @@ function RoutingLine({ cost }: { cost: ChatCost }) {
     </div>
   );
 }
-
 function MemoryPanel({
   memoryUsed,
   onForget,
@@ -279,7 +266,6 @@ function MemoryPanel({
           ))
         )}
       </div>
-
       <div className="ai-panel__section">
         <div className="ai-panel__section-title">Fakta yang ditarik</div>
         {memoryUsed.recalledFacts.length === 0 ? (
@@ -303,7 +289,6 @@ function MemoryPanel({
           ))
         )}
       </div>
-
       <div className="ai-panel__section">
         <div className="ai-panel__section-title">Ringkasan episodik</div>
         {memoryUsed.episodicSummaries.length === 0 ? (
@@ -319,7 +304,6 @@ function MemoryPanel({
     </>
   );
 }
-
 function extractErrorMessage(body: unknown): string | undefined {
   if (typeof body !== "object" || body === null) return undefined;
   const error = (body as Record<string, unknown>).error;

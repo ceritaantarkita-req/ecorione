@@ -18,7 +18,7 @@ function actionRequest(overrides: Partial<ActionRequest> = {}): ActionRequest {
 }
 
 describe("evaluatePolicy", () => {
-  it("aturan 1: IRREVERSIBLE_WRITE selalu REQUIRE_APPROVAL, berapa pun otonominya", () => {
+  it("aturan 1: IRREVERSIBLE_WRITE selalu REQUIRE_APPROVAL dalam plafon otonomi", () => {
     const { verdict, rule } = evaluatePolicy(
       actionRequest({ actionClass: "IRREVERSIBLE_WRITE", autonomy: "L0" }),
     );
@@ -27,7 +27,7 @@ describe("evaluatePolicy", () => {
   });
 
   it.each(["SPEND", "EXTERNAL_SEND", "CREDENTIAL_ACCESS"] as const)(
-    "aturan 1: %s juga selalu REQUIRE_APPROVAL",
+    "aturan 1: %s juga REQUIRE_APPROVAL dalam plafon otonomi",
     (actionClass) => {
       const { verdict } = evaluatePolicy(actionRequest({ actionClass }));
       expect(verdict.outcome).toBe("REQUIRE_APPROVAL");
@@ -42,12 +42,12 @@ describe("evaluatePolicy", () => {
     expect(rule.id).toBe(POLICY_RULES.AUTONOMY_CEILING.id);
   });
 
-  it("aturan 1 menang atas aturan 2: ALWAYS_GATED tetap REQUIRE_APPROVAL walau otonomi juga melebihi plafon", () => {
+  it("plafon L3 absolut: ALWAYS_GATED pada L4 tetap DENY, bukan approval escape hatch", () => {
     const { verdict, rule } = evaluatePolicy(
       actionRequest({ actionClass: "SPEND", autonomy: "L4" }),
     );
-    expect(verdict.outcome).toBe("REQUIRE_APPROVAL");
-    expect(rule.id).toBe(POLICY_RULES.ALWAYS_GATED.id);
+    expect(verdict.outcome).toBe("DENY");
+    expect(rule.id).toBe(POLICY_RULES.AUTONOMY_CEILING.id);
   });
 
   it("aturan 3: READ selalu ALLOW", () => {

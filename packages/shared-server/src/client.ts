@@ -1,13 +1,12 @@
 /**
  * Client HTTP tipis untuk panggilan antar-service. Bukan abstraksi umum — dipangkas
- * khusus untuk pola yang dipakai berulang di Fase 1: JSON masuk, JSON keluar, bearer
- * token internal, error diseragamkan jadi `RemoteServiceError`.
+ * khusus untuk pola JSON antar-service: bearer internal + error RemoteServiceError.
  */
 
 import { RemoteServiceError } from "./errors.js";
 
 export interface HttpJsonOptions {
-  readonly method?: "GET" | "POST" | "PATCH" | "DELETE";
+  readonly method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   readonly body?: unknown;
   readonly token?: string | undefined;
   readonly headers?: Readonly<Record<string, string>>;

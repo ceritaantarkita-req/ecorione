@@ -15,7 +15,9 @@
   "scripts": {
     "build": "tsc --build",
     "dev": "tsx watch src/main.ts",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "mcp:stdio": "tsx src/mcp/stdio-main.ts",
+    "mcp:http": "tsx src/mcp/http-main.ts"
   },
   "dependencies": {
     "@ecorione/context-assembly": "workspace:*",

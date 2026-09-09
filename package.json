@@ -10,8 +10,11 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "pnpm -r --filter \"./packages/**\" run build",
+    "build": "tsc --build && pnpm --filter @ecorione/ai run build",
     "dev": "concurrently -n rnd,context,connect,hub,ai -c yellow,cyan,magenta,green,blue \"pnpm --filter @ecorione/rnd run dev\" \"pnpm --filter @ecorione/context run dev\" \"pnpm --filter @ecorione/connect run dev\" \"pnpm --filter @ecorione/hub run dev\" \"pnpm --filter @ecorione/ai run dev\"",
+    "dev:phase2": "concurrently -n rnd,context,connect,hub,mcp,sync,ai \"pnpm --filter @ecorione/rnd run dev\" \"pnpm --filter @ecorione/context run dev\" \"pnpm --filter @ecorione/connect run dev\" \"pnpm --filter @ecorione/hub run dev\" \"pnpm --filter @ecorione/connect run mcp:http\" \"pnpm --filter @ecorione/sync run dev\" \"pnpm --filter @ecorione/ai run dev\"",
+    "dev:phase3": "concurrently -n rnd,context,connect,hub,artifact,sandbox,space,ai \"pnpm --filter @ecorione/rnd run dev\" \"pnpm --filter @ecorione/context run dev\" \"pnpm --filter @ecorione/connect run dev\" \"pnpm --filter @ecorione/hub run dev\" \"pnpm --filter @ecorione/artifact run dev\" \"pnpm --filter @ecorione/sandbox run dev\" \"pnpm --filter @ecorione/space run dev\" \"pnpm --filter @ecorione/ai run dev\"",
+    "dev:phase4": "concurrently -n rnd,context,connect,hub,artifact,sandbox,space,flow,flow-worker,ai \"pnpm --filter @ecorione/rnd run dev\" \"pnpm --filter @ecorione/context run dev\" \"pnpm --filter @ecorione/connect run dev\" \"pnpm --filter @ecorione/hub run dev\" \"pnpm --filter @ecorione/artifact run dev\" \"pnpm --filter @ecorione/sandbox run dev\" \"pnpm --filter @ecorione/space run dev\" \"pnpm --filter @ecorione/flow run dev\" \"pnpm --filter @ecorione/flow run dev:worker\" \"pnpm --filter @ecorione/ai run dev\"",
     "typecheck": "tsc --build --verbose && pnpm --filter @ecorione/ai run typecheck && tsc --noEmit -p test/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -20,11 +23,14 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "secret-scan": "node scripts/secret-scan.mjs",
-    "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run secret-scan",
+    "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run secret-scan && pnpm run build",
     "clean": "node scripts/clean.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
+    "@temporalio/client": "1.23.0",
+    "@temporalio/testing": "1.23.0",
+    "@temporalio/worker": "1.23.0",
     "@types/node": "^22.20.0",
     "concurrently": "^9.1.2",
     "eslint": "^9.39.0",
