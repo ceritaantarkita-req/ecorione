@@ -1,0 +1,56 @@
+name: Update Phase 4 Progress Once
+
+on:
+  push:
+    branches: [agent/phase4-ci-flake-hardening-20260909]
+    paths:
+      - ".github/workflows/update-progress-phase4-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/phase4-ci-flake-hardening-20260909
+      - name: Update canonical progress tracker
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("docs/EXECUTION-PROGRESS.md")
+          text = p.read_text()
+
+          active_old = '''- `agent/phase4-ci-flake-hardening-20260909`\n- base: `55ee05fe34e595e2c3e2ef6b9742673f1b78f156`\n- purpose: harden Fase 4 process readiness/recovery acceptance dan mengembalikan `main` ke full green\n'''
+          active_new = '''- `agent/phase4-ci-flake-hardening-20260909`\n- base: `55ee05fe34e595e2c3e2ef6b9742673f1b78f156`\n- candidate code head: `c677e17fcc3fb2d1188f2826c7cd30c6e89f423a`\n- purpose: harden Fase 4 process readiness/recovery acceptance dan mengembalikan `main` ke full green\n- implementation: acceptance-only IPC readiness signal dikirim setelah Temporal Worker benar-benar mencapai state `RUNNING`; production process tanpa env acceptance tidak mengaktifkan IPC path\n- stress evidence: run `34349246133` — 3/3 forced crash/replacement acceptance PASS\n- candidate full CI: run `34349843284` — Format, Lint, Typecheck, Test, Secret Scan, Production Build, Naming PASS\n'''
+          if active_old not in text:
+              raise SystemExit("active branch block not found")
+          text = text.replace(active_old, active_new, 1)
+
+          batch_pattern = re.compile(
+              r'''## Batch 1 — Fase 4 Temporal CI Flake Hardening\n\n.*?\n---\n''',
+              re.S,
+          )
+          batch_new = '''## Batch 1 — Fase 4 Temporal CI Flake Hardening\n\nStatus: **IMPLEMENTED / CLOSURE PENDING**\n\nGoal: mengembalikan `main` ke deterministic full-green baseline.\n\nImplemented:\n\n- audit membuktikan OS child-process `spawn` bukan bukti Temporal Worker sudah polling\n- `worker-main.ts` sekarang dapat mengirim readiness IPC **hanya** ketika `ECORIONE_FLOW_WORKER_READY_IPC=1` dan IPC channel tersedia\n- readiness baru dikirim setelah `Worker.getState()` mencapai `RUNNING`\n- terminal worker states sebelum readiness gagal eksplisit\n- readiness wait bounded dan tidak memakai wall-clock `Date.now()`\n- process acceptance membuka IPC channel dan menunggu readiness untuk worker awal maupun replacement worker\n- forced worker crash tetap memakai `SIGKILL`; tidak diubah menjadi graceful shutdown\n- approval tetap harus muncul di durable Hub audit setelah replacement worker siap\n- Flow decision tetap commit ke Hub sebelum Temporal signal\n- AI → Sandbox → RnD verification path tetap diuji end-to-end\n\nEvidence:\n\n- originating `main` failure: CI `34346631709`, `Timed out waiting for durable Hub approval.`\n- repeated stress: `34349246133` — **3/3 PASS** untuk real Temporal forced crash/replacement acceptance\n- candidate code head: `c677e17fcc3fb2d1188f2826c7cd30c6e89f423a`\n- candidate full CI: `34349843284` — **PASS** Format, Lint, Typecheck, Test, Secret Scan, Production Build, Naming\n\nClosure pending:\n\n1. exact docs-final head full CI PASS;\n2. PR #7 merge dengan expected-head lock;\n3. post-merge `main` full CI PASS;\n4. setelah itu Batch 1 dan External MCP HTTPS dinaikkan menjadi `CLOSED`.\n\n---\n'''
+          text, count = batch_pattern.subn(batch_new, text, count=1)
+          if count != 1:
+              raise SystemExit(f"Batch 1 section replacement count={count}")
+
+          p.write_text(text)
+          PY
+      - name: Commit progress update
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/EXECUTION-PROGRESS.md
+          git commit -m "docs: record Phase 4 readiness hardening evidence"
+          git push origin HEAD:agent/phase4-ci-flake-hardening-20260909
