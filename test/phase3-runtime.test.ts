@@ -191,7 +191,11 @@ describe("Fase 3 runtime acceptance", () => {
         scope: "personal",
         sensitivity: "INTERNAL",
       });
-      expect(result.exitCode).toBe(0);
+      if (result.exitCode !== 0) {
+        throw new Error(
+          `Docker Tier1 gagal dengan exit ${String(result.exitCode)}: ${result.stderr.trim()}`,
+        );
+      }
       expect(result.stdout.trim()).toBe("/workspace");
     },
     45_000,
