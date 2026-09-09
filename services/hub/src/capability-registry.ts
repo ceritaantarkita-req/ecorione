@@ -17,9 +17,7 @@ import {
   type OperationId,
   type PermissionAccess,
   type PermissionId,
-  type PermissionResource,
   type Scope,
-  type Sensitivity,
   type Timestamp,
   type WorkspaceId,
 } from "@ecorione/shared-schema";

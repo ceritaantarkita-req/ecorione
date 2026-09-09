@@ -19,9 +19,9 @@ import { z } from "zod";
 import { nowIso } from "./clock.js";
 import {
   CapabilityIdempotencyConflictError,
-  CapabilityRegistry,
   CapabilityUnknownError,
 } from "./capability-registry.js";
+import type { CapabilityRegistry } from "./capability-registry.js";
 import { evaluatePolicy } from "./policy-engine.js";
 import type { HubRepository } from "./repository.js";
 
