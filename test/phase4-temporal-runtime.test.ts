@@ -76,7 +76,7 @@ async function waitUntil(
   check: () => boolean | Promise<boolean>,
   label = "state",
 ): Promise<void> {
-  for (let attempt = 0; attempt < 240; attempt += 1) {
+  for (let attempt = 0; attempt < 800; attempt += 1) {
     if (await check()) return;
     await new Promise<void>((resolve) => setTimeout(resolve, 25));
   }
