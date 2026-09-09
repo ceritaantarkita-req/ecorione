@@ -13,19 +13,13 @@ import {
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import type { ProviderCredentialReader } from "./credential-vault.js";
-import {
-  callAnthropic,
-  estimateAnthropicReservationUsd,
-} from "./providers/anthropic.js";
+import { callAnthropic, estimateAnthropicReservationUsd } from "./providers/anthropic.js";
 import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
 import { callLocal } from "./providers/local.js";
 import { route, type RouteTarget } from "./routing.js";
 import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
 
-type SpendBudgetController = Pick<
-  FileSpendBudget,
-  "reserve" | "settle" | "markUncertain"
->;
+type SpendBudgetController = Pick<FileSpendBudget, "reserve" | "settle" | "markUncertain">;
 
 export interface CompleteDeps {
   /** Production source. If configured, env fallback is intentionally ignored. */

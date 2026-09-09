@@ -137,7 +137,10 @@ function normalizePolicy(policy: SpendBudgetPolicy): SpendBudgetPolicy {
   return parsed;
 }
 
-export function parseOptionalBudgetUsd(name: string, value: string | undefined): number | undefined {
+export function parseOptionalBudgetUsd(
+  name: string,
+  value: string | undefined,
+): number | undefined {
   if (value === undefined || value.trim() === "") return undefined;
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -187,7 +190,10 @@ function readSpend(path: string): SpendFile {
 function writeSpend(path: string, state: SpendFile): void {
   mkdirSync(dirname(path), { recursive: true });
   const tmpPath = `${path}.tmp-${String(process.pid)}`;
-  writeFileSync(tmpPath, `${JSON.stringify(state, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+  writeFileSync(tmpPath, `${JSON.stringify(state, null, 2)}\n`, {
+    encoding: "utf8",
+    mode: 0o600,
+  });
   renameSync(tmpPath, path);
   chmodSync(path, 0o600);
 }

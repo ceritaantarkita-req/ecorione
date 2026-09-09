@@ -1,10 +1,6 @@
 /** Anthropic adapter with explicit prompt-cache breakpoints. */
 import { renderCoreMemoryData, type StablePrefix } from "@ecorione/context-assembly";
-import {
-  priceFor,
-  TOKENS_PER_PRICE_UNIT,
-  type TokenUsage,
-} from "@ecorione/shared-telemetry";
+import { priceFor, TOKENS_PER_PRICE_UNIT, type TokenUsage } from "@ecorione/shared-telemetry";
 import { ProviderError } from "./errors.js";
 
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
@@ -70,7 +66,9 @@ function buildSystem(prefix: StablePrefix): AnthropicSystemBlock[] {
     { type: "text", text: DATA_ENVELOPE_NOTE, cache_control: { type: "ephemeral" } },
   ];
 }
-function buildUserContent(input: Omit<AnthropicCallInput, "apiKey">): string | AnthropicTextBlock[] {
+function buildUserContent(
+  input: Omit<AnthropicCallInput, "apiKey">,
+): string | AnthropicTextBlock[] {
   if (input.prefix.coreMemory.blocks.length === 0)
     return `${input.dynamicText}\n\n${input.userMessage}`;
   return [
@@ -113,8 +111,7 @@ export function estimateAnthropicReservationUsd(
     price.cacheReadPerMTok,
   );
   const rawUsd =
-    (promptTokenCeiling * promptPerMTok +
-      ANTHROPIC_MAX_OUTPUT_TOKENS * price.outputPerMTok) /
+    (promptTokenCeiling * promptPerMTok + ANTHROPIC_MAX_OUTPUT_TOKENS * price.outputPerMTok) /
     TOKENS_PER_PRICE_UNIT;
   return Math.ceil(rawUsd * USD_RESERVATION_PRECISION) / USD_RESERVATION_PRECISION;
 }

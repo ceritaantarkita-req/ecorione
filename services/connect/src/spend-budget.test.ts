@@ -29,12 +29,7 @@ afterEach(() => {
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
-function reserve(
-  budget: FileSpendBudget,
-  operationId = OP1,
-  reservedUsd = 0.3,
-  now = DAY1,
-) {
+function reserve(budget: FileSpendBudget, operationId = OP1, reservedUsd = 0.3, now = DAY1) {
   return budget.reserve({
     operationId,
     provider: "anthropic",

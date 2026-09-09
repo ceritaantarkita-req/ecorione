@@ -7,7 +7,11 @@ import {
 } from "undici";
 import { complete, type CompleteDeps } from "./complete.js";
 import { ExactMatchCache } from "./cache.js";
-import { CostKillSwitchError, MissingCredentialError, ProviderError } from "./providers/errors.js";
+import {
+  CostKillSwitchError,
+  MissingCredentialError,
+  ProviderError,
+} from "./providers/errors.js";
 import { NOW, OPERATION_ID, prefix } from "./test-helpers.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
