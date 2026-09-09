@@ -45,7 +45,9 @@ interface OpenAiCompatibleResponseBody {
   };
 }
 
-function userContent(input: Pick<OpenAiCompatibleHostedInput, "prefix" | "dynamicText" | "userMessage">) {
+function userContent(
+  input: Pick<OpenAiCompatibleHostedInput, "prefix" | "dynamicText" | "userMessage">,
+) {
   const parts: string[] = [];
   if (input.prefix.coreMemory.blocks.length > 0) {
     parts.push(renderCoreMemoryData(input.prefix.coreMemory));
@@ -84,7 +86,10 @@ export function buildOpenAiCompatibleRequestBody(
 export function estimateOpenAiCompatibleReservationUsd(
   input: Omit<OpenAiCompatibleHostedInput, "endpoint" | "providerName" | "apiKey">,
 ): number {
-  const bodyBytes = Buffer.byteLength(JSON.stringify(buildOpenAiCompatibleRequestBody(input)), "utf8");
+  const bodyBytes = Buffer.byteLength(
+    JSON.stringify(buildOpenAiCompatibleRequestBody(input)),
+    "utf8",
+  );
   const promptTokenCeiling = bodyBytes + PROVIDER_FRAMING_TOKEN_ALLOWANCE;
   const price = priceFor(input.costModel);
   const promptPerMTok = Math.max(
@@ -93,7 +98,8 @@ export function estimateOpenAiCompatibleReservationUsd(
     price.cacheReadPerMTok,
   );
   const rawUsd =
-    (promptTokenCeiling * promptPerMTok + OPENAI_COMPAT_MAX_OUTPUT_TOKENS * price.outputPerMTok) /
+    (promptTokenCeiling * promptPerMTok +
+      OPENAI_COMPAT_MAX_OUTPUT_TOKENS * price.outputPerMTok) /
     TOKENS_PER_PRICE_UNIT;
   return Math.ceil(rawUsd * USD_RESERVATION_PRECISION) / USD_RESERVATION_PRECISION;
 }
@@ -104,7 +110,10 @@ function reportedCost(
 ): number | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-    throw new ProviderError("hosted", `Respons ${providerName} memiliki usage.cost yang tidak valid.`);
+    throw new ProviderError(
+      "hosted",
+      `Respons ${providerName} memiliki usage.cost yang tidak valid.`,
+    );
   }
   return value;
 }

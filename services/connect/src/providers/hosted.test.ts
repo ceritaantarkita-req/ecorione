@@ -33,18 +33,16 @@ const base = {
 
 describe("hosted provider adapters", () => {
   it("OpenRouter memakai canonical Claude slug dan membawa authoritative usage.cost", async () => {
-    openrouterPool
-      .intercept({ path: "/api/v1/chat/completions", method: "POST" })
-      .reply(200, {
-        model: "anthropic/claude-sonnet-4.5",
-        choices: [{ message: { content: "via router" } }],
-        usage: {
-          prompt_tokens: 100,
-          completion_tokens: 20,
-          prompt_tokens_details: { cached_tokens: 40 },
-          cost: 0.0042,
-        },
-      });
+    openrouterPool.intercept({ path: "/api/v1/chat/completions", method: "POST" }).reply(200, {
+      model: "anthropic/claude-sonnet-4.5",
+      choices: [{ message: { content: "via router" } }],
+      usage: {
+        prompt_tokens: 100,
+        completion_tokens: 20,
+        prompt_tokens_details: { cached_tokens: 40 },
+        cost: 0.0042,
+      },
+    });
 
     const result = await callHostedProvider({
       provider: "openrouter",

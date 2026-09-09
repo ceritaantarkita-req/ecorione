@@ -36,7 +36,9 @@ describe("route", () => {
   });
 
   it("OpenAI mapping deterministik: Terra normal, Sol RESTRICTED", () => {
-    expect(route({ target: "hosted", sensitivity: "PUBLIC", hostedProvider: "openai" })).toEqual({
+    expect(
+      route({ target: "hosted", sensitivity: "PUBLIC", hostedProvider: "openai" }),
+    ).toEqual({
       model: "gpt-5.6-terra",
       routeReason: "default-hosted",
     });

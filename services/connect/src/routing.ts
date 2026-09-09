@@ -46,7 +46,10 @@ export function route(req: RouteRequest): RouteDecision {
   }
   const provider = req.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
   if (req.sensitivity === "RESTRICTED") {
-    return { model: hostedModel(provider, req.sensitivity), routeReason: "sensitivity-restricted" };
+    return {
+      model: hostedModel(provider, req.sensitivity),
+      routeReason: "sensitivity-restricted",
+    };
   }
   return { model: hostedModel(provider, req.sensitivity), routeReason: "default-hosted" };
 }

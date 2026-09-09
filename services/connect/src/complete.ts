@@ -102,7 +102,8 @@ export async function complete(
     throw new CostKillSwitchError();
   }
 
-  const providerIdentity = decision.routeReason === "local-consolidation" ? "local" : hostedProvider;
+  const providerIdentity =
+    decision.routeReason === "local-consolidation" ? "local" : hostedProvider;
   const key = cacheKey({
     model: `${providerIdentity}:${decision.model}`,
     prefixDigest: prefixDigest(input.prefix),
@@ -202,7 +203,9 @@ export async function complete(
     model: decision.model,
     usage,
     baselineUsage,
-    ...(providerReportedActualUsd === undefined ? {} : { actualUsdOverride: providerReportedActualUsd }),
+    ...(providerReportedActualUsd === undefined
+      ? {}
+      : { actualUsdOverride: providerReportedActualUsd }),
     routeReason: decision.routeReason,
     policyVersion: POLICY_VERSION,
     optimizerOverheadMs,
