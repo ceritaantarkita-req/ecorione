@@ -1,0 +1,129 @@
+name: Wire Outbound MCP Once
+
+on:
+  push:
+    branches: [agent/outbound-mcp-manager-20260909]
+    paths:
+      - ".github/workflows/wire-outbound-mcp-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/outbound-mcp-manager-20260909
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Pin official MCP client SDK
+        run: pnpm --filter @ecorione/connect add @modelcontextprotocol/client@2.0.0 --save-exact
+      - name: Wire vault, Hub, Connect, CLI, and fix canonical digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one match, got {count}: {old[:80]!r}")
+              p.write_text(text.replace(old, new, 1))
+
+          # Credential vault: add a constrained mcp/tokens scope without opening cross-pairs.
+          path = "services/connect/src/credential-vault.ts"
+          replace_once(path,
+              'export const CREDENTIAL_PROVIDERS = ["anthropic", "openai", "openrouter"] as const;',
+              'export const CREDENTIAL_PROVIDERS = ["anthropic", "openai", "openrouter", "mcp"] as const;')
+          replace_once(path,
+              'export const CREDENTIAL_PURPOSES = ["messages"] as const;\nexport type CredentialPurpose = (typeof CREDENTIAL_PURPOSES)[number];\n',
+              '''export const CREDENTIAL_PURPOSES = ["messages", "tokens"] as const;\nexport type CredentialPurpose = (typeof CREDENTIAL_PURPOSES)[number];\n\nfunction assertCredentialScope(\n  provider: CredentialProvider,\n  purpose: CredentialPurpose,\n): void {\n  const valid =\n    (provider === "mcp" && purpose === "tokens") ||\n    (provider !== "mcp" && purpose === "messages");\n  if (!valid) {\n    throw new CredentialVaultFormatError(`scope credential tidak didukung: ${provider}/${purpose}.`);\n  }\n}\n''')
+          replace_once(path,
+              '      const scope = scopeKey(entry.provider, entry.purpose);\n',
+              '      assertCredentialScope(entry.provider, entry.purpose);\n      const scope = scopeKey(entry.provider, entry.purpose);\n')
+          replace_once(path,
+              '  get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined {\n    const vault = readVault(this.path);\n',
+              '  get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined {\n    assertCredentialScope(provider, purpose);\n    const vault = readVault(this.path);\n')
+          replace_once(path,
+              '  ): CredentialMetadata {\n    if (secret.length === 0) throw new CredentialVaultFormatError("secret tidak boleh kosong.");\n',
+              '  ): CredentialMetadata {\n    assertCredentialScope(provider, purpose);\n    if (secret.length === 0) throw new CredentialVaultFormatError("secret tidak boleh kosong.");\n')
+
+          # Hub: internal audit append route; Connect never writes Hub DB directly.
+          path = "services/hub/src/http.ts"
+          replace_once(path,
+              '  ActionRequestSchema,\n  ApprovalDecisionSchema,\n',
+              '  ActionRequestSchema,\n  ApprovalDecisionSchema,\n  AuditEventTypeSchema,\n')
+          replace_once(path,
+              '  InvalidIdError,\n  makeId,\n',
+              '  InvalidIdError,\n  makeId,\n  ModuleNameSchema,\n  OperationIdSchema,\n  TimestampSchema,\n')
+          replace_once(path,
+              'const AuditQuerySchema = z.object({ operationId: z.string().min(1).optional() });\n',
+              '''const AuditQuerySchema = z.object({ operationId: z.string().min(1).optional() });\nconst AuditWriteSchema = z.object({\n  type: AuditEventTypeSchema,\n  operationId: OperationIdSchema.nullable(),\n  module: ModuleNameSchema,\n  detail: z.record(z.string(), z.unknown()),\n  ruleId: z.string().max(64).nullable().optional(),\n  now: TimestampSchema,\n});\n''')
+          replace_once(path,
+              '  app.get("/v1/audit", async (req) => {\n',
+              '''  app.post("/v1/audit/events", async (req, reply) => {\n    const body = parseOrBadRequest(AuditWriteSchema, req.body);\n    const event = repo.recordAuditEvent(body);\n    return reply.code(201).send(event);\n  });\n\n  app.get("/v1/audit", async (req) => {\n''')
+
+          # Connect HTTP runtime routes.
+          path = "services/connect/src/http.ts"
+          replace_once(path,
+              'import type { HostedProviderId } from "./provider-types.js";\n',
+              'import type { HostedProviderId } from "./provider-types.js";\nimport { registerOutboundMcpRoutes } from "./mcp-client/http.js";\nimport type { McpManager } from "./mcp-client/manager.js";\n')
+          replace_once(path,
+              '  readonly cache?: ExactMatchCache | undefined;\n',
+              '  readonly cache?: ExactMatchCache | undefined;\n  readonly mcpManager?: McpManager | undefined;\n')
+          replace_once(path,
+              '  app.post("/v1/complete", async (req) => {\n',
+              '  if (options.mcpManager !== undefined) registerOutboundMcpRoutes(app, options.mcpManager);\n\n  app.post("/v1/complete", async (req) => {\n')
+
+          # Production main wiring.
+          path = "services/connect/src/main.ts"
+          replace_once(path,
+              'import { buildConnectServer } from "./http.js";\n',
+              '''import { buildConnectServer } from "./http.js";\nimport { VaultMcpCredentialReader } from "./mcp-client/credentials.js";\nimport { HubMcpGovernance } from "./mcp-client/governance.js";\nimport { FileMcpInvocationStore } from "./mcp-client/invocation-store.js";\nimport { McpManager } from "./mcp-client/manager.js";\nimport { FileMcpRegistry } from "./mcp-client/registry.js";\nimport { SdkMcpClientFactory } from "./mcp-client/sdk-client.js";\n''')
+          replace_once(path,
+              'const spendBudget =\n  spendDailyUsd === undefined && spendMonthlyUsd === undefined\n    ? undefined\n    : new FileSpendBudget(spendBudgetPath, {\n        dailyUsd: spendDailyUsd,\n        monthlyUsd: spendMonthlyUsd,\n      });\n',
+              '''const spendBudget =\n  spendDailyUsd === undefined && spendMonthlyUsd === undefined\n    ? undefined\n    : new FileSpendBudget(spendBudgetPath, {\n        dailyUsd: spendDailyUsd,\n        monthlyUsd: spendMonthlyUsd,\n      });\n\nconst mcpRegistryPath =\n  process.env.ECORIONE_MCP_OUTBOUND_REGISTRY_PATH ??\n  resolve(import.meta.dirname, "../../../data/connect-mcp-registry.json");\nconst mcpInvocationPath =\n  process.env.ECORIONE_MCP_OUTBOUND_INVOCATION_PATH ??\n  resolve(import.meta.dirname, "../../../data/connect-mcp-invocations.json");\nconst mcpCredentials =\n  credentialVault === undefined ? undefined : new VaultMcpCredentialReader(credentialVault);\nconst mcpManager = new McpManager(\n  new FileMcpRegistry(mcpRegistryPath),\n  new SdkMcpClientFactory(\n    mcpCredentials,\n    process.env.ECORIONE_MCP_STDIO_ALLOWLIST ?? "",\n  ),\n  new HubMcpGovernance(\n    process.env.ECORIONE_HUB_URL ?? "http://127.0.0.1:17024",\n    token,\n  ),\n  new FileMcpInvocationStore(mcpInvocationPath),\n);\n''')
+          replace_once(path,
+              '  spendBudget,\n});\n',
+              '  spendBudget,\n  mcpManager,\n});\n')
+
+          # Public Connect exports.
+          path = "services/connect/src/index.ts"
+          replace_once(path,
+              'export * from "./spend-budget.js";\n',
+              '''export * from "./spend-budget.js";\nexport * from "./mcp-client/types.js";\nexport * from "./mcp-client/registry.js";\nexport * from "./mcp-client/credentials.js";\nexport * from "./mcp-client/invocation-store.js";\nexport * from "./mcp-client/governance.js";\nexport * from "./mcp-client/sdk-client.js";\nexport * from "./mcp-client/manager.js";\n''')
+
+          # Canonical nested args digest; JSON replacer arrays would drop nested keys.
+          path = "services/connect/src/mcp-client/manager.ts"
+          replace_once(path,
+              'function argsDigest(args: Readonly<Record<string, unknown>>): string {\n  return createHash("sha256").update(JSON.stringify(args, Object.keys(args).sort())).digest("hex");\n}\n',
+              '''function argsDigest(args: Readonly<Record<string, unknown>>): string {\n  return createHash("sha256")\n    .update(idempotencyPayload({ module: "Connect", tool: "mcp.args", args }))\n    .digest("hex");\n}\n''')
+
+          # Operator CLI script.
+          package_path = Path("services/connect/package.json")
+          package = json.loads(package_path.read_text())
+          package["scripts"]["mcp:manage"] = "tsx src/mcp-client-cli.ts"
+          package_path.write_text(json.dumps(package, indent=2) + "\n")
+          PY
+      - name: Format touched files
+        run: pnpm exec prettier --write services/connect/src/mcp-client services/connect/src/mcp-client-cli.ts services/connect/src/credential-vault.ts services/connect/src/http.ts services/connect/src/main.ts services/connect/src/index.ts services/connect/package.json services/hub/src/http.ts pnpm-lock.yaml
+      - name: Commit wired implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add services/connect services/hub/src/http.ts pnpm-lock.yaml
+          git commit -m "feat: wire outbound MCP runtime and vault"
+          git push origin HEAD:agent/outbound-mcp-manager-20260909
