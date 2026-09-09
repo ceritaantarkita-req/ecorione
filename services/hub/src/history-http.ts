@@ -45,7 +45,10 @@ const HistoryRangeQuerySchema = HistoryGrantQuerySchema.extend({
 });
 
 function mapHistoryError(error: unknown): unknown {
-  if (error instanceof HistorySessionNotFoundError || error instanceof HistoryAccessDeniedError) {
+  if (
+    error instanceof HistorySessionNotFoundError ||
+    error instanceof HistoryAccessDeniedError
+  ) {
     return new NotFoundError("History session/range tidak tersedia.");
   }
   if (
@@ -83,7 +86,8 @@ export function registerHistoryRoutes(app: FastifyInstance, ledger: HistoryLedge
   app.get("/v1/history/sessions", async (req) => {
     const query = parseOrBadRequest(HistoryGrantQuerySchema, req.query);
     const sessions = ledger.listSessions(query.scope).filter((session) => {
-      if (sensitivityRank(session.sensitivity) > sensitivityRank(query.maxSensitivity)) return false;
+      if (sensitivityRank(session.sensitivity) > sensitivityRank(query.maxSensitivity))
+        return false;
       if (query.hostedEligible && !maySendToHosted(session.syncClass)) return false;
       return true;
     });
@@ -108,16 +112,19 @@ export function registerHistoryRoutes(app: FastifyInstance, ledger: HistoryLedge
     }
   });
 
-  app.post<{ Params: { id: string } }>("/v1/history/sessions/:id/events", async (req, reply) => {
-    const sessionId = parseOrBadRequest(SessionIdSchema, req.params.id);
-    const body = parseOrBadRequest(HistoryAppendRequestSchema, req.body);
-    try {
-      const result = ledger.append(sessionId, body.expectedSeq, body.event);
-      return reply.code(result.deduplicated ? 200 : 201).send(result);
-    } catch (error) {
-      throw mapHistoryError(error);
-    }
-  });
+  app.post<{ Params: { id: string } }>(
+    "/v1/history/sessions/:id/events",
+    async (req, reply) => {
+      const sessionId = parseOrBadRequest(SessionIdSchema, req.params.id);
+      const body = parseOrBadRequest(HistoryAppendRequestSchema, req.body);
+      try {
+        const result = ledger.append(sessionId, body.expectedSeq, body.event);
+        return reply.code(result.deduplicated ? 200 : 201).send(result);
+      } catch (error) {
+        throw mapHistoryError(error);
+      }
+    },
+  );
 
   app.get<{ Params: { id: string } }>("/v1/history/sessions/:id/events", async (req) => {
     const sessionId = parseOrBadRequest(SessionIdSchema, req.params.id);

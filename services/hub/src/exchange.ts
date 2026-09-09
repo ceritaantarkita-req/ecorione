@@ -48,7 +48,10 @@ export interface EcxPlannerOptions {
   readonly makePacketId?: (() => EventId) | undefined;
 }
 
-export function planEcx(input: EcxPlanRequest, options: EcxPlannerOptions = {}): EcxPlanResponse {
+export function planEcx(
+  input: EcxPlanRequest,
+  options: EcxPlannerOptions = {},
+): EcxPlanResponse {
   const selected = input.candidates
     .map((candidate) => ({ candidate, score: overlapScore(input.need, candidate) }))
     .filter((entry) => entry.score > 0)

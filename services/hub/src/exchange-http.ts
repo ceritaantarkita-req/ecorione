@@ -32,7 +32,11 @@ export interface ExchangeRouteOptions {
   readonly internalToken?: string | undefined;
 }
 
-function encodeJson(value: unknown): { mediaType: string; contentBase64: string; sizeBytes: number } {
+function encodeJson(value: unknown): {
+  mediaType: string;
+  contentBase64: string;
+  sizeBytes: number;
+} {
   const bytes = Buffer.from(JSON.stringify(value), "utf8");
   return {
     mediaType: "application/json",
@@ -92,7 +96,9 @@ async function hydrateArtifact(
     if (response.status === 404 || response.status === 403) {
       throw new NotFoundError("Artifact reference tidak tersedia untuk grant ini.");
     }
-    throw new BadGatewayError(`Artifact hydration gagal dengan HTTP ${String(response.status)}.`);
+    throw new BadGatewayError(
+      `Artifact hydration gagal dengan HTTP ${String(response.status)}.`,
+    );
   }
   const declared = response.headers.get("content-length");
   if (declared !== null) {
@@ -169,7 +175,8 @@ export function registerExchangeRoutes(
     let hydratedBytes = 0;
     for (const index of input.refIndexes) {
       const ref = input.packet.refs[index];
-      if (ref === undefined) throw new BadRequestError(`ECX ref index tidak ada: ${String(index)}.`);
+      if (ref === undefined)
+        throw new BadRequestError(`ECX ref index tidak ada: ${String(index)}.`);
       let content: Omit<EcxHydratedItem, "index" | "ref">;
       if (ref.kind === "history") {
         try {

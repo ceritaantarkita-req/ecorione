@@ -85,7 +85,8 @@ export class HistoryPayloadError extends Error {
 function normalizeJson(value: unknown, path = "payload"): unknown {
   if (value === null || typeof value === "string" || typeof value === "boolean") return value;
   if (typeof value === "number") {
-    if (!Number.isFinite(value)) throw new HistoryPayloadError(`${path} mengandung angka non-finite.`);
+    if (!Number.isFinite(value))
+      throw new HistoryPayloadError(`${path} mengandung angka non-finite.`);
     return value;
   }
   if (Array.isArray(value))
@@ -95,7 +96,8 @@ function normalizeJson(value: unknown, path = "payload"): unknown {
     const normalized: Record<string, unknown> = {};
     for (const key of Object.keys(object).sort()) {
       const entry = object[key];
-      if (entry === undefined) throw new HistoryPayloadError(`${path}.${key} bernilai undefined.`);
+      if (entry === undefined)
+        throw new HistoryPayloadError(`${path}.${key} bernilai undefined.`);
       normalized[key] = normalizeJson(entry, `${path}.${key}`);
     }
     return normalized;
@@ -219,17 +221,20 @@ export class HistoryLedger {
 
   getSession(id: string): HistorySession | null {
     const row = this.db.raw.prepare("SELECT * FROM history_sessions WHERE id=?").get(id) as
-      | SessionRow
-      | undefined;
+      SessionRow | undefined;
     return row === undefined ? null : sessionFromRow(row);
   }
 
   listSessions(scope?: Scope): HistorySession[] {
     const rows = (
       scope === undefined
-        ? this.db.raw.prepare("SELECT * FROM history_sessions ORDER BY created_at DESC,id ASC").all()
+        ? this.db.raw
+            .prepare("SELECT * FROM history_sessions ORDER BY created_at DESC,id ASC")
+            .all()
         : this.db.raw
-            .prepare("SELECT * FROM history_sessions WHERE scope=? ORDER BY created_at DESC,id ASC")
+            .prepare(
+              "SELECT * FROM history_sessions WHERE scope=? ORDER BY created_at DESC,id ASC",
+            )
             .all(scope)
     ) as SessionRow[];
     return rows.map(sessionFromRow);
@@ -237,8 +242,7 @@ export class HistoryLedger {
 
   private existingEvent(id: string): HistoryEvent | null {
     const row = this.db.raw.prepare("SELECT * FROM history_events WHERE id=?").get(id) as
-      | EventRow
-      | undefined;
+      EventRow | undefined;
     return row === undefined ? null : eventFromRow(row);
   }
 
@@ -291,7 +295,11 @@ export class HistoryLedger {
     return { event, deduplicated: false };
   }
 
-  append(sessionId: SessionId, expectedSeq: number, draft: HistoryEventDraft): AppendHistoryResult {
+  append(
+    sessionId: SessionId,
+    expectedSeq: number,
+    draft: HistoryEventDraft,
+  ): AppendHistoryResult {
     const transaction = this.db.raw.transaction(() =>
       this.appendLocked(sessionId, expectedSeq, draft),
     );
@@ -299,11 +307,16 @@ export class HistoryLedger {
   }
 
   appendNext(sessionId: SessionId, draft: HistoryEventDraft): AppendHistoryResult {
-    const transaction = this.db.raw.transaction(() => this.appendLocked(sessionId, null, draft));
+    const transaction = this.db.raw.transaction(() =>
+      this.appendLocked(sessionId, null, draft),
+    );
     return transaction.immediate();
   }
 
-  appendBatch(sessionId: SessionId, drafts: readonly HistoryEventDraft[]): AppendHistoryResult[] {
+  appendBatch(
+    sessionId: SessionId,
+    drafts: readonly HistoryEventDraft[],
+  ): AppendHistoryResult[] {
     const transaction = this.db.raw.transaction(() =>
       drafts.map((draft) => this.appendLocked(sessionId, null, draft)),
     );
@@ -325,20 +338,28 @@ export class HistoryLedger {
         );
       }
       if (event.prevHash !== previousHash) {
-        throw new HistoryIntegrityError(`History ${sessionId} prevHash mismatch pada seq ${String(index)}.`);
+        throw new HistoryIntegrityError(
+          `History ${sessionId} prevHash mismatch pada seq ${String(index)}.`,
+        );
       }
       const { hash: _hash, ...withoutHash } = event;
       const recomputed = hashEvent(withoutHash);
       if (recomputed !== event.hash) {
-        throw new HistoryIntegrityError(`History ${sessionId} hash mismatch pada seq ${String(index)}.`);
+        throw new HistoryIntegrityError(
+          `History ${sessionId} hash mismatch pada seq ${String(index)}.`,
+        );
       }
       previousHash = event.hash;
     }
     if (session.nextSeq !== rows.length) {
-      throw new HistoryIntegrityError(`History ${sessionId} nextSeq tidak cocok dengan committed rows.`);
+      throw new HistoryIntegrityError(
+        `History ${sessionId} nextSeq tidak cocok dengan committed rows.`,
+      );
     }
     if (session.headHash !== previousHash) {
-      throw new HistoryIntegrityError(`History ${sessionId} headHash tidak cocok dengan committed prefix.`);
+      throw new HistoryIntegrityError(
+        `History ${sessionId} headHash tidak cocok dengan committed prefix.`,
+      );
     }
   }
 

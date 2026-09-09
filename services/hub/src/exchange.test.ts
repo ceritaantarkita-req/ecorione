@@ -52,7 +52,9 @@ describe("ECX sparse planner", () => {
       EcxPlanRequestSchema.parse({
         ...request,
         need: ["finance"],
-        candidates: [{ agentId: "agent:writer", capabilities: ["copywriting"], estimatedCost: 0 }],
+        candidates: [
+          { agentId: "agent:writer", capabilities: ["copywriting"], estimatedCost: 0 },
+        ],
       }),
     );
     expect(result.packets).toEqual([]);

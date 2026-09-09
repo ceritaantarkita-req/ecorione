@@ -56,7 +56,9 @@ describe("ECX HTTP integration", () => {
 
     const first = await app.inject({ method: "POST", url: "/v1/exchange/plan", payload });
     expect(first.statusCode).toBe(200);
-    const firstBody = first.json() as { packets: Array<{ packetId: string; recipient: string }> };
+    const firstBody = first.json() as {
+      packets: Array<{ packetId: string; recipient: string }>;
+    };
     expect(firstBody.packets).toHaveLength(2);
     expect(firstBody.packets.map((packet) => packet.recipient)).toEqual([
       "agent:reviewer-a",
