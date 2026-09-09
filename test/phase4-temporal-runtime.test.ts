@@ -187,8 +187,9 @@ function workerProcess(input: {
       ECORIONE_CONNECT_URL: input.connectUrl,
       ECORIONE_SANDBOX_URL: input.sandboxUrl,
       ECORIONE_RND_URL: input.rndUrl,
+      ECORIONE_FLOW_WORKER_READY_IPC: "1",
     },
-    stdio: ["ignore", "inherit", "inherit"],
+    stdio: ["ignore", "inherit", "inherit", "ipc"],
   });
 }
 
@@ -197,6 +198,24 @@ function assertWorkerAlive(child: ChildProcess, label: string): void {
     throw new Error(
       `${label} exited before recovery: exit=${String(child.exitCode)} signal=${String(child.signalCode)}`,
     );
+  }
+}
+
+async function waitForWorkerReady(child: ChildProcess, label: string): Promise<void> {
+  assertWorkerAlive(child, label);
+  const [message] = await withTimeout(
+    once(child, "message"),
+    `${label} Temporal polling readiness`,
+    15_000,
+  );
+  assertWorkerAlive(child, label);
+  if (
+    typeof message !== "object" ||
+    message === null ||
+    !("type" in message) ||
+    (message as { type?: unknown }).type !== "ECORIONE_FLOW_WORKER_READY"
+  ) {
+    throw new Error(`${label} emitted an unexpected readiness message.`);
   }
 }
 
@@ -351,7 +370,7 @@ describe("Fase 4 real Temporal restart acceptance", () => {
           rndUrl,
         };
         childOne = workerProcess(runtime);
-        await once(childOne, "spawn");
+        await Promise.all([once(childOne, "spawn"), waitForWorkerReady(childOne, "Worker #1")]);
 
         const start = await flow.inject({
           method: "POST",
@@ -389,7 +408,10 @@ describe("Fase 4 real Temporal restart acceptance", () => {
         expect((await handle.describe()).status.name).toBe("RUNNING");
 
         childTwo = workerProcess(runtime);
-        await once(childTwo, "spawn");
+        await Promise.all([
+          once(childTwo, "spawn"),
+          waitForWorkerReady(childTwo, "Replacement worker #2"),
+        ]);
         await waitUntil(async () => {
           if (childTwo === null) throw new Error("Replacement worker #2 hilang.");
           assertWorkerAlive(childTwo, "Replacement worker #2");
