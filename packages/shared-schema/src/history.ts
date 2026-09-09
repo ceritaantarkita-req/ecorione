@@ -15,6 +15,8 @@ export const HISTORY_EVENT_TYPES = [
   "sandbox.executed",
   "memory.read",
   "artifact.created",
+  "multimodal.processed",
+  "speech.synthesized",
   "flow.started",
   "flow.completed",
   "system.error",
