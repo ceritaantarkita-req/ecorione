@@ -88,7 +88,9 @@ describe("ExtensionRegistry", () => {
       ...request,
       manifest: manifest("1.0.1", "b"),
     });
-    expect(() => registry.install(conflicting, now2)).toThrow(ExtensionIdempotencyConflictError);
+    expect(() => registry.install(conflicting, now2)).toThrow(
+      ExtensionIdempotencyConflictError,
+    );
   });
 
   it("appends update and rollback revisions without rewriting history", () => {
@@ -132,10 +134,9 @@ describe("ExtensionRegistry", () => {
     const installed = registry.install(installRequest(), now1);
     const revisionId = installed.revision!.revisionId;
     expect(() =>
-      db.raw.prepare("UPDATE extension_revisions SET manifest_sha256=? WHERE revision_id=?").run(
-        "f".repeat(64),
-        revisionId,
-      ),
+      db.raw
+        .prepare("UPDATE extension_revisions SET manifest_sha256=? WHERE revision_id=?")
+        .run("f".repeat(64), revisionId),
     ).toThrow(/append-only/);
     expect(() =>
       db.raw.prepare("DELETE FROM extension_revisions WHERE revision_id=?").run(revisionId),

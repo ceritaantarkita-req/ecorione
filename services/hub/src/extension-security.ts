@@ -31,7 +31,9 @@ function canonical(value: unknown): unknown {
 }
 
 export function extensionManifestDigest(manifest: ExtensionManifest): string {
-  return createHash("sha256").update(JSON.stringify(canonical(manifest))).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(canonical(manifest)))
+    .digest("hex");
 }
 
 function hasCapability(manifest: ExtensionManifest, id: string): boolean {
@@ -45,7 +47,8 @@ function hasPermission(
 ): boolean {
   return manifest.permissions.some(
     (permission) =>
-      permission.id === id && (actionClass === undefined || permission.actionClass === actionClass),
+      permission.id === id &&
+      (actionClass === undefined || permission.actionClass === actionClass),
   );
 }
 
@@ -63,7 +66,10 @@ export function validateExtensionManifest(input: unknown): ExtensionSecurityRepo
     });
   }
 
-  if (manifest.source.type === "artifact" && manifest.source.artifactId !== manifest.packageArtifactId) {
+  if (
+    manifest.source.type === "artifact" &&
+    manifest.source.artifactId !== manifest.packageArtifactId
+  ) {
     findings.push({
       severity: "BLOCK",
       code: "ARTIFACT_SOURCE_MISMATCH",
@@ -117,7 +123,8 @@ export function validateExtensionManifest(input: unknown): ExtensionSecurityRepo
   findings.push({
     severity: "INFO",
     code: "SOURCE_PIN_VERIFIED",
-    message: "Manifest memakai immutable source identity + SHA-256; executable host runtime tidak tersedia.",
+    message:
+      "Manifest memakai immutable source identity + SHA-256; executable host runtime tidak tersedia.",
   });
 
   return {

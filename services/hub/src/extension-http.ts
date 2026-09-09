@@ -65,7 +65,10 @@ export class ExtensionApprovalRequiredError extends Error {
 }
 
 function toHttpError(error: unknown): unknown {
-  if (error instanceof ExtensionNotFoundError || error instanceof ExtensionRevisionNotFoundError) {
+  if (
+    error instanceof ExtensionNotFoundError ||
+    error instanceof ExtensionRevisionNotFoundError
+  ) {
     return new NotFoundError(error.message);
   }
   if (error instanceof ExtensionIdMismatchError) return new BadRequestError(error.message);
@@ -113,11 +116,7 @@ function mutationActionRequest(
   };
 }
 
-function authorize(
-  repo: HubRepository,
-  request: ActionRequest,
-  now: Timestamp,
-): void {
+function authorize(repo: HubRepository, request: ActionRequest, now: Timestamp): void {
   const existing = repo.getApprovalByIdempotencyKey(request.idempotencyKey!);
   if (existing !== null) {
     if (existing.status === "APPROVE") return;

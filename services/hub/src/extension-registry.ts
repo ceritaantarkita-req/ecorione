@@ -540,13 +540,18 @@ export class ExtensionRegistry {
   ): ExtensionMutationResult {
     return this.db.raw.transaction(() => {
       const prior = this.db.raw
-        .prepare("SELECT fingerprint,result_json FROM extension_operations WHERE idempotency_key=?")
+        .prepare(
+          "SELECT fingerprint,result_json FROM extension_operations WHERE idempotency_key=?",
+        )
         .get(idempotencyKey) as OperationRow | undefined;
       if (prior !== undefined) {
         if (prior.fingerprint !== requestFingerprint) {
           throw new ExtensionIdempotencyConflictError(idempotencyKey);
         }
-        const result = JSON.parse(prior.result_json) as Omit<ExtensionMutationResult, "deduplicated">;
+        const result = JSON.parse(prior.result_json) as Omit<
+          ExtensionMutationResult,
+          "deduplicated"
+        >;
         return { ...result, deduplicated: true };
       }
 

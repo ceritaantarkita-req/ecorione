@@ -11,9 +11,7 @@ export const ExtensionIdSchema = z
   .regex(/^[a-z][a-z0-9._-]*$/);
 export type ExtensionId = z.infer<typeof ExtensionIdSchema>;
 
-export const ExtensionRevisionIdSchema = z
-  .string()
-  .regex(/^xrev_[a-z0-9][a-z0-9_-]{7,63}$/);
+export const ExtensionRevisionIdSchema = z.string().regex(/^xrev_[a-z0-9][a-z0-9_-]{7,63}$/);
 export type ExtensionRevisionId = z.infer<typeof ExtensionRevisionIdSchema>;
 
 export const ExtensionVersionSchema = z
@@ -33,18 +31,21 @@ const GithubRepositorySchema = z
   .regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/);
 const GithubCommitShaSchema = z.string().regex(/^[a-f0-9]{40}$/);
 
-const HttpsUrlSchema = z.string().url().superRefine((value, ctx) => {
-  const url = new URL(value);
-  if (url.protocol !== "https:") {
-    ctx.addIssue({ code: "custom", message: "Extension release URL wajib HTTPS." });
-  }
-  if (url.username !== "" || url.password !== "" || url.hash !== "") {
-    ctx.addIssue({
-      code: "custom",
-      message: "Extension release URL tidak boleh memuat credential atau fragment.",
-    });
-  }
-});
+const HttpsUrlSchema = z
+  .string()
+  .url()
+  .superRefine((value, ctx) => {
+    const url = new URL(value);
+    if (url.protocol !== "https:") {
+      ctx.addIssue({ code: "custom", message: "Extension release URL wajib HTTPS." });
+    }
+    if (url.username !== "" || url.password !== "" || url.hash !== "") {
+      ctx.addIssue({
+        code: "custom",
+        message: "Extension release URL tidak boleh memuat credential atau fragment.",
+      });
+    }
+  });
 
 export const ExtensionSourceSchema = z.discriminatedUnion("type", [
   z
@@ -79,10 +80,16 @@ const RelativeEntrypointSchema = z
   .max(512)
   .superRefine((value, ctx) => {
     if (value.startsWith("/") || value.startsWith("\\") || value.includes("\\")) {
-      ctx.addIssue({ code: "custom", message: "Entrypoint extension harus path relatif POSIX." });
+      ctx.addIssue({
+        code: "custom",
+        message: "Entrypoint extension harus path relatif POSIX.",
+      });
     }
     if (value.split("/").includes("..")) {
-      ctx.addIssue({ code: "custom", message: "Entrypoint extension tidak boleh path traversal." });
+      ctx.addIssue({
+        code: "custom",
+        message: "Entrypoint extension tidak boleh path traversal.",
+      });
     }
     if (value.includes("\u0000")) {
       ctx.addIssue({ code: "custom", message: "Entrypoint extension mengandung NUL." });

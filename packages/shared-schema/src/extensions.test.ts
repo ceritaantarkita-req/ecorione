@@ -33,7 +33,9 @@ describe("ExtensionManifestSchema", () => {
   });
 
   it("rejects unknown manifest fields", () => {
-    expect(() => ExtensionManifestSchema.parse({ ...manifest(), hostCommand: "node index.js" })).toThrow();
+    expect(() =>
+      ExtensionManifestSchema.parse({ ...manifest(), hostCommand: "node index.js" }),
+    ).toThrow();
   });
 
   it("rejects GitHub branches/tags instead of a full commit SHA", () => {
@@ -69,7 +71,12 @@ describe("ExtensionManifestSchema", () => {
 
   it("rejects sandbox path traversal", () => {
     const value = manifest();
-    value.execution = { kind: "sandbox", artifactId, runtime: "node", entrypoint: "../index.js" };
+    value.execution = {
+      kind: "sandbox",
+      artifactId,
+      runtime: "node",
+      entrypoint: "../index.js",
+    };
     expect(() => ExtensionManifestSchema.parse(value)).toThrow();
   });
 

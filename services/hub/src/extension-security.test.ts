@@ -30,7 +30,9 @@ describe("validateExtensionManifest", () => {
     const report = validateExtensionManifest(baseManifest());
     expect(report.allowed).toBe(true);
     expect(report.manifestSha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(report.findings.some((finding) => finding.code === "SOURCE_PIN_VERIFIED")).toBe(true);
+    expect(report.findings.some((finding) => finding.code === "SOURCE_PIN_VERIFIED")).toBe(
+      true,
+    );
   });
 
   it("blocks package digest mismatch", () => {
@@ -46,7 +48,9 @@ describe("validateExtensionManifest", () => {
     value.execution = { kind: "mcp", serverId: "remote" };
     const report = validateExtensionManifest(value);
     expect(report.allowed).toBe(false);
-    expect(report.findings.map((finding) => finding.code)).toContain("MCP_CAPABILITY_UNDECLARED");
+    expect(report.findings.map((finding) => finding.code)).toContain(
+      "MCP_CAPABILITY_UNDECLARED",
+    );
   });
 
   it("allows MCP runtime only after explicit capability declaration", () => {
@@ -62,7 +66,10 @@ describe("validateExtensionManifest", () => {
     const report = validateExtensionManifest(value);
     expect(report.allowed).toBe(false);
     expect(report.findings.map((finding) => finding.code)).toEqual(
-      expect.arrayContaining(["SANDBOX_CAPABILITY_UNDECLARED", "SANDBOX_PERMISSION_UNDECLARED"]),
+      expect.arrayContaining([
+        "SANDBOX_CAPABILITY_UNDECLARED",
+        "SANDBOX_PERMISSION_UNDECLARED",
+      ]),
     );
 
     value.capabilities = [{ id: "sandbox.execute", description: "Execute inside Sandbox." }];
@@ -77,6 +84,8 @@ describe("validateExtensionManifest", () => {
     value.secretRequirements = [{ name: "api-key", purpose: "Authenticate upstream." }];
     const report = validateExtensionManifest(value);
     expect(report.allowed).toBe(false);
-    expect(report.findings.map((finding) => finding.code)).toContain("SECRET_PERMISSION_UNDECLARED");
+    expect(report.findings.map((finding) => finding.code)).toContain(
+      "SECRET_PERMISSION_UNDECLARED",
+    );
   });
 });
