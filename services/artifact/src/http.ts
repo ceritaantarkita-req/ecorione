@@ -69,8 +69,15 @@ export function buildArtifactServer(
   metadata: ArtifactMetadataClient,
   options: BuildArtifactServerOptions = {},
 ): FastifyInstance {
-  const app = createServer({ name: "artifact", token: options.token, logger: options.logger });
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_ARTIFACT_BYTES;
+  // Base64 expands binary by ~4/3. Leave bounded room for JSON metadata and framing.
+  const bodyLimit = Math.ceil((maxBytes * 4) / 3) + 1024 * 1024;
+  const app = createServer({
+    name: "artifact",
+    token: options.token,
+    logger: options.logger,
+    bodyLimit,
+  });
 
   app.post("/v1/artifacts", async (req, reply) => {
     const body = parseOrBadRequest(UploadSchema, req.body);
