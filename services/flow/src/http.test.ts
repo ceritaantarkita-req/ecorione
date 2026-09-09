@@ -44,7 +44,11 @@ describe("Flow HTTP", () => {
     apps.push(app);
     const res = await app.inject({ method: "POST", url: "/v1/flows", payload: startPayload });
     expect(res.statusCode).toBe(202);
-    const body = res.json() as { flowId: string; operationId: string; temporalWorkflowId: string };
+    const body = res.json() as {
+      flowId: string;
+      operationId: string;
+      temporalWorkflowId: string;
+    };
     expect(body.flowId).toMatch(/^wf_/);
     expect(body.operationId).toMatch(/^op_/);
     expect(body.temporalWorkflowId).toBe(body.flowId);

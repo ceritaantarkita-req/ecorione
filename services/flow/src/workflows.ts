@@ -63,7 +63,10 @@ export async function operationWorkflow(flow: FlowWorkflowInput): Promise<FlowWo
       name: "flow.rejected",
       attributes: { decision: decision?.decision ?? "UNKNOWN" },
     });
-    throw ApplicationFailure.nonRetryable("Workflow ditolak pada human approval.", "FLOW_REJECTED");
+    throw ApplicationFailure.nonRetryable(
+      "Workflow ditolak pada human approval.",
+      "FLOW_REJECTED",
+    );
   }
 
   const ai = await activities.callAi({ flow, transformed });

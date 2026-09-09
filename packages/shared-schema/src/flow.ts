@@ -20,7 +20,12 @@ export const FlowStartRequestSchema = z.object({
   scope: ScopeSchema,
   sensitivity: SensitivitySchema,
   inputText: z.string().min(1).max(32_000),
-  delayMs: z.number().int().min(0).max(30 * 24 * 60 * 60 * 1000).default(0),
+  delayMs: z
+    .number()
+    .int()
+    .min(0)
+    .max(30 * 24 * 60 * 60 * 1000)
+    .default(0),
   approvalPrompt: z.string().min(1).max(1024),
   aiTarget: z.enum(["hosted", "local"]),
   aiMessage: z.string().min(1).max(16_000),

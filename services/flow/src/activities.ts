@@ -72,7 +72,9 @@ export function createFlowActivities(config: FlowActivityConfig): FlowActivities
         },
       });
       if (verdict.outcome !== "REQUIRE_APPROVAL") {
-        throw new Error(`Human approval node tidak menghasilkan approval durable: ${verdict.outcome}`);
+        throw new Error(
+          `Human approval node tidak menghasilkan approval durable: ${verdict.outcome}`,
+        );
       }
     },
 
