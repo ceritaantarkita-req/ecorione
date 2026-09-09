@@ -23,6 +23,9 @@ dan yang jadi **kandidat komersial** nanti, supaya tidak ada kejutan "rug pull".
 | **Context** | Memori 4 tier; data pengguna lokal |
 | **RnD** | Trace + eval evidence |
 | **Sync local/self-hosted** | Device pairing, E2E relay protocol/client, dan MCP bridge lokal adalah bagian dari kemampuan self-hosted; ADR-16 |
+| **Artifact self-hosted** | CAS L3 dan authorization boundary lokal adalah bagian dari kontrol data pengguna |
+| **Space self-hosted** | Notes lokal + editor core-memory harus tetap dapat diaudit dan dijalankan tanpa layanan ecorione |
+| **Sandbox self-hosted** | Policy/execution boundary lokal harus dapat diaudit; kode yang sudah dirilis MIT tidak dapat ditarik kembali |
 | `packages/shared-*`, `packages/context-assembly` | Fondasi kontrak bersama |
 
 ## Kandidat tier berbayar / repo privat
@@ -30,12 +33,12 @@ dan yang jadi **kandidat komersial** nanti, supaya tidak ada kejutan "rug pull".
 | Bagian | Batasnya |
 |---|---|
 | **Managed Sync relay/cloud** | Infrastruktur publik yang dioperasikan ecorione, bukan `services/sync` lokal; biaya uptime/traffic nyata |
-| **Space advanced/team** | Fitur workspace/tim di atas backend self-hosted yang terbuka; keputusan komersial final belum dikunci |
+| **Space advanced/team** | Kolaborasi, hosting, governance dan fitur tim di atas backend self-hosted yang terbuka |
 | **Flow managed** | Hosting/operasi durable execution untuk tim; definisi integrasi inti tetap harus dapat diaudit |
 | **Sandbox managed** | Isolasi berskala, governance/compliance, image registry dan operasi enterprise |
 
-**Artifact** dan **AutoClick** belum diputuskan arah komersialnya. Keputusan lisensi tidak
-boleh mengubah lisensi kode MIT yang sudah pernah dirilis.
+**AutoClick** belum diputuskan arah komersialnya. Keputusan lisensi tidak boleh mengubah
+lisensi kode MIT yang sudah pernah dirilis.
 
 ## Struktur teknis untuk layanan berbayar
 
