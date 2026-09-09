@@ -1,13 +1,13 @@
 # API Fase 2 — MCP inbound + Sync
 
-Status: **implemented on working branch** — 2026-09-09. Dokumen ini menjelaskan kontrak yang benar-benar ada setelah Fase 2, bukan rencana awal. Rencana asal tetap di `fase2.md`; keputusan reachability ada di ADR-16.
+Status: **implemented + external HTTPS acceptance proven** — 2026-09-09. Dokumen ini menjelaskan kontrak yang benar-benar ada setelah Fase 2 dan hardening Fase 6+, bukan rencana awal. Rencana asal tetap di `fase2.md`; keputusan reachability ada di ADR-16.
 
 ## 1. Topologi
 
 - Connect outbound tetap di `127.0.0.1:17023`.
 - Connect MCP HTTP berjalan terpisah di `127.0.0.1:17010`; Connect **tidak pernah** bind publik.
-- Sync local/self-hosted berjalan di `127.0.0.1:17011` dan dapat menjadi target tunnel HTTPS pihak ketiga sesuai ADR-16.
-- Semua tool memory MCP tetap melewati **Connect -> Hub -> Context**. Tidak ada akses DB Context dari Connect/Sync.
+- Sync local/self-hosted berjalan default di `127.0.0.1:17011` dan menjadi target tunnel/reverse proxy HTTPS pihak ketiga sesuai ADR-16.
+- Semua tool memory MCP tetap melewati **Connect -> Hub -> Context/Artifact**. Tidak ada akses DB service lain dari Connect/Sync.
 - Managed public relay ecorione **tidak** ada di repo publik ini.
 
 ## 2. MCP 2026-07-28
@@ -31,7 +31,7 @@ Lima tool:
 4. `memory_recent`
 5. `memory_open`
 
-`memory_open` tetap mengembalikan not-implemented eksplisit sampai Artifact Fase 3 tersedia.
+`memory_open` sekarang fungsional karena Artifact Fase 3 sudah tersambung. Akses tetap melewati Hub dan dicek terhadap scope/sensitivity sebelum bytes Artifact dikembalikan.
 
 ### Trust boundary
 
@@ -51,10 +51,12 @@ Endpoint RPC:
 - `POST /mcp`
 - `GET /mcp` -> 405 (stateless POST-only)
 
-Server memvalidasi issuer, resource/audience, JWKS signature, Origin, OAuth scopes, dan routing headers MCP. Scope tool minimal:
+Server memvalidasi issuer, resource/audience, JWKS signature, expiry/not-before, Origin, OAuth scopes, memory scopes/sensitivity, dan routing headers MCP. Scope tool minimal:
 
 - read tools -> `memory:read`
 - `memory_propose` -> `memory:write`
+
+Jika auth gagal, `WWW-Authenticate` mengiklankan `resource_metadata`, scope minimum, dan `invalid_token`/`insufficient_scope`. Untuk resource publik `https://host/mcp`, metadata berada di `https://host/.well-known/oauth-protected-resource/mcp` dan Sync meneruskan header challenge tanpa menulis ulang URL publik menjadi loopback.
 
 Env wajib untuk HTTP MCP:
 
@@ -62,6 +64,8 @@ Env wajib untuk HTTP MCP:
 - `ECORIONE_MCP_RESOURCE`
 - `ECORIONE_MCP_JWKS_URL`
 - `ECORIONE_MCP_HANDLE_KEY`
+
+`ECORIONE_MCP_RESOURCE` harus mewakili URL resource yang dilihat klien (misalnya URL HTTPS Sync/tunnel), bukan URL Connect loopback.
 
 ## 4. Hub MCP boundary
 
@@ -115,18 +119,33 @@ Sync meneruskan endpoint berikut ke Connect MCP loopback tanpa menghapus header 
 - `/.well-known/oauth-protected-resource/mcp`
 - `/mcp`
 
+Request header `Authorization`, `Origin`, `Content-Type`, `MCP-Protocol-Version`, `Mcp-Method`, dan `Mcp-Name` diteruskan; response `Content-Type` dan `WWW-Authenticate` juga dipertahankan.
+
 Tunnel HTTPS v1 diarahkan ke Sync local, **bukan** langsung ke Connect.
 
-## 7. Security invariants
+## 7. External HTTPS acceptance
+
+Jalankan dedicated acceptance dengan binary cloudflared yang sudah diverifikasi:
+
+```bash
+CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
+```
+
+Workflow `.github/workflows/mcp-external-acceptance.yml` mengunduh release cloudflared yang dipin, memverifikasi checksum, build runtime TypeScript, lalu membuat public HTTPS tunnel sementara untuk OAuth/JWKS dan Sync.
+
+Acceptance memeriksa discovery, 401 challenge, public JWKS/JWT verification, `server/discover`, `tools/list`, `tools/call memory_search`, insufficient scope, malformed token, Origin denial, dan routing-header mismatch. Kegagalan external network tetap failure; workflow tidak mengubahnya menjadi skip/pass.
+
+## 8. Security invariants
 
 - Connect MCP tetap loopback-only.
-- Sync local tetap loopback-only; exposure publik dilakukan tunnel yang dipilih pemilik mesin.
+- Sync local default loopback; exposure publik dilakukan tunnel yang dipilih pemilik mesin.
 - Tidak ada plaintext user-memory di tabel relay.
 - Pairing code sekali pakai dan punya expiry.
 - MCP hosted tidak memperluas scope/sensitivity dari token/handle.
 - Hosted writes masuk quarantine.
+- `resource_metadata` menunjuk resource publik yang benar dan bukan URL Connect loopback.
 - L4 tetap di luar ceiling v1 dan tidak dapat diubah menjadi approval escape hatch.
 
-## 8. Batas Fase 2
+## 9. Batas Fase 2
 
-Fase 2 tidak membangun managed cloud relay, Artifact storage, durable Flow, atau Sandbox. `memory_open` baru menjadi fungsional setelah Artifact Fase 3 tersambung.
+Fase 2 tidak membangun managed cloud relay, durable Flow, atau Sandbox. Artifact, Flow, dan Sandbox sudah dibangun pada fase sesudahnya, tetapi tetap merupakan boundary service terpisah. External HTTPS acceptance membuktikan transport v1; ia tidak berarti ecorione mengoperasikan managed public relay.
