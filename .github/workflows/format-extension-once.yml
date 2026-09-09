@@ -1,0 +1,34 @@
+name: Format Extension Once
+
+on:
+  push:
+    branches: [agent/plugin-extension-framework-20260909]
+    paths: [".github/workflows/format-extension-once.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/plugin-extension-framework-20260909
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --write packages/shared-schema/src/extensions.ts packages/shared-schema/src/extensions.test.ts services/hub/src/extension-http.ts services/hub/src/extension-registry.ts services/hub/src/extension-registry.test.ts services/hub/src/extension-security.ts services/hub/src/extension-security.test.ts services/hub/src/http.ts
+      - run: pnpm run format:check
+      - name: Commit formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add packages/shared-schema/src/extensions.ts packages/shared-schema/src/extensions.test.ts services/hub/src/extension-http.ts services/hub/src/extension-registry.ts services/hub/src/extension-registry.test.ts services/hub/src/extension-security.ts services/hub/src/extension-security.test.ts services/hub/src/http.ts
+          git diff --cached --quiet || git commit -m "style: format extension framework"
+          git push origin HEAD:agent/plugin-extension-framework-20260909
