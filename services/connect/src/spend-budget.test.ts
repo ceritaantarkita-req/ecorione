@@ -80,10 +80,9 @@ describe("FileSpendBudget", () => {
     reserve(budget, OP1, 0.4, DAY1);
     reserve(budget, OP2, 0.2, DAY2);
     expect(() => reserve(budget, OP3, 0.2, DAY2)).toThrow(SpendBudgetExceededError);
-    expect(budget.summary(DAY2)).toMatchObject({
-      dailyCommittedUsd: 0.2,
-      monthlyCommittedUsd: 0.6,
-    });
+    const summary = budget.summary(DAY2);
+    expect(summary.dailyCommittedUsd).toBeCloseTo(0.2, 12);
+    expect(summary.monthlyCommittedUsd).toBeCloseTo(0.6, 12);
   });
 
   it("monthly period reset mengizinkan budget baru", () => {
