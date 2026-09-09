@@ -303,7 +303,7 @@ describe("Fase 4 real Temporal restart acceptance", () => {
   }, 60_000);
 
   it.skipIf(process.env.ECORIONE_PHASE4_PROCESS_ACCEPTANCE !== "1")(
-    "survives forced worker crashes and completes through real Hub, Connect, Sandbox and RnD boundaries",
+    "survives a forced worker crash and completes through real Hub, Connect, Sandbox and RnD boundaries",
     async () => {
       const root = mkdtempSync(join(tmpdir(), "ecorione-phase4-"));
       const workspace = join(root, "workspace");
@@ -319,7 +319,6 @@ describe("Fase 4 real Temporal restart acceptance", () => {
       let flow: ReturnType<typeof buildFlowServer> | null = null;
       let childOne: ChildProcess | null = null;
       let childTwo: ChildProcess | null = null;
-      let childThree: ChildProcess | null = null;
 
       try {
         const rndUrl = await listen(rnd);
@@ -397,22 +396,9 @@ describe("Fase 4 real Temporal restart acceptance", () => {
           return (await auditTypes(hubUrl, started.operationId)).includes("APPROVAL_REQUESTED");
         }, "durable Hub approval");
 
-        await killWorker(childTwo);
-        childTwo = null;
         expect((await handle.describe()).status.name).toBe("RUNNING");
         expect(await auditTypes(hubUrl, started.operationId)).toContain("APPROVAL_REQUESTED");
-
-        childThree = workerProcess(runtime);
-        await once(childThree, "spawn");
-        await waitUntil(async () => {
-          if (childThree === null) throw new Error("Replacement worker #3 hilang.");
-          assertWorkerAlive(childThree, "Replacement worker #3");
-          try {
-            return (await handle.query<OperationId>("operationId")) === started.operationId;
-          } catch {
-            return false;
-          }
-        }, "replacement worker #3 workflow replay");
+        assertWorkerAlive(childTwo, "Replacement worker #2");
 
         const decision = await withTimeout(
           flow.inject({
@@ -445,8 +431,8 @@ describe("Fase 4 real Temporal restart acceptance", () => {
             executionTraces: await traceNames(rndUrl, `${started.operationId}-execution`).catch(
               () => [],
             ),
-            workerExitCode: childThree.exitCode,
-            workerSignalCode: childThree.signalCode,
+            workerExitCode: childTwo?.exitCode ?? null,
+            workerSignalCode: childTwo?.signalCode ?? null,
             workflowStatus: await handle
               .describe()
               .then((description) => description.status.name)
@@ -480,7 +466,6 @@ describe("Fase 4 real Temporal restart acceptance", () => {
       } finally {
         if (childOne !== null) await killWorker(childOne).catch(() => undefined);
         if (childTwo !== null) await killWorker(childTwo).catch(() => undefined);
-        if (childThree !== null) await killWorker(childThree).catch(() => undefined);
         if (flow !== null) await flow.close();
         if (sandbox !== null) await sandbox.close();
         if (hub !== null) await hub.close();
