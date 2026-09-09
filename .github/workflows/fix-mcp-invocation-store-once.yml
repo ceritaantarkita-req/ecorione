@@ -19,7 +19,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Fix durable MCP invocation timestamps and workspace provenance
+      - name: Fix durable MCP invocation timestamps, workspace provenance, and preflight retry guard
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -46,13 +46,19 @@ jobs:
               '''  return (\n    entry.serverId === input.serverId &&\n''',
               '''  return (\n    entry.workspaceId === input.workspaceId &&\n    entry.serverId === input.serverId &&\n''')
           repl(p,
+              '''export class FileMcpInvocationStore {\n  constructor(private readonly path: string) {}\n\n  reserve(input: McpInvocationReservationInput): McpInvocationReservation {\n''',
+              '''export class FileMcpInvocationStore {\n  constructor(private readonly path: string) {}\n\n  /**\n   * Reject known ambiguous retries before Connect opens a new transport or performs\n   * remote discovery. This is a read-only guard; reserve() remains the atomic race\n   * barrier immediately before the remote side-effect dispatch.\n   */\n  assertPreflightSafe(input: McpInvocationReservationInput): void {\n    const state = readState(this.path);\n    const prior = state.entries.find((entry) => entry.idempotencyKey === input.idempotencyKey);\n    if (prior === undefined) return;\n    if (!sameInvocation(prior, input)) {\n      throw new McpInvocationConflictError(input.idempotencyKey);\n    }\n    if (prior.status !== "settled") {\n      throw new McpInvocationOutcomeUncertainError(input.idempotencyKey, prior.status);\n    }\n  }\n\n  reserve(input: McpInvocationReservationInput): McpInvocationReservation {\n''')
+          repl(p,
               '''  reserve(input: McpInvocationReservationInput): McpInvocationReservation {\n    const normalized = InvocationEntrySchema.parse({\n      ...input,\n      status: "reserved",\n      result: null,\n      settledAt: null,\n    });\n''',
               '''  reserve(input: McpInvocationReservationInput): McpInvocationReservation {\n    const normalized = InvocationEntrySchema.parse({\n      idempotencyKey: input.idempotencyKey,\n      operationId: input.operationId,\n      workspaceId: input.workspaceId,\n      serverId: input.serverId,\n      toolName: input.toolName,\n      argsDigest: input.argsDigest,\n      status: "reserved",\n      result: null,\n      createdAt: input.now,\n      settledAt: null,\n    });\n''')
 
           p = "services/connect/src/mcp-client/manager.ts"
           repl(p,
-              '''        operationId: request.operationId,\n        serverId,\n''',
-              '''        operationId: request.operationId,\n        workspaceId: request.workspaceId,\n        serverId,\n''')
+              '''    await this.governance.authorize(governanceRequest);\n    const client = await this.client(config, request.workspaceId);\n    const advertised = await client.listTools(config.requestTimeoutMs);\n''',
+              '''    await this.governance.authorize(governanceRequest);\n    const reservationInput =\n      idempotencyKey === null\n        ? null\n        : {\n            idempotencyKey,\n            operationId: request.operationId,\n            workspaceId: request.workspaceId,\n            serverId,\n            toolName,\n            argsDigest: argsDigest(request.arguments),\n            now: request.now,\n          };\n    if (reservationInput !== null) this.invocations.assertPreflightSafe(reservationInput);\n\n    const client = await this.client(config, request.workspaceId);\n    const advertised = await client.listTools(config.requestTimeoutMs);\n''')
+          repl(p,
+              '''    let reservation: McpInvocationReservation | null = null;\n    if (idempotencyKey !== null) {\n      reservation = this.invocations.reserve({\n        idempotencyKey,\n        operationId: request.operationId,\n        serverId,\n        toolName,\n        argsDigest: argsDigest(request.arguments),\n        now: request.now,\n      });\n''',
+              '''    let reservation: McpInvocationReservation | null = null;\n    if (reservationInput !== null) {\n      reservation = this.invocations.reserve(reservationInput);\n''')
 
           p = "services/connect/src/mcp-client/invocation-store.test.ts"
           repl(p,
@@ -69,9 +75,14 @@ jobs:
               '''    const reserved = store.reserve(input());\n    expect(reserved.kind).toBe("reserved");\n    expect(reserved.entry.createdAt).toBe(now);\n    expect(reserved.entry.workspaceId).toBe(workspaceId);\n    store.settle("12345678abcdefgh", { content: [{ type: "text", text: "ok" }] }, now);\n''')
           repl(p,
               '''  it("fails closed when lock exists", () => {\n''',
-              '''  it("rejects the same idempotency key across different workspace provenance", () => {\n    const store = new FileMcpInvocationStore(statePath());\n    store.reserve(input());\n    expect(() =>\n      store.reserve({ ...input(), workspaceId: WorkspaceIdSchema.parse("ws_b") }),\n    ).toThrow(McpInvocationConflictError);\n  });\n\n  it("fails closed when lock exists", () => {\n''')
+              '''  it("rejects known uncertain work during read-only preflight", () => {\n    const store = new FileMcpInvocationStore(statePath());\n    store.reserve(input());\n    store.markUncertain("12345678abcdefgh");\n    expect(() => store.assertPreflightSafe(input())).toThrow(McpInvocationOutcomeUncertainError);\n  });\n\n  it("rejects the same idempotency key across different workspace provenance", () => {\n    const store = new FileMcpInvocationStore(statePath());\n    store.reserve(input());\n    expect(() =>\n      store.reserve({ ...input(), workspaceId: WorkspaceIdSchema.parse("ws_b") }),\n    ).toThrow(McpInvocationConflictError);\n  });\n\n  it("fails closed when lock exists", () => {\n''')
+
+          p = "services/connect/src/mcp-client/manager.test.ts"
+          repl(p,
+              '''    const calls = factory.byWorkspace.get("ws_a")!.callCount;\n    await expect(manager.callTool("remote", "write", callRequest("op_second"))).rejects.toThrow(\n      /redispatch otomatis ditolak/,\n    );\n    expect(factory.byWorkspace.get("ws_a")!.callCount).toBe(calls);\n''',
+              '''    const failedClient = factory.byWorkspace.get("ws_a")!;\n    const calls = failedClient.callCount;\n    const connections = factory.connectCount;\n    await expect(manager.callTool("remote", "write", callRequest("op_second"))).rejects.toThrow(\n      /redispatch otomatis ditolak/,\n    );\n    expect(failedClient.callCount).toBe(calls);\n    expect(factory.connectCount).toBe(connections);\n''')
           PY
-      - run: pnpm exec prettier --write services/connect/src/mcp-client/invocation-store.ts services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.ts
+      - run: pnpm exec prettier --write services/connect/src/mcp-client/invocation-store.ts services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.ts services/connect/src/mcp-client/manager.test.ts
       - run: pnpm run typecheck
       - run: pnpm exec vitest run services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.test.ts
       - name: Commit fix
@@ -79,6 +90,6 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add services/connect/src/mcp-client/invocation-store.ts services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.ts
-          git commit -m "fix: persist outbound MCP invocation provenance"
+          git add services/connect/src/mcp-client/invocation-store.ts services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.ts services/connect/src/mcp-client/manager.test.ts
+          git commit -m "fix: persist and guard outbound MCP invocation provenance"
           git push origin HEAD:agent/outbound-mcp-manager-20260909
