@@ -18,6 +18,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { ExactMatchCache } from "./cache.js";
 import { complete, type CompleteDeps } from "./complete.js";
+import type { ProviderCredentialReader } from "./credential-vault.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
@@ -52,7 +53,9 @@ const CompleteBodySchema = z.object({
 export interface BuildConnectServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
-  /** `undefined` kalau `.env` belum diisi — gerbang di `complete.ts`, bukan diam-diam gagal. */
+  /** Production credential source; raw provider keys never leave Connect. */
+  readonly credentialVault?: ProviderCredentialReader | undefined;
+  /** Development-only fallback when no vault is configured. */
   readonly anthropicApiKey?: string | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
@@ -65,6 +68,7 @@ export interface BuildConnectServerOptions {
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
   const app = createServer({ name: "connect", token: options.token, logger: options.logger });
   const deps: CompleteDeps = {
+    credentialVault: options.credentialVault,
     anthropicApiKey: options.anthropicApiKey,
     localBaseUrl: options.localBaseUrl,
     localModelTag: options.localModelTag,
