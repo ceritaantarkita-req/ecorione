@@ -36,13 +36,20 @@ export class McpClientTimeoutError extends Error {
   }
 }
 
-async function withTimeout<T>(promise: Promise<T>, label: string, timeoutMs: number): Promise<T> {
+async function withTimeout<T>(
+  promise: Promise<T>,
+  label: string,
+  timeoutMs: number,
+): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
   try {
     return await Promise.race([
       promise,
       new Promise<never>((_resolve, reject) => {
-        timer = setTimeout(() => reject(new McpClientTimeoutError(label, timeoutMs)), timeoutMs);
+        timer = setTimeout(
+          () => reject(new McpClientTimeoutError(label, timeoutMs)),
+          timeoutMs,
+        );
         timer.unref();
       }),
     ]);
@@ -73,7 +80,11 @@ class SdkMcpClientFacade implements McpClientFacade {
   }
 
   async listResources(timeoutMs: number): Promise<readonly McpRemoteResource[]> {
-    const result = await withTimeout(this.client.listResources(), "MCP resources/list", timeoutMs);
+    const result = await withTimeout(
+      this.client.listResources(),
+      "MCP resources/list",
+      timeoutMs,
+    );
     return result.resources.map((resource) => ({
       uri: resource.uri,
       name: resource.name,
@@ -174,7 +185,11 @@ export class SdkMcpClientFactory implements McpClientFactory {
     }
 
     try {
-      await withTimeout(client.connect(transport), `MCP connect ${config.id}`, config.connectTimeoutMs);
+      await withTimeout(
+        client.connect(transport),
+        `MCP connect ${config.id}`,
+        config.connectTimeoutMs,
+      );
       return new SdkMcpClientFacade(client, protocolEra(client));
     } catch (error) {
       await client.close().catch(() => undefined);

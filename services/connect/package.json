@@ -21,13 +21,15 @@
     "vault:keygen": "tsx src/vault-cli.ts keygen",
     "vault:list": "tsx src/vault-cli.ts list",
     "vault:set": "tsx src/vault-cli.ts set",
-    "vault:rotate-master": "tsx src/vault-cli.ts rotate-master"
+    "vault:rotate-master": "tsx src/vault-cli.ts rotate-master",
+    "mcp:manage": "tsx src/mcp-client-cli.ts"
   },
   "dependencies": {
     "@ecorione/context-assembly": "workspace:*",
     "@ecorione/shared-schema": "workspace:*",
     "@ecorione/shared-server": "workspace:*",
     "@ecorione/shared-telemetry": "workspace:*",
+    "@modelcontextprotocol/client": "2.0.0",
     "fastify": "^5.2.1",
     "zod": "^4.1.12"
   }

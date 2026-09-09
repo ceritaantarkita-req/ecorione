@@ -3,11 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { WorkspaceIdSchema } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  FileMcpRegistry,
-  McpRegistryBusyError,
-  McpServerNotFoundError,
-} from "./registry.js";
+import { FileMcpRegistry, McpRegistryBusyError, McpServerNotFoundError } from "./registry.js";
 import { McpServerConfigSchema } from "./types.js";
 
 const dirs: string[] = [];
@@ -97,6 +93,8 @@ describe("FileMcpRegistry", () => {
       enabled: false,
       actionClass: "READ",
     });
-    expect(next.toolPolicies).toEqual([{ name: "search", enabled: false, actionClass: "READ" }]);
+    expect(next.toolPolicies).toEqual([
+      { name: "search", enabled: false, actionClass: "READ" },
+    ]);
   });
 });

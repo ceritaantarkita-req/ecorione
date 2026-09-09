@@ -54,7 +54,8 @@ function parseRegistry(raw: unknown): RegistryFile {
     const state = RegistryFileSchema.parse(raw);
     const ids = new Set<string>();
     for (const server of state.servers) {
-      if (ids.has(server.id)) throw new McpRegistryError(`MCP server id duplikat: ${server.id}.`);
+      if (ids.has(server.id))
+        throw new McpRegistryError(`MCP server id duplikat: ${server.id}.`);
       ids.add(server.id);
     }
     return state;
@@ -124,7 +125,9 @@ export class FileMcpRegistry {
 
   list(workspaceId?: WorkspaceId): readonly McpServerConfig[] {
     const servers = readRegistry(this.path).servers;
-    return workspaceId === undefined ? servers : servers.filter((server) => visibleIn(server, workspaceId));
+    return workspaceId === undefined
+      ? servers
+      : servers.filter((server) => visibleIn(server, workspaceId));
   }
 
   get(id: McpServerId, workspaceId: WorkspaceId): McpServerConfig {

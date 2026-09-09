@@ -71,7 +71,8 @@ const HttpTransportSchema = z
     ctx.addIssue({
       code: "custom",
       path: ["url"],
-      message: "MCP HTTP wajib HTTPS; HTTP hanya boleh untuk loopback yang diizinkan eksplisit.",
+      message:
+        "MCP HTTP wajib HTTPS; HTTP hanya boleh untuk loopback yang diizinkan eksplisit.",
     });
   });
 
@@ -96,7 +97,8 @@ const StdioTransportSchema = z
         ctx.addIssue({
           code: "custom",
           path: ["env", key],
-          message: "Env yang tampak seperti secret harus memakai credentialRef + credentialEnv.",
+          message:
+            "Env yang tampak seperti secret harus memakai credentialRef + credentialEnv.",
         });
       }
     }
@@ -219,10 +221,7 @@ export interface McpClientFacade {
 }
 
 export interface McpClientFactory {
-  connect(
-    config: McpServerConfig,
-    workspaceId: WorkspaceId,
-  ): Promise<McpClientFacade>;
+  connect(config: McpServerConfig, workspaceId: WorkspaceId): Promise<McpClientFacade>;
 }
 
 export interface McpCredentialReader {

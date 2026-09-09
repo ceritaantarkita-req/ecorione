@@ -5,10 +5,7 @@ import {
   type WorkspaceId,
 } from "@ecorione/shared-schema";
 import type { McpGovernance } from "./governance.js";
-import {
-  FileMcpInvocationStore,
-  type McpInvocationReservation,
-} from "./invocation-store.js";
+import { FileMcpInvocationStore, type McpInvocationReservation } from "./invocation-store.js";
 import { FileMcpRegistry } from "./registry.js";
 import type {
   McpClientFacade,
@@ -68,11 +65,16 @@ function configRevisionKey(config: McpServerConfig): string {
 
 function toolActionClass(config: McpServerConfig, toolName: string): ActionClass {
   const policy = config.toolPolicies.find((candidate) => candidate.name === toolName);
-  if (policy === undefined || !policy.enabled) throw new McpToolDisabledError(config.id, toolName);
+  if (policy === undefined || !policy.enabled)
+    throw new McpToolDisabledError(config.id, toolName);
   return policy.actionClass;
 }
 
-function invocationKey(config: McpServerConfig, toolName: string, args: Readonly<Record<string, unknown>>): string {
+function invocationKey(
+  config: McpServerConfig,
+  toolName: string,
+  args: Readonly<Record<string, unknown>>,
+): string {
   const payload = idempotencyPayload({
     module: "Connect",
     tool: `mcp.${config.id}.${toolName}`,
@@ -82,7 +84,9 @@ function invocationKey(config: McpServerConfig, toolName: string, args: Readonly
 }
 
 function argsDigest(args: Readonly<Record<string, unknown>>): string {
-  return createHash("sha256").update(JSON.stringify(args, Object.keys(args).sort())).digest("hex");
+  return createHash("sha256")
+    .update(idempotencyPayload({ module: "Connect", tool: "mcp.args", args }))
+    .digest("hex");
 }
 
 function storedResult(reservation: McpInvocationReservation): McpToolCallResult {
@@ -152,7 +156,10 @@ export class McpManager {
     }));
   }
 
-  status(serverId: McpServerId, workspaceId: WorkspaceId): {
+  status(
+    serverId: McpServerId,
+    workspaceId: WorkspaceId,
+  ): {
     readonly configured: true;
     readonly enabled: boolean;
     readonly connected: boolean;
@@ -179,7 +186,10 @@ export class McpManager {
     return true;
   }
 
-  private async client(config: McpServerConfig, workspaceId: WorkspaceId): Promise<McpClientFacade> {
+  private async client(
+    config: McpServerConfig,
+    workspaceId: WorkspaceId,
+  ): Promise<McpClientFacade> {
     if (!config.enabled) throw new McpServerDisabledError(config.id);
     const key = connectionKey(workspaceId, config.id);
     const revisionKey = configRevisionKey(config);
@@ -194,7 +204,10 @@ export class McpManager {
     return client;
   }
 
-  async discover(serverId: McpServerId, request: McpDiscoverRequest): Promise<McpDiscoveryResult> {
+  async discover(
+    serverId: McpServerId,
+    request: McpDiscoverRequest,
+  ): Promise<McpDiscoveryResult> {
     const config = this.registry.get(serverId, request.workspaceId);
     if (!config.enabled) throw new McpServerDisabledError(config.id);
     const governanceRequest: McpGovernanceRequest = {
@@ -214,7 +227,9 @@ export class McpManager {
     const tools =
       toolsOutcome.status === "fulfilled"
         ? toolsOutcome.value.map((tool) => {
-            const policy = config.toolPolicies.find((candidate) => candidate.name === tool.name);
+            const policy = config.toolPolicies.find(
+              (candidate) => candidate.name === tool.name,
+            );
             return {
               ...tool,
               enabled: policy?.enabled === true,
@@ -226,7 +241,9 @@ export class McpManager {
     const errors: { tools?: string; resources?: string } = {};
     if (toolsOutcome.status === "rejected") {
       errors.tools =
-        toolsOutcome.reason instanceof Error ? toolsOutcome.reason.message : String(toolsOutcome.reason);
+        toolsOutcome.reason instanceof Error
+          ? toolsOutcome.reason.message
+          : String(toolsOutcome.reason);
     }
     if (resourcesOutcome.status === "rejected") {
       errors.resources =

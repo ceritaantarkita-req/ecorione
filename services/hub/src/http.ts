@@ -3,12 +3,16 @@ import { createHash } from "node:crypto";
 import {
   ActionRequestSchema,
   ApprovalDecisionSchema,
+  AuditEventTypeSchema,
   assertId,
   ChatRequestSchema,
   ForgetFactRequestSchema,
   idempotencyPayload,
   InvalidIdError,
   makeId,
+  ModuleNameSchema,
+  OperationIdSchema,
+  TimestampSchema,
   type ActionRequest,
   type MemoryFact,
 } from "@ecorione/shared-schema";
@@ -84,6 +88,14 @@ const DecideBodySchema = z.object({
 });
 const ApprovalLookupQuerySchema = z.object({ idempotencyKey: z.string().min(1).max(512) });
 const AuditQuerySchema = z.object({ operationId: z.string().min(1).optional() });
+const AuditWriteSchema = z.object({
+  type: AuditEventTypeSchema,
+  operationId: OperationIdSchema.nullable(),
+  module: ModuleNameSchema,
+  detail: z.record(z.string(), z.unknown()),
+  ruleId: z.string().max(64).nullable().optional(),
+  now: TimestampSchema,
+});
 export interface BuildHubServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
@@ -274,6 +286,12 @@ export function buildHubServer(
     contextUrl: options.contextUrl,
     artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
     internalToken: options.internalToken,
+  });
+
+  app.post("/v1/audit/events", async (req, reply) => {
+    const body = parseOrBadRequest(AuditWriteSchema, req.body);
+    const event = repo.recordAuditEvent(body);
+    return reply.code(201).send(event);
   });
 
   app.get("/v1/audit", async (req) => {

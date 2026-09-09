@@ -4,11 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { McpGovernance } from "./governance.js";
 import { FileMcpInvocationStore } from "./invocation-store.js";
-import {
-  McpManager,
-  McpRemoteOutcomeUncertainError,
-  McpToolDisabledError,
-} from "./manager.js";
+import { McpManager, McpRemoteOutcomeUncertainError, McpToolDisabledError } from "./manager.js";
 import { FileMcpRegistry } from "./registry.js";
 import {
   McpDiscoverRequestSchema,
@@ -151,7 +147,11 @@ describe("McpManager", () => {
 
   it("refuses tools that are not explicitly enabled before remote dispatch", async () => {
     const { manager, registry, factory } = setup();
-    registry.setToolPolicy("remote", { name: "write", enabled: false, actionClass: "REVERSIBLE_WRITE" });
+    registry.setToolPolicy("remote", {
+      name: "write",
+      enabled: false,
+      actionClass: "REVERSIBLE_WRITE",
+    });
     await expect(manager.callTool("remote", "write", callRequest())).rejects.toBeInstanceOf(
       McpToolDisabledError,
     );
@@ -172,9 +172,9 @@ describe("McpManager", () => {
     const { manager, factory } = setup();
     await manager.discover("remote", discoverRequest);
     factory.byWorkspace.get("ws_a")!.failCall = true;
-    await expect(manager.callTool("remote", "write", callRequest("op_first"))).rejects.toBeInstanceOf(
-      McpRemoteOutcomeUncertainError,
-    );
+    await expect(
+      manager.callTool("remote", "write", callRequest("op_first")),
+    ).rejects.toBeInstanceOf(McpRemoteOutcomeUncertainError);
     const calls = factory.byWorkspace.get("ws_a")!.callCount;
     await expect(manager.callTool("remote", "write", callRequest("op_second"))).rejects.toThrow(
       /redispatch otomatis ditolak/,
@@ -193,7 +193,11 @@ describe("McpManager", () => {
   it("keeps connections isolated per workspace", async () => {
     const { manager, factory } = setup();
     await manager.discover("remote", discoverRequest);
-    await manager.discover("remote", { ...discoverRequest, workspaceId: "ws_b", operationId: "op_b" });
+    await manager.discover("remote", {
+      ...discoverRequest,
+      workspaceId: "ws_b",
+      operationId: "op_b",
+    });
     expect(factory.connectCount).toBe(2);
     expect(manager.status("remote", "ws_a").connected).toBe(true);
     expect(manager.status("remote", "ws_b").connected).toBe(true);

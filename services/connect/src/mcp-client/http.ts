@@ -9,10 +9,7 @@ import {
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import {
-  McpApprovalRequiredError,
-  McpPolicyDeniedError,
-} from "./governance.js";
+import { McpApprovalRequiredError, McpPolicyDeniedError } from "./governance.js";
 import {
   McpInvocationConflictError,
   McpInvocationOutcomeUncertainError,
@@ -98,18 +95,15 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
     }
   });
 
-  app.post<{ Params: { id: string } }>(
-    "/v1/mcp-outbound/servers/:id/discover",
-    async (req) => {
-      const params = parseOrBadRequest(ServerParamsSchema, req.params);
-      const body = parseOrBadRequest(McpDiscoverRequestSchema, req.body);
-      try {
-        return await manager.discover(params.id, body);
-      } catch (error) {
-        throw toHttpError(error);
-      }
-    },
-  );
+  app.post<{ Params: { id: string } }>("/v1/mcp-outbound/servers/:id/discover", async (req) => {
+    const params = parseOrBadRequest(ServerParamsSchema, req.params);
+    const body = parseOrBadRequest(McpDiscoverRequestSchema, req.body);
+    try {
+      return await manager.discover(params.id, body);
+    } catch (error) {
+      throw toHttpError(error);
+    }
+  });
 
   app.post<{ Params: { id: string; tool: string } }>(
     "/v1/mcp-outbound/servers/:id/tools/:tool/call",

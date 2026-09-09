@@ -17,6 +17,8 @@ import { ExactMatchCache } from "./cache.js";
 import { complete, type CompleteDeps } from "./complete.js";
 import { CredentialVaultError, type ProviderCredentialReader } from "./credential-vault.js";
 import type { HostedProviderId } from "./provider-types.js";
+import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
+import type { McpManager } from "./mcp-client/manager.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
@@ -70,6 +72,7 @@ export interface BuildConnectServerOptions {
   readonly hostedCallsEnabled?: boolean | undefined;
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
   readonly cache?: ExactMatchCache | undefined;
+  readonly mcpManager?: McpManager | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -87,6 +90,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     hostedCallsEnabled: options.hostedCallsEnabled ?? true,
     spendBudget: options.spendBudget,
   };
+
+  if (options.mcpManager !== undefined) registerOutboundMcpRoutes(app, options.mcpManager);
 
   app.post("/v1/complete", async (req) => {
     const body = parseOrBadRequest(CompleteBodySchema, req.body);

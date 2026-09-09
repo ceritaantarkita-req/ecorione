@@ -52,10 +52,13 @@ export class VaultMcpCredentialEditor extends VaultMcpCredentialReader {
 
   set(ref: McpCredentialRef, secret: string, now: Timestamp): void {
     const key = McpCredentialRefSchema.parse(ref);
-    if (secret.length === 0) throw new CredentialVaultFormatError("MCP secret tidak boleh kosong.");
+    if (secret.length === 0)
+      throw new CredentialVaultFormatError("MCP secret tidak boleh kosong.");
     const prior = parseBundle(this.writableVault.get("mcp", "tokens"));
     const entries = Object.fromEntries(
-      Object.entries({ ...prior.entries, [key]: secret }).sort(([a], [b]) => a.localeCompare(b)),
+      Object.entries({ ...prior.entries, [key]: secret }).sort(([a], [b]) =>
+        a.localeCompare(b),
+      ),
     );
     this.writableVault.set("mcp", "tokens", JSON.stringify({ version: 1, entries }), now);
   }

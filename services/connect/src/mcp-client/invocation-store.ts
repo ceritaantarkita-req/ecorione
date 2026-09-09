@@ -10,7 +10,12 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname } from "node:path";
-import { OperationIdSchema, TimestampSchema, type OperationId, type Timestamp } from "@ecorione/shared-schema";
+import {
+  OperationIdSchema,
+  TimestampSchema,
+  type OperationId,
+  type Timestamp,
+} from "@ecorione/shared-schema";
 import { z } from "zod";
 import { McpServerIdSchema, type McpServerId } from "./types.js";
 

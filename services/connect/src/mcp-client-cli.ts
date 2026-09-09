@@ -1,9 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import {
-  ActionClassSchema,
-  WorkspaceIdSchema,
-} from "@ecorione/shared-schema";
+import { ActionClassSchema, WorkspaceIdSchema } from "@ecorione/shared-schema";
 import { FileCredentialVault } from "./credential-vault.js";
 import { nowIso } from "./clock.js";
 import { VaultMcpCredentialEditor } from "./mcp-client/credentials.js";
