@@ -199,6 +199,24 @@ export class HistoryLedger {
     return HistorySessionSchema.parse({ ...input, nextSeq: 0, headHash: null });
   }
 
+  ensureSession(input: CreateHistorySessionInput): HistorySession {
+    const transaction = this.db.raw.transaction(() => {
+      const existing = this.getSession(input.id);
+      if (existing === null) return this.createSession(input);
+      if (existing.scope !== input.scope || existing.syncClass !== input.syncClass) {
+        throw new HistorySessionConflictError(input.id);
+      }
+      if (sensitivityRank(input.sensitivity) > sensitivityRank(existing.sensitivity)) {
+        this.db.raw
+          .prepare("UPDATE history_sessions SET sensitivity=? WHERE id=?")
+          .run(input.sensitivity, input.id);
+        return HistorySessionSchema.parse({ ...existing, sensitivity: input.sensitivity });
+      }
+      return existing;
+    });
+    return transaction.immediate();
+  }
+
   getSession(id: string): HistorySession | null {
     const row = this.db.raw.prepare("SELECT * FROM history_sessions WHERE id=?").get(id) as
       | SessionRow
