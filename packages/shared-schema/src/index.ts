@@ -12,6 +12,7 @@ export * from "./modules.js";
 export * from "./policy.js";
 export * from "./capabilities.js";
 export * from "./chat.js";
+export * from "./multimodal.js";
 export * from "./mcp.js";
 export * from "./sync.js";
 export * from "./sandbox.js";
