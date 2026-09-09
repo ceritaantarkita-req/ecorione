@@ -12,6 +12,8 @@ export const ID_PREFIXES = {
   workspace: "ws",
   project: "prj",
   artifact: "art",
+  attachment: "att",
+  multimodalDerivation: "mmd",
   operation: "op",
   device: "dev",
   workflow: "wf",
@@ -41,6 +43,8 @@ export type Branded<T, B extends string> = T & { readonly __brand: B };
 export type WorkspaceId = Branded<string, "ws">;
 export type ProjectId = Branded<string, "prj">;
 export type ArtifactId = Branded<string, "art">;
+export type AttachmentId = Branded<string, "att">;
+export type MultimodalDerivationId = Branded<string, "mmd">;
 export type OperationId = Branded<string, "op">;
 export type DeviceId = Branded<string, "dev">;
 export type WorkflowId = Branded<string, "wf">;
@@ -55,6 +59,8 @@ export interface IdTypeMap {
   workspace: WorkspaceId;
   project: ProjectId;
   artifact: ArtifactId;
+  attachment: AttachmentId;
+  multimodalDerivation: MultimodalDerivationId;
   operation: OperationId;
   device: DeviceId;
   workflow: WorkflowId;
@@ -136,6 +142,8 @@ function idSchema<K extends IdKind>(kind: K) {
 export const WorkspaceIdSchema = idSchema("workspace");
 export const ProjectIdSchema = idSchema("project");
 export const ArtifactIdSchema = idSchema("artifact");
+export const AttachmentIdSchema = idSchema("attachment");
+export const MultimodalDerivationIdSchema = idSchema("multimodalDerivation");
 export const OperationIdSchema = idSchema("operation");
 export const DeviceIdSchema = idSchema("device");
 export const WorkflowIdSchema = idSchema("workflow");
