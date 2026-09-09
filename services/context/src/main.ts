@@ -10,6 +10,7 @@ import { registerArtifactRoutes } from "./artifact-routes.js";
 import { nowIso } from "./clock.js";
 import { openContextDatabase } from "./db.js";
 import { buildContextServer } from "./http.js";
+import { registerMultimodalRoutes } from "./multimodal-routes.js";
 import { ContextRepository } from "./repository.js";
 import { createVectorIndex } from "./vector.js";
 
@@ -67,6 +68,7 @@ async function extractLocal(prompt: string): Promise<string> {
 
 const app = buildContextServer(repo, vectors, { token, logger: true, extractLocal });
 registerArtifactRoutes(app, repo);
+registerMultimodalRoutes(app, repo);
 registerAccessRoutes(app, repo);
 
 app

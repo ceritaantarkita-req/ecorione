@@ -1,6 +1,6 @@
 # ECORIONE — Execution Progress & Remaining Roadmap
 
-Last updated: **2026-09-09**
+Last updated: **2026-09-10**
 
 Status: **ACTIVE — canonical execution tracker**
 
@@ -27,10 +27,11 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Batch 4 implementation merged ke `main` sebagai:
+Batch 4 closure remains the current `main` baseline:
 
-- `455b5cef72d5847b67ddedebc81471432fb0ba42`
-- post-merge main CI `34380385839`: full green
+- `b4df2c364874e6420b6008de7a330a1528546fed`
+- Batch 4 implementation merge: `455b5cef72d5847b67ddedebc81471432fb0ba42`
+- post-merge Batch 4 main CI `34380385839`: full green
 
 ### Active execution
 
@@ -38,7 +39,13 @@ Batch 4 implementation merged ke `main` sebagai:
 - Batch 2 status: **CLOSED**
 - Batch 3 status: **CLOSED**
 - Batch 4 status: **CLOSED**
-- next implementation target: **Batch 5 — Native Multimodal Pipeline**
+- Batch 5 status: **IMPLEMENTED / CLOSURE PENDING**
+- active branch: `agent/batch5-native-multimodal-20260910`
+- PR: **#15**
+- latest green implementation candidate: `66644a059d464b37af98894bdf3353b3e0e8a1a2`
+- candidate CI `34387285455`: full green
+- candidate MCP External HTTPS Acceptance `34387285379`: PASS
+- next after Batch 5 closure: **Batch 6 — Realtime Voice**
 
 ---
 
@@ -205,7 +212,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1–4 sudah CLOSED**. Tersisa **8 batch platform/production (Batch 5–12)**; next implementation target adalah **Batch 5 — Native Multimodal Pipeline**.
+Dari current state, **Batch 1–4 sudah CLOSED** dan **Batch 5 sudah implemented tetapi closure masih pending**. Setelah Batch 5 ditutup, tersisa **7 batch platform/production (Batch 6–12)**; next implementation target adalah **Batch 6 — Realtime Voice**.
 
 ---
 
@@ -377,29 +384,70 @@ Batch 4 resmi **CLOSED**; next implementation batch adalah Batch 5.
 
 ## Batch 5 — Native Multimodal Pipeline
 
-Status: **PLANNED — NEXT**
+Status: **IMPLEMENTED / CLOSURE PENDING**
 
-Ownership:
+Ownership implemented:
 
-- Artifact → raw image/PDF/audio/video
-- Connect → OCR/vision/STT/TTS inference adapters
-- Context → extracted/derived semantic information
-- Historical Ledger → extraction/transcript provenance/history references
-- Hub → routing/policy/sensitivity
+- Artifact → raw image/PDF/document/audio/video + generated TTS audio CAS
+- Connect → normalized OCR/vision/STT/TTS adapter boundary, local/hosted routing, credential + spend enforcement
+- Context → extracted/derived semantic information including page/bbox/confidence/timestamps/language
+- Historical Ledger → `artifact.extracted`, `artifact.transcribed`, `artifact.synthesized` provenance references
+- Hub → routing, capability authority, sensitivity/sync gates, durable attachment lifecycle, idempotency
 
-Scope:
+Implemented scope:
 
-- first-class image input
-- PDF/document input
-- OCR
-- page/bounding-box/confidence metadata
-- Indonesian + English language detection
-- STT
-- transcript + timestamps
-- TTS
-- attachment lifecycle
-- provenance
-- local-first with explicit hosted fallback
+- first-class image input through Artifact pointer
+- PDF/document input with MIME validation
+- OCR + vision normalized result contract
+- page + normalized bounding-box + confidence metadata
+- Indonesian / English / mixed / unknown language metadata
+- STT transcript segments with `startMs` / `endMs`
+- TTS through the same Connect inference boundary; generated audio is written back to Artifact
+- durable lifecycle `RECEIVED → PROCESSING → READY | FAILED`
+- replay-safe READY result and fail-closed ambiguous PROCESSING/FAILED retry semantics
+- Context-owned derivation persistence keyed by `OperationId`
+- Historical Ledger provenance without duplicating raw media/full derived payloads
+- deterministic local-first routing; hosted fallback only when explicitly opted in
+- Hub pre-authorization + SyncClass egress check before raw bytes leave Artifact boundary
+- Connect re-checks hosted eligibility, cost kill switch, credential availability, and cumulative spend reservation
+- explicit bounded media body limits; Artifact's decoded 20 MiB ceiling is reachable despite Base64 expansion
+- hosted adapter credentials remain rotatable through Connect Vault reader
+- realtime duplex voice remains intentionally outside Batch 5 and belongs to Batch 6
+
+Bugs / hardening discovered during implementation:
+
+- Artifact's existing 20 MiB decoded limit was previously unreachable for larger Base64 JSON uploads because Fastify kept its smaller default body limit; body ceiling is now explicit and bounded
+- multimodal duplicate `OperationId` with a different request fingerprint is mapped to HTTP 409 instead of leaking as an internal 500
+- local adapter is forbidden from reporting hosted cost
+- hosted adapter requires Connect-owned credential access and model identities containing `latest` are rejected
+- temporary formatting workflow used during development was removed before the green candidate
+
+Regression / integration coverage:
+
+- Connect local-first routing, explicit fallback, SyncClass rejection, kill switch, and TTS normalization
+- Context derivation persistence + idempotency/conflict for OCR page/bbox/confidence metadata
+- Hub end-to-end image OCR choreography across Context/Artifact/Connect/Ledger
+- Hub LOCAL_ONLY hosted-fallback rejection before bytes reach Connect
+- Hub TTS result written to Artifact and Ledger provenance
+- same request replay returns committed result without a second Connect inference; mutated retry returns 409
+
+Docs:
+
+- ADR: `docs/adr/0026-native-multimodal-pipeline.md`
+- Operations: `docs/multimodal-operations.md`
+
+Green implementation candidate before progress-doc update:
+
+- SHA: `66644a059d464b37af98894bdf3353b3e0e8a1a2`
+- CI `34387285455` — Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Secret Scan, Production Build PASS
+- MCP External HTTPS Acceptance `34387285379` — PASS
+
+Closure still required:
+
+- exact final PR head after this tracker update must remain green
+- PR #15 merge must use expected-head lock
+- merged `main` must pass post-merge CI/runtime gates
+- closure evidence must then be frozen in the canonical tracker before status changes to `CLOSED`
 
 ---
 
@@ -648,10 +696,12 @@ Current planning unit:
 - **Batch 1: CLOSED**
 - **Batch 2: CLOSED**
 - **Batch 3: CLOSED**
-- **9 platform/production batches remaining (Batch 4–12)**
-- next: **Batch 4 — Unified Capability + Permission Plane**
+- **Batch 4: CLOSED**
+- **Batch 5: IMPLEMENTED / CLOSURE PENDING**
+- **7 future platform/production batches remain after closure (Batch 6–12)**
+- next: **Batch 6 — Realtime Voice**
 
-Dalam workstream teknis granular, estimasi tersisa sekitar **30–35 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi.
+Dalam workstream teknis granular, estimasi tersisa sekitar **25–30 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi Batch 6–12.
 
 Heuristic progress estimate — **bukan telemetry atau completion metric formal**:
 
@@ -743,4 +793,4 @@ Jika desain arsitektur berubah, update ADR terkait terlebih dahulu/bersamaan; fi
 
 # 11. Next action
 
-**Immediate next:** selesaikan Batch 1 — Fase 4 Temporal CI Flake Hardening pada branch `agent/phase4-ci-flake-hardening-20260909`, lalu update dokumen ini dengan evidence final sebelum merge.
+**Immediate next:** selesaikan exact-head closure PR #15 untuk Batch 5, merge dengan expected-head lock, verifikasi post-merge `main`, lalu freeze closure evidence dan baru mulai **Batch 6 — Realtime Voice**.
