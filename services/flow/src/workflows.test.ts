@@ -5,6 +5,7 @@ import {
   type FlowWorkflowInput,
   type SandboxExecutionReceipt,
 } from "@ecorione/shared-schema";
+import { WorkflowFailedError } from "@temporalio/client";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { describe, expect, it, vi } from "vitest";
@@ -109,8 +110,8 @@ describe("Temporal operationWorkflow", () => {
         activities,
       });
       const input = workflowInput();
-      await expect(
-        worker.runUntil(async () => {
+      try {
+        await worker.runUntil(async () => {
           const handle = await env.client.workflow.start("operationWorkflow", {
             workflowId: assertId("workflow", "wf_temporalverify002"),
             taskQueue,
@@ -118,8 +119,17 @@ describe("Temporal operationWorkflow", () => {
           });
           await handle.signal("approval", { decision: "APPROVE", note: null });
           return handle.result();
-        }),
-      ).rejects.toThrow(/Verifier independen|FLOW_VERIFICATION_FAILED/);
+        });
+        throw new Error("Expected verifier failure");
+      } catch (err) {
+        expect(err).toBeInstanceOf(WorkflowFailedError);
+        const cause = (err as WorkflowFailedError).cause as {
+          type?: string;
+          nonRetryable?: boolean;
+        } | null;
+        expect(cause?.type).toBe("FLOW_VERIFICATION_FAILED");
+        expect(cause?.nonRetryable).toBe(true);
+      }
     } finally {
       await env.teardown();
     }
