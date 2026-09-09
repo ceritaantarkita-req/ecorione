@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { WorkspaceIdSchema } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
 import type { McpGovernance } from "./governance.js";
 import { FileMcpInvocationStore } from "./invocation-store.js";
@@ -133,10 +134,10 @@ describe("McpManager", () => {
     const { manager, factory } = setup();
     await manager.discover("remote", discoverRequest);
     factory.byWorkspace.get("ws_a")!.failResources = true;
-    const result = await manager.discover("remote", {
-      ...discoverRequest,
-      operationId: "op_discover2",
-    });
+    const result = await manager.discover(
+      "remote",
+      McpDiscoverRequestSchema.parse({ ...discoverRequest, operationId: "op_discover2" }),
+    );
     expect(result.tools.map((tool) => [tool.name, tool.enabled])).toEqual([
       ["read", true],
       ["write", true],
@@ -168,6 +169,23 @@ describe("McpManager", () => {
     expect(governance.successCount).toBe(2);
   });
 
+  it("does not deduplicate side effects across workspaces", async () => {
+    const { manager, factory } = setup();
+    const first = await manager.callTool("remote", "write", callRequest("op_ws_a"));
+    const second = await manager.callTool(
+      "remote",
+      "write",
+      McpToolCallRequestSchema.parse({
+        ...callRequest("op_ws_b"),
+        workspaceId: "ws_b",
+      }),
+    );
+    expect(first.deduplicated).toBe(false);
+    expect(second.deduplicated).toBe(false);
+    expect(factory.byWorkspace.get("ws_a")!.callCount).toBe(1);
+    expect(factory.byWorkspace.get("ws_b")!.callCount).toBe(1);
+  });
+
   it("marks a failed dispatched side effect uncertain and blocks retry", async () => {
     const { manager, factory } = setup();
     await manager.discover("remote", discoverRequest);
@@ -193,13 +211,16 @@ describe("McpManager", () => {
   it("keeps connections isolated per workspace", async () => {
     const { manager, factory } = setup();
     await manager.discover("remote", discoverRequest);
-    await manager.discover("remote", {
-      ...discoverRequest,
-      workspaceId: "ws_b",
-      operationId: "op_b",
-    });
+    await manager.discover(
+      "remote",
+      McpDiscoverRequestSchema.parse({
+        ...discoverRequest,
+        workspaceId: "ws_b",
+        operationId: "op_b",
+      }),
+    );
     expect(factory.connectCount).toBe(2);
-    expect(manager.status("remote", "ws_a").connected).toBe(true);
-    expect(manager.status("remote", "ws_b").connected).toBe(true);
+    expect(manager.status("remote", WorkspaceIdSchema.parse("ws_a")).connected).toBe(true);
+    expect(manager.status("remote", WorkspaceIdSchema.parse("ws_b")).connected).toBe(true);
   });
 });

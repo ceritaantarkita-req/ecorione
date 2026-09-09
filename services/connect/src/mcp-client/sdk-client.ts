@@ -151,14 +151,14 @@ export class SdkMcpClientFactory implements McpClientFactory {
     let transport: StreamableHTTPClientTransport | StdioClientTransport;
     if (config.transport.type === "streamable-http") {
       const credentialRef = config.transport.credentialRef;
-      transport = new StreamableHTTPClientTransport(new URL(config.transport.url), {
-        authProvider:
-          credentialRef === undefined
-            ? undefined
-            : {
+      transport =
+        credentialRef === undefined
+          ? new StreamableHTTPClientTransport(new URL(config.transport.url))
+          : new StreamableHTTPClientTransport(new URL(config.transport.url), {
+              authProvider: {
                 token: async () => this.secret(credentialRef),
               },
-      });
+            });
     } else {
       if (!this.stdioAllowlist.has(config.transport.command)) {
         throw new McpTransportDeniedError(
@@ -175,13 +175,14 @@ export class SdkMcpClientFactory implements McpClientFactory {
       ) {
         env[config.transport.credentialEnv] = this.secret(config.transport.credentialRef);
       }
-      transport = new StdioClientTransport({
+      const parameters = {
         command: config.transport.command,
         args: [...config.transport.args],
-        cwd: config.transport.cwd,
         env,
-        stderr: "pipe",
-      });
+        stderr: "pipe" as const,
+        ...(config.transport.cwd === undefined ? {} : { cwd: config.transport.cwd }),
+      };
+      transport = new StdioClientTransport(parameters);
     }
 
     try {

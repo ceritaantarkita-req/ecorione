@@ -75,13 +75,14 @@ function toolActionClass(config: McpServerConfig, toolName: string): ActionClass
 
 function invocationKey(
   config: McpServerConfig,
+  workspaceId: WorkspaceId,
   toolName: string,
   args: Readonly<Record<string, unknown>>,
 ): string {
   const payload = idempotencyPayload({
     module: "Connect",
     tool: `mcp.${config.id}.${toolName}`,
-    args: { serverId: config.id, toolName, arguments: args },
+    args: { workspaceId, serverId: config.id, toolName, arguments: args },
   });
   return createHash("sha256").update(payload).digest("hex");
 }
@@ -266,7 +267,9 @@ export class McpManager {
     if (!config.enabled) throw new McpServerDisabledError(config.id);
     const actionClass = toolActionClass(config, toolName);
     const idempotencyKey =
-      actionClass === "READ" ? null : invocationKey(config, toolName, request.arguments);
+      actionClass === "READ"
+        ? null
+        : invocationKey(config, request.workspaceId, toolName, request.arguments);
     const governanceRequest: McpGovernanceRequest = {
       server: config,
       toolName,
