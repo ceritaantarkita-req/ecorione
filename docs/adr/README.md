@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Dua puluh keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Dua puluh satu keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
@@ -26,6 +26,7 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [18](0018-historical-ledger.md) | Historical Ledger adalah subsystem durable Hub |
 | [19](0019-ecx-agent-exchange.md) | ECX pointer-first untuk exchange internal agent |
 | [20](0020-connect-credential-vault.md) | Connect memiliki credential vault terenkripsi at-rest |
+| [21](0021-durable-spend-budget.md) | Connect melakukan durable reservation sebelum hosted spend |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris
