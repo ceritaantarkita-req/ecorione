@@ -54,7 +54,11 @@ Failure yang sedang ditangani:
 
 - `agent/phase4-ci-flake-hardening-20260909`
 - base: `55ee05fe34e595e2c3e2ef6b9742673f1b78f156`
+- candidate code head: `c677e17fcc3fb2d1188f2826c7cd30c6e89f423a`
 - purpose: harden Fase 4 process readiness/recovery acceptance dan mengembalikan `main` ke full green
+- implementation: acceptance-only IPC readiness signal dikirim setelah Temporal Worker benar-benar mencapai state `RUNNING`; production process tanpa env acceptance tidak mengaktifkan IPC path
+- stress evidence: run `34349246133` — 3/3 forced crash/replacement acceptance PASS
+- candidate full CI: run `34349843284` — Format, Lint, Typecheck, Test, Secret Scan, Production Build, Naming PASS
 
 ---
 
@@ -227,31 +231,36 @@ Dari current state, sisa roadmap dibagi menjadi **12 batch besar** termasuk hotf
 
 ## Batch 1 — Fase 4 Temporal CI Flake Hardening
 
-Status: **IN PROGRESS**
+Status: **IMPLEMENTED / CLOSURE PENDING**
 
 Goal: mengembalikan `main` ke deterministic full-green baseline.
 
-Work:
+Implemented:
 
-- audit replacement-worker startup semantics
-- jangan menganggap OS child-process `spawn` berarti Temporal worker sudah siap polling
-- buat explicit readiness/recovery evidence atau handshake yang sesuai boundary
-- harden polling/diagnostics tanpa menyembunyikan runtime failure nyata
-- pastikan forced worker crash benar-benar terjadi
-- replacement worker mengambil durable workflow state
-- approval tercatat di Hub
-- Flow decision commit + Temporal signal tetap benar
-- AI → Sandbox → RnD verification tetap selesai
-- repeated/stress acceptance untuk membuktikan flake hilang
-- full CI
-- merge hotfix
-- post-merge `main` full green
-- update file ini dengan final SHA/run evidence
+- audit membuktikan OS child-process `spawn` bukan bukti Temporal Worker sudah polling
+- `worker-main.ts` sekarang dapat mengirim readiness IPC **hanya** ketika `ECORIONE_FLOW_WORKER_READY_IPC=1` dan IPC channel tersedia
+- readiness baru dikirim setelah `Worker.getState()` mencapai `RUNNING`
+- terminal worker states sebelum readiness gagal eksplisit
+- readiness wait bounded dan tidak memakai wall-clock `Date.now()`
+- process acceptance membuka IPC channel dan menunggu readiness untuk worker awal maupun replacement worker
+- forced worker crash tetap memakai `SIGKILL`; tidak diubah menjadi graceful shutdown
+- approval tetap harus muncul di durable Hub audit setelah replacement worker siap
+- Flow decision tetap commit ke Hub sebelum Temporal signal
+- AI → Sandbox → RnD verification path tetap diuji end-to-end
 
-Closure result yang diharapkan:
+Evidence:
 
-- Fase 4 process acceptance stabil
-- External MCP HTTPS workstream dapat dinaikkan dari `IMPLEMENTED / CLOSURE PENDING` menjadi `CLOSED`
+- originating `main` failure: CI `34346631709`, `Timed out waiting for durable Hub approval.`
+- repeated stress: `34349246133` — **3/3 PASS** untuk real Temporal forced crash/replacement acceptance
+- candidate code head: `c677e17fcc3fb2d1188f2826c7cd30c6e89f423a`
+- candidate full CI: `34349843284` — **PASS** Format, Lint, Typecheck, Test, Secret Scan, Production Build, Naming
+
+Closure pending:
+
+1. exact docs-final head full CI PASS;
+2. PR #7 merge dengan expected-head lock;
+3. post-merge `main` full CI PASS;
+4. setelah itu Batch 1 dan External MCP HTTPS dinaikkan menjadi `CLOSED`.
 
 ---
 
