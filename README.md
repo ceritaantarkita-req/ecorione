@@ -44,6 +44,14 @@ OpenRouter/OpenAI memakai explicit model mapping dan pinned cost identity. Alias
 
 Local inference memakai endpoint **OpenAI-compatible**. Default example masih dapat menunjuk Ollama, tetapi Ollama bukan dependency wajib; llama.cpp server, LM Studio, atau runtime kompatibel lain dapat dipakai dengan mengganti endpoint/model secara eksplisit.
 
+## MCP inbound + Sync bridge
+
+Ecorione sudah mempunyai MCP server sendiri di Connect dengan stdio dan stateless Streamable HTTP. HTTP Connect tetap loopback-only. Untuk klien hosted, Sync menjadi bridge dan HTTPS edge/tunnel yang dipilih operator berada di depan Sync sesuai ADR-16.
+
+External HTTPS acceptance sekarang dibuktikan otomatis dengan public tunnel sementara: Protected Resource Metadata, `WWW-Authenticate resource_metadata`, public JWKS/JWT verification, `server/discover`, `tools/list`, dan `tools/call` melewati HTTPS -> Sync -> Connect -> Hub. Negative paths untuk token, scope, Origin, dan routing headers juga diuji fail-closed.
+
+Ini **tidak** berarti repo mengoperasikan managed relay publik. Authorization server/JWKS dan HTTPS edge tetap komponen deployment operator sampai workstream managed deployment dibuat.
+
 ## Arsitektur saat ini
 
 Hub adalah supervisor/policy boundary. Tidak ada service yang boleh membuka database service lain secara langsung.
@@ -54,7 +62,7 @@ Hub adalah supervisor/policy boundary. Tidak ada service yang boleh membuka data
 | **Hub** | Policy, approval, audit, orchestration, Historical Ledger, ECX | implemented |
 | **Connect** | Provider gateway, optimizer, MCP inbound, vault, spend control | implemented |
 | **Context** | Memori L0–L2 + metadata L3 | implemented |
-| **Sync** | Pairing, E2E encrypted relay, MCP bridge | implemented local/self-hosted |
+| **Sync** | Pairing, E2E encrypted relay, MCP HTTPS bridge | implemented + external transport acceptance |
 | **Artifact** | CAS SHA-256 untuk L3 | implemented |
 | **Sandbox** | Tier 0, WASM, Docker hardened | implemented |
 | **Space** | Notes + editor core memory | implemented |
@@ -97,15 +105,21 @@ pnpm dev:phase4
 
 Flow mengharapkan Temporal melalui `ECORIONE_TEMPORAL_ADDRESS`. Repository tidak diam-diam menyalakan managed Temporal.
 
+External MCP acceptance dapat dijalankan terpisah dengan binary cloudflared yang sudah diverifikasi:
+
+```bash
+CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
+```
+
 ## Status fase
 
 - **Fase 0 — CLOSED:** monorepo, strict TypeScript, schema bersama, telemetry, UI foundation, CI.
 - **Fase 1 — CLOSED:** Ai → Hub → Context → Connect → RnD vertical slice.
-- **Fase 2 — CLOSED:** MCP inbound + Sync local/self-hosted.
+- **Fase 2 — CLOSED:** MCP inbound + Sync local/self-hosted; external HTTPS transport acceptance juga sudah dibuktikan pada Fase 6+ hardening.
 - **Fase 3 — CLOSED:** Artifact, Sandbox, Space + runtime acceptance.
 - **Fase 4 — CLOSED:** Flow di Temporal + forced worker crash/recovery.
 - **Fase 5 — DEFERRED BY DESIGN:** belum ada use case non-API konkret yang membenarkan RPA.
-- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, dan multi-provider hardening sudah masuk baseline; MCP external/plugin, multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
+- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, multi-provider hardening, dan external MCP HTTPS acceptance sudah masuk baseline; outbound MCP/plugin, multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
 
 ## Invarian penting
 
@@ -116,6 +130,8 @@ Flow mengharapkan Temporal melalui `ECORIONE_TEMPORAL_ADDRESS`. Repository tidak
 - Hosted provider dipilih eksplisit dari konfigurasi, bukan model output.
 - Credential production hanya dimiliki Connect.
 - Hosted dispatch tunduk pada kill switch + cumulative budget.
+- Connect MCP HTTP tidak bind publik; public reachability masuk lewat Sync + HTTPS edge.
+- MCP OAuth tetap diverifikasi di Connect; tunnel bukan authorization boundary.
 - Side effect memakai idempotency identity.
 - Aksi irreversible lewat policy/approval sesuai risk class.
 - Prefix caching harus byte-stable.
@@ -124,12 +140,12 @@ Flow mengharapkan Temporal melalui `ECORIONE_TEMPORAL_ADDRESS`. Repository tidak
 
 ## Batasan yang masih nyata
 
-- External MCP acceptance lewat real HTTPS/tunnel belum ditutup sebagai production evidence.
 - Ecorione belum memiliki outbound MCP manager/plugin registry generik.
 - Native OCR/STT/TTS/realtime voice belum menjadi capability runtime.
 - Visual node canvas/custom node SDK belum ada.
 - Data refactor/rebuild governance belum menjadi subsystem eksplisit.
-- Managed multi-host spend store/deployment belum ada; current spend store ditujukan single-host/self-host.
+- Managed public relay/deployment recipe belum ada; external acceptance memakai transport edge sementara, bukan layanan ecorione.
+- Managed multi-host spend store belum ada; current spend store ditujukan single-host/self-host.
 - Full git-history secret scan belum menjadi release gate.
 - Provider canary nyata + cumulative operational metrics masih terbuka.
 - ECX savings production belum tervalidasi dengan traffic/provider cost nyata.
@@ -145,6 +161,7 @@ Flow mengharapkan Temporal melalui `ECORIONE_TEMPORAL_ADDRESS`. Repository tidak
 | [`docs/blueprint.md`](docs/blueprint.md) | Cetak biru Fase 0–6+ |
 | [`docs/fase6-hardening.md`](docs/fase6-hardening.md) | Baseline hardening + gap aktif |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Log keputusan aktual |
+| [`docs/verification/`](docs/verification/) | Evidence exact-head/runtime acceptance |
 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
 | [`docs/LICENSING.md`](docs/LICENSING.md) | Batas open-core |
 | [`AGENTS.md`](AGENTS.md) | Aturan kerja repo |
