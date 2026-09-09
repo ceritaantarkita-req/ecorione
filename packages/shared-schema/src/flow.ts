@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { ScopeSchema, SensitivitySchema } from "./classification.js";
-import { OperationIdSchema } from "./ids.js";
+import { OperationIdSchema, WorkflowIdSchema, type WorkflowId } from "./ids.js";
 import { SandboxTierSchema } from "./sandbox.js";
 
-export const FlowIdSchema = z.string().regex(/^flow_[a-z0-9_-]+$/);
-export type FlowId = z.infer<typeof FlowIdSchema>;
+export const FlowIdSchema = WorkflowIdSchema;
+export type FlowId = WorkflowId;
 
 export const FlowExecutionNodeSchema = z.object({
   tier: SandboxTierSchema,
