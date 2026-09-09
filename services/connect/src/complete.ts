@@ -12,12 +12,16 @@ import {
   type TokenUsage,
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
+import type { ProviderCredentialReader } from "./credential-vault.js";
 import { callAnthropic } from "./providers/anthropic.js";
 import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
 import { callLocal } from "./providers/local.js";
 import { route, type RouteTarget } from "./routing.js";
 
 export interface CompleteDeps {
+  /** Production source. If configured, env fallback is intentionally ignored. */
+  readonly credentialVault?: ProviderCredentialReader | undefined;
+  /** Development-only compatibility fallback when no vault is configured. */
   readonly anthropicApiKey: string | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
@@ -100,10 +104,19 @@ export async function complete(
     deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
     cacheHit = false;
   } else {
-    if (deps.anthropicApiKey === undefined)
-      throw new MissingCredentialError("ANTHROPIC_API_KEY");
+    const apiKey =
+      deps.credentialVault === undefined
+        ? deps.anthropicApiKey
+        : deps.credentialVault.get("anthropic", "messages");
+    if (apiKey === undefined) {
+      throw new MissingCredentialError(
+        deps.credentialVault === undefined
+          ? "ANTHROPIC_API_KEY (dev fallback)"
+          : "Connect vault anthropic/messages",
+      );
+    }
     const result = await callAnthropic({
-      apiKey: deps.anthropicApiKey,
+      apiKey,
       model: decision.model,
       prefix: input.prefix,
       dynamicText: input.dynamicText,
