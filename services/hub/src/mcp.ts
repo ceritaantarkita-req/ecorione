@@ -173,7 +173,11 @@ async function artifactContent(
     readonly maxSensitivity: Sensitivity;
     readonly hostedEligible: boolean;
   },
-): Promise<{ readonly contentBase64: string; readonly mimeType: string; readonly sizeBytes: number }> {
+): Promise<{
+  readonly contentBase64: string;
+  readonly mimeType: string;
+  readonly sizeBytes: number;
+}> {
   const query = new URLSearchParams({
     scope: input.scope,
     maxSensitivity: input.maxSensitivity,
@@ -181,12 +185,17 @@ async function artifactContent(
   });
   const url = `${options.artifactUrl}/v1/artifacts/${encodeURIComponent(input.id)}/content?${query.toString()}`;
   const headers: Record<string, string> = { accept: "*/*" };
-  if (options.internalToken !== undefined) headers.authorization = `Bearer ${options.internalToken}`;
+  if (options.internalToken !== undefined)
+    headers.authorization = `Bearer ${options.internalToken}`;
   let response: Response;
   try {
     response = await fetch(url, { headers });
   } catch (error) {
-    throw new RemoteServiceError(url, 502, error instanceof Error ? error.message : String(error));
+    throw new RemoteServiceError(
+      url,
+      502,
+      error instanceof Error ? error.message : String(error),
+    );
   }
   if (!response.ok) {
     const text = await response.text();
