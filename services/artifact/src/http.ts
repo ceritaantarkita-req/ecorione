@@ -56,9 +56,11 @@ function decodeBase64(value: string): Buffer {
 
 function mapContextError(error: unknown): unknown {
   if (!(error instanceof RemoteServiceError)) return error;
-  if (error.statusCode === 404) return new NotFoundError("Artifact tidak tersedia untuk grant ini.");
+  if (error.statusCode === 404)
+    return new NotFoundError("Artifact tidak tersedia untuk grant ini.");
   if (error.statusCode === 403) return new ForbiddenError("Artifact ditolak oleh Context.");
-  if (error.statusCode === 400) return new BadRequestError("Metadata Artifact ditolak Context.");
+  if (error.statusCode === 400)
+    return new BadRequestError("Metadata Artifact ditolak Context.");
   return new BadGatewayError("Context metadata Artifact tidak tersedia.");
 }
 
