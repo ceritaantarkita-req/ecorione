@@ -14,7 +14,9 @@ const CLIENT_ORIGIN = "https://client.acceptance.example";
 const CLOUDFLARED_BIN = process.env.CLOUDFLARED_BIN;
 
 if (!CLOUDFLARED_BIN) {
-  throw new Error("CLOUDFLARED_BIN wajib menunjuk binary cloudflared yang sudah diverifikasi checksum-nya.");
+  throw new Error(
+    "CLOUDFLARED_BIN wajib menunjuk binary cloudflared yang sudah diverifikasi checksum-nya.",
+  );
 }
 
 function assert(condition, message) {
@@ -65,11 +67,9 @@ async function stopChild(child) {
 }
 
 async function startTunnel(localUrl, label) {
-  const child = spawn(
-    CLOUDFLARED_BIN,
-    ["tunnel", "--no-autoupdate", "--url", localUrl],
-    { stdio: ["ignore", "pipe", "pipe"] },
-  );
+  const child = spawn(CLOUDFLARED_BIN, ["tunnel", "--no-autoupdate", "--url", localUrl], {
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   const chunks = [];
   const urlPattern = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/iu;
 
@@ -79,7 +79,11 @@ async function startTunnel(localUrl, label) {
       if (settled) return;
       settled = true;
       void stopChild(child);
-      reject(new Error(`Timeout menunggu public HTTPS tunnel ${label}. Log: ${chunks.join("").slice(-4000)}`));
+      reject(
+        new Error(
+          `Timeout menunggu public HTTPS tunnel ${label}. Log: ${chunks.join("").slice(-4000)}`,
+        ),
+      );
     }, 60_000);
 
     const inspect = (data) => {
@@ -237,7 +241,10 @@ const hubServer = createHttpServer((req, res) => {
   });
   req.on("end", () => {
     const parsed = JSON.parse(body);
-    assert(parsed.access?.principalId === "external-acceptance-user", "Principal tidak sampai ke Hub.");
+    assert(
+      parsed.access?.principalId === "external-acceptance-user",
+      "Principal tidak sampai ke Hub.",
+    );
     assert(parsed.query === "external https proof", "Query tools/call berubah di bridge.");
     hubCalls += 1;
     res.writeHead(200, { "content-type": "application/json" });
@@ -304,15 +311,33 @@ try {
   assert(unauthenticated.status === 401, "Request tanpa token harus 401 melalui HTTPS bridge.");
   const challenge = unauthenticated.headers.get("www-authenticate") ?? "";
   const metadataUrl = `${syncPublicUrl}/.well-known/oauth-protected-resource/mcp`;
-  assert(challenge.includes(`resource_metadata=\"${metadataUrl}\"`), "401 challenge tidak menunjuk Protected Resource Metadata publik.");
-  assert(challenge.includes('scope="memory:read"'), "401 challenge tidak mengiklankan scope minimum.");
-  assert(challenge.includes('error="invalid_token"'), "401 challenge tidak menandai invalid_token.");
+  assert(
+    challenge.includes(`resource_metadata=\"${metadataUrl}\"`),
+    "401 challenge tidak menunjuk Protected Resource Metadata publik.",
+  );
+  assert(
+    challenge.includes('scope="memory:read"'),
+    "401 challenge tidak mengiklankan scope minimum.",
+  );
+  assert(
+    challenge.includes('error="invalid_token"'),
+    "401 challenge tidak menandai invalid_token.",
+  );
 
   const metadataResponse = await fetch(metadataUrl, { signal: AbortSignal.timeout(15_000) });
-  assert(metadataResponse.ok, "Protected Resource Metadata tidak reachable lewat public HTTPS.");
+  assert(
+    metadataResponse.ok,
+    "Protected Resource Metadata tidak reachable lewat public HTTPS.",
+  );
   const metadata = await metadataResponse.json();
-  assert(metadata.resource === resource, "Protected Resource Metadata resource tidak sama dengan MCP publik.");
-  assert(metadata.authorization_servers?.[0] === oauthPublicUrl, "Authorization server metadata berubah di bridge.");
+  assert(
+    metadata.resource === resource,
+    "Protected Resource Metadata resource tidak sama dengan MCP publik.",
+  );
+  assert(
+    metadata.authorization_servers?.[0] === oauthPublicUrl,
+    "Authorization server metadata berubah di bridge.",
+  );
 
   const token = mintJwt({
     privateKey,
@@ -335,7 +360,10 @@ try {
   });
   assert(listResponse.status === 200, "tools/list gagal lewat public HTTPS.");
   const listed = await listResponse.json();
-  assert(Array.isArray(listed.result?.tools) && listed.result.tools.length >= 5, "tools/list tidak mengembalikan tool set MCP.");
+  assert(
+    Array.isArray(listed.result?.tools) && listed.result.tools.length >= 5,
+    "tools/list tidak mengembalikan tool set MCP.",
+  );
 
   const callBody = requestBody("call", "tools/call", {
     name: "memory_search",
@@ -362,8 +390,14 @@ try {
   });
   assert(insufficientResponse.status === 403, "Token tanpa memory:read harus ditolak 403.");
   const insufficientChallenge = insufficientResponse.headers.get("www-authenticate") ?? "";
-  assert(insufficientChallenge.includes('error="insufficient_scope"'), "403 tidak mengiklankan insufficient_scope.");
-  assert(insufficientChallenge.includes('scope="memory:read"'), "403 tidak mengiklankan scope yang dibutuhkan.");
+  assert(
+    insufficientChallenge.includes('error="insufficient_scope"'),
+    "403 tidak mengiklankan insufficient_scope.",
+  );
+  assert(
+    insufficientChallenge.includes('scope="memory:read"'),
+    "403 tidak mengiklankan scope yang dibutuhkan.",
+  );
 
   const invalidResponse = await mcpRequest(
     syncPublicUrl,

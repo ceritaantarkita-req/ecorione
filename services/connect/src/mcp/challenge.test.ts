@@ -28,6 +28,8 @@ describe("MCP OAuth WWW-Authenticate challenge", () => {
 
   it("resource query/fragment ditolak agar metadata discovery tidak ambigu", () => {
     expect(() => protectedResourceMetadataUrl("https://edge.example/mcp?x=1")).toThrow(/query/);
-    expect(() => protectedResourceMetadataUrl("https://edge.example/mcp#x")).toThrow(/fragment/);
+    expect(() => protectedResourceMetadataUrl("https://edge.example/mcp#x")).toThrow(
+      /fragment/,
+    );
   });
 });
