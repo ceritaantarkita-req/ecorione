@@ -5,7 +5,7 @@ import {
   type MultimodalInferRequest,
   type Timestamp,
 } from "@ecorione/shared-schema";
-import { z } from "zod";
+import type { z } from "zod";
 import type { HostedProviderId } from "./provider-types.js";
 import {
   CostKillSwitchError,
