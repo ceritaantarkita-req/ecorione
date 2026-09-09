@@ -9,6 +9,7 @@ import { FileMcpInvocationStore } from "./mcp-client/invocation-store.js";
 import { McpManager } from "./mcp-client/manager.js";
 import { FileMcpRegistry } from "./mcp-client/registry.js";
 import { SdkMcpClientFactory } from "./mcp-client/sdk-client.js";
+import { MultimodalService } from "./multimodal/service.js";
 import { parseHostedProvider } from "./provider-types.js";
 import { parseLocalRuntime } from "./providers/local-runtime.js";
 import { FileSpendBudget, parseOptionalBudgetUsd } from "./spend-budget.js";
@@ -71,6 +72,28 @@ const mcpManager = new McpManager(
   new FileMcpInvocationStore(mcpInvocationPath),
 );
 
+const multimodalHostedReservationUsd =
+  parseOptionalBudgetUsd(
+    "ECORIONE_MULTIMODAL_HOSTED_RESERVATION_USD",
+    process.env.ECORIONE_MULTIMODAL_HOSTED_RESERVATION_USD,
+  ) ?? 1;
+const multimodalService = new MultimodalService({
+  artifactUrl: process.env.ECORIONE_ARTIFACT_URL ?? "http://127.0.0.1:17025",
+  internalToken: token,
+  localBaseUrl: process.env.ECORIONE_LOCAL_MULTIMODAL_URL ?? "http://127.0.0.1:17031",
+  hostedProvider,
+  credentialVault,
+  anthropicApiKey,
+  openrouterApiKey,
+  openaiApiKey,
+  hostedCallsEnabled,
+  spendBudget,
+  hostedReservationUsd: multimodalHostedReservationUsd,
+  openaiVisionModel: process.env.ECORIONE_OPENAI_VISION_MODEL ?? "gpt-5.6-terra",
+  openaiTranscriptionModel: process.env.ECORIONE_OPENAI_TRANSCRIPTION_MODEL ?? "whisper-1",
+  openaiTtsModel: process.env.ECORIONE_OPENAI_TTS_MODEL ?? "gpt-4o-mini-tts",
+});
+
 const app = buildConnectServer({
   token,
   logger: true,
@@ -85,6 +108,7 @@ const app = buildConnectServer({
   hostedCallsEnabled,
   spendBudget,
   mcpManager,
+  multimodalService,
 });
 
 app
