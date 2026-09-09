@@ -18,10 +18,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { ExactMatchCache } from "./cache.js";
 import { complete, type CompleteDeps } from "./complete.js";
-import {
-  CredentialVaultError,
-  type ProviderCredentialReader,
-} from "./credential-vault.js";
+import { CredentialVaultError, type ProviderCredentialReader } from "./credential-vault.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,

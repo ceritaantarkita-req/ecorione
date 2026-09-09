@@ -145,7 +145,9 @@ function readVault(path: string): VaultFile {
   try {
     parsed = JSON.parse(readFileSync(path, "utf8")) as unknown;
   } catch (error) {
-    throw new CredentialVaultFormatError(error instanceof Error ? error.message : String(error));
+    throw new CredentialVaultFormatError(
+      error instanceof Error ? error.message : String(error),
+    );
   }
   try {
     const vault = VaultFileSchema.parse(parsed);
@@ -160,7 +162,9 @@ function readVault(path: string): VaultFile {
     return vault;
   } catch (error) {
     if (error instanceof CredentialVaultFormatError) throw error;
-    throw new CredentialVaultFormatError(error instanceof Error ? error.message : String(error));
+    throw new CredentialVaultFormatError(
+      error instanceof Error ? error.message : String(error),
+    );
   }
 }
 
@@ -224,7 +228,9 @@ export class FileCredentialVault implements ProviderCredentialReader {
     try {
       normalizedUpdatedAt = TimestampSchema.parse(updatedAt);
     } catch (error) {
-      throw new CredentialVaultFormatError(error instanceof Error ? error.message : String(error));
+      throw new CredentialVaultFormatError(
+        error instanceof Error ? error.message : String(error),
+      );
     }
     const vault = readVault(this.path);
     const prior = vault.entries.find(
