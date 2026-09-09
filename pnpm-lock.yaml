@@ -213,6 +213,28 @@ importers:
         specifier: ^7.6.13
         version: 7.6.13
 
+  services/sync:
+    dependencies:
+      '@ecorione/shared-schema':
+        specifier: workspace:*
+        version: link:../../packages/shared-schema
+      '@ecorione/shared-server':
+        specifier: workspace:*
+        version: link:../../packages/shared-server
+      better-sqlite3:
+        specifier: ^12.4.1
+        version: 12.11.1
+      fastify:
+        specifier: ^5.2.1
+        version: 5.12.3
+      zod:
+        specifier: ^4.1.12
+        version: 4.5.4
+    devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
+
 packages:
 
   '@emnapi/runtime@1.11.3':
