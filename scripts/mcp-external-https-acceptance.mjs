@@ -312,7 +312,7 @@ try {
   const challenge = unauthenticated.headers.get("www-authenticate") ?? "";
   const metadataUrl = `${syncPublicUrl}/.well-known/oauth-protected-resource/mcp`;
   assert(
-    challenge.includes(`resource_metadata=\"${metadataUrl}\"`),
+    challenge.includes(`resource_metadata="${metadataUrl}"`),
     "401 challenge tidak menunjuk Protected Resource Metadata publik.",
   );
   assert(
