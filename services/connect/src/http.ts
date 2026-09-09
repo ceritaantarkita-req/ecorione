@@ -2,6 +2,7 @@
 import { ToolDefinitionSchema } from "@ecorione/context-assembly";
 import {
   CoreMemorySchema,
+  MultimodalInferRequestSchema,
   OperationIdSchema,
   SensitivitySchema,
 } from "@ecorione/shared-schema";
@@ -14,11 +15,13 @@ import {
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { ExactMatchCache } from "./cache.js";
+import { nowIso } from "./clock.js";
 import { complete, type CompleteDeps } from "./complete.js";
 import { CredentialVaultError, type ProviderCredentialReader } from "./credential-vault.js";
-import type { HostedProviderId } from "./provider-types.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
+import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
+import { DEFAULT_HOSTED_PROVIDER, type HostedProviderId } from "./provider-types.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
@@ -73,13 +76,16 @@ export interface BuildConnectServerOptions {
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
   readonly cache?: ExactMatchCache | undefined;
   readonly mcpManager?: McpManager | undefined;
+  readonly localMultimodalAdapter?: MultimodalAdapter | undefined;
+  readonly hostedMultimodalAdapter?: MultimodalAdapter | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
   const app = createServer({ name: "connect", token: options.token, logger: options.logger });
+  const hostedProvider = options.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
   const deps: CompleteDeps = {
     credentialVault: options.credentialVault,
-    hostedProvider: options.hostedProvider,
+    hostedProvider,
     anthropicApiKey: options.anthropicApiKey,
     openrouterApiKey: options.openrouterApiKey,
     openaiApiKey: options.openaiApiKey,
@@ -97,6 +103,25 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const body = parseOrBadRequest(CompleteBodySchema, req.body);
     try {
       return await complete(deps, body);
+    } catch (err) {
+      throw toHttpError(err);
+    }
+  });
+
+  app.post("/v1/multimodal/infer", async (req) => {
+    const body = parseOrBadRequest(MultimodalInferRequestSchema, req.body);
+    try {
+      return await inferMultimodal(
+        {
+          localAdapter: options.localMultimodalAdapter,
+          hostedAdapter: options.hostedMultimodalAdapter,
+          hostedProvider,
+          hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+          spendBudget: options.spendBudget,
+        },
+        body,
+        nowIso(),
+      );
     } catch (err) {
       throw toHttpError(err);
     }
