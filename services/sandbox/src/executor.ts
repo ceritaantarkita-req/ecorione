@@ -111,7 +111,7 @@ export function buildDockerPlan(
       "--cpus=1",
       "--pids-limit=128",
       "--mount",
-      `type=bind,src=${workspace},dst=/workspace,rw`,
+      `type=bind,src=${workspace},dst=/workspace`,
       "--workdir=/workspace",
       image,
       "sh",
