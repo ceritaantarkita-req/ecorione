@@ -30,6 +30,12 @@ Planner bersifat deterministik dan sparse:
 3. `maxRecipients` membatasi fan-out;
 4. tidak ada broadcast default.
 
+Determinisme berlaku di core planner, bukan hanya adapter HTTP. Default `packetId` diturunkan secara deterministik dari semantic handoff + recipient, sedangkan duplicate candidate identity ditolak di schema boundary. Retry request identik karena itu menghasilkan packet identity yang sama dan dapat dideduplicate oleh Historical Ledger.
+
+### Provenance commit
+
+Jika plan menghasilkan lebih dari satu recipient dan `historySessionId` diberikan, semua `agent.handoff` untuk plan tersebut ditulis melalui satu Historical Ledger batch transaction. Tidak boleh ada partial committed fan-out provenance ketika salah satu append gagal.
+
 ### Hydration
 
 - History range dibaca dari Historical Ledger Hub.
@@ -37,6 +43,7 @@ Planner bersifat deterministik dan sparse:
 - Artifact dibaca dari Artifact HTTP API.
 - `maxHydratedBytes` adalah hard byte budget.
 - denied/missing reference gagal eksplisit; tidak silently menghapus evidence.
+- `LOCAL_ONLY` History tidak dapat dihydrate sebagai hosted-eligible context.
 
 ### A2A
 
@@ -51,6 +58,8 @@ A2A Protocol v1.0 adalah standard interoperability eksternal. ECX **tidak mengga
 ## Telemetry
 
 Planner/hydrator harus menghasilkan measurement yang dapat dibandingkan terhadap full-context baseline: packet bytes, hydrated bytes, candidate/recipient count, denied refs, dan provider token usage di downstream call. Paper eksternal bukan evidence penghematan ecorione.
+
+Regression suite menyertakan fixture yang membandingkan pointer-first packet dengan equivalent inline-history payload untuk membuktikan properti ukuran packet secara lokal. Klaim penghematan produksi tetap membutuhkan measurement traffic nyata dan tidak boleh disimpulkan hanya dari fixture tersebut.
 
 ## Konsekuensi
 
