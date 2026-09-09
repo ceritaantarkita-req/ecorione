@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   MODEL_PRICES,
   ModelAliasError,
@@ -10,23 +10,22 @@ import {
 } from "./pricing.js";
 
 describe("assertPinnedModel (ADR-14)", () => {
-  it("menolak alias -latest", () => {
+  it("menolak alias latest dan unsuffixed provider alias", () => {
     expect(() => assertPinnedModel("claude-x-latest")).toThrow(ModelAliasError); // naming-gate:allow
-  });
-
-  it("menolak bentuk alias lainnya", () => {
     expect(() => assertPinnedModel("latest")).toThrow(ModelAliasError);
     expect(() => assertPinnedModel("openai/gpt-4.1:latest")).toThrow(ModelAliasError);
+    expect(() => assertPinnedModel("gpt-5.6")).toThrow(ModelAliasError);
   });
 
-  it("alias diperiksa sebelum keanggotaan tabel, supaya pesannya menyebut ADR-14", () => {
-    // Kalau urutannya terbalik, alias yang tidak ada di tabel akan dilaporkan sebagai
-    // "model tidak dikenal" dan alasan sebenarnya hilang dari pesan error.
+  it("alias diperiksa sebelum keanggotaan tabel", () => {
     expect(() => assertPinnedModel("claude-sonnet-latest")).toThrow(/ADR-14/); // naming-gate:allow
   });
 
-  it("menerima ID yang dipin dan mengembalikannya", () => {
+  it("menerima explicit model identities", () => {
     expect(assertPinnedModel("claude-sonnet-4-5-20250929")).toBe("claude-sonnet-4-5-20250929");
+    expect(assertPinnedModel("gpt-5.6-sol")).toBe("gpt-5.6-sol");
+    expect(assertPinnedModel("gpt-5.6-terra")).toBe("gpt-5.6-terra");
+    expect(assertPinnedModel("gpt-5.6-luna")).toBe("gpt-5.6-luna");
   });
 
   it("menolak model yang tidak ada di tabel harga", () => {
@@ -41,8 +40,6 @@ describe("assertPinnedModel (ADR-14)", () => {
 
 describe("tabel harga", () => {
   it("tidak ada satu pun kunci yang berbentuk alias", () => {
-    // Penjaga untuk suntingan berikutnya: menambah "…-latest" ke tabel akan membuat
-    // assertPinnedModel menolak model yang justru ada harganya.
     for (const id of pinnedModelIds()) {
       expect(isPinnedModel(id), `kunci tabel ${id} tidak lolos gerbang pin`).toBe(true);
     }
@@ -55,16 +52,33 @@ describe("tabel harga", () => {
       expect(p.outputPerMTok).toBeGreaterThanOrEqual(0);
       expect(p.cacheWritePerMTok).toBeGreaterThanOrEqual(0);
       expect(p.cacheReadPerMTok).toBeGreaterThanOrEqual(0);
-      // Kalau baca cache lebih mahal dari input, seluruh premis ADR-01 terbalik.
       expect(p.cacheReadPerMTok, id).toBeLessThanOrEqual(p.inputPerMTok);
     }
   });
 
-  it("model Anthropic memakai pengali 1,25x tulis dan 0,1x baca", () => {
-    // Angka ini yang dipakai test break-even di cost.test.ts.
-    const p = MODEL_PRICES["claude-sonnet-4-5-20250929"];
-    expect(p.cacheWritePerMTok / p.inputPerMTok).toBeCloseTo(1.25, 10);
-    expect(p.cacheReadPerMTok / p.inputPerMTok).toBeCloseTo(0.1, 10);
+  it("Anthropic dan GPT-5.6 memakai pricing snapshot yang eksplisit", () => {
+    const claude = MODEL_PRICES["claude-sonnet-4-5-20250929"];
+    expect(claude.cacheWritePerMTok / claude.inputPerMTok).toBeCloseTo(1.25, 10);
+    expect(claude.cacheReadPerMTok / claude.inputPerMTok).toBeCloseTo(0.1, 10);
+
+    expect(MODEL_PRICES["gpt-5.6-sol"]).toEqual({
+      inputPerMTok: 4,
+      outputPerMTok: 20,
+      cacheWritePerMTok: 5,
+      cacheReadPerMTok: 0.4,
+    });
+    expect(MODEL_PRICES["gpt-5.6-terra"]).toEqual({
+      inputPerMTok: 2,
+      outputPerMTok: 12,
+      cacheWritePerMTok: 2.5,
+      cacheReadPerMTok: 0.2,
+    });
+    expect(MODEL_PRICES["gpt-5.6-luna"]).toEqual({
+      inputPerMTok: 0.2,
+      outputPerMTok: 1.2,
+      cacheWritePerMTok: 0.25,
+      cacheReadPerMTok: 0.02,
+    });
   });
 
   it("model lokal berharga nol", () => {
