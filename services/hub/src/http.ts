@@ -25,8 +25,8 @@ import {
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import type { HubDatabase } from "./db.js";
 import { nowIso } from "./clock.js";
+import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
 import {
   chat,
@@ -86,6 +86,7 @@ export interface BuildHubServerOptions {
   readonly contextUrl: string;
   readonly connectUrl: string;
   readonly rndUrl: string;
+  readonly artifactUrl?: string | undefined;
   readonly internalToken?: string | undefined;
 }
 
@@ -251,6 +252,7 @@ export function buildHubServer(
 
   registerMcpRoutes(app, repo, {
     contextUrl: options.contextUrl,
+    artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
     internalToken: options.internalToken,
   });
 
