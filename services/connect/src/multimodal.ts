@@ -7,7 +7,11 @@ import {
 } from "@ecorione/shared-schema";
 import { z } from "zod";
 import type { HostedProviderId } from "./provider-types.js";
-import { CostKillSwitchError, MissingCredentialError, ProviderError } from "./providers/errors.js";
+import {
+  CostKillSwitchError,
+  MissingCredentialError,
+  ProviderError,
+} from "./providers/errors.js";
 import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
 
 type SpendBudgetController = Pick<FileSpendBudget, "reserve" | "settle" | "markUncertain">;
@@ -48,7 +52,9 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
       );
     }
     if (this.route === "hosted" && options.authorizationBearer === undefined) {
-      throw new Error("Adapter multimodal hosted wajib memakai credential reader milik Connect.");
+      throw new Error(
+        "Adapter multimodal hosted wajib memakai credential reader milik Connect.",
+      );
     }
     this.authorizationBearer = options.authorizationBearer;
   }
@@ -92,10 +98,16 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
     }
     const parsed = AdapterOutputSchema.safeParse(payload);
     if (!parsed.success) {
-      throw new ProviderError(this.route, "Adapter multimodal mengembalikan kontrak yang tidak valid.");
+      throw new ProviderError(
+        this.route,
+        "Adapter multimodal mengembalikan kontrak yang tidak valid.",
+      );
     }
     if (/latest/i.test(parsed.data.model)) {
-      throw new ProviderError(this.route, "Adapter multimodal mengembalikan model alias latest yang dilarang.");
+      throw new ProviderError(
+        this.route,
+        "Adapter multimodal mengembalikan model alias latest yang dilarang.",
+      );
     }
     return parsed.data;
   }
@@ -109,10 +121,7 @@ export interface MultimodalDeps {
   readonly spendBudget?: SpendBudgetController | undefined;
 }
 
-function requireAdapter(
-  deps: MultimodalDeps,
-  route: "local" | "hosted",
-): MultimodalAdapter {
+function requireAdapter(deps: MultimodalDeps, route: "local" | "hosted"): MultimodalAdapter {
   const adapter = route === "local" ? deps.localAdapter : deps.hostedAdapter;
   if (adapter === undefined) {
     throw new ProviderError(route, `Adapter multimodal ${route} belum dikonfigurasi.`);
@@ -128,7 +137,10 @@ async function callRoute(
 ): Promise<MultimodalAdapterResult> {
   if (route === "hosted") {
     if (!maySendToHosted(input.syncClass)) {
-      throw new ProviderError("hosted", `syncClass ${input.syncClass} tidak boleh dikirim ke hosted.`);
+      throw new ProviderError(
+        "hosted",
+        `syncClass ${input.syncClass} tidak boleh dikirim ke hosted.`,
+      );
     }
     if (!deps.hostedCallsEnabled) throw new CostKillSwitchError();
   }

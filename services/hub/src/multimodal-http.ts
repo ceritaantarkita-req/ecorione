@@ -67,7 +67,11 @@ function upstreamHttpError(service: string, error: unknown): never {
     if (error.statusCode === 404) throw new NotFoundError(error.message);
     if (error.statusCode === 403) throw new ForbiddenError(error.message);
     if (error.statusCode >= 400 && error.statusCode < 500) {
-      throw new HttpError(error.statusCode, "UPSTREAM_REJECTED", `${service}: ${error.message}`);
+      throw new HttpError(
+        error.statusCode,
+        "UPSTREAM_REJECTED",
+        `${service}: ${error.message}`,
+      );
     }
   }
   throw new BadGatewayError(`${service} tidak tersedia.`);
@@ -110,9 +114,13 @@ async function artifactBytes(
     throw new BadGatewayError("Artifact tidak tersedia.");
   }
   if (!response.ok) {
-    if (response.status === 404) throw new NotFoundError(`Artifact content tidak ditemukan: ${pointer.id}.`);
-    if (response.status === 403) throw new ForbiddenError("Artifact content ditolak owner boundary.");
-    throw new BadGatewayError(`Artifact content gagal dibaca (HTTP ${String(response.status)}).`);
+    if (response.status === 404)
+      throw new NotFoundError(`Artifact content tidak ditemukan: ${pointer.id}.`);
+    if (response.status === 403)
+      throw new ForbiddenError("Artifact content ditolak owner boundary.");
+    throw new BadGatewayError(
+      `Artifact content gagal dibaca (HTTP ${String(response.status)}).`,
+    );
   }
   const bytes = Buffer.from(await response.arrayBuffer());
   if (bytes.byteLength !== pointer.sizeBytes) {
@@ -131,11 +139,14 @@ function assertMime(task: MultimodalAnalyzeRequest["task"], mimeType: string): v
     mimeType === "application/vnd.oasis.opendocument.text" ||
     mimeType.startsWith("text/");
   if ((task === "ocr" || task === "vision") && (mediaImage || document)) return;
-  if (task === "transcribe" && (mimeType.startsWith("audio/") || mimeType.startsWith("video/"))) return;
+  if (task === "transcribe" && (mimeType.startsWith("audio/") || mimeType.startsWith("video/")))
+    return;
   throw new BadRequestError(`MIME ${mimeType} tidak didukung untuk task ${task}.`);
 }
 
-function requestedRoutes(route: MultimodalAnalyzeRequest["route"]): readonly ("local" | "hosted")[] {
+function requestedRoutes(
+  route: MultimodalAnalyzeRequest["route"],
+): readonly ("local" | "hosted")[] {
   if (route.preferred === "hosted") return ["hosted"];
   return route.allowHostedFallback ? ["local", "hosted"] : ["local"];
 }
@@ -153,12 +164,18 @@ function authorizeInference(input: {
 }): void {
   for (const route of input.routes) {
     if (route === "hosted" && !maySendToHosted(input.syncClass)) {
-      throw new ForbiddenError(`syncClass ${input.syncClass} tidak mengizinkan plaintext hosted inference.`);
+      throw new ForbiddenError(
+        `syncClass ${input.syncClass} tidak mengizinkan plaintext hosted inference.`,
+      );
     }
-    const capabilityId = (route === "hosted" ? "model.invoke.hosted" : "model.invoke.local") as CapabilityId;
-    const permissionIds = (route === "hosted"
-      ? ["model.invoke", "network.connect", "provider.spend"]
-      : ["model.invoke", "execution.local"]) as PermissionId[];
+    const capabilityId = (
+      route === "hosted" ? "model.invoke.hosted" : "model.invoke.local"
+    ) as CapabilityId;
+    const permissionIds = (
+      route === "hosted"
+        ? ["model.invoke", "network.connect", "provider.spend"]
+        : ["model.invoke", "execution.local"]
+    ) as PermissionId[];
     const result = input.authority.authorize({
       operationId: input.operationId,
       workspaceId: input.workspaceId,
@@ -173,19 +190,29 @@ function authorizeInference(input: {
       type: result.outcome === "ALLOW" ? "CAPABILITY_AUTHORIZED" : "CAPABILITY_DENIED",
       operationId: input.operationId,
       module: "Hub",
-      detail: { route, capabilityId, permissionIds, scope: input.scope, sensitivity: input.sensitivity },
+      detail: {
+        route,
+        capabilityId,
+        permissionIds,
+        scope: input.scope,
+        sensitivity: input.sensitivity,
+      },
       now: input.now,
     });
     if (result.outcome === "DENY") throw new ForbiddenError(result.reason);
   }
 }
 
-function stripAudio(result: MultimodalAdapterResult): Omit<MultimodalAdapterResult, "audioBase64" | "audioMimeType"> {
+function stripAudio(
+  result: MultimodalAdapterResult,
+): Omit<MultimodalAdapterResult, "audioBase64" | "audioMimeType"> {
   const { audioBase64: _audioBase64, audioMimeType: _audioMimeType, ...semantic } = result;
   return semantic;
 }
 
-function eventType(task: MultimodalAnalyzeRequest["task"]): "artifact.extracted" | "artifact.transcribed" {
+function eventType(
+  task: MultimodalAnalyzeRequest["task"],
+): "artifact.extracted" | "artifact.transcribed" {
   return task === "transcribe" ? "artifact.transcribed" : "artifact.extracted";
 }
 
@@ -282,7 +309,9 @@ export function registerMultimodalRoutes(
         ),
       );
       if (inferred.audioBase64 !== undefined || inferred.audioMimeType !== undefined) {
-        throw new BadGatewayError("Adapter analisis media mengembalikan audio yang tidak diminta.");
+        throw new BadGatewayError(
+          "Adapter analisis media mengembalikan audio yang tidak diminta.",
+        );
       }
       const episode = await serviceJson<Episode>(
         "Context",
@@ -364,7 +393,11 @@ export function registerMultimodalRoutes(
       });
       return response;
     } catch (error) {
-      deps.runs.fail(body.operationId, error instanceof Error ? error.message : String(error), now);
+      deps.runs.fail(
+        body.operationId,
+        error instanceof Error ? error.message : String(error),
+        now,
+      );
       throw error;
     }
   });
@@ -425,10 +458,14 @@ export function registerMultimodalRoutes(
         ),
       );
       if (inferred.audioBase64 === undefined || inferred.audioMimeType === undefined) {
-        throw new BadGatewayError("Adapter TTS tidak mengembalikan audioBase64 + audioMimeType.");
+        throw new BadGatewayError(
+          "Adapter TTS tidak mengembalikan audioBase64 + audioMimeType.",
+        );
       }
       if (!inferred.audioMimeType.startsWith("audio/")) {
-        throw new BadGatewayError(`Adapter TTS mengembalikan MIME non-audio: ${inferred.audioMimeType}.`);
+        throw new BadGatewayError(
+          `Adapter TTS mengembalikan MIME non-audio: ${inferred.audioMimeType}.`,
+        );
       }
       const upload = await serviceJson<ArtifactUploadResponse>(
         "Artifact",
@@ -482,19 +519,26 @@ export function registerMultimodalRoutes(
       });
       return response;
     } catch (error) {
-      deps.runs.fail(body.operationId, error instanceof Error ? error.message : String(error), now);
+      deps.runs.fail(
+        body.operationId,
+        error instanceof Error ? error.message : String(error),
+        now,
+      );
       throw error;
     }
   });
 
-  app.get<{ Params: { operationId: string } }>("/v1/multimodal/:operationId", async (request) => {
-    const operationId = parseOrBadRequest(OperationIdSchema, request.params.operationId);
-    try {
-      return deps.runs.get(operationId);
-    } catch (error) {
-      if (error instanceof MultimodalRunNotFoundError) throw new NotFoundError(error.message);
-      if (error instanceof MultimodalRunConflictError) throw new ConflictError(error.message);
-      throw error;
-    }
-  });
+  app.get<{ Params: { operationId: string } }>(
+    "/v1/multimodal/:operationId",
+    async (request) => {
+      const operationId = parseOrBadRequest(OperationIdSchema, request.params.operationId);
+      try {
+        return deps.runs.get(operationId);
+      } catch (error) {
+        if (error instanceof MultimodalRunNotFoundError) throw new NotFoundError(error.message);
+        if (error instanceof MultimodalRunConflictError) throw new ConflictError(error.message);
+        throw error;
+      }
+    },
+  );
 }

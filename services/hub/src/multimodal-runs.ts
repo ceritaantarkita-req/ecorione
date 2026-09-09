@@ -87,7 +87,8 @@ export class MultimodalRunStore {
       }
       return {
         status: statusFromRow(existing),
-        priorResult: existing.result_json === null ? null : (JSON.parse(existing.result_json) as unknown),
+        priorResult:
+          existing.result_json === null ? null : (JSON.parse(existing.result_json) as unknown),
       };
     }
     this.db.raw

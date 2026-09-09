@@ -50,8 +50,15 @@ export const MultimodalSegmentSchema = z
     language: MultimodalLanguageSchema.optional(),
   })
   .superRefine((value, ctx) => {
-    if (value.startMs !== undefined && value.endMs !== undefined && value.endMs < value.startMs) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "endMs tidak boleh sebelum startMs." });
+    if (
+      value.startMs !== undefined &&
+      value.endMs !== undefined &&
+      value.endMs < value.startMs
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "endMs tidak boleh sebelum startMs.",
+      });
     }
   });
 export type MultimodalSegment = z.infer<typeof MultimodalSegmentSchema>;
@@ -62,7 +69,10 @@ const MultimodalRequestBaseSchema = z.object({
   workspaceId: WorkspaceIdSchema.optional(),
   scope: ScopeSchema,
   maxSensitivity: SensitivitySchema,
-  route: MultimodalRouteRequestSchema.default({ preferred: "local", allowHostedFallback: false }),
+  route: MultimodalRouteRequestSchema.default({
+    preferred: "local",
+    allowHostedFallback: false,
+  }),
 });
 
 export const MultimodalAnalyzeRequestSchema = MultimodalRequestBaseSchema.extend({
@@ -136,7 +146,12 @@ export const MultimodalSynthesizeResponseSchema = z.object({
 });
 export type MultimodalSynthesizeResponse = z.infer<typeof MultimodalSynthesizeResponseSchema>;
 
-export const MultimodalLifecycleStateSchema = z.enum(["RECEIVED", "PROCESSING", "READY", "FAILED"]);
+export const MultimodalLifecycleStateSchema = z.enum([
+  "RECEIVED",
+  "PROCESSING",
+  "READY",
+  "FAILED",
+]);
 export const MultimodalRunStatusSchema = z.object({
   operationId: OperationIdSchema,
   sessionId: SessionIdSchema,
@@ -167,12 +182,18 @@ export const MultimodalInferRequestSchema = z
   .superRefine((value, ctx) => {
     if (value.task === "synthesize") {
       if (value.text === undefined || value.language === undefined) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "TTS membutuhkan text + language." });
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "TTS membutuhkan text + language.",
+        });
       }
       return;
     }
     if (value.contentBase64 === undefined || value.mimeType === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Analisis media membutuhkan contentBase64 + mimeType." });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Analisis media membutuhkan contentBase64 + mimeType.",
+      });
     }
   });
 export type MultimodalInferRequest = z.infer<typeof MultimodalInferRequestSchema>;

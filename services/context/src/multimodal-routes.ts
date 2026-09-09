@@ -40,11 +40,15 @@ export function registerMultimodalRoutes(app: FastifyInstance, repo: ContextRepo
     const payloadJson = JSON.stringify(body);
     const digest = fingerprint(body);
     const existing = db
-      .prepare("SELECT operation_id,fingerprint,payload_json FROM multimodal_derivations WHERE operation_id=?")
+      .prepare(
+        "SELECT operation_id,fingerprint,payload_json FROM multimodal_derivations WHERE operation_id=?",
+      )
       .get(body.operationId) as DerivationRow | undefined;
     if (existing !== undefined) {
       if (existing.fingerprint !== digest) {
-        throw new ConflictError(`Derivasi multimodal ${body.operationId} sudah ada dengan payload berbeda.`);
+        throw new ConflictError(
+          `Derivasi multimodal ${body.operationId} sudah ada dengan payload berbeda.`,
+        );
       }
       return MultimodalDerivationSchema.parse(JSON.parse(existing.payload_json) as unknown);
     }
@@ -69,10 +73,15 @@ export function registerMultimodalRoutes(app: FastifyInstance, repo: ContextRepo
     async (req) => {
       const operationId = parseOrBadRequest(OperationIdSchema, req.params.operationId);
       const row = db
-        .prepare("SELECT operation_id,fingerprint,payload_json FROM multimodal_derivations WHERE operation_id=?")
+        .prepare(
+          "SELECT operation_id,fingerprint,payload_json FROM multimodal_derivations WHERE operation_id=?",
+        )
         .get(operationId) as DerivationRow | undefined;
-      if (row === undefined) throw new NotFoundError(`Derivasi multimodal tidak ditemukan: ${operationId}.`);
-      return MultimodalDerivationSchema.parse(JSON.parse(row.payload_json) as MultimodalDerivation);
+      if (row === undefined)
+        throw new NotFoundError(`Derivasi multimodal tidak ditemukan: ${operationId}.`);
+      return MultimodalDerivationSchema.parse(
+        JSON.parse(row.payload_json) as MultimodalDerivation,
+      );
     },
   );
 }
