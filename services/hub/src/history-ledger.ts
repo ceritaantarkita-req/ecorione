@@ -88,7 +88,8 @@ function normalizeJson(value: unknown, path = "payload"): unknown {
     if (!Number.isFinite(value)) throw new HistoryPayloadError(`${path} mengandung angka non-finite.`);
     return value;
   }
-  if (Array.isArray(value)) return value.map((entry, index) => normalizeJson(entry, `${path}[${String(index)}]`));
+  if (Array.isArray(value))
+    return value.map((entry, index) => normalizeJson(entry, `${path}[${String(index)}]`));
   if (typeof value === "object") {
     const object = value as Record<string, unknown>;
     const normalized: Record<string, unknown> = {};
@@ -284,6 +285,13 @@ export class HistoryLedger {
     return transaction.immediate();
   }
 
+  appendBatch(sessionId: SessionId, drafts: readonly HistoryEventDraft[]): AppendHistoryResult[] {
+    const transaction = this.db.raw.transaction(() =>
+      drafts.map((draft) => this.appendLocked(sessionId, null, draft)),
+    );
+    return transaction.immediate();
+  }
+
   verifySession(sessionId: SessionId): void {
     const session = this.getSession(sessionId);
     if (session === null) throw new HistorySessionNotFoundError(sessionId);
@@ -329,7 +337,13 @@ export class HistoryLedger {
     this.verifySession(input.sessionId);
     const upper = input.throughSeq ?? Math.max(-1, session.nextSeq - 1);
     if (upper < input.afterSeq) {
-      return { sessionId: input.sessionId, afterSeq: input.afterSeq, throughSeq: input.afterSeq, nextSeq: session.nextSeq, events: [] };
+      return {
+        sessionId: input.sessionId,
+        afterSeq: input.afterSeq,
+        throughSeq: input.afterSeq,
+        nextSeq: session.nextSeq,
+        events: [],
+      };
     }
     const rows = this.db.raw
       .prepare(
