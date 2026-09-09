@@ -11,13 +11,17 @@ afterEach(() => {
 describe("MCP memory_open → Artifact", () => {
   it("returns authorized Artifact bytes as base64 instead of the former 501", async () => {
     const artifact = createServer({ name: "artifact-test" });
-    artifact.get<{ Params: { id: string } }>("/v1/artifacts/:id/content", async (req, reply) => {
-      expect(req.query).toMatchObject({ scope: "personal", maxSensitivity: "INTERNAL" });
-      return reply.type("text/plain").send(Buffer.from("artifact-body"));
-    });
+    artifact.get<{ Params: { id: string } }>(
+      "/v1/artifacts/:id/content",
+      async (req, reply) => {
+        expect(req.query).toMatchObject({ scope: "personal", maxSensitivity: "INTERNAL" });
+        return reply.type("text/plain").send(Buffer.from("artifact-body"));
+      },
+    );
     await artifact.listen({ port: 0, host: "127.0.0.1" });
     const address = artifact.server.address();
-    if (address === null || typeof address === "string") throw new Error("Artifact test address gagal.");
+    if (address === null || typeof address === "string")
+      throw new Error("Artifact test address gagal.");
 
     const db = openHubDatabase();
     dbs.push(db);
