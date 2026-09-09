@@ -83,7 +83,11 @@ async function waitUntil(
   throw new Error(`Timed out waiting for ${label}.`);
 }
 
-async function withTimeout<T>(promise: Promise<T>, label: string, timeoutMs: number): Promise<T> {
+async function withTimeout<T>(
+  promise: Promise<T>,
+  label: string,
+  timeoutMs: number,
+): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error(`Timed out waiting for ${label}.`)), timeoutMs);
