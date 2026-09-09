@@ -9,7 +9,7 @@ import {
 import { CredentialVaultIntegrityError } from "./credential-vault.js";
 import { buildConnectServer } from "./http.js";
 import { SpendBudgetBusyError, SpendBudgetExceededError } from "./spend-budget.js";
-import { prefix } from "./test-helpers.js";
+import { OPERATION_ID, prefix } from "./test-helpers.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let anthropicPool: Interceptable;
@@ -227,7 +227,7 @@ describe("POST /v1/complete", () => {
           settledActual = actualUsd;
           return {
             reservationId: "spend_0123456789abcdef0123456789abcdef",
-            operationId: "op_test",
+            operationId: OPERATION_ID,
             provider: "anthropic",
             model: "claude-sonnet-4-5-20250929",
             reservedUsd: 1,
