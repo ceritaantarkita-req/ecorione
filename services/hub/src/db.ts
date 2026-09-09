@@ -1,4 +1,4 @@
-/** Hub durable state: audit, approvals, idempotent action results, historical ledger, extensions. */
+/** Hub durable state: audit, approvals, idempotent action results, historical ledger, extensions, authority. */
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { SqliteConstructor, type SqliteDatabase } from "./sqlite.js";
@@ -120,6 +120,94 @@ BEFORE DELETE ON extension_operations
 BEGIN
   SELECT RAISE(ABORT, 'extension_operations are immutable receipts');
 END;
+
+CREATE TABLE IF NOT EXISTS capability_definitions (
+  id TEXT PRIMARY KEY,
+  description TEXT NOT NULL,
+  permissions_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS authority_declarations (
+  workspace_id TEXT NOT NULL,
+  subject_kind TEXT NOT NULL,
+  subject_id TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  permission_id TEXT NOT NULL,
+  action_class TEXT NOT NULL,
+  resource TEXT NOT NULL,
+  access TEXT NOT NULL,
+  side_effect INTEGER NOT NULL CHECK(side_effect IN (0,1)),
+  description TEXT NOT NULL,
+  source_ref TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(workspace_id,subject_kind,subject_id,capability_id,permission_id)
+);
+CREATE INDEX IF NOT EXISTS idx_authority_declarations_subject
+  ON authority_declarations(workspace_id,subject_kind,subject_id,capability_id);
+
+CREATE TABLE IF NOT EXISTS authority_grants (
+  workspace_id TEXT NOT NULL,
+  subject_kind TEXT NOT NULL,
+  subject_id TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  permission_id TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  max_sensitivity TEXT NOT NULL,
+  granted_at TEXT NOT NULL,
+  operation_id TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  PRIMARY KEY(workspace_id,subject_kind,subject_id,capability_id,permission_id,scope)
+);
+CREATE INDEX IF NOT EXISTS idx_authority_grants_subject
+  ON authority_grants(workspace_id,subject_kind,subject_id,capability_id,scope);
+
+CREATE TABLE IF NOT EXISTS authority_events (
+  event_id TEXT PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  workspace_id TEXT NOT NULL,
+  subject_kind TEXT NOT NULL,
+  subject_id TEXT NOT NULL,
+  capability_id TEXT,
+  permission_ids_json TEXT NOT NULL,
+  operation_id TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_authority_events_subject
+  ON authority_events(workspace_id,subject_kind,subject_id,created_at);
+CREATE TRIGGER IF NOT EXISTS authority_events_no_update
+BEFORE UPDATE ON authority_events
+BEGIN
+  SELECT RAISE(ABORT, 'authority_events are append-only');
+END;
+CREATE TRIGGER IF NOT EXISTS authority_events_no_delete
+BEFORE DELETE ON authority_events
+BEGIN
+  SELECT RAISE(ABORT, 'authority_events are append-only');
+END;
+
+CREATE TABLE IF NOT EXISTS authority_operations (
+  idempotency_key TEXT PRIMARY KEY,
+  fingerprint TEXT NOT NULL,
+  result_json TEXT NOT NULL,
+  completed_at TEXT NOT NULL
+);
+CREATE TRIGGER IF NOT EXISTS authority_operations_no_update
+BEFORE UPDATE ON authority_operations
+BEGIN
+  SELECT RAISE(ABORT, 'authority_operations are immutable receipts');
+END;
+CREATE TRIGGER IF NOT EXISTS authority_operations_no_delete
+BEFORE DELETE ON authority_operations
+BEGIN
+  SELECT RAISE(ABORT, 'authority_operations are immutable receipts');
+END;
+
+CREATE TABLE IF NOT EXISTS authority_meta (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 `;
 export interface HubDatabase {
   readonly raw: SqliteDatabase;
