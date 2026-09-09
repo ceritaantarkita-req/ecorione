@@ -25,7 +25,12 @@ if (process.env.ECORIONE_FLOW_WORKER_READY_IPC === "1" && process.send !== undef
     const deadline = Date.now() + 15_000;
     while (worker.getState() !== "RUNNING") {
       const state = worker.getState();
-      if (state === "STOPPING" || state === "DRAINING" || state === "DRAINED" || state === "STOPPED") {
+      if (
+        state === "STOPPING" ||
+        state === "DRAINING" ||
+        state === "DRAINED" ||
+        state === "STOPPED"
+      ) {
         throw new Error(`Flow worker stopped before readiness: ${state}`);
       }
       if (Date.now() >= deadline) {
