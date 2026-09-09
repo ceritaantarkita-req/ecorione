@@ -36,11 +36,24 @@ Tidak ada parallel message-history table di Ai. UI history membaca projection Le
 
 SQLite transaction adalah serialization point v1. Ini sengaja berbeda dari single-writer in-process DeepSeek: concurrent HTTP writers tetap bertemu di durable DB transaction dan `expectedSeq` conflict.
 
+Batch append yang mewakili satu provenance unit harus memakai satu DB transaction: batch commit seluruhnya atau rollback seluruhnya. Ini mencegah partial `agent.handoff`, model event, atau assistant event ketika event berikutnya dalam batch gagal.
+
 ## Integration semantics
 
 - user/input event boleh dicatat sebelum provider dispatch;
 - event setelah provider/side-effect success tidak boleh mengubah success menjadi retryable provider call hanya karena ledger telemetry gagal;
 - kegagalan append pasca-side-effect harus diaudit/ditrace sebagai degraded observability, bukan memicu duplicate side effect.
+
+### Implementasi chat
+
+`/v1/chat` melakukan dual-write dengan ownership yang tetap terpisah:
+
+- Historical Ledger menyimpan chronological/replay state (`user.message` → `model.called` → `agent.message`);
+- Context tetap menyimpan episodic memory dan tetap menjadi memory source material;
+- live hosted-chat session memakai `CLOUD_ALLOWED` karena surface tersebut memang melakukan hosted egress;
+- selama belum ada classifier sensitivity per-message, `maxSensitivity` request dipakai sebagai label konservatif session dan hanya boleh bergerak naik; ia tidak boleh otomatis downgrade;
+- scope atau sync-class yang berubah pada SessionId yang sama dianggap conflict;
+- kegagalan batch Ledger setelah provider berhasil direkam sebagai `HISTORY_WRITE_FAILED` dan tidak mengubah chat sukses menjadi retryable 502.
 
 ## Konsekuensi
 
