@@ -6,6 +6,8 @@
  */
 
 export * from "./db.js";
+export * from "./extension-registry.js";
+export * from "./extension-security.js";
 export * from "./http.js";
 export * from "./orchestrate.js";
 export * from "./policy-engine.js";

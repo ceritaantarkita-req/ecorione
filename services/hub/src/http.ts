@@ -1,4 +1,4 @@
-/** Hub HTTP routes: chat, policy, idempotent side effects, approvals, MCP, audit. */
+/** Hub HTTP routes: chat, policy, idempotent side effects, approvals, MCP, extensions, audit. */
 import { createHash } from "node:crypto";
 import {
   ActionRequestSchema,
@@ -31,6 +31,8 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nowIso } from "./clock.js";
 import { registerExchangeRoutes } from "./exchange-http.js";
+import { registerExtensionRoutes } from "./extension-http.js";
+import { ExtensionRegistry } from "./extension-registry.js";
 import { registerHistoryRoutes } from "./history-http.js";
 import { HistoryLedger } from "./history-ledger.js";
 import type { HubDatabase } from "./db.js";
@@ -113,6 +115,7 @@ export function buildHubServer(
   const app = createServer({ name: "hub", token: options.token, logger: options.logger });
   const repo = new HubRepository(db);
   const history = new HistoryLedger(db);
+  const extensions = new ExtensionRegistry(db);
   const deps: OrchestrateDeps = {
     repo,
     history,
@@ -287,6 +290,7 @@ export function buildHubServer(
     artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
     internalToken: options.internalToken,
   });
+  registerExtensionRoutes(app, extensions, repo);
 
   app.post("/v1/audit/events", async (req, reply) => {
     const body = parseOrBadRequest(AuditWriteSchema, req.body);

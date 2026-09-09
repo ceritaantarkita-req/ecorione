@@ -1,4 +1,4 @@
-/** Hub durable state: audit, approvals, idempotent action results, historical ledger. */
+/** Hub durable state: audit, approvals, idempotent action results, historical ledger, extensions. */
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { SqliteConstructor, type SqliteDatabase } from "./sqlite.js";
@@ -57,6 +57,68 @@ CREATE TRIGGER IF NOT EXISTS history_events_no_delete
 BEFORE DELETE ON history_events
 BEGIN
   SELECT RAISE(ABORT, 'history_events are append-only');
+END;
+
+CREATE TABLE IF NOT EXISTS extension_revisions (
+  revision_id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  extension_id TEXT NOT NULL,
+  manifest_json TEXT NOT NULL,
+  manifest_sha256 TEXT NOT NULL,
+  change_type TEXT NOT NULL CHECK(change_type IN ('INSTALL','UPDATE','ROLLBACK')),
+  source_revision_id TEXT REFERENCES extension_revisions(revision_id),
+  operation_id TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_extension_revisions_workspace_extension
+  ON extension_revisions(workspace_id, extension_id, created_at);
+CREATE TRIGGER IF NOT EXISTS extension_revisions_no_update
+BEFORE UPDATE ON extension_revisions
+BEGIN
+  SELECT RAISE(ABORT, 'extension_revisions are append-only');
+END;
+CREATE TRIGGER IF NOT EXISTS extension_revisions_no_delete
+BEFORE DELETE ON extension_revisions
+BEGIN
+  SELECT RAISE(ABORT, 'extension_revisions are append-only');
+END;
+
+CREATE TABLE IF NOT EXISTS extension_installations (
+  workspace_id TEXT NOT NULL,
+  extension_id TEXT NOT NULL,
+  current_revision_id TEXT NOT NULL REFERENCES extension_revisions(revision_id),
+  lifecycle_state TEXT NOT NULL CHECK(lifecycle_state IN ('INSTALLED','DISABLED','REMOVED')),
+  health_status TEXT NOT NULL CHECK(health_status IN ('UNKNOWN','HEALTHY','DEGRADED','ERROR','BLOCKED')),
+  health_detail TEXT,
+  health_checked_at TEXT,
+  updated_at TEXT NOT NULL,
+  removed_at TEXT,
+  PRIMARY KEY(workspace_id, extension_id)
+);
+CREATE INDEX IF NOT EXISTS idx_extension_installations_workspace
+  ON extension_installations(workspace_id, extension_id);
+
+CREATE TABLE IF NOT EXISTS extension_operations (
+  idempotency_key TEXT PRIMARY KEY,
+  fingerprint TEXT NOT NULL,
+  operation_id TEXT NOT NULL,
+  action TEXT NOT NULL CHECK(action IN ('INSTALL','UPDATE','ROLLBACK','REMOVE','HEALTH')),
+  workspace_id TEXT NOT NULL,
+  extension_id TEXT NOT NULL,
+  result_json TEXT NOT NULL,
+  completed_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_extension_operations_workspace_extension
+  ON extension_operations(workspace_id, extension_id, completed_at);
+CREATE TRIGGER IF NOT EXISTS extension_operations_no_update
+BEFORE UPDATE ON extension_operations
+BEGIN
+  SELECT RAISE(ABORT, 'extension_operations are immutable receipts');
+END;
+CREATE TRIGGER IF NOT EXISTS extension_operations_no_delete
+BEFORE DELETE ON extension_operations
+BEGIN
+  SELECT RAISE(ABORT, 'extension_operations are immutable receipts');
 END;
 `;
 export interface HubDatabase {

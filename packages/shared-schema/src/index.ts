@@ -18,3 +18,4 @@ export * from "./space.js";
 export * from "./flow.js";
 export * from "./history.js";
 export * from "./ecx.js";
+export * from "./extensions.js";
