@@ -68,4 +68,29 @@ describe("ECX sparse planner", () => {
     expect(encoded).not.toContain("full history payload");
     expect(result.metrics.packetBytes).toBe(Buffer.byteLength(encoded, "utf8"));
   });
+
+  it("is deterministic by default and ignores candidate input order", () => {
+    const first = planEcx(request);
+    const second = planEcx(request);
+    const permuted = planEcx(
+      EcxPlanRequestSchema.parse({
+        ...request,
+        candidates: [...request.candidates].reverse(),
+      }),
+    );
+
+    expect(second).toEqual(first);
+    expect(permuted.packets).toEqual(first.packets);
+    expect(permuted.metrics.packetBytes).toBe(first.metrics.packetBytes);
+  });
+
+  it("rejects duplicate candidate identities before planning", () => {
+    const duplicate = request.candidates[0];
+    expect(() =>
+      EcxPlanRequestSchema.parse({
+        ...request,
+        candidates: [duplicate, duplicate],
+      }),
+    ).toThrow(/candidate agentId tidak boleh duplikat/);
+  });
 });
