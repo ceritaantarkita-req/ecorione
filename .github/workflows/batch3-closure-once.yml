@@ -2,138 +2,24 @@ name: Batch 3 Closure Once
 
 on:
   push:
-    branches: [agent/batch3-plugin-closure-20260909]
+    branches:
+      - agent/batch3-plugin-closure-20260909
 
 permissions:
   contents: write
 
 jobs:
   close-docs:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
           ref: agent/batch3-plugin-closure-20260909
-
-      - name: Patch canonical closure evidence
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          tracker = Path('docs/EXECUTION-PROGRESS.md')
-          text = tracker.read_text()
-
-          old_state = '''Baseline `main` tempat Batch 3 branch dibuat:
-
-- `97646e102ee90a39aa25a7b79b8cbf86673aa81f`
-
-Baseline condition sebelum Batch 2:
-
-- Format: PASS
-- Lint: PASS
-- Typecheck: PASS
-- Test: PASS
-- Secret Scan: PASS
-- Production Build: PASS
-- Naming: PASS
-
-Batch 2 sudah merged dan post-merge main CI `34360113741` full green pada baseline ini.
-
-### Active branch
-
-- branch: `agent/plugin-extension-framework-20260909`
-- PR: #10 — `feat: add plugin and extension framework`
-- Batch 3 status: **IMPLEMENTED / CLOSURE PENDING**
-- base main: `97646e102ee90a39aa25a7b79b8cbf86673aa81f`
-- extension focused Typecheck + regression: PASS
-- exact final CI, merge, dan post-merge `main` verification: pending
-'''
-          new_state = '''Batch 3 implementation merged ke `main` sebagai:
-
-- `af2b3f12f5deeaf2fd50c045998416365f766b9d`
-
-Post-merge verification pada implementation SHA tersebut:
-
-- Naming: PASS
-- Format: PASS
-- Lint: PASS
-- Typecheck: PASS
-- Test: PASS
-- Phase 4 real-process acceptance: PASS
-- Secret Scan: PASS
-- Production Build: PASS
-- run `34368309860`, attempt 2: full green
-
-### Next execution target
-
-- Batch 3 status: **CLOSED**
-- next batch: **Batch 4 — Unified Capability + Permission Plane**
-- closure-doc branch: `agent/batch3-plugin-closure-20260909`
-'''
-          if text.count(old_state) != 1:
-              raise SystemExit('tracker current-state anchor mismatch')
-          text = text.replace(old_state, new_state)
-
-          old_roadmap = 'Dari current state, **Batch 1 dan Batch 2 sudah CLOSED**. **Batch 3 implemented / closure pending**; setelah Batch 3 ditutup, tersisa **9 batch platform/production (Batch 4–12)**.'
-          new_roadmap = 'Dari current state, **Batch 1, Batch 2, dan Batch 3 sudah CLOSED**. Tersisa **9 batch platform/production (Batch 4–12)**; next implementation target adalah **Batch 4 — Unified Capability + Permission Plane**.'
-          if text.count(old_roadmap) != 1:
-              raise SystemExit('tracker roadmap anchor mismatch')
-          text = text.replace(old_roadmap, new_roadmap)
-
-          old_batch = '''## Batch 3 — Plugin / Extension Framework
-
-Status: **IMPLEMENTED / CLOSURE PENDING**'''
-          new_batch = '''## Batch 3 — Plugin / Extension Framework
-
-Status: **CLOSED**'''
-          if text.count(old_batch) != 1:
-              raise SystemExit('tracker Batch 3 status anchor mismatch')
-          text = text.replace(old_batch, new_batch)
-
-          old_pending = '''ADR: `docs/adr/0024-plugin-extension-framework.md`
-Operations: `docs/extension-operations.md`
-Closure pending: exact final CI + public MCP regression, PR #10 expected-head merge, dan post-merge main verification.'''
-          new_pending = '''ADR: `docs/adr/0024-plugin-extension-framework.md`
-Operations: `docs/extension-operations.md`
-
-Closure evidence:
-
-- final implementation candidate: `e706aa70f3b9b80fc6ec12c72972a29f3c503639`;
-- exact-head CI `34368041372` — Naming, Format, Lint, Typecheck, Test, dedicated Phase 4 real-process acceptance, Secret Scan, Production Build PASS;
-- exact-head MCP External HTTPS Acceptance `34368041191` — PASS;
-- verification mirror PR #11 menunjuk exact SHA yang sama, dipakai hanya untuk memicu checks, lalu ditutup tanpa merge;
-- PR #10 merged dengan expected-head lock sebagai `af2b3f12f5deeaf2fd50c045998416365f766b9d`;
-- post-merge `main` CI `34368309860`, attempt 2 — full green setelah attempt 1 dibatalkan saat Production Build tanpa perubahan `main` SHA.
-
-Batch 3 resmi `CLOSED`; next implementation batch adalah Batch 4.'''
-          if text.count(old_pending) != 1:
-              raise SystemExit('tracker Batch 3 closure anchor mismatch')
-          text = text.replace(old_pending, new_pending)
-          tracker.write_text(text)
-
-          hardening = Path('docs/fase6-hardening.md')
-          h = hardening.read_text()
-          anchor = '''- rollback membuat revision baru dan mempertahankan provenance target;
-- remove tidak menghapus revision provenance.
-
-Integrity gate ini tidak diklaim sebagai vulnerability scanner. Unified grant/revocation dan cross-runtime permission authority tetap Batch 4.'''
-          replacement = '''- rollback membuat revision baru dan mempertahankan provenance target;
-- remove tidak menghapus revision provenance.
-
-Closure evidence Batch 3: final candidate `e706aa70f3b9b80fc6ec12c72972a29f3c503639`; exact-head CI `34368041372` PASS; public MCP HTTPS `34368041191` PASS; PR #10 merged dengan expected-head lock sebagai `af2b3f12f5deeaf2fd50c045998416365f766b9d`; post-merge main CI `34368309860` attempt 2 full green.
-
-Integrity gate ini tidak diklaim sebagai vulnerability scanner. Unified grant/revocation dan cross-runtime permission authority tetap Batch 4.'''
-          if h.count(anchor) != 1:
-              raise SystemExit('hardening Batch 3 anchor mismatch')
-          hardening.write_text(h.replace(anchor, replacement))
-          PY
-
-          rm .github/workflows/batch3-closure-once.yml
-
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add docs/EXECUTION-PROGRESS.md docs/fase6-hardening.md .github/workflows/batch3-closure-once.yml
-          git commit -m 'docs: close Batch 3 plugin framework'
+      - run: node scripts/batch3-closure-once.mjs
+      - run: |
+          rm .github/workflows/batch3-closure-once.yml scripts/batch3-closure-once.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/EXECUTION-PROGRESS.md docs/fase6-hardening.md .github/workflows/batch3-closure-once.yml scripts/batch3-closure-once.mjs
+          git commit -m "docs: close Batch 3 plugin framework"
           git push origin HEAD:agent/batch3-plugin-closure-20260909
