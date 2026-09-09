@@ -151,6 +151,26 @@ async function runProcess(
   });
 }
 
+type WasmModuleHandle = object;
+interface WasmRuntime {
+  readonly Module: {
+    new (bytes: Uint8Array): WasmModuleHandle;
+    imports(module: WasmModuleHandle): readonly unknown[];
+  };
+  readonly Instance: new (
+    module: WasmModuleHandle,
+    imports: Record<string, never>,
+  ) => { exports: Record<string, unknown> };
+}
+
+function wasmRuntime(): WasmRuntime {
+  const runtime = (globalThis as unknown as { WebAssembly?: WasmRuntime }).WebAssembly;
+  if (runtime === undefined) {
+    throw new SandboxBoundaryError("Runtime WebAssembly tidak tersedia di Node ini.");
+  }
+  return runtime;
+}
+
 function runWasm(request: SandboxExecutionRequest): {
   exitCode: number;
   stdout: string;
@@ -158,16 +178,17 @@ function runWasm(request: SandboxExecutionRequest): {
 } {
   if (request.wasmBase64 === null)
     throw new SandboxBoundaryError("tier1.5 membutuhkan wasmBase64.");
-  const module = new WebAssembly.Module(Buffer.from(request.wasmBase64, "base64"));
-  if (WebAssembly.Module.imports(module).length !== 0) {
+  const wasm = wasmRuntime();
+  const module = new wasm.Module(Buffer.from(request.wasmBase64, "base64"));
+  if (wasm.Module.imports(module).length !== 0) {
     throw new SandboxBoundaryError("WASM dengan host imports ditolak: zero ambient authority.");
   }
-  const instance = new WebAssembly.Instance(module, {});
+  const instance = new wasm.Instance(module, {});
   const candidate = instance.exports[request.wasmExport];
   if (typeof candidate !== "function") {
     throw new SandboxBoundaryError(`Export WASM tidak ditemukan: ${request.wasmExport}`);
   }
-  const result = candidate(...request.wasmArgs) as unknown;
+  const result = (candidate as (...args: number[]) => unknown)(...request.wasmArgs);
   return { exitCode: 0, stdout: result === undefined ? "" : String(result), stderr: "" };
 }
 
