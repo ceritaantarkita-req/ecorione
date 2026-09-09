@@ -18,7 +18,10 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { ExactMatchCache } from "./cache.js";
 import { complete, type CompleteDeps } from "./complete.js";
-import type { ProviderCredentialReader } from "./credential-vault.js";
+import {
+  CredentialVaultError,
+  type ProviderCredentialReader,
+} from "./credential-vault.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
@@ -29,6 +32,8 @@ import {
 function toHttpError(err: unknown): unknown {
   if (err instanceof CostKillSwitchError)
     return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
+  if (err instanceof CredentialVaultError)
+    return new HttpError(503, "CREDENTIAL_VAULT_UNAVAILABLE", err.message);
   if (err instanceof MissingCredentialError) return new BadGatewayError(err.message);
   if (err instanceof ProviderError) return new BadGatewayError(err.message);
   return err;
