@@ -30,6 +30,8 @@ import {
 import type { LocalRuntimeId } from "./providers/local-runtime.js";
 import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 
+export const DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES = 32 * 1024 * 1024;
+
 function toHttpError(err: unknown): unknown {
   if (err instanceof CostKillSwitchError)
     return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
@@ -78,10 +80,16 @@ export interface BuildConnectServerOptions {
   readonly mcpManager?: McpManager | undefined;
   readonly localMultimodalAdapter?: MultimodalAdapter | undefined;
   readonly hostedMultimodalAdapter?: MultimodalAdapter | undefined;
+  readonly multimodalBodyLimitBytes?: number | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
-  const app = createServer({ name: "connect", token: options.token, logger: options.logger });
+  const app = createServer({
+    name: "connect",
+    token: options.token,
+    logger: options.logger,
+    bodyLimit: options.multimodalBodyLimitBytes ?? DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES,
+  });
   const hostedProvider = options.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
   const deps: CompleteDeps = {
     credentialVault: options.credentialVault,
