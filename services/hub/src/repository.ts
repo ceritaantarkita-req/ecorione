@@ -1,4 +1,4 @@
-/** Hub repository: append-only audit, durable approval state, idempotency results. */
+/** Hub repository: append-only audit, durable approval state, idempotent action results. */
 import {
   makeId,
   type ActionRequest,
@@ -185,6 +185,18 @@ export class HubRepository {
     const row = this.db.raw
       .prepare("SELECT * FROM approvals WHERE operation_id=?")
       .get(operationId) as ApprovalRow | undefined;
+    return row === undefined ? null : rowToApproval(row);
+  }
+  /**
+   * Resolve approval lewat durable Hub state, bukan Temporal workflow query. SQLite JSON1
+   * tersedia di supported runtime better-sqlite3; idempotency key berasal dari ActionRequest.
+   */
+  getApprovalByIdempotencyKey(idempotencyKey: string): Approval | null {
+    const row = this.db.raw
+      .prepare(
+        "SELECT * FROM approvals WHERE json_extract(action_request, '$.idempotencyKey')=? ORDER BY created_at DESC, rowid DESC LIMIT 1",
+      )
+      .get(idempotencyKey) as ApprovalRow | undefined;
     return row === undefined ? null : rowToApproval(row);
   }
   decideApproval(
