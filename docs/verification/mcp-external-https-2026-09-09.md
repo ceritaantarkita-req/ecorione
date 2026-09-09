@@ -2,7 +2,7 @@
 
 ## Verdict
 
-**Candidate runtime evidence: PASS.** Final docs-head closure evidence will be recorded after this documentation commit passes exact-head CI and the external network gate.
+**External MCP HTTPS acceptance: PASS / closure-ready.** Code/runtime dan dokumentasi telah melewati regular exact-head CI serta dedicated public-HTTPS acceptance. Satu final evidence-only commit ini tetap wajib melewati kedua gate sekali lagi sebelum merge PR.
 
 ## Boundary yang dibuktikan
 
@@ -39,6 +39,16 @@ Code/runtime head sebelum update dokumentasi:
 
 Pada SHA tersebut regular CI PASS untuk Format, Lint, Typecheck, Test, Secret Scan, Production Build, dan Naming. External workflow juga PASS.
 
+## Docs-integrated exact-head evidence
+
+Head dengan seluruh code, runtime, docs, ADR/API update, stale `memory_open` capability-description fix, dan tanpa helper workflow sementara:
+
+- SHA: `142750529d936f9f497021744ebd6c27993a9246`
+- regular CI run: `34346152971`
+- MCP External HTTPS Acceptance run: `34346153002`
+
+Kedua workflow selesai **success**. Regular CI melewati frozen install, Format, Lint, Typecheck, Test, Secret Scan, Production Build, dan Naming. Dedicated external workflow melewati build TypeScript, checksum cloudflared, lalu public HTTPS acceptance end-to-end.
+
 ## Checks external workflow
 
 Runner membuktikan:
@@ -68,4 +78,4 @@ PASS ini **bukan** bukti bahwa:
 - mock OAuth server adalah authorization server production;
 - availability internet/tunnel provider dijamin oleh ecorione.
 
-Evidence ini hanya menutup gap bahwa transport MCP sebelumnya belum pernah dibuktikan melalui public HTTPS/JWKS nyata.
+Evidence ini menutup gap bahwa transport MCP sebelumnya belum pernah dibuktikan melalui public HTTPS/JWKS nyata. Final PR merge tetap mensyaratkan kedua workflow hijau pada commit evidence ini.
