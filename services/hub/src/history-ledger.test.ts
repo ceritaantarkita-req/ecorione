@@ -6,6 +6,7 @@ import {
   HistoryIntegrityError,
   HistoryLedger,
   HistorySequenceConflictError,
+  HistorySessionConflictError,
 } from "./history-ledger.js";
 
 const NOW = "2026-09-09T00:00:00.000Z";
@@ -96,6 +97,72 @@ describe("Historical Ledger", () => {
     expect(() =>
       ledger.append(sessionId, 0, { ...event, payload: { recipient: "agent:other" } }),
     ).toThrow(HistoryEventConflictError);
+  });
+
+  it("promotes ensured session sensitivity monotonically and never downgrades it", () => {
+    db = openHubDatabase(":memory:");
+    const ledger = new HistoryLedger(db);
+    const sessionId = assertId("session", "sess_ensure001");
+
+    expect(
+      ledger.ensureSession({
+        id: sessionId,
+        createdAt: NOW,
+        scope: "personal",
+        sensitivity: "INTERNAL",
+        syncClass: "CLOUD_ALLOWED",
+      }).sensitivity,
+    ).toBe("INTERNAL");
+    expect(
+      ledger.ensureSession({
+        id: sessionId,
+        createdAt: "2026-09-09T00:01:00.000Z",
+        scope: "personal",
+        sensitivity: "SENSITIVE",
+        syncClass: "CLOUD_ALLOWED",
+      }).sensitivity,
+    ).toBe("SENSITIVE");
+    expect(
+      ledger.ensureSession({
+        id: sessionId,
+        createdAt: "2026-09-09T00:02:00.000Z",
+        scope: "personal",
+        sensitivity: "PUBLIC",
+        syncClass: "CLOUD_ALLOWED",
+      }).sensitivity,
+    ).toBe("SENSITIVE");
+  });
+
+  it("does not let ensureSession cross scope or sync boundaries", () => {
+    db = openHubDatabase(":memory:");
+    const ledger = new HistoryLedger(db);
+    const sessionId = assertId("session", "sess_ensureboundary001");
+    ledger.ensureSession({
+      id: sessionId,
+      createdAt: NOW,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "CLOUD_ALLOWED",
+    });
+
+    expect(() =>
+      ledger.ensureSession({
+        id: sessionId,
+        createdAt: NOW,
+        scope: "workspace:one",
+        sensitivity: "INTERNAL",
+        syncClass: "CLOUD_ALLOWED",
+      }),
+    ).toThrow(HistorySessionConflictError);
+    expect(() =>
+      ledger.ensureSession({
+        id: sessionId,
+        createdAt: NOW,
+        scope: "personal",
+        sensitivity: "INTERNAL",
+        syncClass: "LOCAL_ONLY",
+      }),
+    ).toThrow(HistorySessionConflictError);
   });
 
   it("commits a batch atomically and makes a committed retry idempotent", () => {
