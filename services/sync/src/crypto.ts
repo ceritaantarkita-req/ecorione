@@ -41,13 +41,17 @@ function deriveKey(privateKeyPem: string, publicKeyPem: string): Buffer {
 
 export function encryptForPeer(peerPublicKey: string, plaintext: Buffer): EncryptedPayload {
   const ephemeral = generateKeyPairSync("x25519");
-  const ephemeralPrivate = ephemeral.privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+  const ephemeralPrivate = ephemeral.privateKey
+    .export({ type: "pkcs8", format: "pem" })
+    .toString();
   const key = deriveKey(ephemeralPrivate, peerPublicKey);
   const nonce = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, nonce);
   const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   return {
-    senderEphemeralPublicKey: ephemeral.publicKey.export({ type: "spki", format: "pem" }).toString(),
+    senderEphemeralPublicKey: ephemeral.publicKey
+      .export({ type: "spki", format: "pem" })
+      .toString(),
     nonce: nonce.toString("base64"),
     authTag: cipher.getAuthTag().toString("base64"),
     ciphertext: ciphertext.toString("base64"),

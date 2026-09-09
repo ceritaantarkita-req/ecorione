@@ -3,7 +3,10 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { SqliteConstructor, type SqliteDatabase } from "./sqlite.js";
 
-export interface SyncDatabase { readonly raw: SqliteDatabase; close(): void; }
+export interface SyncDatabase {
+  readonly raw: SqliteDatabase;
+  close(): void;
+}
 
 const SCHEMA = `
 PRAGMA foreign_keys = ON;
