@@ -107,7 +107,7 @@ export const MCP_TOOLS: readonly McpToolDefinition[] = Object.freeze([
     name: "memory_open",
     title: "Open an artifact pointer",
     description:
-      "Open an ecorione artifact referenced by memory. Until the Artifact module is built in Fase 3 this tool returns an explicit not-implemented error.",
+      "Open an authorized ecorione artifact referenced by memory. Artifact access remains scope/sensitivity checked through Hub before bytes are returned.",
     inputSchema: {
       type: "object",
       additionalProperties: false,

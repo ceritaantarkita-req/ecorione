@@ -11,6 +11,7 @@ import {
   validateOrigin,
   type McpAuthConfig,
 } from "./auth.js";
+import { bearerChallenge, type McpOAuthScope } from "./challenge.js";
 import { epochMs } from "./clock.js";
 import {
   errorResponse,
@@ -47,6 +48,16 @@ function toolName(request: ReturnType<typeof parseMcpRequest>): string | undefin
   return typeof value === "string" ? value : undefined;
 }
 
+function challengeScope(request: ReturnType<typeof parseMcpRequest>): McpOAuthScope {
+  const name = toolName(request);
+  if (name === undefined) return "memory:read";
+  try {
+    return requiredOAuthScope(name);
+  } catch {
+    return "memory:read";
+  }
+}
+
 export function buildMcpHttpServer(options: BuildMcpHttpServerOptions): FastifyInstance {
   const app = createServer({ name: "connect-mcp", logger: options.logger });
   const jwks = new JwksCache(options.auth);
@@ -57,9 +68,10 @@ export function buildMcpHttpServer(options: BuildMcpHttpServerOptions): FastifyI
 
   app.post("/mcp", async (req, reply) => {
     const nowMs = epochMs();
+    let parsed: ReturnType<typeof parseMcpRequest> | undefined;
     try {
       validateOrigin(one(req.headers.origin), options.auth.allowedOrigins);
-      const parsed = parseMcpRequest(req.body);
+      parsed = parseMcpRequest(req.body);
       validateHttpRoutingHeaders(parsed, {
         protocolVersion: one(req.headers["mcp-protocol-version"]),
         method: one(req.headers["mcp-method"]),
@@ -88,11 +100,15 @@ export function buildMcpHttpServer(options: BuildMcpHttpServerOptions): FastifyI
       return await reply.code(200).type("application/json").send(response);
     } catch (error) {
       if (error instanceof McpAuthError) {
-        if (error.statusCode === 401) {
-          reply.header("www-authenticate", `Bearer error="${error.code}"`);
-        } else if (error.code === "insufficient_scope") {
-          reply.header("www-authenticate", 'Bearer error="insufficient_scope"');
-        }
+        const scope = parsed === undefined ? "memory:read" : challengeScope(parsed);
+        reply.header(
+          "www-authenticate",
+          bearerChallenge(
+            options.auth,
+            scope,
+            error.code === "insufficient_scope" ? "insufficient_scope" : "invalid_token",
+          ),
+        );
         return await reply
           .code(error.statusCode)
           .send(

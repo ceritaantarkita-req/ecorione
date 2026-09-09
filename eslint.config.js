@@ -56,10 +56,20 @@ export default tseslint.config(
     rules: { "no-restricted-syntax": "off" },
   },
   {
-    // Script build berjalan di Node, bukan di browser: `URL`, `process`, `console` global.
+    // Tooling scripts run on Node 22. Keep the globals explicit so browser code does
+    // not accidentally inherit server capabilities from the lint configuration.
     files: ["**/scripts/**/*.mjs", "*.mjs"],
     languageOptions: {
-      globals: { URL: "readonly", process: "readonly", console: "readonly" },
+      globals: {
+        URL: "readonly",
+        process: "readonly",
+        console: "readonly",
+        Buffer: "readonly",
+        fetch: "readonly",
+        AbortSignal: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+      },
     },
   },
 );
