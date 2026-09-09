@@ -134,7 +134,11 @@ export class SpaceStore {
 
   updateBlock(
     id: string,
-    patch: { type?: SpaceBlockType; content?: string; position?: number },
+    patch: {
+      type?: SpaceBlockType | undefined;
+      content?: string | undefined;
+      position?: number | undefined;
+    },
     now: string,
   ): SpaceBlock | null {
     const row = this.db.raw.prepare("SELECT * FROM blocks WHERE id=?").get(id) as
