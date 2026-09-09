@@ -7,7 +7,7 @@ import {
 } from "undici";
 import { complete, type CompleteDeps } from "./complete.js";
 import { ExactMatchCache } from "./cache.js";
-import { MissingCredentialError } from "./providers/errors.js";
+import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
 import { NOW, OPERATION_ID, prefix } from "./test-helpers.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
@@ -30,6 +30,7 @@ function deps(overrides: Partial<CompleteDeps> = {}): CompleteDeps {
     localBaseUrl: "http://127.0.0.1:11434/v1",
     localModelTag: "qwen3:8b-instruct-q4_K_M",
     cache: new ExactMatchCache(),
+    hostedCallsEnabled: true,
     ...overrides,
   };
 }
@@ -142,6 +143,39 @@ describe("complete", () => {
     expect(result.routeReason).toBe("local-consolidation");
     expect(result.cost.actualUsd).toBe(0);
     expect(result.cost.naiveUsd).toBeGreaterThan(0);
+  });
+
+  it("cost kill switch memblokir hosted tanpa silent fallback", async () => {
+    await expect(
+      complete(deps({ hostedCallsEnabled: false }), {
+        target: "hosted",
+        prefix: prefix(),
+        dynamicText: "",
+        userMessage: "halo",
+        sensitivity: "INTERNAL",
+        operationId: OPERATION_ID,
+        now: NOW,
+      }),
+    ).rejects.toBeInstanceOf(CostKillSwitchError);
+  });
+
+  it("cost kill switch tidak memblokir target local", async () => {
+    localPool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, {
+      model: "qwen3:8b-instruct-q4_K_M",
+      choices: [{ message: { content: "local tetap jalan" } }],
+      usage: { prompt_tokens: 5, completion_tokens: 2 },
+    });
+    const result = await complete(deps({ hostedCallsEnabled: false }), {
+      target: "local",
+      prefix: prefix(),
+      dynamicText: "",
+      userMessage: "halo lokal",
+      sensitivity: "INTERNAL",
+      operationId: OPERATION_ID,
+      now: NOW,
+    });
+    expect(result.reply).toBe("local tetap jalan");
+    expect(result.routeReason).toBe("local-consolidation");
   });
 
   it("target hosted tanpa ANTHROPIC_API_KEY gagal jelas", async () => {
