@@ -8,7 +8,7 @@ permissions:
 jobs:
   fix:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
         with:
@@ -19,7 +19,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Fix exact optional and branded-id typing
+      - name: Fix strict typing and workspace idempotency isolation
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -28,7 +28,7 @@ jobs:
               p = Path(path)
               text = p.read_text()
               if text.count(old) != 1:
-                  raise SystemExit(f"unexpected match count for {path}: {old[:60]!r}")
+                  raise SystemExit(f"unexpected match count for {path}: {old[:80]!r}")
               p.write_text(text.replace(old, new, 1))
 
           p = "services/connect/src/mcp-client/sdk-client.ts"
@@ -39,24 +39,35 @@ jobs:
               '''      transport = new StdioClientTransport({\n        command: config.transport.command,\n        args: [...config.transport.args],\n        cwd: config.transport.cwd,\n        env,\n        stderr: "pipe",\n      });\n''',
               '''      const parameters = {\n        command: config.transport.command,\n        args: [...config.transport.args],\n        env,\n        stderr: "pipe" as const,\n        ...(config.transport.cwd === undefined ? {} : { cwd: config.transport.cwd }),\n      };\n      transport = new StdioClientTransport(parameters);\n''')
 
+          p = "services/connect/src/mcp-client/manager.ts"
+          repl(p,
+              '''function invocationKey(\n  config: McpServerConfig,\n  toolName: string,\n  args: Readonly<Record<string, unknown>>,\n): string {\n  const payload = idempotencyPayload({\n    module: "Connect",\n    tool: `mcp.${config.id}.${toolName}`,\n    args: { serverId: config.id, toolName, arguments: args },\n  });\n''',
+              '''function invocationKey(\n  config: McpServerConfig,\n  workspaceId: WorkspaceId,\n  toolName: string,\n  args: Readonly<Record<string, unknown>>,\n): string {\n  const payload = idempotencyPayload({\n    module: "Connect",\n    tool: `mcp.${config.id}.${toolName}`,\n    args: { workspaceId, serverId: config.id, toolName, arguments: args },\n  });\n''')
+          repl(p,
+              '''    const idempotencyKey =\n      actionClass === "READ" ? null : invocationKey(config, toolName, request.arguments);\n''',
+              '''    const idempotencyKey =\n      actionClass === "READ"\n        ? null\n        : invocationKey(config, request.workspaceId, toolName, request.arguments);\n''')
+
           p = "services/connect/src/mcp-client/manager.test.ts"
+          repl(p,
+              'import { afterEach, describe, expect, it } from "vitest";\n',
+              'import { WorkspaceIdSchema } from "@ecorione/shared-schema";\nimport { afterEach, describe, expect, it } from "vitest";\n')
           repl(p,
               '''    const result = await manager.discover("remote", {\n      ...discoverRequest,\n      operationId: "op_discover2",\n    });\n''',
               '''    const result = await manager.discover(\n      "remote",\n      McpDiscoverRequestSchema.parse({ ...discoverRequest, operationId: "op_discover2" }),\n    );\n''')
           repl(p,
+              '''  it("marks a failed dispatched side effect uncertain and blocks retry", async () => {\n''',
+              '''  it("does not deduplicate side effects across workspaces", async () => {\n    const { manager, factory } = setup();\n    const first = await manager.callTool("remote", "write", callRequest("op_ws_a"));\n    const second = await manager.callTool(\n      "remote",\n      "write",\n      McpToolCallRequestSchema.parse({\n        ...callRequest("op_ws_b"),\n        workspaceId: "ws_b",\n      }),\n    );\n    expect(first.deduplicated).toBe(false);\n    expect(second.deduplicated).toBe(false);\n    expect(factory.byWorkspace.get("ws_a")!.callCount).toBe(1);\n    expect(factory.byWorkspace.get("ws_b")!.callCount).toBe(1);\n  });\n\n  it("marks a failed dispatched side effect uncertain and blocks retry", async () => {\n''')
+          repl(p,
               '''    await manager.discover("remote", {\n      ...discoverRequest,\n      workspaceId: "ws_b",\n      operationId: "op_b",\n    });\n    expect(factory.connectCount).toBe(2);\n    expect(manager.status("remote", "ws_a").connected).toBe(true);\n    expect(manager.status("remote", "ws_b").connected).toBe(true);\n''',
               '''    await manager.discover(\n      "remote",\n      McpDiscoverRequestSchema.parse({\n        ...discoverRequest,\n        workspaceId: "ws_b",\n        operationId: "op_b",\n      }),\n    );\n    expect(factory.connectCount).toBe(2);\n    expect(manager.status("remote", WorkspaceIdSchema.parse("ws_a")).connected).toBe(true);\n    expect(manager.status("remote", WorkspaceIdSchema.parse("ws_b")).connected).toBe(true);\n''')
-          repl(p,
-              'import { afterEach, describe, expect, it } from "vitest";\n',
-              'import { WorkspaceIdSchema } from "@ecorione/shared-schema";\nimport { afterEach, describe, expect, it } from "vitest";\n')
           PY
-      - run: pnpm exec prettier --write services/connect/src/mcp-client/sdk-client.ts services/connect/src/mcp-client/manager.test.ts
-      - run: pnpm --filter @ecorione/connect exec tsc --noEmit
+      - run: pnpm exec prettier --write services/connect/src/mcp-client/sdk-client.ts services/connect/src/mcp-client/manager.ts services/connect/src/mcp-client/manager.test.ts
+      - run: pnpm run typecheck
       - name: Commit fixes
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add services/connect/src/mcp-client/sdk-client.ts services/connect/src/mcp-client/manager.test.ts
-          git commit -m "fix: align outbound MCP strict types"
+          git add services/connect/src/mcp-client/sdk-client.ts services/connect/src/mcp-client/manager.ts services/connect/src/mcp-client/manager.test.ts
+          git commit -m "fix: isolate outbound MCP invocation identity"
           git push origin HEAD:agent/outbound-mcp-manager-20260909
