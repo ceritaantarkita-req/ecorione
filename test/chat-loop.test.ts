@@ -243,14 +243,15 @@ describe("loop chat penuh: Ai→Hub→Context→Connect→RnD", () => {
     expect(chat.policy.ruleId).toBe("read-always-allowed");
     expect(typeof chat.policy.reason).toBe("string");
 
-    // Audit: urutan ACTION_REQUESTED → POLICY_EVALUATED → MODEL_CALLED (bukan urutan
-    // lain — ini mengunci ulang perbaikan `ORDER BY ts ASC, rowid ASC` di repository.ts).
+    // Audit: Batch 4 menambahkan authority decision di antara policy dan provider call.
+    // Urutan tetap deterministik dan mengunci ulang ORDER BY ts ASC, rowid ASC.
     const auditRes = await getJson(`${hubUrl}/v1/audit?operationId=${chat.operationId}`);
     expect(auditRes.status).toBe(200);
     const events = (auditRes.body as { events: AuditEventBody[] }).events;
     expect(events.map((e) => e.type)).toEqual([
       "ACTION_REQUESTED",
       "POLICY_EVALUATED",
+      "CAPABILITY_AUTHORIZED",
       "MODEL_CALLED",
     ]);
 
