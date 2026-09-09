@@ -49,26 +49,40 @@ ADR-22 memperluas Connect tanpa memindahkan provider boundary:
 
 Pricing snapshot tetap evidence yang harus diverifikasi ulang sebelum public billing/savings claim.
 
+### 8. External MCP HTTPS acceptance
+
+External reachability ADR-16 sekarang punya dedicated acceptance nyata, bukan hanya localhost/reverse-proxy simulation:
+
+- Connect tetap bind loopback;
+- Sync menjadi bridge yang diekspos lewat public HTTPS edge sementara;
+- OAuth/JWKS juga diakses lewat public HTTPS sehingga signature/issuer/audience benar-benar melewati network boundary;
+- 401/403 `WWW-Authenticate` mengiklankan Protected Resource Metadata dan scope minimum;
+- `server/discover`, `tools/list`, dan `tools/call memory_search` dibuktikan end-to-end melalui HTTPS -> Sync -> Connect -> Hub;
+- malformed JWT, insufficient scope, Origin terlarang, dan MCP routing-header mismatch fail closed;
+- cloudflared dipin dan checksum diverifikasi;
+- network/tunnel failure tetap workflow failure, bukan skip/pass.
+
+Ini adalah **transport acceptance**, bukan klaim bahwa ecorione mengoperasikan managed public relay atau production authorization server.
+
 ## Gap hardening/platform yang masih terbuka
 
 Urutan rekomendasi berdasarkan dependency dan risiko:
 
-1. **External MCP acceptance** melalui tunnel/HTTPS nyata, bukan hanya local/stateless protocol tests.
-2. **Outbound MCP client/manager** untuk memasang dan mengelola MCP eksternal dengan permission/capability scope.
-3. **Plugin/extension framework + security gate** termasuk GitHub-origin extension, manifest, pin revision, sandbox, permission, rollback.
-4. **Native multimodal pipeline**: image/document first-class input, OCR, STT/TTS Indonesia+Inggris, lalu realtime voice.
-5. **Data refactor/rebuild + dataset governance**: authoritative-vs-derived separation, migration, reindex/rebuild, validation, lineage/versioning.
-6. **Unified capability/permission registry + Node Registry** sebagai dasar visual Flow Canvas, core node pack, custom node SDK, dan reusable subflow.
-7. **Space block runtime** ala block workspace tanpa menggandakan source of truth Context/Artifact.
-8. **Data maintenance center + backup/restore/disaster recovery** dengan integrity verification.
-9. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
-10. **Provider canary harian** dengan provider nyata dan quality floor; deterministic CI tetap external-credential-free.
-11. **Full-history secret scan** sebelum public release; working-tree scan saat ini belum cukup.
-12. **Next.js ESLint integration warning** pada production build.
-13. **Cumulative operational metrics + distributed trace** per hari/task/provider/node (cost, quality, p50/p95, errors).
-14. **ECX production efficiency validation** menggunakan traffic metrics nyata sebelum savings claim.
-15. **Chaos/failure + full cross-service E2E acceptance**.
-16. **Final security audit, Settings/Control Center, SDK/docs, installer/upgrade/release closure**.
-17. **AutoClick/RPA** tetap conditional/deferred sampai use case non-API nyata lolos design gate.
+1. **Outbound MCP client/manager** untuk memasang dan mengelola MCP eksternal dengan permission/capability scope.
+2. **Plugin/extension framework + security gate** termasuk GitHub-origin extension, manifest, pin revision, sandbox, permission, rollback.
+3. **Native multimodal pipeline**: image/document first-class input, OCR, STT/TTS Indonesia+Inggris, lalu realtime voice.
+4. **Data refactor/rebuild + dataset governance**: authoritative-vs-derived separation, migration, reindex/rebuild, validation, lineage/versioning.
+5. **Unified capability/permission registry + Node Registry** sebagai dasar visual Flow Canvas, core node pack, custom node SDK, dan reusable subflow.
+6. **Space block runtime** ala block workspace tanpa menggandakan source of truth Context/Artifact.
+7. **Data maintenance center + backup/restore/disaster recovery** dengan integrity verification.
+8. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
+9. **Provider canary harian** dengan provider nyata dan quality floor; deterministic CI tetap external-credential-free.
+10. **Full-history secret scan** sebelum public release; working-tree scan saat ini belum cukup.
+11. **Next.js ESLint integration warning** pada production build.
+12. **Cumulative operational metrics + distributed trace** per hari/task/provider/node (cost, quality, p50/p95, errors).
+13. **ECX production efficiency validation** menggunakan traffic metrics nyata sebelum savings claim.
+14. **Chaos/failure + full cross-service E2E acceptance**.
+15. **Final security audit, Settings/Control Center, SDK/docs, installer/upgrade/release closure**.
+16. **AutoClick/RPA** tetap conditional/deferred sampai use case non-API nyata lolos design gate.
 
 Tidak satu pun gap dianggap selesai hanya karena ada ADR, rencana, mock, atau unit test. Setiap workstream harus lolos exact-head closure gate dan post-merge `main` smoke sebelum statusnya berubah menjadi implemented/closed baseline.
