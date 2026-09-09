@@ -27,12 +27,13 @@ export interface CredentialMetadata {
   readonly updatedAt: string;
 }
 
+const TimestampSchema = z.string().datetime({ offset: false });
 const EncodedBytesSchema = z.string().regex(/^[A-Za-z0-9_-]+$/);
 const VaultEntrySchema = z.object({
   provider: z.enum(CREDENTIAL_PROVIDERS),
   purpose: z.enum(CREDENTIAL_PURPOSES),
   generation: z.number().int().positive(),
-  updatedAt: z.string().datetime({ offset: false }),
+  updatedAt: TimestampSchema,
   nonce: EncodedBytesSchema,
   ciphertext: EncodedBytesSchema,
   authTag: EncodedBytesSchema,
@@ -112,13 +113,13 @@ function encryptEntry(input: {
   cipher.setAAD(aad(metadata));
   const ciphertext = Buffer.concat([cipher.update(input.secret, "utf8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  return {
+  return VaultEntrySchema.parse({
     ...metadata,
     updatedAt: input.updatedAt,
     nonce: nonce.toString("base64url"),
     ciphertext: ciphertext.toString("base64url"),
     authTag: authTag.toString("base64url"),
-  };
+  });
 }
 
 function decryptEntry(entry: VaultEntry, key: Buffer): string {
@@ -219,6 +220,12 @@ export class FileCredentialVault implements ProviderCredentialReader {
     updatedAt: string,
   ): CredentialMetadata {
     if (secret.length === 0) throw new CredentialVaultFormatError("secret tidak boleh kosong.");
+    let normalizedUpdatedAt: string;
+    try {
+      normalizedUpdatedAt = TimestampSchema.parse(updatedAt);
+    } catch (error) {
+      throw new CredentialVaultFormatError(error instanceof Error ? error.message : String(error));
+    }
     const vault = readVault(this.path);
     const prior = vault.entries.find(
       (candidate) => candidate.provider === provider && candidate.purpose === purpose,
@@ -228,16 +235,18 @@ export class FileCredentialVault implements ProviderCredentialReader {
       provider,
       purpose,
       generation,
-      updatedAt,
+      updatedAt: normalizedUpdatedAt,
       secret,
       key: this.masterKey,
     });
     const entries = vault.entries
       .filter((entry) => !(entry.provider === provider && entry.purpose === purpose))
       .concat(next)
-      .sort((a, b) => scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)));
+      .sort((a, b) =>
+        scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)),
+      );
     writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
-    return { provider, purpose, generation, updatedAt };
+    return { provider, purpose, generation, updatedAt: normalizedUpdatedAt };
   }
 
   /** Re-encrypts every entry under a new 32-byte master key as one atomic file replacement. */
