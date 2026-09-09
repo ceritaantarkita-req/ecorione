@@ -30,6 +30,8 @@ import {
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nowIso } from "./clock.js";
+import { registerCapabilityRoutes } from "./capability-http.js";
+import { CapabilityRegistry } from "./capability-registry.js";
 import { registerExchangeRoutes } from "./exchange-http.js";
 import { registerExtensionRoutes } from "./extension-http.js";
 import { ExtensionRegistry } from "./extension-registry.js";
@@ -39,6 +41,7 @@ import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
 import {
   chat,
+  CapabilityAuthorityDeniedError,
   PolicyEngineBugError,
   UpstreamError,
   type OrchestrateDeps,
@@ -54,6 +57,9 @@ import {
 function toHttpError(err: unknown): unknown {
   if (err instanceof UpstreamError) return new BadGatewayError(err.message);
   if (err instanceof PolicyEngineBugError) return err;
+  if (err instanceof CapabilityAuthorityDeniedError) {
+    return new HttpError(403, "CAPABILITY_DENIED", err.message);
+  }
   if (err instanceof ApprovalNotFoundError) return new NotFoundError(err.message);
   if (err instanceof ApprovalAlreadyDecidedError) return new ConflictError(err.message);
   if (err instanceof RespondNotAllowedError || err instanceof InvalidIdError)
@@ -115,10 +121,12 @@ export function buildHubServer(
   const app = createServer({ name: "hub", token: options.token, logger: options.logger });
   const repo = new HubRepository(db);
   const history = new HistoryLedger(db);
-  const extensions = new ExtensionRegistry(db);
+  const authority = new CapabilityRegistry(db);
+  const extensions = new ExtensionRegistry(db, authority);
   const deps: OrchestrateDeps = {
     repo,
     history,
+    authority,
     contextUrl: options.contextUrl,
     connectUrl: options.connectUrl,
     rndUrl: options.rndUrl,
@@ -290,6 +298,7 @@ export function buildHubServer(
     artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
     internalToken: options.internalToken,
   });
+  registerCapabilityRoutes(app, authority, repo);
   registerExtensionRoutes(app, extensions, repo);
 
   app.post("/v1/audit/events", async (req, reply) => {

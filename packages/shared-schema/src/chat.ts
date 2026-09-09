@@ -5,12 +5,18 @@
  */
 
 import { z } from "zod";
-import { MemoryFactIdSchema, OperationIdSchema, SessionIdSchema } from "./ids.js";
+import {
+  MemoryFactIdSchema,
+  OperationIdSchema,
+  SessionIdSchema,
+  WorkspaceIdSchema,
+} from "./ids.js";
 import { AutonomyLevelSchema } from "./policy.js";
 import { ScopeSchema, SensitivitySchema } from "./classification.js";
 
 export const ChatRequestSchema = z.object({
   sessionId: SessionIdSchema,
+  workspaceId: WorkspaceIdSchema.optional(),
   message: z.string().min(1).max(16_000),
   scope: ScopeSchema.default("personal"),
   /** Plafon sensitivitas fakta yang boleh ikut ditarik ke konteks giliran ini. */

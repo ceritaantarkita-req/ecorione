@@ -46,6 +46,13 @@ async function actualContext() {
 }
 
 const allowControl: SandboxControlPlane = {
+  async authorize() {
+    return {
+      outcome: "ALLOW",
+      reason: "runtime acceptance",
+      grantedPermissionIds: ["sandbox.execute"],
+    };
+  },
   async evaluate(): Promise<PolicyVerdict> {
     return { outcome: "ALLOW", reason: "runtime acceptance" };
   },

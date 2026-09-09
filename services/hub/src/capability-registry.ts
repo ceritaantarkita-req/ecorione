@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   CapabilityDefinitionSchema,
+  extensionPermissionCapabilityId,
   SensitivitySchema,
   sensitivityRank,
   type ActionClass,
@@ -28,21 +29,6 @@ const BASELINE_OPERATION = "op_authoritybaseline" as OperationId;
 const PERSONAL_WORKSPACE = "ws_personal" as WorkspaceId;
 const BASELINE_KEY = "batch4-baseline-v1";
 const BASELINE_AT = "2026-09-09T00:00:00.000Z" as Timestamp;
-
-const MCP_ACTION_PERMISSIONS: Readonly<Record<ActionClass, PermissionId>> = {
-  READ: "mcp.tool.read" as PermissionId,
-  REVERSIBLE_WRITE: "mcp.tool.write" as PermissionId,
-  IRREVERSIBLE_WRITE: "mcp.tool.irreversible-write" as PermissionId,
-  SPEND: "mcp.tool.spend" as PermissionId,
-  EXTERNAL_SEND: "mcp.tool.external-send" as PermissionId,
-  CREDENTIAL_ACCESS: "mcp.tool.credential-access" as PermissionId,
-  EXECUTE: "mcp.tool.execute" as PermissionId,
-  POLICY_ADMIN: "mcp.tool.policy-admin" as PermissionId,
-};
-
-export function mcpPermissionForActionClass(actionClass: ActionClass): PermissionId {
-  return MCP_ACTION_PERMISSIONS[actionClass];
-}
 
 function actionPermission(
   id: string,
@@ -92,7 +78,12 @@ export const BUILTIN_CAPABILITIES: readonly CapabilityDefinition[] = [
         "write",
         "Remote irreversible write.",
       ),
-      actionPermission("mcp.tool.spend", "SPEND", "spend", "Remote tool dapat membelanjakan dana."),
+      actionPermission(
+        "mcp.tool.spend",
+        "SPEND",
+        "spend",
+        "Remote tool dapat membelanjakan dana.",
+      ),
       actionPermission(
         "mcp.tool.external-send",
         "EXTERNAL_SEND",
@@ -105,7 +96,12 @@ export const BUILTIN_CAPABILITIES: readonly CapabilityDefinition[] = [
         "use",
         "Remote tool membutuhkan credential-scoped action.",
       ),
-      actionPermission("mcp.tool.execute", "EXECUTE", "execute", "Remote tool mengeksekusi aksi."),
+      actionPermission(
+        "mcp.tool.execute",
+        "EXECUTE",
+        "execute",
+        "Remote tool mengeksekusi aksi.",
+      ),
       actionPermission(
         "mcp.tool.policy-admin",
         "POLICY_ADMIN",
@@ -242,7 +238,8 @@ export const BUILTIN_CAPABILITIES: readonly CapabilityDefinition[] = [
   }),
   CapabilityDefinitionSchema.parse({
     id: "secret.access",
-    description: "Menggunakan secret melalui owner boundary tanpa mengekspos plaintext ke registry.",
+    description:
+      "Menggunakan secret melalui owner boundary tanpa mengekspos plaintext ke registry.",
     permissions: [
       {
         id: "credential.use",
@@ -311,7 +308,9 @@ function canonical(value: unknown): unknown {
   return value;
 }
 function fingerprint(value: unknown): string {
-  return createHash("sha256").update(JSON.stringify(canonical(value))).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(canonical(value)))
+    .digest("hex");
 }
 function eventId(parts: readonly string[]): string {
   return `auth_evt_${createHash("sha256").update(parts.join("\u0000")).digest("hex").slice(0, 24)}`;
@@ -338,7 +337,9 @@ export class CapabilityRegistry {
 
   listDefinitions(): CapabilityDefinition[] {
     const rows = this.db.raw
-      .prepare("SELECT id, description, permissions_json FROM capability_definitions ORDER BY id ASC")
+      .prepare(
+        "SELECT id, description, permissions_json FROM capability_definitions ORDER BY id ASC",
+      )
       .all() as DefinitionRow[];
     return rows.map((row) =>
       CapabilityDefinitionSchema.parse({
@@ -372,7 +373,11 @@ export class CapabilityRegistry {
   }
 
   authorize(input: CapabilityAuthorizationRequest): CapabilityAuthorizationResult {
-    const requirements = this.requirementsFor(input.workspaceId, input.subject, input.capabilityId);
+    const requirements = this.requirementsFor(
+      input.workspaceId,
+      input.subject,
+      input.capabilityId,
+    );
     if (requirements.size === 0) {
       return {
         outcome: "DENY",
@@ -402,7 +407,9 @@ export class CapabilityRegistry {
           input.scope,
         ) as GrantRow[];
       const allowed = rows.some(
-        (row) => sensitivityRank(input.sensitivity) <= sensitivityRank(SensitivitySchema.parse(row.max_sensitivity)),
+        (row) =>
+          sensitivityRank(input.sensitivity) <=
+          sensitivityRank(SensitivitySchema.parse(row.max_sensitivity)),
       );
       if (allowed) granted.push(permissionId);
       else missing.push(permissionId);
@@ -421,10 +428,22 @@ export class CapabilityRegistry {
     };
   }
 
-  grant(input: CapabilityGrantRequest, now: Timestamp): { grants: CapabilityGrantView[]; deduplicated: boolean } {
-    const requestFingerprint = fingerprint({ action: "GRANT", ...input, permissionIds: [...input.permissionIds].sort() });
-    return this.mutate(input.idempotencyKey, requestFingerprint, () => {
-      this.assertPermissionsAvailable(input.workspaceId, input.subject, input.capabilityId, input.permissionIds);
+  grant(
+    input: CapabilityGrantRequest,
+    now: Timestamp,
+  ): { grants: CapabilityGrantView[]; deduplicated: boolean } {
+    const requestFingerprint = fingerprint({
+      action: "GRANT",
+      ...input,
+      permissionIds: [...input.permissionIds].sort(),
+    });
+    return this.mutate(input.idempotencyKey, requestFingerprint, now, () => {
+      this.assertPermissionsAvailable(
+        input.workspaceId,
+        input.subject,
+        input.capabilityId,
+        input.permissionIds,
+      );
       const tx = this.db.raw.transaction(() => {
         for (const permissionId of input.permissionIds) {
           this.db.raw
@@ -452,7 +471,10 @@ export class CapabilityRegistry {
         }
         this.appendAuthorityEvent("GRANT", input, now);
         return {
-          grants: this.listGrants({ workspaceId: input.workspaceId, subject: input.subject }).filter(
+          grants: this.listGrants({
+            workspaceId: input.workspaceId,
+            subject: input.subject,
+          }).filter(
             (grant) => grant.capabilityId === input.capabilityId && grant.scope === input.scope,
           ),
           deduplicated: false,
@@ -462,9 +484,16 @@ export class CapabilityRegistry {
     });
   }
 
-  revoke(input: CapabilityRevokeRequest, now: Timestamp): { revoked: number; deduplicated: boolean } {
-    const requestFingerprint = fingerprint({ action: "REVOKE", ...input, permissionIds: [...input.permissionIds].sort() });
-    return this.mutate(input.idempotencyKey, requestFingerprint, () => {
+  revoke(
+    input: CapabilityRevokeRequest,
+    now: Timestamp,
+  ): { revoked: number; deduplicated: boolean } {
+    const requestFingerprint = fingerprint({
+      action: "REVOKE",
+      ...input,
+      permissionIds: [...input.permissionIds].sort(),
+    });
+    return this.mutate(input.idempotencyKey, requestFingerprint, now, () => {
       const tx = this.db.raw.transaction(() => {
         let revoked = 0;
         for (const permissionId of input.permissionIds) {
@@ -500,32 +529,33 @@ export class CapabilityRegistry {
     const subject: AuthoritySubject = { kind: "extension", id: extensionId };
     const tx = this.db.raw.transaction(() => {
       this.db.raw
-        .prepare("DELETE FROM authority_declarations WHERE workspace_id=? AND subject_kind=? AND subject_id=?")
+        .prepare(
+          "DELETE FROM authority_declarations WHERE workspace_id=? AND subject_kind=? AND subject_id=?",
+        )
         .run(workspaceId, subject.kind, subject.id);
-      for (const capability of manifest.capabilities) {
-        for (const permission of manifest.permissions) {
-          this.db.raw
-            .prepare(
-              `INSERT INTO authority_declarations(
-                workspace_id,subject_kind,subject_id,capability_id,permission_id,action_class,
-                resource,access,side_effect,description,source_ref,updated_at
-              ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
-            )
-            .run(
-              workspaceId,
-              subject.kind,
-              subject.id,
-              capability.id,
-              permission.id,
-              permission.actionClass,
-              permission.resource,
-              permission.access,
-              permission.sideEffect ?? permission.actionClass !== "READ" ? 1 : 0,
-              permission.reason,
-              `extension:${manifest.id}@${manifest.version}`,
-              now,
-            );
-        }
+      for (const permission of manifest.permissions) {
+        const capabilityId = extensionPermissionCapabilityId(permission);
+        this.db.raw
+          .prepare(
+            `INSERT INTO authority_declarations(
+              workspace_id,subject_kind,subject_id,capability_id,permission_id,action_class,
+              resource,access,side_effect,description,source_ref,updated_at
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
+          )
+          .run(
+            workspaceId,
+            subject.kind,
+            subject.id,
+            capabilityId,
+            permission.id,
+            permission.actionClass,
+            permission.resource,
+            permission.access,
+            (permission.sideEffect ?? permission.actionClass !== "READ") ? 1 : 0,
+            permission.reason,
+            `extension:${manifest.id}@${manifest.version}`,
+            now,
+          );
       }
       this.db.raw
         .prepare(
@@ -555,13 +585,21 @@ export class CapabilityRegistry {
     tx();
   }
 
+  clearExtension(workspaceId: WorkspaceId, extensionId: string, now: Timestamp): void {
+    this.clearSubject(workspaceId, { kind: "extension", id: extensionId }, now);
+  }
+
   clearSubject(workspaceId: WorkspaceId, subject: AuthoritySubject, now: Timestamp): void {
     const tx = this.db.raw.transaction(() => {
       this.db.raw
-        .prepare("DELETE FROM authority_declarations WHERE workspace_id=? AND subject_kind=? AND subject_id=?")
+        .prepare(
+          "DELETE FROM authority_declarations WHERE workspace_id=? AND subject_kind=? AND subject_id=?",
+        )
         .run(workspaceId, subject.kind, subject.id);
       this.db.raw
-        .prepare("DELETE FROM authority_grants WHERE workspace_id=? AND subject_kind=? AND subject_id=?")
+        .prepare(
+          "DELETE FROM authority_grants WHERE workspace_id=? AND subject_kind=? AND subject_id=?",
+        )
         .run(workspaceId, subject.kind, subject.id);
       this.appendSimpleEvent({
         eventType: "SUBJECT_CLEARED",
@@ -639,10 +677,13 @@ export class CapabilityRegistry {
   private mutate<T extends { deduplicated: boolean }>(
     idempotencyKey: string,
     requestFingerprint: string,
+    now: Timestamp,
     execute: () => T,
   ): T {
     const prior = this.db.raw
-      .prepare("SELECT fingerprint,result_json FROM authority_operations WHERE idempotency_key=?")
+      .prepare(
+        "SELECT fingerprint,result_json FROM authority_operations WHERE idempotency_key=?",
+      )
       .get(idempotencyKey) as OperationRow | undefined;
     if (prior !== undefined) {
       if (prior.fingerprint !== requestFingerprint) {
@@ -657,7 +698,7 @@ export class CapabilityRegistry {
         `INSERT INTO authority_operations(idempotency_key,fingerprint,result_json,completed_at)
          VALUES(?,?,?,?)`,
       )
-      .run(idempotencyKey, requestFingerprint, JSON.stringify(result), new Date().toISOString());
+      .run(idempotencyKey, requestFingerprint, JSON.stringify(result), now);
     return result;
   }
 
@@ -727,7 +768,12 @@ export class CapabilityRegistry {
     );
     const tx = this.db.raw.transaction(() => {
       for (const definition of BUILTIN_CAPABILITIES) {
-        upsert.run(definition.id, definition.description, JSON.stringify(definition.permissions), BASELINE_AT);
+        upsert.run(
+          definition.id,
+          definition.description,
+          JSON.stringify(definition.permissions),
+          BASELINE_AT,
+        );
       }
     });
     tx();
@@ -754,9 +800,28 @@ export class CapabilityRegistry {
           ],
         },
         {
+          subject: { kind: "model", id: "local" },
+          capabilityId: "model.invoke.local" as CapabilityId,
+          permissionIds: ["model.invoke" as PermissionId, "execution.local" as PermissionId],
+        },
+        {
           subject: { kind: "sandbox", id: "tier0" },
           capabilityId: "sandbox.execute" as CapabilityId,
           permissionIds: ["sandbox.execute" as PermissionId, "filesystem.read" as PermissionId],
+        },
+        {
+          subject: { kind: "sandbox", id: "tier1.5" },
+          capabilityId: "sandbox.execute" as CapabilityId,
+          permissionIds: ["sandbox.execute" as PermissionId],
+        },
+        {
+          subject: { kind: "sandbox", id: "tier1" },
+          capabilityId: "sandbox.execute" as CapabilityId,
+          permissionIds: [
+            "sandbox.execute" as PermissionId,
+            "filesystem.read" as PermissionId,
+            "filesystem.write" as PermissionId,
+          ],
         },
       ];
       for (const item of baseline) {

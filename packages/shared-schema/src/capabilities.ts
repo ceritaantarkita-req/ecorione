@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { ScopeSchema, SensitivitySchema } from "./classification.js";
 import { OperationIdSchema, WorkspaceIdSchema } from "./ids.js";
-import { ActionClassSchema, AutonomyLevelSchema } from "./policy.js";
+import { ActionClassSchema, AutonomyLevelSchema, type ActionClass } from "./policy.js";
 
 export const CapabilityIdSchema = z
   .string()
@@ -81,6 +81,20 @@ export const CapabilityPermissionSchema = z
   .strict();
 export type CapabilityPermission = z.infer<typeof CapabilityPermissionSchema>;
 
+const MCP_ACTION_PERMISSIONS: Readonly<Record<ActionClass, PermissionId>> = {
+  READ: "mcp.tool.read" as PermissionId,
+  REVERSIBLE_WRITE: "mcp.tool.write" as PermissionId,
+  IRREVERSIBLE_WRITE: "mcp.tool.irreversible-write" as PermissionId,
+  SPEND: "mcp.tool.spend" as PermissionId,
+  EXTERNAL_SEND: "mcp.tool.external-send" as PermissionId,
+  CREDENTIAL_ACCESS: "mcp.tool.credential-access" as PermissionId,
+  EXECUTE: "mcp.tool.execute" as PermissionId,
+  POLICY_ADMIN: "mcp.tool.policy-admin" as PermissionId,
+};
+export function mcpPermissionForActionClass(actionClass: ActionClass): PermissionId {
+  return MCP_ACTION_PERMISSIONS[actionClass];
+}
+
 export const CapabilityDefinitionSchema = z
   .object({
     id: CapabilityIdSchema,
@@ -103,7 +117,10 @@ export const CapabilityDefinitionSchema = z
   });
 export type CapabilityDefinition = z.infer<typeof CapabilityDefinitionSchema>;
 
-function uniquePermissionIds(value: { permissionIds: readonly string[] }, ctx: z.RefinementCtx): void {
+function uniquePermissionIds(
+  value: { permissionIds: readonly string[] },
+  ctx: z.RefinementCtx,
+): void {
   const seen = new Set<string>();
   for (const [index, id] of value.permissionIds.entries()) {
     if (seen.has(id)) {
@@ -155,7 +172,9 @@ export const CapabilityAuthorizationRequestSchema = z
   })
   .strict()
   .superRefine(uniquePermissionIds);
-export type CapabilityAuthorizationRequest = z.infer<typeof CapabilityAuthorizationRequestSchema>;
+export type CapabilityAuthorizationRequest = z.infer<
+  typeof CapabilityAuthorizationRequestSchema
+>;
 
 export const CapabilityAuthorizationResultSchema = z.discriminatedUnion("outcome", [
   z.object({

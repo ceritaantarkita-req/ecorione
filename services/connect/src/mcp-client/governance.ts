@@ -1,5 +1,9 @@
 import {
+  CapabilityAuthorizationResultSchema,
+  mcpPermissionForActionClass,
   type ActionRequest,
+  type CapabilityId,
+  type PermissionId,
   type OperationId,
   type PolicyVerdict,
   type Timestamp,
@@ -87,6 +91,49 @@ export class HubMcpGovernance implements McpGovernance {
   }
 
   async authorize(request: McpGovernanceRequest): Promise<void> {
+    const discover = request.toolName === "server.discover";
+    const authority = CapabilityAuthorizationResultSchema.parse(
+      await httpJson<unknown>(`${this.hubUrl}/v1/authority/authorize`, {
+        token: this.token,
+        body: {
+          operationId: request.context.operationId,
+          workspaceId: request.context.workspaceId,
+          subject: { kind: "mcp-tool", id: `${request.server.id}/${request.toolName}` },
+          capabilityId: (discover ? "mcp.discover" : "mcp.tool.call") as CapabilityId,
+          permissionIds: [
+            discover
+              ? ("mcp.read" as PermissionId)
+              : mcpPermissionForActionClass(request.actionClass),
+          ],
+          scope: request.context.scope,
+          sensitivity: request.context.sensitivity,
+          autonomy: request.context.autonomy,
+        },
+      }),
+    );
+    if (authority.outcome === "DENY") throw new McpPolicyDeniedError(authority.reason);
+
+    if (request.server.transport.credentialRef !== undefined) {
+      const credentialAuthority = CapabilityAuthorizationResultSchema.parse(
+        await httpJson<unknown>(`${this.hubUrl}/v1/authority/authorize`, {
+          token: this.token,
+          body: {
+            operationId: request.context.operationId,
+            workspaceId: request.context.workspaceId,
+            subject: { kind: "mcp-tool", id: `${request.server.id}/${request.toolName}` },
+            capabilityId: "secret.access" as CapabilityId,
+            permissionIds: ["credential.use" as PermissionId],
+            scope: request.context.scope,
+            sensitivity: request.context.sensitivity,
+            autonomy: request.context.autonomy,
+          },
+        }),
+      );
+      if (credentialAuthority.outcome === "DENY") {
+        throw new McpPolicyDeniedError(credentialAuthority.reason);
+      }
+    }
+
     if (request.actionClass !== "READ" && request.idempotencyKey !== null) {
       const existing = await this.existingApproval(request.idempotencyKey);
       if (existing !== null) {

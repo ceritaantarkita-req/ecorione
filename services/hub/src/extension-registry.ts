@@ -185,8 +185,21 @@ function revisionId(input: {
   return `xrev_${digest.slice(0, 24)}` as ExtensionRevisionId;
 }
 
+export interface ExtensionAuthorityPlane {
+  syncExtensionManifest(
+    workspaceId: WorkspaceId,
+    extensionId: string,
+    manifest: ExtensionManifest,
+    now: Timestamp,
+  ): void;
+  clearExtension(workspaceId: WorkspaceId, extensionId: string, now: Timestamp): void;
+}
+
 export class ExtensionRegistry {
-  constructor(private readonly db: HubDatabase) {}
+  constructor(
+    private readonly db: HubDatabase,
+    private readonly authority?: ExtensionAuthorityPlane,
+  ) {}
 
   list(workspaceId: WorkspaceId): ExtensionView[] {
     const rows = this.db.raw
@@ -275,6 +288,12 @@ export class ExtensionRegistry {
                health_checked_at=NULL, updated_at=excluded.updated_at, removed_at=NULL`,
           )
           .run(input.workspaceId, report.manifest.id, revision.revisionId, now);
+        this.authority?.syncExtensionManifest(
+          input.workspaceId,
+          report.manifest.id,
+          report.manifest,
+          now,
+        );
         return { extension: this.requireView(input.workspaceId, report.manifest.id), revision };
       },
     );
@@ -327,6 +346,12 @@ export class ExtensionRegistry {
              WHERE workspace_id=? AND extension_id=?`,
           )
           .run(revision.revisionId, now, input.workspaceId, extensionId);
+        this.authority?.syncExtensionManifest(
+          input.workspaceId,
+          extensionId,
+          report.manifest,
+          now,
+        );
         return { extension: this.requireView(input.workspaceId, extensionId), revision };
       },
     );
@@ -378,6 +403,12 @@ export class ExtensionRegistry {
              WHERE workspace_id=? AND extension_id=?`,
           )
           .run(revision.revisionId, now, input.workspaceId, extensionId);
+        this.authority?.syncExtensionManifest(
+          input.workspaceId,
+          extensionId,
+          target.manifest,
+          now,
+        );
         return { extension: this.requireView(input.workspaceId, extensionId), revision };
       },
     );
@@ -412,6 +443,7 @@ export class ExtensionRegistry {
              WHERE workspace_id=? AND extension_id=?`,
           )
           .run(now, now, input.workspaceId, extensionId);
+        this.authority?.clearExtension(input.workspaceId, extensionId, now);
         return { extension: this.requireView(input.workspaceId, extensionId), revision: null };
       },
     );

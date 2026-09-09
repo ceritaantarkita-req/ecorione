@@ -6,6 +6,7 @@ import {
   type Interceptable,
 } from "undici";
 import type { ChatRequest, Timestamp } from "@ecorione/shared-schema";
+import { CapabilityRegistry } from "./capability-registry.js";
 import { openHubDatabase, type HubDatabase } from "./db.js";
 import { HistoryLedger } from "./history-ledger.js";
 import { chat, hubPrefixDigest, UpstreamError, type OrchestrateDeps } from "./orchestrate.js";
@@ -48,6 +49,7 @@ beforeEach(() => {
   deps = {
     repo: new HubRepository(db),
     history: new HistoryLedger(db),
+    authority: new CapabilityRegistry(db),
     contextUrl: "http://context.local",
     connectUrl: "http://connect.local",
     rndUrl: "http://rnd.local",

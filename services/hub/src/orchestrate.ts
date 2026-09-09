@@ -7,8 +7,11 @@ import {
   type StablePrefix,
 } from "@ecorione/context-assembly";
 import {
+  assertId,
   makeId,
   type ActionRequest,
+  type CapabilityId,
+  type PermissionId,
   type ArtifactPointer,
   type ChatRequest,
   type ChatResponse,
@@ -25,6 +28,7 @@ import {
   type CallCostRecord,
   type TokenUsage,
 } from "@ecorione/shared-telemetry";
+import type { CapabilityRegistry } from "./capability-registry.js";
 import type { HistoryLedger } from "./history-ledger.js";
 import { evaluatePolicy } from "./policy-engine.js";
 import type { HubRepository } from "./repository.js";
@@ -49,6 +53,12 @@ export class UpstreamError extends Error {
     this.service = service;
   }
 }
+export class CapabilityAuthorityDeniedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CapabilityAuthorityDeniedError";
+  }
+}
 export class PolicyEngineBugError extends Error {
   constructor(outcome: string) {
     super(`Policy engine membalas "${outcome}" untuk aksi READ — seharusnya ALLOW.`);
@@ -58,6 +68,7 @@ export class PolicyEngineBugError extends Error {
 export interface OrchestrateDeps {
   readonly repo: HubRepository;
   readonly history: HistoryLedger;
+  readonly authority: CapabilityRegistry;
   readonly contextUrl: string;
   readonly connectUrl: string;
   readonly rndUrl: string;
@@ -138,6 +149,25 @@ export async function chat(
     now,
   });
   if (verdict.outcome !== "ALLOW") throw new PolicyEngineBugError(verdict.outcome);
+
+  const workspaceId = req.workspaceId ?? assertId("workspace", "ws_personal");
+  const authority = deps.authority.authorize({
+    operationId,
+    workspaceId,
+    subject: { kind: "model", id: "hosted" },
+    capabilityId: "model.invoke.hosted" as CapabilityId,
+    permissionIds: [
+      "model.invoke" as PermissionId,
+      "network.connect" as PermissionId,
+      "provider.spend" as PermissionId,
+    ],
+    scope: req.scope,
+    sensitivity: req.maxSensitivity,
+    autonomy: req.autonomy,
+  });
+  if (authority.outcome === "DENY") {
+    throw new CapabilityAuthorityDeniedError(authority.reason);
+  }
 
   // Hosted chat is explicitly cloud-eligible. Until per-message classification exists,
   // maxSensitivity is used as a conservative session label and may only move upward.

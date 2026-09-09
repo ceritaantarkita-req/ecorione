@@ -1,6 +1,9 @@
 import {
   assertId,
+  CapabilityAuthorizationResultSchema,
+  type CapabilityId,
   type FlowWorkflowInput,
+  type PermissionId,
   type OperationId,
   type PolicyVerdict,
   type SandboxExecutionReceipt,
@@ -49,6 +52,8 @@ export function childOperationId(parent: OperationId, node: "ai" | "execution"):
   return assertId("operation", `${parent}-${node}`);
 }
 
+const PERSONAL_WORKSPACE = assertId("workspace", "ws_personal");
+
 export function createFlowActivities(config: FlowActivityConfig): FlowActivities {
   return {
     async requestApproval({ flow, transformed }): Promise<void> {
@@ -80,6 +85,31 @@ export function createFlowActivities(config: FlowActivityConfig): FlowActivities
 
     async callAi({ flow, transformed }): Promise<{ readonly reply: string }> {
       const operationId = childOperationId(flow.operationId, "ai");
+      const workspaceId = flow.workspaceId ?? PERSONAL_WORKSPACE;
+      const hosted = flow.aiTarget === "hosted";
+      const authority = CapabilityAuthorizationResultSchema.parse(
+        await httpJson<unknown>(`${config.hubUrl}/v1/authority/authorize`, {
+          method: "POST",
+          token: config.token,
+          body: {
+            operationId,
+            workspaceId,
+            subject: { kind: "model", id: flow.aiTarget },
+            capabilityId: (hosted
+              ? "model.invoke.hosted"
+              : "model.invoke.local") as CapabilityId,
+            permissionIds: (hosted
+              ? ["model.invoke", "network.connect", "provider.spend"]
+              : ["model.invoke", "execution.local"]) as PermissionId[],
+            scope: flow.scope,
+            sensitivity: flow.sensitivity,
+            autonomy: "L2",
+          },
+        }),
+      );
+      if (authority.outcome === "DENY") {
+        throw new Error(`Flow model authority ditolak: ${authority.reason}`);
+      }
       const result = await httpJson<{ reply: string }>(`${config.connectUrl}/v1/complete`, {
         method: "POST",
         token: config.token,
@@ -108,6 +138,7 @@ export function createFlowActivities(config: FlowActivityConfig): FlowActivities
         token: config.token,
         body: {
           operationId,
+          workspaceId: flow.workspaceId ?? PERSONAL_WORKSPACE,
           tier: flow.execution.tier,
           workspace: flow.execution.workspace,
           command: flow.execution.command,

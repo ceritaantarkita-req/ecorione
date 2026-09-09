@@ -3,9 +3,13 @@ import {
   CapabilityGrantRequestSchema,
   CapabilityRevokeRequestSchema,
   ExtensionManifestSchema,
+  WorkspaceIdSchema,
 } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
-import { CapabilityIdempotencyConflictError, CapabilityRegistry } from "./capability-registry.js";
+import {
+  CapabilityIdempotencyConflictError,
+  CapabilityRegistry,
+} from "./capability-registry.js";
 import { openHubDatabase, type HubDatabase } from "./db.js";
 
 const opened: HubDatabase[] = [];
@@ -115,7 +119,8 @@ describe("CapabilityRegistry", () => {
       ],
       secretRequirements: [],
     });
-    registry.syncExtensionManifest("ws_alpha", manifest.id, manifest, T0);
+    const workspaceId = WorkspaceIdSchema.parse("ws_alpha");
+    registry.syncExtensionManifest(workspaceId, manifest.id, manifest, T0);
     const grant = CapabilityGrantRequestSchema.parse({
       operationId: "op_extensiongrant01",
       workspaceId: "ws_alpha",
@@ -156,9 +161,11 @@ describe("CapabilityRegistry", () => {
         },
       ],
     });
-    registry.syncExtensionManifest("ws_alpha", changed.id, changed, T0);
+    registry.syncExtensionManifest(workspaceId, changed.id, changed, T0);
     expect(registry.authorize(auth).outcome).toBe("DENY");
-    expect(registry.listGrants({ workspaceId: "ws_alpha", subject: { kind: "extension", id: manifest.id } })).toHaveLength(0);
+    expect(
+      registry.listGrants({ workspaceId, subject: { kind: "extension", id: manifest.id } }),
+    ).toHaveLength(0);
   });
 
   it("returns idempotent result and rejects key reuse with a different grant", () => {
