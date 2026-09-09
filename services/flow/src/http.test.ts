@@ -57,18 +57,24 @@ describe("Flow HTTP", () => {
     );
   });
 
-  it("records Hub approval before signaling the Temporal workflow", async () => {
+  it("resolves durable Hub approval, records decision, then signals Temporal", async () => {
     const agent = new MockAgent();
     agent.disableNetConnect();
     setGlobalDispatcher(agent);
-    agent
-      .get("http://hub.local")
+    const hub = agent.get("http://hub.local");
+    hub
+      .intercept({
+        path: "/v1/approvals/by-idempotency-key?idempotencyKey=wf_runtime001%3Ahuman-approval",
+        method: "GET",
+      })
+      .reply(200, { operationId: "op_flowapproval001", status: "PENDING" });
+    hub
       .intercept({
         path: "/v1/approvals/op_flowapproval001/decide",
         method: "POST",
         body: JSON.stringify({ decision: "APPROVE", note: "ok" }),
       })
-      .reply(200, { status: "APPROVED" });
+      .reply(200, { status: "APPROVE" });
 
     const temporal = temporalStub();
     const app = buildFlowServer(temporal, { hubUrl: "http://hub.local" });
@@ -79,20 +85,23 @@ describe("Flow HTTP", () => {
       payload: { decision: "APPROVE", note: "ok" },
     });
     expect(res.statusCode).toBe(200);
-    expect(temporal.operationId).toHaveBeenCalledWith("wf_runtime001");
+    expect(temporal.operationId).not.toHaveBeenCalled();
     expect(temporal.signal).toHaveBeenCalledWith("wf_runtime001", {
       decision: "APPROVE",
       note: "ok",
     });
   });
 
-  it("does not signal Temporal when Hub refuses the decision", async () => {
+  it("does not signal Temporal when durable Hub approval cannot be resolved", async () => {
     const agent = new MockAgent();
     agent.disableNetConnect();
     setGlobalDispatcher(agent);
     agent
       .get("http://hub.local")
-      .intercept({ path: "/v1/approvals/op_flowapproval001/decide", method: "POST" })
+      .intercept({
+        path: "/v1/approvals/by-idempotency-key?idempotencyKey=wf_runtime002%3Ahuman-approval",
+        method: "GET",
+      })
       .reply(404, { error: { type: "NOT_FOUND", message: "approval missing" } });
 
     const temporal = temporalStub();
@@ -101,6 +110,34 @@ describe("Flow HTTP", () => {
     const res = await app.inject({
       method: "POST",
       url: "/v1/flows/wf_runtime002/decision",
+      payload: { decision: "REJECT" },
+    });
+    expect(res.statusCode).toBe(500);
+    expect(temporal.operationId).not.toHaveBeenCalled();
+    expect(temporal.signal).not.toHaveBeenCalled();
+  });
+
+  it("does not signal Temporal when Hub refuses the durable decision", async () => {
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+    const hub = agent.get("http://hub.local");
+    hub
+      .intercept({
+        path: "/v1/approvals/by-idempotency-key?idempotencyKey=wf_runtime003%3Ahuman-approval",
+        method: "GET",
+      })
+      .reply(200, { operationId: "op_flowapproval001", status: "PENDING" });
+    hub
+      .intercept({ path: "/v1/approvals/op_flowapproval001/decide", method: "POST" })
+      .reply(409, { error: { type: "CONFLICT", message: "already decided" } });
+
+    const temporal = temporalStub();
+    const app = buildFlowServer(temporal, { hubUrl: "http://hub.local" });
+    apps.push(app);
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/flows/wf_runtime003/decision",
       payload: { decision: "REJECT" },
     });
     expect(res.statusCode).toBe(500);
