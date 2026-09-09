@@ -10,6 +10,7 @@ import {
 } from "./ids.js";
 
 export const ECX_VERSION = 1 as const;
+const TimestampSchema = z.string().datetime({ offset: false });
 export const EcxAgentIdSchema = z
   .string()
   .min(1)
@@ -71,6 +72,7 @@ export type EcxCandidate = z.infer<typeof EcxCandidateSchema>;
 
 export const EcxPlanRequestSchema = z.object({
   operationId: OperationIdSchema,
+  requestedAt: TimestampSchema,
   sender: EcxAgentIdSchema,
   intent: z.string().min(1).max(128),
   task: z.string().min(1).max(2048),
@@ -94,13 +96,17 @@ export const EcxPlanResponseSchema = z.object({
 });
 export type EcxPlanResponse = z.infer<typeof EcxPlanResponseSchema>;
 
-export const EcxHydrateRequestSchema = z.object({
-  packet: EcxPacketSchema,
-  refIndexes: z.array(z.number().int().nonnegative()).min(1).max(32),
-  scope: ScopeSchema,
-  maxSensitivity: SensitivitySchema,
-  hostedEligible: z.boolean().default(false),
-});
+export const EcxHydrateRequestSchema = z
+  .object({
+    packet: EcxPacketSchema,
+    refIndexes: z.array(z.number().int().nonnegative()).min(1).max(32),
+    scope: ScopeSchema,
+    maxSensitivity: SensitivitySchema,
+    hostedEligible: z.boolean().default(false),
+  })
+  .refine((value) => new Set(value.refIndexes).size === value.refIndexes.length, {
+    message: "refIndexes tidak boleh duplikat.",
+  });
 export type EcxHydrateRequest = z.infer<typeof EcxHydrateRequestSchema>;
 
 export const EcxHydratedItemSchema = z.object({
