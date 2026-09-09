@@ -79,6 +79,7 @@ const DecideBodySchema = z.object({
   decision: ApprovalDecisionSchema,
   note: z.string().max(1024).optional(),
 });
+const ApprovalLookupQuerySchema = z.object({ idempotencyKey: z.string().min(1).max(512) });
 const AuditQuerySchema = z.object({ operationId: z.string().min(1).optional() });
 export interface BuildHubServerOptions {
   readonly token?: string | undefined;
@@ -220,6 +221,13 @@ export function buildHubServer(
       });
     }
     return evaluation.verdict;
+  });
+
+  app.get("/v1/approvals/by-idempotency-key", async (req) => {
+    const query = parseOrBadRequest(ApprovalLookupQuerySchema, req.query);
+    const approval = repo.getApprovalByIdempotencyKey(query.idempotencyKey);
+    if (approval === null) throw new NotFoundError("Approval durable tidak ditemukan.");
+    return approval;
   });
 
   app.post<{ Params: { operationId: string } }>(
