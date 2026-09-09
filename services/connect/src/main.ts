@@ -9,6 +9,7 @@ import { FileMcpInvocationStore } from "./mcp-client/invocation-store.js";
 import { McpManager } from "./mcp-client/manager.js";
 import { FileMcpRegistry } from "./mcp-client/registry.js";
 import { SdkMcpClientFactory } from "./mcp-client/sdk-client.js";
+import { HttpMultimodalAdapter } from "./multimodal.js";
 import { parseHostedProvider } from "./provider-types.js";
 import { parseLocalRuntime } from "./providers/local-runtime.js";
 import { FileSpendBudget, parseOptionalBudgetUsd } from "./spend-budget.js";
@@ -32,6 +33,17 @@ const openrouterApiKey =
 const openaiApiKey =
   credentialVault === undefined ? process.env.OPENAI_API_KEY || undefined : undefined;
 
+function developmentHostedApiKey(): string | undefined {
+  switch (hostedProvider) {
+    case "anthropic":
+      return anthropicApiKey;
+    case "openrouter":
+      return openrouterApiKey;
+    case "openai":
+      return openaiApiKey;
+  }
+}
+
 const localRuntime = parseLocalRuntime(process.env.ECORIONE_LOCAL_RUNTIME);
 const localBaseUrl = process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11434/v1";
 const localModelTag = process.env.ECORIONE_LOCAL_MODEL ?? "qwen3:8b-instruct-q4_K_M";
@@ -54,6 +66,28 @@ const spendBudget =
     : new FileSpendBudget(spendBudgetPath, {
         dailyUsd: spendDailyUsd,
         monthlyUsd: spendMonthlyUsd,
+      });
+
+const localMultimodalUrl = process.env.ECORIONE_MULTIMODAL_LOCAL_URL || undefined;
+const hostedMultimodalUrl = process.env.ECORIONE_MULTIMODAL_HOSTED_URL || undefined;
+const hostedMultimodalReservationUsd =
+  parseOptionalBudgetUsd(
+    "ECORIONE_MULTIMODAL_HOSTED_RESERVATION_USD",
+    process.env.ECORIONE_MULTIMODAL_HOSTED_RESERVATION_USD,
+  ) ?? 1;
+const localMultimodalAdapter =
+  localMultimodalUrl === undefined
+    ? undefined
+    : new HttpMultimodalAdapter({ route: "local", endpoint: localMultimodalUrl });
+const hostedMultimodalAdapter =
+  hostedMultimodalUrl === undefined
+    ? undefined
+    : new HttpMultimodalAdapter({
+        route: "hosted",
+        endpoint: hostedMultimodalUrl,
+        reservationUsd: hostedMultimodalReservationUsd,
+        authorizationBearer: () =>
+          credentialVault?.get(hostedProvider, "messages") ?? developmentHostedApiKey(),
       });
 
 const mcpRegistryPath =
@@ -85,6 +119,8 @@ const app = buildConnectServer({
   hostedCallsEnabled,
   spendBudget,
   mcpManager,
+  localMultimodalAdapter,
+  hostedMultimodalAdapter,
 });
 
 app
