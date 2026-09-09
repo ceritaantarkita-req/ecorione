@@ -1,6 +1,7 @@
 import {
   ApplicationFailure,
   condition,
+  defineQuery,
   defineSignal,
   proxyActivities,
   setHandler,
@@ -10,6 +11,7 @@ import type {
   FlowApprovalSignal,
   FlowWorkflowInput,
   FlowWorkflowResult,
+  OperationId,
 } from "@ecorione/shared-schema";
 import type { FlowActivities } from "./activities.js";
 
@@ -24,6 +26,7 @@ const activities = proxyActivities<FlowActivities>({
 });
 
 export const approvalSignal = defineSignal<[FlowApprovalSignal]>("approval");
+export const operationIdQuery = defineQuery<OperationId>("operationId");
 
 export function transformInput(value: string): string {
   return value.trim().replace(/\s+/g, " ");
@@ -31,6 +34,7 @@ export function transformInput(value: string): string {
 
 export async function operationWorkflow(flow: FlowWorkflowInput): Promise<FlowWorkflowResult> {
   let approval: FlowApprovalSignal | undefined;
+  setHandler(operationIdQuery, () => flow.operationId);
   setHandler(approvalSignal, (value) => {
     approval = value;
   });
