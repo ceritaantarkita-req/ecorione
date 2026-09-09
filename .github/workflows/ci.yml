@@ -24,7 +24,16 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      # Temporary only: workspace gained services/sync. Export canonical pnpm lockfile,
+      # then restore --frozen-lockfile in the next commit.
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Export regenerated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-lockfile
+          path: pnpm-lock.yaml
+          retention-days: 1
 
       # Temporary repair-branch helper: materialize canonical Prettier output so it can be
       # committed exactly, while still letting lint/typecheck/tests run in this CI pass.
