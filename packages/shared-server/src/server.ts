@@ -54,12 +54,10 @@ export function createServer(options: CreateServerOptions): FastifyInstance {
         requestId: req.requestId,
       });
     req.log.error({ err }, "unhandled error");
-    return reply
-      .code(500)
-      .send({
-        error: { type: "INTERNAL", message: "Kesalahan internal service." },
-        requestId: req.requestId,
-      });
+    return reply.code(500).send({
+      error: { type: "INTERNAL", message: "Kesalahan internal service." },
+      requestId: req.requestId,
+    });
   });
   app.setNotFoundHandler((req, reply) =>
     reply.code(404).send({

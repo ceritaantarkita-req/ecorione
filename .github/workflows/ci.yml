@@ -12,37 +12,65 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+
     steps:
       - uses: actions/checkout@v5
+
       - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
+
       - run: pnpm install --frozen-lockfile
-      - name: Inspect remaining Prettier diff
-        run: |
-          pnpm exec prettier packages/shared-server/src/server.ts --write
-          git diff -- packages/shared-server/src/server.ts
-          test -z "$(git status --porcelain -- packages/shared-server/src/server.ts)"
+
+      - name: Format
+        run: pnpm run format:check
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Secret scan
+        run: pnpm run secret-scan
+
+      - name: Production build
+        run: pnpm run build
 
   naming:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
     steps:
       - uses: actions/checkout@v5
+
       - name: Tidak ada penamaan "InMy" yang tersisa
         run: |
           if grep -rniE '\bInMy[A-Z]' \
               --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \
               --include='*.json' --include='*.sql' --include='*.yml' --include='*.css' \
               --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git . \
-              | grep -v 'naming-gate:allow' ; then exit 1; fi
+              | grep -v 'naming-gate:allow' ; then
+            echo "::error::Penamaan ekosistem lama ditemukan. Lihat AGENTS.md dan docs/prd.md §19."
+            exit 1
+          fi
+          echo "Bersih."
+
       - name: Tidak ada alias model `-latest` (ADR-14)
         run: |
           if grep -rnE '"[a-z0-9./-]+-latest"' \
               --include='*.ts' --include='*.json' --include='*.yaml' \
               --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
               packages services apps 2>/dev/null \
-              | grep -v 'naming-gate:allow' ; then exit 1; fi
+              | grep -v 'naming-gate:allow' ; then
+            echo "::error::Alias model terdeteksi. Pin versi eksplisit — lihat docs/adr/0014-*.md."
+            exit 1
+          fi
+          echo "Bersih."
