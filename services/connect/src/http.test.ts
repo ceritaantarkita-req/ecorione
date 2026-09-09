@@ -8,7 +8,8 @@ import {
 } from "undici";
 import { CredentialVaultIntegrityError } from "./credential-vault.js";
 import { buildConnectServer } from "./http.js";
-import { prefix } from "./test-helpers.js";
+import { SpendBudgetBusyError, SpendBudgetExceededError } from "./spend-budget.js";
+import { OPERATION_ID, prefix } from "./test-helpers.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let anthropicPool: Interceptable;
@@ -141,6 +142,112 @@ describe("POST /v1/complete", () => {
     expect(res.statusCode).toBe(503);
     expect(res.json().error.type).toBe("COST_KILL_SWITCH_ACTIVE");
     expect(res.json().error.message).toContain("ECORIONE_COST_KILL_SWITCH");
+    await app.close();
+  });
+
+  it("daily/monthly budget rejection → 429 sebelum provider dispatch", async () => {
+    const app = buildConnectServer({
+      anthropicApiKey: "test-provider-key",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      spendBudget: {
+        reserve() {
+          throw new SpendBudgetExceededError({
+            period: "daily",
+            limitUsd: 1,
+            committedUsd: 0.99,
+            requestedReserveUsd: 0.02,
+          });
+        },
+        settle() {
+          throw new Error("settle must not run");
+        },
+        markUncertain() {
+          throw new Error("uncertain must not run");
+        },
+      },
+    });
+
+    const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
+    expect(res.statusCode).toBe(429);
+    expect(res.json().error.type).toBe("SPEND_BUDGET_EXCEEDED");
+    await app.close();
+  });
+
+  it("spend store/lock unavailable → 503 fail-closed", async () => {
+    const app = buildConnectServer({
+      anthropicApiKey: "test-provider-key",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      spendBudget: {
+        reserve() {
+          throw new SpendBudgetBusyError("/tmp/connect-spend-budget.lock");
+        },
+        settle() {
+          throw new Error("settle must not run");
+        },
+        markUncertain() {
+          throw new Error("uncertain must not run");
+        },
+      },
+    });
+
+    const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
+    expect(res.statusCode).toBe(503);
+    expect(res.json().error.type).toBe("SPEND_BUDGET_UNAVAILABLE");
+    await app.close();
+  });
+
+  it("provider hosted sukses mengembalikan budget reservation + settlement", async () => {
+    anthropicPool.intercept({ path: "/v1/messages", method: "POST" }).reply(200, {
+      model: "claude-sonnet-4-5-20250929",
+      content: [{ type: "text", text: "budgeted" }],
+      usage: { input_tokens: 10, output_tokens: 5 },
+    });
+    let settledActual: number | undefined;
+    const app = buildConnectServer({
+      anthropicApiKey: "test-provider-key",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      spendBudget: {
+        reserve(input) {
+          return {
+            reservationId: "spend_0123456789abcdef0123456789abcdef",
+            operationId: input.operationId,
+            provider: "anthropic",
+            model: input.model,
+            reservedUsd: input.reservedUsd,
+            actualUsd: null,
+            status: "reserved",
+            createdAt: input.now,
+            settledAt: null,
+          };
+        },
+        settle(_reservationId, actualUsd) {
+          settledActual = actualUsd;
+          return {
+            reservationId: "spend_0123456789abcdef0123456789abcdef",
+            operationId: OPERATION_ID,
+            provider: "anthropic",
+            model: "claude-sonnet-4-5-20250929",
+            reservedUsd: 1,
+            actualUsd,
+            status: "settled",
+            createdAt: "2026-09-08T10:30:00.000Z",
+            settledAt: "2026-09-08T10:30:00.000Z",
+          };
+        },
+        markUncertain() {
+          throw new Error("uncertain must not run");
+        },
+      },
+    });
+
+    const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
+    expect(res.statusCode).toBe(200);
+    expect(settledActual).toBeGreaterThan(0);
+    expect(res.json().budget.settlement).toBe("settled");
+    expect(res.json().budget.actualUsd).toBe(settledActual);
     await app.close();
   });
 

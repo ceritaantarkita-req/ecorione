@@ -7,7 +7,11 @@ import {
 } from "undici";
 import { complete, type CompleteDeps } from "./complete.js";
 import { ExactMatchCache } from "./cache.js";
-import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
+import {
+  CostKillSwitchError,
+  MissingCredentialError,
+  ProviderError,
+} from "./providers/errors.js";
 import { NOW, OPERATION_ID, prefix } from "./test-helpers.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
@@ -262,5 +266,108 @@ describe("complete", () => {
       now: NOW,
     });
     expect(result.model).toBe("claude-opus-4-1-20250805");
+  });
+
+  it("provider failure setelah reservation mempertahankan admission sebagai uncertain", async () => {
+    anthropicPool
+      .intercept({ path: "/v1/messages", method: "POST" })
+      .replyWithError(new Error("network ambiguous"));
+    let uncertainId: string | undefined;
+    await expect(
+      complete(
+        deps({
+          spendBudget: {
+            reserve(input) {
+              return {
+                reservationId: "spend_11111111111111111111111111111111",
+                operationId: input.operationId,
+                provider: "anthropic",
+                model: input.model,
+                reservedUsd: input.reservedUsd,
+                actualUsd: null,
+                status: "reserved",
+                createdAt: input.now,
+                settledAt: null,
+              };
+            },
+            settle() {
+              throw new Error("settle must not run");
+            },
+            markUncertain(reservationId) {
+              uncertainId = reservationId;
+              return {
+                reservationId,
+                operationId: OPERATION_ID,
+                provider: "anthropic",
+                model: "claude-sonnet-4-5-20250929",
+                reservedUsd: 1,
+                actualUsd: null,
+                status: "uncertain",
+                createdAt: NOW,
+                settledAt: null,
+              };
+            },
+          },
+        }),
+        {
+          target: "hosted",
+          prefix: prefix(),
+          dynamicText: "",
+          userMessage: "ambiguous",
+          sensitivity: "INTERNAL",
+          operationId: OPERATION_ID,
+          now: NOW,
+        },
+      ),
+    ).rejects.toBeInstanceOf(ProviderError);
+    expect(uncertainId).toBe("spend_11111111111111111111111111111111");
+  });
+
+  it("settlement failure setelah provider sukses tidak mengubah response menjadi retryable", async () => {
+    anthropicPool
+      .intercept({ path: "/v1/messages", method: "POST" })
+      .reply(200, {
+        model: "claude-sonnet-4-5-20250929",
+        content: [{ type: "text", text: "provider already succeeded" }],
+        usage: { input_tokens: 100, output_tokens: 20 },
+      })
+      .times(1);
+    const result = await complete(
+      deps({
+        spendBudget: {
+          reserve(input) {
+            return {
+              reservationId: "spend_22222222222222222222222222222222",
+              operationId: input.operationId,
+              provider: "anthropic",
+              model: input.model,
+              reservedUsd: input.reservedUsd,
+              actualUsd: null,
+              status: "reserved",
+              createdAt: input.now,
+              settledAt: null,
+            };
+          },
+          settle() {
+            throw new Error("disk unavailable after provider success");
+          },
+          markUncertain() {
+            throw new Error("mark uncertain must not run after provider success");
+          },
+        },
+      }),
+      {
+        target: "hosted",
+        prefix: prefix(),
+        dynamicText: "",
+        userMessage: "settlement failure",
+        sensitivity: "INTERNAL",
+        operationId: OPERATION_ID,
+        now: NOW,
+      },
+    );
+    expect(result.reply).toBe("provider already succeeded");
+    expect(result.budget?.settlement).toBe("reservation-retained");
+    expect(result.budget?.actualUsd).toBeGreaterThan(0);
   });
 });

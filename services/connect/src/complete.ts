@@ -13,10 +13,13 @@ import {
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import type { ProviderCredentialReader } from "./credential-vault.js";
-import { callAnthropic } from "./providers/anthropic.js";
+import { callAnthropic, estimateAnthropicReservationUsd } from "./providers/anthropic.js";
 import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
 import { callLocal } from "./providers/local.js";
 import { route, type RouteTarget } from "./routing.js";
+import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
+
+type SpendBudgetController = Pick<FileSpendBudget, "reserve" | "settle" | "markUncertain">;
 
 export interface CompleteDeps {
   /** Production source. If configured, env fallback is intentionally ignored. */
@@ -28,6 +31,8 @@ export interface CompleteDeps {
   readonly cache: ExactMatchCache;
   /** Emergency operator control. Defaults true at HTTP construction boundary. */
   readonly hostedCallsEnabled: boolean;
+  /** Optional durable cumulative budget. If absent, hosted budget admission is disabled. */
+  readonly spendBudget?: SpendBudgetController | undefined;
 }
 export interface CompleteInput {
   readonly target: RouteTarget;
@@ -37,6 +42,13 @@ export interface CompleteInput {
   readonly sensitivity: Sensitivity;
   readonly operationId: OperationId;
   readonly now: Timestamp;
+}
+export interface CompleteBudgetResult {
+  readonly reservationId: string;
+  readonly reservedUsd: number;
+  readonly actualUsd: number;
+  readonly overrunUsd: number;
+  readonly settlement: "settled" | "reservation-retained";
 }
 export interface CompleteResult {
   readonly reply: string;
@@ -48,6 +60,7 @@ export interface CompleteResult {
   readonly usage: TokenUsage;
   readonly cost: CallCostRecord;
   readonly routeReason: string;
+  readonly budget?: CompleteBudgetResult | undefined;
 }
 const POLICY_VERSION = "2";
 
@@ -81,6 +94,7 @@ export async function complete(
   let usage: TokenUsage;
   let baselineUsage: TokenUsage;
   let cacheHit: boolean;
+  let spendReservation: SpendEntry | undefined;
 
   if (cached !== null) {
     reply = cached.reply;
@@ -115,19 +129,43 @@ export async function complete(
           : "Connect vault anthropic/messages",
       );
     }
-    const result = await callAnthropic({
-      apiKey,
+
+    const providerInput = {
       model: decision.model,
       prefix: input.prefix,
       dynamicText: input.dynamicText,
       userMessage: input.userMessage,
-    });
-    reply = result.reply;
-    responseModel = result.model;
-    usage = result.usage;
-    baselineUsage = usage;
-    deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
-    cacheHit = false;
+    };
+    if (deps.spendBudget !== undefined) {
+      spendReservation = deps.spendBudget.reserve({
+        operationId: input.operationId,
+        provider: "anthropic",
+        model: decision.model,
+        reservedUsd: estimateAnthropicReservationUsd(providerInput),
+        now: input.now,
+      });
+    }
+
+    try {
+      const result = await callAnthropic({ apiKey, ...providerInput });
+      reply = result.reply;
+      responseModel = result.model;
+      usage = result.usage;
+      baselineUsage = usage;
+      deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
+      cacheHit = false;
+    } catch (error) {
+      if (spendReservation !== undefined && deps.spendBudget !== undefined) {
+        try {
+          deps.spendBudget.markUncertain(spendReservation.reservationId);
+        } catch {
+          // Reservation itself was durably committed before dispatch. If uncertain marking
+          // fails, retaining it as `reserved` is still conservative and must not hide the
+          // original provider failure.
+        }
+      }
+      throw error;
+    }
   }
 
   const cost = recordCall({
@@ -139,6 +177,26 @@ export async function complete(
     optimizerOverheadMs,
     operationId: input.operationId,
   });
+
+  let budget: CompleteBudgetResult | undefined;
+  if (spendReservation !== undefined && deps.spendBudget !== undefined) {
+    let settlement: CompleteBudgetResult["settlement"] = "settled";
+    try {
+      deps.spendBudget.settle(spendReservation.reservationId, cost.actualUsd, input.now);
+    } catch {
+      // Provider success must not become retryable solely because post-provider budget
+      // finalization failed. The durable pre-dispatch reservation remains counted.
+      settlement = "reservation-retained";
+    }
+    budget = {
+      reservationId: spendReservation.reservationId,
+      reservedUsd: spendReservation.reservedUsd,
+      actualUsd: cost.actualUsd,
+      overrunUsd: Math.max(0, cost.actualUsd - spendReservation.reservedUsd),
+      settlement,
+    };
+  }
+
   return {
     reply,
     model: decision.model,
@@ -147,5 +205,6 @@ export async function complete(
     usage,
     cost,
     routeReason: decision.routeReason,
+    ...(budget === undefined ? {} : { budget }),
   };
 }

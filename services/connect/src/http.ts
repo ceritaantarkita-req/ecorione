@@ -24,6 +24,7 @@ import {
   MissingCredentialError,
   ProviderError,
 } from "./providers/errors.js";
+import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 
 /** Memetakan kegagalan provider/kredensial/kontrol operator ke error HTTP eksplisit. */
 function toHttpError(err: unknown): unknown {
@@ -31,6 +32,10 @@ function toHttpError(err: unknown): unknown {
     return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
   if (err instanceof CredentialVaultError)
     return new HttpError(503, "CREDENTIAL_VAULT_UNAVAILABLE", err.message);
+  if (err instanceof SpendBudgetExceededError)
+    return new HttpError(429, "SPEND_BUDGET_EXCEEDED", err.message);
+  if (err instanceof SpendBudgetError)
+    return new HttpError(503, "SPEND_BUDGET_UNAVAILABLE", err.message);
   if (err instanceof MissingCredentialError) return new BadGatewayError(err.message);
   if (err instanceof ProviderError) return new BadGatewayError(err.message);
   return err;
@@ -63,6 +68,8 @@ export interface BuildConnectServerOptions {
   readonly localModelTag: string;
   /** Emergency operator cost control. Default true supaya upgrade tidak mengubah perilaku. */
   readonly hostedCallsEnabled?: boolean | undefined;
+  /** Durable cumulative budget; hosted cache misses reserve before provider dispatch. */
+  readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
   /** Diinjeksikan supaya test bisa memeriksa isi cache secara langsung kalau perlu. */
   readonly cache?: ExactMatchCache | undefined;
 }
@@ -76,6 +83,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localModelTag: options.localModelTag,
     cache: options.cache ?? new ExactMatchCache(),
     hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+    spendBudget: options.spendBudget,
   };
 
   app.post("/v1/complete", async (req) => {

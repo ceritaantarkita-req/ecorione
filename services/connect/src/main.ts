@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import { bindHost } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
 import { buildConnectServer } from "./http.js";
+import { FileSpendBudget, parseOptionalBudgetUsd } from "./spend-budget.js";
 
 const port = Number(process.env.ECORIONE_CONNECT_PORT ?? "17023");
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
@@ -22,6 +23,25 @@ const localBaseUrl = process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11
 const localModelTag = process.env.ECORIONE_LOCAL_MODEL ?? "qwen3:8b-instruct-q4_K_M";
 const hostedCallsEnabled = process.env.ECORIONE_COST_KILL_SWITCH !== "1";
 
+const spendDailyUsd = parseOptionalBudgetUsd(
+  "ECORIONE_SPEND_DAILY_USD",
+  process.env.ECORIONE_SPEND_DAILY_USD,
+);
+const spendMonthlyUsd = parseOptionalBudgetUsd(
+  "ECORIONE_SPEND_MONTHLY_USD",
+  process.env.ECORIONE_SPEND_MONTHLY_USD,
+);
+const spendBudgetPath =
+  process.env.ECORIONE_SPEND_BUDGET_PATH ??
+  resolve(import.meta.dirname, "../../../data/connect-spend-budget.json");
+const spendBudget =
+  spendDailyUsd === undefined && spendMonthlyUsd === undefined
+    ? undefined
+    : new FileSpendBudget(spendBudgetPath, {
+        dailyUsd: spendDailyUsd,
+        monthlyUsd: spendMonthlyUsd,
+      });
+
 const app = buildConnectServer({
   token,
   logger: true,
@@ -30,6 +50,7 @@ const app = buildConnectServer({
   localBaseUrl,
   localModelTag,
   hostedCallsEnabled,
+  spendBudget,
 });
 
 app

@@ -8,9 +8,7 @@ Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. `docs/blueprint.md` 
 
 ### 1. Emergency hosted-cost kill switch
 
-PRD §22 mewajibkan kontrol biaya dengan kill switch. Baseline Fase 1 sudah mempunyai cost ledger, tetapi belum mempunyai sakelar yang benar-benar menghentikan spend hosted.
-
-Sekarang Connect membaca:
+PRD §22 mewajibkan kontrol biaya dengan kill switch. Connect membaca:
 
 ```text
 ECORIONE_COST_KILL_SWITCH=1
@@ -24,7 +22,7 @@ Jika aktif:
 - target lokal tetap dapat berjalan;
 - semua caller masa kini/future yang memakai Connect ikut terkena gate yang sama.
 
-Batas penting: ini **emergency kill switch**, bukan cumulative daily/monthly budget. Durable spend cap masih pekerjaan terpisah karena implementasi yang reset saat restart akan memberi rasa aman palsu.
+Kill switch tetap emergency control yang berbeda dari cumulative budget ADR-21.
 
 ### 2. Runtime orchestration per fase
 
@@ -60,16 +58,34 @@ Requirement PRD §14 bahwa raw provider credential hanya dimiliki Connect dan te
 
 Storage ini memenuhi requirement encryption at-rest aplikasi; ia bukan hardware-backed keystore dan tidak mengklaim melindungi secret dari OS/process yang sudah sepenuhnya dikompromikan.
 
+### 6. Durable cumulative spend budget
+
+ADR-21 menambahkan cumulative hosted-spend admission langsung di Connect provider boundary:
+
+- limit daily dan monthly opsional;
+- state bertahan restart di `ECORIONE_SPEND_BUDGET_PATH`;
+- hosted cache-miss harus mendapat reservation sebelum provider dispatch;
+- reservation/uncertain entry tetap dihitung konservatif;
+- exclusive file lock + atomic replacement mencegah dua process mengadmit terhadap snapshot lama yang sama;
+- provider success disettle ke actual cost;
+- actual overrun tetap dicatat dan mengurangi headroom call berikutnya;
+- budget exceeded menjadi `429 SPEND_BUDGET_EXCEEDED`;
+- store/lock failure menjadi `503 SPEND_BUDGET_UNAVAILABLE` dan fail-closed;
+- cache hit internal dan target local tidak memakai hosted spend budget.
+
+File implementation ini ditujukan untuk single-host/self-host. Managed multi-host deployment harus mengganti storage dengan transactional shared store tanpa memindahkan admission keluar dari Connect.
+
 ## Gap hardening yang masih terbuka
 
 Urutan rekomendasi berdasarkan risiko/kejujuran produk:
 
-1. **Durable cumulative spend budget** di provider boundary; harus bertahan restart dan aman terhadap concurrent calls.
-2. **External interoperability acceptance** untuk MCP HTTP melalui tunnel/HTTPS nyata, bukan hanya local/stateless protocol tests.
-3. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
-4. **Provider canary harian** dengan model/provider nyata dan quality floor; CI saat ini deterministic dan tidak membutuhkan kredensial eksternal.
-5. **Full-history secret scan sebelum public release**; current `secret-scan` memindai working tree, bukan seluruh git history.
-6. **Next.js ESLint integration warning** pada production build: build hijau, tetapi plugin Next belum diintegrasikan ke flat ESLint config.
-7. **Cumulative operational metrics** per hari/tugas (cost, quality, p50/p95) agar kenaikan otonomi Fase 6+ benar-benar evidence-driven.
+1. **External interoperability acceptance** untuk MCP HTTP melalui tunnel/HTTPS nyata, bukan hanya local/stateless protocol tests.
+2. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
+3. **Provider canary harian** dengan model/provider nyata dan quality floor; CI saat ini deterministic dan tidak membutuhkan kredensial eksternal.
+4. **Full-history secret scan sebelum public release**; current `secret-scan` memindai working tree, bukan seluruh git history.
+5. **Next.js ESLint integration warning** pada production build: build hijau, tetapi plugin Next belum diintegrasikan ke flat ESLint config.
+6. **Cumulative operational metrics** per hari/tugas (cost, quality, p50/p95) agar kenaikan otonomi Fase 6+ benar-benar evidence-driven.
+
+Roadmap platform tambahan setelah hardening baseline dicatat terpisah di blueprint: provider framework/OpenRouter, external MCP/plugin manager, native multimodal, data-refactor/rebuild, dan visual node/block runtime. Masing-masing wajib punya ADR sebelum mengubah invariant lintas service.
 
 Tidak satu pun gap di atas dianggap selesai hanya karena ada rencana atau unit test.
