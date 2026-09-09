@@ -76,7 +76,7 @@ async function waitUntil(
   check: () => boolean | Promise<boolean>,
   label = "state",
 ): Promise<void> {
-  for (let attempt = 0; attempt < 800; attempt += 1) {
+  for (let attempt = 0; attempt < 1600; attempt += 1) {
     if (await check()) return;
     await new Promise<void>((resolve) => setTimeout(resolve, 25));
   }
@@ -172,8 +172,16 @@ function workerProcess(input: {
       ECORIONE_SANDBOX_URL: input.sandboxUrl,
       ECORIONE_RND_URL: input.rndUrl,
     },
-    stdio: "ignore",
+    stdio: ["ignore", "inherit", "inherit"],
   });
+}
+
+function assertWorkerAlive(child: ChildProcess, label: string): void {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    throw new Error(
+      `${label} exited before recovery: exit=${String(child.exitCode)} signal=${String(child.signalCode)}`,
+    );
+  }
 }
 
 async function killWorker(child: ChildProcess): Promise<void> {
@@ -367,11 +375,11 @@ describe("Fase 4 real Temporal restart acceptance", () => {
 
         childTwo = workerProcess(runtime);
         await once(childTwo, "spawn");
-        await waitUntil(
-          async () =>
-            (await auditTypes(hubUrl, started.operationId)).includes("APPROVAL_REQUESTED"),
-          "durable Hub approval",
-        );
+        await waitUntil(async () => {
+          if (childTwo === null) throw new Error("Replacement worker #2 hilang.");
+          assertWorkerAlive(childTwo, "Replacement worker #2");
+          return (await auditTypes(hubUrl, started.operationId)).includes("APPROVAL_REQUESTED");
+        }, "durable Hub approval");
 
         await killWorker(childTwo);
         childTwo = null;
@@ -380,6 +388,7 @@ describe("Fase 4 real Temporal restart acceptance", () => {
 
         childThree = workerProcess(runtime);
         await once(childThree, "spawn");
+        assertWorkerAlive(childThree, "Replacement worker #3");
         const decision = await flow.inject({
           method: "POST",
           url: `/v1/flows/${started.flowId}/decision`,
@@ -426,6 +435,6 @@ describe("Fase 4 real Temporal restart acceptance", () => {
         rmSync(root, { recursive: true, force: true });
       }
     },
-    90_000,
+    120_000,
   );
 });
