@@ -1,6 +1,6 @@
 /**
- * Error domain adapter provider — dipetakan ke `BadGatewayError` (502) di `http.ts`,
- * bukan 500: kegagalan provider bukan bug di Connect (`docs/api-fase1.md` §Connect).
+ * Error domain adapter provider — dipetakan ke error HTTP di `http.ts`, bukan 500:
+ * kegagalan provider/kontrol operator bukan bug di Connect (`docs/api-fase1.md` §Connect).
  */
 
 export class ProviderError extends Error {
@@ -18,5 +18,13 @@ export class MissingCredentialError extends Error {
   constructor(envVar: string) {
     super(`Kredensial provider belum diisi di .env: ${envVar}.`);
     this.name = "MissingCredentialError";
+  }
+}
+
+/** Operator mematikan seluruh target hosted sebagai emergency cost-control switch. */
+export class CostKillSwitchError extends Error {
+  constructor() {
+    super("Panggilan model hosted dinonaktifkan oleh ECORIONE_COST_KILL_SWITCH.");
+    this.name = "CostKillSwitchError";
   }
 }
