@@ -9,7 +9,7 @@ function temporalStub(overrides: Partial<FlowTemporalClient> = {}): FlowTemporal
     start: vi.fn(async () => undefined),
     signal: vi.fn(async () => undefined),
     operationId: vi.fn(async () => assertId("operation", "op_flowapproval001")),
-    describe: vi.fn(async () => ({ status: "RUNNING" })),
+    describe: vi.fn(async () => ({ status: "RUNNING" as const })),
     ...overrides,
   };
 }
