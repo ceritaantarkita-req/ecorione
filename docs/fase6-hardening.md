@@ -97,6 +97,8 @@ ADR-24 menambahkan Hub-owned extension control plane tanpa membuat arbitrary cod
 - rollback membuat revision baru dan mempertahankan provenance target;
 - remove tidak menghapus revision provenance.
 
+Closure evidence Batch 3: final candidate `e706aa70f3b9b80fc6ec12c72972a29f3c503639`; exact-head CI `34368041372` PASS; public MCP HTTPS `34368041191` PASS; PR #10 merged dengan expected-head lock sebagai `af2b3f12f5deeaf2fd50c045998416365f766b9d`; post-merge main CI `34368309860` attempt 2 full green.
+
 Integrity gate ini tidak diklaim sebagai vulnerability scanner. Unified grant/revocation dan cross-runtime permission authority tetap Batch 4.
 
 ## Gap hardening/platform yang masih terbuka
