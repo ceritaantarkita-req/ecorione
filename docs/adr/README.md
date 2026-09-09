@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Dua puluh satu keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Dua puluh tiga keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
@@ -27,6 +27,8 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [19](0019-ecx-agent-exchange.md) | ECX pointer-first untuk exchange internal agent |
 | [20](0020-connect-credential-vault.md) | Connect memiliki credential vault terenkripsi at-rest |
 | [21](0021-durable-spend-budget.md) | Connect melakukan durable reservation sebelum hosted spend |
+| [22](0022-provider-framework-and-runtime-abstraction.md) | Connect memakai provider framework + local runtime abstraction |
+| [23](0023-outbound-mcp-client-manager.md) | Connect memiliki outbound MCP client/manager dengan Hub governance |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris

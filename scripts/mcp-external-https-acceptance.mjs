@@ -72,6 +72,7 @@ async function startTunnel(localUrl, label) {
   });
   const chunks = [];
   const urlPattern = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/iu;
+  const logTail = () => chunks.join("").slice(-4000);
 
   return await new Promise((resolve, reject) => {
     let settled = false;
@@ -79,11 +80,7 @@ async function startTunnel(localUrl, label) {
       if (settled) return;
       settled = true;
       void stopChild(child);
-      reject(
-        new Error(
-          `Timeout menunggu public HTTPS tunnel ${label}. Log: ${chunks.join("").slice(-4000)}`,
-        ),
-      );
+      reject(new Error(`Timeout menunggu public HTTPS tunnel ${label}. Log: ${logTail()}`));
     }, 60_000);
 
     const inspect = (data) => {
@@ -93,7 +90,7 @@ async function startTunnel(localUrl, label) {
       if (match && !settled) {
         settled = true;
         clearTimeout(timer);
-        resolve({ child, publicUrl: match[0] });
+        resolve({ child, publicUrl: match[0], logTail });
       }
     };
     child.stdout.on("data", inspect);
@@ -110,17 +107,22 @@ async function startTunnel(localUrl, label) {
       clearTimeout(timer);
       reject(
         new Error(
-          `cloudflared ${label} berhenti sebelum URL tersedia (code=${String(code)}, signal=${String(signal)}). Log: ${chunks.join("").slice(-4000)}`,
+          `cloudflared ${label} berhenti sebelum URL tersedia (code=${String(code)}, signal=${String(signal)}). Log: ${logTail()}`,
         ),
       );
     });
   });
 }
 
-async function waitForPublic(url, label) {
-  const deadline = Date.now() + 45_000;
+async function waitForPublic(url, label, tunnel) {
+  const deadline = Date.now() + 60_000;
   let lastError = "belum ada response";
   while (Date.now() < deadline) {
+    if (tunnel.child.exitCode !== null || tunnel.child.signalCode !== null) {
+      throw new Error(
+        `Public HTTPS ${label} tunnel berhenti sebelum ready. Log: ${tunnel.logTail()}`,
+      );
+    }
     try {
       const response = await fetch(url, { signal: AbortSignal.timeout(5_000) });
       if (response.ok) return;
@@ -130,7 +132,31 @@ async function waitForPublic(url, label) {
     }
     await new Promise((resolve) => setTimeout(resolve, 750));
   }
-  throw new Error(`Public HTTPS ${label} tidak ready: ${lastError}`);
+  throw new Error(
+    `Public HTTPS ${label} tidak ready: ${lastError}. Tunnel log: ${tunnel.logTail()}`,
+  );
+}
+
+async function startReadyTunnel(localUrl, label) {
+  const failures = [];
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const tunnel = await startTunnel(localUrl, `${label} attempt ${String(attempt)}`);
+    try {
+      await waitForPublic(
+        `${tunnel.publicUrl}/healthz`,
+        `${label} attempt ${String(attempt)}`,
+        tunnel,
+      );
+      return tunnel;
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : String(error));
+      await stopChild(tunnel.child);
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1_500));
+    }
+  }
+  throw new Error(
+    `Public HTTPS ${label} gagal setelah 2 tunnel attempts: ${failures.join(" | ")}`,
+  );
 }
 
 function b64urlJson(value) {
@@ -271,9 +297,8 @@ try {
   const oauthPort = await listenHttp(oauthServer);
   const hubPort = await listenHttp(hubServer);
 
-  oauthTunnel = await startTunnel(`http://${LOOPBACK}:${String(oauthPort)}`, "OAuth/JWKS");
+  oauthTunnel = await startReadyTunnel(`http://${LOOPBACK}:${String(oauthPort)}`, "OAuth/JWKS");
   oauthPublicUrl = oauthTunnel.publicUrl;
-  await waitForPublic(`${oauthPublicUrl}/healthz`, "OAuth/JWKS");
 
   const connectPort = await freePort();
   syncApp = buildSyncServer(syncDb, {
@@ -284,9 +309,11 @@ try {
   await syncApp.listen({ host: LOOPBACK, port: 0 });
   const syncPort = httpPort(syncApp.server);
 
-  syncTunnel = await startTunnel(`http://${LOOPBACK}:${String(syncPort)}`, "Sync MCP bridge");
+  syncTunnel = await startReadyTunnel(
+    `http://${LOOPBACK}:${String(syncPort)}`,
+    "Sync MCP bridge",
+  );
   const syncPublicUrl = syncTunnel.publicUrl;
-  await waitForPublic(`${syncPublicUrl}/healthz`, "Sync MCP bridge");
 
   const resource = `${syncPublicUrl}/mcp`;
   connectApp = buildMcpHttpServer({

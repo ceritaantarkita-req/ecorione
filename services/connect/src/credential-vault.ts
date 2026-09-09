@@ -10,11 +10,22 @@ import {
 import { dirname } from "node:path";
 import { z } from "zod";
 
-export const CREDENTIAL_PROVIDERS = ["anthropic", "openai", "openrouter"] as const;
+export const CREDENTIAL_PROVIDERS = ["anthropic", "openai", "openrouter", "mcp"] as const;
 export type CredentialProvider = (typeof CREDENTIAL_PROVIDERS)[number];
 
-export const CREDENTIAL_PURPOSES = ["messages"] as const;
+export const CREDENTIAL_PURPOSES = ["messages", "tokens"] as const;
 export type CredentialPurpose = (typeof CREDENTIAL_PURPOSES)[number];
+
+function assertCredentialScope(provider: CredentialProvider, purpose: CredentialPurpose): void {
+  const valid =
+    (provider === "mcp" && purpose === "tokens") ||
+    (provider !== "mcp" && purpose === "messages");
+  if (!valid) {
+    throw new CredentialVaultFormatError(
+      `scope credential tidak didukung: ${provider}/${purpose}.`,
+    );
+  }
+}
 
 export interface ProviderCredentialReader {
   get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined;
@@ -153,6 +164,7 @@ function readVault(path: string): VaultFile {
     const vault = VaultFileSchema.parse(parsed);
     const scopes = new Set<string>();
     for (const entry of vault.entries) {
+      assertCredentialScope(entry.provider, entry.purpose);
       const scope = scopeKey(entry.provider, entry.purpose);
       if (scopes.has(scope)) {
         throw new CredentialVaultFormatError(`scope duplikat: ${scope}.`);
@@ -201,6 +213,7 @@ export class FileCredentialVault implements ProviderCredentialReader {
   }
 
   get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined {
+    assertCredentialScope(provider, purpose);
     const vault = readVault(this.path);
     const entry = vault.entries.find(
       (candidate) => candidate.provider === provider && candidate.purpose === purpose,
@@ -223,6 +236,7 @@ export class FileCredentialVault implements ProviderCredentialReader {
     secret: string,
     updatedAt: string,
   ): CredentialMetadata {
+    assertCredentialScope(provider, purpose);
     if (secret.length === 0) throw new CredentialVaultFormatError("secret tidak boleh kosong.");
     let normalizedUpdatedAt: string;
     try {

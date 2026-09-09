@@ -3,6 +3,12 @@ import { resolve } from "node:path";
 import { bindHost } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
 import { buildConnectServer } from "./http.js";
+import { VaultMcpCredentialReader } from "./mcp-client/credentials.js";
+import { HubMcpGovernance } from "./mcp-client/governance.js";
+import { FileMcpInvocationStore } from "./mcp-client/invocation-store.js";
+import { McpManager } from "./mcp-client/manager.js";
+import { FileMcpRegistry } from "./mcp-client/registry.js";
+import { SdkMcpClientFactory } from "./mcp-client/sdk-client.js";
 import { parseHostedProvider } from "./provider-types.js";
 import { parseLocalRuntime } from "./providers/local-runtime.js";
 import { FileSpendBudget, parseOptionalBudgetUsd } from "./spend-budget.js";
@@ -50,6 +56,21 @@ const spendBudget =
         monthlyUsd: spendMonthlyUsd,
       });
 
+const mcpRegistryPath =
+  process.env.ECORIONE_MCP_OUTBOUND_REGISTRY_PATH ??
+  resolve(import.meta.dirname, "../../../data/connect-mcp-registry.json");
+const mcpInvocationPath =
+  process.env.ECORIONE_MCP_OUTBOUND_INVOCATION_PATH ??
+  resolve(import.meta.dirname, "../../../data/connect-mcp-invocations.json");
+const mcpCredentials =
+  credentialVault === undefined ? undefined : new VaultMcpCredentialReader(credentialVault);
+const mcpManager = new McpManager(
+  new FileMcpRegistry(mcpRegistryPath),
+  new SdkMcpClientFactory(mcpCredentials, process.env.ECORIONE_MCP_STDIO_ALLOWLIST ?? ""),
+  new HubMcpGovernance(process.env.ECORIONE_HUB_URL ?? "http://127.0.0.1:17024", token),
+  new FileMcpInvocationStore(mcpInvocationPath),
+);
+
 const app = buildConnectServer({
   token,
   logger: true,
@@ -63,6 +84,7 @@ const app = buildConnectServer({
   localModelTag,
   hostedCallsEnabled,
   spendBudget,
+  mcpManager,
 });
 
 app
