@@ -9,7 +9,13 @@ import type { ChatRequest, Timestamp } from "@ecorione/shared-schema";
 import { CapabilityRegistry } from "./capability-registry.js";
 import { openHubDatabase, type HubDatabase } from "./db.js";
 import { HistoryLedger } from "./history-ledger.js";
-import { chat, hubPrefixDigest, UpstreamError, type OrchestrateDeps } from "./orchestrate.js";
+import {
+  CapabilityAuthorityDeniedError,
+  chat,
+  hubPrefixDigest,
+  UpstreamError,
+  type OrchestrateDeps,
+} from "./orchestrate.js";
 import { HubRepository } from "./repository.js";
 
 const NOW = "2026-09-08T10:30:00.000Z" as Timestamp;
@@ -130,7 +136,12 @@ describe("chat", () => {
     expect(result.policy.ruleId).toBe("read-always-allowed");
     expect(
       deps.repo.listAuditEvents({ operationId: result.operationId }).map((e) => e.type),
-    ).toEqual(["ACTION_REQUESTED", "POLICY_EVALUATED", "MODEL_CALLED"]);
+    ).toEqual([
+      "ACTION_REQUESTED",
+      "POLICY_EVALUATED",
+      "CAPABILITY_AUTHORIZED",
+      "MODEL_CALLED",
+    ]);
 
     const range = deps.history.readRange({
       sessionId: chatRequest().sessionId,
@@ -146,6 +157,17 @@ describe("chat", () => {
     expect(range.events.map((event) => event.seq)).toEqual([0, 1, 2]);
     expect(range.events[1]?.parentEventId).toBe(range.events[0]?.id);
     expect(range.events[2]?.parentEventId).toBe(range.events[1]?.id);
+  });
+
+  it("authority deny stops hosted chat before Context or Connect egress", async () => {
+    const err = await chat(deps, chatRequest({ workspaceId: "ws_denied" as never }), NOW).catch(
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(CapabilityAuthorityDeniedError);
+    const denied = deps.repo
+      .listAuditEvents({})
+      .filter((event) => event.type === "CAPABILITY_DENIED");
+    expect(denied).toHaveLength(1);
   });
 
   it("Context tidak bisa dihubungi → UpstreamError Context", async () => {

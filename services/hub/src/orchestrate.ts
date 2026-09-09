@@ -165,6 +165,21 @@ export async function chat(
     sensitivity: req.maxSensitivity,
     autonomy: req.autonomy,
   });
+  deps.repo.recordAuditEvent({
+    type: authority.outcome === "ALLOW" ? "CAPABILITY_AUTHORIZED" : "CAPABILITY_DENIED",
+    operationId,
+    module: "Hub",
+    detail: {
+      workspaceId,
+      subject: { kind: "model", id: "hosted" },
+      capabilityId: "model.invoke.hosted",
+      permissionIds: ["model.invoke", "network.connect", "provider.spend"],
+      scope: req.scope,
+      sensitivity: req.maxSensitivity,
+      outcome: authority.outcome,
+    },
+    now,
+  });
   if (authority.outcome === "DENY") {
     throw new CapabilityAuthorityDeniedError(authority.reason);
   }

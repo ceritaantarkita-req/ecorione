@@ -101,6 +101,8 @@ describe("HubMcpGovernance authority plane", () => {
       })
       .times(1);
     const governance = new HubMcpGovernance("http://hub.local", undefined);
-    await expect(governance.authorize(request(true))).rejects.toBeInstanceOf(McpPolicyDeniedError);
+    await expect(governance.authorize(request(true))).rejects.toBeInstanceOf(
+      McpPolicyDeniedError,
+    );
   });
 });

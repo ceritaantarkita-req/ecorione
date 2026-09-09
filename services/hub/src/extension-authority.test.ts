@@ -39,9 +39,7 @@ function manifest(version: string, digest: string, withPermission = true): Exten
     },
     packageArtifactId: `art_${digest}` as ExtensionManifest["packageArtifactId"],
     execution: { kind: "none" },
-    capabilities: withPermission
-      ? [{ id: "demo.read", description: "Read demo data." }]
-      : [],
+    capabilities: withPermission ? [{ id: "demo.read", description: "Read demo data." }] : [],
     permissions: withPermission
       ? [
           {
