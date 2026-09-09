@@ -26,6 +26,9 @@ import {
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nowIso } from "./clock.js";
+import { registerExchangeRoutes } from "./exchange-http.js";
+import { registerHistoryRoutes } from "./history-http.js";
+import { HistoryLedger } from "./history-ledger.js";
 import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
 import {
@@ -97,6 +100,7 @@ export function buildHubServer(
 ): FastifyInstance {
   const app = createServer({ name: "hub", token: options.token, logger: options.logger });
   const repo = new HubRepository(db);
+  const history = new HistoryLedger(db);
   const deps: OrchestrateDeps = {
     repo,
     contextUrl: options.contextUrl,
@@ -257,6 +261,13 @@ export function buildHubServer(
       }
     },
   );
+
+  registerHistoryRoutes(app, history);
+  registerExchangeRoutes(app, history, {
+    contextUrl: options.contextUrl,
+    artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
+    internalToken: options.internalToken,
+  });
 
   registerMcpRoutes(app, repo, {
     contextUrl: options.contextUrl,
