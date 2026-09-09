@@ -6,6 +6,7 @@ import {
   getGlobalDispatcher,
   type Interceptable,
 } from "undici";
+import { CredentialVaultIntegrityError } from "./credential-vault.js";
 import { buildConnectServer } from "./http.js";
 import { prefix } from "./test-helpers.js";
 
@@ -47,7 +48,7 @@ describe("POST /v1/complete", () => {
     });
 
     const app: FastifyInstance = buildConnectServer({
-      anthropicApiKey: "sk-test",
+      anthropicApiKey: "test-provider-key",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
     });
@@ -68,7 +69,7 @@ describe("POST /v1/complete", () => {
     });
 
     const app = buildConnectServer({
-      anthropicApiKey: "sk-test",
+      anthropicApiKey: "test-provider-key",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
     });
@@ -98,7 +99,7 @@ describe("POST /v1/complete", () => {
     await app.close();
   });
 
-  it("target hosted tanpa ANTHROPIC_API_KEY dikonfigurasi → 502, bukan 500", async () => {
+  it("target hosted tanpa credential dikonfigurasi → 502, bukan 500", async () => {
     const app = buildConnectServer({
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
@@ -110,9 +111,27 @@ describe("POST /v1/complete", () => {
     await app.close();
   });
 
+  it("vault integrity failure → 503 eksplisit tanpa fallback provider", async () => {
+    const app = buildConnectServer({
+      credentialVault: {
+        get() {
+          throw new CredentialVaultIntegrityError("anthropic", "messages");
+        },
+      },
+      anthropicApiKey: "dev-fallback-must-not-run",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+    });
+
+    const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
+    expect(res.statusCode).toBe(503);
+    expect(res.json().error.type).toBe("CREDENTIAL_VAULT_UNAVAILABLE");
+    await app.close();
+  });
+
   it("cost kill switch → 503 eksplisit dan tidak silent fallback", async () => {
     const app = buildConnectServer({
-      anthropicApiKey: "sk-test",
+      anthropicApiKey: "test-provider-key",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
       hostedCallsEnabled: false,
@@ -131,7 +150,7 @@ describe("POST /v1/complete", () => {
       .replyWithError(new Error("boom"));
 
     const app = buildConnectServer({
-      anthropicApiKey: "sk-test",
+      anthropicApiKey: "test-provider-key",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
     });
@@ -147,7 +166,7 @@ describe("/healthz", () => {
     const app = buildConnectServer({
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
-      token: "secret",
+      token: "test-internal-token",
     });
     const res = await app.inject({ method: "GET", url: "/healthz" });
     expect(res.json()).toEqual({ status: "ok", service: "connect" });
