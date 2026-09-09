@@ -1,7 +1,8 @@
+import { createHash } from "node:crypto";
 import {
   ECX_VERSION,
   EcxPlanResponseSchema,
-  makeId,
+  assertId,
   type EcxCandidate,
   type EcxPlanRequest,
   type EcxPlanResponse,
@@ -21,12 +22,33 @@ function overlapScore(need: readonly string[], candidate: EcxCandidate): number 
       ).length;
 }
 
+function deterministicPacketId(input: EcxPlanRequest, recipient: string): EventId {
+  const digest = createHash("sha256")
+    .update(
+      JSON.stringify({
+        version: ECX_VERSION,
+        historySessionId: input.historySessionId ?? null,
+        requestedAt: input.requestedAt,
+        operationId: input.operationId,
+        sender: input.sender,
+        recipient,
+        intent: input.intent,
+        task: input.task,
+        need: input.need,
+        refs: input.refs,
+        budget: input.budget,
+        responseMode: input.responseMode,
+      }),
+    )
+    .digest("hex");
+  return assertId("event", `evt_${digest.slice(0, 24)}`);
+}
+
 export interface EcxPlannerOptions {
   readonly makePacketId?: (() => EventId) | undefined;
 }
 
 export function planEcx(input: EcxPlanRequest, options: EcxPlannerOptions = {}): EcxPlanResponse {
-  const makePacketId = options.makePacketId ?? (() => makeId("event"));
   const selected = input.candidates
     .map((candidate) => ({ candidate, score: overlapScore(input.need, candidate) }))
     .filter((entry) => entry.score > 0)
@@ -41,7 +63,7 @@ export function planEcx(input: EcxPlanRequest, options: EcxPlannerOptions = {}):
 
   const packets = selected.map(({ candidate }) => ({
     version: ECX_VERSION,
-    packetId: makePacketId(),
+    packetId: options.makePacketId?.() ?? deterministicPacketId(input, candidate.agentId),
     operationId: input.operationId,
     sender: input.sender,
     recipient: candidate.agentId,
