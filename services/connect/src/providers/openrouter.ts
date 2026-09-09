@@ -1,10 +1,10 @@
+import type { StablePrefix } from "@ecorione/context-assembly";
 import type { PinnedModelId } from "@ecorione/shared-telemetry";
 import {
   callOpenAiCompatibleHosted,
   estimateOpenAiCompatibleReservationUsd,
   type OpenAiCompatibleHostedResult,
 } from "./openai-compatible.js";
-import type { StablePrefix } from "@ecorione/context-assembly";
 
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -37,7 +37,6 @@ function adapterInput(input: Omit<OpenRouterCallInput, "apiKey">) {
     dynamicText: input.dynamicText,
     userMessage: input.userMessage,
     maxTokensField: "max_tokens" as const,
-    includeUsage: true,
   };
 }
 
