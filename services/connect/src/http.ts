@@ -1,6 +1,8 @@
 /** Route HTTP Connect — provider gateway and local runtime boundary. */
 import { ToolDefinitionSchema } from "@ecorione/context-assembly";
 import {
+  ConnectMultimodalProcessRequestSchema,
+  ConnectSpeechRequestSchema,
   CoreMemorySchema,
   OperationIdSchema,
   SensitivitySchema,
@@ -20,6 +22,13 @@ import type { HostedProviderId } from "./provider-types.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import {
+  MultimodalAdapterUnavailableError,
+  MultimodalArtifactCommitUncertainError,
+  MultimodalProviderError,
+  UnsupportedHostedMultimodalProviderError,
+} from "./multimodal/errors.js";
+import type { MultimodalService } from "./multimodal/service.js";
+import {
   CostKillSwitchError,
   MissingCredentialError,
   ProviderError,
@@ -36,6 +45,13 @@ function toHttpError(err: unknown): unknown {
     return new HttpError(429, "SPEND_BUDGET_EXCEEDED", err.message);
   if (err instanceof SpendBudgetError)
     return new HttpError(503, "SPEND_BUDGET_UNAVAILABLE", err.message);
+  if (err instanceof MultimodalArtifactCommitUncertainError)
+    return new HttpError(503, "MULTIMODAL_COMMIT_UNCERTAIN", err.message);
+  if (err instanceof MultimodalAdapterUnavailableError)
+    return new HttpError(503, "MULTIMODAL_LOCAL_UNAVAILABLE", err.message);
+  if (err instanceof UnsupportedHostedMultimodalProviderError)
+    return new HttpError(400, "MULTIMODAL_PROVIDER_UNSUPPORTED", err.message);
+  if (err instanceof MultimodalProviderError) return new BadGatewayError(err.message);
   if (err instanceof MissingCredentialError) return new BadGatewayError(err.message);
   if (err instanceof ProviderError) return new BadGatewayError(err.message);
   return err;
@@ -73,6 +89,7 @@ export interface BuildConnectServerOptions {
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
   readonly cache?: ExactMatchCache | undefined;
   readonly mcpManager?: McpManager | undefined;
+  readonly multimodalService?: MultimodalService | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -101,6 +118,25 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       throw toHttpError(err);
     }
   });
+
+  if (options.multimodalService !== undefined) {
+    app.post("/v1/multimodal/process", async (req) => {
+      const body = parseOrBadRequest(ConnectMultimodalProcessRequestSchema, req.body);
+      try {
+        return await options.multimodalService!.process(body);
+      } catch (err) {
+        throw toHttpError(err);
+      }
+    });
+    app.post("/v1/multimodal/speech", async (req) => {
+      const body = parseOrBadRequest(ConnectSpeechRequestSchema, req.body);
+      try {
+        return await options.multimodalService!.speech(body);
+      } catch (err) {
+        throw toHttpError(err);
+      }
+    });
+  }
 
   return app;
 }
