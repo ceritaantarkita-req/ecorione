@@ -7,6 +7,7 @@ import {
   assertId,
   makeId,
   type FlowApprovalSignal,
+  type OperationId,
 } from "@ecorione/shared-schema";
 import { createServer, httpJson, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
@@ -48,7 +49,17 @@ export function buildFlowServer(
   app.post<{ Params: { id: string } }>("/v1/flows/:id/decision", async (req) => {
     const flowId = parseOrBadRequest(FlowIdSchema, req.params.id);
     const body = parseOrBadRequest(FlowDecisionRequestSchema, req.body);
-    const operationId = await temporal.operationId(flowId);
+
+    // Hub is the source of truth for approvals. Resolving the operation through Hub's
+    // durable idempotency key avoids a Temporal Workflow Query that can block while a
+    // replacement worker is still recovering after a crash. Signals remain durable and
+    // can safely queue in Temporal after the Hub decision is committed.
+    const approvalKey = `${flowId}:human-approval`;
+    const approval = await httpJson<{ operationId: OperationId }>(
+      `${options.hubUrl}/v1/approvals/by-idempotency-key?idempotencyKey=${encodeURIComponent(approvalKey)}`,
+      { token: options.token },
+    );
+    const operationId = assertId("operation", approval.operationId);
     const hubBody: { decision: "APPROVE" | "REJECT"; note?: string } = {
       decision: body.decision,
     };
