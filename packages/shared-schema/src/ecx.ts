@@ -70,20 +70,30 @@ export const EcxCandidateSchema = z.object({
 });
 export type EcxCandidate = z.infer<typeof EcxCandidateSchema>;
 
-export const EcxPlanRequestSchema = z.object({
-  operationId: OperationIdSchema,
-  requestedAt: TimestampSchema,
-  sender: EcxAgentIdSchema,
-  intent: z.string().min(1).max(128),
-  task: z.string().min(1).max(2048),
-  need: z.array(z.string().min(1).max(64)).min(1).max(32),
-  refs: z.array(EcxReferenceSchema).max(32).default([]),
-  budget: EcxBudgetSchema,
-  responseMode: z.enum(["delta", "full"]).default("delta"),
-  candidates: z.array(EcxCandidateSchema).min(1).max(64),
-  maxRecipients: z.number().int().min(1).max(8).default(1),
-  historySessionId: SessionIdSchema.optional(),
-});
+export const EcxPlanRequestSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    requestedAt: TimestampSchema,
+    sender: EcxAgentIdSchema,
+    intent: z.string().min(1).max(128),
+    task: z.string().min(1).max(2048),
+    need: z.array(z.string().min(1).max(64)).min(1).max(32),
+    refs: z.array(EcxReferenceSchema).max(32).default([]),
+    budget: EcxBudgetSchema,
+    responseMode: z.enum(["delta", "full"]).default("delta"),
+    candidates: z.array(EcxCandidateSchema).min(1).max(64),
+    maxRecipients: z.number().int().min(1).max(8).default(1),
+    historySessionId: SessionIdSchema.optional(),
+  })
+  .refine(
+    (value) =>
+      new Set(value.candidates.map((candidate) => candidate.agentId)).size ===
+      value.candidates.length,
+    {
+      message: "candidate agentId tidak boleh duplikat.",
+      path: ["candidates"],
+    },
+  );
 export type EcxPlanRequest = z.infer<typeof EcxPlanRequestSchema>;
 
 export const EcxPlanResponseSchema = z.object({
