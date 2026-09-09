@@ -72,7 +72,10 @@ function receipt(): SandboxExecutionReceipt {
   };
 }
 
-async function waitUntil(check: () => boolean | Promise<boolean>, label = "state"): Promise<void> {
+async function waitUntil(
+  check: () => boolean | Promise<boolean>,
+  label = "state",
+): Promise<void> {
   for (let attempt = 0; attempt < 240; attempt += 1) {
     if (await check()) return;
     await new Promise<void>((resolve) => setTimeout(resolve, 25));
@@ -89,7 +92,8 @@ interface FastifyLike {
 async function listen(app: FastifyLike): Promise<string> {
   await app.listen({ port: 0, host: "127.0.0.1" });
   const address = app.server.address();
-  if (address === null || typeof address === "string") throw new Error("Service address gagal.");
+  if (address === null || typeof address === "string")
+    throw new Error("Service address gagal.");
   return `http://127.0.0.1:${String(address.port)}`;
 }
 
@@ -118,7 +122,8 @@ async function localProvider(): Promise<{
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   const address = server.address();
-  if (address === null || typeof address === "string") throw new Error("Provider address gagal.");
+  if (address === null || typeof address === "string")
+    throw new Error("Provider address gagal.");
   return {
     server,
     baseUrl: `http://127.0.0.1:${String(address.port)}/v1`,
@@ -364,7 +369,8 @@ describe("Fase 4 real Temporal restart acceptance", () => {
         childTwo = workerProcess(runtime);
         await once(childTwo, "spawn");
         await waitUntil(
-          async () => (await auditTypes(hubUrl, started.operationId)).includes("APPROVAL_REQUESTED"),
+          async () =>
+            (await auditTypes(hubUrl, started.operationId)).includes("APPROVAL_REQUESTED"),
           "durable Hub approval",
         );
 
