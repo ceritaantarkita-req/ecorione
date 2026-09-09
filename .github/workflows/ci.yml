@@ -46,6 +46,7 @@ jobs:
       - name: Test
         env:
           ECORIONE_PHASE3_DOCKER_ACCEPTANCE: "1"
+          ECORIONE_PHASE4_PROCESS_ACCEPTANCE: "1"
         run: pnpm run test
       - name: Secret scan
         run: pnpm run secret-scan
