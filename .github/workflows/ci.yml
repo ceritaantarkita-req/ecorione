@@ -35,7 +35,7 @@ jobs:
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add pnpm-lock.yaml packages services apps tsconfig.json
+            git add pnpm-lock.yaml packages services apps test tsconfig.json
             git commit -m "Fase 3: canonical lockfile and formatting"
             git push origin HEAD:${{ github.head_ref }}
           fi
@@ -44,6 +44,8 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
       - name: Test
+        env:
+          ECORIONE_PHASE3_DOCKER_ACCEPTANCE: "1"
         run: pnpm run test
       - name: Secret scan
         run: pnpm run secret-scan
