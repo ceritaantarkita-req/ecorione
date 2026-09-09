@@ -30,10 +30,10 @@ import {
   ExtensionIdMismatchError,
   ExtensionNoChangeError,
   ExtensionNotFoundError,
-  ExtensionRegistry,
   ExtensionRevisionNotFoundError,
   ExtensionSecurityBlockedError,
   type ExtensionMutationResult,
+  type ExtensionRegistry,
 } from "./extension-registry.js";
 
 const WorkspaceQuerySchema = z.object({ workspaceId: WorkspaceIdSchema });
