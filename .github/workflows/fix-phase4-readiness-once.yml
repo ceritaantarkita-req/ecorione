@@ -1,0 +1,71 @@
+name: Fix Phase 4 Readiness Once
+
+on:
+  push:
+    branches: [agent/phase4-ci-flake-hardening-20260909]
+    paths:
+      - ".github/workflows/fix-phase4-readiness-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/phase4-ci-flake-hardening-20260909
+      - name: Patch process acceptance readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path("test/phase4-temporal-runtime.test.ts")
+          text = p.read_text()
+
+          replacements = [
+              (
+                  '    stdio: ["ignore", "inherit", "inherit"],',
+                  '    stdio: ["ignore", "inherit", "inherit", "ipc"],',
+              ),
+              (
+                  '      ECORIONE_RND_URL: input.rndUrl,\n',
+                  '      ECORIONE_RND_URL: input.rndUrl,\n      ECORIONE_FLOW_WORKER_READY_IPC: "1",\n',
+              ),
+              (
+                  '''function assertWorkerAlive(child: ChildProcess, label: string): void {\n  if (child.exitCode !== null || child.signalCode !== null) {\n    throw new Error(\n      `${label} exited before recovery: exit=${String(child.exitCode)} signal=${String(child.signalCode)}`,\n    );\n  }\n}\n''',
+                  '''function assertWorkerAlive(child: ChildProcess, label: string): void {\n  if (child.exitCode !== null || child.signalCode !== null) {\n    throw new Error(\n      `${label} exited before recovery: exit=${String(child.exitCode)} signal=${String(child.signalCode)}`,\n    );\n  }\n}\n\nasync function waitForWorkerReady(child: ChildProcess, label: string): Promise<void> {\n  assertWorkerAlive(child, label);\n  const [message] = await withTimeout(\n    once(child, "message"),\n    `${label} Temporal polling readiness`,\n    15_000,\n  );\n  assertWorkerAlive(child, label);\n  if (\n    typeof message !== "object" ||\n    message === null ||\n    !("type" in message) ||\n    (message as { type?: unknown }).type !== "ECORIONE_FLOW_WORKER_READY"\n  ) {\n    throw new Error(`${label} emitted an unexpected readiness message.`);\n  }\n}\n''',
+              ),
+              (
+                  '''        childOne = workerProcess(runtime);\n        await once(childOne, "spawn");\n''',
+                  '''        childOne = workerProcess(runtime);\n        await Promise.all([\n          once(childOne, "spawn"),\n          waitForWorkerReady(childOne, "Worker #1"),\n        ]);\n''',
+              ),
+              (
+                  '''        childTwo = workerProcess(runtime);\n        await once(childTwo, "spawn");\n''',
+                  '''        childTwo = workerProcess(runtime);\n        await Promise.all([\n          once(childTwo, "spawn"),\n          waitForWorkerReady(childTwo, "Replacement worker #2"),\n        ]);\n''',
+              ),
+          ]
+
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"expected exactly one match, found {count}: {old[:80]!r}")
+              text = text.replace(old, new, 1)
+
+          p.write_text(text)
+          PY
+      - name: Format focused files
+        run: pnpm exec prettier --write test/phase4-temporal-runtime.test.ts services/flow/src/worker-main.ts
+      - name: Commit focused readiness fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add test/phase4-temporal-runtime.test.ts services/flow/src/worker-main.ts
+          git commit -m "fix: wait for real Temporal worker readiness"
+          git push origin HEAD:agent/phase4-ci-flake-hardening-20260909
