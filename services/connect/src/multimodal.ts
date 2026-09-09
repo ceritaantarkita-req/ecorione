@@ -6,8 +6,9 @@ import {
   type Timestamp,
 } from "@ecorione/shared-schema";
 import { z } from "zod";
-import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
+import type { HostedProviderId } from "./provider-types.js";
 import { CostKillSwitchError, ProviderError } from "./providers/errors.js";
+import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
 
 type SpendBudgetController = Pick<FileSpendBudget, "reserve" | "settle" | "markUncertain">;
 const AdapterOutputSchema = MultimodalAdapterResultSchema.omit({ routeUsed: true });
@@ -36,8 +37,15 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
     this.route = options.route;
     this.endpoint = options.endpoint;
     this.reservationUsd = options.reservationUsd ?? (this.route === "hosted" ? 1 : 0);
-    if (!Number.isFinite(this.reservationUsd) || this.reservationUsd < 0) {
-      throw new Error("Multimodal reservationUsd harus angka non-negatif.");
+    const validReservation =
+      Number.isFinite(this.reservationUsd) &&
+      (this.route === "hosted" ? this.reservationUsd > 0 : this.reservationUsd === 0);
+    if (!validReservation) {
+      throw new Error(
+        this.route === "hosted"
+          ? "Multimodal hosted reservationUsd harus angka positif."
+          : "Multimodal local reservationUsd harus 0.",
+      );
     }
     this.authorizationBearer = options.authorizationBearer;
   }
@@ -90,6 +98,7 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
 export interface MultimodalDeps {
   readonly localAdapter?: MultimodalAdapter | undefined;
   readonly hostedAdapter?: MultimodalAdapter | undefined;
+  readonly hostedProvider: HostedProviderId;
   readonly hostedCallsEnabled: boolean;
   readonly spendBudget?: SpendBudgetController | undefined;
 }
@@ -122,8 +131,8 @@ async function callRoute(
   if (route === "hosted" && deps.spendBudget !== undefined) {
     reservation = deps.spendBudget.reserve({
       operationId: input.operationId,
-      provider: "multimodal",
-      model: "multimodal-adapter",
+      provider: deps.hostedProvider,
+      model: "multimodal-adapter-v1",
       reservedUsd: adapter.estimateReservationUsd(input),
       now,
     });
