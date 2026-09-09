@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS extension_revisions (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_extension_revisions_workspace_extension
-  ON extension_revisions(workspace_id, extension_id, created_at, rowid);
+  ON extension_revisions(workspace_id, extension_id, created_at);
 CREATE TRIGGER IF NOT EXISTS extension_revisions_no_update
 BEFORE UPDATE ON extension_revisions
 BEGIN
