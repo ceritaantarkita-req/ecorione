@@ -1,4 +1,4 @@
-/** Fase 2 MCP memory boundary. Every inbound tool crosses Hub policy + audit before Context. */
+/** Fase 2/3 MCP memory boundary. Every inbound tool crosses Hub policy + audit. */
 import { createHash } from "node:crypto";
 import {
   EpisodeSchema,
@@ -21,19 +21,19 @@ import {
 } from "@ecorione/shared-schema";
 import {
   ForbiddenError,
-  HttpError,
   NotFoundError,
   RemoteServiceError,
   httpJson,
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
+import { nowIso } from "./clock.js";
 import { evaluatePolicy } from "./policy-engine.js";
 import type { HubRepository } from "./repository.js";
-import { nowIso } from "./clock.js";
 
 export interface McpRouteOptions {
   readonly contextUrl: string;
+  readonly artifactUrl: string;
   readonly internalToken?: string | undefined;
 }
 
@@ -163,6 +163,41 @@ async function contextJson<T>(
     }
     throw error;
   }
+}
+
+async function artifactContent(
+  options: McpRouteOptions,
+  input: {
+    readonly id: string;
+    readonly scope: Scope;
+    readonly maxSensitivity: Sensitivity;
+    readonly hostedEligible: boolean;
+  },
+): Promise<{ readonly contentBase64: string; readonly mimeType: string; readonly sizeBytes: number }> {
+  const query = new URLSearchParams({
+    scope: input.scope,
+    maxSensitivity: input.maxSensitivity,
+    hostedEligible: input.hostedEligible ? "1" : "0",
+  });
+  const url = `${options.artifactUrl}/v1/artifacts/${encodeURIComponent(input.id)}/content?${query.toString()}`;
+  const headers: Record<string, string> = { accept: "*/*" };
+  if (options.internalToken !== undefined) headers.authorization = `Bearer ${options.internalToken}`;
+  let response: Response;
+  try {
+    response = await fetch(url, { headers });
+  } catch (error) {
+    throw new RemoteServiceError(url, 502, error instanceof Error ? error.message : String(error));
+  }
+  if (!response.ok) {
+    const text = await response.text();
+    throw new RemoteServiceError(url, response.status, text);
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+  return {
+    contentBase64: bytes.toString("base64"),
+    mimeType: response.headers.get("content-type") ?? "application/octet-stream",
+    sizeBytes: bytes.byteLength,
+  };
 }
 
 export function registerMcpRoutes(
@@ -313,10 +348,17 @@ export function registerMcpRoutes(
       body.artifactPointer.sensitivity,
       now,
     );
-    throw new HttpError(
-      501,
-      "NOT_IMPLEMENTED",
-      "Artifact belum tersedia; memory_open aktif setelah Fase 3 Artifact.",
-    );
+    const content = await artifactContent(options, {
+      id: body.artifactPointer.id,
+      scope: body.artifactPointer.scope,
+      maxSensitivity: body.access.maxSensitivity,
+      hostedEligible: body.access.delivery === "hosted",
+    });
+    return {
+      artifactId: body.artifactPointer.id,
+      description: body.artifactPointer.description,
+      ...content,
+      encoding: "base64",
+    };
   });
 }
