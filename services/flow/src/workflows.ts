@@ -69,9 +69,32 @@ export async function operationWorkflow(flow: FlowWorkflowInput): Promise<FlowWo
     );
   }
 
+  await activities.recordTrace({
+    flow,
+    name: "flow.approval.approved",
+    attributes: { operationId: flow.operationId },
+  });
+
   const ai = await activities.callAi({ flow, transformed });
+  await activities.recordTrace({
+    flow,
+    name: "flow.ai.completed",
+    attributes: { operationId: flow.operationId },
+  });
+
   const receipt = await activities.executeSandbox({ flow });
+  await activities.recordTrace({
+    flow,
+    name: "flow.sandbox.completed",
+    attributes: { receiptId: receipt.id, exitCode: receipt.exitCode },
+  });
+
   const verified = await activities.verifyExecution({ flow, receipt });
+  await activities.recordTrace({
+    flow,
+    name: "flow.verification.completed",
+    attributes: { receiptId: receipt.id, verified },
+  });
   if (!verified) {
     await activities.recordTrace({
       flow,
