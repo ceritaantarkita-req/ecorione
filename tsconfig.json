@@ -9,6 +9,7 @@
     { "path": "./services/context" },
     { "path": "./services/rnd" },
     { "path": "./services/connect" },
-    { "path": "./services/hub" }
+    { "path": "./services/hub" },
+    { "path": "./services/sync" }
   ]
 }
