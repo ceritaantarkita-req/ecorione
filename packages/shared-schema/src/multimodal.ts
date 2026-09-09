@@ -1,6 +1,11 @@
-/** Native multimodal contracts (Batch 5). Raw media stays in Artifact; derived semantics use pointers. */
+/** Native multimodal contracts (Batch 5). Raw media stays in Artifact; derived semantics belong to Context. */
 import { z } from "zod";
-import { ScopeSchema, SensitivitySchema, SyncClassSchema } from "./classification.js";
+import {
+  ScopeSchema,
+  SensitivitySchema,
+  SyncClassSchema,
+  TrustSchema,
+} from "./classification.js";
 import {
   ArtifactIdSchema,
   EpisodeIdSchema,
@@ -93,6 +98,22 @@ export const MultimodalAdapterResultSchema = z.object({
 });
 export type MultimodalAdapterResult = z.infer<typeof MultimodalAdapterResultSchema>;
 
+export const MultimodalDerivationWriteSchema = z.object({
+  operationId: OperationIdSchema,
+  sourceArtifactId: ArtifactIdSchema,
+  episodeId: EpisodeIdSchema,
+  task: MultimodalAnalyzeTaskSchema,
+  result: MultimodalAdapterResultSchema.omit({ audioBase64: true, audioMimeType: true }),
+  scope: ScopeSchema,
+  sensitivity: SensitivitySchema,
+  syncClass: SyncClassSchema,
+  trust: TrustSchema,
+  createdAt: z.string().datetime({ offset: false }),
+});
+export type MultimodalDerivationWrite = z.infer<typeof MultimodalDerivationWriteSchema>;
+export const MultimodalDerivationSchema = MultimodalDerivationWriteSchema;
+export type MultimodalDerivation = z.infer<typeof MultimodalDerivationSchema>;
+
 export const MultimodalAnalyzeResponseSchema = z.object({
   operationId: OperationIdSchema,
   sessionId: SessionIdSchema,
@@ -131,25 +152,27 @@ export const MultimodalRunStatusSchema = z.object({
 export type MultimodalRunStatus = z.infer<typeof MultimodalRunStatusSchema>;
 
 /** Connect-only normalized inference boundary. Hub obtains bytes from Artifact after policy gates. */
-export const MultimodalInferRequestSchema = z.object({
-  operationId: OperationIdSchema,
-  task: z.enum(["ocr", "vision", "transcribe", "synthesize"]),
-  route: MultimodalRouteRequestSchema,
-  syncClass: SyncClassSchema,
-  mimeType: z.string().min(1).max(128).optional(),
-  contentBase64: z.string().min(1).optional(),
-  text: z.string().min(1).max(32_000).optional(),
-  language: z.enum(["id", "en"]).optional(),
-  voice: z.string().min(1).max(128).optional(),
-}).superRefine((value, ctx) => {
-  if (value.task === "synthesize") {
-    if (value.text === undefined || value.language === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "TTS membutuhkan text + language." });
+export const MultimodalInferRequestSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    task: z.enum(["ocr", "vision", "transcribe", "synthesize"]),
+    route: MultimodalRouteRequestSchema,
+    syncClass: SyncClassSchema,
+    mimeType: z.string().min(1).max(128).optional(),
+    contentBase64: z.string().min(1).optional(),
+    text: z.string().min(1).max(32_000).optional(),
+    language: z.enum(["id", "en"]).optional(),
+    voice: z.string().min(1).max(128).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.task === "synthesize") {
+      if (value.text === undefined || value.language === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "TTS membutuhkan text + language." });
+      }
+      return;
     }
-    return;
-  }
-  if (value.contentBase64 === undefined || value.mimeType === undefined) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Analisis media membutuhkan contentBase64 + mimeType." });
-  }
-});
+    if (value.contentBase64 === undefined || value.mimeType === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Analisis media membutuhkan contentBase64 + mimeType." });
+    }
+  });
 export type MultimodalInferRequest = z.infer<typeof MultimodalInferRequestSchema>;
