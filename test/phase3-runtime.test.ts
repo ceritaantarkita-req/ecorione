@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { makeId, type PolicyVerdict } from "@ecorione/shared-schema";
+import { makeId, type PolicyVerdict } from "../packages/shared-schema/src/index.js";
 import { ArtifactStore } from "../services/artifact/src/store.js";
 import { createContextMetadataClient } from "../services/artifact/src/context-client.js";
 import { buildArtifactServer } from "../services/artifact/src/http.js";
@@ -167,7 +167,7 @@ describe("Fase 3 runtime acceptance", () => {
     expect(wasm.stdout).toBe("42");
   });
 
-  it.skipIf(process.env.ECORIONE_RUN_DOCKER_ACCEPTANCE !== "1")(
+  it.skipIf(process.env.ECORIONE_PHASE3_DOCKER_ACCEPTANCE !== "1")(
     "executes Tier 1 in a real hardened Docker container",
     async () => {
       const root = tempRoot();
