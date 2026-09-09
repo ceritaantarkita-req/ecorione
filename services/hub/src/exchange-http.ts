@@ -1,13 +1,10 @@
-import { createHash } from "node:crypto";
 import {
   EcxHydrateRequestSchema,
   EcxHydrateResponseSchema,
   EcxPlanRequestSchema,
   EcxPlanResponseSchema,
-  assertId,
   type EcxHydratedItem,
   type EcxReference,
-  type EventId,
   type HistoryEventDraft,
   type MemoryFact,
 } from "@ecorione/shared-schema";
@@ -33,15 +30,6 @@ export interface ExchangeRouteOptions {
   readonly contextUrl: string;
   readonly artifactUrl: string;
   readonly internalToken?: string | undefined;
-}
-
-function deterministicPacketIds(seed: unknown): () => EventId {
-  const root = createHash("sha256").update(JSON.stringify(seed)).digest("hex");
-  let index = 0;
-  return () => {
-    const digest = createHash("sha256").update(`${root}:${String(index++)}`).digest("hex");
-    return assertId("event", `evt_${digest.slice(0, 24)}`);
-  };
 }
 
 function encodeJson(value: unknown): { mediaType: string; contentBase64: string; sizeBytes: number } {
@@ -140,7 +128,7 @@ export function registerExchangeRoutes(
 ): void {
   app.post("/v1/exchange/plan", async (req) => {
     const input = parseOrBadRequest(EcxPlanRequestSchema, req.body);
-    const response = planEcx(input, { makePacketId: deterministicPacketIds(input) });
+    const response = planEcx(input);
     if (input.historySessionId !== undefined) {
       try {
         const events = response.packets.map<HistoryEventDraft>((packet) => ({
