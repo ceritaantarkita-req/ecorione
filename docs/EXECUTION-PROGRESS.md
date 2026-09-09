@@ -27,30 +27,27 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Baseline `main` tempat Batch 3 branch dibuat:
+Batch 3 implementation merged ke `main` sebagai:
 
-- `97646e102ee90a39aa25a7b79b8cbf86673aa81f`
+- `af2b3f12f5deeaf2fd50c045998416365f766b9d`
 
-Baseline condition sebelum Batch 2:
+Post-merge verification pada implementation SHA tersebut:
 
+- Naming: PASS
 - Format: PASS
 - Lint: PASS
 - Typecheck: PASS
 - Test: PASS
+- Phase 4 real-process acceptance: PASS
 - Secret Scan: PASS
 - Production Build: PASS
-- Naming: PASS
+- run `34368309860`, attempt 2: full green
 
-Batch 2 sudah merged dan post-merge main CI `34360113741` full green pada baseline ini.
+### Next execution target
 
-### Active branch
-
-- branch: `agent/plugin-extension-framework-20260909`
-- PR: #10 — `feat: add plugin and extension framework`
-- Batch 3 status: **IMPLEMENTED / CLOSURE PENDING**
-- base main: `97646e102ee90a39aa25a7b79b8cbf86673aa81f`
-- extension focused Typecheck + regression: PASS
-- exact final CI, merge, dan post-merge `main` verification: pending
+- Batch 3 status: **CLOSED**
+- next batch: **Batch 4 — Unified Capability + Permission Plane**
+- closure-doc branch: `agent/batch3-plugin-closure-20260909`
 
 ---
 
@@ -217,7 +214,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1 dan Batch 2 sudah CLOSED**. **Batch 3 implemented / closure pending**; setelah Batch 3 ditutup, tersisa **9 batch platform/production (Batch 4–12)**.
+Dari current state, **Batch 1, Batch 2, dan Batch 3 sudah CLOSED**. Tersisa **9 batch platform/production (Batch 4–12)**; next implementation target adalah **Batch 4 — Unified Capability + Permission Plane**.
 
 ---
 
@@ -303,7 +300,7 @@ Batch 2 resmi `CLOSED`; next implementation batch adalah Batch 3.
 
 ## Batch 3 — Plugin / Extension Framework
 
-Status: **IMPLEMENTED / CLOSURE PENDING**
+Status: **CLOSED**
 
 Implemented baseline:
 
@@ -330,7 +327,17 @@ Security rule:
 
 ADR: `docs/adr/0024-plugin-extension-framework.md`
 Operations: `docs/extension-operations.md`
-Closure pending: exact final CI + public MCP regression, PR #10 expected-head merge, dan post-merge main verification.
+
+Closure evidence:
+
+- final implementation candidate: `e706aa70f3b9b80fc6ec12c72972a29f3c503639`;
+- exact-head CI `34368041372` — Naming, Format, Lint, Typecheck, Test, dedicated Phase 4 real-process acceptance, Secret Scan, Production Build PASS;
+- exact-head MCP External HTTPS Acceptance `34368041191` — PASS;
+- verification mirror PR #11 menunjuk exact SHA yang sama, dipakai hanya untuk memicu checks, lalu ditutup tanpa merge;
+- PR #10 merged dengan expected-head lock sebagai `af2b3f12f5deeaf2fd50c045998416365f766b9d`;
+- post-merge `main` CI `34368309860`, attempt 2 — full green setelah attempt 1 dibatalkan saat Production Build tanpa perubahan `main` SHA.
+
+Batch 3 resmi `CLOSED`; next implementation batch adalah Batch 4.
 
 ---
 
@@ -626,8 +633,10 @@ Ini bukan berarti development berhenti; Fase 6+ tetap open-ended dan hardening/t
 Current planning unit:
 
 - **Batch 1: CLOSED**
-- **11 platform/production batches remaining (Batch 2–12)**
-- next: **Batch 2 — Outbound MCP Client + MCP Manager**
+- **Batch 2: CLOSED**
+- **Batch 3: CLOSED**
+- **9 platform/production batches remaining (Batch 4–12)**
+- next: **Batch 4 — Unified Capability + Permission Plane**
 
 Dalam workstream teknis granular, estimasi tersisa sekitar **30–35 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi.
 
