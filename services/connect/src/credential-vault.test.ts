@@ -81,10 +81,11 @@ describe("FileCredentialVault", () => {
     const parsed = JSON.parse(readFileSync(path, "utf8")) as {
       entries: Array<{ ciphertext: string }>;
     };
-    const current = parsed.entries[0]?.ciphertext;
-    expect(current).toBeDefined();
-    if (current === undefined) throw new Error("fixture entry hilang");
-    parsed.entries[0]!.ciphertext = `${current.slice(0, -1)}${current.endsWith("A") ? "B" : "A"}`;
+    const entry = parsed.entries[0];
+    if (entry === undefined) throw new Error("fixture entry hilang");
+    const current = entry.ciphertext;
+    if (current.length === 0) throw new Error("fixture ciphertext kosong");
+    entry.ciphertext = `${current.startsWith("A") ? "B" : "A"}${current.slice(1)}`;
     writeFileSync(path, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
 
     expect(() => vault.get("anthropic", "messages")).toThrow(CredentialVaultIntegrityError);
