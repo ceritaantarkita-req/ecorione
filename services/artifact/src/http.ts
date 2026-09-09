@@ -16,7 +16,8 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { ArtifactMetadataClient } from "./context-client.js";
 import { normalizedSyncClass } from "./context-client.js";
-import { ArtifactIntegrityError, ArtifactStore } from "./store.js";
+import { ArtifactIntegrityError } from "./store.js";
+import type { ArtifactStore } from "./store.js";
 
 export const DEFAULT_MAX_ARTIFACT_BYTES = 20 * 1024 * 1024;
 
