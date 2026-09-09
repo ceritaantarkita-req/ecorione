@@ -24,7 +24,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: node scripts/batch4-closure-once.mjs
-      - run: pnpm exec prettier --write docs/EXECUTION-PROGRESS.md
+      - run: pnpm exec prettier --write docs/EXECUTION-PROGRESS.md scripts/batch4-closure-once.mjs
       - run: pnpm run format:check
       - name: Commit closure tracker and remove helper
         run: |
