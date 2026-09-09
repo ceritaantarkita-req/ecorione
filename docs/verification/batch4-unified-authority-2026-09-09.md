@@ -24,11 +24,13 @@ This note records the candidate evidence used to close Batch 4. Batch 4 is not c
 
 - Integration helper run `34375813569`: root Typecheck PASS and focused authority/extension/sandbox/orchestrate tests PASS.
 - Regression hardening run `34376301583`: root Typecheck PASS and focused Chat/MCP/credential/extension/Sandbox authority tests PASS.
-- Temporary helper workflows and scripts self-removed before this candidate.
+- Exact-head candidate `64564f7e8aa0a09c9738cf74f879fa340ec884d0` exposed three import-only lint errors; Format and Naming already passed.
+- One-shot lint hygiene run `34378863858`: Lint PASS and root Typecheck PASS; helper workflow/script self-removed after committing `d4c1f033c91fe4dc663993077205e82353d6a937`.
+- No policy, authorization, runtime, or data-boundary semantics were weakened to resolve the lint failure.
 
 ## Exact-head closure gates
 
-The commit containing this file is intentionally authored through the repository connector so GitHub executes pull-request workflows instead of leaving bot-authored synchronization checks in `action_required` state.
+The commit containing this final evidence update is intentionally authored through the repository connector so GitHub executes pull-request workflows instead of leaving a bot-authored synchronization commit in `action_required` state.
 
 Required before merge:
 
