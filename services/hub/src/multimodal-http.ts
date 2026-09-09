@@ -16,9 +16,9 @@ import {
   type MultimodalAdapterResult,
   type MultimodalAnalyzeRequest,
   type MultimodalAnalyzeResponse,
-  type MultimodalSynthesizeRequest,
   type MultimodalSynthesizeResponse,
   type PermissionId,
+  type Scope,
   type Sensitivity,
   type SyncClass,
   type Timestamp,
@@ -94,7 +94,6 @@ async function artifactBytes(
   options: MultimodalRouteOptions,
   pointer: ArtifactPointer,
 ): Promise<string> {
-  const syncClass = pointer.syncClass ?? "LOCAL_ONLY";
   const query = new URLSearchParams({
     scope: pointer.scope,
     maxSensitivity: pointer.sensitivity,
@@ -126,7 +125,6 @@ async function artifactBytes(
   if (bytes.byteLength !== pointer.sizeBytes) {
     throw new BadGatewayError(`Artifact ${pointer.id} berubah ukuran setelah authorization.`);
   }
-  void syncClass;
   return bytes.toString("base64");
 }
 
@@ -157,7 +155,7 @@ function authorizeInference(input: {
   workspaceId: WorkspaceId;
   operationId: MultimodalAnalyzeRequest["operationId"];
   routes: readonly ("local" | "hosted")[];
-  scope: string;
+  scope: Scope;
   sensitivity: Sensitivity;
   syncClass: SyncClass;
   now: Timestamp;
@@ -232,6 +230,18 @@ function retryResult<T>(
   return null;
 }
 
+function beginRun(
+  runs: MultimodalRunStore,
+  input: Parameters<MultimodalRunStore["begin"]>[0],
+): ReturnType<MultimodalRunStore["begin"]> {
+  try {
+    return runs.begin(input);
+  } catch (error) {
+    if (error instanceof MultimodalRunConflictError) throw new ConflictError(error.message);
+    throw error;
+  }
+}
+
 export function registerMultimodalRoutes(
   app: FastifyInstance,
   deps: {
@@ -245,7 +255,7 @@ export function registerMultimodalRoutes(
   app.post("/v1/multimodal/analyze", async (request) => {
     const body = parseOrBadRequest(MultimodalAnalyzeRequestSchema, request.body);
     const now = options.now();
-    const begun = deps.runs.begin({
+    const begun = beginRun(deps.runs, {
       operationId: body.operationId,
       fingerprint: fingerprint(body),
       sessionId: body.sessionId,
@@ -405,7 +415,7 @@ export function registerMultimodalRoutes(
   app.post("/v1/multimodal/synthesize", async (request) => {
     const body = parseOrBadRequest(MultimodalSynthesizeRequestSchema, request.body);
     const now = options.now();
-    const begun = deps.runs.begin({
+    const begun = beginRun(deps.runs, {
       operationId: body.operationId,
       fingerprint: fingerprint(body),
       sessionId: body.sessionId,
