@@ -170,6 +170,22 @@ describe("Hub native multimodal pipeline", () => {
     });
     expect(retry.statusCode).toBe(200);
     expect(connectCalls).toHaveBeenCalledTimes(1);
+
+    const conflictingRetry = await hub.inject({
+      method: "POST",
+      url: "/v1/multimodal/analyze",
+      payload: {
+        operationId: "op_multimodalhub001",
+        sessionId: "sess_multimodal001",
+        artifactId: "art_source001",
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        task: "vision",
+        route: { preferred: "local", allowHostedFallback: false },
+      },
+    });
+    expect(conflictingRetry.statusCode).toBe(409);
+    expect(connectCalls).toHaveBeenCalledTimes(1);
   });
 
   it("rejects hosted fallback for LOCAL_ONLY before sending bytes to Connect", async () => {
