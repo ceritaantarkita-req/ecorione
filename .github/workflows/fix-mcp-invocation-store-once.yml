@@ -1,0 +1,84 @@
+name: Fix MCP Invocation Store Once
+on:
+  push:
+    branches: [agent/outbound-mcp-manager-20260909]
+    paths: [".github/workflows/fix-mcp-invocation-store-once.yml"]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/outbound-mcp-manager-20260909
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fix durable MCP invocation timestamps and workspace provenance
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def repl(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one match, got {count}: {old[:100]!r}")
+              p.write_text(text.replace(old, new, 1))
+
+          p = "services/connect/src/mcp-client/invocation-store.ts"
+          repl(p,
+              '''  OperationIdSchema,\n  TimestampSchema,\n  type OperationId,\n  type Timestamp,\n''',
+              '''  OperationIdSchema,\n  TimestampSchema,\n  WorkspaceIdSchema,\n  type OperationId,\n  type Timestamp,\n  type WorkspaceId,\n''')
+          repl(p,
+              '''  operationId: OperationIdSchema,\n  serverId: McpServerIdSchema,\n''',
+              '''  operationId: OperationIdSchema,\n  workspaceId: WorkspaceIdSchema,\n  serverId: McpServerIdSchema,\n''')
+          repl(p,
+              '''  readonly operationId: OperationId;\n  readonly serverId: McpServerId;\n''',
+              '''  readonly operationId: OperationId;\n  readonly workspaceId: WorkspaceId;\n  readonly serverId: McpServerId;\n''')
+          repl(p,
+              '''  return (\n    entry.serverId === input.serverId &&\n''',
+              '''  return (\n    entry.workspaceId === input.workspaceId &&\n    entry.serverId === input.serverId &&\n''')
+          repl(p,
+              '''  reserve(input: McpInvocationReservationInput): McpInvocationReservation {\n    const normalized = InvocationEntrySchema.parse({\n      ...input,\n      status: "reserved",\n      result: null,\n      settledAt: null,\n    });\n''',
+              '''  reserve(input: McpInvocationReservationInput): McpInvocationReservation {\n    const normalized = InvocationEntrySchema.parse({\n      idempotencyKey: input.idempotencyKey,\n      operationId: input.operationId,\n      workspaceId: input.workspaceId,\n      serverId: input.serverId,\n      toolName: input.toolName,\n      argsDigest: input.argsDigest,\n      status: "reserved",\n      result: null,\n      createdAt: input.now,\n      settledAt: null,\n    });\n''')
+
+          p = "services/connect/src/mcp-client/manager.ts"
+          repl(p,
+              '''        operationId: request.operationId,\n        serverId,\n''',
+              '''        operationId: request.operationId,\n        workspaceId: request.workspaceId,\n        serverId,\n''')
+
+          p = "services/connect/src/mcp-client/invocation-store.test.ts"
+          repl(p,
+              '''import { OperationIdSchema, TimestampSchema } from "@ecorione/shared-schema";\n''',
+              '''import {\n  OperationIdSchema,\n  TimestampSchema,\n  WorkspaceIdSchema,\n} from "@ecorione/shared-schema";\n''')
+          repl(p,
+              '''const operationId = OperationIdSchema.parse("op_call1");\nconst digest = "a".repeat(64);\n''',
+              '''const operationId = OperationIdSchema.parse("op_call1");\nconst workspaceId = WorkspaceIdSchema.parse("ws_a");\nconst digest = "a".repeat(64);\n''')
+          repl(p,
+              '''    operationId,\n    serverId: "server-a",\n''',
+              '''    operationId,\n    workspaceId,\n    serverId: "server-a",\n''')
+          repl(p,
+              '''    expect(store.reserve(input()).kind).toBe("reserved");\n    store.settle("12345678abcdefgh", { content: [{ type: "text", text: "ok" }] }, now);\n''',
+              '''    const reserved = store.reserve(input());\n    expect(reserved.kind).toBe("reserved");\n    expect(reserved.entry.createdAt).toBe(now);\n    expect(reserved.entry.workspaceId).toBe(workspaceId);\n    store.settle("12345678abcdefgh", { content: [{ type: "text", text: "ok" }] }, now);\n''')
+          repl(p,
+              '''  it("fails closed when lock exists", () => {\n''',
+              '''  it("rejects the same idempotency key across different workspace provenance", () => {\n    const store = new FileMcpInvocationStore(statePath());\n    store.reserve(input());\n    expect(() =>\n      store.reserve({ ...input(), workspaceId: WorkspaceIdSchema.parse("ws_b") }),\n    ).toThrow(McpInvocationConflictError);\n  });\n\n  it("fails closed when lock exists", () => {\n''')
+          PY
+      - run: pnpm exec prettier --write services/connect/src/mcp-client/invocation-store.ts services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.ts
+      - run: pnpm exec vitest run services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.test.ts
+      - run: pnpm run typecheck
+      - name: Commit fix
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add services/connect/src/mcp-client/invocation-store.ts services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.ts
+          git commit -m "fix: persist outbound MCP invocation provenance"
+          git push origin HEAD:agent/outbound-mcp-manager-20260909
