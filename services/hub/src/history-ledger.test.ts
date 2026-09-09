@@ -1,4 +1,4 @@
-import { assertId } from "@ecorione/shared-schema";
+import { assertId, type HistoryEventDraft } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
 import { openHubDatabase, type HubDatabase } from "./db.js";
 import {
@@ -96,6 +96,74 @@ describe("Historical Ledger", () => {
     expect(() =>
       ledger.append(sessionId, 0, { ...event, payload: { recipient: "agent:other" } }),
     ).toThrow(HistoryEventConflictError);
+  });
+
+  it("commits a batch atomically and makes a committed retry idempotent", () => {
+    const { ledger, sessionId } = setup();
+    const drafts: HistoryEventDraft[] = [
+      {
+        id: assertId("event", "evt_batch001"),
+        recordedAt: NOW,
+        eventType: "agent.handoff",
+        actor: "hub:exchange",
+        operationId: null,
+        parentEventId: null,
+        payload: { recipient: "agent:one" },
+      },
+      {
+        id: assertId("event", "evt_batch002"),
+        recordedAt: NOW,
+        eventType: "agent.handoff",
+        actor: "hub:exchange",
+        operationId: null,
+        parentEventId: null,
+        payload: { recipient: "agent:two" },
+      },
+    ];
+
+    const first = ledger.appendBatch(sessionId, drafts);
+    expect(first.map((entry) => entry.deduplicated)).toEqual([false, false]);
+    expect(first.map((entry) => entry.event.seq)).toEqual([0, 1]);
+
+    const retry = ledger.appendBatch(sessionId, drafts);
+    expect(retry.map((entry) => entry.deduplicated)).toEqual([true, true]);
+    expect(ledger.getSession(sessionId)?.nextSeq).toBe(2);
+  });
+
+  it("rolls back the whole batch when a later event conflicts", () => {
+    const { ledger, sessionId } = setup();
+    const eventId = assertId("event", "evt_batchconflict001");
+    const drafts: HistoryEventDraft[] = [
+      {
+        id: eventId,
+        recordedAt: NOW,
+        eventType: "agent.handoff",
+        actor: "hub:exchange",
+        operationId: null,
+        parentEventId: null,
+        payload: { recipient: "agent:one" },
+      },
+      {
+        id: eventId,
+        recordedAt: NOW,
+        eventType: "agent.handoff",
+        actor: "hub:exchange",
+        operationId: null,
+        parentEventId: null,
+        payload: { recipient: "agent:two" },
+      },
+    ];
+
+    expect(() => ledger.appendBatch(sessionId, drafts)).toThrow(HistoryEventConflictError);
+    expect(ledger.getSession(sessionId)).toMatchObject({ nextSeq: 0, headHash: null });
+    expect(
+      ledger.readRange({
+        sessionId,
+        afterSeq: -1,
+        limit: 10,
+        grant: { scope: "personal", maxSensitivity: "INTERNAL", hostedEligible: false },
+      }).events,
+    ).toEqual([]);
   });
 
   it("enforces append-only rows at the database boundary", () => {
