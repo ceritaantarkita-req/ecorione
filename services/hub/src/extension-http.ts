@@ -188,6 +188,12 @@ function auditResult(
   });
 }
 
+function enforceSecurityAdmission(report: ReturnType<ExtensionRegistry["validate"]>): void {
+  if (!report.allowed) {
+    throw toHttpError(new ExtensionSecurityBlockedError(report));
+  }
+}
+
 function auditFailure(
   repo: HubRepository,
   request: ActionRequest,
@@ -241,6 +247,7 @@ export function registerExtensionRoutes(
     const body = parseOrBadRequest(ExtensionInstallRequestSchema, req.body);
     const now = nowIso();
     const report = registry.validate(body.manifest);
+    enforceSecurityAdmission(report);
     const action = mutationActionRequest("install", body.manifest.id, body, {
       manifestSha256: report.manifestSha256,
       version: body.manifest.version,
@@ -261,6 +268,7 @@ export function registerExtensionRoutes(
     const body = parseOrBadRequest(ExtensionUpdateRequestSchema, req.body);
     const now = nowIso();
     const report = registry.validate(body.manifest);
+    enforceSecurityAdmission(report);
     const action = mutationActionRequest("update", params.id, body, {
       manifestSha256: report.manifestSha256,
       version: body.manifest.version,

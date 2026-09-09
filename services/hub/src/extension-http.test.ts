@@ -66,7 +66,9 @@ describe("extension HTTP lifecycle", () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json().allowed).toBe(true);
-    expect(db.raw.prepare("SELECT count(*) AS n FROM extension_revisions").get()).toEqual({ n: 0 });
+    expect(db.raw.prepare("SELECT count(*) AS n FROM extension_revisions").get()).toEqual({
+      n: 0,
+    });
   });
 
   it("installs idempotently and isolates workspace visibility", async () => {
@@ -83,7 +85,10 @@ describe("extension HTTP lifecycle", () => {
     expect(own.statusCode).toBe(200);
     expect(own.json().extensions).toHaveLength(1);
 
-    const other = await app.inject({ method: "GET", url: "/v1/extensions?workspaceId=ws_beta" });
+    const other = await app.inject({
+      method: "GET",
+      url: "/v1/extensions?workspaceId=ws_beta",
+    });
     expect(other.statusCode).toBe(200);
     expect(other.json().extensions).toEqual([]);
   });
@@ -198,10 +203,16 @@ describe("extension HTTP lifecycle", () => {
     });
     expect(res.statusCode).toBe(403);
     expect(res.json().error.type).toBe("EXTENSION_SECURITY_BLOCKED");
-    expect(db.raw.prepare("SELECT count(*) AS n FROM extension_revisions").get()).toEqual({ n: 0 });
-    expect(db.raw.prepare("SELECT count(*) AS n FROM extension_installations").get()).toEqual({ n: 0 });
+    expect(db.raw.prepare("SELECT count(*) AS n FROM extension_revisions").get()).toEqual({
+      n: 0,
+    });
+    expect(db.raw.prepare("SELECT count(*) AS n FROM extension_installations").get()).toEqual({
+      n: 0,
+    });
     expect(
-      db.raw.prepare("SELECT count(*) AS n FROM audit_events WHERE operation_id=?").get("op_blocked_a"),
+      db.raw
+        .prepare("SELECT count(*) AS n FROM audit_events WHERE operation_id=?")
+        .get("op_blocked_a"),
     ).toEqual({ n: 0 });
   });
 });
