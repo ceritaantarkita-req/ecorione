@@ -22,9 +22,9 @@ const runPromise = worker.run();
 
 if (process.env.ECORIONE_FLOW_WORKER_READY_IPC === "1" && process.send !== undefined) {
   const ready = (async () => {
-    const deadline = Date.now() + 15_000;
-    while (worker.getState() !== "RUNNING") {
+    for (let attempt = 0; attempt < 1500; attempt += 1) {
       const state = worker.getState();
+      if (state === "RUNNING") return;
       if (
         state === "STOPPING" ||
         state === "DRAINING" ||
@@ -33,11 +33,9 @@ if (process.env.ECORIONE_FLOW_WORKER_READY_IPC === "1" && process.send !== undef
       ) {
         throw new Error(`Flow worker stopped before readiness: ${state}`);
       }
-      if (Date.now() >= deadline) {
-        throw new Error(`Timed out waiting for Flow worker RUNNING state; current=${state}`);
-      }
       await new Promise<void>((resolve) => setTimeout(resolve, 10));
     }
+    throw new Error(`Timed out waiting for Flow worker RUNNING state; current=${worker.getState()}`);
   })();
 
   await Promise.race([
