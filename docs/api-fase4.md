@@ -1,6 +1,6 @@
 # API Fase 4 — Flow durable execution
 
-**Status:** CLOSURE CANDIDATE · 2026-09-09
+**Status:** CLOSED · 2026-09-09
 
 Dokumen ini mencatat kontrak yang benar-benar diimplementasikan pada Fase 4. Sumber arsitektur tetap `prd.md`, `blueprint.md`, ADR-08, ADR-12, dan ADR-17; dokumen ini tidak membuat scheduler atau durability layer baru di luar keputusan tersebut.
 
@@ -104,7 +104,7 @@ Flow tidak membuka DB service lain.
 
 Provider credential tetap hanya dimiliki Connect. Flow tidak memegang API key provider.
 
-## 5. Runtime acceptance
+## 5. Runtime acceptance dan closure
 
 `test/phase4-temporal-runtime.test.ts` mempunyai dua lapis acceptance:
 
@@ -121,4 +121,4 @@ Vertical slice kedua menggunakan:
 - Flow HTTP nyata;
 - provider lokal OpenAI-compatible berupa HTTP stub deterministik khusus CI, sehingga acceptance tidak mengklaim Ollama/cloud provider eksternal sungguhan.
 
-Run `34304296140` membuktikan implementation candidate ini lulus **51 test files / 328 tests**, termasuk process crash/recovery, Docker Fase 3, lint, typecheck, secret scan, dan production build. Workflow pada run tersebut masih memakai helper canonicalizer; status Fase 4 baru boleh diubah menjadi **CLOSED** setelah workflow CI dikembalikan ke frozen/read-only strict gate dan strict run juga hijau.
+Strict closure run `34304885390` pada commit `2863eea1303c58f2baf384c839f4aff778bfd0bd` lulus frozen lockfile, format check read-only, lint, typecheck, **51 test files / 328 tests**, forced worker crash/recovery, Docker runtime acceptance Fase 3, secret scan, dan production build. Sebelum run ini, strict run `34304606191` menangkap flakiness cold-start replacement worker; test kemudian di-hardening agar child process observable/fail-fast dan memberi window cold-start yang realistis tanpa menurunkan acceptance.
