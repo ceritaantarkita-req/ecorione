@@ -17,7 +17,11 @@
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
     "mcp:stdio": "tsx src/mcp/stdio-main.ts",
-    "mcp:http": "tsx src/mcp/http-main.ts"
+    "mcp:http": "tsx src/mcp/http-main.ts",
+    "vault:keygen": "tsx src/vault-cli.ts keygen",
+    "vault:list": "tsx src/vault-cli.ts list",
+    "vault:set": "tsx src/vault-cli.ts set",
+    "vault:rotate-master": "tsx src/vault-cli.ts rotate-master"
   },
   "dependencies": {
     "@ecorione/context-assembly": "workspace:*",

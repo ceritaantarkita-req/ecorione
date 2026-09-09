@@ -7,6 +7,7 @@
 
 export * from "./cache.js";
 export * from "./complete.js";
+export * from "./credential-vault.js";
 export * from "./http.js";
 export * from "./routing.js";
 export { nowIso } from "./clock.js";

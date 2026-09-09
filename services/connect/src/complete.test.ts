@@ -26,7 +26,7 @@ afterEach(() => {
 });
 function deps(overrides: Partial<CompleteDeps> = {}): CompleteDeps {
   return {
-    anthropicApiKey: "sk-test",
+    anthropicApiKey: "test-provider-key",
     localBaseUrl: "http://127.0.0.1:11434/v1",
     localModelTag: "qwen3:8b-instruct-q4_K_M",
     cache: new ExactMatchCache(),
@@ -62,6 +62,62 @@ describe("complete", () => {
     expect(result.cacheHit).toBe(false);
     expect(result.cost.actualUsd).toBeGreaterThan(0);
     expect(result.cost.operationId).toBe(OPERATION_ID);
+  });
+
+  it("credential vault adalah source authoritative dan env fallback diabaikan", async () => {
+    anthropicPool
+      .intercept({
+        path: "/v1/messages",
+        method: "POST",
+        headers: { "x-api-key": "vault-provider-key" },
+      })
+      .reply(200, {
+        model: "claude-sonnet-4-5-20250929",
+        content: [{ type: "text", text: "dari vault" }],
+        usage: {},
+      });
+    const result = await complete(
+      deps({
+        anthropicApiKey: "dev-env-key-must-not-be-used",
+        credentialVault: {
+          get(provider, purpose) {
+            expect(provider).toBe("anthropic");
+            expect(purpose).toBe("messages");
+            return "vault-provider-key";
+          },
+        },
+      }),
+      {
+        target: "hosted",
+        prefix: prefix(),
+        dynamicText: "",
+        userMessage: "halo vault",
+        sensitivity: "INTERNAL",
+        operationId: OPERATION_ID,
+        now: NOW,
+      },
+    );
+    expect(result.reply).toBe("dari vault");
+  });
+
+  it("vault aktif tapi credential missing tidak fallback ke env", async () => {
+    await expect(
+      complete(
+        deps({
+          anthropicApiKey: "dev-env-key-must-not-be-used",
+          credentialVault: { get: () => undefined },
+        }),
+        {
+          target: "hosted",
+          prefix: prefix(),
+          dynamicText: "",
+          userMessage: "halo",
+          sensitivity: "INTERNAL",
+          operationId: OPERATION_ID,
+          now: NOW,
+        },
+      ),
+    ).rejects.toBeInstanceOf(MissingCredentialError);
   });
 
   it("internal exact-cache hit tidak memanggil provider dan actual provider cost = 0", async () => {

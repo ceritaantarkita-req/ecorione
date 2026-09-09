@@ -39,23 +39,37 @@ Root package sekarang membedakan:
 
 ### 3. Dokumentasi dibuat sesuai state aktual
 
-README tidak lagi mengklaim repo berhenti di Fase 1 atau memakai satu SQLite global. `.env.example` juga tidak lagi mengklaim production credential vault sudah ada: requirement PRD §14 tetap berlaku, tetapi vault produksi terenkripsi at-rest **belum diimplementasikan**.
+README tidak lagi mengklaim repo berhenti di Fase 1 atau memakai satu SQLite global. `.env.example` membedakan provider key development-only dari credential storage produksi/self-host.
 
 ### 4. AutoClick tidak dipaksakan
 
 Fase 5 dicatat `DEFERRED BY DESIGN`. Tidak ada `services/autoclick/` sampai use case non-API nyata memenuhi gate ADR-11.
 
+### 5. Production credential vault di Connect
+
+Requirement PRD §14 bahwa raw provider credential hanya dimiliki Connect dan terenkripsi at-rest sekarang punya implementasi konkret di ADR-20:
+
+- vault file hanya menyimpan AES-256-GCM ciphertext + metadata;
+- master key 32 byte dipasok out-of-band dan tidak disimpan bersama ciphertext;
+- provider + purpose + generation diikat sebagai authenticated metadata;
+- provider-secret rotation menaikkan generation dan dibaca Connect tanpa restart;
+- master-key rotation re-encrypt seluruh vault sebagai atomic replacement;
+- wrong key, malformed vault, atau ciphertext tamper gagal tertutup;
+- ketika vault aktif, raw provider key dari `.env` tidak menjadi fallback;
+- administrasi credential memakai CLI operator, bukan HTTP endpoint yang memperlebar exposure raw secret.
+
+Storage ini memenuhi requirement encryption at-rest aplikasi; ia bukan hardware-backed keystore dan tidak mengklaim melindungi secret dari OS/process yang sudah sepenuhnya dikompromikan.
+
 ## Gap hardening yang masih terbuka
 
 Urutan rekomendasi berdasarkan risiko/kejujuran produk:
 
-1. **Production credential vault** di Connect: encryption at-rest, rotation, least-privilege provider scope.
-2. **Durable cumulative spend budget** di provider boundary; harus bertahan restart dan aman terhadap concurrent calls.
-3. **External interoperability acceptance** untuk MCP HTTP melalui tunnel/HTTPS nyata, bukan hanya local/stateless protocol tests.
-4. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
-5. **Provider canary harian** dengan model/provider nyata dan quality floor; CI saat ini deterministic dan tidak membutuhkan kredensial eksternal.
-6. **Full-history secret scan sebelum public release**; current `secret-scan` memindai working tree, bukan seluruh git history.
-7. **Next.js ESLint integration warning** pada production build: build hijau, tetapi plugin Next belum diintegrasikan ke flat ESLint config.
-8. **Cumulative operational metrics** per hari/tugas (cost, quality, p50/p95) agar kenaikan otonomi Fase 6+ benar-benar evidence-driven.
+1. **Durable cumulative spend budget** di provider boundary; harus bertahan restart dan aman terhadap concurrent calls.
+2. **External interoperability acceptance** untuk MCP HTTP melalui tunnel/HTTPS nyata, bukan hanya local/stateless protocol tests.
+3. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
+4. **Provider canary harian** dengan model/provider nyata dan quality floor; CI saat ini deterministic dan tidak membutuhkan kredensial eksternal.
+5. **Full-history secret scan sebelum public release**; current `secret-scan` memindai working tree, bukan seluruh git history.
+6. **Next.js ESLint integration warning** pada production build: build hijau, tetapi plugin Next belum diintegrasikan ke flat ESLint config.
+7. **Cumulative operational metrics** per hari/tugas (cost, quality, p50/p95) agar kenaikan otonomi Fase 6+ benar-benar evidence-driven.
 
 Tidak satu pun gap di atas dianggap selesai hanya karena ada rencana atau unit test.
