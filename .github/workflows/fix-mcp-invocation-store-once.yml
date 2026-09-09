@@ -72,8 +72,8 @@ jobs:
               '''  it("rejects the same idempotency key across different workspace provenance", () => {\n    const store = new FileMcpInvocationStore(statePath());\n    store.reserve(input());\n    expect(() =>\n      store.reserve({ ...input(), workspaceId: WorkspaceIdSchema.parse("ws_b") }),\n    ).toThrow(McpInvocationConflictError);\n  });\n\n  it("fails closed when lock exists", () => {\n''')
           PY
       - run: pnpm exec prettier --write services/connect/src/mcp-client/invocation-store.ts services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.ts
-      - run: pnpm exec vitest run services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.test.ts
       - run: pnpm run typecheck
+      - run: pnpm exec vitest run services/connect/src/mcp-client/invocation-store.test.ts services/connect/src/mcp-client/manager.test.ts
       - name: Commit fix
         run: |
           set -euo pipefail
