@@ -56,7 +56,13 @@ Ini **tidak** berarti repo mengoperasikan managed relay publik. Authorization se
 
 Connect juga memiliki outbound MCP manager untuk memakai server MCP pihak lain. Baseline memakai official `@modelcontextprotocol/client@2.0.0`, Streamable HTTP dan stdio yang di-allowlist, workspace-scoped durable registry, named credential references di Connect Vault, explicit per-tool `ActionClass`, Hub policy/approval/audit, serta durable side-effect reservation.
 
-Discovery tidak otomatis mengaktifkan tool. Ambiguous side effect menjadi `MCP_OUTCOME_UNCERTAIN` dan tidak boleh di-retry otomatis; retry yang sudah diketahui ambiguous ditolak sebelum reconnect. Stdio bukan jalur arbitrary plugin execution: executable harus diizinkan exact oleh operator, dan Plugin/Extension Framework tetap workstream terpisah. Lihat [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md).
+Discovery tidak otomatis mengaktifkan tool. Ambiguous side effect menjadi `MCP_OUTCOME_UNCERTAIN` dan tidak boleh di-retry otomatis; retry yang sudah diketahui ambiguous ditolak sebelum reconnect. Stdio bukan jalur arbitrary plugin execution: executable harus diizinkan exact oleh operator. Lihat [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md).
+
+## Plugin / Extension Framework
+
+Hub memiliki control plane extension dengan manifest versioned, immutable source pin, SHA-256 bundle identity yang dibind ke Artifact CAS, workspace-scoped installation, append-only revision provenance, idempotent lifecycle receipt, rollback, dan health state. Runtime baseline hanya `none | mcp | sandbox`; tidak ada host-process execution. MCP extension tetap memakai Connect outbound MCP manager dan executable extension hanya boleh lewat Sandbox.
+
+Security admission membuktikan identity/integrity/declaration consistency dan dijalankan sebelum policy/audit mutation. Itu **bukan** klaim vulnerability-free. Capability/permission/secret declaration Batch 3 juga belum menjadi grant otomatis; unified grant/revocation authority diselesaikan pada Batch 4. Lihat [`docs/extension-operations.md`](docs/extension-operations.md) dan ADR-24.
 
 ## Arsitektur saat ini
 
@@ -125,7 +131,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 - **Fase 3 — CLOSED:** Artifact, Sandbox, Space + runtime acceptance.
 - **Fase 4 — CLOSED:** Flow di Temporal + forced worker crash/recovery.
 - **Fase 5 — DEFERRED BY DESIGN:** belum ada use case non-API konkret yang membenarkan RPA.
-- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, multi-provider hardening, external MCP HTTPS acceptance, dan outbound MCP manager sudah masuk baseline; plugin framework, multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
+- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, multi-provider hardening, external MCP HTTPS acceptance, outbound MCP manager, dan Plugin/Extension Framework sudah masuk baseline candidate; unified capability/permission plane, multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
 
 ## Invarian penting
 
@@ -146,7 +152,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 
 ## Batasan yang masih nyata
 
-- Plugin/extension registry + security gate belum ada; outbound MCP manager sudah ada, tetapi arbitrary extension/repository execution tetap tidak didukung.
+- Unified capability/permission grant + revocation plane belum selesai; extension manifest saat ini hanya mendeklarasikan kebutuhan dan tidak memberi grant otomatis.
 - Native OCR/STT/TTS/realtime voice belum menjadi capability runtime.
 - Visual node canvas/custom node SDK belum ada.
 - Data refactor/rebuild governance belum menjadi subsystem eksplisit.
@@ -167,6 +173,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 | [`docs/blueprint.md`](docs/blueprint.md) | Cetak biru Fase 0–6+ |
 | [`docs/fase6-hardening.md`](docs/fase6-hardening.md) | Baseline hardening + gap aktif |
 | [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md) | Operasi outbound MCP registry, credential, tool, dan failure handling |
+| [`docs/extension-operations.md`](docs/extension-operations.md) | Operasi extension manifest, lifecycle, provenance, rollback, dan security admission |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Log keputusan aktual |
 | [`docs/verification/`](docs/verification/) | Evidence exact-head/runtime acceptance |
 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |

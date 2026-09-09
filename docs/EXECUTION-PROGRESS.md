@@ -27,9 +27,9 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Baseline `main` tempat Batch 2 branch dibuat:
+Baseline `main` tempat Batch 3 branch dibuat:
 
-- `69cffc81694bff30260c1c9aaeae2cf667d5534f`
+- `97646e102ee90a39aa25a7b79b8cbf86673aa81f`
 
 Baseline condition sebelum Batch 2:
 
@@ -41,17 +41,16 @@ Baseline condition sebelum Batch 2:
 - Production Build: PASS
 - Naming: PASS
 
-Batch 1 tracker closure sudah merged pada baseline ini.
+Batch 2 sudah merged dan post-merge main CI `34360113741` full green pada baseline ini.
 
 ### Active branch
 
-- branch: `agent/outbound-mcp-manager-20260909`
-- PR: #9 — `feat: add outbound MCP client and manager`
-- Batch 2 status: **IMPLEMENTED / CLOSURE PENDING**
-- clean code candidate sebelum docs: `1cf736611d2b2a2778884d971b1afa92057f37b3`
-- code candidate CI: `34357212048` — full green
-- inbound public HTTPS regression acceptance: `34357212042` — PASS
-- exact docs/final head, merge, dan post-merge `main` verification: pending
+- branch: `agent/plugin-extension-framework-20260909`
+- PR: #10 — `feat: add plugin and extension framework`
+- Batch 3 status: **IMPLEMENTED / CLOSURE PENDING**
+- base main: `97646e102ee90a39aa25a7b79b8cbf86673aa81f`
+- extension focused Typecheck + regression: PASS
+- exact final CI, merge, dan post-merge `main` verification: pending
 
 ---
 
@@ -218,7 +217,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1 sudah CLOSED** dan **Batch 2 sudah implemented / closure pending**. Setelah Batch 2 ditutup, tersisa **10 batch platform/production (Batch 3–12)**.
+Dari current state, **Batch 1 dan Batch 2 sudah CLOSED**. **Batch 3 implemented / closure pending**; setelah Batch 3 ditutup, tersisa **9 batch platform/production (Batch 4–12)**.
 
 ---
 
@@ -258,7 +257,7 @@ Closure result:
 
 ## Batch 2 — Outbound MCP Client + MCP Manager
 
-Status: **IMPLEMENTED / CLOSURE PENDING**
+Status: **CLOSED**
 
 Goal: ecorione dapat memakai MCP server pihak lain tanpa membuat transport, credential, policy, approval, atau retry boundary kedua di luar Connect + Hub.
 
@@ -290,31 +289,48 @@ Evidence sebelum docs closure:
 - MCP External HTTPS Acceptance `34357212042` — PASS;
 - focused MCP regression setelah durable provenance/preflight fix: 14 tests PASS.
 
-Closure masih pending karena final docs head harus lolos exact-head gate, PR #9 harus merged dengan expected-head lock, dan post-merge `main` harus diverifikasi hijau. Setelah itu tracker boleh mengubah Batch 2 menjadi `CLOSED`; next implementation batch adalah Batch 3.
+Closure evidence:
+
+- final PR head: `5609d8cae9fe9bb83a751da5616822b8dec1c4a2`;
+- CI `34359796175` — full green;
+- MCP External HTTPS Acceptance `34359796083` — PASS;
+- PR #9 merge SHA: `97646e102ee90a39aa25a7b79b8cbf86673aa81f`;
+- post-merge main CI `34360113741` — full green.
+
+Batch 2 resmi `CLOSED`; next implementation batch adalah Batch 3.
 
 ---
 
 ## Batch 3 — Plugin / Extension Framework
 
-Status: **PLANNED**
+Status: **IMPLEMENTED / CLOSURE PENDING**
 
-Scope:
+Implemented baseline:
 
-- Plugin Registry
-- manifest/version/source metadata
-- pinned Git revision/release
-- capability declaration
-- permission requirements
-- secret requirements
-- install/update/remove
-- rollback
-- integrity/provenance
-- extension health
-- workspace visibility
+- strict versioned manifest `ecorione.extension/v1`;
+- immutable GitHub commit SHA / HTTPS release / Artifact source identity;
+- SHA-256 bundle identity bound to Artifact CAS;
+- execution kinds only `none | mcp | sandbox`; no host execution;
+- MCP execution remains behind Connect outbound MCP manager;
+- executable extension remains behind Sandbox;
+- declared capabilities, permissions/ActionClass, and secret requirements;
+- fail-closed security admission before policy/audit mutation;
+- durable workspace-scoped installation registry;
+- append-only extension revisions;
+- transactional idempotent install/update/rollback/remove/health receipts;
+- same idempotency key + different canonical fingerprint fails conflict;
+- rollback creates a new revision and preserves target provenance;
+- remove preserves revision history;
+- workspace-isolated list/get/revision visibility;
+- HTTP lifecycle regression covers validation, idempotency, isolation, update/rollback, health, remove, and blocked admission.
 
 Security rule:
 
-> Arbitrary GitHub repository **tidak boleh** langsung dieksekusi di host process. Source harus melalui pinned revision, validation/security gate, dan Sandbox bila membawa executable code.
+> Arbitrary GitHub repository **tidak boleh** langsung dieksekusi di host process. Digest/provenance admission proves identity/integrity, not vulnerability absence. Capability/permission declaration is not an authority grant until Batch 4.
+
+ADR: `docs/adr/0024-plugin-extension-framework.md`
+Operations: `docs/extension-operations.md`
+Closure pending: exact final CI + public MCP regression, PR #10 expected-head merge, dan post-merge main verification.
 
 ---
 

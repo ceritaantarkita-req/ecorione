@@ -80,16 +80,33 @@ ADR-23 menambahkan outbound MCP boundary di Connect tanpa membuat jalur governan
 - known ambiguous retry ditolak sebelum reconnect/discovery, sementara atomic reserve tetap race barrier sebelum remote dispatch;
 - remote success tidak dibuat retryable karena settlement/audit bookkeeping lokal gagal.
 
-Code candidate sebelum docs lulus full CI `34357212048` dan inbound public HTTPS regression acceptance `34357212042`. Ini adalah evidence candidate, bukan closure final; exact docs head, merge, dan post-merge main verification tetap wajib. Arbitrary plugin/repository execution tetap tidak termasuk baseline ini.
+Code candidate sebelum docs lulus full CI `34357212048` dan inbound public HTTPS regression acceptance `34357212042`. Batch 2 kemudian ditutup pada final head `5609d8cae9fe9bb83a751da5616822b8dec1c4a2`: CI `34359796175` PASS, public HTTPS `34359796083` PASS, PR #9 merged sebagai `97646e102ee90a39aa25a7b79b8cbf86673aa81f`, dan post-merge main CI `34360113741` full green.
+
+### 10. Plugin / Extension Framework
+
+ADR-24 menambahkan Hub-owned extension control plane tanpa membuat arbitrary code execution path:
+
+- strict manifest `ecorione.extension/v1` dengan immutable GitHub SHA / HTTPS release / Artifact source;
+- bundle SHA-256 harus identik dengan Artifact CAS identity;
+- runtime hanya `none`, `mcp`, atau `sandbox`; tidak ada host runtime;
+- MCP execution tetap melalui Connect outbound MCP manager; executable extension hanya melalui Sandbox;
+- capability, permission, dan secret requirement dideklarasikan tetapi belum menjadi grant otomatis;
+- security admission berjalan sebelum policy/audit mutation dan blocked manifest tidak membuat registry state;
+- durable workspace-scoped installation projection + append-only revision history;
+- install/update/rollback/remove/health memakai transactional idempotent receipts;
+- rollback membuat revision baru dan mempertahankan provenance target;
+- remove tidak menghapus revision provenance.
+
+Integrity gate ini tidak diklaim sebagai vulnerability scanner. Unified grant/revocation dan cross-runtime permission authority tetap Batch 4.
 
 ## Gap hardening/platform yang masih terbuka
 
 Urutan rekomendasi berdasarkan dependency dan risiko:
 
-1. **Plugin/extension framework + security gate** termasuk GitHub-origin extension, manifest, pin revision, sandbox, permission, rollback.
+1. **Unified capability/permission plane** untuk grant/revoke workspace-scoped lintas MCP/Plugin/Sandbox/model/tool; extension declaration Batch 3 belum menjadi authority grant.
 2. **Native multimodal pipeline**: image/document first-class input, OCR, STT/TTS Indonesia+Inggris, lalu realtime voice.
 3. **Data refactor/rebuild + dataset governance**: authoritative-vs-derived separation, migration, reindex/rebuild, validation, lineage/versioning.
-4. **Unified capability/permission registry + Node Registry** sebagai dasar visual Flow Canvas, core node pack, custom node SDK, dan reusable subflow.
+4. **Node Registry** di atas capability/permission plane sebagai dasar visual Flow Canvas, core node pack, custom node SDK, dan reusable subflow.
 5. **Space block runtime** ala block workspace tanpa menggandakan source of truth Context/Artifact.
 6. **Data maintenance center + backup/restore/disaster recovery** dengan integrity verification.
 7. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
