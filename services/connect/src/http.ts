@@ -1,7 +1,4 @@
-/**
- * Route HTTP Connect — `docs/api-fase1.md` §Connect. Satu endpoint inti: `POST /v1/complete`.
- */
-
+/** Route HTTP Connect — provider gateway and local runtime boundary. */
 import { ToolDefinitionSchema } from "@ecorione/context-assembly";
 import {
   CoreMemorySchema,
@@ -19,14 +16,15 @@ import { z } from "zod";
 import { ExactMatchCache } from "./cache.js";
 import { complete, type CompleteDeps } from "./complete.js";
 import { CredentialVaultError, type ProviderCredentialReader } from "./credential-vault.js";
+import type { HostedProviderId } from "./provider-types.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
   ProviderError,
 } from "./providers/errors.js";
+import type { LocalRuntimeId } from "./providers/local-runtime.js";
 import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 
-/** Memetakan kegagalan provider/kredensial/kontrol operator ke error HTTP eksplisit. */
 function toHttpError(err: unknown): unknown {
   if (err instanceof CostKillSwitchError)
     return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
@@ -60,17 +58,17 @@ const CompleteBodySchema = z.object({
 export interface BuildConnectServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
-  /** Production credential source; raw provider keys never leave Connect. */
   readonly credentialVault?: ProviderCredentialReader | undefined;
-  /** Development-only fallback when no vault is configured. */
+  readonly hostedProvider?: HostedProviderId | undefined;
+  /** Development-only fallbacks when no credential vault is configured. */
   readonly anthropicApiKey?: string | undefined;
+  readonly openrouterApiKey?: string | undefined;
+  readonly openaiApiKey?: string | undefined;
+  readonly localRuntime?: LocalRuntimeId | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
-  /** Emergency operator cost control. Default true supaya upgrade tidak mengubah perilaku. */
   readonly hostedCallsEnabled?: boolean | undefined;
-  /** Durable cumulative budget; hosted cache misses reserve before provider dispatch. */
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
-  /** Diinjeksikan supaya test bisa memeriksa isi cache secara langsung kalau perlu. */
   readonly cache?: ExactMatchCache | undefined;
 }
 
@@ -78,7 +76,11 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
   const app = createServer({ name: "connect", token: options.token, logger: options.logger });
   const deps: CompleteDeps = {
     credentialVault: options.credentialVault,
+    hostedProvider: options.hostedProvider,
     anthropicApiKey: options.anthropicApiKey,
+    openrouterApiKey: options.openrouterApiKey,
+    openaiApiKey: options.openaiApiKey,
+    localRuntime: options.localRuntime,
     localBaseUrl: options.localBaseUrl,
     localModelTag: options.localModelTag,
     cache: options.cache ?? new ExactMatchCache(),

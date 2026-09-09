@@ -1,55 +1,55 @@
-/**
- * Routing deterministik — `docs/api-fase1.md` §Connect "Routing deterministik", ADR-02.
- *
- * **Bukan** predictor terlatih: urutan aturan tetap, berhenti di yang pertama menyala,
- * `routeReason` = id aturan itu sendiri. Kalau suatu hari routing perlu jadi lebih pintar,
- * itu perubahan yang harus terlihat di diff (aturan baru, versi baru) — bukan model yang
- * diam-diam belajar rute berbeda dari trafik yang sama.
- */
-
+/** Deterministic routing — ADR-02 + ADR-14. */
 import type { Sensitivity } from "@ecorione/shared-schema";
 import type { PinnedModelId } from "@ecorione/shared-telemetry";
+import { DEFAULT_HOSTED_PROVIDER, type HostedProviderId } from "./provider-types.js";
 
 export type RouteTarget = "hosted" | "local";
 
 export interface RouteRequest {
   readonly target: RouteTarget;
   readonly sensitivity: Sensitivity;
+  readonly hostedProvider?: HostedProviderId | undefined;
 }
 
 export interface RouteDecision {
-  /**
-   * Identitas model untuk keperluan harga/ledger (`pricing.ts`) — **bukan** tag mentah
-   * yang dikirim ke endpoint Ollama. Untuk `target: "local"` ini selalu string pin tetap;
-   * tag Ollama sungguhan datang dari `ECORIONE_LOCAL_MODEL` di adapter, terpisah dari
-   * keputusan routing (ADR-14 — alias/tag provider tidak boleh jadi identitas biaya).
-   */
+  /** Pinned pricing identity, not necessarily the provider runtime slug. */
   readonly model: PinnedModelId;
   readonly routeReason: "local-consolidation" | "sensitivity-restricted" | "default-hosted";
 }
 
-/** Identitas biaya tetap untuk model lokal — lihat catatan di `RouteDecision.model`. */
 export const LOCAL_PINNED_MODEL: PinnedModelId = "local/qwen3-8b-instruct-q4_k_m";
 
-const SENSITIVITY_MODEL: PinnedModelId = "claude-opus-4-1-20250805";
-const DEFAULT_HOSTED_MODEL: PinnedModelId = "claude-sonnet-4-5-20250929";
+function hostedModel(provider: HostedProviderId, sensitivity: Sensitivity): PinnedModelId {
+  switch (provider) {
+    case "anthropic":
+    case "openrouter":
+      return sensitivity === "RESTRICTED"
+        ? "claude-opus-4-1-20250805"
+        : "claude-sonnet-4-5-20250929";
+    case "openai":
+      return sensitivity === "RESTRICTED" ? "gpt-5.6-sol" : "gpt-5.6-terra";
+  }
+}
 
 /**
- * Urutan aturan mengikuti kontrak persis — jangan susun ulang tanpa memperbarui
- * `docs/api-fase1.md` di saat yang sama:
+ * Deterministic order:
+ * 1. local target always stays local;
+ * 2. RESTRICTED chooses the provider's higher-quality pinned model;
+ * 3. normal hosted chooses the provider's standard pinned model.
  *
- * 1. `target === "local"` → selalu model lokal. Model lokal berperan classifier/extractor
- *    (ADR-04), bukan agent loop — tidak pernah dieskalasi diam-diam ke hosted.
- * 2. `sensitivity === "RESTRICTED"` → kualitas tertinggi (Opus). Gerbang sensitivitas
- *    tidak pernah ditukar dengan biaya.
- * 3. Default → model hosted standar.
+ * Provider choice is explicit configuration, never an auto-router. Runtime aliases such as
+ * `gpt-5.6` or model `latest` are not accepted as pricing identities.
  */
 export function route(req: RouteRequest): RouteDecision {
   if (req.target === "local") {
     return { model: LOCAL_PINNED_MODEL, routeReason: "local-consolidation" };
   }
+  const provider = req.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
   if (req.sensitivity === "RESTRICTED") {
-    return { model: SENSITIVITY_MODEL, routeReason: "sensitivity-restricted" };
+    return {
+      model: hostedModel(provider, req.sensitivity),
+      routeReason: "sensitivity-restricted",
+    };
   }
-  return { model: DEFAULT_HOSTED_MODEL, routeReason: "default-hosted" };
+  return { model: hostedModel(provider, req.sensitivity), routeReason: "default-hosted" };
 }

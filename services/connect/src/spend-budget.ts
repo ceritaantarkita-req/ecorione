@@ -13,6 +13,7 @@ import {
 import { dirname } from "node:path";
 import { OperationIdSchema, type OperationId, type Timestamp } from "@ecorione/shared-schema";
 import { z } from "zod";
+import { HOSTED_PROVIDER_IDS, type HostedProviderId } from "./provider-types.js";
 
 const TimestampSchema = z.string().datetime({ offset: false });
 const NonNegativeUsdSchema = z.number().finite().nonnegative();
@@ -23,7 +24,7 @@ const SpendStatusSchema = z.enum(["reserved", "uncertain", "settled"]);
 const SpendEntrySchema = z.object({
   reservationId: ReservationIdSchema,
   operationId: OperationIdSchema,
-  provider: z.literal("anthropic"),
+  provider: z.enum(HOSTED_PROVIDER_IDS),
   model: z.string().min(1),
   reservedUsd: PositiveUsdSchema,
   actualUsd: NonNegativeUsdSchema.nullable(),
@@ -47,7 +48,7 @@ export interface SpendBudgetPolicy {
 
 export interface SpendReservationInput {
   readonly operationId: OperationId;
-  readonly provider: "anthropic";
+  readonly provider: HostedProviderId;
   readonly model: string;
   readonly reservedUsd: number;
   readonly now: Timestamp;
@@ -228,14 +229,7 @@ function newReservationId(): string {
   return `spend_${randomBytes(16).toString("hex")}`;
 }
 
-/**
- * Durable single-writer spend ledger at the Connect provider boundary.
- *
- * Every hosted dispatch must reserve budget before the provider call. Reserved/uncertain
- * entries count at their conservative reservation value until an actual provider cost is
- * durably settled. The filesystem lock prevents concurrent writers from admitting against
- * the same stale snapshot; a stale lock after process/host failure intentionally fails closed.
- */
+/** Durable single-host spend ledger at the Connect hosted-provider boundary. */
 export class FileSpendBudget {
   readonly policy: SpendBudgetPolicy;
 

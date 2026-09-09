@@ -13,25 +13,34 @@ import {
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import type { ProviderCredentialReader } from "./credential-vault.js";
-import { callAnthropic, estimateAnthropicReservationUsd } from "./providers/anthropic.js";
+import {
+  DEFAULT_HOSTED_PROVIDER,
+  providerCredentialLabel,
+  type HostedProviderId,
+} from "./provider-types.js";
 import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
-import { callLocal } from "./providers/local.js";
+import { callHostedProvider, estimateHostedReservationUsd } from "./providers/hosted.js";
+import { callLocalRuntime, type LocalRuntimeId } from "./providers/local-runtime.js";
 import { route, type RouteTarget } from "./routing.js";
 import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
 
 type SpendBudgetController = Pick<FileSpendBudget, "reserve" | "settle" | "markUncertain">;
 
 export interface CompleteDeps {
-  /** Production source. If configured, env fallback is intentionally ignored. */
+  /** Production source. If configured, all raw provider env fallbacks are ignored. */
   readonly credentialVault?: ProviderCredentialReader | undefined;
-  /** Development-only compatibility fallback when no vault is configured. */
+  /** Hosted provider is process configuration, never chosen by model output. */
+  readonly hostedProvider?: HostedProviderId | undefined;
+  /** Development-only compatibility fallbacks when no vault is configured. */
   readonly anthropicApiKey: string | undefined;
+  readonly openrouterApiKey?: string | undefined;
+  readonly openaiApiKey?: string | undefined;
+  /** Local inference is protocol-based; Ollama is only one possible implementation. */
+  readonly localRuntime?: LocalRuntimeId | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
   readonly cache: ExactMatchCache;
-  /** Emergency operator control. Defaults true at HTTP construction boundary. */
   readonly hostedCallsEnabled: boolean;
-  /** Optional durable cumulative budget. If absent, hosted budget admission is disabled. */
   readonly spendBudget?: SpendBudgetController | undefined;
 }
 export interface CompleteInput {
@@ -52,6 +61,7 @@ export interface CompleteBudgetResult {
 }
 export interface CompleteResult {
   readonly reply: string;
+  readonly provider: HostedProviderId | "local";
   /** Pinned cost/routing identity. */
   readonly model: string;
   /** Runtime identity reported by provider/runtime. */
@@ -62,25 +72,40 @@ export interface CompleteResult {
   readonly routeReason: string;
   readonly budget?: CompleteBudgetResult | undefined;
 }
-const POLICY_VERSION = "2";
+const POLICY_VERSION = "3";
+
+function developmentApiKey(deps: CompleteDeps, provider: HostedProviderId): string | undefined {
+  switch (provider) {
+    case "anthropic":
+      return deps.anthropicApiKey;
+    case "openrouter":
+      return deps.openrouterApiKey;
+    case "openai":
+      return deps.openaiApiKey;
+  }
+}
 
 export async function complete(
   deps: CompleteDeps,
   input: CompleteInput,
 ): Promise<CompleteResult> {
-  // Connect enforces the invariant itself; callers cannot bypass Hub/context-assembly.
   assertPrefixCacheable(input.prefix);
   const overheadStart = performance.now();
-  const decision = route({ target: input.target, sensitivity: input.sensitivity });
+  const hostedProvider = deps.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
+  const decision = route({
+    target: input.target,
+    sensitivity: input.sensitivity,
+    hostedProvider,
+  });
 
-  // Fase 6 cost kill switch lives at the provider boundary so Hub, Flow, MCP, or any
-  // future caller cannot bypass it. No silent reroute to local is allowed.
   if (decision.routeReason !== "local-consolidation" && !deps.hostedCallsEnabled) {
     throw new CostKillSwitchError();
   }
 
+  const providerIdentity =
+    decision.routeReason === "local-consolidation" ? "local" : hostedProvider;
   const key = cacheKey({
-    model: decision.model,
+    model: `${providerIdentity}:${decision.model}`,
     prefixDigest: prefixDigest(input.prefix),
     dynamicText: input.dynamicText,
     userMessage: input.userMessage,
@@ -95,16 +120,17 @@ export async function complete(
   let baselineUsage: TokenUsage;
   let cacheHit: boolean;
   let spendReservation: SpendEntry | undefined;
+  let providerReportedActualUsd: number | undefined;
 
   if (cached !== null) {
     reply = cached.reply;
     responseModel = cached.model;
-    // Internal exact-cache hit performs no provider call: actual tokens/cost are zero.
     usage = tokenUsage();
     baselineUsage = cached.usage;
     cacheHit = true;
   } else if (decision.routeReason === "local-consolidation") {
-    const result = await callLocal({
+    const result = await callLocalRuntime({
+      runtime: deps.localRuntime ?? "openai-compatible",
       baseUrl: deps.localBaseUrl,
       modelTag: deps.localModelTag,
       prefix: input.prefix,
@@ -120,13 +146,14 @@ export async function complete(
   } else {
     const apiKey =
       deps.credentialVault === undefined
-        ? deps.anthropicApiKey
-        : deps.credentialVault.get("anthropic", "messages");
+        ? developmentApiKey(deps, hostedProvider)
+        : deps.credentialVault.get(hostedProvider, "messages");
     if (apiKey === undefined) {
+      const label = providerCredentialLabel(hostedProvider);
       throw new MissingCredentialError(
         deps.credentialVault === undefined
-          ? "ANTHROPIC_API_KEY (dev fallback)"
-          : "Connect vault anthropic/messages",
+          ? `${label} (dev fallback)`
+          : `Connect vault ${hostedProvider}/messages`,
       );
     }
 
@@ -139,19 +166,24 @@ export async function complete(
     if (deps.spendBudget !== undefined) {
       spendReservation = deps.spendBudget.reserve({
         operationId: input.operationId,
-        provider: "anthropic",
+        provider: hostedProvider,
         model: decision.model,
-        reservedUsd: estimateAnthropicReservationUsd(providerInput),
+        reservedUsd: estimateHostedReservationUsd(hostedProvider, providerInput),
         now: input.now,
       });
     }
 
     try {
-      const result = await callAnthropic({ apiKey, ...providerInput });
+      const result = await callHostedProvider({
+        provider: hostedProvider,
+        apiKey,
+        ...providerInput,
+      });
       reply = result.reply;
       responseModel = result.model;
       usage = result.usage;
       baselineUsage = usage;
+      providerReportedActualUsd = result.providerReportedActualUsd;
       deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
       cacheHit = false;
     } catch (error) {
@@ -159,9 +191,8 @@ export async function complete(
         try {
           deps.spendBudget.markUncertain(spendReservation.reservationId);
         } catch {
-          // Reservation itself was durably committed before dispatch. If uncertain marking
-          // fails, retaining it as `reserved` is still conservative and must not hide the
-          // original provider failure.
+          // Pre-dispatch reservation is already durable. Retaining `reserved` remains
+          // conservative and must not hide the original provider failure.
         }
       }
       throw error;
@@ -172,6 +203,9 @@ export async function complete(
     model: decision.model,
     usage,
     baselineUsage,
+    ...(providerReportedActualUsd === undefined
+      ? {}
+      : { actualUsdOverride: providerReportedActualUsd }),
     routeReason: decision.routeReason,
     policyVersion: POLICY_VERSION,
     optimizerOverheadMs,
@@ -184,8 +218,6 @@ export async function complete(
     try {
       deps.spendBudget.settle(spendReservation.reservationId, cost.actualUsd, input.now);
     } catch {
-      // Provider success must not become retryable solely because post-provider budget
-      // finalization failed. The durable pre-dispatch reservation remains counted.
       settlement = "reservation-retained";
     }
     budget = {
@@ -199,6 +231,7 @@ export async function complete(
 
   return {
     reply,
+    provider: providerIdentity,
     model: decision.model,
     responseModel,
     cacheHit,

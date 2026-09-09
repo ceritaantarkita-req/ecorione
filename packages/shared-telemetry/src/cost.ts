@@ -9,6 +9,7 @@ export const TokenUsageSchema = z.object({
   cacheReadTokens: z.number().int().nonnegative(),
   cacheWriteTokens: z.number().int().nonnegative(),
 });
+const NonNegativeUsdSchema = z.number().finite().nonnegative();
 export type TokenUsage = z.infer<typeof TokenUsageSchema>;
 export function tokenUsage(partial: Partial<TokenUsage> = {}): TokenUsage {
   return TokenUsageSchema.parse({
@@ -61,6 +62,8 @@ export interface CallCostInput {
   readonly model: string;
   readonly usage: TokenUsage;
   readonly baselineUsage?: TokenUsage;
+  /** Provider-reported billed cost wins when the provider exposes an authoritative value. */
+  readonly actualUsdOverride?: number;
   readonly routeReason: PolicyRule["id"];
   readonly policyVersion: PolicyRule["version"];
   readonly optimizerOverheadMs: number;
@@ -73,7 +76,10 @@ export function recordCall(input: CallCostInput): CallCostRecord {
   const naiveModel = input.naiveModel ?? DEFAULT_NAIVE_MODEL;
   const usage = TokenUsageSchema.parse(input.usage);
   const baselineUsage = TokenUsageSchema.parse(input.baselineUsage ?? usage);
-  const actualUsd = computeCost(input.model, usage);
+  const actualUsd =
+    input.actualUsdOverride === undefined
+      ? computeCost(input.model, usage)
+      : NonNegativeUsdSchema.parse(input.actualUsdOverride);
   const naiveUsd = computeNaiveCost(naiveModel, baselineUsage);
   const savedUsd = naiveUsd - actualUsd;
   const record: MutableCallCostRecord = {
