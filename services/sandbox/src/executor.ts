@@ -3,7 +3,9 @@ import { spawn } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import {
+  assertId,
   SandboxExecutionReceiptSchema,
+  type PermissionId,
   type SandboxExecutionReceipt,
   type SandboxExecutionRequest,
 } from "@ecorione/shared-schema";
@@ -27,6 +29,7 @@ const DESTRUCTIVE = new Set([
 ]);
 const SHELL_META = /[;&|><`$()]/;
 const SAFE_GIT = new Set(["status", "diff", "log", "show"]);
+const PERSONAL_WORKSPACE = assertId("workspace", "ws_personal");
 
 export class SandboxBoundaryError extends Error {}
 export class SandboxApprovalRequiredError extends Error {}
@@ -82,6 +85,18 @@ function assertSafeHostCommand(tokens: readonly string[]): void {
   throw new SandboxBoundaryError(
     "Tier 0 host hanya mengizinkan pwd, ls, cat path-relatif, dan git status/diff/log/show.",
   );
+}
+
+function authorityPermissions(request: SandboxExecutionRequest): readonly PermissionId[] {
+  if (request.tier === "tier1.5") return ["sandbox.execute" as PermissionId];
+  if (request.tier === "tier0") {
+    return ["sandbox.execute" as PermissionId, "filesystem.read" as PermissionId];
+  }
+  return [
+    "sandbox.execute" as PermissionId,
+    "filesystem.read" as PermissionId,
+    "filesystem.write" as PermissionId,
+  ];
 }
 
 export interface DockerPlan {
@@ -203,12 +218,27 @@ export class SandboxExecutor {
     const prior = this.receipts.get(request.idempotencyKey);
     if (prior !== null) return prior;
     const workspace = assertWorkspace(this.workspaceRoot, request.workspace);
+    const workspaceId = request.workspaceId ?? PERSONAL_WORKSPACE;
+    const authority = await this.control.authorize({
+      operationId: request.operationId,
+      workspaceId,
+      subject: { kind: "sandbox", id: request.tier },
+      capabilityId: "sandbox.execute",
+      permissionIds: [...authorityPermissions(request)],
+      scope: request.scope,
+      sensitivity: request.sensitivity,
+      autonomy: "L2",
+    });
+    if (authority.outcome === "DENY") {
+      throw new SandboxBoundaryError(`Sandbox authority ditolak: ${authority.reason}`);
+    }
+
     const verdict = await this.control.evaluate({
       operationId: request.operationId,
       module: "Sandbox",
       tool: `sandbox.${request.tier}`,
       actionClass: request.irreversible ? "IRREVERSIBLE_WRITE" : "EXECUTE",
-      args: { tier: request.tier, workspace },
+      args: { workspaceId, tier: request.tier, workspace },
       scope: request.scope,
       sensitivity: request.sensitivity,
       autonomy: "L2",
@@ -224,7 +254,12 @@ export class SandboxExecutor {
       name: "sandbox.execution.requested",
       operationId: request.operationId,
       recordedAt,
-      attributes: { tier: request.tier, workspace, irreversible: request.irreversible },
+      attributes: {
+        workspaceId,
+        tier: request.tier,
+        workspace,
+        irreversible: request.irreversible,
+      },
     });
     const start = process.hrtime.bigint();
     let result: { exitCode: number; stdout: string; stderr: string };
@@ -262,6 +297,7 @@ export class SandboxExecutor {
       operationId: request.operationId,
       recordedAt: nowIso(),
       attributes: {
+        workspaceId,
         tier: request.tier,
         exitCode: result.exitCode,
         durationMs,
