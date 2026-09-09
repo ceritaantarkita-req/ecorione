@@ -3,12 +3,15 @@ CREATE TABLE IF NOT EXISTS multimodal_attachments (
   workspace_id TEXT NOT NULL,
   artifact_id TEXT NOT NULL REFERENCES artifact_pointers(id),
   media_kind TEXT NOT NULL CHECK(media_kind IN ('image','document','audio','video')),
+  scope TEXT NOT NULL,
+  sensitivity TEXT NOT NULL CHECK(sensitivity IN ('PUBLIC','INTERNAL','SENSITIVE','RESTRICTED')),
+  sync_class TEXT NOT NULL CHECK(sync_class IN ('LOCAL_ONLY','SYNC_ENCRYPTED','CLOUD_ALLOWED','PUBLIC')),
   lifecycle_state TEXT NOT NULL CHECK(lifecycle_state IN ('UPLOADED','PROCESSING','READY','FAILED')),
   latest_derivation_id TEXT,
   error TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  UNIQUE(workspace_id, artifact_id)
+  UNIQUE(workspace_id, artifact_id, scope, sensitivity, sync_class)
 );
 CREATE INDEX IF NOT EXISTS idx_multimodal_attachments_workspace_state
   ON multimodal_attachments(workspace_id, lifecycle_state, updated_at);
