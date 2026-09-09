@@ -93,7 +93,7 @@ Docker escalation untuk workload yang butuh runtime/package nyata. V1 menjalanka
 
 Catatan: ecorione mengikuti ADR-10 dan **tidak mengklaim secure sandbox** terhadap kernel escape.
 
-### `POST /v1/execute`
+### `POST /v1/executions`
 
 Body mengikuti `SandboxExecutionRequestSchema` di `packages/shared-schema/src/sandbox.ts`. Side effect selalu membawa `idempotencyKey`.
 
@@ -146,4 +146,4 @@ CI Fase 3 mengeksekusi runtime acceptance nyata, bukan hanya unit-plan assertion
 4. Sandbox Tier 1.5 benar-benar menjalankan zero-import WASM.
 5. Sandbox Tier 1 benar-benar menjalankan container Docker dengan hardening ADR-10.
 
-Closure run `34300859602` pada commit `c5cc1d6b42d11883ddb1b5e45ed7c60545448262` lulus naming, lint, typecheck, **321/321 tests**, secret scan, dan production build. CI sementara yang boleh menulis hanya dipakai untuk canonical lock/format selama penambahan workspace; setelah closure workflow dikembalikan ke frozen/read-only strict gate.
+Final strict closure run `34301124513` pada commit `6117e8a528b52aef2351dd63b45b1fd980a8dc74` lulus frozen lockfile, format check, naming, lint, typecheck, runtime tests termasuk Docker nyata, secret scan, dan production build. Run helper `34300859602` adalah evidence runtime sebelumnya, bukan final strict closure run.
