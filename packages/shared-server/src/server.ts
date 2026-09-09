@@ -8,6 +8,8 @@ export interface CreateServerOptions {
   readonly name: string;
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
+  /** Explicit per-service JSON/body ceiling; Fastify's default is too small for Artifact media. */
+  readonly bodyLimit?: number | undefined;
 }
 declare module "fastify" {
   interface FastifyRequest {
@@ -23,7 +25,10 @@ function errorBody(err: HttpError): Record<string, unknown> {
   return body;
 }
 export function createServer(options: CreateServerOptions): FastifyInstance {
-  const app = Fastify({ logger: options.logger ?? false });
+  const app = Fastify({
+    logger: options.logger ?? false,
+    ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }),
+  });
   app.decorateRequest("requestId", "");
   app.addHook("onRequest", async (req: FastifyRequest) => {
     const incoming = req.headers["x-request-id"];
