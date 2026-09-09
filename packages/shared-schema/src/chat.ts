@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import {
+  AttachmentIdSchema,
   MemoryFactIdSchema,
   OperationIdSchema,
   SessionIdSchema,
@@ -18,6 +19,7 @@ export const ChatRequestSchema = z.object({
   sessionId: SessionIdSchema,
   workspaceId: WorkspaceIdSchema.optional(),
   message: z.string().min(1).max(16_000),
+  attachmentIds: z.array(AttachmentIdSchema).max(8).default([]),
   scope: ScopeSchema.default("personal"),
   /** Plafon sensitivitas fakta yang boleh ikut ditarik ke konteks giliran ini. */
   maxSensitivity: SensitivitySchema.default("INTERNAL"),
