@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import { bindHost } from "@ecorione/shared-server";
 import { openHubDatabase } from "./db.js";
 import { buildHubServer } from "./http.js";
+import { registerHubMultimodal } from "./multimodal-bootstrap.js";
 
 /** Default DB dijangkarkan ke lokasi modul, bukan process.cwd(). */
 const DEFAULT_DB_PATH = resolve(import.meta.dirname, "../../../data/hub.db");
@@ -28,6 +29,7 @@ const app = buildHubServer(db, {
   artifactUrl,
   internalToken: token,
 });
+registerHubMultimodal(app, db, { contextUrl, connectUrl, artifactUrl, internalToken: token });
 
 app
   .listen({ port, host: bindHost() })
