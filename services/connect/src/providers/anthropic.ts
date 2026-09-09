@@ -17,19 +17,35 @@ export interface AnthropicCallInput {
   readonly dynamicText: string;
   readonly userMessage: string;
 }
-export interface AnthropicCallResult { readonly reply: string; readonly model: string; readonly usage: TokenUsage; }
+export interface AnthropicCallResult {
+  readonly reply: string;
+  readonly model: string;
+  readonly usage: TokenUsage;
+}
 interface AnthropicToolBlock {
-  readonly name: string; readonly description: string; readonly input_schema: Record<string, unknown>;
+  readonly name: string;
+  readonly description: string;
+  readonly input_schema: Record<string, unknown>;
   readonly cache_control?: { readonly type: "ephemeral" };
 }
-interface AnthropicSystemBlock { readonly type: "text"; readonly text: string; readonly cache_control?: { readonly type: "ephemeral" }; }
-interface AnthropicTextBlock { readonly type: "text"; readonly text: string; readonly cache_control?: { readonly type: "ephemeral" }; }
+interface AnthropicSystemBlock {
+  readonly type: "text";
+  readonly text: string;
+  readonly cache_control?: { readonly type: "ephemeral" };
+}
+interface AnthropicTextBlock {
+  readonly type: "text";
+  readonly text: string;
+  readonly cache_control?: { readonly type: "ephemeral" };
+}
 interface AnthropicResponseBody {
   readonly content?: ReadonlyArray<{ readonly type: string; readonly text?: string }>;
   readonly model?: string;
   readonly usage?: {
-    readonly input_tokens?: number; readonly output_tokens?: number;
-    readonly cache_creation_input_tokens?: number; readonly cache_read_input_tokens?: number;
+    readonly input_tokens?: number;
+    readonly output_tokens?: number;
+    readonly cache_creation_input_tokens?: number;
+    readonly cache_read_input_tokens?: number;
   };
 }
 function buildTools(prefix: StablePrefix): AnthropicToolBlock[] {
@@ -37,7 +53,9 @@ function buildTools(prefix: StablePrefix): AnthropicToolBlock[] {
     name: t.name,
     description: t.description,
     input_schema: t.inputSchema,
-    ...(i === prefix.toolDefinitions.length - 1 ? { cache_control: { type: "ephemeral" as const } } : {}),
+    ...(i === prefix.toolDefinitions.length - 1
+      ? { cache_control: { type: "ephemeral" as const } }
+      : {}),
   }));
 }
 function buildSystem(prefix: StablePrefix): AnthropicSystemBlock[] {
@@ -47,9 +65,14 @@ function buildSystem(prefix: StablePrefix): AnthropicSystemBlock[] {
   ];
 }
 function buildUserContent(input: AnthropicCallInput): string | AnthropicTextBlock[] {
-  if (input.prefix.coreMemory.blocks.length === 0) return `${input.dynamicText}\n\n${input.userMessage}`;
+  if (input.prefix.coreMemory.blocks.length === 0)
+    return `${input.dynamicText}\n\n${input.userMessage}`;
   return [
-    { type: "text", text: renderCoreMemoryData(input.prefix.coreMemory), cache_control: { type: "ephemeral" } },
+    {
+      type: "text",
+      text: renderCoreMemoryData(input.prefix.coreMemory),
+      cache_control: { type: "ephemeral" },
+    },
     { type: "text", text: `${input.dynamicText}\n\n${input.userMessage}` },
   ];
 }
@@ -65,18 +88,38 @@ export async function callAnthropic(input: AnthropicCallInput): Promise<Anthropi
   try {
     res = await fetch(ANTHROPIC_MESSAGES_URL, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": input.apiKey, "anthropic-version": ANTHROPIC_VERSION },
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": input.apiKey,
+        "anthropic-version": ANTHROPIC_VERSION,
+      },
       body: JSON.stringify(body),
     });
   } catch (err) {
-    throw new ProviderError("hosted", `Tidak bisa menghubungi Anthropic: ${err instanceof Error ? err.message : String(err)}`);
+    throw new ProviderError(
+      "hosted",
+      `Tidak bisa menghubungi Anthropic: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
   const text = await res.text();
   let parsed: AnthropicResponseBody;
-  try { parsed = text.length === 0 ? {} : JSON.parse(text) as AnthropicResponseBody; }
-  catch { throw new ProviderError("hosted", `Respons Anthropic bukan JSON valid: ${text.slice(0, 200)}`); }
-  if (!res.ok) throw new ProviderError("hosted", `Anthropic membalas status ${String(res.status)}: ${text.slice(0, 400)}`);
-  const reply = (parsed.content ?? []).filter((b) => b.type === "text" && typeof b.text === "string").map((b) => b.text).join("");
+  try {
+    parsed = text.length === 0 ? {} : (JSON.parse(text) as AnthropicResponseBody);
+  } catch {
+    throw new ProviderError(
+      "hosted",
+      `Respons Anthropic bukan JSON valid: ${text.slice(0, 200)}`,
+    );
+  }
+  if (!res.ok)
+    throw new ProviderError(
+      "hosted",
+      `Anthropic membalas status ${String(res.status)}: ${text.slice(0, 400)}`,
+    );
+  const reply = (parsed.content ?? [])
+    .filter((b) => b.type === "text" && typeof b.text === "string")
+    .map((b) => b.text)
+    .join("");
   const usage = parsed.usage ?? {};
   return {
     reply,

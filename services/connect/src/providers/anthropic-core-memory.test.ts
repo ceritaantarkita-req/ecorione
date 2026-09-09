@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { MockAgent, getGlobalDispatcher, setGlobalDispatcher, type Interceptable } from "undici";
+import {
+  MockAgent,
+  getGlobalDispatcher,
+  setGlobalDispatcher,
+  type Interceptable,
+} from "undici";
 import { callAnthropic } from "./anthropic.js";
 import { prefix } from "../test-helpers.js";
 

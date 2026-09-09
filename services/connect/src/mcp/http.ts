@@ -12,7 +12,13 @@ import {
   type McpAuthConfig,
 } from "./auth.js";
 import { epochMs } from "./clock.js";
-import { errorResponse, McpProtocolError, parseMcpRequest, dispatchMcpRequest, validateHttpRoutingHeaders } from "./server.js";
+import {
+  errorResponse,
+  McpProtocolError,
+  parseMcpRequest,
+  dispatchMcpRequest,
+  validateHttpRoutingHeaders,
+} from "./server.js";
 import { requiredOAuthScope } from "./tools.js";
 
 export interface BuildMcpHttpServerOptions {
@@ -59,7 +65,12 @@ export function buildMcpHttpServer(options: BuildMcpHttpServerOptions): FastifyI
         method: one(req.headers["mcp-method"]),
         name: one(req.headers["mcp-name"]),
       });
-      const principal = await authenticateBearer(one(req.headers.authorization), options.auth, jwks, nowMs);
+      const principal = await authenticateBearer(
+        one(req.headers.authorization),
+        options.auth,
+        jwks,
+        nowMs,
+      );
       const name = toolName(parsed);
       if (name !== undefined) requireOAuthScope(principal, requiredOAuthScope(name));
 
@@ -80,9 +91,13 @@ export function buildMcpHttpServer(options: BuildMcpHttpServerOptions): FastifyI
         if (error.statusCode === 401) {
           reply.header("www-authenticate", `Bearer error="${error.code}"`);
         } else if (error.code === "insufficient_scope") {
-          reply.header("www-authenticate", "Bearer error=\"insufficient_scope\"");
+          reply.header("www-authenticate", 'Bearer error="insufficient_scope"');
         }
-        return await reply.code(error.statusCode).send(errorResponse(requestId(req.body), new McpProtocolError(-32001, error.message)));
+        return await reply
+          .code(error.statusCode)
+          .send(
+            errorResponse(requestId(req.body), new McpProtocolError(-32001, error.message)),
+          );
       }
       const status = error instanceof McpProtocolError && error.code === -32020 ? 400 : 400;
       return await reply.code(status).send(errorResponse(requestId(req.body), error));

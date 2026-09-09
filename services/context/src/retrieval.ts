@@ -35,10 +35,16 @@ export interface RetrievalDiagnostics {
   readonly afterFilter: number;
   readonly returned: number;
 }
-export interface RetrievalResult { readonly hits: RetrievalHit[]; readonly diagnostics: RetrievalDiagnostics; }
+export interface RetrievalResult {
+  readonly hits: RetrievalHit[];
+  readonly diagnostics: RetrievalDiagnostics;
+}
 
 type RankedList = readonly MemoryFactId[];
-interface FusedEntry { score: number; matchedBy: RetrievalHit["matchedBy"]; }
+interface FusedEntry {
+  score: number;
+  matchedBy: RetrievalHit["matchedBy"];
+}
 
 function placeholders(count: number): string {
   return Array.from({ length: count }, () => "?").join(", ");
@@ -48,13 +54,20 @@ function allowedSensitivities(max: Sensitivity): Sensitivity[] {
 }
 
 export class ContextRetriever {
-  constructor(private readonly repo: ContextRepository, private readonly vectors?: VectorIndex) {}
+  constructor(
+    private readonly repo: ContextRepository,
+    private readonly vectors?: VectorIndex,
+  ) {}
   retrieve(options: RetrievalOptions): RetrievalResult {
     assertScopes(options.scopes);
     const k = clampK(options.k);
     const maxSensitivity = options.maxSensitivity ?? "RESTRICTED";
     const candidateLimit = Math.max(MIN_CANDIDATES, k * CANDIDATE_MULTIPLIER);
-    const allowedFacts = this.allowedFacts(options.scopes, maxSensitivity, options.hostedEligibleOnly ?? false);
+    const allowedFacts = this.allowedFacts(
+      options.scopes,
+      maxSensitivity,
+      options.hostedEligibleOnly ?? false,
+    );
     const allowedIds = new Set(allowedFacts.keys());
     const lexical = this.lexicalSearch(
       options.query,
@@ -84,18 +97,35 @@ export class ContextRetriever {
     };
   }
 
-  private allowedFacts(scopes: readonly Scope[], maxSensitivity: Sensitivity, hostedEligibleOnly: boolean): Map<MemoryFactId, MemoryFact> {
-    const facts = this.repo.listFacts({ scopes, maxSensitivity, hostedEligibleOnly, limit: 100_000 });
+  private allowedFacts(
+    scopes: readonly Scope[],
+    maxSensitivity: Sensitivity,
+    hostedEligibleOnly: boolean,
+  ): Map<MemoryFactId, MemoryFact> {
+    const facts = this.repo.listFacts({
+      scopes,
+      maxSensitivity,
+      hostedEligibleOnly,
+      limit: 100_000,
+    });
     return new Map(facts.map((f) => [f.id, f]));
   }
 
-  private lexicalSearch(query: string, limit: number, scopes: readonly Scope[], maxSensitivity: Sensitivity, hostedEligibleOnly: boolean): RankedList {
+  private lexicalSearch(
+    query: string,
+    limit: number,
+    scopes: readonly Scope[],
+    maxSensitivity: Sensitivity,
+    hostedEligibleOnly: boolean,
+  ): RankedList {
     const match = toFtsQuery(query);
     if (match === null) return [];
     const allowed = allowedSensitivities(maxSensitivity);
     const egress = hostedEligibleOnly ? "AND f.sync_class IN ('CLOUD_ALLOWED','PUBLIC')" : "";
     try {
-      const rows = this.repo.db.raw.prepare(`
+      const rows = this.repo.db.raw
+        .prepare(
+          `
         SELECT f.id AS id
         FROM facts_fts
         JOIN facts f ON f.rowid = facts_fts.rowid
@@ -106,20 +136,29 @@ export class ContextRetriever {
           ${egress}
         ORDER BY bm25(facts_fts)
         LIMIT ?
-      `).all(match, ...scopes, ...allowed, limit) as { id: string }[];
+      `,
+        )
+        .all(match, ...scopes, ...allowed, limit) as { id: string }[];
       return rows.map((r) => r.id as MemoryFactId);
     } catch {
       return [];
     }
   }
 
-  private vectorSearch(queryEmbedding: Float32Array | undefined, limit: number, allowed: ReadonlySet<MemoryFactId>): RankedList {
+  private vectorSearch(
+    queryEmbedding: Float32Array | undefined,
+    limit: number,
+    allowed: ReadonlySet<MemoryFactId>,
+  ): RankedList {
     if (queryEmbedding === undefined || this.vectors === undefined) return [];
     return this.vectors.search(queryEmbedding, limit, allowed).map((m) => m.factId);
   }
 }
 
-export function reciprocalRankFusion(lists: readonly RankedList[], k = RRF_K): Map<MemoryFactId, FusedEntry> {
+export function reciprocalRankFusion(
+  lists: readonly RankedList[],
+  k = RRF_K,
+): Map<MemoryFactId, FusedEntry> {
   const fused = new Map<MemoryFactId, FusedEntry>();
   const labels = ["lexical", "vector"] as const;
   lists.forEach((list, listIndex) => {
@@ -127,10 +166,12 @@ export function reciprocalRankFusion(lists: readonly RankedList[], k = RRF_K): M
     list.forEach((factId, rank) => {
       const contribution = 1 / (k + rank + 1);
       const existing = fused.get(factId);
-      if (existing === undefined) fused.set(factId, { score: contribution, matchedBy: [label] });
+      if (existing === undefined)
+        fused.set(factId, { score: contribution, matchedBy: [label] });
       else {
         existing.score += contribution;
-        if (!existing.matchedBy.includes(label)) existing.matchedBy = [...existing.matchedBy, label];
+        if (!existing.matchedBy.includes(label))
+          existing.matchedBy = [...existing.matchedBy, label];
       }
     });
   });
@@ -143,15 +184,21 @@ export class MissingScopeError extends Error {
     this.name = "MissingScopeError";
   }
 }
-function assertScopes(scopes: readonly Scope[] | undefined): asserts scopes is readonly Scope[] {
+function assertScopes(
+  scopes: readonly Scope[] | undefined,
+): asserts scopes is readonly Scope[] {
   if (scopes === undefined || scopes.length === 0) throw new MissingScopeError();
 }
 function clampK(k: number | undefined): number {
   if (k === undefined) return DEFAULT_RETRIEVAL_K;
-  if (!Number.isInteger(k) || k < 1) throw new RangeError(`k harus bilangan bulat ≥ 1, diterima ${k}`);
+  if (!Number.isInteger(k) || k < 1)
+    throw new RangeError(`k harus bilangan bulat ≥ 1, diterima ${k}`);
   return Math.min(k, MAX_RETRIEVAL_K);
 }
 export function toFtsQuery(raw: string): string | null {
-  const tokens = raw.split(/[^\p{L}\p{N}_]+/u).filter((t) => t.length > 0).map((t) => `"${t.replaceAll('"', '""')}"`);
+  const tokens = raw
+    .split(/[^\p{L}\p{N}_]+/u)
+    .filter((t) => t.length > 0)
+    .map((t) => `"${t.replaceAll('"', '""')}"`);
   return tokens.length === 0 ? null : tokens.join(" OR ");
 }

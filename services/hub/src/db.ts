@@ -23,11 +23,25 @@ CREATE TABLE IF NOT EXISTS idempotent_results (
 );
 CREATE INDEX IF NOT EXISTS idx_idempotent_results_operation ON idempotent_results(operation_id);
 `;
-export interface HubDatabase { readonly raw: SqliteDatabase; readonly path: string; close(): void; }
+export interface HubDatabase {
+  readonly raw: SqliteDatabase;
+  readonly path: string;
+  close(): void;
+}
 export function openHubDatabase(path: string = IN_MEMORY): HubDatabase {
   if (path !== IN_MEMORY) mkdirSync(dirname(path), { recursive: true });
   const raw = new SqliteConstructor(path);
-  if (path !== IN_MEMORY) { raw.pragma("journal_mode = WAL"); raw.pragma("synchronous = NORMAL"); raw.pragma("busy_timeout = 5000"); }
+  if (path !== IN_MEMORY) {
+    raw.pragma("journal_mode = WAL");
+    raw.pragma("synchronous = NORMAL");
+    raw.pragma("busy_timeout = 5000");
+  }
   raw.exec(SCHEMA);
-  return { raw, path, close(): void { raw.close(); } };
+  return {
+    raw,
+    path,
+    close(): void {
+      raw.close();
+    },
+  };
 }

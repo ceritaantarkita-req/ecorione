@@ -170,7 +170,8 @@ export function buildContextServer(
   app.get<{ Params: { id: string } }>("/v1/episodes/:id", async (req) => {
     try {
       const episode = repo.getEpisode(assertId("episode", req.params.id));
-      if (episode === null) throw new NotFoundError(`Episode tidak ditemukan: ${req.params.id}`);
+      if (episode === null)
+        throw new NotFoundError(`Episode tidak ditemukan: ${req.params.id}`);
       return episode;
     } catch (err) {
       throw toHttpError(err);

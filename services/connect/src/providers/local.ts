@@ -10,7 +10,11 @@ export interface LocalCallInput {
   readonly dynamicText: string;
   readonly userMessage: string;
 }
-export interface LocalCallResult { readonly reply: string; readonly model: string; readonly usage: TokenUsage; }
+export interface LocalCallResult {
+  readonly reply: string;
+  readonly model: string;
+  readonly usage: TokenUsage;
+}
 interface OpenAiChatResponseBody {
   readonly model?: string;
   readonly choices?: ReadonlyArray<{ readonly message?: { readonly content?: string } }>;
@@ -18,7 +22,8 @@ interface OpenAiChatResponseBody {
 }
 function buildUserContent(input: LocalCallInput): string {
   const parts: string[] = [];
-  if (input.prefix.coreMemory.blocks.length > 0) parts.push(renderCoreMemoryData(input.prefix.coreMemory));
+  if (input.prefix.coreMemory.blocks.length > 0)
+    parts.push(renderCoreMemoryData(input.prefix.coreMemory));
   if (input.dynamicText.length > 0) parts.push(input.dynamicText);
   parts.push(input.userMessage);
   return parts.join("\n\n");
@@ -39,13 +44,26 @@ export async function callLocal(input: LocalCallInput): Promise<LocalCallResult>
       body: JSON.stringify(body),
     });
   } catch (err) {
-    throw new ProviderError("local", `Tidak bisa menghubungi model lokal di ${input.baseUrl}: ${err instanceof Error ? err.message : String(err)}`);
+    throw new ProviderError(
+      "local",
+      `Tidak bisa menghubungi model lokal di ${input.baseUrl}: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
   const text = await res.text();
   let parsed: OpenAiChatResponseBody;
-  try { parsed = text.length === 0 ? {} : JSON.parse(text) as OpenAiChatResponseBody; }
-  catch { throw new ProviderError("local", `Respons model lokal bukan JSON valid: ${text.slice(0, 200)}`); }
-  if (!res.ok) throw new ProviderError("local", `Model lokal membalas status ${String(res.status)}: ${text.slice(0, 400)}`);
+  try {
+    parsed = text.length === 0 ? {} : (JSON.parse(text) as OpenAiChatResponseBody);
+  } catch {
+    throw new ProviderError(
+      "local",
+      `Respons model lokal bukan JSON valid: ${text.slice(0, 200)}`,
+    );
+  }
+  if (!res.ok)
+    throw new ProviderError(
+      "local",
+      `Model lokal membalas status ${String(res.status)}: ${text.slice(0, 400)}`,
+    );
   const usage = parsed.usage ?? {};
   return {
     reply: parsed.choices?.[0]?.message?.content ?? "",

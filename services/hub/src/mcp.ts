@@ -37,7 +37,10 @@ export interface McpRouteOptions {
   readonly internalToken?: string | undefined;
 }
 
-function effectiveSensitivity(requested: Sensitivity | undefined, access: McpAccessContext): Sensitivity {
+function effectiveSensitivity(
+  requested: Sensitivity | undefined,
+  access: McpAccessContext,
+): Sensitivity {
   const value = requested ?? access.maxSensitivity;
   if (sensitivityRank(value) > sensitivityRank(access.maxSensitivity)) {
     throw new ForbiddenError(`Sensitivity ${value} melewati grant ${access.maxSensitivity}.`);
@@ -48,7 +51,8 @@ function effectiveSensitivity(requested: Sensitivity | undefined, access: McpAcc
 function assertScopes(scopes: readonly Scope[], access: McpAccessContext): void {
   const allowed = new Set(access.allowedScopes);
   for (const scope of scopes) {
-    if (!allowed.has(scope)) throw new ForbiddenError(`Scope MCP tidak diizinkan untuk principal ini: ${scope}.`);
+    if (!allowed.has(scope))
+      throw new ForbiddenError(`Scope MCP tidak diizinkan untuk principal ini: ${scope}.`);
   }
 }
 
@@ -57,7 +61,11 @@ function hostedEligible(syncClass: string): boolean {
 }
 
 function assertMemoryVisible(
-  item: { readonly scope: Scope; readonly sensitivity: Sensitivity; readonly syncClass: string },
+  item: {
+    readonly scope: Scope;
+    readonly sensitivity: Sensitivity;
+    readonly syncClass: string;
+  },
   access: McpAccessContext,
 ): void {
   assertScopes([item.scope], access);
@@ -69,7 +77,11 @@ function assertMemoryVisible(
   }
 }
 
-function idempotencyKey(access: McpAccessContext, tool: string, args: Record<string, unknown>): string {
+function idempotencyKey(
+  access: McpAccessContext,
+  tool: string,
+  args: Record<string, unknown>,
+): string {
   const payload = idempotencyPayload({ module: "Hub", tool, args });
   return createHash("sha256")
     .update(`${access.principalId}\n${access.requestId}\n${payload}`)
@@ -135,9 +147,16 @@ function evaluateMcpAction(
   return { operationId, idempotencyKey: key };
 }
 
-async function contextJson<T>(options: McpRouteOptions, path: string, init: { method?: "GET" | "POST"; body?: unknown } = {}): Promise<T> {
+async function contextJson<T>(
+  options: McpRouteOptions,
+  path: string,
+  init: { method?: "GET" | "POST"; body?: unknown } = {},
+): Promise<T> {
   try {
-    return await httpJson<T>(`${options.contextUrl}${path}`, { token: options.internalToken, ...init });
+    return await httpJson<T>(`${options.contextUrl}${path}`, {
+      token: options.internalToken,
+      ...init,
+    });
   } catch (error) {
     if (error instanceof RemoteServiceError && error.statusCode === 404) {
       throw new NotFoundError(error.message);
@@ -146,13 +165,26 @@ async function contextJson<T>(options: McpRouteOptions, path: string, init: { me
   }
 }
 
-export function registerMcpRoutes(app: FastifyInstance, repo: HubRepository, options: McpRouteOptions): void {
+export function registerMcpRoutes(
+  app: FastifyInstance,
+  repo: HubRepository,
+  options: McpRouteOptions,
+): void {
   app.post("/v1/mcp/memory/search", async (req) => {
     const body = parseOrBadRequest(McpMemorySearchSchema, req.body);
     assertScopes(body.scopes, body.access);
     const maxSensitivity = effectiveSensitivity(body.maxSensitivity, body.access);
     const now = nowIso();
-    evaluateMcpAction(repo, body.access, "mcp.memory_search", "READ", { query: body.query, scopes: body.scopes, k: body.k }, body.scopes[0]!, maxSensitivity, now);
+    evaluateMcpAction(
+      repo,
+      body.access,
+      "mcp.memory_search",
+      "READ",
+      { query: body.query, scopes: body.scopes, k: body.k },
+      body.scopes[0]!,
+      maxSensitivity,
+      now,
+    );
     return contextJson(options, "/v1/retrieve", {
       method: "POST",
       body: {
@@ -169,10 +201,23 @@ export function registerMcpRoutes(app: FastifyInstance, repo: HubRepository, opt
   app.post("/v1/mcp/memory/get", async (req) => {
     const body = parseOrBadRequest(McpMemoryGetSchema, req.body);
     const now = nowIso();
-    evaluateMcpAction(repo, body.access, "mcp.memory_get", "READ", { id: body.id }, body.access.allowedScopes[0]!, body.access.maxSensitivity, now);
-    const path = body.id.startsWith("mem_") ? `/v1/facts/${encodeURIComponent(body.id)}` : `/v1/episodes/${encodeURIComponent(body.id)}`;
+    evaluateMcpAction(
+      repo,
+      body.access,
+      "mcp.memory_get",
+      "READ",
+      { id: body.id },
+      body.access.allowedScopes[0]!,
+      body.access.maxSensitivity,
+      now,
+    );
+    const path = body.id.startsWith("mem_")
+      ? `/v1/facts/${encodeURIComponent(body.id)}`
+      : `/v1/episodes/${encodeURIComponent(body.id)}`;
     const raw = await contextJson<unknown>(options, path);
-    const item = body.id.startsWith("mem_") ? MemoryFactSchema.parse(raw) : EpisodeSchema.parse(raw);
+    const item = body.id.startsWith("mem_")
+      ? MemoryFactSchema.parse(raw)
+      : EpisodeSchema.parse(raw);
     assertMemoryVisible(item, body.access);
     return item;
   });
@@ -181,7 +226,16 @@ export function registerMcpRoutes(app: FastifyInstance, repo: HubRepository, opt
     const body = parseOrBadRequest(McpMemoryProposeSchema, req.body);
     assertScopes([body.scope], body.access);
     const now = nowIso();
-    const audit = evaluateMcpAction(repo, body.access, "mcp.memory_propose", "REVERSIBLE_WRITE", { text: body.text, scope: body.scope }, body.scope, body.access.maxSensitivity, now);
+    const audit = evaluateMcpAction(
+      repo,
+      body.access,
+      "mcp.memory_propose",
+      "REVERSIBLE_WRITE",
+      { text: body.text, scope: body.scope },
+      body.scope,
+      body.access.maxSensitivity,
+      now,
+    );
     const key = audit.idempotencyKey!;
     const prior = repo.getIdempotentResult<{ id: string }>(key);
     if (prior !== null) {
@@ -219,12 +273,27 @@ export function registerMcpRoutes(app: FastifyInstance, repo: HubRepository, opt
     const body = parseOrBadRequest(McpMemoryRecentSchema, req.body);
     assertScopes(body.scopes, body.access);
     const now = nowIso();
-    evaluateMcpAction(repo, body.access, "mcp.memory_recent", "READ", { scopes: body.scopes, limit: body.limit }, body.scopes[0]!, body.access.maxSensitivity, now);
-    const groups = await Promise.all(body.scopes.map((scope) => contextJson<{ episodes: unknown[] }>(
-      options,
-      `/v1/episodes?scope=${encodeURIComponent(scope)}&limit=${String(body.limit)}&hostedEligible=${body.access.delivery === "hosted" ? "1" : "0"}`,
-    )));
-    const episodes = groups.flatMap((group) => group.episodes.map((item) => EpisodeSchema.parse(item)));
+    evaluateMcpAction(
+      repo,
+      body.access,
+      "mcp.memory_recent",
+      "READ",
+      { scopes: body.scopes, limit: body.limit },
+      body.scopes[0]!,
+      body.access.maxSensitivity,
+      now,
+    );
+    const groups = await Promise.all(
+      body.scopes.map((scope) =>
+        contextJson<{ episodes: unknown[] }>(
+          options,
+          `/v1/episodes?scope=${encodeURIComponent(scope)}&limit=${String(body.limit)}&hostedEligible=${body.access.delivery === "hosted" ? "1" : "0"}`,
+        ),
+      ),
+    );
+    const episodes = groups.flatMap((group) =>
+      group.episodes.map((item) => EpisodeSchema.parse(item)),
+    );
     episodes.sort((a, b) => b.ts.localeCompare(a.ts) || b.id.localeCompare(a.id));
     return { episodes: episodes.slice(0, body.limit) };
   });
@@ -234,7 +303,20 @@ export function registerMcpRoutes(app: FastifyInstance, repo: HubRepository, opt
     assertScopes([body.artifactPointer.scope], body.access);
     effectiveSensitivity(body.artifactPointer.sensitivity, body.access);
     const now = nowIso();
-    evaluateMcpAction(repo, body.access, "mcp.memory_open", "READ", { artifactId: body.artifactPointer.id }, body.artifactPointer.scope, body.artifactPointer.sensitivity, now);
-    throw new HttpError(501, "NOT_IMPLEMENTED", "Artifact belum tersedia; memory_open aktif setelah Fase 3 Artifact.");
+    evaluateMcpAction(
+      repo,
+      body.access,
+      "mcp.memory_open",
+      "READ",
+      { artifactId: body.artifactPointer.id },
+      body.artifactPointer.scope,
+      body.artifactPointer.sensitivity,
+      now,
+    );
+    throw new HttpError(
+      501,
+      "NOT_IMPLEMENTED",
+      "Artifact belum tersedia; memory_open aktif setelah Fase 3 Artifact.",
+    );
   });
 }

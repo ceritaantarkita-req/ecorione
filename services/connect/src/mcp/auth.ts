@@ -1,6 +1,12 @@
 /** OAuth resource-server boundary for MCP Streamable HTTP. */
 import { createPublicKey, verify as verifySignature } from "node:crypto";
-import { ScopeSchema, SensitivitySchema, sensitivityRank, type Scope, type Sensitivity } from "@ecorione/shared-schema";
+import {
+  ScopeSchema,
+  SensitivitySchema,
+  sensitivityRank,
+  type Scope,
+  type Sensitivity,
+} from "@ecorione/shared-schema";
 import { z } from "zod";
 
 const JwtHeaderSchema = z.object({ alg: z.enum(["RS256", "ES256"]), kid: z.string().min(1) });
@@ -34,7 +40,11 @@ export interface AuthPrincipal {
 }
 
 export class McpAuthError extends Error {
-  constructor(readonly statusCode: 401 | 403, readonly code: string, message: string) {
+  constructor(
+    readonly statusCode: 401 | 403,
+    readonly code: string,
+    message: string,
+  ) {
     super(message);
     this.name = "McpAuthError";
   }
@@ -70,9 +80,15 @@ function defaultFetchJson(url: string): Promise<unknown> {
 }
 
 export class JwksCache {
-  private cached: { readonly expiresAtMs: number; readonly keys: readonly Record<string, unknown>[] } | null = null;
+  private cached: {
+    readonly expiresAtMs: number;
+    readonly keys: readonly Record<string, unknown>[];
+  } | null = null;
 
-  constructor(private readonly config: McpAuthConfig, private readonly ttlMs: number = 5 * 60 * 1000) {}
+  constructor(
+    private readonly config: McpAuthConfig,
+    private readonly ttlMs: number = 5 * 60 * 1000,
+  ) {}
 
   async keys(nowMs: number): Promise<readonly Record<string, unknown>[]> {
     if (this.cached !== null && this.cached.expiresAtMs > nowMs) return this.cached.keys;
@@ -110,7 +126,10 @@ function narrowMemoryScopes(
   return [...new Set(claimed.filter((scope) => base.has(scope)))].sort();
 }
 
-function narrowSensitivity(defaultMax: Sensitivity, claimed: Sensitivity | undefined): Sensitivity {
+function narrowSensitivity(
+  defaultMax: Sensitivity,
+  claimed: Sensitivity | undefined,
+): Sensitivity {
   if (claimed === undefined) return defaultMax;
   return sensitivityRank(claimed) <= sensitivityRank(defaultMax) ? claimed : defaultMax;
 }
@@ -126,50 +145,85 @@ export async function authenticateBearer(
   }
   const token = authorization.slice("Bearer ".length).trim();
   const segments = token.split(".");
-  if (segments.length !== 3) throw new McpAuthError(401, "invalid_token", "Access token harus JWT tiga segmen.");
+  if (segments.length !== 3)
+    throw new McpAuthError(401, "invalid_token", "Access token harus JWT tiga segmen.");
   const header = JwtHeaderSchema.parse(decodeJson(segments[0]!));
   const payload = JwtPayloadSchema.parse(decodeJson(segments[1]!));
 
   if (normalizeIssuer(payload.iss) !== normalizeIssuer(config.issuer)) {
-    throw new McpAuthError(401, "invalid_token", "Issuer token tidak cocok dengan authorization server MCP.");
+    throw new McpAuthError(
+      401,
+      "invalid_token",
+      "Issuer token tidak cocok dengan authorization server MCP.",
+    );
   }
   if (!audienceIncludes(payload.aud, config.resource)) {
-    throw new McpAuthError(401, "invalid_token", "Audience/resource indicator token bukan ecorione MCP resource.");
+    throw new McpAuthError(
+      401,
+      "invalid_token",
+      "Audience/resource indicator token bukan ecorione MCP resource.",
+    );
   }
   const nowSeconds = Math.floor(nowMs / 1000);
   if (payload.exp <= nowSeconds || (payload.nbf !== undefined && payload.nbf > nowSeconds)) {
-    throw new McpAuthError(401, "invalid_token", "Access token kedaluwarsa atau belum berlaku.");
+    throw new McpAuthError(
+      401,
+      "invalid_token",
+      "Access token kedaluwarsa atau belum berlaku.",
+    );
   }
 
   const keys = await jwks.keys(nowMs);
   const jwk = keys.find((candidate) => candidate.kid === header.kid);
-  if (jwk === undefined) throw new McpAuthError(401, "invalid_token", "JWK untuk kid token tidak ditemukan.");
+  if (jwk === undefined)
+    throw new McpAuthError(401, "invalid_token", "JWK untuk kid token tidak ditemukan.");
   const signingInput = `${segments[0]!}.${segments[1]!}`;
   let signatureValid = false;
   try {
-    signatureValid = verifyJwtSignature(signingInput, Buffer.from(segments[2]!, "base64url"), header, jwk);
+    signatureValid = verifyJwtSignature(
+      signingInput,
+      Buffer.from(segments[2]!, "base64url"),
+      header,
+      jwk,
+    );
   } catch {
     signatureValid = false;
   }
-  if (!signatureValid) throw new McpAuthError(401, "invalid_token", "Signature JWT tidak valid.");
+  if (!signatureValid)
+    throw new McpAuthError(401, "invalid_token", "Signature JWT tidak valid.");
 
   const memoryScopes = narrowMemoryScopes(config.defaultMemoryScopes, payload.ecorione_scopes);
-  if (memoryScopes.length === 0) throw new McpAuthError(403, "insufficient_scope", "Token tidak memiliki scope memori ecorione yang diizinkan deployment.");
+  if (memoryScopes.length === 0)
+    throw new McpAuthError(
+      403,
+      "insufficient_scope",
+      "Token tidak memiliki scope memori ecorione yang diizinkan deployment.",
+    );
   return {
     id: payload.sub,
     oauthScopes: splitScopes(payload.scope),
     memoryScopes,
-    maxSensitivity: narrowSensitivity(config.defaultMaxSensitivity, payload.ecorione_max_sensitivity),
+    maxSensitivity: narrowSensitivity(
+      config.defaultMaxSensitivity,
+      payload.ecorione_max_sensitivity,
+    ),
   };
 }
 
 export function requireOAuthScope(principal: AuthPrincipal, scope: string): void {
   if (!principal.oauthScopes.has(scope)) {
-    throw new McpAuthError(403, "insufficient_scope", `OAuth scope ${scope} wajib untuk tool ini.`);
+    throw new McpAuthError(
+      403,
+      "insufficient_scope",
+      `OAuth scope ${scope} wajib untuk tool ini.`,
+    );
   }
 }
 
-export function validateOrigin(origin: string | undefined, allowedOrigins: readonly string[]): void {
+export function validateOrigin(
+  origin: string | undefined,
+  allowedOrigins: readonly string[],
+): void {
   if (origin === undefined) return;
   if (!allowedOrigins.includes(origin)) {
     throw new McpAuthError(403, "origin_not_allowed", `Origin MCP tidak diizinkan: ${origin}`);

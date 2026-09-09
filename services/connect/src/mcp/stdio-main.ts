@@ -6,13 +6,18 @@ import { epochMs } from "./clock.js";
 import { parseHandleKey } from "./handle.js";
 import { dispatchMcpRequest } from "./server.js";
 
-const scopes = z.array(ScopeSchema).min(1).parse(
-  (process.env.ECORIONE_MCP_SCOPES ?? "personal")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean),
+const scopes = z
+  .array(ScopeSchema)
+  .min(1)
+  .parse(
+    (process.env.ECORIONE_MCP_SCOPES ?? "personal")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+  );
+const maxSensitivity = SensitivitySchema.parse(
+  process.env.ECORIONE_MCP_MAX_SENSITIVITY ?? "RESTRICTED",
 );
-const maxSensitivity = SensitivitySchema.parse(process.env.ECORIONE_MCP_MAX_SENSITIVITY ?? "RESTRICTED");
 const handleKey = parseHandleKey(process.env.ECORIONE_MCP_HANDLE_KEY);
 const hubUrl = process.env.ECORIONE_HUB_URL ?? "http://127.0.0.1:17024";
 const internalToken = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
@@ -38,6 +43,8 @@ for await (const line of lines) {
     });
     process.stdout.write(`${JSON.stringify(response)}\n`);
   } catch (error) {
-    process.stderr.write(`ecorione MCP stdio parse/dispatch error: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.stderr.write(
+      `ecorione MCP stdio parse/dispatch error: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
   }
 }

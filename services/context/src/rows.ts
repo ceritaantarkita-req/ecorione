@@ -37,8 +37,15 @@ export function provenanceParams(p: Provenance): ProvenanceColumns {
 }
 
 export interface EpisodeRow extends ProvenanceColumns {
-  id: string; ts: string; raw_text: string; scope: string; sensitivity: string;
-  sync_class: string; trust: string; summary: string | null; consolidated_at: string | null;
+  id: string;
+  ts: string;
+  raw_text: string;
+  scope: string;
+  sensitivity: string;
+  sync_class: string;
+  trust: string;
+  summary: string | null;
+  consolidated_at: string | null;
 }
 export function rowToEpisode(row: EpisodeRow): Episode {
   return EpisodeSchema.parse({
@@ -56,10 +63,22 @@ export function rowToEpisode(row: EpisodeRow): Episode {
 }
 
 export interface FactRow extends ProvenanceColumns {
-  id: string; subject: string; predicate: string; object: string; text: string;
-  confidence: number; salience: number; source_episode_ids: string; t_valid: string;
-  t_invalid: string | null; superseded_by: string | null; created_at: string;
-  scope: string; sensitivity: string; sync_class: string; trust: string;
+  id: string;
+  subject: string;
+  predicate: string;
+  object: string;
+  text: string;
+  confidence: number;
+  salience: number;
+  source_episode_ids: string;
+  t_valid: string;
+  t_invalid: string | null;
+  superseded_by: string | null;
+  created_at: string;
+  scope: string;
+  sensitivity: string;
+  sync_class: string;
+  trust: string;
 }
 export const FACT_COLUMNS = `
   id, subject, predicate, object, text, confidence, salience, source_episode_ids,
@@ -111,8 +130,14 @@ export function factParams(fact: MemoryFact): Record<string, BindValue> {
 }
 
 export interface QuarantineRow extends ProvenanceColumns {
-  id: string; proposed_text: string; proposed_at: string; trust: string; scope: string;
-  status: string; rejection_reason: string | null; reviewed_at: string | null;
+  id: string;
+  proposed_text: string;
+  proposed_at: string;
+  trust: string;
+  scope: string;
+  status: string;
+  rejection_reason: string | null;
+  reviewed_at: string | null;
   promoted_fact_id: string | null;
 }
 export function rowToQuarantined(row: QuarantineRow): QuarantinedWrite {
@@ -130,8 +155,15 @@ export function rowToQuarantined(row: QuarantineRow): QuarantinedWrite {
 }
 
 export interface CoreMemoryRow {
-  label: string; description: string; value: string; read_only: number; updated_at: string;
-  scope: string; sensitivity: string; sync_class: string; trust: string;
+  label: string;
+  description: string;
+  value: string;
+  read_only: number;
+  updated_at: string;
+  scope: string;
+  sensitivity: string;
+  sync_class: string;
+  trust: string;
 }
 export function rowToCoreBlock(row: CoreMemoryRow): CoreMemoryBlock {
   return CoreMemoryBlockSchema.parse({
@@ -148,8 +180,14 @@ export function rowToCoreBlock(row: CoreMemoryRow): CoreMemoryBlock {
 }
 
 export interface ArtifactPointerRow {
-  id: string; path: string; description: string; mime_type: string; size_bytes: number;
-  scope: string; sensitivity: string; sync_class: string;
+  id: string;
+  path: string;
+  description: string;
+  mime_type: string;
+  size_bytes: number;
+  scope: string;
+  sensitivity: string;
+  sync_class: string;
 }
 export function rowToArtifactPointer(row: ArtifactPointerRow): ArtifactPointer {
   return ArtifactPointerSchema.parse({

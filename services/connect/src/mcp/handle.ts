@@ -42,7 +42,8 @@ export function parseHandleKey(raw: string | undefined): Buffer {
   } catch {
     throw new InvalidMcpHandleError("ECORIONE_MCP_HANDLE_KEY harus base64url 32-byte.");
   }
-  if (key.length !== 32) throw new InvalidMcpHandleError("ECORIONE_MCP_HANDLE_KEY harus tepat 32 byte.");
+  if (key.length !== 32)
+    throw new InvalidMcpHandleError("ECORIONE_MCP_HANDLE_KEY harus tepat 32 byte.");
   return key;
 }
 
@@ -59,21 +60,32 @@ function stable(value: unknown): unknown {
 }
 
 export function requestDigest(request: unknown): string {
-  return createHash("sha256").update(JSON.stringify(stable(request))).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(stable(request)))
+    .digest("hex");
 }
 
 function sealJson(key: Buffer, value: unknown, aad: Buffer): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
   cipher.setAAD(aad);
-  const ciphertext = Buffer.concat([cipher.update(JSON.stringify(value), "utf8"), cipher.final()]);
+  const ciphertext = Buffer.concat([
+    cipher.update(JSON.stringify(value), "utf8"),
+    cipher.final(),
+  ]);
   const tag = cipher.getAuthTag();
-  return [HANDLE_VERSION, iv.toString("base64url"), ciphertext.toString("base64url"), tag.toString("base64url")].join(".");
+  return [
+    HANDLE_VERSION,
+    iv.toString("base64url"),
+    ciphertext.toString("base64url"),
+    tag.toString("base64url"),
+  ].join(".");
 }
 
 function openJson(key: Buffer, token: string, aad: Buffer): unknown {
   const parts = token.split(".");
-  if (parts.length !== 4 || parts[0] !== HANDLE_VERSION) throw new InvalidMcpHandleError("Format handle tidak valid.");
+  if (parts.length !== 4 || parts[0] !== HANDLE_VERSION)
+    throw new InvalidMcpHandleError("Format handle tidak valid.");
   try {
     const iv = Buffer.from(parts[1]!, "base64url");
     const ciphertext = Buffer.from(parts[2]!, "base64url");
@@ -95,13 +107,23 @@ export function mintHandle(
   nowMs: number,
   ttlMs: number = DEFAULT_HANDLE_TTL_MS,
 ): string {
-  const parsed = HandleClaimsSchema.parse({ ...claims, issuedAtMs: nowMs, expiresAtMs: nowMs + ttlMs });
+  const parsed = HandleClaimsSchema.parse({
+    ...claims,
+    issuedAtMs: nowMs,
+    expiresAtMs: nowMs + ttlMs,
+  });
   return sealJson(key, parsed, AAD_HANDLE);
 }
 
-export function openHandle(key: Buffer, token: string, principalId: string, nowMs: number): HandleClaims {
+export function openHandle(
+  key: Buffer,
+  token: string,
+  principalId: string,
+  nowMs: number,
+): HandleClaims {
   const claims = HandleClaimsSchema.parse(openJson(key, token, AAD_HANDLE));
-  if (claims.principalId !== principalId) throw new InvalidMcpHandleError("Handle terikat principal lain.");
+  if (claims.principalId !== principalId)
+    throw new InvalidMcpHandleError("Handle terikat principal lain.");
   if (claims.expiresAtMs <= nowMs) throw new InvalidMcpHandleError("Handle sudah kedaluwarsa.");
   return claims;
 }
@@ -132,8 +154,11 @@ export function openRequestState<T>(
   nowMs: number,
 ): T {
   const envelope = RequestStateEnvelopeSchema.parse(openJson(key, token, AAD_STATE));
-  if (envelope.principalId !== principalId) throw new InvalidMcpHandleError("requestState terikat principal lain.");
-  if (envelope.expiresAtMs <= nowMs) throw new InvalidMcpHandleError("requestState sudah kedaluwarsa.");
-  if (envelope.requestDigest !== requestDigest(request)) throw new InvalidMcpHandleError("requestState tidak cocok dengan request yang diulang.");
+  if (envelope.principalId !== principalId)
+    throw new InvalidMcpHandleError("requestState terikat principal lain.");
+  if (envelope.expiresAtMs <= nowMs)
+    throw new InvalidMcpHandleError("requestState sudah kedaluwarsa.");
+  if (envelope.requestDigest !== requestDigest(request))
+    throw new InvalidMcpHandleError("requestState tidak cocok dengan request yang diulang.");
   return envelope.state as T;
 }

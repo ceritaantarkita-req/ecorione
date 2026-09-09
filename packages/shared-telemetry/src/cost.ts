@@ -11,17 +11,33 @@ export const TokenUsageSchema = z.object({
 });
 export type TokenUsage = z.infer<typeof TokenUsageSchema>;
 export function tokenUsage(partial: Partial<TokenUsage> = {}): TokenUsage {
-  return TokenUsageSchema.parse({ inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, ...partial });
+  return TokenUsageSchema.parse({
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+    ...partial,
+  });
 }
 export const DEFAULT_NAIVE_MODEL = "claude-sonnet-4-5-20250929";
 export function computeCost(model: string, usage: TokenUsage): number {
-  const p = priceFor(model); const u = TokenUsageSchema.parse(usage);
-  return (u.inputTokens * p.inputPerMTok + u.cacheWriteTokens * p.cacheWritePerMTok + u.cacheReadTokens * p.cacheReadPerMTok + u.outputTokens * p.outputPerMTok) / TOKENS_PER_PRICE_UNIT;
+  const p = priceFor(model);
+  const u = TokenUsageSchema.parse(usage);
+  return (
+    (u.inputTokens * p.inputPerMTok +
+      u.cacheWriteTokens * p.cacheWritePerMTok +
+      u.cacheReadTokens * p.cacheReadPerMTok +
+      u.outputTokens * p.outputPerMTok) /
+    TOKENS_PER_PRICE_UNIT
+  );
 }
 export function computeNaiveCost(naiveModel: string, usage: TokenUsage): number {
-  const p = priceFor(naiveModel); const u = TokenUsageSchema.parse(usage);
+  const p = priceFor(naiveModel);
+  const u = TokenUsageSchema.parse(usage);
   const promptTokens = u.inputTokens + u.cacheReadTokens + u.cacheWriteTokens;
-  return (promptTokens * p.inputPerMTok + u.outputTokens * p.outputPerMTok) / TOKENS_PER_PRICE_UNIT;
+  return (
+    (promptTokens * p.inputPerMTok + u.outputTokens * p.outputPerMTok) / TOKENS_PER_PRICE_UNIT
+  );
 }
 
 export interface CallCostRecord {
@@ -93,14 +109,37 @@ export type CostLedgerSink = (record: CallCostRecord) => void;
 export class CostLedger {
   readonly #records: CallCostRecord[] = [];
   readonly #sink: CostLedgerSink | undefined;
-  constructor(sink?: CostLedgerSink) { this.#sink = sink; }
-  record(entry: CallCostRecord): CallCostRecord { this.#records.push(entry); this.#sink?.(entry); return entry; }
-  entries(): readonly CallCostRecord[] { return this.#records; }
-  total(): number { return this.#records.reduce((sum, r) => sum + r.actualUsd, 0); }
+  constructor(sink?: CostLedgerSink) {
+    this.#sink = sink;
+  }
+  record(entry: CallCostRecord): CallCostRecord {
+    this.#records.push(entry);
+    this.#sink?.(entry);
+    return entry;
+  }
+  entries(): readonly CallCostRecord[] {
+    return this.#records;
+  }
+  total(): number {
+    return this.#records.reduce((sum, r) => sum + r.actualUsd, 0);
+  }
   savingsSummary(): SavingsSummary {
-    let actualUsd = 0; let naiveUsd = 0; let escalatedCallCount = 0;
-    for (const r of this.#records) { actualUsd += r.actualUsd; naiveUsd += r.naiveUsd; if (r.escalatedFrom !== undefined) escalatedCallCount += 1; }
+    let actualUsd = 0;
+    let naiveUsd = 0;
+    let escalatedCallCount = 0;
+    for (const r of this.#records) {
+      actualUsd += r.actualUsd;
+      naiveUsd += r.naiveUsd;
+      if (r.escalatedFrom !== undefined) escalatedCallCount += 1;
+    }
     const savedUsd = naiveUsd - actualUsd;
-    return { actualUsd, naiveUsd, savedUsd, savedPct: savedPercent(savedUsd, naiveUsd), callCount: this.#records.length, escalatedCallCount };
+    return {
+      actualUsd,
+      naiveUsd,
+      savedUsd,
+      savedPct: savedPercent(savedUsd, naiveUsd),
+      callCount: this.#records.length,
+      escalatedCallCount,
+    };
   }
 }

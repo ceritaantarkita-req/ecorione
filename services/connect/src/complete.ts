@@ -1,7 +1,16 @@
 /** Connect completion pipeline: routing, bounded exact cache, provider, honest cost. */
-import { assertPrefixCacheable, prefixDigest, type StablePrefix } from "@ecorione/context-assembly";
+import {
+  assertPrefixCacheable,
+  prefixDigest,
+  type StablePrefix,
+} from "@ecorione/context-assembly";
 import type { OperationId, Sensitivity, Timestamp } from "@ecorione/shared-schema";
-import { recordCall, tokenUsage, type CallCostRecord, type TokenUsage } from "@ecorione/shared-telemetry";
+import {
+  recordCall,
+  tokenUsage,
+  type CallCostRecord,
+  type TokenUsage,
+} from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import { callAnthropic } from "./providers/anthropic.js";
 import { MissingCredentialError } from "./providers/errors.js";
@@ -36,12 +45,20 @@ export interface CompleteResult {
 }
 const POLICY_VERSION = "2";
 
-export async function complete(deps: CompleteDeps, input: CompleteInput): Promise<CompleteResult> {
+export async function complete(
+  deps: CompleteDeps,
+  input: CompleteInput,
+): Promise<CompleteResult> {
   // Connect enforces the invariant itself; callers cannot bypass Hub/context-assembly.
   assertPrefixCacheable(input.prefix);
   const overheadStart = performance.now();
   const decision = route({ target: input.target, sensitivity: input.sensitivity });
-  const key = cacheKey({ model: decision.model, prefixDigest: prefixDigest(input.prefix), dynamicText: input.dynamicText, userMessage: input.userMessage });
+  const key = cacheKey({
+    model: decision.model,
+    prefixDigest: prefixDigest(input.prefix),
+    dynamicText: input.dynamicText,
+    userMessage: input.userMessage,
+  });
   const nowMs = Date.parse(input.now);
   const cached = deps.cache.get(key, nowMs);
   const optimizerOverheadMs = performance.now() - overheadStart;
@@ -60,7 +77,13 @@ export async function complete(deps: CompleteDeps, input: CompleteInput): Promis
     baselineUsage = cached.usage;
     cacheHit = true;
   } else if (decision.routeReason === "local-consolidation") {
-    const result = await callLocal({ baseUrl: deps.localBaseUrl, modelTag: deps.localModelTag, prefix: input.prefix, dynamicText: input.dynamicText, userMessage: input.userMessage });
+    const result = await callLocal({
+      baseUrl: deps.localBaseUrl,
+      modelTag: deps.localModelTag,
+      prefix: input.prefix,
+      dynamicText: input.dynamicText,
+      userMessage: input.userMessage,
+    });
     reply = result.reply;
     responseModel = result.model;
     usage = result.usage;
@@ -68,8 +91,15 @@ export async function complete(deps: CompleteDeps, input: CompleteInput): Promis
     deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
     cacheHit = false;
   } else {
-    if (deps.anthropicApiKey === undefined) throw new MissingCredentialError("ANTHROPIC_API_KEY");
-    const result = await callAnthropic({ apiKey: deps.anthropicApiKey, model: decision.model, prefix: input.prefix, dynamicText: input.dynamicText, userMessage: input.userMessage });
+    if (deps.anthropicApiKey === undefined)
+      throw new MissingCredentialError("ANTHROPIC_API_KEY");
+    const result = await callAnthropic({
+      apiKey: deps.anthropicApiKey,
+      model: decision.model,
+      prefix: input.prefix,
+      dynamicText: input.dynamicText,
+      userMessage: input.userMessage,
+    });
     reply = result.reply;
     responseModel = result.model;
     usage = result.usage;
@@ -87,5 +117,13 @@ export async function complete(deps: CompleteDeps, input: CompleteInput): Promis
     optimizerOverheadMs,
     operationId: input.operationId,
   });
-  return { reply, model: decision.model, responseModel, cacheHit, usage, cost, routeReason: decision.routeReason };
+  return {
+    reply,
+    model: decision.model,
+    responseModel,
+    cacheHit,
+    usage,
+    cost,
+    routeReason: decision.routeReason,
+  };
 }

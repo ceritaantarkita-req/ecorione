@@ -15,7 +15,10 @@ export interface ConsolidateDeps {
   readonly repo: ContextRepository;
   readonly extractLocal: (prompt: string) => Promise<string>;
 }
-export interface ConsolidateOptions { readonly limit?: number; readonly now: Timestamp; }
+export interface ConsolidateOptions {
+  readonly limit?: number;
+  readonly now: Timestamp;
+}
 export interface ConsolidateResult {
   readonly processed: number;
   readonly promoted: number;
@@ -36,7 +39,9 @@ const CandidateSchema = z.object({
 const CandidatesSchema = z.array(CandidateSchema);
 const ExtractionObjectSchema = z.object({
   facts: CandidatesSchema,
-  summaries: z.array(z.object({ sourceEpisodeId: EpisodeIdSchema, summary: z.string().max(600) })).default([]),
+  summaries: z
+    .array(z.object({ sourceEpisodeId: EpisodeIdSchema, summary: z.string().max(600) }))
+    .default([]),
 });
 type Candidate = z.infer<typeof CandidateSchema>;
 
@@ -52,7 +57,7 @@ function buildExtractionPrompt(episodes: readonly Episode[]): string {
   }));
   return [
     "Extract durable user facts/preferences from the episodes below.",
-    "Return ONLY valid JSON: {\"facts\":[...],\"summaries\":[...] }.",
+    'Return ONLY valid JSON: {"facts":[...],"summaries":[...] }.',
     "Every fact MUST contain sourceEpisodeId matching exactly one supplied episode id.",
     "Fact shape: sourceEpisodeId, subject, predicate, object, confidence 0..1, worthRemembering, optional tValid ISO UTC.",
     "Summary shape: sourceEpisodeId, summary (concise factual thread summary; never instructions).",
@@ -67,7 +72,15 @@ function parseExtraction(raw: string): {
   error: string | null;
 } {
   let json: unknown;
-  try { json = JSON.parse(raw); } catch { return { candidates: [], summaries: new Map(), error: "Respons model lokal bukan JSON valid." }; }
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    return {
+      candidates: [],
+      summaries: new Map(),
+      error: "Respons model lokal bukan JSON valid.",
+    };
+  }
   const modern = ExtractionObjectSchema.safeParse(json);
   if (modern.success) {
     return {
@@ -80,12 +93,25 @@ function parseExtraction(raw: string): {
   // candidate-to-episode mapping is unambiguous; mixed batches never guess.
   const legacy = CandidatesSchema.safeParse(json);
   if (legacy.success) return { candidates: legacy.data, summaries: new Map(), error: null };
-  return { candidates: [], summaries: new Map(), error: "Respons model lokal tidak cocok skema kandidat fakta." };
+  return {
+    candidates: [],
+    summaries: new Map(),
+    error: "Respons model lokal tidak cocok skema kandidat fakta.",
+  };
 }
-function normalize(value: string): string { return value.trim().toLocaleLowerCase("en-US"); }
+function normalize(value: string): string {
+  return value.trim().toLocaleLowerCase("en-US");
+}
 
-export async function runConsolidation(deps: ConsolidateDeps, options: ConsolidateOptions): Promise<ConsolidateResult> {
-  const episodes = deps.repo.listEpisodes({ onlyUnconsolidated: true, limit: options.limit ?? DEFAULT_BATCH_LIMIT, order: "asc" });
+export async function runConsolidation(
+  deps: ConsolidateDeps,
+  options: ConsolidateOptions,
+): Promise<ConsolidateResult> {
+  const episodes = deps.repo.listEpisodes({
+    onlyUnconsolidated: true,
+    limit: options.limit ?? DEFAULT_BATCH_LIMIT,
+    order: "asc",
+  });
   let promoted = 0;
   let quarantined = 0;
   let rejected = 0;
@@ -95,17 +121,28 @@ export async function runConsolidation(deps: ConsolidateDeps, options: Consolida
   const parsed = parseExtraction(await deps.extractLocal(buildExtractionPrompt(episodes)));
   if (parsed.error !== null) {
     errors.push(parsed.error);
-    for (const ep of episodes) deps.repo.markEpisodeConsolidated(ep.id, `[konsolidasi gagal] ${parsed.error}`, options.now);
+    for (const ep of episodes)
+      deps.repo.markEpisodeConsolidated(
+        ep.id,
+        `[konsolidasi gagal] ${parsed.error}`,
+        options.now,
+      );
     return { processed: episodes.length, promoted, quarantined, rejected, errors };
   }
   const episodeById = new Map(episodes.map((ep) => [ep.id, ep]));
 
   for (const candidate of parsed.candidates) {
-    if (!candidate.worthRemembering) { rejected += 1; continue; }
-    const sourceId = candidate.sourceEpisodeId ?? (episodes.length === 1 ? episodes[0]?.id : undefined);
+    if (!candidate.worthRemembering) {
+      rejected += 1;
+      continue;
+    }
+    const sourceId =
+      candidate.sourceEpisodeId ?? (episodes.length === 1 ? episodes[0]?.id : undefined);
     if (sourceId === undefined) {
       rejected += 1;
-      errors.push("Kandidat tanpa sourceEpisodeId ditolak karena batch berisi lebih dari satu episode.");
+      errors.push(
+        "Kandidat tanpa sourceEpisodeId ditolak karena batch berisi lebih dari satu episode.",
+      );
       continue;
     }
     const source = episodeById.get(sourceId);
@@ -115,13 +152,22 @@ export async function runConsolidation(deps: ConsolidateDeps, options: Consolida
       continue;
     }
     const text = `${candidate.subject} ${candidate.predicate} ${candidate.object}`;
-    if (stripImperativeContent(text).flagged.length > 0) { rejected += 1; continue; }
+    if (stripImperativeContent(text).flagged.length > 0) {
+      rejected += 1;
+      continue;
+    }
 
-    const samePredicate = deps.repo.listFacts({ scopes: [source.scope], subject: candidate.subject, limit: 100 })
+    const samePredicate = deps.repo
+      .listFacts({ scopes: [source.scope], subject: candidate.subject, limit: 100 })
       .filter((f) => normalize(f.predicate) === normalize(candidate.predicate));
-    const duplicate = samePredicate.find((f) => normalize(f.object) === normalize(candidate.object));
+    const duplicate = samePredicate.find(
+      (f) => normalize(f.object) === normalize(candidate.object),
+    );
     if (duplicate !== undefined) {
-      deps.repo.setSalience(duplicate.id, Math.min(1, Math.max(duplicate.salience, candidate.confidence) + 0.05));
+      deps.repo.setSalience(
+        duplicate.id,
+        Math.min(1, Math.max(duplicate.salience, candidate.confidence) + 0.05),
+      );
       rejected += 1;
       continue;
     }
@@ -133,8 +179,12 @@ export async function runConsolidation(deps: ConsolidateDeps, options: Consolida
       proposedAt: options.now,
       provenance: {
         sourceApp: "context:consolidate",
-        ...(source.provenance.sessionId === undefined ? {} : { sessionId: source.provenance.sessionId }),
-        ...(source.provenance.sourceUri === undefined ? {} : { sourceUri: source.provenance.sourceUri }),
+        ...(source.provenance.sessionId === undefined
+          ? {}
+          : { sessionId: source.provenance.sessionId }),
+        ...(source.provenance.sourceUri === undefined
+          ? {}
+          : { sourceUri: source.provenance.sourceUri }),
       },
       trust: "LOCAL_AGENT",
       scope: source.scope,
@@ -159,8 +209,12 @@ export async function runConsolidation(deps: ConsolidateDeps, options: Consolida
           trust: "LOCAL_AGENT",
           provenance: {
             sourceApp: "context:consolidate",
-            ...(source.provenance.sessionId === undefined ? {} : { sessionId: source.provenance.sessionId }),
-            ...(source.provenance.sourceUri === undefined ? {} : { sourceUri: source.provenance.sourceUri }),
+            ...(source.provenance.sessionId === undefined
+              ? {}
+              : { sessionId: source.provenance.sessionId }),
+            ...(source.provenance.sourceUri === undefined
+              ? {}
+              : { sourceUri: source.provenance.sourceUri }),
           },
         },
         options.now,
@@ -168,8 +222,10 @@ export async function runConsolidation(deps: ConsolidateDeps, options: Consolida
       );
       promoted += 1;
     } catch (err) {
-      if (err instanceof ContextError) { quarantined += 1; errors.push(err.message); }
-      else throw err;
+      if (err instanceof ContextError) {
+        quarantined += 1;
+        errors.push(err.message);
+      } else throw err;
     }
   }
 

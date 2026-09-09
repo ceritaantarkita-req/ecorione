@@ -1,5 +1,10 @@
 /** Render context pack. Stored memory is always data, never instruction text. */
-import type { ArtifactPointer, CoreMemory, Provenance, RetrievalHit } from "@ecorione/shared-schema";
+import type {
+  ArtifactPointer,
+  CoreMemory,
+  Provenance,
+  RetrievalHit,
+} from "@ecorione/shared-schema";
 import type { ContextPack, EpisodicSummary } from "./pack.js";
 import type { StablePrefix } from "./prefix.js";
 
@@ -18,22 +23,45 @@ export function neutralizeEnvelopeMarkers(text: string): string {
   return text.replace(/<\/?\s*untrusted_memory\s*>?/gi, "[penanda amplop dihapus]");
 }
 export function wrapAsUntrustedData(body: string): string {
-  return [UNTRUSTED_OPEN, UNTRUSTED_BANNER, "", neutralizeEnvelopeMarkers(body).trimEnd(), UNTRUSTED_CLOSE].join("\n");
+  return [
+    UNTRUSTED_OPEN,
+    UNTRUSTED_BANNER,
+    "",
+    neutralizeEnvelopeMarkers(body).trimEnd(),
+    UNTRUSTED_CLOSE,
+  ].join("\n");
 }
 function esc(value: string): string {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 function attrs(pairs: ReadonlyArray<readonly [string, string | number | undefined]>): string {
-  return pairs.filter((p): p is readonly [string, string | number] => p[1] !== undefined).map(([k, v]) => `${k}="${esc(String(v))}"`).join(" ");
+  return pairs
+    .filter((p): p is readonly [string, string | number] => p[1] !== undefined)
+    .map(([k, v]) => `${k}="${esc(String(v))}"`)
+    .join(" ");
 }
-function provenanceAttrs(p: Provenance): ReadonlyArray<readonly [string, string | number | undefined]> {
-  return [["source_app", p.sourceApp], ["session", p.sessionId], ["tool_call", p.toolCallId], ["source_uri", p.sourceUri]];
+function provenanceAttrs(
+  p: Provenance,
+): ReadonlyArray<readonly [string, string | number | undefined]> {
+  return [
+    ["source_app", p.sourceApp],
+    ["session", p.sessionId],
+    ["tool_call", p.toolCallId],
+    ["source_uri", p.sourceUri],
+  ];
 }
 
 /** Stable L2 bytes. Classification fields are policy metadata, not model text. */
 export function renderCoreMemoryData(coreMemory: CoreMemory): string {
   const blocks = coreMemory.blocks.map((b) => {
-    const head = attrs([["label", b.label], ["about", b.description]]);
+    const head = attrs([
+      ["label", b.label],
+      ["about", b.description],
+    ]);
     return [`<block ${head}>`, b.value, "</block>"].join("\n");
   });
   return wrapAsUntrustedData(["<core_memory>", ...blocks, "</core_memory>"].join("\n"));
@@ -43,10 +71,14 @@ export function renderCoreMemoryData(coreMemory: CoreMemory): string {
 export function renderStablePrefix(prefix: StablePrefix): string {
   const parts: string[] = [];
   if (prefix.toolDefinitions.length > 0) {
-    const tools = prefix.toolDefinitions.map((t) => [
-      `<tool ${attrs([["name", t.name]])}>`, t.description,
-      `<input_schema>${JSON.stringify(t.inputSchema)}</input_schema>`, "</tool>",
-    ].join("\n"));
+    const tools = prefix.toolDefinitions.map((t) =>
+      [
+        `<tool ${attrs([["name", t.name]])}>`,
+        t.description,
+        `<input_schema>${JSON.stringify(t.inputSchema)}</input_schema>`,
+        "</tool>",
+      ].join("\n"),
+    );
     parts.push(["<tools>", ...tools, "</tools>"].join("\n"));
   }
   parts.push(prefix.systemPrompt);
@@ -57,9 +89,15 @@ export function renderStablePrefix(prefix: StablePrefix): string {
 function renderFact(hit: RetrievalHit, recalledAt: string): string {
   const f = hit.fact;
   const head = attrs([
-    ["id", f.id], ["trust", f.trust], ["scope", f.scope], ["sensitivity", f.sensitivity],
-    ["confidence", f.confidence.toFixed(2)], ["t_valid", f.tValid], ["created_at", f.createdAt],
-    ["recalled_at", recalledAt], ...provenanceAttrs(f.provenance),
+    ["id", f.id],
+    ["trust", f.trust],
+    ["scope", f.scope],
+    ["sensitivity", f.sensitivity],
+    ["confidence", f.confidence.toFixed(2)],
+    ["t_valid", f.tValid],
+    ["created_at", f.createdAt],
+    ["recalled_at", recalledAt],
+    ...provenanceAttrs(f.provenance),
   ]);
   return `<fact ${head}>\n${f.text}\n</fact>`;
 }
@@ -69,17 +107,50 @@ function renderEpisode(ep: EpisodicSummary): string {
 }
 const POINTER_NOTE = "pointers only; open a document only when the task needs it";
 function renderPointer(p: ArtifactPointer): string {
-  const head = attrs([["id", p.id], ["path", p.path], ["mime", p.mimeType], ["bytes", p.sizeBytes], ["sensitivity", p.sensitivity]]);
+  const head = attrs([
+    ["id", p.id],
+    ["path", p.path],
+    ["mime", p.mimeType],
+    ["bytes", p.sizeBytes],
+    ["sensitivity", p.sensitivity],
+  ]);
   return `<artifact_pointer ${head}>${esc(p.description)}</artifact_pointer>`;
 }
-export interface RenderedContext { readonly stableText: string; readonly dynamicText: string; }
+export interface RenderedContext {
+  readonly stableText: string;
+  readonly dynamicText: string;
+}
 export function renderContextPack(pack: ContextPack): RenderedContext {
   const sections: string[] = [];
   const { recalledFacts, episodicSummaries, artifactPointers, assembledAt } = pack.dynamic;
-  if (recalledFacts.length > 0) sections.push(["<recalled_facts>", ...recalledFacts.map((h) => renderFact(h, assembledAt)), "</recalled_facts>"].join("\n"));
-  if (episodicSummaries.length > 0) sections.push(["<thread_summaries>", ...episodicSummaries.map(renderEpisode), "</thread_summaries>"].join("\n"));
-  if (artifactPointers.length > 0) sections.push([`<artifact_pointers ${attrs([["note", POINTER_NOTE]])}>`, ...artifactPointers.map(renderPointer), "</artifact_pointers>"].join("\n"));
-  return { stableText: renderStablePrefix(pack.stable.prefix), dynamicText: wrapAsUntrustedData(sections.join("\n\n")) };
+  if (recalledFacts.length > 0)
+    sections.push(
+      [
+        "<recalled_facts>",
+        ...recalledFacts.map((h) => renderFact(h, assembledAt)),
+        "</recalled_facts>",
+      ].join("\n"),
+    );
+  if (episodicSummaries.length > 0)
+    sections.push(
+      [
+        "<thread_summaries>",
+        ...episodicSummaries.map(renderEpisode),
+        "</thread_summaries>",
+      ].join("\n"),
+    );
+  if (artifactPointers.length > 0)
+    sections.push(
+      [
+        `<artifact_pointers ${attrs([["note", POINTER_NOTE]])}>`,
+        ...artifactPointers.map(renderPointer),
+        "</artifact_pointers>",
+      ].join("\n"),
+    );
+  return {
+    stableText: renderStablePrefix(pack.stable.prefix),
+    dynamicText: wrapAsUntrustedData(sections.join("\n\n")),
+  };
 }
 
 const IMPERATIVE_PATTERNS: readonly RegExp[] = [
@@ -94,7 +165,10 @@ const IMPERATIVE_PATTERNS: readonly RegExp[] = [
   /^\s*(please\s+)?(ignore|disregard|send|email|forward|delete|remove|run|execute|call|fetch|download|install|reply|respond|tell|reveal|print|output|export|transfer|pay|click|visit|open|always|never|must|do not|don't)\b/i,
   /^\s*(tolong\s+)?(abaikan|kirim|kirimkan|hapus|jalankan|eksekusi|panggil|ambil|unduh|pasang|balas|jawab|beritahu|ungkap|cetak|ekspor|transfer|bayar|klik|buka|jangan|harus|selalu|pastikan)\b/i,
 ];
-export interface StripResult { readonly clean: string; readonly flagged: readonly string[]; }
+export interface StripResult {
+  readonly clean: string;
+  readonly flagged: readonly string[];
+}
 export function stripImperativeContent(text: string): StripResult {
   const flagged: string[] = [];
   const keptLines: string[] = [];
