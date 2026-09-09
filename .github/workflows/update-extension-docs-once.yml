@@ -1,0 +1,35 @@
+name: Update Extension Docs Once
+
+on:
+  push:
+    branches: [agent/plugin-extension-framework-20260909]
+    paths: [".github/workflows/update-extension-docs-once.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/plugin-extension-framework-20260909
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: python scripts/patch-extension-docs.py
+      - run: pnpm exec prettier --write README.md docs/DECISIONS.md docs/EXECUTION-PROGRESS.md docs/fase6-hardening.md docs/adr/0024-plugin-extension-framework.md docs/adr/README.md docs/extension-operations.md
+      - run: pnpm run format:check
+      - name: Commit docs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add README.md docs/DECISIONS.md docs/EXECUTION-PROGRESS.md docs/fase6-hardening.md docs/adr/0024-plugin-extension-framework.md docs/adr/README.md docs/extension-operations.md
+          git diff --cached --quiet || git commit -m "docs: record extension framework progress"
+          git push origin HEAD:agent/plugin-extension-framework-20260909
