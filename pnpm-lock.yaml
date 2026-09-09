@@ -11,6 +11,15 @@ importers:
       '@eslint/js':
         specifier: ^9.39.0
         version: 9.39.5
+      '@temporalio/client':
+        specifier: 1.23.0
+        version: 1.23.0
+      '@temporalio/testing':
+        specifier: 1.23.0
+        version: 1.23.0
+      '@temporalio/worker':
+        specifier: 1.23.0
+        version: 1.23.0
       '@types/node':
         specifier: ^22.20.0
         version: 22.20.1
