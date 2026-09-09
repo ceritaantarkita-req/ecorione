@@ -10,6 +10,7 @@ export * from "./classification.js";
 export * from "./memory.js";
 export * from "./modules.js";
 export * from "./policy.js";
+export * from "./capabilities.js";
 export * from "./chat.js";
 export * from "./mcp.js";
 export * from "./sync.js";
