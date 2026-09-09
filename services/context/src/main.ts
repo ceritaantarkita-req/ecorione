@@ -10,6 +10,8 @@ import { registerArtifactRoutes } from "./artifact-routes.js";
 import { nowIso } from "./clock.js";
 import { openContextDatabase } from "./db.js";
 import { buildContextServer } from "./http.js";
+import { registerMultimodalRoutes } from "./multimodal-http.js";
+import { MultimodalRepository } from "./multimodal-repository.js";
 import { ContextRepository } from "./repository.js";
 import { createVectorIndex } from "./vector.js";
 
@@ -34,6 +36,7 @@ const vectors = createVectorIndex(db.raw, {
   model: process.env.ECORIONE_EMBEDDING_MODEL ?? "none",
 });
 const repo = new ContextRepository(db, vectors);
+const multimodal = new MultimodalRepository(db);
 
 interface CompleteResponse {
   readonly reply: string;
@@ -68,6 +71,7 @@ async function extractLocal(prompt: string): Promise<string> {
 const app = buildContextServer(repo, vectors, { token, logger: true, extractLocal });
 registerArtifactRoutes(app, repo);
 registerAccessRoutes(app, repo);
+registerMultimodalRoutes(app, multimodal);
 
 app
   .listen({ port, host: bindHost() })
