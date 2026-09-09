@@ -13,7 +13,7 @@ import {
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import { callAnthropic } from "./providers/anthropic.js";
-import { MissingCredentialError } from "./providers/errors.js";
+import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
 import { callLocal } from "./providers/local.js";
 import { route, type RouteTarget } from "./routing.js";
 
@@ -22,6 +22,8 @@ export interface CompleteDeps {
   readonly localBaseUrl: string;
   readonly localModelTag: string;
   readonly cache: ExactMatchCache;
+  /** Emergency operator control. Defaults true at HTTP construction boundary. */
+  readonly hostedCallsEnabled: boolean;
 }
 export interface CompleteInput {
   readonly target: RouteTarget;
@@ -53,6 +55,13 @@ export async function complete(
   assertPrefixCacheable(input.prefix);
   const overheadStart = performance.now();
   const decision = route({ target: input.target, sensitivity: input.sensitivity });
+
+  // Fase 6 cost kill switch lives at the provider boundary so Hub, Flow, MCP, or any
+  // future caller cannot bypass it. No silent reroute to local is allowed.
+  if (decision.routeReason !== "local-consolidation" && !deps.hostedCallsEnabled) {
+    throw new CostKillSwitchError();
+  }
+
   const key = cacheKey({
     model: decision.model,
     prefixDigest: prefixDigest(input.prefix),
