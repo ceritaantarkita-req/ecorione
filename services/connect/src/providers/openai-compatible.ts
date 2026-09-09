@@ -22,7 +22,6 @@ export interface OpenAiCompatibleHostedInput {
   readonly dynamicText: string;
   readonly userMessage: string;
   readonly maxTokensField: "max_tokens" | "max_completion_tokens";
-  readonly includeUsage?: boolean | undefined;
 }
 
 export interface OpenAiCompatibleHostedResult {
@@ -67,7 +66,7 @@ function buildTools(prefix: StablePrefix) {
 export function buildOpenAiCompatibleRequestBody(
   input: Omit<OpenAiCompatibleHostedInput, "endpoint" | "providerName" | "apiKey">,
 ): Record<string, unknown> {
-  const body: Record<string, unknown> = {
+  return {
     model: input.runtimeModel,
     messages: [
       { role: "system", content: input.prefix.systemPrompt },
@@ -77,8 +76,6 @@ export function buildOpenAiCompatibleRequestBody(
     tools: buildTools(input.prefix),
     [input.maxTokensField]: OPENAI_COMPAT_MAX_OUTPUT_TOKENS,
   };
-  if (input.includeUsage === true) body.usage = { include: true };
-  return body;
 }
 
 export function estimateOpenAiCompatibleReservationUsd(
