@@ -103,6 +103,7 @@ export function buildHubServer(
   const history = new HistoryLedger(db);
   const deps: OrchestrateDeps = {
     repo,
+    history,
     contextUrl: options.contextUrl,
     connectUrl: options.connectUrl,
     rndUrl: options.rndUrl,
