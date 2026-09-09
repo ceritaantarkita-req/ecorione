@@ -442,10 +442,9 @@ describe("Fase 4 real Temporal restart acceptance", () => {
             providerCalls: provider.calls(),
             audit: await auditTypes(hubUrl, started.operationId).catch(() => []),
             rootTraces: await traceNames(rndUrl, started.operationId).catch(() => []),
-            executionTraces: await traceNames(
-              rndUrl,
-              `${started.operationId}-execution`,
-            ).catch(() => []),
+            executionTraces: await traceNames(rndUrl, `${started.operationId}-execution`).catch(
+              () => [],
+            ),
             workerExitCode: childThree.exitCode,
             workerSignalCode: childThree.signalCode,
             workflowStatus: await handle
