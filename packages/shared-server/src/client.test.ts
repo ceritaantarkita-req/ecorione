@@ -29,6 +29,22 @@ describe("httpJson", () => {
     expect(result).toEqual({ ok: true });
   });
 
+  it("meneruskan PUT eksplisit dengan body JSON", async () => {
+    const pool = mockAgentFor("http://svc.local");
+    pool
+      .intercept({
+        path: "/v1/item",
+        method: "PUT",
+        body: JSON.stringify({ value: "updated" }),
+      })
+      .reply(200, { ok: true });
+    const result = await httpJson<{ ok: boolean }>("http://svc.local/v1/item", {
+      method: "PUT",
+      body: { value: "updated" },
+    });
+    expect(result).toEqual({ ok: true });
+  });
+
   it("default ke GET saat tidak ada body", async () => {
     const pool = mockAgentFor("http://svc.local");
     pool.intercept({ path: "/v1/items", method: "GET" }).reply(200, { items: [] });
