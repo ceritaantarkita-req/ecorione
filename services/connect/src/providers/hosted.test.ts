@@ -32,7 +32,7 @@ const base = {
 };
 
 describe("hosted provider adapters", () => {
-  it("OpenRouter memakai bearer key + canonical Claude slug dan membaca cached usage", async () => {
+  it("OpenRouter memakai canonical Claude slug dan membawa authoritative usage.cost", async () => {
     openrouterPool
       .intercept({ path: "/api/v1/chat/completions", method: "POST" })
       .reply(200, {
@@ -42,6 +42,7 @@ describe("hosted provider adapters", () => {
           prompt_tokens: 100,
           completion_tokens: 20,
           prompt_tokens_details: { cached_tokens: 40 },
+          cost: 0.0042,
         },
       });
 
@@ -55,12 +56,29 @@ describe("hosted provider adapters", () => {
       "anthropic/claude-sonnet-4.5",
     );
     expect(result.reply).toBe("via router");
+    expect(result.providerReportedActualUsd).toBe(0.0042);
     expect(result.usage).toEqual({
       inputTokens: 60,
       outputTokens: 20,
       cacheReadTokens: 40,
       cacheWriteTokens: 0,
     });
+  });
+
+  it("OpenRouter menolak usage.cost malformed agar accounting fail-closed", async () => {
+    openrouterPool.intercept({ path: "/api/v1/chat/completions", method: "POST" }).reply(200, {
+      model: "anthropic/claude-sonnet-4.5",
+      choices: [{ message: { content: "invalid cost" } }],
+      usage: { prompt_tokens: 1, completion_tokens: 1, cost: -1 },
+    });
+    await expect(
+      callHostedProvider({
+        provider: "openrouter",
+        apiKey: "router-test-key",
+        model: "claude-sonnet-4-5-20250929",
+        ...base,
+      }),
+    ).rejects.toThrow(/usage.cost/);
   });
 
   it("OpenAI memakai explicit pinned model identity tanpa alias", async () => {
@@ -79,6 +97,7 @@ describe("hosted provider adapters", () => {
     expect(openAiRuntimeModel("gpt-5.6-terra")).toBe("gpt-5.6-terra");
     expect(result.reply).toBe("via openai");
     expect(result.usage.inputTokens).toBe(50);
+    expect(result.providerReportedActualUsd).toBeUndefined();
   });
 
   it("reservation provider-aware tetap positif untuk seluruh hosted provider", () => {

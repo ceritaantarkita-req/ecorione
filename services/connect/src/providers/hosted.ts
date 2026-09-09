@@ -18,6 +18,7 @@ export interface HostedCallResult {
   readonly reply: string;
   readonly model: string;
   readonly usage: TokenUsage;
+  readonly providerReportedActualUsd?: number | undefined;
 }
 
 type AdapterInput = Omit<HostedCallInput, "provider" | "apiKey">;

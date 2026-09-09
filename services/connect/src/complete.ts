@@ -19,14 +19,8 @@ import {
   type HostedProviderId,
 } from "./provider-types.js";
 import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
-import {
-  callHostedProvider,
-  estimateHostedReservationUsd,
-} from "./providers/hosted.js";
-import {
-  callLocalRuntime,
-  type LocalRuntimeId,
-} from "./providers/local-runtime.js";
+import { callHostedProvider, estimateHostedReservationUsd } from "./providers/hosted.js";
+import { callLocalRuntime, type LocalRuntimeId } from "./providers/local-runtime.js";
 import { route, type RouteTarget } from "./routing.js";
 import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
 
@@ -125,6 +119,7 @@ export async function complete(
   let baselineUsage: TokenUsage;
   let cacheHit: boolean;
   let spendReservation: SpendEntry | undefined;
+  let providerReportedActualUsd: number | undefined;
 
   if (cached !== null) {
     reply = cached.reply;
@@ -187,6 +182,7 @@ export async function complete(
       responseModel = result.model;
       usage = result.usage;
       baselineUsage = usage;
+      providerReportedActualUsd = result.providerReportedActualUsd;
       deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
       cacheHit = false;
     } catch (error) {
@@ -206,6 +202,7 @@ export async function complete(
     model: decision.model,
     usage,
     baselineUsage,
+    ...(providerReportedActualUsd === undefined ? {} : { actualUsdOverride: providerReportedActualUsd }),
     routeReason: decision.routeReason,
     policyVersion: POLICY_VERSION,
     optimizerOverheadMs,

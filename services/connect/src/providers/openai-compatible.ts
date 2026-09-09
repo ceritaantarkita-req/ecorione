@@ -28,6 +28,8 @@ export interface OpenAiCompatibleHostedResult {
   readonly reply: string;
   readonly model: string;
   readonly usage: TokenUsage;
+  /** Optional authoritative billed cost exposed by providers such as OpenRouter. */
+  readonly providerReportedActualUsd?: number | undefined;
 }
 
 interface OpenAiCompatibleResponseBody {
@@ -39,6 +41,7 @@ interface OpenAiCompatibleResponseBody {
     readonly prompt_tokens?: number;
     readonly completion_tokens?: number;
     readonly prompt_tokens_details?: { readonly cached_tokens?: number };
+    readonly cost?: unknown;
   };
 }
 
@@ -95,6 +98,17 @@ export function estimateOpenAiCompatibleReservationUsd(
   return Math.ceil(rawUsd * USD_RESERVATION_PRECISION) / USD_RESERVATION_PRECISION;
 }
 
+function reportedCost(
+  providerName: OpenAiCompatibleHostedInput["providerName"],
+  value: unknown,
+): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new ProviderError("hosted", `Respons ${providerName} memiliki usage.cost yang tidak valid.`);
+  }
+  return value;
+}
+
 export async function callOpenAiCompatibleHosted(
   input: OpenAiCompatibleHostedInput,
 ): Promise<OpenAiCompatibleHostedResult> {
@@ -135,6 +149,7 @@ export async function callOpenAiCompatibleHosted(
   const usage = parsed.usage ?? {};
   const totalPrompt = usage.prompt_tokens ?? 0;
   const cachedPrompt = Math.min(totalPrompt, usage.prompt_tokens_details?.cached_tokens ?? 0);
+  const providerReportedActualUsd = reportedCost(input.providerName, usage.cost);
   return {
     reply: parsed.choices?.[0]?.message?.content ?? "",
     model: parsed.model ?? input.runtimeModel,
@@ -144,5 +159,6 @@ export async function callOpenAiCompatibleHosted(
       cacheReadTokens: cachedPrompt,
       cacheWriteTokens: 0,
     },
+    ...(providerReportedActualUsd === undefined ? {} : { providerReportedActualUsd }),
   };
 }
