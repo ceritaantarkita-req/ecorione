@@ -39,10 +39,7 @@ export const FlowApprovalSignalSchema = z.object({
   note: z.string().max(1024).nullable().default(null),
 });
 export type FlowApprovalSignal = z.infer<typeof FlowApprovalSignalSchema>;
-
-export const FlowDecisionRequestSchema = FlowApprovalSignalSchema.extend({
-  operationId: OperationIdSchema,
-});
+export const FlowDecisionRequestSchema = FlowApprovalSignalSchema;
 export type FlowDecisionRequest = z.infer<typeof FlowDecisionRequestSchema>;
 
 export const FlowStartResponseSchema = z.object({
