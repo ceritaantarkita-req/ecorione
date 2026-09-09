@@ -101,24 +101,43 @@ Closure evidence Batch 3: final candidate `e706aa70f3b9b80fc6ec12c72972a29f3c503
 
 Integrity gate ini tidak diklaim sebagai vulnerability scanner. Unified grant/revocation dan cross-runtime permission authority tetap Batch 4.
 
+### 11. Unified Capability + Permission Plane
+
+ADR-25 menjadikan Hub authority plane tunggal untuk standing capability grants lintas MCP, Extension, Sandbox, model/tool, Flow, dan future Node Registry:
+
+- grant di-scope oleh workspace + subject + capability + permission + scope + sensitivity ceiling;
+- unknown/missing grant fail closed;
+- declaration extension bukan grant dan tidak dapat menaikkan privilege sendiri;
+- grant/revoke memakai ActionClass `POLICY_ADMIN` dan durable human approval yang sudah dimiliki Hub;
+- active runtime tetap menjalankan generic policy, Vault, Spend Budget, Sandbox boundary, MCP local enablement, dan idempotency setelah standing authority lolos;
+- Chat hosted model dan Flow model memeriksa authority sebelum provider/egress;
+- Sandbox memeriksa authority sebelum generic policy/execution;
+- outbound MCP memeriksa tool authority dan, jika ada credentialRef, `secret.access / credential.use` sebelum generic policy/network dispatch;
+- extension install/update/rollback menyinkronkan declaration, update memangkas stale grants, remove membersihkan active grants tanpa menghapus revision provenance;
+- compatibility migration one-time eksplisit menjaga hosted/local model serta Sandbox tier0/tier1.5/tier1 pada `ws_personal`; grant tetap dapat di-revoke;
+- outbound MCP tidak dimigrasikan otomatis karena Hub tidak boleh mengintrospeksi registry/DB Connect.
+
+Authority state tidak menyimpan raw secret. Canonical audit merekam authorize/deny/grant/revoke, sedangkan append-only authority events mempertahankan provenance control-plane.
+
+Batch 4 masih `IMPLEMENTED / CLOSURE PENDING` sampai exact-final-head CI + MCP External HTTPS, expected-head merge, dan post-merge `main` verification selesai.
+
 ## Gap hardening/platform yang masih terbuka
 
 Urutan rekomendasi berdasarkan dependency dan risiko:
 
-1. **Unified capability/permission plane** untuk grant/revoke workspace-scoped lintas MCP/Plugin/Sandbox/model/tool; extension declaration Batch 3 belum menjadi authority grant.
-2. **Native multimodal pipeline**: image/document first-class input, OCR, STT/TTS Indonesia+Inggris, lalu realtime voice.
-3. **Data refactor/rebuild + dataset governance**: authoritative-vs-derived separation, migration, reindex/rebuild, validation, lineage/versioning.
-4. **Node Registry** di atas capability/permission plane sebagai dasar visual Flow Canvas, core node pack, custom node SDK, dan reusable subflow.
-5. **Space block runtime** ala block workspace tanpa menggandakan source of truth Context/Artifact.
-6. **Data maintenance center + backup/restore/disaster recovery** dengan integrity verification.
-7. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
-8. **Provider canary harian** dengan provider nyata dan quality floor; deterministic CI tetap external-credential-free.
-9. **Full-history secret scan** sebelum public release; working-tree scan saat ini belum cukup.
-10. **Next.js ESLint integration warning** pada production build.
-11. **Cumulative operational metrics + distributed trace** per hari/task/provider/node (cost, quality, p50/p95, errors).
-12. **ECX production efficiency validation** menggunakan traffic metrics nyata sebelum savings claim.
-13. **Chaos/failure + full cross-service E2E acceptance**.
-14. **Final security audit, Settings/Control Center, SDK/docs, installer/upgrade/release closure**.
-15. **AutoClick/RPA** tetap conditional/deferred sampai use case non-API nyata lolos design gate.
+1. **Native multimodal pipeline**: image/document first-class input, OCR, STT/TTS Indonesia+Inggris, lalu realtime voice. Unified capability/permission plane sudah menjadi Batch 4 candidate dan menunggu closure evidence final.
+2. **Data refactor/rebuild + dataset governance**: authoritative-vs-derived separation, migration, reindex/rebuild, validation, lineage/versioning.
+3. **Node Registry** di atas capability/permission plane sebagai dasar visual Flow Canvas, core node pack, custom node SDK, dan reusable subflow.
+4. **Space block runtime** ala block workspace tanpa menggandakan source of truth Context/Artifact.
+5. **Data maintenance center + backup/restore/disaster recovery** dengan integrity verification.
+6. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
+7. **Provider canary harian** dengan provider nyata dan quality floor; deterministic CI tetap external-credential-free.
+8. **Full-history secret scan** sebelum public release; working-tree scan saat ini belum cukup.
+9. **Next.js ESLint integration warning** pada production build.
+10. **Cumulative operational metrics + distributed trace** per hari/task/provider/node (cost, quality, p50/p95, errors).
+11. **ECX production efficiency validation** menggunakan traffic metrics nyata sebelum savings claim.
+12. **Chaos/failure + full cross-service E2E acceptance**.
+13. **Final security audit, Settings/Control Center, SDK/docs, installer/upgrade/release closure**.
+14. **AutoClick/RPA** tetap conditional/deferred sampai use case non-API nyata lolos design gate.
 
 Tidak satu pun gap dianggap selesai hanya karena ada ADR, rencana, mock, atau unit test. Setiap workstream harus lolos exact-head closure gate dan post-merge `main` smoke sebelum statusnya berubah menjadi implemented/closed baseline.

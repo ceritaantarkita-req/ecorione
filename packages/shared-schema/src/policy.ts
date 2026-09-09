@@ -21,6 +21,7 @@ export const ACTION_CLASS = [
   "EXTERNAL_SEND",
   "CREDENTIAL_ACCESS",
   "EXECUTE",
+  "POLICY_ADMIN",
 ] as const;
 export type ActionClass = (typeof ACTION_CLASS)[number];
 export const ActionClassSchema = z.enum(ACTION_CLASS);
@@ -29,6 +30,7 @@ const ALWAYS_GATED: ReadonlySet<ActionClass> = new Set([
   "SPEND",
   "EXTERNAL_SEND",
   "CREDENTIAL_ACCESS",
+  "POLICY_ADMIN",
 ]);
 export function alwaysRequiresApproval(cls: ActionClass): boolean {
   return ALWAYS_GATED.has(cls);
@@ -88,6 +90,11 @@ export const AUDIT_EVENT_TYPES = [
   "HISTORY_WRITE_FAILED",
   "TRACE_WRITE_FAILED",
   "MCP_TOOL_CALLED",
+  "CAPABILITY_GRANTED",
+  "CAPABILITY_REVOKED",
+  "CAPABILITY_AUTHORIZED",
+  "CAPABILITY_DENIED",
+  "CAPABILITY_DECLARATIONS_SYNCED",
 ] as const;
 export type AuditEventType = (typeof AUDIT_EVENT_TYPES)[number];
 export const AuditEventTypeSchema = z.enum(AUDIT_EVENT_TYPES);

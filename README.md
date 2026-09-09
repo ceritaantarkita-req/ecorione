@@ -131,7 +131,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 - **Fase 3 — CLOSED:** Artifact, Sandbox, Space + runtime acceptance.
 - **Fase 4 — CLOSED:** Flow di Temporal + forced worker crash/recovery.
 - **Fase 5 — DEFERRED BY DESIGN:** belum ada use case non-API konkret yang membenarkan RPA.
-- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, multi-provider hardening, external MCP HTTPS acceptance, outbound MCP manager, dan Plugin/Extension Framework sudah masuk baseline candidate; unified capability/permission plane, multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
+- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, multi-provider hardening, external MCP HTTPS acceptance, outbound MCP manager, Plugin/Extension Framework, dan Unified Capability/Permission Plane sudah masuk baseline candidate; multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
 
 ## Invarian penting
 
@@ -152,7 +152,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 
 ## Batasan yang masih nyata
 
-- Unified capability/permission grant + revocation plane belum selesai; extension manifest saat ini hanya mendeklarasikan kebutuhan dan tidak memberi grant otomatis.
+- Unified capability/permission plane sudah diimplementasikan sebagai Hub-owned standing grant authority; declaration extension tetap bukan grant, outbound MCP membutuhkan grant operator eksplisit, dan closure final masih menunggu exact-head + post-merge evidence Batch 4.
 - Native OCR/STT/TTS/realtime voice belum menjadi capability runtime.
 - Visual node canvas/custom node SDK belum ada.
 - Data refactor/rebuild governance belum menjadi subsystem eksplisit.
@@ -174,6 +174,7 @@ CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
 | [`docs/fase6-hardening.md`](docs/fase6-hardening.md) | Baseline hardening + gap aktif |
 | [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md) | Operasi outbound MCP registry, credential, tool, dan failure handling |
 | [`docs/extension-operations.md`](docs/extension-operations.md) | Operasi extension manifest, lifecycle, provenance, rollback, dan security admission |
+| [`docs/capability-permission-operations.md`](docs/capability-permission-operations.md) | Operasi authority grant/revoke, MCP/model/Sandbox/extension permission, dan failure semantics |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Log keputusan aktual |
 | [`docs/verification/`](docs/verification/) | Evidence exact-head/runtime acceptance |
 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |

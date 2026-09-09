@@ -27,27 +27,20 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Batch 3 implementation merged ke `main` sebagai:
+Batch 3 closure docs merged ke `main` sebagai:
 
-- `af2b3f12f5deeaf2fd50c045998416365f766b9d`
+- `df00c2bafad2449722293eef803fa8873921fd53`
+- final post-closure main CI `34369678467`: full green
 
-Post-merge verification pada implementation SHA tersebut:
+### Active execution
 
-- Naming: PASS
-- Format: PASS
-- Lint: PASS
-- Typecheck: PASS
-- Test: PASS
-- Phase 4 real-process acceptance: PASS
-- Secret Scan: PASS
-- Production Build: PASS
-- run `34368309860`, attempt 2: full green
-
-### Next execution target
-
+- Batch 1 status: **CLOSED**
+- Batch 2 status: **CLOSED**
 - Batch 3 status: **CLOSED**
-- next batch: **Batch 4 — Unified Capability + Permission Plane**
-- closure-doc branch: `agent/batch3-plugin-closure-20260909`
+- Batch 4 status: **IMPLEMENTED / CLOSURE PENDING**
+- active branch: `agent/unified-capability-permission-plane-20260909`
+- PR: #13 (draft sampai exact-head evidence lengkap)
+- next after Batch 4 closure: **Batch 5 — Native Multimodal Pipeline**
 
 ---
 
@@ -214,7 +207,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1, Batch 2, dan Batch 3 sudah CLOSED**. Tersisa **9 batch platform/production (Batch 4–12)**; next implementation target adalah **Batch 4 — Unified Capability + Permission Plane**.
+Dari current state, **Batch 1, Batch 2, dan Batch 3 sudah CLOSED**. Batch 4 sudah diimplementasikan dan sedang menunggu closure evidence; secara roadmap masih tersisa **9 batch (Batch 4–12)** sampai Batch 4 benar-benar CLOSED. Setelah closure, next implementation target adalah **Batch 5 — Native Multimodal Pipeline**.
 
 ---
 
@@ -343,22 +336,35 @@ Batch 3 resmi `CLOSED`; next implementation batch adalah Batch 4.
 
 ## Batch 4 — Unified Capability + Permission Plane
 
-Status: **PLANNED**
+Status: **IMPLEMENTED / CLOSURE PENDING**
 
-Scope:
+Implemented candidate:
 
-- capability registry untuk model/MCP/plugin/node/tool/sandbox
-- permission scopes
-- read/write/network/filesystem distinctions
-- side-effect declaration
-- high-impact action approval
-- secret-access policy
-- sandbox policy
-- revoke capability
-- audit
-- fail-closed default
+- Hub-owned single authority plane; tidak ada permission database kedua di service lain;
+- workspace + subject + capability + permission + scope + sensitivity-ceiling standing grants;
+- fail-closed untuk unknown/undeclared/missing grants;
+- code-owned built-in capability definitions untuk MCP, Sandbox, hosted/local model, generic tool, secret access, dan future node;
+- `POLICY_ADMIN` selalu melewati durable human approval untuk grant/revoke;
+- immutable/idempotent authority mutation receipts + append-only authority events;
+- extension declaration bukan grant, permission terikat deterministik ke capability, stale grants dipangkas saat manifest update, remove membersihkan active grants;
+- Chat hosted model authority sebelum Context/provider egress;
+- Flow hosted/local model authority sebelum Connect;
+- Sandbox authority sebelum generic policy/execution;
+- outbound MCP authority sebelum policy/network dispatch dan credentialRef membutuhkan `secret.access / credential.use`;
+- one-time explicit compatibility grants untuk hosted/local model dan Sandbox tiers pada `ws_personal`; tetap revocable;
+- outbound MCP tidak auto-migrated karena Hub tidak mengintrospeksi Connect registry; operator wajib grant eksplisit;
+- raw credential tetap hanya di Connect Vault; authority state/audit tidak menyimpan secret.
 
-Tujuan: MCP, Plugin, Flow Node, Sandbox, dan AI memakai permission semantics yang konsisten.
+Regression evidence sebelum final docs head:
+
+- integration helper run `34375813569`: root Typecheck PASS + focused authority/extension/sandbox/orchestrate tests PASS;
+- regression hardening run `34376301583`: root Typecheck PASS + Chat/MCP/credential/extension/Sandbox focused tests PASS;
+- temporary helper workflows/scripts self-remove dan bukan bagian final candidate.
+
+ADR: `docs/adr/0025-unified-capability-permission-plane.md`
+Operations: `docs/capability-permission-operations.md`
+
+Closure masih membutuhkan exact-final-head CI + MCP External HTTPS PASS, PR #13 expected-head merge, post-merge `main` verification, lalu tracker closure update.
 
 ---
 

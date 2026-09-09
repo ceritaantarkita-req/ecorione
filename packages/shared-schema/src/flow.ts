@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { ScopeSchema, SensitivitySchema } from "./classification.js";
-import { OperationIdSchema, WorkflowIdSchema, type WorkflowId } from "./ids.js";
+import {
+  OperationIdSchema,
+  WorkflowIdSchema,
+  WorkspaceIdSchema,
+  type WorkflowId,
+} from "./ids.js";
 import { SandboxTierSchema } from "./sandbox.js";
 
 export const FlowIdSchema = WorkflowIdSchema;
@@ -17,6 +22,7 @@ export const FlowExecutionNodeSchema = z.object({
 export type FlowExecutionNode = z.infer<typeof FlowExecutionNodeSchema>;
 
 export const FlowStartRequestSchema = z.object({
+  workspaceId: WorkspaceIdSchema.optional(),
   scope: ScopeSchema,
   sensitivity: SensitivitySchema,
   inputText: z.string().min(1).max(32_000),

@@ -1,7 +1,11 @@
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assertId, type PolicyVerdict } from "@ecorione/shared-schema";
+import {
+  assertId,
+  type CapabilityAuthorizationResult,
+  type PolicyVerdict,
+} from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SandboxControlPlane } from "./clients.js";
 import { buildDockerPlan, SandboxBoundaryError, SandboxExecutor } from "./executor.js";
@@ -12,12 +16,20 @@ afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 
-function setup(verdict: PolicyVerdict = { outcome: "ALLOW", reason: "ok" }) {
+function setup(
+  verdict: PolicyVerdict = { outcome: "ALLOW", reason: "ok" },
+  authority: CapabilityAuthorizationResult = {
+    outcome: "ALLOW",
+    reason: "granted",
+    grantedPermissionIds: ["sandbox.execute", "filesystem.read"],
+  },
+) {
   const root = mkdtempSync(join(tmpdir(), "ecorione-sandbox-"));
   roots.push(root);
   const workspace = join(root, "work");
   mkdirSync(workspace);
   const control: SandboxControlPlane = {
+    authorize: vi.fn(async () => authority),
     evaluate: vi.fn(async () => verdict),
     trace: vi.fn(async () => undefined),
   };
@@ -42,7 +54,7 @@ describe("Sandbox boundaries", () => {
     expect(joined).not.toContain("docker.sock");
   });
 
-  it("rejects workspace escape before policy evaluation", async () => {
+  it("rejects workspace escape before authority/policy evaluation", async () => {
     const { root, control, executor } = setup();
     await expect(
       executor.execute({
@@ -59,6 +71,32 @@ describe("Sandbox boundaries", () => {
         sensitivity: "INTERNAL",
       }),
     ).rejects.toThrow(SandboxBoundaryError);
+    expect(control.authorize).not.toHaveBeenCalled();
+    expect(control.evaluate).not.toHaveBeenCalled();
+  });
+
+  it("fails closed on missing sandbox capability before general policy", async () => {
+    const { workspace, control, executor } = setup(
+      { outcome: "ALLOW", reason: "policy allow" },
+      { outcome: "DENY", reason: "grant missing", missingPermissionIds: ["sandbox.execute"] },
+    );
+    await expect(
+      executor.execute({
+        operationId: assertId("operation", "op_sbxauthority1"),
+        workspaceId: assertId("workspace", "ws_other"),
+        tier: "tier0",
+        workspace,
+        command: "pwd",
+        wasmBase64: null,
+        wasmExport: "run",
+        wasmArgs: [],
+        irreversible: false,
+        idempotencyKey: "sbx-authority-deny",
+        scope: "personal",
+        sensitivity: "INTERNAL",
+      }),
+    ).rejects.toThrow(/authority ditolak/);
+    expect(control.authorize).toHaveBeenCalledTimes(1);
     expect(control.evaluate).not.toHaveBeenCalled();
   });
 
@@ -81,7 +119,7 @@ describe("Sandbox boundaries", () => {
     ).rejects.toThrow(SandboxBoundaryError);
   });
 
-  it("returns durable idempotent receipt without evaluating twice", async () => {
+  it("returns durable idempotent receipt without authorizing/evaluating twice", async () => {
     const { workspace, control, executor } = setup();
     const request = {
       operationId: assertId("operation", "op_sbxidem000001"),
@@ -99,6 +137,7 @@ describe("Sandbox boundaries", () => {
     const first = await executor.execute(request);
     const second = await executor.execute(request);
     expect(second).toEqual(first);
+    expect(control.authorize).toHaveBeenCalledTimes(1);
     expect(control.evaluate).toHaveBeenCalledTimes(1);
   });
 });

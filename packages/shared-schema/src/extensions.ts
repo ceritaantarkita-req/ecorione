@@ -1,5 +1,11 @@
-/** Plugin / Extension Framework contracts (Batch 3). */
+/** Plugin / Extension Framework contracts (Batch 3), unified with Batch 4 authority plane. */
 import { z } from "zod";
+import {
+  CapabilityIdSchema,
+  PermissionAccessSchema,
+  PermissionIdSchema,
+  PermissionResourceSchema,
+} from "./capabilities.js";
 import { ArtifactIdSchema, OperationIdSchema, WorkspaceIdSchema } from "./ids.js";
 import { ScopeSchema, SensitivitySchema } from "./classification.js";
 import { ActionClassSchema, AutonomyLevelSchema } from "./policy.js";
@@ -119,16 +125,6 @@ export const ExtensionExecutionSchema = z.discriminatedUnion("kind", [
 ]);
 export type ExtensionExecution = z.infer<typeof ExtensionExecutionSchema>;
 
-const CapabilityIdSchema = z
-  .string()
-  .min(2)
-  .max(96)
-  .regex(/^[a-z][a-z0-9._:-]*$/);
-const PermissionIdSchema = z
-  .string()
-  .min(2)
-  .max(96)
-  .regex(/^[a-z][a-z0-9._:-]*$/);
 const SecretRequirementNameSchema = z
   .string()
   .min(2)
@@ -146,7 +142,15 @@ export type ExtensionCapability = z.infer<typeof ExtensionCapabilitySchema>;
 export const ExtensionPermissionSchema = z
   .object({
     id: PermissionIdSchema,
+    /**
+     * Permission secara eksplisit terikat ke capability. Untuk manifest Batch 3 lama,
+     * capabilityId boleh dihilangkan hanya bila permission id sama dengan capability id.
+     */
+    capabilityId: CapabilityIdSchema.optional(),
     actionClass: ActionClassSchema,
+    resource: PermissionResourceSchema.default("system"),
+    access: PermissionAccessSchema.default("use"),
+    sideEffect: z.boolean().optional(),
     reason: z.string().min(1).max(256),
   })
   .strict();
@@ -160,6 +164,10 @@ export const ExtensionSecretRequirementSchema = z
   })
   .strict();
 export type ExtensionSecretRequirement = z.infer<typeof ExtensionSecretRequirementSchema>;
+
+export function extensionPermissionCapabilityId(permission: ExtensionPermission): string {
+  return permission.capabilityId ?? permission.id;
+}
 
 export const ExtensionManifestSchema = z
   .object({
@@ -208,6 +216,18 @@ export const ExtensionManifestSchema = z
         path: ["secretRequirements"],
         message: `Secret requirement extension duplikat: ${secret}.`,
       });
+    }
+
+    const capabilityIds = new Set(value.capabilities.map((item) => item.id));
+    for (const [index, item] of value.permissions.entries()) {
+      const capabilityId = item.capabilityId ?? item.id;
+      if (!capabilityIds.has(capabilityId)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["permissions", index, "capabilityId"],
+          message: `Permission ${item.id} harus menunjuk capability yang dideklarasikan: ${capabilityId}.`,
+        });
+      }
     }
   });
 export type ExtensionManifest = z.infer<typeof ExtensionManifestSchema>;
