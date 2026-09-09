@@ -1,0 +1,50 @@
+name: Patch History ECX Once
+
+on:
+  push:
+    branches:
+      - agent/history-ledger-ecx-20260909
+    paths:
+      - .github/workflows/patch-history-ecx-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/history-ledger-ecx-20260909
+      - name: Wire Hub routes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('services/hub/src/http.ts')
+          s = p.read_text()
+          anchor = 'import { nowIso } from "./clock.js";\n'
+          insert = anchor + 'import { registerExchangeRoutes } from "./exchange-http.js";\nimport { registerHistoryRoutes } from "./history-http.js";\nimport { HistoryLedger } from "./history-ledger.js";\n'
+          if 'registerExchangeRoutes' not in s:
+              if anchor not in s: raise SystemExit('hub import anchor missing')
+              s = s.replace(anchor, insert)
+          repo_anchor = '  const repo = new HubRepository(db);\n'
+          if 'const history = new HistoryLedger(db);' not in s:
+              if repo_anchor not in s: raise SystemExit('hub repo anchor missing')
+              s = s.replace(repo_anchor, repo_anchor + '  const history = new HistoryLedger(db);\n')
+          route_anchor = '  registerMcpRoutes(app, repo, {\n'
+          routes = '''  registerHistoryRoutes(app, history);\n  registerExchangeRoutes(app, history, {\n    contextUrl: options.contextUrl,\n    artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",\n    internalToken: options.internalToken,\n  });\n\n'''
+          if 'registerHistoryRoutes(app, history);' not in s:
+              if route_anchor not in s: raise SystemExit('hub route anchor missing')
+              s = s.replace(route_anchor, routes + route_anchor)
+          p.write_text(s)
+          PY
+      - name: Commit wiring
+        run: |
+          if git diff --quiet -- services/hub/src/http.ts; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add services/hub/src/http.ts
+          git commit -m "feat: wire Historical Ledger and ECX into Hub"
+          git push origin HEAD:agent/history-ledger-ecx-20260909
