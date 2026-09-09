@@ -27,38 +27,30 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Current `main` SHA setelah External MCP HTTPS merge:
+Current `main` SHA after Phase 4 readiness hotfix merge:
 
-- `55ee05fe34e595e2c3e2ef6b9742673f1b78f156`
+- `d79793977c9d4ea5d6e472ca4eeeabfed3259e60`
 
 Current `main` condition:
 
 - Format: PASS
 - Lint: PASS
 - Typecheck: PASS
+- Test: PASS
+- Secret Scan: PASS
+- Production Build: PASS
 - Naming: PASS
-- Test: **FAIL — 1 flaky Fase 4 Temporal process acceptance**
-- Secret Scan: skipped karena test gate berhenti
-- Production Build: skipped karena test gate berhenti
 
-Failure yang sedang ditangani:
+Post-merge evidence:
 
-- file: `test/phase4-temporal-runtime.test.ts`
-- scenario: forced worker crash → replacement worker → durable approval
-- failure: `Timed out waiting for durable Hub approval.`
-- evidence: post-merge CI run `34346631709`
-- 395/396 tests PASS sebelum gate berhenti
-- failure terjadi sebelum jalur MCP/provider baru menjadi penyebab; ini merupakan acceptance flake lama yang sudah terlihat lebih dari sekali pada workstream sebelumnya
+- PR #7 merged with expected-head lock
+- merge SHA: `d79793977c9d4ea5d6e472ca4eeeabfed3259e60`
+- main CI: `34350438424` — full green
+- the previously flaky forced Temporal crash/replacement acceptance passed in the full post-merge suite
 
 ### Active branch
 
-- `agent/phase4-ci-flake-hardening-20260909`
-- base: `55ee05fe34e595e2c3e2ef6b9742673f1b78f156`
-- candidate code head: `c677e17fcc3fb2d1188f2826c7cd30c6e89f423a`
-- purpose: harden Fase 4 process readiness/recovery acceptance dan mengembalikan `main` ke full green
-- implementation: acceptance-only IPC readiness signal dikirim setelah Temporal Worker benar-benar mencapai state `RUNNING`; production process tanpa env acceptance tidak mengaktifkan IPC path
-- stress evidence: run `34349246133` — 3/3 forced crash/replacement acceptance PASS
-- candidate full CI: run `34349843284` — Format, Lint, Typecheck, Test, Secret Scan, Production Build, Naming PASS
+No implementation branch is active at this checkpoint. **Batch 2 — Outbound MCP Client + MCP Manager** is the next planned execution batch.
 
 ---
 
@@ -183,7 +175,7 @@ ADR: `docs/adr/0022-provider-framework-and-runtime-abstraction.md`
 
 ## 5. External MCP HTTPS status
 
-Status: **IMPLEMENTED / CLOSURE PENDING**
+Status: **CLOSED**
 
 Implementation dan public-network proof sudah selesai dan merged melalui PR #6.
 
@@ -217,7 +209,7 @@ Final PR-head evidence:
 - External HTTPS Acceptance: `34346430184` — PASS
 - PR #6 merged ke `main` as `55ee05fe34e595e2c3e2ef6b9742673f1b78f156`
 
-Closure masih pending hanya karena post-merge `main` membuka Fase 4 Temporal flake yang tidak berasal dari MCP workstream.
+Closure completed after the unrelated Fase 4 Temporal readiness flake was hardened in PR #7 and post-merge `main` CI `34350438424` passed fully. External MCP HTTPS implementation and its real public-network evidence remain unchanged.
 
 Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
@@ -225,48 +217,47 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, sisa roadmap dibagi menjadi **12 batch besar** termasuk hotfix aktif sekarang.
+Dari current state, **Batch 1 sudah CLOSED**. Sisa roadmap aktif adalah **11 batch besar (Batch 2–12)**.
 
 ---
 
 ## Batch 1 — Fase 4 Temporal CI Flake Hardening
 
-Status: **IMPLEMENTED / CLOSURE PENDING**
+Status: **CLOSED**
 
-Goal: mengembalikan `main` ke deterministic full-green baseline.
+Goal: restore deterministic full-green CI after the repeated forced-worker-recovery flake.
 
 Implemented:
 
-- audit membuktikan OS child-process `spawn` bukan bukti Temporal Worker sudah polling
-- `worker-main.ts` sekarang dapat mengirim readiness IPC **hanya** ketika `ECORIONE_FLOW_WORKER_READY_IPC=1` dan IPC channel tersedia
-- readiness baru dikirim setelah `Worker.getState()` mencapai `RUNNING`
-- terminal worker states sebelum readiness gagal eksplisit
-- readiness wait bounded dan tidak memakai wall-clock `Date.now()`
-- process acceptance membuka IPC channel dan menunggu readiness untuk worker awal maupun replacement worker
-- forced worker crash tetap memakai `SIGKILL`; tidak diubah menjadi graceful shutdown
-- approval tetap harus muncul di durable Hub audit setelah replacement worker siap
-- Flow decision tetap commit ke Hub sebelum Temporal signal
-- AI → Sandbox → RnD verification path tetap diuji end-to-end
+- OS child-process `spawn` is no longer treated as Temporal polling readiness
+- acceptance-only IPC readiness is emitted only after `Worker.getState()` reaches `RUNNING`
+- production behavior remains unchanged when the acceptance IPC env is disabled
+- readiness wait is bounded and fail-closed on terminal worker states
+- the process acceptance waits for explicit readiness for both the initial and replacement workers
+- forced crash remains `SIGKILL`; it was not weakened into graceful shutdown
+- durable Hub approval, commit-before-signal, AI, Sandbox, and RnD verification semantics remain intact
 
 Evidence:
 
-- originating `main` failure: CI `34346631709`, `Timed out waiting for durable Hub approval.`
-- repeated stress: `34349246133` — **3/3 PASS** untuk real Temporal forced crash/replacement acceptance
-- candidate code head: `c677e17fcc3fb2d1188f2826c7cd30c6e89f423a`
-- candidate full CI: `34349843284` — **PASS** Format, Lint, Typecheck, Test, Secret Scan, Production Build, Naming
+- originating main failure: `34346631709` — `Timed out waiting for durable Hub approval.`
+- repeated stress: `34349246133` — 3/3 real forced crash/replacement acceptance PASS
+- candidate code CI: `34349843284` — full green
+- final PR head: `3e2d224d49fa9ce80ed9ad653268a8e6425808c7`
+- final exact-head CI: `34350133864` — full green
+- PR #7 merge SHA: `d79793977c9d4ea5d6e472ca4eeeabfed3259e60`
+- post-merge main CI: `34350438424` — full green
 
-Closure pending:
+Closure result:
 
-1. exact docs-final head full CI PASS;
-2. PR #7 merge dengan expected-head lock;
-3. post-merge `main` full CI PASS;
-4. setelah itu Batch 1 dan External MCP HTTPS dinaikkan menjadi `CLOSED`.
+- Phase 4 process acceptance is stable against the previously observed startup race
+- External MCP HTTPS workstream is also fully `CLOSED`
+- next execution target is Batch 2
 
 ---
 
 ## Batch 2 — Outbound MCP Client + MCP Manager
 
-Status: **PLANNED**
+Status: **NEXT / PLANNED**
 
 Goal: ecorione dapat memakai MCP server pihak lain, bukan hanya menyediakan inbound MCP server.
 
@@ -602,9 +593,9 @@ Ini bukan berarti development berhenti; Fase 6+ tetap open-ended dan hardening/t
 
 Current planning unit:
 
-- **1 active hotfix batch**
-- **11 subsequent platform/production batches**
-- total: **±12 major batches** dari state saat file ini dibuat
+- **Batch 1: CLOSED**
+- **11 platform/production batches remaining (Batch 2–12)**
+- next: **Batch 2 — Outbound MCP Client + MCP Manager**
 
 Dalam workstream teknis granular, estimasi tersisa sekitar **30–35 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi.
 
