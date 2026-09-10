@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Dua puluh delapan keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Tiga puluh keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
@@ -34,6 +34,8 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [26](0026-native-multimodal-pipeline.md) | Native multimodal memakai Artifact/Context/Connect/Hub owner boundaries + explicit hosted fallback |
 | [27](0027-realtime-voice.md) | Realtime voice memakai Hub session/SSE + Batch 5 STT/TTS dengan barge-in generation cancellation |
 | [28](0028-owner-data-rebuild.md) | Data rebuild berjalan lewat owner-service maintenance dengan immutable source digest + snapshot/receipt |
+| [29](0029-dataset-governance-and-owner-dr.md) | Dataset governance + owner-scoped DR menjaga provenance, restore, dan verification boundaries |
+| [30](0030-node-registry-visual-flow.md) | Node Registry + Visual Flow memakai Flow control plane, Hub authority, dan Temporal runtime |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris
