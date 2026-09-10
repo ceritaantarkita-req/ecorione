@@ -1,0 +1,116 @@
+name: Batch 8 Tracker Integrate
+
+on:
+  push:
+    branches: [agent/batch8-data-governance-dr-20260910]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/batch8-data-governance-dr-20260910
+      - name: Update canonical execution tracker
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("docs/EXECUTION-PROGRESS.md")
+          s = p.read_text()
+          s = s.replace(
+              '- Batch 7 status: **CLOSED**\n- next implementation target: **Batch 8 — Dataset Governance + Backup / Restore / DR**',
+              '- Batch 7 status: **CLOSED**\n- Batch 8 status: **IN PROGRESS**\n- active implementation branch: `agent/batch8-data-governance-dr-20260910`'
+          )
+          old = '''## Batch 8 — Dataset Governance + Backup / Restore / DR
+
+Status: **PLANNED**
+
+Dataset governance:
+
+- registry
+- schema/version
+- lineage/source
+- immutable releases
+- dedupe
+- PII/secret sanitation
+- train/eval/regression split bila relevan
+- quality checks
+
+Operations:
+
+- backup service data
+- vault-safe backup
+- restore
+- integrity verification
+- disaster recovery procedure
+- recovery drill
+
+---
+'''
+          new = '''## Batch 8 — Dataset Governance + Backup / Restore / DR
+
+Status: **IN PROGRESS**
+
+Dataset governance:
+
+- registry
+- schema/version
+- lineage/source
+- immutable releases
+- dedupe
+- PII/secret sanitation
+- train/eval/regression split bila relevan
+- quality checks
+
+Operations:
+
+- backup service data
+- vault-safe backup
+- restore
+- integrity verification
+- disaster recovery procedure
+- recovery drill
+
+Implementation branch: `agent/batch8-data-governance-dr-20260910`
+
+Current implementation boundary:
+
+- RnD-owned immutable dataset registry + content-identified releases;
+- explicit schema/version + source lineage digests;
+- deterministic secret/email/phone/Bearer sanitation baseline before release;
+- governed-payload dedupe + deterministic group-safe train/eval/regression split;
+- dataset quality report + tamper detection + registry crash self-heal;
+- owner-scoped backup manifest with per-file SHA-256 + aggregate digest;
+- SQLite online backup adapters for Context, Hub, RnD, Sync, and Space;
+- directory/bundle backup + staged restore for Artifact, Sandbox, RnD datasets, and Connect state;
+- Connect credential vault backup as ciphertext only; master key remains out-of-band;
+- pre-restore safety backup + operation lock + post-restore digest verification;
+- Flow DR remains Temporal-persistence responsibility; no second durability store;
+- documented separate-failure-domain requirement for production DR.
+
+Pre-PR evidence:
+
+- integration gate `34428172190`: Format, Lint, root Typecheck, focused Batch 8 regression PASS;
+- hardening gate `34428476195`: Format, Lint, root Typecheck, empty-directory recovery, dataset registry crash self-heal, RnD dataset restore, Context SQLite recovery drill, Connect vault-safe backup/restore regression PASS;
+- temporary integration/hardening workflows self-delete and are not part of the candidate tree.
+
+Batch 8 remains **IN PROGRESS** until exact-head PR gates, merge, and post-merge verification satisfy the closure definition.
+
+---
+'''
+          if old not in s:
+              raise SystemExit("Batch 8 tracker block not found")
+          p.write_text(s.replace(old, new))
+          PY
+      - name: Remove helper and commit tracker
+        run: |
+          rm .github/workflows/batch8-tracker-integrate.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/EXECUTION-PROGRESS.md .github/workflows/batch8-tracker-integrate.yml
+          git commit -m "docs: record Batch 8 implementation progress"
+          git push origin HEAD:agent/batch8-data-governance-dr-20260910
