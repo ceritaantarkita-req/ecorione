@@ -40,6 +40,7 @@ import { registerHistoryRoutes } from "./history-http.js";
 import { HistoryLedger } from "./history-ledger.js";
 import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
+import { registerNodeAuthorityRoutes } from "./node-authority.js";
 import { registerVoiceRoutes } from "./voice-http.js";
 import { RealtimeVoiceRuntime } from "./voice-runtime.js";
 import { VoiceSessionStore } from "./voice-store.js";
@@ -332,6 +333,7 @@ export function buildHubServer(
     internalToken: options.internalToken,
   });
   registerCapabilityRoutes(app, authority, repo);
+  registerNodeAuthorityRoutes(app, db);
   registerExtensionRoutes(app, extensions, repo);
 
   app.post("/v1/audit/events", async (req, reply) => {

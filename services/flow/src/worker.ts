@@ -1,19 +1,18 @@
 import { fileURLToPath } from "node:url";
 import { NativeConnection, Worker } from "@temporalio/worker";
-import { createFlowActivities, type FlowActivityConfig } from "./activities.js";
+import { createFlowActivities } from "./activities.js";
+import { createFlowGraphActivities, type FlowGraphActivityConfig } from "./graph-activities.js";
 import { FLOW_TASK_QUEUE } from "./temporal-client.js";
 
-export interface FlowWorkerOptions extends FlowActivityConfig {
+export interface FlowWorkerOptions extends FlowGraphActivityConfig {
   readonly temporalAddress: string;
   readonly temporalNamespace: string;
   readonly taskQueue?: string | undefined;
 }
-
 function workflowsPath(): string {
   const extension = import.meta.url.endsWith(".ts") ? "ts" : "js";
   return fileURLToPath(new URL(`./workflows.${extension}`, import.meta.url));
 }
-
 export async function createFlowWorker(options: FlowWorkerOptions): Promise<Worker> {
   const connection = await NativeConnection.connect({ address: options.temporalAddress });
   return Worker.create({
@@ -21,10 +20,7 @@ export async function createFlowWorker(options: FlowWorkerOptions): Promise<Work
     namespace: options.temporalNamespace,
     taskQueue: options.taskQueue ?? FLOW_TASK_QUEUE,
     workflowsPath: workflowsPath(),
-    activities: createFlowActivities(options),
-    // Agent workflows favor fast crash recovery over keeping a sticky assignment for the
-    // SDK default 10 seconds. The workflow cache remains enabled; only failover latency is
-    // shortened, so a replacement worker can replay durable history promptly after SIGKILL.
+    activities: { ...createFlowActivities(options), ...createFlowGraphActivities(options) },
     stickyQueueScheduleToStartTimeout: "1 second",
   });
 }
