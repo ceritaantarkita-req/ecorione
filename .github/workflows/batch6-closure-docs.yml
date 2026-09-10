@@ -1,0 +1,81 @@
+name: Batch 6 Closure Docs
+
+on:
+  push:
+    branches:
+      - docs/batch6-closure-20260910
+    paths:
+      - .github/workflows/batch6-closure-docs.yml
+
+permissions:
+  contents: write
+
+jobs:
+  close:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: docs/batch6-closure-20260910
+      - name: Update canonical tracker and evidence
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('docs/EXECUTION-PROGRESS.md')
+          text = p.read_text()
+
+          replacements = [
+            (
+              '''Batch 5 implementation is merged and post-merge verified on `main`:\n\n- implementation PR #15 merge: `2226493ae54ed83315a9f84fd3b72fe67c947157`\n- exact final PR head: `a202c74eea504b9c7220e0b45fc1d113d1ff1be9`\n- exact-head CI `34387886010`: full green\n- exact-head MCP External HTTPS Acceptance `34387885874`: PASS\n- post-merge main CI `34388114706`: full green''',
+              '''Batch 6 implementation is merged and post-merge verified on `main`:\n\n- implementation PR #17 merge: `01cc32f12745f4a5dd391e61e39ad8d8faa4d5b7`\n- exact final PR head: `4312f76c521cd676ac263a3f400923906fba7bdf`\n- exact-head CI `34423696211`: full green\n- exact-head MCP External HTTPS Acceptance `34423696180`: PASS\n- post-merge main CI `34423867459`: full green''',
+            ),
+            (
+              '''- Batch 5 status: **CLOSED**\n- next implementation target: **Batch 6 — Realtime Voice**''',
+              '''- Batch 5 status: **CLOSED**\n- Batch 6 status: **CLOSED**\n- next implementation target: **Batch 7 — Data Refactor / Rebuild Engine**''',
+            ),
+            (
+              '''Dari current state, **Batch 1–5 sudah CLOSED**. Tersisa **7 batch platform/production (Batch 6–12)**; next implementation target adalah **Batch 6 — Realtime Voice**.''',
+              '''Dari current state, **Batch 1–6 sudah CLOSED**. Tersisa **6 batch platform/production (Batch 7–12)**; next implementation target adalah **Batch 7 — Data Refactor / Rebuild Engine**.''',
+            ),
+            (
+              '''## Batch 6 — Realtime Voice\n\nStatus: **IN PROGRESS**\n\nScope:\n\n- microphone/stream input\n- streaming STT\n- VAD\n- partial transcript\n- streaming model response\n- streaming TTS\n- interruption / barge-in\n- voice session lifecycle\n- Indonesian/English switching\n- latency telemetry''',
+              '''## Batch 6 — Realtime Voice\n\nStatus: **CLOSED**\n\nImplemented baseline:\n\n- browser microphone capture with RMS VAD and bounded PCM16/WAV chunking\n- Hub-owned durable voice-session lifecycle, monotonic client chunk receipts, ordered event sequence, and replay semantics\n- incremental STT per audio chunk with partial/final transcript events\n- ordered SSE downlink for session, transcript, assistant text/audio, interruption, and latency events\n- Indonesian/English automatic language switching with explicit fixed-language override\n- model reply delivery plus incremental TTS playback without inventing provider-native first-token streaming\n- generation-based interruption/barge-in that suppresses stale output and propagates `AbortSignal` Hub -> Connect -> provider\n- live microphone audio remains transient and is not persisted per chunk into Artifact/Context\n- restart fails non-terminal live sessions closed instead of silently adopting transient state\n- strict routing/privacy rules reuse Batch 5 authority, SyncClass, credential, kill-switch, and spend boundaries\n\nBugs/fixes during closure:\n\n- strict optional `AbortSignal` propagation was corrected without weakening `exactOptionalPropertyTypes`\n- Ai proxy relative imports and response null-guard were corrected\n- final repository lint findings were corrected with type-only multimodal language import and unused-import removal\n\nDocs:\n\n- ADR: `docs/adr/0027-realtime-voice.md`\n- Operations: `docs/voice-operations.md`\n\nClosure evidence:\n\n- focused integration/typecheck run `34422346310`: PASS\n- strict lint/typecheck/focused voice run `34423581218`: PASS; temporary helper self-deleted\n- final exact PR head: `4312f76c521cd676ac263a3f400923906fba7bdf`\n- exact-head CI `34423696211`: full green\n- exact-head MCP External HTTPS Acceptance `34423696180`: PASS\n- PR #17 merged with expected-head lock as `01cc32f12745f4a5dd391e61e39ad8d8faa4d5b7`\n- `main` confirmed at expected merge SHA\n- post-merge main CI `34423867459`: full green\n- no temporary Batch 6 helper workflow/script remains in the implementation tree\n\nBatch 6 resmi **CLOSED**; next implementation batch adalah Batch 7.''',
+            ),
+            (
+              '''- **Batch 5: CLOSED**\n- **7 platform/production batches remaining (Batch 6–12)**\n- next: **Batch 6 — Realtime Voice**''',
+              '''- **Batch 5: CLOSED**\n- **Batch 6: CLOSED**\n- **6 platform/production batches remaining (Batch 7–12)**\n- next: **Batch 7 — Data Refactor / Rebuild Engine**''',
+            ),
+            (
+              '''Dalam workstream teknis granular, estimasi tersisa sekitar **25–30 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi Batch 6–12.''',
+              '''Dalam workstream teknis granular, estimasi tersisa sekitar **20–25 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi Batch 7–12.''',
+            ),
+            (
+              '''**Immediate next:** mulai **Batch 6 — Realtime Voice** dari baseline `main` setelah Batch 5 CLOSED, tanpa mengubah owner boundaries dan multimodal primitives yang sudah dibekukan di ADR-26.''',
+              '''**Immediate next:** mulai **Batch 7 — Data Refactor / Rebuild Engine** dari baseline `main` setelah Batch 6 CLOSED. Historical Ledger dan Context L0 tetap immutable; maintenance wajib melalui owner-service contract/API tanpa cross-service database access.''',
+            ),
+          ]
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit(f'missing closure tracker marker: {old[:100]!r}')
+              text = text.replace(old, new, 1)
+          p.write_text(text)
+
+          evidence = Path('docs/verification/batch6-closure-2026-09-10.md')
+          evidence.write_text('''# Batch 6 Realtime Voice — Closure Evidence\n\nDate: 2026-09-10\nStatus: CLOSED candidate; closure-doc PR exact-head verification required before merge\n\n## Implementation merge\n\n- Implementation PR: #17\n- Final implementation PR head: `4312f76c521cd676ac263a3f400923906fba7bdf`\n- Exact-head CI `34423696211`: PASS\n  - Naming\n  - Format\n  - Lint\n  - Typecheck\n  - Test\n  - Phase 4 real-process acceptance\n  - Secret Scan\n  - Production Build\n- Exact-head MCP External HTTPS Acceptance `34423696180`: PASS\n- PR #17 merged with expected-head lock as `01cc32f12745f4a5dd391e61e39ad8d8faa4d5b7`\n- `main` confirmed at expected merge SHA\n- Post-merge main CI `34423867459`: full green\n\n## Focused evidence\n\n- Integration/typecheck/focused voice run `34422346310`: PASS.\n- Strict lint/typecheck/focused voice run `34423581218`: PASS; helper self-deleted before final candidate.\n\n## Closure state\n\nThe canonical `docs/EXECUTION-PROGRESS.md` records Batch 6 as `CLOSED` and points the execution roadmap to Batch 7 — Data Refactor / Rebuild Engine.\n\nNo Batch 6 temporary integration/lint helper workflow or script remains in the proposed closure tree. This closure PR changes documentation/evidence only; it does not intentionally alter runtime behavior.\n\nThe closure PR itself must pass exact-head CI and MCP External HTTPS Acceptance, merge with expected-head protection, and receive final post-merge `main` CI before the closure workflow is complete.\n''')
+          PY
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --write docs/EXECUTION-PROGRESS.md docs/verification/batch6-closure-2026-09-10.md
+      - name: Remove temporary helper and commit
+        run: |
+          rm .github/workflows/batch6-closure-docs.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: close Batch 6 realtime voice"
+          git push origin HEAD:docs/batch6-closure-20260910
