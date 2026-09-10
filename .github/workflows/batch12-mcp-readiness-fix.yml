@@ -52,9 +52,9 @@ jobs:
           echo '=== stable zone edge candidates ==='
           getent ahostsv4 trycloudflare.com || true
           getent ahostsv4 api.trycloudflare.com || true
-          EDGE_IP="$(getent ahostsv4 trycloudflare.com | awk '$3 == "STREAM" {print $1; exit}')"
+          EDGE_IP="$(getent ahostsv4 trycloudflare.com | awk '$2 == "STREAM" {print $1; exit}')"
           if [ -z "$EDGE_IP" ]; then
-            EDGE_IP="$(getent ahostsv4 api.trycloudflare.com | awk '$3 == "STREAM" {print $1; exit}')"
+            EDGE_IP="$(getent ahostsv4 api.trycloudflare.com | awk '$2 == "STREAM" {print $1; exit}')"
           fi
           [ -n "$EDGE_IP" ] || { echo 'No stable Cloudflare edge IP resolved'; exit 1; }
           echo "edge_ip=$EDGE_IP"
