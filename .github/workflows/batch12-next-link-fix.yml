@@ -1,0 +1,56 @@
+name: Batch 12 Next navigation cleanup
+
+on:
+  push:
+    branches: [agent/batch12-final-security-release-20260910]
+    paths:
+      - .github/workflows/batch12-next-link-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/batch12-final-security-release-20260910
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Replace legacy root anchor with Next Link
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('apps/ai/app/space/page.tsx')
+          s = p.read_text()
+          old_import = '"use client";\n\nimport { useCallback, useEffect, useMemo, useState } from "react";'
+          new_import = '"use client";\n\nimport Link from "next/link";\nimport { useCallback, useEffect, useMemo, useState } from "react";'
+          old_anchor = '''          <a href="/" style={{ color: "inherit" }}>
+            ← Ai
+          </a>'''
+          new_anchor = '''          <Link href="/" style={{ color: "inherit" }}>
+            ← Ai
+          </Link>'''
+          assert s.count(old_import) == 1, 'unexpected import anchor count'
+          assert s.count(old_anchor) == 1, 'unexpected root anchor count'
+          p.write_text(s.replace(old_import, new_import).replace(old_anchor, new_anchor))
+          PY
+          pnpm exec prettier --write apps/ai/app/space/page.tsx
+          pnpm run lint
+          pnpm run build
+      - name: Commit validated cleanup
+        run: |
+          rm -f .github/workflows/batch12-next-link-fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'fix(batch12): use Next Link for Space navigation'
+          git push origin HEAD:agent/batch12-final-security-release-20260910
