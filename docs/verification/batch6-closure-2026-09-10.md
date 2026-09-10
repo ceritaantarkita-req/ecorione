@@ -32,4 +32,4 @@ The canonical `docs/EXECUTION-PROGRESS.md` records Batch 6 as `CLOSED` and point
 
 No Batch 6 temporary integration/lint helper workflow or script remains in the proposed closure tree. This closure PR changes documentation/evidence only; it does not intentionally alter runtime behavior.
 
-The closure PR itself must pass exact-head CI and MCP External HTTPS Acceptance, merge with expected-head protection, and receive final post-merge `main` CI before the closure workflow is complete.
+The implementation head already passed the required MCP External HTTPS Acceptance. Because this closure PR is documentation-only, the MCP workflow is excluded by its path filter; the closure PR itself must pass exact-head CI, merge with expected-head protection, and receive final post-merge `main` CI before the closure workflow is complete.
