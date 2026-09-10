@@ -37,7 +37,7 @@ function execution(): FlowGraphExecutionInput {
     nodes: [
       node("node_trigger1", "trigger"),
       node("node_delay001", "delay", { milliseconds: 24 * 60 * 60 * 1000 }),
-      node("node_human001", "human-input"),
+      node("node_human001", "human-input", { prompt: "Provide runtime input" }),
       node("node_condition1", "condition", { operator: "truthy" }),
       node("node_approval1", "approval", { prompt: "Approve graph?" }),
       node("node_false001", "delay", { milliseconds: 0 }),
