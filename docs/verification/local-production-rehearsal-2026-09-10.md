@@ -70,6 +70,14 @@ The candidate fixes these without changing provider ownership:
 - Ai can explicitly select Local or Hosted, defaulting the UI to Local; the choice is locked after the first turn so a single Historical Ledger session does not silently cross `LOCAL_ONLY`/`CLOUD_ALLOWED` boundaries;
 - requests that omit `target` retain the historical hosted default for API compatibility.
 
+## 2026-09-11 post-merge local verification finding
+
+After the Production Activation merge was synchronized back to the laptop, the operator loaded the machine-local `.env` into the shell and ran `pnpm verify`. Formatting, lint and typecheck passed, and 102 test files passed, but one Ai proxy test failed because the test process inherited the real `ECORIONE_INTERNAL_TOKEN` from the shell. The failing assertion expected the no-token case to omit `Authorization`, while the test fixture had not cleared the ambient token before that case.
+
+This is a **test isolation defect**, not evidence that the production proxy is dropping or inventing authentication. The production behavior is correct: when a token exists, the proxy forwards `Authorization: Bearer <token>`. The regression fix makes `apps/ai/lib/proxy.test.ts` establish a token-empty baseline in `beforeEach`, while the explicit bearer-auth test continues to set its own test token. `afterEach` restores the operator's original environment value, so running tests must not mutate the caller's shell configuration.
+
+The purpose of the fix is to make `pnpm verify` deterministic both in clean CI and on a development machine where `.env` was sourced for a running local stack.
+
 ## Evidence boundary
 
 This rehearsal proves local process health, local Temporal/Flow interoperability and a real local model call through the Connect boundary. It does **not** prove VPS durability, Cloudflare named-Tunnel operation, hosted-provider quality, public production latency or disaster recovery.
@@ -84,4 +92,4 @@ Git-tracked code and documentation should be synchronized from the merged GitHub
 - credentials, database files, Ollama model blobs, Docker volumes and WSL/Windows settings are machine-local;
 - only sanitized evidence and reusable configuration/runbook changes belong in Git.
 
-After this candidate merges, the laptop should `git pull --ff-only origin main` and verify `git rev-parse HEAD` equals `origin/main` with a clean tracked working tree before resuming the runtime.
+After a candidate merges, the laptop should `git pull --ff-only origin main` and verify `git rev-parse HEAD` equals `origin/main` with a clean tracked working tree before resuming the runtime.
