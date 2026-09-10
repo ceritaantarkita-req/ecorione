@@ -15,6 +15,10 @@ Before `scripts/self-host-upgrade.sh --apply <tag>`, create and verify owner bac
 
 `scripts/self-host-rollback.sh --apply <previous-tag>` rolls runtime images back. **Data rollback is deliberately separate**: only restore an owner backup after validating its manifest/digest and the service-specific offline/online restore requirements. Never blindly revert Historical Ledger or Context L0 immutable sources.
 
+## Release gate
+
+Treat the repository production build as release-blocking. Before merge or release, the exact implementation head must pass the normal repository CI, including `pnpm run build`; framework lint or production-build failures are not releasable even when focused acceptance tests are green.
+
 ## Failure rule
 
 If migration, canary, recovery, or security acceptance fails, do not label the release healthy. Preserve evidence and return to the last verified image/data combination.
