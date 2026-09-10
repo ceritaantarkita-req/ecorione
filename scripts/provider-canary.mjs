@@ -36,7 +36,7 @@ try {
     process.exit(1);
   }
   console.log(
-    `provider-canary: PASS target=${target} provider=${String(body.provider)} model=${String(body.model)} latencyMs=${Number(body.latencyMs).toFixed(1)}`,
+    `provider-canary: PASS target=${target} provider=${String(body.provider)} model=${String(body.model)} responseModel=${String(body.responseModel)} pricingModel=${String(body.pricingModel)} latencyMs=${Number(body.latencyMs).toFixed(1)}`,
   );
 } catch (error) {
   console.error(

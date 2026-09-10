@@ -81,10 +81,12 @@ describe("tabel harga", () => {
     });
   });
 
-  it("model lokal berharga nol", () => {
-    const p = priceFor("local/qwen3-8b-instruct-q4_k_m");
-    expect(p.inputPerMTok).toBe(0);
-    expect(p.outputPerMTok).toBe(0);
+  it("pricing identity lokal generik berharga nol dan legacy Qwen tetap replayable", () => {
+    for (const id of ["local/provider-token-zero", "local/qwen3-8b-instruct-q4_k_m"] as const) {
+      const p = priceFor(id);
+      expect(p.inputPerMTok).toBe(0);
+      expect(p.outputPerMTok).toBe(0);
+    }
   });
 
   it("tabel beku terhadap mutasi runtime", () => {

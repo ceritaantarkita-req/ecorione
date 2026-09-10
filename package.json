@@ -32,7 +32,15 @@
     "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run secret-scan && pnpm run build",
     "clean": "node scripts/clean.mjs",
     "acceptance:production-ops": "node scripts/production-ops-acceptance.mjs",
-    "canary:provider": "node scripts/provider-canary.mjs"
+    "canary:provider": "node scripts/provider-canary.mjs",
+    "canary:providers": "node scripts/provider-matrix-canary.mjs",
+    "production:preflight": "bash scripts/production-preflight.sh",
+    "production:smoke": "node scripts/production-public-smoke.mjs",
+    "production:ops-snapshot": "node scripts/production-ops-snapshot.mjs",
+    "production:data-evidence": "node scripts/production-data-evidence.mjs",
+    "production:host-audit": "bash scripts/host-security-audit.sh",
+    "cloudflare:tunnel:install": "bash scripts/cloudflare-tunnel-install.sh",
+    "cloudflare:origin:lockdown": "bash scripts/cloudflare-origin-lockdown.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

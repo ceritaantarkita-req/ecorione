@@ -345,13 +345,36 @@ hr {
   color: var(--success);
 }
 
+.ai-route-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-md);
+}
+
+.ai-route-control__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ai-route-control__select {
+  width: 110px;
+}
+
+.ai-route-control__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .ai-composer {
-  margin-top: var(--space-lg);
+  margin-top: var(--space-sm);
   display: flex;
   gap: var(--space-sm);
   align-items: flex-end;
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-lg);
+  padding-top: var(--space-sm);
 }
 
 .ai-composer__field {

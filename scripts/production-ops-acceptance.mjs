@@ -16,7 +16,14 @@ function count(value, needle) {
 
 assert(!compose.includes("docker.sock"), "host Docker socket tidak boleh dimount");
 assert(count(compose, "\n    ports:\n") === 1, "hanya reverse proxy yang boleh publish ports");
-assert(compose.includes("image: temporalio/auto-setup:1.31.2"), "Temporal harus exact-pinned");
+assert(
+  compose.includes("image: temporalio/auto-setup:1.29.7"),
+  "Temporal harus exact-pinned ke tag pull/run-verified",
+);
+assert(
+  !compose.includes("temporalio/auto-setup:1.31.2"),
+  "Temporal tag 1.31.2 yang tidak tersedia tidak boleh kembali",
+);
 assert(compose.includes("image: postgres:17.6-alpine"), "PostgreSQL harus exact-pinned");
 assert(compose.includes("image: caddy:2.11.4-alpine"), "Caddy harus exact-pinned");
 assert(

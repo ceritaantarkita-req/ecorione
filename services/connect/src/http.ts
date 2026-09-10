@@ -148,6 +148,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const labels = {
       provider: result.provider,
       model: result.model,
+      pricingModel: result.pricingModel,
       target: body.target,
       cache: result.cacheHit ? "hit" : "miss",
     };
@@ -223,6 +224,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         target: body.target,
         provider: result.provider,
         model: result.model,
+        pricingModel: result.pricingModel,
         responseModel: result.responseModel,
         latencyMs,
         outputChars: result.reply.length,

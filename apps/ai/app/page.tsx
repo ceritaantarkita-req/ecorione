@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
 import { makeSessionId } from "../lib/session";
 
+type ChatTarget = "local" | "hosted";
 interface UserTurn {
   kind: "user";
   id: string;
@@ -40,6 +41,7 @@ export default function ChatPage() {
   const sessionIdRef = useRef<string>(makeSessionId());
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
+  const [target, setTarget] = useState<ChatTarget>("local");
   const [sending, setSending] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
   const latestAssistant = [...turns]
@@ -56,7 +58,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId: sessionIdRef.current, message: trimmed }),
+        body: JSON.stringify({ sessionId: sessionIdRef.current, message: trimmed, target }),
       });
       const body: unknown = await res.json().catch(() => undefined);
       if (!res.ok) {
@@ -164,6 +166,24 @@ export default function ChatPage() {
                 <div className="ai-bubble">Menunggu balasan…</div>
               </div>
             ) : null}
+          </div>
+          <div className="ai-route-control">
+            <label className="ai-route-control__label" htmlFor="chat-target">
+              Route
+            </label>
+            <select
+              id="chat-target"
+              className="ecr-input ai-route-control__select"
+              value={target}
+              onChange={(e) => setTarget(e.target.value as ChatTarget)}
+              disabled={sending || turns.length > 0}
+            >
+              <option value="local">Local</option>
+              <option value="hosted">Hosted</option>
+            </select>
+            <span className="ai-route-control__hint">
+              Pilihan dikunci setelah pesan pertama agar boundary sesi tidak berubah diam-diam.
+            </span>
           </div>
           <form className="ai-composer" onSubmit={handleSubmit}>
             <textarea

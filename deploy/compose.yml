@@ -42,7 +42,9 @@ services:
       retries: 10
 
   temporal:
-    image: temporalio/auto-setup:1.31.2
+    # Pull/run verified during the local production rehearsal. The previously pinned
+    # 1.31.2 tag was not published and failed before a container could be created.
+    image: temporalio/auto-setup:1.29.7
     restart: unless-stopped
     depends_on:
       temporal-db:

@@ -86,7 +86,11 @@ interface ListArtifactsResponse {
 }
 interface CompleteResponse {
   readonly reply: string;
+  /** Added by post-closure Connect; optional here for rolling compatibility. */
+  readonly provider?: string;
   readonly model: string;
+  /** Added by post-closure Connect; legacy responses carry it as cost.model. */
+  readonly pricingModel?: string;
   readonly responseModel: string;
   readonly cacheHit: boolean;
   readonly usage: TokenUsage;
@@ -134,7 +138,7 @@ export async function chat(
   now: Timestamp,
   options: ChatExecutionOptions = {},
 ): Promise<ChatResponse> {
-  const target = options.target ?? "hosted";
+  const target = options.target ?? req.target ?? "hosted";
   const hosted = target === "hosted";
   const syncClass = options.syncClass ?? (hosted ? "CLOUD_ALLOWED" : "LOCAL_ONLY");
   const operationId: OperationId = makeId("operation");
@@ -143,7 +147,7 @@ export async function chat(
     module: "Hub",
     tool: "chat.reply",
     actionClass: "READ",
-    args: { sessionId: req.sessionId, scope: req.scope },
+    args: { sessionId: req.sessionId, scope: req.scope, target },
     scope: req.scope,
     sensitivity: req.maxSensitivity,
     autonomy: req.autonomy,
@@ -219,7 +223,7 @@ export async function chat(
     actor: "user",
     operationId,
     parentEventId: null,
-    payload: { text: req.message },
+    payload: { text: req.message, target },
   }).event;
 
   // Hosted turns filter Context to cloud-eligible data. Local turns remain inside the local boundary.
@@ -287,12 +291,18 @@ export async function chat(
     throw new UpstreamError("Connect", err);
   }
 
+  const completeProvider =
+    complete.provider ?? (target === "local" ? "local" : "unknown-hosted");
+  const completePricingModel = complete.pricingModel ?? complete.cost.model;
+
   deps.repo.recordAuditEvent({
     type: "MODEL_CALLED",
     operationId,
     module: "Hub",
     detail: {
+      provider: completeProvider,
       requestModel: complete.model,
+      pricingModel: completePricingModel,
       responseModel: complete.responseModel,
       cacheHit: complete.cacheHit,
       actualUsd: complete.cost.actualUsd,
@@ -313,7 +323,9 @@ export async function chat(
       operationId,
       parentEventId: userHistoryEvent.id,
       payload: {
+        provider: completeProvider,
         requestModel: complete.model,
+        pricingModel: completePricingModel,
         responseModel: complete.responseModel,
         cacheHit: complete.cacheHit,
         usage: complete.usage,
@@ -378,7 +390,7 @@ export async function chat(
 
   const span = buildGenAiSpan({
     operation: "chat",
-    provider: complete.model.startsWith("local/") ? "ollama" : "anthropic",
+    provider: completeProvider === "local" ? "ollama" : completeProvider,
     requestModel: complete.model,
     responseModel: complete.responseModel,
     conversationId: req.sessionId,
