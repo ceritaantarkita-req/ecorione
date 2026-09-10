@@ -5,6 +5,7 @@ on:
     branches: [docs/batch11-closure-20260910]
     paths:
       - .github/workflows/batch11-closure-apply.yml
+      - scripts/batch11-closure.py
 
 permissions:
   contents: write
