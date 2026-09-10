@@ -85,8 +85,8 @@ Closure evidence:
 
 Evidence boundary: deterministic CI validates the canary mechanism with a local compatible stub; it does not claim real hosted-provider quality/latency. Process metrics are not durable time-series storage, and ECX traffic metrics do not establish savings.
 
-ADR: `docs/adr/0032-production-operations-observability.md`  
-Operations: `docs/production-operations.md`  
+ADR: `docs/adr/0032-production-operations-observability.md`
+Operations: `docs/production-operations.md`
 Verification: `docs/verification/batch11-production-ops-2026-09-10.md`
 
 Batch 11 resmi **CLOSED**; next implementation batch adalah Batch 12.
