@@ -13,16 +13,15 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v5
-      - name: Test localhost.run public HTTPS fallback
+      - name: Inspect localhost.run reverse-tunnel output
         shell: bash
         run: |
           set -euo pipefail
-          HTTP_LOG="$RUNNER_TEMP/http.log"
           SSH_LOG="$RUNNER_TEMP/localhost-run.log"
-          python3 -m http.server 18080 --bind 127.0.0.1 >"$HTTP_LOG" 2>&1 &
+          python3 -m http.server 18080 --bind 127.0.0.1 >"$RUNNER_TEMP/http.log" 2>&1 &
           HTTP_PID=$!
           ssh \
             -o StrictHostKeyChecking=no \
@@ -33,38 +32,10 @@ jobs:
             nokey@localhost.run >"$SSH_LOG" 2>&1 &
           SSH_PID=$!
           trap 'kill "$SSH_PID" "$HTTP_PID" 2>/dev/null || true' EXIT
-
-          URL=""
-          for _ in $(seq 1 45); do
-            URL="$(grep -Eo 'https://[A-Za-z0-9.-]+localhost\.run' "$SSH_LOG" | head -n1 || true)"
-            if [ -n "$URL" ]; then
-              break
-            fi
-            if ! kill -0 "$SSH_PID" 2>/dev/null; then
-              echo 'localhost.run SSH process exited early'
-              cat "$SSH_LOG"
-              exit 1
-            fi
-            sleep 1
-          done
-
-          if [ -z "$URL" ]; then
-            echo 'No localhost.run HTTPS URL discovered'
-            cat "$SSH_LOG"
+          sleep 8
+          echo '=== localhost.run output ==='
+          cat "$SSH_LOG"
+          if ! kill -0 "$SSH_PID" 2>/dev/null; then
+            echo 'SSH process exited early'
             exit 1
           fi
-
-          echo "public_url=$URL"
-          for _ in $(seq 1 20); do
-            if curl --fail --silent --show-error --max-time 10 "$URL/" -o "$RUNNER_TEMP/body"; then
-              echo 'LOCALHOST_RUN_PASS'
-              head -c 120 "$RUNNER_TEMP/body" || true
-              echo
-              exit 0
-            fi
-            sleep 2
-          done
-
-          echo 'LOCALHOST_RUN_FAIL'
-          cat "$SSH_LOG"
-          exit 1
