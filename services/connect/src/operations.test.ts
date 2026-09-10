@@ -55,9 +55,8 @@ describe("Connect operations telemetry", () => {
       url: "/v1/ops/observability",
       headers: { authorization: "Bearer ops-token" },
     });
-    const counters = (
-      metrics.json() as { counters: Array<{ name: string; value: number }> }
-    ).counters;
+    const counters = (metrics.json() as { counters: Array<{ name: string; value: number }> })
+      .counters;
     expect(
       counters.some(
         (item) => item.name === "ecorione_provider_canary_total" && item.value === 1,
