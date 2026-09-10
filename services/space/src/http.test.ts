@@ -135,7 +135,7 @@ describe("Space", () => {
           {
             id: "node_trigger01",
             kind: "trigger",
-            definitionId: "core/trigger/v1",
+            label: "Trigger",
             config: {},
             position: { x: 0, y: 0 },
           },
