@@ -34,6 +34,9 @@ interface BlockRow {
   created_at: string;
   updated_at: string;
 }
+interface BlockContentRow {
+  content_json: string;
+}
 
 export class SpaceVersionConflictError extends Error {
   constructor(message = "Space version berubah; refresh dokumen sebelum menulis ulang.") {
@@ -99,7 +102,15 @@ export class SpaceStore {
       .prepare(
         "INSERT INTO pages(id,workspace_id,title,scope,version,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
       )
-      .run(page.id, page.workspaceId, page.title, page.scope, page.version, page.createdAt, page.updatedAt);
+      .run(
+        page.id,
+        page.workspaceId,
+        page.title,
+        page.scope,
+        page.version,
+        page.createdAt,
+        page.updatedAt,
+      );
     return page;
   }
 
@@ -132,7 +143,10 @@ export class SpaceStore {
     return SpaceDocumentSchema.parse({ page: pageFromRow(row), blocks: blocks.map(blockFromRow) });
   }
 
-  getBlock(id: string, workspaceId: WorkspaceId): { page: SpacePage; block: SpaceBlock } | null {
+  getBlock(
+    id: string,
+    workspaceId: WorkspaceId,
+  ): { page: SpacePage; block: SpaceBlock } | null {
     const row = this.db.raw
       .prepare(
         `SELECT b.*,p.workspace_id FROM blocks b JOIN pages p ON p.id=b.page_id
@@ -194,6 +208,16 @@ export class SpaceStore {
     if (source === undefined || source.type !== "table") {
       throw new SpaceReferenceError("database-view harus menunjuk table block pada page yang sama.");
     }
+  }
+
+  private hasDatabaseViewDependency(pageId: string, blockId: string): boolean {
+    const rows = this.db.raw
+      .prepare("SELECT content_json FROM blocks WHERE page_id=? AND type='database-view'")
+      .all(pageId) as BlockContentRow[];
+    return rows.some((row) => {
+      const body = SpaceBlockBodySchema.parse(JSON.parse(row.content_json) as unknown);
+      return body.kind === "database-view" && body.sourceBlockId === blockId;
+    });
   }
 
   addBlock(input: {
@@ -332,10 +356,7 @@ export class SpaceStore {
       ) {
         throw new SpaceVersionConflictError();
       }
-      const dependent = this.db.raw
-        .prepare("SELECT id FROM blocks WHERE page_id=? AND type='database-view' AND content_json LIKE ?")
-        .get(current.page.id, `%${input.id}%`) as { id: string } | undefined;
-      if (dependent !== undefined) {
+      if (current.block.type === "table" && this.hasDatabaseViewDependency(current.page.id, input.id)) {
         throw new SpaceReferenceError("Table block masih dipakai database-view; hapus view lebih dulu.");
       }
       const deleted = this.db.raw
@@ -378,7 +399,9 @@ export class SpaceStore {
       if (seen.size !== input.blockIds.length) {
         throw new SpaceReferenceError("Reorder tidak menerima block id duplikat.");
       }
-      const update = this.db.raw.prepare("UPDATE blocks SET position=?,updated_at=? WHERE id=? AND page_id=?");
+      const update = this.db.raw.prepare(
+        "UPDATE blocks SET position=?,updated_at=? WHERE id=? AND page_id=?",
+      );
       input.blockIds.forEach((id, position) => update.run(position, input.now, id, input.pageId));
       const bumped = this.db.raw
         .prepare(
