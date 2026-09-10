@@ -18,6 +18,18 @@ The candidate adds guarded operational tooling for:
 - Historical Ledger integrity and ECX/model/token/cache/cost traffic evidence floors;
 - deterministic local regression coverage for the new scripts plus shell syntax validation.
 
+## Local production rehearsal evidence
+
+A real Windows 11 + WSL2 rehearsal subsequently exercised the candidate stack through Phase 4 and a real local Ollama-compatible model boundary. Sanitized evidence lives in `docs/verification/local-production-rehearsal-2026-09-10.md`.
+
+The rehearsal found and the candidate now fixes:
+
+- an unavailable Temporal image tag (`1.31.2`) by switching the exact pin to the pull/run-verified `1.29.7`;
+- a local-model identity bug where Qwen was hard-coded into pricing/telemetry/cache identity even while another runtime model was configured;
+- a chat-routing gap where browser chat had no explicit Local/Hosted target and therefore defaulted to hosted.
+
+Local provider identity, response identity and generic zero-provider-token pricing identity are now separate fields; local cache identity includes the configured runtime endpoint/model; browser chat defaults to Local but locks route choice after its first turn. Requests that omit a chat target retain the historical hosted default.
+
 ## Acceptance hardening found during this workstream
 
 A real public HTTPS run exposed a resilience bug in the existing MCP acceptance harness: in `auto` mode, the first successful tunnel provider was stored globally and reused for the second public endpoint. If the OAuth/JWKS Cloudflare Quick Tunnel became routable but the independently-created Sync/MCP Quick Tunnel hit fresh-host NXDOMAIN, the configured Pinggy fallback was never attempted for that second endpoint.
@@ -26,9 +38,9 @@ The candidate keeps `MCP_TUNNEL_PROVIDER=<explicit provider>` deterministic, but
 
 ## Evidence boundary
 
-Repository CI can prove the scripts build, lint, typecheck, test and preserve the existing acceptance gates. It cannot prove external production state. Items requiring the actual VPS, Cloudflare zone/tunnel, provider credentials, firewall or real traffic remain pending until evidence is collected from those boundaries.
+Repository CI can prove the scripts build, lint, typecheck, test and preserve the existing acceptance gates. The laptop rehearsal proves local process/runtime boundaries. Neither proves external production VPS/Cloudflare/hosted-provider state. Items requiring those real boundaries remain pending.
 
-No ECX/optimizer savings claim is permitted from packet/token counters alone.
+No ECX/optimizer savings claim is permitted from packet/token counters or a single local canary alone.
 
 ## Acceptance rule
 

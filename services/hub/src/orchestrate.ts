@@ -86,9 +86,11 @@ interface ListArtifactsResponse {
 }
 interface CompleteResponse {
   readonly reply: string;
-  readonly provider: string;
+  /** Added by post-closure Connect; optional here for rolling compatibility. */
+  readonly provider?: string;
   readonly model: string;
-  readonly pricingModel: string;
+  /** Added by post-closure Connect; legacy responses carry it as cost.model. */
+  readonly pricingModel?: string;
   readonly responseModel: string;
   readonly cacheHit: boolean;
   readonly usage: TokenUsage;
@@ -289,14 +291,17 @@ export async function chat(
     throw new UpstreamError("Connect", err);
   }
 
+  const completeProvider = complete.provider ?? (target === "local" ? "local" : "unknown-hosted");
+  const completePricingModel = complete.pricingModel ?? complete.cost.model;
+
   deps.repo.recordAuditEvent({
     type: "MODEL_CALLED",
     operationId,
     module: "Hub",
     detail: {
-      provider: complete.provider,
+      provider: completeProvider,
       requestModel: complete.model,
-      pricingModel: complete.pricingModel,
+      pricingModel: completePricingModel,
       responseModel: complete.responseModel,
       cacheHit: complete.cacheHit,
       actualUsd: complete.cost.actualUsd,
@@ -317,9 +322,9 @@ export async function chat(
       operationId,
       parentEventId: userHistoryEvent.id,
       payload: {
-        provider: complete.provider,
+        provider: completeProvider,
         requestModel: complete.model,
-        pricingModel: complete.pricingModel,
+        pricingModel: completePricingModel,
         responseModel: complete.responseModel,
         cacheHit: complete.cacheHit,
         usage: complete.usage,
@@ -384,7 +389,7 @@ export async function chat(
 
   const span = buildGenAiSpan({
     operation: "chat",
-    provider: complete.provider === "local" ? "ollama" : complete.provider,
+    provider: completeProvider === "local" ? "ollama" : completeProvider,
     requestModel: complete.model,
     responseModel: complete.responseModel,
     conversationId: req.sessionId,

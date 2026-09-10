@@ -7,7 +7,7 @@ This is the post-closure operational workstream. It does not reopen Batch 1–12
 
 ## Objective
 
-Take the repository-verified production/self-host baseline into a real VPS deployment, put a stable Cloudflare Free edge in front of it, validate real providers and real traffic, and gather production evidence before any new feature scope is accepted.
+Take the repository-verified production/self-host baseline through a real local rehearsal first, then into a real compute-host deployment, put a stable Cloudflare Free edge in front of it, validate real providers and real traffic, and gather production evidence before any new feature scope is accepted.
 
 ## Current starting point
 
@@ -15,12 +15,23 @@ Take the repository-verified production/self-host baseline into a real VPS deplo
 - Main at workstream start: `aa360b81a6ef5cd41f466d7ada239b4e461c60ee`.
 - Final documentation post-merge CI run `34494150426`: **PASS**.
 - Repository provides Docker/Compose self-host baseline, Caddy, Temporal/PostgreSQL, Connect Vault, spend budget, provider canary, `/ops`, release/rollback tooling, and real public MCP acceptance.
+- Real laptop rehearsal: **PASS through Phase 4 + real Ollama/Gemma local canary**; see `docs/verification/local-production-rehearsal-2026-09-10.md`.
+
+## Local rehearsal findings folded into this candidate
+
+The local rehearsal deliberately preceded VPS mutation and found defects that repository-only CI had not exposed:
+
+- the previous Temporal image pin `temporalio/auto-setup:1.31.2` could not be pulled; the pull/run-verified candidate pin is `1.29.7`;
+- local model runtime identity was conflated with a hard-coded Qwen pricing identity and cache key;
+- browser chat could not explicitly request the local path and therefore hit the hosted kill switch during a local-first test.
+
+The candidate separates runtime model identity from the generic zero-provider-token pricing identity, makes the local cache key model/runtime-specific, and adds explicit Local/Hosted chat selection while retaining hosted as the compatibility default for API requests that omit a target.
 
 ## Tooling added in this workstream
 
 | Command | Purpose | Mutation |
 |---|---|---|
-| `pnpm production:preflight` | Validate production env, file mode, Compose, repository production acceptance, disk floor | Read-only |
+| `pnpm production:preflight` | Validate production env, file permissions/Compose/repo acceptance/disk-floor checks | Read-only |
 | `pnpm cloudflare:tunnel:install` | Validate Cloudflare edge reachability; `--apply` installs the remotely-managed tunnel system service | Dry-run by default |
 | `pnpm production:smoke` | Verify HTTPS home, protected `/ops` + `/settings`, MCP resource metadata and unauthenticated challenge | Read-only |
 | `pnpm cloudflare:origin:lockdown` | Verify tunnel + SSH firewall preconditions; `--apply` removes direct 80/443 ingress and auto-restores on failed smoke | Dry-run by default |
@@ -35,21 +46,22 @@ Production secrets are never command-line examples in this document. Provider se
 
 | # | Work item | State | Evidence / next gate |
 |---|---|---|---|
+| 0 | Local production rehearsal | **DONE / candidate fixes pending CI+merge** | Phase 1/3/4 health PASS; Temporal worker RUNNING; real local Gemma canary PASS; see local rehearsal verification note |
 | 1 | Confirm final post-merge CI | **DONE** | `34494150426` PASS |
 | 2 | Audit final docs/repo state | **DONE** | PR #31 merged; canonical handoff exists |
-| 3 | Deploy ECORIONE to real VPS | **BLOCKED ON VPS ACCESS** | `pnpm production:preflight` then `scripts/self-host-install.sh --apply` on target host |
-| 4 | Install Cloudflare Free + named Tunnel | **TOOLING READY / BLOCKED ON CLOUDFLARE+VPS ACCESS** | `pnpm cloudflare:tunnel:install`, then publish hostname -> local Caddy |
+| 3 | Deploy ECORIONE to real compute host/VPS | **PENDING AFTER LOCAL-FINDING FIXES MERGE** | sync merged `main`, then `pnpm production:preflight` and `scripts/self-host-install.sh --apply` on target host |
+| 4 | Install Cloudflare Free + named Tunnel | **TOOLING READY / BLOCKED ON CLOUDFLARE+HOST ACCESS** | `pnpm cloudflare:tunnel:install`, then publish hostname -> local Caddy |
 | 5 | Configure domain/DNS/HTTPS/Caddy/MCP routing | **TOOLING READY / BLOCKED ON DOMAIN+CLOUDFLARE ACCESS** | `ECORIONE_PUBLIC_BASE_URL=https://<host> pnpm production:smoke` must PASS |
-| 6 | Lock direct origin ingress | **GUARDED TOOLING READY / BLOCKED ON VPS ROOT ACCESS** | Dry-run `pnpm cloudflare:origin:lockdown`; explicit ack + `--apply` only after public smoke |
+| 6 | Lock direct origin ingress | **GUARDED TOOLING READY / BLOCKED ON HOST ROOT ACCESS** | Dry-run `pnpm cloudflare:origin:lockdown`; explicit ack + `--apply` only after public smoke |
 | 7 | Production E2E edge smoke | **TOOLING IMPLEMENTED; REAL RUN PENDING #3–5** | `pnpm production:smoke` |
-| 8 | Add real AI providers through Connect Vault | **BLOCKED ON OPERATOR CREDENTIALS** | Add secret via `/settings` or Connect control API; no secret in Git/env history |
-| 9 | Run real provider canary | **TOOLING IMPLEMENTED; REAL RUN PENDING #8** | `pnpm canary:providers`; all intended providers must PASS and original settings must be restored |
+| 8 | Add real hosted AI providers through Connect Vault | **BLOCKED ON OPERATOR CREDENTIALS** | Add secret via `/settings` or Connect control API; no secret in Git/env history |
+| 9 | Run real hosted-provider matrix canary | **TOOLING IMPLEMENTED; REAL RUN PENDING #8** | `pnpm canary:providers`; all intended providers must PASS and original settings must be restored |
 | 10 | Start production observability baseline | **TOOLING IMPLEMENTED; REAL SNAPSHOT PENDING #3** | `/ops` + `pnpm production:ops-snapshot`; external retention remains operator choice |
-| 11 | VPS hardening | **READ-ONLY AUDIT IMPLEMENTED; REMEDIATION NEEDS VPS ROOT** | `pnpm production:host-audit`; review firewall/SSH/patching/off-host backup findings |
-| 12 | Validate Historical Ledger + ECX + optimizer from real traffic | **TOOLING IMPLEMENTED; REAL TRAFFIC PENDING** | `pnpm production:data-evidence`; no savings claim from packet/token counters alone |
+| 11 | Host hardening | **READ-ONLY AUDIT IMPLEMENTED; REMEDIATION NEEDS ROOT** | `pnpm production:host-audit`; review firewall/SSH/patching/off-host backup findings |
+| 12 | Validate Historical Ledger + ECX + optimizer from real traffic | **TOOLING IMPLEMENTED; LOCAL REAL TRAFFIC EXISTS, PRODUCTION TRAFFIC PENDING** | `pnpm production:data-evidence`; no savings claim from packet/token counters alone |
 | 13 | UX/Control Center improvements from production evidence | **WAITING FOR PRODUCTION EVIDENCE** | Create explicit scope only from observed friction/usage |
 
-## VPS execution order
+## Compute-host execution order
 
 ```bash
 # 1. Validate host/repo/config without deploying
@@ -86,10 +98,11 @@ pnpm cloudflare:origin:lockdown -- --apply
 
 ## Evidence rules
 
-Do not mark #3–#12 DONE from repository CI alone. They require evidence from the actual deployment or real provider/account boundary. Specifically:
+Do not mark #3–#12 DONE from repository CI or the local rehearsal alone. They require evidence from the actual production host/provider/account boundary where applicable. Specifically:
 
+- a local Phase 4 PASS does not prove VPS persistence/restart/backup behavior;
 - a `Healthy` Cloudflare Tunnel alone does not prove the local origin route works;
-- a local provider stub does not prove hosted-provider quality/latency/cost;
+- a real local provider canary does not prove hosted-provider quality/latency/cost;
 - ECX packet/hydration counts do not prove savings;
 - same-host backup does not prove disaster recovery against host loss;
 - repository security CI does not prove host firewall/SSH/account posture.
@@ -100,7 +113,7 @@ Stop deployment/cutover if any of these occurs:
 
 - production env contains placeholders or has unsafe permissions;
 - Compose validation or production acceptance fails;
-- Cloudflare edge port 7844 is unreachable from the VPS;
+- Cloudflare edge port 7844 is unreachable from the compute host;
 - public smoke fails;
 - `/ops` or `/settings` becomes unauthenticated;
 - MCP protected-resource metadata/challenge points at a non-public/incorrect resource URL;
@@ -113,10 +126,11 @@ Stop deployment/cutover if any of these occurs:
 1. `docs/current-state-and-next-steps.md`
 2. `AGENTS.md`
 3. this file
-4. `docs/production-operations.md`
-5. `docs/cloudflare-free-deployment.md`
-6. `docs/release-operations.md`
-7. `docs/security-review.md`
+4. `docs/verification/local-production-rehearsal-2026-09-10.md`
+5. `docs/production-operations.md`
+6. `docs/cloudflare-free-deployment.md`
+7. `docs/release-operations.md`
+8. `docs/security-review.md`
 
 ## Architecture boundary
 
