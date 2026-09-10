@@ -192,13 +192,13 @@ async function waitForPublic(url, label, tunnel, timeoutMs) {
   );
 }
 
-let selectedTunnelProvider = process.env.MCP_TUNNEL_PROVIDER ?? "auto";
+const configuredTunnelProvider = process.env.MCP_TUNNEL_PROVIDER ?? "auto";
 
 async function startReadyTunnel(localUrl, label) {
   const providerNames =
-    selectedTunnelProvider === "auto"
+    configuredTunnelProvider === "auto"
       ? [...(CLOUDFLARED_BIN ? ["cloudflare"] : []), "pinggy"]
-      : [selectedTunnelProvider];
+      : [configuredTunnelProvider];
   const failures = [];
 
   for (const provider of providerNames) {
@@ -218,7 +218,6 @@ async function startReadyTunnel(localUrl, label) {
         tunnel,
         provider === "cloudflare" ? 20_000 : 30_000,
       );
-      if (selectedTunnelProvider === "auto") selectedTunnelProvider = provider;
       return tunnel;
     } catch (error) {
       failures.push(`${provider}: ${error instanceof Error ? error.message : String(error)}`);
