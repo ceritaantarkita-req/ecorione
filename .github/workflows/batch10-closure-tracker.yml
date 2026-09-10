@@ -1,0 +1,138 @@
+name: Batch 10 closure tracker update
+
+on:
+  push:
+    branches:
+      - agent/batch10-closure-20260910
+    paths:
+      - .github/workflows/batch10-closure-tracker.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/batch10-closure-20260910
+          fetch-depth: 0
+      - name: Update canonical tracker
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("docs/EXECUTION-PROGRESS.md")
+          text = path.read_text()
+
+          replacements = [
+              (
+                  """Batch 9 implementation is merged and post-merge verified on `main`:
+
+- implementation PR #23 merge: `05b05a5f22133d61a411ff22463ac5acfaf4c5eb`
+- exact final PR head: `6294a6f641b1ddecf23ccac23ab1e85ce8da7fe8`
+- exact-head CI `34435365038`: full green
+- exact-head MCP External HTTPS Acceptance `34435365023`: PASS
+- post-merge main CI `34435559155`: full green""",
+                  """Batch 10 implementation is merged and post-merge verified on `main`:
+
+- implementation PR #25 merge: `f5232048f29efa4d4b6632330f0d860afa781d48`
+- exact final PR head: `3459e4b51ff5c04eeb129ed2463cb0545d9a6ef8`
+- exact-head CI `34442113246`: full green
+- exact-head MCP External HTTPS Acceptance `34442113341`: PASS
+- post-merge main CI `34443543782`: full green""",
+              ),
+              (
+                  """- Batch 9 status: **CLOSED**
+- next implementation target: **Batch 10 — Space Block Runtime**""",
+                  """- Batch 9 status: **CLOSED**
+- Batch 10 status: **CLOSED**
+- next implementation target: **Batch 11 — Production Operations & Observability**""",
+              ),
+              (
+                  """Dari current state, **Batch 1–9 sudah CLOSED**. Tersisa **3 batch platform/production (Batch 10–12)**; next implementation target adalah **Batch 10 — Space Block Runtime**.""",
+                  """Dari current state, **Batch 1–10 sudah CLOSED**. Tersisa **2 batch platform/production (Batch 11–12)**; next implementation target adalah **Batch 11 — Production Operations & Observability**.""",
+              ),
+              (
+                  """## Batch 10 — Space Block Runtime
+
+Status: **PLANNED**""",
+                  """## Batch 10 — Space Block Runtime
+
+Status: **CLOSED**""",
+              ),
+              (
+                  """- Space hanya menyimpan workspace/document composition yang memang menjadi domain-nya
+
+---
+
+## Batch 11 — Production Operations & Observability""",
+                  """- Space hanya menyimpan workspace/document composition yang memang menjadi domain-nya
+
+Implemented baseline:
+
+- 13 typed block kinds: paragraph, heading, list, checklist, table, database-view, file, image, embed, ai, context-link, artifact-link, flow-link;
+- shared discriminated schemas dengan type/body agreement dan HTTPS-only embed validation;
+- workspace-scoped pages/blocks dengan monotonic optimistic versions;
+- transactional insert/move/delete/reorder dan fail-closed stale-write conflicts;
+- same-page table dependency untuk database-view dengan exact typed-reference checking;
+- Context/Artifact/Flow pointer resolution dilakukan just-in-time tanpa copy authoritative owner data;
+- AI block menunjuk Flow graph, sehingga durable execution tetap dimiliki Flow/Temporal;
+- real pre-Batch-10 SQLite migration mempertahankan IDs/order/timestamps dan mengubah legacy text/heading/list menjadi typed bodies;
+- Ai `/space` menyediakan page composition, block palette, preview, reorder/delete, JSON inspector, reference resolution, dan existing Context core-memory editor.
+
+Closure evidence:
+
+- implementation branch: `agent/batch10-space-block-runtime-20260910`;
+- implementation PR: #25;
+- final exact implementation head: `3459e4b51ff5c04eeb129ed2463cb0545d9a6ef8`;
+- exact-head CI `34442113246`: Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Secret Scan, Production Build PASS;
+- exact-head MCP External HTTPS Acceptance `34442113341`: PASS;
+- PR #25 merged with expected-head lock as `f5232048f29efa4d4b6632330f0d860afa781d48`;
+- `main` confirmed at the expected merge SHA;
+- post-merge main CI `34443543782`: full green;
+- no temporary Batch 10 implementation helper workflow remains in the implementation tree.
+
+ADR: `docs/adr/0031-space-block-runtime.md`  
+Operations: `docs/space-block-runtime-operations.md`  
+Verification: `docs/verification/batch10-closure-2026-09-10.md`
+
+Batch 10 resmi **CLOSED**; next implementation batch adalah Batch 11.
+
+---
+
+## Batch 11 — Production Operations & Observability""",
+              ),
+              (
+                  """- **Batch 9: CLOSED**
+- **3 platform/production batches remaining (Batch 10–12)**
+- next: **Batch 10 — Space Block Runtime**
+
+Heuristic percentage/granular workload estimates sengaja tidak dihitung ulang pada closure Batch 9.""",
+                  """- **Batch 9: CLOSED**
+- **Batch 10: CLOSED**
+- **2 platform/production batches remaining (Batch 11–12)**
+- next: **Batch 11 — Production Operations & Observability**
+
+Heuristic percentage/granular workload estimates sengaja tidak dihitung ulang pada closure Batch 10.""",
+              ),
+          ]
+
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit(f"STOP: expected tracker marker missing: {old[:100]!r}")
+              text = text.replace(old, new, 1)
+
+          path.write_text(text)
+          PY
+      - name: Remove one-shot helper and commit tracker
+        shell: bash
+        run: |
+          rm .github/workflows/batch10-closure-tracker.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/EXECUTION-PROGRESS.md .github/workflows/batch10-closure-tracker.yml
+          git commit -m "docs(batch10): close Space Block Runtime"
+          git push origin HEAD:agent/batch10-closure-20260910
