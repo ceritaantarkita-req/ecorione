@@ -28,6 +28,7 @@ import {
   NotFoundError,
   createServer,
   httpJson,
+  observabilityFor,
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
@@ -105,6 +106,7 @@ export function buildFlowServer(
   options: BuildFlowServerOptions,
 ): FastifyInstance {
   const app = createServer({ name: "flow", token: options.token, logger: options.logger });
+  const metrics = observabilityFor(app);
   const ownedDb = options.graphRepository === undefined ? openFlowDatabase(":memory:") : null;
   const graphs = options.graphRepository ?? new FlowGraphRepository(ownedDb!);
   if (ownedDb !== null) app.addHook("onClose", async () => ownedDb.close());
@@ -115,6 +117,7 @@ export function buildFlowServer(
     const operationId = makeId("operation");
     const input = FlowWorkflowInputSchema.parse({ ...body, flowId, operationId });
     await temporal.start(input);
+    metrics.addCounter("ecorione_flow_runs_total", 1, { runtime: "legacy" });
     return reply
       .code(202)
       .send(FlowStartResponseSchema.parse({ flowId, operationId, temporalWorkflowId: flowId }));
@@ -146,6 +149,10 @@ export function buildFlowServer(
     });
     const signal: FlowApprovalSignal = { decision: body.decision, note: body.note };
     await temporal.signal(assertId("workflow", flowId), signal);
+    metrics.addCounter("ecorione_flow_decisions_total", 1, {
+      runtime: "legacy",
+      decision: body.decision.toLowerCase(),
+    });
     return { flowId, operationId, decision: body.decision };
   });
 
@@ -215,15 +222,20 @@ export function buildFlowServer(
     }
     if (!graphVersion.validation.valid || graphVersion.validation.plan === null)
       throw new BadRequestError("Graph version tidak valid dan tidak dapat dijalankan.");
+    const plan = graphVersion.validation.plan;
     const graphTemporal = requireGraphTemporal(temporal);
     const runId = makeId("workflow");
     const operationId = makeId("operation");
     await graphTemporal.startGraph({
       runId,
       operationId,
-      plan: graphVersion.validation.plan,
+      plan,
       input: body.input,
       depth: 0,
+    });
+    metrics.addCounter("ecorione_flow_runs_total", 1, { runtime: "graph" });
+    metrics.addCounter("ecorione_flow_nodes_scheduled_total", plan.nodes.length, {
+      runtime: "graph",
     });
     return reply.code(202).send(
       FlowGraphRunResponseSchema.parse({
@@ -232,7 +244,7 @@ export function buildFlowServer(
         graphVersion: graphVersion.version,
         temporalWorkflowId: runId,
         traceOperationId: operationId,
-        planDigest: graphVersion.validation.plan.planDigest,
+        planDigest: plan.planDigest,
       }),
     );
   });
@@ -274,6 +286,10 @@ export function buildFlowServer(
         decision: body.decision,
         note: body.note,
       });
+      metrics.addCounter("ecorione_flow_decisions_total", 1, {
+        runtime: "graph",
+        decision: body.decision.toLowerCase(),
+      });
       return { runId: id, nodeId, operationId, decision: body.decision };
     },
   );
@@ -284,6 +300,7 @@ export function buildFlowServer(
       const { id, nodeId } = parseOrBadRequest(NodeRunParamsSchema, req.params);
       const body = parseOrBadRequest(FlowGraphHumanInputRequestSchema, req.body);
       await requireGraphTemporal(temporal).signalGraphInput(id, { nodeId, value: body.value });
+      metrics.addCounter("ecorione_flow_human_inputs_total", 1, { runtime: "graph" });
       return { runId: id, nodeId, accepted: true };
     },
   );
