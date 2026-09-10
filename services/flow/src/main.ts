@@ -11,7 +11,7 @@ const temporalNamespace = process.env.ECORIONE_TEMPORAL_NAMESPACE ?? "default";
 const hubUrl = process.env.ECORIONE_HUB_URL ?? "http://127.0.0.1:17024";
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
 const dbPath =
-  process.env.ECORIONE_FLOW_DB ?? resolve(import.meta.dirname, "../../../data/flow.sqlite");
+  process.env.ECORIONE_FLOW_DB_PATH ?? resolve(import.meta.dirname, "../../../data/flow.sqlite");
 const db = openFlowDatabase(dbPath);
 const temporal = await createFlowTemporalClient({
   address: temporalAddress,
