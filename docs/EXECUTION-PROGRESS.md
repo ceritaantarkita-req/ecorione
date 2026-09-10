@@ -27,13 +27,13 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Batch 8 implementation is merged and post-merge verified on `main`:
+Batch 9 implementation is merged and post-merge verified on `main`:
 
-- implementation PR #21 merge: `37f073ad9865487a217d4348083f75fe28caa1e9`
-- exact final PR head: `84017f01be52bf65bc8d1ea88ce2d481b1b831d8`
-- exact-head CI `34429679871`: full green
-- exact-head MCP External HTTPS Acceptance `34429679835`: PASS
-- post-merge main CI `34429848537`: full green
+- implementation PR #23 merge: `05b05a5f22133d61a411ff22463ac5acfaf4c5eb`
+- exact final PR head: `6294a6f641b1ddecf23ccac23ab1e85ce8da7fe8`
+- exact-head CI `34435365038`: full green
+- exact-head MCP External HTTPS Acceptance `34435365023`: PASS
+- post-merge main CI `34435559155`: full green
 
 ### Active execution
 
@@ -45,7 +45,8 @@ Batch 8 implementation is merged and post-merge verified on `main`:
 - Batch 6 status: **CLOSED**
 - Batch 7 status: **CLOSED**
 - Batch 8 status: **CLOSED**
-- next implementation target: **Batch 9 — Node Registry + Visual Flow Canvas**
+- Batch 9 status: **CLOSED**
+- next implementation target: **Batch 10 — Space Block Runtime**
 
 ---
 
@@ -212,7 +213,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1–8 sudah CLOSED**. Tersisa **4 batch platform/production (Batch 9–12)**; next implementation target adalah **Batch 9 — Node Registry + Visual Flow Canvas**.
+Dari current state, **Batch 1–9 sudah CLOSED**. Tersisa **3 batch platform/production (Batch 10–12)**; next implementation target adalah **Batch 10 — Space Block Runtime**.
 
 ---
 
@@ -625,7 +626,7 @@ Batch 8 resmi **CLOSED**; next implementation batch adalah Batch 9.
 
 ## Batch 9 — Node Registry + Visual Flow Canvas
 
-Status: **PLANNED**
+Status: **CLOSED**
 
 Goal: membuat user-composable execution layer ala n8n tanpa membuat durability engine kedua.
 
@@ -680,6 +681,35 @@ UI:
 - save/load/version
 - execution status
 - trace linkage
+
+Implemented baseline:
+
+- versioned shared node contract + deterministic graph compiler/validator;
+- 17 core node kinds with capability, policy, side-effect, secret-ref, limit, retry, and idempotency metadata;
+- Flow-owned append-only graph definitions/versions with optimistic concurrency;
+- Temporal-owned durable graph execution, timers, signals, approvals, human input, parallel levels, and child-workflow subflows;
+- Hub node declaration sync without auto-grant and exact node authority checks;
+- owner-service execution boundaries for Connect, Context, Artifact, Space, Sandbox, RnD, and MCP;
+- fail-closed HTTPS hostname allowlist and owner API prefix allowlist;
+- Ai `/flow` visual canvas with drag/drop, edges, inspector, validation, save/load/version, execution status, approval/input controls, and trace linkage.
+
+Closure evidence:
+
+- implementation branch: `agent/batch9-node-registry-canvas-20260910`;
+- implementation PR: #23;
+- final exact PR head: `6294a6f641b1ddecf23ccac23ab1e85ce8da7fe8`;
+- exact-head CI `34435365038`: Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Secret Scan, Production Build PASS;
+- exact-head MCP External HTTPS Acceptance `34435365023`: PASS;
+- PR #23 merged with expected-head lock as `05b05a5f22133d61a411ff22463ac5acfaf4c5eb`;
+- `main` confirmed at the expected merge SHA;
+- post-merge main CI `34435559155`: full green;
+- no temporary Batch 9 helper workflow remains in the implementation tree.
+
+ADR: `docs/adr/0030-node-registry-visual-flow.md`  
+Operations: `docs/node-registry-flow-canvas-operations.md`  
+Verification: `docs/verification/batch9-closure-2026-09-10.md`
+
+Batch 9 resmi **CLOSED**; next implementation batch adalah Batch 10.
 
 ---
 
@@ -797,17 +827,13 @@ Current planning unit:
 - **Batch 4: CLOSED**
 - **Batch 5: CLOSED**
 - **Batch 6: CLOSED**
-- **6 platform/production batches remaining (Batch 7–12)**
-- next: **Batch 7 — Data Refactor / Rebuild Engine**
+- **Batch 7: CLOSED**
+- **Batch 8: CLOSED**
+- **Batch 9: CLOSED**
+- **3 platform/production batches remaining (Batch 10–12)**
+- next: **Batch 10 — Space Block Runtime**
 
-Dalam workstream teknis granular, estimasi tersisa sekitar **20–25 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi Batch 7–12.
-
-Heuristic progress estimate — **bukan telemetry atau completion metric formal**:
-
-- overall platform menuju production/self-host baseline: kira-kira **60–65%**
-- backend/core architectural foundation: kira-kira **75–80%**
-
-Angka ini hanya planning heuristic berdasarkan scope roadmap, bukan klaim produktivitas atau kualitas produksi.
+Heuristic percentage/granular workload estimates sengaja tidak dihitung ulang pada closure Batch 9. Status batch dan evidence di tracker ini adalah source of truth; estimasi bukan completion metric formal dan tidak boleh dipakai sebagai klaim kualitas/efisiensi produksi.
 
 ---
 
