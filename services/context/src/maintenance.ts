@@ -1,13 +1,12 @@
 import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { Episode, MemoryFact, Timestamp } from "@ecorione/shared-schema";
+import type { MemoryFact, Timestamp } from "@ecorione/shared-schema";
 import { runConsolidation } from "./consolidate.js";
 import { openContextDatabase } from "./db.js";
 import { loadMigrations, migrate } from "./migrate.js";
 import { ContextRepository } from "./repository.js";
 import type { SqliteDatabase } from "./sqlite.js";
-import { createVectorIndex, type VectorIndex } from "./vector.js";
 
 export const MAINTENANCE_ACTIONS = [
   "migrate",
@@ -49,7 +48,6 @@ interface EmbeddingRow {
   readonly model: string;
   readonly dim: number;
   readonly embedding: Buffer;
-  readonly updated_at: string;
 }
 
 interface QuarantinePromotionRow {
@@ -157,7 +155,9 @@ function normalizeWhitespace(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
-function canonicalFactKey(fact: Pick<MemoryFact, "scope" | "subject" | "predicate" | "object">): string {
+function canonicalFactKey(
+  fact: Pick<MemoryFact, "scope" | "subject" | "predicate" | "object">,
+): string {
   return [fact.scope, fact.subject, fact.predicate, fact.object]
     .map((value) => normalizeWhitespace(value).toLocaleLowerCase("en-US"))
     .join("\u001f");
@@ -192,7 +192,7 @@ function episodeProjectionRows(raw: SqliteDatabase): EpisodeProjectionRow[] {
 function embeddingDigestRows(raw: SqliteDatabase): readonly unknown[] {
   return raw
     .prepare(
-      "SELECT fact_id,model,dim,hex(embedding) AS embedding_hex,updated_at FROM fact_embeddings ORDER BY fact_id ASC",
+      "SELECT fact_id,model,dim,hex(embedding) AS embedding_hex FROM fact_embeddings ORDER BY fact_id ASC",
     )
     .all() as readonly unknown[];
 }
@@ -207,12 +207,16 @@ export function contextProjectionDigest(repo: ContextRepository): string {
 }
 
 function schemaVersions(raw: SqliteDatabase): number[] {
-  return (raw.prepare("SELECT version FROM schema_migrations ORDER BY version ASC").all() as { version: number }[]).map(
-    (row) => row.version,
-  );
+  return (
+    raw.prepare("SELECT version FROM schema_migrations ORDER BY version ASC").all() as {
+      version: number;
+    }[]
+  ).map((row) => row.version);
 }
 
-function countOrphans(raw: SqliteDatabase): Pick<
+function countOrphans(
+  raw: SqliteDatabase,
+): Pick<
   MaintenanceFindings,
   | "orphanEpisodeReferences"
   | "orphanSupersedeReferences"
@@ -326,7 +330,8 @@ export function inspectContext(repo: ContextRepository): MaintenanceFindings {
     facts: facts.length,
     embeddings,
     normalizableFacts,
-    duplicateLiveDerivedGroups: [...liveDerivedGroups.values()].filter((count) => count > 1).length,
+    duplicateLiveDerivedGroups: [...liveDerivedGroups.values()].filter((count) => count > 1)
+      .length,
     ...countOrphans(raw),
     foreignKeyViolations,
     quickCheck,
@@ -334,7 +339,10 @@ export function inspectContext(repo: ContextRepository): MaintenanceFindings {
   };
 }
 
-function assertIntegrity(findings: MaintenanceFindings): void {
+function assertIntegrity(
+  findings: MaintenanceFindings,
+  options: { readonly allowFtsError?: boolean } = {},
+): void {
   const failures: string[] = [];
   if (findings.quickCheck !== "ok") failures.push(`quick_check=${findings.quickCheck}`);
   if (findings.foreignKeyViolations > 0)
@@ -346,8 +354,11 @@ function assertIntegrity(findings: MaintenanceFindings): void {
   if (findings.orphanEmbeddingReferences > 0)
     failures.push(`orphan_embedding_refs=${String(findings.orphanEmbeddingReferences)}`);
   if (findings.orphanQuarantinePromotions > 0)
-    failures.push(`orphan_quarantine_promotions=${String(findings.orphanQuarantinePromotions)}`);
-  if (findings.ftsIntegrity !== "ok") failures.push("fts_integrity=error");
+    failures.push(
+      `orphan_quarantine_promotions=${String(findings.orphanQuarantinePromotions)}`,
+    );
+  if (findings.ftsIntegrity !== "ok" && options.allowFtsError !== true)
+    failures.push("fts_integrity=error");
   if (failures.length > 0) {
     throw new MaintenanceIntegrityError(`Context integrity gagal: ${failures.join(", ")}.`);
   }
@@ -394,7 +405,8 @@ export class ContextMaintenanceEngine {
     readonly now: Timestamp;
   }): MaintenancePlan {
     const actions = canonicalActions(input.actions);
-    if (actions.length === 0) throw new MaintenanceError("Maintenance plan membutuhkan action.");
+    if (actions.length === 0)
+      throw new MaintenanceError("Maintenance plan membutuhkan action.");
     if (
       actions.includes("rebuild-l1") &&
       (actions.includes("normalize-metadata") || actions.includes("dedupe-facts"))
@@ -426,22 +438,35 @@ export class ContextMaintenanceEngine {
   }
 
   private assertPlan(plan: MaintenancePlan): void {
-    const { planDigest, ...unsigned } = plan;
-    if (plan.schema !== PLAN_SCHEMA || hashJson(unsigned) !== planDigest) {
+    if (plan.schema !== PLAN_SCHEMA) {
+      throw new MaintenanceConflictError("Maintenance plan schema tidak valid.");
+    }
+    const expected = this.plan({
+      operationId: plan.operationId,
+      actions: plan.actions,
+      now: plan.generatedAt,
+    });
+    if (expected.planDigest !== plan.planDigest) {
+      if (expected.sourceDigest !== plan.sourceDigest) {
+        throw new MaintenanceConflictError(
+          "Context L0 berubah setelah dry-run; buat plan baru.",
+        );
+      }
+      if (expected.projectionDigest !== plan.projectionDigest) {
+        throw new MaintenanceConflictError(
+          "Context projection berubah setelah dry-run; buat plan baru.",
+        );
+      }
       throw new MaintenanceConflictError("Maintenance plan digest tidak valid.");
-    }
-    if (contextSourceDigest(this.repo.db.raw) !== plan.sourceDigest) {
-      throw new MaintenanceConflictError("Context L0 berubah setelah dry-run; buat plan baru.");
-    }
-    if (contextProjectionDigest(this.repo) !== plan.projectionDigest) {
-      throw new MaintenanceConflictError("Context projection berubah setelah dry-run; buat plan baru.");
     }
   }
 
   private snapshotDirectory(): string {
     if (this.options.snapshotDir !== undefined) return this.options.snapshotDir;
     if (this.repo.db.path === ":memory:") {
-      throw new MaintenanceSnapshotError("Execute/rollback membutuhkan file-backed Context DB.");
+      throw new MaintenanceSnapshotError(
+        "Execute/rollback membutuhkan file-backed Context DB.",
+      );
     }
     return join(dirname(this.repo.db.path), "context-maintenance-snapshots");
   }
@@ -477,7 +502,9 @@ export class ContextMaintenanceEngine {
     const bounded = Math.max(1, Math.min(limit, 500));
     return (
       this.repo.db.raw
-        .prepare("SELECT * FROM context_maintenance_receipts ORDER BY completed_at DESC,id ASC LIMIT ?")
+        .prepare(
+          "SELECT * FROM context_maintenance_receipts ORDER BY completed_at DESC,id ASC LIMIT ?",
+        )
         .all(bounded) as ReceiptRow[]
     ).map(receiptFromRow);
   }
@@ -562,7 +589,8 @@ export class ContextMaintenanceEngine {
       for (const group of groups.values()) {
         if (group.length < 2) continue;
         group.sort(
-          (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id),
+          (a, b) =>
+            Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id),
         );
         const winner = group[0];
         if (winner === undefined) continue;
@@ -592,7 +620,9 @@ export class ContextMaintenanceEngine {
 
   private async prepareL1Rebuild(now: Timestamp): Promise<PreparedL1> {
     if (this.options.extractLocal === undefined) {
-      throw new MaintenanceError("rebuild-l1 membutuhkan Context local extractor melalui Connect.");
+      throw new MaintenanceError(
+        "rebuild-l1 membutuhkan Context local extractor melalui Connect.",
+      );
     }
     const stagingDb = openContextDatabase({ path: ":memory:" });
     try {
@@ -620,9 +650,7 @@ export class ContextMaintenanceEngine {
         quarantined += result.quarantined;
         rejected += result.rejected;
         if (result.errors.length > 0) {
-          throw new MaintenanceError(
-            `Staging L1 rebuild gagal: ${result.errors.join(" | ")}`,
-          );
+          throw new MaintenanceError(`Staging L1 rebuild gagal: ${result.errors.join(" | ")}`);
         }
       }
       return {
@@ -635,7 +663,10 @@ export class ContextMaintenanceEngine {
     }
   }
 
-  private applyPreparedL1(prepared: PreparedL1): { factsWritten: number; embeddingsDropped: number } {
+  private applyPreparedL1(prepared: PreparedL1): {
+    factsWritten: number;
+    embeddingsDropped: number;
+  } {
     const raw = this.repo.db.raw;
     const embeddingsDropped = Number(
       (raw.prepare("SELECT COUNT(*) AS n FROM fact_embeddings").get() as { n: number }).n,
@@ -656,13 +687,14 @@ export class ContextMaintenanceEngine {
   async execute(plan: MaintenancePlan): Promise<MaintenanceReceipt> {
     const existing = this.getReceiptByOperation(plan.operationId);
     if (existing !== null) {
-      if (existing.planDigest === plan.planDigest && existing.status === "SUCCEEDED") return existing;
+      if (existing.planDigest === plan.planDigest && existing.status === "SUCCEEDED")
+        return existing;
       throw new MaintenanceConflictError(
         `Operation ${plan.operationId} sudah memiliki receipt ${existing.status}.`,
       );
     }
     this.assertPlan(plan);
-    assertIntegrity(plan.findings);
+    assertIntegrity(plan.findings, { allowFtsError: plan.actions.includes("rebuild-fts") });
     const prepared = plan.actions.includes("rebuild-l1")
       ? await this.prepareL1Rebuild(plan.generatedAt)
       : null;
@@ -694,7 +726,9 @@ export class ContextMaintenanceEngine {
       const findingsAfter = this.verify();
       const sourceAfter = contextSourceDigest(this.repo.db.raw);
       if (sourceAfter !== sourceBefore) {
-        throw new MaintenanceIntegrityError("Immutable Context L0 digest berubah saat maintenance.");
+        throw new MaintenanceIntegrityError(
+          "Immutable Context L0 digest berubah saat maintenance.",
+        );
       }
       const receipt: MaintenanceReceipt = {
         id: `maint_${hashJson([plan.operationId, plan.planDigest]).slice(0, 24)}`,
@@ -752,7 +786,9 @@ export class ContextMaintenanceEngine {
       sourceReceipt.status !== "SUCCEEDED" ||
       sourceReceipt.snapshotPath === null
     ) {
-      throw new MaintenanceSnapshotError("Source receipt tidak memiliki snapshot rollback yang valid.");
+      throw new MaintenanceSnapshotError(
+        "Source receipt tidak memiliki snapshot rollback yang valid.",
+      );
     }
     if (!existsSync(sourceReceipt.snapshotPath)) {
       throw new MaintenanceSnapshotError("Snapshot rollback tidak ditemukan di owner storage.");
@@ -779,7 +815,7 @@ export class ContextMaintenanceEngine {
       });
       const snapshotEpisodes = episodeProjectionRows(snapshotDb.raw);
       const snapshotEmbeddings = snapshotDb.raw
-        .prepare("SELECT fact_id,model,dim,embedding,updated_at FROM fact_embeddings ORDER BY fact_id")
+        .prepare("SELECT fact_id,model,dim,embedding FROM fact_embeddings ORDER BY fact_id")
         .all() as EmbeddingRow[];
       const snapshotPromotions = snapshotDb.raw
         .prepare(
@@ -792,7 +828,7 @@ export class ContextMaintenanceEngine {
         raw.pragma("defer_foreign_keys = ON");
         for (const fact of snapshotFacts) repo.insertFact(fact);
         const insertEmbedding = raw.prepare(
-          "INSERT INTO fact_embeddings(fact_id,model,dim,embedding,updated_at) VALUES(?,?,?,?,?)",
+          "INSERT INTO fact_embeddings(fact_id,model,dim,embedding) VALUES(?,?,?,?)",
         );
         for (const embedding of snapshotEmbeddings) {
           insertEmbedding.run(
@@ -800,7 +836,6 @@ export class ContextMaintenanceEngine {
             embedding.model,
             embedding.dim,
             embedding.embedding,
-            embedding.updated_at,
           );
         }
         const updateEpisode = raw.prepare(
@@ -821,7 +856,9 @@ export class ContextMaintenanceEngine {
       const findingsAfter = this.verify();
       const sourceAfter = contextSourceDigest(this.repo.db.raw);
       if (sourceAfter !== sourceBefore) {
-        throw new MaintenanceIntegrityError("Immutable Context L0 digest berubah saat rollback.");
+        throw new MaintenanceIntegrityError(
+          "Immutable Context L0 digest berubah saat rollback.",
+        );
       }
       return this.storeReceipt({
         id: `maint_${hashJson([input.operationId, input.sourceReceiptId]).slice(0, 24)}`,
@@ -846,7 +883,11 @@ export class ContextMaintenanceEngine {
 
   removeSnapshot(receiptId: string): void {
     const receipt = this.getReceipt(receiptId);
-    if (receipt?.snapshotPath !== null && receipt?.snapshotPath !== undefined && existsSync(receipt.snapshotPath)) {
+    if (
+      receipt?.snapshotPath !== null &&
+      receipt?.snapshotPath !== undefined &&
+      existsSync(receipt.snapshotPath)
+    ) {
       unlinkSync(receipt.snapshotPath);
     }
   }

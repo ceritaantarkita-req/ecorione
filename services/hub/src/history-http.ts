@@ -94,6 +94,14 @@ export function registerHistoryRoutes(app: FastifyInstance, ledger: HistoryLedge
     return { sessions };
   });
 
+  app.get("/v1/history/verify", async () => {
+    try {
+      return ledger.verifyAll();
+    } catch (error) {
+      throw mapHistoryError(error);
+    }
+  });
+
   app.get<{ Params: { id: string } }>("/v1/history/sessions/:id", async (req) => {
     const sessionId = parseOrBadRequest(SessionIdSchema, req.params.id);
     const query = parseOrBadRequest(HistoryGrantQuerySchema, req.query);

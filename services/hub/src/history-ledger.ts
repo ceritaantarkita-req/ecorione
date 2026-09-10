@@ -363,6 +363,16 @@ export class HistoryLedger {
     }
   }
 
+  verifyAll(): { readonly sessions: number; readonly events: number } {
+    const sessions = this.listSessions();
+    let events = 0;
+    for (const session of sessions) {
+      this.verifySession(session.id);
+      events += session.nextSeq;
+    }
+    return { sessions: sessions.length, events };
+  }
+
   readRange(input: {
     readonly sessionId: SessionId;
     readonly afterSeq: number;

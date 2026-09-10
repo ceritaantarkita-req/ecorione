@@ -14,5 +14,7 @@ export * from "./rows.js";
 export * from "./vector.js";
 export * from "./consolidate.js";
 export * from "./http.js";
+export * from "./maintenance.js";
+export * from "./maintenance-http.js";
 export { nowIso } from "./clock.js";
 export type { SqliteDatabase, SqliteStatement, BindValue } from "./sqlite.js";

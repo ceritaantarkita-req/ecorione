@@ -40,7 +40,7 @@ describe("Context maintenance / rebuild engine", () => {
     return { repo, maintenance };
   }
 
-  function seedEpisode(repo: ContextRepository, id = "ep_maint001") {
+  function seedEpisode(repo: ContextRepository, id = "epi_maint001") {
     const episodeId = assertId("episode", id);
     repo.appendEpisode({
       id: episodeId,
@@ -55,9 +55,12 @@ describe("Context maintenance / rebuild engine", () => {
     return episodeId;
   }
 
-  function seedDuplicateFacts(repo: ContextRepository, episodeId: ReturnType<typeof seedEpisode>) {
-    const first = assertId("memoryFact", "mf_maint001");
-    const second = assertId("memoryFact", "mf_maint002");
+  function seedDuplicateFacts(
+    repo: ContextRepository,
+    episodeId: ReturnType<typeof seedEpisode>,
+  ) {
+    const first = assertId("memoryFact", "mem_maint001");
+    const second = assertId("memoryFact", "mem_maint002");
     repo.insertFact({
       id: first,
       subject: " user ",
@@ -105,7 +108,13 @@ describe("Context maintenance / rebuild engine", () => {
 
     const plan = maintenance.plan({
       operationId: assertId("operation", "op_maint001"),
-      actions: ["normalize-metadata", "dedupe-facts", "rebuild-fts", "reindex-vector", "verify"],
+      actions: [
+        "normalize-metadata",
+        "dedupe-facts",
+        "rebuild-fts",
+        "reindex-vector",
+        "verify",
+      ],
       now: NOW,
     });
     expect(plan.findings.normalizableFacts).toBe(2);
@@ -139,13 +148,13 @@ describe("Context maintenance / rebuild engine", () => {
       actions: ["verify"],
       now: NOW,
     });
-    seedEpisode(repo, "ep_maint002");
+    seedEpisode(repo, "epi_maint002");
     await expect(maintenance.execute(plan)).rejects.toBeInstanceOf(MaintenanceConflictError);
   });
 
   it("rebuilds L1 in staging from immutable L0 before swapping the projection", async () => {
     const extractLocal = async (prompt: string) => {
-      const source = /\"id\":\"([^\"]+)\"/.exec(prompt)?.[1];
+      const source = /"id":"([^"]+)"/.exec(prompt)?.[1];
       if (source === undefined) throw new Error("source episode id missing");
       return JSON.stringify({
         facts: [
@@ -164,7 +173,7 @@ describe("Context maintenance / rebuild engine", () => {
     const { repo, maintenance } = setup({ extractLocal });
     const episodeId = seedEpisode(repo);
     repo.insertFact({
-      id: assertId("memoryFact", "mf_stale001"),
+      id: assertId("memoryFact", "mem_stale001"),
       subject: "stale",
       predicate: "is",
       object: "projection",
@@ -206,7 +215,7 @@ describe("Context maintenance / rebuild engine", () => {
       now: NOW,
     });
     const receipt = await maintenance.execute(plan);
-    seedEpisode(repo, "ep_maint003");
+    seedEpisode(repo, "epi_maint003");
 
     await expect(
       maintenance.rollback({

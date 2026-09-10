@@ -56,17 +56,22 @@ function parsePlan(value: unknown): MaintenancePlan {
   ) {
     throw new BadRequestError("Maintenance plan tidak cocok contract v1.");
   }
-  const actions = z.array(MaintenanceActionSchema).min(1).parse(plan.actions) as MaintenanceAction[];
-  return { ...plan, actions } as MaintenancePlan;
+  const actions = z
+    .array(MaintenanceActionSchema)
+    .min(1)
+    .parse(plan.actions) as MaintenanceAction[];
+  const operationId = OperationIdSchema.parse(plan.operationId);
+  const generatedAt = TimestampSchema.parse(plan.generatedAt);
+  return { ...plan, operationId, generatedAt, actions } as MaintenancePlan;
 }
 
 function mapMaintenanceError(error: unknown): unknown {
   if (error instanceof MaintenanceConflictError) return new ConflictError(error.message);
-  if (error instanceof MaintenanceSnapshotError || error instanceof MaintenanceError) {
-    return new BadRequestError(error.message);
-  }
   if (error instanceof MaintenanceIntegrityError) {
     return new HttpError(500, "CONTEXT_INTEGRITY_ERROR", error.message);
+  }
+  if (error instanceof MaintenanceSnapshotError || error instanceof MaintenanceError) {
+    return new BadRequestError(error.message);
   }
   return error;
 }
