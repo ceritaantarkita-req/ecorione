@@ -6,6 +6,8 @@ Dokumen pasangan: `research.md` (riset & due diligence — **sumber alasan untuk
 Repo sumber (referensi, read-only, **tidak pernah diubah**): `C:\Users\Amand\.gemini\antigravity\scratch\ideagentics\inmy`
 Repo baru: `C:\Users\Amand\.gemini\antigravity\scratch\ideagentics\ecorione` → dipublikasikan sebagai 1 repo GitHub publik baru (lisensi **MIT**)
 
+> **CURRENT IMPLEMENTATION NOTE — 2026-09-10:** PRD ini tetap requirement/product-architecture source, bukan tracker implementasi. Planned platform/production Batch 1–12 sudah CLOSED dan production/self-host baseline sudah READY sesuai evidence. Current status + next scope ada di `current-state-and-next-steps.md` dan `EXECUTION-PROGRESS.md`. Tidak ada Batch 13 implisit; AutoClick tetap deferred by design dan Fase 6+ tetap evidence-driven/open-ended.
+
 **Riwayat:** DRAFT v0.1–v0.2 (scope & arsitektur awal) → DRAFT v0.3 (drop prefix "InMy", jadi satu sistem) → APPROVED v1.0 → **v2.0** (riset teknis; koreksi asumsi).
 
 > **Apa yang berubah dari v1.0, ringkas:** (1) inti "optimizer" dipindah dari *model routing* ke *disiplin caching + isolasi konteks*, karena itu yang angkanya bisa dibuktikan; (2) peran model lokal dikoreksi — di 8–16GB RAM ia bukan agent, melainkan classifier/extractor; (3) modul Context ditulis ulang jadi arsitektur memori 4-tier yang konkret; (4) MCP masuk sebagai fondasi interop; (5) Cache & IR dilebur; RnD naik ke P1, AutoClick turun ke P2; (6) visi "bisnis dijalankan AI" diganti tangga otonomi L0–L4 dengan pengakuan jujur bahwa **L3 adalah plafon 2026**.
