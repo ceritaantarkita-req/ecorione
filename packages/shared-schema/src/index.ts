@@ -22,3 +22,4 @@ export * from "./ecx.js";
 export * from "./extensions.js";
 export * from "./multimodal.js";
 export * from "./voice.js";
+export * from "./data-governance.js";
