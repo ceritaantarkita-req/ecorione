@@ -28,7 +28,7 @@ if (!Number.isFinite(timeoutMs) || timeoutMs < 1000 || timeoutMs > 60000) {
 
 async function request(path, init = {}) {
   const url = new URL(path, base);
-  const controller = new AbortController();
+  const controller = new globalThis.AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(url, {
