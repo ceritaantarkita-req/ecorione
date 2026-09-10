@@ -1,86 +1,68 @@
 # ecorione
 
-**Satu memori bersama untuk semua AI yang lu pakai — lokal maupun hosted — plus lapisan kontrol, eksekusi, dan optimizer biaya yang bisa diaudit.**
+**Satu memori bersama untuk semua AI yang lu pakai — lokal maupun hosted — plus lapisan kontrol, eksekusi, observability, dan optimizer biaya yang bisa diaudit.**
 
-Pindah lintas provider/model tanpa kehilangan kesinambungan kerja, sambil menjaga boundary local-first, approval, audit trail, durable execution, dan biaya kontrafaktual tetap eksplisit.
+Pindah lintas provider/model tanpa kehilangan kesinambungan kerja, sambil menjaga boundary local-first, approval, audit trail, durable execution, MCP, dan biaya kontrafaktual tetap eksplisit.
 
-> Status: **Fase 0–4 CLOSED · Fase 5 DEFERRED BY DESIGN · Fase 6+ evidence-driven hardening aktif.**
+> **Current status — 2026-09-10:** **production/self-host baseline READY · planned platform/production Batch 1–12 CLOSED · 0 planned batches remaining · Fase 6+ tetap evidence-driven/open-ended · AutoClick DEFERRED BY DESIGN.**
 
-## Kenapa ini ada
+Untuk agent/manusia yang baru masuk repo: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md). Jangan menyimpulkan current state dari blueprint/audit lama saja.
 
-Ecorione fokus pada kombinasi: memori bersama lintas lokal+hosted, deterministic provider boundary, eksekusi dengan policy/approval, durable workflow, MCP, sandbox, artifact, dan pengukuran biaya yang jujur.
+## Current closure evidence
 
-Riset dan keputusan arsitektur ada di [`docs/research.md`](docs/research.md), [`docs/prd.md`](docs/prd.md), [`docs/blueprint.md`](docs/blueprint.md), dan [`docs/adr/`](docs/adr/).
+Final state setelah roadmap Batch 1–12:
 
-## Klaim optimizer
+- implementation PR #29 merged sebagai `ad67b68290a41e69e18dfa49caefed0090bd9635`;
+- closure PR #30 merged sebagai `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`;
+- final post-closure `main` CI `34490006960`: PASS;
+- implementation exact-head MCP External HTTPS Acceptance `34485292292`: PASS;
+- implementation post-merge MCP External HTTPS Acceptance `34485575560`: PASS.
 
-| Lever | Status |
+Final CI mencakup Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production Operations acceptance, Secret Scan, dan Production Build.
+
+Detail: [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md) dan [`docs/verification/batch12-closure-2026-09-10.md`](docs/verification/batch12-closure-2026-09-10.md).
+
+## Apa yang sudah ada
+
+| Modul/area | Current baseline |
 |---|---|
-| Prompt caching / prefix stability | implemented + regression |
-| Isolasi konteks | implemented di context assembly |
-| Exact-match internal cache | implemented, bounded |
-| Deterministic model/provider routing | implemented, no silent fallback |
-| Cost ledger aktual vs naive | implemented per call |
-| Provider-reported billed cost | supported bila provider menyediakannya |
-| Emergency hosted-cost kill switch | implemented |
-| Durable daily/monthly hosted spend budget | implemented |
-| Production credential vault | implemented |
+| **Ai** | Chat, `/space`, `/ops`, `/settings` Control Center |
+| **Hub** | Policy, approval, audit, orchestration, Historical Ledger, ECX, capability/permission authority |
+| **Connect** | Hosted/local provider gateway, optimizer, credential vault, durable spend budget, MCP inbound/outbound, runtime settings |
+| **Context** | Memori L0–L2 + L3 metadata binding |
+| **Sync** | Pairing/self-host relay + MCP HTTPS bridge |
+| **Artifact** | Content-addressed storage SHA-256 |
+| **Sandbox** | Tier 0, WASM, hardened Docker boundary |
+| **Space** | Notes/block runtime tanpa menggandakan Context source of truth |
+| **Flow** | Durable workflow di Temporal |
+| **RnD** | Trace/eval foundation + dataset governance |
+| **Multimodal / Voice** | Baseline image/document/audio + realtime voice pipeline |
+| **Data / DR** | Rebuild/governance/backup-restore procedures |
+| **Production Ops** | Compose/Caddy, metrics/traces, provider canary, release/install/upgrade/rollback tooling |
+| **Security closure** | Full-history + working-tree secret scans, dependency/release checks, HTTP/SSRF hardening, real public HTTPS MCP acceptance |
+| **AutoClick** | **Deferred by design** sampai ada use case non-API nyata |
 
-`ECORIONE_COST_KILL_SWITCH=1` memblokir semua hosted provider di Connect. Daily/monthly budget ADR-21 adalah kontrol terpisah dan membuat durable reservation sebelum provider dispatch.
-
-## Provider dan local runtime
-
-Connect tetap satu-satunya outbound model gateway.
-
-Hosted provider baseline:
-
-- `anthropic`
-- `openrouter`
-- `openai`
-
-Pilih melalui `ECORIONE_HOSTED_PROVIDER`. Production credential berada di Credential Vault dengan scope `<provider>/messages`; environment API key hanya fallback development ketika vault tidak aktif.
-
-OpenRouter/OpenAI memakai explicit model mapping dan pinned cost identity. Alias/auto-router yang dapat drift tetap dilarang. OpenRouter `usage.cost`, ketika tersedia dan valid, dipakai sebagai actual billed cost untuk ledger + spend settlement.
-
-Local inference memakai endpoint **OpenAI-compatible**. Default example masih dapat menunjuk Ollama, tetapi Ollama bukan dependency wajib; llama.cpp server, LM Studio, atau runtime kompatibel lain dapat dipakai dengan mengganti endpoint/model secara eksplisit.
-
-## MCP inbound + Sync bridge
-
-Ecorione sudah mempunyai MCP server sendiri di Connect dengan stdio dan stateless Streamable HTTP. HTTP Connect tetap loopback-only. Untuk klien hosted, Sync menjadi bridge dan HTTPS edge/tunnel yang dipilih operator berada di depan Sync sesuai ADR-16.
-
-External HTTPS acceptance sekarang dibuktikan otomatis dengan public tunnel sementara: Protected Resource Metadata, `WWW-Authenticate resource_metadata`, public JWKS/JWT verification, `server/discover`, `tools/list`, dan `tools/call` melewati HTTPS -> Sync -> Connect -> Hub. Negative paths untuk token, scope, Origin, dan routing headers juga diuji fail-closed.
-
-Ini **tidak** berarti repo mengoperasikan managed relay publik. Authorization server/JWKS dan HTTPS edge tetap komponen deployment operator sampai workstream managed deployment dibuat.
-
-## MCP outbound
-
-Connect juga memiliki outbound MCP manager untuk memakai server MCP pihak lain. Baseline memakai official `@modelcontextprotocol/client@2.0.0`, Streamable HTTP dan stdio yang di-allowlist, workspace-scoped durable registry, named credential references di Connect Vault, explicit per-tool `ActionClass`, Hub policy/approval/audit, serta durable side-effect reservation.
-
-Discovery tidak otomatis mengaktifkan tool. Ambiguous side effect menjadi `MCP_OUTCOME_UNCERTAIN` dan tidak boleh di-retry otomatis; retry yang sudah diketahui ambiguous ditolak sebelum reconnect. Stdio bukan jalur arbitrary plugin execution: executable harus diizinkan exact oleh operator. Lihat [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md).
-
-## Plugin / Extension Framework
-
-Hub memiliki control plane extension dengan manifest versioned, immutable source pin, SHA-256 bundle identity yang dibind ke Artifact CAS, workspace-scoped installation, append-only revision provenance, idempotent lifecycle receipt, rollback, dan health state. Runtime baseline hanya `none | mcp | sandbox`; tidak ada host-process execution. MCP extension tetap memakai Connect outbound MCP manager dan executable extension hanya boleh lewat Sandbox.
-
-Security admission membuktikan identity/integrity/declaration consistency dan dijalankan sebelum policy/audit mutation. Itu **bukan** klaim vulnerability-free. Capability/permission/secret declaration Batch 3 juga belum menjadi grant otomatis; unified grant/revocation authority diselesaikan pada Batch 4. Lihat [`docs/extension-operations.md`](docs/extension-operations.md) dan ADR-24.
-
-## Arsitektur saat ini
+## Arsitektur inti
 
 Hub adalah supervisor/policy boundary. Tidak ada service yang boleh membuka database service lain secara langsung.
 
-| Modul | Peran | Status |
-|---|---|---|
-| **Ai** | Chat UI + route `/space` | implemented |
-| **Hub** | Policy, approval, audit, orchestration, Historical Ledger, ECX | implemented |
-| **Connect** | Provider gateway, optimizer, MCP inbound/outbound, vault, spend control | implemented |
-| **Context** | Memori L0–L2 + metadata L3 | implemented |
-| **Sync** | Pairing, E2E encrypted relay, MCP HTTPS bridge | implemented + external transport acceptance |
-| **Artifact** | CAS SHA-256 untuk L3 | implemented |
-| **Sandbox** | Tier 0, WASM, Docker hardened | implemented |
-| **Space** | Notes + editor core memory | implemented |
-| **Flow** | Durable workflow di Temporal | implemented |
-| **RnD** | Trace store + evaluation evidence | implemented |
-| **AutoClick** | RPA escape hatch | **deferred by design** |
+```text
+Ai
+ -> Hub
+    -> Context
+    -> Connect -> local/hosted models
+    -> Artifact
+    -> Sandbox
+    -> Space
+    -> Flow -> Temporal
+    -> RnD
+
+Hosted MCP client
+ -> public HTTPS edge
+ -> Sync
+ -> Connect MCP
+ -> Hub governance
+```
 
 ### Memori
 
@@ -91,95 +73,139 @@ L2  core memory       kecil, editable manusia, source of truth di Context
 L3  artifact          content-addressed, just-in-time retrieval
 ```
 
-Historical Ledger di Hub menyimpan chronological/replay history dan tidak menggantikan Context episodic/semantic memory. ECX adalah pointer-first internal agent exchange; savings production belum boleh diklaim tanpa traffic telemetry nyata.
+Historical Ledger di Hub menyimpan chronological/replay history dan tidak menggantikan Context episodic/semantic memory. ECX adalah pointer-first internal agent exchange; savings production tidak boleh diklaim tanpa telemetry pembanding nyata.
+
+## Provider dan local runtime
+
+Connect tetap satu-satunya outbound model gateway.
+
+Hosted provider baseline:
+
+- Anthropic;
+- OpenRouter;
+- OpenAI.
+
+Production credential berada di Connect Vault. Raw provider API key dari environment hanya development fallback sesuai konfigurasi; tidak boleh menjadi credential store produksi ketika Vault aktif.
+
+Local inference memakai endpoint **OpenAI-compatible**. Ollama adalah salah satu implementation yang mungkin digunakan, bukan dependency arsitektural wajib.
+
+Tidak ada silent provider fallback. Model identity harus dipin; alias yang dapat drift dilarang oleh gate.
+
+## MCP
+
+### Inbound
+
+Connect mempunyai MCP stateless HTTP/stdio. HTTP Connect tetap loopback-only. Public hosted-client reachability melewati Sync + HTTPS edge.
+
+External acceptance benar-benar menguji public HTTPS: OAuth protected-resource discovery, Bearer challenge, JWKS/JWT verification, discovery/list/call, dan negative auth/origin/routing cases. Acceptance dibuat provider-resilient setelah Cloudflare Quick Tunnel terbukti dapat mengalami fresh-host DNS/route provisioning failure; public-network test tetap tidak boleh diturunkan menjadi localhost-only.
+
+### Outbound
+
+Connect juga mempunyai outbound MCP manager dengan official client SDK yang dipin, HTTPS/allowlisted stdio, workspace-scoped registry, Vault credential refs, explicit tool policy, Hub approval/audit, dan durable side-effect reservation. Ambiguous side effect tidak di-retry otomatis.
+
+Lihat [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md).
 
 ## Menjalankan lokal
+
+Butuh Node >=22 dan pnpm 10.
 
 ```bash
 pnpm install
 pnpm verify
-```
-
-Butuh Node ≥22 dan pnpm 10.
-
-```bash
 cp .env.example .env
+pnpm dev
 ```
 
-Runtime:
+Runtime bertahap juga tersedia:
 
 ```bash
-pnpm dev
 pnpm dev:phase2
 pnpm dev:phase3
 pnpm dev:phase4
 ```
 
-Flow mengharapkan Temporal melalui `ECORIONE_TEMPORAL_ADDRESS`. Repository tidak diam-diam menyalakan managed Temporal.
+Flow membutuhkan Temporal melalui `ECORIONE_TEMPORAL_ADDRESS`.
 
-External MCP acceptance dapat dijalankan terpisah dengan binary cloudflared yang sudah diverifikasi:
+## Production/self-host
 
-```bash
-CLOUDFLARED_BIN=/path/to/cloudflared pnpm run acceptance:mcp:external
-```
+Baseline production menggunakan Docker Compose + Caddy. Mulai dari:
 
-## Status fase
+- [`docs/production-operations.md`](docs/production-operations.md)
+- [`docs/release-operations.md`](docs/release-operations.md)
 
-- **Fase 0 — CLOSED:** monorepo, strict TypeScript, schema bersama, telemetry, UI foundation, CI.
-- **Fase 1 — CLOSED:** Ai → Hub → Context → Connect → RnD vertical slice.
-- **Fase 2 — CLOSED:** MCP inbound + Sync local/self-hosted; external HTTPS transport acceptance juga sudah dibuktikan pada Fase 6+ hardening.
-- **Fase 3 — CLOSED:** Artifact, Sandbox, Space + runtime acceptance.
-- **Fase 4 — CLOSED:** Flow di Temporal + forced worker crash/recovery.
-- **Fase 5 — DEFERRED BY DESIGN:** belum ada use case non-API konkret yang membenarkan RPA.
-- **Fase 6+ — ACTIVE:** credential vault, cumulative spend budget, Historical Ledger/ECX, multi-provider hardening, external MCP HTTPS acceptance, outbound MCP manager, Plugin/Extension Framework, dan Unified Capability/Permission Plane sudah masuk baseline candidate; multimodal/voice, data rebuild, node runtime, deployment/metrics/security tetap workstream berikutnya.
+Recommended next real deployment uses a VPS/self-host origin with **Cloudflare Free as DNS/HTTPS edge and Cloudflare Tunnel**, not as replacement compute for the ECORIONE service stack:
+
+- [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md)
+
+Cloudflare Tunnel is an operator deployment layer. ECORIONE databases, Temporal, Vault, Artifact, Sandbox, and services remain on the self-host origin.
+
+## Next work after Batch 12
+
+There is **no automatic Batch 13**. Future work must be opened as a new explicit scope.
+
+Recommended order:
+
+1. real production deployment;
+2. real provider validation/canaries;
+3. durable production observability collection;
+4. host/account/backup security hardening;
+5. product validation from real workflows;
+6. RnD/evaluation and ECX/optimizer validation;
+7. UX/Control Center improvement;
+8. ecosystem integrations through contracts/APIs;
+9. ongoing maintenance/security/dependency/DR drills;
+10. new features only when evidence justifies them.
+
+See [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md).
 
 ## Invarian penting
 
 - Memory adalah **untrusted data**, bukan instruksi.
-- Hosted egress hanya untuk klasifikasi/sync class yang diizinkan.
-- Tulisan hosted masuk quarantine, bukan langsung core memory.
+- Hosted egress tunduk pada scope/sensitivity/sync-class policy.
+- Tulisan hosted masuk quarantine sebelum menjadi trusted/core memory.
 - Tidak ada silent provider fallback.
-- Hosted provider dipilih eksplisit dari konfigurasi, bukan model output.
-- Credential production hanya dimiliki Connect.
+- Credential production dimiliki Connect dan terenkripsi at-rest.
 - Hosted dispatch tunduk pada kill switch + cumulative budget.
-- Connect MCP HTTP tidak bind publik; public reachability masuk lewat Sync + HTTPS edge.
-- MCP OAuth tetap diverifikasi di Connect; tunnel bukan authorization boundary.
+- Connect MCP HTTP tidak bind publik; public reachability melalui Sync + HTTPS edge.
+- MCP OAuth tetap diverifikasi di Connect; tunnel/Cloudflare bukan ECORIONE permission authority.
 - Side effect memakai idempotency identity.
-- Aksi irreversible lewat policy/approval sesuai risk class.
+- Irreversible/high-risk action tetap melewati policy/approval yang sesuai.
 - Prefix caching harus byte-stable.
-- Model identity dipin; alias `latest`/`gpt-5.6` ditolak oleh pricing/naming gate.
-- AutoClick maksimum L2 dan baru boleh dibuat untuk kebutuhan non-API yang nyata.
+- Model identity dipin.
+- Owner-service boundary melarang cross-service database access.
+- Historical Ledger dan Context L0 ground truth tidak direwrite untuk convenience migration.
+- AutoClick tetap deferred sampai use case non-API nyata lolos design gate.
 
-## Batasan yang masih nyata
+## Batasan yang tetap nyata
 
-- Unified capability/permission plane sudah diimplementasikan sebagai Hub-owned standing grant authority; declaration extension tetap bukan grant, outbound MCP membutuhkan grant operator eksplisit, dan closure final masih menunggu exact-head + post-merge evidence Batch 4.
-- Native OCR/STT/TTS/realtime voice belum menjadi capability runtime.
-- Visual node canvas/custom node SDK belum ada.
-- Data refactor/rebuild governance belum menjadi subsystem eksplisit.
-- Managed public relay/deployment recipe belum ada; external acceptance memakai transport edge sementara, bukan layanan ecorione.
-- Managed multi-host spend store belum ada; current spend store ditujukan single-host/self-host.
-- Full git-history secret scan belum menjadi release gate.
-- Provider canary nyata + cumulative operational metrics masih terbuka.
-- ECX savings production belum tervalidasi dengan traffic/provider cost nyata.
-- Ecorione tidak mengklaim Docker sebagai secure sandbox terhadap kernel escape.
+READY baseline bukan klaim bahwa:
 
-## Dokumen
+- real hosted-provider quality/latency telah dibuktikan deterministic CI;
+- process-local rate limiter adalah distributed global limiter;
+- semua DNS-rebinding/network risk sudah hilang;
+- repository secret scan menggantikan organization/account secret controls;
+- backup aman jika tetap berada di failure domain yang sama;
+- host OS/firewall/SSH/Cloudflare/provider-account hardening dilakukan otomatis;
+- ECX savings telah terbukti tanpa production telemetry;
+- Fase 6+ selesai permanen.
 
-| File | Isi |
-|---|---|
-| [`docs/prd.md`](docs/prd.md) | Produk + arsitektur teknis |
-| [`docs/research.md`](docs/research.md) | Riset & due diligence |
-| [`docs/design.md`](docs/design.md) | Identitas visual & UI/UX |
-| [`docs/blueprint.md`](docs/blueprint.md) | Cetak biru Fase 0–6+ |
-| [`docs/fase6-hardening.md`](docs/fase6-hardening.md) | Baseline hardening + gap aktif |
-| [`docs/outbound-mcp-operations.md`](docs/outbound-mcp-operations.md) | Operasi outbound MCP registry, credential, tool, dan failure handling |
-| [`docs/extension-operations.md`](docs/extension-operations.md) | Operasi extension manifest, lifecycle, provenance, rollback, dan security admission |
-| [`docs/capability-permission-operations.md`](docs/capability-permission-operations.md) | Operasi authority grant/revoke, MCP/model/Sandbox/extension permission, dan failure semantics |
-| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Log keputusan aktual |
-| [`docs/verification/`](docs/verification/) | Evidence exact-head/runtime acceptance |
-| [`docs/adr/`](docs/adr/) | Architecture Decision Records |
-| [`docs/LICENSING.md`](docs/LICENSING.md) | Batas open-core |
-| [`AGENTS.md`](AGENTS.md) | Aturan kerja repo |
+## Dokumen — reading order untuk agent baru
+
+| Urutan | File | Fungsi |
+|---:|---|---|
+| 1 | [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md) | Current canonical handoff + next scope |
+| 2 | [`AGENTS.md`](AGENTS.md) | Invarian dan aturan kerja repo |
+| 3 | [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md) | Detailed progress + closure evidence |
+| 4 | [`docs/verification/batch12-closure-2026-09-10.md`](docs/verification/batch12-closure-2026-09-10.md) | Final Batch 12 verification |
+| 5 | [`docs/production-operations.md`](docs/production-operations.md) | Production/self-host operations |
+| 6 | [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md) | Free Cloudflare edge/Tunnel deployment |
+| 7 | [`docs/release-operations.md`](docs/release-operations.md) | Install/upgrade/rollback/release gate |
+| 8 | [`docs/prd.md`](docs/prd.md) | Product + architecture requirements |
+| 9 | [`docs/research.md`](docs/research.md) | Research/due diligence |
+| 10 | [`docs/blueprint.md`](docs/blueprint.md) | Historical execution blueprint; not current status source |
+| 11 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log |
+| 12 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
+| 13 | [`docs/verification/`](docs/verification/) | Exact-head/runtime evidence |
 
 ## Lisensi
 
