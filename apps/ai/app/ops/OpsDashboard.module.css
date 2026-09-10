@@ -1,0 +1,59 @@
+.page {
+  min-height: 100vh;
+  padding: 32px;
+  background: var(--background, #0b0d10);
+  color: var(--foreground, #f4f5f7);
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+.header h1 { margin: 4px 0 8px; font-size: 32px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .16em; opacity: .65; }
+.subtle, .footer { opacity: .65; }
+.actions { display: flex; align-items: center; gap: 12px; }
+.actions button {
+  border: 1px solid #444b55;
+  border-radius: 9px;
+  padding: 8px 12px;
+  background: #171b20;
+  color: inherit;
+  cursor: pointer;
+}
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.summary div, .card, .trace {
+  border: 1px solid #2c323a;
+  background: #12161b;
+  border-radius: 12px;
+}
+.summary div { padding: 14px; }
+.summary span { display: block; font-size: 12px; opacity: .65; margin-bottom: 7px; }
+.summary strong { font-size: 18px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 32px; }
+.card { padding: 16px; }
+.cardTitle { display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; }
+.cardTitle span { font-size: 11px; font-weight: 700; }
+.ok { color: #73d89b; }
+.bad, .error { color: #ff8b8b; }
+.card dl { margin: 14px 0 0; }
+.card dl div { display: flex; justify-content: space-between; padding: 4px 0; }
+.card dt { opacity: .6; }
+.card dd { margin: 0; font-variant-numeric: tabular-nums; }
+.traces { display: grid; gap: 9px; margin-bottom: 28px; }
+.trace { padding: 13px 15px; overflow: hidden; }
+.trace code { display: block; margin-bottom: 8px; font-size: 11px; opacity: .75; overflow-wrap: anywhere; }
+.trace div { display: flex; flex-wrap: wrap; gap: 6px; }
+.trace span { font-size: 12px; border: 1px solid #303741; border-radius: 6px; padding: 5px 7px; }
+.footer { font-size: 12px; padding-bottom: 16px; }
+@media (max-width: 720px) {
+  .page { padding: 20px; }
+  .header { flex-direction: column; }
+}
