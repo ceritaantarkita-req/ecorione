@@ -27,13 +27,13 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Batch 5 implementation is merged and post-merge verified on `main`:
+Batch 6 implementation is merged and post-merge verified on `main`:
 
-- implementation PR #15 merge: `2226493ae54ed83315a9f84fd3b72fe67c947157`
-- exact final PR head: `a202c74eea504b9c7220e0b45fc1d113d1ff1be9`
-- exact-head CI `34387886010`: full green
-- exact-head MCP External HTTPS Acceptance `34387885874`: PASS
-- post-merge main CI `34388114706`: full green
+- implementation PR #17 merge: `01cc32f12745f4a5dd391e61e39ad8d8faa4d5b7`
+- exact final PR head: `4312f76c521cd676ac263a3f400923906fba7bdf`
+- exact-head CI `34423696211`: full green
+- exact-head MCP External HTTPS Acceptance `34423696180`: PASS
+- post-merge main CI `34423867459`: full green
 
 ### Active execution
 
@@ -42,7 +42,8 @@ Batch 5 implementation is merged and post-merge verified on `main`:
 - Batch 3 status: **CLOSED**
 - Batch 4 status: **CLOSED**
 - Batch 5 status: **CLOSED**
-- next implementation target: **Batch 6 — Realtime Voice**
+- Batch 6 status: **CLOSED**
+- next implementation target: **Batch 7 — Data Refactor / Rebuild Engine**
 
 ---
 
@@ -209,7 +210,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1–5 sudah CLOSED**. Tersisa **7 batch platform/production (Batch 6–12)**; next implementation target adalah **Batch 6 — Realtime Voice**.
+Dari current state, **Batch 1–6 sudah CLOSED**. Tersisa **6 batch platform/production (Batch 7–12)**; next implementation target adalah **Batch 7 — Data Refactor / Rebuild Engine**.
 
 ---
 
@@ -455,20 +456,45 @@ Batch 5 resmi **CLOSED**; next implementation batch adalah Batch 6.
 
 ## Batch 6 — Realtime Voice
 
-Status: **IN PROGRESS**
+Status: **CLOSED**
 
-Scope:
+Implemented baseline:
 
-- microphone/stream input
-- streaming STT
-- VAD
-- partial transcript
-- streaming model response
-- streaming TTS
-- interruption / barge-in
-- voice session lifecycle
-- Indonesian/English switching
-- latency telemetry
+- browser microphone capture with RMS VAD and bounded PCM16/WAV chunking
+- Hub-owned durable voice-session lifecycle, monotonic client chunk receipts, ordered event sequence, and replay semantics
+- incremental STT per audio chunk with partial/final transcript events
+- ordered SSE downlink for session, transcript, assistant text/audio, interruption, and latency events
+- Indonesian/English automatic language switching with explicit fixed-language override
+- model reply delivery plus incremental TTS playback without inventing provider-native first-token streaming
+- generation-based interruption/barge-in that suppresses stale output and propagates `AbortSignal` Hub -> Connect -> provider
+- live microphone audio remains transient and is not persisted per chunk into Artifact/Context
+- restart fails non-terminal live sessions closed instead of silently adopting transient state
+- strict routing/privacy rules reuse Batch 5 authority, SyncClass, credential, kill-switch, and spend boundaries
+
+Bugs/fixes during closure:
+
+- strict optional `AbortSignal` propagation was corrected without weakening `exactOptionalPropertyTypes`
+- Ai proxy relative imports and response null-guard were corrected
+- final repository lint findings were corrected with type-only multimodal language import and unused-import removal
+
+Docs:
+
+- ADR: `docs/adr/0027-realtime-voice.md`
+- Operations: `docs/voice-operations.md`
+
+Closure evidence:
+
+- focused integration/typecheck run `34422346310`: PASS
+- strict lint/typecheck/focused voice run `34423581218`: PASS; temporary helper self-deleted
+- final exact PR head: `4312f76c521cd676ac263a3f400923906fba7bdf`
+- exact-head CI `34423696211`: full green
+- exact-head MCP External HTTPS Acceptance `34423696180`: PASS
+- PR #17 merged with expected-head lock as `01cc32f12745f4a5dd391e61e39ad8d8faa4d5b7`
+- `main` confirmed at expected merge SHA
+- post-merge main CI `34423867459`: full green
+- no temporary Batch 6 helper workflow/script remains in the implementation tree
+
+Batch 6 resmi **CLOSED**; next implementation batch adalah Batch 7.
 
 ---
 
@@ -700,10 +726,11 @@ Current planning unit:
 - **Batch 3: CLOSED**
 - **Batch 4: CLOSED**
 - **Batch 5: CLOSED**
-- **7 platform/production batches remaining (Batch 6–12)**
-- next: **Batch 6 — Realtime Voice**
+- **Batch 6: CLOSED**
+- **6 platform/production batches remaining (Batch 7–12)**
+- next: **Batch 7 — Data Refactor / Rebuild Engine**
 
-Dalam workstream teknis granular, estimasi tersisa sekitar **25–30 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi Batch 6–12.
+Dalam workstream teknis granular, estimasi tersisa sekitar **20–25 pekerjaan signifikan**, tergantung temuan audit/CI selama implementasi Batch 7–12.
 
 Heuristic progress estimate — **bukan telemetry atau completion metric formal**:
 
@@ -795,4 +822,4 @@ Jika desain arsitektur berubah, update ADR terkait terlebih dahulu/bersamaan; fi
 
 # 11. Next action
 
-**Immediate next:** mulai **Batch 6 — Realtime Voice** dari baseline `main` setelah Batch 5 CLOSED, tanpa mengubah owner boundaries dan multimodal primitives yang sudah dibekukan di ADR-26.
+**Immediate next:** mulai **Batch 7 — Data Refactor / Rebuild Engine** dari baseline `main` setelah Batch 6 CLOSED. Historical Ledger dan Context L0 tetap immutable; maintenance wajib melalui owner-service contract/API tanpa cross-service database access.
