@@ -13,29 +13,61 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-24.04
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@v5
-      - name: Inspect localhost.run reverse-tunnel output
+      - name: Verify Pinggy public HTTPS fallback with exact marker
         shell: bash
         run: |
           set -euo pipefail
-          SSH_LOG="$RUNNER_TEMP/localhost-run.log"
-          python3 -m http.server 18080 --bind 127.0.0.1 >"$RUNNER_TEMP/http.log" 2>&1 &
+          SSH_LOG="$RUNNER_TEMP/pinggy.log"
+          MARKER="ECORIONE_PUBLIC_HTTPS_TUNNEL_PROOF"
+          cat >"$RUNNER_TEMP/proof-server.mjs" <<'EOF'
+          import http from "node:http";
+          http.createServer((_req, res) => {
+            res.writeHead(200, { "content-type": "text/plain", "cache-control": "no-store" });
+            res.end("ECORIONE_PUBLIC_HTTPS_TUNNEL_PROOF");
+          }).listen(18080, "127.0.0.1");
+          EOF
+          node "$RUNNER_TEMP/proof-server.mjs" >"$RUNNER_TEMP/http.log" 2>&1 &
           HTTP_PID=$!
           ssh \
+            -T \
+            -p 443 \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
             -o ServerAliveInterval=15 \
             -o ExitOnForwardFailure=yes \
-            -R 80:127.0.0.1:18080 \
-            nokey@localhost.run >"$SSH_LOG" 2>&1 &
+            -R0:127.0.0.1:18080 \
+            free.pinggy.io >"$SSH_LOG" 2>&1 &
           SSH_PID=$!
           trap 'kill "$SSH_PID" "$HTTP_PID" 2>/dev/null || true' EXIT
-          sleep 8
-          echo '=== localhost.run output ==='
+
+          URL=""
+          for _ in $(seq 1 45); do
+            URL="$(grep -Eo 'https://[A-Za-z0-9.-]+\.pinggy\.link' "$SSH_LOG" | head -n1 || true)"
+            if [ -n "$URL" ]; then
+              break
+            fi
+            if ! kill -0 "$SSH_PID" 2>/dev/null; then
+              echo 'Pinggy SSH process exited early'
+              cat "$SSH_LOG"
+              exit 1
+            fi
+            sleep 1
+          done
+          [ -n "$URL" ] || { echo 'No Pinggy HTTPS URL discovered'; cat "$SSH_LOG"; exit 1; }
+          echo "pinggy_public_host=$(printf '%s' "$URL" | sed 's#https://##')"
+
+          for _ in $(seq 1 20); do
+            BODY="$(curl --fail --silent --show-error --max-time 10 "$URL/" || true)"
+            if [ "$BODY" = "$MARKER" ]; then
+              echo 'PINGGY_PUBLIC_HTTPS_PASS'
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo 'Pinggy public HTTPS did not return exact local marker'
           cat "$SSH_LOG"
-          if ! kill -0 "$SSH_PID" 2>/dev/null; then
-            echo 'SSH process exited early'
-            exit 1
-          fi
+          exit 1
