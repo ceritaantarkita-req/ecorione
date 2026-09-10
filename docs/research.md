@@ -4,6 +4,8 @@ Status: **v1.0** — 2026-09-07
 Tujuan dokumen: memastikan sebelum satu baris kode ditulis, bahwa (a) klaim "optimizer" ecorione benar-benar punya dasar terukur, (b) arsitekturnya berdiri di atas pola yang sudah terbukti, dan (c) visi "satu orang menjalankan bisnis dengan AI" dipetakan secara jujur — apa yang nyata sekarang, apa yang belum.
 Dokumen pasangan: `prd.md` (produk + arsitektur teknis), `design.md` (identitas visual).
 
+> **RESEARCH SNAPSHOT NOTICE — 2026-09-10:** riset ini tetap source alasan/due-diligence untuk keputusan arsitektur, tetapi bukan tracker implementasi. Setelah riset ini, planned platform/production Batch 1–12 telah CLOSED. Current state + next work ada di `current-state-and-next-steps.md` dan `EXECUTION-PROGRESS.md`. Jangan menganggap bagian yang berbicara dalam future tense sebagai pekerjaan yang masih otomatis terbuka.
+
 > **Aturan main dokumen ini:** setiap angka di sini punya sumber. Angka dari vendor ditandai sebagai klaim vendor. Yang tidak bisa diverifikasi ditandai eksplisit. Kalau riset ini bertentangan dengan asumsi awal di `prd.md` v1.0, riset yang menang — dan perubahannya dicatat di §9.
 
 ---

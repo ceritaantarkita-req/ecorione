@@ -6,6 +6,8 @@ mengerjakan ini tidak perlu menebak bentuk request/respons. Pasangan:
 `docs/prd.md` §7 (Connect, Sync), §9 (arsitektur), §14 (keamanan), §15 (local-first
 hybrid), §16 (MCP), §23 (roadmap), `docs/research.md` §4 (MCP lengkap), ADR-09.
 
+> **HISTORICAL PLANNING NOTICE — 2026-09-10:** Fase 2 sudah diimplementasikan dan ditutup. Dokumen ini dipertahankan sebagai rencana pra-implementasi, bukan daftar pekerjaan aktif. Kontrak implementasi ada di `api-fase2.md`; current overall state ada di `current-state-and-next-steps.md` dan `EXECUTION-PROGRESS.md`. Jangan membangun ulang item di dokumen ini hanya karena status header historis masih menyebut draft.
+
 ## 0. Cara pakai dokumen ini
 
 Kalau kamu (manusia atau AI) baru pertama kali buka repo ini: **jangan mulai dari

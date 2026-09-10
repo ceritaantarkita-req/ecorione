@@ -5,6 +5,8 @@ Status: **v1.0** — 2026-09-08. Ditulis sebelum implementasi supaya `services/r
 bisa dibangun paralel tanpa menyimpang bentuk request/respons satu sama lain.
 Pasangan: `docs/prd.md` §9 (arsitektur), §23 (roadmap Fase 1).
 
+> **CONTRACT-SNAPSHOT NOTICE — 2026-09-10:** dokumen ini menjelaskan kontrak Fase 1 dan tetap berguna untuk boundary tersebut, tetapi bukan source current status atau seluruh hardening yang datang setelahnya. Planned Batch 1–12 sudah CLOSED. Untuk current state/release/security/deployment, baca `current-state-and-next-steps.md`, `EXECUTION-PROGRESS.md`, dan operations/ADR terbaru sebelum mengubah kontrak lama.
+
 Semua service pakai `@ecorione/shared-server` (`createServer`): bind `127.0.0.1`
 default, auth `Authorization: Bearer <ECORIONE_INTERNAL_TOKEN>` (nonaktif kalau token
 tidak diisi — dev only), `/healthz` otomatis, error `{ error: { type, message, detail? }, requestId }`.

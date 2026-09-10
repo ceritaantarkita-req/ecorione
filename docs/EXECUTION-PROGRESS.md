@@ -54,7 +54,7 @@ Batch 12 implementation is merged and post-merge verified on `main`:
 - Batch 10 status: **CLOSED**
 - Batch 11 status: **CLOSED**
 - Batch 12 status: **CLOSED**
-- platform/production roadmap status: **CLOSED — Batch 1–12 complete**
+- platform/production roadmap status: **CLOSED — 12/12 batches (100% of the defined roadmap) complete**
 - next implementation target: **none inside the closed Batch 1–12 roadmap**
 - next work is a **new explicit scope**, starting with real production deployment/provider validation rather than an implicit Batch 13
 - recommended free public edge: **Cloudflare Free + Cloudflare Tunnel in front of the self-host VPS**; see `docs/cloudflare-free-deployment.md`

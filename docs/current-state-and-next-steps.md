@@ -29,6 +29,20 @@ Final closure state on `main`:
 
 The final CI passed Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production Operations acceptance, Secret Scan, and Production Build.
 
+### Progress snapshot
+
+| Area | Progress at 2026-09-10 | Meaning |
+|---|---:|---|
+| Defined platform/production implementation roadmap | **12/12 batches = 100% CLOSED** | Planned repository implementation scope is finished and verified on `main`. |
+| Production/self-host repository baseline | **READY** | Compose/Caddy/release/security baseline passed repository evidence. |
+| Real VPS production deployment | **NEXT / not yet evidenced in this roadmap** | Deploy the closed baseline and collect environment-specific proof. |
+| Cloudflare Free named Tunnel cutover | **NEXT / documented, not yet executed as production state** | Use Cloudflare as DNS/TLS/tunnel edge in front of the VPS. |
+| Real hosted-provider validation | **NEXT / deterministic mechanism exists, real evidence pending** | Run operator-owned Anthropic/OpenRouter/OpenAI canaries/evals and record quality/latency/cost. |
+| Durable external production telemetry | **NEXT** | Existing process metrics/traces need external retention for longitudinal evidence. |
+| Product/R&D optimization evidence | **NEXT / evidence-driven** | Validate workflows, ECX savings, routing/model choices, and UX from real usage. |
+
+Do not collapse these rows into one percentage. **100% refers only to the defined Batch 1–12 implementation roadmap**, not to the never-ending operational maturity of a live production system.
+
 ## 2. What is already in the baseline
 
 The current baseline includes:
