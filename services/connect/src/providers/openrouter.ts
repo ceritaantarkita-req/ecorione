@@ -48,11 +48,15 @@ export function estimateOpenRouterReservationUsd(
 
 export function callOpenRouter(
   input: OpenRouterCallInput,
+  signal?: AbortSignal,
 ): Promise<OpenAiCompatibleHostedResult> {
-  return callOpenAiCompatibleHosted({
-    endpoint: OPENROUTER_CHAT_URL,
-    providerName: "OpenRouter",
-    apiKey: input.apiKey,
-    ...adapterInput(input),
-  });
+  return callOpenAiCompatibleHosted(
+    {
+      endpoint: OPENROUTER_CHAT_URL,
+      providerName: "OpenRouter",
+      apiKey: input.apiKey,
+      ...adapterInput(input),
+    },
+    signal,
+  );
 }

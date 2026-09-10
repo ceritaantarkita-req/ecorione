@@ -28,7 +28,10 @@ function buildUserContent(input: LocalCallInput): string {
   parts.push(input.userMessage);
   return parts.join("\n\n");
 }
-export async function callLocal(input: LocalCallInput): Promise<LocalCallResult> {
+export async function callLocal(
+  input: LocalCallInput,
+  signal?: AbortSignal,
+): Promise<LocalCallResult> {
   const body = {
     model: input.modelTag,
     messages: [
@@ -42,6 +45,7 @@ export async function callLocal(input: LocalCallInput): Promise<LocalCallResult>
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
+      ...(signal === undefined ? {} : { signal }),
     });
   } catch (err) {
     throw new ProviderError(

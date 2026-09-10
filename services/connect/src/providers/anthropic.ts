@@ -116,7 +116,10 @@ export function estimateAnthropicReservationUsd(
   return Math.ceil(rawUsd * USD_RESERVATION_PRECISION) / USD_RESERVATION_PRECISION;
 }
 
-export async function callAnthropic(input: AnthropicCallInput): Promise<AnthropicCallResult> {
+export async function callAnthropic(
+  input: AnthropicCallInput,
+  signal?: AbortSignal,
+): Promise<AnthropicCallResult> {
   const body = buildRequestBody(input);
   let res: Response;
   try {
@@ -128,6 +131,7 @@ export async function callAnthropic(input: AnthropicCallInput): Promise<Anthropi
         "anthropic-version": ANTHROPIC_VERSION,
       },
       body: JSON.stringify(body),
+      ...(signal === undefined ? {} : { signal }),
     });
   } catch (err) {
     throw new ProviderError(

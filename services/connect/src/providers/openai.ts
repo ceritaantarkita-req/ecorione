@@ -39,11 +39,17 @@ export function estimateOpenAiReservationUsd(input: Omit<OpenAiCallInput, "apiKe
   return estimateOpenAiCompatibleReservationUsd(adapterInput(input));
 }
 
-export function callOpenAi(input: OpenAiCallInput): Promise<OpenAiCompatibleHostedResult> {
-  return callOpenAiCompatibleHosted({
-    endpoint: OPENAI_CHAT_URL,
-    providerName: "OpenAI",
-    apiKey: input.apiKey,
-    ...adapterInput(input),
-  });
+export function callOpenAi(
+  input: OpenAiCallInput,
+  signal?: AbortSignal,
+): Promise<OpenAiCompatibleHostedResult> {
+  return callOpenAiCompatibleHosted(
+    {
+      endpoint: OPENAI_CHAT_URL,
+      providerName: "OpenAI",
+      apiKey: input.apiKey,
+      ...adapterInput(input),
+    },
+    signal,
+  );
 }

@@ -37,7 +37,10 @@ export function estimateHostedReservationUsd(
   }
 }
 
-export function callHostedProvider(input: HostedCallInput): Promise<HostedCallResult> {
+export function callHostedProvider(
+  input: HostedCallInput,
+  signal?: AbortSignal,
+): Promise<HostedCallResult> {
   const adapterInput = {
     apiKey: input.apiKey,
     model: input.model,
@@ -47,10 +50,10 @@ export function callHostedProvider(input: HostedCallInput): Promise<HostedCallRe
   };
   switch (input.provider) {
     case "anthropic":
-      return callAnthropic(adapterInput);
+      return callAnthropic(adapterInput, signal);
     case "openrouter":
-      return callOpenRouter(adapterInput);
+      return callOpenRouter(adapterInput, signal);
     case "openai":
-      return callOpenAi(adapterInput);
+      return callOpenAi(adapterInput, signal);
   }
 }

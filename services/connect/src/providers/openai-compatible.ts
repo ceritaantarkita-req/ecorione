@@ -120,6 +120,7 @@ function reportedCost(
 
 export async function callOpenAiCompatibleHosted(
   input: OpenAiCompatibleHostedInput,
+  signal?: AbortSignal,
 ): Promise<OpenAiCompatibleHostedResult> {
   let res: Response;
   try {
@@ -130,6 +131,7 @@ export async function callOpenAiCompatibleHosted(
         "content-type": "application/json",
       },
       body: JSON.stringify(buildOpenAiCompatibleRequestBody(input)),
+      ...(signal === undefined ? {} : { signal }),
     });
   } catch (error) {
     throw new ProviderError(
