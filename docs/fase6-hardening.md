@@ -1,143 +1,150 @@
 # Fase 6+ — evidence-driven hardening baseline
 
-**Status:** ACTIVE / OPEN-ENDED · baseline 2026-09-09
+**Status:** ACTIVE / OPEN-ENDED · reconciled through Batch 12 closure on 2026-09-10
 
-Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. `docs/blueprint.md` §9 mendefinisikannya sebagai perluasan operasi bisnis berdasarkan evidence pemakaian. Dokumen ini hanya mencatat hardening baseline yang dikerjakan setelah Fase 4 CLOSED dan Fase 5 sengaja deferred.
+Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. Yang sudah CLOSED adalah **planned platform/production roadmap Batch 1–12**. Dokumen ini mencatat hardening baseline yang sudah masuk `main` dan area evidence-driven yang masih bisa berkembang setelah closure.
 
-## Hardening yang sudah dilakukan
+Current canonical handoff: `docs/current-state-and-next-steps.md`.
 
-### 1. Emergency hosted-cost kill switch
+## Current closure state
 
-Connect membaca `ECORIONE_COST_KILL_SWITCH=1`. Jika aktif, target hosted ditolak di boundary Connect sebelum provider dipanggil; tidak ada silent fallback ke local; HTTP mengembalikan `503 COST_KILL_SWITCH_ACTIVE`; target local tetap berjalan. Kill switch adalah emergency control yang berbeda dari cumulative budget ADR-21.
+- Batch 1–12: **CLOSED**
+- production/self-host baseline: **READY** sesuai boundary yang didokumentasikan
+- final closure merge: `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`
+- final post-closure main CI: `34490006960` — PASS
+- AutoClick: **DEFERRED BY DESIGN**
+- no implicit Batch 13
 
-### 2. Runtime orchestration per fase
+## Hardening/platform baseline yang sudah masuk
 
-Root package membedakan `pnpm dev`, `dev:phase2`, `dev:phase3`, dan `dev:phase4`. Flow tetap membutuhkan Temporal nyata melalui `ECORIONE_TEMPORAL_ADDRESS`; runtime tidak diam-diam menyediakan managed Temporal.
+### Cost + credential control
 
-### 3. Dokumentasi sesuai state aktual
+- emergency hosted-cost kill switch di Connect;
+- production credential vault AES-256-GCM dengan master key out-of-band;
+- durable daily/monthly hosted spend reservation/settlement;
+- provider-aware actual/naive cost accounting;
+- no silent provider fallback.
 
-README, env example, API docs, ADR, decision log, dan hardening docs harus mengikuti implementasi nyata. Klaim production hanya boleh mengikuti evidence closure gate.
+### Provider/runtime framework
 
-### 4. AutoClick tidak dipaksakan
+- Anthropic, OpenRouter, OpenAI hosted boundaries;
+- local OpenAI-compatible runtime abstraction;
+- explicit provider/model mapping;
+- model identity pinning;
+- provider-scoped Vault credentials;
+- provider-aware spend/cache telemetry.
 
-Fase 5 tetap `DEFERRED BY DESIGN`. Tidak ada `services/autoclick/` sampai use case non-API nyata memenuhi ADR-11.
+### MCP + extension + permission plane
 
-### 5. Production credential vault di Connect
+- inbound MCP HTTP/stdio;
+- public HTTPS MCP proof through Sync;
+- provider-resilient external tunnel acceptance;
+- outbound MCP manager with workspace-scoped registry/credential refs/tool policy;
+- Plugin/Extension Framework with immutable source/digest provenance and no arbitrary host execution;
+- Hub-owned unified capability/permission authority;
+- side-effect reservation/uncertain semantics;
+- policy/approval/audit remains Hub-owned.
 
-ADR-20 menyediakan AES-256-GCM file vault, master key out-of-band, provider/purpose scope, provider-secret rotation, master-key rotation, atomic replacement, tamper/wrong-key fail-closed, dan CLI operator. Ketika vault aktif, raw provider key dari env tidak menjadi fallback.
+### Multimodal + voice
 
-### 6. Durable cumulative spend budget
+- multimodal input pipeline baseline;
+- realtime voice session/order plane;
+- STT/TTS remains Connect/provider boundary;
+- final transcript/reply remains in normal governed chat/memory path;
+- raw live audio is transient according to the documented boundary.
 
-ADR-21 menambahkan daily/monthly hosted spend budget di Connect provider boundary. State bertahan restart, reservation dibuat sebelum provider dispatch, uncertain reservation tetap dihitung konservatif, writer diserialisasi dengan exclusive lock + atomic replacement, dan actual overrun tetap tersimpan. Budget exceeded menjadi `429 SPEND_BUDGET_EXCEEDED`; store/lock failure menjadi `503 SPEND_BUDGET_UNAVAILABLE`.
+### Data rebuild / governance / DR
 
-Implementation file ditujukan untuk single-host/self-host. Managed multi-host deployment harus memakai transactional shared store tanpa memindahkan admission keluar dari Connect.
+- owner-service rebuild/migration boundaries;
+- Context L0 and Historical Ledger ground truth are not convenience-rewritten;
+- dry-run/digest/receipt patterns;
+- dataset governance through RnD;
+- owner-scoped backup/restore procedures;
+- Temporal/Flow persistence treated according to its owner/runtime boundary.
 
-### 7. Provider framework + OpenRouter/OpenAI + local runtime abstraction
+### Production operations / observability
 
-ADR-22 memperluas Connect tanpa memindahkan provider boundary:
+- Docker Compose self-host baseline;
+- Caddy-only public ports in the repository baseline;
+- pinned infrastructure images;
+- owner-scoped persistent volumes;
+- process metrics + W3C-compatible trace propagation;
+- Ai `/ops` aggregation;
+- provider canary mechanism;
+- Production Operations acceptance in CI;
+- install/upgrade/rollback scripts;
+- release/security acceptance;
+- working-tree + full-history secret scanning;
+- dependency review and production build release gate;
+- Ai `/settings` Control Center and Connect-owned runtime settings.
 
-- hosted provider baseline: `anthropic`, `openrouter`, `openai`;
-- provider dipilih secara eksplisit lewat process configuration, bukan model output;
-- Credential Vault tetap provider-scoped (`<provider>/messages`);
-- cache key memasukkan provider identity;
-- spend reservation mencatat provider dan berlaku pada semua hosted provider;
-- OpenRouter/OpenAI memakai explicit pinned mapping; alias/auto-router yang dapat drift tetap dilarang;
-- OpenRouter provider-reported `usage.cost` menjadi actual billed cost untuk ledger dan spend settlement ketika tersedia; malformed billed cost fail-closed;
-- OpenAI direct memakai pinned GPT-5.6 identity yang ada di pricing snapshot;
-- local runtime memakai contract `openai-compatible`, sehingga Ollama hanyalah salah satu implementation dan bukan dependency arsitektural wajib;
-- tidak ada silent fallback antar-provider atau hosted→local.
+### Final security/release closure
 
-Pricing snapshot tetap evidence yang harus diverifikasi ulang sebelum public billing/savings claim.
+Batch 12 closed:
 
-### 8. External MCP HTTPS acceptance
+- shared HTTP hardening;
+- request/body bounds and security headers;
+- SSRF/public URL validation;
+- AuthN/AuthZ regression coverage;
+- Sandbox/path/permission release checks;
+- full-history secret scan;
+- dependency/security review;
+- Next.js lint/build cleanup;
+- developer SDK docs;
+- self-host/release procedures;
+- real public HTTPS MCP acceptance resilience;
+- final exact-head + post-merge evidence.
 
-External reachability ADR-16 sekarang punya dedicated acceptance nyata, bukan hanya localhost/reverse-proxy simulation:
+See:
 
-- Connect tetap bind loopback;
-- Sync menjadi bridge yang diekspos lewat public HTTPS edge sementara;
-- OAuth/JWKS juga diakses lewat public HTTPS sehingga signature/issuer/audience benar-benar melewati network boundary;
-- 401/403 `WWW-Authenticate` mengiklankan Protected Resource Metadata dan scope minimum;
-- `server/discover`, `tools/list`, dan `tools/call memory_search` dibuktikan end-to-end melalui HTTPS -> Sync -> Connect -> Hub;
-- malformed JWT, insufficient scope, Origin terlarang, dan MCP routing-header mismatch fail closed;
-- cloudflared dipin dan checksum diverifikasi;
-- network/tunnel failure tetap workflow failure, bukan skip/pass.
+- `docs/adr/0033-final-security-release-closure.md`
+- `docs/verification/batch12-closure-2026-09-10.md`
+- `docs/EXECUTION-PROGRESS.md`
 
-Ini adalah **transport acceptance**, bukan klaim bahwa ecorione mengoperasikan managed public relay atau production authorization server.
+## What remains open-ended after Batch 12
 
-### 9. Outbound MCP client + manager
+These are **not unfinished Batch 12 items**. They are future operational/product/R&D evidence work:
 
-ADR-23 menambahkan outbound MCP boundary di Connect tanpa membuat jalur governance kedua:
+1. deploy the closed baseline to a real production VPS/server;
+2. validate real Anthropic/OpenRouter/OpenAI quality, latency, errors, and billed cost;
+3. scrape/store durable production metrics outside process memory;
+4. perform host OS/firewall/SSH/account hardening;
+5. separate backups from the same failure domain and run recurring restore drills;
+6. collect real product workflow evidence;
+7. build real evaluation datasets and provider/model comparisons;
+8. validate ECX/optimizer savings before making production savings claims;
+9. improve UX/Control Center/approval/error surfaces based on use;
+10. integrate other ecosystem projects only through explicit APIs/contracts;
+11. keep dependency/security/model/pricing reviews current;
+12. add new features only when evidence justifies them.
 
-- official `@modelcontextprotocol/client@2.0.0` dipin exact;
-- protocol negotiation modern/legacy diaktifkan eksplisit (`versionNegotiation.mode = "auto"`);
-- Streamable HTTP wajib HTTPS kecuali explicit loopback, dan stdio command harus ada di comma-separated allowlist;
-- server registry durable, workspace-scoped, atomic, mode `0600`, dan menolak secret-looking plaintext env;
-- named MCP credentials disimpan terenkripsi melalui Connect Vault `mcp/tokens`;
-- discovery tidak auto-enable tool; tool harus punya local enable + `ActionClass`;
-- Hub tetap owner policy, approval, dan audit melalui service API;
-- connection/cache partition dan side-effect identity dipisahkan per workspace;
-- non-READ call membuat durable `reserved`/`uncertain`/`settled` provenance sebelum dispatch;
-- known ambiguous retry ditolak sebelum reconnect/discovery, sementara atomic reserve tetap race barrier sebelum remote dispatch;
-- remote success tidak dibuat retryable karena settlement/audit bookkeeping lokal gagal.
+## Cloudflare Free deployment direction
 
-Code candidate sebelum docs lulus full CI `34357212048` dan inbound public HTTPS regression acceptance `34357212042`. Batch 2 kemudian ditutup pada final head `5609d8cae9fe9bb83a751da5616822b8dec1c4a2`: CI `34359796175` PASS, public HTTPS `34359796083` PASS, PR #9 merged sebagai `97646e102ee90a39aa25a7b79b8cbf86673aa81f`, dan post-merge main CI `34360113741` full green.
+Recommended next public-edge topology:
 
-### 10. Plugin / Extension Framework
+```text
+Cloudflare Free DNS/TLS/WAF/DDoS
+  -> Cloudflare Tunnel
+  -> ECORIONE VPS
+  -> Caddy
+  -> Ai + Sync/MCP
+  -> internal services
+```
 
-ADR-24 menambahkan Hub-owned extension control plane tanpa membuat arbitrary code execution path:
+Cloudflare does **not** replace ECORIONE compute, Docker services, owner databases, Temporal, Vault, Artifact storage, or Sandbox. Detailed bootstrap/tunnel/rollback procedure: `docs/cloudflare-free-deployment.md`.
 
-- strict manifest `ecorione.extension/v1` dengan immutable GitHub SHA / HTTPS release / Artifact source;
-- bundle SHA-256 harus identik dengan Artifact CAS identity;
-- runtime hanya `none`, `mcp`, atau `sandbox`; tidak ada host runtime;
-- MCP execution tetap melalui Connect outbound MCP manager; executable extension hanya melalui Sandbox;
-- capability, permission, dan secret requirement dideklarasikan tetapi belum menjadi grant otomatis;
-- security admission berjalan sebelum policy/audit mutation dan blocked manifest tidak membuat registry state;
-- durable workspace-scoped installation projection + append-only revision history;
-- install/update/rollback/remove/health memakai transactional idempotent receipts;
-- rollback membuat revision baru dan mempertahankan provenance target;
-- remove tidak menghapus revision provenance.
+## Evidence rule for future work
 
-Closure evidence Batch 3: final candidate `e706aa70f3b9b80fc6ec12c72972a29f3c503639`; exact-head CI `34368041372` PASS; public MCP HTTPS `34368041191` PASS; PR #10 merged dengan expected-head lock sebagai `af2b3f12f5deeaf2fd50c045998416365f766b9d`; post-merge main CI `34368309860` attempt 2 full green.
+Future work may only become part of a new READY claim when the relevant evidence exists. At minimum:
 
-Integrity gate ini tidak diklaim sebagai vulnerability scanner. Unified grant/revocation dan cross-runtime permission authority tetap Batch 4.
+- dedicated branch/scope;
+- owner-service architecture preserved;
+- focused tests/acceptance;
+- format/lint/typecheck/test/secret scan/build gates where applicable;
+- runtime/public-network acceptance when applicable;
+- documentation/ADR update;
+- exact-head evidence;
+- merge with head guard when available;
+- post-merge main verification.
 
-### 11. Unified Capability + Permission Plane
-
-ADR-25 menjadikan Hub authority plane tunggal untuk standing capability grants lintas MCP, Extension, Sandbox, model/tool, Flow, dan future Node Registry:
-
-- grant di-scope oleh workspace + subject + capability + permission + scope + sensitivity ceiling;
-- unknown/missing grant fail closed;
-- declaration extension bukan grant dan tidak dapat menaikkan privilege sendiri;
-- grant/revoke memakai ActionClass `POLICY_ADMIN` dan durable human approval yang sudah dimiliki Hub;
-- active runtime tetap menjalankan generic policy, Vault, Spend Budget, Sandbox boundary, MCP local enablement, dan idempotency setelah standing authority lolos;
-- Chat hosted model dan Flow model memeriksa authority sebelum provider/egress;
-- Sandbox memeriksa authority sebelum generic policy/execution;
-- outbound MCP memeriksa tool authority dan, jika ada credentialRef, `secret.access / credential.use` sebelum generic policy/network dispatch;
-- extension install/update/rollback menyinkronkan declaration, update memangkas stale grants, remove membersihkan active grants tanpa menghapus revision provenance;
-- compatibility migration one-time eksplisit menjaga hosted/local model serta Sandbox tier0/tier1.5/tier1 pada `ws_personal`; grant tetap dapat di-revoke;
-- outbound MCP tidak dimigrasikan otomatis karena Hub tidak boleh mengintrospeksi registry/DB Connect.
-
-Authority state tidak menyimpan raw secret. Canonical audit merekam authorize/deny/grant/revoke, sedangkan append-only authority events mempertahankan provenance control-plane.
-
-Batch 4 masih `IMPLEMENTED / CLOSURE PENDING` sampai exact-final-head CI + MCP External HTTPS, expected-head merge, dan post-merge `main` verification selesai.
-
-## Gap hardening/platform yang masih terbuka
-
-Urutan rekomendasi berdasarkan dependency dan risiko:
-
-1. **Native multimodal pipeline**: image/document first-class input, OCR, STT/TTS Indonesia+Inggris, lalu realtime voice. Unified capability/permission plane sudah menjadi Batch 4 candidate dan menunggu closure evidence final.
-2. **Data refactor/rebuild + dataset governance**: authoritative-vs-derived separation, migration, reindex/rebuild, validation, lineage/versioning.
-3. **Node Registry** di atas capability/permission plane sebagai dasar visual Flow Canvas, core node pack, custom node SDK, dan reusable subflow.
-4. **Space block runtime** ala block workspace tanpa menggandakan source of truth Context/Artifact.
-5. **Data maintenance center + backup/restore/disaster recovery** dengan integrity verification.
-6. **Managed/self-host deployment recipe** untuk Temporal + seluruh service tanpa mengubah local-first default.
-7. **Provider canary harian** dengan provider nyata dan quality floor; deterministic CI tetap external-credential-free.
-8. **Full-history secret scan** sebelum public release; working-tree scan saat ini belum cukup.
-9. **Next.js ESLint integration warning** pada production build.
-10. **Cumulative operational metrics + distributed trace** per hari/task/provider/node (cost, quality, p50/p95, errors).
-11. **ECX production efficiency validation** menggunakan traffic metrics nyata sebelum savings claim.
-12. **Chaos/failure + full cross-service E2E acceptance**.
-13. **Final security audit, Settings/Control Center, SDK/docs, installer/upgrade/release closure**.
-14. **AutoClick/RPA** tetap conditional/deferred sampai use case non-API nyata lolos design gate.
-
-Tidak satu pun gap dianggap selesai hanya karena ada ADR, rencana, mock, atau unit test. Setiap workstream harus lolos exact-head closure gate dan post-merge `main` smoke sebelum statusnya berubah menjadi implemented/closed baseline.
+Do not reopen Batch 12 merely because Fase 6+ continues. Create a new explicit scope instead.
