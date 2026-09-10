@@ -1,0 +1,89 @@
+name: Batch 12 MCP readiness fix
+
+on:
+  push:
+    branches:
+      - agent/batch12-final-security-release-20260910
+    paths:
+      - .github/workflows/batch12-mcp-readiness-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/batch12-final-security-release-20260910
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Harden Quick Tunnel readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('scripts/mcp-external-https-acceptance.mjs')
+          text = path.read_text()
+          old = '''    const inspect = (data) => {
+              const text = data.toString("utf8");
+              chunks.push(text);
+              const match = text.match(urlPattern);
+              if (match && !settled) {
+                settled = true;
+                clearTimeout(timer);
+                resolve({ child, publicUrl: match[0], logTail });
+              }
+            };'''
+          new = '''    const inspect = (data) => {
+              const text = data.toString("utf8");
+              chunks.push(text);
+              const output = chunks.join("");
+              const match = output.match(urlPattern);
+              const registered = output.includes("Registered tunnel connection");
+              if (match && registered && !settled) {
+                settled = true;
+                clearTimeout(timer);
+                resolve({ child, publicUrl: match[0], logTail });
+              }
+            };'''
+          if old not in text:
+              raise SystemExit('expected startTunnel inspect block not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
+          pnpm exec prettier --write scripts/mcp-external-https-acceptance.mjs
+      - name: Build TypeScript runtime
+        run: pnpm exec tsc --build
+      - name: Install pinned cloudflared and verify checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLOUDFLARED="$RUNNER_TEMP/cloudflared"
+          curl --fail --silent --show-error --location \
+            "https://github.com/cloudflare/cloudflared/releases/download/2026.8.3/cloudflared-linux-amd64" \
+            --output "$CLOUDFLARED"
+          echo "f29324fe934d1e100617484c78deef803c4dc2cd351d645bbde42e96b4fccc5e  $CLOUDFLARED" \
+            | sha256sum --check --strict
+          chmod 0755 "$CLOUDFLARED"
+          echo "CLOUDFLARED_BIN=$CLOUDFLARED" >> "$GITHUB_ENV"
+      - name: Verify public HTTPS MCP acceptance
+        run: pnpm run acceptance:mcp:external
+      - name: Commit hardened readiness and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/batch12-mcp-readiness-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/mcp-external-https-acceptance.mjs .github/workflows/batch12-mcp-readiness-fix.yml
+          git diff --cached --check
+          git commit -m "fix(batch12): wait for MCP tunnel edge registration"
+          git push origin HEAD:agent/batch12-final-security-release-20260910
