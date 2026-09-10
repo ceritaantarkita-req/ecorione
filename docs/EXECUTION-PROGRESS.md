@@ -27,13 +27,13 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Batch 9 implementation is merged and post-merge verified on `main`:
+Batch 10 implementation is merged and post-merge verified on `main`:
 
-- implementation PR #23 merge: `05b05a5f22133d61a411ff22463ac5acfaf4c5eb`
-- exact final PR head: `6294a6f641b1ddecf23ccac23ab1e85ce8da7fe8`
-- exact-head CI `34435365038`: full green
-- exact-head MCP External HTTPS Acceptance `34435365023`: PASS
-- post-merge main CI `34435559155`: full green
+- implementation PR #25 merge: `f5232048f29efa4d4b6632330f0d860afa781d48`
+- exact final PR head: `3459e4b51ff5c04eeb129ed2463cb0545d9a6ef8`
+- exact-head CI `34442113246`: full green
+- exact-head MCP External HTTPS Acceptance `34442113341`: PASS
+- post-merge main CI `34443543782`: full green
 
 ### Active execution
 
@@ -46,7 +46,8 @@ Batch 9 implementation is merged and post-merge verified on `main`:
 - Batch 7 status: **CLOSED**
 - Batch 8 status: **CLOSED**
 - Batch 9 status: **CLOSED**
-- next implementation target: **Batch 10 — Space Block Runtime**
+- Batch 10 status: **CLOSED**
+- next implementation target: **Batch 11 — Production Operations & Observability**
 
 ---
 
@@ -213,7 +214,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1–9 sudah CLOSED**. Tersisa **3 batch platform/production (Batch 10–12)**; next implementation target adalah **Batch 10 — Space Block Runtime**.
+Dari current state, **Batch 1–10 sudah CLOSED**. Tersisa **2 batch platform/production (Batch 11–12)**; next implementation target adalah **Batch 11 — Production Operations & Observability**.
 
 ---
 
@@ -715,7 +716,7 @@ Batch 9 resmi **CLOSED**; next implementation batch adalah Batch 10.
 
 ## Batch 10 — Space Block Runtime
 
-Status: **PLANNED**
+Status: **CLOSED**
 
 Goal: composable workspace/document surface ala Notion tanpa membuat duplicate memory/source-of-truth.
 
@@ -741,6 +742,36 @@ Boundary:
 - Artifact tetap owner file/blob
 - Flow tetap owner durable execution
 - Space hanya menyimpan workspace/document composition yang memang menjadi domain-nya
+
+Implemented baseline:
+
+- 13 typed block kinds: paragraph, heading, list, checklist, table, database-view, file, image, embed, ai, context-link, artifact-link, flow-link;
+- shared discriminated schemas dengan type/body agreement dan HTTPS-only embed validation;
+- workspace-scoped pages/blocks dengan monotonic optimistic versions;
+- transactional insert/move/delete/reorder dan fail-closed stale-write conflicts;
+- same-page table dependency untuk database-view dengan exact typed-reference checking;
+- Context/Artifact/Flow pointer resolution dilakukan just-in-time tanpa copy authoritative owner data;
+- AI block menunjuk Flow graph, sehingga durable execution tetap dimiliki Flow/Temporal;
+- real pre-Batch-10 SQLite migration mempertahankan IDs/order/timestamps dan mengubah legacy text/heading/list menjadi typed bodies;
+- Ai `/space` menyediakan page composition, block palette, preview, reorder/delete, JSON inspector, reference resolution, dan existing Context core-memory editor.
+
+Closure evidence:
+
+- implementation branch: `agent/batch10-space-block-runtime-20260910`;
+- implementation PR: #25;
+- final exact implementation head: `3459e4b51ff5c04eeb129ed2463cb0545d9a6ef8`;
+- exact-head CI `34442113246`: Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Secret Scan, Production Build PASS;
+- exact-head MCP External HTTPS Acceptance `34442113341`: PASS;
+- PR #25 merged with expected-head lock as `f5232048f29efa4d4b6632330f0d860afa781d48`;
+- `main` confirmed at the expected merge SHA;
+- post-merge main CI `34443543782`: full green;
+- no temporary Batch 10 implementation helper workflow remains in the implementation tree.
+
+ADR: `docs/adr/0031-space-block-runtime.md`  
+Operations: `docs/space-block-runtime-operations.md`  
+Verification: `docs/verification/batch10-closure-2026-09-10.md`
+
+Batch 10 resmi **CLOSED**; next implementation batch adalah Batch 11.
 
 ---
 
@@ -830,10 +861,11 @@ Current planning unit:
 - **Batch 7: CLOSED**
 - **Batch 8: CLOSED**
 - **Batch 9: CLOSED**
-- **3 platform/production batches remaining (Batch 10–12)**
-- next: **Batch 10 — Space Block Runtime**
+- **Batch 10: CLOSED**
+- **2 platform/production batches remaining (Batch 11–12)**
+- next: **Batch 11 — Production Operations & Observability**
 
-Heuristic percentage/granular workload estimates sengaja tidak dihitung ulang pada closure Batch 9. Status batch dan evidence di tracker ini adalah source of truth; estimasi bukan completion metric formal dan tidak boleh dipakai sebagai klaim kualitas/efisiensi produksi.
+Heuristic percentage/granular workload estimates sengaja tidak dihitung ulang pada closure Batch 10. Status batch dan evidence di tracker ini adalah source of truth; estimasi bukan completion metric formal dan tidak boleh dipakai sebagai klaim kualitas/efisiensi produksi.
 
 ---
 
