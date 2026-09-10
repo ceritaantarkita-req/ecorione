@@ -52,7 +52,10 @@ console.log(JSON.stringify(summary, null, 2));
 
 const outputPath = process.env.ECORIONE_OPS_SNAPSHOT_OUT;
 if (outputPath) {
-  writeFileSync(outputPath, `${JSON.stringify(body, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+  writeFileSync(outputPath, `${JSON.stringify(body, null, 2)}\n`, {
+    encoding: "utf8",
+    mode: 0o600,
+  });
   console.log(`production-ops-snapshot: wrote mode-0600 snapshot to ${outputPath}`);
 }
 

@@ -18,7 +18,8 @@ async function getJson(base, path) {
     signal: AbortSignal.timeout(10000),
   });
   const body = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(`${path} HTTP ${String(response.status)} ${JSON.stringify(body)}`);
+  if (!response.ok)
+    throw new Error(`${path} HTTP ${String(response.status)} ${JSON.stringify(body)}`);
   return body;
 }
 
@@ -73,7 +74,8 @@ const evidence = {
 console.log(JSON.stringify(evidence, null, 2));
 
 const failures = [];
-if (historyEvents < minHistoryEvents) failures.push(`history events ${historyEvents} < ${minHistoryEvents}`);
+if (historyEvents < minHistoryEvents)
+  failures.push(`history events ${historyEvents} < ${minHistoryEvents}`);
 if (ecxPackets < minEcxPackets) failures.push(`ECX packets ${ecxPackets} < ${minEcxPackets}`);
 if (modelCalls < minModelCalls) failures.push(`model calls ${modelCalls} < ${minModelCalls}`);
 if (failures.length > 0) {
@@ -81,4 +83,6 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("PASS production-data-evidence: real traffic exists across Historical Ledger, ECX, and provider telemetry boundaries");
+console.log(
+  "PASS production-data-evidence: real traffic exists across Historical Ledger, ECX, and provider telemetry boundaries",
+);

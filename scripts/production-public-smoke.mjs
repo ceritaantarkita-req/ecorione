@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 
 const rawBase = process.env.ECORIONE_PUBLIC_BASE_URL;
 if (!rawBase) {
-  throw new Error("ECORIONE_PUBLIC_BASE_URL is required, for example https://ecorione.example.com");
+  throw new Error(
+    "ECORIONE_PUBLIC_BASE_URL is required, for example https://ecorione.example.com",
+  );
 }
 
 const base = new URL(rawBase);
@@ -48,7 +50,11 @@ function pass(label, detail = "") {
 }
 
 function expectSecurityHeaders(response, label) {
-  assert.equal(response.headers.get("x-content-type-options"), "nosniff", `${label}: missing nosniff`);
+  assert.equal(
+    response.headers.get("x-content-type-options"),
+    "nosniff",
+    `${label}: missing nosniff`,
+  );
   assert.equal(response.headers.get("x-frame-options"), "DENY", `${label}: missing frame deny`);
 }
 
@@ -65,22 +71,48 @@ for (const operatorPath of ["/ops", "/settings"]) {
 
 const metadataPath = "/.well-known/oauth-protected-resource/mcp";
 const metadata = await request(metadataPath);
-assert.equal(metadata.status, 200, `protected-resource metadata expected HTTP 200, got ${metadata.status}`);
+assert.equal(
+  metadata.status,
+  200,
+  `protected-resource metadata expected HTTP 200, got ${metadata.status}`,
+);
 const metadataJson = await metadata.json();
-assert.equal(metadataJson.resource, new URL("/mcp", base).toString(), "metadata resource URL mismatch");
-assert(Array.isArray(metadataJson.authorization_servers), "metadata authorization_servers must be an array");
+assert.equal(
+  metadataJson.resource,
+  new URL("/mcp", base).toString(),
+  "metadata resource URL mismatch",
+);
+assert(
+  Array.isArray(metadataJson.authorization_servers),
+  "metadata authorization_servers must be an array",
+);
 pass("MCP protected-resource metadata", "HTTP 200");
 
 const unauthenticated = await request("/mcp", {
   method: "POST",
   headers: { "content-type": "application/json" },
-  body: JSON.stringify({ jsonrpc: "2.0", id: "production-smoke", method: "tools/list", params: {} }),
+  body: JSON.stringify({
+    jsonrpc: "2.0",
+    id: "production-smoke",
+    method: "tools/list",
+    params: {},
+  }),
 });
-assert.equal(unauthenticated.status, 401, `unauthenticated MCP must return 401, got ${unauthenticated.status}`);
+assert.equal(
+  unauthenticated.status,
+  401,
+  `unauthenticated MCP must return 401, got ${unauthenticated.status}`,
+);
 const challenge = unauthenticated.headers.get("www-authenticate") ?? "";
 const expectedMetadata = new URL(metadataPath, base).toString();
-assert(challenge.includes(`resource_metadata="${expectedMetadata}"`), "MCP challenge does not advertise public resource metadata URL");
-assert(challenge.includes("memory:read"), "MCP challenge does not advertise minimum memory:read scope");
+assert(
+  challenge.includes(`resource_metadata="${expectedMetadata}"`),
+  "MCP challenge does not advertise public resource metadata URL",
+);
+assert(
+  challenge.includes("memory:read"),
+  "MCP challenge does not advertise minimum memory:read scope",
+);
 pass("MCP unauthenticated challenge", "HTTP 401 + resource_metadata");
 
 console.log(`PASS production public smoke for ${base.origin}`);

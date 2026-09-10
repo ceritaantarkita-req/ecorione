@@ -7,7 +7,9 @@ if (!token) {
   process.exit(2);
 }
 
-const requested = (process.env.ECORIONE_PROVIDER_VALIDATION_SET ?? "anthropic,openrouter,openai")
+const requested = (
+  process.env.ECORIONE_PROVIDER_VALIDATION_SET ?? "anthropic,openrouter,openai"
+)
   .split(",")
   .map((value) => value.trim())
   .filter(Boolean);
@@ -44,11 +46,17 @@ if (!original || typeof original !== "object" || !original.settings) {
 }
 
 const credentialState = await jsonRequest("/v1/settings/credentials");
-if (!credentialState || typeof credentialState !== "object" || credentialState.available !== true) {
+if (
+  !credentialState ||
+  typeof credentialState !== "object" ||
+  credentialState.available !== true
+) {
   throw new Error("Connect credential vault is not available");
 }
 
-const credentials = Array.isArray(credentialState.credentials) ? credentialState.credentials : [];
+const credentials = Array.isArray(credentialState.credentials)
+  ? credentialState.credentials
+  : [];
 const credentialProviders = new Set(
   credentials
     .map((entry) => (entry && typeof entry === "object" ? entry.provider : null))
@@ -81,7 +89,9 @@ try {
         }),
       });
       if (!result || typeof result !== "object" || result.pass !== true) {
-        console.error(`FAIL provider=${provider} — quality floor failed ${JSON.stringify(result)}`);
+        console.error(
+          `FAIL provider=${provider} — quality floor failed ${JSON.stringify(result)}`,
+        );
         failed = true;
         continue;
       }
@@ -89,7 +99,9 @@ try {
         `PASS provider=${provider} model=${String(result.model)} latencyMs=${Number(result.latencyMs).toFixed(1)}`,
       );
     } catch (error) {
-      console.error(`FAIL provider=${provider} — ${error instanceof Error ? error.message : String(error)}`);
+      console.error(
+        `FAIL provider=${provider} — ${error instanceof Error ? error.message : String(error)}`,
+      );
       failed = true;
     }
   }
