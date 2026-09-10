@@ -43,7 +43,8 @@ describe("Connect operations telemetry", () => {
     expect(canary.json()).toMatchObject({
       pass: true,
       provider: "local",
-      model: "local-test-pinned",
+      model: "local/qwen3-8b-instruct-q4_k_m",
+      responseModel: "local-test-pinned",
       expectedSubstringMatched: true,
       usage: { inputTokens: 7, outputTokens: 3 },
     });
