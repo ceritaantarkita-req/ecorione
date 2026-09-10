@@ -52,7 +52,7 @@ jobs:
               'export * from "./http.js";\nexport * from "./maintenance.js";\nexport * from "./maintenance-http.js";\n',
           )
 
-          # Tighten maintenance plan validation and allow explicit FTS repair.
+          # Tighten maintenance plan validation and align embedding handling with the durable schema.
           p = Path('services/context/src/maintenance.ts')
           text = p.read_text()
           text = text.replace(
@@ -60,6 +60,23 @@ jobs:
               'import type { MemoryFact, Timestamp } from "@ecorione/shared-schema";',
           )
           text = text.replace('import { createVectorIndex, type VectorIndex } from "./vector.js";\n', '')
+          text = text.replace('  readonly updated_at: string;\n', '', 1)
+          text = text.replace(
+              'SELECT fact_id,model,dim,hex(embedding) AS embedding_hex,updated_at FROM fact_embeddings ORDER BY fact_id ASC',
+              'SELECT fact_id,model,dim,hex(embedding) AS embedding_hex FROM fact_embeddings ORDER BY fact_id ASC',
+          )
+          text = text.replace(
+              'SELECT fact_id,model,dim,embedding,updated_at FROM fact_embeddings ORDER BY fact_id',
+              'SELECT fact_id,model,dim,embedding FROM fact_embeddings ORDER BY fact_id',
+          )
+          text = text.replace(
+              'INSERT INTO fact_embeddings(fact_id,model,dim,embedding,updated_at) VALUES(?,?,?,?,?)',
+              'INSERT INTO fact_embeddings(fact_id,model,dim,embedding) VALUES(?,?,?,?)',
+          )
+          text = text.replace(
+              '            embedding.embedding,\n            embedding.updated_at,\n',
+              '            embedding.embedding,\n',
+          )
           old = '''function assertIntegrity(findings: MaintenanceFindings): void {\n  const failures: string[] = [];'''
           new = '''function assertIntegrity(\n  findings: MaintenanceFindings,\n  options: { readonly allowFtsError?: boolean } = {},\n): void {\n  const failures: string[] = [];'''
           if old not in text:
