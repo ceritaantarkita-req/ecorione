@@ -31,11 +31,14 @@ import {
 } from "./sdk-client.js";
 import {
   McpDiscoverRequestSchema,
+  McpServerConfigSchema,
   McpServerIdSchema,
   McpToolCallRequestSchema,
+  McpToolPolicySchema,
 } from "./types.js";
 
 const WorkspaceQuerySchema = z.object({ workspaceId: WorkspaceIdSchema });
+const OptionalWorkspaceQuerySchema = z.object({ workspaceId: WorkspaceIdSchema.optional() });
 const ServerParamsSchema = z.object({ id: McpServerIdSchema });
 const ToolParamsSchema = z.object({
   id: McpServerIdSchema,
@@ -153,6 +156,34 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
         });
         throw toHttpError(error);
       }
+    },
+  );
+
+  app.get("/v1/settings/mcp/servers", async (req) => {
+    const query = parseOrBadRequest(OptionalWorkspaceQuerySchema, req.query);
+    return { servers: manager.configuredServers(query.workspaceId) };
+  });
+
+  app.put<{ Params: { id: string } }>("/v1/settings/mcp/servers/:id", async (req) => {
+    const params = parseOrBadRequest(ServerParamsSchema, req.params);
+    const body = parseOrBadRequest(McpServerConfigSchema, req.body);
+    if (body.id !== params.id) throw new BadRequestError("MCP server id body/path harus sama.");
+    return manager.upsertServer(body);
+  });
+
+  app.delete<{ Params: { id: string } }>("/v1/settings/mcp/servers/:id", async (req) => {
+    const params = parseOrBadRequest(ServerParamsSchema, req.params);
+    return { removed: await manager.removeServer(params.id) };
+  });
+
+  app.put<{ Params: { id: string; tool: string } }>(
+    "/v1/settings/mcp/servers/:id/tools/:tool",
+    async (req) => {
+      const params = parseOrBadRequest(ToolParamsSchema, req.params);
+      const body = parseOrBadRequest(McpToolPolicySchema, req.body);
+      if (body.name !== params.tool)
+        throw new BadRequestError("Nama tool body/path harus sama.");
+      return manager.setServerToolPolicy(params.id, body);
     },
   );
 

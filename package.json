@@ -22,9 +22,13 @@
     "acceptance:mcp:external": "node scripts/mcp-external-https-acceptance.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "secret-scan": "node scripts/secret-scan.mjs",
+    "secret-scan:history": "node scripts/secret-history-scan.mjs",
+    "dependency:review": "node scripts/dependency-security-review.mjs",
+    "acceptance:release": "node scripts/release-security-acceptance.mjs && vitest run packages/shared-server/src/server.test.ts packages/shared-server/src/backup.test.ts services/connect/src/runtime-settings.test.ts services/connect/src/control-http.test.ts services/connect/src/backup.test.ts services/context/src/backup.test.ts services/rnd/src/backup.test.ts services/sandbox/src/executor.test.ts apps/ai/lib/settings-proxy.test.ts",
     "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run secret-scan && pnpm run build",
     "clean": "node scripts/clean.mjs",
     "acceptance:production-ops": "node scripts/production-ops-acceptance.mjs",
@@ -32,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
+    "@next/eslint-plugin-next": "15.5.25",
     "@temporalio/client": "1.23.0",
     "@temporalio/testing": "1.23.0",
     "@temporalio/worker": "1.23.0",
@@ -44,5 +49,10 @@
     "typescript-eslint": "^8.46.0",
     "undici": "^7.2.3",
     "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.18"
+    }
   }
 }

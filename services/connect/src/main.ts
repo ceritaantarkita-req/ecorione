@@ -12,6 +12,7 @@ import { SdkMcpClientFactory } from "./mcp-client/sdk-client.js";
 import { HttpMultimodalAdapter } from "./multimodal.js";
 import { parseHostedProvider } from "./provider-types.js";
 import { parseLocalRuntime } from "./providers/local-runtime.js";
+import { FileRuntimeSettings } from "./runtime-settings.js";
 import { FileSpendBudget, parseOptionalBudgetUsd } from "./spend-budget.js";
 
 const port = Number(process.env.ECORIONE_CONNECT_PORT ?? "17023");
@@ -33,8 +34,8 @@ const openrouterApiKey =
 const openaiApiKey =
   credentialVault === undefined ? process.env.OPENAI_API_KEY || undefined : undefined;
 
-function developmentHostedApiKey(): string | undefined {
-  switch (hostedProvider) {
+function developmentHostedApiKey(provider = hostedProvider): string | undefined {
+  switch (provider) {
     case "anthropic":
       return anthropicApiKey;
     case "openrouter":
@@ -48,6 +49,16 @@ const localRuntime = parseLocalRuntime(process.env.ECORIONE_LOCAL_RUNTIME);
 const localBaseUrl = process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11434/v1";
 const localModelTag = process.env.ECORIONE_LOCAL_MODEL ?? "qwen3:8b-instruct-q4_K_M";
 const hostedCallsEnabled = process.env.ECORIONE_COST_KILL_SWITCH !== "1";
+const runtimeSettingsPath =
+  process.env.ECORIONE_CONNECT_SETTINGS_PATH ??
+  resolve(import.meta.dirname, "../../../data/connect-runtime-settings.json");
+const runtimeSettings = new FileRuntimeSettings(runtimeSettingsPath, {
+  hostedProvider,
+  localRuntime,
+  localBaseUrl,
+  localModelTag,
+  hostedCallsEnabled,
+});
 
 const spendDailyUsd = parseOptionalBudgetUsd(
   "ECORIONE_SPEND_DAILY_USD",
@@ -86,8 +97,12 @@ const hostedMultimodalAdapter =
         route: "hosted",
         endpoint: hostedMultimodalUrl,
         reservationUsd: hostedMultimodalReservationUsd,
-        authorizationBearer: () =>
-          credentialVault?.get(hostedProvider, "messages") ?? developmentHostedApiKey(),
+        authorizationBearer: () => {
+          const provider = runtimeSettings.get().settings.hostedProvider;
+          return (
+            credentialVault?.get(provider, "messages") ?? developmentHostedApiKey(provider)
+          );
+        },
       });
 
 const mcpRegistryPath =
@@ -109,6 +124,8 @@ const app = buildConnectServer({
   token,
   logger: true,
   credentialVault,
+  credentialVaultAdmin: credentialVault,
+  runtimeSettings,
   hostedProvider,
   anthropicApiKey,
   openrouterApiKey,

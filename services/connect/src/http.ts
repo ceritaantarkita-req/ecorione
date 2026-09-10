@@ -19,11 +19,17 @@ import { z } from "zod";
 import { ExactMatchCache } from "./cache.js";
 import { nowIso } from "./clock.js";
 import { complete, type CompleteDeps } from "./complete.js";
-import { CredentialVaultError, type ProviderCredentialReader } from "./credential-vault.js";
+import {
+  CredentialVaultError,
+  type CredentialVaultAdmin,
+  type ProviderCredentialReader,
+} from "./credential-vault.js";
+import { registerConnectControlRoutes } from "./control-http.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
 import { DEFAULT_HOSTED_PROVIDER, type HostedProviderId } from "./provider-types.js";
+import type { RuntimeSettings, RuntimeSettingsAdmin } from "./runtime-settings.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
@@ -78,6 +84,8 @@ export interface BuildConnectServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
   readonly credentialVault?: ProviderCredentialReader | undefined;
+  readonly credentialVaultAdmin?: CredentialVaultAdmin | undefined;
+  readonly runtimeSettings?: RuntimeSettingsAdmin | undefined;
   readonly hostedProvider?: HostedProviderId | undefined;
   /** Development-only fallbacks when no credential vault is configured. */
   readonly anthropicApiKey?: string | undefined;
@@ -103,22 +111,35 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     bodyLimit: options.multimodalBodyLimitBytes ?? DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES,
   });
   const metrics = observabilityFor(app);
-  const hostedProvider = options.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
-  const deps: CompleteDeps = {
+  const cache = options.cache ?? new ExactMatchCache();
+  const defaults: RuntimeSettings = {
+    hostedProvider: options.hostedProvider ?? DEFAULT_HOSTED_PROVIDER,
+    localRuntime: options.localRuntime ?? "openai-compatible",
+    localBaseUrl: options.localBaseUrl,
+    localModelTag: options.localModelTag,
+    hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+  };
+  const currentRuntime = (): RuntimeSettings =>
+    options.runtimeSettings?.get().settings ?? defaults;
+  const currentDeps = (runtime = currentRuntime()): CompleteDeps => ({
     credentialVault: options.credentialVault,
-    hostedProvider,
+    hostedProvider: runtime.hostedProvider,
     anthropicApiKey: options.anthropicApiKey,
     openrouterApiKey: options.openrouterApiKey,
     openaiApiKey: options.openaiApiKey,
-    localRuntime: options.localRuntime,
-    localBaseUrl: options.localBaseUrl,
-    localModelTag: options.localModelTag,
-    cache: options.cache ?? new ExactMatchCache(),
-    hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+    localRuntime: runtime.localRuntime,
+    localBaseUrl: runtime.localBaseUrl,
+    localModelTag: runtime.localModelTag,
+    cache,
+    hostedCallsEnabled: runtime.hostedCallsEnabled,
     spendBudget: options.spendBudget,
-  };
+  });
 
   if (options.mcpManager !== undefined) registerOutboundMcpRoutes(app, options.mcpManager);
+  registerConnectControlRoutes(app, {
+    runtimeSettings: options.runtimeSettings,
+    credentialVault: options.credentialVaultAdmin,
+  });
 
   function recordCompletion(
     body: z.infer<typeof CompleteBodySchema>,
@@ -152,7 +173,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const abort = (): void => controller.abort();
     req.raw.once("aborted", abort);
     try {
-      const result = await complete(deps, body, controller.signal);
+      const result = await complete(currentDeps(), body, controller.signal);
       recordCompletion(body, result);
       return result;
     } catch (err) {
@@ -164,6 +185,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
 
   app.post("/v1/ops/provider-canary", async (req) => {
     const body = parseOrBadRequest(ProviderCanaryBodySchema, req.body ?? {});
+    const runtime = currentRuntime();
     const started = performance.now();
     const completeBody = CompleteBodySchema.parse({
       target: body.target,
@@ -180,7 +202,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       now: nowIso(),
     });
     try {
-      const result = await complete(deps, completeBody);
+      const result = await complete(currentDeps(runtime), completeBody);
       const latencyMs = performance.now() - started;
       recordCompletion(completeBody, result);
       const pass =
@@ -210,8 +232,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       };
     } catch (err) {
       metrics.addCounter("ecorione_provider_canary_total", 1, {
-        provider: body.target === "local" ? "local" : hostedProvider,
-        model: body.target === "local" ? options.localModelTag : "configured",
+        provider: body.target === "local" ? "local" : runtime.hostedProvider,
+        model: body.target === "local" ? runtime.localModelTag : "configured",
         outcome: "error",
       });
       throw toHttpError(err);
@@ -228,8 +250,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         {
           localAdapter: options.localMultimodalAdapter,
           hostedAdapter: options.hostedMultimodalAdapter,
-          hostedProvider,
-          hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+          hostedProvider: currentRuntime().hostedProvider,
+          hostedCallsEnabled: currentRuntime().hostedCallsEnabled,
           spendBudget: options.spendBudget,
         },
         body,

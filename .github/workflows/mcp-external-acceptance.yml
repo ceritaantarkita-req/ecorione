@@ -2,6 +2,18 @@ name: MCP External HTTPS Acceptance
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/mcp-external-acceptance.yml"
+      - "scripts/mcp-external-https-acceptance.mjs"
+      - "services/connect/src/mcp/**"
+      - "services/sync/**"
+      - "packages/shared-schema/**"
+      - "packages/shared-server/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
   pull_request:
     paths:
       - ".github/workflows/mcp-external-acceptance.yml"
@@ -40,18 +52,23 @@ jobs:
       - name: Build TypeScript runtime
         run: pnpm exec tsc --build
 
-      - name: Install pinned cloudflared and verify checksum
+      - name: Prepare optional pinned Cloudflare tunnel provider
         shell: bash
         run: |
           set -euo pipefail
           CLOUDFLARED="$RUNNER_TEMP/cloudflared"
-          curl --fail --silent --show-error --location \
+          if curl --fail --silent --show-error --location \
             "https://github.com/cloudflare/cloudflared/releases/download/2026.8.3/cloudflared-linux-amd64" \
-            --output "$CLOUDFLARED"
-          echo "f29324fe934d1e100617484c78deef803c4dc2cd351d645bbde42e96b4fccc5e  $CLOUDFLARED" \
-            | sha256sum --check --strict
-          chmod 0755 "$CLOUDFLARED"
-          echo "CLOUDFLARED_BIN=$CLOUDFLARED" >> "$GITHUB_ENV"
+            --output "$CLOUDFLARED" \
+            && echo "f29324fe934d1e100617484c78deef803c4dc2cd351d645bbde42e96b4fccc5e  $CLOUDFLARED" \
+              | sha256sum --check --strict; then
+            chmod 0755 "$CLOUDFLARED"
+            echo "CLOUDFLARED_BIN=$CLOUDFLARED" >> "$GITHUB_ENV"
+          else
+            rm -f "$CLOUDFLARED"
+            echo "::warning::Pinned Cloudflare provider unavailable; acceptance will use its independent HTTPS tunnel fallback."
+          fi
+          command -v ssh >/dev/null
 
       - name: Public HTTPS MCP acceptance
         run: pnpm run acceptance:mcp:external

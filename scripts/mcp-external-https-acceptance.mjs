@@ -13,12 +13,6 @@ const LOOPBACK = "127.0.0.1";
 const CLIENT_ORIGIN = "https://client.acceptance.example";
 const CLOUDFLARED_BIN = process.env.CLOUDFLARED_BIN;
 
-if (!CLOUDFLARED_BIN) {
-  throw new Error(
-    "CLOUDFLARED_BIN wajib menunjuk binary cloudflared yang sudah diverifikasi checksum-nya.",
-  );
-}
-
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -66,14 +60,12 @@ async function stopChild(child) {
   }
 }
 
-async function startTunnel(localUrl, label) {
-  const child = spawn(CLOUDFLARED_BIN, ["tunnel", "--no-autoupdate", "--url", localUrl], {
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  const chunks = [];
-  const urlPattern = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/iu;
-  const logTail = () => chunks.join("").slice(-4000);
+function logTailFor(chunks) {
+  return () => chunks.join("").slice(-4000);
+}
 
+async function waitForTunnelUrl(child, chunks, urlPattern, label, timeoutMs) {
+  const logTail = logTailFor(chunks);
   return await new Promise((resolve, reject) => {
     let settled = false;
     const timer = setTimeout(() => {
@@ -81,16 +73,15 @@ async function startTunnel(localUrl, label) {
       settled = true;
       void stopChild(child);
       reject(new Error(`Timeout menunggu public HTTPS tunnel ${label}. Log: ${logTail()}`));
-    }, 60_000);
+    }, timeoutMs);
 
     const inspect = (data) => {
-      const text = data.toString("utf8");
-      chunks.push(text);
-      const match = text.match(urlPattern);
+      chunks.push(data.toString("utf8"));
+      const match = chunks.join("").match(urlPattern);
       if (match && !settled) {
         settled = true;
         clearTimeout(timer);
-        resolve({ child, publicUrl: match[0], logTail });
+        resolve(match[0]);
       }
     };
     child.stdout.on("data", inspect);
@@ -107,15 +98,68 @@ async function startTunnel(localUrl, label) {
       clearTimeout(timer);
       reject(
         new Error(
-          `cloudflared ${label} berhenti sebelum URL tersedia (code=${String(code)}, signal=${String(signal)}). Log: ${logTail()}`,
+          `Tunnel ${label} berhenti sebelum URL tersedia (code=${String(code)}, signal=${String(signal)}). Log: ${logTail()}`,
         ),
       );
     });
   });
 }
 
-async function waitForPublic(url, label, tunnel) {
-  const deadline = Date.now() + 60_000;
+async function startCloudflareTunnel(localUrl, label) {
+  if (!CLOUDFLARED_BIN) {
+    throw new Error("CLOUDFLARED_BIN tidak tersedia untuk provider Cloudflare.");
+  }
+  const child = spawn(CLOUDFLARED_BIN, ["tunnel", "--no-autoupdate", "--url", localUrl], {
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  const chunks = [];
+  const publicUrl = await waitForTunnelUrl(
+    child,
+    chunks,
+    /https:\/\/[a-z0-9-]+\.trycloudflare\.com/iu,
+    `${label} via Cloudflare`,
+    45_000,
+  );
+  return { child, publicUrl, logTail: logTailFor(chunks), provider: "cloudflare" };
+}
+
+async function startPinggyTunnel(localUrl, label) {
+  const parsed = new URL(localUrl);
+  if (parsed.protocol !== "http:" || !parsed.port) {
+    throw new Error(`Pinggy membutuhkan local HTTP URL dengan port: ${localUrl}`);
+  }
+  const child = spawn(
+    "ssh",
+    [
+      "-T",
+      "-p",
+      "443",
+      "-o",
+      "StrictHostKeyChecking=no",
+      "-o",
+      "UserKnownHostsFile=/dev/null",
+      "-o",
+      "ServerAliveInterval=15",
+      "-o",
+      "ExitOnForwardFailure=yes",
+      `-R0:${parsed.hostname}:${parsed.port}`,
+      "free.pinggy.io",
+    ],
+    { stdio: ["ignore", "pipe", "pipe"] },
+  );
+  const chunks = [];
+  const publicUrl = await waitForTunnelUrl(
+    child,
+    chunks,
+    /https:\/\/[a-z0-9.-]+\.(?:free\.pinggy\.net|run\.pinggy-free\.link)/iu,
+    `${label} via Pinggy`,
+    45_000,
+  );
+  return { child, publicUrl, logTail: logTailFor(chunks), provider: "pinggy" };
+}
+
+async function waitForPublic(url, label, tunnel, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
   let lastError = "belum ada response";
   while (Date.now() < deadline) {
     if (tunnel.child.exitCode !== null || tunnel.child.signalCode !== null) {
@@ -128,7 +172,18 @@ async function waitForPublic(url, label, tunnel) {
       if (response.ok) return;
       lastError = `HTTP ${String(response.status)}`;
     } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
+      if (error instanceof Error) {
+        const cause = error.cause;
+        const causeDetail =
+          cause && typeof cause === "object"
+            ? `${String(cause.code ?? "unknown")}: ${String(cause.message ?? cause)}`
+            : cause
+              ? String(cause)
+              : "none";
+        lastError = `${error.message}; cause=${causeDetail}`;
+      } else {
+        lastError = String(error);
+      }
     }
     await new Promise((resolve) => setTimeout(resolve, 750));
   }
@@ -137,26 +192,41 @@ async function waitForPublic(url, label, tunnel) {
   );
 }
 
+let selectedTunnelProvider = process.env.MCP_TUNNEL_PROVIDER ?? "auto";
+
 async function startReadyTunnel(localUrl, label) {
+  const providerNames =
+    selectedTunnelProvider === "auto"
+      ? [...(CLOUDFLARED_BIN ? ["cloudflare"] : []), "pinggy"]
+      : [selectedTunnelProvider];
   const failures = [];
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    const tunnel = await startTunnel(localUrl, `${label} attempt ${String(attempt)}`);
+
+  for (const provider of providerNames) {
+    let tunnel;
     try {
+      tunnel =
+        provider === "cloudflare"
+          ? await startCloudflareTunnel(localUrl, label)
+          : provider === "pinggy"
+            ? await startPinggyTunnel(localUrl, label)
+            : (() => {
+                throw new Error(`Provider tunnel tidak dikenal: ${provider}`);
+              })();
       await waitForPublic(
         `${tunnel.publicUrl}/healthz`,
-        `${label} attempt ${String(attempt)}`,
+        `${label} via ${provider}`,
         tunnel,
+        provider === "cloudflare" ? 20_000 : 30_000,
       );
+      if (selectedTunnelProvider === "auto") selectedTunnelProvider = provider;
       return tunnel;
     } catch (error) {
-      failures.push(error instanceof Error ? error.message : String(error));
-      await stopChild(tunnel.child);
-      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1_500));
+      failures.push(`${provider}: ${error instanceof Error ? error.message : String(error)}`);
+      if (tunnel) await stopChild(tunnel.child).catch(() => undefined);
     }
   }
-  throw new Error(
-    `Public HTTPS ${label} gagal setelah 2 tunnel attempts: ${failures.join(" | ")}`,
-  );
+
+  throw new Error(`Public HTTPS ${label} gagal: ${failures.join(" | ")}`);
 }
 
 function b64urlJson(value) {

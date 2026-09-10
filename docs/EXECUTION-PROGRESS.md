@@ -845,7 +845,7 @@ Batch 11 resmi **CLOSED**; next implementation batch adalah Batch 12.
 
 ## Batch 12 — Final Security / Release Closure
 
-Status: **PLANNED**
+Status: **IN PROGRESS**
 
 Scope:
 

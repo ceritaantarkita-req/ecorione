@@ -1,19 +1,50 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/shared-schema" },
-    { "path": "./packages/shared-telemetry" },
-    { "path": "./packages/context-assembly" },
-    { "path": "./packages/shared-ui" },
-    { "path": "./packages/shared-server" },
-    { "path": "./services/context" },
-    { "path": "./services/rnd" },
-    { "path": "./services/connect" },
-    { "path": "./services/hub" },
-    { "path": "./services/sync" },
-    { "path": "./services/artifact" },
-    { "path": "./services/sandbox" },
-    { "path": "./services/space" },
-    { "path": "./services/flow" }
+    {
+      "path": "./packages/shared-schema"
+    },
+    {
+      "path": "./packages/shared-telemetry"
+    },
+    {
+      "path": "./packages/context-assembly"
+    },
+    {
+      "path": "./packages/shared-ui"
+    },
+    {
+      "path": "./packages/shared-server"
+    },
+    {
+      "path": "./packages/sdk"
+    },
+    {
+      "path": "./services/context"
+    },
+    {
+      "path": "./services/rnd"
+    },
+    {
+      "path": "./services/connect"
+    },
+    {
+      "path": "./services/hub"
+    },
+    {
+      "path": "./services/sync"
+    },
+    {
+      "path": "./services/artifact"
+    },
+    {
+      "path": "./services/sandbox"
+    },
+    {
+      "path": "./services/space"
+    },
+    {
+      "path": "./services/flow"
+    }
   ]
 }
