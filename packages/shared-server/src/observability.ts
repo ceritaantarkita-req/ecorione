@@ -78,7 +78,10 @@ function seriesKey(name: string, labels: MetricLabels): string {
 function percentile(values: readonly number[], fraction: number): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
-  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * fraction) - 1));
+  const index = Math.min(
+    sorted.length - 1,
+    Math.max(0, Math.ceil(sorted.length * fraction) - 1),
+  );
   return sorted[index] ?? 0;
 }
 
@@ -97,7 +100,8 @@ export class OperationalMetrics {
   constructor(readonly service: string) {}
 
   addCounter(name: string, value = 1, labels: MetricLabels = {}): void {
-    if (!Number.isFinite(value) || value < 0) throw new Error("Counter increment harus finite >= 0.");
+    if (!Number.isFinite(value) || value < 0)
+      throw new Error("Counter increment harus finite >= 0.");
     const safeName = metricName(name);
     const safeLabels = normalizedLabels(labels);
     const key = seriesKey(safeName, safeLabels);
@@ -194,13 +198,17 @@ function formatLabels(labels: MetricLabels): string {
 
 const appMetrics = new WeakMap<FastifyInstance, OperationalMetrics>();
 
-export function attachOperationalMetrics(app: FastifyInstance, metrics: OperationalMetrics): void {
+export function attachOperationalMetrics(
+  app: FastifyInstance,
+  metrics: OperationalMetrics,
+): void {
   appMetrics.set(app, metrics);
 }
 
 export function observabilityFor(app: FastifyInstance): OperationalMetrics {
   const metrics = appMetrics.get(app);
-  if (metrics === undefined) throw new Error("Operational metrics belum terpasang pada server.");
+  if (metrics === undefined)
+    throw new Error("Operational metrics belum terpasang pada server.");
   return metrics;
 }
 
@@ -224,7 +232,10 @@ export function requestTraceContext(
 ): RequestTraceContext {
   const match = traceparent?.trim().toLowerCase().match(TRACEPARENT);
   const valid =
-    match !== null && match !== undefined && !/^0+$/.test(match[1] ?? "") && !/^0+$/.test(match[2] ?? "");
+    match !== null &&
+    match !== undefined &&
+    !/^0+$/.test(match[1] ?? "") &&
+    !/^0+$/.test(match[2] ?? "");
   return {
     traceId: valid ? (match?.[1] ?? randomHex(16)) : randomHex(16),
     spanId: randomHex(8),
@@ -241,7 +252,9 @@ export function currentRequestTrace(): RequestTraceContext | undefined {
   return traceStorage.getStore();
 }
 
-export function traceparentFor(context: Pick<RequestTraceContext, "traceId" | "spanId" | "flags">): string {
+export function traceparentFor(
+  context: Pick<RequestTraceContext, "traceId" | "spanId" | "flags">,
+): string {
   return `00-${context.traceId}-${context.spanId}-${context.flags}`;
 }
 

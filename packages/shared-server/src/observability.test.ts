@@ -70,7 +70,10 @@ describe("shared server observability", () => {
       recentRequests: Array<{ route: string; traceId: string }>;
     };
     expect(body.recentRequests).toContainEqual(
-      expect.objectContaining({ route: "/v1/probe", traceId: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }),
+      expect.objectContaining({
+        route: "/v1/probe",
+        traceId: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      }),
     );
   });
 

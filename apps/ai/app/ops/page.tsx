@@ -37,7 +37,9 @@ type OpsResponse = {
 };
 
 function sum(counters: Counter[], name: string): number {
-  return counters.filter((counter) => counter.name === name).reduce((n, counter) => n + counter.value, 0);
+  return counters
+    .filter((counter) => counter.name === name)
+    .reduce((n, counter) => n + counter.value, 0);
 }
 function latency(histograms: Histogram[]): { p50: number; p95: number } {
   const values = histograms.filter((item) => item.name === "ecorione_http_request_duration_ms");
@@ -77,7 +79,8 @@ export default function OpsPage() {
   }, [auto, refresh]);
 
   const totals = useMemo(() => {
-    const counters = data?.services.flatMap((service) => service.observability?.counters ?? []) ?? [];
+    const counters =
+      data?.services.flatMap((service) => service.observability?.counters ?? []) ?? [];
     return {
       requests: sum(counters, "ecorione_http_requests_total"),
       errors: sum(counters, "ecorione_http_errors_total"),
@@ -99,29 +102,69 @@ export default function OpsPage() {
           <p className={styles.eyebrow}>ECORIONE OPERATIONS</p>
           <h1>Runtime health & telemetry</h1>
           <p className={styles.subtle}>
-            Process-lifetime operational metrics. Long-term retention belongs in an external scraper.
+            Process-lifetime operational metrics. Long-term retention belongs in an external
+            scraper.
           </p>
         </div>
         <div className={styles.actions}>
           <label>
-            <input type="checkbox" checked={auto} onChange={(event) => setAuto(event.target.checked)} /> Auto 5s
+            <input
+              type="checkbox"
+              checked={auto}
+              onChange={(event) => setAuto(event.target.checked)}
+            />{" "}
+            Auto 5s
           </label>
-          <button type="button" onClick={() => void refresh()}>Refresh</button>
+          <button type="button" onClick={() => void refresh()}>
+            Refresh
+          </button>
         </div>
       </header>
 
       {error !== null ? <p className={styles.error}>Ops fetch failed: {error}</p> : null}
       <section className={styles.summary}>
-        <div><span>Fleet</span><strong>{data?.healthy ? "Healthy" : "Degraded"}</strong></div>
-        <div><span>Requests</span><strong>{formatNumber(totals.requests)}</strong></div>
-        <div><span>Errors</span><strong>{formatNumber(totals.errors)}</strong></div>
-        <div><span>Model calls</span><strong>{formatNumber(totals.modelCalls)}</strong></div>
-        <div><span>Tokens in / out</span><strong>{formatNumber(totals.inputTokens)} / {formatNumber(totals.outputTokens)}</strong></div>
-        <div><span>Model cost</span><strong>${totals.costUsd.toFixed(6)}</strong></div>
-        <div><span>MCP calls</span><strong>{formatNumber(totals.mcpCalls)}</strong></div>
-        <div><span>Flow runs</span><strong>{formatNumber(totals.flowRuns)}</strong></div>
-        <div><span>ECX packets</span><strong>{formatNumber(totals.ecxPackets)}</strong></div>
-        <div><span>ECX hydrated bytes</span><strong>{formatNumber(totals.ecxBytes)}</strong></div>
+        <div>
+          <span>Fleet</span>
+          <strong>{data?.healthy ? "Healthy" : "Degraded"}</strong>
+        </div>
+        <div>
+          <span>Requests</span>
+          <strong>{formatNumber(totals.requests)}</strong>
+        </div>
+        <div>
+          <span>Errors</span>
+          <strong>{formatNumber(totals.errors)}</strong>
+        </div>
+        <div>
+          <span>Model calls</span>
+          <strong>{formatNumber(totals.modelCalls)}</strong>
+        </div>
+        <div>
+          <span>Tokens in / out</span>
+          <strong>
+            {formatNumber(totals.inputTokens)} / {formatNumber(totals.outputTokens)}
+          </strong>
+        </div>
+        <div>
+          <span>Model cost</span>
+          <strong>${totals.costUsd.toFixed(6)}</strong>
+        </div>
+        <div>
+          <span>MCP calls</span>
+          <strong>{formatNumber(totals.mcpCalls)}</strong>
+        </div>
+        <div>
+          <span>Flow runs</span>
+          <strong>{formatNumber(totals.flowRuns)}</strong>
+        </div>
+        <div>
+          <span>ECX packets</span>
+          <strong>{formatNumber(totals.ecxPackets)}</strong>
+        </div>
+        <div>
+          <span>ECX hydrated bytes</span>
+          <strong>{formatNumber(totals.ecxBytes)}</strong>
+        </div>
       </section>
 
       <section>
@@ -136,15 +179,31 @@ export default function OpsPage() {
               <article className={styles.card} key={service.name}>
                 <div className={styles.cardTitle}>
                   <strong>{service.name}</strong>
-                  <span className={service.healthy ? styles.ok : styles.bad}>{service.healthy ? "UP" : "DOWN"}</span>
+                  <span className={service.healthy ? styles.ok : styles.bad}>
+                    {service.healthy ? "UP" : "DOWN"}
+                  </span>
                 </div>
                 <dl>
-                  <div><dt>requests</dt><dd>{formatNumber(requestCount)}</dd></div>
-                  <div><dt>errors</dt><dd>{formatNumber(errorCount)}</dd></div>
-                  <div><dt>p50</dt><dd>{timing.p50.toFixed(1)} ms</dd></div>
-                  <div><dt>p95</dt><dd>{timing.p95.toFixed(1)} ms</dd></div>
+                  <div>
+                    <dt>requests</dt>
+                    <dd>{formatNumber(requestCount)}</dd>
+                  </div>
+                  <div>
+                    <dt>errors</dt>
+                    <dd>{formatNumber(errorCount)}</dd>
+                  </div>
+                  <div>
+                    <dt>p50</dt>
+                    <dd>{timing.p50.toFixed(1)} ms</dd>
+                  </div>
+                  <div>
+                    <dt>p95</dt>
+                    <dd>{timing.p95.toFixed(1)} ms</dd>
+                  </div>
                 </dl>
-                {service.error !== null ? <p className={styles.error}>{service.error}</p> : null}
+                {service.error !== null ? (
+                  <p className={styles.error}>{service.error}</p>
+                ) : null}
               </article>
             );
           })}
@@ -160,7 +219,8 @@ export default function OpsPage() {
               <div>
                 {trace.spans.map((span, index) => (
                   <span key={`${span.service}-${span.startedAt}-${String(index)}`}>
-                    {span.service} {span.method} {span.route} · {span.statusCode} · {span.durationMs.toFixed(1)}ms
+                    {span.service} {span.method} {span.route} · {span.statusCode} ·{" "}
+                    {span.durationMs.toFixed(1)}ms
                   </span>
                 ))}
               </div>
@@ -169,7 +229,10 @@ export default function OpsPage() {
         </div>
       </section>
 
-      <footer className={styles.footer}>Last snapshot: {data?.generatedAt ?? "—"}. ECX metrics are traffic facts, not a savings claim.</footer>
+      <footer className={styles.footer}>
+        Last snapshot: {data?.generatedAt ?? "—"}. ECX metrics are traffic facts, not a savings
+        claim.
+      </footer>
     </main>
   );
 }

@@ -26,7 +26,9 @@
     "format:check": "prettier --check .",
     "secret-scan": "node scripts/secret-scan.mjs",
     "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run secret-scan && pnpm run build",
-    "clean": "node scripts/clean.mjs"
+    "clean": "node scripts/clean.mjs",
+    "acceptance:production-ops": "node scripts/production-ops-acceptance.mjs",
+    "canary:provider": "node scripts/provider-canary.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

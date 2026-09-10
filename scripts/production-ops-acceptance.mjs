@@ -19,7 +19,10 @@ assert(count(compose, "\n    ports:\n") === 1, "hanya reverse proxy yang boleh p
 assert(compose.includes("image: temporalio/auto-setup:1.31.2"), "Temporal harus exact-pinned");
 assert(compose.includes("image: postgres:17.6-alpine"), "PostgreSQL harus exact-pinned");
 assert(compose.includes("image: caddy:2.11.4-alpine"), "Caddy harus exact-pinned");
-assert(compose.includes("network_mode: service:sync"), "MCP harus berbagi namespace dengan Sync");
+assert(
+  compose.includes("network_mode: service:sync"),
+  "MCP harus berbagi namespace dengan Sync",
+);
 assert(compose.includes("ECORIONE_MCP_HOST: 127.0.0.1"), "MCP inbound harus loopback-only");
 for (const volume of [
   "rnd_data",

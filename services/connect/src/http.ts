@@ -168,7 +168,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const completeBody = CompleteBodySchema.parse({
       target: body.target,
       prefix: {
-        systemPrompt: "You are a deterministic provider health canary. Follow the user instruction exactly.",
+        systemPrompt:
+          "You are a deterministic provider health canary. Follow the user instruction exactly.",
         toolDefinitions: [],
         coreMemory: { blocks: [] },
       },

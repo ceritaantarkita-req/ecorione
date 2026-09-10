@@ -39,6 +39,9 @@ try {
     `provider-canary: PASS target=${target} provider=${String(body.provider)} model=${String(body.model)} latencyMs=${Number(body.latencyMs).toFixed(1)}`,
   );
 } catch (error) {
-  console.error("provider-canary: gagal", error instanceof Error ? error.message : String(error));
+  console.error(
+    "provider-canary: gagal",
+    error instanceof Error ? error.message : String(error),
+  );
   process.exit(1);
 }

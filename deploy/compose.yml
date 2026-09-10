@@ -157,10 +157,13 @@ services:
     volumes: [sync_data:/app/data]
 
   mcp:
-    <<: *app
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: ecorione:${ECORIONE_IMAGE_TAG:-local}
+    restart: unless-stopped
     command: ["node", "services/connect/dist/mcp/http-main.js"]
     network_mode: service:sync
-    networks: !reset []
     environment:
       <<: *runtime-env
       ECORIONE_MCP_HOST: 127.0.0.1
