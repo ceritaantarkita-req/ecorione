@@ -42,3 +42,5 @@ jobs:
           git add -A
           git commit -m 'feat: Batch 11 production operations and observability'
           git push origin HEAD:agent/batch11-production-ops-observability-20260910
+
+# verifier retry after request-scope trace hardening
