@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   CoreMemory,
@@ -491,9 +492,9 @@ export default function SpacePageView() {
         }}
       >
         <div>
-          <a href="/" style={{ color: "inherit" }}>
+          <Link href="/" style={{ color: "inherit" }}>
             ← Ai
-          </a>
+          </Link>
           <h1 style={{ marginBottom: 4 }}>Space</h1>
           <p style={{ marginTop: 0, color: "#666" }}>
             Composition lives here. Memory, files, and durable execution remain linked to their
