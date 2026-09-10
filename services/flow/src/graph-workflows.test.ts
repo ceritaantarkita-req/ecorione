@@ -66,7 +66,7 @@ function execution(): FlowGraphExecutionInput {
 function activities(): FlowGraphActivities {
   return {
     authorizeGraphNode: vi.fn(async () => undefined),
-    evaluateGraphNodePolicy: vi.fn(async () => ({ outcome: "ALLOW", reason: "test" })),
+    evaluateGraphNodePolicy: vi.fn(async () => ({ outcome: "ALLOW" as const, reason: "test" })),
     requestGraphApproval: vi.fn(async () => "Approve graph?"),
     executeGraphNode: vi.fn(async ({ input }) => input),
     recordGraphTrace: vi.fn(async () => undefined),
