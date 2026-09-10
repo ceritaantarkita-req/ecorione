@@ -55,6 +55,46 @@ describe("POST /api/chat", () => {
     expect((await res.json()) as { reply: string }).toMatchObject({ reply: "halo!" });
   });
 
+  it("target local adalah input valid dan tetap diteruskan ke Hub", async () => {
+    pool
+      .intercept({
+        path: "/v1/chat",
+        method: "POST",
+        body: JSON.stringify({
+          sessionId: "sess_local",
+          message: "halo lokal",
+          target: "local",
+          scope: "personal",
+          maxSensitivity: "INTERNAL",
+          autonomy: "L1",
+        }),
+      })
+      .reply(200, {
+        operationId: "op_local",
+        sessionId: "sess_local",
+        reply: "lokal aktif",
+        memoryUsed: { coreMemoryBlocks: [], recalledFacts: [], episodicSummaries: [] },
+        cost: {
+          model: "gemma-test",
+          cacheHit: false,
+          actualUsd: 0,
+          naiveUsd: 0.001,
+          savedUsd: 0.001,
+          savedPct: 100,
+          routeReason: "local-consolidation",
+        },
+        policy: { outcome: "ALLOW", reason: "ok", ruleId: "read-always-allowed" },
+      });
+
+    const req = new Request("http://ai.local/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ sessionId: "sess_local", message: "halo lokal", target: "local" }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect((await res.json()) as { reply: string }).toMatchObject({ reply: "lokal aktif" });
+  });
+
   it("body tidak cocok ChatRequestSchema (sessionId salah format) → 400, tanpa memanggil Hub", async () => {
     const req = new Request("http://ai.local/api/chat", {
       method: "POST",

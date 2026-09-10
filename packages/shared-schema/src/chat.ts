@@ -18,6 +18,8 @@ export const ChatRequestSchema = z.object({
   sessionId: SessionIdSchema,
   workspaceId: WorkspaceIdSchema.optional(),
   message: z.string().min(1).max(16_000),
+  /** Explicit route selection. Omitted requests retain the historical hosted default. */
+  target: z.enum(["hosted", "local"]).optional(),
   scope: ScopeSchema.default("personal"),
   /** Plafon sensitivitas fakta yang boleh ikut ditarik ke konteks giliran ini. */
   maxSensitivity: SensitivitySchema.default("INTERNAL"),
