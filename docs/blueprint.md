@@ -6,6 +6,8 @@ Ditulis supaya siapa pun (manusia atau AI lain — ChatGPT, dst) yang membuka re
 tanpa histori percakapan sebelumnya tetap tahu persis apa yang sedang dan akan dibangun,
 tanpa harus menyimpulkan sendiri dari `prd.md` yang ditulis untuk audiens berbeda (§0).
 
+> **HISTORICAL EXECUTION BLUEPRINT NOTICE — 2026-09-10:** dokumen v1.0 ini dipertahankan untuk menjelaskan rencana/urutan awal. Tabel status fase di bawah adalah snapshot planning 2026-09-08 dan **bukan current implementation state**. Current state: Fase 0–4 CLOSED baseline, Fase 5 AutoClick DEFERRED BY DESIGN, planned platform/production Batch 1–12 CLOSED, 0 planned batches remaining, Fase 6+ OPEN-ENDED/evidence-driven. Mulai dari `current-state-and-next-steps.md` lalu `EXECUTION-PROGRESS.md` sebelum memakai blueprint ini.
+
 ## 0. Cara pakai dokumen ini
 
 `docs/prd.md` menjawab **apa & kenapa** (produk) dan **bagaimana** (arsitektur) secara

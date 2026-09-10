@@ -1,5 +1,7 @@
 # ecorione — Final real-state audit
 
+> **HISTORICAL SNAPSHOT:** audit ini merekam keadaan 2026-09-09 dan sengaja tidak direwrite untuk menyembunyikan blocker yang saat itu nyata. Blocker roadmap tersebut kemudian ditutup sampai Batch 12. Current canonical status ada di `current-state-and-next-steps.md`, `EXECUTION-PROGRESS.md`, dan `verification/batch12-closure-2026-09-10.md`.
+
 **Tanggal:** 2026-09-09  
 **Branch audit:** `agent/fullstack-audit-fixes-phases-20260909`  
 **PR:** #1 (draft, belum merge)  

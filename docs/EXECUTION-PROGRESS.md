@@ -35,6 +35,10 @@ Batch 12 implementation is merged and post-merge verified on `main`:
 - exact-head MCP External HTTPS Acceptance `34485292292`: PASS
 - post-merge main CI `34485575168`, attempt 2: full green on the unchanged merge SHA; attempt 1 hit one transient 60-second Temporal test timeout before the rerun passed
 - post-merge main MCP External HTTPS Acceptance `34485575560`: PASS
+- closure PR #30 exact-head CI `34489719588`: full green
+- closure PR #30 merge: `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`
+- final post-closure main CI `34490006960`: full green
+- canonical post-closure handoff: `docs/current-state-and-next-steps.md`
 
 ### Active execution
 
@@ -50,8 +54,10 @@ Batch 12 implementation is merged and post-merge verified on `main`:
 - Batch 10 status: **CLOSED**
 - Batch 11 status: **CLOSED**
 - Batch 12 status: **CLOSED**
-- platform/production roadmap status: **CLOSED — Batch 1–12 complete**
+- platform/production roadmap status: **CLOSED — 12/12 batches (100% of the defined roadmap) complete**
 - next implementation target: **none inside the closed Batch 1–12 roadmap**
+- next work is a **new explicit scope**, starting with real production deployment/provider validation rather than an implicit Batch 13
+- recommended free public edge: **Cloudflare Free + Cloudflare Tunnel in front of the self-host VPS**; see `docs/cloudflare-free-deployment.md`
 
 ---
 
@@ -911,7 +917,11 @@ Closure evidence:
 - exact-head MCP External HTTPS Acceptance `34485292292`: PASS;
 - PR #29 merged with expected-head lock as `ad67b68290a41e69e18dfa49caefed0090bd9635`;
 - post-merge main CI `34485575168`, attempt 2: full green on `ad67b68290a41e69e18dfa49caefed0090bd9635`;
-- post-merge main MCP External HTTPS Acceptance `34485575560`: PASS;
+- post-merge main MCP External HTTPS Acceptance `34485575560`: PASS
+- closure PR #30 exact-head CI `34489719588`: full green
+- closure PR #30 merge: `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`
+- final post-closure main CI `34490006960`: full green
+- canonical post-closure handoff: `docs/current-state-and-next-steps.md`;
 - roadmap result: Batch 1–12 production/platform plan is complete; Fase 6+ remains open-ended/evidence-driven and AutoClick remains deferred by design.
 
 Verification: `docs/verification/batch12-closure-2026-09-10.md`
@@ -978,6 +988,28 @@ Final Security / Release Closure
 ```
 
 Visual Flow **jangan** dipercepat sebelum provider/MCP/plugin/permission/data contracts cukup stabil. Membangun canvas terlalu awal akan membekukan kontrak yang masih berubah dan memicu refactor UI/runtime besar.
+
+---
+
+## 8.1 Post-closure execution order
+
+Batch 1–12 closure does not create Batch 13. Future work is scoped independently, in this order unless new evidence changes priority:
+
+1. real VPS/self-host production deployment;
+2. Cloudflare Free DNS/TLS edge + named Cloudflare Tunnel cutover;
+3. real Anthropic/OpenRouter/OpenAI canary/evaluation with operator-owned credentials;
+4. durable production observability retention and baseline metrics;
+5. host/firewall/SSH/account/off-host-backup hardening;
+6. product workflow validation;
+7. RnD/ECX/optimizer validation from real telemetry;
+8. UX/Control Center improvements;
+9. ecosystem integrations through explicit APIs/contracts;
+10. maintenance/security/dependency/DR drills and new features only from evidence.
+
+Canonical handoff: `docs/current-state-and-next-steps.md`.
+Cloudflare procedure: `docs/cloudflare-free-deployment.md`.
+
+Cloudflare is transport/edge only. It does not become owner of Hub policy, Connect credentials/MCP configuration, Temporal, databases, Artifact storage, or Sandbox execution.
 
 ---
 
