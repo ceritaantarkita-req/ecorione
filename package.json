@@ -28,7 +28,7 @@
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
-    "acceptance:release": "node scripts/release-security-acceptance.mjs && vitest run packages/shared-server/src/server.test.ts packages/shared-server/src/backup.test.ts services/connect/src/runtime-settings.test.ts services/context/src/backup.test.ts services/sandbox/src/executor.test.ts",
+    "acceptance:release": "node scripts/release-security-acceptance.mjs && vitest run packages/shared-server/src/server.test.ts packages/shared-server/src/backup.test.ts services/connect/src/runtime-settings.test.ts services/connect/src/control-http.test.ts services/connect/src/backup.test.ts services/context/src/backup.test.ts services/rnd/src/backup.test.ts services/sandbox/src/executor.test.ts apps/ai/lib/settings-proxy.test.ts",
     "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run secret-scan && pnpm run build",
     "clean": "node scripts/clean.mjs",
     "acceptance:production-ops": "node scripts/production-ops-acceptance.mjs",
