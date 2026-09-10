@@ -12,8 +12,13 @@ if (!rawBase || !user || !password) {
 }
 
 const base = new URL(rawBase);
-if (base.protocol !== "https:") {
-  console.error("production-ops-snapshot: public base URL must use HTTPS");
+const allowLoopbackHttp =
+  process.env.ECORIONE_PUBLIC_SMOKE_ALLOW_HTTP === "1" &&
+  (base.hostname === "127.0.0.1" || base.hostname === "localhost" || base.hostname === "::1");
+if (base.protocol !== "https:" && !(allowLoopbackHttp && base.protocol === "http:")) {
+  console.error(
+    "production-ops-snapshot: public base URL must use HTTPS (HTTP is test-only on loopback with ECORIONE_PUBLIC_SMOKE_ALLOW_HTTP=1)",
+  );
   process.exit(2);
 }
 
@@ -30,12 +35,16 @@ if (!response.ok || !body || typeof body !== "object") {
 }
 
 const services = Array.isArray(body.services) ? body.services : [];
-const unhealthy = services.filter((service) => !service || typeof service !== "object" || service.healthy !== true);
+const unhealthy = services.filter(
+  (service) => !service || typeof service !== "object" || service.healthy !== true,
+);
 const summary = {
   generatedAt: typeof body.generatedAt === "string" ? body.generatedAt : null,
   healthy: body.healthy === true,
   serviceCount: services.length,
-  unhealthyServices: unhealthy.map((service) => (service && typeof service === "object" ? service.name : "unknown")),
+  unhealthyServices: unhealthy.map((service) =>
+    service && typeof service === "object" ? service.name : "unknown",
+  ),
   traceGroups: Array.isArray(body.recentTraces) ? body.recentTraces.length : 0,
 };
 
