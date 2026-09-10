@@ -1,0 +1,178 @@
+name: Batch 7 Integrate Data Rebuild
+
+on:
+  push:
+    branches:
+      - agent/batch7-data-rebuild-20260910
+    paths:
+      - .github/workflows/batch7-integrate.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/batch7-data-rebuild-20260910
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Wire Batch 7 owner contracts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f"missing marker in {path}: {old[:120]!r}")
+              p.write_text(text.replace(old, new, 1))
+
+          # Context HTTP owns maintenance API.
+          replace_once(
+              'services/context/src/http.ts',
+              'import { runConsolidation, type ConsolidateDeps } from "./consolidate.js";\n',
+              'import { runConsolidation, type ConsolidateDeps } from "./consolidate.js";\nimport { registerMaintenanceRoutes } from "./maintenance-http.js";\nimport { ContextMaintenanceEngine } from "./maintenance.js";\n',
+          )
+          replace_once(
+              'services/context/src/http.ts',
+              '  const retriever = new ContextRetriever(repo, vectors);\n\n',
+              '  const retriever = new ContextRetriever(repo, vectors);\n  const maintenance = new ContextMaintenanceEngine(repo, { extractLocal: options.extractLocal });\n  registerMaintenanceRoutes(app, maintenance);\n\n',
+          )
+          replace_once(
+              'services/context/src/index.ts',
+              'export * from "./http.js";\n',
+              'export * from "./http.js";\nexport * from "./maintenance.js";\nexport * from "./maintenance-http.js";\n',
+          )
+
+          # Tighten maintenance plan validation and allow explicit FTS repair.
+          p = Path('services/context/src/maintenance.ts')
+          text = p.read_text()
+          text = text.replace('import { createVectorIndex, type VectorIndex } from "./vector.js";\n', '')
+          old = '''function assertIntegrity(findings: MaintenanceFindings): void {\n  const failures: string[] = [];'''
+          new = '''function assertIntegrity(\n  findings: MaintenanceFindings,\n  options: { readonly allowFtsError?: boolean } = {},\n): void {\n  const failures: string[] = [];'''
+          if old not in text:
+              raise SystemExit('missing assertIntegrity signature')
+          text = text.replace(old, new, 1)
+          text = text.replace(
+              '  if (findings.ftsIntegrity !== "ok") failures.push("fts_integrity=error");',
+              '  if (findings.ftsIntegrity !== "ok" && options.allowFtsError !== true)\n    failures.push("fts_integrity=error");',
+              1,
+          )
+          old = '''  private assertPlan(plan: MaintenancePlan): void {\n    const { planDigest, ...unsigned } = plan;\n    if (plan.schema !== PLAN_SCHEMA || hashJson(unsigned) !== planDigest) {\n      throw new MaintenanceConflictError("Maintenance plan digest tidak valid.");\n    }\n    if (contextSourceDigest(this.repo.db.raw) !== plan.sourceDigest) {\n      throw new MaintenanceConflictError("Context L0 berubah setelah dry-run; buat plan baru.");\n    }\n    if (contextProjectionDigest(this.repo) !== plan.projectionDigest) {\n      throw new MaintenanceConflictError("Context projection berubah setelah dry-run; buat plan baru.");\n    }\n  }'''
+          new = '''  private assertPlan(plan: MaintenancePlan): void {\n    if (plan.schema !== PLAN_SCHEMA) {\n      throw new MaintenanceConflictError("Maintenance plan schema tidak valid.");\n    }\n    const expected = this.plan({\n      operationId: plan.operationId,\n      actions: plan.actions,\n      now: plan.generatedAt,\n    });\n    if (expected.planDigest !== plan.planDigest) {\n      if (expected.sourceDigest !== plan.sourceDigest) {\n        throw new MaintenanceConflictError("Context L0 berubah setelah dry-run; buat plan baru.");\n      }\n      if (expected.projectionDigest !== plan.projectionDigest) {\n        throw new MaintenanceConflictError("Context projection berubah setelah dry-run; buat plan baru.");\n      }\n      throw new MaintenanceConflictError("Maintenance plan digest tidak valid.");\n    }\n  }'''
+          if old not in text:
+              raise SystemExit('missing assertPlan block')
+          text = text.replace(old, new, 1)
+          text = text.replace(
+              '    assertIntegrity(plan.findings);',
+              '    assertIntegrity(plan.findings, { allowFtsError: plan.actions.includes("rebuild-fts") });',
+              1,
+          )
+          p.write_text(text)
+
+          # HTTP parsing must validate operation/timestamp and map integrity as 500 before base error.
+          p = Path('services/context/src/maintenance-http.ts')
+          text = p.read_text()
+          old = '''  const actions = z.array(MaintenanceActionSchema).min(1).parse(plan.actions) as MaintenanceAction[];\n  return { ...plan, actions } as MaintenancePlan;'''
+          new = '''  const actions = z.array(MaintenanceActionSchema).min(1).parse(plan.actions) as MaintenanceAction[];\n  const operationId = OperationIdSchema.parse(plan.operationId);\n  const generatedAt = TimestampSchema.parse(plan.generatedAt);\n  return { ...plan, operationId, generatedAt, actions } as MaintenancePlan;'''
+          if old not in text:
+              raise SystemExit('missing maintenance-http parse block')
+          text = text.replace(old, new, 1)
+          old = '''function mapMaintenanceError(error: unknown): unknown {\n  if (error instanceof MaintenanceConflictError) return new ConflictError(error.message);\n  if (error instanceof MaintenanceSnapshotError || error instanceof MaintenanceError) {\n    return new BadRequestError(error.message);\n  }\n  if (error instanceof MaintenanceIntegrityError) {\n    return new HttpError(500, "CONTEXT_INTEGRITY_ERROR", error.message);\n  }'''
+          new = '''function mapMaintenanceError(error: unknown): unknown {\n  if (error instanceof MaintenanceConflictError) return new ConflictError(error.message);\n  if (error instanceof MaintenanceIntegrityError) {\n    return new HttpError(500, "CONTEXT_INTEGRITY_ERROR", error.message);\n  }\n  if (error instanceof MaintenanceSnapshotError || error instanceof MaintenanceError) {\n    return new BadRequestError(error.message);\n  }'''
+          if old not in text:
+              raise SystemExit('missing maintenance error map')
+          p.write_text(text.replace(old, new, 1))
+
+          # Correct branded test prefixes.
+          p = Path('services/context/src/maintenance.test.ts')
+          text = p.read_text()
+          for old, new in [
+              ('"ep_maint001"', '"epi_maint001"'),
+              ('"ep_maint002"', '"epi_maint002"'),
+              ('"ep_maint003"', '"epi_maint003"'),
+              ('"mf_maint001"', '"mem_maint001"'),
+              ('"mf_maint002"', '"mem_maint002"'),
+              ('"mf_stale001"', '"mem_stale001"'),
+          ]:
+              text = text.replace(old, new)
+          p.write_text(text)
+
+          # Historical Ledger gets verification only; never a repair/rewrite endpoint.
+          replace_once(
+              'services/hub/src/history-ledger.ts',
+              '  readRange(input: {\n',
+              '''  verifyAll(): { readonly sessions: number; readonly events: number } {\n    const sessions = this.listSessions();\n    let events = 0;\n    for (const session of sessions) {\n      this.verifySession(session.id);\n      events += session.nextSeq;\n    }\n    return { sessions: sessions.length, events };\n  }\n\n  readRange(input: {\n''',
+          )
+          replace_once(
+              'services/hub/src/history-http.ts',
+              '  app.get<{ Params: { id: string } }>("/v1/history/sessions/:id", async (req) => {\n',
+              '''  app.get("/v1/history/verify", async () => {\n    try {\n      return ledger.verifyAll();\n    } catch (error) {\n      throw mapHistoryError(error);\n    }\n  });\n\n  app.get<{ Params: { id: string } }>("/v1/history/sessions/:id", async (req) => {\n''',
+          )
+          p = Path('services/hub/src/history-ledger.test.ts')
+          text = p.read_text()
+          marker = '\n});\n'
+          pos = text.rfind(marker)
+          if pos < 0:
+              raise SystemExit('missing history test closing marker')
+          test = '''\n\n  it("verifies every Historical Ledger session without mutating it", () => {\n    const { ledger, sessionId } = setup();\n    ledger.append(sessionId, 0, {\n      id: assertId("event", "evt_verifyall001"),\n      recordedAt: NOW,\n      eventType: "user.message",\n      actor: "user",\n      operationId: null,\n      parentEventId: null,\n      payload: { text: "immutable" },\n    });\n    expect(ledger.verifyAll()).toEqual({ sessions: 1, events: 1 });\n    expect(ledger.getSession(sessionId)?.nextSeq).toBe(1);\n  });\n'''
+          p.write_text(text[:pos] + test + text[pos:])
+
+          # Architecture/documentation tracker.
+          p = Path('docs/adr/README.md')
+          text = p.read_text().replace('Dua puluh tujuh keputusan', 'Dua puluh delapan keputusan', 1)
+          row = '| [27](0027-realtime-voice.md) | Realtime voice memakai Hub session/SSE + Batch 5 STT/TTS dengan barge-in generation cancellation |\n'
+          if row not in text:
+              raise SystemExit('missing ADR-27 row')
+          text = text.replace(row, row + '| [28](0028-owner-data-rebuild.md) | Data rebuild berjalan lewat owner-service maintenance dengan immutable source digest + snapshot/receipt |\n', 1)
+          p.write_text(text)
+
+          p = Path('docs/DECISIONS.md')
+          text = p.read_text()
+          line = '| 2026-09-10 | Data refactor/rebuild dimiliki masing-masing owner service: Context L0 dan Historical Ledger tidak boleh direwrite; dry-run digest + owner snapshot + durable receipt wajib sebelum projection mutation/rollback | ADR-28, `docs/data-rebuild-operations.md` |\n'
+          if line not in text:
+              if not text.endswith('\n'):
+                  text += '\n'
+              text += line
+          p.write_text(text)
+
+          p = Path('docs/EXECUTION-PROGRESS.md')
+          text = p.read_text()
+          heading = '## Batch 7 — Data Refactor / Rebuild Engine'
+          start = text.find(heading)
+          if start < 0:
+              raise SystemExit('missing Batch 7 tracker section')
+          end = text.find('\n## Batch 8', start)
+          if end < 0:
+              raise SystemExit('missing Batch 8 tracker section')
+          section = text[start:end]
+          if 'Status: **PLANNED**' not in section:
+              raise SystemExit('Batch 7 is not PLANNED at integration start')
+          section = section.replace('Status: **PLANNED**', 'Status: **IN PROGRESS**', 1)
+          section += '''\n\nImplementation branch: `agent/batch7-data-rebuild-20260910`\n\nCurrent implementation boundary:\n\n- Context-owned dry-run/execute/rollback/verify/receipt API\n- immutable Context L0 source digest + projection digest anti-TOCTOU\n- owner-generated SQLite safety snapshots\n- derived LOCAL_AGENT metadata normalization + deterministic dedupe/invalidation\n- staging-first L1 rebuild from immutable episodes through local extraction\n- FTS5 rebuild + vector accelerator reindex from durable embeddings\n- orphan/SQLite/FK/FTS integrity validation\n- Historical Ledger verify-all only; no rewrite/repair endpoint\n'''
+          p.write_text(text[:start] + section + text[end:])
+          PY
+      - name: Format candidate
+        run: pnpm exec prettier --write services/context/src services/hub/src/history-ledger.ts services/hub/src/history-http.ts services/hub/src/history-ledger.test.ts docs/adr/README.md docs/DECISIONS.md docs/EXECUTION-PROGRESS.md docs/adr/0028-owner-data-rebuild.md docs/data-rebuild-operations.md
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Focused Batch 7 regression
+        run: pnpm exec vitest run services/context/src/maintenance.test.ts services/hub/src/history-ledger.test.ts services/context/src/repository.test.ts services/context/src/retrieval.test.ts
+      - name: Remove helper and commit candidate
+        run: |
+          rm .github/workflows/batch7-integrate.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: Batch 7 data rebuild engine"
+          git push origin HEAD:agent/batch7-data-rebuild-20260910
