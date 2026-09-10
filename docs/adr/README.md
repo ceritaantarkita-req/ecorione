@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Tiga puluh keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Tiga puluh satu keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
@@ -36,6 +36,7 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [28](0028-owner-data-rebuild.md) | Data rebuild berjalan lewat owner-service maintenance dengan immutable source digest + snapshot/receipt |
 | [29](0029-dataset-governance-and-owner-dr.md) | Dataset governance + owner-scoped DR menjaga provenance, restore, dan verification boundaries |
 | [30](0030-node-registry-visual-flow.md) | Node Registry + Visual Flow memakai Flow control plane, Hub authority, dan Temporal runtime |
+| [31](0031-space-block-runtime.md) | Space menyimpan composition/version/order; linked memory/blob/Flow tetap pointer-only ke owner service |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris
