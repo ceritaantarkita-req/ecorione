@@ -37,7 +37,7 @@ describe("Context maintenance / rebuild engine", () => {
       extractLocal: options.extractLocal,
       snapshotDir: join(directory, "snapshots"),
     });
-    return { repo, maintenance };
+    return { repo, maintenance, vectors };
   }
 
   function seedEpisode(repo: ContextRepository, id = "epi_maint001") {
@@ -224,5 +224,47 @@ describe("Context maintenance / rebuild engine", () => {
         now: LATER,
       }),
     ).rejects.toBeInstanceOf(MaintenanceConflictError);
+  });
+
+  it("rolls back a failed execute from its pre-mutation owner snapshot", async () => {
+    const { repo, maintenance, vectors } = setup();
+    const episodeId = seedEpisode(repo);
+    seedDuplicateFacts(repo, episodeId);
+    const sourceBefore = contextSourceDigest(repo.db.raw);
+    const projectionBefore = contextProjectionDigest(repo);
+    const plan = maintenance.plan({
+      operationId: assertId("operation", "op_maintfailed001"),
+      actions: ["dedupe-facts", "reindex-vector", "verify"],
+      now: NOW,
+    });
+    expect(plan.diff.duplicateLiveDerivedGroups).toBe(1);
+    expect(plan.diff.reindexVector).toBe(true);
+
+    const originalRebuild = vectors.rebuild.bind(vectors);
+    Object.defineProperty(vectors, "rebuild", {
+      configurable: true,
+      value: () => {
+        throw new Error("forced reindex failure");
+      },
+    });
+    await expect(maintenance.execute(plan)).rejects.toThrow("forced reindex failure");
+    expect(repo.listFacts({ includeInvalidated: false })).toHaveLength(1);
+
+    const failed = maintenance
+      .listReceipts()
+      .find((receipt) => receipt.operationId === plan.operationId);
+    expect(failed).toMatchObject({ kind: "EXECUTE", status: "FAILED" });
+    expect(failed?.snapshotPath).not.toBeNull();
+
+    Object.defineProperty(vectors, "rebuild", { configurable: true, value: originalRebuild });
+    const rollback = await maintenance.rollback({
+      operationId: assertId("operation", "op_maintfailedback001"),
+      sourceReceiptId: failed?.id ?? "missing",
+      now: LATER,
+    });
+    expect(rollback.status).toBe("SUCCEEDED");
+    expect(rollback.projectionDigestAfter).toBe(projectionBefore);
+    expect(contextSourceDigest(repo.db.raw)).toBe(sourceBefore);
+    expect(repo.listFacts({ includeInvalidated: false })).toHaveLength(2);
   });
 });

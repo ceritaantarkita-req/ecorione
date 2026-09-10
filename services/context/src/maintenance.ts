@@ -100,6 +100,14 @@ export interface MaintenancePlan {
     readonly pendingVersions: readonly number[];
   };
   readonly findings: MaintenanceFindings;
+  readonly diff: {
+    readonly pendingMigrationVersions: readonly number[];
+    readonly normalizableFacts: number;
+    readonly duplicateLiveDerivedGroups: number;
+    readonly rebuildL1: boolean;
+    readonly rebuildFts: boolean;
+    readonly reindexVector: boolean;
+  };
   readonly rebuildL1RequiresLocalExtraction: boolean;
   readonly planDigest: string;
 }
@@ -419,6 +427,8 @@ export class ContextMaintenanceEngine {
     const available = loadMigrations().map((migration) => migration.version);
     const appliedSet = new Set(applied);
     const targetVersion = Math.max(0, ...available);
+    const findings = inspectContext(this.repo);
+    const pendingVersions = available.filter((version) => !appliedSet.has(version));
     const unsigned = {
       schema: PLAN_SCHEMA,
       operationId: input.operationId,
@@ -429,9 +439,21 @@ export class ContextMaintenanceEngine {
       migration: {
         currentVersion: Math.max(0, ...applied),
         targetVersion,
-        pendingVersions: available.filter((version) => !appliedSet.has(version)),
+        pendingVersions,
       },
-      findings: inspectContext(this.repo),
+      findings,
+      diff: {
+        pendingMigrationVersions: pendingVersions,
+        normalizableFacts: actions.includes("normalize-metadata")
+          ? findings.normalizableFacts
+          : 0,
+        duplicateLiveDerivedGroups: actions.includes("dedupe-facts")
+          ? findings.duplicateLiveDerivedGroups
+          : 0,
+        rebuildL1: actions.includes("rebuild-l1"),
+        rebuildFts: actions.includes("rebuild-fts") || actions.includes("rebuild-l1"),
+        reindexVector: actions.includes("reindex-vector") || actions.includes("rebuild-l1"),
+      },
       rebuildL1RequiresLocalExtraction: actions.includes("rebuild-l1"),
     };
     return { ...unsigned, planDigest: hashJson(unsigned) };
@@ -783,7 +805,7 @@ export class ContextMaintenanceEngine {
     const sourceReceipt = this.getReceipt(input.sourceReceiptId);
     if (
       sourceReceipt === null ||
-      sourceReceipt.status !== "SUCCEEDED" ||
+      sourceReceipt.kind !== "EXECUTE" ||
       sourceReceipt.snapshotPath === null
     ) {
       throw new MaintenanceSnapshotError(

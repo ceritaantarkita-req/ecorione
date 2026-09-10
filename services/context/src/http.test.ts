@@ -252,3 +252,51 @@ describe("/healthz", () => {
     expect(res.json()).toEqual({ status: "ok", service: "context" });
   });
 });
+
+describe("maintenance owner API", () => {
+  it("returns an explicit dry-run diff and rejects a stale plan fail-closed", async () => {
+    const planned = await app.inject({
+      method: "POST",
+      url: "/v1/maintenance/plan",
+      payload: { operationId: "op_httpmaint001", actions: ["verify"], now: NOW },
+    });
+    expect(planned.statusCode).toBe(200);
+    const plan = planned.json();
+    expect(plan.diff).toMatchObject({
+      pendingMigrationVersions: [],
+      normalizableFacts: 0,
+      duplicateLiveDerivedGroups: 0,
+      rebuildL1: false,
+      rebuildFts: false,
+      reindexVector: false,
+    });
+
+    const appended = await app.inject({
+      method: "POST",
+      url: "/v1/episodes",
+      payload: {
+        ts: T0,
+        rawText: "advance immutable L0",
+        provenance: PROVENANCE,
+        scope: "personal",
+        sensitivity: "INTERNAL",
+        syncClass: "LOCAL_ONLY",
+        trust: "USER",
+      },
+    });
+    expect(appended.statusCode).toBe(201);
+
+    const executed = await app.inject({
+      method: "POST",
+      url: "/v1/maintenance/execute",
+      payload: { plan },
+    });
+    expect(executed.statusCode).toBe(409);
+
+    const verified = await app.inject({ method: "GET", url: "/v1/maintenance/verify" });
+    expect(verified.statusCode).toBe(200);
+    const receipts = await app.inject({ method: "GET", url: "/v1/maintenance/receipts" });
+    expect(receipts.statusCode).toBe(200);
+    expect(receipts.json().receipts).toEqual([]);
+  });
+});

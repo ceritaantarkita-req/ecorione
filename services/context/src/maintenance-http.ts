@@ -52,7 +52,9 @@ function parsePlan(value: unknown): MaintenancePlan {
     typeof plan.migration !== "object" ||
     plan.migration === null ||
     typeof plan.findings !== "object" ||
-    plan.findings === null
+    plan.findings === null ||
+    typeof plan.diff !== "object" ||
+    plan.diff === null
   ) {
     throw new BadRequestError("Maintenance plan tidak cocok contract v1.");
   }
