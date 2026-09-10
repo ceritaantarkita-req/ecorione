@@ -1,0 +1,515 @@
+name: Batch 6 Apply Realtime Voice
+
+on:
+  push:
+    branches:
+      - agent/batch6-realtime-voice-20260910
+    paths:
+      - .github/workflows/batch6-apply.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/batch6-realtime-voice-20260910
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Patch realtime voice integration
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f"missing patch marker in {path}: {old[:100]!r}")
+              p.write_text(text.replace(old, new, 1))
+
+          # Clean imports in the newly added runtime.
+          replace_once(
+              "services/hub/src/voice-runtime.ts",
+              'import {\n  VoiceChunkConflictError,\n  VoiceSessionStore,\n  type VoiceSessionNotFoundError,\n} from "./voice-store.js";',
+              'import type { VoiceSessionStore } from "./voice-store.js";',
+          )
+          replace_once(
+              "services/hub/src/voice-runtime.ts",
+              '\nexport { VoiceChunkConflictError, VoiceSessionStore };\nexport type { VoiceSessionNotFoundError };\n',
+              '\n',
+          )
+
+          # Reuse Batch 5 route/authority logic; no second permission plane.
+          replace_once(
+              "services/hub/src/multimodal-http.ts",
+              'function requestedRoutes(',
+              'export function requestedRoutes(',
+          )
+          replace_once(
+              "services/hub/src/multimodal-http.ts",
+              'function authorizeInference(input: {',
+              'export function authorizeInference(input: {',
+          )
+
+          # Chat orchestration can now execute through the existing local or hosted Connect path,
+          # and accepts cancellation from a live voice generation.
+          p = Path("services/hub/src/orchestrate.ts")
+          text = p.read_text()
+          text = text.replace('  type RetrievalHit,\n  type Timestamp,', '  type RetrievalHit,\n  type SyncClass,\n  type Timestamp,', 1)
+          text = text.replace(
+              '  init: { readonly method?: "GET" | "POST"; readonly body?: unknown } = {},',
+              '  init: {\n    readonly method?: "GET" | "POST";\n    readonly body?: unknown;\n    readonly signal?: AbortSignal | undefined;\n  } = {},',
+              1,
+          )
+          marker = 'interface CompleteResponse {\n  readonly reply: string;\n  readonly model: string;\n  readonly responseModel: string;\n  readonly cacheHit: boolean;\n  readonly usage: TokenUsage;\n  readonly cost: CallCostRecord;\n  readonly routeReason: string;\n}\n'
+          if marker not in text:
+              raise SystemExit("missing CompleteResponse marker")
+          text = text.replace(
+              marker,
+              marker + 'export interface ChatExecutionOptions {\n  readonly target?: "hosted" | "local" | undefined;\n  readonly syncClass?: SyncClass | undefined;\n  readonly signal?: AbortSignal | undefined;\n  readonly sourceApp?: string | undefined;\n}\n',
+              1,
+          )
+          old_sig = 'export async function chat(\n  deps: OrchestrateDeps,\n  req: ChatRequest,\n  now: Timestamp,\n): Promise<ChatResponse> {\n  const operationId: OperationId = makeId("operation");'
+          new_sig = 'export async function chat(\n  deps: OrchestrateDeps,\n  req: ChatRequest,\n  now: Timestamp,\n  options: ChatExecutionOptions = {},\n): Promise<ChatResponse> {\n  const target = options.target ?? "hosted";\n  const hosted = target === "hosted";\n  const syncClass = options.syncClass ?? (hosted ? "CLOUD_ALLOWED" : "LOCAL_ONLY");\n  const operationId: OperationId = makeId("operation");'
+          if old_sig not in text:
+              raise SystemExit("missing chat signature marker")
+          text = text.replace(old_sig, new_sig, 1)
+
+          start = text.index('  const workspaceId = req.workspaceId ?? assertId("workspace", "ws_personal");')
+          end_marker = '  if (authority.outcome === "DENY") {\n    throw new CapabilityAuthorityDeniedError(authority.reason);\n  }\n'
+          end = text.index(end_marker, start) + len(end_marker)
+          authority = '''  const workspaceId = req.workspaceId ?? assertId("workspace", "ws_personal");
+          const capabilityId = (hosted ? "model.invoke.hosted" : "model.invoke.local") as CapabilityId;
+          const permissionIds = (hosted
+            ? ["model.invoke", "network.connect", "provider.spend"]
+            : ["model.invoke", "execution.local"]) as PermissionId[];
+          const authority = deps.authority.authorize({
+            operationId,
+            workspaceId,
+            subject: { kind: "model", id: target },
+            capabilityId,
+            permissionIds,
+            scope: req.scope,
+            sensitivity: req.maxSensitivity,
+            autonomy: req.autonomy,
+          });
+          deps.repo.recordAuditEvent({
+            type: authority.outcome === "ALLOW" ? "CAPABILITY_AUTHORIZED" : "CAPABILITY_DENIED",
+            operationId,
+            module: "Hub",
+            detail: {
+              workspaceId,
+              subject: { kind: "model", id: target },
+              capabilityId,
+              permissionIds,
+              scope: req.scope,
+              sensitivity: req.maxSensitivity,
+              outcome: authority.outcome,
+            },
+            now,
+          });
+          if (authority.outcome === "DENY") {
+            throw new CapabilityAuthorityDeniedError(authority.reason);
+          }
+          '''
+          text = text[:start] + authority + text[end:]
+          text = text.replace('    syncClass: "CLOUD_ALLOWED",', '    syncClass,', 1)
+          text = text.replace(
+              '  // Chat Fase 1 is hosted. Only memory explicitly eligible for hosted plaintext egress may leave the machine.\n',
+              '  // Hosted turns filter Context to cloud-eligible data. Local turns remain inside the local boundary.\n',
+              1,
+          )
+          text = text.replace(
+              '    `/v1/core-memory?scope=${scope}&maxSensitivity=${max}&hostedEligible=1`,\n  );',
+              '    `/v1/core-memory?scope=${scope}&maxSensitivity=${max}&hostedEligible=${hosted ? "1" : "0"}`,\n    { signal: options.signal },\n  );',
+              1,
+          )
+          text = text.replace('      hostedEligibleOnly: true,\n      now,', '      hostedEligibleOnly: hosted,\n      now,\n      signal: options.signal,', 1)
+          text = text.replace(
+              '    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=1`,\n  );',
+              '    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=${hosted ? "1" : "0"}`,\n    { signal: options.signal },\n  );',
+              1,
+          )
+          text = text.replace(
+              '    `/v1/artifacts?scope=${scope}&maxSensitivity=${max}&limit=${String(ARTIFACT_LIMIT)}&hostedEligible=1`,\n  );',
+              '    `/v1/artifacts?scope=${scope}&maxSensitivity=${max}&limit=${String(ARTIFACT_LIMIT)}&hostedEligible=${hosted ? "1" : "0"}`,\n    { signal: options.signal },\n  );',
+              1,
+          )
+          text = text.replace('        target: "hosted",', '        target,', 1)
+          text = text.replace('        now,\n      },\n    });', '        now,\n      },\n      signal: options.signal,\n    });', 1)
+          text = text.replace('      rawText: req.message,\n      provenance: { sourceApp: "ai", sessionId: req.sessionId },', '      rawText: req.message,\n      provenance: { sourceApp: options.sourceApp ?? "ai", sessionId: req.sessionId },', 1)
+          text = text.replace('      syncClass: "CLOUD_ALLOWED",\n      trust: "USER",', '      syncClass,\n      trust: "USER",', 1)
+          text = text.replace('      trust: "HOSTED_AGENT",', '      trust: hosted ? "HOSTED_AGENT" : "LOCAL_AGENT",', 1)
+          # second CLOUD_ALLOWED is assistant episode
+          text = text.replace('      syncClass: "CLOUD_ALLOWED",', '      syncClass,', 1)
+          # add cancellation to the two Context episode writes and RnD trace write
+          text = text.replace('      trust: "USER",\n    },\n  });', '      trust: "USER",\n    },\n    signal: options.signal,\n  });', 1)
+          text = text.replace('      trust: hosted ? "HOSTED_AGENT" : "LOCAL_AGENT",\n    },\n  });', '      trust: hosted ? "HOSTED_AGENT" : "LOCAL_AGENT",\n    },\n    signal: options.signal,\n  });', 1)
+          text = text.replace('      body: { name: span.name, attributes: span.attributes, operationId, recordedAt: now },\n    });', '      body: { name: span.name, attributes: span.attributes, operationId, recordedAt: now },\n      signal: options.signal,\n    });', 1)
+          p.write_text(text)
+
+          # Cancellation propagates through Connect to local/hosted provider and multimodal fetches.
+          replace_once(
+              "services/connect/src/providers/local.ts",
+              'export async function callLocal(input: LocalCallInput): Promise<LocalCallResult> {',
+              'export async function callLocal(\n  input: LocalCallInput,\n  signal?: AbortSignal,\n): Promise<LocalCallResult> {',
+          )
+          replace_once(
+              "services/connect/src/providers/local.ts",
+              '      body: JSON.stringify(body),\n    });',
+              '      body: JSON.stringify(body),\n      signal,\n    });',
+          )
+          replace_once(
+              "services/connect/src/providers/local-runtime.ts",
+              'export function callLocalRuntime(input: LocalRuntimeCallInput): Promise<LocalCallResult> {',
+              'export function callLocalRuntime(\n  input: LocalRuntimeCallInput,\n  signal?: AbortSignal,\n): Promise<LocalCallResult> {',
+          )
+          replace_once(
+              "services/connect/src/providers/local-runtime.ts",
+              '      return callLocal(input);',
+              '      return callLocal(input, signal);',
+          )
+          replace_once(
+              "services/connect/src/providers/anthropic.ts",
+              'export async function callAnthropic(input: AnthropicCallInput): Promise<AnthropicCallResult> {',
+              'export async function callAnthropic(\n  input: AnthropicCallInput,\n  signal?: AbortSignal,\n): Promise<AnthropicCallResult> {',
+          )
+          replace_once(
+              "services/connect/src/providers/anthropic.ts",
+              '      body: JSON.stringify(body),\n    });',
+              '      body: JSON.stringify(body),\n      signal,\n    });',
+          )
+          replace_once(
+              "services/connect/src/providers/openai-compatible.ts",
+              'export async function callOpenAiCompatibleHosted(\n  input: OpenAiCompatibleHostedInput,\n): Promise<OpenAiCompatibleHostedResult> {',
+              'export async function callOpenAiCompatibleHosted(\n  input: OpenAiCompatibleHostedInput,\n  signal?: AbortSignal,\n): Promise<OpenAiCompatibleHostedResult> {',
+          )
+          replace_once(
+              "services/connect/src/providers/openai-compatible.ts",
+              '      body: JSON.stringify(buildOpenAiCompatibleRequestBody(input)),\n    });',
+              '      body: JSON.stringify(buildOpenAiCompatibleRequestBody(input)),\n      signal,\n    });',
+          )
+          replace_once(
+              "services/connect/src/providers/openai.ts",
+              'export function callOpenAi(input: OpenAiCallInput): Promise<OpenAiCompatibleHostedResult> {',
+              'export function callOpenAi(\n  input: OpenAiCallInput,\n  signal?: AbortSignal,\n): Promise<OpenAiCompatibleHostedResult> {',
+          )
+          replace_once(
+              "services/connect/src/providers/openai.ts",
+              '    ...adapterInput(input),\n  });',
+              '    ...adapterInput(input),\n  }, signal);',
+          )
+          replace_once(
+              "services/connect/src/providers/openrouter.ts",
+              'export function callOpenRouter(\n  input: OpenRouterCallInput,\n): Promise<OpenAiCompatibleHostedResult> {',
+              'export function callOpenRouter(\n  input: OpenRouterCallInput,\n  signal?: AbortSignal,\n): Promise<OpenAiCompatibleHostedResult> {',
+          )
+          replace_once(
+              "services/connect/src/providers/openrouter.ts",
+              '    ...adapterInput(input),\n  });',
+              '    ...adapterInput(input),\n  }, signal);',
+          )
+          replace_once(
+              "services/connect/src/providers/hosted.ts",
+              'export function callHostedProvider(input: HostedCallInput): Promise<HostedCallResult> {',
+              'export function callHostedProvider(\n  input: HostedCallInput,\n  signal?: AbortSignal,\n): Promise<HostedCallResult> {',
+          )
+          replace_once("services/connect/src/providers/hosted.ts", '      return callAnthropic(adapterInput);', '      return callAnthropic(adapterInput, signal);')
+          replace_once("services/connect/src/providers/hosted.ts", '      return callOpenRouter(adapterInput);', '      return callOpenRouter(adapterInput, signal);')
+          replace_once("services/connect/src/providers/hosted.ts", '      return callOpenAi(adapterInput);', '      return callOpenAi(adapterInput, signal);')
+
+          replace_once(
+              "services/connect/src/complete.ts",
+              'export async function complete(\n  deps: CompleteDeps,\n  input: CompleteInput,\n): Promise<CompleteResult> {',
+              'export async function complete(\n  deps: CompleteDeps,\n  input: CompleteInput,\n  signal?: AbortSignal,\n): Promise<CompleteResult> {',
+          )
+          replace_once(
+              "services/connect/src/complete.ts",
+              '      userMessage: input.userMessage,\n    });',
+              '      userMessage: input.userMessage,\n    }, signal);',
+          )
+          replace_once(
+              "services/connect/src/complete.ts",
+              '        ...providerInput,\n      });',
+              '        ...providerInput,\n      }, signal);',
+          )
+
+          p = Path("services/connect/src/multimodal.ts")
+          text = p.read_text()
+          text = text.replace('  infer(input: MultimodalInferRequest): Promise<AdapterOutput>;', '  infer(input: MultimodalInferRequest, signal?: AbortSignal): Promise<AdapterOutput>;', 1)
+          text = text.replace('  async infer(input: MultimodalInferRequest): Promise<AdapterOutput> {', '  async infer(input: MultimodalInferRequest, signal?: AbortSignal): Promise<AdapterOutput> {', 1)
+          text = text.replace('        body: JSON.stringify(input),\n      });', '        body: JSON.stringify(input),\n        signal,\n      });', 1)
+          text = text.replace('  now: Timestamp,\n): Promise<MultimodalAdapterResult> {', '  now: Timestamp,\n  signal?: AbortSignal,\n): Promise<MultimodalAdapterResult> {', 1)
+          text = text.replace('    const output = await adapter.infer(input);', '    const output = await adapter.infer(input, signal);', 1)
+          text = text.replace('  now: Timestamp,\n): Promise<MultimodalAdapterResult> {\n  if (input.route.preferred === "hosted") return callRoute(deps, input, "hosted", now);', '  now: Timestamp,\n  signal?: AbortSignal,\n): Promise<MultimodalAdapterResult> {\n  if (input.route.preferred === "hosted") return callRoute(deps, input, "hosted", now, signal);', 1)
+          text = text.replace('    return await callRoute(deps, input, "local", now);', '    return await callRoute(deps, input, "local", now, signal);', 1)
+          text = text.replace('    return callRoute(deps, input, "hosted", now);', '    return callRoute(deps, input, "hosted", now, signal);', 1)
+          p.write_text(text)
+
+          p = Path("services/connect/src/http.ts")
+          text = p.read_text()
+          old = '''  app.post("/v1/complete", async (req) => {
+            const body = parseOrBadRequest(CompleteBodySchema, req.body);
+            try {
+              return await complete(deps, body);
+            } catch (err) {
+              throw toHttpError(err);
+            }
+          });'''
+          new = '''  app.post("/v1/complete", async (req) => {
+            const body = parseOrBadRequest(CompleteBodySchema, req.body);
+            const controller = new AbortController();
+            const abort = (): void => controller.abort();
+            req.raw.once("aborted", abort);
+            try {
+              return await complete(deps, body, controller.signal);
+            } catch (err) {
+              throw toHttpError(err);
+            } finally {
+              req.raw.off("aborted", abort);
+            }
+          });'''
+          if old not in text:
+              raise SystemExit("missing Connect complete route marker")
+          text = text.replace(old, new, 1)
+          old = '''  app.post("/v1/multimodal/infer", async (req) => {
+            const body = parseOrBadRequest(MultimodalInferRequestSchema, req.body);
+            try {
+              return await inferMultimodal(
+                {
+                  localAdapter: options.localMultimodalAdapter,
+                  hostedAdapter: options.hostedMultimodalAdapter,
+                  hostedProvider,
+                  hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+                  spendBudget: options.spendBudget,
+                },
+                body,
+                nowIso(),
+              );
+            } catch (err) {
+              throw toHttpError(err);
+            }
+          });'''
+          new = '''  app.post("/v1/multimodal/infer", async (req) => {
+            const body = parseOrBadRequest(MultimodalInferRequestSchema, req.body);
+            const controller = new AbortController();
+            const abort = (): void => controller.abort();
+            req.raw.once("aborted", abort);
+            try {
+              return await inferMultimodal(
+                {
+                  localAdapter: options.localMultimodalAdapter,
+                  hostedAdapter: options.hostedMultimodalAdapter,
+                  hostedProvider,
+                  hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+                  spendBudget: options.spendBudget,
+                },
+                body,
+                nowIso(),
+                controller.signal,
+              );
+            } catch (err) {
+              throw toHttpError(err);
+            } finally {
+              req.raw.off("aborted", abort);
+            }
+          });'''
+          if old not in text:
+              raise SystemExit("missing Connect multimodal route marker")
+          p.write_text(text.replace(old, new, 1))
+
+          # Hub wires the voice runtime to existing Connect + chat orchestration.
+          p = Path("services/hub/src/http.ts")
+          text = p.read_text()
+          text = text.replace('  ModuleNameSchema,\n  OperationIdSchema,', '  ModuleNameSchema,\n  MultimodalAdapterResultSchema,\n  OperationIdSchema,', 1)
+          text = text.replace('import { registerMcpRoutes } from "./mcp.js";', 'import { registerMcpRoutes } from "./mcp.js";\nimport { registerVoiceRoutes } from "./voice-http.js";\nimport { RealtimeVoiceRuntime } from "./voice-runtime.js";\nimport { VoiceSessionStore } from "./voice-store.js";', 1)
+          marker = '''  const deps: OrchestrateDeps = {
+            repo,
+            history,
+            authority,
+            contextUrl: options.contextUrl,
+            connectUrl: options.connectUrl,
+            rndUrl: options.rndUrl,
+            internalToken: options.internalToken,
+          };
+          '''
+          if marker not in text:
+              raise SystemExit("missing Hub deps marker")
+          wiring = marker + '''
+          const voice = new RealtimeVoiceRuntime({
+            store: new VoiceSessionStore(db),
+            authority,
+            repo,
+            history,
+            now: nowIso,
+            infer: async (input, signal) => {
+              try {
+                return MultimodalAdapterResultSchema.parse(
+                  await httpJson(`${options.connectUrl}/v1/multimodal/infer`, {
+                    token: options.internalToken,
+                    body: input,
+                    signal,
+                  }),
+                );
+              } catch (err) {
+                throw forwardOrUpstreamError("Connect", err);
+              }
+            },
+            chat: async (input, execution) =>
+              chat(deps, input, nowIso(), {
+                target: execution.target,
+                syncClass: execution.syncClass,
+                signal: execution.signal,
+                sourceApp: "ai:voice",
+              }),
+          });
+          registerVoiceRoutes(app, voice);
+          '''
+          text = text.replace(marker, wiring, 1)
+          p.write_text(text)
+          PY
+      - name: Write Batch 6 architecture docs
+        run: |
+          cat > docs/adr/0027-realtime-voice.md <<'EOF'
+          # ADR-27 — Realtime Voice
+
+          Status: Accepted — Batch 6 implementation
+
+          ## Context
+
+          Batch 5 established the native speech primitives: normalized STT/TTS through Connect, Hub-owned authority, SyncClass egress checks, cumulative hosted spend guards, Context/History provenance, and explicit local/hosted routing. Realtime voice must add low-latency conversation without creating a second provider gateway, permission plane, memory source, or durability engine.
+
+          Persisting every microphone frame into Artifact would create a high-cardinality blob stream that is neither useful memory nor a stable user artifact. Conversely, keeping every realtime state only in browser memory would make ordering, audit, reconnect, and fail-closed restart behavior unverifiable.
+
+          ## Decision
+
+          1. Hub owns realtime voice session coordination. A durable SQLite session record tracks lifecycle, generation, monotonic client sequence, language mode, VAD configuration, and append-only event metadata.
+          2. Audio uplink is chunked `audio/*` with explicit `clientSequence`. Each chunk has an immutable receipt/fingerprint. Exact completed replay is safe; same sequence with different bytes or ambiguous PROCESSING/FAILED receipt fails closed.
+          3. Browser VAD is the first speech boundary. Hub does not trust it for security: MIME, schema, ordering, capability, SyncClass, Connect routing, credential, kill-switch, and spend controls are still re-evaluated server-side.
+          4. Speech chunks use Batch 5 `/v1/multimodal/infer` STT. Normalized language metadata drives `auto` Indonesian/English switching. Explicit `id` or `en` pins the language.
+          5. Final transcript enters the normal Hub chat path, so user/assistant text, Context memory, Historical Ledger, authority, provider accounting, and RnD tracing do not get a voice-specific duplicate implementation. Voice may select the existing local or hosted Connect completion target.
+          6. Assistant text is delivered downstream incrementally as bounded `assistant.delta` events. The current provider completion contract remains request/response; therefore Batch 6 guarantees realtime incremental downstream delivery, not provider-native first-token streaming. Provider-native token streaming may be added later only if it preserves exact cache, cost, reservation, and final-state semantics.
+          7. Each text delta is synthesized through Batch 5 TTS and delivered as transient `assistant.audio`. Durable voice events retain only audio metadata. Raw live microphone/TTS bytes are intentionally not duplicated into the durable voice event database.
+          8. Server-Sent Events provide ordered downlink events while chunk POSTs provide the uplink. Together they form a duplex application transport without introducing a second RPC authority boundary.
+          9. Barge-in increments a generation counter and aborts the active request chain. Stale generations are never emitted after interruption. AbortSignal is propagated Hub → Connect → local/hosted completion and STT/TTS fetches.
+          10. Open live sessions are not adopted after a Hub process restart. They are marked FAILED with an append-only restart event; clients must explicitly start a new live session.
+          11. Latency events record model latency, first TTS-chunk latency, end-to-end latency, and barge-in count. STT chunk latency is recorded with partial transcript events. These are telemetry facts, not performance claims.
+
+          ## Consequences
+
+          - Batch 6 reuses the security/cost/provider boundaries already proven in Batch 4–5.
+          - Final conversational text remains reconstructable from Historical Ledger/Context without storing raw live audio.
+          - Reconnect can replay durable transcript/state events; already-delivered transient audio is not guaranteed after process loss.
+          - A browser can stop audible output immediately on barge-in while server cancellation prevents stale provider/TTS work where the underlying fetch honors AbortSignal.
+          - Realtime voice does not create a new durable workflow engine; long-running workflow durability remains Temporal/Flow's domain.
+          EOF
+
+          cat > docs/voice-operations.md <<'EOF'
+          # Realtime Voice Operations — Batch 6
+
+          ## Boundary
+
+          `Ai microphone/VAD -> Hub voice session -> Connect STT -> Hub chat -> Connect model -> Connect TTS -> Hub SSE -> Ai playback`
+
+          Hub owns session/order/audit. Connect owns model/STT/TTS runtime and credentials. Context/History keep final conversational semantics/provenance. Raw live audio is transient transport data.
+
+          ## Endpoints
+
+          - `POST /v1/voice/sessions` — create/idempotently reopen the same configuration.
+          - `POST /v1/voice/chunks` — monotonic audio uplink with `clientSequence`.
+          - `POST /v1/voice/interrupt` — explicit barge-in/cancel.
+          - `POST /v1/voice/close` — close the live session.
+          - `GET /v1/voice/events?sessionId=...&after=N` — finite event replay/debug view.
+          - `GET /v1/voice/stream?sessionId=...&after=N` — ordered SSE downlink.
+
+          Ai exposes same-origin proxy routes under `/api/voice/*`; `lib/voice-client.ts` provides microphone capture, VAD, PCM16 WAV chunking, SSE handling, and audio playback without introducing a separate UI contract.
+
+          ## Session lifecycle
+
+          Normal path: `LISTENING -> THINKING -> SPEAKING -> LISTENING`. Barge-in moves through `INTERRUPTED`, increments generation, aborts stale work, then returns to `LISTENING`. `CLOSED` and `FAILED` are terminal for audio chunks.
+
+          A Hub restart marks any non-terminal live session `FAILED`. This is deliberate: a realtime stream cannot be truthfully adopted after process loss when transient audio buffers no longer exist.
+
+          ## VAD and chunking
+
+          Default client VAD: RMS threshold `0.02`, silence `700 ms`, chunk target `800 ms`. These are user-adjustable transport parameters, not security controls. Server still validates MIME, body schema, ordering, authority, and routing.
+
+          ## Language
+
+          `languageMode=auto` follows normalized STT language when it is confidently `id` or `en`; `mixed/unknown` retain the current language. Explicit `id`/`en` disables automatic switching. The active language is used for TTS.
+
+          ## Routing and privacy
+
+          The voice session uses the existing Batch 5 `route` object. STT/TTS can use explicit hosted fallback exactly as Batch 5 permits. The assistant model uses the preferred route directly; it does not silently retry a completed/partially-recorded chat turn on another provider. Hosted paths still require cloud-eligible SyncClass, Hub grants, Connect credentials, cost kill switch, and durable spend reservation.
+
+          ## Streaming semantics
+
+          STT is incremental per audio chunk. Assistant text/audio is streamed from Hub to the browser as ordered events. The current Connect chat provider contract produces a completed model reply before Hub slices it into downstream deltas; this baseline intentionally does not claim provider-native first-token streaming.
+
+          ## Failure / replay rules
+
+          - Exact completed audio-chunk replay returns the prior ack.
+          - Same `clientSequence` with different payload is HTTP 409.
+          - PROCESSING/FAILED chunk replay is treated as ambiguous and fails closed.
+          - Missing sequence gaps are HTTP 409.
+          - Stale generations are suppressed after interruption.
+          - Durable voice events never store `audioBase64`; only in-process live delivery overlays transient audio bytes.
+          EOF
+
+          python <<'PY'
+          from pathlib import Path
+          p = Path("docs/adr/README.md")
+          text = p.read_text().replace("Dua puluh enam keputusan", "Dua puluh tujuh keputusan", 1)
+          marker = '| [26](0026-native-multimodal-pipeline.md) | Native multimodal memakai Artifact/Context/Connect/Hub owner boundaries + explicit hosted fallback |\n'
+          if marker not in text:
+              raise SystemExit("missing ADR 26 row")
+          text = text.replace(marker, marker + '| [27](0027-realtime-voice.md) | Realtime voice memakai Hub session/SSE + Batch 5 STT/TTS dengan barge-in generation cancellation |\n', 1)
+          p.write_text(text)
+
+          p = Path("docs/DECISIONS.md")
+          text = p.read_text()
+          row = '| 2026-09-10 | Realtime voice dimiliki Hub sebagai live session/order plane; STT/TTS tetap Connect, final transcript/reply tetap lewat chat/Context/History, raw audio live transient, dan barge-in memakai generation + AbortSignal tanpa membuat provider/permission/durability engine kedua | ADR-27, `docs/voice-operations.md` |\n'
+          if row not in text:
+              p.write_text(text + "\n" + row)
+
+          p = Path("docs/EXECUTION-PROGRESS.md")
+          text = p.read_text()
+          text = text.replace('- Batch 5 status: **CLOSED**\n- next implementation target: **Batch 6 — Realtime Voice**', '- Batch 5 status: **CLOSED**\n- Batch 6 status: **IN PROGRESS**\n- active branch: `agent/batch6-realtime-voice-20260910`\n- next after Batch 6: **Batch 7 — Data Refactor / Rebuild Engine**', 1) if '- next implementation target: **Batch 6 — Realtime Voice**' in text else text
+          text = text.replace('## Batch 6 — Realtime Voice\n\nStatus: **PLANNED**', '## Batch 6 — Realtime Voice\n\nStatus: **IN PROGRESS**', 1)
+          p.write_text(text)
+          PY
+      - name: Format and focused verification
+        run: |
+          pnpm exec prettier --write \
+            packages/shared-schema/src/voice.ts packages/shared-schema/src/index.ts \
+            services/hub/src/voice-store.ts services/hub/src/voice-runtime.ts services/hub/src/voice-http.ts \
+            services/hub/src/voice-store.test.ts services/hub/src/voice-runtime.test.ts \
+            services/hub/src/multimodal-http.ts services/hub/src/orchestrate.ts services/hub/src/http.ts \
+            services/connect/src/providers/local.ts services/connect/src/providers/local-runtime.ts \
+            services/connect/src/providers/anthropic.ts services/connect/src/providers/openai-compatible.ts \
+            services/connect/src/providers/openai.ts services/connect/src/providers/openrouter.ts \
+            services/connect/src/providers/hosted.ts services/connect/src/complete.ts \
+            services/connect/src/multimodal.ts services/connect/src/http.ts \
+            apps/ai/lib/voice-client.ts apps/ai/lib/voice-client.test.ts \
+            apps/ai/app/api/voice/session/route.ts apps/ai/app/api/voice/chunk/route.ts \
+            apps/ai/app/api/voice/interrupt/route.ts apps/ai/app/api/voice/close/route.ts \
+            apps/ai/app/api/voice/stream/route.ts docs/adr/0027-realtime-voice.md \
+            docs/voice-operations.md docs/adr/README.md docs/DECISIONS.md docs/EXECUTION-PROGRESS.md
+          pnpm typecheck
+          pnpm vitest run services/hub/src/voice-store.test.ts services/hub/src/voice-runtime.test.ts apps/ai/lib/voice-client.test.ts
+      - name: Remove helper and commit implementation candidate
+        run: |
+          git rm .github/workflows/batch6-apply.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: Batch 6 realtime voice baseline"
+          git push origin HEAD:agent/batch6-realtime-voice-20260910

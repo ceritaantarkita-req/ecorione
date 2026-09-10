@@ -21,3 +21,4 @@ export * from "./history.js";
 export * from "./ecx.js";
 export * from "./extensions.js";
 export * from "./multimodal.js";
+export * from "./voice.js";
