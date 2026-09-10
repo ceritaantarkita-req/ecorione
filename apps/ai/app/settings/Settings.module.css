@@ -71,9 +71,9 @@
   gap: 10px;
   align-items: center;
 }
-input,
-select,
-textarea {
+.page input,
+.page select,
+.page textarea {
   border: 1px solid #c9c9c9;
   background: #fff;
   color: #151515;
@@ -81,7 +81,7 @@ textarea {
   padding: 10px 12px;
   font: inherit;
 }
-textarea {
+.page textarea {
   width: 100%;
   margin-top: 14px;
   font-family: ui-monospace, monospace;
@@ -92,7 +92,7 @@ textarea {
   flex: 1;
   min-width: 220px;
 }
-button {
+.page button {
   border: 0;
   border-radius: 7px;
   padding: 10px 14px;
@@ -101,7 +101,7 @@ button {
   font: 600 13px/1.2 inherit;
   cursor: pointer;
 }
-button:disabled {
+.page button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
