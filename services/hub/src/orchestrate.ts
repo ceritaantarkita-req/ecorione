@@ -291,7 +291,8 @@ export async function chat(
     throw new UpstreamError("Connect", err);
   }
 
-  const completeProvider = complete.provider ?? (target === "local" ? "local" : "unknown-hosted");
+  const completeProvider =
+    complete.provider ?? (target === "local" ? "local" : "unknown-hosted");
   const completePricingModel = complete.pricingModel ?? complete.cost.model;
 
   deps.repo.recordAuditEvent({
