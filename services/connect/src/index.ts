@@ -2,6 +2,7 @@
  * @ecorione/connect — outbound provider/local gateway.
  */
 
+export * from "./backup.js";
 export * from "./cache.js";
 export * from "./complete.js";
 export * from "./credential-vault.js";

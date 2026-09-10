@@ -8,5 +8,7 @@
 
 export * from "./db.js";
 export * from "./store.js";
+export * from "./dataset.js";
+export * from "./backup.js";
 export * from "./http.js";
 export type { SqliteDatabase } from "./sqlite.js";

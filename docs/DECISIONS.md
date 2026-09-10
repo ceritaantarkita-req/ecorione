@@ -54,3 +54,4 @@ Keputusan yang mengubah invarian di [`../AGENTS.md`](../AGENTS.md) butuh ADR di
 
 | 2026-09-10 | Realtime voice dimiliki Hub sebagai live session/order plane; STT/TTS tetap Connect, final transcript/reply tetap lewat chat/Context/History, raw audio live transient, dan barge-in memakai generation + AbortSignal tanpa membuat provider/permission/durability engine kedua | ADR-27, `docs/voice-operations.md` |
 | 2026-09-10 | Data refactor/rebuild dimiliki masing-masing owner service: Context L0 dan Historical Ledger tidak boleh direwrite; dry-run digest + owner snapshot + durable receipt wajib sebelum projection mutation/rollback | ADR-28, `docs/data-rebuild-operations.md` |
+| 2026-09-10 | Dataset release dimiliki RnD dan terpisah dari backup; backup/restore tetap owner-scoped, Connect Vault ciphertext-only dengan master key out-of-band, dan Flow DR mengikuti persistence Temporal | ADR-29, `docs/data-governance-dr-operations.md` |

@@ -12,4 +12,5 @@ export * from "./http.js";
 export * from "./orchestrate.js";
 export * from "./policy-engine.js";
 export * from "./repository.js";
+export * from "./backup.js";
 export { nowIso } from "./clock.js";
