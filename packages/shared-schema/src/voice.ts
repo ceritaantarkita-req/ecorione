@@ -3,7 +3,8 @@ import { z } from "zod";
 import { ScopeSchema, SensitivitySchema, SyncClassSchema } from "./classification.js";
 import { OperationIdSchema, SessionIdSchema, WorkspaceIdSchema } from "./ids.js";
 import { TimestampSchema } from "./memory.js";
-import { MultimodalLanguageSchema, MultimodalRouteRequestSchema } from "./multimodal.js";
+import { MultimodalRouteRequestSchema } from "./multimodal.js";
+import type { MultimodalLanguage } from "./multimodal.js";
 
 export const VOICE_SESSION_STATES = [
   "LISTENING",
@@ -180,7 +181,7 @@ export type VoiceLatency = z.infer<typeof VoiceLatencySchema>;
 
 export function voiceLanguageFromDetected(
   mode: VoiceLanguageMode,
-  detected: z.infer<typeof MultimodalLanguageSchema>,
+  detected: MultimodalLanguage,
   current: "id" | "en",
 ): "id" | "en" {
   if (mode === "id" || mode === "en") return mode;

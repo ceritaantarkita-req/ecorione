@@ -3,7 +3,6 @@ import {
   VoiceChunkAckSchema,
   VoiceEventSchema,
   VoiceSessionSnapshotSchema,
-  type OperationId,
   type SessionId,
   type Timestamp,
   type VoiceAudioChunkRequest,
