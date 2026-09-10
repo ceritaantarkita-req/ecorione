@@ -28,21 +28,27 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          p = Path('apps/ai/app/space/page.tsx')
-          s = p.read_text()
-          old_import = '"use client";\n\nimport { useCallback, useEffect, useMemo, useState } from "react";'
-          new_import = '"use client";\n\nimport Link from "next/link";\nimport { useCallback, useEffect, useMemo, useState } from "react";'
-          old_anchor = '''          <a href="/" style={{ color: "inherit" }}>
-            ← Ai
-          </a>'''
-          new_anchor = '''          <Link href="/" style={{ color: "inherit" }}>
-            ← Ai
-          </Link>'''
-          assert s.count(old_import) == 1, 'unexpected import anchor count'
-          assert s.count(old_anchor) == 1, 'unexpected root anchor count'
-          p.write_text(s.replace(old_import, new_import).replace(old_anchor, new_anchor))
+          import re
+
+          page = Path('apps/ai/app/space/page.tsx')
+          source = page.read_text()
+          react_import = 'import { useCallback, useEffect, useMemo, useState } from "react";'
+          if 'import Link from "next/link";' not in source:
+              assert source.count(react_import) == 1, 'unexpected React import count'
+              source = source.replace(react_import, 'import Link from "next/link";\n' + react_import, 1)
+
+          pattern = r'<a href="/" style=\{\{ color: "inherit" \}\}>\s*← Ai\s*</a>'
+          replacement = '<Link href="/" style={{ color: "inherit" }}>\n            ← Ai\n          </Link>'
+          source, count = re.subn(pattern, replacement, source, count=1)
+          assert count == 1, 'unexpected root anchor count'
+          page.write_text(source)
+
+          css = Path('apps/ai/app/settings/Settings.module.css')
+          css_source = css.read_text()
+          assert css_source.count('align-items: end;') == 1, 'unexpected align-items end count'
+          css.write_text(css_source.replace('align-items: end;', 'align-items: flex-end;', 1))
           PY
-          pnpm exec prettier --write apps/ai/app/space/page.tsx
+          pnpm exec prettier --write apps/ai/app/space/page.tsx apps/ai/app/settings/Settings.module.css
           pnpm run lint
           pnpm run build
       - name: Commit validated cleanup
@@ -52,5 +58,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git diff --cached --check
-          git commit -m 'fix(batch12): use Next Link for Space navigation'
+          git commit -m 'fix(batch12): satisfy Next production build rules'
           git push origin HEAD:agent/batch12-final-security-release-20260910
