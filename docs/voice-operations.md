@@ -47,3 +47,9 @@ STT is incremental per audio chunk. Assistant text/audio is streamed from Hub as
 - Missing sequence gaps → HTTP 409.
 - Stale generations are suppressed after interruption.
 - Durable voice events never store `audioBase64`; only in-process live delivery overlays transient bytes.
+
+## Validation evidence
+
+- Batch 6 integration run `34422346310`: root typecheck PASS and focused voice regression PASS.
+- Strict lint-fix run `34423581218`: lint PASS, root typecheck PASS, focused voice regression PASS, and the temporary helper self-deleted before the candidate head.
+- Closure still requires exact-head repository CI, exact-head MCP External HTTPS Acceptance, expected-head merge, and post-merge `main` verification before Batch 6 can be marked `CLOSED`.
