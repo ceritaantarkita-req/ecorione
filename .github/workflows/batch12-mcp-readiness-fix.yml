@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - name: Install pinned cloudflared and diagnose Quick Tunnel DNS
+      - name: Test fresh Quick Tunnel through Cloudflare edge
         shell: bash
         run: |
           set -euo pipefail
@@ -46,22 +46,31 @@ jobs:
           HOST="${URL#https://}"
           echo "quick_tunnel_host=$HOST"
 
-          echo '=== system resolver ==='
+          echo '=== direct fresh-host DNS ==='
           getent ahostsv4 "$HOST" || true
 
-          echo '=== Cloudflare DoH ==='
-          curl --fail --silent --show-error \
-            -H 'accept: application/dns-json' \
-            "https://cloudflare-dns.com/dns-query?name=${HOST}&type=A" || true
-          echo
+          echo '=== stable zone edge candidates ==='
+          getent ahostsv4 trycloudflare.com || true
+          getent ahostsv4 api.trycloudflare.com || true
+          EDGE_IP="$(getent ahostsv4 trycloudflare.com | awk '$3 == "STREAM" {print $1; exit}')"
+          if [ -z "$EDGE_IP" ]; then
+            EDGE_IP="$(getent ahostsv4 api.trycloudflare.com | awk '$3 == "STREAM" {print $1; exit}')"
+          fi
+          [ -n "$EDGE_IP" ] || { echo 'No stable Cloudflare edge IP resolved'; exit 1; }
+          echo "edge_ip=$EDGE_IP"
 
-          echo '=== Google DoH ==='
-          curl --fail --silent --show-error \
-            "https://dns.google/resolve?name=${HOST}&type=A" || true
-          echo
+          echo '=== public HTTPS via pinned edge, original SNI/Host ==='
+          for _ in $(seq 1 30); do
+            if curl --fail --silent --show-error --max-time 10 \
+              --resolve "$HOST:443:$EDGE_IP" "$URL/" -o "$RUNNER_TEMP/body"; then
+              echo 'PINNED_EDGE_PASS'
+              head -c 120 "$RUNNER_TEMP/body" || true
+              echo
+              exit 0
+            fi
+            sleep 2
+          done
 
-          echo '=== HTTPS curl ==='
-          curl --head --max-time 10 --silent --show-error "$URL" || true
-
-          echo '=== cloudflared tail ==='
-          tail -n 30 "$LOG"
+          echo 'PINNED_EDGE_FAIL'
+          tail -n 40 "$LOG"
+          exit 1
