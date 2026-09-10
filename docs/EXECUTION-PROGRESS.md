@@ -27,13 +27,13 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Batch 6 implementation is merged and post-merge verified on `main`:
+Batch 7 implementation is merged and post-merge verified on `main`:
 
-- implementation PR #17 merge: `01cc32f12745f4a5dd391e61e39ad8d8faa4d5b7`
-- exact final PR head: `4312f76c521cd676ac263a3f400923906fba7bdf`
-- exact-head CI `34423696211`: full green
-- exact-head MCP External HTTPS Acceptance `34423696180`: PASS
-- post-merge main CI `34423867459`: full green
+- implementation PR #19 merge: `a48629d13ad03d9d02e635c6a8ca72f511e7a99c`
+- exact final PR head: `87afff362dd00c5922b641e52e18d5813b506593`
+- exact-head CI `34425970086`: full green
+- MCP External HTTPS Acceptance: **N/A** — Batch 7 tidak mengubah path yang memicu workflow MCP external
+- post-merge main CI `34426166317`: full green
 
 ### Active execution
 
@@ -43,7 +43,8 @@ Batch 6 implementation is merged and post-merge verified on `main`:
 - Batch 4 status: **CLOSED**
 - Batch 5 status: **CLOSED**
 - Batch 6 status: **CLOSED**
-- next implementation target: **Batch 7 — Data Refactor / Rebuild Engine**
+- Batch 7 status: **CLOSED**
+- next implementation target: **Batch 8 — Dataset Governance + Backup / Restore / DR**
 
 ---
 
@@ -210,7 +211,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1–6 sudah CLOSED**. Tersisa **6 batch platform/production (Batch 7–12)**; next implementation target adalah **Batch 7 — Data Refactor / Rebuild Engine**.
+Dari current state, **Batch 1–7 sudah CLOSED**. Tersisa **5 batch platform/production (Batch 8–12)**; next implementation target adalah **Batch 8 — Dataset Governance + Backup / Restore / DR**.
 
 ---
 
@@ -500,7 +501,7 @@ Batch 6 resmi **CLOSED**; next implementation batch adalah Batch 7.
 
 ## Batch 7 — Data Refactor / Rebuild Engine
 
-Status: **IN PROGRESS**
+Status: **CLOSED**
 
 Immutable rule:
 
@@ -540,6 +541,24 @@ Current implementation boundary:
 - FTS5 rebuild + vector accelerator reindex from durable embeddings
 - orphan/SQLite/FK/FTS integrity validation
 - Historical Ledger verify-all only; no rewrite/repair endpoint
+
+Closure evidence:
+
+- implementation branch: `agent/batch7-data-rebuild-20260910`;
+- implementation PR: #19;
+- final exact PR head: `87afff362dd00c5922b641e52e18d5813b506593`;
+- pre-PR integration gate `34425510633`: lint, typecheck, focused regression PASS;
+- hardening gate `34425780889`: lint, typecheck, failed-execute rollback + HTTP stale-plan + History/repository/retrieval regression PASS;
+- exact-head CI `34425970086`: Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Secret Scan, Production Build PASS;
+- MCP External HTTPS Acceptance: **N/A** karena Batch 7 tidak mengubah path trigger workflow tersebut;
+- merge memakai expected-head lock menjadi `a48629d13ad03d9d02e635c6a8ca72f511e7a99c`;
+- post-merge `main` CI `34426166317`: full green;
+- temporary Batch 7 integration/hardening workflows self-delete dan tidak ada di implementation tree;
+- Historical Ledger dan Context L0 tetap authoritative append-only sources; Batch 7 hanya rebuild/repair projection melalui owner-service contract.
+
+Verification: `docs/verification/batch7-closure-2026-09-10.md`
+
+Batch 7 resmi **CLOSED**; next implementation batch adalah Batch 8.
 
 ## Batch 8 — Dataset Governance + Backup / Restore / DR
 
