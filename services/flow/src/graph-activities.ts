@@ -13,8 +13,6 @@ import {
   type CompiledFlowGraphPlan,
   type FlowCompiledNode,
   type FlowGraphExecutionInput,
-  type FlowGraphId,
-  type FlowGraphNode,
   type OperationId,
   type PermissionId,
   type PolicyVerdict,
@@ -29,6 +27,7 @@ export interface FlowGraphActivityConfig {
   readonly connectUrl: string;
   readonly contextUrl: string;
   readonly artifactUrl: string;
+  readonly spaceUrl: string;
   readonly sandboxUrl: string;
   readonly rndUrl: string;
   readonly flowUrl: string;
@@ -91,6 +90,7 @@ export function createFlowGraphActivities(
   const ownerUrls: Record<string, string> = {
     context: config.contextUrl,
     artifact: config.artifactUrl,
+    space: config.spaceUrl,
     rnd: config.rndUrl,
     hub: config.hubUrl,
     connect: config.connectUrl,
