@@ -94,6 +94,16 @@ describe("DatasetRegistry", () => {
     expect(store.list("routing-eval")).toEqual([first]);
   });
 
+  it("repairs registry visibility when immutable release write survived an interrupted registry update", () => {
+    const store = registry();
+    const first = store.release(request(), "2026-09-10T02:00:00.000Z");
+    rmSync(join(store.root, "registry.json"), { force: true });
+
+    const recovered = store.release(request(), "2026-09-10T03:00:00.000Z");
+    expect(recovered).toEqual(first);
+    expect(store.list("routing-eval")).toEqual([first]);
+  });
+
   it("detects release tampering", () => {
     const store = registry();
     const manifest = store.release(request(), "2026-09-10T02:00:00.000Z");
