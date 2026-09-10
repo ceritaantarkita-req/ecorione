@@ -13,57 +13,51 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
-      - name: Test fresh Quick Tunnel through Cloudflare edge
+      - name: Test localhost.run public HTTPS fallback
         shell: bash
         run: |
           set -euo pipefail
-          CLOUDFLARED="$RUNNER_TEMP/cloudflared"
-          LOG="$RUNNER_TEMP/cloudflared.log"
-          curl --fail --silent --show-error --location \
-            "https://github.com/cloudflare/cloudflared/releases/download/2026.8.3/cloudflared-linux-amd64" \
-            --output "$CLOUDFLARED"
-          echo "f29324fe934d1e100617484c78deef803c4dc2cd351d645bbde42e96b4fccc5e  $CLOUDFLARED" \
-            | sha256sum --check --strict
-          chmod 0755 "$CLOUDFLARED"
-
-          python3 -m http.server 18080 --bind 127.0.0.1 >"$RUNNER_TEMP/http.log" 2>&1 &
+          HTTP_LOG="$RUNNER_TEMP/http.log"
+          SSH_LOG="$RUNNER_TEMP/localhost-run.log"
+          python3 -m http.server 18080 --bind 127.0.0.1 >"$HTTP_LOG" 2>&1 &
           HTTP_PID=$!
-          "$CLOUDFLARED" tunnel --no-autoupdate --url http://127.0.0.1:18080 >"$LOG" 2>&1 &
-          TUNNEL_PID=$!
-          trap 'kill "$TUNNEL_PID" "$HTTP_PID" 2>/dev/null || true' EXIT
+          ssh \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ServerAliveInterval=15 \
+            -o ExitOnForwardFailure=yes \
+            -R 80:127.0.0.1:18080 \
+            nokey@localhost.run >"$SSH_LOG" 2>&1 &
+          SSH_PID=$!
+          trap 'kill "$SSH_PID" "$HTTP_PID" 2>/dev/null || true' EXIT
 
           URL=""
-          for _ in $(seq 1 60); do
-            URL="$(grep -Eo 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" | head -n1 || true)"
-            if [ -n "$URL" ] && grep -q 'Registered tunnel connection' "$LOG"; then
+          for _ in $(seq 1 45); do
+            URL="$(grep -Eo 'https://[A-Za-z0-9.-]+localhost\.run' "$SSH_LOG" | head -n1 || true)"
+            if [ -n "$URL" ]; then
               break
+            fi
+            if ! kill -0 "$SSH_PID" 2>/dev/null; then
+              echo 'localhost.run SSH process exited early'
+              cat "$SSH_LOG"
+              exit 1
             fi
             sleep 1
           done
-          [ -n "$URL" ] || { cat "$LOG"; exit 1; }
-          HOST="${URL#https://}"
-          echo "quick_tunnel_host=$HOST"
 
-          echo '=== direct fresh-host DNS ==='
-          getent ahostsv4 "$HOST" || true
-
-          echo '=== stable zone edge candidates ==='
-          getent ahostsv4 trycloudflare.com || true
-          getent ahostsv4 api.trycloudflare.com || true
-          EDGE_IP="$(getent ahostsv4 trycloudflare.com | awk '$2 == "STREAM" {print $1; exit}')"
-          if [ -z "$EDGE_IP" ]; then
-            EDGE_IP="$(getent ahostsv4 api.trycloudflare.com | awk '$2 == "STREAM" {print $1; exit}')"
+          if [ -z "$URL" ]; then
+            echo 'No localhost.run HTTPS URL discovered'
+            cat "$SSH_LOG"
+            exit 1
           fi
-          [ -n "$EDGE_IP" ] || { echo 'No stable Cloudflare edge IP resolved'; exit 1; }
-          echo "edge_ip=$EDGE_IP"
 
-          echo '=== public HTTPS via pinned edge, original SNI/Host ==='
-          for _ in $(seq 1 30); do
-            if curl --fail --silent --show-error --max-time 10 \
-              --resolve "$HOST:443:$EDGE_IP" "$URL/" -o "$RUNNER_TEMP/body"; then
-              echo 'PINNED_EDGE_PASS'
+          echo "public_url=$URL"
+          for _ in $(seq 1 20); do
+            if curl --fail --silent --show-error --max-time 10 "$URL/" -o "$RUNNER_TEMP/body"; then
+              echo 'LOCALHOST_RUN_PASS'
               head -c 120 "$RUNNER_TEMP/body" || true
               echo
               exit 0
@@ -71,6 +65,6 @@ jobs:
             sleep 2
           done
 
-          echo 'PINNED_EDGE_FAIL'
-          tail -n 40 "$LOG"
+          echo 'LOCALHOST_RUN_FAIL'
+          cat "$SSH_LOG"
           exit 1
