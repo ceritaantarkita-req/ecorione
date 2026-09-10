@@ -25,83 +25,45 @@ jobs:
               '- Batch 7 status: **CLOSED**\n- next implementation target: **Batch 8 — Dataset Governance + Backup / Restore / DR**',
               '- Batch 7 status: **CLOSED**\n- Batch 8 status: **IN PROGRESS**\n- active implementation branch: `agent/batch8-data-governance-dr-20260910`'
           )
-          old = '''## Batch 8 — Dataset Governance + Backup / Restore / DR
-
-Status: **PLANNED**
-
-Dataset governance:
-
-- registry
-- schema/version
-- lineage/source
-- immutable releases
-- dedupe
-- PII/secret sanitation
-- train/eval/regression split bila relevan
-- quality checks
-
-Operations:
-
-- backup service data
-- vault-safe backup
-- restore
-- integrity verification
-- disaster recovery procedure
-- recovery drill
-
----
-'''
-          new = '''## Batch 8 — Dataset Governance + Backup / Restore / DR
-
-Status: **IN PROGRESS**
-
-Dataset governance:
-
-- registry
-- schema/version
-- lineage/source
-- immutable releases
-- dedupe
-- PII/secret sanitation
-- train/eval/regression split bila relevan
-- quality checks
-
-Operations:
-
-- backup service data
-- vault-safe backup
-- restore
-- integrity verification
-- disaster recovery procedure
-- recovery drill
-
-Implementation branch: `agent/batch8-data-governance-dr-20260910`
-
-Current implementation boundary:
-
-- RnD-owned immutable dataset registry + content-identified releases;
-- explicit schema/version + source lineage digests;
-- deterministic secret/email/phone/Bearer sanitation baseline before release;
-- governed-payload dedupe + deterministic group-safe train/eval/regression split;
-- dataset quality report + tamper detection + registry crash self-heal;
-- owner-scoped backup manifest with per-file SHA-256 + aggregate digest;
-- SQLite online backup adapters for Context, Hub, RnD, Sync, and Space;
-- directory/bundle backup + staged restore for Artifact, Sandbox, RnD datasets, and Connect state;
-- Connect credential vault backup as ciphertext only; master key remains out-of-band;
-- pre-restore safety backup + operation lock + post-restore digest verification;
-- Flow DR remains Temporal-persistence responsibility; no second durability store;
-- documented separate-failure-domain requirement for production DR.
-
-Pre-PR evidence:
-
-- integration gate `34428172190`: Format, Lint, root Typecheck, focused Batch 8 regression PASS;
-- hardening gate `34428476195`: Format, Lint, root Typecheck, empty-directory recovery, dataset registry crash self-heal, RnD dataset restore, Context SQLite recovery drill, Connect vault-safe backup/restore regression PASS;
-- temporary integration/hardening workflows self-delete and are not part of the candidate tree.
-
-Batch 8 remains **IN PROGRESS** until exact-head PR gates, merge, and post-merge verification satisfy the closure definition.
-
----
-'''
+          old = (
+              '## Batch 8 — Dataset Governance + Backup / Restore / DR\n\n'
+              'Status: **PLANNED**\n\n'
+              'Dataset governance:\n\n'
+              '- registry\n- schema/version\n- lineage/source\n- immutable releases\n- dedupe\n'
+              '- PII/secret sanitation\n- train/eval/regression split bila relevan\n- quality checks\n\n'
+              'Operations:\n\n'
+              '- backup service data\n- vault-safe backup\n- restore\n- integrity verification\n'
+              '- disaster recovery procedure\n- recovery drill\n\n---\n'
+          )
+          new = (
+              '## Batch 8 — Dataset Governance + Backup / Restore / DR\n\n'
+              'Status: **IN PROGRESS**\n\n'
+              'Dataset governance:\n\n'
+              '- registry\n- schema/version\n- lineage/source\n- immutable releases\n- dedupe\n'
+              '- PII/secret sanitation\n- train/eval/regression split bila relevan\n- quality checks\n\n'
+              'Operations:\n\n'
+              '- backup service data\n- vault-safe backup\n- restore\n- integrity verification\n'
+              '- disaster recovery procedure\n- recovery drill\n\n'
+              'Implementation branch: `agent/batch8-data-governance-dr-20260910`\n\n'
+              'Current implementation boundary:\n\n'
+              '- RnD-owned immutable dataset registry + content-identified releases;\n'
+              '- explicit schema/version + source lineage digests;\n'
+              '- deterministic secret/email/phone/Bearer sanitation baseline before release;\n'
+              '- governed-payload dedupe + deterministic group-safe train/eval/regression split;\n'
+              '- dataset quality report + tamper detection + registry crash self-heal;\n'
+              '- owner-scoped backup manifest with per-file SHA-256 + aggregate digest;\n'
+              '- SQLite online backup adapters for Context, Hub, RnD, Sync, and Space;\n'
+              '- directory/bundle backup + staged restore for Artifact, Sandbox, RnD datasets, and Connect state;\n'
+              '- Connect credential vault backup as ciphertext only; master key remains out-of-band;\n'
+              '- pre-restore safety backup + operation lock + post-restore digest verification;\n'
+              '- Flow DR remains Temporal-persistence responsibility; no second durability store;\n'
+              '- documented separate-failure-domain requirement for production DR.\n\n'
+              'Pre-PR evidence:\n\n'
+              '- integration gate `34428172190`: Format, Lint, root Typecheck, focused Batch 8 regression PASS;\n'
+              '- hardening gate `34428476195`: Format, Lint, root Typecheck, empty-directory recovery, dataset registry crash self-heal, RnD dataset restore, Context SQLite recovery drill, Connect vault-safe backup/restore regression PASS;\n'
+              '- temporary integration/hardening workflows self-delete and are not part of the candidate tree.\n\n'
+              'Batch 8 remains **IN PROGRESS** until exact-head PR gates, merge, and post-merge verification satisfy the closure definition.\n\n---\n'
+          )
           if old not in s:
               raise SystemExit("Batch 8 tracker block not found")
           p.write_text(s.replace(old, new))
