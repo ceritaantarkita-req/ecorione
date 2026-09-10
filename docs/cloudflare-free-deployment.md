@@ -1,0 +1,291 @@
+# ECORIONE — Cloudflare Free Deployment Guide
+
+Last reviewed against Cloudflare documentation: **2026-09-10**
+
+Status: **recommended deployment guide; not a claim that Cloudflare hosts ECORIONE compute**
+
+## 1. Decision
+
+For the current ECORIONE architecture, the recommended free Cloudflare topology is:
+
+```text
+Internet
+  -> Cloudflare Free DNS / TLS edge / basic WAF + DDoS protection
+  -> Cloudflare Tunnel (recommended final state)
+  -> cloudflared on the ECORIONE VPS
+  -> Caddy
+  -> Ai / Sync-MCP routes
+  -> internal Docker services
+```
+
+**ECORIONE compute, databases, Temporal, Artifact storage, Vault, Sandbox, and owner data stay on the VPS/self-host environment.** Do not move these services to Cloudflare Workers/Pages merely to say the project is "on Cloudflare". The current architecture relies on long-running services, local persistence, Docker boundaries, and Temporal.
+
+Cloudflare Tunnel is available on all Cloudflare plans and uses an outbound-only connection from `cloudflared` to Cloudflare, so the final tunnel-based topology does not require a public origin IP or open inbound application ports.
+
+Official references:
+
+- Cloudflare Tunnel overview: https://developers.cloudflare.com/tunnel/
+- Tunnel setup: https://developers.cloudflare.com/tunnel/setup/
+- Tunnel routing: https://developers.cloudflare.com/tunnel/routing/
+- `cloudflared` downloads: https://developers.cloudflare.com/tunnel/downloads/
+- Linux service: https://developers.cloudflare.com/tunnel/advanced/local-management/as-a-service/linux/
+- local tunnel configuration: https://developers.cloudflare.com/tunnel/advanced/local-management/configuration-file/
+- HTTPS origin troubleshooting: https://developers.cloudflare.com/tunnel/troubleshooting/https-origins/
+
+## 2. What is free vs what is not
+
+This guide assumes:
+
+- Cloudflare account: Free;
+- DNS zone/domain added to Cloudflare;
+- Cloudflare Tunnel: available on the Free plan/all plans;
+- existing VPS/server: still required and not provided by Cloudflare;
+- ECORIONE provider API usage: separate from Cloudflare and may have its own cost;
+- domain registration: separate from Cloudflare unless the operator already owns a domain.
+
+Do not interpret "Cloudflare Free deployment" as "zero infrastructure cost." It means Cloudflare is used as the free public edge/tunnel while ECORIONE remains self-hosted.
+
+## 3. Prerequisites
+
+Before changing DNS:
+
+1. ECORIONE `main` must be on a verified release/baseline.
+2. A VPS/server must have Docker + Compose and outbound Internet access.
+3. Create `deploy/production.env` from `deploy/production.env.example` and replace all `CHANGE_ME` values.
+4. Keep hosted provider secrets in the Connect Vault, not Git or plaintext deployment docs.
+5. Generate strong internal, Sync, Temporal, Vault, MCP, and operator credentials.
+6. Run the production acceptance and Compose validation before exposing anything.
+7. Own a domain and add its DNS zone to Cloudflare.
+
+Cloudflare requires a domain on Cloudflare to publish normal application hostnames through Tunnel.
+
+## 4. Recommended rollout: two stages
+
+The current ECORIONE Compose/Caddy baseline already expects Caddy to own the public 80/443 edge. The safest migration to Tunnel is therefore two-stage rather than changing origin TLS and DNS simultaneously.
+
+### Stage A — first real deployment with Cloudflare proxied DNS
+
+Use this only as the bootstrap/validation stage.
+
+1. Deploy ECORIONE on the VPS:
+
+```bash
+cp deploy/production.env.example deploy/production.env
+# replace every CHANGE_ME before continuing
+
+scripts/self-host-install.sh --apply
+```
+
+Or use the documented Compose command:
+
+```bash
+docker compose --env-file deploy/production.env -f deploy/compose.yml config --quiet
+docker compose --env-file deploy/production.env -f deploy/compose.yml up -d --build
+```
+
+2. In Cloudflare DNS, create the public hostname, for example:
+
+```text
+ecorione.example.com -> VPS public IP
+```
+
+Use Cloudflare proxying for the record.
+
+3. Keep VPS TCP 80/443 reachable during this bootstrap stage so the existing Caddy deployment can serve the hostname and establish its normal HTTPS origin state.
+
+4. Validate externally:
+
+```bash
+curl -fsS https://ecorione.example.com/
+curl -fsS https://ecorione.example.com/.well-known/oauth-protected-resource
+```
+
+Also validate `/ops`, `/settings`, chat, and MCP according to the production/release docs. Operator routes must remain protected.
+
+5. Do not close the origin firewall yet. First build and verify the named Cloudflare Tunnel in Stage B.
+
+### Stage B — move the same hostname to Cloudflare Tunnel
+
+Cloudflare recommends remotely-managed tunnels for most use cases. Dashboard flow as of September 2026:
+
+1. Cloudflare Dashboard -> **Networking -> Tunnels**.
+2. Select **Create Tunnel**.
+3. Name it, for example `ecorione-prod`.
+4. Select Linux and copy the `cloudflared` installation/run command generated by Cloudflare.
+5. Run the command on the ECORIONE VPS.
+6. Wait until the tunnel reports connected.
+7. Add a **Published application** route.
+8. Public hostname: for example `ecorione.example.com`.
+9. Service URL: route to the existing local Caddy HTTPS origin, normally:
+
+```text
+https://localhost:443
+```
+
+10. If the origin certificate is issued for `ecorione.example.com` rather than `localhost`, configure **Origin Server Name** as:
+
+```text
+ecorione.example.com
+```
+
+Keep TLS verification enabled. Cloudflare documentation explicitly recommends setting `originServerName` or a trusted CA when hostname verification differs. `noTLSVerify: true` is only a temporary troubleshooting escape hatch and must not become the production default.
+
+11. Save the route. Cloudflare will point the public hostname at the tunnel.
+12. Verify the application through the public hostname again.
+13. Only after public validation succeeds, remove the old direct-origin DNS record if it still exists and close public inbound 80/443 at the VPS/firewall if nothing else requires them.
+
+Final traffic should then reach the origin through outbound `cloudflared` connections rather than direct Internet -> VPS connections.
+
+## 5. CLI alternative — locally-managed named tunnel
+
+Cloudflare recommends remotely-managed tunnels for most deployments, but a locally-managed named tunnel is useful when the operator intentionally wants configuration in the server filesystem.
+
+Authenticate and create the tunnel:
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create ecorione-prod
+cloudflared tunnel list
+```
+
+Create `~/.cloudflared/config.yml`:
+
+```yaml
+tunnel: <TUNNEL_UUID>
+credentials-file: /home/<USER>/.cloudflared/<TUNNEL_UUID>.json
+
+ingress:
+  - hostname: ecorione.example.com
+    service: https://localhost:443
+    originRequest:
+      originServerName: ecorione.example.com
+  - service: http_status:404
+```
+
+The final catch-all rule is required by Cloudflare for ingress configuration.
+
+Validate configuration:
+
+```bash
+cloudflared tunnel ingress validate
+cloudflared tunnel ingress rule https://ecorione.example.com
+```
+
+Create the DNS route and test interactively:
+
+```bash
+cloudflared tunnel route dns ecorione-prod ecorione.example.com
+cloudflared tunnel run ecorione-prod
+```
+
+Check tunnel information:
+
+```bash
+cloudflared tunnel info ecorione-prod
+```
+
+After validation, install it as a Linux service. If the config belongs to a non-root user, pass the config path explicitly:
+
+```bash
+sudo cloudflared --config /home/<USER>/.cloudflared/config.yml service install
+sudo systemctl start cloudflared
+sudo systemctl status cloudflared
+```
+
+Cloudflare's Linux documentation warns that `sudo` changes `$HOME` to `/root`, so an explicit config path prevents the service from looking in the wrong home directory.
+
+## 6. ECORIONE hostname and MCP configuration
+
+A single ECORIONE hostname can remain in front of Caddy because the existing Caddy routing already separates:
+
+- `/` -> Ai;
+- `/ops*`, `/api/ops*`, `/settings*`, `/api/settings*` -> Ai with operator authentication;
+- `/.well-known/oauth-protected-resource*` -> Sync;
+- `/mcp*` -> Sync.
+
+For a hostname such as `ecorione.example.com`, production MCP values should be internally consistent. Example shape:
+
+```text
+ECORIONE_DOMAIN=ecorione.example.com
+ECORIONE_MCP_RESOURCE=https://ecorione.example.com/mcp
+ECORIONE_MCP_ALLOWED_ORIGINS=<explicit allowed origin list>
+ECORIONE_MCP_OAUTH_ISSUER=<real HTTPS issuer>
+ECORIONE_MCP_JWKS_URL=<real HTTPS JWKS endpoint>
+```
+
+Do not invent OAuth/JWKS values. They must match the actual authorization deployment.
+
+## 7. Firewall posture after Tunnel cutover
+
+Once the named tunnel is verified:
+
+- do not expose ECORIONE internal service ports publicly;
+- do not expose Temporal/PostgreSQL/Context/Connect/Hub/Sandbox/Artifact/Space/Flow/RnD directly;
+- keep SSH restricted to the operator's chosen secure path;
+- if nothing else requires direct web access, close public inbound 80/443 and let `cloudflared` reach Cloudflare outbound;
+- Cloudflare documentation notes that restrictive firewalls must allow the tunnel to reach Cloudflare on port `7844`.
+
+This does not replace normal host patching, SSH policy, credential hygiene, or backup isolation.
+
+## 8. Cloudflare security settings to use carefully
+
+On the Free plan, use the security controls that do not change ECORIONE application semantics:
+
+- HTTPS at the public edge;
+- Free Managed WAF rules where available;
+- DDoS protection provided by Cloudflare's proxied edge;
+- rate/bot controls only after confirming they do not break MCP streaming/API behavior;
+- Cloudflare Access may be appropriate for human-only operator surfaces such as `/ops` or `/settings`, but do **not** place an interactive browser login in front of MCP/OAuth endpoints unless the MCP client flow is explicitly designed for it.
+
+Caddy's own operator authentication remains part of the ECORIONE baseline. Cloudflare Access, if later enabled, is defense in depth rather than permission authority for ECORIONE itself.
+
+## 9. Required verification before calling the Cloudflare deployment healthy
+
+Run at minimum:
+
+```bash
+docker compose --env-file deploy/production.env -f deploy/compose.yml ps
+curl -fsS https://ecorione.example.com/
+curl -fsS https://ecorione.example.com/.well-known/oauth-protected-resource
+cloudflared tunnel info ecorione-prod
+```
+
+Then verify:
+
+- Ai loads;
+- `/ops` and `/settings` remain protected;
+- local provider canary passes;
+- real hosted canary only if the operator intentionally enabled real credentials/spend;
+- MCP protected-resource discovery works;
+- valid MCP authentication works;
+- invalid token/scope/origin cases remain rejected;
+- owner data survives container restart;
+- backup creation + integrity verification succeeds;
+- restore procedure is understood before a production incident;
+- origin is no longer directly reachable after firewall closure, if Tunnel-only mode is the intended final state.
+
+## 10. Rollback
+
+If Tunnel routing fails:
+
+1. do not change ECORIONE data state merely because edge routing failed;
+2. re-open only the minimum required 80/443 firewall path if needed;
+3. restore the previous Cloudflare DNS record pointing to the VPS;
+4. verify direct Caddy HTTPS again;
+5. diagnose `cloudflared` separately;
+6. only switch back to Tunnel after the same public checks pass.
+
+Cloudflare edge rollback and ECORIONE application/data rollback are different operations. Do not restore owner databases for a pure DNS/tunnel incident.
+
+## 11. Current implementation boundary
+
+As of the Batch 12 closure, ECORIONE has production Compose/Caddy, release scripts, observability, and real public HTTPS MCP acceptance. A **persistent named Cloudflare production tunnel is an operator deployment step**, not something the repository automatically provisions.
+
+If we later automate Cloudflare provisioning, it must be a new explicit operations scope with:
+
+- no Cloudflare account tokens committed to Git;
+- least-privilege API token permissions;
+- deterministic hostname/config validation;
+- rollback procedure;
+- CI that does not require personal production credentials;
+- no weakening of Connect/Hub authorization boundaries.
