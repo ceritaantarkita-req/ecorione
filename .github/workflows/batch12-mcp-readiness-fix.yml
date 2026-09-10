@@ -24,7 +24,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Harden Quick Tunnel readiness
+      - name: Harden and diagnose Quick Tunnel readiness
         shell: bash
         run: |
           set -euo pipefail
@@ -34,19 +34,37 @@ jobs:
           path = Path("scripts/mcp-external-https-acceptance.mjs")
           text = path.read_text()
 
-          old_match = '      const match = text.match(urlPattern);'
-          new_match = '''      const output = chunks.join("");
+          replacements = [
+              (
+                  '      const match = text.match(urlPattern);',
+                  '''      const output = chunks.join("");
                 const match = output.match(urlPattern);
-                const registered = output.includes("Registered tunnel connection");'''
-          old_if = '      if (match && !settled) {'
-          new_if = '      if (match && registered && !settled) {'
+                const registered = output.includes("Registered tunnel connection");''',
+              ),
+              ('      if (match && !settled) {', '      if (match && registered && !settled) {'),
+              (
+                  '      lastError = error instanceof Error ? error.message : String(error);',
+                  '''      if (error instanceof Error) {
+                  const cause = error.cause;
+                  const causeDetail =
+                    cause && typeof cause === "object"
+                      ? `${String(cause.code ?? "unknown")}: ${String(cause.message ?? cause)}`
+                      : cause
+                        ? String(cause)
+                        : "none";
+                  lastError = `${error.message}; cause=${causeDetail}; url=${url}`;
+                } else {
+                  lastError = `${String(error)}; url=${url}`;
+                }''',
+              ),
+          ]
 
-          if text.count(old_match) != 1:
-              raise SystemExit(f"expected exactly one URL-match line, found {text.count(old_match)}")
-          if text.count(old_if) != 1:
-              raise SystemExit(f"expected exactly one tunnel-ready condition, found {text.count(old_if)}")
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"expected exactly one target, found {count}: {old}")
+              text = text.replace(old, new, 1)
 
-          text = text.replace(old_match, new_match, 1).replace(old_if, new_if, 1)
           path.write_text(text)
           PY
           pnpm exec prettier --write scripts/mcp-external-https-acceptance.mjs
@@ -66,7 +84,7 @@ jobs:
           echo "CLOUDFLARED_BIN=$CLOUDFLARED" >> "$GITHUB_ENV"
       - name: Verify public HTTPS MCP acceptance
         run: pnpm run acceptance:mcp:external
-      - name: Commit hardened readiness and remove helper
+      - name: Commit hardened readiness and diagnostics and remove helper
         shell: bash
         run: |
           set -euo pipefail
@@ -75,5 +93,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add scripts/mcp-external-https-acceptance.mjs .github/workflows/batch12-mcp-readiness-fix.yml
           git diff --cached --check
-          git commit -m "fix(batch12): wait for MCP tunnel edge registration"
+          git commit -m "fix(batch12): harden MCP tunnel readiness diagnostics"
           git push origin HEAD:agent/batch12-final-security-release-20260910
