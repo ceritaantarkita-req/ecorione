@@ -1,5 +1,5 @@
 /** Shared Fastify boundary for local services. */
-import { randomUUID } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
 import { ZodError } from "zod";
 import { HttpError, UnauthorizedError } from "./errors.js";
@@ -11,13 +11,21 @@ import {
   traceparentFor,
 } from "./observability.js";
 
+export interface RateLimitOptions {
+  readonly max: number;
+  readonly windowMs: number;
+}
+
 export interface CreateServerOptions {
   readonly name: string;
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
   /** Explicit per-service JSON/body ceiling; Fastify's default is too small for Artifact media. */
   readonly bodyLimit?: number | undefined;
+  /** Bounded process-local defensive limiter. Set max=0 to disable explicitly. */
+  readonly rateLimit?: RateLimitOptions | undefined;
 }
+
 declare module "fastify" {
   interface FastifyRequest {
     requestId: string;
@@ -27,32 +35,64 @@ declare module "fastify" {
     observabilityStartedIso: string;
   }
 }
+
+interface RateState {
+  windowStartedAt: number;
+  hits: number;
+}
+
+const DEFAULT_RATE_LIMIT: RateLimitOptions = { max: 1_200, windowMs: 60_000 };
+const MAX_RATE_KEYS = 4_096;
+const SAFE_REQUEST_ID = /^[A-Za-z0-9._:-]{1,128}$/;
+
 export function bindHost(): string {
   return process.env.ECORIONE_ALLOW_REMOTE_BIND === "1" ? "0.0.0.0" : "127.0.0.1";
 }
+
 function errorBody(err: HttpError): Record<string, unknown> {
   const body: Record<string, unknown> = { error: { type: err.type, message: err.message } };
   if (err.detail !== undefined) (body.error as Record<string, unknown>).detail = err.detail;
   return body;
 }
+
+function bearerMatches(header: string | undefined, token: string): boolean {
+  if (header === undefined) return false;
+  const actual = Buffer.from(header, "utf8");
+  const expected = Buffer.from(`Bearer ${token}`, "utf8");
+  return actual.byteLength === expected.byteLength && timingSafeEqual(actual, expected);
+}
+
+function safeRequestId(value: string | string[] | undefined): string {
+  return typeof value === "string" && SAFE_REQUEST_ID.test(value) ? value : randomUUID();
+}
+
+function validateRateLimit(input: RateLimitOptions): RateLimitOptions {
+  if (!Number.isInteger(input.max) || input.max < 0 || input.max > 1_000_000) {
+    throw new Error("rateLimit.max harus integer 0..1000000.");
+  }
+  if (!Number.isInteger(input.windowMs) || input.windowMs < 100 || input.windowMs > 3_600_000) {
+    throw new Error("rateLimit.windowMs harus integer 100..3600000.");
+  }
+  return input;
+}
+
 export function createServer(options: CreateServerOptions): FastifyInstance {
   const app = Fastify({
     logger: options.logger ?? false,
     ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }),
   });
   const metrics = new OperationalMetrics(options.name);
+  const rateLimit = validateRateLimit(options.rateLimit ?? DEFAULT_RATE_LIMIT);
+  const rateStates = new Map<string, RateState>();
   attachOperationalMetrics(app, metrics);
   app.decorateRequest("requestId", "");
   app.decorateRequest("traceId", "");
   app.decorateRequest("traceSpanId", "");
   app.decorateRequest("observabilityStartedAt", 0);
   app.decorateRequest("observabilityStartedIso", "");
+
   app.addHook("onRequest", (req: FastifyRequest, reply: FastifyReply, done) => {
-    const incoming = req.headers["x-request-id"];
-    req.requestId =
-      typeof incoming === "string" && incoming.length > 0 && incoming.length <= 128
-        ? incoming
-        : randomUUID();
+    req.requestId = safeRequestId(req.headers["x-request-id"]);
     const incomingTrace = req.headers.traceparent;
     const trace = requestTraceContext(
       typeof incomingTrace === "string" ? incomingTrace : undefined,
@@ -65,16 +105,55 @@ export function createServer(options: CreateServerOptions): FastifyInstance {
     reply.header("x-request-id", req.requestId);
     reply.header("x-ecorione-trace-id", trace.traceId);
     reply.header("traceparent", traceparentFor(trace));
+    reply.header("x-content-type-options", "nosniff");
+    reply.header("referrer-policy", "no-referrer");
+    reply.header("cache-control", "no-store");
     runWithRequestTrace(trace, done);
   });
+
+  app.addHook("onRequest", async (req: FastifyRequest, reply: FastifyReply) => {
+    if (req.url === "/healthz" || rateLimit.max === 0) return;
+    const now = performance.now();
+    const key = req.ip;
+    let state = rateStates.get(key);
+    if (state === undefined || now - state.windowStartedAt >= rateLimit.windowMs) {
+      state = { windowStartedAt: now, hits: 0 };
+      if (rateStates.size >= MAX_RATE_KEYS) {
+        const oldest = rateStates.keys().next().value as string | undefined;
+        if (oldest !== undefined) rateStates.delete(oldest);
+      }
+      rateStates.set(key, state);
+    }
+    state.hits += 1;
+    if (state.hits <= rateLimit.max) return;
+    metrics.addCounter("ecorione_http_rate_limited_total", 1, {
+      service: options.name,
+      route: req.routeOptions.url ?? req.url.split("?", 1)[0] ?? "unknown",
+    });
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((rateLimit.windowMs - (now - state.windowStartedAt)) / 1_000),
+    );
+    await reply
+      .code(429)
+      .header("retry-after", String(retryAfterSeconds))
+      .send({
+        error: { type: "RATE_LIMITED", message: "Terlalu banyak request." },
+        requestId: req.requestId,
+      });
+    return reply;
+  });
+
   app.addHook("onRequest", async (req: FastifyRequest, reply: FastifyReply) => {
     if (req.url === "/healthz" || options.token === undefined) return;
-    if (req.headers.authorization !== `Bearer ${options.token}`) {
+    const authorization = req.headers.authorization;
+    if (!bearerMatches(typeof authorization === "string" ? authorization : undefined, options.token)) {
       const err = new UnauthorizedError();
       await reply.code(err.statusCode).send({ ...errorBody(err), requestId: req.requestId });
       return reply;
     }
   });
+
   app.addHook("onResponse", async (req: FastifyRequest, reply: FastifyReply) => {
     const durationMs = Math.max(0, performance.now() - req.observabilityStartedAt);
     const route = req.routeOptions.url ?? req.url.split("?", 1)[0] ?? "unknown";
@@ -105,6 +184,7 @@ export function createServer(options: CreateServerOptions): FastifyInstance {
       startedAt: req.observabilityStartedIso,
     });
   });
+
   app.get("/healthz", async () => ({ status: "ok", service: options.name }));
   if (options.token !== undefined) {
     app.get("/metrics", async (_req, reply) =>
