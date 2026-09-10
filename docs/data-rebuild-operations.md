@@ -11,7 +11,7 @@
 
 - `POST /v1/maintenance/plan` — dry-run. Input: `operationId`, `actions`, `now`.
 - `POST /v1/maintenance/execute` — execute exact plan; stale source/projection digest ditolak.
-- `POST /v1/maintenance/rollback` — rollback projection dari snapshot receipt lama, hanya bila current L0 digest sama.
+- `POST /v1/maintenance/rollback` — rollback projection dari owner snapshot pada execute receipt, hanya bila current L0 digest sama. Snapshot dari execute `FAILED` tetap valid bila snapshot sudah berhasil dibuat sebelum mutation.
 - `GET /v1/maintenance/verify` — owner integrity verification.
 - `GET /v1/maintenance/receipts` — durable receipt list.
 - `GET /v1/maintenance/receipts/:id` — one receipt.
@@ -28,7 +28,7 @@ Supported actions:
 
 `rebuild-l1` sengaja tidak boleh digabung dengan `normalize-metadata`/`dedupe-facts`, karena kedua transformasi itu akan langsung tertimpa oleh projection baru. FTS/vector rebuild boleh digabung dan juga dijalankan otomatis setelah L1 swap.
 
-## Dry-run / anti-TOCTOU
+## Dry-run / diff / anti-TOCTOU
 
 Plan mengandung:
 
@@ -39,13 +39,16 @@ Plan mengandung:
 - counts untuk episode/fact/embedding;
 - normalizable derived facts dan duplicate groups;
 - orphan/integrity findings;
+- explicit `diff` untuk pending migration, jumlah normalization/dedupe yang relevan dengan action, serta flag rebuild L1/FTS/vector;
 - plan digest.
 
-Execute menghitung ulang keadaan tersebut. Bila source atau projection bergerak sejak plan dibuat, execute fail closed dan operator harus membuat plan baru.
+Execute menghitung ulang keadaan tersebut. Bila source atau projection bergerak sejak plan dibuat, execute fail closed dan operator harus membuat plan baru. HTTP regression membuktikan stale plan ditolak sebelum snapshot atau mutation.
 
 ## Snapshot
 
 Execute/rollback mutation membutuhkan file-backed Context DB. Sebelum mutation, Context memakai SQLite online backup ke direktori owner-controlled `context-maintenance-snapshots/` (atau directory yang diinject service owner) dan mengatur file snapshot `0600`. Caller tidak dapat memilih arbitrary path.
+
+Snapshot dibuat sebelum mutation. Karena kegagalan dapat terjadi setelah sebagian tahap projection selesai tetapi sebelum execute dinyatakan sukses, receipt `FAILED` yang sudah memiliki owner snapshot tetap boleh menjadi `sourceReceiptId` rollback. Ini mencegah dead-end recovery tanpa pernah memundurkan L0.
 
 ## Rebuild L1
 
@@ -65,10 +68,12 @@ Rebuild L1 dapat mengubah fact IDs. Embedding lama yang cascade-delete karena fa
 
 ## Rollback
 
-Rollback menerima `sourceReceiptId`, bukan file path. Context menemukan owner snapshot dari receipt tersebut, membaca source digest snapshot, lalu membandingkannya dengan current L0.
+Rollback menerima `sourceReceiptId`, bukan file path. Context menemukan owner snapshot dari execute receipt tersebut, membaca source digest snapshot, lalu membandingkannya dengan current L0.
 
 - digest sama → buat safety snapshot current projection, restore L1/embedding/derived episode markers/quarantine promotion links, rebuild indexes, verify, tulis rollback receipt;
 - digest berbeda → **reject**. Jangan mengganti whole database atau mengembalikan L0 ke masa lalu. Jalankan rebuild baru dari current immutable L0.
+
+Rollback berlaku untuk execute receipt `SUCCEEDED` maupun `FAILED` selama receipt tersebut memiliki pre-mutation owner snapshot. Regression khusus memaksa kegagalan reindex setelah dedupe mutation, lalu membuktikan rollback mengembalikan projection digest awal sementara immutable source digest tetap identik.
 
 ## Integrity checks
 
@@ -85,4 +90,10 @@ Closure verification mencakup:
 
 ## Historical Ledger
 
-Hub exposes owner verification for all Historical Ledger sessions. Verification recomputes sequence continuity, previous-hash chain, event hash, `nextSeq`, and head hash. Batch 7 does not add a Ledger rewrite/repair endpoint.
+Hub exposes owner verification for all Historical Ledger sessions. Verification recomputes sequence continuity, previous-hash chain, event hash, `nextSeq`, dan head hash. Batch 7 does not add a Ledger rewrite/repair endpoint.
+
+## Pre-PR focused evidence
+
+- integration gate `34425510633`: lint, root typecheck, focused Context/History regression PASS;
+- hardening gate `34425780889`: lint, root typecheck, failed-execute rollback regression, maintenance HTTP dry-run/stale-plan regression, Historical Ledger verification, repository/retrieval regression PASS;
+- temporary integration/hardening workflows self-delete from the candidate tree before PR.
