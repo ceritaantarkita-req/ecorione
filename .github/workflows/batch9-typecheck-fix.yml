@@ -1,0 +1,87 @@
+name: Batch 9 typecheck fix
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'agent/batch9-node-registry-canvas-20260910'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Patch TypeScript exactness
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          {
+            const path = 'services/flow/src/http.ts';
+            let text = fs.readFileSync(path, 'utf8');
+            text = text.replace('  type FlowGraphTemporalClient,\n', '');
+            text = text.replace(
+              'import type { FlowServerTemporalClient } from "./temporal-client.js";',
+              'import type { FlowGraphTemporalClient, FlowServerTemporalClient } from "./temporal-client.js";',
+            );
+            fs.writeFileSync(path, text);
+          }
+
+          {
+            const path = 'services/flow/src/node-registry.ts';
+            let text = fs.readFileSync(path, 'utf8');
+            text = text.replace(
+              '  type FlowNodeResourceLimits,\n  type FlowNodeRetry,\n',
+              '  type FlowNodeResourceLimits,\n  type FlowNodeResourceOverride,\n  type FlowNodeRetry,\n  type FlowNodeRetryOverride,\n',
+            );
+            text = text.replace(
+              '  override: Partial<FlowNodeResourceLimits>,',
+              '  override: FlowNodeResourceOverride,',
+            );
+            text = text.replace(
+              '  override: Partial<FlowNodeRetry>,',
+              '  override: FlowNodeRetryOverride,',
+            );
+            fs.writeFileSync(path, text);
+          }
+
+          {
+            const path = 'services/flow/src/graph-activities.ts';
+            let text = fs.readFileSync(path, 'utf8');
+            text = text.replace(
+              '          body:\n            cfg.method === "POST"\n              ? JSON.stringify(cfg.body === undefined ? input : cfg.body)\n              : undefined,\n          redirect: "error",',
+              '          ...(cfg.method === "POST"\n            ? { body: JSON.stringify(cfg.body === undefined ? input : cfg.body) }\n            : {}),\n          redirect: "error",',
+            );
+            fs.writeFileSync(path, text);
+          }
+
+          {
+            const path = 'services/flow/src/workflows.ts';
+            let text = fs.readFileSync(path, 'utf8');
+            text = text.replace(
+              'const child = await executeChild<FlowGraphExecutionResult>("graphExecutionWorkflow", {',
+              'const child = await executeChild(graphExecutionWorkflow, {',
+            );
+            fs.writeFileSync(path, text);
+          }
+          NODE
+      - run: pnpm exec prettier --write services/flow/src/http.ts services/flow/src/node-registry.ts services/flow/src/graph-activities.ts services/flow/src/workflows.ts
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+      - name: Commit patch
+        run: |
+          git config user.name 'ecorione-batch9-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add services/flow/src/http.ts services/flow/src/node-registry.ts services/flow/src/graph-activities.ts services/flow/src/workflows.ts
+          git commit -m 'fix(flow): satisfy Batch 9 strict type boundaries'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
