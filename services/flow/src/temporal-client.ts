@@ -1,4 +1,8 @@
-import { Connection, WorkflowClient, type WorkflowExecutionStatusName } from "@temporalio/client";
+import {
+  Connection,
+  WorkflowClient,
+  type WorkflowExecutionStatusName,
+} from "@temporalio/client";
 import type {
   FlowApprovalSignal,
   FlowGraphExecutionInput,
@@ -34,13 +38,19 @@ export interface TemporalClientOptions {
   readonly taskQueue?: string | undefined;
 }
 
-export async function createFlowTemporalClient(options: TemporalClientOptions): Promise<FlowTemporalClient & FlowGraphTemporalClient> {
+export async function createFlowTemporalClient(
+  options: TemporalClientOptions,
+): Promise<FlowTemporalClient & FlowGraphTemporalClient> {
   const connection = await Connection.connect({ address: options.address });
   const client = new WorkflowClient({ connection, namespace: options.namespace });
   const taskQueue = options.taskQueue ?? FLOW_TASK_QUEUE;
   return {
     async start(input): Promise<void> {
-      await client.start(FLOW_WORKFLOW_TYPE, { taskQueue, workflowId: input.flowId, args: [input] });
+      await client.start(FLOW_WORKFLOW_TYPE, {
+        taskQueue,
+        workflowId: input.flowId,
+        args: [input],
+      });
     },
     async signal(flowId, signal): Promise<void> {
       await client.getHandle(flowId).signal("approval", signal);
@@ -53,7 +63,11 @@ export async function createFlowTemporalClient(options: TemporalClientOptions): 
       return { status: description.status.name };
     },
     async startGraph(input): Promise<void> {
-      await client.start(FLOW_GRAPH_WORKFLOW_TYPE, { taskQueue, workflowId: input.runId, args: [input] });
+      await client.start(FLOW_GRAPH_WORKFLOW_TYPE, {
+        taskQueue,
+        workflowId: input.runId,
+        args: [input],
+      });
     },
     async signalGraphDecision(runId, signal): Promise<void> {
       await client.getHandle(runId).signal("graphNodeDecision", signal);

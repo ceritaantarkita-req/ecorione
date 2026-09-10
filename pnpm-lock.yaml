@@ -207,6 +207,9 @@ importers:
       '@temporalio/workflow':
         specifier: 1.23.0
         version: 1.23.0
+      better-sqlite3:
+        specifier: ^12.4.1
+        version: 12.11.1
       fastify:
         specifier: ^5.2.1
         version: 5.12.3
@@ -217,6 +220,9 @@ importers:
       '@temporalio/testing':
         specifier: 1.23.0
         version: 1.23.0
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
 
   services/hub:
     dependencies:

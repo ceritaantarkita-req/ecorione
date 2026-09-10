@@ -41,7 +41,9 @@ describe("Flow node contracts", () => {
 
   it("parses typed node config without accepting unknown fields", () => {
     expect(parseFlowNodeConfig("delay", { milliseconds: 500 })).toEqual({ milliseconds: 500 });
-    expect(() => parseFlowNodeConfig("delay", { milliseconds: 500, command: "oops" })).toThrow();
+    expect(() =>
+      parseFlowNodeConfig("delay", { milliseconds: 500, command: "oops" }),
+    ).toThrow();
   });
 
   it("rejects duplicate node and edge ids at the shared boundary", () => {
@@ -53,8 +55,22 @@ describe("Flow node contracts", () => {
         scope: "personal",
         sensitivity: "INTERNAL",
         nodes: [
-          { id: "node_same01", kind: "trigger", version: 1, label: "A", position: { x: 0, y: 0 }, config: {} },
-          { id: "node_same01", kind: "transform", version: 1, label: "B", position: { x: 100, y: 0 }, config: { mode: "pick", path: "x" } },
+          {
+            id: "node_same01",
+            kind: "trigger",
+            version: 1,
+            label: "A",
+            position: { x: 0, y: 0 },
+            config: {},
+          },
+          {
+            id: "node_same01",
+            kind: "transform",
+            version: 1,
+            label: "B",
+            position: { x: 100, y: 0 },
+            config: { mode: "pick", path: "x" },
+          },
         ],
         edges: [],
       }),

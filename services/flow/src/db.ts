@@ -36,7 +36,10 @@ export function openFlowDatabase(path: string): FlowDatabase {
   if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
   const raw = new SqliteConstructor(path);
   raw.pragma("foreign_keys = ON");
-  if (path !== ":memory:") { raw.pragma("journal_mode = WAL"); raw.pragma("busy_timeout = 5000"); }
+  if (path !== ":memory:") {
+    raw.pragma("journal_mode = WAL");
+    raw.pragma("busy_timeout = 5000");
+  }
   raw.exec(SCHEMA);
   return { raw, path, close: () => raw.close() };
 }
