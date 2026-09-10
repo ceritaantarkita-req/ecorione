@@ -31,33 +31,23 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          path = Path('scripts/mcp-external-https-acceptance.mjs')
+          path = Path("scripts/mcp-external-https-acceptance.mjs")
           text = path.read_text()
-          old = '''    const inspect = (data) => {
-              const text = data.toString("utf8");
-              chunks.push(text);
-              const match = text.match(urlPattern);
-              if (match && !settled) {
-                settled = true;
-                clearTimeout(timer);
-                resolve({ child, publicUrl: match[0], logTail });
-              }
-            };'''
-          new = '''    const inspect = (data) => {
-              const text = data.toString("utf8");
-              chunks.push(text);
-              const output = chunks.join("");
-              const match = output.match(urlPattern);
-              const registered = output.includes("Registered tunnel connection");
-              if (match && registered && !settled) {
-                settled = true;
-                clearTimeout(timer);
-                resolve({ child, publicUrl: match[0], logTail });
-              }
-            };'''
-          if old not in text:
-              raise SystemExit('expected startTunnel inspect block not found')
-          path.write_text(text.replace(old, new, 1))
+
+          old_match = '      const match = text.match(urlPattern);'
+          new_match = '''      const output = chunks.join("");
+                const match = output.match(urlPattern);
+                const registered = output.includes("Registered tunnel connection");'''
+          old_if = '      if (match && !settled) {'
+          new_if = '      if (match && registered && !settled) {'
+
+          if text.count(old_match) != 1:
+              raise SystemExit(f"expected exactly one URL-match line, found {text.count(old_match)}")
+          if text.count(old_if) != 1:
+              raise SystemExit(f"expected exactly one tunnel-ready condition, found {text.count(old_if)}")
+
+          text = text.replace(old_match, new_match, 1).replace(old_if, new_if, 1)
+          path.write_text(text)
           PY
           pnpm exec prettier --write scripts/mcp-external-https-acceptance.mjs
       - name: Build TypeScript runtime
