@@ -61,12 +61,21 @@ const MAX_SERIES = 2_048;
 const MAX_HISTOGRAM_SAMPLES = 512;
 const MAX_RECENT_REQUESTS = 256;
 
+function sanitizeLabelValue(raw: string): string {
+  let result = "";
+  for (const character of raw) {
+    const code = character.charCodeAt(0);
+    result += code <= 31 || code === 127 ? "_" : character;
+    if (result.length >= 128) break;
+  }
+  return result;
+}
+
 function normalizedLabels(labels: MetricLabels): MetricLabels {
   const result: Record<string, string> = {};
   for (const [key, raw] of Object.entries(labels).sort(([a], [b]) => a.localeCompare(b))) {
     const safeKey = key.replace(/[^a-zA-Z0-9_]/g, "_").slice(0, 64);
-    const safeValue = raw.replace(/[\r\n\u0000-\u001f\u007f]/g, "_").slice(0, 128);
-    result[safeKey] = safeValue;
+    result[safeKey] = sanitizeLabelValue(raw);
   }
   return result;
 }
