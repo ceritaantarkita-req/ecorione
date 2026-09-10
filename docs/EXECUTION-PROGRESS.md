@@ -500,7 +500,7 @@ Batch 6 resmi **CLOSED**; next implementation batch adalah Batch 7.
 
 ## Batch 7 — Data Refactor / Rebuild Engine
 
-Status: **PLANNED**
+Status: **IN PROGRESS**
 
 Immutable rule:
 
@@ -526,6 +526,20 @@ Scope:
 No cross-service database access. Maintenance dilakukan melalui owner-service contract/API.
 
 ---
+
+
+Implementation branch: `agent/batch7-data-rebuild-20260910`
+
+Current implementation boundary:
+
+- Context-owned dry-run/execute/rollback/verify/receipt API
+- immutable Context L0 source digest + projection digest anti-TOCTOU
+- owner-generated SQLite safety snapshots
+- derived LOCAL_AGENT metadata normalization + deterministic dedupe/invalidation
+- staging-first L1 rebuild from immutable episodes through local extraction
+- FTS5 rebuild + vector accelerator reindex from durable embeddings
+- orphan/SQLite/FK/FTS integrity validation
+- Historical Ledger verify-all only; no rewrite/repair endpoint
 
 ## Batch 8 — Dataset Governance + Backup / Restore / DR
 

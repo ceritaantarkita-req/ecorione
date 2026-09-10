@@ -20,6 +20,8 @@ import {
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { runConsolidation, type ConsolidateDeps } from "./consolidate.js";
+import { registerMaintenanceRoutes } from "./maintenance-http.js";
+import { ContextMaintenanceEngine } from "./maintenance.js";
 import {
   ContextError,
   CoreMemoryWriteForbiddenError,
@@ -158,6 +160,10 @@ export function buildContextServer(
 ): FastifyInstance {
   const app = createServer({ name: "context", token: options.token, logger: options.logger });
   const retriever = new ContextRetriever(repo, vectors);
+  const maintenance = new ContextMaintenanceEngine(repo, {
+    extractLocal: options.extractLocal,
+  });
+  registerMaintenanceRoutes(app, maintenance);
 
   app.post("/v1/episodes", async (req, reply) => {
     const body = parseOrBadRequest(AppendEpisodeBodySchema, req.body);

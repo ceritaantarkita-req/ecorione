@@ -288,4 +288,19 @@ describe("Historical Ledger", () => {
       }),
     ).toThrow(/tidak tersedia/);
   });
+
+  it("verifies every Historical Ledger session without mutating it", () => {
+    const { ledger, sessionId } = setup();
+    ledger.append(sessionId, 0, {
+      id: assertId("event", "evt_verifyall001"),
+      recordedAt: NOW,
+      eventType: "user.message",
+      actor: "user",
+      operationId: null,
+      parentEventId: null,
+      payload: { text: "immutable" },
+    });
+    expect(ledger.verifyAll()).toEqual({ sessions: 1, events: 1 });
+    expect(ledger.getSession(sessionId)?.nextSeq).toBe(1);
+  });
 });
