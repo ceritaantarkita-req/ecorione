@@ -6,8 +6,8 @@ import { HttpError, UnauthorizedError } from "./errors.js";
 import {
   OperationalMetrics,
   attachOperationalMetrics,
-  enterRequestTrace,
   requestTraceContext,
+  runWithRequestTrace,
   traceparentFor,
 } from "./observability.js";
 
@@ -47,7 +47,7 @@ export function createServer(options: CreateServerOptions): FastifyInstance {
   app.decorateRequest("traceSpanId", "");
   app.decorateRequest("observabilityStartedAt", 0);
   app.decorateRequest("observabilityStartedIso", "");
-  app.addHook("onRequest", async (req: FastifyRequest, reply: FastifyReply) => {
+  app.addHook("onRequest", (req: FastifyRequest, reply: FastifyReply, done) => {
     const incoming = req.headers["x-request-id"];
     req.requestId =
       typeof incoming === "string" && incoming.length > 0 && incoming.length <= 128
@@ -62,10 +62,10 @@ export function createServer(options: CreateServerOptions): FastifyInstance {
     req.traceSpanId = trace.spanId;
     req.observabilityStartedAt = performance.now();
     req.observabilityStartedIso = new Date().toISOString();
-    enterRequestTrace(trace);
     reply.header("x-request-id", req.requestId);
     reply.header("x-ecorione-trace-id", trace.traceId);
     reply.header("traceparent", traceparentFor(trace));
+    runWithRequestTrace(trace, done);
   });
   app.addHook("onRequest", async (req: FastifyRequest, reply: FastifyReply) => {
     if (req.url === "/healthz" || options.token === undefined) return;
