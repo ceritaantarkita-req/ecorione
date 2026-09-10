@@ -1,0 +1,52 @@
+name: Batch 9 format and wiring
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.head_ref == 'agent/batch9-node-registry-canvas-20260910'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Register Hub node authority route
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'services/hub/src/http.ts';
+          let text = fs.readFileSync(path, 'utf8');
+          if (!text.includes('registerNodeAuthorityRoutes')) {
+            text = text.replace(
+              'import { registerMcpRoutes } from "./mcp.js";\n',
+              'import { registerMcpRoutes } from "./mcp.js";\nimport { registerNodeAuthorityRoutes } from "./node-authority.js";\n',
+            );
+            text = text.replace(
+              '  registerCapabilityRoutes(app, authority, repo);\n',
+              '  registerCapabilityRoutes(app, authority, repo);\n  registerNodeAuthorityRoutes(app, db);\n',
+            );
+            fs.writeFileSync(path, text);
+          }
+          NODE
+      - run: pnpm exec prettier --write services/flow/package.json services/flow/src/http.ts services/hub/src/http.ts
+      - name: Commit normalized files
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name 'ecorione-batch9-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add services/flow/package.json services/flow/src/http.ts services/hub/src/http.ts
+          git commit -m 'fix(batch9): wire node authority and normalize formatting'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
