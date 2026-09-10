@@ -10,3 +10,4 @@ export * from "./server.js";
 export * from "./errors.js";
 export * from "./client.js";
 export * from "./validate.js";
+export * from "./backup.js";
