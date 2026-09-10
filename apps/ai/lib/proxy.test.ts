@@ -25,6 +25,9 @@ beforeEach(() => {
   originalHubUrl = process.env.ECORIONE_HUB_URL;
   originalToken = process.env.ECORIONE_INTERNAL_TOKEN;
   process.env.ECORIONE_HUB_URL = "http://hub.local";
+  // Hermetic test baseline: a developer may have sourced `.env` before running Vitest.
+  // Individual cases that exercise bearer auth set their own explicit token below.
+  delete process.env.ECORIONE_INTERNAL_TOKEN;
 });
 
 afterEach(() => {
