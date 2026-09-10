@@ -226,18 +226,16 @@ export function buildFlowServer(
       input: body.input,
       depth: 0,
     });
-    return reply
-      .code(202)
-      .send(
-        FlowGraphRunResponseSchema.parse({
-          runId,
-          graphId: id,
-          graphVersion: graphVersion.version,
-          temporalWorkflowId: runId,
-          traceOperationId: operationId,
-          planDigest: graphVersion.validation.plan.planDigest,
-        }),
-      );
+    return reply.code(202).send(
+      FlowGraphRunResponseSchema.parse({
+        runId,
+        graphId: id,
+        graphVersion: graphVersion.version,
+        temporalWorkflowId: runId,
+        traceOperationId: operationId,
+        planDigest: graphVersion.validation.plan.planDigest,
+      }),
+    );
   });
 
   app.get<{ Params: { id: string } }>("/v1/graph-runs/:id", async (req) => {
