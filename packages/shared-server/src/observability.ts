@@ -233,8 +233,8 @@ export function requestTraceContext(
   };
 }
 
-export function enterRequestTrace(context: RequestTraceContext): void {
-  traceStorage.enterWith(context);
+export function runWithRequestTrace<T>(context: RequestTraceContext, callback: () => T): T {
+  return traceStorage.run(context, callback);
 }
 
 export function currentRequestTrace(): RequestTraceContext | undefined {
