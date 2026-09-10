@@ -1,0 +1,33 @@
+name: Final docs context notice sync
+
+on:
+  push:
+    branches:
+      - docs/post-closure-cloudflare-20260910
+    paths:
+      - .github/workflows/docs-context-notice-sync.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync_docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: docs/post-closure-cloudflare-20260910
+          fetch-depth: 0
+      - name: Patch context notices
+        run: python scripts/docs-context-notice-sync.py
+      - name: Validate, commit, and remove helper
+        run: |
+          set -euo pipefail
+          git diff --check
+          rm .github/workflows/docs-context-notice-sync.yml scripts/docs-context-notice-sync.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs .github/workflows/docs-context-notice-sync.yml scripts/docs-context-notice-sync.py
+          git diff --cached --check
+          git commit -m "docs: clarify current progress across historical sources"
+          git push origin HEAD:docs/post-closure-cloudflare-20260910
