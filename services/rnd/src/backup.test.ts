@@ -35,11 +35,11 @@ describe("RnD governed dataset recovery", () => {
 
     expect(receipt.restoredDigest).toBe(manifest.aggregateDigest);
     expect(readFileSync(join(restoredRoot, "registry.json"), "utf8")).toBe("registry-before\n");
-    expect(readFileSync(join(restoredRoot, "releases", "release-1", "manifest.json"), "utf8")).toBe(
-      "manifest-before\n",
-    );
-    expect(readFileSync(join(restoredRoot, "releases", "release-1", "records.ndjson"), "utf8")).toBe(
-      "record-before\n",
-    );
+    expect(
+      readFileSync(join(restoredRoot, "releases", "release-1", "manifest.json"), "utf8"),
+    ).toBe("manifest-before\n");
+    expect(
+      readFileSync(join(restoredRoot, "releases", "release-1", "records.ndjson"), "utf8"),
+    ).toBe("record-before\n");
   });
 });

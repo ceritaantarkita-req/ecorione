@@ -246,8 +246,6 @@ export class OwnerBackupStore {
         const rel = relativeFrom(resolvedSource, source);
         return copyWithEntry(source, join(staging, "payload", rel), `payload/${rel}`);
       });
-      if (entries.length === 0)
-        throw new BackupIntegrityError("directory backup tidak boleh kosong");
       return this.finalize(staging, name, "directory", createdAt, entries);
     } catch (error) {
       rmSync(staging, { recursive: true, force: true });
@@ -388,6 +386,7 @@ export class OwnerBackupStore {
     let safetyBackupId: string | null = null;
     if (existsSync(target))
       safetyBackupId = this.createDirectory("pre-restore", target, restoredAt).backupId;
+    mkdirSync(dirname(target), { recursive: true, mode: 0o700 });
     mkdirSync(staging, { recursive: false, mode: 0o700 });
     try {
       for (const entry of manifest.entries) {

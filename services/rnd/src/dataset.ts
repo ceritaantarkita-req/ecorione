@@ -229,6 +229,24 @@ export class DatasetRegistry {
     mkdirSync(this.root, { recursive: true, mode: 0o700 });
   }
 
+  private register(manifest: DatasetReleaseManifest): void {
+    const state = readRegistry(this.registryPath);
+    if (state.releases.some((entry) => entry.releaseId === manifest.releaseId)) return;
+    writeRegistry(this.registryPath, {
+      format: "ecorione.dataset-registry/v1",
+      revision: state.revision + 1,
+      releases: state.releases
+        .concat({
+          releaseId: manifest.releaseId,
+          dataset: manifest.dataset,
+          schemaName: manifest.schemaName,
+          schemaVersion: manifest.schemaVersion,
+          createdAt: manifest.createdAt,
+        })
+        .sort((a, b) => a.releaseId.localeCompare(b.releaseId)),
+    });
+  }
+
   release(input: DatasetReleaseRequest, createdAt: string): DatasetReleaseManifest {
     const request = DatasetReleaseRequestSchema.parse(input);
     validateSplitPolicy(request.splitPolicy);
@@ -265,7 +283,11 @@ export class DatasetRegistry {
     });
     return withLock(this.registryPath, () => {
       const releaseRoot = join(this.root, "releases", releaseId);
-      if (existsSync(releaseRoot)) return this.get(releaseId);
+      if (existsSync(releaseRoot)) {
+        const existing = this.get(releaseId);
+        this.register(existing);
+        return existing;
+      }
       const staging = `${releaseRoot}.tmp-${randomUUID()}`;
       mkdirSync(staging, { recursive: true, mode: 0o700 });
       try {
@@ -287,22 +309,7 @@ export class DatasetRegistry {
         rmSync(staging, { recursive: true, force: true });
         throw error;
       }
-      const state = readRegistry(this.registryPath);
-      if (!state.releases.some((entry) => entry.releaseId === releaseId)) {
-        writeRegistry(this.registryPath, {
-          format: "ecorione.dataset-registry/v1",
-          revision: state.revision + 1,
-          releases: state.releases
-            .concat({
-              releaseId,
-              dataset: manifest.dataset,
-              schemaName: manifest.schemaName,
-              schemaVersion: manifest.schemaVersion,
-              createdAt: manifest.createdAt,
-            })
-            .sort((a, b) => a.releaseId.localeCompare(b.releaseId)),
-        });
-      }
+      this.register(manifest);
       return manifest;
     });
   }

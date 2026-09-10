@@ -89,19 +89,11 @@ describe("OwnerBackupStore", () => {
     const source = join(root, "empty-source");
     mkdirSync(source);
     const store = new OwnerBackupStore(join(root, "backups"), "directory-owner");
-    const manifest = store.createDirectory(
-      "empty-state",
-      source,
-      "2026-09-10T01:00:00.000Z",
-    );
+    const manifest = store.createDirectory("empty-state", source, "2026-09-10T01:00:00.000Z");
     expect(manifest.entries).toEqual([]);
 
     const target = join(root, "missing-parent", "restored");
-    const first = store.restoreDirectory(
-      manifest.backupId,
-      target,
-      "2026-09-10T01:01:00.000Z",
-    );
+    const first = store.restoreDirectory(manifest.backupId, target, "2026-09-10T01:01:00.000Z");
     expect(first.safetyBackupId).toBeNull();
     expect(readdirSync(target)).toEqual([]);
 
