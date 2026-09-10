@@ -27,7 +27,7 @@ jobs:
       - name: Apply final integration patches
         run: python scripts/batch11-finalize.py
       - name: Format candidate
-        run: pnpm exec prettier --write packages/shared-server/src services/connect/src/http.ts services/connect/src/mcp-client/http.ts services/hub/src/exchange-http.ts services/flow/src/http.ts services/sync/src/http.ts apps/ai/app/api/ops apps/ai/app/ops Dockerfile deploy scripts/provider-canary.mjs scripts/production-ops-acceptance.mjs docs/adr/0032-production-operations-observability.md docs/adr/README.md docs/DECISIONS.md docs/production-operations.md docs/verification/batch11-production-ops-2026-09-10.md docs/EXECUTION-PROGRESS.md package.json .github/workflows/ci.yml .env.example
+        run: pnpm exec prettier --write packages/shared-server/src services/connect/src/http.ts services/connect/src/mcp-client/http.ts services/hub/src/exchange-http.ts services/flow/src/http.ts services/sync/src/http.ts apps/ai/app/api/ops apps/ai/app/ops deploy/compose.yml deploy/Caddyfile scripts/provider-canary.mjs scripts/production-ops-acceptance.mjs docs/adr/0032-production-operations-observability.md docs/adr/README.md docs/DECISIONS.md docs/production-operations.md docs/verification/batch11-production-ops-2026-09-10.md docs/EXECUTION-PROGRESS.md package.json .github/workflows/ci.yml
       - name: Typecheck
         run: pnpm run typecheck
       - name: Focused Batch 11 tests
