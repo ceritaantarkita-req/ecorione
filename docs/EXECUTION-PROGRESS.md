@@ -27,13 +27,13 @@ Dokumen ini adalah source of truth untuk progress implementasi ecorione setelah 
 
 ### Main
 
-Batch 7 implementation is merged and post-merge verified on `main`:
+Batch 8 implementation is merged and post-merge verified on `main`:
 
-- implementation PR #19 merge: `a48629d13ad03d9d02e635c6a8ca72f511e7a99c`
-- exact final PR head: `87afff362dd00c5922b641e52e18d5813b506593`
-- exact-head CI `34425970086`: full green
-- MCP External HTTPS Acceptance: **N/A** — Batch 7 tidak mengubah path yang memicu workflow MCP external
-- post-merge main CI `34426166317`: full green
+- implementation PR #21 merge: `37f073ad9865487a217d4348083f75fe28caa1e9`
+- exact final PR head: `84017f01be52bf65bc8d1ea88ce2d481b1b831d8`
+- exact-head CI `34429679871`: full green
+- exact-head MCP External HTTPS Acceptance `34429679835`: PASS
+- post-merge main CI `34429848537`: full green
 
 ### Active execution
 
@@ -44,8 +44,8 @@ Batch 7 implementation is merged and post-merge verified on `main`:
 - Batch 5 status: **CLOSED**
 - Batch 6 status: **CLOSED**
 - Batch 7 status: **CLOSED**
-- Batch 8 status: **IN PROGRESS**
-- active implementation branch: `agent/batch8-data-governance-dr-20260910`
+- Batch 8 status: **CLOSED**
+- next implementation target: **Batch 9 — Node Registry + Visual Flow Canvas**
 
 ---
 
@@ -212,7 +212,7 @@ Verification: `docs/verification/mcp-external-https-2026-09-09.md`
 
 # 6. Remaining execution roadmap
 
-Dari current state, **Batch 1–7 sudah CLOSED**. Tersisa **5 batch platform/production (Batch 8–12)**; next implementation target adalah **Batch 8 — Dataset Governance + Backup / Restore / DR**.
+Dari current state, **Batch 1–8 sudah CLOSED**. Tersisa **4 batch platform/production (Batch 9–12)**; next implementation target adalah **Batch 9 — Node Registry + Visual Flow Canvas**.
 
 ---
 
@@ -563,7 +563,7 @@ Batch 7 resmi **CLOSED**; next implementation batch adalah Batch 8.
 
 ## Batch 8 — Dataset Governance + Backup / Restore / DR
 
-Status: **IN PROGRESS**
+Status: **CLOSED**
 
 Dataset governance:
 
@@ -587,7 +587,7 @@ Operations:
 
 Implementation branch: `agent/batch8-data-governance-dr-20260910`
 
-Current implementation boundary:
+Implemented boundary:
 
 - RnD-owned immutable dataset registry + content-identified releases;
 - explicit schema/version + source lineage digests;
@@ -602,13 +602,24 @@ Current implementation boundary:
 - Flow DR remains Temporal-persistence responsibility; no second durability store;
 - documented separate-failure-domain requirement for production DR.
 
-Pre-PR evidence:
+Closure evidence:
 
-- integration gate `34428172190`: Format, Lint, root Typecheck, focused Batch 8 regression PASS;
+- implementation branch: `agent/batch8-data-governance-dr-20260910`;
+- implementation PR: #21;
+- final exact PR head: `84017f01be52bf65bc8d1ea88ce2d481b1b831d8`;
+- pre-PR integration gate `34428172190`: Format, Lint, root Typecheck, focused Batch 8 regression PASS;
 - hardening gate `34428476195`: Format, Lint, root Typecheck, empty-directory recovery, dataset registry crash self-heal, RnD dataset restore, Context SQLite recovery drill, Connect vault-safe backup/restore regression PASS;
-- temporary integration/hardening workflows self-delete and are not part of the candidate tree.
+- exact-head CI `34429679871`: Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Secret Scan, Production Build PASS;
+- exact-head MCP External HTTPS Acceptance `34429679835`: PASS;
+- merge memakai expected-head lock menjadi `37f073ad9865487a217d4348083f75fe28caa1e9`;
+- post-merge `main` CI `34429848537`: full green;
+- temporary Batch 8 integration/hardening/tracker workflows self-delete dan tidak ada di implementation tree;
+- production disaster recovery tetap mensyaratkan verified backup replication ke failure domain terpisah; local backup directory bukan bukti tahan disk loss;
+- Connect master key tetap out-of-band dan Flow recovery tetap mengikuti Temporal persistence.
 
-Batch 8 remains **IN PROGRESS** until exact-head PR gates, merge, and post-merge verification satisfy the closure definition.
+Verification: `docs/verification/batch8-closure-2026-09-10.md`
+
+Batch 8 resmi **CLOSED**; next implementation batch adalah Batch 9.
 
 ---
 
