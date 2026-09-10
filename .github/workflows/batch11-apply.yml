@@ -34,13 +34,14 @@ jobs:
         run: pnpm vitest run packages/shared-server/src/observability.test.ts services/connect/src/operations.test.ts
       - name: Production operations acceptance
         run: pnpm run acceptance:production-ops
-      - name: Remove helpers and commit candidate
+      - name: Commit non-workflow candidate
         run: |
-          rm .github/workflows/batch11-apply.yml scripts/batch11-finalize.py
+          git restore .github/workflows/ci.yml
+          rm scripts/batch11-finalize.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m 'feat: Batch 11 production operations and observability'
           git push origin HEAD:agent/batch11-production-ops-observability-20260910
 
-# verifier retry after request-scope trace hardening
+# Workflow cleanup and permanent CI gate are applied separately via repository connector.
