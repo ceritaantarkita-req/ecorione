@@ -44,59 +44,60 @@ jobs:
 
           dataset = Path("services/rnd/src/dataset.ts")
           text = dataset.read_text()
-          constructor = '''  constructor(root: string) {
-    this.root = resolve(root);
-    this.registryPath = join(this.root, "registry.json");
-    mkdirSync(this.root, { recursive: true, mode: 0o700 });
-  }
-
-'''
-          register = '''  private register(manifest: DatasetReleaseManifest): void {
-    const state = readRegistry(this.registryPath);
-    if (state.releases.some((entry) => entry.releaseId === manifest.releaseId)) return;
-    writeRegistry(this.registryPath, {
-      format: "ecorione.dataset-registry/v1",
-      revision: state.revision + 1,
-      releases: state.releases
-        .concat({
-          releaseId: manifest.releaseId,
-          dataset: manifest.dataset,
-          schemaName: manifest.schemaName,
-          schemaVersion: manifest.schemaVersion,
-          createdAt: manifest.createdAt,
-        })
-        .sort((a, b) => a.releaseId.localeCompare(b.releaseId)),
-    });
-  }
-
-'''
+          constructor = (
+              '  constructor(root: string) {\n'
+              '    this.root = resolve(root);\n'
+              '    this.registryPath = join(this.root, "registry.json");\n'
+              '    mkdirSync(this.root, { recursive: true, mode: 0o700 });\n'
+              '  }\n\n'
+          )
+          register = (
+              '  private register(manifest: DatasetReleaseManifest): void {\n'
+              '    const state = readRegistry(this.registryPath);\n'
+              '    if (state.releases.some((entry) => entry.releaseId === manifest.releaseId)) return;\n'
+              '    writeRegistry(this.registryPath, {\n'
+              '      format: "ecorione.dataset-registry/v1",\n'
+              '      revision: state.revision + 1,\n'
+              '      releases: state.releases\n'
+              '        .concat({\n'
+              '          releaseId: manifest.releaseId,\n'
+              '          dataset: manifest.dataset,\n'
+              '          schemaName: manifest.schemaName,\n'
+              '          schemaVersion: manifest.schemaVersion,\n'
+              '          createdAt: manifest.createdAt,\n'
+              '        })\n'
+              '        .sort((a, b) => a.releaseId.localeCompare(b.releaseId)),\n'
+              '    });\n'
+              '  }\n\n'
+          )
           if register not in text:
               text = text.replace(constructor, constructor + register)
           text = text.replace(
               '      if (existsSync(releaseRoot)) return this.get(releaseId);',
-              '''      if (existsSync(releaseRoot)) {
-        const existing = this.get(releaseId);
-        this.register(existing);
-        return existing;
-      }'''
+              '      if (existsSync(releaseRoot)) {\n'
+              '        const existing = this.get(releaseId);\n'
+              '        this.register(existing);\n'
+              '        return existing;\n'
+              '      }'
           )
-          old_registry = '''      const state = readRegistry(this.registryPath);
-      if (!state.releases.some((entry) => entry.releaseId === releaseId)) {
-        writeRegistry(this.registryPath, {
-          format: "ecorione.dataset-registry/v1",
-          revision: state.revision + 1,
-          releases: state.releases
-            .concat({
-              releaseId,
-              dataset: manifest.dataset,
-              schemaName: manifest.schemaName,
-              schemaVersion: manifest.schemaVersion,
-              createdAt: manifest.createdAt,
-            })
-            .sort((a, b) => a.releaseId.localeCompare(b.releaseId)),
-        });
-      }
-'''
+          old_registry = (
+              '      const state = readRegistry(this.registryPath);\n'
+              '      if (!state.releases.some((entry) => entry.releaseId === releaseId)) {\n'
+              '        writeRegistry(this.registryPath, {\n'
+              '          format: "ecorione.dataset-registry/v1",\n'
+              '          revision: state.revision + 1,\n'
+              '          releases: state.releases\n'
+              '            .concat({\n'
+              '              releaseId,\n'
+              '              dataset: manifest.dataset,\n'
+              '              schemaName: manifest.schemaName,\n'
+              '              schemaVersion: manifest.schemaVersion,\n'
+              '              createdAt: manifest.createdAt,\n'
+              '            })\n'
+              '            .sort((a, b) => a.releaseId.localeCompare(b.releaseId)),\n'
+              '        });\n'
+              '      }\n'
+          )
           text = text.replace(old_registry, '      this.register(manifest);\n')
           dataset.write_text(text)
           PY
