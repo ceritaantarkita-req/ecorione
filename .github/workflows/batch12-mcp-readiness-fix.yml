@@ -8,66 +8,247 @@ on:
       - .github/workflows/batch12-mcp-readiness-fix.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose:
+  fix-and-verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 4
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v5
-      - name: Verify Pinggy public HTTPS fallback with exact marker
+        with:
+          ref: agent/batch12-final-security-release-20260910
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Add provider fallback to MCP external acceptance
         shell: bash
         run: |
           set -euo pipefail
-          SSH_LOG="$RUNNER_TEMP/pinggy.log"
-          MARKER="ECORIONE_PUBLIC_HTTPS_TUNNEL_PROOF"
-          cat >"$RUNNER_TEMP/proof-server.mjs" <<'EOF'
-          import http from "node:http";
-          http.createServer((_req, res) => {
-            res.writeHead(200, { "content-type": "text/plain", "cache-control": "no-store" });
-            res.end("ECORIONE_PUBLIC_HTTPS_TUNNEL_PROOF");
-          }).listen(18080, "127.0.0.1");
-          EOF
-          node "$RUNNER_TEMP/proof-server.mjs" >"$RUNNER_TEMP/http.log" 2>&1 &
-          HTTP_PID=$!
-          ssh \
-            -T \
-            -p 443 \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -o ServerAliveInterval=15 \
-            -o ExitOnForwardFailure=yes \
-            -R0:127.0.0.1:18080 \
-            free.pinggy.io >"$SSH_LOG" 2>&1 &
-          SSH_PID=$!
-          trap 'kill "$SSH_PID" "$HTTP_PID" 2>/dev/null || true' EXIT
+          python - <<'PY'
+          from pathlib import Path
+          import re
 
-          URL=""
-          for _ in $(seq 1 45); do
-            URL="$(grep -Eo 'https://[A-Za-z0-9.-]+\.(free\.pinggy\.net|run\.pinggy-free\.link)' "$SSH_LOG" | head -n1 || true)"
-            if [ -n "$URL" ]; then
-              break
-            fi
-            if ! kill -0 "$SSH_PID" 2>/dev/null; then
-              echo 'Pinggy SSH process exited early'
-              cat "$SSH_LOG"
-              exit 1
-            fi
-            sleep 1
-          done
-          [ -n "$URL" ] || { echo 'No Pinggy HTTPS URL discovered'; cat "$SSH_LOG"; exit 1; }
-          echo "pinggy_public_host=$(printf '%s' "$URL" | sed 's#https://##')"
+          path = Path("scripts/mcp-external-https-acceptance.mjs")
+          text = path.read_text()
 
-          for _ in $(seq 1 20); do
-            BODY="$(curl --fail --silent --show-error --max-time 10 "$URL/" || true)"
-            if [ "$BODY" = "$MARKER" ]; then
-              echo 'PINGGY_PUBLIC_HTTPS_PASS'
-              exit 0
-            fi
-            sleep 2
-          done
+          text, removed = re.subn(
+              r'\nif \(!CLOUDFLARED_BIN\) \{.*?\n\}\n',
+              '\n',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if removed != 1:
+              raise SystemExit(f"expected mandatory cloudflared guard once, found {removed}")
 
-          echo 'Pinggy public HTTPS did not return exact local marker'
-          cat "$SSH_LOG"
-          exit 1
+          start = text.index("async function startTunnel(")
+          end = text.index("function b64urlJson", start)
+          replacement = r'''function logTailFor(chunks) {
+            return () => chunks.join("").slice(-4000);
+          }
+
+          async function waitForTunnelUrl(child, chunks, urlPattern, label, timeoutMs) {
+            const logTail = logTailFor(chunks);
+            return await new Promise((resolve, reject) => {
+              let settled = false;
+              const timer = setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                void stopChild(child);
+                reject(new Error(`Timeout menunggu public HTTPS tunnel ${label}. Log: ${logTail()}`));
+              }, timeoutMs);
+
+              const inspect = (data) => {
+                chunks.push(data.toString("utf8"));
+                const match = chunks.join("").match(urlPattern);
+                if (match && !settled) {
+                  settled = true;
+                  clearTimeout(timer);
+                  resolve(match[0]);
+                }
+              };
+              child.stdout.on("data", inspect);
+              child.stderr.on("data", inspect);
+              child.once("error", (error) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                reject(error);
+              });
+              child.once("exit", (code, signal) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                reject(
+                  new Error(
+                    `Tunnel ${label} berhenti sebelum URL tersedia (code=${String(code)}, signal=${String(signal)}). Log: ${logTail()}`,
+                  ),
+                );
+              });
+            });
+          }
+
+          async function startCloudflareTunnel(localUrl, label) {
+            if (!CLOUDFLARED_BIN) {
+              throw new Error("CLOUDFLARED_BIN tidak tersedia untuk provider Cloudflare.");
+            }
+            const child = spawn(
+              CLOUDFLARED_BIN,
+              ["tunnel", "--no-autoupdate", "--url", localUrl],
+              { stdio: ["ignore", "pipe", "pipe"] },
+            );
+            const chunks = [];
+            const publicUrl = await waitForTunnelUrl(
+              child,
+              chunks,
+              /https:\/\/[a-z0-9-]+\.trycloudflare\.com/iu,
+              `${label} via Cloudflare`,
+              45_000,
+            );
+            return { child, publicUrl, logTail: logTailFor(chunks), provider: "cloudflare" };
+          }
+
+          async function startPinggyTunnel(localUrl, label) {
+            const parsed = new URL(localUrl);
+            if (parsed.protocol !== "http:" || !parsed.port) {
+              throw new Error(`Pinggy membutuhkan local HTTP URL dengan port: ${localUrl}`);
+            }
+            const child = spawn(
+              "ssh",
+              [
+                "-T",
+                "-p",
+                "443",
+                "-o",
+                "StrictHostKeyChecking=no",
+                "-o",
+                "UserKnownHostsFile=/dev/null",
+                "-o",
+                "ServerAliveInterval=15",
+                "-o",
+                "ExitOnForwardFailure=yes",
+                `-R0:${parsed.hostname}:${parsed.port}`,
+                "free.pinggy.io",
+              ],
+              { stdio: ["ignore", "pipe", "pipe"] },
+            );
+            const chunks = [];
+            const publicUrl = await waitForTunnelUrl(
+              child,
+              chunks,
+              /https:\/\/[a-z0-9.-]+\.(?:free\.pinggy\.net|run\.pinggy-free\.link)/iu,
+              `${label} via Pinggy`,
+              45_000,
+            );
+            return { child, publicUrl, logTail: logTailFor(chunks), provider: "pinggy" };
+          }
+
+          async function waitForPublic(url, label, tunnel, timeoutMs) {
+            const deadline = Date.now() + timeoutMs;
+            let lastError = "belum ada response";
+            while (Date.now() < deadline) {
+              if (tunnel.child.exitCode !== null || tunnel.child.signalCode !== null) {
+                throw new Error(
+                  `Public HTTPS ${label} tunnel berhenti sebelum ready. Log: ${tunnel.logTail()}`,
+                );
+              }
+              try {
+                const response = await fetch(url, { signal: AbortSignal.timeout(5_000) });
+                if (response.ok) return;
+                lastError = `HTTP ${String(response.status)}`;
+              } catch (error) {
+                if (error instanceof Error) {
+                  const cause = error.cause;
+                  const causeDetail =
+                    cause && typeof cause === "object"
+                      ? `${String(cause.code ?? "unknown")}: ${String(cause.message ?? cause)}`
+                      : cause
+                        ? String(cause)
+                        : "none";
+                  lastError = `${error.message}; cause=${causeDetail}`;
+                } else {
+                  lastError = String(error);
+                }
+              }
+              await new Promise((resolve) => setTimeout(resolve, 750));
+            }
+            throw new Error(
+              `Public HTTPS ${label} tidak ready: ${lastError}. Tunnel log: ${tunnel.logTail()}`,
+            );
+          }
+
+          let selectedTunnelProvider = process.env.MCP_TUNNEL_PROVIDER ?? "auto";
+
+          async function startReadyTunnel(localUrl, label) {
+            const providerNames =
+              selectedTunnelProvider === "auto"
+                ? [...(CLOUDFLARED_BIN ? ["cloudflare"] : []), "pinggy"]
+                : [selectedTunnelProvider];
+            const failures = [];
+
+            for (const provider of providerNames) {
+              let tunnel;
+              try {
+                tunnel =
+                  provider === "cloudflare"
+                    ? await startCloudflareTunnel(localUrl, label)
+                    : provider === "pinggy"
+                      ? await startPinggyTunnel(localUrl, label)
+                      : (() => {
+                          throw new Error(`Provider tunnel tidak dikenal: ${provider}`);
+                        })();
+                await waitForPublic(
+                  `${tunnel.publicUrl}/healthz`,
+                  `${label} via ${provider}`,
+                  tunnel,
+                  provider === "cloudflare" ? 20_000 : 30_000,
+                );
+                if (selectedTunnelProvider === "auto") selectedTunnelProvider = provider;
+                return tunnel;
+              } catch (error) {
+                failures.push(`${provider}: ${error instanceof Error ? error.message : String(error)}`);
+                if (tunnel) await stopChild(tunnel.child).catch(() => undefined);
+              }
+            }
+
+            throw new Error(`Public HTTPS ${label} gagal: ${failures.join(" | ")}`);
+          }
+
+          '''
+          text = text[:start] + replacement + text[end:]
+          path.write_text(text)
+          PY
+          pnpm exec prettier --write scripts/mcp-external-https-acceptance.mjs
+          git diff --check
+      - name: Build TypeScript runtime
+        run: pnpm exec tsc --build
+      - name: Install pinned cloudflared for primary provider
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLOUDFLARED="$RUNNER_TEMP/cloudflared"
+          curl --fail --silent --show-error --location \
+            "https://github.com/cloudflare/cloudflared/releases/download/2026.8.3/cloudflared-linux-amd64" \
+            --output "$CLOUDFLARED"
+          echo "f29324fe934d1e100617484c78deef803c4dc2cd351d645bbde42e96b4fccc5e  $CLOUDFLARED" \
+            | sha256sum --check --strict
+          chmod 0755 "$CLOUDFLARED"
+          echo "CLOUDFLARED_BIN=$CLOUDFLARED" >> "$GITHUB_ENV"
+      - name: Verify full public HTTPS MCP acceptance
+        run: pnpm run acceptance:mcp:external
+      - name: Commit fallback and remove temporary helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/batch12-mcp-readiness-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/mcp-external-https-acceptance.mjs .github/workflows/batch12-mcp-readiness-fix.yml
+          git diff --cached --check
+          git commit -m "fix(batch12): make MCP HTTPS acceptance provider resilient"
+          git push origin HEAD:agent/batch12-final-security-release-20260910
