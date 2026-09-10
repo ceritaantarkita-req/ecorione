@@ -20,7 +20,9 @@ for (const file of files) {
         spec === "latest" ||
         /^(?:git\+|git:|https?:|github:|bitbucket:)/i.test(spec)
       ) {
-        findings.push(`${file} ${section}.${name} menggunakan source/version tidak diizinkan: ${spec}`);
+        findings.push(
+          `${file} ${section}.${name} menggunakan source/version tidak diizinkan: ${spec}`,
+        );
       }
     }
   }

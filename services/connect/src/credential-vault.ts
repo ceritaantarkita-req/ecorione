@@ -31,6 +31,17 @@ export interface ProviderCredentialReader {
   get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined;
 }
 
+export interface CredentialVaultAdmin extends ProviderCredentialReader {
+  list(): readonly CredentialMetadata[];
+  set(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+    secret: string,
+    updatedAt: string,
+  ): CredentialMetadata;
+  remove(provider: CredentialProvider, purpose: CredentialPurpose): boolean;
+}
+
 export interface CredentialMetadata {
   readonly provider: CredentialProvider;
   readonly purpose: CredentialPurpose;
@@ -267,6 +278,17 @@ export class FileCredentialVault implements ProviderCredentialReader {
       );
     writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
     return { provider, purpose, generation, updatedAt: normalizedUpdatedAt };
+  }
+
+  remove(provider: CredentialProvider, purpose: CredentialPurpose): boolean {
+    assertCredentialScope(provider, purpose);
+    const vault = readVault(this.path);
+    const entries = vault.entries.filter(
+      (entry) => !(entry.provider === provider && entry.purpose === purpose),
+    );
+    if (entries.length == vault.entries.length) return false;
+    writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
+    return true;
   }
 
   /** Re-encrypts every entry under a new 32-byte master key as one atomic file replacement. */

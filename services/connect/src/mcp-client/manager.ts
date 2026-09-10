@@ -21,6 +21,7 @@ import type {
   McpServerId,
   McpToolCallRequest,
   McpToolCallResult,
+  McpToolPolicy,
 } from "./types.js";
 
 interface ConnectionState {
@@ -143,6 +144,43 @@ export class McpManager {
     private readonly governance: McpGovernance,
     private readonly invocations: FileMcpInvocationStore,
   ) {}
+
+  configuredServers(workspaceId?: WorkspaceId): readonly McpServerConfig[] {
+    return this.registry.list(workspaceId);
+  }
+
+  async upsertServer(config: McpServerConfig): Promise<McpServerConfig> {
+    const prior = this.registry.list().find((candidate) => candidate.id === config.id);
+    const saved = this.registry.upsert(config);
+    const workspaces = new Set([...(prior?.workspaceIds ?? []), ...saved.workspaceIds]);
+    await Promise.all(
+      [...workspaces].map((workspaceId) => this.disconnect(saved.id, workspaceId)),
+    );
+    return saved;
+  }
+
+  async removeServer(serverId: McpServerId): Promise<boolean> {
+    const prior = this.registry.list().find((candidate) => candidate.id === serverId);
+    if (prior === undefined) return false;
+    const removed = this.registry.remove(serverId);
+    if (removed) {
+      await Promise.all(
+        prior.workspaceIds.map((workspaceId) => this.disconnect(serverId, workspaceId)),
+      );
+    }
+    return removed;
+  }
+
+  async setServerToolPolicy(
+    serverId: McpServerId,
+    policy: McpToolPolicy,
+  ): Promise<McpServerConfig> {
+    const saved = this.registry.setToolPolicy(serverId, policy);
+    await Promise.all(
+      saved.workspaceIds.map((workspaceId) => this.disconnect(serverId, workspaceId)),
+    );
+    return saved;
+  }
 
   listServers(workspaceId: WorkspaceId): readonly {
     id: McpServerId;

@@ -61,7 +61,9 @@ const forbidden = new Set(
 for (const path of forbidden) findings.push(`history-path:${path}`);
 
 if (findings.length > 0) {
-  console.error(`secret-history-scan: ${String(findings.length)} temuan; nilai secret tidak dicetak.`);
+  console.error(
+    `secret-history-scan: ${String(findings.length)} temuan; nilai secret tidak dicetak.`,
+  );
   for (const finding of findings.slice(0, 100)) {
     const parts = finding.split(":");
     console.error(`  ${parts.slice(0, 3).join(":")}`);

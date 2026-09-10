@@ -83,6 +83,7 @@ services:
       ECORIONE_LOCAL_BASE_URL: ${ECORIONE_LOCAL_BASE_URL:-http://host.docker.internal:11434/v1}
       ECORIONE_LOCAL_MODEL: ${ECORIONE_LOCAL_MODEL:-qwen3:8b-instruct-q4_K_M}
       ECORIONE_CONNECT_VAULT_PATH: /app/data/connect-credentials.vault.json
+      ECORIONE_CONNECT_SETTINGS_PATH: /app/data/connect-runtime-settings.json
       ECORIONE_CONNECT_VAULT_MASTER_KEY: ${ECORIONE_CONNECT_VAULT_MASTER_KEY:-}
       ECORIONE_SPEND_BUDGET_PATH: /app/data/connect-spend-budget.json
       ECORIONE_SPEND_DAILY_USD: ${ECORIONE_SPEND_DAILY_USD:-}

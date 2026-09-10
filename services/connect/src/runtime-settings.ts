@@ -1,4 +1,11 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname } from "node:path";
 import { z } from "zod";
 import { HostedProviderIdSchema, type HostedProviderId } from "./provider-types.js";
@@ -82,7 +89,9 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
     if (!existsSync(this.path)) {
       return { version: 1, revision: 0, settings: cloneSettings(this.defaults) };
     }
-    return RuntimeSettingsFileSchema.parse(JSON.parse(readFileSync(this.path, "utf8")) as unknown);
+    return RuntimeSettingsFileSchema.parse(
+      JSON.parse(readFileSync(this.path, "utf8")) as unknown,
+    );
   }
 
   get(): RuntimeSettingsSnapshot {

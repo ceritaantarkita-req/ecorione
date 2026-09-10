@@ -1,0 +1,144 @@
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 28px 80px;
+  color: #151515;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  border-bottom: 1px solid #dedede;
+  padding-bottom: 24px;
+}
+.header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  letter-spacing: -0.04em;
+}
+.header p,
+.muted {
+  color: #686868;
+}
+.header nav {
+  display: flex;
+  gap: 16px;
+}
+.header a {
+  color: inherit;
+  font-size: 14px;
+}
+.status {
+  margin: 20px 0;
+  padding: 12px 14px;
+  background: #f5f5f5;
+  border-left: 3px solid #222;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+}
+.section {
+  padding: 28px 0;
+  border-bottom: 1px solid #e6e6e6;
+}
+.section h2 {
+  margin: 0 0 18px;
+  font-size: 1.25rem;
+}
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.formGrid label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.wide {
+  grid-column: 1 / -1;
+}
+.check {
+  display: flex !important;
+  align-items: center;
+  gap: 8px !important;
+}
+.inline,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+input,
+select,
+textarea {
+  border: 1px solid #c9c9c9;
+  background: #fff;
+  color: #151515;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font: inherit;
+}
+textarea {
+  width: 100%;
+  margin-top: 14px;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.inline input {
+  flex: 1;
+  min-width: 220px;
+}
+button {
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 14px;
+  background: #181818;
+  color: #fff;
+  font: 600 13px/1.2 inherit;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.secondary {
+  background: #ececec;
+  color: #181818;
+}
+.serverList {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.server {
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  background: #f6f6f6;
+  color: #181818;
+  border: 1px solid #e2e2e2;
+}
+.server span {
+  color: #777;
+  font-weight: 400;
+}
+@media (max-width: 720px) {
+  .header {
+    align-items: start;
+    flex-direction: column;
+  }
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .wide {
+    grid-column: auto;
+  }
+  .server {
+    flex-direction: column;
+    gap: 4px;
+  }
+}

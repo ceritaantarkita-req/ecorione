@@ -2,6 +2,7 @@
 const DEFAULT_HUB_URL = "http://127.0.0.1:17024";
 const DEFAULT_SPACE_URL = "http://127.0.0.1:17027";
 const DEFAULT_FLOW_URL = "http://127.0.0.1:17028";
+const DEFAULT_CONNECT_URL = "http://127.0.0.1:17023";
 
 export function hubUrl(): string {
   const value = process.env.ECORIONE_HUB_URL;
@@ -14,6 +15,10 @@ export function spaceUrl(): string {
 export function flowUrl(): string {
   const value = process.env.ECORIONE_FLOW_URL;
   return value !== undefined && value.length > 0 ? value : DEFAULT_FLOW_URL;
+}
+export function connectUrl(): string {
+  const value = process.env.ECORIONE_CONNECT_URL;
+  return value !== undefined && value.length > 0 ? value : DEFAULT_CONNECT_URL;
 }
 export function internalToken(): string | undefined {
   const value = process.env.ECORIONE_INTERNAL_TOKEN;

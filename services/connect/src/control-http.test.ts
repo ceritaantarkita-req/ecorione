@@ -59,7 +59,11 @@ describe("Connect Control Center boundary", () => {
     });
     expect(response.statusCode).toBe(200);
     expect(response.body).not.toContain(secret);
-    expect(response.json()).toMatchObject({ provider: "openai", purpose: "messages", generation: 1 });
+    expect(response.json()).toMatchObject({
+      provider: "openai",
+      purpose: "messages",
+      generation: 1,
+    });
     expect(vault.get("openai", "messages")).toBe(secret);
 
     const listed = await app.inject({

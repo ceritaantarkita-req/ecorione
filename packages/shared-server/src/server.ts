@@ -147,7 +147,12 @@ export function createServer(options: CreateServerOptions): FastifyInstance {
   app.addHook("onRequest", async (req: FastifyRequest, reply: FastifyReply) => {
     if (req.url === "/healthz" || options.token === undefined) return;
     const authorization = req.headers.authorization;
-    if (!bearerMatches(typeof authorization === "string" ? authorization : undefined, options.token)) {
+    if (
+      !bearerMatches(
+        typeof authorization === "string" ? authorization : undefined,
+        options.token,
+      )
+    ) {
       const err = new UnauthorizedError();
       await reply.code(err.statusCode).send({ ...errorBody(err), requestId: req.requestId });
       return reply;
