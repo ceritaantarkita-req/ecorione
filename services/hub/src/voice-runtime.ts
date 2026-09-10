@@ -25,11 +25,7 @@ import type { CapabilityRegistry } from "./capability-registry.js";
 import type { HistoryLedger } from "./history-ledger.js";
 import { authorizeInference, requestedRoutes } from "./multimodal-http.js";
 import type { HubRepository } from "./repository.js";
-import {
-  VoiceChunkConflictError,
-  VoiceSessionStore,
-  type VoiceSessionNotFoundError,
-} from "./voice-store.js";
+import type { VoiceSessionStore } from "./voice-store.js";
 
 export interface VoiceRuntimeDeps {
   readonly store: VoiceSessionStore;
@@ -74,7 +70,10 @@ function replyChunks(text: string): string[] {
   for (const raw of sentences) {
     const sentence = raw.trim();
     if (sentence.length === 0) continue;
-    if (current.length > 0 && current.length + 1 + sentence.length > ASSISTANT_DELTA_MAX_CHARS) {
+    if (
+      current.length > 0 &&
+      current.length + 1 + sentence.length > ASSISTANT_DELTA_MAX_CHARS
+    ) {
       chunks.push(current);
       current = "";
     }
@@ -104,7 +103,8 @@ export class RealtimeVoiceRuntime {
 
   create(input: VoiceSessionCreateRequest): VoiceSessionSnapshot {
     const now = this.deps.now();
-    const workspaceId = input.workspaceId ?? ("ws_personal" as VoiceSessionSnapshot["workspaceId"]);
+    const workspaceId =
+      input.workspaceId ?? ("ws_personal" as VoiceSessionSnapshot["workspaceId"]);
     authorizeInference({
       authority: this.deps.authority,
       repo: this.deps.repo,
@@ -170,7 +170,12 @@ export class RealtimeVoiceRuntime {
       let session = this.deps.store.get(input.sessionId);
       const transient = this.ensureTransient(input.sessionId);
       if (input.speech && (session.state === "THINKING" || session.state === "SPEAKING")) {
-        session = this.interruptInternal(input.sessionId, input.operationId, "user-barge-in", now);
+        session = this.interruptInternal(
+          input.sessionId,
+          input.operationId,
+          "user-barge-in",
+          now,
+        );
       }
 
       if (input.speech) {
@@ -285,7 +290,12 @@ export class RealtimeVoiceRuntime {
   }
 
   interrupt(input: VoiceInterruptRequest): VoiceSessionSnapshot {
-    return this.interruptInternal(input.sessionId, input.operationId, input.reason, this.deps.now());
+    return this.interruptInternal(
+      input.sessionId,
+      input.operationId,
+      input.reason,
+      this.deps.now(),
+    );
   }
 
   close(input: VoiceCloseRequest): VoiceSessionSnapshot {
@@ -351,7 +361,11 @@ export class RealtimeVoiceRuntime {
       const modelMs = performance.now() - modelStarted;
       if (!this.isCurrent(sessionAtStart.sessionId, generation, controller)) return;
 
-      let session = this.deps.store.setState(sessionAtStart.sessionId, "SPEAKING", this.deps.now());
+      let session = this.deps.store.setState(
+        sessionAtStart.sessionId,
+        "SPEAKING",
+        this.deps.now(),
+      );
       this.emitStored(
         this.deps.store.appendEvent(
           session.sessionId,
@@ -392,7 +406,9 @@ export class RealtimeVoiceRuntime {
         );
         if (!this.isCurrent(session.sessionId, generation, controller)) return;
         if (audio.audioBase64 === undefined || audio.audioMimeType === undefined) {
-          throw new Error("Realtime TTS adapter tidak mengembalikan audioBase64 + audioMimeType.");
+          throw new Error(
+            "Realtime TTS adapter tidak mengembalikan audioBase64 + audioMimeType.",
+          );
         }
         if (firstTtsMs === null) firstTtsMs = performance.now() - ttsStarted;
         this.emitLiveAudio(session.sessionId, generation, {
@@ -449,7 +465,10 @@ export class RealtimeVoiceRuntime {
           current.sessionId,
           "error",
           generation,
-          { message: error instanceof Error ? error.message : String(error), recoverable: true },
+          {
+            message: error instanceof Error ? error.message : String(error),
+            recoverable: true,
+          },
           now,
         ),
       );
@@ -499,7 +518,11 @@ export class RealtimeVoiceRuntime {
   ): boolean {
     if (controller.signal.aborted) return false;
     const session = this.deps.store.get(sessionId);
-    return session.generation === generation && session.state !== "CLOSED" && session.state !== "FAILED";
+    return (
+      session.generation === generation &&
+      session.state !== "CLOSED" &&
+      session.state !== "FAILED"
+    );
   }
 
   private ensureTransient(sessionId: SessionId): TransientSession {
@@ -553,6 +576,3 @@ export class RealtimeVoiceRuntime {
     return `voice:${sessionId}`;
   }
 }
-
-export { VoiceChunkConflictError, VoiceSessionStore };
-export type { VoiceSessionNotFoundError };

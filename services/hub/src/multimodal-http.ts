@@ -142,14 +142,14 @@ function assertMime(task: MultimodalAnalyzeRequest["task"], mimeType: string): v
   throw new BadRequestError(`MIME ${mimeType} tidak didukung untuk task ${task}.`);
 }
 
-function requestedRoutes(
+export function requestedRoutes(
   route: MultimodalAnalyzeRequest["route"],
 ): readonly ("local" | "hosted")[] {
   if (route.preferred === "hosted") return ["hosted"];
   return route.allowHostedFallback ? ["local", "hosted"] : ["local"];
 }
 
-function authorizeInference(input: {
+export function authorizeInference(input: {
   authority: CapabilityRegistry;
   repo: HubRepository;
   workspaceId: WorkspaceId;

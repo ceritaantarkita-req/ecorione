@@ -25,9 +25,12 @@ export interface LocalRuntimeCallInput {
  * vLLM, or another implementation is acceptable when it exposes the configured
  * OpenAI-compatible chat-completions endpoint.
  */
-export function callLocalRuntime(input: LocalRuntimeCallInput): Promise<LocalCallResult> {
+export function callLocalRuntime(
+  input: LocalRuntimeCallInput,
+  signal?: AbortSignal,
+): Promise<LocalCallResult> {
   switch (input.runtime) {
     case "openai-compatible":
-      return callLocal(input);
+      return callLocal(input, signal);
   }
 }

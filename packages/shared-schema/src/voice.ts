@@ -52,10 +52,17 @@ export const VoiceAudioChunkRequestSchema = z
     operationId: OperationIdSchema,
     sessionId: SessionIdSchema,
     clientSequence: z.number().int().nonnegative(),
-    mimeType: z.string().min(1).max(128).refine((value) => value.startsWith("audio/"), {
-      message: "Realtime voice hanya menerima MIME audio/*.",
-    }),
-    contentBase64: z.string().min(1).max(8 * 1024 * 1024),
+    mimeType: z
+      .string()
+      .min(1)
+      .max(128)
+      .refine((value) => value.startsWith("audio/"), {
+        message: "Realtime voice hanya menerima MIME audio/*.",
+      }),
+    contentBase64: z
+      .string()
+      .min(1)
+      .max(8 * 1024 * 1024),
     speech: z.boolean(),
     endOfUtterance: z.boolean().default(false),
     rms: z.number().min(0).max(1).optional(),

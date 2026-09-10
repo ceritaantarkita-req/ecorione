@@ -88,6 +88,7 @@ function developmentApiKey(deps: CompleteDeps, provider: HostedProviderId): stri
 export async function complete(
   deps: CompleteDeps,
   input: CompleteInput,
+  signal?: AbortSignal,
 ): Promise<CompleteResult> {
   assertPrefixCacheable(input.prefix);
   const overheadStart = performance.now();
@@ -129,14 +130,17 @@ export async function complete(
     baselineUsage = cached.usage;
     cacheHit = true;
   } else if (decision.routeReason === "local-consolidation") {
-    const result = await callLocalRuntime({
-      runtime: deps.localRuntime ?? "openai-compatible",
-      baseUrl: deps.localBaseUrl,
-      modelTag: deps.localModelTag,
-      prefix: input.prefix,
-      dynamicText: input.dynamicText,
-      userMessage: input.userMessage,
-    });
+    const result = await callLocalRuntime(
+      {
+        runtime: deps.localRuntime ?? "openai-compatible",
+        baseUrl: deps.localBaseUrl,
+        modelTag: deps.localModelTag,
+        prefix: input.prefix,
+        dynamicText: input.dynamicText,
+        userMessage: input.userMessage,
+      },
+      signal,
+    );
     reply = result.reply;
     responseModel = result.model;
     usage = result.usage;
@@ -174,11 +178,14 @@ export async function complete(
     }
 
     try {
-      const result = await callHostedProvider({
-        provider: hostedProvider,
-        apiKey,
-        ...providerInput,
-      });
+      const result = await callHostedProvider(
+        {
+          provider: hostedProvider,
+          apiKey,
+          ...providerInput,
+        },
+        signal,
+      );
       reply = result.reply;
       responseModel = result.model;
       usage = result.usage;

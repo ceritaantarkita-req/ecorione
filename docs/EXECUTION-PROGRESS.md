@@ -455,7 +455,7 @@ Batch 5 resmi **CLOSED**; next implementation batch adalah Batch 6.
 
 ## Batch 6 — Realtime Voice
 
-Status: **PLANNED**
+Status: **IN PROGRESS**
 
 Scope:
 

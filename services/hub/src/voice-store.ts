@@ -87,7 +87,9 @@ function canonical(value: unknown): unknown {
 }
 
 function digest(value: unknown): string {
-  return createHash("sha256").update(JSON.stringify(canonical(value))).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(canonical(value)))
+    .digest("hex");
 }
 
 function sessionConfigFingerprint(input: VoiceSessionCreateRequest): string {
@@ -241,7 +243,13 @@ export class VoiceSessionStore {
         now,
         null,
       );
-    this.appendEvent(input.sessionId, "session.started", 0, { operationId: input.operationId }, now);
+    this.appendEvent(
+      input.sessionId,
+      "session.started",
+      0,
+      { operationId: input.operationId },
+      now,
+    );
     return this.get(input.sessionId);
   }
 
@@ -280,7 +288,9 @@ export class VoiceSessionStore {
         )
         .run(sessionId, sequence, generation, type, at, JSON.stringify(data));
       this.db.raw
-        .prepare("UPDATE voice_sessions SET next_event_sequence=?, updated_at=? WHERE session_id=?")
+        .prepare(
+          "UPDATE voice_sessions SET next_event_sequence=?, updated_at=? WHERE session_id=?",
+        )
         .run(sequence + 1, at, sessionId);
       return VoiceEventSchema.parse({ sessionId, sequence, generation, type, at, data });
     });
@@ -300,7 +310,11 @@ export class VoiceSessionStore {
     return this.get(sessionId);
   }
 
-  setLanguage(sessionId: SessionId, language: "id" | "en", now: Timestamp): VoiceSessionSnapshot {
+  setLanguage(
+    sessionId: SessionId,
+    language: "id" | "en",
+    now: Timestamp,
+  ): VoiceSessionSnapshot {
     const result = this.db.raw
       .prepare("UPDATE voice_sessions SET active_language=?,updated_at=? WHERE session_id=?")
       .run(language, now, sessionId);
@@ -334,14 +348,20 @@ export class VoiceSessionStore {
 
   recoverOpenSessions(now: Timestamp): number {
     const rows = this.db.raw
-      .prepare("SELECT session_id,generation FROM voice_sessions WHERE state NOT IN ('CLOSED','FAILED')")
+      .prepare(
+        "SELECT session_id,generation FROM voice_sessions WHERE state NOT IN ('CLOSED','FAILED')",
+      )
       .all() as Array<{ session_id: string; generation: number }>;
     for (const row of rows) {
       this.db.raw
         .prepare(
           "UPDATE voice_sessions SET state='FAILED',updated_at=?,error=? WHERE session_id=?",
         )
-        .run(now, "Realtime voice process restarted; live session tidak diadopsi diam-diam.", row.session_id);
+        .run(
+          now,
+          "Realtime voice process restarted; live session tidak diadopsi diam-diam.",
+          row.session_id,
+        );
       this.appendEvent(
         row.session_id as SessionId,
         "error",
@@ -368,7 +388,9 @@ export class VoiceSessionStore {
         );
       }
       if (prior.status === "READY" && prior.response_json !== null) {
-        return { replay: VoiceChunkAckSchema.parse(JSON.parse(prior.response_json) as unknown) };
+        return {
+          replay: VoiceChunkAckSchema.parse(JSON.parse(prior.response_json) as unknown),
+        };
       }
       throw new VoiceChunkConflictError(
         `clientSequence ${String(input.clientSequence)} berada pada state ${prior.status}; jangan retry ambigu dengan payload baru.`,
@@ -376,7 +398,9 @@ export class VoiceSessionStore {
     }
     const session = this.get(input.sessionId);
     if (session.state === "CLOSED" || session.state === "FAILED") {
-      throw new VoiceChunkConflictError(`Voice session tidak menerima audio pada state ${session.state}.`);
+      throw new VoiceChunkConflictError(
+        `Voice session tidak menerima audio pada state ${session.state}.`,
+      );
     }
     const expected = session.lastClientSequence + 1;
     if (input.clientSequence !== expected) {
@@ -403,7 +427,9 @@ export class VoiceSessionStore {
           null,
         );
       this.db.raw
-        .prepare("UPDATE voice_sessions SET last_client_sequence=?,updated_at=? WHERE session_id=?")
+        .prepare(
+          "UPDATE voice_sessions SET last_client_sequence=?,updated_at=? WHERE session_id=?",
+        )
         .run(input.clientSequence, now, input.sessionId);
     });
     tx();
@@ -422,12 +448,7 @@ export class VoiceSessionStore {
     }
   }
 
-  failChunk(
-    sessionId: SessionId,
-    clientSequence: number,
-    error: string,
-    now: Timestamp,
-  ): void {
+  failChunk(sessionId: SessionId, clientSequence: number, error: string, now: Timestamp): void {
     this.db.raw
       .prepare(
         `UPDATE voice_chunk_receipts SET status='FAILED',error=?,completed_at=?

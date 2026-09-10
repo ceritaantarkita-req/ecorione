@@ -40,7 +40,10 @@ describe("VoiceSessionStore", () => {
     const store = new VoiceSessionStore(db);
     const first = store.create(createRequest(), T0);
     const second = store.create(
-      VoiceSessionCreateRequestSchema.parse({ ...createRequest(), operationId: "op_voicecreate02" }),
+      VoiceSessionCreateRequestSchema.parse({
+        ...createRequest(),
+        operationId: "op_voicecreate02",
+      }),
       T1,
     );
     expect(first.sessionId).toBe(second.sessionId);

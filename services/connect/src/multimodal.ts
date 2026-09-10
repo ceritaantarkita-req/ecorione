@@ -21,7 +21,7 @@ type AdapterOutput = z.infer<typeof AdapterOutputSchema>;
 export interface MultimodalAdapter {
   readonly route: "local" | "hosted";
   estimateReservationUsd(input: MultimodalInferRequest): number;
-  infer(input: MultimodalInferRequest): Promise<AdapterOutput>;
+  infer(input: MultimodalInferRequest, signal?: AbortSignal): Promise<AdapterOutput>;
 }
 
 export interface HttpMultimodalAdapterOptions {
@@ -63,7 +63,7 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
     return this.reservationUsd;
   }
 
-  async infer(input: MultimodalInferRequest): Promise<AdapterOutput> {
+  async infer(input: MultimodalInferRequest, signal?: AbortSignal): Promise<AdapterOutput> {
     const headers: Record<string, string> = { "content-type": "application/json" };
     const bearer = this.authorizationBearer?.();
     if (this.route === "hosted" && (bearer === undefined || bearer === "")) {
@@ -76,6 +76,7 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
         method: "POST",
         headers,
         body: JSON.stringify(input),
+        ...(signal === undefined ? {} : { signal }),
       });
     } catch (error) {
       throw new ProviderError(
@@ -134,6 +135,7 @@ async function callRoute(
   input: MultimodalInferRequest,
   route: "local" | "hosted",
   now: Timestamp,
+  signal?: AbortSignal,
 ): Promise<MultimodalAdapterResult> {
   if (route === "hosted") {
     if (!maySendToHosted(input.syncClass)) {
@@ -156,7 +158,7 @@ async function callRoute(
     });
   }
   try {
-    const output = await adapter.infer(input);
+    const output = await adapter.infer(input, signal);
     if (route === "local" && (output.actualUsd !== 0 || output.naiveUsd !== 0)) {
       throw new ProviderError("local", "Adapter local tidak boleh melaporkan biaya hosted.");
     }
@@ -184,12 +186,13 @@ export async function inferMultimodal(
   deps: MultimodalDeps,
   input: MultimodalInferRequest,
   now: Timestamp,
+  signal?: AbortSignal,
 ): Promise<MultimodalAdapterResult> {
-  if (input.route.preferred === "hosted") return callRoute(deps, input, "hosted", now);
+  if (input.route.preferred === "hosted") return callRoute(deps, input, "hosted", now, signal);
   try {
-    return await callRoute(deps, input, "local", now);
+    return await callRoute(deps, input, "local", now, signal);
   } catch (localError) {
     if (!input.route.allowHostedFallback) throw localError;
-    return callRoute(deps, input, "hosted", now);
+    return callRoute(deps, input, "hosted", now, signal);
   }
 }

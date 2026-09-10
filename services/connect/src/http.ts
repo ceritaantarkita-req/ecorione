@@ -109,15 +109,23 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
 
   app.post("/v1/complete", async (req) => {
     const body = parseOrBadRequest(CompleteBodySchema, req.body);
+    const controller = new AbortController();
+    const abort = (): void => controller.abort();
+    req.raw.once("aborted", abort);
     try {
-      return await complete(deps, body);
+      return await complete(deps, body, controller.signal);
     } catch (err) {
       throw toHttpError(err);
+    } finally {
+      req.raw.off("aborted", abort);
     }
   });
 
   app.post("/v1/multimodal/infer", async (req) => {
     const body = parseOrBadRequest(MultimodalInferRequestSchema, req.body);
+    const controller = new AbortController();
+    const abort = (): void => controller.abort();
+    req.raw.once("aborted", abort);
     try {
       return await inferMultimodal(
         {
@@ -129,9 +137,12 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         },
         body,
         nowIso(),
+        controller.signal,
       );
     } catch (err) {
       throw toHttpError(err);
+    } finally {
+      req.raw.off("aborted", abort);
     }
   });
 

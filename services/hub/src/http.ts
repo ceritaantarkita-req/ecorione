@@ -11,6 +11,7 @@ import {
   InvalidIdError,
   makeId,
   ModuleNameSchema,
+  MultimodalAdapterResultSchema,
   OperationIdSchema,
   TimestampSchema,
   type ActionRequest,
@@ -39,6 +40,9 @@ import { registerHistoryRoutes } from "./history-http.js";
 import { HistoryLedger } from "./history-ledger.js";
 import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
+import { registerVoiceRoutes } from "./voice-http.js";
+import { RealtimeVoiceRuntime } from "./voice-runtime.js";
+import { VoiceSessionStore } from "./voice-store.js";
 import {
   chat,
   CapabilityAuthorityDeniedError,
@@ -132,6 +136,35 @@ export function buildHubServer(
     rndUrl: options.rndUrl,
     internalToken: options.internalToken,
   };
+
+  const voice = new RealtimeVoiceRuntime({
+    store: new VoiceSessionStore(db),
+    authority,
+    repo,
+    history,
+    now: nowIso,
+    infer: async (input, signal) => {
+      try {
+        return MultimodalAdapterResultSchema.parse(
+          await httpJson(`${options.connectUrl}/v1/multimodal/infer`, {
+            token: options.internalToken,
+            body: input,
+            ...(signal === undefined ? {} : { signal }),
+          }),
+        );
+      } catch (err) {
+        throw forwardOrUpstreamError("Connect", err);
+      }
+    },
+    chat: async (input, execution) =>
+      chat(deps, input, nowIso(), {
+        target: execution.target,
+        syncClass: execution.syncClass,
+        signal: execution.signal,
+        sourceApp: "ai:voice",
+      }),
+  });
+  registerVoiceRoutes(app, voice);
 
   app.post("/v1/chat", async (req) => {
     const body = parseOrBadRequest(ChatRequestSchema, req.body);

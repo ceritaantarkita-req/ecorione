@@ -1,6 +1,6 @@
 import { VoiceEventsQuerySchema } from "@ecorione/shared-schema";
-import { hubUrl, internalToken } from "../../../lib/env";
-import { jsonError } from "../../../lib/proxy";
+import { hubUrl, internalToken } from "../../../../lib/env";
+import { jsonError } from "../../../../lib/proxy";
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);

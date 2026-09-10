@@ -6,11 +6,7 @@ import {
   VoiceInterruptRequestSchema,
   VoiceSessionCreateRequestSchema,
 } from "@ecorione/shared-schema";
-import {
-  ConflictError,
-  NotFoundError,
-  parseOrBadRequest,
-} from "@ecorione/shared-server";
+import { ConflictError, NotFoundError, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { RealtimeVoiceRuntime } from "./voice-runtime.js";
@@ -40,14 +36,17 @@ export function registerVoiceRoutes(app: FastifyInstance, runtime: RealtimeVoice
     }
   });
 
-  app.get<{ Params: { sessionId: string } }>("/v1/voice/sessions/:sessionId", async (request) => {
-    const params = parseOrBadRequest(SessionParamsSchema, request.params);
-    try {
-      return runtime.get(params.sessionId);
-    } catch (error) {
-      mapVoiceError(error);
-    }
-  });
+  app.get<{ Params: { sessionId: string } }>(
+    "/v1/voice/sessions/:sessionId",
+    async (request) => {
+      const params = parseOrBadRequest(SessionParamsSchema, request.params);
+      try {
+        return runtime.get(params.sessionId);
+      } catch (error) {
+        mapVoiceError(error);
+      }
+    },
+  );
 
   app.post("/v1/voice/chunks", async (request) => {
     const body = parseOrBadRequest(VoiceAudioChunkRequestSchema, request.body);
@@ -103,7 +102,9 @@ export function registerVoiceRoutes(app: FastifyInstance, runtime: RealtimeVoice
 
     let cursor = query.after;
     let closed = false;
-    const send = (event: ReturnType<RealtimeVoiceRuntime["events"]>["events"][number]): void => {
+    const send = (
+      event: ReturnType<RealtimeVoiceRuntime["events"]>["events"][number],
+    ): void => {
       if (closed || event.sequence <= cursor) return;
       cursor = event.sequence;
       reply.raw.write(`id: ${String(event.sequence)}\ndata: ${JSON.stringify(event)}\n\n`);

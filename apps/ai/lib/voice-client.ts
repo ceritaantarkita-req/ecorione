@@ -92,7 +92,8 @@ function base64(bytes: Uint8Array): string {
 function decodeBase64(value: string): ArrayBuffer {
   const binary = atob(value);
   const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  for (let index = 0; index < binary.length; index += 1)
+    bytes[index] = binary.charCodeAt(index);
   return bytes.buffer;
 }
 
@@ -103,12 +104,13 @@ async function jsonRequest<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   const payload = (await response.json().catch(() => undefined)) as
-    | { error?: { message?: string } }
-    | T
-    | undefined;
+    { error?: { message?: string } } | T | undefined;
   if (!response.ok) {
     const message =
-      payload !== undefined && typeof payload === "object" && "error" in payload
+      payload !== undefined &&
+      payload !== null &&
+      typeof payload === "object" &&
+      "error" in payload
         ? payload.error?.message
         : undefined;
     throw new Error(message ?? `Voice API membalas HTTP ${String(response.status)}.`);
@@ -147,7 +149,9 @@ export class RealtimeVoiceClient {
     const session = await jsonRequest<VoiceSessionSnapshot>("/api/voice/session", {
       operationId: operationId(),
       sessionId: this.options.sessionId,
-      ...(this.options.workspaceId === undefined ? {} : { workspaceId: this.options.workspaceId }),
+      ...(this.options.workspaceId === undefined
+        ? {}
+        : { workspaceId: this.options.workspaceId }),
       ...(this.options.scope === undefined ? {} : { scope: this.options.scope }),
       ...(this.options.maxSensitivity === undefined
         ? {}
@@ -206,7 +210,8 @@ export class RealtimeVoiceClient {
     this.inputContext = context;
     this.source = context.createMediaStreamSource(stream);
     this.processor = context.createScriptProcessor(4096, 1, 1);
-    this.processor.onaudioprocess = (event) => this.handleAudio(event.inputBuffer.getChannelData(0));
+    this.processor.onaudioprocess = (event) =>
+      this.handleAudio(event.inputBuffer.getChannelData(0));
     this.source.connect(this.processor);
     this.processor.connect(context.destination);
   }
@@ -240,7 +245,10 @@ export class RealtimeVoiceClient {
     this.pendingSamples.push(copy);
     this.pendingCount += copy.length;
     this.pendingMaxRms = Math.max(this.pendingMaxRms, level);
-    const chunkSamples = Math.max(1, Math.floor((this.inputContext.sampleRate * this.vad.chunkMs) / 1000));
+    const chunkSamples = Math.max(
+      1,
+      Math.floor((this.inputContext.sampleRate * this.vad.chunkMs) / 1000),
+    );
     const silenceLimit = Math.max(
       1,
       Math.floor((this.inputContext.sampleRate * this.vad.silenceMs) / 1000),
@@ -294,7 +302,10 @@ export class RealtimeVoiceClient {
       }
     };
     stream.onerror = () => {
-      if (!this.stopped) this.options.onError?.(new Error("Voice event stream terputus; browser akan mencoba reconnect."));
+      if (!this.stopped)
+        this.options.onError?.(
+          new Error("Voice event stream terputus; browser akan mencoba reconnect."),
+        );
     };
   }
 

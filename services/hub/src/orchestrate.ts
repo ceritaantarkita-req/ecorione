@@ -20,6 +20,7 @@ import {
   type HistoryEventDraft,
   type OperationId,
   type RetrievalHit,
+  type SyncClass,
   type Timestamp,
 } from "@ecorione/shared-schema";
 import { httpJson } from "@ecorione/shared-server";
@@ -92,15 +93,27 @@ interface CompleteResponse {
   readonly cost: CallCostRecord;
   readonly routeReason: string;
 }
+export interface ChatExecutionOptions {
+  readonly target?: "hosted" | "local" | undefined;
+  readonly syncClass?: SyncClass | undefined;
+  readonly signal?: AbortSignal | undefined;
+  readonly sourceApp?: string | undefined;
+}
 async function callContext<T>(
   deps: OrchestrateDeps,
   path: string,
-  init: { readonly method?: "GET" | "POST"; readonly body?: unknown } = {},
+  init: {
+    readonly method?: "GET" | "POST";
+    readonly body?: unknown;
+    readonly signal?: AbortSignal | undefined;
+  } = {},
 ): Promise<T> {
   try {
+    const { signal, ...requestInit } = init;
     return await httpJson<T>(`${deps.contextUrl}${path}`, {
       token: deps.internalToken,
-      ...init,
+      ...requestInit,
+      ...(signal === undefined ? {} : { signal }),
     });
   } catch (err) {
     throw new UpstreamError("Context", err);
@@ -119,7 +132,11 @@ export async function chat(
   deps: OrchestrateDeps,
   req: ChatRequest,
   now: Timestamp,
+  options: ChatExecutionOptions = {},
 ): Promise<ChatResponse> {
+  const target = options.target ?? "hosted";
+  const hosted = target === "hosted";
+  const syncClass = options.syncClass ?? (hosted ? "CLOUD_ALLOWED" : "LOCAL_ONLY");
   const operationId: OperationId = makeId("operation");
   const actionRequest: ActionRequest = {
     operationId,
@@ -151,16 +168,18 @@ export async function chat(
   if (verdict.outcome !== "ALLOW") throw new PolicyEngineBugError(verdict.outcome);
 
   const workspaceId = req.workspaceId ?? assertId("workspace", "ws_personal");
+  const capabilityId = (hosted ? "model.invoke.hosted" : "model.invoke.local") as CapabilityId;
+  const permissionIds = (
+    hosted
+      ? ["model.invoke", "network.connect", "provider.spend"]
+      : ["model.invoke", "execution.local"]
+  ) as PermissionId[];
   const authority = deps.authority.authorize({
     operationId,
     workspaceId,
-    subject: { kind: "model", id: "hosted" },
-    capabilityId: "model.invoke.hosted" as CapabilityId,
-    permissionIds: [
-      "model.invoke" as PermissionId,
-      "network.connect" as PermissionId,
-      "provider.spend" as PermissionId,
-    ],
+    subject: { kind: "model", id: target },
+    capabilityId,
+    permissionIds,
     scope: req.scope,
     sensitivity: req.maxSensitivity,
     autonomy: req.autonomy,
@@ -171,9 +190,9 @@ export async function chat(
     module: "Hub",
     detail: {
       workspaceId,
-      subject: { kind: "model", id: "hosted" },
-      capabilityId: "model.invoke.hosted",
-      permissionIds: ["model.invoke", "network.connect", "provider.spend"],
+      subject: { kind: "model", id: target },
+      capabilityId,
+      permissionIds,
       scope: req.scope,
       sensitivity: req.maxSensitivity,
       outcome: authority.outcome,
@@ -191,7 +210,7 @@ export async function chat(
     createdAt: now,
     scope: req.scope,
     sensitivity: req.maxSensitivity,
-    syncClass: "CLOUD_ALLOWED",
+    syncClass,
   });
   const userHistoryEvent = deps.history.appendNext(req.sessionId, {
     id: makeId("event"),
@@ -203,12 +222,13 @@ export async function chat(
     payload: { text: req.message },
   }).event;
 
-  // Chat Fase 1 is hosted. Only memory explicitly eligible for hosted plaintext egress may leave the machine.
+  // Hosted turns filter Context to cloud-eligible data. Local turns remain inside the local boundary.
   const scope = encodeURIComponent(req.scope);
   const max = encodeURIComponent(req.maxSensitivity);
   const coreMemory = await callContext<CoreMemory>(
     deps,
-    `/v1/core-memory?scope=${scope}&maxSensitivity=${max}&hostedEligible=1`,
+    `/v1/core-memory?scope=${scope}&maxSensitivity=${max}&hostedEligible=${hosted ? "1" : "0"}`,
+    { signal: options.signal },
   );
   const retrieved = await callContext<RetrieveResponse>(deps, "/v1/retrieve", {
     method: "POST",
@@ -216,17 +236,20 @@ export async function chat(
       query: req.message,
       scopes: [req.scope],
       maxSensitivity: req.maxSensitivity,
-      hostedEligibleOnly: true,
+      hostedEligibleOnly: hosted,
       now,
+      ...(options.signal === undefined ? {} : { signal: options.signal }),
     },
   });
   const episodesRes = await callContext<ListEpisodesResponse>(
     deps,
-    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=1`,
+    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=${hosted ? "1" : "0"}`,
+    { signal: options.signal },
   );
   const artifactsRes = await callContext<ListArtifactsResponse>(
     deps,
-    `/v1/artifacts?scope=${scope}&maxSensitivity=${max}&limit=${String(ARTIFACT_LIMIT)}&hostedEligible=1`,
+    `/v1/artifacts?scope=${scope}&maxSensitivity=${max}&limit=${String(ARTIFACT_LIMIT)}&hostedEligible=${hosted ? "1" : "0"}`,
+    { signal: options.signal },
   );
 
   const prefix: StablePrefix = {
@@ -250,7 +273,7 @@ export async function chat(
     complete = await httpJson<CompleteResponse>(`${deps.connectUrl}/v1/complete`, {
       token: deps.internalToken,
       body: {
-        target: "hosted",
+        target,
         prefix,
         dynamicText: rendered.dynamicText,
         userMessage: req.message,
@@ -258,6 +281,7 @@ export async function chat(
         operationId,
         now,
       },
+      ...(options.signal === undefined ? {} : { signal: options.signal }),
     });
   } catch (err) {
     throw new UpstreamError("Connect", err);
@@ -330,12 +354,13 @@ export async function chat(
     body: {
       ts: now,
       rawText: req.message,
-      provenance: { sourceApp: "ai", sessionId: req.sessionId },
+      provenance: { sourceApp: options.sourceApp ?? "ai", sessionId: req.sessionId },
       scope: req.scope,
       sensitivity: req.maxSensitivity,
-      syncClass: "CLOUD_ALLOWED",
+      syncClass,
       trust: "USER",
     },
+    signal: options.signal,
   });
   await callContext(deps, "/v1/episodes", {
     method: "POST",
@@ -345,9 +370,10 @@ export async function chat(
       provenance: { sourceApp: `connect:${complete.responseModel}`, sessionId: req.sessionId },
       scope: req.scope,
       sensitivity: req.maxSensitivity,
-      syncClass: "CLOUD_ALLOWED",
-      trust: "HOSTED_AGENT",
+      syncClass,
+      trust: hosted ? "HOSTED_AGENT" : "LOCAL_AGENT",
     },
+    signal: options.signal,
   });
 
   const span = buildGenAiSpan({
@@ -363,6 +389,7 @@ export async function chat(
     await httpJson(`${deps.rndUrl}/v1/traces`, {
       token: deps.internalToken,
       body: { name: span.name, attributes: span.attributes, operationId, recordedAt: now },
+      ...(options.signal === undefined ? {} : { signal: options.signal }),
     });
   } catch (err) {
     // Telemetry failure after provider/state success must not turn a completed user action into a retryable 502.
