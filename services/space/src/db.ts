@@ -40,7 +40,9 @@ interface LegacyBlockRow {
 
 function columns(raw: SqliteDatabase, table: string): Set<string> {
   return new Set(
-    (raw.prepare(`PRAGMA table_info(${table})`).all() as ColumnRow[]).map((column) => column.name),
+    (raw.prepare(`PRAGMA table_info(${table})`).all() as ColumnRow[]).map(
+      (column) => column.name,
+    ),
   );
 }
 
@@ -76,7 +78,9 @@ function migrateLegacySchema(raw: SqliteDatabase): void {
     return;
   }
 
-  const legacyRows = raw.prepare("SELECT * FROM blocks ORDER BY page_id,position,id").all() as LegacyBlockRow[];
+  const legacyRows = raw
+    .prepare("SELECT * FROM blocks ORDER BY page_id,position,id")
+    .all() as LegacyBlockRow[];
   raw.pragma("foreign_keys = OFF");
   try {
     raw.transaction(() => {
@@ -121,8 +125,12 @@ export function openSpaceDatabase(path: string): SpaceDatabase {
   raw.exec(CREATE_PAGES);
   raw.exec(CREATE_BLOCKS);
   migrateLegacySchema(raw);
-  raw.exec("CREATE INDEX IF NOT EXISTS idx_pages_workspace_updated ON pages(workspace_id,updated_at DESC,id ASC);");
-  raw.exec("CREATE INDEX IF NOT EXISTS idx_blocks_page_position ON blocks(page_id,position,id);");
+  raw.exec(
+    "CREATE INDEX IF NOT EXISTS idx_pages_workspace_updated ON pages(workspace_id,updated_at DESC,id ASC);",
+  );
+  raw.exec(
+    "CREATE INDEX IF NOT EXISTS idx_blocks_page_position ON blocks(page_id,position,id);",
+  );
   raw.pragma("user_version = 10");
   return { raw, close: () => raw.close() };
 }

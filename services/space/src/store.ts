@@ -140,7 +140,10 @@ export class SpaceStore {
          WHERE b.page_id=? AND p.workspace_id=? ORDER BY b.position ASC,b.id ASC`,
       )
       .all(id, workspaceId) as BlockRow[];
-    return SpaceDocumentSchema.parse({ page: pageFromRow(row), blocks: blocks.map(blockFromRow) });
+    return SpaceDocumentSchema.parse({
+      page: pageFromRow(row),
+      blocks: blocks.map(blockFromRow),
+    });
   }
 
   getBlock(
@@ -206,7 +209,9 @@ export class SpaceStore {
       .prepare("SELECT type FROM blocks WHERE id=? AND page_id=?")
       .get(body.sourceBlockId, pageId) as { type: string } | undefined;
     if (source === undefined || source.type !== "table") {
-      throw new SpaceReferenceError("database-view harus menunjuk table block pada page yang sama.");
+      throw new SpaceReferenceError(
+        "database-view harus menunjuk table block pada page yang sama.",
+      );
     }
   }
 
@@ -236,7 +241,9 @@ export class SpaceStore {
       if (pageRow.version !== input.expectedPageVersion) throw new SpaceVersionConflictError();
       this.assertDatabaseViewSource(input.pageId, input.body);
       const count = (
-        this.db.raw.prepare("SELECT COUNT(*) AS n FROM blocks WHERE page_id=?").get(input.pageId) as {
+        this.db.raw
+          .prepare("SELECT COUNT(*) AS n FROM blocks WHERE page_id=?")
+          .get(input.pageId) as {
           n: number;
         }
       ).n;
@@ -301,7 +308,9 @@ export class SpaceStore {
       const body = input.body ?? current.block.body;
       this.assertDatabaseViewSource(current.page.id, body);
       const count = (
-        this.db.raw.prepare("SELECT COUNT(*) AS n FROM blocks WHERE page_id=?").get(current.page.id) as {
+        this.db.raw
+          .prepare("SELECT COUNT(*) AS n FROM blocks WHERE page_id=?")
+          .get(current.page.id) as {
           n: number;
         }
       ).n;
@@ -326,7 +335,14 @@ export class SpaceStore {
           `UPDATE blocks SET type=?,content_json=?,position=?,version=version+1,updated_at=?
            WHERE id=? AND version=?`,
         )
-        .run(body.kind, JSON.stringify(body), target, input.now, input.id, input.expectedVersion);
+        .run(
+          body.kind,
+          JSON.stringify(body),
+          target,
+          input.now,
+          input.id,
+          input.expectedVersion,
+        );
       if (result.changes !== 1) throw new SpaceVersionConflictError();
       const bumped = this.db.raw
         .prepare(
@@ -356,8 +372,13 @@ export class SpaceStore {
       ) {
         throw new SpaceVersionConflictError();
       }
-      if (current.block.type === "table" && this.hasDatabaseViewDependency(current.page.id, input.id)) {
-        throw new SpaceReferenceError("Table block masih dipakai database-view; hapus view lebih dulu.");
+      if (
+        current.block.type === "table" &&
+        this.hasDatabaseViewDependency(current.page.id, input.id)
+      ) {
+        throw new SpaceReferenceError(
+          "Table block masih dipakai database-view; hapus view lebih dulu.",
+        );
       }
       const deleted = this.db.raw
         .prepare("DELETE FROM blocks WHERE id=? AND version=?")
@@ -386,7 +407,8 @@ export class SpaceStore {
     return this.db.raw.transaction(() => {
       const document = this.getPage(input.pageId, input.workspaceId);
       if (document === null) return null;
-      if (document.page.version !== input.expectedPageVersion) throw new SpaceVersionConflictError();
+      if (document.page.version !== input.expectedPageVersion)
+        throw new SpaceVersionConflictError();
       const current = document.blocks.map((block) => block.id).sort();
       const requested = [...input.blockIds].sort();
       if (
@@ -402,7 +424,9 @@ export class SpaceStore {
       const update = this.db.raw.prepare(
         "UPDATE blocks SET position=?,updated_at=? WHERE id=? AND page_id=?",
       );
-      input.blockIds.forEach((id, position) => update.run(position, input.now, id, input.pageId));
+      input.blockIds.forEach((id, position) =>
+        update.run(position, input.now, id, input.pageId),
+      );
       const bumped = this.db.raw
         .prepare(
           "UPDATE pages SET version=version+1,updated_at=? WHERE id=? AND workspace_id=? AND version=?",

@@ -47,8 +47,24 @@ describe("Space Batch 10 database migration", () => {
       "INSERT INTO blocks(id,page_id,type,content,position,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
     );
     insert.run("block_legacytext", "page_legacy01", "text", "Body", 0, timestamp, timestamp);
-    insert.run("block_legacyheading", "page_legacy01", "heading", "Title", 1, timestamp, timestamp);
-    insert.run("block_legacylist", "page_legacy01", "list", "One\nTwo", 2, timestamp, timestamp);
+    insert.run(
+      "block_legacyheading",
+      "page_legacy01",
+      "heading",
+      "Title",
+      1,
+      timestamp,
+      timestamp,
+    );
+    insert.run(
+      "block_legacylist",
+      "page_legacy01",
+      "list",
+      "One\nTwo",
+      2,
+      timestamp,
+      timestamp,
+    );
     legacy.close();
 
     const db = openSpaceDatabase(path);
@@ -59,7 +75,9 @@ describe("Space Batch 10 database migration", () => {
       workspaceId: "ws_personal",
       version: 1,
     });
-    expect(document?.blocks.map((block) => ({ id: block.id, type: block.type, body: block.body }))).toEqual([
+    expect(
+      document?.blocks.map((block) => ({ id: block.id, type: block.type, body: block.body })),
+    ).toEqual([
       {
         id: "block_legacytext",
         type: "paragraph",

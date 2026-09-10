@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { ScopeSchema } from "./classification.js";
-import {
-  ArtifactIdSchema,
-  MemoryFactIdSchema,
-  WorkspaceIdSchema,
-} from "./ids.js";
+import { ArtifactIdSchema, MemoryFactIdSchema, WorkspaceIdSchema } from "./ids.js";
 import { TimestampSchema } from "./memory.js";
 import { FlowGraphIdSchema } from "./nodes.js";
 
@@ -98,7 +94,11 @@ export const SpaceTableBodySchema = z
     const rowIds = new Set<string>();
     for (const [index, row] of value.rows.entries()) {
       if (rowIds.has(row.id)) {
-        ctx.addIssue({ code: "custom", path: ["rows", index, "id"], message: "Row id harus unik." });
+        ctx.addIssue({
+          code: "custom",
+          path: ["rows", index, "id"],
+          message: "Row id harus unik.",
+        });
       }
       rowIds.add(row.id);
       for (const key of Object.keys(row.cells)) {
@@ -116,7 +116,10 @@ export const SpaceDatabaseViewBodySchema = z
   .object({
     kind: z.literal("database-view"),
     sourceBlockId: SpaceBlockIdSchema,
-    visibleColumnIds: z.array(z.string().regex(/^col_[a-z0-9_-]+$/)).max(64).optional(),
+    visibleColumnIds: z
+      .array(z.string().regex(/^col_[a-z0-9_-]+$/))
+      .max(64)
+      .optional(),
     filter: z
       .object({
         columnId: z.string().regex(/^col_[a-z0-9_-]+$/),
@@ -135,7 +138,11 @@ export const SpaceDatabaseViewBodySchema = z
   })
   .strict();
 export const SpaceFileBodySchema = z
-  .object({ kind: z.literal("file"), artifactId: ArtifactIdSchema, label: LabelSchema.optional() })
+  .object({
+    kind: z.literal("file"),
+    artifactId: ArtifactIdSchema,
+    label: LabelSchema.optional(),
+  })
   .strict();
 export const SpaceImageBodySchema = z
   .object({
@@ -184,7 +191,12 @@ export const SpaceEmbedBodySchema = z
   .strict()
   .superRefine((value, ctx) => {
     const url = new URL(value.url);
-    if (url.protocol !== "https:" || url.username !== "" || url.password !== "" || url.hash !== "") {
+    if (
+      url.protocol !== "https:" ||
+      url.username !== "" ||
+      url.password !== "" ||
+      url.hash !== ""
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["url"],

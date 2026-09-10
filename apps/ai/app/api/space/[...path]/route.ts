@@ -3,7 +3,11 @@ import { proxyToSpace } from "../../../../lib/space-proxy";
 type RouteContext = { params: Promise<{ path: string[] }> };
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-async function forward(request: Request, context: RouteContext, method: Method): Promise<Response> {
+async function forward(
+  request: Request,
+  context: RouteContext,
+  method: Method,
+): Promise<Response> {
   const { path } = await context.params;
   if (path.length === 0) return new Response("Not Found", { status: 404 });
   const encoded = path.map((segment) => encodeURIComponent(segment)).join("/");

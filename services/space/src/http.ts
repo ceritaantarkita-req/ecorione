@@ -26,11 +26,7 @@ import {
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nowIso } from "./clock.js";
-import {
-  SpaceReferenceError,
-  type SpaceStore,
-  SpaceVersionConflictError,
-} from "./store.js";
+import { SpaceReferenceError, type SpaceStore, SpaceVersionConflictError } from "./store.js";
 
 const PageQuerySchema = z.object({
   workspaceId: WorkspaceIdSchema.optional(),
@@ -69,8 +65,11 @@ export interface BuildSpaceServerOptions {
   readonly internalToken?: string | undefined;
 }
 
-function workspace(value: ReturnType<typeof WorkspaceQuerySchema.parse>): typeof PERSONAL_SPACE_WORKSPACE_ID {
-  return (value.workspaceId ?? PERSONAL_SPACE_WORKSPACE_ID) as typeof PERSONAL_SPACE_WORKSPACE_ID;
+function workspace(
+  value: ReturnType<typeof WorkspaceQuerySchema.parse>,
+): typeof PERSONAL_SPACE_WORKSPACE_ID {
+  return (value.workspaceId ??
+    PERSONAL_SPACE_WORKSPACE_ID) as typeof PERSONAL_SPACE_WORKSPACE_ID;
 }
 
 function mapSpaceError(error: unknown): never {
@@ -134,7 +133,13 @@ export function buildSpaceServer(
     const id = parseOrBadRequest(SpacePageIdSchema, req.params.id);
     const query = parseOrBadRequest(DeletePageQuerySchema, req.query);
     try {
-      if (!store.deletePage({ id, workspaceId: workspace(query), expectedVersion: query.expectedVersion })) {
+      if (
+        !store.deletePage({
+          id,
+          workspaceId: workspace(query),
+          expectedVersion: query.expectedVersion,
+        })
+      ) {
         throw new NotFoundError(`Page tidak ditemukan: ${id}`);
       }
       return reply.code(204).send();
@@ -221,7 +226,10 @@ export function buildSpaceServer(
     let value: unknown = block.body;
     if (block.body.kind === "context-link") {
       source = "context";
-      const params = new URLSearchParams({ scope: page.scope, maxSensitivity: query.maxSensitivity });
+      const params = new URLSearchParams({
+        scope: page.scope,
+        maxSensitivity: query.maxSensitivity,
+      });
       value = await httpJson(
         `${options.contextUrl}/v1/access/facts/${encodeURIComponent(block.body.factId)}?${params.toString()}`,
         { token: options.internalToken },
@@ -232,7 +240,10 @@ export function buildSpaceServer(
       block.body.kind === "artifact-link"
     ) {
       source = "artifact";
-      const params = new URLSearchParams({ scope: page.scope, maxSensitivity: query.maxSensitivity });
+      const params = new URLSearchParams({
+        scope: page.scope,
+        maxSensitivity: query.maxSensitivity,
+      });
       value = await httpJson(
         `${options.contextUrl}/v1/artifacts/${encodeURIComponent(block.body.artifactId)}/authorize?${params.toString()}`,
         { token: options.internalToken },
@@ -240,7 +251,8 @@ export function buildSpaceServer(
     } else if (block.body.kind === "flow-link" || block.body.kind === "ai") {
       source = "flow";
       const params = new URLSearchParams();
-      if (block.body.graphVersion !== undefined) params.set("version", String(block.body.graphVersion));
+      if (block.body.graphVersion !== undefined)
+        params.set("version", String(block.body.graphVersion));
       const suffix = params.size === 0 ? "" : `?${params.toString()}`;
       const raw = await httpJson(
         `${flowUrl}/v1/graphs/${encodeURIComponent(block.body.graphId)}${suffix}`,

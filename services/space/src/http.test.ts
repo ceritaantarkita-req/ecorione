@@ -9,7 +9,9 @@ afterEach(() => {
   for (const db of dbs.splice(0)) db.close();
 });
 
-async function createPage(app: ReturnType<typeof buildSpaceServer>): Promise<{ id: string; version: number }> {
+async function createPage(
+  app: ReturnType<typeof buildSpaceServer>,
+): Promise<{ id: string; version: number }> {
   const created = await app.inject({
     method: "POST",
     url: "/v1/pages",
@@ -35,7 +37,10 @@ describe("Space", () => {
       },
     });
     expect(heading.statusCode).toBe(201);
-    const headingResult = heading.json() as { block: { id: string; version: number }; pageVersion: number };
+    const headingResult = heading.json() as {
+      block: { id: string; version: number };
+      pageVersion: number;
+    };
     const paragraph = await app.inject({
       method: "POST",
       url: `/v1/pages/${page.id}/blocks?workspaceId=ws_personal`,
@@ -51,7 +56,10 @@ describe("Space", () => {
       method: "GET",
       url: `/v1/pages/${page.id}?workspaceId=ws_personal`,
     });
-    const document = fetched.json() as { page: { version: number }; blocks: Array<{ id: string; type: string }> };
+    const document = fetched.json() as {
+      page: { version: number };
+      blocks: Array<{ id: string; type: string }>;
+    };
     expect(document.blocks.map((block) => block.type)).toEqual(["paragraph", "heading"]);
 
     const stale = await app.inject({
@@ -74,10 +82,9 @@ describe("Space", () => {
       },
     });
     expect(reordered.statusCode).toBe(200);
-    expect((reordered.json() as { blocks: Array<{ id: string }> }).blocks.map((block) => block.id)).toEqual([
-      headingResult.block.id,
-      paragraphResult.block.id,
-    ]);
+    expect(
+      (reordered.json() as { blocks: Array<{ id: string }> }).blocks.map((block) => block.id),
+    ).toEqual([headingResult.block.id, paragraphResult.block.id]);
     await app.close();
   });
 
@@ -109,7 +116,8 @@ describe("Space", () => {
     }));
     await context.listen({ port: 0, host: "127.0.0.1" });
     const contextAddress = context.server.address();
-    if (contextAddress === null || typeof contextAddress === "string") throw new Error("Context address gagal.");
+    if (contextAddress === null || typeof contextAddress === "string")
+      throw new Error("Context address gagal.");
 
     const flow = createServer({ name: "flow-test" });
     flow.get<{ Params: { id: string } }>("/v1/graphs/:id", async (req) => ({
@@ -140,7 +148,8 @@ describe("Space", () => {
     }));
     await flow.listen({ port: 0, host: "127.0.0.1" });
     const flowAddress = flow.server.address();
-    if (flowAddress === null || typeof flowAddress === "string") throw new Error("Flow address gagal.");
+    if (flowAddress === null || typeof flowAddress === "string")
+      throw new Error("Flow address gagal.");
 
     const app = buildSpaceServer(new SpaceStore(db), {
       contextUrl: `http://127.0.0.1:${String(contextAddress.port)}`,
@@ -156,13 +165,19 @@ describe("Space", () => {
         expectedPageVersion: 1,
       },
     });
-    const contextCreated = contextBlock.json() as { block: { id: string }; pageVersion: number };
+    const contextCreated = contextBlock.json() as {
+      block: { id: string };
+      pageVersion: number;
+    };
     const contextResolved = await app.inject({
       method: "GET",
       url: `/v1/blocks/${contextCreated.block.id}/resolve?workspaceId=ws_personal&maxSensitivity=INTERNAL`,
     });
     expect(contextResolved.statusCode).toBe(200);
-    expect(contextResolved.json()).toMatchObject({ source: "context", value: { text: "owner fact" } });
+    expect(contextResolved.json()).toMatchObject({
+      source: "context",
+      value: { text: "owner fact" },
+    });
 
     const aiBlock = await app.inject({
       method: "POST",
@@ -179,9 +194,14 @@ describe("Space", () => {
       url: `/v1/blocks/${aiCreated.block.id}/resolve?workspaceId=ws_personal`,
     });
     expect(flowResolved.statusCode).toBe(200);
-    expect(flowResolved.json()).toMatchObject({ source: "flow", value: { graphId: "fg_flowlink01" } });
+    expect(flowResolved.json()).toMatchObject({
+      source: "flow",
+      value: { graphId: "fg_flowlink01" },
+    });
 
-    const rawRows = db.raw.prepare("SELECT content_json FROM blocks ORDER BY position").all() as Array<{ content_json: string }>;
+    const rawRows = db.raw
+      .prepare("SELECT content_json FROM blocks ORDER BY position")
+      .all() as Array<{ content_json: string }>;
     expect(rawRows[0]?.content_json).not.toContain("owner fact");
     await app.close();
     await context.close();
@@ -199,7 +219,8 @@ describe("Space", () => {
     });
     await context.listen({ port: 0, host: "127.0.0.1" });
     const address = context.server.address();
-    if (address === null || typeof address === "string") throw new Error("Context test address gagal.");
+    if (address === null || typeof address === "string")
+      throw new Error("Context test address gagal.");
     const app = buildSpaceServer(new SpaceStore(db), {
       contextUrl: `http://127.0.0.1:${String(address.port)}`,
     });

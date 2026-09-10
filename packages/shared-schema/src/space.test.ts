@@ -19,7 +19,9 @@ describe("Space block contract", () => {
   });
 
   it("fails closed for unsafe embeds", () => {
-    expect(() => SpaceEmbedBodySchema.parse({ kind: "embed", url: "http://example.com" })).toThrow();
+    expect(() =>
+      SpaceEmbedBodySchema.parse({ kind: "embed", url: "http://example.com" }),
+    ).toThrow();
     expect(() =>
       SpaceEmbedBodySchema.parse({ kind: "embed", url: "https://user:pass@example.com/a" }),
     ).toThrow();

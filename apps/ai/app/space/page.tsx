@@ -61,7 +61,11 @@ function templateFor(kind: SpaceBlockType, document: SpaceDocument | null): unkn
     case "embed":
       return { kind, url: "https://example.com", title: "Embed" };
     case "ai":
-      return { kind, graphId: "fg_replace01", prompt: "Describe what this AI block should do." };
+      return {
+        kind,
+        graphId: "fg_replace01",
+        prompt: "Describe what this AI block should do.",
+      };
     case "context-link":
       return { kind, factId: "mem_replace", label: "Context fact" };
     case "artifact-link":
@@ -75,40 +79,115 @@ function blockPreview(block: SpaceBlock) {
   const body = block.body;
   switch (body.kind) {
     case "paragraph":
-      return <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{body.text || "Empty paragraph"}</p>;
+      return (
+        <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{body.text || "Empty paragraph"}</p>
+      );
     case "heading":
-      return <strong style={{ fontSize: body.level === 1 ? 28 : body.level === 2 ? 22 : 18 }}>{body.text}</strong>;
+      return (
+        <strong style={{ fontSize: body.level === 1 ? 28 : body.level === 2 ? 22 : 18 }}>
+          {body.text}
+        </strong>
+      );
     case "list": {
       const Tag = body.style === "numbered" ? "ol" : "ul";
-      return <Tag style={{ margin: 0 }}>{body.items.map((item, index) => <li key={index}>{item}</li>)}</Tag>;
+      return (
+        <Tag style={{ margin: 0 }}>
+          {body.items.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </Tag>
+      );
     }
     case "checklist":
-      return <div>{body.items.map((item) => <label key={item.id} style={{ display: "block" }}><input type="checkbox" checked={item.checked} readOnly /> {item.text}</label>)}</div>;
+      return (
+        <div>
+          {body.items.map((item) => (
+            <label key={item.id} style={{ display: "block" }}>
+              <input type="checkbox" checked={item.checked} readOnly /> {item.text}
+            </label>
+          ))}
+        </div>
+      );
     case "table":
       return (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead><tr>{body.columns.map((column) => <th key={column.id} style={{ textAlign: "left", borderBottom: "1px solid #ddd", padding: 6 }}>{column.label}</th>)}</tr></thead>
-            <tbody>{body.rows.slice(0, 8).map((row) => <tr key={row.id}>{body.columns.map((column) => <td key={column.id} style={{ borderBottom: "1px solid #eee", padding: 6 }}>{row.cells[column.id] ?? ""}</td>)}</tr>)}</tbody>
+            <thead>
+              <tr>
+                {body.columns.map((column) => (
+                  <th
+                    key={column.id}
+                    style={{ textAlign: "left", borderBottom: "1px solid #ddd", padding: 6 }}
+                  >
+                    {column.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {body.rows.slice(0, 8).map((row) => (
+                <tr key={row.id}>
+                  {body.columns.map((column) => (
+                    <td key={column.id} style={{ borderBottom: "1px solid #eee", padding: 6 }}>
+                      {row.cells[column.id] ?? ""}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       );
     case "database-view":
       return <span>Database view → {body.sourceBlockId}</span>;
     case "file":
-      return <span>File pointer → {body.artifactId}{body.label ? ` · ${body.label}` : ""}</span>;
+      return (
+        <span>
+          File pointer → {body.artifactId}
+          {body.label ? ` · ${body.label}` : ""}
+        </span>
+      );
     case "image":
-      return <span>Image pointer → {body.artifactId}{body.caption ? ` · ${body.caption}` : ""}</span>;
+      return (
+        <span>
+          Image pointer → {body.artifactId}
+          {body.caption ? ` · ${body.caption}` : ""}
+        </span>
+      );
     case "embed":
-      return <a href={body.url} target="_blank" rel="noreferrer">{body.title ?? body.url}</a>;
+      return (
+        <a href={body.url} target="_blank" rel="noreferrer">
+          {body.title ?? body.url}
+        </a>
+      );
     case "ai":
-      return <div><strong>AI via Flow {body.graphId}</strong><p style={{ marginBottom: 0 }}>{body.prompt}</p></div>;
+      return (
+        <div>
+          <strong>AI via Flow {body.graphId}</strong>
+          <p style={{ marginBottom: 0 }}>{body.prompt}</p>
+        </div>
+      );
     case "context-link":
-      return <span>Context fact → {body.factId}{body.label ? ` · ${body.label}` : ""}</span>;
+      return (
+        <span>
+          Context fact → {body.factId}
+          {body.label ? ` · ${body.label}` : ""}
+        </span>
+      );
     case "artifact-link":
-      return <span>Artifact → {body.artifactId}{body.label ? ` · ${body.label}` : ""}</span>;
+      return (
+        <span>
+          Artifact → {body.artifactId}
+          {body.label ? ` · ${body.label}` : ""}
+        </span>
+      );
     case "flow-link":
-      return <span>Flow → {body.graphId}{body.label ? ` · ${body.label}` : ""}</span>;
+      return (
+        <span>
+          Flow → {body.graphId}
+          {body.label ? ` · ${body.label}` : ""}
+        </span>
+      );
   }
 }
 
@@ -119,7 +198,9 @@ export default function SpacePageView() {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [newPageTitle, setNewPageTitle] = useState("");
   const [draftKind, setDraftKind] = useState<SpaceBlockType>("paragraph");
-  const [draftJson, setDraftJson] = useState(JSON.stringify(templateFor("paragraph", null), null, 2));
+  const [draftJson, setDraftJson] = useState(
+    JSON.stringify(templateFor("paragraph", null), null, 2),
+  );
   const [inspectorJson, setInspectorJson] = useState("");
   const [resolution, setResolution] = useState<SpaceBlockReferenceResolution | null>(null);
   const [memory, setMemory] = useState<CoreMemory>({ blocks: [] });
@@ -137,7 +218,9 @@ export default function SpacePageView() {
   const loadPage = useCallback(async (id: string) => {
     try {
       const next = await readJson<SpaceDocument>(
-        await fetch(`/api/space/pages/${encodeURIComponent(id)}?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" }),
+        await fetch(`/api/space/pages/${encodeURIComponent(id)}?workspaceId=${WORKSPACE_ID}`, {
+          cache: "no-store",
+        }),
       );
       setDocument(next);
       setSelectedPageId(id);
@@ -149,7 +232,9 @@ export default function SpacePageView() {
 
   const refreshPages = useCallback(async () => {
     try {
-      const response = await fetch(`/api/space/pages?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" });
+      const response = await fetch(`/api/space/pages?workspaceId=${WORKSPACE_ID}`, {
+        cache: "no-store",
+      });
       const next = (await readJson<{ pages: SpacePage[] }>(response)).pages;
       setPages(next);
       setSelectedPageId((current) => current ?? next[0]?.id ?? null);
@@ -161,7 +246,10 @@ export default function SpacePageView() {
 
   const refreshMemory = useCallback(async () => {
     try {
-      const response = await fetch("/api/space/core-memory?scope=personal&maxSensitivity=RESTRICTED", { cache: "no-store" });
+      const response = await fetch(
+        "/api/space/core-memory?scope=personal&maxSensitivity=RESTRICTED",
+        { cache: "no-store" },
+      );
       setMemory(await readJson<CoreMemory>(response));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -195,7 +283,11 @@ export default function SpacePageView() {
         await fetch("/api/space/pages", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ workspaceId: WORKSPACE_ID, title: newPageTitle.trim(), scope: "personal" }),
+          body: JSON.stringify({
+            workspaceId: WORKSPACE_ID,
+            title: newPageTitle.trim(),
+            scope: "personal",
+          }),
         }),
       );
       setNewPageTitle("");
@@ -226,7 +318,11 @@ export default function SpacePageView() {
         await fetch(`/api/space/pages/${document.page.id}/blocks?workspaceId=${WORKSPACE_ID}`, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ body, position: document.blocks.length, expectedPageVersion: document.page.version }),
+          body: JSON.stringify({
+            body,
+            position: document.blocks.length,
+            expectedPageVersion: document.page.version,
+          }),
         }),
       );
       await loadPage(document.page.id);
@@ -246,7 +342,11 @@ export default function SpacePageView() {
         await fetch(`/api/space/blocks/${selectedBlock.id}?workspaceId=${WORKSPACE_ID}`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ body, expectedVersion: selectedBlock.version, expectedPageVersion: document.page.version }),
+          body: JSON.stringify({
+            body,
+            expectedVersion: selectedBlock.version,
+            expectedPageVersion: document.page.version,
+          }),
         }),
       );
       await loadPage(document.page.id);
@@ -261,7 +361,10 @@ export default function SpacePageView() {
     if (document === null) return;
     try {
       await readJson(
-        await fetch(`/api/space/blocks/${block.id}?workspaceId=${WORKSPACE_ID}&expectedVersion=${String(block.version)}&expectedPageVersion=${String(document.page.version)}`, { method: "DELETE" }),
+        await fetch(
+          `/api/space/blocks/${block.id}?workspaceId=${WORKSPACE_ID}&expectedVersion=${String(block.version)}&expectedPageVersion=${String(document.page.version)}`,
+          { method: "DELETE" },
+        ),
       );
       setSelectedBlockId(null);
       await loadPage(document.page.id);
@@ -281,11 +384,14 @@ export default function SpacePageView() {
     [blockIds[index], blockIds[target]] = [blockIds[target]!, blockIds[index]!];
     try {
       await readJson(
-        await fetch(`/api/space/pages/${document.page.id}/reorder?workspaceId=${WORKSPACE_ID}`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ blockIds, expectedPageVersion: document.page.version }),
-        }),
+        await fetch(
+          `/api/space/pages/${document.page.id}/reorder?workspaceId=${WORKSPACE_ID}`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ blockIds, expectedPageVersion: document.page.version }),
+          },
+        ),
       );
       await loadPage(document.page.id);
       await refreshPages();
@@ -298,7 +404,10 @@ export default function SpacePageView() {
     if (selectedBlock === null) return;
     try {
       const value = await readJson<SpaceBlockReferenceResolution>(
-        await fetch(`/api/space/blocks/${selectedBlock.id}/resolve?workspaceId=${WORKSPACE_ID}&maxSensitivity=RESTRICTED`, { cache: "no-store" }),
+        await fetch(
+          `/api/space/blocks/${selectedBlock.id}/resolve?workspaceId=${WORKSPACE_ID}&maxSensitivity=RESTRICTED`,
+          { cache: "no-store" },
+        ),
       );
       setResolution(value);
       setError(null);
@@ -333,7 +442,13 @@ export default function SpacePageView() {
         await fetch(`/api/space/core-memory/${encodeURIComponent(memoryLabel)}`, {
           method: "PUT",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ description: memoryDescription, value: memoryValue, scope: "personal", sensitivity: "INTERNAL", syncClass: "LOCAL_ONLY" }),
+          body: JSON.stringify({
+            description: memoryDescription,
+            value: memoryValue,
+            scope: "personal",
+            sensitivity: "INTERNAL",
+            syncClass: "LOCAL_ONLY",
+          }),
         }),
       );
       await refreshMemory();
@@ -343,56 +458,182 @@ export default function SpacePageView() {
     }
   }
 
-  const panel = { border: "1px solid #d8d8d8", borderRadius: 12, padding: 16, background: "#fff" } as const;
-  const button = { padding: "7px 10px", border: "1px solid #bbb", borderRadius: 8, background: "#fff", cursor: "pointer" } as const;
+  const panel = {
+    border: "1px solid #d8d8d8",
+    borderRadius: 12,
+    padding: 16,
+    background: "#fff",
+  } as const;
+  const button = {
+    padding: "7px 10px",
+    border: "1px solid #bbb",
+    borderRadius: 8,
+    background: "#fff",
+    cursor: "pointer",
+  } as const;
 
   return (
-    <main style={{ maxWidth: 1480, margin: "0 auto", padding: 24, fontFamily: "sans-serif", color: "#191919" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+    <main
+      style={{
+        maxWidth: 1480,
+        margin: "0 auto",
+        padding: 24,
+        fontFamily: "sans-serif",
+        color: "#191919",
+      }}
+    >
+      <header
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 20,
+        }}
+      >
         <div>
-          <a href="/" style={{ color: "inherit" }}>← Ai</a>
+          <a href="/" style={{ color: "inherit" }}>
+            ← Ai
+          </a>
           <h1 style={{ marginBottom: 4 }}>Space</h1>
-          <p style={{ marginTop: 0, color: "#666" }}>Composition lives here. Memory, files, and durable execution remain linked to their owner services.</p>
+          <p style={{ marginTop: 0, color: "#666" }}>
+            Composition lives here. Memory, files, and durable execution remain linked to their
+            owner services.
+          </p>
         </div>
         <span style={{ fontSize: 12, color: "#666" }}>workspace: {WORKSPACE_ID}</span>
       </header>
 
-      {error !== null ? <p role="alert" style={{ padding: 10, background: "#fff0f0", borderRadius: 8 }}>{error}</p> : null}
-      {notice !== null ? <p style={{ padding: 10, background: "#f3f7f3", borderRadius: 8 }}>{notice}</p> : null}
+      {error !== null ? (
+        <p role="alert" style={{ padding: 10, background: "#fff0f0", borderRadius: 8 }}>
+          {error}
+        </p>
+      ) : null}
+      {notice !== null ? (
+        <p style={{ padding: 10, background: "#f3f7f3", borderRadius: 8 }}>{notice}</p>
+      ) : null}
 
-      <div style={{ display: "grid", gridTemplateColumns: "240px minmax(0,1fr) 360px", gap: 16, alignItems: "start" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "240px minmax(0,1fr) 360px",
+          gap: 16,
+          alignItems: "start",
+        }}
+      >
         <aside style={panel}>
           <h2 style={{ marginTop: 0, fontSize: 16 }}>Pages</h2>
           <form onSubmit={createPage} style={{ display: "grid", gap: 8, marginBottom: 12 }}>
-            <input value={newPageTitle} onChange={(event) => setNewPageTitle(event.target.value)} placeholder="New page" style={{ padding: 9, border: "1px solid #ccc", borderRadius: 8 }} />
-            <button type="submit" style={button}>Create page</button>
+            <input
+              value={newPageTitle}
+              onChange={(event) => setNewPageTitle(event.target.value)}
+              placeholder="New page"
+              style={{ padding: 9, border: "1px solid #ccc", borderRadius: 8 }}
+            />
+            <button type="submit" style={button}>
+              Create page
+            </button>
           </form>
           <div style={{ display: "grid", gap: 6 }}>
             {pages.map((page) => (
-              <button key={page.id} type="button" onClick={() => setSelectedPageId(page.id)} style={{ ...button, textAlign: "left", background: page.id === selectedPageId ? "#f1f1f1" : "#fff" }}>
-                <strong>{page.title}</strong><br /><small>v{page.version} · {page.scope}</small>
+              <button
+                key={page.id}
+                type="button"
+                onClick={() => setSelectedPageId(page.id)}
+                style={{
+                  ...button,
+                  textAlign: "left",
+                  background: page.id === selectedPageId ? "#f1f1f1" : "#fff",
+                }}
+              >
+                <strong>{page.title}</strong>
+                <br />
+                <small>
+                  v{page.version} · {page.scope}
+                </small>
               </button>
             ))}
           </div>
         </aside>
 
         <section style={panel}>
-          {document === null ? <p>Create or select a page.</p> : (
+          {document === null ? (
+            <p>Create or select a page.</p>
+          ) : (
             <>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                <div><h2 style={{ margin: 0 }}>{document.page.title}</h2><small>page v{document.page.version}</small></div>
-                <button type="button" style={button} onClick={() => void renamePage()}>Rename</button>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <h2 style={{ margin: 0 }}>{document.page.title}</h2>
+                  <small>page v{document.page.version}</small>
+                </div>
+                <button type="button" style={button} onClick={() => void renamePage()}>
+                  Rename
+                </button>
               </div>
 
               <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
                 {document.blocks.map((block, index) => (
-                  <article key={block.id} onClick={() => setSelectedBlockId(block.id)} style={{ border: selectedBlockId === block.id ? "2px solid #555" : "1px solid #ddd", borderRadius: 10, padding: 14, cursor: "pointer" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-                      <small>{block.type} · block v{block.version}</small>
+                  <article
+                    key={block.id}
+                    onClick={() => setSelectedBlockId(block.id)}
+                    style={{
+                      border:
+                        selectedBlockId === block.id ? "2px solid #555" : "1px solid #ddd",
+                      borderRadius: 10,
+                      padding: 14,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 10,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <small>
+                        {block.type} · block v{block.version}
+                      </small>
                       <span style={{ display: "flex", gap: 4 }}>
-                        <button type="button" style={button} disabled={index === 0} onClick={(event) => { event.stopPropagation(); void moveBlock(block, -1); }}>↑</button>
-                        <button type="button" style={button} disabled={index === document.blocks.length - 1} onClick={(event) => { event.stopPropagation(); void moveBlock(block, 1); }}>↓</button>
-                        <button type="button" style={button} onClick={(event) => { event.stopPropagation(); void deleteBlock(block); }}>Delete</button>
+                        <button
+                          type="button"
+                          style={button}
+                          disabled={index === 0}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void moveBlock(block, -1);
+                          }}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          style={button}
+                          disabled={index === document.blocks.length - 1}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void moveBlock(block, 1);
+                          }}
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          style={button}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void deleteBlock(block);
+                          }}
+                        >
+                          Delete
+                        </button>
                       </span>
                     </div>
                     {blockPreview(block)}
@@ -403,10 +644,37 @@ export default function SpacePageView() {
               <div style={{ marginTop: 22, borderTop: "1px solid #ddd", paddingTop: 16 }}>
                 <h3>Add block</h3>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-                  {BLOCK_KINDS.map((kind) => <button key={kind} type="button" style={{ ...button, background: kind === draftKind ? "#eee" : "#fff" }} onClick={() => chooseKind(kind)}>{kind}</button>)}
+                  {BLOCK_KINDS.map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      style={{ ...button, background: kind === draftKind ? "#eee" : "#fff" }}
+                      onClick={() => chooseKind(kind)}
+                    >
+                      {kind}
+                    </button>
+                  ))}
                 </div>
-                <textarea value={draftJson} onChange={(event) => setDraftJson(event.target.value)} rows={9} spellCheck={false} style={{ width: "100%", boxSizing: "border-box", fontFamily: "monospace", fontSize: 12, padding: 10 }} />
-                <button type="button" style={{ ...button, marginTop: 8 }} onClick={() => void addBlock()}>Add {draftKind}</button>
+                <textarea
+                  value={draftJson}
+                  onChange={(event) => setDraftJson(event.target.value)}
+                  rows={9}
+                  spellCheck={false}
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    fontFamily: "monospace",
+                    fontSize: 12,
+                    padding: 10,
+                  }}
+                />
+                <button
+                  type="button"
+                  style={{ ...button, marginTop: 8 }}
+                  onClick={() => void addBlock()}
+                >
+                  Add {draftKind}
+                </button>
               </div>
             </>
           )}
@@ -415,28 +683,94 @@ export default function SpacePageView() {
         <aside style={{ display: "grid", gap: 16 }}>
           <section style={panel}>
             <h2 style={{ marginTop: 0, fontSize: 16 }}>Block inspector</h2>
-            {selectedBlock === null ? <p>Select a block.</p> : (
+            {selectedBlock === null ? (
+              <p>Select a block.</p>
+            ) : (
               <>
-                <small>{selectedBlock.id} · {selectedBlock.type} · v{selectedBlock.version}</small>
-                <textarea value={inspectorJson} onChange={(event) => setInspectorJson(event.target.value)} rows={15} spellCheck={false} style={{ width: "100%", boxSizing: "border-box", marginTop: 10, fontFamily: "monospace", fontSize: 12, padding: 10 }} />
+                <small>
+                  {selectedBlock.id} · {selectedBlock.type} · v{selectedBlock.version}
+                </small>
+                <textarea
+                  value={inspectorJson}
+                  onChange={(event) => setInspectorJson(event.target.value)}
+                  rows={15}
+                  spellCheck={false}
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    marginTop: 10,
+                    fontFamily: "monospace",
+                    fontSize: 12,
+                    padding: 10,
+                  }}
+                />
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                  <button type="button" style={button} onClick={() => void saveBlock()}>Save block</button>
-                  <button type="button" style={button} onClick={() => void resolveBlock()}>Resolve link</button>
+                  <button type="button" style={button} onClick={() => void saveBlock()}>
+                    Save block
+                  </button>
+                  <button type="button" style={button} onClick={() => void resolveBlock()}>
+                    Resolve link
+                  </button>
                 </div>
-                {resolution !== null ? <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: 11, background: "#f6f6f6", padding: 10, borderRadius: 8 }}>{JSON.stringify(resolution, null, 2)}</pre> : null}
+                {resolution !== null ? (
+                  <pre
+                    style={{
+                      whiteSpace: "pre-wrap",
+                      overflowWrap: "anywhere",
+                      fontSize: 11,
+                      background: "#f6f6f6",
+                      padding: 10,
+                      borderRadius: 8,
+                    }}
+                  >
+                    {JSON.stringify(resolution, null, 2)}
+                  </pre>
+                ) : null}
               </>
             )}
           </section>
 
           <section style={panel}>
             <h2 style={{ marginTop: 0, fontSize: 16 }}>Context core memory</h2>
-            <p style={{ fontSize: 12, color: "#666" }}>Editor proxy only. Values are stored by Context, not Space.</p>
-            <div style={{ marginBottom: 10 }}>{memory.blocks.map((item) => <button key={item.label} type="button" style={{ ...button, margin: 2 }} onClick={() => { setMemoryLabel(item.label); setMemoryDescription(item.description); setMemoryValue(item.value); }}>{item.label}</button>)}</div>
+            <p style={{ fontSize: 12, color: "#666" }}>
+              Editor proxy only. Values are stored by Context, not Space.
+            </p>
+            <div style={{ marginBottom: 10 }}>
+              {memory.blocks.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  style={{ ...button, margin: 2 }}
+                  onClick={() => {
+                    setMemoryLabel(item.label);
+                    setMemoryDescription(item.description);
+                    setMemoryValue(item.value);
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
             <form onSubmit={saveMemory} style={{ display: "grid", gap: 8 }}>
-              <input value={memoryLabel} onChange={(event) => setMemoryLabel(event.target.value)} placeholder="label" />
-              <input value={memoryDescription} onChange={(event) => setMemoryDescription(event.target.value)} placeholder="description" />
-              <textarea value={memoryValue} onChange={(event) => setMemoryValue(event.target.value)} rows={7} placeholder="Context-owned value" />
-              <button type="submit" style={button}>Save to Context</button>
+              <input
+                value={memoryLabel}
+                onChange={(event) => setMemoryLabel(event.target.value)}
+                placeholder="label"
+              />
+              <input
+                value={memoryDescription}
+                onChange={(event) => setMemoryDescription(event.target.value)}
+                placeholder="description"
+              />
+              <textarea
+                value={memoryValue}
+                onChange={(event) => setMemoryValue(event.target.value)}
+                rows={7}
+                placeholder="Context-owned value"
+              />
+              <button type="submit" style={button}>
+                Save to Context
+              </button>
             </form>
           </section>
         </aside>
