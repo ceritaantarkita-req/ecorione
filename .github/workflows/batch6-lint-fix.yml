@@ -1,0 +1,64 @@
+name: Batch 6 Lint Fix
+
+on:
+  push:
+    branches:
+      - agent/batch6-realtime-voice-20260910
+    paths:
+      - .github/workflows/batch6-lint-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/batch6-realtime-voice-20260910
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Fix strict lint findings
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          voice = Path('packages/shared-schema/src/voice.ts')
+          text = voice.read_text()
+          text = text.replace(
+              'import { MultimodalLanguageSchema, MultimodalRouteRequestSchema } from "./multimodal.js";',
+              'import { MultimodalRouteRequestSchema } from "./multimodal.js";\nimport type { MultimodalLanguage } from "./multimodal.js";',
+              1,
+          )
+          text = text.replace(
+              '  detected: z.infer<typeof MultimodalLanguageSchema>,',
+              '  detected: MultimodalLanguage,',
+              1,
+          )
+          voice.write_text(text)
+
+          store = Path('services/hub/src/voice-store.ts')
+          text = store.read_text().replace('  type OperationId,\n', '', 1)
+          store.write_text(text)
+          PY
+      - name: Format changed files
+        run: pnpm exec prettier --write packages/shared-schema/src/voice.ts services/hub/src/voice-store.ts
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Focused voice regression
+        run: pnpm exec vitest run services/hub/src/voice-store.test.ts services/hub/src/voice-runtime.test.ts apps/ai/lib/voice-client.test.ts
+      - name: Remove helper and push fix
+        run: |
+          rm .github/workflows/batch6-lint-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: Batch 6 lint hygiene"
+          git push origin HEAD:agent/batch6-realtime-voice-20260910
