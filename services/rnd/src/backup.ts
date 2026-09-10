@@ -45,3 +45,33 @@ export function restoreRndDatabase(
     release();
   }
 }
+
+export function backupRndDatasets(
+  datasetRoot: string,
+  backupRoot: string,
+  createdAt: string,
+): BackupManifest {
+  const store = new OwnerBackupStore(backupRoot, "rnd");
+  const release = store.acquireOperationLock();
+  try {
+    return store.createDirectory("rnd-datasets", datasetRoot, createdAt);
+  } finally {
+    release();
+  }
+}
+
+/** Caller wajib menghentikan/menutup RnD dataset writers selama directory restore. */
+export function restoreRndDatasets(
+  backupRoot: string,
+  backupId: string,
+  targetRoot: string,
+  restoredAt: string,
+): RestoreReceipt {
+  const store = new OwnerBackupStore(backupRoot, "rnd");
+  const release = store.acquireOperationLock();
+  try {
+    return store.restoreDirectory(backupId, targetRoot, restoredAt);
+  } finally {
+    release();
+  }
+}
