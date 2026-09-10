@@ -45,7 +45,7 @@ jobs:
 
           URL=""
           for _ in $(seq 1 45); do
-            URL="$(grep -Eo 'https://[A-Za-z0-9.-]+\.pinggy\.link' "$SSH_LOG" | head -n1 || true)"
+            URL="$(grep -Eo 'https://[A-Za-z0-9.-]+\.(free\.pinggy\.net|run\.pinggy-free\.link)' "$SSH_LOG" | head -n1 || true)"
             if [ -n "$URL" ]; then
               break
             fi
