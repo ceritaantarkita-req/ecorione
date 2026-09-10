@@ -18,7 +18,6 @@ import {
   makeId,
   type FlowApprovalSignal,
   type FlowGraphDocument,
-  type FlowGraphTemporalClient,
   type OperationId,
   type Timestamp,
 } from "@ecorione/shared-schema";
@@ -46,7 +45,7 @@ import {
   listCoreNodeDefinitions,
   validateAndCompileFlowGraph,
 } from "./node-registry.js";
-import type { FlowServerTemporalClient } from "./temporal-client.js";
+import type { FlowGraphTemporalClient, FlowServerTemporalClient } from "./temporal-client.js";
 
 export interface BuildFlowServerOptions {
   readonly hubUrl: string;

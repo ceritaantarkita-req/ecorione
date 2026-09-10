@@ -299,10 +299,9 @@ export function createFlowGraphActivities(
         const response = await fetch(url, {
           method: cfg.method,
           headers,
-          body:
-            cfg.method === "POST"
-              ? JSON.stringify(cfg.body === undefined ? input : cfg.body)
-              : undefined,
+          ...(cfg.method === "POST"
+            ? { body: JSON.stringify(cfg.body === undefined ? input : cfg.body) }
+            : {}),
           redirect: "error",
           signal: AbortSignal.timeout(compiled.limits.timeoutMs),
         });

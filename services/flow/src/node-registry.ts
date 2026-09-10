@@ -10,7 +10,9 @@ import {
   type FlowNodeDefinition,
   type FlowNodeKind,
   type FlowNodeResourceLimits,
+  type FlowNodeResourceOverride,
   type FlowNodeRetry,
+  type FlowNodeRetryOverride,
 } from "@ecorione/shared-schema";
 
 const INPUT = [{ id: "in", label: "Input", valueType: "any" as const }];
@@ -225,7 +227,7 @@ function hasInlineSecret(value: unknown): boolean {
 
 function mergeLimits(
   definitionValue: FlowNodeResourceLimits,
-  override: Partial<FlowNodeResourceLimits>,
+  override: FlowNodeResourceOverride,
   nodeId: string,
   issues: FlowGraphValidationIssue[],
 ): FlowNodeResourceLimits {
@@ -245,7 +247,7 @@ function mergeLimits(
 }
 function mergeRetry(
   definitionValue: FlowNodeRetry,
-  override: Partial<FlowNodeRetry>,
+  override: FlowNodeRetryOverride,
   nodeId: string,
   issues: FlowGraphValidationIssue[],
 ): FlowNodeRetry {

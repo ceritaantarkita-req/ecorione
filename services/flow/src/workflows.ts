@@ -327,7 +327,7 @@ export async function graphExecutionWorkflow(
             "FLOW_SUBFLOW_RECURSION",
           );
         const runId = childRunId(execution.runId, node.id, execution.depth + 1);
-        const child = await executeChild<FlowGraphExecutionResult>("graphExecutionWorkflow", {
+        const child = await executeChild(graphExecutionWorkflow, {
           workflowId: runId,
           args: [
             {
