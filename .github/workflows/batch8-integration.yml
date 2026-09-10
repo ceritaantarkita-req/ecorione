@@ -1,0 +1,73 @@
+name: Batch 8 Integration
+
+on:
+  push:
+    branches: [agent/batch8-data-governance-dr-20260910]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: batch8-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/batch8-data-governance-dr-20260910
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format Batch 8 files
+        run: |
+          pnpm exec prettier --write \
+            packages/shared-schema/src/data-governance.ts \
+            packages/shared-schema/src/index.ts \
+            packages/shared-server/src/backup.ts \
+            packages/shared-server/src/backup.test.ts \
+            packages/shared-server/src/index.ts \
+            services/context/src/backup.ts \
+            services/context/src/backup.test.ts \
+            services/context/src/index.ts \
+            services/hub/src/backup.ts \
+            services/hub/src/index.ts \
+            services/rnd/src/backup.ts \
+            services/rnd/src/dataset.ts \
+            services/rnd/src/dataset.test.ts \
+            services/rnd/src/dataset-http.test.ts \
+            services/rnd/src/http.ts \
+            services/rnd/src/main.ts \
+            services/rnd/src/index.ts \
+            services/sync/src/backup.ts \
+            services/sync/src/index.ts \
+            services/space/src/backup.ts \
+            services/space/src/index.ts \
+            services/artifact/src/backup.ts \
+            services/artifact/src/index.ts \
+            services/sandbox/src/backup.ts \
+            services/sandbox/src/index.ts \
+            services/connect/src/backup.ts \
+            services/connect/src/backup.test.ts \
+            services/connect/src/index.ts \
+            .env.example
+      - name: Lint
+        run: pnpm run lint
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Focused Batch 8 regression
+        run: pnpm exec vitest run packages/shared-server/src/backup.test.ts services/rnd/src/dataset.test.ts services/rnd/src/dataset-http.test.ts services/context/src/backup.test.ts services/connect/src/backup.test.ts --maxWorkers=1 --minWorkers=1
+      - name: Commit formatted candidate and remove helper
+        run: |
+          rm .github/workflows/batch8-integration.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "test: integrate Batch 8 data governance and DR"
+          git push origin HEAD:agent/batch8-data-governance-dr-20260910
