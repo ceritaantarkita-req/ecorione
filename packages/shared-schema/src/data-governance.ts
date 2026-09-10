@@ -108,7 +108,7 @@ export const BackupManifestSchema = z.object({
   kind: BackupKindSchema,
   createdAt: TimestampSchema,
   aggregateDigest: Sha256Schema,
-  entries: z.array(BackupEntrySchema).min(1),
+  entries: z.array(BackupEntrySchema),
 });
 export type BackupManifest = z.infer<typeof BackupManifestSchema>;
 
