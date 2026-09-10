@@ -78,6 +78,14 @@ This is a **test isolation defect**, not evidence that the production proxy is d
 
 The purpose of the fix is to make `pnpm verify` deterministic both in clean CI and on a development machine where `.env` was sourced for a running local stack.
 
+## 2026-09-11 secret-scan commit-boundary finding
+
+After the proxy isolation fix was merged and pulled, the same sourced-runtime verification reached 103 passing test files with 537 passing tests and 2 skipped tests. It then failed only at `secret-scan` because the scanner walked the entire working tree and treated the intentionally gitignored machine-local `.env` as though it were a commit candidate.
+
+That behavior conflicted with the repository's own local-state rule: `.env` is required for local runtime configuration and is intentionally excluded by Git. The correction makes the scanner inspect Git commit candidates instead: tracked files plus untracked files that are not ignored. This does **not** permit credential files into source control: a forbidden `.env` that is already tracked or force-added remains visible through Git's cached file set and is rejected, while non-ignored untracked files are still scanned for credential patterns. If Git metadata is unavailable, the scanner falls back fail-closed to the full working tree.
+
+Focused regression tests cover all three boundaries: ignored local `.env` passes, force-added `.env` fails, and a non-ignored untracked secret fails.
+
 ## Evidence boundary
 
 This rehearsal proves local process health, local Temporal/Flow interoperability and a real local model call through the Connect boundary. It does **not** prove VPS durability, Cloudflare named-Tunnel operation, hosted-provider quality, public production latency or disaster recovery.
