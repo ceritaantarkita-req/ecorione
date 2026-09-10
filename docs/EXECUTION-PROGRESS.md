@@ -44,7 +44,8 @@ Batch 7 implementation is merged and post-merge verified on `main`:
 - Batch 5 status: **CLOSED**
 - Batch 6 status: **CLOSED**
 - Batch 7 status: **CLOSED**
-- next implementation target: **Batch 8 — Dataset Governance + Backup / Restore / DR**
+- Batch 8 status: **IN PROGRESS**
+- active implementation branch: `agent/batch8-data-governance-dr-20260910`
 
 ---
 
@@ -562,7 +563,7 @@ Batch 7 resmi **CLOSED**; next implementation batch adalah Batch 8.
 
 ## Batch 8 — Dataset Governance + Backup / Restore / DR
 
-Status: **PLANNED**
+Status: **IN PROGRESS**
 
 Dataset governance:
 
@@ -583,6 +584,31 @@ Operations:
 - integrity verification
 - disaster recovery procedure
 - recovery drill
+
+Implementation branch: `agent/batch8-data-governance-dr-20260910`
+
+Current implementation boundary:
+
+- RnD-owned immutable dataset registry + content-identified releases;
+- explicit schema/version + source lineage digests;
+- deterministic secret/email/phone/Bearer sanitation baseline before release;
+- governed-payload dedupe + deterministic group-safe train/eval/regression split;
+- dataset quality report + tamper detection + registry crash self-heal;
+- owner-scoped backup manifest with per-file SHA-256 + aggregate digest;
+- SQLite online backup adapters for Context, Hub, RnD, Sync, and Space;
+- directory/bundle backup + staged restore for Artifact, Sandbox, RnD datasets, and Connect state;
+- Connect credential vault backup as ciphertext only; master key remains out-of-band;
+- pre-restore safety backup + operation lock + post-restore digest verification;
+- Flow DR remains Temporal-persistence responsibility; no second durability store;
+- documented separate-failure-domain requirement for production DR.
+
+Pre-PR evidence:
+
+- integration gate `34428172190`: Format, Lint, root Typecheck, focused Batch 8 regression PASS;
+- hardening gate `34428476195`: Format, Lint, root Typecheck, empty-directory recovery, dataset registry crash self-heal, RnD dataset restore, Context SQLite recovery drill, Connect vault-safe backup/restore regression PASS;
+- temporary integration/hardening workflows self-delete and are not part of the candidate tree.
+
+Batch 8 remains **IN PROGRESS** until exact-head PR gates, merge, and post-merge verification satisfy the closure definition.
 
 ---
 
