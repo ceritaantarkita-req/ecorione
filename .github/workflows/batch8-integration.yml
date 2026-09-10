@@ -25,6 +25,15 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Apply integration fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("services/rnd/src/dataset.ts")
+          s = p.read_text()
+          s = s.replace("[A-Za-z0-9._~+\\/-]", "[A-Za-z0-9._~+/-]")
+          p.write_text(s)
+          PY
       - name: Format Batch 8 files
         run: |
           pnpm exec prettier --write \
