@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import nextPlugin from "@next/eslint-plugin-next";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -38,6 +39,15 @@ export default tseslint.config(
             "Date.now() dilarang di jalur perakitan prefix (ADR-01). Injeksikan clock lewat parameter supaya bisa diuji dan supaya prefix tetap byte-identik.",
         },
       ],
+    },
+  },
+  {
+    // Next 15 removed `next lint`; keep framework rules in the root flat config.
+    files: ["apps/ai/**/*.{ts,tsx}"],
+    plugins: { "@next/next": nextPlugin },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
     },
   },
   {
