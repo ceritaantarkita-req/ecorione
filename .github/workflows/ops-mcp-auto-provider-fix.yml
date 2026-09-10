@@ -1,0 +1,54 @@
+name: Ops MCP auto provider fix
+
+on:
+  push:
+    branches:
+      - ops/production-activation-20260910
+    paths:
+      - .github/workflows/ops-mcp-auto-provider-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ops/production-activation-20260910
+      - name: Patch per-tunnel auto provider selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/mcp-external-https-acceptance.mjs')
+          t = p.read_text()
+          replacements = [
+              ('let selectedTunnelProvider = process.env.MCP_TUNNEL_PROVIDER ?? "auto";',
+               'const configuredTunnelProvider = process.env.MCP_TUNNEL_PROVIDER ?? "auto";'),
+              ('selectedTunnelProvider === "auto"\n      ? [...(CLOUDFLARED_BIN ? ["cloudflare"] : []), "pinggy"]\n      : [selectedTunnelProvider];',
+               'configuredTunnelProvider === "auto"\n      ? [...(CLOUDFLARED_BIN ? ["cloudflare"] : []), "pinggy"]\n      : [configuredTunnelProvider];'),
+              ('      if (selectedTunnelProvider === "auto") selectedTunnelProvider = provider;\n', ''),
+          ]
+          for old, new in replacements:
+              if t.count(old) != 1:
+                  raise SystemExit(f'expected one MCP provider-selection anchor, found {t.count(old)}: {old[:60]}')
+              t = t.replace(old, new, 1)
+          if 'selectedTunnelProvider' in t:
+              raise SystemExit('stale selectedTunnelProvider remains')
+          p.write_text(t)
+          PY
+          rm .github/workflows/ops-mcp-auto-provider-fix.yml
+          git diff --check
+      - name: Commit fix and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/mcp-external-https-acceptance.mjs .github/workflows/ops-mcp-auto-provider-fix.yml
+          git diff --cached --check
+          git commit -m "fix: keep MCP auto tunnel fallback per public endpoint"
+          git push origin HEAD:ops/production-activation-20260910
