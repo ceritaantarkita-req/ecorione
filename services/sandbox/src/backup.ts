@@ -1,4 +1,8 @@
-import { OwnerBackupStore, type BackupManifest, type RestoreReceipt } from "@ecorione/shared-server";
+import {
+  OwnerBackupStore,
+  type BackupManifest,
+  type RestoreReceipt,
+} from "@ecorione/shared-server";
 import type { SandboxReceiptStore } from "./receipt-store.js";
 
 export function backupSandboxReceipts(

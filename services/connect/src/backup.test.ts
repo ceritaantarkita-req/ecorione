@@ -3,7 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { FileCredentialVault } from "./credential-vault.js";
-import { backupConnectState, restoreConnectState, restoreConnectVaultCiphertext } from "./backup.js";
+import {
+  backupConnectState,
+  restoreConnectState,
+  restoreConnectVaultCiphertext,
+} from "./backup.js";
 
 const roots: string[] = [];
 function tempRoot(): string {
@@ -58,8 +62,8 @@ describe("Connect backup", () => {
     const root = tempRoot();
     const spend = join(root, "spend.json");
     const registry = join(root, "registry.json");
-    writeFileSync(spend, "{\"version\":1}\n");
-    writeFileSync(registry, "{\"version\":1,\"servers\":[]}\n");
+    writeFileSync(spend, '{"version":1}\n');
+    writeFileSync(registry, '{"version":1,"servers":[]}\n');
     const backupRoot = join(root, "backup");
     const result = backupConnectState(
       { spendBudgetPath: spend, mcpRegistryPath: registry },

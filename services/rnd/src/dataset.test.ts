@@ -53,7 +53,10 @@ function request(): DatasetReleaseRequest {
   };
 }
 
-function recordsFor(store: DatasetRegistry, releaseId: string): readonly DatasetReleasedRecord[] {
+function recordsFor(
+  store: DatasetRegistry,
+  releaseId: string,
+): readonly DatasetReleasedRecord[] {
   const text = readFileSync(join(store.root, "releases", releaseId, "records.ndjson"), "utf8");
   return text
     .trim()

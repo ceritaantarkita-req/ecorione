@@ -1,4 +1,12 @@
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -25,11 +33,7 @@ describe("OwnerBackupStore", () => {
     const manifest = store.createFile("state", source, "file", "2026-09-10T01:00:00.000Z");
 
     writeFileSync(source, "after\n", { mode: 0o600 });
-    const receipt = store.restoreFile(
-      manifest.backupId,
-      source,
-      "2026-09-10T01:01:00.000Z",
-    );
+    const receipt = store.restoreFile(manifest.backupId, source, "2026-09-10T01:01:00.000Z");
 
     expect(readFileSync(source, "utf8")).toBe("before\n");
     expect(receipt.safetyBackupId).not.toBeNull();
@@ -68,7 +72,11 @@ describe("OwnerBackupStore", () => {
       "2026-09-10T01:00:00.000Z",
     );
     const target = join(root, "restored");
-    const receipt = store.restoreDirectory(manifest.backupId, target, "2026-09-10T01:01:00.000Z");
+    const receipt = store.restoreDirectory(
+      manifest.backupId,
+      target,
+      "2026-09-10T01:01:00.000Z",
+    );
 
     expect(readFileSync(join(target, "a.json"), "utf8")).toBe("A");
     expect(readFileSync(join(target, "nested/b.json"), "utf8")).toBe("B");

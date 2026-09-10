@@ -32,15 +32,27 @@ export function backupConnectState(
   const release = store.acquireOperationLock();
   try {
     const stateSources: BundleBackupSource[] = [];
-    for (const path of [paths.spendBudgetPath, paths.mcpRegistryPath, paths.mcpInvocationPath]) {
+    for (const path of [
+      paths.spendBudgetPath,
+      paths.mcpRegistryPath,
+      paths.mcpInvocationPath,
+    ]) {
       if (path !== undefined && existsSync(path)) {
         stateSources.push({ relativePath: basename(path), sourcePath: path });
       }
     }
-    const state = stateSources.length === 0 ? null : store.createBundle("connect-state", stateSources, createdAt);
+    const state =
+      stateSources.length === 0
+        ? null
+        : store.createBundle("connect-state", stateSources, createdAt);
     const vaultCiphertext =
       paths.credentialVaultPath !== undefined && existsSync(paths.credentialVaultPath)
-        ? store.createFile("credential-vault", paths.credentialVaultPath, "vault-ciphertext", createdAt)
+        ? store.createFile(
+            "credential-vault",
+            paths.credentialVaultPath,
+            "vault-ciphertext",
+            createdAt,
+          )
         : null;
     return { state, vaultCiphertext };
   } finally {
@@ -59,7 +71,8 @@ export function restoreConnectVaultCiphertext(
   const release = store.acquireOperationLock();
   try {
     const manifest = store.verify(backupId);
-    if (manifest.kind !== "vault-ciphertext") throw new Error("backup bukan Connect vault ciphertext");
+    if (manifest.kind !== "vault-ciphertext")
+      throw new Error("backup bukan Connect vault ciphertext");
     return store.restoreFile(backupId, targetPath, restoredAt);
   } finally {
     release();

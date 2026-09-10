@@ -38,7 +38,9 @@ describe("Context recovery drill", () => {
     expect(receipt.safetyBackupId).not.toBeNull();
 
     const restored = openContextDatabase({ path: dbPath, runMigrations: false });
-    const row = restored.raw.prepare("SELECT value FROM recovery_drill").get() as { value: string };
+    const row = restored.raw.prepare("SELECT value FROM recovery_drill").get() as {
+      value: string;
+    };
     expect(row.value).toBe("before-failure");
     expect(restored.raw.pragma("quick_check", { simple: true })).toBe("ok");
     restored.close();

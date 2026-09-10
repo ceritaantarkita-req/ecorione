@@ -15,6 +15,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
+export type { BackupManifest, RestoreReceipt } from "@ecorione/shared-schema";
 import {
   BackupManifestSchema,
   type BackupEntry,
@@ -169,7 +170,9 @@ export class OwnerBackupStore {
     createdAt: string,
     entries: readonly BackupEntry[],
   ): BackupManifest {
-    const sortedEntries = [...entries].sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+    const sortedEntries = [...entries].sort((a, b) =>
+      a.relativePath.localeCompare(b.relativePath),
+    );
     const aggregate = aggregateDigest(sortedEntries);
     const backupId = digestBytes(
       JSON.stringify({
@@ -222,7 +225,11 @@ export class OwnerBackupStore {
     const name = safeSegment(logicalName);
     const staging = this.stagingRoot();
     try {
-      const entry = copyWithEntry(sourcePath, join(staging, "payload", basename(sourcePath)), `payload/${basename(sourcePath)}`);
+      const entry = copyWithEntry(
+        sourcePath,
+        join(staging, "payload", basename(sourcePath)),
+        `payload/${basename(sourcePath)}`,
+      );
       return this.finalize(staging, name, kind, createdAt, [entry]);
     } catch (error) {
       rmSync(staging, { recursive: true, force: true });
@@ -239,7 +246,8 @@ export class OwnerBackupStore {
         const rel = relativeFrom(resolvedSource, source);
         return copyWithEntry(source, join(staging, "payload", rel), `payload/${rel}`);
       });
-      if (entries.length === 0) throw new BackupIntegrityError("directory backup tidak boleh kosong");
+      if (entries.length === 0)
+        throw new BackupIntegrityError("directory backup tidak boleh kosong");
       return this.finalize(staging, name, "directory", createdAt, entries);
     } catch (error) {
       rmSync(staging, { recursive: true, force: true });
@@ -252,7 +260,8 @@ export class OwnerBackupStore {
     sources: readonly BundleBackupSource[],
     createdAt: string,
   ): BackupManifest {
-    if (sources.length === 0) throw new BackupIntegrityError("bundle backup tidak boleh kosong");
+    if (sources.length === 0)
+      throw new BackupIntegrityError("bundle backup tidak boleh kosong");
     const name = safeSegment(logicalName);
     const staging = this.stagingRoot();
     try {
@@ -261,7 +270,11 @@ export class OwnerBackupStore {
         const rel = safeRelative(source.relativePath);
         if (seen.has(rel)) throw new BackupPathError(`relative path bundle duplikat: ${rel}`);
         seen.add(rel);
-        return copyWithEntry(source.sourcePath, join(staging, "payload", rel), `payload/${rel}`);
+        return copyWithEntry(
+          source.sourcePath,
+          join(staging, "payload", rel),
+          `payload/${rel}`,
+        );
       });
       return this.finalize(staging, name, "bundle", createdAt, entries);
     } catch (error) {
@@ -306,7 +319,11 @@ export class OwnerBackupStore {
       const rel = safeRelative(entry.relativePath);
       const path = join(root, rel);
       const stat = statSync(path);
-      if (!stat.isFile() || stat.size !== entry.sizeBytes || digestFile(path) !== entry.digest) {
+      if (
+        !stat.isFile() ||
+        stat.size !== entry.sizeBytes ||
+        digestFile(path) !== entry.digest
+      ) {
         throw new BackupIntegrityError(`integritas payload backup gagal: ${rel}`);
       }
     }
@@ -319,9 +336,12 @@ export class OwnerBackupStore {
   restoreFile(backupId: string, targetPath: string, restoredAt: string): RestoreReceipt {
     const manifest = this.verify(backupId);
     if (!(["sqlite", "file", "vault-ciphertext"] as const).includes(manifest.kind as never)) {
-      throw new BackupIntegrityError(`backup ${manifest.kind} tidak dapat direstore sebagai file`);
+      throw new BackupIntegrityError(
+        `backup ${manifest.kind} tidak dapat direstore sebagai file`,
+      );
     }
-    if (manifest.entries.length !== 1) throw new BackupIntegrityError("file backup harus satu entry");
+    if (manifest.entries.length !== 1)
+      throw new BackupIntegrityError("file backup harus satu entry");
     const entry = manifest.entries[0]!;
     const source = join(this.ownerRoot(), backupId, safeRelative(entry.relativePath));
     const target = resolve(targetPath);
@@ -334,14 +354,16 @@ export class OwnerBackupStore {
     try {
       copyFileSync(source, temp);
       chmodSync(temp, 0o600);
-      if (digestFile(temp) !== entry.digest) throw new BackupIntegrityError("staging restore digest mismatch");
+      if (digestFile(temp) !== entry.digest)
+        throw new BackupIntegrityError("staging restore digest mismatch");
       renameSync(temp, target);
       chmodSync(target, 0o600);
     } finally {
       rmSync(temp, { force: true });
     }
     const restoredDigest = digestFile(target);
-    if (restoredDigest !== entry.digest) throw new BackupIntegrityError("restore digest mismatch");
+    if (restoredDigest !== entry.digest)
+      throw new BackupIntegrityError("restore digest mismatch");
     return {
       format: "ecorione.owner-restore/v1",
       owner: this.owner,
@@ -356,13 +378,16 @@ export class OwnerBackupStore {
   restoreDirectory(backupId: string, targetRoot: string, restoredAt: string): RestoreReceipt {
     const manifest = this.verify(backupId);
     if (manifest.kind !== "directory" && manifest.kind !== "bundle") {
-      throw new BackupIntegrityError(`backup ${manifest.kind} tidak dapat direstore sebagai directory`);
+      throw new BackupIntegrityError(
+        `backup ${manifest.kind} tidak dapat direstore sebagai directory`,
+      );
     }
     const target = resolve(targetRoot);
     const staging = `${target}.restore-${randomUUID()}`;
     const displaced = `${target}.pre-restore-${randomUUID()}`;
     let safetyBackupId: string | null = null;
-    if (existsSync(target)) safetyBackupId = this.createDirectory("pre-restore", target, restoredAt).backupId;
+    if (existsSync(target))
+      safetyBackupId = this.createDirectory("pre-restore", target, restoredAt).backupId;
     mkdirSync(staging, { recursive: false, mode: 0o700 });
     try {
       for (const entry of manifest.entries) {
@@ -388,7 +413,8 @@ export class OwnerBackupStore {
       sizeBytes: statSync(path).size,
     }));
     const restoredDigest = aggregateDigest(restoredEntries);
-    if (restoredDigest !== manifest.aggregateDigest) throw new BackupIntegrityError("restore directory digest mismatch");
+    if (restoredDigest !== manifest.aggregateDigest)
+      throw new BackupIntegrityError("restore directory digest mismatch");
     return {
       format: "ecorione.owner-restore/v1",
       owner: this.owner,

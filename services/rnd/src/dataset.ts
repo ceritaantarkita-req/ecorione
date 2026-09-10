@@ -44,10 +44,11 @@ const EMPTY_REGISTRY: RegistryFile = {
   releases: [],
 };
 
-const SECRET_FIELD = /^(?:authorization|password|passwd|secret|api[-_]?key|access[-_]?token|refresh[-_]?token|credential)$/i;
+const SECRET_FIELD =
+  /^(?:authorization|password|passwd|secret|api[-_]?key|access[-_]?token|refresh[-_]?token|credential)$/i;
 const EMAIL_VALUE = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 const PHONE_VALUE = /(?<!\w)\+?[0-9][0-9 ()-]{7,}[0-9](?!\w)/g;
-const BEARER_VALUE = /\bBearer\s+[A-Za-z0-9._~+\/-]{12,}\b/gi;
+const BEARER_VALUE = /\bBearer\s+[A-Za-z0-9._~+/-]{12,}\b/gi;
 
 export class DatasetGovernanceError extends Error {
   constructor(message: string) {
@@ -173,7 +174,8 @@ function buildRecords(
   const byDigest = new Map<string, DatasetReleasedRecord>();
   const sourceIds = new Set<string>();
   for (const record of request.records) {
-    if (sourceIds.has(record.id)) throw new DatasetGovernanceError(`record id duplikat: ${record.id}`);
+    if (sourceIds.has(record.id))
+      throw new DatasetGovernanceError(`record id duplikat: ${record.id}`);
     sourceIds.add(record.id);
     const payload = sanitizeValue(record.payload, report) as Record<string, unknown>;
     const payloadDigest = digest(canonical(payload));
@@ -202,8 +204,10 @@ function quality(
     splitCounts[record.split] += 1;
     if (Object.keys(record.payload).length === 0) emptyPayloads += 1;
   }
-  if (records.length === 0) throw new DatasetGovernanceError("release dataset kosong setelah dedupe");
-  if (emptyPayloads > 0) throw new DatasetGovernanceError("payload dataset kosong ditolak quality gate");
+  if (records.length === 0)
+    throw new DatasetGovernanceError("release dataset kosong setelah dedupe");
+  if (emptyPayloads > 0)
+    throw new DatasetGovernanceError("payload dataset kosong ditolak quality gate");
   return {
     inputRecords: inputCount,
     uniqueRecords: records.length,
@@ -265,11 +269,18 @@ export class DatasetRegistry {
       const staging = `${releaseRoot}.tmp-${randomUUID()}`;
       mkdirSync(staging, { recursive: true, mode: 0o700 });
       try {
-        writeFileSync(join(staging, "records.ndjson"), recordsText, { mode: 0o600, flag: "wx" });
-        writeFileSync(join(staging, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, {
+        writeFileSync(join(staging, "records.ndjson"), recordsText, {
           mode: 0o600,
           flag: "wx",
         });
+        writeFileSync(
+          join(staging, "manifest.json"),
+          `${JSON.stringify(manifest, null, 2)}\n`,
+          {
+            mode: 0o600,
+            flag: "wx",
+          },
+        );
         mkdirSync(dirname(releaseRoot), { recursive: true, mode: 0o700 });
         renameSync(staging, releaseRoot);
       } catch (error) {
@@ -304,13 +315,16 @@ export class DatasetRegistry {
   }
 
   get(releaseId: string): DatasetReleaseManifest {
-    if (!/^[a-f0-9]{64}$/.test(releaseId)) throw new DatasetGovernanceError("release id tidak valid");
+    if (!/^[a-f0-9]{64}$/.test(releaseId))
+      throw new DatasetGovernanceError("release id tidak valid");
     const root = join(this.root, "releases", releaseId);
-    if (!existsSync(root)) throw new DatasetGovernanceError(`release tidak ditemukan: ${releaseId}`);
+    if (!existsSync(root))
+      throw new DatasetGovernanceError(`release tidak ditemukan: ${releaseId}`);
     const manifest = DatasetReleaseManifestSchema.parse(
       JSON.parse(readFileSync(join(root, "manifest.json"), "utf8")) as unknown,
     );
-    if (manifest.releaseId !== releaseId) throw new DatasetGovernanceError("release manifest id mismatch");
+    if (manifest.releaseId !== releaseId)
+      throw new DatasetGovernanceError("release manifest id mismatch");
     const recordsText = readFileSync(join(root, "records.ndjson"), "utf8");
     if (digest(recordsText) !== manifest.recordsDigest) {
       throw new DatasetGovernanceError("records digest release tidak cocok");
@@ -326,7 +340,8 @@ export class DatasetRegistry {
         quality: manifest.quality,
       }),
     );
-    if (computed !== releaseId) throw new DatasetGovernanceError("release identity tidak cocok");
+    if (computed !== releaseId)
+      throw new DatasetGovernanceError("release identity tidak cocok");
     return manifest;
   }
 }

@@ -51,7 +51,8 @@ export function buildRndServer(
   options: BuildRndServerOptions = {},
 ): FastifyInstance {
   const store = new TraceStore(db);
-  const datasets = options.datasetRoot === undefined ? undefined : new DatasetRegistry(options.datasetRoot);
+  const datasets =
+    options.datasetRoot === undefined ? undefined : new DatasetRegistry(options.datasetRoot);
   const app = createServer({ name: "rnd", token: options.token, logger: options.logger });
 
   app.post("/v1/traces", async (req, reply) => {
@@ -82,7 +83,8 @@ export function buildRndServer(
       try {
         return reply.code(201).send(datasets.release(body, nowIso()));
       } catch (error) {
-        if (error instanceof DatasetGovernanceError) return reply.code(409).send({ error: error.message });
+        if (error instanceof DatasetGovernanceError)
+          return reply.code(409).send({ error: error.message });
         throw error;
       }
     });

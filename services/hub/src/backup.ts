@@ -1,4 +1,9 @@
-import { BackupIntegrityError, OwnerBackupStore, type BackupManifest, type RestoreReceipt } from "@ecorione/shared-server";
+import {
+  BackupIntegrityError,
+  OwnerBackupStore,
+  type BackupManifest,
+  type RestoreReceipt,
+} from "@ecorione/shared-server";
 import type { HubDatabase } from "./db.js";
 
 function assertHealthy(db: HubDatabase): void {
@@ -17,7 +22,11 @@ export async function backupHubDatabase(
   const store = new OwnerBackupStore(backupRoot, "hub");
   const release = store.acquireOperationLock();
   try {
-    return await store.createSqlite("hub-db", (destination) => db.raw.backup(destination), createdAt);
+    return await store.createSqlite(
+      "hub-db",
+      (destination) => db.raw.backup(destination),
+      createdAt,
+    );
   } finally {
     release();
   }
