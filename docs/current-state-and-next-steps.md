@@ -26,6 +26,8 @@ Final closure state on `main`:
 - final post-closure main CI: `34490006960` — PASS
 - implementation exact-head MCP External HTTPS Acceptance: `34485292292` — PASS
 - implementation post-merge MCP External HTTPS Acceptance: `34485575560` — PASS
+- documentation synchronization PR #31 merge: `aa360b81a6ef5cd41f466d7ada239b4e461c60ee`
+- post-merge CI after PR #31: `34494150426` — PASS
 
 The final CI passed Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production Operations acceptance, Secret Scan, and Production Build.
 
@@ -35,13 +37,28 @@ The final CI passed Naming, Format, Lint, Typecheck, Test, Phase 4 real-process 
 |---|---:|---|
 | Defined platform/production implementation roadmap | **12/12 batches = 100% CLOSED** | Planned repository implementation scope is finished and verified on `main`. |
 | Production/self-host repository baseline | **READY** | Compose/Caddy/release/security baseline passed repository evidence. |
-| Real VPS production deployment | **NEXT / not yet evidenced in this roadmap** | Deploy the closed baseline and collect environment-specific proof. |
-| Cloudflare Free named Tunnel cutover | **NEXT / documented, not yet executed as production state** | Use Cloudflare as DNS/TLS/tunnel edge in front of the VPS. |
-| Real hosted-provider validation | **NEXT / deterministic mechanism exists, real evidence pending** | Run operator-owned Anthropic/OpenRouter/OpenAI canaries/evals and record quality/latency/cost. |
-| Durable external production telemetry | **NEXT** | Existing process metrics/traces need external retention for longitudinal evidence. |
-| Product/R&D optimization evidence | **NEXT / evidence-driven** | Validate workflows, ECX savings, routing/model choices, and UX from real usage. |
+| Real VPS production deployment | **ACTIVE NEXT SCOPE / real host evidence pending** | Production Activation workstream now has executable preflight/smoke/evidence tooling; actual VPS mutation still requires host access. |
+| Cloudflare Free named Tunnel cutover | **TOOLING READY / account+host execution pending** | Use Cloudflare as DNS/TLS/tunnel edge in front of the VPS. |
+| Real hosted-provider validation | **TOOLING READY / credentials+live run pending** | Provider matrix canary validates Anthropic/OpenRouter/OpenAI through Connect Vault and restores runtime settings. |
+| Durable external production telemetry | **TOOLING READY / live snapshots pending** | Existing process metrics/traces can be checked and snapshotted; long-term retention remains external. |
+| Product/R&D optimization evidence | **WAITING FOR REAL TRAFFIC** | Validate workflows, ECX, routing/model choices, and UX from real usage; no savings claim from synthetic CI. |
 
 Do not collapse these rows into one percentage. **100% refers only to the defined Batch 1–12 implementation roadmap**, not to the never-ending operational maturity of a live production system.
+
+### Active post-closure scope: Production Activation
+
+The current operational continuation is documented in `docs/production-activation.md`. It adds guarded tooling for:
+
+- VPS production preflight;
+- named Cloudflare Tunnel installation readiness;
+- public HTTPS + MCP smoke checks;
+- safe origin-firewall cutover with prechecks/rollback;
+- host security audit;
+- Anthropic/OpenRouter/OpenAI matrix canary using existing Connect Vault;
+- protected `/api/ops` health snapshots;
+- Historical Ledger integrity + ECX/model traffic evidence.
+
+Repository CI can validate the tooling, but **actual VPS/Cloudflare/provider/traffic steps are not DONE until evidence comes from the real environment**.
 
 ## 2. What is already in the baseline
 
@@ -84,6 +101,7 @@ Future work is a **new scope**, not Batch 13. Recommended order:
 1. **Production deployment**
    - deploy the current baseline to a real VPS/server;
    - validate persistence, restart behavior, backups, restore, networking, domain, and TLS;
+   - execute `docs/production-activation.md`;
    - recommended public edge: Cloudflare Free + Cloudflare Tunnel; see `docs/cloudflare-free-deployment.md`.
 
 2. **Real provider validation**
@@ -134,12 +152,13 @@ An agent starting without chat history should read:
 
 1. `docs/current-state-and-next-steps.md` — current state and next work;
 2. `AGENTS.md` — invariants and repo rules;
-3. `docs/EXECUTION-PROGRESS.md` — detailed implementation/closure history;
-4. `docs/verification/batch12-closure-2026-09-10.md` — final Batch 12 evidence;
-5. `docs/production-operations.md` and `docs/release-operations.md` — production/release procedures;
-6. `docs/cloudflare-free-deployment.md` — recommended free public-edge deployment;
-7. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` — product rationale and historical planning context;
-8. relevant ADR/API/operations docs for the exact subsystem being changed.
+3. `docs/production-activation.md` — active post-closure operational execution and evidence gates;
+4. `docs/EXECUTION-PROGRESS.md` — detailed implementation/closure history;
+5. `docs/verification/batch12-closure-2026-09-10.md` — final Batch 12 evidence;
+6. `docs/production-operations.md` and `docs/release-operations.md` — production/release procedures;
+7. `docs/cloudflare-free-deployment.md` — recommended free public-edge deployment;
+8. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` — product rationale and historical planning context;
+9. relevant ADR/API/operations docs for the exact subsystem being changed.
 
 ## 6. Rules for the next agent
 
@@ -153,12 +172,13 @@ Before implementing new work:
 - preserve external MCP as real public-network acceptance;
 - do not weaken release gates to make CI green;
 - create/update ADRs when architecture changes;
-- update this file and `docs/EXECUTION-PROGRESS.md` when current state materially changes;
+- update this file, `docs/production-activation.md`, and `docs/EXECUTION-PROGRESS.md` when current state materially changes;
 - keep historical audits/verification files as historical evidence unless a file explicitly describes itself as current/canonical.
 
 ## 7. Canonical status references
 
-- detailed progress: `docs/EXECUTION-PROGRESS.md`
+- active production continuation: `docs/production-activation.md`
+- detailed closed-roadmap progress: `docs/EXECUTION-PROGRESS.md`
 - final closure evidence: `docs/verification/batch12-closure-2026-09-10.md`
 - final release decision: `docs/adr/0033-final-security-release-closure.md`
 - open-ended hardening posture: `docs/fase6-hardening.md`
