@@ -29,10 +29,19 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          p = Path("services/rnd/src/dataset.ts")
-          s = p.read_text()
-          s = s.replace("[A-Za-z0-9._~+\\/-]", "[A-Za-z0-9._~+/-]")
-          p.write_text(s)
+
+          dataset = Path("services/rnd/src/dataset.ts")
+          text = dataset.read_text()
+          text = text.replace("[A-Za-z0-9._~+\\/-]", "[A-Za-z0-9._~+/-]")
+          dataset.write_text(text)
+
+          backup = Path("packages/shared-server/src/backup.ts")
+          text = backup.read_text()
+          marker = 'import {\n  BackupManifestSchema,'
+          export_line = 'export type { BackupManifest, RestoreReceipt } from "@ecorione/shared-schema";\n'
+          if export_line not in text:
+              text = text.replace(marker, export_line + marker)
+          backup.write_text(text)
           PY
       - name: Format Batch 8 files
         run: |
