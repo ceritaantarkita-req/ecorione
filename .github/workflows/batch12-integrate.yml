@@ -1,3 +1,4 @@
+# Batch 12 rerun: patched PostCSS override
 name: Batch 12 integration gate
 
 on:
