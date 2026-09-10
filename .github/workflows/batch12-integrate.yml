@@ -1,4 +1,4 @@
-# Batch 12 rerun: patched PostCSS override
+# Batch 12 final one-shot integration gate
 name: Batch 12 integration gate
 
 on:
@@ -47,7 +47,12 @@ jobs:
         run: pnpm run secret-scan:history
       - name: Commit integrated candidate
         run: |
+          # The ADR generator accidentally emits a Markdown hard-break on the status line.
+          # Normalize that single line before the repository whitespace gate.
+          sed -i 's/^Status: Accepted  $/Status: Accepted/' docs/adr/0033-final-security-release-closure.md
           chmod +x scripts/self-host-install.sh scripts/self-host-upgrade.sh scripts/self-host-rollback.sh
+          # One-shot helpers must not ship in the implementation PR.
+          rm -f .github/workflows/batch12-integrate.yml scripts/batch12-apply.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
