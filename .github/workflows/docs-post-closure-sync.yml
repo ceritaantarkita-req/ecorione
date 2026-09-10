@@ -18,7 +18,7 @@ jobs:
         with:
           ref: docs/post-closure-cloudflare-20260910
           fetch-depth: 0
-      - name: Run patcher
+      - name: Run corrected patcher
         run: python scripts/docs-post-closure-sync.py
       - name: Validate and commit
         run: |
