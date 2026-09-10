@@ -6,7 +6,13 @@ if (!rawBase) {
 }
 
 const base = new URL(rawBase);
-assert.equal(base.protocol, "https:", "production public base URL must use HTTPS");
+const allowLoopbackHttp =
+  process.env.ECORIONE_PUBLIC_SMOKE_ALLOW_HTTP === "1" &&
+  (base.hostname === "127.0.0.1" || base.hostname === "localhost" || base.hostname === "::1");
+assert(
+  base.protocol === "https:" || (allowLoopbackHttp && base.protocol === "http:"),
+  "production public base URL must use HTTPS (HTTP is test-only on loopback with ECORIONE_PUBLIC_SMOKE_ALLOW_HTTP=1)",
+);
 assert.equal(base.username, "", "credentials must not be embedded in the public URL");
 assert.equal(base.password, "", "credentials must not be embedded in the public URL");
 base.pathname = "/";
