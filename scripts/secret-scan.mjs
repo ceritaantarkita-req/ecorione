@@ -10,8 +10,9 @@
  * tidak bisa dipakai untuk memeriksa apa yang baru saja di-install.
  */
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, extname } from "node:path";
+import { execFileSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { basename, extname, join, relative } from "node:path";
 
 const ROOT = process.cwd();
 
@@ -73,6 +74,49 @@ const ALLOW_MARKER = "secret-scan:allow";
 
 const findings = [];
 
+/**
+ * Batas utama scanner adalah apa yang dapat masuk commit: file tracked plus file untracked
+ * yang tidak di-ignore Git. File runtime lokal yang memang di-gitignore (mis. `.env`) tidak
+ * boleh membuat `pnpm verify` gagal, tetapi file yang pernah/terlanjur di-track tetap muncul
+ * lewat `--cached` dan akan diblokir.
+ */
+function gitCommitCandidates() {
+  try {
+    const output = execFileSync(
+      "git",
+      ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+      {
+        cwd: ROOT,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      },
+    );
+    return output.split("\0").filter(Boolean);
+  } catch {
+    return null;
+  }
+}
+
+function scanFile(rel) {
+  const full = join(ROOT, rel);
+  if (!existsSync(full)) return;
+
+  const stat = statSync(full);
+  if (!stat.isFile()) return;
+
+  const entry = basename(rel);
+  if (FORBIDDEN_FILES.some((re) => re.test(entry))) {
+    findings.push({ file: rel, line: 0, name: "File kredensial tidak boleh di-commit" });
+    return;
+  }
+
+  if (SKIP_EXT.has(extname(entry).toLowerCase())) return;
+  if (stat.size > 2_000_000) return;
+
+  scan(rel, readFileSync(full, "utf8"));
+}
+
+/** Fail-closed fallback untuk source tree yang tidak memiliki metadata Git. */
 function walk(dir) {
   for (const entry of readdirSync(dir)) {
     if (SKIP_DIRS.has(entry)) continue;
@@ -85,15 +129,7 @@ function walk(dir) {
       continue;
     }
 
-    if (FORBIDDEN_FILES.some((re) => re.test(entry))) {
-      findings.push({ file: rel, line: 0, name: "File kredensial tidak boleh di-commit" });
-      continue;
-    }
-
-    if (SKIP_EXT.has(extname(entry).toLowerCase())) continue;
-    if (stat.size > 2_000_000) continue;
-
-    scan(rel, readFileSync(full, "utf8"));
+    scanFile(rel);
   }
 }
 
@@ -108,7 +144,13 @@ function scan(rel, content) {
   });
 }
 
-walk(ROOT);
+const candidates = gitCommitCandidates();
+if (candidates === null) {
+  console.warn("secret-scan: metadata Git tidak tersedia; memakai full working-tree fallback.");
+  walk(ROOT);
+} else {
+  for (const rel of candidates) scanFile(rel);
+}
 
 if (findings.length === 0) {
   console.log("secret-scan: bersih.");
