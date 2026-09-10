@@ -1,0 +1,31 @@
+{$ECORIONE_DOMAIN} {
+  encode zstd gzip
+
+  header {
+    -Server
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "no-referrer"
+    X-Frame-Options "DENY"
+    Permissions-Policy "camera=(), microphone=(self), geolocation=()"
+  }
+
+  @operator path /ops* /api/ops* /settings* /api/settings*
+  handle @operator {
+    basic_auth {
+      {$ECORIONE_OPS_USER} {$ECORIONE_OPS_PASSWORD_HASH}
+    }
+    reverse_proxy ai:3000
+  }
+
+  handle /.well-known/oauth-protected-resource* {
+    reverse_proxy sync:17011
+  }
+
+  handle /mcp* {
+    reverse_proxy sync:17011
+  }
+
+  handle {
+    reverse_proxy ai:3000
+  }
+}
