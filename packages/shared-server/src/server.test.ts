@@ -86,9 +86,10 @@ describe("createServer", () => {
     const res = await app.inject({ method: "GET", url: "/crash" });
     expect(res.statusCode).toBe(500);
     expect(res.json().error.message).toBe("Kesalahan internal service.");
+    expect(res.body).not.toContain("detail internal rahasia");
   });
 
-  it("menyertakan x-request-id yang dikirim klien di error body", async () => {
+  it("menyertakan request id aman dari klien di error body", async () => {
     const app = createServer({ name: "test-svc" });
     app.get("/missing", async () => {
       throw new NotFoundError("tidak ada");
@@ -100,5 +101,39 @@ describe("createServer", () => {
       headers: { "x-request-id": "req-fixed-123" },
     });
     expect(res.json().requestId).toBe("req-fixed-123");
+  });
+
+  it("mengganti request id berkarakter kontrol agar tidak menjadi log/header injection", async () => {
+    const app = createServer({ name: "test-svc" });
+    const res = await app.inject({
+      method: "GET",
+      url: "/healthz",
+      headers: { "x-request-id": "bad id with spaces" },
+    });
+    expect(res.headers["x-request-id"]).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it("menambahkan response security headers pada service boundary", async () => {
+    const app = createServer({ name: "test-svc" });
+    const res = await app.inject({ method: "GET", url: "/healthz" });
+    expect(res.headers["x-content-type-options"]).toBe("nosniff");
+    expect(res.headers["referrer-policy"]).toBe("no-referrer");
+    expect(res.headers["cache-control"]).toBe("no-store");
+  });
+
+  it("rate limit fail-closed dengan Retry-After tetapi health check tetap exempt", async () => {
+    const app = createServer({
+      name: "test-svc",
+      rateLimit: { max: 2, windowMs: 60_000 },
+    });
+    app.get("/limited", async () => ({ ok: true }));
+
+    expect((await app.inject({ method: "GET", url: "/limited" })).statusCode).toBe(200);
+    expect((await app.inject({ method: "GET", url: "/limited" })).statusCode).toBe(200);
+    const limited = await app.inject({ method: "GET", url: "/limited" });
+    expect(limited.statusCode).toBe(429);
+    expect(limited.headers["retry-after"]).toBeDefined();
+    expect(limited.json().error.type).toBe("RATE_LIMITED");
+    expect((await app.inject({ method: "GET", url: "/healthz" })).statusCode).toBe(200);
   });
 });
