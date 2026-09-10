@@ -8,90 +8,60 @@ on:
       - .github/workflows/batch12-mcp-readiness-fix.yml
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  fix-and-verify:
+  diagnose:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: agent/batch12-final-security-release-20260910
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Harden and diagnose Quick Tunnel readiness
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("scripts/mcp-external-https-acceptance.mjs")
-          text = path.read_text()
-
-          replacements = [
-              (
-                  '      const match = text.match(urlPattern);',
-                  '''      const output = chunks.join("");
-                const match = output.match(urlPattern);
-                const registered = output.includes("Registered tunnel connection");''',
-              ),
-              ('      if (match && !settled) {', '      if (match && registered && !settled) {'),
-              (
-                  '      lastError = error instanceof Error ? error.message : String(error);',
-                  '''      if (error instanceof Error) {
-                  const cause = error.cause;
-                  const causeDetail =
-                    cause && typeof cause === "object"
-                      ? `${String(cause.code ?? "unknown")}: ${String(cause.message ?? cause)}`
-                      : cause
-                        ? String(cause)
-                        : "none";
-                  lastError = `${error.message}; cause=${causeDetail}; url=${url}`;
-                } else {
-                  lastError = `${String(error)}; url=${url}`;
-                }''',
-              ),
-          ]
-
-          for old, new in replacements:
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f"expected exactly one target, found {count}: {old}")
-              text = text.replace(old, new, 1)
-
-          path.write_text(text)
-          PY
-          pnpm exec prettier --write scripts/mcp-external-https-acceptance.mjs
-      - name: Build TypeScript runtime
-        run: pnpm exec tsc --build
-      - name: Install pinned cloudflared and verify checksum
+      - name: Install pinned cloudflared and diagnose Quick Tunnel DNS
         shell: bash
         run: |
           set -euo pipefail
           CLOUDFLARED="$RUNNER_TEMP/cloudflared"
+          LOG="$RUNNER_TEMP/cloudflared.log"
           curl --fail --silent --show-error --location \
             "https://github.com/cloudflare/cloudflared/releases/download/2026.8.3/cloudflared-linux-amd64" \
             --output "$CLOUDFLARED"
           echo "f29324fe934d1e100617484c78deef803c4dc2cd351d645bbde42e96b4fccc5e  $CLOUDFLARED" \
             | sha256sum --check --strict
           chmod 0755 "$CLOUDFLARED"
-          echo "CLOUDFLARED_BIN=$CLOUDFLARED" >> "$GITHUB_ENV"
-      - name: Verify public HTTPS MCP acceptance
-        run: pnpm run acceptance:mcp:external
-      - name: Commit hardened readiness and diagnostics and remove helper
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm .github/workflows/batch12-mcp-readiness-fix.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/mcp-external-https-acceptance.mjs .github/workflows/batch12-mcp-readiness-fix.yml
-          git diff --cached --check
-          git commit -m "fix(batch12): harden MCP tunnel readiness diagnostics"
-          git push origin HEAD:agent/batch12-final-security-release-20260910
+
+          python3 -m http.server 18080 --bind 127.0.0.1 >"$RUNNER_TEMP/http.log" 2>&1 &
+          HTTP_PID=$!
+          "$CLOUDFLARED" tunnel --no-autoupdate --url http://127.0.0.1:18080 >"$LOG" 2>&1 &
+          TUNNEL_PID=$!
+          trap 'kill "$TUNNEL_PID" "$HTTP_PID" 2>/dev/null || true' EXIT
+
+          URL=""
+          for _ in $(seq 1 60); do
+            URL="$(grep -Eo 'https://[a-z0-9-]+\.trycloudflare\.com' "$LOG" | head -n1 || true)"
+            if [ -n "$URL" ] && grep -q 'Registered tunnel connection' "$LOG"; then
+              break
+            fi
+            sleep 1
+          done
+          [ -n "$URL" ] || { cat "$LOG"; exit 1; }
+          HOST="${URL#https://}"
+          echo "quick_tunnel_host=$HOST"
+
+          echo '=== system resolver ==='
+          getent ahostsv4 "$HOST" || true
+
+          echo '=== Cloudflare DoH ==='
+          curl --fail --silent --show-error \
+            -H 'accept: application/dns-json' \
+            "https://cloudflare-dns.com/dns-query?name=${HOST}&type=A" || true
+          echo
+
+          echo '=== Google DoH ==='
+          curl --fail --silent --show-error \
+            "https://dns.google/resolve?name=${HOST}&type=A" || true
+          echo
+
+          echo '=== HTTPS curl ==='
+          curl --head --max-time 10 --silent --show-error "$URL" || true
+
+          echo '=== cloudflared tail ==='
+          tail -n 30 "$LOG"
