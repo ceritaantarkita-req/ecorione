@@ -29,13 +29,18 @@ replace_once(
 
 p = Path("services/hub/src/orchestrate.ts")
 text = p.read_text()
-old = """  return httpJson<T>(`${deps.contextUrl}${path}`, { token: deps.internalToken, ...init });"""
-new = """  const { signal, ...requestInit } = init;
-  return httpJson<T>(`${deps.contextUrl}${path}`, {
-    token: deps.internalToken,
-    ...requestInit,
-    ...(signal === undefined ? {} : { signal }),
-  });"""
+old = """  try {
+    return await httpJson<T>(`${deps.contextUrl}${path}`, {
+      token: deps.internalToken,
+      ...init,
+    });"""
+new = """  try {
+    const { signal, ...requestInit } = init;
+    return await httpJson<T>(`${deps.contextUrl}${path}`, {
+      token: deps.internalToken,
+      ...requestInit,
+      ...(signal === undefined ? {} : { signal }),
+    });"""
 if old not in text:
     raise SystemExit("missing callContext strict-optional marker")
 text = text.replace(old, new, 1)
