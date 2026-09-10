@@ -113,6 +113,8 @@ function requestHeaders(req: FastifyRequest): Headers {
     "mcp-protocol-version",
     "mcp-method",
     "mcp-name",
+    "traceparent",
+    "x-request-id",
   ]) {
     const value = req.headers[name];
     if (typeof value === "string") headers.set(name, value);

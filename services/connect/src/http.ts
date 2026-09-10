@@ -5,11 +5,13 @@ import {
   MultimodalInferRequestSchema,
   OperationIdSchema,
   SensitivitySchema,
+  makeId,
 } from "@ecorione/shared-schema";
 import {
   BadGatewayError,
   createServer,
   HttpError,
+  observabilityFor,
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
@@ -62,6 +64,16 @@ const CompleteBodySchema = z.object({
   now: z.string().datetime({ offset: false }),
 });
 
+const ProviderCanaryBodySchema = z
+  .object({
+    target: z.enum(["hosted", "local"]).default("local"),
+    prompt: z.string().min(1).max(2_000).default("Reply exactly ECORIONE_CANARY_OK"),
+    expectedSubstring: z.string().min(1).max(256).default("ECORIONE_CANARY_OK"),
+    minOutputChars: z.number().int().min(1).max(10_000).default(10),
+    maxLatencyMs: z.number().int().min(100).max(120_000).default(15_000),
+  })
+  .strict();
+
 export interface BuildConnectServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
@@ -90,6 +102,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     logger: options.logger,
     bodyLimit: options.multimodalBodyLimitBytes ?? DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES,
   });
+  const metrics = observabilityFor(app);
   const hostedProvider = options.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
   const deps: CompleteDeps = {
     credentialVault: options.credentialVault,
@@ -107,17 +120,101 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
 
   if (options.mcpManager !== undefined) registerOutboundMcpRoutes(app, options.mcpManager);
 
+  function recordCompletion(
+    body: z.infer<typeof CompleteBodySchema>,
+    result: Awaited<ReturnType<typeof complete>>,
+  ): void {
+    const labels = {
+      provider: result.provider,
+      model: result.model,
+      target: body.target,
+      cache: result.cacheHit ? "hit" : "miss",
+    };
+    metrics.addCounter("ecorione_model_calls_total", 1, labels);
+    metrics.addCounter("ecorione_model_input_tokens_total", result.usage.inputTokens, labels);
+    metrics.addCounter("ecorione_model_output_tokens_total", result.usage.outputTokens, labels);
+    metrics.addCounter(
+      "ecorione_model_cache_read_tokens_total",
+      result.usage.cacheReadTokens,
+      labels,
+    );
+    metrics.addCounter(
+      "ecorione_model_cache_write_tokens_total",
+      result.usage.cacheWriteTokens,
+      labels,
+    );
+    metrics.addCounter("ecorione_model_cost_usd_total", result.cost.actualUsd, labels);
+  }
+
   app.post("/v1/complete", async (req) => {
     const body = parseOrBadRequest(CompleteBodySchema, req.body);
     const controller = new AbortController();
     const abort = (): void => controller.abort();
     req.raw.once("aborted", abort);
     try {
-      return await complete(deps, body, controller.signal);
+      const result = await complete(deps, body, controller.signal);
+      recordCompletion(body, result);
+      return result;
     } catch (err) {
       throw toHttpError(err);
     } finally {
       req.raw.off("aborted", abort);
+    }
+  });
+
+  app.post("/v1/ops/provider-canary", async (req) => {
+    const body = parseOrBadRequest(ProviderCanaryBodySchema, req.body ?? {});
+    const started = performance.now();
+    const completeBody = CompleteBodySchema.parse({
+      target: body.target,
+      prefix: {
+        systemPrompt:
+          "You are a deterministic provider health canary. Follow the user instruction exactly.",
+        toolDefinitions: [],
+        coreMemory: { blocks: [] },
+      },
+      dynamicText: "",
+      userMessage: body.prompt,
+      sensitivity: "PUBLIC",
+      operationId: makeId("operation"),
+      now: nowIso(),
+    });
+    try {
+      const result = await complete(deps, completeBody);
+      const latencyMs = performance.now() - started;
+      recordCompletion(completeBody, result);
+      const pass =
+        result.reply.includes(body.expectedSubstring) &&
+        result.reply.length >= body.minOutputChars &&
+        latencyMs <= body.maxLatencyMs;
+      metrics.addCounter("ecorione_provider_canary_total", 1, {
+        provider: result.provider,
+        model: result.model,
+        outcome: pass ? "pass" : "quality_fail",
+      });
+      metrics.observe("ecorione_provider_canary_duration_ms", latencyMs, {
+        provider: result.provider,
+        model: result.model,
+      });
+      return {
+        pass,
+        target: body.target,
+        provider: result.provider,
+        model: result.model,
+        responseModel: result.responseModel,
+        latencyMs,
+        outputChars: result.reply.length,
+        expectedSubstringMatched: result.reply.includes(body.expectedSubstring),
+        usage: result.usage,
+        cost: result.cost,
+      };
+    } catch (err) {
+      metrics.addCounter("ecorione_provider_canary_total", 1, {
+        provider: body.target === "local" ? "local" : hostedProvider,
+        model: body.target === "local" ? options.localModelTag : "configured",
+        outcome: "error",
+      });
+      throw toHttpError(err);
     }
   });
 

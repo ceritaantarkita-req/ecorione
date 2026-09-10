@@ -48,6 +48,9 @@ jobs:
           ECORIONE_PHASE4_PROCESS_ACCEPTANCE: "1"
         run: pnpm run acceptance:phase4:process
 
+      - name: Production operations acceptance
+        run: pnpm run acceptance:production-ops
+
       - name: Secret scan
         run: pnpm run secret-scan
 

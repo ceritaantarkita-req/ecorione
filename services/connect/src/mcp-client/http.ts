@@ -5,6 +5,7 @@ import {
   ConflictError,
   HttpError,
   NotFoundError,
+  observabilityFor,
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
@@ -80,6 +81,7 @@ function toHttpError(error: unknown): unknown {
 }
 
 export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpManager): void {
+  const metrics = observabilityFor(app);
   app.get("/v1/mcp-outbound/servers", async (req) => {
     const query = parseOrBadRequest(WorkspaceQuerySchema, req.query);
     return { servers: manager.listServers(query.workspaceId) };
@@ -98,9 +100,25 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
   app.post<{ Params: { id: string } }>("/v1/mcp-outbound/servers/:id/discover", async (req) => {
     const params = parseOrBadRequest(ServerParamsSchema, req.params);
     const body = parseOrBadRequest(McpDiscoverRequestSchema, req.body);
+    const started = performance.now();
     try {
-      return await manager.discover(params.id, body);
+      const result = await manager.discover(params.id, body);
+      metrics.addCounter("ecorione_mcp_discovery_total", 1, {
+        server: params.id,
+        outcome: "success",
+      });
+      metrics.observe("ecorione_mcp_discovery_duration_ms", performance.now() - started, {
+        server: params.id,
+      });
+      return result;
     } catch (error) {
+      metrics.addCounter("ecorione_mcp_discovery_total", 1, {
+        server: params.id,
+        outcome: "error",
+      });
+      metrics.observe("ecorione_mcp_discovery_duration_ms", performance.now() - started, {
+        server: params.id,
+      });
       throw toHttpError(error);
     }
   });
@@ -110,9 +128,29 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
     async (req) => {
       const params = parseOrBadRequest(ToolParamsSchema, req.params);
       const body = parseOrBadRequest(McpToolCallRequestSchema, req.body);
+      const started = performance.now();
       try {
-        return await manager.callTool(params.id, params.tool, body);
+        const result = await manager.callTool(params.id, params.tool, body);
+        metrics.addCounter("ecorione_mcp_tool_calls_total", 1, {
+          server: params.id,
+          tool: params.tool,
+          outcome: "success",
+        });
+        metrics.observe("ecorione_mcp_tool_duration_ms", performance.now() - started, {
+          server: params.id,
+          tool: params.tool,
+        });
+        return result;
       } catch (error) {
+        metrics.addCounter("ecorione_mcp_tool_calls_total", 1, {
+          server: params.id,
+          tool: params.tool,
+          outcome: "error",
+        });
+        metrics.observe("ecorione_mcp_tool_duration_ms", performance.now() - started, {
+          server: params.id,
+          tool: params.tool,
+        });
         throw toHttpError(error);
       }
     },

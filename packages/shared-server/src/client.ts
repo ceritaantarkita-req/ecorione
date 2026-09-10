@@ -4,6 +4,7 @@
  */
 
 import { RemoteServiceError } from "./errors.js";
+import { outgoingTraceHeaders } from "./observability.js";
 
 export interface HttpJsonOptions {
   readonly method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -17,6 +18,7 @@ export interface HttpJsonOptions {
 export async function httpJson<T>(url: string, options: HttpJsonOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     accept: "application/json",
+    ...outgoingTraceHeaders(),
     ...options.headers,
   };
   if (options.token !== undefined) headers.authorization = `Bearer ${options.token}`;

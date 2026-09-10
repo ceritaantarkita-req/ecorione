@@ -15,6 +15,8 @@ import {
   NotFoundError,
   RemoteServiceError,
   httpJson,
+  observabilityFor,
+  outgoingTraceHeaders,
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
@@ -82,7 +84,7 @@ async function hydrateArtifact(
   url.searchParams.set("scope", input.scope);
   url.searchParams.set("maxSensitivity", input.maxSensitivity);
   url.searchParams.set("hostedEligible", input.hostedEligible ? "1" : "0");
-  const headers = new Headers();
+  const headers = new Headers(outgoingTraceHeaders());
   if (input.token !== undefined) headers.set("authorization", `Bearer ${input.token}`);
   let response: Response;
   try {
@@ -132,6 +134,7 @@ export function registerExchangeRoutes(
   ledger: HistoryLedger,
   options: ExchangeRouteOptions,
 ): void {
+  const metrics = observabilityFor(app);
   app.post("/v1/exchange/plan", async (req) => {
     const input = parseOrBadRequest(EcxPlanRequestSchema, req.body);
     const response = planEcx(input);
@@ -166,6 +169,10 @@ export function registerExchangeRoutes(
         throw error;
       }
     }
+    metrics.addCounter("ecorione_ecx_plans_total");
+    metrics.addCounter("ecorione_ecx_candidates_total", response.metrics.candidateCount);
+    metrics.addCounter("ecorione_ecx_packets_total", response.metrics.recipientCount);
+    metrics.addCounter("ecorione_ecx_packet_bytes_total", response.metrics.packetBytes);
     return EcxPlanResponseSchema.parse(response);
   });
 
@@ -231,6 +238,9 @@ export function registerExchangeRoutes(
       hydratedBytes += content.sizeBytes;
       items.push({ index, ref, ...content });
     }
+    metrics.addCounter("ecorione_ecx_hydrations_total");
+    metrics.addCounter("ecorione_ecx_hydrated_items_total", items.length);
+    metrics.addCounter("ecorione_ecx_hydration_bytes_total", hydratedBytes);
     return EcxHydrateResponseSchema.parse({
       packetId: input.packet.packetId,
       hydratedBytes,

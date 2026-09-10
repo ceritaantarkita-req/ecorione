@@ -1,0 +1,217 @@
+name: ecorione
+
+x-runtime-env: &runtime-env
+  ECORIONE_ALLOW_REMOTE_BIND: "1"
+  ECORIONE_INTERNAL_TOKEN: ${ECORIONE_INTERNAL_TOKEN:?set ECORIONE_INTERNAL_TOKEN}
+  ECORIONE_RND_URL: http://rnd:17021
+  ECORIONE_CONTEXT_URL: http://context:17022
+  ECORIONE_CONNECT_URL: http://connect:17023
+  ECORIONE_HUB_URL: http://hub:17024
+  ECORIONE_ARTIFACT_URL: http://artifact:17025
+  ECORIONE_SANDBOX_URL: http://sandbox:17026
+  ECORIONE_SPACE_URL: http://space:17027
+  ECORIONE_FLOW_URL: http://flow:17028
+  ECORIONE_SYNC_URL: http://sync:17011
+  ECORIONE_TEMPORAL_ADDRESS: temporal:7233
+  ECORIONE_TEMPORAL_NAMESPACE: default
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: Dockerfile
+  image: ecorione:${ECORIONE_IMAGE_TAG:-local}
+  restart: unless-stopped
+  networks: [internal]
+  environment:
+    <<: *runtime-env
+
+services:
+  temporal-db:
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
+      POSTGRES_PASSWORD: ${TEMPORAL_POSTGRES_PASSWORD:?set TEMPORAL_POSTGRES_PASSWORD}
+    volumes:
+      - temporal_db:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  temporal:
+    image: temporalio/auto-setup:1.31.2
+    restart: unless-stopped
+    depends_on:
+      temporal-db:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: ${TEMPORAL_POSTGRES_USER:-temporal}
+      POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD:?set TEMPORAL_POSTGRES_PASSWORD}
+      POSTGRES_SEEDS: temporal-db
+    networks: [internal]
+
+  rnd:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/rnd", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_RND_DB_PATH: /app/data/rnd.db
+      ECORIONE_RND_DATASET_ROOT: /app/data/datasets
+    volumes: [rnd_data:/app/data]
+
+  context:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/context", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_DB_PATH: /app/data/context.db
+    volumes: [context_data:/app/data]
+    depends_on: [connect]
+
+  connect:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/connect", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_HOSTED_PROVIDER: ${ECORIONE_HOSTED_PROVIDER:-anthropic}
+      ECORIONE_LOCAL_RUNTIME: ${ECORIONE_LOCAL_RUNTIME:-openai-compatible}
+      ECORIONE_LOCAL_BASE_URL: ${ECORIONE_LOCAL_BASE_URL:-http://host.docker.internal:11434/v1}
+      ECORIONE_LOCAL_MODEL: ${ECORIONE_LOCAL_MODEL:-qwen3:8b-instruct-q4_K_M}
+      ECORIONE_CONNECT_VAULT_PATH: /app/data/connect-credentials.vault.json
+      ECORIONE_CONNECT_VAULT_MASTER_KEY: ${ECORIONE_CONNECT_VAULT_MASTER_KEY:-}
+      ECORIONE_SPEND_BUDGET_PATH: /app/data/connect-spend-budget.json
+      ECORIONE_SPEND_DAILY_USD: ${ECORIONE_SPEND_DAILY_USD:-}
+      ECORIONE_SPEND_MONTHLY_USD: ${ECORIONE_SPEND_MONTHLY_USD:-}
+      ECORIONE_COST_KILL_SWITCH: ${ECORIONE_COST_KILL_SWITCH:-0}
+      ECORIONE_MCP_OUTBOUND_REGISTRY_PATH: /app/data/connect-mcp-registry.json
+      ECORIONE_MCP_OUTBOUND_INVOCATION_PATH: /app/data/connect-mcp-invocations.json
+      ECORIONE_MCP_STDIO_ALLOWLIST: ${ECORIONE_MCP_STDIO_ALLOWLIST:-}
+    volumes: [connect_data:/app/data]
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  hub:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/hub", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_HUB_DB_PATH: /app/data/hub.db
+    volumes: [hub_data:/app/data]
+    depends_on: [context, connect, rnd]
+
+  artifact:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/artifact", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_ARTIFACT_DIR: /app/data/artifacts
+    volumes: [artifact_data:/app/data]
+    depends_on: [context]
+
+  sandbox:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/sandbox", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_SANDBOX_WORKSPACE_ROOT: /app/data/workspaces
+      ECORIONE_SANDBOX_RECEIPT_DIR: /app/data/receipts
+    volumes: [sandbox_data:/app/data]
+    depends_on: [hub]
+
+  space:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/space", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_SPACE_DB_PATH: /app/data/space.db
+    volumes: [space_data:/app/data]
+    depends_on: [context, artifact, flow]
+
+  flow:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/flow", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_FLOW_DB_PATH: /app/data/flow.sqlite
+    volumes: [flow_data:/app/data]
+    depends_on: [temporal, hub]
+
+  flow-worker:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/flow", "start:worker"]
+    depends_on: [temporal, hub, connect, context, artifact, sandbox, space, rnd]
+
+  sync:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/sync", "start"]
+    environment:
+      <<: *runtime-env
+      ECORIONE_SYNC_DB_PATH: /app/data/sync.db
+      ECORIONE_SYNC_OWNER_TOKEN: ${ECORIONE_SYNC_OWNER_TOKEN:?set ECORIONE_SYNC_OWNER_TOKEN}
+      ECORIONE_MCP_URL: http://127.0.0.1:17010
+    volumes: [sync_data:/app/data]
+
+  mcp:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: ecorione:${ECORIONE_IMAGE_TAG:-local}
+    restart: unless-stopped
+    command: ["node", "services/connect/dist/mcp/http-main.js"]
+    network_mode: service:sync
+    environment:
+      <<: *runtime-env
+      ECORIONE_MCP_HOST: 127.0.0.1
+      ECORIONE_MCP_PORT: 17010
+      ECORIONE_MCP_OAUTH_ISSUER: ${ECORIONE_MCP_OAUTH_ISSUER:?set ECORIONE_MCP_OAUTH_ISSUER}
+      ECORIONE_MCP_RESOURCE: ${ECORIONE_MCP_RESOURCE:?set ECORIONE_MCP_RESOURCE}
+      ECORIONE_MCP_JWKS_URL: ${ECORIONE_MCP_JWKS_URL:?set ECORIONE_MCP_JWKS_URL}
+      ECORIONE_MCP_HANDLE_KEY: ${ECORIONE_MCP_HANDLE_KEY:?set ECORIONE_MCP_HANDLE_KEY}
+      ECORIONE_MCP_ALLOWED_ORIGINS: ${ECORIONE_MCP_ALLOWED_ORIGINS:?set ECORIONE_MCP_ALLOWED_ORIGINS}
+    depends_on: [sync, hub]
+
+  ai:
+    <<: *app
+    command: ["pnpm", "--filter", "@ecorione/ai", "start"]
+    depends_on: [hub, space, flow]
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      ECORIONE_DOMAIN: ${ECORIONE_DOMAIN:?set ECORIONE_DOMAIN}
+      ECORIONE_OPS_USER: ${ECORIONE_OPS_USER:-operator}
+      ECORIONE_OPS_PASSWORD_HASH: ${ECORIONE_OPS_PASSWORD_HASH:?set ECORIONE_OPS_PASSWORD_HASH}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [internal]
+    depends_on: [ai, sync]
+
+networks:
+  internal:
+    internal: false
+
+volumes:
+  temporal_db:
+  rnd_data:
+  context_data:
+  connect_data:
+  hub_data:
+  artifact_data:
+  sandbox_data:
+  space_data:
+  flow_data:
+  sync_data:
+  caddy_data:
+  caddy_config:

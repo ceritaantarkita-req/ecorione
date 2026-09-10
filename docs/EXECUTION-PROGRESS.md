@@ -777,7 +777,7 @@ Batch 10 resmi **CLOSED**; next implementation batch adalah Batch 11.
 
 ## Batch 11 — Production Operations & Observability
 
-Status: **PLANNED / PARTIAL FOUNDATION EXISTS**
+Status: **IN PROGRESS**
 
 Scope:
 
