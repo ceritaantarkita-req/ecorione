@@ -8,9 +8,16 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
     return text.replace(old, new, 1)
 
 
+def replace_exact_count(text: str, old: str, new: str, expected: int, label: str) -> str:
+    count = text.count(old)
+    if count != expected:
+        raise SystemExit(f"{label}: expected {expected} anchors, found {count}")
+    return text.replace(old, new)
+
+
 p = Path("docs/EXECUTION-PROGRESS.md")
 t = p.read_text()
-t = replace_once(
+t = replace_exact_count(
     t,
     "- post-merge main MCP External HTTPS Acceptance `34485575560`: PASS",
     """- post-merge main MCP External HTTPS Acceptance `34485575560`: PASS
@@ -18,6 +25,7 @@ t = replace_once(
 - closure PR #30 merge: `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`
 - final post-closure main CI `34490006960`: full green
 - canonical post-closure handoff: `docs/current-state-and-next-steps.md`""",
+    2,
     "progress final evidence",
 )
 t = replace_once(
