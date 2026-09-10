@@ -63,7 +63,7 @@ describe("POST /v1/complete", () => {
     await app.close();
   });
 
-  it("target local → 200, model biaya = pin lokal", async () => {
+  it("target local → 200, runtime model terpisah dari pricing identity", async () => {
     localPool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, {
       choices: [{ message: { content: "[]" } }],
       usage: { prompt_tokens: 8, completion_tokens: 2 },
@@ -81,7 +81,10 @@ describe("POST /v1/complete", () => {
       payload: baseBody({ target: "local" }),
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json().model).toBe("local/qwen3-8b-instruct-q4_k_m");
+    expect(res.json()).toMatchObject({
+      model: "qwen3:8b-instruct-q4_K_M",
+      pricingModel: "local/provider-token-zero",
+    });
     await app.close();
   });
 

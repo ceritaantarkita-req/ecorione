@@ -9,6 +9,7 @@ import {
   recordCall,
   tokenUsage,
   type CallCostRecord,
+  type PinnedModelId,
   type TokenUsage,
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
@@ -62,8 +63,10 @@ export interface CompleteBudgetResult {
 export interface CompleteResult {
   readonly reply: string;
   readonly provider: HostedProviderId | "local";
-  /** Pinned cost/routing identity. */
+  /** Runtime model requested from the selected provider/runtime. */
   readonly model: string;
+  /** Pinned identity used only for auditable cost calculation. */
+  readonly pricingModel: PinnedModelId;
   /** Runtime identity reported by provider/runtime. */
   readonly responseModel: string;
   readonly cacheHit: boolean;
@@ -103,10 +106,14 @@ export async function complete(
     throw new CostKillSwitchError();
   }
 
-  const providerIdentity =
-    decision.routeReason === "local-consolidation" ? "local" : hostedProvider;
+  const local = decision.routeReason === "local-consolidation";
+  const providerIdentity = local ? "local" : hostedProvider;
+  const model = local ? deps.localModelTag : decision.model;
+  const modelCacheIdentity = local
+    ? `${providerIdentity}:${deps.localRuntime ?? "openai-compatible"}:${deps.localBaseUrl}:${model}`
+    : `${providerIdentity}:${model}`;
   const key = cacheKey({
-    model: `${providerIdentity}:${decision.model}`,
+    model: modelCacheIdentity,
     prefixDigest: prefixDigest(input.prefix),
     dynamicText: input.dynamicText,
     userMessage: input.userMessage,
@@ -129,7 +136,7 @@ export async function complete(
     usage = tokenUsage();
     baselineUsage = cached.usage;
     cacheHit = true;
-  } else if (decision.routeReason === "local-consolidation") {
+  } else if (local) {
     const result = await callLocalRuntime(
       {
         runtime: deps.localRuntime ?? "openai-compatible",
@@ -239,7 +246,8 @@ export async function complete(
   return {
     reply,
     provider: providerIdentity,
-    model: decision.model,
+    model,
+    pricingModel: decision.model,
     responseModel,
     cacheHit,
     usage,

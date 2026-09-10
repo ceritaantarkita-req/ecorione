@@ -94,9 +94,18 @@ const PRICE_TABLE = {
   },
 
   /**
-   * Model lokal. Nol berarti biaya marjinal provider-token yang ditagihkan nol — bukan
-   * berarti hardware/listrik/latensi gratis.
+   * Generic local-runtime pricing identity. Local runtime/model identity is recorded
+   * separately; this key only means provider-token billing is zero. It does not claim
+   * hardware, electricity or latency are free.
    */
+  "local/provider-token-zero": {
+    inputPerMTok: 0,
+    outputPerMTok: 0,
+    cacheWritePerMTok: 0,
+    cacheReadPerMTok: 0,
+  },
+
+  /** Legacy local pricing identity retained for Historical Ledger/replay compatibility. */
   "local/qwen3-8b-instruct-q4_k_m": {
     inputPerMTok: 0,
     outputPerMTok: 0,

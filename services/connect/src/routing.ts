@@ -17,7 +17,11 @@ export interface RouteDecision {
   readonly routeReason: "local-consolidation" | "sensitivity-restricted" | "default-hosted";
 }
 
-export const LOCAL_PINNED_MODEL: PinnedModelId = "local/qwen3-8b-instruct-q4_k_m";
+/**
+ * Local model/runtime identity is dynamic configuration. Cost accounting uses one generic
+ * zero-provider-token pricing identity so telemetry never pretends every local call is Qwen.
+ */
+export const LOCAL_PINNED_MODEL: PinnedModelId = "local/provider-token-zero";
 
 function hostedModel(provider: HostedProviderId, sensitivity: Sensitivity): PinnedModelId {
   switch (provider) {

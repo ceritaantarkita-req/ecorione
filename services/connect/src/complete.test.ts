@@ -62,6 +62,7 @@ describe("complete", () => {
     });
     expect(result.reply).toBe("halo!");
     expect(result.model).toBe("claude-sonnet-4-5-20250929");
+    expect(result.pricingModel).toBe("claude-sonnet-4-5-20250929");
     expect(result.responseModel).toBe("claude-sonnet-4-5-20250929");
     expect(result.cacheHit).toBe(false);
     expect(result.cost.actualUsd).toBeGreaterThan(0);
@@ -183,7 +184,7 @@ describe("complete", () => {
     expect(first.reply).not.toBe(second.reply);
   });
 
-  it("target local mencatat pinned cost identity dan runtime response model", async () => {
+  it("target local mencatat runtime model terpisah dari pricing identity", async () => {
     localPool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, {
       model: "qwen3:8b-instruct-q4_K_M",
       choices: [{ message: { content: "[]" } }],
@@ -198,11 +199,56 @@ describe("complete", () => {
       operationId: OPERATION_ID,
       now: NOW,
     });
-    expect(result.model).toBe("local/qwen3-8b-instruct-q4_k_m");
+    expect(result.model).toBe("qwen3:8b-instruct-q4_K_M");
+    expect(result.pricingModel).toBe("local/provider-token-zero");
     expect(result.responseModel).toBe("qwen3:8b-instruct-q4_K_M");
     expect(result.routeReason).toBe("local-consolidation");
+    expect(result.cost.model).toBe("local/provider-token-zero");
     expect(result.cost.actualUsd).toBe(0);
     expect(result.cost.naiveUsd).toBeGreaterThan(0);
+  });
+
+  it("local exact-cache dipisahkan saat runtime model berubah", async () => {
+    localPool
+      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .reply(200, {
+        model: "gemma4:stable-test",
+        choices: [{ message: { content: "gemma" } }],
+        usage: { prompt_tokens: 5, completion_tokens: 2 },
+      })
+      .times(1);
+    localPool
+      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .reply(200, {
+        model: "qwen3:8b-instruct-q4_K_M",
+        choices: [{ message: { content: "qwen" } }],
+        usage: { prompt_tokens: 5, completion_tokens: 2 },
+      })
+      .times(1);
+    const sharedCache = new ExactMatchCache();
+    const input = {
+      target: "local" as const,
+      prefix: prefix(),
+      dynamicText: "",
+      userMessage: "same prompt",
+      sensitivity: "INTERNAL" as const,
+      operationId: OPERATION_ID,
+      now: NOW,
+    };
+    const first = await complete(
+      deps({ cache: sharedCache, localModelTag: "gemma4:stable-test" }),
+      input,
+    );
+    const second = await complete(
+      deps({ cache: sharedCache, localModelTag: "qwen3:8b-instruct-q4_K_M" }),
+      input,
+    );
+    expect(first.cacheHit).toBe(false);
+    expect(second.cacheHit).toBe(false);
+    expect(first.model).toBe("gemma4:stable-test");
+    expect(second.model).toBe("qwen3:8b-instruct-q4_K_M");
+    expect(first.reply).toBe("gemma");
+    expect(second.reply).toBe("qwen");
   });
 
   it("cost kill switch memblokir hosted tanpa silent fallback", async () => {
