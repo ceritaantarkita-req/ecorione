@@ -1,6 +1,6 @@
 # Local production rehearsal — 2026-09-10
 
-Status: **REAL LOCAL EVIDENCE / not a VPS-production claim**
+Status: **REAL LOCAL EVIDENCE PASS / local boundary closed / not a VPS-production claim**
 
 This note records a real post-closure Production Activation rehearsal on a Windows 11 laptop with Ubuntu 24.04 under WSL2. It intentionally excludes usernames, hostnames, secrets, local file paths and provider credentials.
 
@@ -13,7 +13,7 @@ This note records a real post-closure Production Activation rehearsal on a Windo
 - Ollama 0.33.3 on Windows
 - WSL2 mirrored networking for Windows↔Linux loopback interoperability
 
-The repository was cloned fresh into the Linux filesystem. `pnpm install --frozen-lockfile` and `pnpm verify` completed successfully before runtime testing. The verification run reported 102 test files, 530 passed tests, 2 skipped tests, clean secret scan and a successful Next.js production build.
+The repository was cloned fresh into the Linux filesystem. The final synchronized verification on merged `main` completed successfully with 104/104 test files, 540 passed tests, 2 skipped tests, a clean secret scan and a successful Next.js production build.
 
 ## Runtime checkpoints
 
@@ -29,7 +29,7 @@ The staged local runtime was exercised rather than inferred from CI:
 
 The repository had pinned `temporalio/auto-setup:1.31.2`. A real Docker pull failed because that tag was not available, so the container could not be created. `temporalio/auto-setup:1.29.7` was then pulled successfully and ran with PostgreSQL `17.6-alpine`; port `127.0.0.1:7233` became reachable and the ECORIONE Flow worker reached `RUNNING`.
 
-The Production Activation candidate therefore changes the exact Compose pin and acceptance assertion to `1.29.7`. This is a concrete runtime correction discovered by local evidence, not a CI-only assumption.
+Production Activation therefore changed the exact Compose pin and acceptance assertion to `1.29.7`. This is a concrete runtime correction discovered by local evidence, not a CI-only assumption.
 
 ## Local provider evidence
 
@@ -42,55 +42,84 @@ The local ECORIONE runtime used:
 - rehearsal runtime model: `gemma4:latest`;
 - hosted-call kill switch: enabled.
 
-The direct Connect provider canary returned:
+The first direct Connect provider canary returned `pass: true`, `target: local`, `provider: local`, `responseModel: gemma4:latest`, latency approximately `4430.5 ms`, provider-token `actualUsd: 0`, and route reason `local-consolidation`.
+
+After the model-identity correction was merged and synchronized, a repeat canary on the final local runtime reported:
 
 - `pass: true`;
 - `target: local`;
 - `provider: local`;
+- `model: gemma4:latest`;
 - `responseModel: gemma4:latest`;
-- latency approximately `4430.5 ms`;
-- input tokens `41`, output tokens `164`;
-- provider-token `actualUsd: 0`;
-- route reason `local-consolidation`.
+- `pricingModel: local/provider-token-zero`;
+- latency approximately `22795.9 ms`;
+- provider-token cost remained zero.
 
-`gemma4:latest` is accepted only as rehearsal evidence. A mutable `:latest` alias is not a durable production model identity; production evidence must use an immutable local tag/alias selected by the operator.
+The latency difference is recorded as observed local-run variance, not yet classified as a product defect. `gemma4:latest` is accepted only as rehearsal evidence. A mutable `:latest` alias is not a durable production model identity; production evidence must use an immutable local tag/alias selected by the operator.
+
+## Ai API and browser Local-chat evidence
+
+The merged Ai server rendered the new `Route` control and a direct `POST /api/chat` with `target: local` completed through the real stack. The response reported `model: gemma4:latest`, `actualUsd: 0`, `cacheHit: false`, and `routeReason: local-consolidation`.
+
+The browser initially displayed an older client bundle and omitted the route selector even though the server HTML already contained it. A hard refresh loaded the current client. This was treated as a browser-cache/stale-bundle condition, not a repository runtime defect.
+
+With the refreshed UI:
+
+- `Route` displayed `Local` before the first turn;
+- the route selector locked after the first turn as designed;
+- a real browser chat request completed successfully;
+- the assistant returned a response through the local stack;
+- the UI displayed `Model: gemma4:latest`, `cache miss`, `$0.0000`, and the counterfactual hosted-baseline savings display.
+
+This verifies the local browser path:
+
+`Browser Ai UI → /api/chat → Hub → Connect → Ollama OpenAI-compatible endpoint → gemma4:latest`.
+
+The displayed savings value is counterfactual accounting against the configured naive hosted baseline. It is not, by itself, evidence for a public ECX/optimizer savings claim.
 
 ## Defects fixed from the evidence
 
-The rehearsal exposed two additional correctness gaps:
+The rehearsal exposed three runtime/correctness gaps and two local-verification isolation gaps:
 
 1. local `model`/telemetry/cache identity was hard-coded to a Qwen pricing identity even when the configured runtime was Gemma;
-2. the Ai chat surface did not carry an explicit local/hosted target, so browser chat defaulted to hosted and was correctly rejected by the hosted cost kill switch.
+2. the Ai chat surface did not carry an explicit local/hosted target, so browser chat defaulted to hosted and was correctly rejected by the hosted cost kill switch;
+3. the Temporal production image pin referenced an unavailable tag;
+4. an Ai proxy test inherited the operator's sourced `ECORIONE_INTERNAL_TOKEN` instead of establishing its own isolated baseline;
+5. `secret-scan` walked the whole working tree and rejected an intentionally gitignored machine-local `.env` even though it was not a commit candidate.
 
-The candidate fixes these without changing provider ownership:
+The merged corrections preserve the existing ownership boundaries:
 
 - Connect reports actual requested runtime `model`, separate `responseModel`, and separate generic zero-provider-token `pricingModel`;
-- the legacy Qwen pricing key is retained for Historical Ledger/replay compatibility;
-- local exact-cache keys include runtime type, base URL and configured model so changing local models cannot reuse stale results from a different runtime identity;
-- Ai can explicitly select Local or Hosted, defaulting the UI to Local; the choice is locked after the first turn so a single Historical Ledger session does not silently cross `LOCAL_ONLY`/`CLOUD_ALLOWED` boundaries;
-- requests that omit `target` retain the historical hosted default for API compatibility.
+- the legacy Qwen pricing key remains only for Historical Ledger/replay compatibility;
+- local exact-cache keys include runtime type, base URL and configured model;
+- Ai explicitly selects Local or Hosted, defaults the browser UI to Local, and locks the route after the first turn;
+- requests that omit `target` retain the historical hosted default for API compatibility;
+- Temporal Compose uses the pull/run-verified `1.29.7` image;
+- proxy tests isolate ambient environment state and restore the caller's value;
+- secret scanning follows Git commit candidates while remaining fail-closed for tracked/force-added credential files and non-ignored untracked secrets.
 
-## 2026-09-11 post-merge local verification finding
+## Final local/Git synchronization checkpoint
 
-After the Production Activation merge was synchronized back to the laptop, the operator loaded the machine-local `.env` into the shell and ran `pnpm verify`. Formatting, lint and typecheck passed, and 102 test files passed, but one Ai proxy test failed because the test process inherited the real `ECORIONE_INTERNAL_TOKEN` from the shell. The failing assertion expected the no-token case to omit `Authorization`, while the test fixture had not cleared the ambient token before that case.
+After the local-verification fixes were merged, the laptop fast-forwarded to GitHub `main` and verified:
 
-This is a **test isolation defect**, not evidence that the production proxy is dropping or inventing authentication. The production behavior is correct: when a token exists, the proxy forwards `Authorization: Bearer <token>`. The regression fix makes `apps/ai/lib/proxy.test.ts` establish a token-empty baseline in `beforeEach`, while the explicit bearer-auth test continues to set its own test token. `afterEach` restores the operator's original environment value, so running tests must not mutate the caller's shell configuration.
+- local `HEAD` equals `origin/main`;
+- `git diff --exit-code HEAD origin/main` succeeds;
+- tracked working tree is clean;
+- machine-local `.env` remains untracked and intact.
 
-The purpose of the fix is to make `pnpm verify` deterministic both in clean CI and on a development machine where `.env` was sourced for a running local stack.
+The final full verification on that synchronized tree reported:
 
-## 2026-09-11 secret-scan commit-boundary finding
-
-After the proxy isolation fix was merged and pulled, the same sourced-runtime verification reached 103 passing test files with 537 passing tests and 2 skipped tests. It then failed only at `secret-scan` because the scanner walked the entire working tree and treated the intentionally gitignored machine-local `.env` as though it were a commit candidate.
-
-That behavior conflicted with the repository's own local-state rule: `.env` is required for local runtime configuration and is intentionally excluded by Git. The correction makes the scanner inspect Git commit candidates instead: tracked files plus untracked files that are not ignored. This does **not** permit credential files into source control: a forbidden `.env` that is already tracked or force-added remains visible through Git's cached file set and is rejected, while non-ignored untracked files are still scanned for credential patterns. If Git metadata is unavailable, the scanner falls back fail-closed to the full working tree.
-
-Focused regression tests cover all three boundaries: ignored local `.env` passes, force-added `.env` fails, and a non-ignored untracked secret fails.
+- 104 test files passed;
+- 540 tests passed;
+- 2 tests skipped;
+- `secret-scan: bersih`;
+- Next.js production build compiled and generated all expected routes successfully.
 
 ## Evidence boundary
 
-This rehearsal proves local process health, local Temporal/Flow interoperability and a real local model call through the Connect boundary. It does **not** prove VPS durability, Cloudflare named-Tunnel operation, hosted-provider quality, public production latency or disaster recovery.
+This rehearsal proves local process health, local Temporal/Flow interoperability, a real local model call through Connect, direct Ai API routing, and a real browser Local-chat turn. It does **not** prove VPS durability, Cloudflare named-Tunnel operation, hosted-provider quality, public production latency or disaster recovery.
 
-The canary's `naiveUsd`/`savedUsd` values are counterfactual accounting against the configured naive hosted baseline. A single local canary is not sufficient evidence for a public ECX/optimizer savings claim.
+Historical Ledger and ECX code paths have deterministic test coverage, but the next evidence step is to inspect the real local browser traffic just generated and verify its Ledger chronology/integrity plus ECX/model/token/cache/cost records before treating that local evidence as closed.
 
 ## Local/Git synchronization rule
 
