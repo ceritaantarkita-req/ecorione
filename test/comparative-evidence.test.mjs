@@ -72,8 +72,12 @@ describe("comparative evidence helpers", () => {
     const task = FIXTURES.find((fixture) => fixture.id === "release-readiness");
     expect(task).toBeDefined();
 
-    const releaseIdDocument = task.documents.find((document) => document.id === "release-id");
-    const blockerDocument = task.documents.find((document) => document.id === "release-blocker");
+    const releaseIdDocument = task.documents.find(
+      (document) => document.id === "release-id",
+    );
+    const blockerDocument = task.documents.find(
+      (document) => document.id === "release-blocker",
+    );
 
     expect(releaseIdDocument.content).toContain("Release ID: R2026.09.11\n");
     expect(releaseIdDocument.content).not.toContain("Release ID: R2026.09.11.\n");
