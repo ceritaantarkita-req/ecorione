@@ -13,41 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-fix:
-    if: github.event_name == 'pull_request' && github.head_ref == 'feat/local-observability-baseline-20260911'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Import Node performance API and push if needed
-        run: |
-          node --input-type=module <<'NODE'
-          import { readFileSync, writeFileSync } from 'node:fs';
-          const path = 'scripts/local-observability-evidence.mjs';
-          let text = readFileSync(path, 'utf8');
-          const line = 'import { performance } from "node:perf_hooks";\n';
-          if (!text.includes(line)) {
-            const anchor = 'import { dirname, join, resolve } from "node:path";\n';
-            if (!text.includes(anchor)) throw new Error('path import anchor not found');
-            text = text.replace(anchor, `${anchor}${line}`);
-            writeFileSync(path, text);
-          }
-          NODE
-          if git diff --quiet; then
-            echo "No lint fix required."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/local-observability-evidence.mjs
-          git commit -m "fix: import Node performance API"
-          git push origin HEAD:${{ github.head_ref }}
-
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 25
