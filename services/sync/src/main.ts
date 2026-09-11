@@ -5,7 +5,11 @@ import { buildSyncServer } from "./http.js";
 
 const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 const port = Number(process.env.ECORIONE_SYNC_PORT ?? "17011");
-const dbPath = resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_SYNC_DB_PATH, "data/sync.db");
+const dbPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_SYNC_DB_PATH,
+  "data/sync.db",
+);
 const ownerToken = process.env.ECORIONE_SYNC_OWNER_TOKEN;
 const connectMcpUrl = process.env.ECORIONE_MCP_URL ?? "http://127.0.0.1:17010";
 
