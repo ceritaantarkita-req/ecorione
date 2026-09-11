@@ -36,7 +36,9 @@ if (action === "backup") {
     console.log(JSON.stringify({ owner: "artifact", action, status: "missing", source }));
   } else {
     const manifest = backupArtifactStore(new ArtifactStore(source), backupRoot, timestamp);
-    console.log(JSON.stringify({ owner: "artifact", action, status: "backed-up", source, manifest }));
+    console.log(
+      JSON.stringify({ owner: "artifact", action, status: "backed-up", source, manifest }),
+    );
   }
 } else if (action === "restore") {
   const restoreRoot = evidencePath(arg(5, "restoreRoot"));
@@ -45,14 +47,22 @@ if (action === "backup") {
     console.log(JSON.stringify({ owner: "artifact", action, status: "missing" }));
   } else {
     const target = resolve(restoreRoot, "artifact/artifacts");
-    if (target === source) throw new Error("isolated restore target resolves to active Artifact CAS");
+    if (target === source)
+      throw new Error("isolated restore target resolves to active Artifact CAS");
     const receipt = restoreArtifactStore(backupRoot, ids.cas, target, timestamp);
     const verification = {
       root: new ArtifactStore(target).root,
       topLevelEntries: readdirSync(target).length,
     };
     console.log(
-      JSON.stringify({ owner: "artifact", action, status: "restored", target, receipt, verification }),
+      JSON.stringify({
+        owner: "artifact",
+        action,
+        status: "restored",
+        target,
+        receipt,
+        verification,
+      }),
     );
   }
 } else {

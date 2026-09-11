@@ -35,8 +35,14 @@ if (action === "backup") {
   if (!existsSync(source)) {
     console.log(JSON.stringify({ owner: "sandbox", action, status: "missing", source }));
   } else {
-    const manifest = backupSandboxReceipts(new SandboxReceiptStore(source), backupRoot, timestamp);
-    console.log(JSON.stringify({ owner: "sandbox", action, status: "backed-up", source, manifest }));
+    const manifest = backupSandboxReceipts(
+      new SandboxReceiptStore(source),
+      backupRoot,
+      timestamp,
+    );
+    console.log(
+      JSON.stringify({ owner: "sandbox", action, status: "backed-up", source, manifest }),
+    );
   }
 } else if (action === "restore") {
   const restoreRoot = evidencePath(arg(5, "restoreRoot"));
@@ -45,14 +51,22 @@ if (action === "backup") {
     console.log(JSON.stringify({ owner: "sandbox", action, status: "missing" }));
   } else {
     const target = resolve(restoreRoot, "sandbox/receipts");
-    if (target === source) throw new Error("isolated restore target resolves to active Sandbox receipts");
+    if (target === source)
+      throw new Error("isolated restore target resolves to active Sandbox receipts");
     const receipt = restoreSandboxReceipts(backupRoot, ids.receipts, target, timestamp);
     const verification = {
       root: new SandboxReceiptStore(target).root,
       topLevelEntries: readdirSync(target).length,
     };
     console.log(
-      JSON.stringify({ owner: "sandbox", action, status: "restored", target, receipt, verification }),
+      JSON.stringify({
+        owner: "sandbox",
+        action,
+        status: "restored",
+        target,
+        receipt,
+        verification,
+      }),
     );
   }
 } else {

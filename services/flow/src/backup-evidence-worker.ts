@@ -27,7 +27,11 @@ const source = resolveRepoRuntimePath(
   "data/flow.sqlite",
 );
 
-function inspect(path: string): { quickCheck: unknown; foreignKeyViolations: number; tableCount: number } {
+function inspect(path: string): {
+  quickCheck: unknown;
+  foreignKeyViolations: number;
+  tableCount: number;
+} {
   const db = openFlowDatabase(path);
   try {
     return {
@@ -57,7 +61,9 @@ if (action === "backup") {
     const db = openFlowDatabase(source);
     try {
       const manifest = await backupFlowGraphRegistry(db, backupRoot, timestamp);
-      console.log(JSON.stringify({ owner: "flow", action, status: "backed-up", source, manifest }));
+      console.log(
+        JSON.stringify({ owner: "flow", action, status: "backed-up", source, manifest }),
+      );
     } finally {
       db.close();
     }
@@ -69,14 +75,22 @@ if (action === "backup") {
     console.log(JSON.stringify({ owner: "flow", action, status: "missing" }));
   } else {
     const target = resolve(restoreRoot, "flow/flow.sqlite");
-    if (target === source) throw new Error("isolated restore target resolves to active Flow DB");
+    if (target === source)
+      throw new Error("isolated restore target resolves to active Flow DB");
     const receipt = restoreFlowGraphRegistry(backupRoot, ids.graph, target, timestamp);
     const verification = inspect(target);
     if (verification.quickCheck !== "ok" || verification.foreignKeyViolations !== 0) {
       throw new Error(`restored Flow DB integrity failed: ${JSON.stringify(verification)}`);
     }
     console.log(
-      JSON.stringify({ owner: "flow", action, status: "restored", target, receipt, verification }),
+      JSON.stringify({
+        owner: "flow",
+        action,
+        status: "restored",
+        target,
+        receipt,
+        verification,
+      }),
     );
   }
 } else {

@@ -26,7 +26,11 @@ function evidencePath(value: string): string {
   return path;
 }
 
-const dbPath = resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_RND_DB_PATH, "data/rnd.db");
+const dbPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_RND_DB_PATH,
+  "data/rnd.db",
+);
 const datasetRoot = resolveRepoRuntimePath(
   REPO_ROOT,
   process.env.ECORIONE_RND_DATASET_ROOT,
@@ -88,9 +92,7 @@ if (action === "backup") {
   if (targetDb === dbPath || targetDatasets === datasetRoot) {
     throw new Error("isolated restore target resolves to active RnD state");
   }
-  const dbReceipt = ids.db
-    ? restoreRndDatabase(backupRoot, ids.db, targetDb, timestamp)
-    : null;
+  const dbReceipt = ids.db ? restoreRndDatabase(backupRoot, ids.db, targetDb, timestamp) : null;
   const datasetsReceipt = ids.datasets
     ? restoreRndDatasets(backupRoot, ids.datasets, targetDatasets, timestamp)
     : null;

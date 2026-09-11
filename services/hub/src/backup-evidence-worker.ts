@@ -25,7 +25,11 @@ function activePath(): string {
   return resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_HUB_DB_PATH, "data/hub.db");
 }
 
-function inspect(path: string): { quickCheck: unknown; foreignKeyViolations: number; tableCount: number } {
+function inspect(path: string): {
+  quickCheck: unknown;
+  foreignKeyViolations: number;
+  tableCount: number;
+} {
   const db = openHubDatabase(path);
   try {
     return {
@@ -56,7 +60,9 @@ if (action === "backup") {
     const db = openHubDatabase(source);
     try {
       const manifest = await backupHubDatabase(db, backupRoot, timestamp);
-      console.log(JSON.stringify({ owner: "hub", action, status: "backed-up", source, manifest }));
+      console.log(
+        JSON.stringify({ owner: "hub", action, status: "backed-up", source, manifest }),
+      );
     } finally {
       db.close();
     }

@@ -65,7 +65,8 @@ if (action === "backup") {
     JSON.stringify({
       owner: "connect",
       action,
-      status: result.state !== null || result.vaultCiphertext !== null ? "backed-up" : "missing",
+      status:
+        result.state !== null || result.vaultCiphertext !== null ? "backed-up" : "missing",
       source: paths,
       present,
       manifests: result,

@@ -7,12 +7,11 @@ import {
   mkdirSync,
   openSync,
   readFileSync,
-  rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
 import { connect as netConnect } from "node:net";
-import { basename, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import {
   OWNER_WORKERS,
   backupIds,
@@ -234,21 +233,31 @@ async function inventory() {
     throw new Error("backup/restore inventory gagal: repo belum synchronized/clean");
   }
   if (unhealthy.length > 0) {
-    throw new Error(`backup/restore inventory gagal: owner health unavailable: ${unhealthy.join(", ")}`);
+    throw new Error(
+      `backup/restore inventory gagal: owner health unavailable: ${unhealthy.join(", ")}`,
+    );
   }
   if (!dockerOkay) {
-    throw new Error("backup/restore inventory gagal: exact Temporal/PostgreSQL boundary tidak ready");
+    throw new Error(
+      "backup/restore inventory gagal: exact Temporal/PostgreSQL boundary tidak ready",
+    );
   }
   if (!ports.ok) {
-    throw new Error(`backup/restore inventory gagal: isolated ports busy: ${JSON.stringify(ports.busy)}`);
+    throw new Error(
+      `backup/restore inventory gagal: isolated ports busy: ${JSON.stringify(ports.busy)}`,
+    );
   }
   if (!persistenceOkay) {
-    throw new Error("backup/restore inventory gagal: closed persistence evidence state tidak tersedia");
+    throw new Error(
+      "backup/restore inventory gagal: closed persistence evidence state tidak tersedia",
+    );
   }
   if (INTERNAL_TOKEN === "") {
     throw new Error("backup/restore inventory gagal: ECORIONE_INTERNAL_TOKEN tidak tersedia");
   }
-  console.log("PASS backup/restore inventory: repo, owners, isolated ports and Temporal boundary are ready");
+  console.log(
+    "PASS backup/restore inventory: repo, owners, isolated ports and Temporal boundary are ready",
+  );
   return { result, persistence };
 }
 
@@ -315,7 +324,8 @@ function runOwnerWorker(owner, action, backupRoot, timestamp, restoreRoot = null
   if (worker === undefined) throw new Error(`owner worker tidak ditemukan: ${owner}`);
   const args = ["exec", "tsx", worker, action, backupRoot, timestamp];
   if (action === "restore") {
-    if (restoreRoot === null || ids === null) throw new Error(`restore args incomplete: ${owner}`);
+    if (restoreRoot === null || ids === null)
+      throw new Error(`restore args incomplete: ${owner}`);
     args.push(restoreRoot, JSON.stringify(ids));
   }
   const stdout = command("pnpm", args, { maxBuffer: 30 * 1024 * 1024 });
@@ -325,8 +335,12 @@ function runOwnerWorker(owner, action, backupRoot, timestamp, restoreRoot = null
 function backupTemporalDatabases(runRoot) {
   const temporalRoot = resolveEvidencePath(REPO_ROOT, join(runRoot, "temporal"));
   mkdirSync(temporalRoot, { recursive: true, mode: 0o700 });
-  const postgresUser = command("docker", ["exec", TEMPORAL_DB_CONTAINER, "printenv", "POSTGRES_USER"])
-    .trim();
+  const postgresUser = command("docker", [
+    "exec",
+    TEMPORAL_DB_CONTAINER,
+    "printenv",
+    "POSTGRES_USER",
+  ]).trim();
   if (postgresUser === "") throw new Error("Temporal PostgreSQL POSTGRES_USER kosong");
   const databases = command("docker", [
     "exec",
@@ -343,7 +357,8 @@ function backupTemporalDatabases(runRoot) {
     .split(/\r?\n/u)
     .filter(Boolean);
   for (const expected of ["temporal", "temporal_visibility"]) {
-    if (!databases.includes(expected)) throw new Error(`Temporal database tidak ditemukan: ${expected}`);
+    if (!databases.includes(expected))
+      throw new Error(`Temporal database tidak ditemukan: ${expected}`);
   }
 
   const dumps = {};
@@ -359,7 +374,9 @@ function backupTemporalDatabases(runRoot) {
       if (result.error !== undefined) throw result.error;
       if (result.status !== 0) {
         throw new Error(
-          `pg_dump ${database} gagal: ${Buffer.from(result.stderr ?? "").toString("utf8").slice(-4000)}`,
+          `pg_dump ${database} gagal: ${Buffer.from(result.stderr ?? "")
+            .toString("utf8")
+            .slice(-4000)}`,
         );
       }
     } finally {
@@ -414,7 +431,10 @@ function dockerTry(args) {
 }
 
 async function restoreTemporalIsolated(runId, temporalBackup) {
-  const suffix = safeRunId(runId).replaceAll(/[^a-z0-9]/giu, "").slice(-12).toLowerCase();
+  const suffix = safeRunId(runId)
+    .replaceAll(/[^a-z0-9]/giu, "")
+    .slice(-12)
+    .toLowerCase();
   const network = `ecorione-br-net-${suffix}`;
   const postgres = `ecorione-br-db-${suffix}`;
   const temporal = `ecorione-br-temporal-${suffix}`;
@@ -513,7 +533,9 @@ async function restoreTemporalIsolated(runId, temporalBackup) {
         encoding: "utf8",
       });
       if (output.status === 0 && String(output.stdout).trim() !== "") {
-        const match = String(output.stdout).trim().match(/:(\d+)$/u);
+        const match = String(output.stdout)
+          .trim()
+          .match(/:(\d+)$/u);
         if (match) {
           port = Number(match[1]);
           break;
@@ -572,15 +594,18 @@ function isolatedEnv(restoreRoot, temporalAddress, connectRestore) {
     ECORIONE_SANDBOX_WORKSPACE_ROOT: resolve(restoreRoot, "sandbox/workspaces"),
     ECORIONE_SANDBOX_RECEIPT_DIR: resolve(restoreRoot, "sandbox/receipts"),
     ECORIONE_CONNECT_VAULT_PATH:
-      restoredConnect.credentialVaultPath ?? resolve(restoreRoot, "connect/vault/credentials.vault.json"),
+      restoredConnect.credentialVaultPath ??
+      resolve(restoreRoot, "connect/vault/credentials.vault.json"),
     ECORIONE_CONNECT_SETTINGS_PATH:
-      restoredConnect.runtimeSettingsPath ?? resolve(connectStateRoot, "connect-runtime-settings.json"),
+      restoredConnect.runtimeSettingsPath ??
+      resolve(connectStateRoot, "connect-runtime-settings.json"),
     ECORIONE_SPEND_BUDGET_PATH:
       restoredConnect.spendBudgetPath ?? resolve(connectStateRoot, "connect-spend-budget.json"),
     ECORIONE_MCP_OUTBOUND_REGISTRY_PATH:
       restoredConnect.mcpRegistryPath ?? resolve(connectStateRoot, "connect-mcp-registry.json"),
     ECORIONE_MCP_OUTBOUND_INVOCATION_PATH:
-      restoredConnect.mcpInvocationPath ?? resolve(connectStateRoot, "connect-mcp-invocations.json"),
+      restoredConnect.mcpInvocationPath ??
+      resolve(connectStateRoot, "connect-mcp-invocations.json"),
     ECORIONE_TEMPORAL_ADDRESS: temporalAddress,
     ECORIONE_TEMPORAL_NAMESPACE: process.env.ECORIONE_TEMPORAL_NAMESPACE ?? "default",
     ECORIONE_SYNC_OWNER_TOKEN:
@@ -644,7 +669,13 @@ async function stopIsolatedServices(processes) {
   }
 }
 
-async function verifyIsolatedOwners(restoreRoot, temporalRestore, restores, persistence, baseline) {
+async function verifyIsolatedOwners(
+  restoreRoot,
+  temporalRestore,
+  restores,
+  persistence,
+  baseline,
+) {
   const env = isolatedEnv(restoreRoot, temporalRestore.address, restores.connect);
   const processes = [];
   const health = {};
@@ -693,7 +724,10 @@ async function verifyIsolatedOwners(restoreRoot, temporalRestore, restores, pers
       )}`,
     );
 
-    if (ledger.headHash !== baseline.ledger.headHash || ledger.nextSeq !== baseline.ledger.nextSeq) {
+    if (
+      ledger.headHash !== baseline.ledger.headHash ||
+      ledger.nextSeq !== baseline.ledger.nextSeq
+    ) {
       throw new Error("isolated Hub Ledger tidak sama dengan source baseline");
     }
     if (context.id !== baseline.context.id || context.rawText !== baseline.context.rawText) {

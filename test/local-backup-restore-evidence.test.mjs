@@ -22,9 +22,9 @@ describe("local backup/restore evidence helpers", () => {
   });
 
   it("parses only the final worker JSON line and rejects invalid run ids", () => {
-    expect(parseWorkerJson('noise\n{"owner":"context","status":"backed-up"}\n', "context")).toEqual(
-      { owner: "context", status: "backed-up" },
-    );
+    expect(
+      parseWorkerJson('noise\n{"owner":"context","status":"backed-up"}\n', "context"),
+    ).toEqual({ owner: "context", status: "backed-up" });
     expect(safeRunId("backup-20260911-a1b2c3d4")).toBe("backup-20260911-a1b2c3d4");
     expect(() => safeRunId("../escape")).toThrow(/run id tidak valid/u);
   });

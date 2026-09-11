@@ -21,9 +21,17 @@ function evidencePath(value: string): string {
   return path;
 }
 
-const source = resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_SYNC_DB_PATH, "data/sync.db");
+const source = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_SYNC_DB_PATH,
+  "data/sync.db",
+);
 
-function inspect(path: string): { quickCheck: unknown; foreignKeyViolations: number; tableCount: number } {
+function inspect(path: string): {
+  quickCheck: unknown;
+  foreignKeyViolations: number;
+  tableCount: number;
+} {
   const db = openSyncDatabase(path);
   try {
     return {
@@ -53,7 +61,9 @@ if (action === "backup") {
     const db = openSyncDatabase(source);
     try {
       const manifest = await backupSyncDatabase(db, backupRoot, timestamp);
-      console.log(JSON.stringify({ owner: "sync", action, status: "backed-up", source, manifest }));
+      console.log(
+        JSON.stringify({ owner: "sync", action, status: "backed-up", source, manifest }),
+      );
     } finally {
       db.close();
     }
@@ -65,14 +75,22 @@ if (action === "backup") {
     console.log(JSON.stringify({ owner: "sync", action, status: "missing" }));
   } else {
     const target = resolve(restoreRoot, "sync/sync.db");
-    if (target === source) throw new Error("isolated restore target resolves to active Sync DB");
+    if (target === source)
+      throw new Error("isolated restore target resolves to active Sync DB");
     const receipt = restoreSyncDatabase(backupRoot, ids.db, target, timestamp);
     const verification = inspect(target);
     if (verification.quickCheck !== "ok" || verification.foreignKeyViolations !== 0) {
       throw new Error(`restored Sync DB integrity failed: ${JSON.stringify(verification)}`);
     }
     console.log(
-      JSON.stringify({ owner: "sync", action, status: "restored", target, receipt, verification }),
+      JSON.stringify({
+        owner: "sync",
+        action,
+        status: "restored",
+        target,
+        receipt,
+        verification,
+      }),
     );
   }
 } else {

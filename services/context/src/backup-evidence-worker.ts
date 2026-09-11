@@ -25,7 +25,11 @@ function activePath(): string {
   return resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_DB_PATH, "data/ecorione.db");
 }
 
-function inspect(path: string): { quickCheck: unknown; foreignKeyViolations: number; tableCount: number } {
+function inspect(path: string): {
+  quickCheck: unknown;
+  foreignKeyViolations: number;
+  tableCount: number;
+} {
   const db = openContextDatabase({ path, runMigrations: false });
   try {
     return {
@@ -56,7 +60,9 @@ if (action === "backup") {
     const db = openContextDatabase({ path: source });
     try {
       const manifest = await backupContextDatabase(db, backupRoot, timestamp);
-      console.log(JSON.stringify({ owner: "context", action, status: "backed-up", source, manifest }));
+      console.log(
+        JSON.stringify({ owner: "context", action, status: "backed-up", source, manifest }),
+      );
     } finally {
       db.close();
     }
@@ -66,14 +72,22 @@ if (action === "backup") {
   const ids = JSON.parse(arg(6, "backupIdsJson")) as { db?: string };
   if (ids.db === undefined) throw new Error("context backup id missing");
   const target = resolve(restoreRoot, "context/context.db");
-  if (target === source) throw new Error("isolated restore target resolves to active Context DB");
+  if (target === source)
+    throw new Error("isolated restore target resolves to active Context DB");
   const receipt = restoreContextDatabase(backupRoot, ids.db, target, timestamp);
   const verification = inspect(target);
   if (verification.quickCheck !== "ok" || verification.foreignKeyViolations !== 0) {
     throw new Error(`restored Context DB integrity failed: ${JSON.stringify(verification)}`);
   }
   console.log(
-    JSON.stringify({ owner: "context", action, status: "restored", target, receipt, verification }),
+    JSON.stringify({
+      owner: "context",
+      action,
+      status: "restored",
+      target,
+      receipt,
+      verification,
+    }),
   );
 } else {
   throw new Error(`unsupported action: ${action}`);
