@@ -1,6 +1,6 @@
 # Comparative ECX first real Gemma smoke — cache-isolation finding — 2026-09-11
 
-Status: **FAIL / VALID RUNTIME FINDING — MODEL-COMPUTE EVIDENCE INVALIDATED BY EXACT CACHE**
+Status: **FAIL / VALID RUNTIME FINDING — CACHE-ISOLATION FIX MERGED/VERIFIED; UNCACHED SMOKE RERUN PENDING**
 
 This note records the first real local comparative smoke after the comparative harness implementation was merged and the operator laptop was synchronized.
 
@@ -8,7 +8,7 @@ It is a failure record, not a savings result. The failure is useful because the 
 
 ## Revision and runtime
 
-Synchronized repository revision:
+Synchronized repository revision used by the failed smoke:
 
 `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`
 
@@ -99,13 +99,13 @@ The PR #38 implementation appended a cache marker based on:
 - paired-run index;
 - mode.
 
-That marker was unique within one benchmark invocation but deterministic across separate invocations. Connect exact-cache identity includes model identity, stable-prefix digest, dynamic text, and user message. Therefore a later smoke/full run against the same still-running Connect process could reuse a prior benchmark entry while that entry remained inside the exact-cache TTL.
+That marker was unique within one benchmark invocation but deterministic across separate invocations. Connect exact-cache identity includes model identity, stable prefix digest, dynamic text, and user message. Therefore a later smoke/full run against the same still-running Connect process could reuse a prior benchmark entry while that entry remained inside the exact-cache TTL.
 
 This is a measurement-harness defect, not evidence of an ECX transport failure.
 
-## Fix scope
+## Fix implementation and verification
 
-Branch:
+Fix branch:
 
 `fix/comparative-cache-namespace-20260911`
 
@@ -117,14 +117,27 @@ The correction:
 4. adds deterministic regression coverage for cross-invocation separation and paired marker-shape stability;
 5. does not change the predeclared quality/bytes/token/latency thresholds.
 
+Repository evidence:
+
+- PR #40: `fix: isolate comparative benchmark cache per run`;
+- final exact PR head: `689adf108252dd8eb899ea04cc96986da45bc38f`;
+- exact-head CI `34561732640`: **PASS** Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production Operations acceptance, Secret Scan and Production Build;
+- squash merge on `main`: `197627dc04689dea94bf7957e18b2699f8fb9213`;
+- post-merge CI `34561893817`: **PASS** all repository gates.
+
+No MCP-specific workflow was required by this change set; the fix only changes the local comparative harness/test/docs and does not change the MCP/network boundary.
+
+The fix implementation is therefore **MERGED / REPOSITORY-VERIFIED**. The comparative efficiency result itself is still open because the corrected harness has not yet been rerun on the synchronized laptop.
+
 ## Claim boundary
 
-This smoke supports only these findings:
+This failed smoke supports only these findings:
 
 - real Artifact + Hub ECX plan/hydration wiring was exercised;
 - selective hydration transferred fewer bytes for the fixture;
 - the original benchmark cache-isolation design was insufficient across separate invocations;
-- the cache-contamination gate worked and rejected the run.
+- the cache-contamination gate worked and rejected the run;
+- the repository fix for cross-invocation cache isolation is merged and verified.
 
 This smoke does **not** establish:
 
@@ -135,4 +148,4 @@ This smoke does **not** establish:
 - hosted-provider cost savings;
 - production/VPS behavior.
 
-Next checkpoint: verify/merge the cache-isolation fix, synchronize the laptop, rerun the smoke, and require all measured lanes to be uncached before any closure-grade benchmark.
+Next checkpoint: synchronize the laptop to the latest `main` containing PR #40, rerun `pnpm evidence:comparative:smoke`, and require all measured lanes to be uncached with non-zero model token telemetry before any closure-grade benchmark.
