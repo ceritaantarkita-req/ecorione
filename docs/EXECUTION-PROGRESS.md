@@ -4,46 +4,45 @@ Last updated: **2026-09-11**
 
 Status: **ACTIVE — canonical execution tracker**
 
-Dokumen ini adalah source of truth untuk **current execution status** setelah planned Batch 1–12 selesai. Detail kronologis Batch 1–12 dipertahankan di:
+This file is the source of truth for **current execution status** after the defined Batch 1–12 roadmap. Detailed Batch 1–12 chronology remains archived at:
 
 - `docs/archive/execution-progress-through-batch12-2026-09-10.md`
 
-Jangan memakai archive tersebut sebagai current-state source. Mulai dari `docs/current-state-and-next-steps.md`, lalu file ini.
+Start from `docs/current-state-and-next-steps.md`, then this file.
 
-> **Maintenance rule:** setiap workstream yang mengubah current implementation/evidence status wajib meng-update file ini sebelum closure-ready. `CLOSED` hanya boleh dipakai setelah evidence sesuai boundary workstream tersedia, exact-head gate relevan hijau, merge benar, dan post-merge verification selesai.
+> **Maintenance rule:** a workstream may be marked `CLOSED` only when its applicable evidence exists, exact-head gates are green, the intended merge is verified, post-merge verification is complete, and runtime evidence is rerun on the synchronized merged tree when the claim crosses a runtime boundary.
 
 ---
 
 ## 1. Status legend
 
-| Status | Arti |
+| Status | Meaning |
 |---|---|
-| `CLOSED` | Scope selesai dan seluruh closure evidence relevan sudah terpenuhi |
-| `IMPLEMENTED / CLOSURE PENDING` | Implementasi ada, tetapi runtime/exact-head/merge/post-merge evidence belum lengkap |
-| `IN PROGRESS` | Scope aktif sedang dikerjakan |
-| `PLANNED` | Sudah disepakati tetapi belum diimplementasikan |
-| `DEFERRED` | Sengaja tidak dikerjakan sampai operator/prasyarat/use case mengaktifkannya kembali |
-| `OPEN-ENDED` | Area hardening/evidence yang tidak pernah dianggap selesai permanen |
+| `CLOSED` | Scope finished and relevant closure evidence satisfied |
+| `PASS WITH LIMITATIONS` | Declared gates passed, but bounded limitations must stay attached to the result |
+| `IMPLEMENTED / CLOSURE PENDING` | Implementation exists, but exact-head/runtime/merge/post-merge evidence is incomplete |
+| `IN PROGRESS` | Active workstream |
+| `PLANNED` | Agreed but not started |
+| `DEFERRED` | Intentionally postponed until operator/prerequisite/use case reactivates it |
+| `OPEN-ENDED` | Hardening/evidence area that is never permanently finished |
 
 ---
 
 ## 2. Closed planned roadmap
 
-Planned platform/production roadmap tetap:
-
 - Batch 1–12: **12/12 CLOSED**
-- remaining planned batch di roadmap tersebut: **0**
+- remaining planned batch in that roadmap: **0**
 - Fase 5 AutoClick: **DEFERRED BY DESIGN**
 - Fase 6+: **OPEN-ENDED / evidence-driven**
-- **tidak ada Batch 13 implisit**
+- **no implicit Batch 13**
 
-`100%` hanya merujuk ke defined Batch 1–12 roadmap. Itu bukan persentase operational maturity sebuah live production system.
+`100%` refers only to the defined Batch 1–12 repository implementation roadmap, not live-production operational maturity.
 
 Historical detailed tracker: `docs/archive/execution-progress-through-batch12-2026-09-10.md`.
 
 ---
 
-## 3. Current verified repository baseline
+## 3. Verified repository/local baseline
 
 Key post-closure progression:
 
@@ -51,32 +50,25 @@ Key post-closure progression:
 - closure PR #30: `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`
 - docs/Cloudflare reconciliation PR #31: `aa360b81a6ef5cd41f466d7ada239b4e461c60ee`
 - Production Activation tooling + local runtime fixes PR #32: `a6cc17530b4e4540d710fa449c93844a8dad7981`
-- sourced-env proxy test isolation PR #33: `eac26497aa868e448c5fa4e48c3331abf585d5cf`
+- sourced-env proxy-test isolation PR #33: `eac26497aa868e448c5fa4e48c3331abf585d5cf`
 - secret-scan Git-boundary correction PR #34: `a95e5e20bb30d4828288f6bba230860bc65e631f`
-- local-rehearsal docs closure PR #35: `7b1d50630e21a14413f73e2ca4a0934de042dcdf`
+- local rehearsal docs closure PR #35: `7b1d50630e21a14413f73e2ca4a0934de042dcdf`
 - browser/Historical-Ledger session identity fix PR #36: `8b93b346a11cc4293af2b8e75e2ec6af48348e60`
 - Historical Ledger + ECX local evidence closure PR #37: `88d588bbe4a5f005652c20f3409dd72093439f56`
-- comparative ECX harness PR #38: `c1849cd0c67712e40ea4e5c90587283900859cdb`
+- Comparative ECX harness PR #38: `c1849cd0c67712e40ea4e5c90587283900859cdb`
 - comparative harness docs closure PR #39: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`
 - comparative cache-isolation fix PR #40: `197627dc04689dea94bf7957e18b2699f8fb9213`
+- release fixture delimiter correction PR #41: `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`
 
-PR #38 repository closure evidence:
+PR #41 evidence:
 
-- final PR head: `d3f1cbf4d0acbb2c92f340b952f2c42e6c9bef4a`
-- exact-head CI `34557147546`: **PASS**
-- exact-head MCP External HTTPS Acceptance `34557147583`: **PASS**
-- merge: `c1849cd0c67712e40ea4e5c90587283900859cdb`
-- post-merge `main` CI `34557297702`: **PASS**
-- post-merge MCP External HTTPS Acceptance `34557297803`: **PASS**
+- exact-head CI `34565244451`: **PASS**;
+- merge `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`;
+- post-merge CI `34565539119`: **PASS**;
+- synchronized laptop targeted `release-readiness`: **PASS**;
+- synchronized laptop final full 5× Comparative ECX run: **5/5 task gates PASS**.
 
-PR #40 cache-isolation evidence:
-
-- exact-head repository gates: **PASS**;
-- merge: `197627dc04689dea94bf7957e18b2699f8fb9213`;
-- post-merge CI `34561893817`: **PASS**;
-- corrected real Gemma smoke: **PASS** with all measured lanes `cacheHit=false` and non-zero token telemetry.
-
-Closed local evidence before the comparative benchmark includes:
+Closed local evidence before comparative measurement includes:
 
 - real Phase 4 process stack + Temporal worker RUNNING;
 - WSL→Windows Ollama loopback path;
@@ -84,7 +76,7 @@ Closed local evidence before the comparative benchmark includes:
 - real browser Local chat;
 - browser session identity equal to actual `LOCAL_ONLY` Historical Ledger session after PR #36;
 - real Ledger chronology/hash chain;
-- real ECX pointer-first plan + `agent.handoff` + history hydration;
+- real ECX pointer-first plan + `agent.handoff` + hydration;
 - `pnpm production:data-evidence` PASS.
 
 Verification sources:
@@ -92,27 +84,35 @@ Verification sources:
 - `docs/verification/local-production-rehearsal-2026-09-10.md`
 - `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
 
-These prove local traffic/integrity/provenance. They do **not** prove ECX/optimizer savings.
+Those prove local traffic/integrity/provenance. They do **not** by themselves prove optimizer savings.
 
 ---
 
-## 4. Active workstream — Comparative ECX efficiency evidence
+## 4. Comparative ECX efficiency evidence — CLOSED / PASS WITH LIMITATIONS
 
-Status: **IN PROGRESS — CACHE FIX VERIFIED / FIRST 5× RUN 4 OF 5 TASKS PASS / RELEASE FIXTURE CORRECTION IN REVIEW / FINAL VERDICT PENDING**
+Status: **CLOSED / PASS WITH LIMITATIONS — LOCAL SYNTHETIC CHECKPOINT**
 
-Protocol: `docs/comparative-ecx-evidence.md`.
+Protocol/results:
+
+- `docs/comparative-ecx-evidence.md`
+- `docs/verification/comparative-closure-grade-final-2026-09-11.md`
+
+Historical findings retained:
+
+- `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`
+- `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`
 
 ### 4.1 Experiment lanes
 
 1. `full-inline`
-   - all fixture documents are assembled directly into model context;
+   - all fixture documents assembled directly into model context;
    - baseline for bytes/tokens/latency/quality.
 
 2. `ecx-all`
-   - fixture documents become LOCAL_ONLY Artifact pointers;
-   - Hub creates one real ECX packet;
-   - all packet refs are hydrated through Hub;
-   - same semantic document set reaches the model as `full-inline`;
+   - documents become LOCAL_ONLY Artifact pointers;
+   - Hub creates a real ECX packet;
+   - all refs are hydrated through Hub;
+   - same semantic document set reaches the model as the baseline;
    - control lane so ECX transport is not confused with selective-context benefit.
 
 3. `ecx-selective-oracle`
@@ -120,9 +120,9 @@ Protocol: `docs/comparative-ecx-evidence.md`.
    - only fixture-declared relevant reference indexes are hydrated;
    - measures potential/upper bound of correct selective hydration.
 
-**Critical boundary:** current `/v1/exchange/hydrate` receives `refIndexes` from the caller. ECORIONE does not yet have a verified autonomous semantic reference selector. The `oracle` suffix remains mandatory.
+**Critical boundary:** current `/v1/exchange/hydrate` receives `refIndexes` from the caller. ECORIONE does not yet have a verified autonomous semantic reference selector.
 
-### 4.2 Harness scope already implemented
+### 4.2 Harness scope
 
 Merged harness scope includes:
 
@@ -136,12 +136,10 @@ Merged harness scope includes:
 - median aggregation;
 - predeclared task gates;
 - optional local JSON evidence output under gitignored `.ecorione/`;
-- explicit claim boundary in output;
+- explicit output claim boundary;
 - per-invocation measured cache namespace isolation after PR #40.
 
-Deterministic tests cover scoring/context helpers, positive gates, cache/quality failures, cache-marker isolation, and the release exact-value delimiter correction.
-
-### 4.3 Predeclared pass gates
+### 4.3 Predeclared task gates
 
 A task passes only when:
 
@@ -155,125 +153,121 @@ A task passes only when:
 8. selective median input tokens are lower than full-inline;
 9. selective median latency does not exceed full-inline by more than default ratio `1.35`.
 
-Do not weaken a gate after seeing a result merely to obtain PASS.
+No gate was weakened after a failure.
 
-### 4.4 Runtime evidence progression
+### 4.4 Evidence progression
 
-#### First real smoke — FAIL / valid cache finding
+#### First real smoke — valid FAIL / cache finding
 
-Synchronized laptop revision: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`.
-
-Artifact, ECX plan/hydration, recipient selection, and deterministic returned quality worked, but all three measured completion lanes hit exact cache. The hard cache gate rejected the run. Finding preserved in:
-
-- `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`.
+The first synchronized real Gemma smoke reached Artifact, Hub ECX and Connect, but all measured completions were exact-cache hits. The cache gate correctly rejected the run.
 
 #### Corrected smoke after PR #40 — PASS
 
-Synchronized laptop revision: `197627dc04689dea94bf7957e18b2699f8fb9213`.
+After PR #40, the rerun was uncached with real token telemetry, stable model identity, 100% task-level quality, aligned baseline/control tokens, and lower selective bytes/tokens.
 
-Observed:
+#### First full 75-call run — valid FAIL / release fixture ambiguity
 
-- all three measured lanes `cacheHit=false`;
-- real non-zero token telemetry;
-- same local model identity across lanes;
-- deterministic quality 100%;
-- `full-inline` and `ecx-all` control token counts aligned;
-- oracle-selective bytes/tokens lower;
+The first complete 5-task × 5-repeat run on `197627dc04689dea94bf7957e18b2699f8fb9213` passed 4/5 tasks. `release-readiness` failed exact quality equally in all three lanes because authoritative source values had sentence-final punctuation adjacent to values while the predeclared expected strings did not.
+
+This was a fixture-design finding, not selective-ECX-specific quality loss. It remains preserved historically.
+
+#### PR #41 targeted correction — PASS
+
+PR #41 changed only ambiguous release source delimiters. It kept the expected answer, scorer and all task thresholds unchanged.
+
+Targeted `release-readiness` after the merge:
+
+- all three lanes uncached;
+- quality `1.0` in all lanes;
+- `full-inline` input tokens `1394`;
+- `ecx-all` input tokens `1394`;
+- selective input tokens `461`;
 - task gate PASS.
 
-#### First full closure-grade 5× run — FAIL / 4 of 5 tasks pass
+#### Final corrected 75-call run — formal harness PASS
 
-Revision: `197627dc04689dea94bf7957e18b2699f8fb9213`.
+Runtime revision:
+
+`4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`
 
 Run shape:
 
-- tasks: 5;
-- repeats: 5;
-- lanes: 3;
-- measured model calls: 75.
+- 5 tasks;
+- 5 repeats;
+- 3 lanes;
+- 75 measured model calls;
+- all measured cache hits: `0`;
+- 5/5 task gates PASS.
 
-Aggregate observed result:
+Raw local evidence:
 
-- passed tasks: `4/5`;
-- failed task: `release-readiness`;
+```text
+.ecorione/evidence/comparative-local-2026-09-11-v2.json
+bytes: 94654
+sha256: 189795c71dc72acfd3d1533490a002d87e68421682868eb2b8b830c6fbdab439
+```
+
+Aggregate:
+
 - median selective transport reduction: `73.6379379246037%`;
-- median selective input-token reduction: `77.70491803278688%`;
-- median selective/full latency ratio: `0.8387964882197358`.
+- median selective input-token reduction: `77.8580814717477%`;
+- median selective/full latency ratio: `0.8672873729681319`.
 
-These percentages are **provisional observations from a failed closure run**.
+Task-level medians:
 
-`release-readiness` failed median deterministic quality in all three lanes (`full-inline`, `ecx-all`, and `ecx-selective-oracle`). The model returned sentence-final periods in two values that the expected exact answer intentionally excludes. The original source fixture placed periods immediately after those authoritative values, making the delimiter ambiguous for an exact-string benchmark. Because the baseline/control/selective lanes failed identically, this is not ECX-specific quality loss.
+| Task | Full input | ECX-all input | Selective input | Transport reduction | Input-token reduction | Latency ratio | Gate |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `incident-triage` | 1553 | 1553 | 351 | 74.1928% | 77.3986% | 0.8673 | PASS |
+| `procurement-award` | 1884 | 1884 | 393 | 75.6462% | 79.1401% | 0.9084 | PASS |
+| `release-readiness` | 1392 | 1392 | 459 | 58.7594% | 67.0259% | 0.9740 | PASS |
+| `retention-policy` | 1595 | 1595 | 338 | 73.6379% | 78.8088% | 0.7663 | PASS |
+| `customer-escalation` | 1522 | 1522 | 337 | 73.5568% | 77.8581% | 0.8456 | PASS |
 
-Finding preserved in:
+### 4.5 Limitation discovered in post-run audit
 
-- `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`.
+One individual completion did not have perfect exact-string quality:
 
-### 4.5 Active fixture correction
+- task `retention-policy`;
+- lane `ecx-selective-oracle`;
+- repeat `2/5`;
+- quality `1/3` because two returned strings retained sentence-final periods.
 
-Branch:
+The other four selective repeats and all baseline/control repeats for that task were `3/3`, so the predeclared **median quality** gate remained `1.0` and the task formally passed.
 
-`fix/comparative-release-fixture-ambiguity-20260911`
+Therefore the checkpoint is recorded as **PASS WITH LIMITATIONS**, not “75/75 perfect outputs”. This does not invalidate the task-level gate result or byte/token control relationship, but it limits the quality claim and should inform future harness hardening.
 
-Correction rules:
+### 4.6 Closed claim boundary
 
-- expected answer unchanged;
-- exact-match scorer unchanged;
-- quality gate unchanged;
-- byte/token/latency gates unchanged;
-- remove only the sentence-final periods directly adjacent to the two ambiguous authoritative values;
-- add regression coverage that locks the delimiter-safe source representation;
-- correct documented CLI argument forwarding; literal `--` must not be passed to the harness parser.
+This workstream verifies only that, for these five synthetic local fixtures under the declared median-based gates:
 
-This is a benchmark-fixture design correction, not an ECX architecture change.
+- real ECX transport/hydration worked;
+- baseline/control model input remained aligned;
+- oracle-selective hydration reduced transported context;
+- oracle-selective hydration reduced median model input tokens;
+- median task quality remained `1.0`;
+- median selective latency stayed inside tolerance;
+- measurements were uncached.
 
-### 4.6 Correct commands
+It does **not** verify:
 
-Targeted verification after the fixture fix is merged and synchronized:
-
-```bash
-pnpm evidence:comparative \
-  --tasks release-readiness \
-  --repeats 1
-```
-
-Closure-grade run after targeted verification passes:
-
-```bash
-pnpm evidence:comparative \
-  --repeats 5 \
-  --output .ecorione/evidence/comparative-local-2026-09-11.json
-```
-
-Do **not** use `pnpm evidence:comparative -- --repeats ...`; the literal `--` is forwarded to `scripts/comparative-evidence.mjs` and rejected as an unknown argument.
-
-Raw evidence stays local/gitignored. Only sanitized verified summaries belong in Git.
-
-### 4.7 Remaining closure blockers
-
-The comparative evidence workstream is **not CLOSED** yet. Remaining gates:
-
-- exact-head repository verification of `fix/comparative-release-fixture-ambiguity-20260911`;
-- merge + post-merge verification;
-- laptop synchronization to resulting `main`;
-- targeted real Gemma `release-readiness` rerun;
-- complete 5-task × 5-repeat closure rerun on corrected merged revision;
-- sanitized final measured-result verification note;
-- canonical docs updated with final `PASS`, `PASS WITH LIMITATIONS`, or `FAIL / NEEDS ITERATION` verdict.
-
-A negative result remains valid evidence and must not be rewritten into a positive claim.
+- automatic semantic reference selection;
+- universal optimizer effectiveness;
+- production workload quality;
+- hosted-provider billed-cost savings;
+- public/general percentage-savings claims.
 
 ---
 
 ## 5. Current operator-approved execution order
 
-1. **Comparative ECX real Gemma efficiency evidence — ACTIVE**
-2. **Local persistence/restart drill — PENDING AFTER COMPARATIVE**
-3. **Local backup/restore drill — PENDING**
-4. **Local observability baseline — PENDING**
-5. **UX/product validation — PENDING**
-6. **Immutable local model identity hardening — PENDING**
-7. **Compute-host/VPS + Cloudflare production activation — DEFERRED BY OPERATOR**
-8. **Hosted-provider comparative validation — OPTIONAL/FUTURE; credentials + spend intent required**
+1. **Local persistence/restart drill — ACTIVE NEXT CHECKPOINT**
+2. **Local backup/restore drill — PENDING**
+3. **Local observability baseline — PENDING**
+4. **UX/product validation — PENDING**
+5. **Immutable local model identity hardening — PENDING**
+6. **Compute-host/VPS + Cloudflare production activation — DEFERRED BY OPERATOR**
+7. **Hosted-provider comparative validation — OPTIONAL/FUTURE; credentials + spend intent required**
+8. **Automatic selector/optimizer — no automatic start; explicit evidence-driven scope only**
 9. **Maintenance/security/dependency/DR evidence — OPEN-ENDED**
 10. **New features — evidence-driven only**
 
@@ -281,11 +275,32 @@ Production deployment is not a blocker for current local R&D. It resumes only on
 
 ---
 
-## 6. Production activation status
+## 6. Active next workstream — local persistence/restart evidence
+
+The next scope should be opened explicitly and should not be called Batch 13.
+
+Minimum intended evidence:
+
+1. start from synchronized reviewed `main`;
+2. inventory current ECORIONE + Temporal/PostgreSQL runtime state;
+3. avoid stopping/pruning unrelated Docker workloads;
+4. record baseline identifiers/receipts for Historical Ledger, Context, Artifact and a durable Flow item;
+5. restart the relevant ECORIONE service/process/container boundaries in a controlled sequence;
+6. verify owner data survives according to each service contract;
+7. verify Temporal-backed Flow durability/recovery;
+8. identify state that is intentionally ephemeral;
+9. run focused health/integrity checks after restart;
+10. write sanitized verification evidence before closure.
+
+Architecture/ownership must not change merely to make the drill easier.
+
+---
+
+## 7. Production activation status
 
 Status: **DEFERRED BY OPERATOR DECISION / TOOLING READY**
 
-No VPS, Cloudflare named Tunnel, domain cutover, origin-firewall mutation, or hosted-provider spending should be initiated from the current workstream.
+No VPS, Cloudflare named Tunnel, domain cutover, origin-firewall mutation or hosted-provider spending should be initiated from the current local workstream.
 
 When explicitly resumed, use:
 
@@ -294,41 +309,42 @@ When explicitly resumed, use:
 - `docs/cloudflare-free-deployment.md`
 - `docs/release-operations.md`
 
-Cloudflare, if used, stays an external DNS/TLS/tunnel edge. It never becomes owner of Hub policy, Connect credentials, databases, Temporal, Artifact or Sandbox.
+Cloudflare remains an external DNS/TLS/tunnel edge; it never owns Hub policy, Connect credentials, databases, Temporal, Artifact or Sandbox.
 
 ---
 
-## 7. Persistent architecture/evidence rules
+## 8. Persistent architecture/evidence rules
 
 - Historical Ledger and Context L0 remain semantic ground truth; no convenience rewrite.
 - No cross-service database access.
 - Hub remains policy/approval authority.
 - Connect remains provider/credential/MCP owner.
-- Artifact owns L3 bytes; comparative fixtures use Artifact API rather than filesystem/DB bypass.
-- Exact cache must not contaminate paired model-compute comparisons.
-- Benchmark cache isolation must hold across separate invocations while the same Connect process is alive.
-- Exact-match benchmark source values must use unambiguous delimiters; do not normalize scoring after a failure to manufacture PASS.
+- Artifact owns L3 bytes.
 - Memory is untrusted data, never instructions.
 - Hosted-derived memory follows quarantine/governed promotion.
-- Model identity must be pinned for durable production claims. `gemma4:latest` is accepted only as current local rehearsal evidence until immutable local identity hardening.
+- Exact cache must not contaminate paired model-compute comparisons.
+- Benchmark cache isolation must hold across separate invocations.
+- Exact-match source values should use unambiguous delimiters.
+- Median task PASS must not be described as every individual completion PASS if per-run audit says otherwise.
+- Model identity must be pinned for durable production claims; `gemma4:latest` is current local runtime evidence only.
 - ECX packet/hydration count alone is not a savings metric.
 - `ecx-selective-oracle` is not automatic selector evidence.
-- Local USD 0 provider-token cost is not hosted-provider billed-cost evidence.
-- No public savings claim without representative comparable telemetry.
-- External MCP public-network acceptance must remain genuinely public-network when that gate is relevant.
+- Local USD 0 provider-token cost is not hosted billed-cost evidence.
+- No public/general savings claim without representative comparable telemetry.
+- External MCP public-network acceptance must remain genuinely public-network when relevant.
 - Do not weaken CI/security/evidence gates to manufacture closure.
 - AutoClick remains deferred until a concrete non-API use case passes architecture review.
 
 ---
 
-## 8. Definition of Done for post-closure workstreams
+## 9. Definition of Done for post-closure workstreams
 
 A post-closure workstream may be marked `CLOSED` only after all applicable items are satisfied:
 
 1. dedicated branch/scope;
 2. baseline SHA and architecture boundary explicit;
 3. relevant implementation complete;
-4. deterministic regression tests exist;
+4. deterministic regression tests exist when code changes;
 5. real runtime/E2E evidence exists when the claim crosses a runtime boundary;
 6. Format PASS;
 7. Lint PASS;
@@ -343,24 +359,14 @@ A post-closure workstream may be marked `CLOSED` only after all applicable items
 16. PR merge uses expected-head guard when available;
 17. `main` points to intended merge;
 18. post-merge `main` verification passes;
-19. machine/local evidence is rerun on the synchronized merged tree when the claim requires it;
-20. claim boundaries are stated explicitly and do not exceed measured evidence.
+19. machine/local evidence is rerun on the synchronized merged tree when required;
+20. claim boundaries do not exceed measured evidence.
 
-For comparative/model evidence specifically, also require:
-
-- lane definitions and acceptance thresholds fixed before closure run;
-- cache contamination detection;
-- cache namespaces isolated across separate benchmark invocations;
-- equivalent fact/task/model controls;
-- exact source/answer delimiters unambiguous when deterministic exact-match scoring is used;
-- quality measurement rather than token-only optimization;
-- raw evidence kept local/gitignored;
-- sanitized verification note committed after measurement;
-- automatic selector, transport, token, latency, and actual-cost claims separated.
+For comparative/model evidence specifically also require explicit cache state, quality measurement, equivalent task/fact/model controls, raw evidence kept local/gitignored, and separate claims for transport/selective hydration/automatic selection/actual provider cost.
 
 ---
 
-## 9. Progress update protocol
+## 10. Progress update protocol
 
 Every active workstream update should record:
 
@@ -375,12 +381,12 @@ Every active workstream update should record:
 9. real runtime evidence where required;
 10. remaining blockers and next checkpoint.
 
-Architecture changes require ADR/decision updates. Measurement harnesses that only use existing owner APIs do not automatically constitute an architecture change.
+Architecture changes require ADR/decision updates. Measurement or operations evidence using existing owner APIs does not automatically constitute an architecture change.
 
 ---
 
-## 10. Next action
+## 11. Immediate next action
 
-**Immediate next:** verify `fix/comparative-release-fixture-ambiguity-20260911` through normal repository gates. If exact-head verification is green, merge it, verify `main`, synchronize the laptop, then run a targeted uncached `release-readiness` check. Only after that task is healthy should the complete 5× closure run be repeated on the corrected merged revision.
+**Open and execute the local persistence/restart evidence scope from synchronized `main`.** Do not restart/prune unrelated Docker workloads, and do not mutate VPS/Cloudflare state.
 
-Canonical protocol: `docs/comparative-ecx-evidence.md`.
+Canonical handoff: `docs/current-state-and-next-steps.md`.
