@@ -6,20 +6,31 @@ on:
       - rnd/comparative-ecx-evidence-20260911
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  format-preview:
+  format-and-commit:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: rnd/comparative-ecx-evidence-20260911
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Format target files and print exact diff
+      - name: Format target files and remove temporary workflow
         run: |
           pnpm exec prettier --write scripts/comparative-evidence.mjs test/comparative-evidence.test.mjs
-          git diff -- scripts/comparative-evidence.mjs test/comparative-evidence.test.mjs
+          rm .github/workflows/tmp-format-comparative.yml
+          git diff --check
+      - name: Commit exact formatter output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/comparative-evidence.mjs test/comparative-evidence.test.mjs .github/workflows/tmp-format-comparative.yml
+          git diff --cached --quiet && { echo "No formatting changes to commit"; exit 1; }
+          git commit -m "chore: format comparative evidence harness"
+          git push origin HEAD:rnd/comparative-ecx-evidence-20260911
