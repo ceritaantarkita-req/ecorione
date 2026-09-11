@@ -4,11 +4,11 @@ Last updated: **2026-09-11**
 
 Status: **CURRENT / canonical handoff for humans and AI agents**
 
-This document is the shortest current-state handoff after the Batch 1–12 platform/production roadmap closure, the real laptop Production Activation rehearsal, the real local Historical Ledger + ECX evidence closure, the merged comparative-harness implementation, and the first real Gemma comparative smoke finding. Historical plans and audits remain useful evidence, but they must not be used as the source of current implementation status.
+This document is the shortest current-state handoff after the Batch 1–12 platform/production roadmap closure, the real laptop Production Activation rehearsal, the real local Historical Ledger + ECX evidence closure, the merged comparative harness, the cache-isolation runtime fix, and the first closure-grade Comparative ECX run. Historical plans and audits remain useful evidence, but they must not be used as the source of current implementation status.
 
 ## 1. Current verdict
 
-**ECORIONE production/self-host repository baseline READY; real local laptop rehearsal and Historical Ledger + ECX traffic/integrity evidence CLOSED for the local boundary; Comparative ECX harness implementation CLOSED/VERIFIED; first real Gemma comparative smoke exposed a cross-invocation exact-cache isolation defect, so comparative efficiency evidence remains ACTIVE / NOT YET CLOSED.**
+**ECORIONE production/self-host repository baseline READY; real local laptop rehearsal and Historical Ledger + ECX traffic/integrity evidence CLOSED for the local boundary; Comparative ECX harness implementation CLOSED/VERIFIED; cache isolation VERIFIED in real runtime; first 5× closure-grade run executed 75 measured calls and passed 4/5 tasks, but `release-readiness` exposed an exact-value fixture delimiter ambiguity, so comparative efficiency evidence remains ACTIVE / NOT YET CLOSED.**
 
 The planned platform/production roadmap remains complete:
 
@@ -32,6 +32,7 @@ Key post-closure merges now on `main` include:
 - Historical Ledger + ECX local evidence closure PR #37: `88d588bbe4a5f005652c20f3409dd72093439f56`
 - comparative ECX harness PR #38: `c1849cd0c67712e40ea4e5c90587283900859cdb`
 - comparative harness docs closure PR #39: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`
+- comparative cache-isolation fix PR #40: `197627dc04689dea94bf7957e18b2699f8fb9213`
 
 PR #38 verification:
 
@@ -40,6 +41,13 @@ PR #38 verification:
 - exact-head MCP External HTTPS Acceptance `34557147583`: PASS;
 - post-merge `main` CI `34557297702`: PASS all repository gates;
 - post-merge `main` MCP External HTTPS Acceptance `34557297803`: PASS.
+
+PR #40 verification:
+
+- exact-head CI: PASS all repository gates;
+- squash merge: `197627dc04689dea94bf7957e18b2699f8fb9213`;
+- post-merge CI `34561893817`: PASS all repository gates;
+- corrected real Gemma smoke after laptop synchronization: PASS with all three measured lanes uncached and non-zero token telemetry.
 
 ### Progress snapshot
 
@@ -50,9 +58,10 @@ PR #38 verification:
 | Real laptop production rehearsal | **PASS / LOCAL BOUNDARY CLOSED** | Phase 4, Temporal worker, Connect→Ollama→Gemma, direct Ai API, browser Local chat, sourced-env verification and Git synchronization were exercised on the real laptop. |
 | Historical Ledger + ECX local traffic/integrity evidence | **PASS / LOCAL CHECKPOINT CLOSED** | A real Local Gemma browser session was verified in the hash-chained Ledger; a real pointer-first ECX plan appended `agent.handoff`, hydrated the exact local history range and made `production:data-evidence` PASS. |
 | Comparative ECX harness implementation | **PASS / IMPLEMENTATION CLOSED** | Three-lane local benchmark harness, deterministic scoring/gates, regression coverage and docs were merged and repository-verified. |
-| Comparative ECX first real Gemma smoke | **FAIL / HARNESS CACHE-ISOLATION DEFECT FOUND** | Artifact/ECX wiring and deterministic quality worked, but all measured model lanes hit exact cache; zero token usage and cache-speed latency invalidate model-compute comparison. Gate correctly failed. |
-| Comparative ECX cache-isolation fix | **IN REVIEW / RERUN REQUIRED** | Fix scope adds a unique per-invocation cache namespace with fixed-shape task/pair/mode markers. Thresholds are unchanged. |
-| Comparative ECX real Gemma evidence | **ACTIVE / NOT CLOSED** | After the cache fix passes repository gates and merges, sync laptop and rerun smoke. Only a healthy uncached smoke may proceed to the 5× closure benchmark. |
+| Comparative ECX cache isolation | **PASS / RUNTIME VERIFIED** | PR #40 added a unique per-invocation namespace; corrected smoke showed all measured lanes `cacheHit=false` with real token telemetry. |
+| Comparative ECX first 5× closure run | **FAIL / VALID FINDING — 4/5 TASKS PASS** | 75 measured calls ran. `release-readiness` failed exact quality equally in baseline/control/selective lanes because two source values were sentence-punctuation ambiguous relative to the fixed exact answer key. |
+| Comparative release fixture correction | **IN REVIEW / RERUN REQUIRED** | Follow-up keeps answer key, scorer, and all thresholds unchanged; only removes ambiguous source punctuation and adds regression coverage. |
+| Comparative ECX real Gemma evidence | **ACTIVE / NOT CLOSED** | After the fixture correction merges, run targeted `release-readiness`, then rerun the full 5× benchmark on the corrected merged revision. |
 | Automatic reference selection / general optimizer claim | **NOT YET PROVEN** | Current ECX hydration receives caller-selected `refIndexes`; the oracle lane measures selective-hydration potential, not an autonomous production selector. |
 | Real compute-host/VPS production deployment | **DEFERRED BY OPERATOR DECISION** | Tooling remains ready, but no target-host mutation should be performed until the operator explicitly resumes deployment. |
 | Cloudflare Free named Tunnel cutover | **DEFERRED WITH COMPUTE-HOST DEPLOYMENT** | Cloudflare remains the documented DNS/TLS/tunnel edge option; no current account/host execution is requested. |
@@ -81,31 +90,29 @@ The closed local checkpoints include:
 - `pnpm production:data-evidence` PASS with 8 sessions / 15 Ledger events, 1 ECX plan, 1 packet, 1 hydration, 1 real provider call, 210 input tokens, 350 output tokens and provider-token actual cost USD 0 at the captured local snapshot;
 - laptop/GitHub tracked trees synchronized at the Historical Ledger + ECX closure commit.
 
-The browser initially showed a stale client bundle without the Route selector even though server HTML already contained it. A hard refresh loaded the current UI; no repository code change was required for that browser-cache condition.
-
-A separate real finding was the header/session hydration mismatch: server render and client hydration could generate different random session IDs while `suppressHydrationWarning` hid the mismatch. PR #36 corrected it and the real post-fix browser session resolved directly in Historical Ledger.
-
 The ECX closure above is a traffic/integrity proof, **not a savings proof**. The counterfactual `naiveUsd`/UI savings display does not establish comparative ECX or optimizer savings.
 
-### Comparative harness implementation closure and first runtime finding
+### Comparative runtime progression
 
-Verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
+Verification sources:
 
-PR #38 merged a controlled three-lane harness:
+- `docs/verification/comparative-harness-implementation-2026-09-11.md`;
+- `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`;
+- `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`.
+
+PR #38 merged the controlled three-lane harness:
 
 - `full-inline` — all fixture context goes directly to the same local model;
 - `ecx-all` — real Artifact pointers + ECX plan + all-ref hydration, preserving the same semantic document set;
 - `ecx-selective-oracle` — same ECX packet with only fixture-declared relevant refs hydrated.
 
-The implementation includes five fixed-answer synthetic workloads, deterministic exact-field quality scoring, warm-up exclusion, hard failure on measured cache hits, median aggregation, predeclared byte/token/latency/quality gates, and optional mode-0600 raw JSON under the gitignored `.ecorione/` path.
+The first real smoke exposed a cross-invocation exact-cache namespace defect. PR #40 corrected that without weakening any gate. The corrected real smoke then passed on `197627dc04689dea94bf7957e18b2699f8fb9213`: all measured lanes were uncached, model identity stayed `gemma4:latest`, deterministic quality was 100%, and selective context/token measurements were lower for the smoke fixture.
 
-The first synchronized real Gemma smoke on `5437c1ea5d8ee168dbbe09de688a23c39089c7aa` reached Artifact, Hub ECX plan/hydrate, and Connect successfully. It produced a 1011-byte ECX packet, 8241 bytes of all-ref hydration, and 1123 bytes of oracle-selective hydration with 100% deterministic returned quality. However all three measured completion lanes reported `cacheHit=true`, zero input/output tokens, and cache-speed latency. The run therefore failed as designed and **does not establish token or latency reduction**.
+The first complete 5-task × 5-repeat run then executed 75 measured model calls. Aggregate observations were 4/5 tasks passed, median selective transport reduction `73.6379379246037%`, median selective input-token reduction `77.70491803278688%`, and median selective/full latency ratio `0.8387964882197358`. These numbers are **provisional because the overall run failed the predeclared quality gate**.
 
-Root cause: the original marker encoded task id + pair index + mode but had no per-invocation namespace. Re-running smoke or starting the full run within Connect's cache TTL could reuse an earlier benchmark entry. The fix scope `fix/comparative-cache-namespace-20260911` adds a fresh invocation namespace while keeping marker shape fixed across paired lanes; no evidence threshold is weakened.
+The failed task was `release-readiness`. All three lanes had the same median quality failure (`1/3`), while their token/transport/latency gates still behaved as expected. The model copied sentence-final periods from two authoritative source lines, but the fixed expected values excluded those punctuation marks. Because the baseline/control/selective lanes failed identically, this is not evidence of ECX-specific quality loss. The follow-up fixture correction removes only the ambiguous sentence punctuation; it does not normalize `scoreReply`, change the expected answer, or lower any threshold.
 
-Protocol and current finding: `docs/comparative-ecx-evidence.md`.
-
-This keeps the **harness implementation closure** intact while making clear that the real comparative result is still open and must be rerun after the cache-isolation fix.
+Protocol: `docs/comparative-ecx-evidence.md`.
 
 ## 2. What is already in the baseline
 
@@ -132,7 +139,7 @@ The comparative harness does not change the owner-service architecture or grant 
 
 ## 3. What CLOSED does and does not mean
 
-`CLOSED` means the planned Batch 1–12 implementation scope passed closure evidence and is present on `main`. The local-rehearsal and Historical Ledger + ECX local closures mean those documented laptop boundaries were exercised successfully. The comparative-harness implementation closure means the measurement tooling itself passed repository evidence and was merged; it does not mean every runtime defect was impossible, and the first real smoke demonstrated why runtime evidence remains a separate gate.
+`CLOSED` means the planned Batch 1–12 implementation scope passed closure evidence and is present on `main`. The local-rehearsal and Historical Ledger + ECX local closures mean those documented laptop boundaries were exercised successfully. The comparative-harness implementation closure means the measurement tooling itself passed repository evidence and was merged; real comparative evidence remains a separate runtime gate.
 
 It does **not** mean:
 
@@ -143,7 +150,7 @@ It does **not** mean:
 - off-host backup durability exists automatically;
 - ECX or optimizer savings may be claimed from local packet/hydration counts or counterfactual UI accounting;
 - `ecx-selective-oracle` proves automatic reference selection;
-- the cached first smoke proves token or latency reduction;
+- the failed 4/5 closure run proves a general percentage savings claim;
 - an ECX-selected recipient has necessarily executed a second model call;
 - AutoClick should now be built automatically.
 
@@ -152,15 +159,14 @@ It does **not** mean:
 Future work is a **new scope**, not Batch 13. Current operator-approved order is local-first:
 
 1. **Comparative ECX real Gemma efficiency evidence — ACTIVE**
-   - finish repository verification of `fix/comparative-cache-namespace-20260911`;
+   - finish repository verification of `fix/comparative-release-fixture-ambiguity-20260911`;
    - merge only after exact-head gates pass;
    - synchronize the laptop to the resulting `main`;
-   - use `docs/comparative-ecx-evidence.md` as the protocol;
-   - keep Phase 4 on the synchronized tree;
-   - rerun `pnpm evidence:comparative:smoke`;
-   - require all three measured lanes to be `cacheHit=false` with non-zero model token telemetry;
-   - inspect model identity, bytes, tokens, latency and deterministic quality;
-   - only after a healthy smoke run the closure-grade 5× paired benchmark;
+   - keep Phase 4 running if the service/runtime tree did not change;
+   - run targeted `release-readiness` with one repeat using the corrected fixture;
+   - require all three lanes to remain uncached and median quality to return to 100%;
+   - if targeted verification is healthy, rerun the complete 5-task × 5-repeat closure benchmark;
+   - preserve raw JSON locally/gitignored and commit only sanitized verified evidence;
    - do not convert oracle selective results into an automatic-selector or public-savings claim.
 
 2. **Local persistence/restart drill**
@@ -201,17 +207,19 @@ An agent starting without chat history should read:
 
 1. `docs/current-state-and-next-steps.md` — current state and next work;
 2. `AGENTS.md` — invariants and repo rules;
-3. `docs/comparative-ecx-evidence.md` — active local comparative-evidence protocol + first smoke finding;
-4. `docs/verification/comparative-harness-implementation-2026-09-11.md` — merged harness implementation evidence;
-5. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md` — real Local Ledger + ECX traffic closure;
-6. `docs/verification/local-production-rehearsal-2026-09-10.md` — real laptop runtime evidence and findings;
-7. `docs/production-activation.md` — operator-deferred production deployment procedure;
-8. `docs/EXECUTION-PROGRESS.md` — detailed implementation/closure history;
-9. `docs/verification/batch12-closure-2026-09-10.md` — final Batch 12 evidence;
-10. `docs/production-operations.md` and `docs/release-operations.md` — production/release procedures;
-11. `docs/cloudflare-free-deployment.md` — future free public-edge deployment option;
-12. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` — rationale and historical planning context;
-13. relevant ADR/API/operations docs for the exact subsystem being changed.
+3. `docs/comparative-ecx-evidence.md` — active local comparative-evidence protocol and runtime findings;
+4. `docs/verification/comparative-closure-grade-first-run-2026-09-11.md` — first 5× run and fixture ambiguity finding;
+5. `docs/verification/comparative-smoke-cache-defect-2026-09-11.md` — first smoke cache-isolation finding;
+6. `docs/verification/comparative-harness-implementation-2026-09-11.md` — merged harness implementation evidence;
+7. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md` — real Local Ledger + ECX traffic closure;
+8. `docs/verification/local-production-rehearsal-2026-09-10.md` — real laptop runtime evidence and findings;
+9. `docs/production-activation.md` — operator-deferred production deployment procedure;
+10. `docs/EXECUTION-PROGRESS.md` — detailed implementation/closure history;
+11. `docs/verification/batch12-closure-2026-09-10.md` — final Batch 12 evidence;
+12. `docs/production-operations.md` and `docs/release-operations.md` — production/release procedures;
+13. `docs/cloudflare-free-deployment.md` — future free public-edge deployment option;
+14. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` — rationale and historical planning context;
+15. relevant ADR/API/operations docs for the exact subsystem being changed.
 
 ## 6. Rules for the next agent
 
@@ -225,6 +233,7 @@ Before implementing new work:
 - preserve external MCP as real public-network acceptance;
 - do not weaken release/evidence gates to make a benchmark or CI green;
 - benchmark cache-busters must be isolated across separate invocations, not only within one invocation;
+- for exact-match benchmark fixtures, authoritative values must have unambiguous delimiters; do not fix source ambiguity by normalizing the scorer after seeing results;
 - do not represent fixture-declared `refIndexes` as an autonomous optimizer;
 - create/update ADRs when architecture changes;
 - update this file, `AGENTS.md`, `docs/EXECUTION-PROGRESS.md`, and the relevant workstream/verification docs when current state materially changes;
@@ -233,6 +242,8 @@ Before implementing new work:
 ## 7. Canonical status references
 
 - current local comparative evidence: `docs/comparative-ecx-evidence.md`
+- first closure-grade comparative run finding: `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`
+- first comparative smoke cache finding: `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`
 - comparative harness implementation closure: `docs/verification/comparative-harness-implementation-2026-09-11.md`
 - local Ledger + ECX evidence: `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
 - local runtime evidence: `docs/verification/local-production-rehearsal-2026-09-10.md`

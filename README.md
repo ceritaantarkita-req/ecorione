@@ -4,7 +4,7 @@
 
 Pindah lintas provider/model tanpa kehilangan kesinambungan kerja, sambil menjaga boundary local-first, approval, audit trail, durable execution, MCP, dan biaya kontrafaktual tetap eksplisit.
 
-> **Current status — 2026-09-11:** **production/self-host repository baseline READY · planned platform/production Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · comparative ECX harness MERGED/VERIFIED · first real Gemma comparative smoke found a cross-invocation exact-cache isolation defect, fix in review/rerun required · compute-host/VPS deployment DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
+> **Current status — 2026-09-11:** **production/self-host repository baseline READY · planned platform/production Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · comparative ECX harness MERGED/VERIFIED · cache isolation VERIFIED in real runtime · first 5× closure run executed 75 measured calls and passed 4/5 tasks; `release-readiness` exposed an exact-value fixture delimiter ambiguity, so final comparative verdict remains OPEN · compute-host/VPS deployment DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
 
 Untuk agent/manusia yang baru masuk repo: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md). Jangan menyimpulkan current state dari blueprint/audit lama saja.
 
@@ -21,18 +21,23 @@ Final state setelah roadmap Batch 1–12, local evidence closure, dan comparativ
 - PR #38 exact-head CI `34557147546` dan MCP External HTTPS `34557147583`: PASS;
 - PR #38 post-merge `main` CI `34557297702` dan MCP External HTTPS `34557297803`: PASS;
 - comparative harness docs closure PR #39 merged sebagai `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`;
+- comparative cache-isolation fix PR #40 merged sebagai `197627dc04689dea94bf7957e18b2699f8fb9213`;
+- PR #40 post-merge CI `34561893817`: PASS;
 - real local browser→Hub→Connect→Ollama/Gemma path: PASS;
 - real local Historical Ledger hash chain + ECX plan/handoff/hydration: PASS;
 - `pnpm production:data-evidence`: PASS pada captured local checkpoint;
-- first real comparative Gemma smoke reached Artifact/ECX/Connect but **FAILED the cache-contamination gate** because all measured lanes were exact-cache hits;
-- real uncached comparative Gemma smoke/full benchmark: **PENDING** after the cache-isolation fix is verified, merged, and synchronized.
+- first cached comparative smoke: valid FAIL, cache-isolation defect found and preserved;
+- corrected uncached comparative smoke after PR #40: PASS;
+- first closure-grade run: 5 tasks × 5 repeats × 3 lanes = 75 measured calls, **4/5 task PASS**; `release-readiness` failed exact quality equally across baseline/control/selective due ambiguous source sentence punctuation;
+- final comparative verdict: **PENDING** after fixture correction + targeted rerun + full corrected rerun.
 
 Detail current state dan evidence:
 
 - [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md)
 - [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md)
-- [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md)
+- [`docs/verification/comparative-closure-grade-first-run-2026-09-11.md`](docs/verification/comparative-closure-grade-first-run-2026-09-11.md)
 - [`docs/verification/comparative-smoke-cache-defect-2026-09-11.md`](docs/verification/comparative-smoke-cache-defect-2026-09-11.md)
+- [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md)
 - [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md)
 - [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md)
 - [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md)
@@ -55,7 +60,7 @@ Detail current state dan evidence:
 | **Data / DR** | Rebuild/governance/backup-restore procedures |
 | **Production Ops** | Compose/Caddy, metrics/traces, provider canary, release/install/upgrade/rollback tooling |
 | **Security closure** | Full-history + working-tree secret scans, dependency/release checks, HTTP/SSRF hardening, real public HTTPS MCP acceptance |
-| **Comparative evidence** | Harness merged untuk full-inline vs ECX all-ref vs oracle selective hydration; first real smoke found cache-isolation defect; uncached rerun pending |
+| **Comparative evidence** | Harness merged; cache isolation verified; first full 5× run 4/5 pass; release fixture delimiter fix + rerun pending |
 | **AutoClick** | **Deferred by design** sampai ada use case non-API nyata |
 
 ## Arsitektur inti
@@ -95,7 +100,7 @@ Historical Ledger di Hub menyimpan chronological/replay history dan tidak mengga
 
 ## Comparative ECX evidence
 
-Active local R&D protocol: [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md). Harness implementation sudah merged dan repository-verified. First real smoke kemudian menemukan bahwa marker cache awal unik hanya di dalam satu invocation, bukan antar invocation. Gate `cacheHit=true` menolak run tersebut, sehingga angka token/latency dari smoke itu tidak dipakai sebagai model-compute evidence.
+Active local R&D protocol: [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md).
 
 Benchmark membandingkan tiga lane dengan task/facts/model yang sama:
 
@@ -109,15 +114,24 @@ ECX packet + hydrate fixture-declared relevant refs (oracle control)
 
 Yang diukur: transport bytes, input/output tokens, latency, cache state, model identity, dan deterministic answer quality.
 
-Cache-isolation fix yang sedang diverifikasi memakai namespace baru per benchmark invocation dan fixed-shape task/pair/mode marker. Threshold evidence tidak berubah.
+Runtime progression saat ini:
 
-Quick smoke setelah Phase 4 runtime hidup dan laptop sudah sinkron ke fix yang merged:
+- first real smoke menemukan cross-invocation cache collision dan correctly FAIL;
+- PR #40 memperbaiki cache namespace tanpa menurunkan gate;
+- corrected smoke PASS dengan real uncached token telemetry;
+- first 75-call closure run menghasilkan 4/5 task PASS;
+- `release-readiness` gagal exact quality di semua tiga lane karena source value delimiter ambigu; fix tidak mengubah expected answer/scorer/gate.
+
+Targeted verification setelah fixture correction merged:
 
 ```bash
 set -a
 source .env
 set +a
-pnpm evidence:comparative:smoke
+
+pnpm evidence:comparative \
+  --tasks release-readiness \
+  --repeats 1
 ```
 
 Normal development run:
@@ -129,11 +143,14 @@ pnpm evidence:comparative
 Closure-grade protocol memakai 5 paired repeats per task dan raw JSON disimpan hanya di local gitignored storage:
 
 ```bash
-pnpm evidence:comparative -- --repeats 5 \
+pnpm evidence:comparative \
+  --repeats 5 \
   --output .ecorione/evidence/comparative-local-2026-09-11.json
 ```
 
-`ecx-selective-oracle` adalah **upper-bound/control lane**, bukan bukti selector otomatis. Local provider-token `actualUsd=0` juga bukan hosted cost-savings proof. Measured exact-cache hits juga bukan token/latency savings proof.
+Jangan menambahkan literal `--` setelah `pnpm evidence:comparative`; pada script ini separator tersebut ikut diteruskan dan parser menolaknya sebagai `Unknown argument: --`.
+
+`ecx-selective-oracle` adalah **upper-bound/control lane**, bukan bukti selector otomatis. Local provider-token `actualUsd=0` juga bukan hosted cost-savings proof. Measured exact-cache hits juga bukan token/latency savings proof. Aggregate reduction dari run yang overall FAIL juga belum boleh dipromosikan menjadi public savings claim.
 
 ## Provider dan local runtime
 
@@ -205,7 +222,7 @@ There is **no automatic Batch 13**. Future work must be opened as a new explicit
 
 Current operator-approved order:
 
-1. comparative ECX efficiency evidence — finish cache-isolation fix, merge/sync, rerun uncached Gemma smoke, then closure-grade measurement only if healthy;
+1. comparative ECX efficiency evidence — merge/sync release fixture correction, targeted `release-readiness` verification, then rerun complete 5× measurement if healthy;
 2. controlled local persistence/restart drill;
 3. isolated local backup/restore drill;
 4. local observability baseline;
@@ -235,6 +252,7 @@ See [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.m
 - Owner-service boundary melarang cross-service database access.
 - Historical Ledger dan Context L0 ground truth tidak direwrite untuk convenience migration.
 - Comparative benchmark cache isolation harus berlaku antar invocation; measured `cacheHit=true` adalah invalid untuk model-compute comparison.
+- Exact-match fixture harus punya source delimiter yang tidak ambigu; jangan menormalisasi scorer setelah failure demi memaksa PASS.
 - Comparative benchmark tidak boleh mengubah oracle ref selection menjadi klaim automatic optimizer.
 - AutoClick tetap deferred sampai use case non-API nyata lolos design gate.
 
@@ -250,6 +268,7 @@ READY baseline bukan klaim bahwa:
 - host OS/firewall/SSH/Cloudflare/provider-account hardening dilakukan otomatis;
 - ECX/optimizer savings sudah terbukti hanya dari traffic/hydration counts;
 - cached benchmark response membuktikan real model token/latency savings;
+- aggregate percentages dari failed closure run boleh dipakai sebagai general/public savings claim;
 - oracle selective hydration membuktikan automatic reference selection;
 - laptop evidence membuktikan VPS/Cloudflare production behavior;
 - Fase 6+ selesai permanen.
@@ -260,22 +279,23 @@ READY baseline bukan klaim bahwa:
 |---:|---|---|
 | 1 | [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md) | Current canonical handoff + next scope |
 | 2 | [`AGENTS.md`](AGENTS.md) | Invarian dan aturan kerja repo |
-| 3 | [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md) | Active local comparative-evidence protocol + first smoke finding |
-| 4 | [`docs/verification/comparative-smoke-cache-defect-2026-09-11.md`](docs/verification/comparative-smoke-cache-defect-2026-09-11.md) | First real Gemma smoke failure + cache root cause |
-| 5 | [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md) | Comparative harness implementation + CI/merge closure |
-| 6 | [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md) | Real local Ledger + ECX closure |
-| 7 | [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md) | Real laptop runtime evidence |
-| 8 | [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md) | Detailed progress + closure history |
-| 9 | [`docs/production-activation.md`](docs/production-activation.md) | Deferred production activation runbook |
-| 10 | [`docs/production-operations.md`](docs/production-operations.md) | Production/self-host operations |
-| 11 | [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md) | Future free Cloudflare edge/Tunnel option |
-| 12 | [`docs/release-operations.md`](docs/release-operations.md) | Install/upgrade/rollback/release gate |
-| 13 | [`docs/prd.md`](docs/prd.md) | Product + architecture requirements |
-| 14 | [`docs/research.md`](docs/research.md) | Research/due diligence |
-| 15 | [`docs/blueprint.md`](docs/blueprint.md) | Historical execution blueprint; not current status source |
-| 16 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log |
-| 17 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
-| 18 | [`docs/verification/`](docs/verification/) | Exact-head/runtime evidence |
+| 3 | [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md) | Active local comparative-evidence protocol + runtime findings |
+| 4 | [`docs/verification/comparative-closure-grade-first-run-2026-09-11.md`](docs/verification/comparative-closure-grade-first-run-2026-09-11.md) | First 5× closure run + release fixture finding |
+| 5 | [`docs/verification/comparative-smoke-cache-defect-2026-09-11.md`](docs/verification/comparative-smoke-cache-defect-2026-09-11.md) | First real Gemma smoke failure + cache root cause |
+| 6 | [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md) | Comparative harness implementation + CI/merge closure |
+| 7 | [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md) | Real local Ledger + ECX closure |
+| 8 | [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md) | Real laptop runtime evidence |
+| 9 | [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md) | Detailed progress + closure history |
+| 10 | [`docs/production-activation.md`](docs/production-activation.md) | Deferred production activation runbook |
+| 11 | [`docs/production-operations.md`](docs/production-operations.md) | Production/self-host operations |
+| 12 | [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md) | Future free Cloudflare edge/Tunnel option |
+| 13 | [`docs/release-operations.md`](docs/release-operations.md) | Install/upgrade/rollback/release gate |
+| 14 | [`docs/prd.md`](docs/prd.md) | Product + architecture requirements |
+| 15 | [`docs/research.md`](docs/research.md) | Research/due diligence |
+| 16 | [`docs/blueprint.md`](docs/blueprint.md) | Historical execution blueprint; not current status source |
+| 17 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log |
+| 18 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
+| 19 | [`docs/verification/`](docs/verification/) | Exact-head/runtime evidence |
 
 ## Lisensi
 

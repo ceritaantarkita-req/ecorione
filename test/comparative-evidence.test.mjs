@@ -4,6 +4,7 @@ import {
   benchmarkCacheMarker,
   evaluateTaskGates,
   extractJsonObject,
+  FIXTURES,
   median,
   scoreReply,
   summarizeRuns,
@@ -65,6 +66,25 @@ describe("comparative evidence helpers", () => {
         { id: "b", content: "beta" },
       ]),
     ).toBe("alpha\n\n---\n\nbeta");
+  });
+
+  it("keeps release exact-match values delimiter-safe", () => {
+    const task = FIXTURES.find((fixture) => fixture.id === "release-readiness");
+    expect(task).toBeDefined();
+
+    const releaseIdDocument = task.documents.find((document) => document.id === "release-id");
+    const blockerDocument = task.documents.find(
+      (document) => document.id === "release-blocker",
+    );
+
+    expect(releaseIdDocument.content).toContain("Release ID: R2026.09.11\n");
+    expect(releaseIdDocument.content).not.toContain("Release ID: R2026.09.11.\n");
+    expect(blockerDocument.content).toContain(
+      "Only open blocker: DB-188 migration checksum mismatch\n",
+    );
+    expect(blockerDocument.content).not.toContain(
+      "Only open blocker: DB-188 migration checksum mismatch.\n",
+    );
   });
 
   it("isolates cache markers across invocations while keeping paired marker shape stable", () => {
