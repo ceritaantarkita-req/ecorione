@@ -54,7 +54,10 @@ export function parseArgs(argv) {
 export function isEcorioneContainerRow(row) {
   const name = String(row?.Names ?? "");
   const labels = String(row?.Labels ?? "");
-  return /(^|[-_])ecorione($|[-_])/i.test(name) || /(^|,)com\.docker\.compose\.project=ecorione(,|$)/i.test(labels);
+  return (
+    /(^|[-_])ecorione($|[-_])/i.test(name) ||
+    /(^|,)com\.docker\.compose\.project=ecorione(,|$)/i.test(labels)
+  );
 }
 
 export function summarizeContainerRows(rows) {
@@ -126,7 +129,9 @@ async function jsonRequest(url, { token, method = "GET", body, allow404 = false 
   const payload = await response.json().catch(() => null);
   if (allow404 && response.status === 404) return { status: 404, body: payload };
   if (!response.ok) {
-    throw new Error(`${method} ${url} HTTP ${String(response.status)} ${JSON.stringify(payload)}`);
+    throw new Error(
+      `${method} ${url} HTTP ${String(response.status)} ${JSON.stringify(payload)}`,
+    );
   }
   return payload;
 }
@@ -198,7 +203,11 @@ async function healthInventory(urls, token) {
     try {
       result[name] = { ok: true, url, body: await jsonRequest(url, { token }) };
     } catch (error) {
-      result[name] = { ok: false, url, error: error instanceof Error ? error.message : String(error) };
+      result[name] = {
+        ok: false,
+        url,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }
   return result;
@@ -237,13 +246,16 @@ async function runInventory(token) {
   const failures = [];
   if (!repo.synced) failures.push("HEAD != origin/main");
   if (!repo.trackedClean) failures.push("tracked Git tree is not clean");
-  for (const name of REQUIRED_HEALTH) if (!health[name].ok) failures.push(`${name} health unavailable`);
+  for (const name of REQUIRED_HEALTH)
+    if (!health[name].ok) failures.push(`${name} health unavailable`);
   if (failures.length > 0) {
     console.error(`FAIL persistence inventory: ${failures.join("; ")}`);
     process.exitCode = 1;
     return evidence;
   }
-  console.log("PASS persistence inventory: repo is synchronized and required owner services are healthy");
+  console.log(
+    "PASS persistence inventory: repo is synchronized and required owner services are healthy",
+  );
   return evidence;
 }
 
@@ -336,7 +348,8 @@ async function baseline(token, statePath) {
     },
   });
   const episodeRead = await jsonRequest(`${urls.context}/v1/episodes/${episode.id}`, { token });
-  if (episodeRead.rawText !== episodeText) throw new Error("Context probe content mismatch before restart");
+  if (episodeRead.rawText !== episodeText)
+    throw new Error("Context probe content mismatch before restart");
 
   const artifactBytes = Buffer.from(`ECORIONE_PERSISTENCE_PROBE\nmarker=${marker}\n`, "utf8");
   const artifactDigest = sha256Hex(artifactBytes);
@@ -353,7 +366,8 @@ async function baseline(token, statePath) {
     },
   });
   const artifactId = artifactUpload?.pointer?.id;
-  if (typeof artifactId !== "string") throw new Error("Artifact upload did not return pointer.id");
+  if (typeof artifactId !== "string")
+    throw new Error("Artifact upload did not return pointer.id");
   const artifactRead = await bytesRequest(
     `${urls.artifact}/v1/artifacts/${artifactId}/content?scope=personal&maxSensitivity=INTERNAL&hostedEligible=0`,
     token,
@@ -422,14 +436,17 @@ async function baseline(token, statePath) {
   };
   await writeState(statePath, state);
   console.log(JSON.stringify(state, null, 2));
-  console.log(`PASS persistence baseline: probes created; state saved mode-0600 at ${statePath}`);
+  console.log(
+    `PASS persistence baseline: probes created; state saved mode-0600 at ${statePath}`,
+  );
   return state;
 }
 
 async function loadState(statePath) {
   const raw = await readFile(statePath, "utf8");
   const state = JSON.parse(raw);
-  if (state?.schemaVersion !== 1) throw new Error("Unsupported persistence evidence state schema");
+  if (state?.schemaVersion !== 1)
+    throw new Error("Unsupported persistence evidence state schema");
   return state;
 }
 
@@ -443,9 +460,12 @@ async function postVerify(token, statePath) {
   const state = await loadState(statePath);
   const repo = await repoInventory();
   if (repo.head !== state.baselineRevision)
-    throw new Error(`Refusing post verification: HEAD ${repo.head} != baseline ${state.baselineRevision}`);
+    throw new Error(
+      `Refusing post verification: HEAD ${repo.head} != baseline ${state.baselineRevision}`,
+    );
   if (!repo.synced) throw new Error("Refusing post verification: HEAD != origin/main");
-  if (!repo.trackedClean) throw new Error("Refusing post verification: tracked Git tree is not clean");
+  if (!repo.trackedClean)
+    throw new Error("Refusing post verification: tracked Git tree is not clean");
 
   const urls = state.urls;
   const health = await healthInventory(urls, token);
@@ -469,7 +489,9 @@ async function postVerify(token, statePath) {
     throw new Error("Post verification: Ledger payload changed");
   const ledgerVerify = await jsonRequest(`${urls.hub}/v1/history/verify`, { token });
 
-  const episode = await jsonRequest(`${urls.context}/v1/episodes/${state.context.episodeId}`, { token });
+  const episode = await jsonRequest(`${urls.context}/v1/episodes/${state.context.episodeId}`, {
+    token,
+  });
   if (episode.rawText !== state.context.rawText)
     throw new Error("Post verification: Context episode content changed");
   const episodeDigest = sha256Hex(Buffer.from(episode.rawText, "utf8"));
@@ -518,7 +540,9 @@ async function postVerify(token, statePath) {
   };
   await writeState(statePath, updated);
   console.log(JSON.stringify(updated.post, null, 2));
-  console.log("PASS persistence post: Ledger, Context, Artifact and pending Flow identities survived the tested restart boundary");
+  console.log(
+    "PASS persistence post: Ledger, Context, Artifact and pending Flow identities survived the tested restart boundary",
+  );
   return updated;
 }
 
@@ -542,7 +566,8 @@ async function cleanup(token, statePath) {
       await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
     }
   }
-  if (status.status === "RUNNING") throw new Error("Cleanup: Flow remained RUNNING after reject signal");
+  if (status.status === "RUNNING")
+    throw new Error("Cleanup: Flow remained RUNNING after reject signal");
   const updated = {
     ...state,
     phase: "cleanup-complete",
@@ -568,10 +593,13 @@ export async function main(argv = process.argv.slice(2)) {
   else if (options.phase === "cleanup") await cleanup(token, options.statePath);
 }
 
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+const isMain =
+  process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (isMain) {
   main().catch((error) => {
-    console.error(`persistence-restart-evidence: failed ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `persistence-restart-evidence: failed ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exitCode = 1;
   });
 }
