@@ -1,11 +1,15 @@
 import { resolve } from "node:path";
-import { bindHost } from "@ecorione/shared-server";
+import { bindHost, resolveRepoRuntimePath } from "@ecorione/shared-server";
 import { openSyncDatabase } from "./db.js";
 import { buildSyncServer } from "./http.js";
 
-const DEFAULT_DB_PATH = resolve(import.meta.dirname, "../../../data/sync.db");
+const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 const port = Number(process.env.ECORIONE_SYNC_PORT ?? "17011");
-const dbPath = process.env.ECORIONE_SYNC_DB_PATH ?? DEFAULT_DB_PATH;
+const dbPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_SYNC_DB_PATH,
+  "data/sync.db",
+);
 const ownerToken = process.env.ECORIONE_SYNC_OWNER_TOKEN;
 const connectMcpUrl = process.env.ECORIONE_MCP_URL ?? "http://127.0.0.1:17010";
 

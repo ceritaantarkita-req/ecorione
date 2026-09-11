@@ -12,3 +12,4 @@ export * from "./client.js";
 export * from "./validate.js";
 export * from "./backup.js";
 export * from "./observability.js";
+export * from "./runtime-path.js";

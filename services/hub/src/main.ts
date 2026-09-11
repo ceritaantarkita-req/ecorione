@@ -3,16 +3,19 @@
  */
 
 import { resolve } from "node:path";
-import { bindHost } from "@ecorione/shared-server";
+import { bindHost, resolveRepoRuntimePath } from "@ecorione/shared-server";
 import { openHubDatabase } from "./db.js";
 import { buildHubServer } from "./http.js";
 import { registerHubMultimodal } from "./multimodal-bootstrap.js";
 
-/** Default DB dijangkarkan ke lokasi modul, bukan process.cwd(). */
-const DEFAULT_DB_PATH = resolve(import.meta.dirname, "../../../data/hub.db");
+const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 
 const port = Number(process.env.ECORIONE_HUB_PORT ?? "17024");
-const dbPath = process.env.ECORIONE_HUB_DB_PATH ?? DEFAULT_DB_PATH;
+const dbPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_HUB_DB_PATH,
+  "data/hub.db",
+);
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
 const contextUrl = process.env.ECORIONE_CONTEXT_URL ?? "http://127.0.0.1:17022";
 const connectUrl = process.env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
