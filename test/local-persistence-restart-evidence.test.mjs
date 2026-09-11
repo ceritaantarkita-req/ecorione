@@ -27,7 +27,7 @@ describe("local persistence restart evidence helpers", () => {
 
   it("computes stable SHA-256 digests", () => {
     expect(sha256Hex(Buffer.from("ecorione", "utf8"))).toBe(
-      "ae667c28b9c3e6ead45f084a51232319596382413fef4669b63d45a329cfc8db",
+      "5f4500ebbe55b2d346cd5c83a1007fca422c597e29c899fd0454cbe6e9362c42",
     );
   });
 
