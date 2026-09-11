@@ -4,7 +4,11 @@
 
 import { resolve } from "node:path";
 import { makeId } from "@ecorione/shared-schema";
-import { bindHost, httpJson, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHost,
+  httpJson,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { registerAccessRoutes } from "./access-http.js";
 import { registerArtifactRoutes } from "./artifact-routes.js";
 import { nowIso } from "./clock.js";
@@ -17,7 +21,11 @@ import { createVectorIndex } from "./vector.js";
 const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 
 const port = Number(process.env.ECORIONE_CONTEXT_PORT ?? "17022");
-const dbPath = resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_DB_PATH, "data/ecorione.db");
+const dbPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_DB_PATH,
+  "data/ecorione.db",
+);
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
 const connectUrl = process.env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
 
