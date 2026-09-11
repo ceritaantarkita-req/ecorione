@@ -10,7 +10,11 @@ import { buildRndServer } from "./http.js";
 const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 
 const port = Number(process.env.ECORIONE_RND_PORT ?? "17021");
-const dbPath = resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_RND_DB_PATH, "data/rnd.db");
+const dbPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_RND_DB_PATH,
+  "data/rnd.db",
+);
 const datasetRoot = resolveRepoRuntimePath(
   REPO_ROOT,
   process.env.ECORIONE_RND_DATASET_ROOT,
