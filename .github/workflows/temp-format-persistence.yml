@@ -1,0 +1,26 @@
+name: Temporary Persistence Formatter
+
+on:
+  push:
+    branches:
+      - ops/local-persistence-restart-evidence-20260911
+
+permissions:
+  contents: read
+
+jobs:
+  format-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Print exact Prettier diff
+        run: |
+          pnpm exec prettier scripts/local-persistence-restart-evidence.mjs --write
+          git diff -- scripts/local-persistence-restart-evidence.mjs
+          exit 1
