@@ -15,56 +15,68 @@ Per **2026-09-11**:
 - comparative ECX harness PR #38 merged sebagai `c1849cd0c67712e40ea4e5c90587283900859cdb`;
 - comparative harness docs closure PR #39 merged sebagai `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`;
 - comparative cache-isolation fix PR #40 merged sebagai `197627dc04689dea94bf7957e18b2699f8fb9213`;
-- PR #38 exact-head CI `34557147546` + MCP External HTTPS `34557147583`: **PASS**;
-- PR #38 post-merge CI `34557297702` + MCP External HTTPS `34557297803`: **PASS**;
-- PR #40 post-merge CI `34561893817`: **PASS**;
+- comparative release fixture correction PR #41 merged sebagai `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`;
+- PR #41 exact-head CI `34565244451`: **PASS**;
+- PR #41 post-merge CI `34565539119`: **PASS**;
 - comparative harness implementation: **CLOSED / VERIFIED**;
 - first cached real Gemma smoke: **FAIL / VALID CACHE-ISOLATION FINDING**;
 - corrected real Gemma smoke after PR #40: **PASS**;
-- first closure-grade 5× run: **FAIL / 4 OF 5 TASKS PASS / RELEASE FIXTURE DELIMITER AMBIGUITY FOUND**;
-- comparative release fixture correction: **IN REVIEW / TARGETED + FULL RERUN REQUIRED**;
-- real Gemma comparative ECX efficiency evidence: **ACTIVE / NOT CLOSED**;
+- first full 75-call run: **FAIL / VALID RELEASE-FIXTURE FINDING**;
+- targeted corrected `release-readiness` after PR #41: **PASS**;
+- final corrected full 75-call run: **5/5 TASK GATES PASS**;
+- local Comparative ECX checkpoint: **CLOSED / PASS WITH LIMITATIONS**;
+- automatic semantic reference selector: **NOT PROVEN / NOT IMPLEMENTED BY THIS CHECKPOINT**;
+- active next checkpoint: **LOCAL PERSISTENCE/RESTART EVIDENCE**;
 - real compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**;
 - Fase 6+ tetap **OPEN-ENDED / evidence-driven**;
 - Fase 5 AutoClick tetap **DEFERRED BY DESIGN**;
 - **tidak ada Batch 13 implisit**.
 
-Agent yang tidak punya histori chat **WAJIB mulai dari `docs/current-state-and-next-steps.md`**, lalu file ini. Jangan memakai `docs/blueprint.md` atau `docs/final-audit-2026-09-09.md` sebagai current-state source; keduanya punya nilai historis/planning dan tidak menggantikan tracker terbaru.
+Final local comparative aggregate on merged revision `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`:
 
-Recommended reading order saat ini:
+- 5 tasks × 5 repeats × 3 lanes = 75 measured calls;
+- measured cache hits: 0;
+- 5/5 task-level gates PASS;
+- median selective transport reduction: `73.6379379246037%`;
+- median selective input-token reduction: `77.8580814717477%`;
+- median selective/full latency ratio: `0.8672873729681319`.
+
+**Limitation:** one individual `retention-policy` `ecx-selective-oracle` repeat scored `1/3` exact fields because two returned strings retained sentence-final periods. The predeclared quality gate is median-based, so the task still formally passed. Do not rewrite this into “75/75 perfect outputs”. See `docs/verification/comparative-closure-grade-final-2026-09-11.md`.
+
+Agent tanpa histori chat **WAJIB mulai dari `docs/current-state-and-next-steps.md`**, lalu file ini. Jangan memakai `docs/blueprint.md` atau audit lama sebagai current-state source.
+
+Recommended reading order:
 
 1. `docs/current-state-and-next-steps.md`
 2. `AGENTS.md`
-3. `docs/comparative-ecx-evidence.md`
-4. `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`
-5. `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`
-6. `docs/verification/comparative-harness-implementation-2026-09-11.md`
-7. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-8. `docs/verification/local-production-rehearsal-2026-09-10.md`
-9. `docs/EXECUTION-PROGRESS.md`
-10. docs operations/ADR yang relevan dengan scope
-11. `docs/prd.md` + `docs/research.md`
-12. `docs/blueprint.md` sebagai historical execution blueprint
+3. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
+4. `docs/comparative-ecx-evidence.md`
+5. `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`
+6. `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`
+7. `docs/verification/comparative-harness-implementation-2026-09-11.md`
+8. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
+9. `docs/verification/local-production-rehearsal-2026-09-10.md`
+10. `docs/EXECUTION-PROGRESS.md`
+11. operations/ADR docs yang relevan dengan scope baru
+12. `docs/prd.md` + `docs/research.md`
+13. `docs/blueprint.md` sebagai historical execution blueprint
 
 ## Next work posture
 
-Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Operator sudah memilih local-first evidence sebelum VPS. Urutan aktif sekarang:
+Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Comparative ECX local evidence sudah ditutup. Urutan operator-approved sekarang:
 
-1. selesaikan `fix/comparative-release-fixture-ambiguity-20260911` tanpa mengubah expected answer, scorer, atau threshold evidence;
-2. exact-head verify → merge → post-merge verify → sync laptop;
-3. run targeted `release-readiness` satu repeat dan wajibkan ketiga lane uncached + 100% deterministic quality;
-4. jika targeted task sehat, rerun full 5 task × 5 repeat closure-grade benchmark;
-5. commit sanitized final verification note dan update canonical verdict;
-6. local persistence/restart drill;
-7. local backup/restore drill;
-8. local observability baseline;
-9. product/UX validation;
-10. immutable local model identity hardening;
-11. compute-host/VPS + Cloudflare deployment **hanya jika operator secara eksplisit melanjutkan**;
-12. hosted-provider comparative validation bila operator menyediakan kredensial + budget;
-13. maintenance/dependency/security/DR evidence dan feature baru hanya jika evidence membenarkan.
+1. local persistence/restart drill;
+2. local backup/restore drill;
+3. local observability baseline;
+4. product/UX validation;
+5. immutable local model identity hardening;
+6. compute-host/VPS + Cloudflare deployment **hanya jika operator secara eksplisit melanjutkan**;
+7. hosted-provider comparative validation bila operator menyediakan kredensial + budget;
+8. automatic selector/optimizer hanya sebagai scope eksplisit bila evidence baru membenarkan;
+9. maintenance/dependency/security/DR evidence;
+10. feature baru hanya jika evidence membenarkan.
 
-Comparative protocol: `docs/comparative-ecx-evidence.md`. Current failed full-run finding: `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`.
+Comparative protocol/results: `docs/comparative-ecx-evidence.md`. Final sanitized evidence: `docs/verification/comparative-closure-grade-final-2026-09-11.md`.
 
 Untuk future Cloudflare Free/VPS deployment, baca `docs/production-activation.md` dan `docs/cloudflare-free-deployment.md`. Cloudflare adalah edge/tunnel, **bukan** pengganti compute/storage/Temporal ECORIONE.
 
@@ -83,7 +95,7 @@ pnpm run acceptance:production-ops
 pnpm evidence:comparative:smoke
 pnpm evidence:comparative
 
-# targeted release-readiness verification after fixture correction
+# targeted comparative task
 pnpm evidence:comparative \
   --tasks release-readiness \
   --repeats 1
@@ -91,7 +103,7 @@ pnpm evidence:comparative \
 # closure-grade comparative run
 pnpm evidence:comparative \
   --repeats 5 \
-  --output .ecorione/evidence/comparative-local-2026-09-11.json
+  --output .ecorione/evidence/comparative-local-2026-09-11-v2.json
 ```
 
 Jangan menambahkan literal `--` setelah `pnpm evidence:comparative`; parser harness akan menerima literal itu dan gagal dengan `Unknown argument: --`.
@@ -104,30 +116,32 @@ Jangan menambahkan literal `--` setelah `pnpm evidence:comparative`; parser harn
 
 1. Jangan menyebut packet/hydration count sebagai savings proof.
 2. Current ECX `/v1/exchange/hydrate` menerima `refIndexes` dari caller. Jadi `ecx-selective-oracle` hanya mengukur benefit ketika reference yang benar **sudah diketahui**; itu bukan automatic selector evidence.
-3. `full-inline`, `ecx-all`, dan `ecx-selective-oracle` harus memakai task/facts/model yang sama. Jangan memberi satu lane jawaban lebih mudah.
-4. Exact-cache tidak boleh menguntungkan lane tertentu. Measured `cacheHit=true` adalah failure. Cache-buster benchmark harus terisolasi **antar invocation**, bukan cuma unik di dalam satu invocation.
+3. `full-inline`, `ecx-all`, dan `ecx-selective-oracle` harus memakai task/facts/model yang sama.
+4. Exact-cache tidak boleh menguntungkan lane tertentu. Measured `cacheHit=true` adalah failure. Cache-buster benchmark harus terisolasi **antar invocation**.
 5. Tetapkan gate sebelum melihat hasil. Jangan melemahkan threshold sesudah failure hanya agar benchmark hijau.
 6. Quality harus dinilai dengan deterministic expected facts ketika fixture memungkinkan. Jangan menambahkan AI judge hanya untuk menaikkan skor.
-7. Kalau benchmark memakai exact-string scoring, authoritative source values harus punya delimiter yang tidak ambigu. Jangan memperbaiki ambiguity dengan normalisasi scorer setelah melihat hasil; perbaiki fixture source, dokumentasikan alasan, lalu rerun pada merged revision baru.
-8. Local provider-token `actualUsd=0` bukan hosted cost-saving evidence.
-9. Simpan raw evidence lokal di path yang gitignored (contoh `.ecorione/evidence/`). Commit hanya sanitized summary setelah hasil diverifikasi.
-10. Negative result adalah evidence yang valid. Jangan membangun selector/optimizer baru hanya untuk mempertahankan hipotesis awal.
-11. Real comparative result hanya boleh diklaim dari run pada laptop yang sudah sinkron ke merged harness revision; jangan memakai moving PR branch sebagai closure evidence.
-12. Cache-hit runs boleh membuktikan bahwa cache bekerja, tetapi **tidak boleh** dipakai sebagai model-compute token/latency evidence; zero token telemetry pada exact-cache hit bukan selective-context savings.
-13. Aggregate reductions dari run yang overall FAIL boleh dicatat sebagai provisional observation, tetapi tidak boleh dipromosikan menjadi final/public savings claim.
+7. Kalau benchmark memakai exact-string scoring, authoritative source values harus punya delimiter yang tidak ambigu. Jangan memperbaiki ambiguity dengan normalisasi scorer setelah melihat hasil.
+8. Median-based task PASS tidak boleh disalahartikan sebagai semua individual completion sempurna. Audit per-run anomaly harus dicatat kalau ditemukan.
+9. Local provider-token `actualUsd=0` bukan hosted cost-saving evidence.
+10. Simpan raw evidence lokal di path gitignored seperti `.ecorione/evidence/`. Commit hanya sanitized summary.
+11. Negative result adalah evidence valid. Jangan membangun selector/optimizer baru hanya untuk mempertahankan hipotesis awal.
+12. Real comparative result hanya boleh diklaim dari run pada laptop yang sinkron ke merged revision.
+13. Cache-hit runs boleh membuktikan cache bekerja, tetapi **tidak boleh** dipakai sebagai model-compute token/latency evidence.
+14. Aggregate reductions dari run yang overall FAIL boleh dicatat sebagai provisional observation, tetapi tidak boleh dipromosikan menjadi final/public savings claim.
+15. Aggregate reductions dari final PASS tetap hanya benchmark-specific; jangan mengubahnya menjadi universal/public savings claim tanpa representative held-out/production evidence.
 
 ## Aturan yang tidak bisa dinegosiasikan
 
 Ini bukan preferensi gaya — ini invarian yang kalau dilanggar merusak klaim inti produk. Nomor ADR merujuk ke `docs/adr/`.
 
-1. **Prefix stabil harus byte-identik** (ADR-01). Segala yang berubah tiap panggilan — timestamp, UUID, hasil retrieval, jam — **tidak boleh** masuk system prompt, definisi tool, atau blok memori inti. Cache provider dicocokkan lewat hash prefix. Clock produksi harus diinjeksi dari boundary yang eksplisit, bukan dibuat di pure/core logic.
+1. **Prefix stabil harus byte-identik** (ADR-01). Segala yang berubah tiap panggilan — timestamp, UUID, hasil retrieval, jam — **tidak boleh** masuk system prompt, definisi tool, atau blok memori inti. Cache provider dicocokkan lewat hash prefix. Clock produksi harus diinjeksi dari boundary eksplisit, bukan dibuat di pure/core logic.
 2. **Jangan pernah menyimpan instruksi sebagai memori** (ADR-07, PRD). Memori menyimpan fakta/preferensi. Semua memori tersimpan diperlakukan sebagai **data tak-tepercaya** dan dirender sebagai data, bukan instruksi.
 3. **Tulisan dari model hosted masuk karantina** (ADR-07). `memory_propose`, bukan trusted write langsung. Promosi mengikuti jalur lokal/governed.
 4. **Jangan hapus fakta — invalidate** (ADR-06). Gunakan temporal invalidation/supersession; retrieval aktif memfilter state invalid.
 5. **Idempotency key wajib pada setiap efek samping** (ADR-12), dipaksakan di boundary runtime/tool, bukan diminta lewat prompt.
 6. **Setiap panggilan model mencatat biaya aktual/kontrafaktual sesuai boundary yang tersedia** (ADR-13). Jangan membuat savings claim yang tidak didukung telemetry nyata.
 7. **Gerbang sensitivitas/authority dievaluasi sebelum egress/biaya.** Tidak ada downgrade/silent fallback tersembunyi.
-8. **Pin versi/model identity eksplisit** (ADR-14). Alias yang dapat drift seperti `-latest` dilarang di config/code yang diaudit. `gemma4:latest` yang muncul pada rehearsal adalah evidence runtime sementara, bukan durable production identity.
+8. **Pin versi/model identity eksplisit** (ADR-14). Alias yang dapat drift seperti `-latest` dilarang di config/code yang diaudit. `gemma4:latest` yang muncul pada rehearsal/benchmark adalah evidence runtime sementara, bukan durable production identity.
 9. **Kredensial tidak pernah masuk konteks reasoning AI.** Connect tetap credential owner dan production secret berada di Vault/encrypted boundary yang disetujui.
 10. **Jangan sentuh repo/ekosistem lama sebagai side effect.** Referensi lama tetap read-only kecuali user membuat scope eksplisit terpisah.
 11. **Tidak ada cross-service database access.** Setiap owner data diakses lewat contract/API owner service.
@@ -166,14 +180,14 @@ ECX selective hydration berada di Hub, tetapi pemilihan `refIndexes` saat ini be
 
 Keputusan besar dicatat di `docs/DECISIONS.md`. Perubahan yang mengubah invariant, ownership, authority, durable state, security boundary, deployment contract, atau release claim membutuhkan ADR baru/updated ADR yang eksplisit.
 
-Current comparative harness, cache-isolation fix, dan delimiter-safe fixture correction **bukan architecture change**: semuanya memakai API Artifact, Hub ECX, dan Connect yang sudah ada serta tidak mengubah owner boundary. Automatic selector baru akan menjadi scope terpisah dan harus direview jika evidence membenarkannya.
+Comparative harness/cache-fix/fixture corrections dan final measurement **bukan architecture change**. Semuanya memakai owner API yang sudah ada. Automatic selector baru akan menjadi scope terpisah dan harus direview bila evidence membenarkannya.
 
 Setelah scope selesai:
 
 - update `docs/current-state-and-next-steps.md` bila current state berubah;
 - update `docs/EXECUTION-PROGRESS.md` dengan evidence nyata;
 - update workstream/operations docs yang terpengaruh;
-- untuk comparative evidence, commit sanitized verification note setelah real run, bukan raw local evidence;
+- commit sanitized verification note setelah real run, bukan raw local evidence;
 - jangan rewrite historical verification/audit hanya untuk membuat sejarah terlihat lebih bersih.
 
 ## Yang sengaja tidak dibangun/dipaksakan
