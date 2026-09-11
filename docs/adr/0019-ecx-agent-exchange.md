@@ -1,6 +1,6 @@
 # ADR-19 — ECX pointer-first agent exchange; A2A di external boundary
 
-**Status:** Diterima · 2026-09-09
+**Status:** Diterima · 2026-09-09 · evidence-boundary clarification 2026-09-11
 
 ## Konteks
 
@@ -19,7 +19,7 @@ Packet ECX hanya membawa:
 - response mode (`delta` atau `full`);
 - sender/recipient dan operation identity.
 
-Raw referenced data **tidak disalin ke packet**. Receiver meminta hydration secara eksplisit. Hub melakukan classification gate sebelum memanggil owner service melalui API.
+Raw referenced data **tidak disalin ke packet**. Receiver/caller meminta hydration secara eksplisit. Hub melakukan classification gate sebelum memanggil owner service melalui API.
 
 ### Routing
 
@@ -44,6 +44,9 @@ Jika plan menghasilkan lebih dari satu recipient dan `historySessionId` diberika
 - `maxHydratedBytes` adalah hard byte budget.
 - denied/missing reference gagal eksplisit; tidak silently menghapus evidence.
 - `LOCAL_ONLY` History tidak dapat dihydrate sebagai hosted-eligible context.
+- current `/v1/exchange/hydrate` menerima **caller-supplied `refIndexes`**; hydrator tidak memilih reference secara semantik/autonom.
+
+Konsekuensinya, kemampuan selective hydration yang sudah ada berbeda dari **automatic reference selection**. ECORIONE tidak boleh diklaim memiliki selector otomatis hanya karena caller dapat meminta subset reference.
 
 ### A2A
 
@@ -61,10 +64,28 @@ Planner/hydrator harus menghasilkan measurement yang dapat dibandingkan terhadap
 
 Regression suite menyertakan fixture yang membandingkan pointer-first packet dengan equivalent inline-history payload untuk membuktikan properti ukuran packet secara lokal. Klaim penghematan produksi tetap membutuhkan measurement traffic nyata dan tidak boleh disimpulkan hanya dari fixture tersebut.
 
+### Comparative evidence clarification — 2026-09-11
+
+Local traffic/integrity evidence sudah membuktikan real ECX plan, `agent.handoff`, dan hydration melalui owner boundary. Itu tetap bukan savings proof.
+
+Untuk comparative local R&D, protocol resmi saat ini ada di `docs/comparative-ecx-evidence.md` dan memisahkan tiga lane:
+
+- `full-inline` — baseline full context;
+- `ecx-all` — ECX packet + hydrate semua refs untuk mengontrol efek transport;
+- `ecx-selective-oracle` — hanya fixture-declared relevant refs dihydrate.
+
+Nama `oracle` sengaja eksplisit karena reference subset diketahui dari answer-key fixture, bukan ditemukan oleh selector produksi. Hasil lane tersebut hanya boleh dipakai untuk mengukur **potential/upper bound of correct selective hydration**.
+
+Jika evidence menunjukkan potential yang cukup besar, automatic selector dapat diusulkan sebagai scope baru. Selector tersebut harus punya evaluation sendiri terhadap oracle dan full-inline baseline, termasuk false omission/quality regression. ADR ini tidak mengotorisasi selector baru secara implisit.
+
+Local provider-token `actualUsd=0` tidak membuktikan hosted billed-cost savings. Hosted cost evidence membutuhkan equivalent paired tasks, operator-owned credentials melalui Connect Vault, explicit spend limits, dan actual provider billing telemetry bila tersedia.
+
 ## Konsekuensi
 
 - agent handoff bisa mengirim reference ticket kecil;
-- context hanya dihydrate saat perlu;
+- context hanya dihydrate saat diminta;
 - Hub tetap supervisor komunikasi/policy;
 - Connect tetap interoperability boundary;
-- format internal dapat dioptimalkan tanpa mem-fork standard A2A.
+- format internal dapat dioptimalkan tanpa mem-fork standard A2A;
+- selective hydration bisa diukur tanpa melebih-lebihkan kemampuan selector;
+- negative comparative result diterima sebagai evidence dan tidak memaksa pembangunan optimizer baru.

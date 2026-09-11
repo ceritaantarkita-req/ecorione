@@ -34,6 +34,8 @@
     "acceptance:production-ops": "node scripts/production-ops-acceptance.mjs",
     "canary:provider": "node scripts/provider-canary.mjs",
     "canary:providers": "node scripts/provider-matrix-canary.mjs",
+    "evidence:comparative": "node scripts/comparative-evidence.mjs",
+    "evidence:comparative:smoke": "node scripts/comparative-evidence.mjs --smoke",
     "production:preflight": "bash scripts/production-preflight.sh",
     "production:smoke": "node scripts/production-public-smoke.mjs",
     "production:ops-snapshot": "node scripts/production-ops-snapshot.mjs",

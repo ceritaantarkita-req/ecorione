@@ -4,45 +4,53 @@ ECORIONE adalah lapisan memori dan optimizer bersama untuk AI lokal maupun hoste
 
 ## Current state — baca ini dulu
 
-Per **2026-09-10**:
+Per **2026-09-11**:
 
 - planned platform/production **Batch 1–12 CLOSED**;
 - remaining planned batch di roadmap itu: **0**;
 - production/self-host baseline: **READY** sesuai boundary yang didokumentasikan;
-- closure PR #30 merged ke `main` sebagai `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`;
-- final post-closure CI `34490006960`: PASS;
+- real laptop rehearsal: **PASS / LOCAL BOUNDARY CLOSED**;
+- real Historical Ledger + ECX traffic/integrity checkpoint: **PASS / LOCAL CHECKPOINT CLOSED**;
+- PR #37 merged ke `main` sebagai `88d588bbe4a5f005652c20f3409dd72093439f56`;
+- post-merge CI #37 `34554159172`: PASS seluruh repository gates;
+- comparative ECX efficiency evidence: **ACTIVE LOCAL R&D CHECKPOINT**;
+- real compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**;
 - Fase 6+ tetap **OPEN-ENDED / evidence-driven**;
 - Fase 5 AutoClick tetap **DEFERRED BY DESIGN**;
 - **tidak ada Batch 13 implisit**.
 
 Agent yang tidak punya histori chat **WAJIB mulai dari `docs/current-state-and-next-steps.md`**, lalu file ini. Jangan memakai `docs/blueprint.md` atau `docs/final-audit-2026-09-09.md` sebagai current-state source; keduanya punya nilai historis/planning dan tidak menggantikan tracker terbaru.
 
-Recommended reading order:
+Recommended reading order saat ini:
 
 1. `docs/current-state-and-next-steps.md`
 2. `AGENTS.md`
-3. `docs/EXECUTION-PROGRESS.md`
-4. `docs/verification/batch12-closure-2026-09-10.md`
-5. docs operations/ADR yang relevan dengan scope
-6. `docs/prd.md` + `docs/research.md`
-7. `docs/blueprint.md` sebagai historical execution blueprint
+3. `docs/comparative-ecx-evidence.md`
+4. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
+5. `docs/verification/local-production-rehearsal-2026-09-10.md`
+6. `docs/EXECUTION-PROGRESS.md`
+7. docs operations/ADR yang relevan dengan scope
+8. `docs/prd.md` + `docs/research.md`
+9. `docs/blueprint.md` sebagai historical execution blueprint
 
 ## Next work posture
 
-Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Urutan rekomendasi saat ini:
+Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Operator sudah memilih local-first evidence sebelum VPS. Urutan aktif saat ini:
 
-1. production deployment;
-2. real provider validation;
-3. durable production observability;
-4. host/account/backup security hardening;
-5. product validation;
-6. RnD/evaluation + ECX/optimizer validation;
-7. UX/Control Center improvement;
-8. ecosystem integration lewat contract/API;
-9. maintenance/dependency/security/DR drills;
+1. comparative ECX efficiency evidence;
+2. local persistence/restart drill;
+3. local backup/restore drill;
+4. local observability baseline;
+5. product/UX validation;
+6. immutable local model identity hardening;
+7. compute-host/VPS + Cloudflare deployment **hanya jika operator secara eksplisit melanjutkan**;
+8. hosted-provider comparative validation bila operator menyediakan kredensial + budget;
+9. maintenance/dependency/security/DR evidence;
 10. feature baru hanya jika evidence membenarkan.
 
-Untuk Cloudflare Free/VPS deployment, baca `docs/cloudflare-free-deployment.md`. Cloudflare adalah edge/tunnel, **bukan** pengganti compute/storage/Temporal ECORIONE.
+Comparative protocol: `docs/comparative-ecx-evidence.md`.
+
+Untuk future Cloudflare Free/VPS deployment, baca `docs/production-activation.md` dan `docs/cloudflare-free-deployment.md`. Cloudflare adalah edge/tunnel, **bukan** pengganti compute/storage/Temporal ECORIONE.
 
 ## Perintah
 
@@ -54,9 +62,27 @@ pnpm test:watch
 pnpm typecheck
 pnpm secret-scan
 pnpm run acceptance:production-ops
+
+# local comparative evidence, only with Phase 4 runtime running
+pnpm evidence:comparative:smoke
+pnpm evidence:comparative
 ```
 
 `pnpm verify` harus hijau sebelum PR dibuka. Production build dan acceptance yang relevan tetap release-blocking sesuai workflow/closure rules.
+
+`evidence:comparative` adalah runtime evidence command, bukan CI unit test. Jangan membuat CI bergantung pada Ollama/model lokal. Harness helper/gate logic harus punya deterministic test terpisah.
+
+## Comparative evidence rules
+
+1. Jangan menyebut packet/hydration count sebagai savings proof.
+2. Current ECX `/v1/exchange/hydrate` menerima `refIndexes` dari caller. Jadi `ecx-selective-oracle` hanya mengukur benefit ketika reference yang benar **sudah diketahui**; itu bukan automatic selector evidence.
+3. `full-inline`, `ecx-all`, dan `ecx-selective-oracle` harus memakai task/facts/model yang sama. Jangan memberi satu lane jawaban lebih mudah.
+4. Exact-cache tidak boleh menguntungkan lane tertentu. Measured `cacheHit=true` adalah failure.
+5. Tetapkan gate sebelum melihat hasil. Jangan melemahkan threshold sesudah failure hanya agar benchmark hijau.
+6. Quality harus dinilai dengan deterministic expected facts ketika fixture memungkinkan. Jangan menambahkan AI judge hanya untuk menaikkan skor.
+7. Local provider-token `actualUsd=0` bukan hosted cost-saving evidence.
+8. Simpan raw evidence lokal di path yang gitignored (contoh `.ecorione/evidence/`). Commit hanya sanitized summary setelah hasil diverifikasi.
+9. Negative result adalah evidence yang valid. Jangan membangun selector/optimizer baru hanya untuk mempertahankan hipotesis awal.
 
 ## Aturan yang tidak bisa dinegosiasikan
 
@@ -69,7 +95,7 @@ Ini bukan preferensi gaya — ini invarian yang kalau dilanggar merusak klaim in
 5. **Idempotency key wajib pada setiap efek samping** (ADR-12), dipaksakan di boundary runtime/tool, bukan diminta lewat prompt.
 6. **Setiap panggilan model mencatat biaya aktual/kontrafaktual sesuai boundary yang tersedia** (ADR-13). Jangan membuat savings claim yang tidak didukung telemetry nyata.
 7. **Gerbang sensitivitas/authority dievaluasi sebelum egress/biaya.** Tidak ada downgrade/silent fallback tersembunyi.
-8. **Pin versi/model identity eksplisit** (ADR-14). Alias yang dapat drift seperti `-latest` dilarang di config/code yang diaudit.
+8. **Pin versi/model identity eksplisit** (ADR-14). Alias yang dapat drift seperti `-latest` dilarang di config/code yang diaudit. `gemma4:latest` yang muncul pada rehearsal adalah evidence runtime sementara, bukan durable production identity.
 9. **Kredensial tidak pernah masuk konteks reasoning AI.** Connect tetap credential owner dan production secret berada di Vault/encrypted boundary yang disetujui.
 10. **Jangan sentuh repo/ekosistem lama sebagai side effect.** Referensi lama tetap read-only kecuali user membuat scope eksplisit terpisah.
 11. **Tidak ada cross-service database access.** Setiap owner data diakses lewat contract/API owner service.
@@ -82,7 +108,7 @@ Ini bukan preferensi gaya — ini invarian yang kalau dilanggar merusak klaim in
 ## Arsitektur singkat
 
 - **Hub** = supervisor/coordinator + policy/approval/audit/authority + Historical Ledger/ECX. Bukan swarm.
-- **Connect** = outbound provider/local model + optimizer + credential/spend + inbound/outbound MCP + runtime settings.
+- **Connect** = outbound provider/local model + cache/routing/cost telemetry + credential/spend + inbound/outbound MCP + runtime settings.
 - **Context** = memory owner L0–L2 dan L3 metadata binding.
 - **Sync** = pairing/self-host bridge dan public MCP bridge boundary.
 - **Artifact** = content-addressed L3 bytes.
@@ -92,6 +118,8 @@ Ini bukan preferensi gaya — ini invarian yang kalau dilanggar merusak klaim in
 - **RnD** = traces, eval foundation, dataset governance.
 - **Ai** = user/operator UI; bukan authority/database owner untuk service lain.
 
+ECX selective hydration berada di Hub, tetapi pemilihan `refIndexes` saat ini berasal dari caller. Jangan mendokumentasikan Hub/Connect seolah sudah punya semantic/autonomous reference selector jika belum ada implementasinya.
+
 ## Konvensi kode
 
 - TypeScript strict, ESM, Node >=22. Gunakan `import type` untuk type-only import sesuai project config.
@@ -100,16 +128,20 @@ Ini bukan preferensi gaya — ini invarian yang kalau dilanggar merusak klaim in
 - Shared schema didefinisikan sekali di `packages/shared-schema`; jangan duplikasi kontrak antar service.
 - Test mengikuti struktur existing dan harus menguji owner/runtime boundary yang relevan.
 - Jangan menambahkan temporary helper/workflow ke final merge tree.
+- Evidence harness boleh mengorkestrasi public/internal service API yang sudah ada, tetapi tidak boleh membuka DB owner service secara langsung.
 
 ## Mengubah arsitektur
 
 Keputusan besar dicatat di `docs/DECISIONS.md`. Perubahan yang mengubah invariant, ownership, authority, durable state, security boundary, deployment contract, atau release claim membutuhkan ADR baru/updated ADR yang eksplisit.
 
+Current comparative harness **bukan architecture change**: ia memakai API Artifact, Hub ECX, dan Connect yang sudah ada. Automatic selector baru akan menjadi scope terpisah dan harus direview jika evidence membenarkannya.
+
 Setelah scope selesai:
 
 - update `docs/current-state-and-next-steps.md` bila current state berubah;
 - update `docs/EXECUTION-PROGRESS.md` dengan evidence nyata;
-- update operations docs yang terpengaruh;
+- update workstream/operations docs yang terpengaruh;
+- untuk comparative evidence, commit sanitized verification note setelah real run, bukan raw local evidence;
 - jangan rewrite historical verification/audit hanya untuk membuat sejarah terlihat lebih bersih.
 
 ## Yang sengaja tidak dibangun/dipaksakan
@@ -117,6 +149,7 @@ Setelah scope selesai:
 Jangan menambahkan tanpa evidence + keputusan arsitektur baru:
 
 - semantic caching generik;
+- automatic semantic ECX reference selector hanya karena benchmark oracle terlihat bagus;
 - graph database hanya karena tren;
 - swarm/multi-agent orchestration tanpa kebutuhan nyata;
 - durable execution engine buatan sendiri yang menduplikasi Temporal;
