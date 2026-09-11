@@ -1,8 +1,8 @@
 # Local Persistence / Restart — First Runtime Drill (2026-09-11)
 
-Status: **VALID FAILURE / ROOT CAUSE FIXED IN CODE / RERUN REQUIRED**
+Status: **HISTORICAL VALID FAILURE / ROOT CAUSE FIXED / SUCCESSFUL RERUN CLOSED SEPARATELY**
 
-This note preserves the first real laptop persistence/restart drill as defect evidence. It does **not** upgrade the persistence checkpoint to PASS.
+This note preserves the first real laptop persistence/restart drill as defect evidence. It is intentionally **not** rewritten as PASS. The final successful rerun is recorded separately in `docs/verification/local-persistence-restart-closure-2026-09-11.md`.
 
 ## Baseline
 
@@ -57,7 +57,7 @@ Runtime inspection confirmed the restarted Hub had:
 
 At the same time, the repository-root `data/hub.db` plus WAL/SHM files from the baseline still existed. The equivalent 404 results for Context and Artifact established that this was a storage-path contract defect, not a Temporal durability failure.
 
-## Repository fix
+## Repository fixes
 
 PR #46, **`fix: anchor local runtime paths to repo root`**, corrected the path contract across the affected runtime services.
 
@@ -71,24 +71,36 @@ The fix:
 - applies the rule across Hub, Context, Artifact, Flow, RnD, Connect, Sandbox, Space and Sync;
 - adds regression coverage for relative, fallback, empty and absolute paths.
 
-PR exact-head verification passed format, lint, typecheck, tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build and MCP External HTTPS acceptance. Post-merge `main` verification also passed.
+A subsequent laptop start exposed a second bounded local bootstrap issue: the service source imported the new shared export while the compiled `@ecorione/shared-server/dist` could remain stale after `git pull`.
 
-## Claim boundary and next action
+PR #48, **`fix: build compiled runtime deps before local dev`**, corrected that bootstrap contract. Merged revision: `673af91642ea1b9440079e396675c69f53647951`.
 
-The first drill remains a **valid failed persistence attempt** and must not be rewritten as PASS. The failure is useful evidence that the strict harness caught a real durability contract defect.
+Local dev entrypoints now build the relevant compiled workspace dependencies before starting service processes, and regression coverage prevents the bootstrap step from being silently removed.
 
-Required next sequence:
+## Recovery confirmation after the fixes
 
-1. synchronize the laptop to `main` at or after `778e7eb19a0e2f528c64e68459d8ff6e6ecbe1ce`;
-2. preserve the original local failed evidence before mutating its state;
-3. cleanly terminate the old dedicated waiting Flow probe;
-4. verify owner services now open repository-root durable paths;
-5. create a fresh strict baseline;
-6. repeat the reviewed process + Temporal + PostgreSQL restart boundary;
-7. require strict `post` PASS;
-8. require strict `cleanup` PASS;
-9. only then publish the final local persistence/restart closure claim.
+The original failed raw state was preserved before cleanup. After synchronizing to the fixed runtime and confirming owner services opened repository-root durable paths, the same first-drill probe became readable again through owner APIs:
 
-Until that rerun succeeds, the correct checkpoint status is:
+- Ledger: **HTTP 200** with the original head hash;
+- Context: **HTTP 200** with the original episode identity/content;
+- Artifact: **HTTP 200** with the original SHA-256;
+- Flow: **HTTP 200 / RUNNING**;
+- Hub approval: **HTTP 200 / PENDING** with the original operation identity.
 
-> **first runtime drill failed validly; path-resolution defect fixed in code; local persistence/restart proof pending rerun**
+This recovery confirmed the first drill's 404s were caused by wrong-path reopening. The original durable state had not been deleted or corrupted.
+
+The original dedicated Flow probe was then rejected through the canonical cleanup path and reached terminal state.
+
+## Historical claim boundary
+
+The first drill remains a **valid failed persistence attempt**. Its value is that the strict harness caught a real durability-path defect before ECORIONE could incorrectly claim persistence closure.
+
+Do not reinterpret the first drill as a successful persistence test. The later successful second drill used a fresh strict baseline on merged revision `673af91642ea1b9440079e396675c69f53647951` and independently exercised the same process + Temporal + PostgreSQL restart boundary.
+
+Final closure evidence:
+
+- `docs/verification/local-persistence-restart-closure-2026-09-11.md`
+
+Final checkpoint status after the independent rerun:
+
+> **LOCAL PERSISTENCE / RESTART CLOSED / PASS for the tested local process + Temporal + PostgreSQL-container restart boundary.**
