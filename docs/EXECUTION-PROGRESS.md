@@ -58,26 +58,23 @@ Key post-closure progression:
 - Historical Ledger + ECX local evidence closure PR #37: `88d588bbe4a5f005652c20f3409dd72093439f56`
 - comparative ECX harness PR #38: `c1849cd0c67712e40ea4e5c90587283900859cdb`
 - comparative harness docs closure PR #39: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`
+- comparative cache-isolation fix PR #40: `197627dc04689dea94bf7957e18b2699f8fb9213`
 
 PR #38 repository closure evidence:
 
 - final PR head: `d3f1cbf4d0acbb2c92f340b952f2c42e6c9bef4a`
 - exact-head CI `34557147546`: **PASS**
-  - Naming
-  - Format
-  - Lint
-  - Typecheck
-  - Test
-  - Phase 4 real-process acceptance
-  - Production Operations acceptance
-  - Secret Scan
-  - Production Build
 - exact-head MCP External HTTPS Acceptance `34557147583`: **PASS**
-- expected-head squash merge: `c1849cd0c67712e40ea4e5c90587283900859cdb`
-- post-merge `main` CI `34557297702`: **PASS** all repository gates
+- merge: `c1849cd0c67712e40ea4e5c90587283900859cdb`
+- post-merge `main` CI `34557297702`: **PASS**
 - post-merge MCP External HTTPS Acceptance `34557297803`: **PASS**
 
-Implementation verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
+PR #40 cache-isolation evidence:
+
+- exact-head repository gates: **PASS**;
+- merge: `197627dc04689dea94bf7957e18b2699f8fb9213`;
+- post-merge CI `34561893817`: **PASS**;
+- corrected real Gemma smoke: **PASS** with all measured lanes `cacheHit=false` and non-zero token telemetry.
 
 Closed local evidence before the comparative benchmark includes:
 
@@ -101,9 +98,7 @@ These prove local traffic/integrity/provenance. They do **not** prove ECX/optimi
 
 ## 4. Active workstream — Comparative ECX efficiency evidence
 
-Status: **IN PROGRESS — HARNESS IMPLEMENTATION CLOSED / FIRST REAL SMOKE FAILED CACHE-ISOLATION GATE / FIX IN REVIEW / REAL COMPARATIVE VERDICT PENDING**
-
-The original harness implementation is merged and repository-verified. The first real Gemma smoke then found a runtime measurement defect in cross-invocation cache isolation. That failure is valid evidence and does not reopen Batch 1–12 or the already-closed Historical Ledger/ECX traffic checkpoint.
+Status: **IN PROGRESS — CACHE FIX VERIFIED / FIRST 5× RUN 4 OF 5 TASKS PASS / RELEASE FIXTURE CORRECTION IN REVIEW / FINAL VERDICT PENDING**
 
 Protocol: `docs/comparative-ecx-evidence.md`.
 
@@ -125,52 +120,28 @@ Protocol: `docs/comparative-ecx-evidence.md`.
    - only fixture-declared relevant reference indexes are hydrated;
    - measures potential/upper bound of correct selective hydration.
 
-**Critical boundary:** current `/v1/exchange/hydrate` receives `refIndexes` from the caller. ECORIONE does not yet have a verified autonomous semantic reference selector. The `oracle` suffix must remain until a real selector exists and has separate evidence.
+**Critical boundary:** current `/v1/exchange/hydrate` receives `refIndexes` from the caller. ECORIONE does not yet have a verified autonomous semantic reference selector. The `oracle` suffix remains mandatory.
 
-### 4.2 Implemented and verified harness scope
+### 4.2 Harness scope already implemented
 
-Merged through PR #38:
+Merged harness scope includes:
 
-- `scripts/comparative-evidence.mjs`
-  - five synthetic fixed-answer workloads;
-  - real Artifact upload through owner API;
-  - real Hub ECX plan/hydrate calls;
-  - real Connect `target=local` completion calls;
-  - warm-up excluded from measurement;
-  - measured cache contamination is a hard failure;
-  - deterministic exact-field quality scoring;
-  - median aggregation;
-  - predeclared task gates;
-  - optional local JSON evidence output with mode `0600`;
-  - explicit claim boundary in output.
-- `test/comparative-evidence.test.mjs`
-  - median/scoring/context assembly regression;
-  - positive gate regression;
-  - cache contamination and quality-loss failure regression.
-- root commands:
-  - `pnpm evidence:comparative:smoke`
-  - `pnpm evidence:comparative`
-- `docs/comparative-ecx-evidence.md`
-  - experiment design, gates, commands, interpretation, and claim boundaries.
+- five synthetic fixed-answer workloads;
+- real Artifact upload through owner API;
+- real Hub ECX plan/hydrate calls;
+- real Connect `target=local` completion calls;
+- warm-up excluded from measurement;
+- measured cache contamination as hard failure;
+- deterministic exact-field quality scoring;
+- median aggregation;
+- predeclared task gates;
+- optional local JSON evidence output under gitignored `.ecorione/`;
+- explicit claim boundary in output;
+- per-invocation measured cache namespace isolation after PR #40.
 
-Two implementation findings were fixed before PR #38 closure rather than waived:
+Deterministic tests cover scoring/context helpers, positive gates, cache/quality failures, cache-marker isolation, and the release exact-value delimiter correction.
 
-- Prettier differences in the new harness/test;
-- `performance` was explicitly imported from `node:perf_hooks` for the Node/ESLint environment.
-
-Temporary formatter/lint-fixer workflows are absent from the final PR diff and merged tree.
-
-### 4.3 Five synthetic workloads
-
-- incident triage;
-- procurement award;
-- release readiness;
-- retention policy;
-- customer escalation.
-
-Each fixture contains authoritative relevant documents plus larger irrelevant/noise documents. Required JSON facts are fixed before the real model run, so quality can be scored without a second AI judge.
-
-### 4.4 Predeclared pass gates
+### 4.3 Predeclared pass gates
 
 A task passes only when:
 
@@ -184,117 +155,116 @@ A task passes only when:
 8. selective median input tokens are lower than full-inline;
 9. selective median latency does not exceed full-inline by more than default ratio `1.35`.
 
-Do not weaken a gate after seeing a result merely to obtain PASS. The first smoke cache failure did **not** change these thresholds.
+Do not weaken a gate after seeing a result merely to obtain PASS.
 
-### 4.5 Measurements
+### 4.4 Runtime evidence progression
 
-Per measured run:
-
-- lane/task/repeat identity;
-- provider/model/response-model/pricing-model;
-- cache state;
-- model context bytes;
-- input/output/cache tokens;
-- end-to-end harness latency;
-- Connect `actualUsd`, `naiveUsd`, optimizer overhead;
-- deterministic quality score.
-
-Per ECX task:
-
-- packet bytes;
-- all-ref hydration bytes;
-- selective hydration bytes;
-- selected recipient;
-- Artifact IDs.
-
-Local provider-token `actualUsd=0` remains valid local accounting, **not hosted cost-savings evidence**.
-
-### 4.6 First real Gemma smoke — observed result
+#### First real smoke — FAIL / valid cache finding
 
 Synchronized laptop revision: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`.
 
+Artifact, ECX plan/hydration, recipient selection, and deterministic returned quality worked, but all three measured completion lanes hit exact cache. The hard cache gate rejected the run. Finding preserved in:
+
+- `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`.
+
+#### Corrected smoke after PR #40 — PASS
+
+Synchronized laptop revision: `197627dc04689dea94bf7957e18b2699f8fb9213`.
+
 Observed:
 
-- Phase 4 services ready and Temporal Flow worker RUNNING;
-- configured local model `gemma4:latest` present;
-- Artifact fixture uploads: success;
-- Hub ECX plan: success;
-- all-ref hydration: success;
-- oracle-selective hydration: success;
-- recipient: `agent:comparative-evidence-reviewer`;
-- packet bytes: `1011`;
-- all-ref hydrated bytes: `8241`;
-- selective hydrated bytes: `1123`;
-- deterministic returned quality: `1.0` in all three lanes;
-- all three measured lanes: `cacheHit=true`;
-- measured input/output tokens: `0/0` because Connect served exact-cache entries;
-- gate result: **FAIL** with `measured run hit exact cache` and `selective median input tokens did not beat full-inline`.
+- all three measured lanes `cacheHit=false`;
+- real non-zero token telemetry;
+- same local model identity across lanes;
+- deterministic quality 100%;
+- `full-inline` and `ecx-all` control token counts aligned;
+- oracle-selective bytes/tokens lower;
+- task gate PASS.
 
-Interpretation:
+#### First full closure-grade 5× run — FAIL / 4 of 5 tasks pass
 
-- Artifact/ECX wiring and byte accounting were exercised successfully;
-- `74.19%` selective transport reduction is a byte calculation for the fixture, but the run is not accepted as model-compute evidence;
-- 7–11 ms lane latency is exact-cache response latency, not Gemma inference latency;
-- zero token telemetry makes the selective-vs-full token comparison invalid;
-- therefore no optimizer/token/latency verdict is claimed from this smoke.
+Revision: `197627dc04689dea94bf7957e18b2699f8fb9213`.
 
-Root cause found in the harness: the original cache marker was deterministic from task id + pair + mode, so separate benchmark invocations could collide while the same Connect process retained entries inside its cache TTL.
+Run shape:
 
-### 4.7 Cache-isolation fix scope
+- tasks: 5;
+- repeats: 5;
+- lanes: 3;
+- measured model calls: 75.
 
-Active fix branch: `fix/comparative-cache-namespace-20260911`.
+Aggregate observed result:
 
-Fix design:
+- passed tasks: `4/5`;
+- failed task: `release-readiness`;
+- median selective transport reduction: `73.6379379246037%`;
+- median selective input-token reduction: `77.70491803278688%`;
+- median selective/full latency ratio: `0.8387964882197358`.
 
-- generate one fresh random 32-hex namespace per benchmark invocation;
-- use fixed-shape numeric task/pair/mode coordinates inside each measured marker;
-- preserve the same marker length across paired lanes;
-- keep the existing `cacheHit=true` hard-failure gate unchanged;
-- add deterministic regression coverage proving cross-invocation marker separation and paired-shape stability.
+These percentages are **provisional observations from a failed closure run**.
 
-This is a measurement-harness correction, not an ECX architecture change and not a threshold relaxation.
+`release-readiness` failed median deterministic quality in all three lanes (`full-inline`, `ecx-all`, and `ecx-selective-oracle`). The model returned sentence-final periods in two values that the expected exact answer intentionally excludes. The original source fixture placed periods immediately after those authoritative values, making the delimiter ambiguous for an exact-string benchmark. Because the baseline/control/selective lanes failed identically, this is not ECX-specific quality loss.
 
-### 4.8 Runtime commands / next gates
+Finding preserved in:
 
-After the cache-isolation fix passes repository gates, merges, and laptop synchronization is verified:
+- `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`.
+
+### 4.5 Active fixture correction
+
+Branch:
+
+`fix/comparative-release-fixture-ambiguity-20260911`
+
+Correction rules:
+
+- expected answer unchanged;
+- exact-match scorer unchanged;
+- quality gate unchanged;
+- byte/token/latency gates unchanged;
+- remove only the sentence-final periods directly adjacent to the two ambiguous authoritative values;
+- add regression coverage that locks the delimiter-safe source representation;
+- correct documented CLI argument forwarding; literal `--` must not be passed to the harness parser.
+
+This is a benchmark-fixture design correction, not an ECX architecture change.
+
+### 4.6 Correct commands
+
+Targeted verification after the fixture fix is merged and synchronized:
 
 ```bash
-set -a
-source .env
-set +a
-pnpm evidence:comparative:smoke
+pnpm evidence:comparative \
+  --tasks release-readiness \
+  --repeats 1
 ```
 
-The rerun must show all measured lanes `cacheHit=false` and real non-zero token telemetry before it can be considered a healthy model-compute smoke.
-
-Do not run the closure-grade benchmark until the smoke rerun is inspected. If smoke is healthy:
+Closure-grade run after targeted verification passes:
 
 ```bash
-pnpm evidence:comparative -- --repeats 5 \
+pnpm evidence:comparative \
+  --repeats 5 \
   --output .ecorione/evidence/comparative-local-2026-09-11.json
 ```
 
-Raw evidence stays local/gitignored. Only a sanitized verified summary should be committed later.
+Do **not** use `pnpm evidence:comparative -- --repeats ...`; the literal `--` is forwarded to `scripts/comparative-evidence.mjs` and rejected as an unknown argument.
 
-### 4.9 Remaining closure blockers
+Raw evidence stays local/gitignored. Only sanitized verified summaries belong in Git.
 
-The **comparative evidence workstream itself is not CLOSED** yet. Repository/harness implementation is closed, but these evidence gates remain:
+### 4.7 Remaining closure blockers
 
-- exact-head verification of the cache-isolation fix branch;
-- merge + post-merge verification of the fix;
-- laptop tracked-tree sync to the resulting `main`;
-- real local Gemma smoke rerun with no measured cache hits;
-- closure-grade 5× paired run;
-- sanitized comparative measured-result verification note;
-- current-state/progress docs updated with the actual measured verdict.
+The comparative evidence workstream is **not CLOSED** yet. Remaining gates:
 
-A negative benchmark result is valid evidence and must not be rewritten into a positive claim.
+- exact-head repository verification of `fix/comparative-release-fixture-ambiguity-20260911`;
+- merge + post-merge verification;
+- laptop synchronization to resulting `main`;
+- targeted real Gemma `release-readiness` rerun;
+- complete 5-task × 5-repeat closure rerun on corrected merged revision;
+- sanitized final measured-result verification note;
+- canonical docs updated with final `PASS`, `PASS WITH LIMITATIONS`, or `FAIL / NEEDS ITERATION` verdict.
+
+A negative result remains valid evidence and must not be rewritten into a positive claim.
 
 ---
 
 ## 5. Current operator-approved execution order
-
-Current order is deliberately local-first:
 
 1. **Comparative ECX real Gemma efficiency evidence — ACTIVE**
 2. **Local persistence/restart drill — PENDING AFTER COMPARATIVE**
@@ -337,6 +307,7 @@ Cloudflare, if used, stays an external DNS/TLS/tunnel edge. It never becomes own
 - Artifact owns L3 bytes; comparative fixtures use Artifact API rather than filesystem/DB bypass.
 - Exact cache must not contaminate paired model-compute comparisons.
 - Benchmark cache isolation must hold across separate invocations while the same Connect process is alive.
+- Exact-match benchmark source values must use unambiguous delimiters; do not normalize scoring after a failure to manufacture PASS.
 - Memory is untrusted data, never instructions.
 - Hosted-derived memory follows quarantine/governed promotion.
 - Model identity must be pinned for durable production claims. `gemma4:latest` is accepted only as current local rehearsal evidence until immutable local identity hardening.
@@ -381,6 +352,7 @@ For comparative/model evidence specifically, also require:
 - cache contamination detection;
 - cache namespaces isolated across separate benchmark invocations;
 - equivalent fact/task/model controls;
+- exact source/answer delimiters unambiguous when deterministic exact-match scoring is used;
 - quality measurement rather than token-only optimization;
 - raw evidence kept local/gitignored;
 - sanitized verification note committed after measurement;
@@ -409,6 +381,6 @@ Architecture changes require ADR/decision updates. Measurement harnesses that on
 
 ## 10. Next action
 
-**Immediate next:** verify `fix/comparative-cache-namespace-20260911` through the normal repository gates. If exact-head verification is green, merge it, verify `main`, synchronize the laptop, and rerun `pnpm evidence:comparative:smoke`. Do not run the 5× paired closure benchmark until that rerun proves the measured lanes are uncached and the result is inspected.
+**Immediate next:** verify `fix/comparative-release-fixture-ambiguity-20260911` through normal repository gates. If exact-head verification is green, merge it, verify `main`, synchronize the laptop, then run a targeted uncached `release-readiness` check. Only after that task is healthy should the complete 5× closure run be repeated on the corrected merged revision.
 
 Canonical protocol: `docs/comparative-ecx-evidence.md`.
