@@ -685,7 +685,7 @@ async function warmUp({ connectUrl, token, timeoutMs }) {
         coreMemory: { blocks: [] },
       },
       dynamicText: "Benchmark warm-up only. No measured fixture context.",
-      userMessage: '{"warmup":"ok"}',
+      userMessage: 'Return exactly {"warmup":"ok"}.',
       sensitivity: "INTERNAL",
       operationId,
       now: new Date().toISOString(),
