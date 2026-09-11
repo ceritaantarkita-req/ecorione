@@ -140,10 +140,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (options.phase === "baseline") {
     const approvalPromise = readApproval(state, token);
     const sessionPromise = readLedgerSession(state, token);
-    const [approval, session] = await Promise.all([
-      approvalPromise,
-      sessionPromise,
-    ]);
+    const [approval, session] = await Promise.all([approvalPromise, sessionPromise]);
     assertBaselineEvidenceState(state, approval, session);
     console.log("PASS strict persistence baseline");
     return;
@@ -163,8 +160,7 @@ export async function main(argv = process.argv.slice(2)) {
 }
 
 const scriptPath = process.argv[1];
-const isMain =
-  scriptPath && import.meta.url === pathToFileURL(resolve(scriptPath)).href;
+const isMain = scriptPath && import.meta.url === pathToFileURL(resolve(scriptPath)).href;
 
 if (isMain) {
   main().catch((error) => {
