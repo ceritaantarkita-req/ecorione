@@ -72,9 +72,7 @@ describe("comparative evidence helpers", () => {
     const task = FIXTURES.find((fixture) => fixture.id === "release-readiness");
     expect(task).toBeDefined();
 
-    const releaseIdDocument = task.documents.find(
-      (document) => document.id === "release-id",
-    );
+    const releaseIdDocument = task.documents.find((document) => document.id === "release-id");
     const blockerDocument = task.documents.find(
       (document) => document.id === "release-blocker",
     );
