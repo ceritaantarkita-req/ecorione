@@ -40,6 +40,8 @@
     "evidence:persistence-restart": "node scripts/local-persistence-restart-evidence-strict.mjs",
     "evidence:persistence-restart:inventory": "node scripts/local-persistence-restart-evidence-strict.mjs --phase inventory",
     "evidence:persistence-restart:raw": "node scripts/local-persistence-restart-evidence.mjs",
+    "evidence:backup-restore": "pnpm run build:runtime-deps && node scripts/local-backup-restore-evidence.mjs",
+    "evidence:backup-restore:inventory": "pnpm run build:runtime-deps && node scripts/local-backup-restore-evidence.mjs --phase inventory",
     "production:preflight": "bash scripts/production-preflight.sh",
     "production:smoke": "node scripts/production-public-smoke.mjs",
     "production:ops-snapshot": "node scripts/production-ops-snapshot.mjs",
