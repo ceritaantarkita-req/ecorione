@@ -1,6 +1,6 @@
 # Fase 6+ — evidence-driven hardening baseline
 
-**Status:** ACTIVE / OPEN-ENDED · reconciled through local Historical Ledger + ECX closure on 2026-09-11
+**Status:** ACTIVE / OPEN-ENDED · reconciled through comparative-harness implementation closure on 2026-09-11
 
 Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. Yang sudah CLOSED adalah **planned platform/production roadmap Batch 1–12**. Dokumen ini mencatat hardening baseline yang sudah masuk `main` dan area evidence-driven yang masih bisa berkembang setelah closure.
 
@@ -12,12 +12,17 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - production/self-host repository baseline: **READY** sesuai boundary yang didokumentasikan
 - local laptop rehearsal: **PASS / LOCAL BOUNDARY CLOSED**
 - local Historical Ledger + ECX traffic/integrity evidence: **PASS / LOCAL CHECKPOINT CLOSED**
-- current local-evidence baseline merge: `88d588bbe4a5f005652c20f3409dd72093439f56`
-- post-merge CI `34554159172`: **PASS**
-- comparative ECX efficiency work: **ACTIVE LOCAL R&D CHECKPOINT**
+- Historical Ledger + ECX evidence merge: `88d588bbe4a5f005652c20f3409dd72093439f56`
+- comparative ECX harness implementation: **PASS / CLOSED**
+- comparative harness PR #38 merge: `c1849cd0c67712e40ea4e5c90587283900859cdb`
+- PR #38 exact-head CI `34557147546` + MCP External HTTPS `34557147583`: **PASS**
+- PR #38 post-merge CI `34557297702` + MCP External HTTPS `34557297803`: **PASS**
+- real Gemma comparative ECX efficiency evidence: **ACTIVE / PENDING RUNTIME MEASUREMENT**
 - compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**
 - AutoClick: **DEFERRED BY DESIGN**
 - no implicit Batch 13
+
+Comparative harness verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
 
 ## Hardening/platform baseline yang sudah masuk
 
@@ -92,11 +97,30 @@ This proves local traffic/integrity/provenance. It still does not prove comparat
 
 Verification: `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`.
 
+### Comparative harness implementation
+
+The comparative harness is now merged and repository-verified. It uses existing Artifact, Hub ECX and Connect owner APIs rather than a database/filesystem shortcut, and it keeps the control/claim boundary explicit.
+
+Merged scope includes:
+
+- `full-inline`, `ecx-all`, and `ecx-selective-oracle` lanes;
+- five fixed-answer synthetic workloads with relevant + noise documents;
+- deterministic exact-field quality scoring;
+- warm-up exclusion and measured-call cache-busting;
+- hard failure on measured cache hits;
+- median aggregation and predeclared quality/bytes/token/latency gates;
+- optional mode-0600 raw JSON output under gitignored `.ecorione/` storage;
+- deterministic helper/gate regression coverage.
+
+Pre-closure findings were fixed rather than waived: new-file Prettier differences and the explicit Node `performance` import required by the repository lint environment. Temporary helper workflows are absent from the merged tree.
+
+Verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
+
 ## Active comparative evidence scope
 
 Current local R&D protocol: `docs/comparative-ecx-evidence.md`.
 
-The benchmark uses three paired lanes:
+The harness implementation is **CLOSED**; the measured real Gemma result remains **ACTIVE/PENDING**. The runtime benchmark uses three paired lanes:
 
 - `full-inline` — full synthetic context sent to the same local model;
 - `ecx-all` — real ECX packet + all refs hydrated, preserving the same semantic document set as the baseline;
@@ -106,13 +130,22 @@ The oracle suffix is mandatory because current ECX does **not** autonomously cho
 
 Predeclared evidence includes transport bytes, input/output tokens, latency, cache state, model identity, and deterministic answer quality. Exact-cache hits invalidate measured runs. Local `actualUsd=0` is recorded but is not hosted-cost evidence.
 
+Next exact runtime order:
+
+1. synchronize laptop to the merged harness/docs closure;
+2. restart/use Phase 4 from that synchronized tree;
+3. run `pnpm evidence:comparative:smoke`;
+4. inspect all three lanes and fix any real defect without weakening gates;
+5. only after healthy smoke, run the 5× paired closure benchmark and save raw JSON locally;
+6. commit a sanitized measured-result verification note and update canonical status.
+
 If oracle-selective evidence is useful, a real selector may be proposed later as a separate evidence-driven scope. If it is not useful, record the negative result instead of building a selector to defend the hypothesis.
 
 ## What remains open-ended after Batch 12
 
 These are **not unfinished Batch 12 items**. Current operator-approved order is:
 
-1. run comparative ECX local evidence using the predeclared protocol;
+1. run comparative ECX real Gemma evidence using the predeclared protocol;
 2. perform a controlled local persistence/restart drill;
 3. perform an isolated local backup/restore drill;
 4. collect a local observability baseline from representative workloads;

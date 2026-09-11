@@ -4,26 +4,32 @@
 
 Pindah lintas provider/model tanpa kehilangan kesinambungan kerja, sambil menjaga boundary local-first, approval, audit trail, durable execution, MCP, dan biaya kontrafaktual tetap eksplisit.
 
-> **Current status — 2026-09-11:** **production/self-host repository baseline READY · planned platform/production Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · comparative ECX efficiency evidence ACTIVE · compute-host/VPS deployment DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
+> **Current status — 2026-09-11:** **production/self-host repository baseline READY · planned platform/production Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · comparative ECX harness MERGED/VERIFIED with real Gemma comparative evidence ACTIVE/PENDING · compute-host/VPS deployment DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
 
 Untuk agent/manusia yang baru masuk repo: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md). Jangan menyimpulkan current state dari blueprint/audit lama saja.
 
 ## Current closure evidence
 
-Final state setelah roadmap Batch 1–12 dan local evidence closure:
+Final state setelah roadmap Batch 1–12, local evidence closure, dan comparative-harness implementation closure:
 
 - implementation PR #29 merged sebagai `ad67b68290a41e69e18dfa49caefed0090bd9635`;
 - closure PR #30 merged sebagai `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`;
 - local Production Activation/runtime-fix sequence PR #32–#36 merged;
 - Historical Ledger + ECX local evidence closure PR #37 merged sebagai `88d588bbe4a5f005652c20f3409dd72093439f56`;
 - PR #37 post-merge `main` CI `34554159172`: PASS seluruh repository gates;
+- comparative harness PR #38 merged sebagai `c1849cd0c67712e40ea4e5c90587283900859cdb`;
+- PR #38 exact-head CI `34557147546` dan MCP External HTTPS `34557147583`: PASS;
+- PR #38 post-merge `main` CI `34557297702` dan MCP External HTTPS `34557297803`: PASS;
 - real local browser→Hub→Connect→Ollama/Gemma path: PASS;
 - real local Historical Ledger hash chain + ECX plan/handoff/hydration: PASS;
-- `pnpm production:data-evidence`: PASS pada captured local checkpoint.
+- `pnpm production:data-evidence`: PASS pada captured local checkpoint;
+- real comparative Gemma smoke/full benchmark: **PENDING** setelah laptop disinkronkan ke merged harness.
 
 Detail current state dan evidence:
 
 - [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md)
+- [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md)
+- [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md)
 - [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md)
 - [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md)
 - [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md)
@@ -46,7 +52,7 @@ Detail current state dan evidence:
 | **Data / DR** | Rebuild/governance/backup-restore procedures |
 | **Production Ops** | Compose/Caddy, metrics/traces, provider canary, release/install/upgrade/rollback tooling |
 | **Security closure** | Full-history + working-tree secret scans, dependency/release checks, HTTP/SSRF hardening, real public HTTPS MCP acceptance |
-| **Comparative evidence** | Local A/B/C-style harness for full-inline vs ECX all-ref vs oracle selective hydration |
+| **Comparative evidence** | Harness merged untuk full-inline vs ECX all-ref vs oracle selective hydration; real Gemma comparative run masih pending |
 | **AutoClick** | **Deferred by design** sampai ada use case non-API nyata |
 
 ## Arsitektur inti
@@ -86,7 +92,7 @@ Historical Ledger di Hub menyimpan chronological/replay history dan tidak mengga
 
 ## Comparative ECX evidence
 
-Active local R&D protocol: [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md).
+Active local R&D protocol: [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md). Harness implementation sudah merged dan repository-verified; next checkpoint adalah real local Gemma smoke, lalu closure-grade paired run bila smoke sehat.
 
 Benchmark membandingkan tiga lane dengan task/facts/model yang sama:
 
@@ -194,7 +200,7 @@ There is **no automatic Batch 13**. Future work must be opened as a new explicit
 
 Current operator-approved order:
 
-1. comparative ECX efficiency evidence;
+1. comparative ECX efficiency evidence — harness merged; real Gemma smoke/full measurement pending;
 2. controlled local persistence/restart drill;
 3. isolated local backup/restore drill;
 4. local observability baseline;
@@ -248,19 +254,20 @@ READY baseline bukan klaim bahwa:
 | 1 | [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md) | Current canonical handoff + next scope |
 | 2 | [`AGENTS.md`](AGENTS.md) | Invarian dan aturan kerja repo |
 | 3 | [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md) | Active local comparative-evidence protocol |
-| 4 | [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md) | Real local Ledger + ECX closure |
-| 5 | [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md) | Real laptop runtime evidence |
-| 6 | [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md) | Detailed progress + closure history |
-| 7 | [`docs/production-activation.md`](docs/production-activation.md) | Deferred production activation runbook |
-| 8 | [`docs/production-operations.md`](docs/production-operations.md) | Production/self-host operations |
-| 9 | [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md) | Future free Cloudflare edge/Tunnel option |
-| 10 | [`docs/release-operations.md`](docs/release-operations.md) | Install/upgrade/rollback/release gate |
-| 11 | [`docs/prd.md`](docs/prd.md) | Product + architecture requirements |
-| 12 | [`docs/research.md`](docs/research.md) | Research/due diligence |
-| 13 | [`docs/blueprint.md`](docs/blueprint.md) | Historical execution blueprint; not current status source |
-| 14 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log |
-| 15 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
-| 16 | [`docs/verification/`](docs/verification/) | Exact-head/runtime evidence |
+| 4 | [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md) | Comparative harness implementation + CI/merge closure |
+| 5 | [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md) | Real local Ledger + ECX closure |
+| 6 | [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md) | Real laptop runtime evidence |
+| 7 | [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md) | Detailed progress + closure history |
+| 8 | [`docs/production-activation.md`](docs/production-activation.md) | Deferred production activation runbook |
+| 9 | [`docs/production-operations.md`](docs/production-operations.md) | Production/self-host operations |
+| 10 | [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md) | Future free Cloudflare edge/Tunnel option |
+| 11 | [`docs/release-operations.md`](docs/release-operations.md) | Install/upgrade/rollback/release gate |
+| 12 | [`docs/prd.md`](docs/prd.md) | Product + architecture requirements |
+| 13 | [`docs/research.md`](docs/research.md) | Research/due diligence |
+| 14 | [`docs/blueprint.md`](docs/blueprint.md) | Historical execution blueprint; not current status source |
+| 15 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log |
+| 16 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
+| 17 | [`docs/verification/`](docs/verification/) | Exact-head/runtime evidence |
 
 ## Lisensi
 

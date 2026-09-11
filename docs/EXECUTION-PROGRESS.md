@@ -4,7 +4,7 @@ Last updated: **2026-09-11**
 
 Status: **ACTIVE — canonical execution tracker**
 
-Dokumen ini adalah source of truth untuk **current execution status** setelah planned Batch 1–12 selesai. Detail kronologis Batch 1–12 yang sebelumnya membuat file ini sangat panjang dipertahankan byte-for-byte di:
+Dokumen ini adalah source of truth untuk **current execution status** setelah planned Batch 1–12 selesai. Detail kronologis Batch 1–12 dipertahankan di:
 
 - `docs/archive/execution-progress-through-batch12-2026-09-10.md`
 
@@ -31,19 +31,7 @@ Jangan memakai archive tersebut sebagai current-state source. Mulai dari `docs/c
 
 Planned platform/production roadmap tetap:
 
-- Batch 1: **CLOSED**
-- Batch 2: **CLOSED**
-- Batch 3: **CLOSED**
-- Batch 4: **CLOSED**
-- Batch 5: **CLOSED**
-- Batch 6: **CLOSED**
-- Batch 7: **CLOSED**
-- Batch 8: **CLOSED**
-- Batch 9: **CLOSED**
-- Batch 10: **CLOSED**
-- Batch 11: **CLOSED**
-- Batch 12: **CLOSED**
-- total defined roadmap: **12/12 = 100% CLOSED**
+- Batch 1–12: **12/12 CLOSED**
 - remaining planned batch di roadmap tersebut: **0**
 - Fase 5 AutoClick: **DEFERRED BY DESIGN**
 - Fase 6+: **OPEN-ENDED / evidence-driven**
@@ -55,23 +43,42 @@ Historical detailed tracker: `docs/archive/execution-progress-through-batch12-20
 
 ---
 
-## 3. Current verified `main` baseline
+## 3. Current verified repository baseline
 
-Current reviewed baseline sebelum comparative-evidence branch dibuka:
+Key post-closure progression:
 
 - Batch 12 implementation PR #29: `ad67b68290a41e69e18dfa49caefed0090bd9635`
 - closure PR #30: `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`
 - docs/Cloudflare reconciliation PR #31: `aa360b81a6ef5cd41f466d7ada239b4e461c60ee`
-- Production Activation tooling + real local runtime fixes PR #32: `a6cc17530b4e4540d710fa449c93844a8dad7981`
+- Production Activation tooling + local runtime fixes PR #32: `a6cc17530b4e4540d710fa449c93844a8dad7981`
 - sourced-env proxy test isolation PR #33: `eac26497aa868e448c5fa4e48c3331abf585d5cf`
 - secret-scan Git-boundary correction PR #34: `a95e5e20bb30d4828288f6bba230860bc65e631f`
 - local-rehearsal docs closure PR #35: `7b1d50630e21a14413f73e2ca4a0934de042dcdf`
-- browser/Historical-Ledger session hydration identity fix PR #36: `8b93b346a11cc4293af2b8e75e2ec6af48348e60`
+- browser/Historical-Ledger session identity fix PR #36: `8b93b346a11cc4293af2b8e75e2ec6af48348e60`
 - Historical Ledger + ECX local evidence closure PR #37: `88d588bbe4a5f005652c20f3409dd72093439f56`
-- PR #37 post-merge CI `34554159172`: **PASS** all repository gates
-- laptop tracked tree was verified equal to `origin/main` at `88d588bbe4a5f005652c20f3409dd72093439f56` before this new workstream started.
+- comparative ECX harness PR #38: `c1849cd0c67712e40ea4e5c90587283900859cdb`
 
-Closed local evidence now includes:
+PR #38 repository closure evidence:
+
+- final PR head: `d3f1cbf4d0acbb2c92f340b952f2c42e6c9bef4a`
+- exact-head CI `34557147546`: **PASS**
+  - Naming
+  - Format
+  - Lint
+  - Typecheck
+  - Test
+  - Phase 4 real-process acceptance
+  - Production Operations acceptance
+  - Secret Scan
+  - Production Build
+- exact-head MCP External HTTPS Acceptance `34557147583`: **PASS**
+- expected-head squash merge: `c1849cd0c67712e40ea4e5c90587283900859cdb`
+- post-merge `main` CI `34557297702`: **PASS** all repository gates
+- post-merge MCP External HTTPS Acceptance `34557297803`: **PASS**
+
+Implementation verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
+
+Closed local evidence before the comparative benchmark includes:
 
 - real Phase 4 process stack + Temporal worker RUNNING;
 - WSL→Windows Ollama loopback path;
@@ -93,16 +100,9 @@ These prove local traffic/integrity/provenance. They do **not** prove ECX/optimi
 
 ## 4. Active workstream — Comparative ECX efficiency evidence
 
-Status: **IN PROGRESS / HARNESS IMPLEMENTED ON BRANCH / REAL GEMMA EVIDENCE PENDING**
+Status: **IN PROGRESS — HARNESS IMPLEMENTATION CLOSED / REAL GEMMA EVIDENCE PENDING**
 
-Branch:
-
-- `rnd/comparative-ecx-evidence-20260911`
-- base: reviewed `main` at `88d588bbe4a5f005652c20f3409dd72093439f56`
-
-Goal:
-
-> Measure, under a controlled paired local experiment, what changes when the same facts/task/model use full inline context, ECX with all refs hydrated, or ECX with only fixture-declared relevant refs hydrated.
+Harness implementation is merged and repository-verified. There is no active harness implementation branch anymore. The next boundary is real runtime evidence on the operator laptop after synchronizing to the merged tree.
 
 Protocol: `docs/comparative-ecx-evidence.md`.
 
@@ -126,9 +126,9 @@ Protocol: `docs/comparative-ecx-evidence.md`.
 
 **Critical boundary:** current `/v1/exchange/hydrate` receives `refIndexes` from the caller. ECORIONE does not yet have a verified autonomous semantic reference selector. The `oracle` suffix must remain until a real selector exists and has separate evidence.
 
-### 4.2 Implemented branch scope
+### 4.2 Implemented and verified harness scope
 
-Implemented on the active branch:
+Merged through PR #38:
 
 - `scripts/comparative-evidence.mjs`
   - five synthetic fixed-answer workloads;
@@ -152,7 +152,14 @@ Implemented on the active branch:
 - `docs/comparative-ecx-evidence.md`
   - experiment design, gates, commands, interpretation, and claim boundaries.
 
-### 4.3 Five current synthetic workloads
+Two implementation findings were fixed before closure rather than waived:
+
+- Prettier differences in the new harness/test;
+- `performance` was explicitly imported from `node:perf_hooks` for the Node/ESLint environment.
+
+Temporary formatter/lint-fixer workflows are absent from the final PR diff and merged tree.
+
+### 4.3 Five synthetic workloads
 
 - incident triage;
 - procurement award;
@@ -160,7 +167,7 @@ Implemented on the active branch:
 - retention policy;
 - customer escalation.
 
-Each fixture contains authoritative relevant documents plus larger irrelevant/noise documents. The required JSON facts are fixed before the real model run, so quality can be scored without a second AI judge.
+Each fixture contains authoritative relevant documents plus larger irrelevant/noise documents. Required JSON facts are fixed before the real model run, so quality can be scored without a second AI judge.
 
 ### 4.4 Predeclared pass gates
 
@@ -203,9 +210,7 @@ Local provider-token `actualUsd=0` remains valid local accounting, **not hosted 
 
 ### 4.6 Runtime commands / next gates
 
-First, repository CI must pass on the final candidate head. Then synchronize laptop to the merged candidate before running closure evidence.
-
-Runtime smoke:
+After this docs closure is merged and laptop synchronization is verified:
 
 ```bash
 set -a
@@ -214,7 +219,7 @@ set +a
 pnpm evidence:comparative:smoke
 ```
 
-Closure-grade run only after smoke and any discovered fixes:
+Do not run the closure-grade benchmark until smoke is inspected. If smoke is healthy:
 
 ```bash
 pnpm evidence:comparative -- --repeats 5 \
@@ -223,18 +228,17 @@ pnpm evidence:comparative -- --repeats 5 \
 
 Raw evidence stays local/gitignored. Only a sanitized verified summary should be committed later.
 
-### 4.7 Current closure blockers
+### 4.7 Remaining closure blockers
 
-Comparative workstream is **not CLOSED** yet because these evidence gates are pending:
+The **comparative evidence workstream itself is not CLOSED** yet. Repository/harness implementation is closed, but these evidence gates remain:
 
-- final branch Format/Lint/Typecheck/Test/Phase4/Production Ops/Secret Scan/Build CI;
-- PR exact-head verification and merge;
-- post-merge `main` CI;
-- laptop sync to merged exact tree;
+- merge and post-merge verification of this docs-only harness-closure update;
+- laptop tracked-tree sync to the latest merged `main`;
 - real local Gemma smoke;
-- closure-grade paired run;
-- sanitized comparative verification note;
-- current-state/progress docs updated with actual measured result.
+- investigation/fix of any smoke-discovered defect;
+- closure-grade 5× paired run;
+- sanitized comparative measured-result verification note;
+- current-state/progress docs updated with the actual measured verdict.
 
 A negative benchmark result is valid evidence and must not be rewritten into a positive claim.
 
@@ -244,7 +248,7 @@ A negative benchmark result is valid evidence and must not be rewritten into a p
 
 Current order is deliberately local-first:
 
-1. **Comparative ECX efficiency evidence — ACTIVE**
+1. **Comparative ECX real Gemma efficiency evidence — ACTIVE**
 2. **Local persistence/restart drill — PENDING AFTER COMPARATIVE**
 3. **Local backup/restore drill — PENDING**
 4. **Local observability baseline — PENDING**
@@ -339,7 +343,7 @@ For comparative/model evidence specifically, also require:
 Every active workstream update should record:
 
 1. current `main` baseline;
-2. active branch;
+2. active branch if any;
 3. exact implementation status;
 4. bugs/findings discovered;
 5. focused verification evidence;
@@ -355,6 +359,6 @@ Architecture changes require ADR/decision updates. Measurement harnesses that on
 
 ## 10. Next action
 
-**Immediate next:** finish repository verification of `rnd/comparative-ecx-evidence-20260911`. If the branch passes exact-head gates, merge and synchronize the laptop. Then run `pnpm evidence:comparative:smoke` against the real local Phase 4 + Gemma runtime. Do not run the 5× paired closure benchmark until the smoke result is inspected and any real defect is fixed.
+**Immediate next:** finish this docs-only comparative-harness implementation closure, verify/merge it, synchronize the laptop to the resulting `main`, restart/use Phase 4 from that synchronized tree, then run `pnpm evidence:comparative:smoke`. Do not run the 5× paired closure benchmark until the smoke result is inspected and any real defect is fixed.
 
 Canonical protocol: `docs/comparative-ecx-evidence.md`.

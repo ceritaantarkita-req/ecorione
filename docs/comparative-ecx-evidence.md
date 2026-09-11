@@ -1,9 +1,21 @@
 # Comparative ECX / optimizer evidence
 
-Status: **ACTIVE LOCAL R&D CHECKPOINT**
+Status: **ACTIVE LOCAL R&D CHECKPOINT — HARNESS MERGED/VERIFIED; REAL GEMMA EVIDENCE PENDING**
 Date: 2026-09-11
 
 This workstream measures whether the current ECORIONE pointer-first exchange can reduce transported/model context without hiding quality loss. It is intentionally local-first. Real compute-host/VPS and Cloudflare deployment are **operator-deferred** and are not prerequisites for this evidence work.
+
+Harness implementation status:
+
+- PR #38 merged as `c1849cd0c67712e40ea4e5c90587283900859cdb`;
+- final PR head `d3f1cbf4d0acbb2c92f340b952f2c42e6c9bef4a`;
+- exact-head CI `34557147546`: PASS;
+- exact-head MCP External HTTPS Acceptance `34557147583`: PASS;
+- post-merge `main` CI `34557297702`: PASS;
+- post-merge MCP External HTTPS Acceptance `34557297803`: PASS;
+- verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
+
+The **measurement result is not closed yet**. Next runtime checkpoint is laptop sync → real Gemma smoke → inspect/fix if needed → closure-grade paired benchmark.
 
 ## Why this exists
 
@@ -78,7 +90,12 @@ A single warm-up completion is performed before measurements and excluded from r
 
 ## Repository closure hygiene
 
-The harness implementation must be merged only from an exact branch head that passes the normal repository gates. Temporary formatter/helper workflows are not part of the implementation and must be removed before closure. The real Gemma smoke/full benchmark is intentionally run only after the verified harness is merged to `main` and synchronized to the laptop, so runtime evidence is tied to a stable repository revision rather than a moving PR branch.
+The harness implementation was merged only after the final PR head passed the normal repository gates and MCP External HTTPS acceptance. Temporary formatter/helper workflows were removed before closure. The real Gemma smoke/full benchmark is intentionally run only after the verified harness is merged to `main` and synchronized to the laptop, so runtime evidence is tied to a stable repository revision rather than a moving PR branch.
+
+Two implementation hygiene issues discovered before closure were fixed rather than waived:
+
+- Prettier differences in the new script/test;
+- Node `performance` usage was made explicit with `node:perf_hooks` to satisfy the repository lint environment.
 
 ## Measurements
 
@@ -116,11 +133,11 @@ A task passes only when all of these are true:
 8. selective median input tokens are lower than full-inline median input tokens;
 9. selective median latency does not exceed full-inline median latency by more than the configured tolerance; default ratio is `1.35`.
 
-These gates are declared before the real evidence run. Do not lower them after seeing a failure merely to obtain a green result. If a gate is inappropriate because the measurement design itself is wrong, document the reason and change the design in a separate reviewed commit before rerunning.
+These gates were declared before the real evidence run. Do not lower them after seeing a failure merely to obtain a green result. If a gate is inappropriate because the measurement design itself is wrong, document the reason and change the design in a separate reviewed commit before rerunning.
 
 ## Commands
 
-Prerequisite: the local Phase 4 runtime is already running and `.env` has the known local configuration.
+Prerequisite: synchronize the laptop to the latest merged `main`, then run the local Phase 4 runtime with the known local `.env` configuration.
 
 ```bash
 cd ~/projects/ecorione
@@ -157,6 +174,22 @@ ECORIONE_COMPARATIVE_LATENCY_TOLERANCE_RATIO default 1.35
 ECORIONE_COMPARATIVE_OUTPUT                  optional local JSON output
 ```
 
+## Runtime execution order
+
+Do not skip directly to the 75-call closure run. Use this order:
+
+1. synchronize tracked laptop tree to the latest merged `main`;
+2. restart Phase 4 if it is still running from an older tree;
+3. verify the local model endpoint is reachable;
+4. run `pnpm evidence:comparative:smoke`;
+5. inspect all three lanes, model identity, cache state, quality and measurements;
+6. if a real defect appears, fix it through a separate reviewed branch and rerun smoke;
+7. only after smoke is healthy, run `--repeats 5` and save raw JSON locally;
+8. create a sanitized verification note from the measured result;
+9. update canonical status docs with `PASS`, `PASS WITH LIMITATIONS`, or `FAIL / NEEDS ITERATION` based on evidence.
+
+A negative result is valid evidence. Do not change the gates or workload after seeing a failure merely to recover a positive result.
+
 ## How to interpret results
 
 A PASS supports only the measured claims:
@@ -190,7 +223,7 @@ Real compute-host/VPS deployment and Cloudflare cutover remain valid future oper
 The active order is now:
 
 ```text
-comparative ECX evidence
+comparative ECX real Gemma evidence
   -> local persistence/restart drill
   -> local backup/restore drill
   -> local observability baseline
