@@ -4,7 +4,7 @@
 
 import { resolve } from "node:path";
 import { makeId } from "@ecorione/shared-schema";
-import { bindHost, httpJson } from "@ecorione/shared-server";
+import { bindHost, httpJson, resolveRepoRuntimePath } from "@ecorione/shared-server";
 import { registerAccessRoutes } from "./access-http.js";
 import { registerArtifactRoutes } from "./artifact-routes.js";
 import { nowIso } from "./clock.js";
@@ -14,18 +14,10 @@ import { registerMultimodalRoutes } from "./multimodal-routes.js";
 import { ContextRepository } from "./repository.js";
 import { createVectorIndex } from "./vector.js";
 
-/**
- * Default **hanya** dipakai kalau `ECORIONE_DB_PATH` kosong di `.env` — dijangkarkan ke
- * lokasi modul ini (bukan `process.cwd()`) supaya `pnpm dev` tetap menulis ke satu
- * `./data/` di akar repo, persis seperti yang didokumentasikan `.env.example`, apa pun
- * direktori kerja saat proses ini dijalankan (`pnpm --filter` mengubah cwd ke folder
- * paket, bukan akar repo — default relatif-ke-cwd akan diam-diam mencar ke
- * `services/context/data/`).
- */
-const DEFAULT_DB_PATH = resolve(import.meta.dirname, "../../../data/ecorione.db");
+const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 
 const port = Number(process.env.ECORIONE_CONTEXT_PORT ?? "17022");
-const dbPath = process.env.ECORIONE_DB_PATH ?? DEFAULT_DB_PATH;
+const dbPath = resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_DB_PATH, "data/ecorione.db");
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
 const connectUrl = process.env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
 
