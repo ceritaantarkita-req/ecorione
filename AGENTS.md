@@ -11,26 +11,25 @@ Per **2026-09-11**:
 - production/self-host baseline: **READY** sesuai boundary yang didokumentasikan;
 - real laptop rehearsal: **PASS / LOCAL BOUNDARY CLOSED**;
 - real Historical Ledger + ECX traffic/integrity checkpoint: **PASS / LOCAL CHECKPOINT CLOSED**;
-- PR #37 merged ke `main` sebagai `88d588bbe4a5f005652c20f3409dd72093439f56`;
-- comparative ECX harness PR #38 merged sebagai `c1849cd0c67712e40ea4e5c90587283900859cdb`;
-- comparative harness docs closure PR #39 merged sebagai `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`;
-- comparative cache-isolation fix PR #40 merged sebagai `197627dc04689dea94bf7957e18b2699f8fb9213`;
-- comparative release fixture correction PR #41 merged sebagai `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`;
-- PR #41 exact-head CI `34565244451`: **PASS**;
-- PR #41 post-merge CI `34565539119`: **PASS**;
-- comparative harness implementation: **CLOSED / VERIFIED**;
-- first cached real Gemma smoke: **FAIL / VALID CACHE-ISOLATION FINDING**;
-- corrected real Gemma smoke after PR #40: **PASS**;
-- first full 75-call run: **FAIL / VALID RELEASE-FIXTURE FINDING**;
-- targeted corrected `release-readiness` after PR #41: **PASS**;
+- comparative ECX harness implementation: **CLOSED / VERIFIED**;
 - final corrected full 75-call run: **5/5 TASK GATES PASS**;
 - local Comparative ECX checkpoint: **CLOSED / PASS WITH LIMITATIONS**;
 - automatic semantic reference selector: **NOT PROVEN / NOT IMPLEMENTED BY THIS CHECKPOINT**;
-- active next checkpoint: **LOCAL PERSISTENCE/RESTART EVIDENCE**;
+- first persistence/restart drill: **FAIL / VALID DURABILITY-PATH FINDING**;
+- relative local runtime-path defect: **FIXED by PR #46**;
+- local compiled-runtime bootstrap defect: **FIXED by PR #48**;
+- final local persistence/restart rerun: **CLOSED / PASS** across the tested Phase 4 + Temporal + PostgreSQL-container boundary;
+- active next checkpoint: **ISOLATED LOCAL BACKUP/RESTORE EVIDENCE**;
 - real compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**;
 - Fase 6+ tetap **OPEN-ENDED / evidence-driven**;
 - Fase 5 AutoClick tetap **DEFERRED BY DESIGN**;
 - **tidak ada Batch 13 implisit**.
+
+Persistence references:
+
+- `docs/local-persistence-restart-evidence.md`
+- `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+- `docs/verification/local-persistence-restart-closure-2026-09-11.md`
 
 Final local comparative aggregate on merged revision `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`:
 
@@ -41,7 +40,9 @@ Final local comparative aggregate on merged revision `4d5ee560a3b6cef024b0d7ed7b
 - median selective input-token reduction: `77.8580814717477%`;
 - median selective/full latency ratio: `0.8672873729681319`.
 
-**Limitation:** one individual `retention-policy` `ecx-selective-oracle` repeat scored `1/3` exact fields because two returned strings retained sentence-final periods. The predeclared quality gate is median-based, so the task still formally passed. Do not rewrite this into “75/75 perfect outputs”. See `docs/verification/comparative-closure-grade-final-2026-09-11.md`.
+**Comparative limitation:** one individual `retention-policy` `ecx-selective-oracle` repeat scored `1/3` exact fields because two returned strings retained sentence-final periods. The predeclared quality gate is median-based, so the task still formally passed. Do not rewrite this into “75/75 perfect outputs”.
+
+**Persistence limitation:** the successful drill proves only the controlled local process + Temporal + PostgreSQL-container restart boundary. It does not prove backup/restore, host loss, off-host DR, hard power-loss/fsync behavior, VPS durability, Cloudflare behavior or arbitrary corruption recovery.
 
 Agent tanpa histori chat **WAJIB mulai dari `docs/current-state-and-next-steps.md`**, lalu file ini. Jangan memakai `docs/blueprint.md` atau audit lama sebagai current-state source.
 
@@ -49,24 +50,27 @@ Recommended reading order:
 
 1. `docs/current-state-and-next-steps.md`
 2. `AGENTS.md`
-3. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
-4. `docs/comparative-ecx-evidence.md`
-5. `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`
-6. `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`
-7. `docs/verification/comparative-harness-implementation-2026-09-11.md`
-8. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-9. `docs/verification/local-production-rehearsal-2026-09-10.md`
-10. `docs/EXECUTION-PROGRESS.md`
-11. operations/ADR docs yang relevan dengan scope baru
-12. `docs/prd.md` + `docs/research.md`
-13. `docs/blueprint.md` sebagai historical execution blueprint
+3. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
+4. `docs/local-persistence-restart-evidence.md`
+5. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+6. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
+7. `docs/comparative-ecx-evidence.md`
+8. `docs/verification/comparative-closure-grade-first-run-2026-09-11.md`
+9. `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`
+10. `docs/verification/comparative-harness-implementation-2026-09-11.md`
+11. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
+12. `docs/verification/local-production-rehearsal-2026-09-10.md`
+13. `docs/EXECUTION-PROGRESS.md`
+14. operations/ADR docs yang relevan dengan scope baru
+15. `docs/prd.md` + `docs/research.md`
+16. `docs/blueprint.md` sebagai historical execution blueprint
 
 ## Next work posture
 
-Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Comparative ECX local evidence sudah ditutup. Urutan operator-approved sekarang:
+Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Persistence/restart local evidence sudah ditutup. Urutan operator-approved sekarang:
 
-1. local persistence/restart drill;
-2. local backup/restore drill;
+1. local persistence/restart drill — **CLOSED / PASS**;
+2. isolated local backup/restore drill — **ACTIVE NEXT CHECKPOINT**;
 3. local observability baseline;
 4. product/UX validation;
 5. immutable local model identity hardening;
@@ -76,7 +80,9 @@ Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 1
 9. maintenance/dependency/security/DR evidence;
 10. feature baru hanya jika evidence membenarkan.
 
-Comparative protocol/results: `docs/comparative-ecx-evidence.md`. Final sanitized evidence: `docs/verification/comparative-closure-grade-final-2026-09-11.md`.
+Backup/restore drill harus memakai owner-scoped tooling/contracts yang sudah ada, menyimpan receipt/digest, dan restore ke **isolated target**. Jangan overwrite active durable owner state hanya untuk membuktikan restore. Pisahkan Hub, Context, Artifact, Flow/Temporal/PostgreSQL semantics dan jangan membuat satu ad-hoc archive yang mengaburkan ownership.
+
+Comparative protocol/results: `docs/comparative-ecx-evidence.md`. Final sanitized comparative evidence: `docs/verification/comparative-closure-grade-final-2026-09-11.md`.
 
 Untuk future Cloudflare Free/VPS deployment, baca `docs/production-activation.md` dan `docs/cloudflare-free-deployment.md`. Cloudflare adalah edge/tunnel, **bukan** pengganti compute/storage/Temporal ECORIONE.
 
@@ -95,22 +101,18 @@ pnpm run acceptance:production-ops
 pnpm evidence:comparative:smoke
 pnpm evidence:comparative
 
-# targeted comparative task
-pnpm evidence:comparative \
-  --tasks release-readiness \
-  --repeats 1
-
-# closure-grade comparative run
-pnpm evidence:comparative \
-  --repeats 5 \
-  --output .ecorione/evidence/comparative-local-2026-09-11-v2.json
+# local persistence/restart evidence
+pnpm evidence:persistence-restart:inventory
+pnpm evidence:persistence-restart --phase baseline
+pnpm evidence:persistence-restart --phase post
+pnpm evidence:persistence-restart --phase cleanup
 ```
 
 Jangan menambahkan literal `--` setelah `pnpm evidence:comparative`; parser harness akan menerima literal itu dan gagal dengan `Unknown argument: --`.
 
 `pnpm verify` harus hijau sebelum PR dibuka. Production build dan acceptance yang relevan tetap release-blocking sesuai workflow/closure rules.
 
-`evidence:comparative` adalah runtime evidence command, bukan CI unit test. Jangan membuat CI bergantung pada Ollama/model lokal. Harness helper/gate logic harus punya deterministic test terpisah.
+Runtime evidence commands bukan deterministic CI substitutes. Jangan membuat CI bergantung pada Ollama/model lokal atau laptop-specific persistence state. Harness helper/gate logic harus punya deterministic test terpisah.
 
 ## Comparative evidence rules
 
@@ -129,6 +131,19 @@ Jangan menambahkan literal `--` setelah `pnpm evidence:comparative`; parser harn
 13. Cache-hit runs boleh membuktikan cache bekerja, tetapi **tidak boleh** dipakai sebagai model-compute token/latency evidence.
 14. Aggregate reductions dari run yang overall FAIL boleh dicatat sebagai provisional observation, tetapi tidak boleh dipromosikan menjadi final/public savings claim.
 15. Aggregate reductions dari final PASS tetap hanya benchmark-specific; jangan mengubahnya menjadi universal/public savings claim tanpa representative held-out/production evidence.
+
+## Persistence / backup evidence rules
+
+1. Relative configured local durable paths harus tetap anchored ke repository root; jangan kembali ke package-local cwd semantics.
+2. Absolute production/container paths harus tetap absolute dan tidak direwrite ke repo root.
+3. `pnpm dev*` harus membangun compiled runtime workspace dependencies yang diperlukan sebelum service source memakai export baru.
+4. Persistence runtime acceptance harus lewat owner HTTP/runtime contracts; filesystem inspection hanya untuk ownership/path diagnosis.
+5. Valid failed evidence tidak boleh dihapus/rewrite setelah bug diperbaiki.
+6. Backup/restore checkpoint tidak boleh overwrite active durable state; restore harus isolated kecuali ada reviewed migration scope eksplisit.
+7. Backup receipt/digest harus merekam source snapshot identity yang cukup untuk diverifikasi.
+8. Backup yang berada di failure domain laptop yang sama bukan off-host DR proof.
+9. Temporal/PostgreSQL, SQLite owner DBs dan Artifact bytes punya semantics berbeda; jangan samakan mekanismenya tanpa contract eksplisit.
+10. `ECORIONE_COST_KILL_SWITCH=1` tetap dipertahankan untuk local ops evidence yang tidak memerlukan hosted traffic.
 
 ## Aturan yang tidak bisa dinegosiasikan
 
@@ -180,7 +195,7 @@ ECX selective hydration berada di Hub, tetapi pemilihan `refIndexes` saat ini be
 
 Keputusan besar dicatat di `docs/DECISIONS.md`. Perubahan yang mengubah invariant, ownership, authority, durable state, security boundary, deployment contract, atau release claim membutuhkan ADR baru/updated ADR yang eksplisit.
 
-Comparative harness/cache-fix/fixture corrections dan final measurement **bukan architecture change**. Semuanya memakai owner API yang sudah ada. Automatic selector baru akan menjadi scope terpisah dan harus direview bila evidence membenarkannya.
+Comparative harness/cache-fix/fixture corrections, runtime-path normalization, local dev bootstrap build, dan persistence/backup evidence dengan owner contracts **bukan otomatis architecture change**. Automatic selector baru akan menjadi scope terpisah dan harus direview bila evidence membenarkannya.
 
 Setelah scope selesai:
 
