@@ -58,15 +58,21 @@ describe("Connect backup", () => {
     expect(new FileCredentialVault(restored, key).get("openai", "messages")).toBe(secret);
   });
 
-  it("restores non-secret Connect state as an integrity-checked bundle", () => {
+  it("restores all non-secret Connect state, including runtime settings, as one bundle", () => {
     const root = tempRoot();
+    const settings = join(root, "settings.json");
     const spend = join(root, "spend.json");
     const registry = join(root, "registry.json");
+    writeFileSync(settings, '{"localModel":"immutable-local-model"}\n');
     writeFileSync(spend, '{"version":1}\n');
     writeFileSync(registry, '{"version":1,"servers":[]}\n');
     const backupRoot = join(root, "backup");
     const result = backupConnectState(
-      { spendBudgetPath: spend, mcpRegistryPath: registry },
+      {
+        runtimeSettingsPath: settings,
+        spendBudgetPath: spend,
+        mcpRegistryPath: registry,
+      },
       backupRoot,
       "2026-09-10T02:00:00.000Z",
     );
@@ -76,6 +82,9 @@ describe("Connect backup", () => {
       result.state!.backupId,
       target,
       "2026-09-10T02:01:00.000Z",
+    );
+    expect(readFileSync(join(target, "settings.json"), "utf8")).toContain(
+      "immutable-local-model",
     );
     expect(readFileSync(join(target, "spend.json"), "utf8")).toContain("version");
     expect(readFileSync(join(target, "registry.json"), "utf8")).toContain("servers");
