@@ -11,7 +11,11 @@ import { registerHubMultimodal } from "./multimodal-bootstrap.js";
 const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 
 const port = Number(process.env.ECORIONE_HUB_PORT ?? "17024");
-const dbPath = resolveRepoRuntimePath(REPO_ROOT, process.env.ECORIONE_HUB_DB_PATH, "data/hub.db");
+const dbPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_HUB_DB_PATH,
+  "data/hub.db",
+);
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
 const contextUrl = process.env.ECORIONE_CONTEXT_URL ?? "http://127.0.0.1:17022";
 const connectUrl = process.env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
