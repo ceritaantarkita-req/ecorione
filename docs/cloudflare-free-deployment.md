@@ -5,9 +5,11 @@ Current project status reconciled: **2026-09-11**
 
 Status: **FUTURE DEPLOYMENT OPTION / DEFERRED BY OPERATOR DECISION**
 
-This file remains the deployment guide for a future Cloudflare Free + Tunnel rollout. It is **not the active next checkpoint**. The operator has explicitly chosen to continue local comparative/persistence/backup/observability/product evidence before deciding whether to deploy to a VPS/compute host.
+This file remains the deployment guide for a future Cloudflare Free + Tunnel rollout. It is **not the active next checkpoint**. The operator has explicitly chosen to continue local persistence/restart, backup/restore, observability, product validation, and model-identity hardening before deciding whether to deploy to a VPS/compute host.
 
-Do not execute Cloudflare account, DNS, Tunnel, firewall, or target-host mutation from the current local R&D workstream. Resume this guide only after an explicit operator decision. Current state: `docs/current-state-and-next-steps.md`. Active evidence protocol: `docs/comparative-ecx-evidence.md`.
+The local Comparative ECX checkpoint is now **CLOSED / PASS WITH LIMITATIONS**. That result does not change this deployment deferral and must not be treated as Cloudflare/VPS evidence.
+
+Do not execute Cloudflare account, DNS, Tunnel, firewall, or target-host mutation from the current local workstream. Resume this guide only after an explicit operator decision. Current state: `docs/current-state-and-next-steps.md`.
 
 ## 1. Architecture decision when deployment resumes
 
@@ -27,7 +29,7 @@ Internet
 
 Cloudflare Tunnel uses outbound connections from `cloudflared` to Cloudflare; a Tunnel-only final topology therefore does not require direct public inbound application ports on the origin once cutover is proven and other host requirements are accounted for.
 
-Official references retained for the future rollout:
+Official references retained for future rollout:
 
 - Cloudflare Tunnel overview: https://developers.cloudflare.com/tunnel/
 - Tunnel setup: https://developers.cloudflare.com/tunnel/setup/
@@ -53,23 +55,23 @@ Do not interpret “Cloudflare Free deployment” as “zero infrastructure cost
 
 When this workstream is explicitly resumed:
 
-1. start from a reviewed and synchronized `main`;
-2. inventory the chosen target host before installing anything;
+1. start from reviewed synchronized `main`;
+2. inventory chosen target host before installing anything;
 3. verify Docker + Compose and outbound connectivity;
 4. prepare `deploy/production.env` from its example and remove every placeholder;
 5. keep hosted-provider secrets in Connect Vault, never Git/plaintext docs;
 6. generate strong internal/Sync/Temporal/Vault/MCP/operator credentials;
 7. run `pnpm production:preflight` and `pnpm production:host-audit` read-only first;
 8. resolve existing port/service collisions before ECORIONE deployment;
-9. own/control the intended domain and Cloudflare zone before publishing it.
+9. own/control intended domain and Cloudflare zone before publishing it.
 
-Laptop evidence cannot satisfy target-host prerequisites.
+Laptop/local evidence cannot satisfy target-host prerequisites. This includes local Comparative ECX, local persistence/restart, and local backup/restore results.
 
 ## 4. Recommended rollout when resumed
 
 The safest sequence remains staged rather than changing application, DNS, TLS, Tunnel, and firewall state simultaneously.
 
-### Stage A — establish the real compute-host application boundary
+### Stage A — establish real compute-host application boundary
 
 After preflight/audit and reviewed production configuration:
 
@@ -80,18 +82,18 @@ ECORIONE_CANARY_TARGET=local pnpm canary:provider
 
 Verify persistence/restart/application health on the actual host before public edge cutover.
 
-If the deployment design intentionally uses direct/proxied DNS temporarily for bootstrap, validate it before introducing Tunnel. Never close origin ingress before the replacement path is proven.
+If deployment design intentionally uses direct/proxied DNS temporarily for bootstrap, validate it before introducing Tunnel. Never close origin ingress before the replacement path is proven.
 
-### Stage B — create and validate the named Cloudflare Tunnel
+### Stage B — create and validate named Cloudflare Tunnel
 
-Cloudflare Dashboard flow should be rechecked against current Cloudflare UI/documentation at execution time. The intended shape is:
+Cloudflare Dashboard flow should be rechecked against current Cloudflare UI/documentation at execution time. Intended shape:
 
 1. create a named Tunnel;
-2. install/run `cloudflared` on the ECORIONE compute host using the operator-provided token;
+2. install/run `cloudflared` on ECORIONE compute host using operator-provided token;
 3. wait for connected/healthy state;
-4. publish the application hostname to the local Caddy origin;
-5. preserve TLS verification and set the correct origin server name/CA where required;
-6. validate the public hostname through ECORIONE's smoke tests;
+4. publish application hostname to local Caddy origin;
+5. preserve TLS verification and set correct origin server name/CA where required;
+6. validate public hostname through ECORIONE smoke tests;
 7. only after public validation, consider removing obsolete direct-origin DNS/ingress.
 
 Repository tooling:
@@ -104,13 +106,13 @@ pnpm cloudflare:tunnel:install -- --apply
 ECORIONE_PUBLIC_BASE_URL=https://<production-hostname> pnpm production:smoke
 ```
 
-A “Healthy” Tunnel alone is not sufficient. The application path, auth boundaries, and MCP discovery/auth must pass through the public hostname.
+A “Healthy” Tunnel alone is not sufficient. Application path, auth boundaries, and MCP discovery/auth must pass through the public hostname.
 
 ## 5. Locally-managed Tunnel alternative
 
 Cloudflare may recommend remotely managed tunnels for most deployments, but a locally-managed named tunnel remains an alternative when the operator intentionally wants local configuration.
 
-Typical commands when this path is chosen:
+Typical commands:
 
 ```bash
 cloudflared tunnel login
@@ -140,11 +142,11 @@ cloudflared tunnel ingress rule https://ecorione.example.com
 cloudflared tunnel info ecorione-prod
 ```
 
-If installing as a Linux service for a non-root-owned config, pass the explicit config path so `sudo` does not make `cloudflared` search the wrong home directory.
+If installing as Linux service for a non-root-owned config, pass explicit config path so `sudo` does not make `cloudflared` search the wrong home directory.
 
 ## 6. ECORIONE hostname and MCP consistency
 
-Caddy's public routing separates:
+Caddy public routing separates:
 
 - `/` -> Ai;
 - `/ops*`, `/api/ops*`, `/settings*`, `/api/settings*` -> protected Ai/operator surfaces;
@@ -161,41 +163,41 @@ ECORIONE_MCP_OAUTH_ISSUER=<real HTTPS issuer>
 ECORIONE_MCP_JWKS_URL=<real HTTPS JWKS endpoint>
 ```
 
-Do not invent OAuth/JWKS values. They must match the actual authorization deployment.
+Do not invent OAuth/JWKS values. They must match actual authorization deployment.
 
 ## 7. Firewall posture after proven Tunnel cutover
 
-Only after the named Tunnel and public application smoke are proven:
+Only after named Tunnel and public application smoke are proven:
 
 - do not expose internal ECORIONE service ports publicly;
 - do not expose Temporal/PostgreSQL/Context/Connect/Hub/Sandbox/Artifact/Space/Flow/RnD directly;
-- keep SSH restricted to the operator's secure administration path;
-- close direct inbound web ports only if nothing else needs them and Tunnel-only mode is the intended final state;
-- keep required outbound connectivity for `cloudflared`, including Cloudflare's documented tunnel port requirements.
+- keep SSH restricted to operator secure administration path;
+- close direct inbound web ports only if nothing else needs them and Tunnel-only mode is intended final state;
+- keep required outbound connectivity for `cloudflared`, including documented tunnel port requirements.
 
-Use the guarded repo flow:
+Use guarded repo flow:
 
 ```bash
 pnpm cloudflare:origin:lockdown
 pnpm cloudflare:origin:lockdown -- --apply
 ```
 
-Never skip the dry-run/public-smoke/SSH/tunnel prerequisites merely because Cloudflare shows a connected connector.
+Never skip dry-run/public-smoke/SSH/tunnel prerequisites merely because Cloudflare shows a connected connector.
 
 ## 8. Cloudflare security settings
 
 Use edge controls only when they preserve ECORIONE semantics:
 
-- HTTPS at the public edge;
+- HTTPS at public edge;
 - applicable managed WAF/DDoS controls;
 - rate/bot controls only after verifying they do not break MCP streaming/API behavior;
-- Cloudflare Access may be useful as defense-in-depth for human operator surfaces, but it must not replace ECORIONE Hub/Connect authorization or break MCP/OAuth client flows.
+- Cloudflare Access may be defense-in-depth for human operator surfaces, but it must not replace ECORIONE Hub/Connect authorization or break MCP/OAuth client flows.
 
-Caddy/operator authentication remains part of the ECORIONE application baseline.
+Caddy/operator authentication remains part of ECORIONE application baseline.
 
 ## 9. Verification required before calling future deployment healthy
 
-At minimum, verify on the real deployment:
+At minimum, verify on real deployment:
 
 ```bash
 docker compose --env-file deploy/production.env -f deploy/compose.yml ps
@@ -206,13 +208,13 @@ pnpm production:data-evidence
 
 Also require evidence that:
 
-- Ai loads through the intended public hostname;
+- Ai loads through intended public hostname;
 - `/ops` and `/settings` remain protected;
-- local provider canary passes on the compute host if local inference is part of that deployment;
-- hosted canaries run only when the operator explicitly enables credentials/spend;
+- local provider canary passes on compute host if local inference is part of deployment;
+- hosted canaries run only when operator explicitly enables credentials/spend;
 - MCP protected-resource discovery works;
 - valid MCP auth works and invalid token/scope/origin cases remain rejected;
-- owner data survives the intended restart boundary;
+- owner data survives intended restart boundary;
 - backups are created and integrity-verified;
 - off-host/failure-domain backup evidence exists before claiming disaster-recovery resilience;
 - origin is not directly reachable after firewall closure if Tunnel-only mode is intended.
@@ -222,10 +224,10 @@ Also require evidence that:
 If edge/Tunnel routing fails:
 
 1. do not mutate/restore ECORIONE owner data for a pure edge incident;
-2. restore only the minimum previous network/DNS/firewall path needed for service recovery;
+2. restore only minimum previous network/DNS/firewall path needed for service recovery;
 3. validate Caddy/application health independently of Tunnel;
 4. diagnose `cloudflared` separately;
-5. re-cut over only after the same public checks pass.
+5. re-cut over only after same public checks pass.
 
 Cloudflare edge rollback and ECORIONE application/data rollback are separate operations.
 
@@ -236,7 +238,8 @@ ECORIONE already has production Compose/Caddy, release tooling, observability, p
 Current state on 2026-09-11:
 
 - local runtime and Historical Ledger + ECX traffic/integrity evidence: **CLOSED**;
-- comparative ECX efficiency evidence: **ACTIVE LOCAL R&D**;
+- local Comparative ECX evidence: **CLOSED / PASS WITH LIMITATIONS**;
+- local persistence/restart evidence: **ACTIVE NEXT CHECKPOINT**;
 - VPS/compute-host deployment: **DEFERRED BY OPERATOR**;
 - Cloudflare named Tunnel/public cutover: **DEFERRED WITH DEPLOYMENT**.
 
