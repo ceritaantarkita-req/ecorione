@@ -3,7 +3,8 @@
 Status: **IN PROGRESS — OPERATOR-APPROVED LOCAL CHECKPOINT**  
 Started: **2026-09-11**  
 Baseline `main`: `84cf086745a14e75c3a976ceb5ca7847f691a76f`  
-Working branch: `ops/local-persistence-restart-evidence-20260911`
+Working branch: `ops/local-persistence-restart-evidence-20260911`  
+Harness PR: **#43 — implementation verification in progress; runtime restart not started yet**
 
 This workstream verifies that ECORIONE local durable state survives a controlled restart according to existing owner contracts. It is a new post-closure evidence scope, **not Batch 13**, and it does not resume VPS/Cloudflare deployment.
 
