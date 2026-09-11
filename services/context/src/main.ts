@@ -4,11 +4,7 @@
 
 import { resolve } from "node:path";
 import { makeId } from "@ecorione/shared-schema";
-import {
-  bindHost,
-  httpJson,
-  resolveRepoRuntimePath,
-} from "@ecorione/shared-server";
+import { bindHost, httpJson, resolveRepoRuntimePath } from "@ecorione/shared-server";
 import { registerAccessRoutes } from "./access-http.js";
 import { registerArtifactRoutes } from "./artifact-routes.js";
 import { nowIso } from "./clock.js";
