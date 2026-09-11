@@ -151,7 +151,7 @@ export const FIXTURES = [
       {
         id: "release-id",
         content:
-          "RELEASE CONTROL\nRelease ID: R2026.09.11.\nCandidate channel: production.\n" +
+          "RELEASE CONTROL\nRelease ID: R2026.09.11\nCandidate channel: production.\n" +
           repeatedNoise(
             "release-control-notes",
             "The release identifier is immutable for this candidate and must be used in audit records.",
@@ -169,7 +169,7 @@ export const FIXTURES = [
       {
         id: "release-blocker",
         content:
-          "OPEN RELEASE BLOCKERS\nOnly open blocker: DB-188 migration checksum mismatch.\n" +
+          "OPEN RELEASE BLOCKERS\nOnly open blocker: DB-188 migration checksum mismatch\n" +
           repeatedNoise(
             "blocker-notes",
             "Release cannot proceed until the open blocker is explicitly resolved.",
@@ -685,7 +685,7 @@ async function warmUp({ connectUrl, token, timeoutMs }) {
         coreMemory: { blocks: [] },
       },
       dynamicText: "Benchmark warm-up only. No measured fixture context.",
-      userMessage: 'Return exactly {"warmup":"ok"}.',
+      userMessage: '{"warmup":"ok"}',
       sensitivity: "INTERNAL",
       operationId,
       now: new Date().toISOString(),
