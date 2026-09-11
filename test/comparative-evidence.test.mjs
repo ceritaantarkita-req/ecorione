@@ -47,13 +47,13 @@ describe("comparative evidence helpers", () => {
       answer: "yes",
       count: 2,
     });
-    expect(
-      scoreReply('{"answer":"yes","count":2}', { answer: "yes", count: 2 }),
-    ).toMatchObject({
-      score: 1,
-      matched: 2,
-      total: 2,
-    });
+    expect(scoreReply('{"answer":"yes","count":2}', { answer: "yes", count: 2 })).toMatchObject(
+      {
+        score: 1,
+        matched: 2,
+        total: 2,
+      },
+    );
     expect(scoreReply("not json", { answer: "yes" }).score).toBe(0);
   });
 

@@ -321,9 +321,7 @@ export function median(values) {
   if (!Array.isArray(values) || values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1
-    ? sorted[middle]
-    : (sorted[middle - 1] + sorted[middle]) / 2;
+  return sorted.length % 2 === 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
 export function extractJsonObject(text) {
@@ -442,7 +440,8 @@ export function evaluateTaskGates({
       inputTokenReductionPct:
         full.inputTokensMedian === 0
           ? 0
-          : ((full.inputTokensMedian - selective.inputTokensMedian) / full.inputTokensMedian) * 100,
+          : ((full.inputTokensMedian - selective.inputTokensMedian) / full.inputTokensMedian) *
+            100,
       selectiveVsFullLatencyRatio:
         full.latencyMsMedian === 0 ? 0 : selective.latencyMsMedian / full.latencyMsMedian,
       controlTokenDelta,
@@ -585,7 +584,9 @@ async function hydratePacket({ packet, indexes, hubUrl, token, timeoutMs }) {
   });
   const items = Array.isArray(response?.items) ? response.items : [];
   if (items.length !== indexes.length) {
-    throw new Error(`Hydration returned ${items.length} items for ${indexes.length} requested refs`);
+    throw new Error(
+      `Hydration returned ${items.length} items for ${indexes.length} requested refs`,
+    );
   }
   const documents = [...items]
     .sort((a, b) => Number(a.index) - Number(b.index))
