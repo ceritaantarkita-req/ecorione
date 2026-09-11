@@ -22,7 +22,6 @@ export const FIXTURES = [
     title: "Incident triage extraction",
     need: ["incident", "verification"],
     prompt:
-      '{"incidentId":"","severity":"","containmentOwner":""}' &&
       'Return JSON with exactly these keys: {"incidentId":"","severity":"","containmentOwner":""}. Preserve the source values exactly.',
     expected: {
       incidentId: "INC-7421",
