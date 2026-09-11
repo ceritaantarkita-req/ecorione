@@ -59,32 +59,31 @@ Key post-closure progression:
 - comparative harness docs closure PR #39: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`
 - comparative cache-isolation fix PR #40: `197627dc04689dea94bf7957e18b2699f8fb9213`
 - release fixture delimiter correction PR #41: `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`
+- local persistence harness PR #43: `47ebb8b5430396dc2968445dfb56998f98e009b3`
+- strict persistence gate PR #44: `3319f140379c455446bade50c80aadcca5b0ecc7`
+- persistence readiness docs PR #45: `0a5e585d53e01d819027c602a2ac69f7dc130723`
+- repo-root runtime-path fix PR #46: `778e7eb19a0e2f528c64e68459d8ff6e6ecbe1ce`
+- first persistence-drill failure documentation PR #47: historical finding preserved
+- compiled local runtime-dependency bootstrap fix PR #48: `673af91642ea1b9440079e396675c69f53647951`
 
-PR #41 evidence:
+Closed local evidence now includes:
 
-- exact-head CI `34565244451`: **PASS**;
-- merge `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`;
-- post-merge CI `34565539119`: **PASS**;
-- synchronized laptop targeted `release-readiness`: **PASS**;
-- synchronized laptop final full 5× Comparative ECX run: **5/5 task gates PASS**.
-
-Closed local evidence before comparative measurement includes:
-
-- real Phase 4 process stack + Temporal worker RUNNING;
+- real Phase 4 process stack + Temporal worker `RUNNING`;
 - WSL→Windows Ollama loopback path;
 - real Connect→Ollama→Gemma local calls;
 - real browser Local chat;
-- browser session identity equal to actual `LOCAL_ONLY` Historical Ledger session after PR #36;
+- browser session identity equal to actual `LOCAL_ONLY` Historical Ledger session;
 - real Ledger chronology/hash chain;
 - real ECX pointer-first plan + `agent.handoff` + hydration;
-- `pnpm production:data-evidence` PASS.
+- `pnpm production:data-evidence` PASS;
+- strict local persistence/restart PASS across the tested owner-process + Temporal + PostgreSQL-container boundary.
 
 Verification sources:
 
 - `docs/verification/local-production-rehearsal-2026-09-10.md`
 - `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-
-Those prove local traffic/integrity/provenance. They do **not** by themselves prove optimizer savings.
+- `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+- `docs/verification/local-persistence-restart-closure-2026-09-11.md`
 
 ---
 
@@ -92,7 +91,7 @@ Those prove local traffic/integrity/provenance. They do **not** by themselves pr
 
 Status: **CLOSED / PASS WITH LIMITATIONS — LOCAL SYNTHETIC CHECKPOINT**
 
-Protocol/results:
+Canonical protocol/results:
 
 - `docs/comparative-ecx-evidence.md`
 - `docs/verification/comparative-closure-grade-final-2026-09-11.md`
@@ -104,87 +103,13 @@ Historical findings retained:
 
 ### 4.1 Experiment lanes
 
-1. `full-inline`
-   - all fixture documents assembled directly into model context;
-   - baseline for bytes/tokens/latency/quality.
-
-2. `ecx-all`
-   - documents become LOCAL_ONLY Artifact pointers;
-   - Hub creates a real ECX packet;
-   - all refs are hydrated through Hub;
-   - same semantic document set reaches the model as the baseline;
-   - control lane so ECX transport is not confused with selective-context benefit.
-
-3. `ecx-selective-oracle`
-   - same ECX packet;
-   - only fixture-declared relevant reference indexes are hydrated;
-   - measures potential/upper bound of correct selective hydration.
+1. `full-inline` — all fixture documents inline to the same local model.
+2. `ecx-all` — real Artifact pointers + ECX plan + all refs hydrated.
+3. `ecx-selective-oracle` — same packet with only fixture-declared relevant refs hydrated.
 
 **Critical boundary:** current `/v1/exchange/hydrate` receives `refIndexes` from the caller. ECORIONE does not yet have a verified autonomous semantic reference selector.
 
-### 4.2 Harness scope
-
-Merged harness scope includes:
-
-- five synthetic fixed-answer workloads;
-- real Artifact upload through owner API;
-- real Hub ECX plan/hydrate calls;
-- real Connect `target=local` completion calls;
-- warm-up excluded from measurement;
-- measured cache contamination as hard failure;
-- deterministic exact-field quality scoring;
-- median aggregation;
-- predeclared task gates;
-- optional local JSON evidence output under gitignored `.ecorione/`;
-- explicit output claim boundary;
-- per-invocation measured cache namespace isolation after PR #40.
-
-### 4.3 Predeclared task gates
-
-A task passes only when:
-
-1. ECX selects the exact-capability benchmark reviewer;
-2. no measured lane has `cacheHit=true`;
-3. model + response-model identity stays constant across paired lanes;
-4. median deterministic quality is 100% in every lane;
-5. `ecx-all` median input tokens remain within 5% of `full-inline` (minimum tolerance 2 tokens);
-6. selective hydration bytes are lower than all-ref hydration bytes;
-7. `packetBytes + selectiveHydratedBytes` is lower than full-inline context bytes;
-8. selective median input tokens are lower than full-inline;
-9. selective median latency does not exceed full-inline by more than default ratio `1.35`.
-
-No gate was weakened after a failure.
-
-### 4.4 Evidence progression
-
-#### First real smoke — valid FAIL / cache finding
-
-The first synchronized real Gemma smoke reached Artifact, Hub ECX and Connect, but all measured completions were exact-cache hits. The cache gate correctly rejected the run.
-
-#### Corrected smoke after PR #40 — PASS
-
-After PR #40, the rerun was uncached with real token telemetry, stable model identity, 100% task-level quality, aligned baseline/control tokens, and lower selective bytes/tokens.
-
-#### First full 75-call run — valid FAIL / release fixture ambiguity
-
-The first complete 5-task × 5-repeat run on `197627dc04689dea94bf7957e18b2699f8fb9213` passed 4/5 tasks. `release-readiness` failed exact quality equally in all three lanes because authoritative source values had sentence-final punctuation adjacent to values while the predeclared expected strings did not.
-
-This was a fixture-design finding, not selective-ECX-specific quality loss. It remains preserved historically.
-
-#### PR #41 targeted correction — PASS
-
-PR #41 changed only ambiguous release source delimiters. It kept the expected answer, scorer and all task thresholds unchanged.
-
-Targeted `release-readiness` after the merge:
-
-- all three lanes uncached;
-- quality `1.0` in all lanes;
-- `full-inline` input tokens `1394`;
-- `ecx-all` input tokens `1394`;
-- selective input tokens `461`;
-- task gate PASS.
-
-#### Final corrected 75-call run — formal harness PASS
+### 4.2 Final corrected 75-call run
 
 Runtime revision:
 
@@ -199,69 +124,113 @@ Run shape:
 - all measured cache hits: `0`;
 - 5/5 task gates PASS.
 
-Raw local evidence:
-
-```text
-.ecorione/evidence/comparative-local-2026-09-11-v2.json
-bytes: 94654
-sha256: 189795c71dc72acfd3d1533490a002d87e68421682868eb2b8b830c6fbdab439
-```
-
 Aggregate:
 
 - median selective transport reduction: `73.6379379246037%`;
 - median selective input-token reduction: `77.8580814717477%`;
 - median selective/full latency ratio: `0.8672873729681319`.
 
-Task-level medians:
+One `retention-policy` `ecx-selective-oracle` repeat scored `1/3` exact fields because two strings retained sentence-final periods. The other four selective repeats and all baseline/control repeats for that task scored `3/3`, so the predeclared median task quality gate remained `1.0`.
 
-| Task | Full input | ECX-all input | Selective input | Transport reduction | Input-token reduction | Latency ratio | Gate |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| `incident-triage` | 1553 | 1553 | 351 | 74.1928% | 77.3986% | 0.8673 | PASS |
-| `procurement-award` | 1884 | 1884 | 393 | 75.6462% | 79.1401% | 0.9084 | PASS |
-| `release-readiness` | 1392 | 1392 | 459 | 58.7594% | 67.0259% | 0.9740 | PASS |
-| `retention-policy` | 1595 | 1595 | 338 | 73.6379% | 78.8088% | 0.7663 | PASS |
-| `customer-escalation` | 1522 | 1522 | 337 | 73.5568% | 77.8581% | 0.8456 | PASS |
-
-### 4.5 Limitation discovered in post-run audit
-
-One individual completion did not have perfect exact-string quality:
-
-- task `retention-policy`;
-- lane `ecx-selective-oracle`;
-- repeat `2/5`;
-- quality `1/3` because two returned strings retained sentence-final periods.
-
-The other four selective repeats and all baseline/control repeats for that task were `3/3`, so the predeclared **median quality** gate remained `1.0` and the task formally passed.
-
-Therefore the checkpoint is recorded as **PASS WITH LIMITATIONS**, not “75/75 perfect outputs”. This does not invalidate the task-level gate result or byte/token control relationship, but it limits the quality claim and should inform future harness hardening.
-
-### 4.6 Closed claim boundary
-
-This workstream verifies only that, for these five synthetic local fixtures under the declared median-based gates:
-
-- real ECX transport/hydration worked;
-- baseline/control model input remained aligned;
-- oracle-selective hydration reduced transported context;
-- oracle-selective hydration reduced median model input tokens;
-- median task quality remained `1.0`;
-- median selective latency stayed inside tolerance;
-- measurements were uncached.
-
-It does **not** verify:
-
-- automatic semantic reference selection;
-- universal optimizer effectiveness;
-- production workload quality;
-- hosted-provider billed-cost savings;
-- public/general percentage-savings claims.
+Therefore the checkpoint remains **PASS WITH LIMITATIONS**, not “75/75 perfect outputs”. The percentages are benchmark-specific and are not universal/public savings claims.
 
 ---
 
-## 5. Current operator-approved execution order
+## 5. Local persistence/restart evidence — CLOSED / PASS
 
-1. **Local persistence/restart drill — ACTIVE NEXT CHECKPOINT**
-2. **Local backup/restore drill — PENDING**
+Status: **CLOSED / PASS — REAL LOCAL PROCESS + TEMPORAL + POSTGRESQL-CONTAINER RESTART BOUNDARY**
+
+Canonical docs:
+
+- `docs/local-persistence-restart-evidence.md`
+- `docs/verification/local-persistence-restart-closure-2026-09-11.md`
+
+Historical valid failure:
+
+- `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+
+### 5.1 First drill — valid failure
+
+The first strict baseline passed on `0a5e585d53e01d819027c602a2ac69f7dc130723`. After controlled Phase 4 + Temporal + PostgreSQL restart, strict post failed because Hub Ledger returned 404; Context, Artifact and Hub approval also returned 404 while the same Temporal-backed Flow remained `RUNNING`.
+
+Diagnosis showed restarted owner services resolving relative values such as `./data/hub.db` from package-local cwd, opening `services/<service>/data/...` rather than repository-root `data/...`.
+
+This remained a valid failed persistence attempt; no gate was weakened.
+
+### 5.2 Path/bootstrap fixes
+
+PR #46 fixed the durable local path contract by anchoring relative runtime filesystem paths to the ECORIONE repository root while preserving absolute production paths.
+
+A subsequent restart exposed stale compiled workspace `dist` after source updates. PR #48 added `build:runtime-deps` before local dev entrypoints and deterministic regression coverage.
+
+After both fixes, runtime file-descriptor inspection confirmed Hub, Context and Flow opened repository-root durable files even though their process cwd values remained service-local.
+
+### 5.3 Recovery of the historical first probe
+
+Before creating the second baseline, the preserved first-drill state was re-read through owner APIs:
+
+- Ledger: 200 with original head hash;
+- Context: 200 with original episode identity/content;
+- Artifact: 200 with original SHA-256;
+- Flow: 200 / `RUNNING`;
+- Hub approval: 200 / `PENDING` with original operation identity.
+
+That recovery confirmed wrong-path reopening rather than data deletion/corruption. The old dedicated Flow was then cleaned up and reached terminal state.
+
+### 5.4 Fresh second strict baseline
+
+A fresh strict baseline passed on merged revision:
+
+`673af91642ea1b9440079e396675c69f53647951`
+
+The probe recorded exact Ledger hash identity, Context digest, Artifact digest, Flow identity and pending Hub approval operation identity.
+
+### 5.5 Successful controlled restart
+
+Only the reviewed ECORIONE boundary was stopped:
+
+1. Phase 4 process group;
+2. exact `ecorione-temporal`;
+3. exact `ecorione-temporal-db`.
+
+`ecorione_temporal_db` remained present. No unrelated Docker workload was stopped/pruned and no owner database/Artifact/volume was deleted.
+
+Dependency-safe restart order was PostgreSQL → Temporal → `pnpm dev:phase4`. Required owner services returned healthy and the Flow worker returned `RUNNING`.
+
+### 5.6 Strict post + cleanup
+
+Strict post passed with:
+
+- Ledger same event/head hash and `nextSeq=1`;
+- Context same episode ID/SHA;
+- Artifact same ID/SHA;
+- same Flow ID still `RUNNING`;
+- same Hub approval still `PENDING` with same operation identity.
+
+Strict cleanup then terminalized the dedicated probe (`FAILED`) and both cleanup gates passed.
+
+### 5.7 Closed claim boundary
+
+Verified:
+
+> local owner storage + Phase 4 process restart + Temporal-container restart + PostgreSQL-container restart persistence on the real laptop boundary.
+
+Not verified by this checkpoint:
+
+- backup/restore correctness;
+- off-host disaster recovery;
+- host-loss recovery;
+- hard power-loss/fsync semantics beyond controlled stop/start;
+- arbitrary corruption recovery;
+- VPS/Cloudflare durability;
+- hosted-provider behavior.
+
+---
+
+## 6. Current operator-approved execution order
+
+1. **Local persistence/restart drill — CLOSED / PASS**
+2. **Isolated local backup/restore drill — ACTIVE NEXT CHECKPOINT**
 3. **Local observability baseline — PENDING**
 4. **UX/product validation — PENDING**
 5. **Immutable local model identity hardening — PENDING**
@@ -275,28 +244,28 @@ Production deployment is not a blocker for current local R&D. It resumes only on
 
 ---
 
-## 6. Active next workstream — local persistence/restart evidence
+## 7. Active next workstream — isolated local backup/restore evidence
 
-The next scope should be opened explicitly and should not be called Batch 13.
+The next scope is explicit and is not Batch 13.
 
 Minimum intended evidence:
 
 1. start from synchronized reviewed `main`;
-2. inventory current ECORIONE + Temporal/PostgreSQL runtime state;
-3. avoid stopping/pruning unrelated Docker workloads;
-4. record baseline identifiers/receipts for Historical Ledger, Context, Artifact and a durable Flow item;
-5. restart the relevant ECORIONE service/process/container boundaries in a controlled sequence;
-6. verify owner data survives according to each service contract;
-7. verify Temporal-backed Flow durability/recovery;
-8. identify state that is intentionally ephemeral;
-9. run focused health/integrity checks after restart;
-10. write sanitized verification evidence before closure.
+2. inventory existing owner-scoped backup/restore tooling and current durable paths;
+3. keep active runtime state untouched until backup inputs/outputs are explicit;
+4. produce owner backup receipts/digests using existing supported contracts/tooling;
+5. keep Hub, Context, Artifact, Flow/Temporal/PostgreSQL ownership semantics separate;
+6. restore only into isolated targets, never directly overwrite active owner state during the drill;
+7. verify restored byte/database integrity and expected identities;
+8. where service-level restore startup is required, bind isolated paths/ports and prove owner API readability without colliding with the active runtime;
+9. distinguish backup correctness from off-host DR/failure-domain claims;
+10. preserve raw evidence locally/gitignored and commit only sanitized closure evidence.
 
 Architecture/ownership must not change merely to make the drill easier.
 
 ---
 
-## 7. Production activation status
+## 8. Production activation status
 
 Status: **DEFERRED BY OPERATOR DECISION / TOOLING READY**
 
@@ -313,7 +282,7 @@ Cloudflare remains an external DNS/TLS/tunnel edge; it never owns Hub policy, Co
 
 ---
 
-## 8. Persistent architecture/evidence rules
+## 9. Persistent architecture/evidence rules
 
 - Historical Ledger and Context L0 remain semantic ground truth; no convenience rewrite.
 - No cross-service database access.
@@ -333,11 +302,13 @@ Cloudflare remains an external DNS/TLS/tunnel edge; it never owns Hub policy, Co
 - No public/general savings claim without representative comparable telemetry.
 - External MCP public-network acceptance must remain genuinely public-network when relevant.
 - Do not weaken CI/security/evidence gates to manufacture closure.
+- Preserve valid failed evidence rather than rewriting history after a fix.
+- Backup/restore evidence must use isolated restore targets and must not overwrite active durable state merely to make the drill convenient.
 - AutoClick remains deferred until a concrete non-API use case passes architecture review.
 
 ---
 
-## 9. Definition of Done for post-closure workstreams
+## 10. Definition of Done for post-closure workstreams
 
 A post-closure workstream may be marked `CLOSED` only after all applicable items are satisfied:
 
@@ -364,9 +335,11 @@ A post-closure workstream may be marked `CLOSED` only after all applicable items
 
 For comparative/model evidence specifically also require explicit cache state, quality measurement, equivalent task/fact/model controls, raw evidence kept local/gitignored, and separate claims for transport/selective hydration/automatic selection/actual provider cost.
 
+For backup/restore evidence specifically also require explicit source snapshot identity, backup receipt/digest, isolated restore target, restore verification and a statement of whether the backup leaves the original failure domain.
+
 ---
 
-## 10. Progress update protocol
+## 11. Progress update protocol
 
 Every active workstream update should record:
 
@@ -385,8 +358,8 @@ Architecture changes require ADR/decision updates. Measurement or operations evi
 
 ---
 
-## 11. Immediate next action
+## 12. Immediate next action
 
-**Open and execute the local persistence/restart evidence scope from synchronized `main`.** Do not restart/prune unrelated Docker workloads, and do not mutate VPS/Cloudflare state.
+**Open and execute the isolated local backup/restore evidence scope from synchronized reviewed `main`.** Restore into isolated targets, preserve owner boundaries, do not overwrite active durable state, do not restart/prune unrelated Docker workloads, and do not mutate VPS/Cloudflare state.
 
 Canonical handoff: `docs/current-state-and-next-steps.md`.

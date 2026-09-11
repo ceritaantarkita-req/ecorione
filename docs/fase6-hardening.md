@@ -1,6 +1,6 @@
 # Fase 6+ — evidence-driven hardening baseline
 
-**Status:** ACTIVE / OPEN-ENDED · reconciled through final local Comparative ECX closure on 2026-09-11
+**Status:** ACTIVE / OPEN-ENDED · reconciled through local persistence/restart closure on 2026-09-11
 
 Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. Yang sudah CLOSED adalah **planned platform/production roadmap Batch 1–12** dan beberapa checkpoint evidence lokal yang eksplisit. Dokumen ini mencatat hardening baseline yang sudah masuk `main` dan area evidence-driven yang masih bisa berkembang.
 
@@ -18,18 +18,21 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - comparative harness docs closure PR #39 merge: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`
 - comparative cache-isolation fix PR #40 merge: `197627dc04689dea94bf7957e18b2699f8fb9213`
 - comparative release fixture correction PR #41 merge: `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`
-- PR #41 exact-head CI `34565244451`: **PASS**
-- PR #41 post-merge CI `34565539119`: **PASS**
-- first cached Gemma comparative smoke: **FAIL / VALID CACHE FINDING**
-- corrected uncached smoke after PR #40: **PASS**
-- first full 75-call run: **FAIL / VALID RELEASE FIXTURE FINDING**
-- targeted corrected `release-readiness`: **PASS**
-- final corrected full 75-call run: **5/5 TASK GATES PASS**
 - final local Comparative ECX checkpoint: **CLOSED / PASS WITH LIMITATIONS**
-- active next checkpoint: **LOCAL PERSISTENCE/RESTART EVIDENCE**
+- first local persistence/restart drill: **FAIL / VALID PATH-CONTRACT FINDING**
+- repo-root runtime-path fix PR #46 merge: `778e7eb19a0e2f528c64e68459d8ff6e6ecbe1ce`
+- local runtime-dependency bootstrap fix PR #48 merge: `673af91642ea1b9440079e396675c69f53647951`
+- final local persistence/restart rerun: **CLOSED / PASS**
+- active next checkpoint: **ISOLATED LOCAL BACKUP/RESTORE EVIDENCE**
 - compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**
 - AutoClick: **DEFERRED BY DESIGN**
 - no implicit Batch 13
+
+Current persistence references:
+
+- `docs/local-persistence-restart-evidence.md`
+- `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+- `docs/verification/local-persistence-restart-closure-2026-09-11.md`
 
 Comparative references:
 
@@ -142,37 +145,9 @@ The benchmark uses:
 
 The oracle suffix remains mandatory because current ECX does **not** autonomously choose `refIndexes`.
 
-### Evidence progression
+Final corrected 75-call result on `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`:
 
-#### First real smoke — valid FAIL / cache isolation
-
-The first real Gemma smoke reached the real owner APIs but all measured completions were exact-cache hits. The gate correctly rejected it.
-
-#### Corrected smoke after PR #40 — PASS
-
-The corrected rerun was uncached with non-zero token telemetry, stable model identity, aligned baseline/control input tokens, 100% task quality, and lower selective bytes/tokens.
-
-#### First full 75-call run — valid FAIL / release fixture ambiguity
-
-The first 5× run passed 4/5 tasks. `release-readiness` failed exact quality in all three lanes because the source fixture placed sentence punctuation immediately after authoritative string values.
-
-This was preserved as evidence rather than normalized away.
-
-#### PR #41 targeted correction — PASS
-
-PR #41 removed only the ambiguous release source delimiters, leaving answer key/scorer/gates unchanged. Targeted real Gemma `release-readiness` then passed in all three uncached lanes.
-
-#### Final corrected 75-call run — PASS WITH LIMITATIONS
-
-Runtime revision:
-
-`4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`
-
-Run shape/result:
-
-- 5 tasks;
-- 5 repeats;
-- 3 lanes;
+- 5 tasks × 5 repeats × 3 lanes;
 - 75 measured calls;
 - measured cache hits: `0`;
 - 5/5 task gates PASS;
@@ -180,47 +155,55 @@ Run shape/result:
 - median selective input-token reduction: `77.8580814717477%`;
 - median selective/full latency ratio: `0.8672873729681319`.
 
-Raw local receipt:
+Post-run audit found one `retention-policy` `ecx-selective-oracle` repeat at `1/3` exact fields because two returned strings retained sentence-final periods. The other four selective repeats and all baseline/control repeats for that task scored `3/3`; the predeclared median gate still passed.
 
-```text
-.ecorione/evidence/comparative-local-2026-09-11-v2.json
-bytes: 94654
-sha256: 189795c71dc72acfd3d1533490a002d87e68421682868eb2b8b830c6fbdab439
-```
+Therefore the checkpoint remains **CLOSED / PASS WITH LIMITATIONS**. It does not support “75/75 perfect outputs”, automatic-selector claims, universal optimizer claims, hosted billed-cost savings, or public/general percentage-savings marketing.
 
-Post-run audit limitation:
+## Closed local persistence/restart evidence
 
-- one `retention-policy` `ecx-selective-oracle` repeat scored `1/3` exact fields because two returned strings retained sentence-final periods;
-- the other four selective repeats and all baseline/control repeats for that task scored `3/3`;
-- the predeclared gate uses the median over five repeats, so the task still formally passed.
+Status: **CLOSED / PASS**.
 
-Therefore the checkpoint is **CLOSED / PASS WITH LIMITATIONS**. It supports task-level median benchmark claims only. It does not support “75/75 perfect outputs”, automatic-selector claims, universal optimizer claims, hosted billed-cost savings, or public/general percentage-savings marketing.
+The first strict runtime drill failed validly after restart because owner services reopened relative durable paths under package-local cwd. Temporal/PostgreSQL retained the same Flow execution, while Hub/Context/Artifact/approval reads hit the wrong filesystem locations.
 
-Final verification: `docs/verification/comparative-closure-grade-final-2026-09-11.md`.
+PR #46 anchored configured relative runtime paths to the ECORIONE repository root while preserving absolute production paths. A second bounded bootstrap issue then appeared: local compiled shared-package `dist` could remain stale after `git pull`. PR #48 made local dev entrypoints build compiled runtime dependencies before starting services.
 
-## Active next evidence scope — local persistence/restart
+After both fixes:
 
-The next checkpoint is local persistence/restart evidence. It is a new explicit scope, not Batch 13.
+- Hub/Context/Flow effective SQLite paths were verified under repository-root `data/`;
+- the preserved first-drill Ledger, Context, Artifact, Flow and approval identities reappeared through owner APIs;
+- the old Flow probe was cleaned up;
+- a fresh strict baseline passed on `673af91642ea1b9440079e396675c69f53647951`;
+- Phase 4 processes, exact Temporal container and exact PostgreSQL container were stopped/restarted with the existing named DB volume preserved;
+- strict post passed with exact Ledger hashes, Context digest, Artifact digest, Flow ID and pending approval identity preserved;
+- strict cleanup terminalized the dedicated second probe.
+
+Final verification: `docs/verification/local-persistence-restart-closure-2026-09-11.md`.
+
+Claim boundary: this proves the controlled **local owner storage + process + Temporal-container + PostgreSQL-container restart boundary**. It does not prove backup/restore, off-host DR, host loss, hard power-loss/fsync behavior, arbitrary corruption recovery, VPS durability or Cloudflare behavior.
+
+## Active next evidence scope — isolated local backup/restore
+
+The next checkpoint is isolated local backup/restore evidence. It is a new explicit scope, not Batch 13.
 
 Target evidence should include:
 
 1. synchronized reviewed `main` baseline;
-2. inventory of ECORIONE/Temporal/PostgreSQL runtime state;
-3. baseline receipts/identifiers for Historical Ledger, Context, Artifact and durable Flow state;
-4. controlled restart of relevant ECORIONE boundaries only;
-5. no global Docker prune/stop affecting unrelated workloads;
-6. post-restart health checks;
-7. verification that owner data persists according to each owner contract;
-8. Temporal/Flow recovery verification;
-9. explicit documentation of intentionally ephemeral state;
+2. inventory of existing owner backup/restore tooling and current durable paths;
+3. no mutation/overwrite of active durable state while collecting source backups;
+4. owner-scoped backup receipts/digests;
+5. explicit Hub, Context, Artifact, Flow/Temporal/PostgreSQL ownership semantics;
+6. restore only into isolated targets;
+7. isolated restore integrity verification;
+8. owner API/service-level readability where an isolated restored service can be started safely;
+9. explicit distinction between same-host backup correctness and off-host DR;
 10. sanitized verification note before closure.
 
 ## What remains open-ended after Batch 12
 
 Current operator-approved order:
 
-1. local persistence/restart drill;
-2. isolated local backup/restore drill;
+1. local persistence/restart drill — **CLOSED / PASS**;
+2. isolated local backup/restore drill — **ACTIVE NEXT CHECKPOINT**;
 3. local observability baseline;
 4. product/UX validation from real use;
 5. immutable local model identity hardening;
@@ -282,5 +265,13 @@ For comparative benchmarks specifically:
 - preserve raw evidence locally in gitignored storage;
 - commit only sanitized verified summaries;
 - distinguish ECX transport, selective hydration, automatic selection, routing/cache, and actual provider cost as separate claims.
+
+For backup/restore specifically:
+
+- record source snapshot identity and backup receipt/digest;
+- do not overwrite active owner state during the evidence drill;
+- restore only into an isolated target;
+- preserve owner boundaries instead of opening another service's DB directly;
+- distinguish same-host restore correctness from off-host disaster recovery.
 
 Do not reopen Batch 12 merely because Fase 6+ continues. Create a new explicit scope instead.

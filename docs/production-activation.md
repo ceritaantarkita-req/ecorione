@@ -7,7 +7,7 @@ This is the post-closure production-deployment workstream. It does not reopen Ba
 
 The operator has explicitly chosen **not to deploy to a VPS/compute host yet**. Do not treat that decision as a blocker or failure. Do not perform target-host, Cloudflare, firewall, domain, or hosted-provider mutations unless the operator explicitly resumes this workstream.
 
-Current active local work is documented in `docs/current-state-and-next-steps.md`. The local Comparative ECX checkpoint is now closed; its protocol/result remains in `docs/comparative-ecx-evidence.md`.
+Current active local work is documented in `docs/current-state-and-next-steps.md`. Local persistence/restart is now closed for the tested laptop boundary; isolated local backup/restore is the active next checkpoint. Comparative ECX remains closed with its documented limitations.
 
 ## Objective when resumed
 
@@ -22,32 +22,35 @@ Take the repository-verified production/self-host baseline from the already-clos
 - Browser/Historical-Ledger session identity defect: fixed in PR #36.
 - Historical Ledger + ECX evidence closure: PR #37 merged as `88d588bbe4a5f005652c20f3409dd72093439f56`.
 - Comparative ECX harness + runtime evidence checkpoint: **CLOSED / PASS WITH LIMITATIONS**.
-- Comparative release fixture correction PR #41 merged as `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`.
-- PR #41 exact-head CI `34565244451`: PASS.
-- PR #41 post-merge CI `34565539119`: PASS.
 - Final corrected Comparative ECX run: 5/5 task gates PASS over 75 uncached measured calls.
+- Local persistence/restart first drill: **valid FAIL**, relative durable-path defect found.
+- Repo-root runtime path fix PR #46: merged as `778e7eb19a0e2f528c64e68459d8ff6e6ecbe1ce`.
+- Local compiled-runtime bootstrap fix PR #48: merged as `673af91642ea1b9440079e396675c69f53647951`.
+- Final local persistence/restart rerun: **CLOSED / PASS** across Phase 4 + Temporal + PostgreSQL-container restart boundary.
 - Deployment, provider-canary, ops-snapshot, host-audit, Cloudflare Tunnel, public-smoke, and guarded origin-lockdown tooling exists.
 
 Sanitized local evidence:
 
 - `docs/verification/local-production-rehearsal-2026-09-10.md`;
 - `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`;
-- `docs/verification/comparative-closure-grade-final-2026-09-11.md`.
+- `docs/verification/comparative-closure-grade-final-2026-09-11.md`;
+- `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`;
+- `docs/verification/local-persistence-restart-closure-2026-09-11.md`.
 
 ## Why production activation remains deferred
 
 The operator-approved local-first sequence is now:
 
 ```text
-local persistence/restart drill
-  -> local backup/restore drill
+local persistence/restart — CLOSED / PASS
+  -> isolated local backup/restore — ACTIVE NEXT CHECKPOINT
   -> local observability baseline
   -> UX/product validation
   -> immutable local model identity hardening
   -> production activation only when the operator explicitly chooses to resume it
 ```
 
-The Comparative ECX checkpoint no longer blocks this sequence. Its local synthetic result remains bounded and must not be mislabeled as VPS, Cloudflare, hosted-provider, or production evidence.
+Neither the Comparative ECX result nor the local persistence/restart PASS should be mislabeled as VPS, Cloudflare, hosted-provider, backup/restore, or off-host DR evidence.
 
 ## Production tooling available when resumed
 
@@ -75,15 +78,16 @@ Production secrets are never command-line examples in this document. Provider se
 | 0 | Local production rehearsal | **DONE / LOCAL BOUNDARY CLOSED** | Phase 4, Temporal, Gemma canary, direct Ai API, real browser Local chat, sourced-env verification |
 | 1 | Historical Ledger + ECX local traffic/integrity | **DONE / LOCAL CHECKPOINT CLOSED** | Session identity, hash chain, real ECX plan/handoff/hydration, `production:data-evidence` PASS |
 | 2 | Comparative ECX local efficiency evidence | **DONE / PASS WITH LIMITATIONS** | 5/5 task gates PASS over 75 uncached calls; oracle-selector and one per-run exact-string limitation remain explicit |
-| 3 | Local persistence/restart evidence | **ACTIVE IN SEPARATE LOCAL WORKSTREAM** | Current next checkpoint; not a remote deployment action |
-| 4 | Deploy to real compute host/VPS | **DEFERRED BY OPERATOR** | No host action until explicit resume |
-| 5 | Install Cloudflare Free + named Tunnel | **DEFERRED WITH #4** | Tooling ready; account/host evidence pending |
-| 6 | Domain/DNS/HTTPS/Caddy/MCP public routing | **DEFERRED WITH #4** | Requires real target hostname/host |
-| 7 | Origin firewall lockdown | **DEFERRED WITH #4** | Never apply before successful public smoke + SSH/tunnel preconditions |
-| 8 | Production E2E edge smoke | **PENDING FUTURE DEPLOYMENT** | `pnpm production:smoke` on actual public edge |
-| 9 | Hosted provider credentials/canaries | **OPTIONAL / OPERATOR CREDENTIALS REQUIRED** | Never required for current local work |
-| 10 | Durable production observability | **PENDING FUTURE DEPLOYMENT** | Local observability is a separate earlier checkpoint |
-| 11 | Host hardening/off-host DR | **PENDING FUTURE DEPLOYMENT** | Requires actual host/failure-domain evidence |
+| 3 | Local persistence/restart evidence | **DONE / LOCAL CHECKPOINT CLOSED** | Fresh strict baseline; Phase 4 + Temporal + PostgreSQL restart; exact owner state survived; strict cleanup PASS |
+| 4 | Isolated local backup/restore evidence | **ACTIVE IN SEPARATE LOCAL WORKSTREAM** | Current next checkpoint; restore into isolated targets, not active owner state |
+| 5 | Deploy to real compute host/VPS | **DEFERRED BY OPERATOR** | No host action until explicit resume |
+| 6 | Install Cloudflare Free + named Tunnel | **DEFERRED WITH #5** | Tooling ready; account/host evidence pending |
+| 7 | Domain/DNS/HTTPS/Caddy/MCP public routing | **DEFERRED WITH #5** | Requires real target hostname/host |
+| 8 | Origin firewall lockdown | **DEFERRED WITH #5** | Never apply before successful public smoke + SSH/tunnel preconditions |
+| 9 | Production E2E edge smoke | **PENDING FUTURE DEPLOYMENT** | `pnpm production:smoke` on actual public edge |
+| 10 | Hosted provider credentials/canaries | **OPTIONAL / OPERATOR CREDENTIALS REQUIRED** | Never required for current local work |
+| 11 | Durable production observability | **PENDING FUTURE DEPLOYMENT** | Local observability is a separate earlier checkpoint |
+| 12 | Host hardening/off-host DR | **PENDING FUTURE DEPLOYMENT** | Requires actual host/failure-domain evidence |
 
 ## Resume procedure
 
@@ -136,9 +140,9 @@ pnpm cloudflare:origin:lockdown -- --apply
 
 ## Evidence rules
 
-Do not mark deferred production items DONE from repository CI, laptop rehearsal, local persistence/restart, or local comparative benchmarks. Specifically:
+Do not mark deferred production items DONE from repository CI, laptop rehearsal, local persistence/restart, local backup/restore, or local comparative benchmarks. Specifically:
 
-- local Phase 4 does not prove remote-host persistence/restart/backup behavior;
+- local Phase 4 + Temporal/PostgreSQL persistence evidence does not prove remote-host persistence/restart/backup behavior;
 - local backup/restore does not prove off-host disaster recovery;
 - a `Healthy` Cloudflare Tunnel alone does not prove origin routing;
 - local provider evidence does not prove hosted-provider quality, latency, cost, or billing;

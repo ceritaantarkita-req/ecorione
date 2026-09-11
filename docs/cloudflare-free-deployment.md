@@ -5,9 +5,9 @@ Current project status reconciled: **2026-09-11**
 
 Status: **FUTURE DEPLOYMENT OPTION / DEFERRED BY OPERATOR DECISION**
 
-This file remains the deployment guide for a future Cloudflare Free + Tunnel rollout. It is **not the active next checkpoint**. The operator has explicitly chosen to continue local persistence/restart, backup/restore, observability, product validation, and model-identity hardening before deciding whether to deploy to a VPS/compute host.
+This file remains the deployment guide for a future Cloudflare Free + Tunnel rollout. It is **not the active next checkpoint**. Local persistence/restart is now **CLOSED / PASS** for the tested laptop boundary; the operator-approved active next checkpoint is **isolated local backup/restore**, followed by observability, product validation, and local model-identity hardening before deciding whether to deploy to a VPS/compute host.
 
-The local Comparative ECX checkpoint is now **CLOSED / PASS WITH LIMITATIONS**. That result does not change this deployment deferral and must not be treated as Cloudflare/VPS evidence.
+The local Comparative ECX checkpoint is **CLOSED / PASS WITH LIMITATIONS**. Neither that result nor the local persistence/restart PASS changes this deployment deferral or constitutes Cloudflare/VPS evidence.
 
 Do not execute Cloudflare account, DNS, Tunnel, firewall, or target-host mutation from the current local workstream. Resume this guide only after an explicit operator decision. Current state: `docs/current-state-and-next-steps.md`.
 
@@ -239,7 +239,8 @@ Current state on 2026-09-11:
 
 - local runtime and Historical Ledger + ECX traffic/integrity evidence: **CLOSED**;
 - local Comparative ECX evidence: **CLOSED / PASS WITH LIMITATIONS**;
-- local persistence/restart evidence: **ACTIVE NEXT CHECKPOINT**;
+- local persistence/restart evidence: **CLOSED / PASS**;
+- isolated local backup/restore evidence: **ACTIVE NEXT CHECKPOINT**;
 - VPS/compute-host deployment: **DEFERRED BY OPERATOR**;
 - Cloudflare named Tunnel/public cutover: **DEFERRED WITH DEPLOYMENT**.
 
