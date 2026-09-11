@@ -1,0 +1,49 @@
+name: Temporary Comparative Lint Fix
+
+on:
+  push:
+    branches:
+      - rnd/comparative-ecx-evidence-20260911
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-commit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: rnd/comparative-ecx-evidence-20260911
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply lint fix and remove temporary workflow
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/comparative-evidence.mjs')
+          text = path.read_text()
+          needle = 'import { randomUUID } from "node:crypto";\n'
+          replacement = needle + 'import { performance } from "node:perf_hooks";\n'
+          if replacement not in text:
+              if needle not in text:
+                  raise SystemExit('expected import anchor not found')
+              text = text.replace(needle, replacement, 1)
+              path.write_text(text)
+          PY
+          pnpm exec prettier --write scripts/comparative-evidence.mjs
+          pnpm exec eslint scripts/comparative-evidence.mjs
+          rm .github/workflows/tmp-fix-comparative-lint.yml
+          git diff --check
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/comparative-evidence.mjs .github/workflows/tmp-fix-comparative-lint.yml
+          git diff --cached --quiet && { echo "No lint fix changes to commit"; exit 1; }
+          git commit -m "fix: import Node performance for comparative harness"
+          git push origin HEAD:rnd/comparative-ecx-evidence-20260911
