@@ -46,7 +46,7 @@ Jika plan menghasilkan lebih dari satu recipient dan `historySessionId` diberika
 - `LOCAL_ONLY` History tidak dapat dihydrate sebagai hosted-eligible context.
 - current `/v1/exchange/hydrate` menerima **caller-supplied `refIndexes`**; hydrator tidak memilih reference secara semantik/autonom.
 
-Konsekuensinya, kemampuan selective hydration yang sudah ada berbeda dari **automatic reference selection**. ECORIONE tidak boleh diklaim memiliki selector otomatis hanya karena caller dapat meminta subset reference.
+Konsekuensinya, selective hydration berbeda dari **automatic reference selection**. ECORIONE tidak boleh diklaim memiliki selector otomatis hanya karena caller dapat meminta subset reference.
 
 ### A2A
 
@@ -68,13 +68,23 @@ Regression suite menyertakan fixture yang membandingkan pointer-first packet den
 
 Local traffic/integrity evidence sudah membuktikan real ECX plan, `agent.handoff`, dan hydration melalui owner boundary. Itu tetap bukan savings proof.
 
-Untuk comparative local R&D, protocol resmi saat ini ada di `docs/comparative-ecx-evidence.md` dan memisahkan tiga lane:
+Protocol comparative local R&D ada di `docs/comparative-ecx-evidence.md` dan memisahkan tiga lane:
 
 - `full-inline` — baseline full context;
 - `ecx-all` — ECX packet + hydrate semua refs untuk mengontrol efek transport;
 - `ecx-selective-oracle` — hanya fixture-declared relevant refs dihydrate.
 
 Nama `oracle` sengaja eksplisit karena reference subset diketahui dari answer-key fixture, bukan ditemukan oleh selector produksi. Hasil lane tersebut hanya boleh dipakai untuk mengukur **potential/upper bound of correct selective hydration**.
+
+Final corrected local checkpoint pada revision `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675` menjalankan 5 task × 5 repeat × 3 lane = 75 measured calls. Seluruh measured calls uncached dan 5/5 task-level predeclared gates PASS. Aggregate task-level median yang terukur:
+
+- selective transport reduction: `73.6379379246037%`;
+- selective input-token reduction: `77.8580814717477%`;
+- selective/full latency ratio: `0.8672873729681319`.
+
+Hasil itu tetap **benchmark-specific**, bukan general/public savings claim. Satu individual `retention-policy` selective repeat memiliki exact-string punctuation mismatch `1/3`; karena quality gate yang dideklarasikan memakai median lima repeat, task tetap PASS. Karena itu current local checkpoint dicatat sebagai **PASS WITH LIMITATIONS** dan bukan klaim 75/75 output sempurna.
+
+Sanitized final verification: `docs/verification/comparative-closure-grade-final-2026-09-11.md`.
 
 Jika evidence menunjukkan potential yang cukup besar, automatic selector dapat diusulkan sebagai scope baru. Selector tersebut harus punya evaluation sendiri terhadap oracle dan full-inline baseline, termasuk false omission/quality regression. ADR ini tidak mengotorisasi selector baru secara implisit.
 
@@ -88,4 +98,6 @@ Local provider-token `actualUsd=0` tidak membuktikan hosted billed-cost savings.
 - Connect tetap interoperability boundary;
 - format internal dapat dioptimalkan tanpa mem-fork standard A2A;
 - selective hydration bisa diukur tanpa melebih-lebihkan kemampuan selector;
-- negative comparative result diterima sebagai evidence dan tidak memaksa pembangunan optimizer baru.
+- negative/intermediate comparative result diterima sebagai evidence dan tidak dihapus dari histori;
+- final local synthetic benchmark tetap dibatasi pada lane/task/gate yang benar-benar diukur;
+- automatic selector baru tetap membutuhkan scope/evaluation terpisah.
