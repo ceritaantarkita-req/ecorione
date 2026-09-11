@@ -4,42 +4,56 @@
 
 Pindah lintas provider/model tanpa kehilangan kesinambungan kerja, sambil menjaga boundary local-first, approval, audit trail, durable execution, MCP, dan biaya kontrafaktual tetap eksplisit.
 
-> **Current status — 2026-09-11:** **production/self-host repository baseline READY · planned platform/production Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · comparative ECX harness MERGED/VERIFIED · cache isolation VERIFIED in real runtime · first 5× closure run executed 75 measured calls and passed 4/5 tasks; `release-readiness` exposed an exact-value fixture delimiter ambiguity, so final comparative verdict remains OPEN · compute-host/VPS deployment DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
+> **Current status — 2026-09-11:** **production/self-host repository baseline READY · planned platform/production Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · Comparative ECX harness MERGED/VERIFIED · final corrected local Comparative ECX checkpoint CLOSED / PASS WITH LIMITATIONS · local persistence/restart is the active next checkpoint · compute-host/VPS deployment DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
 
 Untuk agent/manusia yang baru masuk repo: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md). Jangan menyimpulkan current state dari blueprint/audit lama saja.
 
 ## Current closure evidence
 
-Final state setelah roadmap Batch 1–12, local evidence closure, dan comparative-harness implementation closure:
+Key post-closure progression:
 
 - implementation PR #29 merged sebagai `ad67b68290a41e69e18dfa49caefed0090bd9635`;
 - closure PR #30 merged sebagai `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`;
 - local Production Activation/runtime-fix sequence PR #32–#36 merged;
 - Historical Ledger + ECX local evidence closure PR #37 merged sebagai `88d588bbe4a5f005652c20f3409dd72093439f56`;
-- PR #37 post-merge `main` CI `34554159172`: PASS seluruh repository gates;
 - comparative harness PR #38 merged sebagai `c1849cd0c67712e40ea4e5c90587283900859cdb`;
-- PR #38 exact-head CI `34557147546` dan MCP External HTTPS `34557147583`: PASS;
-- PR #38 post-merge `main` CI `34557297702` dan MCP External HTTPS `34557297803`: PASS;
 - comparative harness docs closure PR #39 merged sebagai `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`;
 - comparative cache-isolation fix PR #40 merged sebagai `197627dc04689dea94bf7957e18b2699f8fb9213`;
-- PR #40 post-merge CI `34561893817`: PASS;
+- release fixture delimiter correction PR #41 merged sebagai `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675`;
+- PR #41 exact-head CI `34565244451`: PASS;
+- PR #41 post-merge `main` CI `34565539119`: PASS;
 - real local browser→Hub→Connect→Ollama/Gemma path: PASS;
 - real local Historical Ledger hash chain + ECX plan/handoff/hydration: PASS;
 - `pnpm production:data-evidence`: PASS pada captured local checkpoint;
 - first cached comparative smoke: valid FAIL, cache-isolation defect found and preserved;
 - corrected uncached comparative smoke after PR #40: PASS;
-- first closure-grade run: 5 tasks × 5 repeats × 3 lanes = 75 measured calls, **4/5 task PASS**; `release-readiness` failed exact quality equally across baseline/control/selective due ambiguous source sentence punctuation;
-- final comparative verdict: **PENDING** after fixture correction + targeted rerun + full corrected rerun.
+- first closure-grade 75-call run: valid FAIL, 4/5 tasks PASS, `release-readiness` delimiter ambiguity found and preserved;
+- targeted corrected `release-readiness` after PR #41: PASS;
+- final corrected 75-call run: **5/5 task gates PASS**, all measured calls uncached;
+- final local Comparative ECX verdict: **CLOSED / PASS WITH LIMITATIONS**.
 
-Detail current state dan evidence:
+Final corrected benchmark aggregate:
+
+```text
+measured model calls: 75
+passed task gates: 5/5
+median selective transport reduction: 73.6379379246037%
+median selective input-token reduction: 77.8580814717477%
+median selective/full latency ratio: 0.8672873729681319
+```
+
+Important limitation: one individual `retention-policy` selective repeat returned two exact-string values with sentence-final periods and scored `1/3`. The predeclared quality gate uses the median over five repeats, so that task still formally passed. Therefore the checkpoint is **PASS WITH LIMITATIONS**, not a claim that all 75 individual completions had perfect exact-string quality.
+
+Detail current state/evidence:
 
 - [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md)
+- [`docs/verification/comparative-closure-grade-final-2026-09-11.md`](docs/verification/comparative-closure-grade-final-2026-09-11.md)
 - [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md)
 - [`docs/verification/comparative-closure-grade-first-run-2026-09-11.md`](docs/verification/comparative-closure-grade-first-run-2026-09-11.md)
 - [`docs/verification/comparative-smoke-cache-defect-2026-09-11.md`](docs/verification/comparative-smoke-cache-defect-2026-09-11.md)
 - [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md)
-- [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md)
 - [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md)
+- [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md)
 - [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md)
 
 ## Apa yang sudah ada
@@ -60,7 +74,7 @@ Detail current state dan evidence:
 | **Data / DR** | Rebuild/governance/backup-restore procedures |
 | **Production Ops** | Compose/Caddy, metrics/traces, provider canary, release/install/upgrade/rollback tooling |
 | **Security closure** | Full-history + working-tree secret scans, dependency/release checks, HTTP/SSRF hardening, real public HTTPS MCP acceptance |
-| **Comparative evidence** | Harness merged; cache isolation verified; first full 5× run 4/5 pass; release fixture delimiter fix + rerun pending |
+| **Comparative evidence** | Harness merged; cache isolation verified; final corrected local 5× run passed 5/5 task gates; checkpoint CLOSED / PASS WITH LIMITATIONS |
 | **AutoClick** | **Deferred by design** sampai ada use case non-API nyata |
 
 ## Arsitektur inti
@@ -100,7 +114,7 @@ Historical Ledger di Hub menyimpan chronological/replay history dan tidak mengga
 
 ## Comparative ECX evidence
 
-Active local R&D protocol: [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md).
+Closed local protocol/results: [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md).
 
 Benchmark membandingkan tiga lane dengan task/facts/model yang sama:
 
@@ -114,43 +128,19 @@ ECX packet + hydrate fixture-declared relevant refs (oracle control)
 
 Yang diukur: transport bytes, input/output tokens, latency, cache state, model identity, dan deterministic answer quality.
 
-Runtime progression saat ini:
+Final corrected run pada merged revision `4d5ee560a3b6cef024b0d7ed7bbec53a17f32675` menjalankan 5 task × 5 repeat × 3 lane = 75 measured calls. 5/5 task-level gates PASS, semua measured calls uncached, dan median input-token control delta `full-inline` vs `ecx-all` adalah nol untuk setiap task.
 
-- first real smoke menemukan cross-invocation cache collision dan correctly FAIL;
-- PR #40 memperbaiki cache namespace tanpa menurunkan gate;
-- corrected smoke PASS dengan real uncached token telemetry;
-- first 75-call closure run menghasilkan 4/5 task PASS;
-- `release-readiness` gagal exact quality di semua tiga lane karena source value delimiter ambigu; fix tidak mengubah expected answer/scorer/gate.
+Raw evidence tetap local/gitignored:
 
-Targeted verification setelah fixture correction merged:
-
-```bash
-set -a
-source .env
-set +a
-
-pnpm evidence:comparative \
-  --tasks release-readiness \
-  --repeats 1
+```text
+.ecorione/evidence/comparative-local-2026-09-11-v2.json
+bytes: 94654
+sha256: 189795c71dc72acfd3d1533490a002d87e68421682868eb2b8b830c6fbdab439
 ```
 
-Normal development run:
+`ecx-selective-oracle` adalah **upper-bound/control lane**, bukan bukti selector otomatis. Local provider-token `actualUsd=0` juga bukan hosted cost-savings proof. Aggregate percentages dari benchmark ini tidak boleh dipromosikan menjadi universal/public savings claim.
 
-```bash
-pnpm evidence:comparative
-```
-
-Closure-grade protocol memakai 5 paired repeats per task dan raw JSON disimpan hanya di local gitignored storage:
-
-```bash
-pnpm evidence:comparative \
-  --repeats 5 \
-  --output .ecorione/evidence/comparative-local-2026-09-11.json
-```
-
-Jangan menambahkan literal `--` setelah `pnpm evidence:comparative`; pada script ini separator tersebut ikut diteruskan dan parser menolaknya sebagai `Unknown argument: --`.
-
-`ecx-selective-oracle` adalah **upper-bound/control lane**, bukan bukti selector otomatis. Local provider-token `actualUsd=0` juga bukan hosted cost-savings proof. Measured exact-cache hits juga bukan token/latency savings proof. Aggregate reduction dari run yang overall FAIL juga belum boleh dipromosikan menjadi public savings claim.
+Satu individual selective retention repeat memiliki exact-string punctuation mismatch; lihat final verification note. Jadi wording yang benar adalah **task-level benchmark PASS WITH LIMITATIONS**, bukan “75/75 outputs perfect”.
 
 ## Provider dan local runtime
 
@@ -166,7 +156,7 @@ Production credential berada di Connect Vault. Raw provider API key dari environ
 
 Local inference memakai endpoint **OpenAI-compatible**. Ollama adalah salah satu implementation yang mungkin digunakan, bukan dependency arsitektural wajib.
 
-Tidak ada silent provider fallback. Model identity harus dipin untuk durable production evidence. `gemma4:latest` yang muncul pada laptop rehearsal adalah runtime evidence sementara; mutable alias itu akan di-hardening pada checkpoint lokal terpisah.
+Tidak ada silent provider fallback. Model identity harus dipin untuk durable production evidence. `gemma4:latest` yang muncul pada laptop rehearsal/benchmark adalah runtime evidence sementara; mutable alias itu akan di-hardening pada checkpoint lokal terpisah.
 
 ## MCP
 
@@ -193,7 +183,7 @@ cp .env.example .env
 pnpm dev
 ```
 
-Runtime bertahap juga tersedia:
+Runtime bertahap tersedia:
 
 ```bash
 pnpm dev:phase2
@@ -222,14 +212,14 @@ There is **no automatic Batch 13**. Future work must be opened as a new explicit
 
 Current operator-approved order:
 
-1. comparative ECX efficiency evidence — merge/sync release fixture correction, targeted `release-readiness` verification, then rerun complete 5× measurement if healthy;
-2. controlled local persistence/restart drill;
-3. isolated local backup/restore drill;
-4. local observability baseline;
-5. product/UX validation from real use;
-6. immutable local model identity hardening;
-7. VPS/compute-host + Cloudflare deployment only when explicitly resumed;
-8. hosted-provider comparative validation only with operator credentials + spend intent;
+1. **local persistence/restart drill — ACTIVE NEXT CHECKPOINT**;
+2. isolated local backup/restore drill;
+3. local observability baseline;
+4. product/UX validation from real use;
+5. immutable local model identity hardening;
+6. VPS/compute-host + Cloudflare deployment only when explicitly resumed;
+7. hosted-provider comparative validation only with operator credentials + spend intent;
+8. optional automatic-selector/optimizer work only if a new explicit evidence-driven scope justifies it;
 9. ongoing maintenance/security/dependency/DR evidence;
 10. new features only when evidence justifies them.
 
@@ -268,8 +258,9 @@ READY baseline bukan klaim bahwa:
 - host OS/firewall/SSH/Cloudflare/provider-account hardening dilakukan otomatis;
 - ECX/optimizer savings sudah terbukti hanya dari traffic/hydration counts;
 - cached benchmark response membuktikan real model token/latency savings;
-- aggregate percentages dari failed closure run boleh dipakai sebagai general/public savings claim;
 - oracle selective hydration membuktikan automatic reference selection;
+- final local synthetic benchmark membuktikan universal/general production savings;
+- task-level median quality PASS berarti setiap individual model completion sempurna;
 - laptop evidence membuktikan VPS/Cloudflare production behavior;
 - Fase 6+ selesai permanen.
 
@@ -279,23 +270,24 @@ READY baseline bukan klaim bahwa:
 |---:|---|---|
 | 1 | [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md) | Current canonical handoff + next scope |
 | 2 | [`AGENTS.md`](AGENTS.md) | Invarian dan aturan kerja repo |
-| 3 | [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md) | Active local comparative-evidence protocol + runtime findings |
-| 4 | [`docs/verification/comparative-closure-grade-first-run-2026-09-11.md`](docs/verification/comparative-closure-grade-first-run-2026-09-11.md) | First 5× closure run + release fixture finding |
-| 5 | [`docs/verification/comparative-smoke-cache-defect-2026-09-11.md`](docs/verification/comparative-smoke-cache-defect-2026-09-11.md) | First real Gemma smoke failure + cache root cause |
-| 6 | [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md) | Comparative harness implementation + CI/merge closure |
-| 7 | [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md) | Real local Ledger + ECX closure |
-| 8 | [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md) | Real laptop runtime evidence |
-| 9 | [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md) | Detailed progress + closure history |
-| 10 | [`docs/production-activation.md`](docs/production-activation.md) | Deferred production activation runbook |
-| 11 | [`docs/production-operations.md`](docs/production-operations.md) | Production/self-host operations |
-| 12 | [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md) | Future free Cloudflare edge/Tunnel option |
-| 13 | [`docs/release-operations.md`](docs/release-operations.md) | Install/upgrade/rollback/release gate |
-| 14 | [`docs/prd.md`](docs/prd.md) | Product + architecture requirements |
-| 15 | [`docs/research.md`](docs/research.md) | Research/due diligence |
-| 16 | [`docs/blueprint.md`](docs/blueprint.md) | Historical execution blueprint; not current status source |
-| 17 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log |
-| 18 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
-| 19 | [`docs/verification/`](docs/verification/) | Exact-head/runtime evidence |
+| 3 | [`docs/verification/comparative-closure-grade-final-2026-09-11.md`](docs/verification/comparative-closure-grade-final-2026-09-11.md) | Final corrected local Comparative ECX evidence + limitations |
+| 4 | [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md) | Comparative protocol + closed claim boundary |
+| 5 | [`docs/verification/comparative-closure-grade-first-run-2026-09-11.md`](docs/verification/comparative-closure-grade-first-run-2026-09-11.md) | First 5× run + fixture finding |
+| 6 | [`docs/verification/comparative-smoke-cache-defect-2026-09-11.md`](docs/verification/comparative-smoke-cache-defect-2026-09-11.md) | First real smoke failure + cache root cause |
+| 7 | [`docs/verification/comparative-harness-implementation-2026-09-11.md`](docs/verification/comparative-harness-implementation-2026-09-11.md) | Harness implementation closure |
+| 8 | [`docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`](docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md) | Real local Ledger + ECX closure |
+| 9 | [`docs/verification/local-production-rehearsal-2026-09-10.md`](docs/verification/local-production-rehearsal-2026-09-10.md) | Real laptop runtime evidence |
+| 10 | [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md) | Detailed current progress + closure history |
+| 11 | [`docs/production-activation.md`](docs/production-activation.md) | Deferred production activation runbook |
+| 12 | [`docs/production-operations.md`](docs/production-operations.md) | Production/self-host operations |
+| 13 | [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md) | Future free Cloudflare edge/Tunnel option |
+| 14 | [`docs/release-operations.md`](docs/release-operations.md) | Install/upgrade/rollback/release gate |
+| 15 | [`docs/prd.md`](docs/prd.md) | Product + architecture requirements |
+| 16 | [`docs/research.md`](docs/research.md) | Research/due diligence |
+| 17 | [`docs/blueprint.md`](docs/blueprint.md) | Historical execution blueprint; not current status source |
+| 18 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log |
+| 19 | [`docs/adr/`](docs/adr/) | Architecture Decision Records |
+| 20 | [`docs/verification/`](docs/verification/) | Exact-head/runtime evidence |
 
 ## Lisensi
 
