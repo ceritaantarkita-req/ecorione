@@ -4,11 +4,11 @@ Last updated: **2026-09-11**
 
 Status: **CURRENT / canonical handoff for humans and AI agents**
 
-This document is the shortest current-state handoff after the Batch 1–12 platform/production roadmap closure, the real laptop Production Activation rehearsal, and the real local Historical Ledger + ECX evidence closure. Historical plans and audits remain useful evidence, but they must not be used as the source of current implementation status.
+This document is the shortest current-state handoff after the Batch 1–12 platform/production roadmap closure, the real laptop Production Activation rehearsal, the real local Historical Ledger + ECX evidence closure, and the merged comparative-harness implementation. Historical plans and audits remain useful evidence, but they must not be used as the source of current implementation status.
 
 ## 1. Current verdict
 
-**ECORIONE production/self-host repository baseline READY; real local laptop rehearsal and Historical Ledger + ECX traffic/integrity evidence CLOSED for the local boundary. Comparative ECX efficiency evidence is the active local R&D checkpoint.**
+**ECORIONE production/self-host repository baseline READY; real local laptop rehearsal and Historical Ledger + ECX traffic/integrity evidence CLOSED for the local boundary; Comparative ECX harness implementation CLOSED/VERIFIED; real Gemma comparative efficiency evidence is the active local R&D checkpoint.**
 
 The planned platform/production roadmap remains complete:
 
@@ -30,8 +30,15 @@ Key post-closure merges now on `main` include:
 - real local rehearsal documentation closure PR #35: `7b1d50630e21a14413f73e2ca4a0934de042dcdf`
 - browser/Historical-Ledger session hydration identity fix PR #36: `8b93b346a11cc4293af2b8e75e2ec6af48348e60`
 - Historical Ledger + ECX local evidence closure PR #37: `88d588bbe4a5f005652c20f3409dd72093439f56`
+- comparative ECX harness PR #38: `c1849cd0c67712e40ea4e5c90587283900859cdb`
 
-The post-merge CI for PR #37 (`34554159172`) passed Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production Operations acceptance, Secret Scan and Production Build.
+PR #38 verification:
+
+- final PR head `d3f1cbf4d0acbb2c92f340b952f2c42e6c9bef4a`;
+- exact-head CI `34557147546`: PASS Naming, Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production Operations acceptance, Secret Scan and Production Build;
+- exact-head MCP External HTTPS Acceptance `34557147583`: PASS;
+- post-merge `main` CI `34557297702`: PASS all repository gates;
+- post-merge `main` MCP External HTTPS Acceptance `34557297803`: PASS.
 
 ### Progress snapshot
 
@@ -41,7 +48,8 @@ The post-merge CI for PR #37 (`34554159172`) passed Naming, Format, Lint, Typech
 | Production/self-host repository baseline | **READY** | Compose/Caddy/release/security baseline passed repository evidence. |
 | Real laptop production rehearsal | **PASS / LOCAL BOUNDARY CLOSED** | Phase 4, Temporal worker, Connect→Ollama→Gemma, direct Ai API, browser Local chat, sourced-env verification and Git synchronization were exercised on the real laptop. |
 | Historical Ledger + ECX local traffic/integrity evidence | **PASS / LOCAL CHECKPOINT CLOSED** | A real Local Gemma browser session was verified in the hash-chained Ledger; a real pointer-first ECX plan appended `agent.handoff`, hydrated the exact local history range and made `production:data-evidence` PASS. |
-| Comparative ECX efficiency evidence | **ACTIVE LOCAL R&D CHECKPOINT** | A paired `full-inline` / `ecx-all` / `ecx-selective-oracle` harness is being added with predeclared quality/bytes/tokens/latency gates. Real Gemma benchmark evidence is still pending. |
+| Comparative ECX harness implementation | **PASS / IMPLEMENTATION CLOSED** | Three-lane local benchmark harness, deterministic scoring/gates, regression coverage and docs are merged and repository-verified. |
+| Comparative ECX real Gemma evidence | **ACTIVE / PENDING RUNTIME MEASUREMENT** | Synchronize the laptop to the merged harness, run smoke, inspect any defect, then run the predeclared 5× paired benchmark. |
 | Automatic reference selection / general optimizer claim | **NOT YET PROVEN** | Current ECX hydration receives caller-selected `refIndexes`; the oracle lane measures selective-hydration potential, not an autonomous production selector. |
 | Real compute-host/VPS production deployment | **DEFERRED BY OPERATOR DECISION** | Tooling remains ready, but no target-host mutation should be performed until the operator explicitly resumes deployment. |
 | Cloudflare Free named Tunnel cutover | **DEFERRED WITH COMPUTE-HOST DEPLOYMENT** | Cloudflare remains the documented DNS/TLS/tunnel edge option; no current account/host execution is requested. |
@@ -68,13 +76,29 @@ The closed local checkpoints include:
 - real Ledger chronology `user.message → model.called → agent.message → agent.handoff` with an intact hash chain;
 - real ECX plan selecting the exact-capability reviewer, one pointer-first packet of 478 bytes, and one local-only history hydration of 1,725 bytes;
 - `pnpm production:data-evidence` PASS with 8 sessions / 15 Ledger events, 1 ECX plan, 1 packet, 1 hydration, 1 real provider call, 210 input tokens, 350 output tokens and provider-token actual cost USD 0 at the captured local snapshot;
-- laptop/GitHub tracked trees synchronized at the closure commit.
+- laptop/GitHub tracked trees synchronized at the Historical Ledger + ECX closure commit.
 
 The browser initially showed a stale client bundle without the Route selector even though server HTML already contained it. A hard refresh loaded the current UI; no repository code change was required for that browser-cache condition.
 
 A separate real finding was the header/session hydration mismatch: server render and client hydration could generate different random session IDs while `suppressHydrationWarning` hid the mismatch. PR #36 corrected it and the real post-fix browser session resolved directly in Historical Ledger.
 
 The ECX closure above is a traffic/integrity proof, **not a savings proof**. The counterfactual `naiveUsd`/UI savings display does not establish comparative ECX or optimizer savings.
+
+### Comparative harness implementation closure
+
+Verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
+
+PR #38 merged a controlled three-lane harness:
+
+- `full-inline` — all fixture context goes directly to the same local model;
+- `ecx-all` — real Artifact pointers + ECX plan + all-ref hydration, preserving the same semantic document set;
+- `ecx-selective-oracle` — same ECX packet with only fixture-declared relevant refs hydrated.
+
+The implementation includes five fixed-answer synthetic workloads, deterministic exact-field quality scoring, warm-up exclusion, unique measured cache-busters, hard failure on measured cache hits, median aggregation, predeclared byte/token/latency/quality gates, and optional mode-0600 raw JSON under the gitignored `.ecorione/` path.
+
+Two hygiene findings were fixed before exact-head closure: Prettier differences in the new files and an explicit `node:perf_hooks` import for `performance`. Temporary helper workflows are absent from the merged tree.
+
+This closes the **harness implementation**, not the real comparative result. No ECX/token/latency savings claim is established until the synchronized laptop runs the smoke and closure-grade measurements.
 
 ## 2. What is already in the baseline
 
@@ -94,13 +118,14 @@ The current baseline includes:
 - data rebuild/governance/DR tooling;
 - production observability, provider canaries, self-host Compose, release/upgrade/rollback tooling;
 - full-history + Git commit-boundary secret scanning and release security acceptance;
-- real public HTTPS MCP acceptance with provider-resilient tunnel testing.
+- real public HTTPS MCP acceptance with provider-resilient tunnel testing;
+- merged comparative ECX harness using existing Artifact/Hub/Connect owner APIs.
 
-The current comparative-evidence scope adds a local benchmark harness; it does not change the owner-service architecture or grant a new optimizer capability.
+The comparative harness does not change the owner-service architecture or grant a new optimizer capability.
 
 ## 3. What CLOSED does and does not mean
 
-`CLOSED` means the planned Batch 1–12 implementation scope passed closure evidence and is present on `main`. The local-rehearsal and Historical Ledger + ECX local closures mean those documented laptop boundaries were exercised successfully.
+`CLOSED` means the planned Batch 1–12 implementation scope passed closure evidence and is present on `main`. The local-rehearsal and Historical Ledger + ECX local closures mean those documented laptop boundaries were exercised successfully. The comparative-harness implementation closure means the measurement tooling itself passed repository evidence and is merged.
 
 It does **not** mean:
 
@@ -111,6 +136,7 @@ It does **not** mean:
 - off-host backup durability exists automatically;
 - ECX or optimizer savings may be claimed from local packet/hydration counts or counterfactual UI accounting;
 - `ecx-selective-oracle` proves automatic reference selection;
+- the merged harness itself proves token or latency reduction before the real benchmark runs;
 - an ECX-selected recipient has necessarily executed a second model call;
 - AutoClick should now be built automatically.
 
@@ -118,12 +144,14 @@ It does **not** mean:
 
 Future work is a **new scope**, not Batch 13. Current operator-approved order is local-first:
 
-1. **Comparative ECX efficiency evidence — ACTIVE**
+1. **Comparative ECX real Gemma efficiency evidence — ACTIVE**
+   - synchronize the laptop to the latest merged `main` containing PR #38 and this docs closure;
    - use `docs/comparative-ecx-evidence.md` as the protocol;
-   - compare `full-inline`, `ecx-all`, and `ecx-selective-oracle` with the same local model/task facts;
-   - keep exact-cache out of measured calls;
-   - measure transport bytes, model-input tokens, latency and deterministic answer quality;
-   - run the fast smoke first, then closure-grade paired repetitions only after the harness itself is verified;
+   - restart/use the synchronized Phase 4 runtime;
+   - run `pnpm evidence:comparative:smoke` first;
+   - inspect model identity, cache, bytes, tokens, latency and deterministic quality;
+   - fix any real runtime defect before the full run;
+   - only then run the closure-grade 5× paired benchmark;
    - do not convert oracle selective results into an automatic-selector or public-savings claim.
 
 2. **Local persistence/restart drill**
@@ -165,15 +193,16 @@ An agent starting without chat history should read:
 1. `docs/current-state-and-next-steps.md` — current state and next work;
 2. `AGENTS.md` — invariants and repo rules;
 3. `docs/comparative-ecx-evidence.md` — active local comparative-evidence protocol;
-4. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md` — real Local Ledger + ECX traffic closure;
-5. `docs/verification/local-production-rehearsal-2026-09-10.md` — real laptop runtime evidence and findings;
-6. `docs/production-activation.md` — operator-deferred production deployment procedure;
-7. `docs/EXECUTION-PROGRESS.md` — detailed implementation/closure history;
-8. `docs/verification/batch12-closure-2026-09-10.md` — final Batch 12 evidence;
-9. `docs/production-operations.md` and `docs/release-operations.md` — production/release procedures;
-10. `docs/cloudflare-free-deployment.md` — future free public-edge deployment option;
-11. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` — rationale and historical planning context;
-12. relevant ADR/API/operations docs for the exact subsystem being changed.
+4. `docs/verification/comparative-harness-implementation-2026-09-11.md` — merged harness implementation evidence;
+5. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md` — real Local Ledger + ECX traffic closure;
+6. `docs/verification/local-production-rehearsal-2026-09-10.md` — real laptop runtime evidence and findings;
+7. `docs/production-activation.md` — operator-deferred production deployment procedure;
+8. `docs/EXECUTION-PROGRESS.md` — detailed implementation/closure history;
+9. `docs/verification/batch12-closure-2026-09-10.md` — final Batch 12 evidence;
+10. `docs/production-operations.md` and `docs/release-operations.md` — production/release procedures;
+11. `docs/cloudflare-free-deployment.md` — future free public-edge deployment option;
+12. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` — rationale and historical planning context;
+13. relevant ADR/API/operations docs for the exact subsystem being changed.
 
 ## 6. Rules for the next agent
 
@@ -194,10 +223,12 @@ Before implementing new work:
 ## 7. Canonical status references
 
 - current local comparative evidence: `docs/comparative-ecx-evidence.md`
+- comparative harness implementation closure: `docs/verification/comparative-harness-implementation-2026-09-11.md`
 - local Ledger + ECX evidence: `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
 - local runtime evidence: `docs/verification/local-production-rehearsal-2026-09-10.md`
 - operator-deferred production continuation: `docs/production-activation.md`
-- detailed closed-roadmap/progress history: `docs/EXECUTION-PROGRESS.md`
+- detailed current progress: `docs/EXECUTION-PROGRESS.md`
+- archived Batch 1–12 execution history: `docs/archive/execution-progress-through-batch12-2026-09-10.md`
 - final closure evidence: `docs/verification/batch12-closure-2026-09-10.md`
 - final release decision: `docs/adr/0033-final-security-release-closure.md`
 - open-ended hardening posture: `docs/fase6-hardening.md`
