@@ -1,6 +1,11 @@
 "use client";
 
-import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
 import { makeSessionId } from "../lib/session";
 
@@ -37,8 +42,17 @@ function formatPct(value: number): string {
   return `${value.toFixed(0)}%`;
 }
 
+const subscribeHydration = (): (() => void) => () => undefined;
+const getClientHydrationSnapshot = (): boolean => true;
+const getServerHydrationSnapshot = (): boolean => false;
+
 export default function ChatPage() {
-  const sessionIdRef = useRef<string>(makeSessionId());
+  const [sessionId] = useState<string>(() => makeSessionId());
+  const hydrated = useSyncExternalStore(
+    subscribeHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
@@ -50,7 +64,7 @@ export default function ChatPage() {
 
   async function sendMessage(text: string): Promise<void> {
     const trimmed = text.trim();
-    if (trimmed.length === 0 || sending) return;
+    if (!hydrated || trimmed.length === 0 || sending) return;
     setTurns((prev) => [...prev, { kind: "user", id: nextTurnId(), text: trimmed }]);
     setDraft("");
     setSending(true);
@@ -58,7 +72,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId: sessionIdRef.current, message: trimmed, target }),
+        body: JSON.stringify({ sessionId, message: trimmed, target }),
       });
       const body: unknown = await res.json().catch(() => undefined);
       if (!res.ok) {
@@ -147,9 +161,7 @@ export default function ChatPage() {
     <div className="ai-shell">
       <header className="ai-topbar">
         <h1 className="ai-topbar__title">ecorione — Ai</h1>
-        <span className="ai-topbar__session" suppressHydrationWarning>
-          {sessionIdRef.current}
-        </span>
+        <span className="ai-topbar__session">{hydrated ? sessionId : "sess_pending"}</span>
       </header>
       <main className="ai-main">
         <section className="ai-conversation">
@@ -176,7 +188,7 @@ export default function ChatPage() {
               className="ecr-input ai-route-control__select"
               value={target}
               onChange={(e) => setTarget(e.target.value as ChatTarget)}
-              disabled={sending || turns.length > 0}
+              disabled={!hydrated || sending || turns.length > 0}
             >
               <option value="local">Local</option>
               <option value="hosted">Hosted</option>
@@ -192,12 +204,12 @@ export default function ChatPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={sending}
+              disabled={!hydrated || sending}
             />
             <button
               type="submit"
               className="ecr-btn ecr-btn--primary"
-              disabled={sending || draft.trim().length === 0}
+              disabled={!hydrated || sending || draft.trim().length === 0}
             >
               Kirim
             </button>
