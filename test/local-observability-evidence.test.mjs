@@ -65,7 +65,9 @@ describe("local observability evidence helpers", () => {
         { requestId: "other", startedAt: "2026-09-11T00:00:01.000Z" },
       ],
     };
-    expect(counterDelta(before, after, "ecorione_model_calls_total", { cache: "miss" })).toBe(3);
+    expect(counterDelta(before, after, "ecorione_model_calls_total", { cache: "miss" })).toBe(
+      3,
+    );
     expect(spansForRun({ connect: after }, "obs-run")).toHaveLength(1);
   });
 

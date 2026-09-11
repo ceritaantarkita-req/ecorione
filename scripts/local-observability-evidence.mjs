@@ -70,7 +70,12 @@ function sampleConfig() {
     ownerReads: boundedInteger("ECORIONE_OBS_OWNER_READ_SAMPLES", 8, 3, 40),
     ecx: boundedInteger("ECORIONE_OBS_ECX_SAMPLES", 5, 3, 20),
     model: boundedInteger("ECORIONE_OBS_MODEL_SAMPLES", 5, 3, 12),
-    modelMaxLatencyMs: boundedInteger("ECORIONE_OBS_MODEL_MAX_LATENCY_MS", 60_000, 1_000, 120_000),
+    modelMaxLatencyMs: boundedInteger(
+      "ECORIONE_OBS_MODEL_MAX_LATENCY_MS",
+      60_000,
+      1_000,
+      120_000,
+    ),
   };
 }
 
@@ -182,7 +187,9 @@ async function healthSnapshot() {
   const entries = await Promise.all(
     Object.entries(ACTIVE_URLS).map(async ([name, baseUrl]) => {
       try {
-        const response = await fetch(`${baseUrl}/healthz`, { signal: AbortSignal.timeout(2_500) });
+        const response = await fetch(`${baseUrl}/healthz`, {
+          signal: AbortSignal.timeout(2_500),
+        });
         return [
           name,
           {
@@ -309,7 +316,9 @@ async function inventory({ print = true } = {}) {
   if (opsError !== null) {
     throw new Error(`observability inventory gagal: /v1/ops/observability: ${opsError}`);
   }
-  const missingResources = REQUIRED_SERVICES.filter((service) => !processSnapshotValid(ops[service]));
+  const missingResources = REQUIRED_SERVICES.filter(
+    (service) => !processSnapshotValid(ops[service]),
+  );
   if (missingResources.length > 0) {
     throw new Error(
       `observability inventory gagal: process resource snapshot belum tersedia: ${missingResources.join(", ")}`,
@@ -320,7 +329,9 @@ async function inventory({ print = true } = {}) {
     typeof runtime.settings?.localRuntime !== "string" ||
     typeof runtime.settings?.localModelTag !== "string"
   ) {
-    throw new Error("observability inventory gagal: local runtime/model identity tidak tersedia");
+    throw new Error(
+      "observability inventory gagal: local runtime/model identity tidak tersedia",
+    );
   }
   if (
     persistence === null ||
@@ -330,7 +341,9 @@ async function inventory({ print = true } = {}) {
     typeof persistence.artifact?.artifactId !== "string" ||
     typeof persistence.flow?.flowId !== "string"
   ) {
-    throw new Error("observability inventory gagal: closed persistence evidence tidak tersedia");
+    throw new Error(
+      "observability inventory gagal: closed persistence evidence tidak tersedia",
+    );
   }
   if (print) {
     console.log(
@@ -343,7 +356,8 @@ async function inventory({ print = true } = {}) {
 function semanticOwnerSample(result, expected, kind) {
   if (!result.ok) return { ok: false, status: result.status, durationMs: result.durationMs };
   if (kind === "hub") {
-    const ok = result.payload?.id === expected.ledger.sessionId &&
+    const ok =
+      result.payload?.id === expected.ledger.sessionId &&
       result.payload?.headHash === expected.ledger.headHash;
     return {
       ok,
@@ -367,7 +381,8 @@ function semanticOwnerSample(result, expected, kind) {
     };
   }
   if (kind === "flow") {
-    const ok = result.payload?.flowId === expected.flow.flowId && result.payload?.status !== "RUNNING";
+    const ok =
+      result.payload?.flowId === expected.flow.flowId && result.payload?.status !== "RUNNING";
     return {
       ok,
       status: result.status,
@@ -601,9 +616,7 @@ function summarizeEcx(ecx, spans) {
   const hydrateIds = new Set(ecx.map((sample) => sample.hydrateRequestId));
   return {
     planClientMs: summarizeNumbers(ecx.map((sample) => sample.planDurationMs)),
-    planServerMs: summarizeNumbers(
-      spanDurations(spans, planIds, "hub", "/v1/exchange/plan"),
-    ),
+    planServerMs: summarizeNumbers(spanDurations(spans, planIds, "hub", "/v1/exchange/plan")),
     hydrateClientMs: summarizeNumbers(ecx.map((sample) => sample.hydrateDurationMs)),
     hydrateServerMs: summarizeNumbers(
       spanDurations(spans, hydrateIds, "hub", "/v1/exchange/hydrate"),
@@ -634,7 +647,10 @@ function summarizeModel(model, spans) {
     pricingModel: [...new Set(model.map((sample) => sample.pricingModel))],
     cacheHits: model.filter((sample) => sample.cacheHit === true).length,
     cacheMisses: model.filter((sample) => sample.cacheHit === false).length,
-    inputTokens: model.reduce((total, sample) => total + Number(sample.usage?.inputTokens ?? 0), 0),
+    inputTokens: model.reduce(
+      (total, sample) => total + Number(sample.usage?.inputTokens ?? 0),
+      0,
+    ),
     outputTokens: model.reduce(
       (total, sample) => total + Number(sample.usage?.outputTokens ?? 0),
       0,
@@ -671,9 +687,10 @@ function workloadErrorCount(ownerReads, ecx, model) {
 async function run() {
   const config = sampleConfig();
   const { result: inventoryResult, runtime, persistence } = await inventory({ print: true });
-  const runId = `obs-${new Date().toISOString().replaceAll(/[-:.TZ]/gu, "").slice(0, 14)}-${randomUUID()
-    .replaceAll("-", "")
-    .slice(0, 8)}`;
+  const runId = `obs-${new Date()
+    .toISOString()
+    .replaceAll(/[-:.TZ]/gu, "")
+    .slice(0, 14)}-${randomUUID().replaceAll("-", "").slice(0, 8)}`;
   const initialState = {
     schemaVersion: 1,
     phase: "running",
@@ -748,9 +765,14 @@ async function run() {
     };
     assertObservabilityReport(report);
     if (summary.metricDeltas.modelCallsLocalMiss < config.model) {
-      throw new Error("Connect metric delta tidak mencatat seluruh local cache-miss model calls");
+      throw new Error(
+        "Connect metric delta tidak mencatat seluruh local cache-miss model calls",
+      );
     }
-    if (summary.metricDeltas.ecxPlans < config.ecx || summary.metricDeltas.ecxHydrations < config.ecx) {
+    if (
+      summary.metricDeltas.ecxPlans < config.ecx ||
+      summary.metricDeltas.ecxHydrations < config.ecx
+    ) {
       throw new Error("Hub ECX metric delta tidak mencatat seluruh measured samples");
     }
     writePrivateJson(STATE_PATH, report);

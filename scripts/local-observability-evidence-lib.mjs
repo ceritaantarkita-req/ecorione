@@ -3,7 +3,10 @@ export function percentile(values, fraction) {
   if (!Number.isFinite(fraction) || fraction < 0 || fraction > 1) {
     throw new Error("fraction harus berada pada rentang 0..1");
   }
-  const sorted = values.map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+  const sorted = values
+    .map(Number)
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
   if (sorted.length === 0) return 0;
   const index = Math.min(
     sorted.length - 1,
@@ -49,7 +52,8 @@ export function spansForRun(snapshots, requestPrefix) {
   const spans = [];
   for (const [service, snapshot] of Object.entries(snapshots)) {
     for (const span of snapshot?.recentRequests ?? []) {
-      if (typeof span?.requestId !== "string" || !span.requestId.startsWith(requestPrefix)) continue;
+      if (typeof span?.requestId !== "string" || !span.requestId.startsWith(requestPrefix))
+        continue;
       spans.push({ ...span, service: span.service ?? service });
     }
   }

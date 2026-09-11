@@ -232,7 +232,9 @@ export class OperationalMetrics {
     lines.push(
       `ecorione_process_array_buffers_bytes${labels} ${snapshot.process.arrayBuffersBytes}`,
     );
-    lines.push(`ecorione_process_cpu_user_microseconds${labels} ${snapshot.process.cpuUserMicros}`);
+    lines.push(
+      `ecorione_process_cpu_user_microseconds${labels} ${snapshot.process.cpuUserMicros}`,
+    );
     lines.push(
       `ecorione_process_cpu_system_microseconds${labels} ${snapshot.process.cpuSystemMicros}`,
     );
