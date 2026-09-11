@@ -1,6 +1,6 @@
 # Fase 6+ — evidence-driven hardening baseline
 
-**Status:** ACTIVE / OPEN-ENDED · reconciled through Batch 12 closure on 2026-09-10
+**Status:** ACTIVE / OPEN-ENDED · reconciled through local Historical Ledger + ECX closure on 2026-09-11
 
 Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. Yang sudah CLOSED adalah **planned platform/production roadmap Batch 1–12**. Dokumen ini mencatat hardening baseline yang sudah masuk `main` dan area evidence-driven yang masih bisa berkembang setelah closure.
 
@@ -9,9 +9,13 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 ## Current closure state
 
 - Batch 1–12: **CLOSED**
-- production/self-host baseline: **READY** sesuai boundary yang didokumentasikan
-- final closure merge: `783a4ae8a2c90b3c696b3d619fb0c03581f675b2`
-- final post-closure main CI: `34490006960` — PASS
+- production/self-host repository baseline: **READY** sesuai boundary yang didokumentasikan
+- local laptop rehearsal: **PASS / LOCAL BOUNDARY CLOSED**
+- local Historical Ledger + ECX traffic/integrity evidence: **PASS / LOCAL CHECKPOINT CLOSED**
+- current local-evidence baseline merge: `88d588bbe4a5f005652c20f3409dd72093439f56`
+- post-merge CI `34554159172`: **PASS**
+- comparative ECX efficiency work: **ACTIVE LOCAL R&D CHECKPOINT**
+- compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**
 - AutoClick: **DEFERRED BY DESIGN**
 - no implicit Batch 13
 
@@ -30,9 +34,11 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - Anthropic, OpenRouter, OpenAI hosted boundaries;
 - local OpenAI-compatible runtime abstraction;
 - explicit provider/model mapping;
-- model identity pinning;
+- model identity pinning contract;
 - provider-scoped Vault credentials;
 - provider-aware spend/cache telemetry.
+
+`gemma4:latest` yang dipakai pada local rehearsal adalah runtime evidence sementara. Mutable alias itu belum dianggap durable production identity dan harus diganti dengan operator-controlled immutable tag/alias pada checkpoint hardening lokal yang terpisah.
 
 ### MCP + extension + permission plane
 
@@ -78,73 +84,86 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - dependency review and production build release gate;
 - Ai `/settings` Control Center and Connect-owned runtime settings.
 
-### Final security/release closure
+### Historical Ledger + ECX real local evidence
 
-Batch 12 closed:
+The deterministic Ledger/ECX implementation baseline is no longer test-only evidence. A real local browser session was verified in a `LOCAL_ONLY` hash chain, a real ECX plan appended `agent.handoff`, the referenced range was hydrated, and `pnpm production:data-evidence` passed.
 
-- shared HTTP hardening;
-- request/body bounds and security headers;
-- SSRF/public URL validation;
-- AuthN/AuthZ regression coverage;
-- Sandbox/path/permission release checks;
-- full-history secret scan;
-- dependency/security review;
-- Next.js lint/build cleanup;
-- developer SDK docs;
-- self-host/release procedures;
-- real public HTTPS MCP acceptance resilience;
-- final exact-head + post-merge evidence.
+This proves local traffic/integrity/provenance. It still does not prove comparative savings.
 
-See:
+Verification: `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`.
 
-- `docs/adr/0033-final-security-release-closure.md`
-- `docs/verification/batch12-closure-2026-09-10.md`
-- `docs/EXECUTION-PROGRESS.md`
+## Active comparative evidence scope
+
+Current local R&D protocol: `docs/comparative-ecx-evidence.md`.
+
+The benchmark uses three paired lanes:
+
+- `full-inline` — full synthetic context sent to the same local model;
+- `ecx-all` — real ECX packet + all refs hydrated, preserving the same semantic document set as the baseline;
+- `ecx-selective-oracle` — same ECX packet with only fixture-declared relevant refs hydrated.
+
+The oracle suffix is mandatory because current ECX does **not** autonomously choose `refIndexes`. The caller chooses them. The lane measures the potential/upper bound of correct selective hydration, not automatic selector quality.
+
+Predeclared evidence includes transport bytes, input/output tokens, latency, cache state, model identity, and deterministic answer quality. Exact-cache hits invalidate measured runs. Local `actualUsd=0` is recorded but is not hosted-cost evidence.
+
+If oracle-selective evidence is useful, a real selector may be proposed later as a separate evidence-driven scope. If it is not useful, record the negative result instead of building a selector to defend the hypothesis.
 
 ## What remains open-ended after Batch 12
 
-These are **not unfinished Batch 12 items**. They are future operational/product/R&D evidence work:
+These are **not unfinished Batch 12 items**. Current operator-approved order is:
 
-1. deploy the closed baseline to a real production VPS/server;
-2. validate real Anthropic/OpenRouter/OpenAI quality, latency, errors, and billed cost;
-3. scrape/store durable production metrics outside process memory;
-4. perform host OS/firewall/SSH/account hardening;
-5. separate backups from the same failure domain and run recurring restore drills;
-6. collect real product workflow evidence;
-7. build real evaluation datasets and provider/model comparisons;
-8. validate ECX/optimizer savings before making production savings claims;
-9. improve UX/Control Center/approval/error surfaces based on use;
-10. integrate other ecosystem projects only through explicit APIs/contracts;
-11. keep dependency/security/model/pricing reviews current;
-12. add new features only when evidence justifies them.
+1. run comparative ECX local evidence using the predeclared protocol;
+2. perform a controlled local persistence/restart drill;
+3. perform an isolated local backup/restore drill;
+4. collect a local observability baseline from representative workloads;
+5. validate product/UX behavior from real use;
+6. replace mutable rehearsal model identity with an immutable operator-controlled local identity and revalidate telemetry/cache identity;
+7. resume compute-host/VPS + Cloudflare deployment only when the operator explicitly chooses to do so;
+8. validate hosted providers/cost only with operator credentials and explicit spend intent;
+9. build representative evaluation datasets and held-out comparisons before broad optimizer claims;
+10. improve UX/Control Center/approval/error surfaces based on observed friction;
+11. integrate other ecosystem projects only through explicit APIs/contracts;
+12. keep dependency/security/model/pricing reviews current;
+13. add new features only when evidence justifies them.
 
-## Cloudflare Free deployment direction
+## Deployment direction — currently deferred
 
-Recommended next public-edge topology:
+The existing future public-edge topology remains valid if/when the operator resumes production activation:
 
 ```text
 Cloudflare Free DNS/TLS/WAF/DDoS
   -> Cloudflare Tunnel
-  -> ECORIONE VPS
+  -> ECORIONE compute host
   -> Caddy
   -> Ai + Sync/MCP
   -> internal services
 ```
 
-Cloudflare does **not** replace ECORIONE compute, Docker services, owner databases, Temporal, Vault, Artifact storage, or Sandbox. Detailed bootstrap/tunnel/rollback procedure: `docs/cloudflare-free-deployment.md`.
+Cloudflare does **not** replace ECORIONE compute, Docker services, owner databases, Temporal, Vault, Artifact storage, or Sandbox. Detailed future procedure: `docs/production-activation.md` and `docs/cloudflare-free-deployment.md`.
+
+Do not infer target-host readiness from the laptop evidence. The production workstream is deferred, not completed.
 
 ## Evidence rule for future work
 
-Future work may only become part of a new READY claim when the relevant evidence exists. At minimum:
+Future work may only become part of a new READY/VERIFIED claim when the relevant evidence exists. At minimum:
 
 - dedicated branch/scope;
 - owner-service architecture preserved;
-- focused tests/acceptance;
+- focused deterministic tests/acceptance;
 - format/lint/typecheck/test/secret scan/build gates where applicable;
 - runtime/public-network acceptance when applicable;
-- documentation/ADR update;
+- documentation/ADR update when the architecture or claim boundary changes;
 - exact-head evidence;
 - merge with head guard when available;
 - post-merge main verification.
+
+For comparative benchmarks specifically:
+
+- define lanes and quality answer keys before the real run;
+- record cache state and reject contaminated cached measurements;
+- compare equivalent task/fact sets;
+- preserve raw evidence locally in gitignored storage;
+- commit only sanitized verified summaries;
+- distinguish ECX transport, selective hydration, automatic selection, model routing/cache, and actual provider cost as separate claims.
 
 Do not reopen Batch 12 merely because Fase 6+ continues. Create a new explicit scope instead.
