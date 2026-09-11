@@ -13,10 +13,13 @@ Per **2026-09-11**:
 - real Historical Ledger + ECX traffic/integrity checkpoint: **PASS / LOCAL CHECKPOINT CLOSED**;
 - PR #37 merged ke `main` sebagai `88d588bbe4a5f005652c20f3409dd72093439f56`;
 - comparative ECX harness PR #38 merged sebagai `c1849cd0c67712e40ea4e5c90587283900859cdb`;
+- comparative harness docs closure PR #39 merged sebagai `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`;
 - PR #38 exact-head CI `34557147546` + MCP External HTTPS `34557147583`: **PASS**;
 - PR #38 post-merge CI `34557297702` + MCP External HTTPS `34557297803`: **PASS**;
 - comparative harness implementation: **CLOSED / VERIFIED**;
-- real Gemma comparative ECX efficiency evidence: **ACTIVE / PENDING RUNTIME MEASUREMENT**;
+- first real Gemma comparative smoke: **FAIL / CACHE-ISOLATION HARNESS DEFECT FOUND**;
+- comparative cache-isolation fix: **IN REVIEW / RERUN REQUIRED**;
+- real Gemma comparative ECX efficiency evidence: **ACTIVE / NOT CLOSED**;
 - real compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**;
 - Fase 6+ tetap **OPEN-ENDED / evidence-driven**;
 - Fase 5 AutoClick tetap **DEFERRED BY DESIGN**;
@@ -39,18 +42,20 @@ Recommended reading order saat ini:
 
 ## Next work posture
 
-Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Operator sudah memilih local-first evidence sebelum VPS. Harness comparative sudah merged/verified; urutan aktif sekarang:
+Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Operator sudah memilih local-first evidence sebelum VPS. Harness comparative sudah merged/verified; first real smoke menemukan cross-invocation exact-cache contamination. Urutan aktif sekarang:
 
-1. synchronize laptop ke merged harness/docs closure dan jalankan comparative Gemma smoke;
-2. perbaiki defect runtime bila ditemukan, lalu jalankan closure-grade paired benchmark;
-3. local persistence/restart drill;
-4. local backup/restore drill;
-5. local observability baseline;
-6. product/UX validation;
-7. immutable local model identity hardening;
-8. compute-host/VPS + Cloudflare deployment **hanya jika operator secara eksplisit melanjutkan**;
-9. hosted-provider comparative validation bila operator menyediakan kredensial + budget;
-10. maintenance/dependency/security/DR evidence dan feature baru hanya jika evidence membenarkan.
+1. selesaikan `fix/comparative-cache-namespace-20260911` tanpa mengubah threshold evidence;
+2. exact-head verify → merge → post-merge verify → sync laptop;
+3. rerun comparative Gemma smoke dan wajibkan measured `cacheHit=false` + non-zero token telemetry;
+4. jika smoke sehat, jalankan closure-grade paired benchmark;
+5. local persistence/restart drill;
+6. local backup/restore drill;
+7. local observability baseline;
+8. product/UX validation;
+9. immutable local model identity hardening;
+10. compute-host/VPS + Cloudflare deployment **hanya jika operator secara eksplisit melanjutkan**;
+11. hosted-provider comparative validation bila operator menyediakan kredensial + budget;
+12. maintenance/dependency/security/DR evidence dan feature baru hanya jika evidence membenarkan.
 
 Comparative protocol: `docs/comparative-ecx-evidence.md`. Harness implementation verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
 
@@ -81,13 +86,14 @@ pnpm evidence:comparative
 1. Jangan menyebut packet/hydration count sebagai savings proof.
 2. Current ECX `/v1/exchange/hydrate` menerima `refIndexes` dari caller. Jadi `ecx-selective-oracle` hanya mengukur benefit ketika reference yang benar **sudah diketahui**; itu bukan automatic selector evidence.
 3. `full-inline`, `ecx-all`, dan `ecx-selective-oracle` harus memakai task/facts/model yang sama. Jangan memberi satu lane jawaban lebih mudah.
-4. Exact-cache tidak boleh menguntungkan lane tertentu. Measured `cacheHit=true` adalah failure.
+4. Exact-cache tidak boleh menguntungkan lane tertentu. Measured `cacheHit=true` adalah failure. Cache-buster benchmark harus terisolasi **antar invocation**, bukan cuma unik di dalam satu invocation; smoke lalu full run pada Connect process yang sama tidak boleh saling reuse measured entries.
 5. Tetapkan gate sebelum melihat hasil. Jangan melemahkan threshold sesudah failure hanya agar benchmark hijau.
 6. Quality harus dinilai dengan deterministic expected facts ketika fixture memungkinkan. Jangan menambahkan AI judge hanya untuk menaikkan skor.
 7. Local provider-token `actualUsd=0` bukan hosted cost-saving evidence.
 8. Simpan raw evidence lokal di path yang gitignored (contoh `.ecorione/evidence/`). Commit hanya sanitized summary setelah hasil diverifikasi.
 9. Negative result adalah evidence yang valid. Jangan membangun selector/optimizer baru hanya untuk mempertahankan hipotesis awal.
 10. Real comparative result hanya boleh diklaim dari run pada laptop yang sudah sinkron ke merged harness revision; jangan memakai moving PR branch sebagai closure evidence.
+11. Cache-hit runs boleh membuktikan bahwa cache bekerja, tetapi **tidak boleh** dipakai sebagai model-compute token/latency evidence; zero token telemetry pada exact-cache hit bukan selective-context savings.
 
 ## Aturan yang tidak bisa dinegosiasikan
 
@@ -139,7 +145,7 @@ ECX selective hydration berada di Hub, tetapi pemilihan `refIndexes` saat ini be
 
 Keputusan besar dicatat di `docs/DECISIONS.md`. Perubahan yang mengubah invariant, ownership, authority, durable state, security boundary, deployment contract, atau release claim membutuhkan ADR baru/updated ADR yang eksplisit.
 
-Current comparative harness **bukan architecture change**: ia memakai API Artifact, Hub ECX, dan Connect yang sudah ada. Automatic selector baru akan menjadi scope terpisah dan harus direview jika evidence membenarkannya.
+Current comparative harness dan cache-isolation fix **bukan architecture change**: keduanya memakai API Artifact, Hub ECX, dan Connect yang sudah ada. Automatic selector baru akan menjadi scope terpisah dan harus direview jika evidence membenarkannya.
 
 Setelah scope selesai:
 

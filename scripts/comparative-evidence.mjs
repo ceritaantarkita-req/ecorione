@@ -360,6 +360,10 @@ export function assembleContext(documents) {
   return documents.map((document) => document.content).join("\n\n---\n\n");
 }
 
+export function benchmarkCacheMarker({ cacheNamespace, taskIndex, pairedRunIndex, modeIndex }) {
+  return `[benchmark-cache-key:${cacheNamespace}:${String(taskIndex).padStart(2, "0")}:${String(pairedRunIndex).padStart(2, "0")}:${String(modeIndex)}]`;
+}
+
 export function summarizeRuns(runs) {
   return {
     count: runs.length,
@@ -609,9 +613,18 @@ async function runCompletion({
   token,
   timeoutMs,
   pairedRunIndex,
+  cacheNamespace,
+  taskIndex,
 }) {
-  const cacheKey = `${task.id}-${String(pairedRunIndex).padStart(2, "0")}-${mode}`;
-  const dynamicText = `${context}\n\n[benchmark-cache-key:${cacheKey}]`;
+  const modeIndex = MODES.indexOf(mode);
+  if (modeIndex < 0) throw new Error(`Unknown comparative mode: ${mode}`);
+  const cacheMarker = benchmarkCacheMarker({
+    cacheNamespace,
+    taskIndex,
+    pairedRunIndex,
+    modeIndex,
+  });
+  const dynamicText = `${context}\n\n${cacheMarker}`;
   const operationId = `op_cmp_${randomUUID().replaceAll("-", "")}`;
   const started = performance.now();
   const response = await requestJson(`${connectUrl}/v1/complete`, {
@@ -703,6 +716,7 @@ export async function main(argv = process.argv.slice(2)) {
   const latencyToleranceRatio = Number(
     process.env.ECORIONE_COMPARATIVE_LATENCY_TOLERANCE_RATIO ?? "1.35",
   );
+  const cacheNamespace = randomUUID().replaceAll("-", "");
 
   let selectedTasks = args.taskIds
     ? FIXTURES.filter((task) => args.taskIds.includes(task.id))
@@ -724,11 +738,12 @@ export async function main(argv = process.argv.slice(2)) {
   console.log(
     `comparative-evidence: start tasks=${selectedTasks.length} repeats=${args.repeats} target=local`,
   );
+  console.log("comparative-evidence: cache namespace isolated for this invocation");
   console.log("comparative-evidence: warm-up (excluded from measurements)");
   await warmUp({ connectUrl, token, timeoutMs });
 
   const taskResults = [];
-  for (const task of selectedTasks) {
+  for (const [taskIndex, task] of selectedTasks.entries()) {
     console.log(`comparative-evidence: prepare ${task.id}`);
     const pointers = await uploadFixtureDocuments({ task, artifactUrl, token, timeoutMs });
     const { packet, packetBytes, expectedRecipient } = await planPacket({
@@ -775,6 +790,8 @@ export async function main(argv = process.argv.slice(2)) {
           token,
           timeoutMs,
           pairedRunIndex,
+          cacheNamespace,
+          taskIndex,
         });
         runsByMode[mode].push(run);
       }
@@ -840,7 +857,7 @@ export async function main(argv = process.argv.slice(2)) {
       modes: MODES,
       latencyToleranceRatio,
       cachePolicy:
-        "Every measured lane carries a unique same-shape cache-buster; any cacheHit fails the task.",
+        "Every invocation gets a unique cache namespace; each measured lane uses a fixed-shape task/pair/mode marker and any cacheHit fails the task.",
       warmup: "One local warm-up completion is executed and excluded from measurements.",
     },
     taskResults,

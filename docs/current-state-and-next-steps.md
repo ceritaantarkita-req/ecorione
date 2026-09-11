@@ -4,11 +4,11 @@ Last updated: **2026-09-11**
 
 Status: **CURRENT / canonical handoff for humans and AI agents**
 
-This document is the shortest current-state handoff after the Batch 1–12 platform/production roadmap closure, the real laptop Production Activation rehearsal, the real local Historical Ledger + ECX evidence closure, and the merged comparative-harness implementation. Historical plans and audits remain useful evidence, but they must not be used as the source of current implementation status.
+This document is the shortest current-state handoff after the Batch 1–12 platform/production roadmap closure, the real laptop Production Activation rehearsal, the real local Historical Ledger + ECX evidence closure, the merged comparative-harness implementation, and the first real Gemma comparative smoke finding. Historical plans and audits remain useful evidence, but they must not be used as the source of current implementation status.
 
 ## 1. Current verdict
 
-**ECORIONE production/self-host repository baseline READY; real local laptop rehearsal and Historical Ledger + ECX traffic/integrity evidence CLOSED for the local boundary; Comparative ECX harness implementation CLOSED/VERIFIED; real Gemma comparative efficiency evidence is the active local R&D checkpoint.**
+**ECORIONE production/self-host repository baseline READY; real local laptop rehearsal and Historical Ledger + ECX traffic/integrity evidence CLOSED for the local boundary; Comparative ECX harness implementation CLOSED/VERIFIED; first real Gemma comparative smoke exposed a cross-invocation exact-cache isolation defect, so comparative efficiency evidence remains ACTIVE / NOT YET CLOSED.**
 
 The planned platform/production roadmap remains complete:
 
@@ -31,6 +31,7 @@ Key post-closure merges now on `main` include:
 - browser/Historical-Ledger session hydration identity fix PR #36: `8b93b346a11cc4293af2b8e75e2ec6af48348e60`
 - Historical Ledger + ECX local evidence closure PR #37: `88d588bbe4a5f005652c20f3409dd72093439f56`
 - comparative ECX harness PR #38: `c1849cd0c67712e40ea4e5c90587283900859cdb`
+- comparative harness docs closure PR #39: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`
 
 PR #38 verification:
 
@@ -48,8 +49,10 @@ PR #38 verification:
 | Production/self-host repository baseline | **READY** | Compose/Caddy/release/security baseline passed repository evidence. |
 | Real laptop production rehearsal | **PASS / LOCAL BOUNDARY CLOSED** | Phase 4, Temporal worker, Connect→Ollama→Gemma, direct Ai API, browser Local chat, sourced-env verification and Git synchronization were exercised on the real laptop. |
 | Historical Ledger + ECX local traffic/integrity evidence | **PASS / LOCAL CHECKPOINT CLOSED** | A real Local Gemma browser session was verified in the hash-chained Ledger; a real pointer-first ECX plan appended `agent.handoff`, hydrated the exact local history range and made `production:data-evidence` PASS. |
-| Comparative ECX harness implementation | **PASS / IMPLEMENTATION CLOSED** | Three-lane local benchmark harness, deterministic scoring/gates, regression coverage and docs are merged and repository-verified. |
-| Comparative ECX real Gemma evidence | **ACTIVE / PENDING RUNTIME MEASUREMENT** | Synchronize the laptop to the merged harness, run smoke, inspect any defect, then run the predeclared 5× paired benchmark. |
+| Comparative ECX harness implementation | **PASS / IMPLEMENTATION CLOSED** | Three-lane local benchmark harness, deterministic scoring/gates, regression coverage and docs were merged and repository-verified. |
+| Comparative ECX first real Gemma smoke | **FAIL / HARNESS CACHE-ISOLATION DEFECT FOUND** | Artifact/ECX wiring and deterministic quality worked, but all measured model lanes hit exact cache; zero token usage and cache-speed latency invalidate model-compute comparison. Gate correctly failed. |
+| Comparative ECX cache-isolation fix | **IN REVIEW / RERUN REQUIRED** | Fix scope adds a unique per-invocation cache namespace with fixed-shape task/pair/mode markers. Thresholds are unchanged. |
+| Comparative ECX real Gemma evidence | **ACTIVE / NOT CLOSED** | After the cache fix passes repository gates and merges, sync laptop and rerun smoke. Only a healthy uncached smoke may proceed to the 5× closure benchmark. |
 | Automatic reference selection / general optimizer claim | **NOT YET PROVEN** | Current ECX hydration receives caller-selected `refIndexes`; the oracle lane measures selective-hydration potential, not an autonomous production selector. |
 | Real compute-host/VPS production deployment | **DEFERRED BY OPERATOR DECISION** | Tooling remains ready, but no target-host mutation should be performed until the operator explicitly resumes deployment. |
 | Cloudflare Free named Tunnel cutover | **DEFERRED WITH COMPUTE-HOST DEPLOYMENT** | Cloudflare remains the documented DNS/TLS/tunnel edge option; no current account/host execution is requested. |
@@ -84,7 +87,7 @@ A separate real finding was the header/session hydration mismatch: server render
 
 The ECX closure above is a traffic/integrity proof, **not a savings proof**. The counterfactual `naiveUsd`/UI savings display does not establish comparative ECX or optimizer savings.
 
-### Comparative harness implementation closure
+### Comparative harness implementation closure and first runtime finding
 
 Verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
 
@@ -94,11 +97,15 @@ PR #38 merged a controlled three-lane harness:
 - `ecx-all` — real Artifact pointers + ECX plan + all-ref hydration, preserving the same semantic document set;
 - `ecx-selective-oracle` — same ECX packet with only fixture-declared relevant refs hydrated.
 
-The implementation includes five fixed-answer synthetic workloads, deterministic exact-field quality scoring, warm-up exclusion, unique measured cache-busters, hard failure on measured cache hits, median aggregation, predeclared byte/token/latency/quality gates, and optional mode-0600 raw JSON under the gitignored `.ecorione/` path.
+The implementation includes five fixed-answer synthetic workloads, deterministic exact-field quality scoring, warm-up exclusion, hard failure on measured cache hits, median aggregation, predeclared byte/token/latency/quality gates, and optional mode-0600 raw JSON under the gitignored `.ecorione/` path.
 
-Two hygiene findings were fixed before exact-head closure: Prettier differences in the new files and an explicit `node:perf_hooks` import for `performance`. Temporary helper workflows are absent from the merged tree.
+The first synchronized real Gemma smoke on `5437c1ea5d8ee168dbbe09de688a23c39089c7aa` reached Artifact, Hub ECX plan/hydrate, and Connect successfully. It produced a 1011-byte ECX packet, 8241 bytes of all-ref hydration, and 1123 bytes of oracle-selective hydration with 100% deterministic returned quality. However all three measured completion lanes reported `cacheHit=true`, zero input/output tokens, and cache-speed latency. The run therefore failed as designed and **does not establish token or latency reduction**.
 
-This closes the **harness implementation**, not the real comparative result. No ECX/token/latency savings claim is established until the synchronized laptop runs the smoke and closure-grade measurements.
+Root cause: the original marker encoded task id + pair index + mode but had no per-invocation namespace. Re-running smoke or starting the full run within Connect's cache TTL could reuse an earlier benchmark entry. The fix scope `fix/comparative-cache-namespace-20260911` adds a fresh invocation namespace while keeping marker shape fixed across paired lanes; no evidence threshold is weakened.
+
+Protocol and current finding: `docs/comparative-ecx-evidence.md`.
+
+This keeps the **harness implementation closure** intact while making clear that the real comparative result is still open and must be rerun after the cache-isolation fix.
 
 ## 2. What is already in the baseline
 
@@ -125,7 +132,7 @@ The comparative harness does not change the owner-service architecture or grant 
 
 ## 3. What CLOSED does and does not mean
 
-`CLOSED` means the planned Batch 1–12 implementation scope passed closure evidence and is present on `main`. The local-rehearsal and Historical Ledger + ECX local closures mean those documented laptop boundaries were exercised successfully. The comparative-harness implementation closure means the measurement tooling itself passed repository evidence and is merged.
+`CLOSED` means the planned Batch 1–12 implementation scope passed closure evidence and is present on `main`. The local-rehearsal and Historical Ledger + ECX local closures mean those documented laptop boundaries were exercised successfully. The comparative-harness implementation closure means the measurement tooling itself passed repository evidence and was merged; it does not mean every runtime defect was impossible, and the first real smoke demonstrated why runtime evidence remains a separate gate.
 
 It does **not** mean:
 
@@ -136,7 +143,7 @@ It does **not** mean:
 - off-host backup durability exists automatically;
 - ECX or optimizer savings may be claimed from local packet/hydration counts or counterfactual UI accounting;
 - `ecx-selective-oracle` proves automatic reference selection;
-- the merged harness itself proves token or latency reduction before the real benchmark runs;
+- the cached first smoke proves token or latency reduction;
 - an ECX-selected recipient has necessarily executed a second model call;
 - AutoClick should now be built automatically.
 
@@ -145,13 +152,15 @@ It does **not** mean:
 Future work is a **new scope**, not Batch 13. Current operator-approved order is local-first:
 
 1. **Comparative ECX real Gemma efficiency evidence — ACTIVE**
-   - synchronize the laptop to the latest merged `main` containing PR #38 and this docs closure;
+   - finish repository verification of `fix/comparative-cache-namespace-20260911`;
+   - merge only after exact-head gates pass;
+   - synchronize the laptop to the resulting `main`;
    - use `docs/comparative-ecx-evidence.md` as the protocol;
-   - restart/use the synchronized Phase 4 runtime;
-   - run `pnpm evidence:comparative:smoke` first;
-   - inspect model identity, cache, bytes, tokens, latency and deterministic quality;
-   - fix any real runtime defect before the full run;
-   - only then run the closure-grade 5× paired benchmark;
+   - keep Phase 4 on the synchronized tree;
+   - rerun `pnpm evidence:comparative:smoke`;
+   - require all three measured lanes to be `cacheHit=false` with non-zero model token telemetry;
+   - inspect model identity, bytes, tokens, latency and deterministic quality;
+   - only after a healthy smoke run the closure-grade 5× paired benchmark;
    - do not convert oracle selective results into an automatic-selector or public-savings claim.
 
 2. **Local persistence/restart drill**
@@ -192,7 +201,7 @@ An agent starting without chat history should read:
 
 1. `docs/current-state-and-next-steps.md` — current state and next work;
 2. `AGENTS.md` — invariants and repo rules;
-3. `docs/comparative-ecx-evidence.md` — active local comparative-evidence protocol;
+3. `docs/comparative-ecx-evidence.md` — active local comparative-evidence protocol + first smoke finding;
 4. `docs/verification/comparative-harness-implementation-2026-09-11.md` — merged harness implementation evidence;
 5. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md` — real Local Ledger + ECX traffic closure;
 6. `docs/verification/local-production-rehearsal-2026-09-10.md` — real laptop runtime evidence and findings;
@@ -215,6 +224,7 @@ Before implementing new work:
 - keep provider/credential authority in Connect and policy/approval authority in Hub;
 - preserve external MCP as real public-network acceptance;
 - do not weaken release/evidence gates to make a benchmark or CI green;
+- benchmark cache-busters must be isolated across separate invocations, not only within one invocation;
 - do not represent fixture-declared `refIndexes` as an autonomous optimizer;
 - create/update ADRs when architecture changes;
 - update this file, `AGENTS.md`, `docs/EXECUTION-PROGRESS.md`, and the relevant workstream/verification docs when current state materially changes;

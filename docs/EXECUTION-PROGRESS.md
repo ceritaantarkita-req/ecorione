@@ -57,6 +57,7 @@ Key post-closure progression:
 - browser/Historical-Ledger session identity fix PR #36: `8b93b346a11cc4293af2b8e75e2ec6af48348e60`
 - Historical Ledger + ECX local evidence closure PR #37: `88d588bbe4a5f005652c20f3409dd72093439f56`
 - comparative ECX harness PR #38: `c1849cd0c67712e40ea4e5c90587283900859cdb`
+- comparative harness docs closure PR #39: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`
 
 PR #38 repository closure evidence:
 
@@ -100,9 +101,9 @@ These prove local traffic/integrity/provenance. They do **not** prove ECX/optimi
 
 ## 4. Active workstream — Comparative ECX efficiency evidence
 
-Status: **IN PROGRESS — HARNESS IMPLEMENTATION CLOSED / REAL GEMMA EVIDENCE PENDING**
+Status: **IN PROGRESS — HARNESS IMPLEMENTATION CLOSED / FIRST REAL SMOKE FAILED CACHE-ISOLATION GATE / FIX IN REVIEW / REAL COMPARATIVE VERDICT PENDING**
 
-Harness implementation is merged and repository-verified. There is no active harness implementation branch anymore. The next boundary is real runtime evidence on the operator laptop after synchronizing to the merged tree.
+The original harness implementation is merged and repository-verified. The first real Gemma smoke then found a runtime measurement defect in cross-invocation cache isolation. That failure is valid evidence and does not reopen Batch 1–12 or the already-closed Historical Ledger/ECX traffic checkpoint.
 
 Protocol: `docs/comparative-ecx-evidence.md`.
 
@@ -136,7 +137,7 @@ Merged through PR #38:
   - real Hub ECX plan/hydrate calls;
   - real Connect `target=local` completion calls;
   - warm-up excluded from measurement;
-  - unique same-shape measured cache-buster;
+  - measured cache contamination is a hard failure;
   - deterministic exact-field quality scoring;
   - median aggregation;
   - predeclared task gates;
@@ -152,7 +153,7 @@ Merged through PR #38:
 - `docs/comparative-ecx-evidence.md`
   - experiment design, gates, commands, interpretation, and claim boundaries.
 
-Two implementation findings were fixed before closure rather than waived:
+Two implementation findings were fixed before PR #38 closure rather than waived:
 
 - Prettier differences in the new harness/test;
 - `performance` was explicitly imported from `node:perf_hooks` for the Node/ESLint environment.
@@ -183,7 +184,7 @@ A task passes only when:
 8. selective median input tokens are lower than full-inline;
 9. selective median latency does not exceed full-inline by more than default ratio `1.35`.
 
-Do not weaken a gate after seeing a result merely to obtain PASS.
+Do not weaken a gate after seeing a result merely to obtain PASS. The first smoke cache failure did **not** change these thresholds.
 
 ### 4.5 Measurements
 
@@ -208,9 +209,54 @@ Per ECX task:
 
 Local provider-token `actualUsd=0` remains valid local accounting, **not hosted cost-savings evidence**.
 
-### 4.6 Runtime commands / next gates
+### 4.6 First real Gemma smoke — observed result
 
-After this docs closure is merged and laptop synchronization is verified:
+Synchronized laptop revision: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`.
+
+Observed:
+
+- Phase 4 services ready and Temporal Flow worker RUNNING;
+- configured local model `gemma4:latest` present;
+- Artifact fixture uploads: success;
+- Hub ECX plan: success;
+- all-ref hydration: success;
+- oracle-selective hydration: success;
+- recipient: `agent:comparative-evidence-reviewer`;
+- packet bytes: `1011`;
+- all-ref hydrated bytes: `8241`;
+- selective hydrated bytes: `1123`;
+- deterministic returned quality: `1.0` in all three lanes;
+- all three measured lanes: `cacheHit=true`;
+- measured input/output tokens: `0/0` because Connect served exact-cache entries;
+- gate result: **FAIL** with `measured run hit exact cache` and `selective median input tokens did not beat full-inline`.
+
+Interpretation:
+
+- Artifact/ECX wiring and byte accounting were exercised successfully;
+- `74.19%` selective transport reduction is a byte calculation for the fixture, but the run is not accepted as model-compute evidence;
+- 7–11 ms lane latency is exact-cache response latency, not Gemma inference latency;
+- zero token telemetry makes the selective-vs-full token comparison invalid;
+- therefore no optimizer/token/latency verdict is claimed from this smoke.
+
+Root cause found in the harness: the original cache marker was deterministic from task id + pair + mode, so separate benchmark invocations could collide while the same Connect process retained entries inside its cache TTL.
+
+### 4.7 Cache-isolation fix scope
+
+Active fix branch: `fix/comparative-cache-namespace-20260911`.
+
+Fix design:
+
+- generate one fresh random 32-hex namespace per benchmark invocation;
+- use fixed-shape numeric task/pair/mode coordinates inside each measured marker;
+- preserve the same marker length across paired lanes;
+- keep the existing `cacheHit=true` hard-failure gate unchanged;
+- add deterministic regression coverage proving cross-invocation marker separation and paired-shape stability.
+
+This is a measurement-harness correction, not an ECX architecture change and not a threshold relaxation.
+
+### 4.8 Runtime commands / next gates
+
+After the cache-isolation fix passes repository gates, merges, and laptop synchronization is verified:
 
 ```bash
 set -a
@@ -219,7 +265,9 @@ set +a
 pnpm evidence:comparative:smoke
 ```
 
-Do not run the closure-grade benchmark until smoke is inspected. If smoke is healthy:
+The rerun must show all measured lanes `cacheHit=false` and real non-zero token telemetry before it can be considered a healthy model-compute smoke.
+
+Do not run the closure-grade benchmark until the smoke rerun is inspected. If smoke is healthy:
 
 ```bash
 pnpm evidence:comparative -- --repeats 5 \
@@ -228,14 +276,14 @@ pnpm evidence:comparative -- --repeats 5 \
 
 Raw evidence stays local/gitignored. Only a sanitized verified summary should be committed later.
 
-### 4.7 Remaining closure blockers
+### 4.9 Remaining closure blockers
 
 The **comparative evidence workstream itself is not CLOSED** yet. Repository/harness implementation is closed, but these evidence gates remain:
 
-- merge and post-merge verification of this docs-only harness-closure update;
-- laptop tracked-tree sync to the latest merged `main`;
-- real local Gemma smoke;
-- investigation/fix of any smoke-discovered defect;
+- exact-head verification of the cache-isolation fix branch;
+- merge + post-merge verification of the fix;
+- laptop tracked-tree sync to the resulting `main`;
+- real local Gemma smoke rerun with no measured cache hits;
 - closure-grade 5× paired run;
 - sanitized comparative measured-result verification note;
 - current-state/progress docs updated with the actual measured verdict.
@@ -288,6 +336,7 @@ Cloudflare, if used, stays an external DNS/TLS/tunnel edge. It never becomes own
 - Connect remains provider/credential/MCP owner.
 - Artifact owns L3 bytes; comparative fixtures use Artifact API rather than filesystem/DB bypass.
 - Exact cache must not contaminate paired model-compute comparisons.
+- Benchmark cache isolation must hold across separate invocations while the same Connect process is alive.
 - Memory is untrusted data, never instructions.
 - Hosted-derived memory follows quarantine/governed promotion.
 - Model identity must be pinned for durable production claims. `gemma4:latest` is accepted only as current local rehearsal evidence until immutable local identity hardening.
@@ -330,6 +379,7 @@ For comparative/model evidence specifically, also require:
 
 - lane definitions and acceptance thresholds fixed before closure run;
 - cache contamination detection;
+- cache namespaces isolated across separate benchmark invocations;
 - equivalent fact/task/model controls;
 - quality measurement rather than token-only optimization;
 - raw evidence kept local/gitignored;
@@ -359,6 +409,6 @@ Architecture changes require ADR/decision updates. Measurement harnesses that on
 
 ## 10. Next action
 
-**Immediate next:** finish this docs-only comparative-harness implementation closure, verify/merge it, synchronize the laptop to the resulting `main`, restart/use Phase 4 from that synchronized tree, then run `pnpm evidence:comparative:smoke`. Do not run the 5× paired closure benchmark until the smoke result is inspected and any real defect is fixed.
+**Immediate next:** verify `fix/comparative-cache-namespace-20260911` through the normal repository gates. If exact-head verification is green, merge it, verify `main`, synchronize the laptop, and rerun `pnpm evidence:comparative:smoke`. Do not run the 5× paired closure benchmark until that rerun proves the measured lanes are uncached and the result is inspected.
 
 Canonical protocol: `docs/comparative-ecx-evidence.md`.
