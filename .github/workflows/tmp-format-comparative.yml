@@ -1,0 +1,25 @@
+name: Temporary Comparative Formatter
+
+on:
+  push:
+    branches:
+      - rnd/comparative-ecx-evidence-20260911
+
+permissions:
+  contents: read
+
+jobs:
+  format-preview:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format target files and print exact diff
+        run: |
+          pnpm exec prettier --write scripts/comparative-evidence.mjs test/comparative-evidence.test.mjs
+          git diff -- scripts/comparative-evidence.mjs test/comparative-evidence.test.mjs
