@@ -1,268 +1,195 @@
 # Local Persistence / Restart Evidence
 
-Status: **IN PROGRESS — STRICT HARNESS MERGED; RUNTIME RESTART NOT STARTED**  
+Status: **CLOSED / PASS — LOCAL PROCESS + TEMPORAL + POSTGRESQL-CONTAINER RESTART VERIFIED**  
 Started: **2026-09-11**  
-Harness implementation revision: `47ebb8b5430396dc2968445dfb56998f98e009b3` (PR #43)  
-Strict evidence-gate revision: `3319f140379c455446bade50c80aadcca5b0ecc7` (PR #44)  
-Post-merge repository verification: **CI `34576180542` PASS + MCP External HTTPS `34576180562` PASS**
+Runtime closure revision: `673af91642ea1b9440079e396675c69f53647951`  
+Canonical closure evidence: `docs/verification/local-persistence-restart-closure-2026-09-11.md`
 
-This workstream verifies that ECORIONE local durable state survives a controlled restart according to existing owner contracts. It is a new post-closure evidence scope, **not Batch 13**, and it does not resume VPS/Cloudflare deployment.
+This workstream verified that ECORIONE local durable state survives a controlled restart according to existing owner contracts. It is a post-closure evidence scope, **not Batch 13**, and it does not resume VPS/Cloudflare deployment.
 
-The scope is intentionally local-first. Do not stop/prune unrelated Docker workloads, do not mutate VPS/Cloudflare state, and do not bypass owner APIs by opening another service's database directly.
+## Final verdict
 
-The repository-side harness is now ready, but **runtime persistence is not yet proven**. PR #44 hardened the default evidence command so baseline/post checks fail closed unless the Flow remains the same `RUNNING` Temporal workflow, its Hub approval remains `PENDING` with the same operation identity, and Ledger/Context/Artifact identities and digests remain exact across the tested restart boundary.
+**PASS / CLOSED for the tested real-laptop boundary.**
 
-## Operator entry point
+The successful second drill proved that the same durable identities/integrity survived a controlled stop/start of:
 
-Always start from the current reviewed `main`, not from either historical harness branch. Before any mutation:
+- the ECORIONE Phase 4 local process group;
+- exact container `ecorione-temporal`;
+- exact container `ecorione-temporal-db`;
+- with existing named PostgreSQL volume `ecorione_temporal_db` preserved.
+
+The strict post gate verified exact Historical Ledger, Context, Artifact, Flow and Hub approval identity/integrity after restart. The strict cleanup gate then terminalized the dedicated waiting Flow probe.
+
+The first runtime drill remains preserved as a **valid failure** in `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`. It exposed a real relative-path defect: configured values such as `./data/hub.db` were previously resolved from package-local cwd under `pnpm --filter`, causing restarted owner services to open `services/<service>/data/...` instead of repository-root `data/...`.
+
+PR #46 fixed that path contract across affected runtime services. PR #48 then fixed a second local bootstrap issue where service source could import a new shared export while the local compiled workspace `dist` remained stale after `git pull`. The successful rerun occurred only after both fixes were merged and verified.
+
+Before the second baseline, the original failed probe reappeared through owner APIs with its original Ledger/Context/Artifact/Flow/approval identity. That recovery confirmed the first failure was wrong-path reopening rather than data deletion/corruption.
+
+## Canonical commands
+
+The default command remains the strict gate:
 
 ```bash
-git fetch origin
-git switch main
-git pull --ff-only origin main
-git rev-parse HEAD
-git status --short
 pnpm evidence:persistence-restart:inventory
-```
-
-The inventory phase is read-only and must be reviewed before any restart command is chosen. It exists specifically to identify the exact ECORIONE-owned Phase 4 processes and Temporal/PostgreSQL containers while separating unrelated laptop workloads.
-
-The default command is the strict gate:
-
-```bash
-# after inventory/restart-boundary review and with the normal local runtime env loaded
 pnpm evidence:persistence-restart --phase baseline
-
-# only after the operator-controlled restart
+# operator-controlled restart boundary
 pnpm evidence:persistence-restart --phase post
-
-# only after post verification passes
 pnpm evidence:persistence-restart --phase cleanup
 ```
 
-`scripts/local-persistence-restart-evidence.mjs` remains available through `pnpm evidence:persistence-restart:raw` for diagnostics, but it is **not** the canonical closure gate. Do not downgrade from the strict wrapper to manufacture a PASS.
+`scripts/local-persistence-restart-evidence.mjs` remains available through `pnpm evidence:persistence-restart:raw` for diagnostics, but it is **not** the canonical closure gate.
 
-## Goal
+## Durable boundaries exercised
 
-Produce real laptop evidence that, after a controlled restart of the relevant ECORIONE runtime boundaries:
-
-- Historical Ledger state in Hub remains readable and hash-chain verification still passes;
-- Context authoritative local data remains readable;
-- Artifact content-addressed bytes and Context metadata still agree;
-- a Temporal-backed Flow waiting on durable approval remains the same workflow after process/container restart;
-- intentionally ephemeral state is identified explicitly rather than mistaken for a persistence defect;
-- no unrelated project/container is stopped or pruned.
-
-## Existing durability boundaries
-
-Current implementation stores local durable state as follows:
-
-| Owner | Local durable boundary relevant to this drill |
+| Owner | Local durable boundary exercised |
 |---|---|
-| Hub | SQLite at `ECORIONE_HUB_DB_PATH` or default `data/hub.db`; Historical Ledger is inside Hub-owned state |
-| Context | SQLite at `ECORIONE_DB_PATH` or default `data/ecorione.db` |
-| Artifact | content-addressed directory at `ECORIONE_ARTIFACT_DIR` or default `data/artifacts` plus metadata in Context |
-| Flow | Flow graph metadata in `ECORIONE_FLOW_DB_PATH` / default `data/flow.sqlite`; workflow execution durability belongs to Temporal |
-| Temporal | external durable execution engine at `ECORIONE_TEMPORAL_ADDRESS`, currently local Temporal backed by PostgreSQL in the laptop rehearsal |
+| Hub | repository-root SQLite at `data/hub.db`; Historical Ledger and durable approval state inside Hub-owned storage |
+| Context | repository-root SQLite at `data/ecorione.db` |
+| Artifact | repository-root content-addressed directory `data/artifacts` plus Context metadata authorization |
+| Flow | repository-root metadata SQLite `data/flow.sqlite`; workflow execution durability in Temporal |
+| Temporal | exact local Temporal container backed by exact local PostgreSQL container + named volume `ecorione_temporal_db` |
 
-This drill verifies owner behavior through HTTP/runtime contracts. It does not grant cross-service database access.
+Owner behavior was verified through owner HTTP/runtime contracts. No cross-service database reads were used for acceptance evidence.
 
-## Safety rules
+## Safety rules retained
 
 1. Start from synchronized reviewed `main` and record exact SHA.
-2. Never run global `docker stop $(docker ps -q)`, `docker compose down` against unrelated stacks, `docker system prune`, `docker volume prune`, or equivalent broad mutation.
-3. Identify ECORIONE-owned Temporal/PostgreSQL containers by exact name/label before any container restart.
-4. Restart only the ECORIONE Phase 4 process group and the specifically verified ECORIONE Temporal/PostgreSQL containers needed by the test.
-5. Do not delete/replace local owner databases or Artifact bytes during this checkpoint.
-6. Use owner HTTP contracts for application-level proof; filesystem metadata may be inventoried, but another service must not open an owner's database.
-7. Keep `ECORIONE_COST_KILL_SWITCH=1`; hosted calls are not needed.
-8. Raw local evidence belongs under gitignored `.ecorione/evidence/`; commit only sanitized verification summaries.
-9. If a prerequisite is ambiguous, stop before mutation and inspect it first.
-10. A failed persistence check is evidence; do not weaken the acceptance criteria to manufacture PASS.
-11. Use the strict wrapper as the canonical baseline/post/cleanup gate; the raw harness is diagnostic only.
+2. Never run global `docker stop $(docker ps -q)`, broad `docker compose down`, `docker system prune`, `docker volume prune`, or equivalent unrelated mutation.
+3. Identify ECORIONE-owned Temporal/PostgreSQL containers exactly before mutation.
+4. Restart only the intended ECORIONE process/container boundary.
+5. Do not delete/replace owner databases, Artifact bytes or PostgreSQL volumes during the drill.
+6. Use owner HTTP contracts for application-level proof.
+7. Keep `ECORIONE_COST_KILL_SWITCH=1`; hosted calls are unnecessary.
+8. Raw local evidence belongs under gitignored `.ecorione/evidence/`; commit only sanitized summaries.
+9. A failed persistence check is evidence; never weaken acceptance criteria to manufacture PASS.
+10. Use the strict wrapper as the canonical baseline/post/cleanup gate.
 
-## Twelve-step execution plan
+## Successful execution sequence
 
-### Step 1 — Preflight and inventory
+### 1. Inventory
 
-Record:
+The synchronized laptop runtime was checked for:
 
-- local `HEAD` and `origin/main`;
-- clean tracked-tree status;
-- ECORIONE service listeners/health;
-- Docker container names/images/status for ECORIONE Temporal/PostgreSQL only;
-- relevant data paths and basic file/directory existence;
-- current Temporal endpoint/namespace.
+- exact Git revision/clean tracked tree;
+- required service health/listeners;
+- exact ECORIONE Temporal/PostgreSQL containers;
+- data-path configuration;
+- Temporal endpoint/namespace.
 
-**Gate:** exact repo identity is known and no mutation has happened.
+### 2. Effective-path verification
 
-### Step 2 — Define restart boundary
+After the path/bootstrap fixes, runtime file-descriptor inspection confirmed that service-local cwd no longer changed durable storage location:
 
-Explicitly separate:
+- Hub opened repository-root `data/hub.db`;
+- Context opened repository-root `data/ecorione.db`;
+- Flow opened repository-root `data/flow.sqlite`.
 
-- Phase 4 Node/Next processes owned by this ECORIONE checkout;
-- ECORIONE Temporal container;
-- ECORIONE Temporal PostgreSQL container;
-- unrelated Docker containers/projects on the laptop.
+### 3. Fresh strict baseline
 
-**Gate:** exact restart target list is recorded. No broad Docker command is allowed.
+A new LOCAL_ONLY probe recorded:
 
-### Step 3 — Baseline health
+- dedicated Historical Ledger session/event + exact head/event hash;
+- dedicated Context episode + SHA-256;
+- dedicated Artifact + SHA-256;
+- dedicated Temporal-backed Flow `RUNNING`;
+- matching Hub approval `PENDING` with exact operation identity.
 
-Verify at minimum:
+The strict baseline required `eventHash == headHash`, `nextSeq == 1`, Flow `RUNNING`, approval `PENDING`, and exact approval operation identity.
 
-- Context `127.0.0.1:17022`;
-- Connect `127.0.0.1:17023`;
-- Hub `127.0.0.1:17024`;
-- Artifact `127.0.0.1:17025`;
-- Flow `127.0.0.1:17028`;
-- Temporal connectivity through Flow/worker.
+### 4. Controlled shutdown
 
-Process metrics are expected to reset after restart and are **not** a persistence requirement.
+Only the reviewed ECORIONE boundary was stopped:
 
-### Step 4 — Baseline Historical Ledger probe
+1. Phase 4 process group;
+2. `ecorione-temporal`;
+3. `ecorione-temporal-db`.
 
-Through Hub owner API:
+The named PostgreSQL volume remained present. No unrelated workload was stopped/pruned.
 
-1. create a dedicated LOCAL_ONLY persistence-probe session;
-2. append a deterministic probe event;
-3. read the same event back;
-4. record session ID, event ID, seq, head hash and `/v1/history/verify` result.
+### 5. Controlled restart
 
-**Post-restart requirement:** exact session/event/hash remains readable and full Ledger verification still passes.
+Restart order was:
 
-The strict gate additionally requires the single-event baseline `eventHash` to equal the recorded session `headHash`, `nextSeq` to remain `1`, and the post-restart session head to match the same baseline identity.
+1. PostgreSQL;
+2. Temporal;
+3. wait for `127.0.0.1:7233`;
+4. `pnpm dev:phase4`;
+5. wait for required owner health + Flow worker `RUNNING`.
 
-### Step 5 — Baseline Context probe
+`pnpm dev:phase4` now builds compiled runtime workspace dependencies first, preventing stale shared-package `dist` exports after source updates.
 
-Through Context owner API:
+### 6. Strict post verification
 
-1. append a dedicated LOCAL_ONLY/INTERNAL episode tagged as persistence evidence;
-2. record its episode ID and stable expected text/digest;
-3. GET the exact episode before restart.
+The same baseline probe survived with exact identity/integrity:
 
-**Post-restart requirement:** the same episode ID and content remain readable.
+- Ledger `nextSeq == 1`;
+- Ledger event/head hashes unchanged;
+- global Ledger verify remained readable/valid;
+- Context episode ID/SHA unchanged;
+- Artifact ID/SHA unchanged;
+- Flow exact `flowId` remained `RUNNING`;
+- Hub approval remained the same `PENDING` approval with matching operation identity;
+- all required owner services were healthy.
 
-### Step 6 — Baseline Artifact probe
-
-Through Artifact owner API:
-
-1. upload a small deterministic LOCAL_ONLY/INTERNAL probe artifact;
-2. record Artifact ID, size and expected SHA/content digest;
-3. read it back through the authorized Artifact API before restart.
-
-**Post-restart requirement:** the same Artifact ID returns byte-identical content and Context metadata authorization still works.
-
-### Step 7 — Baseline Flow / Temporal probe
-
-Through Flow owner API:
-
-1. start one dedicated workflow with `delayMs=0` and a human approval prompt;
-2. wait until its Hub durable approval exists and the workflow remains running/waiting;
-3. record `flowId`, `operationId`, approval idempotency key and pre-restart Temporal status;
-4. do **not** approve it before the restart.
-
-**Baseline strict gate:** Flow must be `RUNNING`; the live Hub approval must be `PENDING`; its `operationId` must exactly equal the recorded approval operation identity.
-
-**Post-restart requirement:** the same `flowId` remains addressable, Temporal still reports it `RUNNING`, and the same Hub approval remains `PENDING` with the same operation identity rather than a newly-created workflow/approval.
-
-### Step 8 — Controlled shutdown
-
-Stop only:
-
-- the ECORIONE Phase 4 process group owned by this checkout;
-- then, for the stronger Temporal durability boundary, the exact ECORIONE Temporal container;
-- restart PostgreSQL only if its exact ECORIONE ownership/name is verified and the test explicitly advances to that sub-boundary.
-
-Do not delete volumes.
-
-### Step 9 — Controlled restart
-
-Restart in dependency-safe order:
-
-1. ECORIONE Temporal PostgreSQL if it was stopped;
-2. ECORIONE Temporal;
-3. wait for Temporal readiness;
-4. start `pnpm dev:phase4` from the synchronized checkout;
-5. wait for Flow worker state `RUNNING` and service health.
-
-### Step 10 — Post-restart verification
-
-Re-read all baseline probes:
-
-- Hub Historical Ledger exact session/event/head-hash identity + global verify;
-- Context exact episode ID/content digest;
-- Artifact exact ID/content digest;
-- Flow exact `flowId` + Temporal `RUNNING` status;
-- Hub approval exact operation identity + `PENDING` status.
-
-Only after the strict post gate passes, reject/close the dedicated Flow probe cleanly so the drill does not leave a permanent waiting workflow. Cleanup must observe a terminal Flow state.
-
-**Gate:** all declared durable state survives with the same identity and integrity.
-
-### Step 11 — Failure/recovery review
-
-Record:
-
-- durable state that survived;
-- state that reset intentionally (for example process-lifetime observability counters);
-- any defect or race discovered;
-- whether the failure was repository logic, runtime readiness, environment/config, or test-fixture design;
-- follow-up code/docs needed before closure.
-
-### Step 12 — Closure
-
-After runtime PASS or a fully-understood bounded result:
-
-1. create sanitized verification note under `docs/verification/`;
-2. update `docs/current-state-and-next-steps.md`;
-3. update `docs/EXECUTION-PROGRESS.md`;
-4. update this document with final verdict;
-5. reconcile `README.md`, `AGENTS.md`, `docs/fase6-hardening.md`, and operations docs if their next-work/status text changed;
-6. add/update ADR only if architecture/ownership/authority changed;
-7. run exact-head CI;
-8. merge with expected-head guard;
-9. verify post-merge `main` CI;
-10. synchronize laptop and confirm `TRACKED_SYNC_OK`.
-
-## Acceptance criteria
-
-This checkpoint can close **PASS** only if all applicable conditions hold:
-
-- repository identity and restart boundary were explicit before mutation;
-- no unrelated Docker workload was stopped/pruned;
-- strict baseline gate proved the Flow was actually waiting and the durable approval was actually pending before mutation;
-- Hub probe survives with same event/head-hash identity and Ledger verification passes;
-- Context probe survives with same episode identity/content digest;
-- Artifact probe survives with same Artifact ID and byte digest;
-- Flow/Temporal probe survives the tested restart boundary with the same workflow and pending durable approval identity;
-- Phase 4 returns healthy after restart;
-- cleanup leaves the dedicated Flow probe terminal;
-- intentionally ephemeral state is documented rather than counted as a failure;
-- raw evidence is preserved locally/gitignored;
-- sanitized verification accurately records limitations;
-- exact-head and post-merge repository gates pass.
-
-If PostgreSQL itself is not restarted in the first pass because ownership/readiness is not yet safely identified, the result must say **process + Temporal-container persistence verified; PostgreSQL-container restart pending** rather than silently upgrading the claim.
-
-## Non-goals
-
-This checkpoint does not prove:
-
-- backup/restore correctness — that is the next separate checkpoint;
-- off-host disaster recovery;
-- VPS durability;
-- Cloudflare/public-edge behavior;
-- hosted-provider behavior/cost;
-- hard power-loss/fsync semantics beyond the restart boundary actually exercised;
-- durability of intentionally process-local metrics/caches;
-- automatic recovery from arbitrary disk/database corruption.
-
-## Expected follow-up sequence
+Canonical result:
 
 ```text
-local persistence/restart
-  -> local backup/restore
+PASS persistence post: Ledger, Context, Artifact and pending Flow identities survived the tested restart boundary
+PASS strict persistence post
+```
+
+### 7. Cleanup
+
+The dedicated second Flow probe was rejected only after strict post PASS. It reached terminal state and cleanup returned:
+
+```text
+PASS persistence cleanup: dedicated Flow probe is no longer waiting
+PASS strict persistence cleanup
+```
+
+## Acceptance criteria — result
+
+All applicable closure conditions passed:
+
+- explicit synchronized repository identity and restart boundary;
+- no unrelated Docker workload stopped/pruned;
+- strict waiting Flow + pending approval baseline;
+- Hub Ledger exact event/head-hash survival + verification;
+- Context exact episode/digest survival;
+- Artifact exact ID/byte-digest survival;
+- same Temporal-backed Flow + durable approval identity survival;
+- Phase 4 healthy after restart;
+- cleanup left the dedicated Flow terminal;
+- raw evidence preserved locally/gitignored;
+- historical first failure preserved rather than rewritten away;
+- sanitized closure evidence committed separately.
+
+Repository exact-head/post-merge verification for the closure documentation is completed by the closure PR workflow and recorded in the canonical handoff once merged.
+
+## Claim boundary
+
+The correct claim is:
+
+> **Local owner storage + ECORIONE Phase 4 process restart + Temporal container restart + PostgreSQL container restart persistence verified on the real laptop boundary.**
+
+This does **not** prove:
+
+- backup/restore correctness;
+- off-host disaster recovery;
+- host-loss recovery;
+- VPS durability;
+- Cloudflare/public-edge behavior;
+- hosted-provider persistence/cost;
+- hard power-loss/fsync semantics beyond the controlled stop/start boundary;
+- arbitrary disk/database corruption recovery;
+- durability of intentionally process-local metrics/caches.
+
+## Next checkpoint
+
+```text
+local persistence/restart — CLOSED / PASS
+  -> isolated local backup/restore — ACTIVE NEXT CHECKPOINT
   -> local observability baseline
   -> UX/product validation
   -> immutable local model identity hardening
