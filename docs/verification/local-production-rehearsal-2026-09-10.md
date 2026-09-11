@@ -1,8 +1,8 @@
 # Local production rehearsal — 2026-09-10
 
-Status: **REAL LOCAL EVIDENCE PASS / local boundary closed / not a VPS-production claim**
+Status: **REAL LOCAL EVIDENCE PASS / local runtime + Ledger/ECX boundary closed / not a VPS-production claim**
 
-This note records a real post-closure Production Activation rehearsal on a Windows 11 laptop with Ubuntu 24.04 under WSL2. It intentionally excludes usernames, hostnames, secrets, local file paths and provider credentials.
+This note records a real post-closure Production Activation rehearsal on a Windows 11 laptop with Ubuntu 24.04 under WSL2, followed by the real Historical Ledger + ECX local evidence checkpoint on 2026-09-11. It intentionally excludes usernames, hostnames, secrets, local file paths and provider credentials.
 
 ## Environment exercised
 
@@ -13,7 +13,7 @@ This note records a real post-closure Production Activation rehearsal on a Windo
 - Ollama 0.33.3 on Windows
 - WSL2 mirrored networking for Windows↔Linux loopback interoperability
 
-The repository was cloned fresh into the Linux filesystem. The final synchronized verification on merged `main` completed successfully with 104/104 test files, 540 passed tests, 2 skipped tests, a clean secret scan and a successful Next.js production build.
+The repository was cloned fresh into the Linux filesystem. The synchronized sourced-env verification completed successfully with 104/104 test files, 540 passed tests, 2 skipped tests, a clean secret scan and a successful Next.js production build.
 
 ## Runtime checkpoints
 
@@ -77,15 +77,47 @@ This verifies the local browser path:
 
 The displayed savings value is counterfactual accounting against the configured naive hosted baseline. It is not, by itself, evidence for a public ECX/optimizer savings claim.
 
+## Session hydration identity finding
+
+While inspecting the real browser traffic in Historical Ledger, the session ID displayed by the pre-fix browser header did not exist in the Ledger even though the successful turn did. The root cause was that a random session ID could be generated independently during server render and client hydration while `suppressHydrationWarning` masked the mismatch.
+
+PR #36 corrected the browser session identity by keeping the random ID client-owned, rendering `sess_pending` on the deterministic server/pre-hydration snapshot, revealing the actual client session only after hydration, and using that same session value for the header and `/api/chat`. Regression coverage verifies server-rendered HTML does not emit a random `sess_<uuid>` before hydration.
+
+Post-fix real evidence showed the browser-visible session `sess_866a9ae3-09f8-4f42-862a-a28cabd9d1f7` resolved directly in Historical Ledger. The exact session contained the Local Gemma turn and no identifier translation was required. Post-merge CI `34551995621` passed all repository gates.
+
+## Historical Ledger + ECX real local evidence
+
+The post-fix browser session produced an intact hash-chained sequence:
+
+1. `seq=0` `user.message` with target `local`;
+2. `seq=1` `model.called` with provider `local`, `requestModel=gemma4:latest`, `responseModel=gemma4:latest`, `pricingModel=local/provider-token-zero`, `actualUsd=0`, 210 input tokens and 350 output tokens;
+3. `seq=2` `agent.message`.
+
+A real ECX plan then referenced that exact Ledger range (`afterSeq=-1`, `throughSeq=2`) with a 16,384-byte hydration budget. From two candidates, the planner selected the exact `history` + `verification` capability match and returned one 478-byte pointer-first packet.
+
+The packet was hydrated locally with `hostedEligible=false`, preserving the source session's `LOCAL_ONLY` boundary. Hydration returned one `application/json` history item totaling 1,725 bytes.
+
+The plan also appended `seq=3` `agent.handoff` with actor `hub:exchange` to the same Ledger session. Its `prevHash` matched the `seq=2` assistant-event hash, extending the existing chain without a gap.
+
+After this real plan/hydration, `pnpm production:data-evidence` returned:
+
+- Historical Ledger: 8 sessions / 15 events;
+- ECX: 1 plan / 1 packet / 478 packet bytes / 1 hydration / 1 hydrated item / 1,725 hydration bytes;
+- provider traffic: 1 model call / 210 input tokens / 350 output tokens / 0 cache-read / 0 cache-write tokens / USD 0 provider-token actual cost;
+- final result: `PASS production-data-evidence: real traffic exists across Historical Ledger, ECX, and provider telemetry boundaries`.
+
+Detailed sanitized evidence is recorded in `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`.
+
 ## Defects fixed from the evidence
 
-The rehearsal exposed three runtime/correctness gaps and two local-verification isolation gaps:
+The rehearsal and immediate Ledger/ECX checkpoint exposed four runtime/correctness gaps and two local-verification isolation gaps:
 
 1. local `model`/telemetry/cache identity was hard-coded to a Qwen pricing identity even when the configured runtime was Gemma;
 2. the Ai chat surface did not carry an explicit local/hosted target, so browser chat defaulted to hosted and was correctly rejected by the hosted cost kill switch;
 3. the Temporal production image pin referenced an unavailable tag;
-4. an Ai proxy test inherited the operator's sourced `ECORIONE_INTERNAL_TOKEN` instead of establishing its own isolated baseline;
-5. `secret-scan` walked the whole working tree and rejected an intentionally gitignored machine-local `.env` even though it was not a commit candidate.
+4. the Ai header/session could diverge across server render and client hydration, making the displayed session ID differ from the one actually sent to Hub;
+5. an Ai proxy test inherited the operator's sourced `ECORIONE_INTERNAL_TOKEN` instead of establishing its own isolated baseline;
+6. `secret-scan` walked the whole working tree and rejected an intentionally gitignored machine-local `.env` even though it was not a commit candidate.
 
 The merged corrections preserve the existing ownership boundaries:
 
@@ -93,6 +125,7 @@ The merged corrections preserve the existing ownership boundaries:
 - the legacy Qwen pricing key remains only for Historical Ledger/replay compatibility;
 - local exact-cache keys include runtime type, base URL and configured model;
 - Ai explicitly selects Local or Hosted, defaults the browser UI to Local, and locks the route after the first turn;
+- Ai displays only the client-owned post-hydration session ID and uses that exact value in `/api/chat`;
 - requests that omit `target` retain the historical hosted default for API compatibility;
 - Temporal Compose uses the pull/run-verified `1.29.7` image;
 - proxy tests isolate ambient environment state and restore the caller's value;
@@ -100,14 +133,14 @@ The merged corrections preserve the existing ownership boundaries:
 
 ## Final local/Git synchronization checkpoint
 
-After the local-verification fixes were merged, the laptop fast-forwarded to GitHub `main` and verified:
+After the local-verification and browser-session fixes were merged, the laptop fast-forwarded to GitHub `main` and verified:
 
 - local `HEAD` equals `origin/main`;
 - `git diff --exit-code HEAD origin/main` succeeds;
 - tracked working tree is clean;
 - machine-local `.env` remains untracked and intact.
 
-The final full verification on that synchronized tree reported:
+The full sourced-env verification before the final data-evidence run reported:
 
 - 104 test files passed;
 - 540 tests passed;
@@ -117,9 +150,19 @@ The final full verification on that synchronized tree reported:
 
 ## Evidence boundary
 
-This rehearsal proves local process health, local Temporal/Flow interoperability, a real local model call through Connect, direct Ai API routing, and a real browser Local-chat turn. It does **not** prove VPS durability, Cloudflare named-Tunnel operation, hosted-provider quality, public production latency or disaster recovery.
+The completed local evidence proves:
 
-Historical Ledger and ECX code paths have deterministic test coverage, but the next evidence step is to inspect the real local browser traffic just generated and verify its Ledger chronology/integrity plus ECX/model/token/cache/cost records before treating that local evidence as closed.
+- local process health and local Temporal/Flow interoperability;
+- a real local model call through Connect;
+- direct Ai API routing and a real browser Local-chat turn;
+- browser-visible session identity matching the actual Historical Ledger session;
+- real Ledger chronology and hash-chain continuation through an ECX `agent.handoff`;
+- a real pointer-first ECX plan and bounded local-only history hydration;
+- observable real model/token/cache/cost traffic sufficient for the `production:data-evidence` floor.
+
+It does **not** prove VPS durability, Cloudflare named-Tunnel operation, hosted-provider quality, public production latency, disaster recovery, ECX/optimizer savings, or execution of a second model/agent from the selected ECX packet.
+
+The local Historical Ledger + ECX evidence checkpoint is therefore **CLOSED**. The next operational checkpoint is deployment and validation on a real compute host/VPS/server.
 
 ## Local/Git synchronization rule
 
