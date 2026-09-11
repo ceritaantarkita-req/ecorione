@@ -12,8 +12,11 @@ Per **2026-09-11**:
 - real laptop rehearsal: **PASS / LOCAL BOUNDARY CLOSED**;
 - real Historical Ledger + ECX traffic/integrity checkpoint: **PASS / LOCAL CHECKPOINT CLOSED**;
 - PR #37 merged ke `main` sebagai `88d588bbe4a5f005652c20f3409dd72093439f56`;
-- post-merge CI #37 `34554159172`: PASS seluruh repository gates;
-- comparative ECX efficiency evidence: **ACTIVE LOCAL R&D CHECKPOINT**;
+- comparative ECX harness PR #38 merged sebagai `c1849cd0c67712e40ea4e5c90587283900859cdb`;
+- PR #38 exact-head CI `34557147546` + MCP External HTTPS `34557147583`: **PASS**;
+- PR #38 post-merge CI `34557297702` + MCP External HTTPS `34557297803`: **PASS**;
+- comparative harness implementation: **CLOSED / VERIFIED**;
+- real Gemma comparative ECX efficiency evidence: **ACTIVE / PENDING RUNTIME MEASUREMENT**;
 - real compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**;
 - Fase 6+ tetap **OPEN-ENDED / evidence-driven**;
 - Fase 5 AutoClick tetap **DEFERRED BY DESIGN**;
@@ -26,29 +29,30 @@ Recommended reading order saat ini:
 1. `docs/current-state-and-next-steps.md`
 2. `AGENTS.md`
 3. `docs/comparative-ecx-evidence.md`
-4. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-5. `docs/verification/local-production-rehearsal-2026-09-10.md`
-6. `docs/EXECUTION-PROGRESS.md`
-7. docs operations/ADR yang relevan dengan scope
-8. `docs/prd.md` + `docs/research.md`
-9. `docs/blueprint.md` sebagai historical execution blueprint
+4. `docs/verification/comparative-harness-implementation-2026-09-11.md`
+5. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
+6. `docs/verification/local-production-rehearsal-2026-09-10.md`
+7. `docs/EXECUTION-PROGRESS.md`
+8. docs operations/ADR yang relevan dengan scope
+9. `docs/prd.md` + `docs/research.md`
+10. `docs/blueprint.md` sebagai historical execution blueprint
 
 ## Next work posture
 
-Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Operator sudah memilih local-first evidence sebelum VPS. Urutan aktif saat ini:
+Setelah Batch 12, kerja berikutnya adalah **scope baru**, bukan otomatis Batch 13. Operator sudah memilih local-first evidence sebelum VPS. Harness comparative sudah merged/verified; urutan aktif sekarang:
 
-1. comparative ECX efficiency evidence;
-2. local persistence/restart drill;
-3. local backup/restore drill;
-4. local observability baseline;
-5. product/UX validation;
-6. immutable local model identity hardening;
-7. compute-host/VPS + Cloudflare deployment **hanya jika operator secara eksplisit melanjutkan**;
-8. hosted-provider comparative validation bila operator menyediakan kredensial + budget;
-9. maintenance/dependency/security/DR evidence;
-10. feature baru hanya jika evidence membenarkan.
+1. synchronize laptop ke merged harness/docs closure dan jalankan comparative Gemma smoke;
+2. perbaiki defect runtime bila ditemukan, lalu jalankan closure-grade paired benchmark;
+3. local persistence/restart drill;
+4. local backup/restore drill;
+5. local observability baseline;
+6. product/UX validation;
+7. immutable local model identity hardening;
+8. compute-host/VPS + Cloudflare deployment **hanya jika operator secara eksplisit melanjutkan**;
+9. hosted-provider comparative validation bila operator menyediakan kredensial + budget;
+10. maintenance/dependency/security/DR evidence dan feature baru hanya jika evidence membenarkan.
 
-Comparative protocol: `docs/comparative-ecx-evidence.md`.
+Comparative protocol: `docs/comparative-ecx-evidence.md`. Harness implementation verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
 
 Untuk future Cloudflare Free/VPS deployment, baca `docs/production-activation.md` dan `docs/cloudflare-free-deployment.md`. Cloudflare adalah edge/tunnel, **bukan** pengganti compute/storage/Temporal ECORIONE.
 
@@ -63,7 +67,7 @@ pnpm typecheck
 pnpm secret-scan
 pnpm run acceptance:production-ops
 
-# local comparative evidence, only with Phase 4 runtime running
+# local comparative evidence, only with synchronized Phase 4 runtime running
 pnpm evidence:comparative:smoke
 pnpm evidence:comparative
 ```
@@ -83,6 +87,7 @@ pnpm evidence:comparative
 7. Local provider-token `actualUsd=0` bukan hosted cost-saving evidence.
 8. Simpan raw evidence lokal di path yang gitignored (contoh `.ecorione/evidence/`). Commit hanya sanitized summary setelah hasil diverifikasi.
 9. Negative result adalah evidence yang valid. Jangan membangun selector/optimizer baru hanya untuk mempertahankan hipotesis awal.
+10. Real comparative result hanya boleh diklaim dari run pada laptop yang sudah sinkron ke merged harness revision; jangan memakai moving PR branch sebagai closure evidence.
 
 ## Aturan yang tidak bisa dinegosiasikan
 
