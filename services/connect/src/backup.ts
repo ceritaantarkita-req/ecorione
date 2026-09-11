@@ -9,6 +9,7 @@ import {
 
 export interface ConnectBackupPaths {
   readonly credentialVaultPath?: string | undefined;
+  readonly runtimeSettingsPath?: string | undefined;
   readonly spendBudgetPath?: string | undefined;
   readonly mcpRegistryPath?: string | undefined;
   readonly mcpInvocationPath?: string | undefined;
@@ -33,6 +34,7 @@ export function backupConnectState(
   try {
     const stateSources: BundleBackupSource[] = [];
     for (const path of [
+      paths.runtimeSettingsPath,
       paths.spendBudgetPath,
       paths.mcpRegistryPath,
       paths.mcpInvocationPath,
