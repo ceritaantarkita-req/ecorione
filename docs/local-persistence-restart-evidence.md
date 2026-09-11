@@ -1,14 +1,46 @@
 # Local Persistence / Restart Evidence
 
-Status: **IN PROGRESS — OPERATOR-APPROVED LOCAL CHECKPOINT**  
+Status: **IN PROGRESS — STRICT HARNESS MERGED; RUNTIME RESTART NOT STARTED**  
 Started: **2026-09-11**  
-Baseline `main`: `84cf086745a14e75c3a976ceb5ca7847f691a76f`  
-Working branch: `ops/local-persistence-restart-evidence-20260911`  
-Harness PR: **#43 — implementation verification in progress; runtime restart not started yet**
+Harness implementation revision: `47ebb8b5430396dc2968445dfb56998f98e009b3` (PR #43)  
+Strict evidence-gate revision: `3319f140379c455446bade50c80aadcca5b0ecc7` (PR #44)  
+Post-merge repository verification: **CI `34576180542` PASS + MCP External HTTPS `34576180562` PASS**
 
 This workstream verifies that ECORIONE local durable state survives a controlled restart according to existing owner contracts. It is a new post-closure evidence scope, **not Batch 13**, and it does not resume VPS/Cloudflare deployment.
 
 The scope is intentionally local-first. Do not stop/prune unrelated Docker workloads, do not mutate VPS/Cloudflare state, and do not bypass owner APIs by opening another service's database directly.
+
+The repository-side harness is now ready, but **runtime persistence is not yet proven**. PR #44 hardened the default evidence command so baseline/post checks fail closed unless the Flow remains the same `RUNNING` Temporal workflow, its Hub approval remains `PENDING` with the same operation identity, and Ledger/Context/Artifact identities and digests remain exact across the tested restart boundary.
+
+## Operator entry point
+
+Always start from the current reviewed `main`, not from either historical harness branch. Before any mutation:
+
+```bash
+git fetch origin
+git switch main
+git pull --ff-only origin main
+git rev-parse HEAD
+git status --short
+pnpm evidence:persistence-restart:inventory
+```
+
+The inventory phase is read-only and must be reviewed before any restart command is chosen. It exists specifically to identify the exact ECORIONE-owned Phase 4 processes and Temporal/PostgreSQL containers while separating unrelated laptop workloads.
+
+The default command is the strict gate:
+
+```bash
+# after inventory/restart-boundary review and with the normal local runtime env loaded
+pnpm evidence:persistence-restart --phase baseline
+
+# only after the operator-controlled restart
+pnpm evidence:persistence-restart --phase post
+
+# only after post verification passes
+pnpm evidence:persistence-restart --phase cleanup
+```
+
+`scripts/local-persistence-restart-evidence.mjs` remains available through `pnpm evidence:persistence-restart:raw` for diagnostics, but it is **not** the canonical closure gate. Do not downgrade from the strict wrapper to manufacture a PASS.
 
 ## Goal
 
@@ -47,6 +79,7 @@ This drill verifies owner behavior through HTTP/runtime contracts. It does not g
 8. Raw local evidence belongs under gitignored `.ecorione/evidence/`; commit only sanitized verification summaries.
 9. If a prerequisite is ambiguous, stop before mutation and inspect it first.
 10. A failed persistence check is evidence; do not weaken the acceptance criteria to manufacture PASS.
+11. Use the strict wrapper as the canonical baseline/post/cleanup gate; the raw harness is diagnostic only.
 
 ## Twelve-step execution plan
 
@@ -98,6 +131,8 @@ Through Hub owner API:
 
 **Post-restart requirement:** exact session/event/hash remains readable and full Ledger verification still passes.
 
+The strict gate additionally requires the single-event baseline `eventHash` to equal the recorded session `headHash`, `nextSeq` to remain `1`, and the post-restart session head to match the same baseline identity.
+
 ### Step 5 — Baseline Context probe
 
 Through Context owner API:
@@ -127,7 +162,9 @@ Through Flow owner API:
 3. record `flowId`, `operationId`, approval idempotency key and pre-restart Temporal status;
 4. do **not** approve it before the restart.
 
-**Post-restart requirement:** the same `flowId` remains addressable and still represents the same pending durable workflow/approval rather than a newly-created workflow.
+**Baseline strict gate:** Flow must be `RUNNING`; the live Hub approval must be `PENDING`; its `operationId` must exactly equal the recorded approval operation identity.
+
+**Post-restart requirement:** the same `flowId` remains addressable, Temporal still reports it `RUNNING`, and the same Hub approval remains `PENDING` with the same operation identity rather than a newly-created workflow/approval.
 
 ### Step 8 — Controlled shutdown
 
@@ -153,12 +190,13 @@ Restart in dependency-safe order:
 
 Re-read all baseline probes:
 
-- Hub Historical Ledger exact session/event/hash + global verify;
-- Context exact episode ID/content;
-- Artifact exact ID/content/digest;
-- Flow exact `flowId` + Hub approval identity/status.
+- Hub Historical Ledger exact session/event/head-hash identity + global verify;
+- Context exact episode ID/content digest;
+- Artifact exact ID/content digest;
+- Flow exact `flowId` + Temporal `RUNNING` status;
+- Hub approval exact operation identity + `PENDING` status.
 
-Then reject/close the dedicated Flow probe cleanly so the drill does not leave a permanent waiting workflow.
+Only after the strict post gate passes, reject/close the dedicated Flow probe cleanly so the drill does not leave a permanent waiting workflow. Cleanup must observe a terminal Flow state.
 
 **Gate:** all declared durable state survives with the same identity and integrity.
 
@@ -193,11 +231,13 @@ This checkpoint can close **PASS** only if all applicable conditions hold:
 
 - repository identity and restart boundary were explicit before mutation;
 - no unrelated Docker workload was stopped/pruned;
-- Hub probe survives with same event/hash identity and Ledger verification passes;
-- Context probe survives with same episode identity/content;
+- strict baseline gate proved the Flow was actually waiting and the durable approval was actually pending before mutation;
+- Hub probe survives with same event/head-hash identity and Ledger verification passes;
+- Context probe survives with same episode identity/content digest;
 - Artifact probe survives with same Artifact ID and byte digest;
-- Flow/Temporal probe survives the tested restart boundary with the same workflow and durable approval identity;
+- Flow/Temporal probe survives the tested restart boundary with the same workflow and pending durable approval identity;
 - Phase 4 returns healthy after restart;
+- cleanup leaves the dedicated Flow probe terminal;
 - intentionally ephemeral state is documented rather than counted as a failure;
 - raw evidence is preserved locally/gitignored;
 - sanitized verification accurately records limitations;
