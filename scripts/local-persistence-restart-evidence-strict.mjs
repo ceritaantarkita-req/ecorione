@@ -3,52 +3,51 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import {
-  main as runEvidenceHarness,
-  parseArgs,
-} from "./local-persistence-restart-evidence.mjs";
+import { main as runEvidenceHarness } from "./local-persistence-restart-evidence.mjs";
+import { parseArgs } from "./local-persistence-restart-evidence.mjs";
 
 function fail(message) {
   throw new Error(`Strict persistence evidence gate: ${message}`);
 }
 
 export function assertBaselineEvidenceState(state, approval, session) {
-  if (state?.phase !== "baseline-ready")
-    fail(`state phase ${String(state?.phase)} != baseline-ready`);
+  if (state?.phase !== "baseline-ready") {
+    fail("state phase is not baseline-ready");
+  }
   if (state?.flow?.statusBefore !== "RUNNING") {
-    fail(`baseline Flow status ${String(state?.flow?.statusBefore)} != RUNNING`);
+    fail("baseline Flow status is not RUNNING");
   }
   if (approval?.status !== "PENDING") {
-    fail(`baseline approval status ${String(approval?.status)} != PENDING`);
+    fail("baseline approval status is not PENDING");
   }
   if (approval?.operationId !== state?.flow?.approvalOperationId) {
-    fail("baseline approval operation identity does not match recorded state");
+    fail("baseline approval operation identity changed");
   }
-  if (
-    typeof state?.ledger?.headHash !== "string" ||
-    state.ledger.headHash.length === 0
-  ) {
+
+  const headHash = state?.ledger?.headHash;
+  if (typeof headHash !== "string" || headHash.length === 0) {
     fail("baseline Ledger headHash is missing");
   }
-  if (session?.headHash !== state.ledger.headHash) {
-    fail("baseline Ledger session headHash does not match recorded headHash");
+  if (session?.headHash !== headHash) {
+    fail("baseline Ledger session headHash changed");
   }
   if (session?.nextSeq !== 1) {
-    fail(`baseline Ledger nextSeq ${String(session?.nextSeq)} != 1`);
+    fail("baseline Ledger nextSeq is not 1");
   }
-  if (state?.ledger?.eventHash !== state.ledger.headHash) {
-    fail("single-event baseline Ledger eventHash does not equal session headHash");
+  if (state?.ledger?.eventHash !== headHash) {
+    fail("baseline Ledger eventHash does not equal headHash");
   }
 }
 
 export function assertPostEvidenceState(state, approval) {
-  if (state?.phase !== "post-verified")
-    fail(`state phase ${String(state?.phase)} != post-verified`);
+  if (state?.phase !== "post-verified") {
+    fail("state phase is not post-verified");
+  }
   if (state?.post?.flow?.status !== "RUNNING") {
-    fail(`post Flow status ${String(state?.post?.flow?.status)} != RUNNING`);
+    fail("post Flow status is not RUNNING");
   }
   if (approval?.status !== "PENDING") {
-    fail(`post approval status ${String(approval?.status)} != PENDING`);
+    fail("post approval status is not PENDING");
   }
   if (approval?.operationId !== state?.flow?.approvalOperationId) {
     fail("post approval operation identity changed");
@@ -60,7 +59,7 @@ export function assertPostEvidenceState(state, approval) {
     fail("post Ledger headHash changed");
   }
   if (state?.post?.ledger?.nextSeq !== 1) {
-    fail(`post Ledger nextSeq ${String(state?.post?.ledger?.nextSeq)} != 1`);
+    fail("post Ledger nextSeq is not 1");
   }
   if (state?.post?.context?.episodeId !== state?.context?.episodeId) {
     fail("post Context episode identity changed");
@@ -81,15 +80,19 @@ export function assertPostEvidenceState(state, approval) {
 
 export function assertCleanupEvidenceState(state) {
   if (state?.phase !== "cleanup-complete") {
-    fail(`state phase ${String(state?.phase)} != cleanup-complete`);
+    fail("state phase is not cleanup-complete");
   }
-  if (!state?.cleanup?.finalStatus || state.cleanup.finalStatus === "RUNNING") {
-    fail(`cleanup final Flow status ${String(state?.cleanup?.finalStatus)} is not terminal`);
+  if (!state?.cleanup?.finalStatus) {
+    fail("cleanup final Flow status is missing");
+  }
+  if (state.cleanup.finalStatus === "RUNNING") {
+    fail("cleanup final Flow status is not terminal");
   }
 }
 
 async function loadState(statePath) {
-  return JSON.parse(await readFile(resolve(statePath), "utf8"));
+  const raw = await readFile(resolve(statePath), "utf8");
+  return JSON.parse(raw);
 }
 
 async function getJson(url, token) {
@@ -99,72 +102,74 @@ async function getJson(url, token) {
   });
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(
-      `GET ${url} HTTP ${String(response.status)} ${JSON.stringify(payload)}`,
-    );
+    const status = String(response.status);
+    const body = JSON.stringify(payload);
+    throw new Error(`GET ${String(url)} HTTP ${status} ${body}`);
   }
   return payload;
 }
 
 async function readApproval(state, token) {
-  return getJson(
-    `${state.urls.hub}/v1/approvals/by-idempotency-key?idempotencyKey=${encodeURIComponent(state.flow.approvalKey)}`,
-    token,
-  );
+  const url = new URL("/v1/approvals/by-idempotency-key", state.urls.hub);
+  url.searchParams.set("idempotencyKey", state.flow.approvalKey);
+  return getJson(url, token);
 }
 
 async function readLedgerSession(state, token) {
-  return getJson(
-    `${state.urls.hub}/v1/history/sessions/${state.ledger.sessionId}?scope=personal&maxSensitivity=INTERNAL&hostedEligible=0`,
-    token,
-  );
+  const sessionId = state.ledger.sessionId;
+  const url = new URL(`/v1/history/sessions/${sessionId}`, state.urls.hub);
+  url.searchParams.set("scope", "personal");
+  url.searchParams.set("maxSensitivity", "INTERNAL");
+  url.searchParams.set("hostedEligible", "0");
+  return getJson(url, token);
 }
 
 export async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
   await runEvidenceHarness(argv);
-  if (options.help || options.phase === "inventory") return;
+  if (options.help || options.phase === "inventory") {
+    return;
+  }
 
   const token = process.env.ECORIONE_INTERNAL_TOKEN;
-  if (!token) fail("ECORIONE_INTERNAL_TOKEN is required");
+  if (!token) {
+    fail("ECORIONE_INTERNAL_TOKEN is required");
+  }
   const state = await loadState(options.statePath);
 
   if (options.phase === "baseline") {
+    const approvalPromise = readApproval(state, token);
+    const sessionPromise = readLedgerSession(state, token);
     const [approval, session] = await Promise.all([
-      readApproval(state, token),
-      readLedgerSession(state, token),
+      approvalPromise,
+      sessionPromise,
     ]);
     assertBaselineEvidenceState(state, approval, session);
-    console.log(
-      "PASS strict persistence baseline: Flow is RUNNING, approval is PENDING, and Ledger head identity is exact",
-    );
+    console.log("PASS strict persistence baseline");
     return;
   }
 
   if (options.phase === "post") {
     const approval = await readApproval(state, token);
     assertPostEvidenceState(state, approval);
-    console.log(
-      "PASS strict persistence post: Ledger head, Context, Artifact, Flow and pending approval identities are unchanged",
-    );
+    console.log("PASS strict persistence post");
     return;
   }
 
   if (options.phase === "cleanup") {
     assertCleanupEvidenceState(state);
-    console.log(
-      "PASS strict persistence cleanup: dedicated Flow probe reached a terminal state",
-    );
+    console.log("PASS strict persistence cleanup");
   }
 }
 
+const scriptPath = process.argv[1];
 const isMain =
-  process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+  scriptPath && import.meta.url === pathToFileURL(resolve(scriptPath)).href;
+
 if (isMain) {
   main().catch((error) => {
-    console.error(
-      `persistence-restart-evidence-strict: failed ${error instanceof Error ? error.message : String(error)}`,
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`persistence-restart-evidence-strict: failed ${message}`);
     process.exitCode = 1;
   });
 }
