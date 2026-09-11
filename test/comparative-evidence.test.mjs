@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assembleContext,
+  benchmarkCacheMarker,
   evaluateTaskGates,
   extractJsonObject,
   median,
@@ -64,6 +65,33 @@ describe("comparative evidence helpers", () => {
         { id: "b", content: "beta" },
       ]),
     ).toBe("alpha\n\n---\n\nbeta");
+  });
+
+  it("isolates cache markers across invocations while keeping paired marker shape stable", () => {
+    const first = benchmarkCacheMarker({
+      cacheNamespace: "a".repeat(32),
+      taskIndex: 0,
+      pairedRunIndex: 1,
+      modeIndex: 0,
+    });
+    const secondMode = benchmarkCacheMarker({
+      cacheNamespace: "a".repeat(32),
+      taskIndex: 0,
+      pairedRunIndex: 1,
+      modeIndex: 1,
+    });
+    const nextInvocation = benchmarkCacheMarker({
+      cacheNamespace: "b".repeat(32),
+      taskIndex: 0,
+      pairedRunIndex: 1,
+      modeIndex: 0,
+    });
+
+    expect(first).not.toBe(secondMode);
+    expect(first.length).toBe(secondMode.length);
+    expect(first).not.toBe(nextInvocation);
+    expect(first).toContain("a".repeat(32));
+    expect(nextInvocation).toContain("b".repeat(32));
   });
 
   it("passes predeclared gates when selective hydration reduces bytes and tokens", () => {
