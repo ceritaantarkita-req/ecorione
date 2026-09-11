@@ -13,9 +13,7 @@ describe("local dev runtime dependency bootstrap", () => {
     );
 
     for (const scriptName of ["dev", "dev:phase2", "dev:phase3", "dev:phase4"]) {
-      expect(packageJson.scripts?.[scriptName]).toMatch(
-        /^pnpm run build:runtime-deps && /,
-      );
+      expect(packageJson.scripts?.[scriptName]).toMatch(/^pnpm run build:runtime-deps && /);
     }
   });
 });
