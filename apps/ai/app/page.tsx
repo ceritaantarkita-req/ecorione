@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useSyncExternalStore,
-  type FormEvent,
-  type KeyboardEvent,
-} from "react";
+import { useState, useSyncExternalStore, type FormEvent, type KeyboardEvent } from "react";
 import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
 import { makeSessionId } from "../lib/session";
 
