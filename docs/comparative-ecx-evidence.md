@@ -1,6 +1,6 @@
 # Comparative ECX / optimizer evidence
 
-Status: **ACTIVE LOCAL R&D CHECKPOINT — HARNESS MERGED/VERIFIED; REAL GEMMA EVIDENCE PENDING**
+Status: **ACTIVE LOCAL R&D CHECKPOINT — HARNESS MERGED/VERIFIED; FIRST REAL GEMMA SMOKE FOUND CACHE-ISOLATION DEFECT; RERUN PENDING**
 Date: 2026-09-11
 
 This workstream measures whether the current ECORIONE pointer-first exchange can reduce transported/model context without hiding quality loss. It is intentionally local-first. Real compute-host/VPS and Cloudflare deployment are **operator-deferred** and are not prerequisites for this evidence work.
@@ -13,9 +13,10 @@ Harness implementation status:
 - exact-head MCP External HTTPS Acceptance `34557147583`: PASS;
 - post-merge `main` CI `34557297702`: PASS;
 - post-merge MCP External HTTPS Acceptance `34557297803`: PASS;
+- docs closure PR #39 merged as `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`;
 - verification: `docs/verification/comparative-harness-implementation-2026-09-11.md`.
 
-The **measurement result is not closed yet**. Next runtime checkpoint is laptop sync → real Gemma smoke → inspect/fix if needed → closure-grade paired benchmark.
+The **measurement result is not closed yet**. The first real Gemma smoke correctly failed its predeclared cache gate because the original cache marker was deterministic across separate benchmark invocations. The runtime finding is documented below. The fix keeps the gate unchanged and adds a unique per-invocation namespace; a real smoke rerun is still required before the closure-grade benchmark.
 
 ## Why this exists
 
@@ -84,18 +85,44 @@ No provider credentials are read or printed by the harness. `ECORIONE_INTERNAL_T
 
 Connect exact-match cache keys include the model identity, stable prefix digest, dynamic context, and user message. A repeated identical measured request would therefore become a cache hit and invalidate a model-compute comparison.
 
-The harness adds a unique same-shape benchmark cache-buster to each measured lane. Any measured `cacheHit=true` is a hard task failure.
+The original PR #38 harness used a marker derived from task id, paired-run index, and mode. That was unique **inside one invocation**, but not across two separate invocations. A smoke followed by another smoke/full run inside the Connect cache TTL could therefore reuse the prior measured entry. The first real Gemma smoke exposed exactly that defect and the predeclared `cacheHit=true` gate rejected the run.
 
-A single warm-up completion is performed before measurements and excluded from results.
+The corrected harness now creates one random 32-hex cache namespace per benchmark invocation. Every measured lane appends a fixed-shape marker containing that namespace plus numeric task/pair/mode coordinates. This preserves paired marker shape while making a later smoke/full invocation a distinct exact-cache namespace. Any measured `cacheHit=true` remains a hard task failure.
+
+A single warm-up completion is performed before measurements and excluded from results. The warm-up itself is allowed to be cached because it is not a measured lane; measured calls are not.
+
+## First real Gemma smoke finding — 2026-09-11
+
+Laptop/main revision: `5437c1ea5d8ee168dbbe09de688a23c39089c7aa`.
+
+Observed real runtime facts:
+
+- Phase 4 services and Flow worker were running;
+- `gemma4:latest` was present in Ollama;
+- Artifact uploads succeeded;
+- Hub ECX plan + all-ref hydration + selective hydration succeeded;
+- ECX selected `agent:comparative-evidence-reviewer`;
+- packet size was `1011` bytes;
+- all-ref hydration was `8241` bytes;
+- oracle-selective hydration was `1123` bytes;
+- deterministic answer quality was 100% in all three returned lanes;
+- all three measured completions reported `cacheHit=true` and zero measured input/output tokens;
+- the task therefore **FAILED**, exactly as the gate required.
+
+The displayed `74.19%` transport reduction is a valid byte calculation for that packet/hydration fixture, but the run is **not** accepted as comparative model-compute evidence because exact cache contaminated all three model lanes. The 7–11 ms lane latencies are cache-response latencies, not Gemma inference latency. The zero-token selective-vs-full comparison is therefore invalid and must not be used as an optimizer claim.
+
+Fix scope: `fix/comparative-cache-namespace-20260911`. The gate thresholds are unchanged.
 
 ## Repository closure hygiene
 
-The harness implementation was merged only after the final PR head passed the normal repository gates and MCP External HTTPS acceptance. Temporary formatter/helper workflows were removed before closure. The real Gemma smoke/full benchmark is intentionally run only after the verified harness is merged to `main` and synchronized to the laptop, so runtime evidence is tied to a stable repository revision rather than a moving PR branch.
+The original harness implementation was merged only after the final PR head passed the normal repository gates and MCP External HTTPS acceptance. Temporary formatter/helper workflows were removed before closure. The real Gemma smoke/full benchmark is intentionally run only against a reviewed merged tree, so runtime evidence is tied to a stable repository revision rather than a moving PR branch.
 
-Two implementation hygiene issues discovered before closure were fixed rather than waived:
+Two implementation hygiene issues discovered before PR #38 closure were fixed rather than waived:
 
 - Prettier differences in the new script/test;
 - Node `performance` usage was made explicit with `node:perf_hooks` to satisfy the repository lint environment.
+
+The first real smoke then found the cross-invocation cache-marker defect described above. That runtime finding is treated as a harness defect, not hidden as an ECX result. The fix must pass normal repository gates, merge, synchronize to the laptop, and then be rerun before any comparative verdict.
 
 ## Measurements
 
@@ -133,7 +160,7 @@ A task passes only when all of these are true:
 8. selective median input tokens are lower than full-inline median input tokens;
 9. selective median latency does not exceed full-inline median latency by more than the configured tolerance; default ratio is `1.35`.
 
-These gates were declared before the real evidence run. Do not lower them after seeing a failure merely to obtain a green result. If a gate is inappropriate because the measurement design itself is wrong, document the reason and change the design in a separate reviewed commit before rerunning.
+These gates were declared before the real evidence run. **The cache failure did not cause any gate to be weakened.** If a gate is inappropriate because the measurement design itself is wrong, document the reason and change the design in a separate reviewed commit before rerunning.
 
 ## Commands
 
