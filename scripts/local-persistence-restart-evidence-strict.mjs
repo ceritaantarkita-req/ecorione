@@ -13,7 +13,8 @@ function fail(message) {
 }
 
 export function assertBaselineEvidenceState(state, approval, session) {
-  if (state?.phase !== "baseline-ready") fail(`state phase ${String(state?.phase)} != baseline-ready`);
+  if (state?.phase !== "baseline-ready")
+    fail(`state phase ${String(state?.phase)} != baseline-ready`);
   if (state?.flow?.statusBefore !== "RUNNING") {
     fail(`baseline Flow status ${String(state?.flow?.statusBefore)} != RUNNING`);
   }
@@ -23,7 +24,10 @@ export function assertBaselineEvidenceState(state, approval, session) {
   if (approval?.operationId !== state?.flow?.approvalOperationId) {
     fail("baseline approval operation identity does not match recorded state");
   }
-  if (typeof state?.ledger?.headHash !== "string" || state.ledger.headHash.length === 0) {
+  if (
+    typeof state?.ledger?.headHash !== "string" ||
+    state.ledger.headHash.length === 0
+  ) {
     fail("baseline Ledger headHash is missing");
   }
   if (session?.headHash !== state.ledger.headHash) {
@@ -38,7 +42,8 @@ export function assertBaselineEvidenceState(state, approval, session) {
 }
 
 export function assertPostEvidenceState(state, approval) {
-  if (state?.phase !== "post-verified") fail(`state phase ${String(state?.phase)} != post-verified`);
+  if (state?.phase !== "post-verified")
+    fail(`state phase ${String(state?.phase)} != post-verified`);
   if (state?.post?.flow?.status !== "RUNNING") {
     fail(`post Flow status ${String(state?.post?.flow?.status)} != RUNNING`);
   }
@@ -94,7 +99,9 @@ async function getJson(url, token) {
   });
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(`GET ${url} HTTP ${String(response.status)} ${JSON.stringify(payload)}`);
+    throw new Error(
+      `GET ${url} HTTP ${String(response.status)} ${JSON.stringify(payload)}`,
+    );
   }
   return payload;
 }
@@ -145,7 +152,9 @@ export async function main(argv = process.argv.slice(2)) {
 
   if (options.phase === "cleanup") {
     assertCleanupEvidenceState(state);
-    console.log("PASS strict persistence cleanup: dedicated Flow probe reached a terminal state");
+    console.log(
+      "PASS strict persistence cleanup: dedicated Flow probe reached a terminal state",
+    );
   }
 }
 
