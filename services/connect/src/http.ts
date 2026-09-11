@@ -226,6 +226,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         model: result.model,
         pricingModel: result.pricingModel,
         responseModel: result.responseModel,
+        cacheHit: result.cacheHit,
         latencyMs,
         outputChars: result.reply.length,
         expectedSubstringMatched: result.reply.includes(body.expectedSubstring),

@@ -13,14 +13,22 @@ afterEach(async () => {
 });
 
 describe("OperationalMetrics", () => {
-  it("mencatat counter dan bounded percentile tanpa payload sensitif", () => {
+  it("mencatat counter, bounded percentile, dan process resources tanpa payload sensitif", () => {
     const metrics = new OperationalMetrics("test");
     metrics.addCounter("ecorione_test_total", 2, { outcome: "ok" });
     for (const value of [10, 20, 30, 40, 50]) metrics.observe("ecorione_test_ms", value);
     const snapshot = metrics.snapshot("2026-09-10T00:00:00.000Z");
     expect(snapshot.counters[0]?.value).toBe(2);
     expect(snapshot.histograms[0]).toMatchObject({ count: 5, p50: 30, p95: 50 });
-    expect(metrics.prometheus()).toContain("ecorione_test_ms_p95 50");
+    expect(snapshot.process.pid).toBe(process.pid);
+    expect(snapshot.process.uptimeSeconds).toBeGreaterThanOrEqual(0);
+    expect(snapshot.process.rssBytes).toBeGreaterThan(0);
+    expect(snapshot.process.heapUsedBytes).toBeGreaterThan(0);
+    expect(snapshot.process.cpuUserMicros).toBeGreaterThanOrEqual(0);
+    expect(snapshot.process.cpuSystemMicros).toBeGreaterThanOrEqual(0);
+    const prometheus = metrics.prometheus();
+    expect(prometheus).toContain("ecorione_test_ms_p95 50");
+    expect(prometheus).toContain('ecorione_process_rss_bytes{service="test"}');
   });
 
   it("menolak traceparent invalid dan mempertahankan trace id valid", () => {
@@ -67,8 +75,11 @@ describe("shared server observability", () => {
     });
     expect(snapshot.statusCode).toBe(200);
     const body = snapshot.json() as {
+      process: { pid: number; rssBytes: number };
       recentRequests: Array<{ route: string; traceId: string }>;
     };
+    expect(body.process.pid).toBe(process.pid);
+    expect(body.process.rssBytes).toBeGreaterThan(0);
     expect(body.recentRequests).toContainEqual(
       expect.objectContaining({
         route: "/v1/probe",

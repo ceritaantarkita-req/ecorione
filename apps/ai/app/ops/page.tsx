@@ -11,6 +11,17 @@ type Histogram = {
   p50: number;
   p95: number;
 };
+type ProcessResource = {
+  pid: number;
+  uptimeSeconds: number;
+  rssBytes: number;
+  heapUsedBytes: number;
+  heapTotalBytes: number;
+  externalBytes: number;
+  arrayBuffersBytes: number;
+  cpuUserMicros: number;
+  cpuSystemMicros: number;
+};
 type Span = {
   traceId: string;
   service: string;
@@ -25,6 +36,7 @@ type Service = {
   healthy: boolean;
   error: string | null;
   observability: null | {
+    process: ProcessResource;
     counters: Counter[];
     histograms: Histogram[];
   };
@@ -51,6 +63,10 @@ function latency(histograms: Histogram[]): { p50: number; p95: number } {
 }
 function formatNumber(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(4);
+}
+function formatBytes(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return "0 MB";
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
 }
 
 export default function OpsPage() {
@@ -81,6 +97,11 @@ export default function OpsPage() {
   const totals = useMemo(() => {
     const counters =
       data?.services.flatMap((service) => service.observability?.counters ?? []) ?? [];
+    const rssBytes =
+      data?.services.reduce(
+        (total, service) => total + (service.observability?.process.rssBytes ?? 0),
+        0,
+      ) ?? 0;
     return {
       requests: sum(counters, "ecorione_http_requests_total"),
       errors: sum(counters, "ecorione_http_errors_total"),
@@ -92,6 +113,7 @@ export default function OpsPage() {
       flowRuns: sum(counters, "ecorione_flow_runs_total"),
       ecxPackets: sum(counters, "ecorione_ecx_packets_total"),
       ecxBytes: sum(counters, "ecorione_ecx_hydration_bytes_total"),
+      rssBytes,
     };
   }, [data]);
 
@@ -126,6 +148,10 @@ export default function OpsPage() {
         <div>
           <span>Fleet</span>
           <strong>{data?.healthy ? "Healthy" : "Degraded"}</strong>
+        </div>
+        <div>
+          <span>Fleet RSS</span>
+          <strong>{formatBytes(totals.rssBytes)}</strong>
         </div>
         <div>
           <span>Requests</span>
@@ -175,6 +201,7 @@ export default function OpsPage() {
             const requestCount = sum(counters, "ecorione_http_requests_total");
             const errorCount = sum(counters, "ecorione_http_errors_total");
             const timing = latency(service.observability?.histograms ?? []);
+            const resources = service.observability?.process;
             return (
               <article className={styles.card} key={service.name}>
                 <div className={styles.cardTitle}>
@@ -199,6 +226,14 @@ export default function OpsPage() {
                   <div>
                     <dt>p95</dt>
                     <dd>{timing.p95.toFixed(1)} ms</dd>
+                  </div>
+                  <div>
+                    <dt>RSS</dt>
+                    <dd>{formatBytes(resources?.rssBytes ?? 0)}</dd>
+                  </div>
+                  <div>
+                    <dt>heap</dt>
+                    <dd>{formatBytes(resources?.heapUsedBytes ?? 0)}</dd>
                   </div>
                 </dl>
                 {service.error !== null ? (

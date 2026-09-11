@@ -33,9 +33,22 @@ export interface RecentRequestSpan {
   readonly startedAt: string;
 }
 
+export interface ProcessResourceSnapshot {
+  readonly pid: number;
+  readonly uptimeSeconds: number;
+  readonly rssBytes: number;
+  readonly heapUsedBytes: number;
+  readonly heapTotalBytes: number;
+  readonly externalBytes: number;
+  readonly arrayBuffersBytes: number;
+  readonly cpuUserMicros: number;
+  readonly cpuSystemMicros: number;
+}
+
 export interface OperationalSnapshot {
   readonly service: string;
   readonly generatedAt: string;
+  readonly process: ProcessResourceSnapshot;
   readonly counters: readonly CounterSnapshot[];
   readonly histograms: readonly HistogramSnapshot[];
   readonly recentRequests: readonly RecentRequestSpan[];
@@ -101,6 +114,22 @@ function metricName(name: string): string {
   return name;
 }
 
+function processSnapshot(): ProcessResourceSnapshot {
+  const memory = process.memoryUsage();
+  const cpu = process.cpuUsage();
+  return {
+    pid: process.pid,
+    uptimeSeconds: process.uptime(),
+    rssBytes: memory.rss,
+    heapUsedBytes: memory.heapUsed,
+    heapTotalBytes: memory.heapTotal,
+    externalBytes: memory.external,
+    arrayBuffersBytes: memory.arrayBuffers,
+    cpuUserMicros: cpu.user,
+    cpuSystemMicros: cpu.system,
+  };
+}
+
 export class OperationalMetrics {
   readonly #counters = new Map<string, CounterSeries>();
   readonly #histograms = new Map<string, HistogramSeries>();
@@ -159,6 +188,7 @@ export class OperationalMetrics {
     return {
       service: this.service,
       generatedAt: now,
+      process: processSnapshot(),
       counters: [...this.#counters.values()].map((series) => ({
         name: series.name,
         labels: series.labels,
@@ -193,6 +223,21 @@ export class OperationalMetrics {
       lines.push(`${histogram.name}_p50${labels} ${histogram.p50}`);
       lines.push(`${histogram.name}_p95${labels} ${histogram.p95}`);
     }
+    const labels = formatLabels({ service: this.service });
+    lines.push(`ecorione_process_uptime_seconds${labels} ${snapshot.process.uptimeSeconds}`);
+    lines.push(`ecorione_process_rss_bytes${labels} ${snapshot.process.rssBytes}`);
+    lines.push(`ecorione_process_heap_used_bytes${labels} ${snapshot.process.heapUsedBytes}`);
+    lines.push(`ecorione_process_heap_total_bytes${labels} ${snapshot.process.heapTotalBytes}`);
+    lines.push(`ecorione_process_external_bytes${labels} ${snapshot.process.externalBytes}`);
+    lines.push(
+      `ecorione_process_array_buffers_bytes${labels} ${snapshot.process.arrayBuffersBytes}`,
+    );
+    lines.push(
+      `ecorione_process_cpu_user_microseconds${labels} ${snapshot.process.cpuUserMicros}`,
+    );
+    lines.push(
+      `ecorione_process_cpu_system_microseconds${labels} ${snapshot.process.cpuSystemMicros}`,
+    );
     return `${lines.join("\n")}\n`;
   }
 }

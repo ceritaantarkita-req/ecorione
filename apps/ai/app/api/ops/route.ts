@@ -13,6 +13,17 @@ type HistogramSnapshot = {
   p50: number;
   p95: number;
 };
+type ProcessResourceSnapshot = {
+  pid: number;
+  uptimeSeconds: number;
+  rssBytes: number;
+  heapUsedBytes: number;
+  heapTotalBytes: number;
+  externalBytes: number;
+  arrayBuffersBytes: number;
+  cpuUserMicros: number;
+  cpuSystemMicros: number;
+};
 type RecentRequestSpan = {
   traceId: string;
   spanId: string;
@@ -27,6 +38,7 @@ type RecentRequestSpan = {
 type OperationalSnapshot = {
   service: string;
   generatedAt: string;
+  process: ProcessResourceSnapshot;
   counters: CounterSnapshot[];
   histograms: HistogramSnapshot[];
   recentRequests: RecentRequestSpan[];
