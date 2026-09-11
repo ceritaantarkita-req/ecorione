@@ -76,6 +76,10 @@ The harness adds a unique same-shape benchmark cache-buster to each measured lan
 
 A single warm-up completion is performed before measurements and excluded from results.
 
+## Repository closure hygiene
+
+The harness implementation must be merged only from an exact branch head that passes the normal repository gates. Temporary formatter/helper workflows are not part of the implementation and must be removed before closure. The real Gemma smoke/full benchmark is intentionally run only after the verified harness is merged to `main` and synchronized to the laptop, so runtime evidence is tied to a stable repository revision rather than a moving PR branch.
+
 ## Measurements
 
 For every measured completion the harness records:
