@@ -39,6 +39,7 @@ function git(args) {
 async function request(url, options = {}) {
   const response = await fetch(url, {
     cache: "no-store",
+    redirect: "error",
     signal: AbortSignal.timeout(5_000),
     ...options,
   });
@@ -98,6 +99,12 @@ export function validateOpsSnapshot(payload) {
   }
   if (!Array.isArray(payload.services))
     throw new Error("Ops response tidak memiliki services array.");
+}
+
+export function validateMcpSettingsSnapshot(payload) {
+  if (payload === null || typeof payload !== "object" || !Array.isArray(payload.servers)) {
+    throw new Error("Settings MCP response tidak memiliki servers array.");
+  }
 }
 
 export function validateSpaceSnapshot(payload) {
@@ -161,6 +168,15 @@ export async function inventory() {
   }
   const runtime = validateRuntimeSnapshot(parseJson(runtimeResponse.text, "runtime settings"));
 
+  const mcpSettingsResponse = await request(
+    "http://127.0.0.1:3000/api/settings/settings/mcp/servers?workspaceId=workspace-default",
+  );
+  if (mcpSettingsResponse.status !== 200) {
+    throw new Error(`Ai Settings MCP proxy gagal HTTP ${mcpSettingsResponse.status}.`);
+  }
+  const mcpSettings = parseJson(mcpSettingsResponse.text, "settings MCP servers");
+  validateMcpSettingsSnapshot(mcpSettings);
+
   const opsResponse = await request("http://127.0.0.1:3000/api/ops");
   if (opsResponse.status !== 200)
     throw new Error(`Ai ops proxy gagal HTTP ${opsResponse.status}.`);
@@ -191,6 +207,7 @@ export async function inventory() {
     owners,
     surfaces,
     runtime,
+    mcpConfiguredServerCount: mcpSettings.servers.length,
     opsHealthy: true,
     spacePageCount: space.pages.length,
     flowNodeDefinitionCount: flow.nodes.length,
