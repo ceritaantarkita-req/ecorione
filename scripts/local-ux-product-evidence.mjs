@@ -100,7 +100,9 @@ export async function inventory() {
     const result = await request(url);
     if (result.status !== 200) throw new Error(`${name} health gagal HTTP ${result.status}.`);
     const body = parseJson(result.text, `${name} health`);
-    if (body?.ok !== true) throw new Error(`${name} health tidak melaporkan ok=true.`);
+    if (body?.status !== "ok" || body?.service !== name) {
+      throw new Error(`${name} health tidak melaporkan status=ok dan service=${name}.`);
+    }
     owners.push({ name, status: result.status, ok: true });
   }
 
@@ -157,7 +159,9 @@ async function main() {
   console.log("=== LOCAL UX / PRODUCT VALIDATION INVENTORY ===");
   const result = await inventory();
   console.log(JSON.stringify(result, null, 2));
-  console.log("PASS UX/product inventory: synchronized repo, local-only routing and core Ai surfaces are ready");
+  console.log(
+    "PASS UX/product inventory: synchronized repo, local-only routing and core Ai surfaces are ready",
+  );
 }
 
 const isDirect =
