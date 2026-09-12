@@ -31,6 +31,7 @@ export async function GET(request: Request): Promise<Response> {
       headers,
       signal: request.signal,
       cache: "no-store",
+      redirect: "error",
     });
   } catch {
     return jsonError(502, "UPSTREAM_UNAVAILABLE", "Hub voice stream tidak bisa dihubungi.");
