@@ -33,7 +33,7 @@ Roadmap framing remains:
 | Local persistence/restart | **PASS / CLOSED** | Owner processes + Temporal + PostgreSQL container restart boundary passed after path/bootstrap fixes. |
 | Isolated local backup/restore | **PASS / CLOSED WITH LIMITATIONS** | Existing durable owner state restored into isolated targets; Temporal/PostgreSQL logical restore verified; absent optional Sync/Connect source state is not claimed as runtime-restored. |
 | Local observability baseline | **PASS / CLOSED WITH BOUNDED LOCAL LIMITATIONS** | Representative owner reads, ECX hydration, uncached local-model calls, trace continuity and owner-process resource deltas measured on the tested laptop. |
-| UX/product validation | **IN PROGRESS — STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING** | Repository-side static/frontend + audited Ai owner-boundary hardening is merged through PR #65 at `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; exact-head, public HTTPS and post-merge CI are green, while the real local inventory/browser walkthrough remains required. |
+| UX/product validation | **IN PROGRESS — STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING** | Latest code-bearing repository-side static/frontend + audited Ai owner-boundary hardening is PR #65 at `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; exact-head, public HTTPS and post-merge CI are green for that code baseline, while runtime evidence must execute from synchronized current `origin/main`. |
 | Immutable local model identity hardening | **PENDING** | Replace mutable rehearsal aliases before durable production model-identity claims. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Resume only on explicit operator decision. |
 | Hosted-provider comparative validation | **OPTIONAL/FUTURE** | Requires operator-owned credentials and explicit spend intent. |
@@ -57,7 +57,8 @@ Important merged progression includes:
 - UX/frontend hardening continued through PR #56, #58, #59, #60 and #62;
 - generic owner-proxy follow-up PR #63 → `6ea63f570b3e764154837bc2ad7ca2c1123f06bc`, fixing the Settings MCP workspace-query mismatch and strengthening Ai → owner proxy path/redirect boundaries;
 - canonical UX handoff synchronization PR #64 → `662808f7fb1e2ac76cf0c961b2850b6778801466`;
-- dedicated Ai realtime voice SSE owner-boundary follow-up PR #65 → `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`, closing the remaining audited direct Hub redirect gap and adding deterministic normal/release regression coverage. Exact-head, public HTTPS and post-merge gates are green.
+- dedicated Ai realtime voice SSE owner-boundary follow-up PR #65 → `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`, closing the remaining audited direct Hub redirect gap and adding deterministic normal/release regression coverage. Exact-head, public HTTPS and post-merge gates are green;
+- documentation-only handoff synchronization PR #66 advanced `main` after the code-bearing PR #65 baseline without changing the code claim boundary.
 
 Valid failed evidence remains preserved rather than rewritten away.
 
@@ -278,15 +279,18 @@ Production deployment is not a blocker for current local R&D.
 
 ## 10. Active checkpoint — UX/product validation
 
-Repository-side frontend/static hardening is complete through PR #62, followed by generic owner-proxy hardening in PR #63, canonical handoff synchronization in PR #64, and the dedicated realtime voice SSE owner-boundary follow-up in PR #65. The current merged repository-side baseline is `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; exact-head CI, external MCP/public HTTPS acceptance, and post-merge CI are green for that baseline. Canonical static evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and `docs/verification/frontend-static-defect-ledger-2026-09-12.md`; the exact laptop/browser procedure is `docs/ux-runtime-walkthrough-checklist.md` under the governing protocol `docs/ux-product-validation.md`.
+Repository-side frontend/static hardening is complete through PR #62, followed by generic owner-proxy hardening in PR #63, canonical handoff synchronization in PR #64, and the dedicated realtime voice SSE owner-boundary follow-up in PR #65. The latest **code-bearing** repository-side UX/static baseline is PR #65 at `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; exact-head CI, external MCP/public HTTPS acceptance, and post-merge CI are green for that code baseline. Documentation-only merges after PR #65 may advance `main` without changing this code-bearing claim boundary.
+
+Canonical static evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and `docs/verification/frontend-static-defect-ledger-2026-09-12.md`; the exact laptop/browser procedure is `docs/ux-runtime-walkthrough-checklist.md` under the governing protocol `docs/ux-product-validation.md`.
 
 The repository audit found no remaining known redirect gap in the audited direct Ai API → owner fetches after PR #65: Ops was already fail-closed and the dedicated voice SSE path is now covered. This is a bounded repository-side statement, not a general security certification.
 
-The remaining scope crosses the real browser/runtime boundary. It must validate real user journeys on the already-closed local technical baseline before adding new infrastructure or production deployment work.
+The remaining scope crosses the real browser/runtime boundary. It must validate real user journeys on the already-closed local technical baseline before adding new infrastructure or production deployment work. Runtime evidence must run from synchronized **current `origin/main`**, with `HEAD == origin/main`, a clean tracked tree, and ancestry containing PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; do not checkout the older code-bearing SHA merely to run evidence.
 
 Minimum remaining work:
 
-- synchronize clean local `main` to the current merged baseline and restart Phase 4 with `ECORIONE_COST_KILL_SWITCH=1`;
+- fetch and synchronize clean local `main` to current `origin/main`, require `HEAD == origin/main`, verify a clean tracked tree, and verify the synchronized commit descends from PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`;
+- restart Phase 4 from that synchronized code with `ECORIONE_COST_KILL_SWITCH=1`;
 - run `pnpm evidence:ux:inventory`, including the Settings MCP workspace proxy check added after the static follow-up;
 - exercise representative Local-mode chat flows through the actual Ai surface rather than service-only probes;
 - validate continuity/memory behavior and user-visible state transitions without rewriting Historical Ledger or Context ground truth;
@@ -305,7 +309,8 @@ No VPS/Cloudflare/provider-account mutation belongs to this checkpoint. Realtime
 
 Before implementing new work:
 
-- start from synchronized reviewed `main`;
+- start from synchronized reviewed current `origin/main`;
+- require local `HEAD == origin/main` and a clean tracked tree before runtime evidence;
 - read this file first, then `AGENTS.md`;
 - preserve owner-service boundaries;
 - do not rewrite Historical Ledger or Context L0 ground truth;
@@ -349,7 +354,8 @@ Before implementing new work:
 ## 13. Canonical references
 
 - current handoff: `docs/current-state-and-next-steps.md`
-- current repository-side UX/static baseline: PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`
+- latest code-bearing repository-side UX/static baseline: PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`
+- runtime checkout rule: synchronized current `origin/main` with `HEAD == origin/main` and PR #65 in ancestry
 - UX runtime protocol: `docs/ux-product-validation.md`
 - UX laptop/browser checklist: `docs/ux-runtime-walkthrough-checklist.md`
 - UX static S0–S3 ledger: `docs/verification/frontend-static-defect-ledger-2026-09-12.md`
