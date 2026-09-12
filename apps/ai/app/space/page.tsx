@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type {
   CoreMemory,
   SpaceBlock,
@@ -211,6 +211,10 @@ export default function SpacePageView() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [creatingPage, setCreatingPage] = useState(false);
+  const createPageInFlightRef = useRef(false);
+  const selectedPageIdRef = useRef<string | null>(null);
+  const pageRequestRef = useRef(0);
 
   const selectedBlock = useMemo(
     () => document?.blocks.find((block) => block.id === selectedBlockId) ?? null,
@@ -218,16 +222,18 @@ export default function SpacePageView() {
   );
 
   const loadPage = useCallback(async (id: string) => {
+    const requestId = ++pageRequestRef.current;
     try {
       const next = await readJson<SpaceDocument>(
         await fetch(`/api/space/pages/${encodeURIComponent(id)}?workspaceId=${WORKSPACE_ID}`, {
           cache: "no-store",
         }),
       );
+      if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
       setDocument(next);
-      setSelectedPageId(id);
       setError(null);
     } catch (err) {
+      if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
       setError(err instanceof Error ? err.message : String(err));
     }
   }, []);
@@ -268,8 +274,16 @@ export default function SpacePageView() {
   }, [refreshPages, refreshMemory]);
 
   useEffect(() => {
-    if (selectedPageId !== null) void loadPage(selectedPageId);
-    else setDocument(null);
+    selectedPageIdRef.current = selectedPageId;
+  }, [selectedPageId]);
+
+  useEffect(() => {
+    if (selectedPageId !== null) {
+      void loadPage(selectedPageId);
+    } else {
+      pageRequestRef.current += 1;
+      setDocument(null);
+    }
   }, [loadPage, selectedPageId]);
 
   useEffect(() => {
@@ -289,7 +303,9 @@ export default function SpacePageView() {
 
   async function createPage(event: FormEvent) {
     event.preventDefault();
-    if (newPageTitle.trim().length === 0) return;
+    if (newPageTitle.trim().length === 0 || createPageInFlightRef.current) return;
+    createPageInFlightRef.current = true;
+    setCreatingPage(true);
     try {
       const page = await readJson<SpacePage>(
         await fetch("/api/space/pages", {
@@ -309,6 +325,9 @@ export default function SpacePageView() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      createPageInFlightRef.current = false;
+      setCreatingPage(false);
     }
   }
 
@@ -519,9 +538,9 @@ export default function SpacePageView() {
             <button
               type="submit"
               className={styles.button}
-              disabled={newPageTitle.trim().length === 0}
+              disabled={newPageTitle.trim().length === 0 || creatingPage}
             >
-              Create page
+              {creatingPage ? "Creating…" : "Create page"}
             </button>
           </form>
           <div className={styles.pageList}>
@@ -603,7 +622,10 @@ export default function SpacePageView() {
                   document.blocks.map((block, index) => (
                     <article
                       key={block.id}
-                      onClick={() => setSelectedBlockId(block.id)}
+                      onClick={() => {
+                        setDeleteConfirmId(null);
+                        setSelectedBlockId(block.id);
+                      }}
                       className={`${styles.block} ${selectedBlockId === block.id ? styles.blockSelected : ""}`}
                     >
                       <div className={styles.blockToolbar}>
@@ -618,6 +640,7 @@ export default function SpacePageView() {
                             aria-pressed={selectedBlockId === block.id}
                             onClick={(event) => {
                               event.stopPropagation();
+                              setDeleteConfirmId(null);
                               setSelectedBlockId(block.id);
                             }}
                           >
