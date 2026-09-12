@@ -33,9 +33,11 @@ describe("frontend runtime UX guard contracts", () => {
   });
 
   it("preserves narrow responsive fallbacks and intentional Flow canvas scrolling", async () => {
-    const [spaceCss, flowCss, navCss] = await Promise.all([
+    const [spaceCss, flowCss, opsCss, settingsCss, navCss] = await Promise.all([
       source("apps/ai/app/space/Space.module.css"),
       source("apps/ai/app/flow/FlowCanvas.module.css"),
+      source("apps/ai/app/ops/OpsDashboard.module.css"),
+      source("apps/ai/app/settings/Settings.module.css"),
       source("apps/ai/app/navigation.css"),
     ]);
 
@@ -50,6 +52,13 @@ describe("frontend runtime UX guard contracts", () => {
       /\.workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s,
     );
     expect(flowCss).toMatch(/\.canvasWrap\s*\{[^}]*overflow-x:\s*auto/s);
+
+    expect(opsCss).toContain("@media (max-width: 760px)");
+    expect(opsCss).toMatch(/\.grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
+
+    expect(settingsCss).toContain("@media (max-width: 720px)");
+    expect(settingsCss).toMatch(/\.formGrid\s*\{[^}]*grid-template-columns:\s*1fr/s);
+    expect(settingsCss).toMatch(/\.inline\s*\{[^}]*flex-direction:\s*column/s);
 
     expect(navCss).toContain("@media (max-width: 780px)");
     expect(navCss).toMatch(/\.ecr-global-nav__links\s*\{[^}]*overflow-x:\s*auto/s);
