@@ -72,7 +72,9 @@ describe("proxyToConnectSettings", () => {
       "GET",
     );
     expect(response.status).toBe(400);
-    expect(((await response.json()) as { error: { type: string } }).error.type).toBe("BAD_REQUEST");
+    expect(((await response.json()) as { error: { type: string } }).error.type).toBe(
+      "BAD_REQUEST",
+    );
   });
 
   it("menolak duplicate dan unknown MCP workspace query", async () => {
@@ -107,7 +109,9 @@ describe("proxyToConnectSettings", () => {
       "PUT",
     );
     expect(response.status).toBe(400);
-    expect(((await response.json()) as { error: { type: string } }).error.type).toBe("BAD_REQUEST");
+    expect(((await response.json()) as { error: { type: string } }).error.type).toBe(
+      "BAD_REQUEST",
+    );
   });
 
   it("kegagalan jaringan Connect → 502 eksplisit", async () => {
