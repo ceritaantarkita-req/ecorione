@@ -95,7 +95,7 @@ export default function ProductNav() {
           })}
         </div>
 
-        <div className="ecr-theme-switch" aria-label="Tema tampilan">
+        <div className="ecr-theme-switch" role="group" aria-label="Tema tampilan">
           <button
             type="button"
             className={
