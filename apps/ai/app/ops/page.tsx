@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./OpsDashboard.module.css";
 
 type Counter = { name: string; labels: Record<string, string>; value: number };
@@ -73,20 +73,38 @@ export default function OpsPage() {
   const [data, setData] = useState<OpsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [auto, setAuto] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const inFlightRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const refresh = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    if (mountedRef.current) setRefreshing(true);
     try {
       const response = await fetch("/api/ops", { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
-      setData((await response.json()) as OpsResponse);
-      setError(null);
+      const next = (await response.json()) as OpsResponse;
+      if (mountedRef.current) {
+        setData(next);
+        setError(null);
+      }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
+      if (mountedRef.current) {
+        setError(reason instanceof Error ? reason.message : String(reason));
+      }
+    } finally {
+      inFlightRef.current = false;
+      if (mountedRef.current) setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     void refresh();
+    return () => {
+      mountedRef.current = false;
+    };
   }, [refresh]);
   useEffect(() => {
     if (!auto) return;
@@ -136,8 +154,8 @@ export default function OpsPage() {
             />{" "}
             Auto 5s
           </label>
-          <button type="button" onClick={() => void refresh()}>
-            Refresh
+          <button type="button" disabled={refreshing} onClick={() => void refresh()}>
+            {refreshing ? "Refreshing…" : "Refresh"}
           </button>
         </div>
       </header>
