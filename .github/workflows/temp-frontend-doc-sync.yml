@@ -1,0 +1,97 @@
+name: TEMP Frontend Docs Sync
+
+on:
+  push:
+    branches:
+      - fix/frontend-ux-static-final-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/frontend-ux-static-final-20260912
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Synchronize canonical frontend handoff
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected 1 target, found {count}")
+              return text.replace(old, new, 1)
+
+          p = Path('docs/ux-product-validation.md')
+          s = p.read_text()
+          old = '''The code-side frontend hardening pass is complete through merged `main` revision:\n\n```text\n63646960da0f4dce946208470eed1c7d6f3068e4\n```\n\nNormal repository CI passed at the exact PR #60 head and again after that merge. The remaining gate is the real local rendered inventory/walkthrough described below.'''
+          new = '''The code-side frontend hardening baseline through PR #60 has received one additional final pre-runtime audit/hardening pass. That pass closes remaining static race, stale-state, unsaved-Flow-run, mutation-feedback, evidence-test-coverage, and model-identity-warning gaps. Its canonical evidence is `docs/verification/frontend-static-audit-final-2026-09-12.md`.\n\nThe remaining gate is the real local rendered inventory/walkthrough described below. `docs/ux-runtime-walkthrough-checklist.md` is the exact operator procedure; static review does not substitute for it.'''
+          s = once(s, old, new, 'ux stale revision intro')
+          s = once(s,
+          'Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md`.',
+          'Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md` plus the final pre-runtime audit `docs/verification/frontend-static-audit-final-2026-09-12.md`.',
+          'ux canonical static evidence')
+          s = once(s,
+          '- Ai routes `/`, `/space`, `/flow`, `/ops`, `/settings` returning expected page markers;\n- Ai Settings proxy reporting effective `hostedCallsEnabled=false`;',
+          '- Ai routes `/`, `/space`, `/flow`, `/ops`, `/settings` returning expected page markers and the shared global navigation contract;\n- Ai Settings proxy reporting effective `hostedCallsEnabled=false`, `localRuntime=openai-compatible`, and a non-empty local model tag while recording whether the tag is a mutable `latest` alias;',
+          'ux inventory bullets')
+          s = once(s,
+          'Inventory PASS means the product is ready for rendered walkthrough. It is not UX closure by itself.',
+          'Inventory PASS means the product is ready for rendered walkthrough. It is not UX closure by itself. The rendered sequence and evidence requirements are frozen in `docs/ux-runtime-walkthrough-checklist.md`.',
+          'ux runtime checklist pointer')
+          p.write_text(s)
+
+          p = Path('docs/current-state-and-next-steps.md')
+          s = p.read_text()
+          old = 'Code-side/static frontend hardening is complete through merged `main` revision `63646960da0f4dce946208470eed1c7d6f3068e4`. Canonical static evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`; the runtime protocol is `docs/ux-product-validation.md`.'
+          new = 'Code-side/static frontend hardening is complete through the PR #60 baseline plus the final pre-runtime hardening pass. Canonical evidence is `docs/verification/frontend-static-hardening-2026-09-12.md` and `docs/verification/frontend-static-audit-final-2026-09-12.md`; the exact laptop/browser procedure is `docs/ux-runtime-walkthrough-checklist.md` under the governing protocol `docs/ux-product-validation.md`.'
+          s = once(s, old, new, 'current state static evidence')
+          old = '''1. `docs/current-state-and-next-steps.md`\n2. `AGENTS.md`\n3. `docs/ux-product-validation.md`\n4. `docs/verification/frontend-static-hardening-2026-09-12.md`\n5. `docs/verification/local-observability-closure-2026-09-12.md`'''
+          new = '''1. `docs/current-state-and-next-steps.md`\n2. `AGENTS.md`\n3. `docs/ux-product-validation.md`\n4. `docs/ux-runtime-walkthrough-checklist.md`\n5. `docs/verification/frontend-static-audit-final-2026-09-12.md`\n6. `docs/verification/frontend-static-hardening-2026-09-12.md`\n7. `docs/verification/local-observability-closure-2026-09-12.md`'''
+          s = once(s, old, new, 'current state reading start')
+          # Renumber remaining existing reading items after insertion.
+          for old_num, new_num in [(6,8),(7,9),(8,10),(9,11),(10,12),(11,13),(12,14),(13,15),(14,16),(15,17),(16,18),(17,19),(18,20)]:
+              s = s.replace(f'\n{old_num}. `', f'\n{new_num}. `', 1)
+          s = once(s,
+          '- UX runtime protocol: `docs/ux-product-validation.md`\n- UX static hardening evidence: `docs/verification/frontend-static-hardening-2026-09-12.md`',
+          '- UX runtime protocol: `docs/ux-product-validation.md`\n- UX laptop/browser checklist: `docs/ux-runtime-walkthrough-checklist.md`\n- UX final static audit: `docs/verification/frontend-static-audit-final-2026-09-12.md`\n- UX static hardening baseline evidence: `docs/verification/frontend-static-hardening-2026-09-12.md`\n- next-checkpoint design only: `docs/immutable-local-model-identity-plan.md`',
+          'current canonical references')
+          p.write_text(s)
+
+          p = Path('docs/EXECUTION-PROGRESS.md')
+          s = p.read_text()
+          old = '''Code-side/static hardening is complete through merged `main` revision:\n\n```text\n63646960da0f4dce946208470eed1c7d6f3068e4\n```\n\nThe final code-side passes included PR #56, #58, #59 and #60. Exact-head and post-merge normal CI passed for the final three hardening PRs; the latest post-merge run is `34677516183`.'''
+          new = '''Code-side/static hardening includes PR #56, #58, #59 and #60 plus the final pre-runtime audit/hardening pass recorded in `docs/verification/frontend-static-audit-final-2026-09-12.md`. The final pass also fixes the test-configuration gap that previously excluded `test/**/*.test.mjs` from the root Vitest suite.\n\nThis remains **code-side evidence only** until the final hardening PR is merged, post-merge CI passes, and the operator reruns the local inventory/browser walkthrough on synchronized `main`.'''
+          s = once(s, old, new, 'progress stale revision')
+          s = once(s,
+          'Canonical protocol: `docs/ux-product-validation.md`. Static evidence: `docs/verification/frontend-static-hardening-2026-09-12.md`.',
+          'Canonical protocol: `docs/ux-product-validation.md`. Runtime checklist: `docs/ux-runtime-walkthrough-checklist.md`. Static evidence: `docs/verification/frontend-static-hardening-2026-09-12.md` and `docs/verification/frontend-static-audit-final-2026-09-12.md`.',
+          'progress evidence refs')
+          old = 'On the operator laptop, synchronize reviewed `main` to `63646960da0f4dce946208470eed1c7d6f3068e4`, restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, then execute the rendered desktop/mobile walkthrough in `docs/ux-product-validation.md`. Do not mutate VPS/Cloudflare or hosted-provider state.'
+          new = 'After the final static-hardening PR is merged and post-merge CI is green, use the operator laptop to synchronize reviewed `main`, restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, then execute `docs/ux-runtime-walkthrough-checklist.md`. Do not mutate VPS/Cloudflare or hosted-provider state.'
+          s = once(s, old, new, 'progress immediate action')
+          p.write_text(s)
+          PY
+
+          pnpm exec prettier --write \
+            docs/ux-product-validation.md \
+            docs/current-state-and-next-steps.md \
+            docs/EXECUTION-PROGRESS.md
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/ux-product-validation.md docs/current-state-and-next-steps.md docs/EXECUTION-PROGRESS.md
+          git commit -m 'docs: synchronize final frontend UX handoff'
+          git push origin HEAD:fix/frontend-ux-static-final-20260912
