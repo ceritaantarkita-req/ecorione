@@ -5,7 +5,7 @@ Date: **2026-09-12**
 
 This is the active checkpoint after local observability closure. It validates real user journeys on the already-closed local technical baseline. It is not a new Batch 13 and it does not reopen Historical Ledger, ECX, persistence, backup/restore, or observability closure.
 
-The code-side frontend hardening sequence is merged through PR #62, with a later owner-proxy contract follow-up in PR #63 (`6ea63f570b3e764154837bc2ad7ca2c1123f06bc`). The follow-up fixed a real Settings MCP workspace-query mismatch found after the earlier final static audit and strengthened Ai → owner proxy boundaries without changing the runtime/browser claim boundary. Canonical evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, and `docs/verification/frontend-static-proxy-followup-2026-09-12.md`.
+The code-side frontend hardening sequence is merged through PR #62, with a later owner-proxy contract follow-up in PR #63 (`6ea63f570b3e764154837bc2ad7ca2c1123f06bc`). The follow-up fixed a real Settings MCP workspace-query mismatch found after the earlier final static audit and strengthened Ai → owner proxy boundaries without changing the runtime/browser claim boundary. Canonical evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and the severity/disposition ledger `docs/verification/frontend-static-defect-ledger-2026-09-12.md`.
 
 The remaining gate is the real local rendered inventory/walkthrough described below. `docs/ux-runtime-walkthrough-checklist.md` is the exact operator procedure; static review does not substitute for it.
 
@@ -49,7 +49,7 @@ The preparation/static-hardening sequence found and fixed concrete product defec
 9. **Mobile interaction baseline** — chat safe-area spacing and key compact touch targets were hardened before the narrow-viewport walkthrough.
 10. **Ai → owner proxy contract safety** — Settings MCP workspace loading now accepts the supported single `workspaceId` query instead of rejecting it before Connect; Settings/Space/Flow paths are bounded before owner URL construction; Hub/Settings/Space/Flow/Ops internal requests fail closed on redirects; deterministic proxy regressions are part of normal/release test coverage.
 
-Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md`, the final pre-runtime audit `docs/verification/frontend-static-audit-final-2026-09-12.md`, and the later owner-proxy follow-up `docs/verification/frontend-static-proxy-followup-2026-09-12.md`.
+Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md`, the final pre-runtime audit `docs/verification/frontend-static-audit-final-2026-09-12.md`, the later owner-proxy follow-up `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and `docs/verification/frontend-static-defect-ledger-2026-09-12.md` for S0–S3 source-review disposition.
 
 These fixes count only as code-side/static hardening. They do not replace the real rendered runtime walkthrough.
 
@@ -119,6 +119,8 @@ Do not treat a passing build, HTTP route smoke, static code review, or the stati
 - **S3 minor** — polish/readability issue that does not materially block the journey.
 
 S0/S1 findings block closure. S2 must be fixed or explicitly accepted with a reason. S3 may remain documented.
+
+The pre-runtime static ledger is `docs/verification/frontend-static-defect-ledger-2026-09-12.md`. Its green disposition does not pre-authorize runtime findings: the laptop walkthrough must add or reopen S0–S3 items whenever actual rendered behavior disagrees with the static evidence.
 
 ## PASS definition
 
