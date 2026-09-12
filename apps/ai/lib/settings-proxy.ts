@@ -1,5 +1,8 @@
 import { connectUrl, internalToken } from "./env";
+import { normalizeOwnerProxyPath } from "./owner-proxy-path";
 import { jsonError } from "./proxy";
+
+type Method = "GET" | "POST" | "PUT" | "DELETE";
 
 const ALLOWED = [
   /^\/v1\/settings\/runtime$/,
@@ -8,12 +11,34 @@ const ALLOWED = [
   /^\/v1\/ops\/provider-canary$/,
 ];
 
+function allowedSettingsPath(path: string, method: Method): string | null {
+  const normalized = normalizeOwnerProxyPath(path);
+  if (normalized === null || !ALLOWED.some((pattern) => pattern.test(normalized.pathname))) {
+    return null;
+  }
+
+  if (normalized.pathname === "/v1/settings/mcp/servers" && method === "GET") {
+    const keys = [...normalized.searchParams.keys()];
+    if (
+      keys.some((key) => key !== "workspaceId") ||
+      normalized.searchParams.getAll("workspaceId").length > 1
+    ) {
+      return null;
+    }
+  } else if (normalized.search.length > 0) {
+    return null;
+  }
+
+  return normalized.path;
+}
+
 export async function proxyToConnectSettings(
   request: Request,
   path: string,
-  method: "GET" | "POST" | "PUT" | "DELETE",
+  method: Method,
 ): Promise<Response> {
-  if (!ALLOWED.some((pattern) => pattern.test(path)))
+  const allowedPath = allowedSettingsPath(path, method);
+  if (allowedPath === null)
     return jsonError(400, "BAD_REQUEST", "Settings proxy path tidak diizinkan.");
   const headers: Record<string, string> = {};
   const token = internalToken();
@@ -28,7 +53,7 @@ export async function proxyToConnectSettings(
     }
   }
   try {
-    const upstream = await fetch(`${connectUrl()}${path}`, {
+    const upstream = await fetch(`${connectUrl()}${allowedPath}`, {
       method,
       headers,
       body,
