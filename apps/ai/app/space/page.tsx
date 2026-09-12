@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type {
   CoreMemory,
   SpaceBlock,
@@ -210,6 +210,25 @@ export default function SpacePageView() {
   const [renameDraft, setRenameDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const actionLockRef = useRef<string | null>(null);
+
+  async function runLocked(action: string, work: () => Promise<void>): Promise<void> {
+    if (actionLockRef.current !== null) return;
+    actionLockRef.current = action;
+    setBusyAction(action);
+    setNotice(null);
+    try {
+      await work();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      if (actionLockRef.current === action) {
+        actionLockRef.current = null;
+        setBusyAction(null);
+      }
+    }
+  }
 
   const selectedBlock = useMemo(
     () => document?.blocks.find((block) => block.id === selectedBlockId) ?? null,
@@ -506,7 +525,10 @@ export default function SpacePageView() {
       <div className={styles.workspace}>
         <aside className={styles.rail}>
           <h2 className={styles.panelTitle}>Pages</h2>
-          <form onSubmit={createPage} className={styles.createForm}>
+          <form
+            onSubmit={(event) => void runLocked("create-page", () => createPage(event))}
+            className={styles.createForm}
+          >
             <input
               className={styles.input}
               value={newPageTitle}
@@ -517,7 +539,7 @@ export default function SpacePageView() {
             <button
               type="submit"
               className={styles.button}
-              disabled={newPageTitle.trim().length === 0}
+              disabled={busyAction !== null || newPageTitle.trim().length === 0}
             >
               Create page
             </button>
@@ -551,18 +573,22 @@ export default function SpacePageView() {
             <>
               <div className={styles.documentHeader}>
                 {renaming ? (
-                  <form className={styles.renameRow} onSubmit={renamePage}>
+                  <form
+                    className={styles.renameRow}
+                    onSubmit={(event) => void runLocked("rename-page", () => renamePage(event))}
+                  >
                     <input
                       className={styles.input}
                       value={renameDraft}
                       onChange={(event) => setRenameDraft(event.target.value)}
                       aria-label="Page title"
+                      disabled={busyAction !== null}
                       autoFocus
                     />
                     <button
                       type="submit"
                       className={styles.buttonPrimary}
-                      disabled={renameDraft.trim().length === 0}
+                      disabled={busyAction !== null || renameDraft.trim().length === 0}
                     >
                       Save title
                     </button>
@@ -624,11 +650,11 @@ export default function SpacePageView() {
                           <button
                             type="button"
                             className={styles.iconButton}
-                            disabled={index === 0}
+                            disabled={busyAction !== null || index === 0}
                             aria-label={`Move ${block.type} block up`}
                             onClick={(event) => {
                               event.stopPropagation();
-                              void moveBlock(block, -1);
+                              void runLocked("move-block", () => moveBlock(block, -1));
                             }}
                           >
                             ↑
@@ -636,11 +662,13 @@ export default function SpacePageView() {
                           <button
                             type="button"
                             className={styles.iconButton}
-                            disabled={index === document.blocks.length - 1}
+                            disabled={
+                              busyAction !== null || index === document.blocks.length - 1
+                            }
                             aria-label={`Move ${block.type} block down`}
                             onClick={(event) => {
                               event.stopPropagation();
-                              void moveBlock(block, 1);
+                              void runLocked("move-block", () => moveBlock(block, 1));
                             }}
                           >
                             ↓
@@ -649,9 +677,10 @@ export default function SpacePageView() {
                             type="button"
                             className={`${styles.iconButton} ${styles.deleteButton}`}
                             aria-label={`Delete ${block.type} block`}
+                            disabled={busyAction !== null}
                             onClick={(event) => {
                               event.stopPropagation();
-                              void deleteBlock(block);
+                              void runLocked("delete-block", () => deleteBlock(block));
                             }}
                           >
                             Delete
@@ -692,7 +721,8 @@ export default function SpacePageView() {
                   <button
                     type="button"
                     className={styles.buttonPrimary}
-                    onClick={() => void addBlock()}
+                    disabled={busyAction !== null}
+                    onClick={() => void runLocked("add-block", addBlock)}
                   >
                     Add {draftKind}
                   </button>
@@ -720,19 +750,22 @@ export default function SpacePageView() {
                     rows={15}
                     spellCheck={false}
                     aria-label="Selected block JSON"
+                    disabled={busyAction !== null}
                   />
                   <div className={styles.inspectorActions}>
                     <button
                       type="button"
                       className={styles.buttonPrimary}
-                      onClick={() => void saveBlock()}
+                      disabled={busyAction !== null}
+                      onClick={() => void runLocked("save-block", saveBlock)}
                     >
                       Save block
                     </button>
                     <button
                       type="button"
                       className={styles.button}
-                      onClick={() => void resolveBlock()}
+                      disabled={busyAction !== null}
+                      onClick={() => void runLocked("resolve-block", resolveBlock)}
                     >
                       Resolve link
                     </button>
@@ -767,7 +800,10 @@ export default function SpacePageView() {
                   </button>
                 ))}
               </div>
-              <form onSubmit={saveMemory} className={styles.memoryForm}>
+              <form
+                onSubmit={(event) => void runLocked("save-memory", () => saveMemory(event))}
+                className={styles.memoryForm}
+              >
                 <input
                   className={styles.input}
                   value={memoryLabel}
@@ -790,8 +826,12 @@ export default function SpacePageView() {
                   placeholder="Context-owned value"
                   aria-label="Core memory value"
                 />
-                <button type="submit" className={styles.buttonPrimary}>
-                  Save to Context
+                <button
+                  type="submit"
+                  className={styles.buttonPrimary}
+                  disabled={busyAction !== null}
+                >
+                  {busyAction === "save-memory" ? "Saving…" : "Save to Context"}
                 </button>
               </form>
             </section>
