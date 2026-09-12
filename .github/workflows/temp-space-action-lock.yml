@@ -1,0 +1,38 @@
+name: TEMP Space Action Lock
+
+on:
+  push:
+    branches:
+      - fix/frontend-action-race-hardening-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/frontend-action-race-hardening-20260912
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/temp-space-action-lock.mjs
+      - run: pnpm exec prettier --write apps/ai/app/space/page.tsx
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/ai/app/space/page.tsx
+          if git diff --cached --quiet; then
+            echo "No Space action-lock changes"
+            exit 0
+          fi
+          git commit -m "fix: serialize Space owner mutations"
+          git push origin HEAD:fix/frontend-action-race-hardening-20260912
