@@ -7,14 +7,14 @@ This ledger records source-review defects found during the UX/product-validation
 
 ## Severity summary
 
-| Severity | Static findings in this ledger | Open after PR #63 |
+| Severity | Static findings in this ledger | Open after PR #65 |
 |---|---:|---:|
 | S0 | 1 | 0 |
 | S1 | 8 | 0 |
-| S2 | 10 | 0 |
+| S2 | 11 | 0 |
 | S3 | 2 | 0 |
 
-`0 open` means no **known repository-side** S0/S1/S2/S3 item listed below remains unresolved on the PR #63 baseline. It does not mean the rendered UX checkpoint is closed.
+`0 open` means no **known repository-side** S0/S1/S2/S3 item listed below remains unresolved on the PR #65 baseline. It does not mean the rendered UX checkpoint is closed.
 
 ## Ledger
 
@@ -42,10 +42,11 @@ This ledger records source-review defects found during the UX/product-validation
 | STATIC-020 | S2 | Model identity clarity | Mutable `:latest`/`@latest` local model identity could be visible without an explicit warning that it is not immutable production evidence. | **FIXED** — Settings shows mutable-alias warning; immutable identity remains a later checkpoint. |
 | STATIC-021 | S3 | Operations | Empty services/traces sections were visually ambiguous. | **FIXED** — explicit empty-state copy. |
 | STATIC-022 | S3 | Theme/accessibility | Compact mobile theme controls visually replaced text without explicit accessible names. | **FIXED** — explicit labels/group semantics. |
+| STATIC-023 | S2 | Ai realtime voice / Hub boundary | The dedicated SSE voice-stream route bypassed the generic Hub proxy and still used Fetch's default redirect-follow behavior while attaching the internal bearer token, so the PR #63 redirect invariant was incomplete for this direct owner call. | **FIXED in PR #65** — the Hub SSE fetch now uses `redirect: "error"`; deterministic route coverage is part of both the normal test suite and `acceptance:release`. |
 
 ## Static closure statement
 
-For the scoped primary surfaces (`/`, `/space`, `/flow`, `/ops`, `/settings`) and their Ai-facing owner boundaries, the known static findings above are fixed through merged PR #63 (`6ea63f570b3e764154837bc2ad7ca2c1123f06bc`) with exact-head and post-merge repository gates green.
+For the scoped primary surfaces (`/`, `/space`, `/flow`, `/ops`, `/settings`) and the audited Ai-facing owner boundaries, the known static findings above are fixed through PR #65, with deterministic regressions covering the generic owner proxies plus the dedicated realtime voice SSE owner call.
 
 This statement is deliberately narrower than UX closure. The following are still **unknown until the operator laptop run**:
 
@@ -55,6 +56,7 @@ This statement is deliberately narrower than UX closure. The following are still
 - real Local chat latency/feedback on the synchronized stack;
 - actual Settings `Load workspace` and Local canary interaction in the rendered product;
 - timing-dependent defects that deterministic source/unit review did not reproduce;
+- realtime voice runtime/browser behavior, which is not part of the minimum UX-01–UX-12 closure claim;
 - any new S0–S3 item observed during UX-01 through UX-12.
 
 Append runtime findings to the walkthrough evidence using the required format `ID | severity | route | steps | expected | observed | console evidence | disposition`. Do not downgrade or hide a runtime finding merely because this static ledger is green.
