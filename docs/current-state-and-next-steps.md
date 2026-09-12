@@ -321,21 +321,21 @@ Before implementing new work:
 3. `docs/ux-product-validation.md`
 4. `docs/ux-runtime-walkthrough-checklist.md`
 5. `docs/verification/frontend-static-audit-final-2026-09-12.md`
-20. `docs/verification/frontend-static-hardening-2026-09-12.md`
-19. `docs/verification/local-observability-closure-2026-09-12.md`
-6. `docs/local-observability-evidence.md`
-7. `docs/verification/local-backup-restore-closure-2026-09-11.md`
-8. `docs/local-backup-restore-evidence.md`
-9. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
-10. `docs/local-persistence-restart-evidence.md`
-11. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
-12. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
-13. `docs/comparative-ecx-evidence.md`
-14. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-15. `docs/verification/local-production-rehearsal-2026-09-10.md`
-16. `docs/EXECUTION-PROGRESS.md`
-17. relevant operations/ADR docs
-18. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
+6. `docs/verification/frontend-static-hardening-2026-09-12.md`
+7. `docs/verification/local-observability-closure-2026-09-12.md`
+8. `docs/local-observability-evidence.md`
+9. `docs/verification/local-backup-restore-closure-2026-09-11.md`
+10. `docs/local-backup-restore-evidence.md`
+11. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
+12. `docs/local-persistence-restart-evidence.md`
+13. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+14. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
+15. `docs/comparative-ecx-evidence.md`
+16. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
+17. `docs/verification/local-production-rehearsal-2026-09-10.md`
+18. `docs/EXECUTION-PROGRESS.md`
+19. relevant operations/ADR docs
+20. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
 
 ## 13. Canonical references
 
