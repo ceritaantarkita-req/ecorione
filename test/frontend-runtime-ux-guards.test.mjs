@@ -23,13 +23,16 @@ describe("frontend runtime UX guard contracts", () => {
   it("keeps Flow dirty-state, stale-validation, and run guards explicit", async () => {
     const flow = await source("apps/ai/app/flow/page.tsx");
 
+    expect(flow).toContain("const [dirty, setDirty] = useState(true)");
     expect(flow).toContain("const draftRevisionRef = useRef(0)");
-    expect(flow).toContain("const lastPersistedRevisionRef = useRef<number | null>(null)");
     expect(flow).toContain("const validationInFlightRef = useRef(false)");
-    expect(flow).toContain("Draft berubah saat validasi berjalan; hasil lama diabaikan.");
-    expect(flow).toContain("Save perubahan terbaru sebelum Run.");
-    expect(flow).toContain("savedCurrentDraft");
-    expect(flow).toContain("!validation?.valid");
+    expect(flow).toContain(
+      "Draft berubah selama validasi. Validasi lama diabaikan; jalankan Validate lagi.",
+    );
+    expect(flow).toContain("draft berubah selama request. Simpan lagi sebelum Run.");
+    expect(flow).toContain("Ada perubahan yang belum disimpan. Save dulu sebelum Run.");
+    expect(flow).toContain("if (revision === draftRevisionRef.current)");
+    expect(flow).toContain("disabled={busy || validating || runStarting || graphId === null || dirty}");
   });
 
   it("preserves narrow responsive fallbacks and intentional Flow canvas scrolling", async () => {
