@@ -112,6 +112,7 @@ describe("callLocal", () => {
               label: "preferences",
               description: "user preferences",
               value: "jawab singkat",
+              readOnly: false,
               scope: "personal",
               sensitivity: "INTERNAL",
               syncClass: "LOCAL_ONLY",
