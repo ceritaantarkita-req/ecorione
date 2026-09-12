@@ -274,6 +274,13 @@ hr {
   letter-spacing: -0.025em;
 }
 
+.ai-topbar__lead {
+  margin: 7px 0 0;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
 .ai-topbar__session {
   max-width: 260px;
   overflow: hidden;

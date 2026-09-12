@@ -91,7 +91,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!hydrated || turns.length === 0) return;
-    threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    threadEndRef.current?.scrollIntoView({ block: "nearest" });
   }, [hydrated, sending, turns.length]);
 
   async function sendMessage(text: string): Promise<void> {
