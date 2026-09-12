@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./Settings.module.css";
 
 type RuntimeSnapshot = {
@@ -60,6 +60,30 @@ export default function SettingsPage() {
   const [secretProvider, setSecretProvider] = useState("anthropic");
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("Loading control state…");
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const actionLockRef = useRef<string | null>(null);
+
+  function beginAction(action: string): boolean {
+    if (actionLockRef.current !== null) return false;
+    actionLockRef.current = action;
+    setBusyAction(action);
+    return true;
+  }
+
+  function endAction(action: string): void {
+    if (actionLockRef.current !== action) return;
+    actionLockRef.current = null;
+    setBusyAction(null);
+  }
+
+  async function runAction(action: string, work: () => Promise<void>): Promise<void> {
+    if (!beginAction(action)) return;
+    try {
+      await work();
+    } finally {
+      endAction(action);
+    }
+  }
 
   const refresh = useCallback(async () => {
     try {
@@ -91,77 +115,91 @@ export default function SettingsPage() {
 
   async function saveRuntime() {
     if (runtime === null) return;
-    const requestedHosted = runtime.settings.hostedCallsEnabled;
-    try {
-      const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(runtime.settings),
-      });
-      setRuntime(result);
-      if (requestedHosted && !result.settings.hostedCallsEnabled) {
-        setStatus(
-          `Runtime revision ${String(result.revision)} saved. Hosted remains OFF because the operator gate is closed.`,
-        );
-      } else {
-        setStatus(`Runtime settings saved at revision ${String(result.revision)}.`);
+    await runAction("runtime-save", async () => {
+      const requestedHosted = runtime.settings.hostedCallsEnabled;
+      try {
+        const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(runtime.settings),
+        });
+        setRuntime(result);
+        if (requestedHosted && !result.settings.hostedCallsEnabled) {
+          setStatus(
+            `Runtime revision ${String(result.revision)} saved. Hosted remains OFF because the operator gate is closed.`,
+          );
+        } else {
+          setStatus(`Runtime settings saved at revision ${String(result.revision)}.`);
+        }
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : String(error));
       }
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
-    }
+    });
   }
 
   async function saveCredential() {
-    try {
-      await json(`/api/settings/settings/credentials/${secretProvider}`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ secret }),
-      });
-      setSecret("");
-      await refresh();
-      setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
-    }
+    await runAction("credential-save", async () => {
+      try {
+        await json(`/api/settings/settings/credentials/${secretProvider}`, {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ secret }),
+        });
+        setSecret("");
+        await refresh();
+        setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : String(error));
+      }
+    });
   }
 
   async function runCanary() {
-    try {
-      const result = await json<{
-        pass: boolean;
-        latencyMs: number;
-        provider: string;
-        model: string;
-      }>("/api/settings/ops/provider-canary", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ target: "local" }),
-      });
-      setStatus(
-        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms`,
-      );
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
-    }
+    await runAction("canary", async () => {
+      try {
+        const result = await json<{
+          pass: boolean;
+          latencyMs: number;
+          provider: string;
+          model: string;
+        }>("/api/settings/ops/provider-canary", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ target: "local" }),
+        });
+        setStatus(
+          `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms`,
+        );
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : String(error));
+      }
+    });
+  }
+
+  async function loadMcpWorkspace() {
+    await runAction("mcp-load", refreshMcp);
   }
 
   async function saveMcpServer() {
-    try {
-      const parsed = JSON.parse(mcpJson) as McpServer;
-      await json(`/api/settings/settings/mcp/servers/${encodeURIComponent(parsed.id)}`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(parsed),
-      });
-      await refreshMcp();
-      setStatus(
-        "MCP server configuration saved. Execution permission is still evaluated separately.",
-      );
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
-    }
+    await runAction("mcp-save", async () => {
+      try {
+        const parsed = JSON.parse(mcpJson) as McpServer;
+        await json(`/api/settings/settings/mcp/servers/${encodeURIComponent(parsed.id)}`, {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(parsed),
+        });
+        await refreshMcp();
+        setStatus(
+          "MCP server configuration saved. Execution permission is still evaluated separately.",
+        );
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : String(error));
+      }
+    });
   }
+
+  const busy = busyAction !== null;
 
   return (
     <main className={styles.page}>
@@ -184,6 +222,7 @@ export default function SettingsPage() {
             <label>
               Hosted provider
               <select
+                disabled={busy}
                 value={runtime.settings.hostedProvider}
                 onChange={(event) =>
                   setRuntime({
@@ -204,6 +243,7 @@ export default function SettingsPage() {
             <label>
               Local model
               <input
+                disabled={busy}
                 value={runtime.settings.localModelTag}
                 onChange={(event) =>
                   setRuntime({
@@ -216,6 +256,7 @@ export default function SettingsPage() {
             <label className={styles.wide}>
               Local base URL
               <input
+                disabled={busy}
                 value={runtime.settings.localBaseUrl}
                 onChange={(event) =>
                   setRuntime({
@@ -228,6 +269,7 @@ export default function SettingsPage() {
             <label className={styles.check}>
               <input
                 type="checkbox"
+                disabled={busy}
                 checked={runtime.settings.hostedCallsEnabled}
                 onChange={(event) =>
                   setRuntime({
@@ -243,15 +285,16 @@ export default function SettingsPage() {
               turn Hosted off, but cannot override a closed operator gate.
             </p>
             <div className={styles.actions}>
-              <button type="button" onClick={() => void saveRuntime()}>
-                Save runtime
+              <button type="button" disabled={busy} onClick={() => void saveRuntime()}>
+                {busyAction === "runtime-save" ? "Saving…" : "Save runtime"}
               </button>
               <button
                 type="button"
                 className={styles.secondary}
+                disabled={busy}
                 onClick={() => void runCanary()}
               >
-                Run local canary
+                {busyAction === "canary" ? "Running…" : "Run local canary"}
               </button>
             </div>
           </div>
@@ -271,6 +314,7 @@ export default function SettingsPage() {
         <div className={styles.inline}>
           <select
             aria-label="Credential provider"
+            disabled={busy}
             value={secretProvider}
             onChange={(event) => setSecretProvider(event.target.value)}
           >
@@ -284,15 +328,16 @@ export default function SettingsPage() {
             autoComplete="new-password"
             placeholder="New secret"
             aria-label="New credential secret"
+            disabled={busy}
             value={secret}
             onChange={(event) => setSecret(event.target.value)}
           />
           <button
             type="button"
-            disabled={secret.length === 0}
+            disabled={busy || secret.length === 0}
             onClick={() => void saveCredential()}
           >
-            Encrypt & save
+            {busyAction === "credential-save" ? "Saving…" : "Encrypt & save"}
           </button>
         </div>
       </section>
@@ -302,11 +347,17 @@ export default function SettingsPage() {
         <div className={styles.inline}>
           <input
             aria-label="MCP workspace id"
+            disabled={busy}
             value={workspaceId}
             onChange={(event) => setWorkspaceId(event.target.value)}
           />
-          <button type="button" className={styles.secondary} onClick={() => void refreshMcp()}>
-            Load workspace
+          <button
+            type="button"
+            className={styles.secondary}
+            disabled={busy}
+            onClick={() => void loadMcpWorkspace()}
+          >
+            {busyAction === "mcp-load" ? "Loading…" : "Load workspace"}
           </button>
         </div>
         <div className={styles.serverList}>
@@ -315,6 +366,7 @@ export default function SettingsPage() {
               type="button"
               className={styles.server}
               key={server.id}
+              disabled={busy}
               onClick={() => setMcpJson(JSON.stringify(server, null, 2))}
             >
               <strong>{server.displayName}</strong>
@@ -327,6 +379,7 @@ export default function SettingsPage() {
         <textarea
           rows={12}
           spellCheck={false}
+          disabled={busy}
           value={mcpJson}
           onChange={(event) => setMcpJson(event.target.value)}
           aria-label="MCP server JSON"
@@ -335,10 +388,10 @@ export default function SettingsPage() {
         <div className={styles.actions}>
           <button
             type="button"
-            disabled={mcpJson.trim().length === 0}
+            disabled={busy || mcpJson.trim().length === 0}
             onClick={() => void saveMcpServer()}
           >
-            Validate & save MCP server
+            {busyAction === "mcp-save" ? "Saving…" : "Validate & save MCP server"}
           </button>
         </div>
         <p className={styles.muted}>
