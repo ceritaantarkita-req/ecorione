@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   applyTheme,
   persistTheme,
-  readStoredTheme,
+  THEME_STORAGE_KEY,
   type ThemeChoice,
 } from "@ecorione/shared-ui";
 
@@ -38,14 +38,24 @@ function SealMark() {
   );
 }
 
+function currentTheme(): ThemeChoice {
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+  } catch {
+    // The bootstrap already chose a safe app default when storage is unavailable.
+  }
+  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+}
+
 export default function ProductNav() {
   const pathname = usePathname();
   const [theme, setTheme] = useState<ThemeChoice | null>(null);
 
   useEffect(() => {
-    const stored = readStoredTheme(window.localStorage);
-    applyTheme(stored, document.documentElement);
-    setTheme(stored);
+    const initial = currentTheme();
+    applyTheme(initial, document.documentElement);
+    setTheme(initial);
   }, []);
 
   function chooseTheme(choice: ThemeChoice): void {
