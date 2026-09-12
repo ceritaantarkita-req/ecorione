@@ -182,7 +182,7 @@ export async function inventory() {
   const runtime = validateRuntimeSnapshot(parseJson(runtimeResponse.text, "runtime settings"));
 
   const mcpSettingsResponse = await request(
-    "http://127.0.0.1:3000/api/settings/settings/mcp/servers?workspaceId=workspace-default",
+    "http://127.0.0.1:3000/api/settings/settings/mcp/servers?workspaceId=ws_personal",
   );
   if (mcpSettingsResponse.status !== 200) {
     throw new Error(`Ai Settings MCP proxy gagal HTTP ${mcpSettingsResponse.status}.`);
