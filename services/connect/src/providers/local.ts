@@ -3,6 +3,9 @@ import { renderCoreMemoryData, type StablePrefix } from "@ecorione/context-assem
 import type { TokenUsage } from "@ecorione/shared-telemetry";
 import { ProviderError } from "./errors.js";
 
+const LIVE_REQUEST_NOTE =
+  "The final user message is the live request. Follow it directly. If it asks for an exact string, return exactly that string and nothing else.";
+
 export interface LocalCallInput {
   readonly baseUrl: string;
   readonly modelTag: string;
@@ -20,23 +23,24 @@ interface OpenAiChatResponseBody {
   readonly choices?: ReadonlyArray<{ readonly message?: { readonly content?: string } }>;
   readonly usage?: { readonly prompt_tokens?: number; readonly completion_tokens?: number };
 }
-function buildUserContent(input: LocalCallInput): string {
+function buildContextContent(input: LocalCallInput): string {
   const parts: string[] = [];
   if (input.prefix.coreMemory.blocks.length > 0)
     parts.push(renderCoreMemoryData(input.prefix.coreMemory));
   if (input.dynamicText.length > 0) parts.push(input.dynamicText);
-  parts.push(input.userMessage);
   return parts.join("\n\n");
 }
 export async function callLocal(
   input: LocalCallInput,
   signal?: AbortSignal,
 ): Promise<LocalCallResult> {
+  const contextContent = buildContextContent(input);
   const body = {
     model: input.modelTag,
     messages: [
-      { role: "system", content: input.prefix.systemPrompt },
-      { role: "user", content: buildUserContent(input) },
+      { role: "system", content: `${input.prefix.systemPrompt} ${LIVE_REQUEST_NOTE}` },
+      ...(contextContent.length === 0 ? [] : [{ role: "user", content: contextContent }]),
+      { role: "user", content: input.userMessage },
     ],
   };
   let res: Response;

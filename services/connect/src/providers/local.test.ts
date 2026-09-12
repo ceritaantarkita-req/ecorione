@@ -56,18 +56,17 @@ describe("callLocal", () => {
       messages: Array<{ role: string; content: string }>;
     };
     expect(body.model).toBe("qwen3:8b-instruct-q4_K_M");
-    expect(body.messages[0]).toEqual({
-      role: "system",
-      content: prefix().systemPrompt,
-    });
-    // dynamicText kosong: tidak ada "\n\n" ganjil di depan userMessage.
+    expect(body.messages).toHaveLength(2);
+    expect(body.messages[0]?.role).toBe("system");
+    expect(body.messages[0]?.content).toContain(prefix().systemPrompt);
+    expect(body.messages[0]?.content).toContain("exactly that string and nothing else");
     expect(body.messages[1]).toEqual({
       role: "user",
       content: "ekstrak fakta dari episode berikut",
     });
   });
 
-  it("dynamicText tidak kosong → digabung di depan userMessage", async () => {
+  it("dynamic context tetap data terpisah dan live user request selalu message terakhir", async () => {
     let capturedBody: unknown;
     pool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, (opts) => {
       capturedBody = JSON.parse(opts.body as string);
@@ -79,11 +78,60 @@ describe("callLocal", () => {
       modelTag: "qwen3:8b-instruct-q4_K_M",
       prefix: prefix(),
       dynamicText: "<untrusted_memory>x</untrusted_memory>",
+      userMessage: "Balas tepat: UX_LOCAL_OK",
+    });
+
+    const body = capturedBody as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    expect(body.messages).toHaveLength(3);
+    expect(body.messages[1]).toEqual({
+      role: "user",
+      content: "<untrusted_memory>x</untrusted_memory>",
+    });
+    expect(body.messages[2]).toEqual({
+      role: "user",
+      content: "Balas tepat: UX_LOCAL_OK",
+    });
+  });
+
+  it("core memory ikut context data, bukan digabung dengan live request", async () => {
+    let capturedBody: unknown;
+    pool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, (opts) => {
+      capturedBody = JSON.parse(opts.body as string);
+      return { choices: [{ message: { content: "ok" } }], usage: {} };
+    });
+
+    await callLocal({
+      baseUrl: "http://127.0.0.1:11434/v1",
+      modelTag: "qwen3:8b-instruct-q4_K_M",
+      prefix: prefix({
+        coreMemory: {
+          blocks: [
+            {
+              label: "preferences",
+              description: "user preferences",
+              value: "jawab singkat",
+              readOnly: false,
+              scope: "personal",
+              sensitivity: "INTERNAL",
+              syncClass: "LOCAL_ONLY",
+              updatedAt: "2026-09-12T00:00:00.000Z",
+            },
+          ],
+        },
+      }),
+      dynamicText: "",
       userMessage: "halo",
     });
 
-    const body = capturedBody as { messages: Array<{ content: string }> };
-    expect(body.messages[1]?.content).toBe("<untrusted_memory>x</untrusted_memory>\n\nhalo");
+    const body = capturedBody as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    expect(body.messages).toHaveLength(3);
+    expect(body.messages[1]?.content).toContain("<core_memory>");
+    expect(body.messages[1]?.content).toContain("jawab singkat");
+    expect(body.messages[2]).toEqual({ role: "user", content: "halo" });
   });
 
   it("usage hilang → default ke nol", async () => {
