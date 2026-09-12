@@ -49,7 +49,7 @@ export default function SettingsPage() {
       ]);
       setRuntime(runtimeResult);
       setCredentials(credentialResult.credentials);
-      setStatus("Control state loaded.");
+      setStatus(`Control state loaded · runtime revision ${String(runtimeResult.revision)}.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -61,6 +61,7 @@ export default function SettingsPage() {
         `/api/settings/settings/mcp/servers?workspaceId=${encodeURIComponent(workspaceId)}`,
       );
       setServers(result.servers);
+      setStatus(`Loaded ${String(result.servers.length)} MCP server configuration(s).`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -70,6 +71,7 @@ export default function SettingsPage() {
 
   async function saveRuntime() {
     if (runtime === null) return;
+    const requestedHosted = runtime.settings.hostedCallsEnabled;
     try {
       const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
         method: "PUT",
@@ -77,7 +79,13 @@ export default function SettingsPage() {
         body: JSON.stringify(runtime.settings),
       });
       setRuntime(result);
-      setStatus(`Runtime settings saved at revision ${String(result.revision)}.`);
+      if (requestedHosted && !result.settings.hostedCallsEnabled) {
+        setStatus(
+          `Runtime revision ${String(result.revision)} saved. Hosted remains OFF because the operator gate is closed.`,
+        );
+      } else {
+        setStatus(`Runtime settings saved at revision ${String(result.revision)}.`);
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -142,17 +150,16 @@ export default function SettingsPage() {
           <h1>Control Center</h1>
           <p>Provider, model, credential, and MCP configuration. Secrets never render back.</p>
         </div>
-        <nav>
-          <a href="/ops">Operations</a>
-          <a href="/flow">Flow</a>
-          <a href="/space">Space</a>
-        </nav>
       </header>
-      <p className={styles.status}>{status}</p>
+      <p className={styles.status} aria-live="polite">
+        {status}
+      </p>
 
       <section className={styles.section}>
         <h2>Runtime</h2>
-        {runtime === null ? null : (
+        {runtime === null ? (
+          <p className={styles.muted}>Runtime state is loading.</p>
+        ) : (
           <div className={styles.formGrid}>
             <label>
               Hosted provider
@@ -211,6 +218,10 @@ export default function SettingsPage() {
               />
               Hosted calls enabled
             </label>
+            <p className={`${styles.muted} ${styles.wide}`}>
+              The process-level operator kill switch is a hard ceiling. Runtime settings can turn
+              Hosted off, but cannot override a closed operator gate.
+            </p>
             <div className={styles.actions}>
               <button onClick={() => void saveRuntime()}>Save runtime</button>
               <button className={styles.secondary} onClick={() => void runCanary()}>
@@ -233,6 +244,7 @@ export default function SettingsPage() {
         </p>
         <div className={styles.inline}>
           <select
+            aria-label="Credential provider"
             value={secretProvider}
             onChange={(event) => setSecretProvider(event.target.value)}
           >
@@ -245,6 +257,7 @@ export default function SettingsPage() {
             type="password"
             autoComplete="new-password"
             placeholder="New secret"
+            aria-label="New credential secret"
             value={secret}
             onChange={(event) => setSecret(event.target.value)}
           />
@@ -257,7 +270,11 @@ export default function SettingsPage() {
       <section className={styles.section}>
         <h2>MCP servers</h2>
         <div className={styles.inline}>
-          <input value={workspaceId} onChange={(event) => setWorkspaceId(event.target.value)} />
+          <input
+            aria-label="MCP workspace id"
+            value={workspaceId}
+            onChange={(event) => setWorkspaceId(event.target.value)}
+          />
           <button className={styles.secondary} onClick={() => void refreshMcp()}>
             Load workspace
           </button>
@@ -281,6 +298,7 @@ export default function SettingsPage() {
           spellCheck={false}
           value={mcpJson}
           onChange={(event) => setMcpJson(event.target.value)}
+          aria-label="MCP server JSON"
           placeholder='{"id":"example","displayName":"Example","enabled":false,"workspaceIds":["workspace-default"],"transport":{"type":"streamable-http","url":"https://example.com/mcp"},"toolPolicies":[],"connectTimeoutMs":10000,"requestTimeoutMs":30000}'
         />
         <div className={styles.actions}>
