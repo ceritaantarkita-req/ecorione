@@ -1,0 +1,37 @@
+name: TEMP Docs Numbering Fix
+
+on:
+  push:
+    branches:
+      - fix/frontend-ux-static-final-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/frontend-ux-static-final-20260912
+      - name: Fix canonical reading order
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p = Path('docs/current-state-and-next-steps.md')
+          s = p.read_text()
+          start = s.index('## 12. Recommended reading order')
+          end = s.index('## 13. Canonical references')
+          replacement = '''## 12. Recommended reading order\n\n1. `docs/current-state-and-next-steps.md`\n2. `AGENTS.md`\n3. `docs/ux-product-validation.md`\n4. `docs/ux-runtime-walkthrough-checklist.md`\n5. `docs/verification/frontend-static-audit-final-2026-09-12.md`\n6. `docs/verification/frontend-static-hardening-2026-09-12.md`\n7. `docs/verification/local-observability-closure-2026-09-12.md`\n8. `docs/local-observability-evidence.md`\n9. `docs/verification/local-backup-restore-closure-2026-09-11.md`\n10. `docs/local-backup-restore-evidence.md`\n11. `docs/verification/local-persistence-restart-closure-2026-09-11.md`\n12. `docs/local-persistence-restart-evidence.md`\n13. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`\n14. `docs/verification/comparative-closure-grade-final-2026-09-11.md`\n15. `docs/comparative-ecx-evidence.md`\n16. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`\n17. `docs/verification/local-production-rehearsal-2026-09-10.md`\n18. `docs/EXECUTION-PROGRESS.md`\n19. relevant operations/ADR docs\n20. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history\n\n'''
+          p.write_text(s[:start] + replacement + s[end:])
+          PY
+          npx prettier --write docs/current-state-and-next-steps.md
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/current-state-and-next-steps.md
+          git commit -m 'docs: fix canonical reading order'
+          git push origin HEAD:fix/frontend-ux-static-final-20260912
