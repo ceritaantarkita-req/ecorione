@@ -5,7 +5,7 @@ Date: **2026-09-12**
 
 This is the active checkpoint after local observability closure. It validates real user journeys on the already-closed local technical baseline. It is not a new Batch 13 and it does not reopen Historical Ledger, ECX, persistence, backup/restore, or observability closure.
 
-The code-side frontend hardening sequence is merged through PR #62, with a later owner-proxy contract follow-up in PR #63 (`6ea63f570b3e764154837bc2ad7ca2c1123f06bc`). The follow-up fixed a real Settings MCP workspace-query mismatch found after the earlier final static audit and strengthened Ai → owner proxy boundaries without changing the runtime/browser claim boundary. Canonical evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and the severity/disposition ledger `docs/verification/frontend-static-defect-ledger-2026-09-12.md`.
+The code-side frontend hardening sequence is merged through PR #62, with owner-boundary follow-ups in PR #63 and PR #65. PR #63 fixed a real Settings MCP workspace-query mismatch and hardened the generic Ai → owner proxy paths/redirect behavior; PR #65 closes the remaining dedicated realtime voice SSE direct-Hub redirect gap. These changes do not alter the runtime/browser claim boundary. Canonical evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and the severity/disposition ledger `docs/verification/frontend-static-defect-ledger-2026-09-12.md`.
 
 The remaining gate is the real local rendered inventory/walkthrough described below. `docs/ux-runtime-walkthrough-checklist.md` is the exact operator procedure; static review does not substitute for it.
 
@@ -47,9 +47,9 @@ The preparation/static-hardening sequence found and fixed concrete product defec
 7. **Operations state correctness** — first load shows `Loading`/`—`, not false `Degraded`/zero values; auto/manual refresh cannot overlap; failures are surfaced through alert semantics.
 8. **Ai request race safety** — chat send and forget actions use synchronous request locks in addition to React state so same-frame repeated events cannot dispatch duplicate requests.
 9. **Mobile interaction baseline** — chat safe-area spacing and key compact touch targets were hardened before the narrow-viewport walkthrough.
-10. **Ai → owner proxy contract safety** — Settings MCP workspace loading now accepts the supported single `workspaceId` query instead of rejecting it before Connect; Settings/Space/Flow paths are bounded before owner URL construction; Hub/Settings/Space/Flow/Ops internal requests fail closed on redirects; deterministic proxy regressions are part of normal/release test coverage.
+10. **Ai → owner proxy contract safety** — Settings MCP workspace loading accepts the supported single `workspaceId` query instead of rejecting it before Connect; Settings/Space/Flow paths are bounded before owner URL construction; Hub/Settings/Space/Flow/Ops internal requests fail closed on redirects; the dedicated realtime voice SSE route also fails closed instead of following Hub redirects; deterministic regressions are part of normal/release test coverage.
 
-Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md`, the final pre-runtime audit `docs/verification/frontend-static-audit-final-2026-09-12.md`, the later owner-proxy follow-up `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and `docs/verification/frontend-static-defect-ledger-2026-09-12.md` for S0–S3 source-review disposition.
+Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md`, the final pre-runtime audit `docs/verification/frontend-static-audit-final-2026-09-12.md`, the owner-proxy follow-up `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and `docs/verification/frontend-static-defect-ledger-2026-09-12.md` for S0–S3 source-review disposition.
 
 These fixes count only as code-side/static hardening. They do not replace the real rendered runtime walkthrough.
 
@@ -136,7 +136,7 @@ The checkpoint can be marked **CLOSED / PASS WITH LIMITATIONS** only when all of
 - hosted calls remain effectively disabled throughout the checkpoint;
 - sanitized closure evidence is committed without private raw screenshots/logs.
 
-As of merged PR #63 (`6ea63f570b3e764154837bc2ad7ca2c1123f06bc`), the repository-side implementation, exact-head CI and post-merge CI conditions are satisfied for the current code-side baseline. The local inventory and rendered browser bullets remain pending and must not be inferred from CI.
+As of PR #65, the repository-side static implementation includes the generic owner-proxy hardening plus the dedicated voice-stream redirect boundary. The local inventory and rendered browser bullets remain pending and must not be inferred from CI; exact-head and post-merge status for the latest PR must be verified before treating the repository-side baseline as final.
 
 ## Claim boundary
 
@@ -149,6 +149,7 @@ A future PASS proves only representative local product/UX behavior on the tested
 - concurrent multi-user behavior;
 - autonomous semantic reference selection;
 - immutable model identity;
+- realtime voice behavior unless it is separately exercised;
 - VPS/Cloudflare behavior;
 - off-host DR.
 
