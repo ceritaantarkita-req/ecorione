@@ -113,6 +113,19 @@ describe("proxyToHub", () => {
     );
   });
 
+  it("redirect Hub tidak diikuti sambil membawa bearer token", async () => {
+    process.env.ECORIONE_INTERNAL_TOKEN = "tok-123";
+    pool
+      .intercept({ path: "/v1/x", method: "POST" })
+      .reply(302, "", { headers: { location: "/v1/other" } });
+
+    const res = await proxyToHub(jsonRequest({ message: "halo" }), BodySchema, "/v1/x");
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as { error: { type: string } }).error.type).toBe(
+      "UPSTREAM_UNAVAILABLE",
+    );
+  });
+
   it("respons Hub kosong (mis. 204) tidak melempar saat parsing", async () => {
     pool.intercept({ path: "/v1/x", method: "POST" }).reply(204, "");
 

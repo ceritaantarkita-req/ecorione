@@ -1,4 +1,5 @@
 import { internalToken, spaceUrl } from "./env";
+import { normalizeOwnerProxyPath } from "./owner-proxy-path";
 import { jsonError } from "./proxy";
 
 export async function proxyToSpace(
@@ -6,6 +7,10 @@ export async function proxyToSpace(
   path: string,
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
 ): Promise<Response> {
+  const normalized = normalizeOwnerProxyPath(path);
+  if (normalized === null)
+    return jsonError(400, "BAD_REQUEST", "Space proxy path tidak valid.");
+
   const token = internalToken();
   const headers: Record<string, string> = {};
   if (token !== undefined) headers.authorization = `Bearer ${token}`;
@@ -19,7 +24,13 @@ export async function proxyToSpace(
     }
   }
   try {
-    const upstream = await fetch(`${spaceUrl()}${path}`, { method, headers, body });
+    const upstream = await fetch(`${spaceUrl()}${normalized.path}`, {
+      method,
+      headers,
+      body,
+      redirect: "error",
+      cache: "no-store",
+    });
     const text = await upstream.text();
     return new Response(text.length === 0 ? undefined : text, {
       status: upstream.status,
