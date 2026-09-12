@@ -10,7 +10,7 @@ Historical plans/audits remain useful evidence but are not the current implement
 
 ## 1. Current verdict
 
-**ECORIONE production/self-host repository baseline READY; real local runtime + Historical Ledger/ECX evidence CLOSED; final corrected local Comparative ECX checkpoint CLOSED / PASS WITH LIMITATIONS; local persistence/restart CLOSED / PASS; isolated local backup/restore CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS; local observability baseline CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS; UX/product validation is the active next checkpoint; compute-host/VPS + Cloudflare remains DEFERRED BY OPERATOR.**
+**ECORIONE production/self-host repository baseline READY; real local runtime + Historical Ledger/ECX evidence CLOSED; final corrected local Comparative ECX checkpoint CLOSED / PASS WITH LIMITATIONS; local persistence/restart CLOSED / PASS; isolated local backup/restore CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS; local observability baseline CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS; UX/product validation is IN PROGRESS with code-side static hardening complete and the rendered local walkthrough pending; compute-host/VPS + Cloudflare remains DEFERRED BY OPERATOR.**
 
 Roadmap framing remains:
 
@@ -33,7 +33,7 @@ Roadmap framing remains:
 | Local persistence/restart | **PASS / CLOSED** | Owner processes + Temporal + PostgreSQL container restart boundary passed after path/bootstrap fixes. |
 | Isolated local backup/restore | **PASS / CLOSED WITH LIMITATIONS** | Existing durable owner state restored into isolated targets; Temporal/PostgreSQL logical restore verified; absent optional Sync/Connect source state is not claimed as runtime-restored. |
 | Local observability baseline | **PASS / CLOSED WITH BOUNDED LOCAL LIMITATIONS** | Representative owner reads, ECX hydration, uncached local-model calls, trace continuity and owner-process resource deltas measured on the tested laptop. |
-| UX/product validation | **ACTIVE NEXT CHECKPOINT** | Exercise real user journeys and identify functional/usability defects on the closed local runtime baseline. |
+| UX/product validation | **IN PROGRESS — STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING** | Code-side hardening is merged through `63646960da0f4dce946208470eed1c7d6f3068e4`; the real local browser inventory/walkthrough remains required. |
 | Immutable local model identity hardening | **PENDING** | Replace mutable rehearsal aliases before durable production model-identity claims. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Resume only on explicit operator decision. |
 | Hosted-provider comparative validation | **OPTIONAL/FUTURE** | Requires operator-owned credentials and explicit spend intent. |
@@ -53,7 +53,8 @@ Important merged progression includes:
 - compiled runtime-dependency bootstrap fix PR #48 (`673af91642ea1b9440079e396675c69f53647951`);
 - persistence/restart closure PR #49;
 - isolated backup/restore implementation PR #50 → `4e6bcd94776fc7dd75440ee35dd8fddf0b602233`;
-- local observability implementation PR #52 → `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`.
+- local observability implementation PR #52 → `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`;
+- UX/frontend hardening continued through PR #56, #58, #59 and #60; the final code-side baseline is `63646960da0f4dce946208470eed1c7d6f3068e4` with exact-head and post-merge CI PASS for the final hardening chain.
 
 Valid failed evidence remains preserved rather than rewritten away.
 
@@ -262,7 +263,7 @@ Current operator-approved local-first order:
 1. **Local persistence/restart — CLOSED / PASS**
 2. **Isolated local backup/restore — CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**
 3. **Local observability baseline — CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**
-4. **UX/product validation — ACTIVE NEXT CHECKPOINT**
+4. **UX/product validation — IN PROGRESS; STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING**
 5. **Immutable local model identity hardening — PENDING**
 6. **Compute-host/VPS + Cloudflare — DEFERRED BY OPERATOR**
 7. **Hosted-provider comparative validation — OPTIONAL/FUTURE**
@@ -272,11 +273,13 @@ Current operator-approved local-first order:
 
 Production deployment is not a blocker for current local R&D.
 
-## 10. Next checkpoint — UX/product validation
+## 10. Active checkpoint — UX/product validation
 
-The next scope should validate real user journeys on the already-closed local technical baseline before adding new infrastructure or production deployment work.
+Code-side/static frontend hardening is complete through merged `main` revision `63646960da0f4dce946208470eed1c7d6f3068e4`. Canonical static evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`; the runtime protocol is `docs/ux-product-validation.md`.
 
-Minimum intended work:
+The remaining scope crosses the real browser/runtime boundary. It must validate real user journeys on the already-closed local technical baseline before adding new infrastructure or production deployment work.
+
+Minimum remaining work:
 
 - inventory the current Ai-facing user journeys and expected outcomes before testing;
 - exercise representative Local-mode chat flows through the actual Ai surface rather than service-only probes;
@@ -315,24 +318,28 @@ Before implementing new work:
 
 1. `docs/current-state-and-next-steps.md`
 2. `AGENTS.md`
-3. `docs/verification/local-observability-closure-2026-09-12.md`
-4. `docs/local-observability-evidence.md`
-5. `docs/verification/local-backup-restore-closure-2026-09-11.md`
-6. `docs/local-backup-restore-evidence.md`
-7. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
-8. `docs/local-persistence-restart-evidence.md`
-9. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
-10. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
-11. `docs/comparative-ecx-evidence.md`
-12. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-13. `docs/verification/local-production-rehearsal-2026-09-10.md`
-14. `docs/EXECUTION-PROGRESS.md`
-15. relevant operations/ADR docs
-16. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
+3. `docs/ux-product-validation.md`
+4. `docs/verification/frontend-static-hardening-2026-09-12.md`
+5. `docs/verification/local-observability-closure-2026-09-12.md`
+6. `docs/local-observability-evidence.md`
+7. `docs/verification/local-backup-restore-closure-2026-09-11.md`
+8. `docs/local-backup-restore-evidence.md`
+9. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
+10. `docs/local-persistence-restart-evidence.md`
+11. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+12. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
+13. `docs/comparative-ecx-evidence.md`
+14. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
+15. `docs/verification/local-production-rehearsal-2026-09-10.md`
+16. `docs/EXECUTION-PROGRESS.md`
+17. relevant operations/ADR docs
+18. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
 
 ## 13. Canonical references
 
 - current handoff: `docs/current-state-and-next-steps.md`
+- UX runtime protocol: `docs/ux-product-validation.md`
+- UX static hardening evidence: `docs/verification/frontend-static-hardening-2026-09-12.md`
 - observability closure: `docs/verification/local-observability-closure-2026-09-12.md`
 - observability protocol: `docs/local-observability-evidence.md`
 - backup/restore closure: `docs/verification/local-backup-restore-closure-2026-09-11.md`

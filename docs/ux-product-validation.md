@@ -1,9 +1,17 @@
 # ECORIONE — Local UX / Product Validation
 
-Status: **IMPLEMENTATION IN PROGRESS / RUNTIME WALKTHROUGH PENDING**  
+Status: **STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING**  
 Date: **2026-09-12**
 
 This is the active checkpoint after local observability closure. It validates real user journeys on the already-closed local technical baseline. It is not a new Batch 13 and it does not reopen Historical Ledger, ECX, persistence, backup/restore, or observability closure.
+
+The code-side frontend hardening pass is complete through merged `main` revision:
+
+```text
+63646960da0f4dce946208470eed1c7d6f3068e4
+```
+
+Normal repository CI passed at the exact PR #60 head and again after that merge. The remaining gate is the real local rendered inventory/walkthrough described below.
 
 ## Objective
 
@@ -30,18 +38,27 @@ Rules:
 - only sanitized evidence may be committed;
 - distinguish UX/product defects from latency/resource observations already covered by the observability checkpoint.
 
-## Initial code-audit findings before runtime walkthrough
+## Code-audit findings and fixes completed before runtime walkthrough
 
-Two concrete defects were found while preparing this checkpoint:
+The preparation/static-hardening sequence found and fixed concrete product defects before asking the operator to perform the rendered walkthrough:
 
-1. **Primary product surfaces were not globally discoverable.** Chat exposed no path to Space, Flow, Operations, or Settings; Operations had no product navigation; other pages used inconsistent local links. The checkpoint branch adds a shared top-level navigation rail from the root layout.
-2. **The process-level cost kill switch was only a default, not a hard ceiling, when durable runtime settings already contained `hostedCallsEnabled: true`.** Runtime settings could therefore report/drive hosted enabled even when `ECORIONE_COST_KILL_SWITCH=1`. The checkpoint branch wraps Connect runtime settings with an operator gate so runtime settings may further disable hosted calls but can never re-enable them while the operator gate is closed.
+1. **Global discoverability** — primary surfaces were not consistently reachable. Shared top-level product navigation now exposes Ai, Space, Flow, Operations, and Settings.
+2. **Hosted operator gate** — durable runtime settings could previously outlive the process-level intent. Connect runtime settings are now bounded by the operator kill switch so runtime settings may further disable hosted calls but cannot reopen them while `ECORIONE_COST_KILL_SWITCH=1`.
+3. **Production typography and theme resilience** — approved font families are actually loaded; browser-storage failures no longer crash theme selection; theme controls have explicit grouping semantics.
+4. **Settings failure/mutation safety** — non-JSON/empty HTTP errors retain useful status detail; runtime/credential/canary/MCP actions are serialized and expose pending feedback so repeated clicks do not create duplicate mutations.
+5. **Space interaction safety** — block inspection has a keyboard path; destructive block deletion uses a two-step confirmation; page creation is duplicate-submit guarded; stale out-of-order page responses are ignored; armed deletion confirmation is cleared when selection changes.
+6. **Flow async correctness** — Save/Load/Run/approval/input rejections are surfaced; run polling/version-list failures are visible; Run and node-signal actions reject duplicate in-flight submission; palette creation works by click/keyboard as well as drag; narrow layouts isolate canvas overflow.
+7. **Operations state correctness** — first load shows `Loading`/`—`, not false `Degraded`/zero values; auto/manual refresh cannot overlap; failures are surfaced through alert semantics.
+8. **Ai request race safety** — chat send and forget actions use synchronous request locks in addition to React state so same-frame repeated events cannot dispatch duplicate requests.
+9. **Mobile interaction baseline** — chat safe-area spacing and key compact touch targets were hardened before the narrow-viewport walkthrough.
 
-These fixes require deterministic CI and a fresh merged-runtime inventory before they count as validated behavior.
+Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md`.
+
+These fixes count only as code-side/static hardening. They do not replace the real rendered runtime walkthrough.
 
 ## Read-only strict inventory
 
-After the checkpoint implementation is merged to `main`, Phase 4 is restarted on that exact revision, and the environment is sourced with the kill switch enabled, run:
+After the final static-hardening implementation is present on local synchronized `main`, Phase 4 is restarted on that exact revision, and the environment is sourced with the kill switch enabled, run:
 
 ```bash
 pnpm evidence:ux:inventory
@@ -94,7 +111,7 @@ Minimum evidence:
 8. console errors/warnings captured for the exercised paths;
 9. defect ledger with severity, reproduction, observed result, expected result, owner/file when known, and disposition.
 
-Do not treat a passing build, HTTP route smoke, or static code review as rendered UX evidence.
+Do not treat a passing build, HTTP route smoke, static code review, or the static-hardening CI chain as rendered UX evidence.
 
 ## Defect severity
 
@@ -118,6 +135,8 @@ The checkpoint can be marked **CLOSED / PASS WITH LIMITATIONS** only when all of
 - every observed defect is fixed or explicitly bounded;
 - hosted calls remain effectively disabled throughout the checkpoint;
 - sanitized closure evidence is committed without private raw screenshots/logs.
+
+As of the final static-hardening merge, the first two bullets are satisfied for the code-side baseline. The runtime/browser bullets remain pending and must not be inferred from CI.
 
 ## Claim boundary
 
