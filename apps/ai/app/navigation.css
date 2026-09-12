@@ -156,8 +156,9 @@
   }
 
   .ecr-theme-switch__item {
-    min-width: 30px;
-    width: 30px;
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
     padding: 0;
     overflow: hidden;
     color: transparent;

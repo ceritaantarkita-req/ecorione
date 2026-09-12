@@ -611,7 +611,7 @@ export default function SpacePageView() {
                         <span className={styles.blockActions}>
                           <button
                             type="button"
-                            className={styles.iconButton}
+                            className={`${styles.iconButton} ${styles.inspectButton}`}
                             aria-label={`Inspect ${block.type} block`}
                             aria-pressed={selectedBlockId === block.id}
                             onClick={(event) => {
