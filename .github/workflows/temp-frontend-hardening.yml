@@ -1,0 +1,38 @@
+name: TEMP Frontend Hardening
+
+on:
+  push:
+    branches:
+      - feat/frontend-typography-accessibility-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/frontend-typography-accessibility-20260912
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/temp-frontend-hardening.mjs
+      - run: pnpm exec prettier --write apps/ai/app/space/page.tsx apps/ai/app/space/Space.module.css apps/ai/app/flow/page.tsx apps/ai/app/flow/FlowCanvas.module.css apps/ai/app/globals.css apps/ai/app/navigation.css
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/ai/app/space/page.tsx apps/ai/app/space/Space.module.css apps/ai/app/flow/page.tsx apps/ai/app/flow/FlowCanvas.module.css apps/ai/app/globals.css apps/ai/app/navigation.css
+          if git diff --cached --quiet; then
+            echo "No hardening changes"
+            exit 0
+          fi
+          git commit -m "fix: harden frontend interactions and responsive flow"
+          git push origin HEAD:feat/frontend-typography-accessibility-20260912
