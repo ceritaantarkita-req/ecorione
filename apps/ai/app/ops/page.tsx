@@ -224,15 +224,17 @@ export default function OpsPage() {
             const timing = latency(service.observability?.histograms ?? []);
             const resources = service.observability?.process;
             const optionalDown = !service.healthy && !service.required;
+            const statusClassName = service.healthy
+              ? styles.ok
+              : optionalDown
+                ? styles.subtle
+                : styles.bad;
+            const statusLabel = service.healthy ? "UP" : optionalDown ? "OPTIONAL DOWN" : "DOWN";
             return (
               <article className={styles.card} key={service.name}>
                 <div className={styles.cardTitle}>
                   <strong>{service.name}</strong>
-                  <span
-                    className={service.healthy ? styles.ok : optionalDown ? styles.subtle : styles.bad}
-                  >
-                    {service.healthy ? "UP" : optionalDown ? "OPTIONAL DOWN" : "DOWN"}
-                  </span>
+                  <span className={statusClassName}>{statusLabel}</span>
                 </div>
                 <dl>
                   <div>
