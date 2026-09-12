@@ -4,7 +4,7 @@ ECORIONE adalah lapisan memori dan optimizer bersama untuk AI lokal maupun hoste
 
 ## Current state — baca ini dulu
 
-Per **2026-09-11**:
+Per **2026-09-12**:
 
 - planned platform/production Batch 1–12: **CLOSED**;
 - remaining planned batch: **0**;
@@ -19,7 +19,9 @@ Per **2026-09-11**:
 - final local persistence/restart: **CLOSED / PASS**;
 - isolated local backup/restore implementation: PR #50 → `4e6bcd94776fc7dd75440ee35dd8fddf0b602233`;
 - isolated local backup/restore runtime checkpoint: **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**;
-- active next checkpoint: **LOCAL OBSERVABILITY BASELINE**;
+- local observability implementation: PR #52 → `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`;
+- local observability runtime checkpoint: **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**;
+- active next checkpoint: **UX/PRODUCT VALIDATION**;
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
 - Fase 5 AutoClick: **DEFERRED BY DESIGN**;
@@ -28,6 +30,11 @@ Per **2026-09-11**:
 Agent tanpa histori chat **WAJIB mulai dari `docs/current-state-and-next-steps.md`**, lalu file ini.
 
 ## Canonical evidence
+
+Observability:
+
+- `docs/local-observability-evidence.md`
+- `docs/verification/local-observability-closure-2026-09-12.md`
 
 Backup/restore:
 
@@ -110,31 +117,61 @@ Isolated restored owner APIs matched source semantics for Ledger, Context, Artif
 
 Same-laptop backup/restore is **not off-host DR**. Backup bytes on the same laptop remain in the same failure domain.
 
+## Observability claim boundary
+
+Final strict run:
+
+```text
+revision: bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6
+runId: obs-20260912020700-00fbd7e5
+owner reads: 8 per lane
+ECX samples: 5
+local model samples: 5
+workload errors: 0
+trace coverage: 5/5 Hub→Artifact hydrations
+```
+
+Measured local route:
+
+```text
+runtime: openai-compatible
+model: gemma4:latest
+provider: local
+cache hits: 0
+cache misses: 5
+actual cost USD: 0
+hosted calls: disabled
+```
+
+This is a bounded local baseline only. Never turn the small-sample latency numbers into production SLA/SLO claims. `gemma4:latest` is the measured runtime identity but remains a mutable alias, so it is not immutable production model identity evidence.
+
 ## Recommended reading order
 
 1. `docs/current-state-and-next-steps.md`
 2. `AGENTS.md`
-3. `docs/verification/local-backup-restore-closure-2026-09-11.md`
-4. `docs/local-backup-restore-evidence.md`
-5. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
-6. `docs/local-persistence-restart-evidence.md`
-7. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
-8. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
-9. `docs/comparative-ecx-evidence.md`
-10. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-11. `docs/verification/local-production-rehearsal-2026-09-10.md`
-12. `docs/EXECUTION-PROGRESS.md`
-13. relevant operations/ADR docs
-14. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
+3. `docs/verification/local-observability-closure-2026-09-12.md`
+4. `docs/local-observability-evidence.md`
+5. `docs/verification/local-backup-restore-closure-2026-09-11.md`
+6. `docs/local-backup-restore-evidence.md`
+7. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
+8. `docs/local-persistence-restart-evidence.md`
+9. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+10. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
+11. `docs/comparative-ecx-evidence.md`
+12. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
+13. `docs/verification/local-production-rehearsal-2026-09-10.md`
+14. `docs/EXECUTION-PROGRESS.md`
+15. relevant operations/ADR docs
+16. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
 
 ## Next work posture
 
-After the two local durability checkpoints, operator-approved order is:
+Operator-approved order is now:
 
 1. local persistence/restart — **CLOSED / PASS**;
 2. isolated local backup/restore — **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**;
-3. **local observability baseline — ACTIVE NEXT CHECKPOINT**;
-4. product/UX validation;
+3. local observability baseline — **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**;
+4. **UX/product validation — ACTIVE NEXT CHECKPOINT**;
 5. immutable local model identity hardening;
 6. compute-host/VPS + Cloudflare only if operator explicitly resumes;
 7. hosted-provider comparative validation only with credentials + budget;
@@ -142,7 +179,7 @@ After the two local durability checkpoints, operator-approved order is:
 9. maintenance/security/dependency/DR evidence;
 10. new features only when evidence justifies them.
 
-No VPS, Cloudflare, domain, firewall or hosted-provider spending mutation belongs to the local observability checkpoint.
+No VPS, Cloudflare, domain, firewall or hosted-provider spending mutation belongs to the UX/product validation checkpoint.
 
 ## Perintah penting
 
@@ -167,6 +204,10 @@ pnpm evidence:persistence-restart --phase cleanup
 # Isolated backup/restore evidence
 pnpm evidence:backup-restore:inventory
 pnpm evidence:backup-restore
+
+# Local observability evidence
+pnpm evidence:observability:inventory
+pnpm evidence:observability
 ```
 
 Runtime evidence commands are not deterministic CI substitutes. Raw runtime evidence stays local/gitignored.
