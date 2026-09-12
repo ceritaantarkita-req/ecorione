@@ -57,6 +57,7 @@ Canonical verification sources:
 - `docs/verification/local-persistence-restart-closure-2026-09-11.md`
 - `docs/verification/local-backup-restore-closure-2026-09-11.md`
 - `docs/verification/local-observability-closure-2026-09-12.md`
+- `docs/verification/frontend-static-hardening-2026-09-12.md` for the current UX code-side baseline; rendered UX closure is still pending.
 
 ## 4. Comparative ECX — CLOSED / PASS WITH LIMITATIONS
 
@@ -249,7 +250,7 @@ Not closed/proven by this checkpoint:
 1. **Local persistence/restart — CLOSED / PASS**
 2. **Isolated local backup/restore — CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**
 3. **Local observability baseline — CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**
-4. **UX/product validation — ACTIVE NEXT CHECKPOINT**
+4. **UX/product validation — IN PROGRESS; STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING**
 5. **Immutable local model identity hardening — PENDING**
 6. **Compute-host/VPS + Cloudflare production activation — DEFERRED BY OPERATOR**
 7. **Hosted-provider comparative validation — OPTIONAL/FUTURE**
@@ -259,24 +260,34 @@ Not closed/proven by this checkpoint:
 
 Production deployment is not a blocker for current local R&D.
 
-## 9. Active next workstream — UX/product validation
+## 9. Active workstream — UX/product validation
 
 This is a new explicit scope, not Batch 13.
 
-Minimum intended evidence:
+Code-side/static hardening is complete through merged `main` revision:
 
-1. start from synchronized reviewed `main`;
-2. inventory the actual Ai-facing journeys and expected user outcomes before testing;
-3. exercise representative Local chat flows through the real Ai surface;
-4. validate continuity/memory behavior and visible state transitions without rewriting ground truth;
-5. exercise `/space`, `/ops`, and `/settings` navigation plus safe critical actions;
-6. verify Local/Hosted routing clarity while keeping hosted calls disabled and the cost kill switch on;
-7. exercise approval/error/recovery states where safe existing fixtures or local flows permit it;
-8. record functional defects, confusing UX, missing feedback, stale state, broken navigation and severity;
-9. keep machine/user-specific raw screenshots/logs local and commit only sanitized evidence;
-10. require exact-head gates, runtime evidence, intended merge and post-merge verification before closure.
+```text
+63646960da0f4dce946208470eed1c7d6f3068e4
+```
+
+The final code-side passes included PR #56, #58, #59 and #60. Exact-head and post-merge normal CI passed for the final three hardening PRs; the latest post-merge run is `34677516183`.
+
+The remaining work now crosses the real browser/runtime boundary and therefore cannot be inferred from static review or CI. It requires:
+
+1. synchronize local `main` to the final merged revision and verify a clean tracked tree;
+2. restart Phase 4 from that synchronized code with `ECORIONE_COST_KILL_SWITCH=1`;
+3. run `pnpm evidence:ux:inventory` and require PASS;
+4. exercise representative Local chat first-turn and same-session continuity through the real Ai surface;
+5. verify visible memory/routing/cost state and keep Hosted effectively off;
+6. walk Space, Flow, Operations and Settings through the real rendered product;
+7. check at least desktop and one narrow/mobile viewport;
+8. capture browser console errors/warnings and a severity/disposition defect ledger;
+9. fix or explicitly bound every observed defect; S0/S1 cannot remain open and S2 must be fixed or explicitly accepted;
+10. commit only sanitized closure evidence, then require exact-head CI, intended merge and post-merge verification before closing UX/product validation.
 
 No VPS, Cloudflare, domain, firewall or hosted-provider spending mutation belongs to this workstream.
+
+Canonical protocol: `docs/ux-product-validation.md`. Static evidence: `docs/verification/frontend-static-hardening-2026-09-12.md`.
 
 ## 10. Persistent architecture/evidence rules
 
@@ -328,6 +339,6 @@ For backup/restore specifically, also require explicit source identity, backup r
 
 ## 12. Immediate next action
 
-Open the **UX/product validation** scope from synchronized reviewed `main`. Define the real user journeys and expected outcomes first; do not mutate VPS/Cloudflare or hosted-provider state.
+On the operator laptop, synchronize reviewed `main` to `63646960da0f4dce946208470eed1c7d6f3068e4`, restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, then execute the rendered desktop/mobile walkthrough in `docs/ux-product-validation.md`. Do not mutate VPS/Cloudflare or hosted-provider state.
 
 Canonical handoff: `docs/current-state-and-next-steps.md`.
