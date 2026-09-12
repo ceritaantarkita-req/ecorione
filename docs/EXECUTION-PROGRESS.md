@@ -1,6 +1,6 @@
 # ECORIONE — Execution Progress & Remaining Roadmap
 
-Last updated: **2026-09-11**
+Last updated: **2026-09-12**
 
 Status: **ACTIVE — canonical execution tracker**
 
@@ -45,7 +45,8 @@ The local-first evidence progression now includes:
 - ECX pointer-first handoff/hydration;
 - corrected Comparative ECX benchmark;
 - local persistence/restart across owner processes + Temporal + PostgreSQL container restart;
-- isolated local backup/restore including Temporal/PostgreSQL logical restore.
+- isolated local backup/restore including Temporal/PostgreSQL logical restore;
+- bounded local observability across owner reads, ECX hydration, uncached local model calls, trace propagation and owner-process resource deltas.
 
 Canonical verification sources:
 
@@ -55,6 +56,7 @@ Canonical verification sources:
 - `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
 - `docs/verification/local-persistence-restart-closure-2026-09-11.md`
 - `docs/verification/local-backup-restore-closure-2026-09-11.md`
+- `docs/verification/local-observability-closure-2026-09-12.md`
 
 ## 4. Comparative ECX — CLOSED / PASS WITH LIMITATIONS
 
@@ -182,12 +184,72 @@ Not closed/proven by this checkpoint:
 - transactionally atomic cross-owner snapshots;
 - VPS/Cloudflare behavior.
 
-## 7. Current operator-approved execution order
+## 7. Local observability baseline — CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS
+
+Implementation PR #52 merged as:
+
+```text
+bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6
+```
+
+Real-laptop strict run:
+
+```text
+runId: obs-20260912020700-00fbd7e5
+owner reads: 8 per lane
+ECX samples: 5
+local model samples: 5
+workload errors: 0
+trace coverage: 5/5 Hub→Artifact hydrations
+```
+
+Measured model/cache identity:
+
+```text
+runtime: openai-compatible
+model: gemma4:latest
+provider: local
+cache hits: 0
+cache misses: 5
+actual cost USD: 0
+hosted calls: disabled
+```
+
+Representative client p50/p95 local facts:
+
+```text
+Hub read                 5.981 /   26.439 ms
+Context read             4.436 /   17.534 ms
+Artifact read           12.150 /   62.738 ms
+Flow read               11.997 /  142.314 ms
+ECX plan                 5.349 /   14.645 ms
+ECX hydrate             18.623 /   57.065 ms
+Local model           1145.401 / 9109.495 ms
+Provider-reported     1138.240 / 9104.578 ms
+Client-provider delta    6.711 /    7.161 ms
+```
+
+Metric deltas matched the workload: 5 local cache misses, 0 cache hits, 5 ECX plans and 5 ECX hydrations. Bounded before/after Node-process RSS/heap and cumulative CPU deltas were also captured for all eight owner services.
+
+Closed claim: **a small-sample local observability baseline exists and the existing observability contract can attribute representative owner, ECX and local-model work without hosted spend**.
+
+Not closed/proven by this checkpoint:
+
+- production SLA/SLO;
+- universal latency distributions;
+- peak whole-host/GPU/model-server resource use;
+- concurrency/load capacity;
+- long-duration stability or leak freedom;
+- immutable model identity (`gemma4:latest` remains mutable);
+- hosted-provider behavior/cost;
+- VPS/Cloudflare behavior.
+
+## 8. Current operator-approved execution order
 
 1. **Local persistence/restart — CLOSED / PASS**
 2. **Isolated local backup/restore — CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**
-3. **Local observability baseline — ACTIVE NEXT CHECKPOINT**
-4. **UX/product validation — PENDING**
+3. **Local observability baseline — CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**
+4. **UX/product validation — ACTIVE NEXT CHECKPOINT**
 5. **Immutable local model identity hardening — PENDING**
 6. **Compute-host/VPS + Cloudflare production activation — DEFERRED BY OPERATOR**
 7. **Hosted-provider comparative validation — OPTIONAL/FUTURE**
@@ -197,26 +259,26 @@ Not closed/proven by this checkpoint:
 
 Production deployment is not a blocker for current local R&D.
 
-## 8. Active next workstream — local observability baseline
+## 9. Active next workstream — UX/product validation
 
 This is a new explicit scope, not Batch 13.
 
 Minimum intended evidence:
 
 1. start from synchronized reviewed `main`;
-2. inventory current `/ops`, telemetry, Flow and Connect metric surfaces;
-3. define representative local workloads before collecting measurements;
-4. capture sample counts with latency/error/resource signals;
-5. separate model compute from orchestration/transport where telemetry supports it;
-6. record model identity and cache state alongside measurements;
-7. avoid universal SLA/performance claims from laptop-scale samples;
-8. keep raw local telemetry gitignored;
-9. commit only sanitized summaries;
-10. run exact-head, runtime and post-merge verification before closure.
+2. inventory the actual Ai-facing journeys and expected user outcomes before testing;
+3. exercise representative Local chat flows through the real Ai surface;
+4. validate continuity/memory behavior and visible state transitions without rewriting ground truth;
+5. exercise `/space`, `/ops`, and `/settings` navigation plus safe critical actions;
+6. verify Local/Hosted routing clarity while keeping hosted calls disabled and the cost kill switch on;
+7. exercise approval/error/recovery states where safe existing fixtures or local flows permit it;
+8. record functional defects, confusing UX, missing feedback, stale state, broken navigation and severity;
+9. keep machine/user-specific raw screenshots/logs local and commit only sanitized evidence;
+10. require exact-head gates, runtime evidence, intended merge and post-merge verification before closure.
 
 No VPS, Cloudflare, domain, firewall or hosted-provider spending mutation belongs to this workstream.
 
-## 9. Persistent architecture/evidence rules
+## 10. Persistent architecture/evidence rules
 
 - Historical Ledger and Context L0 remain semantic ground truth.
 - No cross-service database access.
@@ -230,13 +292,14 @@ No VPS, Cloudflare, domain, firewall or hosted-provider spending mutation belong
 - `ecx-selective-oracle` is not automatic-selector evidence.
 - Local USD 0 is not hosted billed-cost evidence.
 - No public/general savings claim without representative comparable telemetry.
+- Small local observability samples are not production SLA/SLO evidence.
 - External MCP public-network acceptance must remain genuinely public-network.
 - Do not weaken CI/security/evidence gates to manufacture closure.
 - Preserve valid failed evidence.
 - Backup/restore evidence must use isolated restore targets and preserve owner boundaries.
 - AutoClick remains deferred until a concrete non-API use case passes architecture review.
 
-## 10. Definition of Done for post-closure workstreams
+## 11. Definition of Done for post-closure workstreams
 
 A post-closure workstream may be marked `CLOSED` only after applicable items are satisfied:
 
@@ -263,8 +326,8 @@ A post-closure workstream may be marked `CLOSED` only after applicable items are
 
 For backup/restore specifically, also require explicit source identity, backup receipts/digests, isolated restore target, restore verification and an explicit failure-domain statement.
 
-## 11. Immediate next action
+## 12. Immediate next action
 
-Open the **local observability baseline** scope from synchronized reviewed `main`. Inventory metric surfaces first; do not mutate VPS/Cloudflare or hosted-provider state.
+Open the **UX/product validation** scope from synchronized reviewed `main`. Define the real user journeys and expected outcomes first; do not mutate VPS/Cloudflare or hosted-provider state.
 
 Canonical handoff: `docs/current-state-and-next-steps.md`.
