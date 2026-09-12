@@ -7,6 +7,8 @@ This is the active checkpoint after local observability closure. It validates re
 
 The code-side frontend hardening sequence is merged through PR #62, with owner-boundary follow-ups in PR #63 and PR #65. PR #63 fixed a real Settings MCP workspace-query mismatch and hardened the generic Ai → owner proxy paths/redirect behavior; PR #65 closes the remaining dedicated realtime voice SSE direct-Hub redirect gap. These changes do not alter the runtime/browser claim boundary. Canonical evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and the severity/disposition ledger `docs/verification/frontend-static-defect-ledger-2026-09-12.md`.
 
+PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` is the latest **code-bearing** repository-side UX/static baseline. Documentation-only merges may advance `main` after that point. Therefore runtime evidence must always execute from synchronized **current `origin/main`**, require `HEAD == origin/main`, and verify that the synchronized commit contains PR #65 in ancestry; do not checkout the older code-bearing SHA merely to run evidence.
+
 The remaining gate is the real local rendered inventory/walkthrough described below. `docs/ux-runtime-walkthrough-checklist.md` is the exact operator procedure; static review does not substitute for it.
 
 ## Objective
@@ -55,7 +57,7 @@ These fixes count only as code-side/static hardening. They do not replace the re
 
 ## Read-only strict inventory
 
-After the final static-hardening implementation is present on local synchronized `main`, Phase 4 is restarted on that exact revision, and the environment is sourced with the kill switch enabled, run:
+After local `main` is fetched and synchronized to **current `origin/main`**, the tracked tree is clean, and the synchronized commit is verified to contain PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` in ancestry, restart Phase 4 from that same revision with the environment sourced and the kill switch enabled, then run:
 
 ```bash
 pnpm evidence:ux:inventory
@@ -95,7 +97,7 @@ Inventory PASS means the product is ready for rendered walkthrough. It is not UX
 
 ## Rendered walkthrough procedure
 
-Use a real browser against `http://127.0.0.1:3000` on the exact merged revision.
+Use a real browser against `http://127.0.0.1:3000` on the same synchronized **current `origin/main`** revision that passed the strict inventory.
 
 Minimum evidence:
 
@@ -128,7 +130,7 @@ The checkpoint can be marked **CLOSED / PASS WITH LIMITATIONS** only when all of
 
 - exact-head repository CI is green;
 - implementation is merged and `main` is verified;
-- Phase 4 runs the merged revision;
+- Phase 4 runs the same synchronized current `origin/main` revision used for inventory/walkthrough;
 - `pnpm evidence:ux:inventory` passes on synchronized clean `main`;
 - rendered browser walkthrough covers the minimum journeys above;
 - no S0/S1 issue remains open;
@@ -136,7 +138,7 @@ The checkpoint can be marked **CLOSED / PASS WITH LIMITATIONS** only when all of
 - hosted calls remain effectively disabled throughout the checkpoint;
 - sanitized closure evidence is committed without private raw screenshots/logs.
 
-As of PR #65, the repository-side static implementation includes the generic owner-proxy hardening plus the dedicated voice-stream redirect boundary. The local inventory and rendered browser bullets remain pending and must not be inferred from CI; exact-head and post-merge status for the latest PR must be verified before treating the repository-side baseline as final.
+As of PR #65, the repository-side static implementation includes the generic owner-proxy hardening plus the dedicated voice-stream redirect boundary. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` remains the latest code-bearing baseline even when documentation-only merges advance `main`. The local inventory and rendered browser bullets remain pending and must not be inferred from CI; runtime evidence must use synchronized current `origin/main` with PR #65 in ancestry.
 
 ## Claim boundary
 
