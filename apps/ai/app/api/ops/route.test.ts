@@ -80,9 +80,11 @@ describe("GET /api/ops", () => {
     expect(body.services).toHaveLength(9);
     expect(body.services.every((service) => service.healthy)).toBe(true);
     expect(body.services.find((service) => service.name === "sync")?.required).toBe(false);
-    expect(body.services.filter((service) => service.name !== "sync").every((service) => service.required)).toBe(
-      true,
-    );
+    expect(
+      body.services
+        .filter((service) => service.name !== "sync")
+        .every((service) => service.required),
+    ).toBe(true);
     expect(calls.filter((call) => call.url.endsWith("/healthz"))).toHaveLength(9);
     expect(calls.filter((call) => call.url.endsWith("/v1/ops/observability"))).toHaveLength(8);
     expect(calls.every((call) => call.init?.cache === "no-store")).toBe(true);
