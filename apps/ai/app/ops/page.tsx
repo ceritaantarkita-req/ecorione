@@ -69,6 +69,11 @@ function formatBytes(value: number): string {
   if (!Number.isFinite(value) || value <= 0) return "0 MB";
   return `${(value / 1024 / 1024).toFixed(1)} MB`;
 }
+function serviceStatus(service: Service): { className: string; label: string } {
+  if (service.healthy) return { className: styles.ok, label: "UP" };
+  if (!service.required) return { className: styles.subtle, label: "OPTIONAL DOWN" };
+  return { className: styles.bad, label: "DOWN" };
+}
 
 export default function OpsPage() {
   const [data, setData] = useState<OpsResponse | null>(null);
@@ -223,18 +228,12 @@ export default function OpsPage() {
             const errorCount = sum(counters, "ecorione_http_errors_total");
             const timing = latency(service.observability?.histograms ?? []);
             const resources = service.observability?.process;
-            const optionalDown = !service.healthy && !service.required;
-            const statusClassName = service.healthy
-              ? styles.ok
-              : optionalDown
-                ? styles.subtle
-                : styles.bad;
-            const statusLabel = service.healthy ? "UP" : optionalDown ? "OPTIONAL DOWN" : "DOWN";
+            const status = serviceStatus(service);
             return (
               <article className={styles.card} key={service.name}>
                 <div className={styles.cardTitle}>
                   <strong>{service.name}</strong>
-                  <span className={statusClassName}>{statusLabel}</span>
+                  <span className={status.className}>{status.label}</span>
                 </div>
                 <dl>
                   <div>
