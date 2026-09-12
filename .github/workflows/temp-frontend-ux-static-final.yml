@@ -1,0 +1,522 @@
+name: TEMP Frontend UX Static Final
+
+on:
+  push:
+    branches:
+      - fix/frontend-ux-static-final-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/frontend-ux-static-final-20260912
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply final static UX hardening
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text()
+          def write(path, text):
+              Path(path).write_text(text)
+          def once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected exactly 1 target, found {count}")
+              return text.replace(old, new, 1)
+
+          # Chat: visible memory mutation feedback + truthful disabled state.
+          p = Path('apps/ai/app/page.tsx')
+          s = p.read_text()
+          s = once(s,
+          '  const [forgettingId, setForgettingId] = useState<string | null>(null);\n  const sendInFlightRef = useRef(false);',
+          '  const [forgettingId, setForgettingId] = useState<string | null>(null);\n  const [memoryFeedback, setMemoryFeedback] = useState<{\n    kind: "success" | "error";\n    message: string;\n  } | null>(null);\n  const sendInFlightRef = useRef(false);',
+          'chat feedback state')
+          s = once(s,
+          '    forgetInFlightRef.current = factId;\n    setForgettingId(factId);',
+          '    forgetInFlightRef.current = factId;\n    setForgettingId(factId);\n    setMemoryFeedback(null);',
+          'chat forget start')
+          old = '''      if (!res.ok) {\n        setTurns((prev) => [\n          ...prev,\n          {\n            kind: "error",\n            id: nextTurnId(),\n            message: extractErrorMessage(body) ?? `Gagal melupakan fakta (${res.status}).`,\n          },\n        ]);\n        return;\n      }'''
+          new = '''      if (!res.ok) {\n        const message = extractErrorMessage(body) ?? `Gagal melupakan fakta (${res.status}).`;\n        setMemoryFeedback({ kind: "error", message });\n        setTurns((prev) => [\n          ...prev,\n          {\n            kind: "error",\n            id: nextTurnId(),\n            message,\n          },\n        ]);\n        return;\n      }'''
+          s = once(s, old, new, 'chat forget http error')
+          s = once(s,
+          '      setTurns((prev) =>\n        prev.map((t) =>',
+          '      setMemoryFeedback({ kind: "success", message: "Fakta berhasil dilupakan." });\n      setTurns((prev) =>\n        prev.map((t) =>',
+          'chat forget success')
+          old = '''    } catch {\n      setTurns((prev) => [\n        ...prev,\n        {\n          kind: "error",\n          id: nextTurnId(),\n          message: "Tidak bisa menghubungi server untuk melupakan fakta.",\n        },\n      ]);\n    } finally {'''
+          new = '''    } catch {\n      const message = "Tidak bisa menghubungi server untuk melupakan fakta.";\n      setMemoryFeedback({ kind: "error", message });\n      setTurns((prev) => [\n        ...prev,\n        {\n          kind: "error",\n          id: nextTurnId(),\n          message,\n        },\n      ]);\n    } finally {'''
+          s = once(s, old, new, 'chat forget network error')
+          s = once(s,
+          '          <div className="ai-panel__title">Memori yang dipakai</div>\n          {latestAssistant === undefined ? (',
+          '          <div className="ai-panel__title">Memori yang dipakai</div>\n          {memoryFeedback !== null ? (\n            <p\n              className={`ai-panel__feedback ai-panel__feedback--${memoryFeedback.kind}`}\n              role={memoryFeedback.kind === "error" ? "alert" : "status"}\n            >\n              {memoryFeedback.message}\n            </p>\n          ) : null}\n          {latestAssistant === undefined ? (',
+          'chat feedback render')
+          s = once(s,
+          '                disabled={forgettingId === fact.id}\n              >\n                Lupakan',
+          '                disabled={forgettingId !== null}\n              >\n                {forgettingId === fact.id ? "Melupakan…" : "Lupakan"}',
+          'chat forget button')
+          p.write_text(s)
+
+          # Chat feedback styling.
+          p = Path('apps/ai/app/globals.css')
+          s = p.read_text()
+          anchor = '''.ai-panel__title {\n  color: var(--text);\n  font-family: var(--font-display);\n  font-size: 18px;\n  letter-spacing: -0.01em;\n}\n'''
+          addition = anchor + '''\n.ai-panel__feedback {\n  margin: -14px 0 0;\n  padding: 8px 0 8px 10px;\n  border-left: 1px solid var(--border);\n  color: var(--text-muted);\n  font-size: 10.5px;\n  line-height: 1.5;\n}\n\n.ai-panel__feedback--success {\n  border-left-color: var(--success);\n}\n\n.ai-panel__feedback--error {\n  border-left-color: var(--danger);\n  color: var(--text);\n  background: color-mix(in srgb, var(--danger) 7%, transparent);\n}\n'''
+          s = once(s, anchor, addition, 'chat feedback css')
+          p.write_text(s)
+
+          # Space: suppress stale lists, clear stale document on navigation, and serialize mutations.
+          p = Path('apps/ai/app/space/page.tsx')
+          s = p.read_text()
+          s = once(s,
+          '  const createPageInFlightRef = useRef(false);\n  const selectedPageIdRef = useRef<string | null>(null);\n  const pageRequestRef = useRef(0);',
+          '  const createPageInFlightRef = useRef(false);\n  const [pendingMutation, setPendingMutation] = useState<string | null>(null);\n  const mutationInFlightRef = useRef(false);\n  const selectedPageIdRef = useRef<string | null>(null);\n  const pageRequestRef = useRef(0);\n  const pagesRequestRef = useRef(0);\n  const memoryRequestRef = useRef(0);',
+          'space mutation refs')
+          anchor = '''  const selectedBlock = useMemo(\n    () => document?.blocks.find((block) => block.id === selectedBlockId) ?? null,\n    [document, selectedBlockId],\n  );\n'''
+          addition = anchor + '''\n  function beginMutation(action: string): boolean {\n    if (createPageInFlightRef.current || mutationInFlightRef.current) return false;\n    mutationInFlightRef.current = true;\n    setPendingMutation(action);\n    return true;\n  }\n\n  function finishMutation(): void {\n    mutationInFlightRef.current = false;\n    setPendingMutation(null);\n  }\n\n  function selectPage(id: string): void {\n    if (selectedPageIdRef.current === id) return;\n    pageRequestRef.current += 1;\n    selectedPageIdRef.current = id;\n    setSelectedPageId(id);\n    setDocument(null);\n    setSelectedBlockId(null);\n    setDeleteConfirmId(null);\n    setResolution(null);\n    setRenaming(false);\n  }\n'''
+          s = once(s, anchor, addition, 'space helpers')
+          old = '''  const refreshPages = useCallback(async () => {\n    try {\n      const response = await fetch(`/api/space/pages?workspaceId=${WORKSPACE_ID}`, {\n        cache: "no-store",\n      });\n      const next = (await readJson<{ pages: SpacePage[] }>(response)).pages;\n      setPages(next);'''
+          new = '''  const refreshPages = useCallback(async () => {\n    const requestId = ++pagesRequestRef.current;\n    try {\n      const response = await fetch(`/api/space/pages?workspaceId=${WORKSPACE_ID}`, {\n        cache: "no-store",\n      });\n      const next = (await readJson<{ pages: SpacePage[] }>(response)).pages;\n      if (requestId !== pagesRequestRef.current) return;\n      setPages(next);'''
+          s = once(s, old, new, 'space pages sequence')
+          s = once(s,
+          '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }, []);\n\n  const refreshMemory = useCallback(async () => {\n    try {',
+          '    } catch (err) {\n      if (requestId === pagesRequestRef.current) {\n        setError(err instanceof Error ? err.message : String(err));\n      }\n    }\n  }, []);\n\n  const refreshMemory = useCallback(async () => {\n    const requestId = ++memoryRequestRef.current;\n    try {',
+          'space pages catch and memory seq')
+          s = once(s,
+          '      setMemory(await readJson<CoreMemory>(response));\n    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }, []);',
+          '      const next = await readJson<CoreMemory>(response);\n      if (requestId !== memoryRequestRef.current) return;\n      setMemory(next);\n    } catch (err) {\n      if (requestId === memoryRequestRef.current) {\n        setError(err instanceof Error ? err.message : String(err));\n      }\n    }\n  }, []);',
+          'space memory sequence')
+          s = once(s,
+          '    if (newPageTitle.trim().length === 0 || createPageInFlightRef.current) return;',
+          '    if (\n      newPageTitle.trim().length === 0 ||\n      createPageInFlightRef.current ||\n      mutationInFlightRef.current\n    )\n      return;',
+          'space create guard')
+          s = once(s,
+          '      await refreshPages();\n      setSelectedPageId(page.id);',
+          '      await refreshPages();\n      selectPage(page.id);',
+          'space create select')
+
+          # Serialize mutation handlers with finally cleanup.
+          for label, old_start, new_start in [
+              ('space add block', '  async function addBlock() {\n    if (document === null) return;\n    try {', '  async function addBlock() {\n    if (document === null || !beginMutation("add-block")) return;\n    try {'),
+              ('space save block', '  async function saveBlock() {\n    if (document === null || selectedBlock === null) return;\n    try {', '  async function saveBlock() {\n    if (document === null || selectedBlock === null || !beginMutation("save-block")) return;\n    try {'),
+              ('space delete block', '  async function deleteBlock(block: SpaceBlock) {\n    if (document === null) return;\n    try {', '  async function deleteBlock(block: SpaceBlock) {\n    if (document === null || !beginMutation("delete-block")) return;\n    try {'),
+              ('space resolve block', '  async function resolveBlock() {\n    if (selectedBlock === null) return;\n    try {', '  async function resolveBlock() {\n    if (selectedBlock === null || !beginMutation("resolve-block")) return;\n    try {'),
+          ]:
+              s = once(s, old_start, new_start, label)
+
+          # Add finally blocks to the four serialized handlers by their exact tails.
+          replacements = [
+              ('space add finally', '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }\n\n  async function saveBlock()', '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    } finally {\n      finishMutation();\n    }\n  }\n\n  async function saveBlock()'),
+              ('space save finally', '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }\n\n  async function deleteBlock', '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    } finally {\n      finishMutation();\n    }\n  }\n\n  async function deleteBlock'),
+              ('space delete finally', '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }\n\n  async function moveBlock', '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    } finally {\n      finishMutation();\n    }\n  }\n\n  async function moveBlock'),
+              ('space resolve finally', '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }\n\n  async function renamePage', '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    } finally {\n      finishMutation();\n    }\n  }\n\n  async function renamePage'),
+          ]
+          for label, old, new in replacements:
+              s = once(s, old, new, label)
+
+          # Move has validation before locking.
+          s = once(s,
+          '    if (index < 0 || target < 0 || target >= document.blocks.length) return;\n    const blockIds = document.blocks.map((item) => item.id);',
+          '    if (index < 0 || target < 0 || target >= document.blocks.length) return;\n    if (!beginMutation("move-block")) return;\n    const blockIds = document.blocks.map((item) => item.id);',
+          'space move lock')
+          s = once(s,
+          '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }\n\n  async function resolveBlock',
+          '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    } finally {\n      finishMutation();\n    }\n  }\n\n  async function resolveBlock',
+          'space move finally')
+
+          # Rename and memory save locks.
+          s = once(s,
+          '    const title = renameDraft.trim();\n    if (title.length === 0) return;\n    try {',
+          '    const title = renameDraft.trim();\n    if (title.length === 0 || !beginMutation("rename-page")) return;\n    try {',
+          'space rename lock')
+          s = once(s,
+          '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }\n\n  async function saveMemory',
+          '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    } finally {\n      finishMutation();\n    }\n  }\n\n  async function saveMemory',
+          'space rename finally')
+          s = once(s,
+          '  async function saveMemory(event: FormEvent) {\n    event.preventDefault();\n    try {',
+          '  async function saveMemory(event: FormEvent) {\n    event.preventDefault();\n    if (!beginMutation("save-memory")) return;\n    try {',
+          'space memory lock')
+          s = once(s,
+          '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    }\n  }\n\n  return (',
+          '    } catch (err) {\n      setError(err instanceof Error ? err.message : String(err));\n    } finally {\n      finishMutation();\n    }\n  }\n\n  return (',
+          'space memory finally')
+
+          # Page navigation must clear old document synchronously.
+          s = once(s,
+          '                  onClick={() => setSelectedPageId(page.id)}',
+          '                  onClick={() => selectPage(page.id)}',
+          'space page selector')
+
+          # Disable mutation surfaces while a mutation is in flight.
+          s = s.replace('disabled={newPageTitle.trim().length === 0 || creatingPage}', 'disabled={newPageTitle.trim().length === 0 || creatingPage || pendingMutation !== null}', 1)
+          s = once(s,
+          '                  aria-pressed={page.id === selectedPageId}\n                >',
+          '                  aria-pressed={page.id === selectedPageId}\n                  disabled={creatingPage || pendingMutation !== null}\n                >',
+          'space page button disable')
+          s = once(s,
+          '                      aria-label="Page title"\n                      autoFocus',
+          '                      aria-label="Page title"\n                      disabled={pendingMutation !== null}\n                      autoFocus',
+          'space rename input disable')
+          s = once(s,
+          '                      disabled={renameDraft.trim().length === 0}',
+          '                      disabled={renameDraft.trim().length === 0 || pendingMutation !== null}',
+          'space rename save disable')
+          s = once(s,
+          '                    className={styles.button}\n                    onClick={() => setRenaming(true)}',
+          '                    className={styles.button}\n                    disabled={pendingMutation !== null}\n                    onClick={() => setRenaming(true)}',
+          'space rename button disable')
+          s = once(s,
+          '                            disabled={index === 0}',
+          '                            disabled={index === 0 || pendingMutation !== null}',
+          'space move up disable')
+          s = once(s,
+          '                            disabled={index === document.blocks.length - 1}',
+          '                            disabled={index === document.blocks.length - 1 || pendingMutation !== null}',
+          'space move down disable')
+          s = once(s,
+          '                            aria-label={\n                              deleteConfirmId === block.id',
+          '                            disabled={pendingMutation !== null}\n                            aria-label={\n                              deleteConfirmId === block.id',
+          'space delete disable')
+          s = once(s,
+          '                      onClick={() => chooseKind(kind)}\n                    >',
+          '                      onClick={() => chooseKind(kind)}\n                      disabled={pendingMutation !== null}\n                    >',
+          'space kind disable')
+          s = once(s,
+          '                  aria-label={`${draftKind} block JSON`}\n                />',
+          '                  aria-label={`${draftKind} block JSON`}\n                  disabled={pendingMutation !== null}\n                />',
+          'space draft disable')
+          s = once(s,
+          '                    className={styles.buttonPrimary}\n                    onClick={() => void addBlock()}',
+          '                    className={styles.buttonPrimary}\n                    disabled={pendingMutation !== null}\n                    onClick={() => void addBlock()}',
+          'space add disable')
+          s = once(s,
+          '                    aria-label="Selected block JSON"\n                  />',
+          '                    aria-label="Selected block JSON"\n                    disabled={pendingMutation !== null}\n                  />',
+          'space inspector disable')
+          s = once(s,
+          '                      className={styles.buttonPrimary}\n                      onClick={() => void saveBlock()}',
+          '                      className={styles.buttonPrimary}\n                      disabled={pendingMutation !== null}\n                      onClick={() => void saveBlock()}',
+          'space save button disable')
+          s = once(s,
+          '                      className={styles.button}\n                      onClick={() => void resolveBlock()}',
+          '                      className={styles.button}\n                      disabled={pendingMutation !== null}\n                      onClick={() => void resolveBlock()}',
+          'space resolve disable')
+          s = once(s,
+          '                <button type="submit" className={styles.buttonPrimary}>\n                  Save to Context',
+          '                <button\n                  type="submit"\n                  className={styles.buttonPrimary}\n                  disabled={pendingMutation !== null}\n                >\n                  {pendingMutation === "save-memory" ? "Saving…" : "Save to Context"}',
+          'space memory button disable')
+          p.write_text(s)
+
+          # Flow: dirty-state truth, stale validation suppression, sync request locks.
+          p = Path('apps/ai/app/flow/page.tsx')
+          s = p.read_text()
+          # Existing validation clears are draft mutations; convert before helper insertion.
+          s = s.replace('setValidation(null);', 'markDraftChanged();')
+          s = once(s,
+          '  const [validation, setValidation] = useState<FlowGraphValidationResult | null>(null);\n  const [busy, setBusy] = useState(false);\n  const [runStarting, setRunStarting] = useState(false);',
+          '  const [validation, setValidation] = useState<FlowGraphValidationResult | null>(null);\n  const [dirty, setDirty] = useState(true);\n  const [busy, setBusy] = useState(false);\n  const [validating, setValidating] = useState(false);\n  const [runStarting, setRunStarting] = useState(false);',
+          'flow state')
+          s = once(s,
+          '  const [humanDraft, setHumanDraft] = useState("");\n  const selected = nodes.find((node) => node.id === selectedId) ?? null;',
+          '  const [humanDraft, setHumanDraft] = useState("");\n  const busyInFlightRef = useRef(false);\n  const validationInFlightRef = useRef(false);\n  const runInFlightRef = useRef(false);\n  const nodeActionInFlightRef = useRef(false);\n  const draftRevisionRef = useRef(0);\n  const selected = nodes.find((node) => node.id === selectedId) ?? null;',
+          'flow refs')
+          anchor = '''  const selected = nodes.find((node) => node.id === selectedId) ?? null;\n'''
+          addition = anchor + '''\n  function markDraftChanged(): void {\n    draftRevisionRef.current += 1;\n    setDirty(true);\n    setValidation(null);\n  }\n\n  function beginBusy(): boolean {\n    if (busyInFlightRef.current) return false;\n    busyInFlightRef.current = true;\n    setBusy(true);\n    return true;\n  }\n\n  function finishBusy(): void {\n    busyInFlightRef.current = false;\n    setBusy(false);\n  }\n'''
+          s = once(s, anchor, addition, 'flow helpers')
+          # Moving a node changes the persisted graph but previously did not invalidate validation.
+          s = once(s,
+          '      setNodes((current) =>\n        current.map((node) => (node.id === moving ? { ...node, position: { x, y } } : node)),\n      );\n      return;',
+          '      setNodes((current) =>\n        current.map((node) => (node.id === moving ? { ...node, position: { x, y } } : node)),\n      );\n      markDraftChanged();\n      return;',
+          'flow drag dirty')
+          # Validation must describe exactly the draft revision it checked.
+          old = '''  async function validate(): Promise<FlowGraphValidationResult | null> {\n    const response = await fetch("/api/flow/graphs/validate", {\n      method: "POST",\n      headers: { "content-type": "application/json" },\n      body: JSON.stringify(graphDocument()),\n    });\n    const body = (await response.json().catch(() => null)) as FlowGraphValidationResult | null;\n    if (!response.ok || body === null) {\n      setMessage(errorMessage(body, `Validasi gagal (${response.status}).`));\n      return null;\n    }\n    setValidation(body);\n    setMessage(\n      body.valid ? "Graph valid dan compileable." : `${body.issues.length} masalah validasi.`,\n    );\n    return body;\n  }'''
+          new = '''  async function validate(): Promise<FlowGraphValidationResult | null> {\n    if (validationInFlightRef.current) return null;\n    validationInFlightRef.current = true;\n    setValidating(true);\n    const revision = draftRevisionRef.current;\n    const snapshot = graphDocument();\n    try {\n      const response = await fetch("/api/flow/graphs/validate", {\n        method: "POST",\n        headers: { "content-type": "application/json" },\n        body: JSON.stringify(snapshot),\n      });\n      const body = (await response.json().catch(() => null)) as FlowGraphValidationResult | null;\n      if (!response.ok || body === null) {\n        setMessage(errorMessage(body, `Validasi gagal (${response.status}).`));\n        return null;\n      }\n      if (revision !== draftRevisionRef.current) {\n        setMessage("Draft berubah selama validasi. Validasi lama diabaikan; jalankan Validate lagi.");\n        return null;\n      }\n      setValidation(body);\n      setMessage(\n        body.valid ? "Graph valid dan compileable." : `${body.issues.length} masalah validasi.`,\n      );\n      return body;\n    } finally {\n      validationInFlightRef.current = false;\n      setValidating(false);\n    }\n  }'''
+          s = once(s, old, new, 'flow validate')
+          # Save is synchronously guarded and cannot silently overwrite edits made while awaiting server.
+          s = once(s,
+          '  async function save(): Promise<void> {\n    setBusy(true);\n    try {',
+          '  async function save(): Promise<void> {\n    if (!beginBusy()) return;\n    const revision = draftRevisionRef.current;\n    const snapshot = graphDocument();\n    try {',
+          'flow save begin')
+          s = once(s,
+          '          ? { ...graphDocument(), id: undefined }\n          : { ...graphDocument(), id: undefined, expectedVersion: version ?? 1 };',
+          '          ? { ...snapshot, id: undefined }\n          : { ...snapshot, id: undefined, expectedVersion: version ?? 1 };',
+          'flow save snapshot')
+          old = '''      setVersion(body.version.version);\n      setNodes(body.version.graph.nodes);\n      setEdges(body.version.graph.edges);\n      setValidation(body.version.validation);\n      setMessage(\n        body.deduplicated\n          ? `Tidak ada perubahan — tetap v${body.version.version}.`\n          : `Tersimpan sebagai v${body.version.version}.`,\n      );'''
+          new = '''      setVersion(body.version.version);\n      if (revision === draftRevisionRef.current) {\n        setNodes(body.version.graph.nodes);\n        setEdges(body.version.graph.edges);\n        setValidation(body.version.validation);\n        setDirty(false);\n        setMessage(\n          body.deduplicated\n            ? `Tidak ada perubahan — tetap v${body.version.version}.`\n            : `Tersimpan sebagai v${body.version.version}.`,\n        );\n      } else {\n        setValidation(null);\n        setDirty(true);\n        setMessage(\n          `v${body.version.version} tersimpan, tetapi draft berubah selama request. Simpan lagi sebelum Run.`,\n        );\n      }'''
+          s = once(s, old, new, 'flow save response')
+          s = once(s,
+          '    } finally {\n      setBusy(false);\n    }\n  }\n  async function loadGraph',
+          '    } finally {\n      finishBusy();\n    }\n  }\n  async function loadGraph',
+          'flow save finish')
+          # Load is synchronously guarded and refreshes config draft even when selected id is unchanged.
+          s = once(s,
+          '    if (clean.length === 0) return;\n    setBusy(true);\n    try {',
+          '    if (clean.length === 0 || !beginBusy()) return;\n    try {',
+          'flow load begin')
+          s = once(s,
+          '      setNodes(body.graph.nodes);\n      setEdges(body.graph.edges);\n      setSelectedId(body.graph.nodes[0]?.id ?? "");\n      setValidation(body.validation);',
+          '      setNodes(body.graph.nodes);\n      setEdges(body.graph.edges);\n      const firstNode = body.graph.nodes[0] ?? null;\n      setSelectedId(firstNode?.id ?? "");\n      setConfigDraft(JSON.stringify(firstNode?.config ?? {}, null, 2));\n      draftRevisionRef.current += 1;\n      setDirty(false);\n      setValidation(body.validation);',
+          'flow load config')
+          s = once(s,
+          '    } finally {\n      setBusy(false);\n    }\n  }\n  async function loadVersions',
+          '    } finally {\n      finishBusy();\n    }\n  }\n  async function loadVersions',
+          'flow load finish')
+          # Running unsaved edits previously executed an older persisted version.
+          s = once(s,
+          '  async function runGraph(): Promise<void> {\n    if (runStarting) return;\n    if (graphId === null) {',
+          '  async function runGraph(): Promise<void> {\n    if (runInFlightRef.current || runStarting) return;\n    if (graphId === null) {',
+          'flow run guard')
+          s = once(s,
+          '      setMessage("Simpan graph sebelum Run.");\n      return;\n    }\n    setRunStarting(true);',
+          '      setMessage("Simpan graph sebelum Run.");\n      return;\n    }\n    if (dirty) {\n      setMessage("Ada perubahan yang belum disimpan. Save dulu sebelum Run.");\n      return;\n    }\n    runInFlightRef.current = true;\n    setRunStarting(true);',
+          'flow run dirty')
+          s = once(s,
+          '    } finally {\n      setRunStarting(false);\n    }\n  }\n  async function decide',
+          '    } finally {\n      runInFlightRef.current = false;\n      setRunStarting(false);\n    }\n  }\n  async function decide',
+          'flow run finish')
+          # Node decisions/input same-frame duplicate guard.
+          s = once(s,
+          '    if (runId === null || node.approvalKey === null || pendingNodeAction !== null) return;\n    const actionKey = `${node.nodeId}:decision`;\n    setPendingNodeAction(actionKey);',
+          '    if (\n      runId === null ||\n      node.approvalKey === null ||\n      pendingNodeAction !== null ||\n      nodeActionInFlightRef.current\n    )\n      return;\n    const actionKey = `${node.nodeId}:decision`;\n    nodeActionInFlightRef.current = true;\n    setPendingNodeAction(actionKey);',
+          'flow decide lock')
+          s = once(s,
+          '    } finally {\n      setPendingNodeAction(null);\n    }\n  }\n  async function submitHuman',
+          '    } finally {\n      nodeActionInFlightRef.current = false;\n      setPendingNodeAction(null);\n    }\n  }\n  async function submitHuman',
+          'flow decide finish')
+          s = once(s,
+          '    if (runId === null || pendingNodeAction !== null) return;\n    const actionKey = `${node.nodeId}:input`;\n    setPendingNodeAction(actionKey);',
+          '    if (runId === null || pendingNodeAction !== null || nodeActionInFlightRef.current) return;\n    const actionKey = `${node.nodeId}:input`;\n    nodeActionInFlightRef.current = true;\n    setPendingNodeAction(actionKey);',
+          'flow human lock')
+          s = once(s,
+          '    } finally {\n      setPendingNodeAction(null);\n    }\n  }\n\n  return (',
+          '    } finally {\n      nodeActionInFlightRef.current = false;\n      setPendingNodeAction(null);\n    }\n  }\n\n  return (',
+          'flow human finish')
+          # Metadata edits are persisted graph edits too.
+          s = once(s,
+          '          onChange={(event) => setName(event.target.value)}',
+          '          onChange={(event) => {\n            setName(event.target.value);\n            markDraftChanged();\n          }}',
+          'flow name dirty')
+          s = once(s,
+          '          onChange={(event) => setScope(event.target.value)}',
+          '          onChange={(event) => {\n            setScope(event.target.value);\n            markDraftChanged();\n          }}',
+          'flow scope dirty')
+          s = once(s,
+          '          onChange={(event) => setSensitivity(event.target.value)}',
+          '          onChange={(event) => {\n            setSensitivity(event.target.value);\n            markDraftChanged();\n          }}',
+          'flow sensitivity dirty')
+          # UI reflects validation/run lock and dirty state.
+          s = once(s,
+          '            onClick={() => void runUiAction("Validasi gagal", validate)}\n            disabled={busy}\n          >\n            Validate',
+          '            onClick={() => void runUiAction("Validasi gagal", validate)}\n            disabled={busy || validating}\n          >\n            {validating ? "Validating…" : "Validate"}',
+          'flow validate button')
+          s = once(s,
+          '            disabled={busy || runStarting || graphId === null}\n          >',
+          '            disabled={busy || validating || runStarting || graphId === null || dirty}\n            title={dirty ? "Save perubahan terbaru sebelum Run" : undefined}\n          >',
+          'flow run button')
+          s = once(s,
+          '          {graphId ?? "unsaved"}\n          {version === null ? "" : ` · v${version}`}',
+          '          {graphId ?? "unsaved"}\n          {version === null ? "" : ` · v${version}`}\n          {dirty ? " · unsaved changes" : ""}',
+          'flow dirty indicator')
+          s = once(s,
+          '                <button\n                  key={item.version}\n                  onClick={() =>',
+          '                <button\n                  key={item.version}\n                  disabled={busy}\n                  onClick={() =>',
+          'flow version disable')
+          p.write_text(s)
+
+          # Settings: prevent in-flight edit loss, stale workspace results, and expose mutable identity warning.
+          p = Path('apps/ai/app/settings/page.tsx')
+          s = p.read_text()
+          s = once(s,
+          '  const [pendingAction, setPendingAction] = useState<string | null>(null);\n  const actionInFlight = useRef(false);',
+          '  const [pendingAction, setPendingAction] = useState<string | null>(null);\n  const [mcpLoading, setMcpLoading] = useState(false);\n  const actionInFlight = useRef(false);\n  const mcpLoadRequestRef = useRef(0);\n  const workspaceIdRef = useRef(workspaceId);',
+          'settings refs')
+          old = '''  const refreshMcp = useCallback(async () => {\n    try {\n      const result = await json<{ servers: McpServer[] }>(\n        `/api/settings/settings/mcp/servers?workspaceId=${encodeURIComponent(workspaceId)}`,\n      );\n      setServers(result.servers);\n      setStatus(`Loaded ${String(result.servers.length)} MCP server configuration(s).`);\n    } catch (error) {\n      setStatus(error instanceof Error ? error.message : String(error));\n    }\n  }, [workspaceId]);'''
+          new = '''  const refreshMcp = useCallback(async () => {\n    const requestId = ++mcpLoadRequestRef.current;\n    const requestedWorkspace = workspaceId;\n    setMcpLoading(true);\n    try {\n      const result = await json<{ servers: McpServer[] }>(\n        `/api/settings/settings/mcp/servers?workspaceId=${encodeURIComponent(requestedWorkspace)}`,\n      );\n      if (\n        requestId !== mcpLoadRequestRef.current ||\n        workspaceIdRef.current !== requestedWorkspace\n      )\n        return;\n      setServers(result.servers);\n      setStatus(`Loaded ${String(result.servers.length)} MCP server configuration(s).`);\n    } catch (error) {\n      if (requestId === mcpLoadRequestRef.current) {\n        setStatus(error instanceof Error ? error.message : String(error));\n      }\n    } finally {\n      if (requestId === mcpLoadRequestRef.current) setMcpLoading(false);\n    }\n  }, [workspaceId]);'''
+          s = once(s, old, new, 'settings mcp load sequence')
+          s = once(s,
+          '  useEffect(() => void refresh(), [refresh]);',
+          '  useEffect(() => void refresh(), [refresh]);\n\n  const mutableLocalModel =\n    runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());',
+          'settings mutable model')
+          # Disable runtime controls during any mutation.
+          s = once(s,
+          '                value={runtime.settings.hostedProvider}\n                onChange=',
+          '                value={runtime.settings.hostedProvider}\n                disabled={pendingAction !== null}\n                onChange=',
+          'settings provider disable')
+          s = once(s,
+          '                value={runtime.settings.localModelTag}\n                onChange=',
+          '                value={runtime.settings.localModelTag}\n                disabled={pendingAction !== null}\n                onChange=',
+          'settings model disable')
+          s = once(s,
+          '                value={runtime.settings.localBaseUrl}\n                onChange=',
+          '                value={runtime.settings.localBaseUrl}\n                disabled={pendingAction !== null}\n                onChange=',
+          'settings url disable')
+          s = once(s,
+          '                checked={runtime.settings.hostedCallsEnabled}\n                onChange=',
+          '                checked={runtime.settings.hostedCallsEnabled}\n                disabled={pendingAction !== null}\n                onChange=',
+          'settings hosted disable')
+          s = once(s,
+          '            <p className={`${styles.muted} ${styles.wide}`}>\n              The process-level operator kill switch is a hard ceiling.',
+          '            {mutableLocalModel ? (\n              <p className={`${styles.warning} ${styles.wide}`}>\n                Local model memakai alias mutable <code>{runtime.settings.localModelTag}</code>.\n                Cocok untuk rehearsal, belum immutable production identity.\n              </p>\n            ) : null}\n            <p className={`${styles.muted} ${styles.wide}`}>\n              The process-level operator kill switch is a hard ceiling.',
+          'settings model warning')
+          # Credential edits must not be wiped by a completing request.
+          s = once(s,
+          '            value={secretProvider}\n            onChange=',
+          '            value={secretProvider}\n            disabled={pendingAction !== null}\n            onChange=',
+          'settings secret provider disable')
+          s = once(s,
+          '            value={secret}\n            onChange=',
+          '            value={secret}\n            disabled={pendingAction !== null}\n            onChange=',
+          'settings secret disable')
+          # Workspace request must remain aligned with visible workspace id.
+          s = once(s,
+          '            value={workspaceId}\n            onChange={(event) => setWorkspaceId(event.target.value)}',
+          '            value={workspaceId}\n            disabled={mcpLoading || pendingAction !== null}\n            onChange={(event) => {\n              workspaceIdRef.current = event.target.value;\n              setWorkspaceId(event.target.value);\n            }}',
+          'settings workspace input')
+          s = once(s,
+          '          <button type="button" className={styles.secondary} onClick={() => void refreshMcp()}>\n            Load workspace',
+          '          <button\n            type="button"\n            className={styles.secondary}\n            disabled={mcpLoading || pendingAction !== null}\n            onClick={() => void refreshMcp()}\n          >\n            {mcpLoading ? "Loading…" : "Load workspace"}',
+          'settings workspace button')
+          s = once(s,
+          '          value={mcpJson}\n          onChange=',
+          '          value={mcpJson}\n          disabled={pendingAction !== null}\n          onChange=',
+          'settings mcp editor disable')
+          p.write_text(s)
+
+          p = Path('apps/ai/app/settings/Settings.module.css')
+          s = p.read_text()
+          anchor = '''.muted {\n  margin: 0 0 14px;\n  font-size: 11.5px;\n  line-height: 1.6;\n}\n'''
+          addition = anchor + '''\n.warning {\n  margin: 0;\n  padding: 9px 0 9px 11px;\n  border-left: 1px solid var(--warning);\n  color: var(--text);\n  background: color-mix(in srgb, var(--warning) 7%, transparent);\n  font-size: 11px;\n  line-height: 1.55;\n}\n\n.warning code {\n  color: var(--accent-strong);\n}\n'''
+          s = once(s, anchor, addition, 'settings warning css')
+          p.write_text(s)
+
+          # Ops: explicit empty states and visible fleet health semantics.
+          p = Path('apps/ai/app/ops/page.tsx')
+          s = p.read_text()
+          s = once(s,
+          '<strong>{data === null ? "Loading" : data.healthy ? "Healthy" : "Degraded"}</strong>',
+          '<strong className={data === null ? undefined : data.healthy ? styles.ok : styles.bad}>\n            {data === null ? "Loading" : data.healthy ? "Healthy" : "Degraded"}\n          </strong>',
+          'ops fleet state')
+          s = once(s,
+          '        <div className={styles.grid}>\n          {(data?.services ?? []).map((service) => {',
+          '        <div className={styles.grid}>\n          {data !== null && data.services.length === 0 ? (\n            <p className={styles.empty}>No owner services were returned by the Ops aggregator.</p>\n          ) : null}\n          {(data?.services ?? []).map((service) => {',
+          'ops service empty')
+          s = once(s,
+          '        <div className={styles.traces}>\n          {(data?.recentTraces ?? []).slice(0, 20).map((trace) => (',
+          '        <div className={styles.traces}>\n          {data !== null && data.recentTraces.length === 0 ? (\n            <p className={styles.empty}>No recent distributed traces in this process lifetime.</p>\n          ) : null}\n          {(data?.recentTraces ?? []).slice(0, 20).map((trace) => (',
+          'ops traces empty')
+          p.write_text(s)
+
+          p = Path('apps/ai/app/ops/OpsDashboard.module.css')
+          s = p.read_text()
+          anchor = '''.error {\n  margin: 14px 0;\n  padding: 9px 0 9px 12px;\n  border-left: 1px solid var(--danger);\n  background: color-mix(in srgb, var(--danger) 7%, transparent);\n  color: var(--text);\n  font-size: 11.5px;\n}\n'''
+          addition = anchor + '''\n.empty {\n  grid-column: 1 / -1;\n  margin: 0;\n  padding: 14px 0;\n  color: var(--text-muted);\n  font-size: 11px;\n  line-height: 1.55;\n}\n'''
+          s = once(s, anchor, addition, 'ops empty css')
+          p.write_text(s)
+
+          # Theme controls have explicit accessible labels even when mobile CSS hides their text.
+          p = Path('apps/ai/app/ProductNav.tsx')
+          s = p.read_text()
+          s = once(s,
+          '            aria-pressed={theme === "light"}\n            onClick={() => chooseTheme("light")}',
+          '            aria-pressed={theme === "light"}\n            aria-label="Gunakan tema terang"\n            onClick={() => chooseTheme("light")}',
+          'nav light aria')
+          s = once(s,
+          '            aria-pressed={theme === "dark"}\n            onClick={() => chooseTheme("dark")}',
+          '            aria-pressed={theme === "dark"}\n            aria-label="Gunakan tema gelap"\n            onClick={() => chooseTheme("dark")}',
+          'nav dark aria')
+          p.write_text(s)
+
+          # UX inventory: enforce shared navigation and typed proxy contracts; record mutable alias honestly.
+          p = Path('scripts/local-ux-product-evidence.mjs')
+          s = p.read_text()
+          s = once(s,
+          'export const UI_SURFACES = [\n  ["ai", "http://127.0.0.1:3000/", "ecorione — Ai"],',
+          'export const NAV_ROUTES = [\n  ["Ai", "/"],\n  ["Space", "/space"],\n  ["Flow", "/flow"],\n  ["Operations", "/ops"],\n  ["Settings", "/settings"],\n];\n\nexport const UI_SURFACES = [\n  ["ai", "http://127.0.0.1:3000/", "ecorione — Ai"],',
+          'ux inventory nav const')
+          old = '''  return {\n    hostedCallsEnabled: false,\n    localRuntime: settings.localRuntime ?? null,\n    localModelTag: settings.localModelTag ?? null,\n  };\n}\n\nexport function validateSurfaceHtml'''
+          new = '''  if (settings.localRuntime !== "openai-compatible") {\n    throw new Error("Runtime lokal yang dilaporkan bukan openai-compatible.");\n  }\n  if (typeof settings.localModelTag !== "string" || settings.localModelTag.trim().length === 0) {\n    throw new Error("Runtime settings tidak melaporkan localModelTag yang valid.");\n  }\n  return {\n    hostedCallsEnabled: false,\n    localRuntime: settings.localRuntime,\n    localModelTag: settings.localModelTag,\n    mutableModelAlias: /(^|[:@])latest$/i.test(settings.localModelTag.trim()),\n  };\n}\n\nexport function validateNavigationHtml(html) {\n  for (const [label, href] of NAV_ROUTES) {\n    if (!html.includes(`href="${href}"`)) {\n      throw new Error(`Global navigation tidak memuat route ${label} (${href}).`);\n    }\n  }\n}\n\nexport function validateOpsSnapshot(payload) {\n  if (payload === null || typeof payload !== "object" || payload.healthy !== true) {\n    throw new Error("Ops aggregator tidak melaporkan healthy=true.");\n  }\n  if (!Array.isArray(payload.services)) throw new Error("Ops response tidak memiliki services array.");\n}\n\nexport function validateSpaceSnapshot(payload) {\n  if (payload === null || typeof payload !== "object" || !Array.isArray(payload.pages)) {\n    throw new Error("Space pages response tidak memiliki pages array.");\n  }\n}\n\nexport function validateFlowSnapshot(payload) {\n  if (payload === null || typeof payload !== "object" || !Array.isArray(payload.nodes)) {\n    throw new Error("Flow nodes response tidak memiliki nodes array.");\n  }\n}\n\nexport function validateSurfaceHtml'''
+          s = once(s, old, new, 'ux inventory validators')
+          s = once(s,
+          '    validateSurfaceHtml(name, result.text, marker);\n    surfaces.push({ name, status: result.status, marker });',
+          '    validateSurfaceHtml(name, result.text, marker);\n    validateNavigationHtml(result.text);\n    surfaces.push({ name, status: result.status, marker });',
+          'ux inventory navigation use')
+          s = once(s,
+          '  const ops = parseJson(opsResponse.text, "ops");\n  if (ops?.healthy !== true) throw new Error("Ops aggregator tidak melaporkan healthy=true.");',
+          '  const ops = parseJson(opsResponse.text, "ops");\n  validateOpsSnapshot(ops);',
+          'ux inventory ops use')
+          s = once(s,
+          '  const space = parseJson(spaceResponse.text, "space pages");\n  if (!Array.isArray(space?.pages))\n    throw new Error("Space pages response tidak memiliki pages array.");',
+          '  const space = parseJson(spaceResponse.text, "space pages");\n  validateSpaceSnapshot(space);',
+          'ux inventory space use')
+          s = once(s,
+          '  const flow = parseJson(flowResponse.text, "flow nodes");\n  if (!Array.isArray(flow?.nodes))\n    throw new Error("Flow nodes response tidak memiliki nodes array.");',
+          '  const flow = parseJson(flowResponse.text, "flow nodes");\n  validateFlowSnapshot(flow);',
+          'ux inventory flow use')
+          p.write_text(s)
+
+          p = Path('test/local-ux-product-evidence.test.mjs')
+          s = p.read_text()
+          s = once(s,
+          '  UI_SURFACES,\n  validateRuntimeSnapshot,\n  validateSurfaceHtml,',
+          '  NAV_ROUTES,\n  UI_SURFACES,\n  validateFlowSnapshot,\n  validateNavigationHtml,\n  validateOpsSnapshot,\n  validateRuntimeSnapshot,\n  validateSpaceSnapshot,\n  validateSurfaceHtml,',
+          'ux test imports')
+          s = once(s,
+          '    expect(UI_SURFACES.map(([name]) => name)).toEqual([',
+          '    expect(NAV_ROUTES.map(([label]) => label)).toEqual([\n      "Ai",\n      "Space",\n      "Flow",\n      "Operations",\n      "Settings",\n    ]);\n    expect(UI_SURFACES.map(([name]) => name)).toEqual([',
+          'ux nav test')
+          s = once(s,
+          '    ).toEqual({\n      hostedCallsEnabled: false,\n      localRuntime: "openai-compatible",\n      localModelTag: "local-model",\n    });',
+          '    ).toEqual({\n      hostedCallsEnabled: false,\n      localRuntime: "openai-compatible",\n      localModelTag: "local-model",\n      mutableModelAlias: false,\n    });',
+          'ux runtime expected')
+          insert = '''\n\n  it("mencatat alias model mutable tanpa mengubahnya menjadi failure UX", () => {\n    expect(\n      validateRuntimeSnapshot({\n        settings: {\n          localRuntime: "openai-compatible",\n          localModelTag: "gemma4:latest",\n          hostedCallsEnabled: false,\n        },\n      }).mutableModelAlias,\n    ).toBe(true);\n  });\n\n  it("mewajibkan global navigation dan contract proxy utama", () => {\n    const navHtml = NAV_ROUTES.map(([label, href]) => `<a href="${href}">${label}</a>`).join("");\n    expect(() => validateNavigationHtml(navHtml)).not.toThrow();\n    expect(() => validateNavigationHtml('<a href="/">Ai</a>')).toThrow(/Global navigation/);\n\n    expect(() => validateOpsSnapshot({ healthy: true, services: [] })).not.toThrow();\n    expect(() => validateOpsSnapshot({ healthy: false, services: [] })).toThrow(/healthy=true/);\n    expect(() => validateSpaceSnapshot({ pages: [] })).not.toThrow();\n    expect(() => validateSpaceSnapshot({})).toThrow(/pages array/);\n    expect(() => validateFlowSnapshot({ nodes: [] })).not.toThrow();\n    expect(() => validateFlowSnapshot({})).toThrow(/nodes array/);\n  });\n'''
+          marker = '\n  it("mewajibkan marker halaman dan menolak framework error marker", () => {'
+          s = once(s, marker, insert + marker, 'ux extra tests')
+          p.write_text(s)
+
+          # Static audit evidence + exact laptop walkthrough + next-checkpoint design only.
+          Path('docs/verification/frontend-static-audit-final-2026-09-12.md').write_text('''# Frontend Static Audit — Final Pre-Runtime Pass\n\nStatus: **CODE-SIDE PASS / RENDERED RUNTIME EVIDENCE PENDING**  \nDate: **2026-09-12**\n\nThis pass is the final repository-side UX hardening before the real local browser walkthrough. It does not claim rendered visual quality.\n\n## Surfaces audited\n\n- Ai chat and memory panel\n- global navigation/theme switching\n- Space page/block/core-memory workspace\n- Flow canvas, validation, versioning and run controls\n- Operations telemetry\n- Settings/runtime/credential/MCP controls\n- Ai proxy/evidence contract and local-only operator boundary\n\n## Defects fixed in this pass\n\n1. **Ai forget success had no local visible confirmation.** The memory panel now reports success/failure and disables all forget buttons while one request is active.\n2. **Space could keep the previous page document interactive while a newly selected page was loading.** Page selection now clears the old document synchronously and stale page/list/memory responses are ignored.\n3. **Space mutation buttons relied on async React state independently.** Owner-backed block/page/memory mutations are serialized with synchronous refs and mutation controls are disabled while one is in flight.\n4. **Flow could validate one draft revision and later display that validation after the draft changed.** Validation is revision-bound; stale validation is discarded.\n5. **Flow could run an older persisted version while the visible canvas had unsaved edits.** Dirty state now blocks Run until Save succeeds.\n6. **Flow save/load/run/approval/input actions had same-frame duplicate-event windows.** Synchronous in-flight guards now close those windows.\n7. **Flow loading a graph whose first node reused the current selected id could leave stale Config JSON in the inspector.** Load now refreshes the config draft explicitly.\n8. **Settings fields remained editable during writes, allowing a completing request to overwrite newer local edits (including clearing a newly typed credential).** Mutation-bound fields now lock during writes.\n9. **Settings MCP results could arrive for an older workspace after the visible workspace id changed.** Workspace loads are request-sequenced and identity-checked.\n10. **Mutable local model identity was technically visible but easy to misread as production-pinned.** Settings now displays an explicit warning for `:latest`/`@latest` aliases.\n11. **Operations had ambiguous blank sections when no service/trace rows existed.** Explicit empty states were added.\n12. **Mobile theme controls visually replace text with symbols.** Explicit accessible labels were added so hidden visual text does not reduce control naming.\n13. **UX inventory only smoke-checked route markers.** It now also requires global navigation on every surface, typed Ops/Space/Flow response shapes, a non-empty local model identity, and records whether that identity is a mutable alias.\n\n## Static security/safety findings\n\n- Hosted remains governed by the process-level cost kill switch; this pass does not enable Hosted.\n- Ai server-side proxy configuration keeps the internal token server-side.\n- Space embed URLs are already restricted by shared schema to HTTPS without inline credentials or fragments.\n- No new raw secret rendering or cross-owner DB path was added.\n\n## What this pass does not prove\n\nStatic source review and CI cannot prove pixel-level layout, browser console cleanliness, scroll behavior on the operator's device, local model interaction, or desktop/mobile visual quality. Those remain the runtime closure gate in `docs/ux-runtime-walkthrough-checklist.md`.\n''')
+
+          Path('docs/ux-runtime-walkthrough-checklist.md').write_text('''# UX Runtime Walkthrough Checklist\n\nStatus: **READY / REQUIRES OPERATOR LAPTOP**\n\nRun only on synchronized clean `main` with `ECORIONE_COST_KILL_SWITCH=1` and the merged Phase 4 stack.\n\n## Preflight\n\n1. `git rev-parse HEAD` equals `git rev-parse origin/main`.\n2. `git status --short` is empty.\n3. restart `pnpm dev:phase4` from that revision; do not stop Temporal/PostgreSQL containers.\n4. run `pnpm evidence:ux:inventory`; stop on FAIL.\n5. open `http://127.0.0.1:3000` with browser devtools console visible.\n\n## Desktop walkthrough\n\n| ID | Action | PASS observation | Evidence |\n|---|---|---|---|\n| UX-01 | Use global nav Ai → Space → Flow → Operations → Settings → Ai | every surface reachable, correct active nav, no manual URL entry | one screenshot collage or per-surface screenshots |\n| UX-02 | Send one Local message: `Balas tepat: UX_LOCAL_OK` | waiting state appears once, one reply appears, route/model/cache/cost line visible, no duplicate turn | screenshot + console check |\n| UX-03 | Send second Local message: `Balas tepat: UX_CONTINUITY_OK` | same displayed session id remains; second reply appends to same thread | screenshot |\n| UX-04 | Inspect memory panel | core/recalled/episodic state is understandable and reflects returned data | screenshot |\n| UX-05 | If a disposable recalled fact exists, use Forget once | button enters pending state; success/failure appears visibly; no duplicate request | screenshot; otherwise NOT_EXERCISED |\n| UX-06 | Inspect route control and Settings | Local available; Hosted shown OFF/effectively disabled under kill switch | screenshot |\n| UX-07 | Operations: manual Refresh, toggle Auto 5s off/on | no overlapping refresh glitch; fleet/services/traces or explicit empty states remain understandable | screenshot |\n| UX-08 | Settings: run Local canary only | pending state visible, local provider/model result visible, Hosted remains OFF | screenshot |\n| UX-09 | Space: open two existing pages quickly; create disposable page only if desired | old document is not interactable while new page loads; no stale content swap; owner-backed actions give feedback | screenshot |\n| UX-10 | Flow: edit a draft after save/load | Run becomes unavailable while `unsaved changes` is visible; Validate ignores stale results if draft changes during request | screenshot |\n| UX-11 | Safe failure: invalid Space block JSON or invalid Flow config JSON | actionable visible error, app remains usable without full reload | screenshot |\n| UX-12 | repeat Ai + one management surface at narrow viewport ~390px | no page-level horizontal trap except intentional Flow canvas scroll; controls remain reachable | screenshots |\n\n## Browser console\n\nRecord console errors/warnings after each route. Framework/hydration/unhandled-promise errors are defects. Expected application-level request failures intentionally triggered for UX-11 must be distinguished from unhandled browser errors.\n\n## Defect ledger format\n\nFor every finding record: `ID | severity S0-S3 | route | exact steps | expected | observed | console evidence | disposition`. No S0/S1 may remain for closure; S2 must be fixed or explicitly accepted.\n\n## Minimum screenshots\n\n- desktop Ai before message;\n- desktop Ai after successful Local reply;\n- same-session second turn;\n- Space; Flow; Operations; Settings;\n- Settings Hosted OFF;\n- narrow/mobile Ai;\n- narrow/mobile one management surface.\n\nRaw screenshots stay local if they expose machine/user-specific details. Commit only sanitized findings.\n''')
+
+          Path('docs/immutable-local-model-identity-plan.md').write_text('''# Immutable Local Model Identity — Prepared Plan\n\nStatus: **PENDING — DO NOT ACTIVATE UNTIL UX/PRODUCT VALIDATION CLOSES**  \nDate: **2026-09-12**\n\nThe local rehearsal/benchmark/observability evidence reports `gemma4:latest`. That is valid historical runtime evidence but a mutable alias, not an immutable production identity.\n\n## Goal\n\nMake durable model identity claims depend on a pinned immutable identity while preserving historical evidence exactly as recorded.\n\n## Planned implementation\n\n1. Define a Connect-owned local model identity record containing runtime, requested alias, immutable resolved identity/digest, resolution timestamp, and source.\n2. Resolve the local runtime identity at startup/preflight through the existing local provider boundary; never infer a digest from the alias string.\n3. Refuse production-identity claims when only a mutable alias is known. Local R&D may continue but must expose the limitation.\n4. Persist/report both requested model tag and resolved immutable identity in Connect observability/provider responses without leaking credentials.\n5. Propagate immutable identity into Hub model-called Ledger metadata and comparative/evidence harnesses while keeping historical Ledger entries immutable.\n6. Update Settings/Ops to show `requested alias` separately from `resolved identity`.\n7. Add deterministic tests for alias detection, resolution mismatch, unavailable identity, restart stability, and fail-closed production claim behavior.\n8. Run a new local evidence checkpoint on synchronized merged code; confirm the identity is stable across controlled owner restart and at least one local model call.\n\n## Migration boundary\n\nDo not rewrite existing evidence documents or historical Ledger rows containing `gemma4:latest`; they describe what was actually reported at the time. New immutable evidence begins only after this checkpoint is implemented and measured.\n\n## Not part of this prepared plan\n\n- model quality comparison;\n- changing the chosen local model;\n- Hosted-provider activation;\n- VPS/Cloudflare work;\n- automatic semantic reference selection.\n''')
+          PY
+
+          pnpm exec prettier --write \
+            apps/ai/app/page.tsx \
+            apps/ai/app/globals.css \
+            apps/ai/app/space/page.tsx \
+            apps/ai/app/flow/page.tsx \
+            apps/ai/app/settings/page.tsx \
+            apps/ai/app/settings/Settings.module.css \
+            apps/ai/app/ops/page.tsx \
+            apps/ai/app/ops/OpsDashboard.module.css \
+            apps/ai/app/ProductNav.tsx \
+            scripts/local-ux-product-evidence.mjs \
+            test/local-ux-product-evidence.test.mjs \
+            docs/verification/frontend-static-audit-final-2026-09-12.md \
+            docs/ux-runtime-walkthrough-checklist.md \
+            docs/immutable-local-model-identity-plan.md
+
+          pnpm vitest run test/local-ux-product-evidence.test.mjs
+          pnpm --filter @ecorione/ai run typecheck
+          git diff --check
+          git status --short
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/ai scripts/local-ux-product-evidence.mjs test/local-ux-product-evidence.test.mjs docs
+          git commit -m 'fix: finish static frontend UX hardening'
+          git push origin HEAD:fix/frontend-ux-static-final-20260912
