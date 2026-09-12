@@ -7,6 +7,7 @@ export default defineConfig({
       "services/**/*.test.ts",
       "apps/**/*.test.ts",
       "test/**/*.test.ts",
+      "test/**/*.test.mjs",
     ],
     environment: "node",
     globals: false,

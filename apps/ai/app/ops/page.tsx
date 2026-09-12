@@ -158,7 +158,9 @@ export default function OpsPage() {
       <section className={styles.summary} aria-busy={data === null || refreshing}>
         <div>
           <span>Fleet</span>
-          <strong>{data === null ? "Loading" : data.healthy ? "Healthy" : "Degraded"}</strong>
+          <strong className={data === null ? undefined : data.healthy ? styles.ok : styles.bad}>
+            {data === null ? "Loading" : data.healthy ? "Healthy" : "Degraded"}
+          </strong>
         </div>
         <div>
           <span>Fleet RSS</span>
@@ -209,6 +211,11 @@ export default function OpsPage() {
       <section>
         <h2>Services</h2>
         <div className={styles.grid}>
+          {data !== null && data.services.length === 0 ? (
+            <p className={styles.empty}>
+              No owner services were returned by the Ops aggregator.
+            </p>
+          ) : null}
           {(data?.services ?? []).map((service) => {
             const counters = service.observability?.counters ?? [];
             const requestCount = sum(counters, "ecorione_http_requests_total");
@@ -261,6 +268,11 @@ export default function OpsPage() {
       <section>
         <h2>Recent distributed traces</h2>
         <div className={styles.traces}>
+          {data !== null && data.recentTraces.length === 0 ? (
+            <p className={styles.empty}>
+              No recent distributed traces in this process lifetime.
+            </p>
+          ) : null}
           {(data?.recentTraces ?? []).slice(0, 20).map((trace) => (
             <article className={styles.trace} key={trace.traceId}>
               <code>{trace.traceId}</code>

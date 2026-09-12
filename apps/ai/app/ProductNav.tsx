@@ -102,6 +102,7 @@ export default function ProductNav() {
               theme === "light" ? "ecr-theme-switch__item is-active" : "ecr-theme-switch__item"
             }
             aria-pressed={theme === "light"}
+            aria-label="Gunakan tema terang"
             onClick={() => chooseTheme("light")}
           >
             Terang
@@ -112,6 +113,7 @@ export default function ProductNav() {
               theme === "dark" ? "ecr-theme-switch__item is-active" : "ecr-theme-switch__item"
             }
             aria-pressed={theme === "dark"}
+            aria-label="Gunakan tema gelap"
             onClick={() => chooseTheme("dark")}
           >
             Gelap

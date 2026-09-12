@@ -264,13 +264,9 @@ Production deployment is not a blocker for current local R&D.
 
 This is a new explicit scope, not Batch 13.
 
-Code-side/static hardening is complete through merged `main` revision:
+Code-side/static hardening includes PR #56, #58, #59 and #60 plus the final pre-runtime audit/hardening pass recorded in `docs/verification/frontend-static-audit-final-2026-09-12.md`. The final pass also fixes the test-configuration gap that previously excluded `test/**/*.test.mjs` from the root Vitest suite.
 
-```text
-63646960da0f4dce946208470eed1c7d6f3068e4
-```
-
-The final code-side passes included PR #56, #58, #59 and #60. Exact-head and post-merge normal CI passed for the final three hardening PRs; the latest post-merge run is `34677516183`.
+This remains **code-side evidence only** until the final hardening PR is merged, post-merge CI passes, and the operator reruns the local inventory/browser walkthrough on synchronized `main`.
 
 The remaining work now crosses the real browser/runtime boundary and therefore cannot be inferred from static review or CI. It requires:
 
@@ -287,7 +283,7 @@ The remaining work now crosses the real browser/runtime boundary and therefore c
 
 No VPS, Cloudflare, domain, firewall or hosted-provider spending mutation belongs to this workstream.
 
-Canonical protocol: `docs/ux-product-validation.md`. Static evidence: `docs/verification/frontend-static-hardening-2026-09-12.md`.
+Canonical protocol: `docs/ux-product-validation.md`. Runtime checklist: `docs/ux-runtime-walkthrough-checklist.md`. Static evidence: `docs/verification/frontend-static-hardening-2026-09-12.md` and `docs/verification/frontend-static-audit-final-2026-09-12.md`.
 
 ## 10. Persistent architecture/evidence rules
 
@@ -339,6 +335,6 @@ For backup/restore specifically, also require explicit source identity, backup r
 
 ## 12. Immediate next action
 
-On the operator laptop, synchronize reviewed `main` to `63646960da0f4dce946208470eed1c7d6f3068e4`, restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, then execute the rendered desktop/mobile walkthrough in `docs/ux-product-validation.md`. Do not mutate VPS/Cloudflare or hosted-provider state.
+After the final static-hardening PR is merged and post-merge CI is green, use the operator laptop to synchronize reviewed `main`, restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, then execute `docs/ux-runtime-walkthrough-checklist.md`. Do not mutate VPS/Cloudflare or hosted-provider state.
 
 Canonical handoff: `docs/current-state-and-next-steps.md`.

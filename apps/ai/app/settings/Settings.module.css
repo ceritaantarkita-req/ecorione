@@ -183,6 +183,20 @@
   line-height: 1.6;
 }
 
+.warning {
+  margin: 0;
+  padding: 9px 0 9px 11px;
+  border-left: 1px solid var(--warning);
+  color: var(--text);
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.warning code {
+  color: var(--accent-strong);
+}
+
 .serverList {
   display: grid;
   margin-top: 14px;

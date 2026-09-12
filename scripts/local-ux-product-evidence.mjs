@@ -14,6 +14,14 @@ export const OWNER_HEALTH = [
   ["flow", "http://127.0.0.1:17028/healthz"],
 ];
 
+export const NAV_ROUTES = [
+  ["Ai", "/"],
+  ["Space", "/space"],
+  ["Flow", "/flow"],
+  ["Operations", "/ops"],
+  ["Settings", "/settings"],
+];
+
 export const UI_SURFACES = [
   ["ai", "http://127.0.0.1:3000/", "ecorione — Ai"],
   ["space", "http://127.0.0.1:3000/space", "Space"],
@@ -59,11 +67,49 @@ export function validateRuntimeSnapshot(payload) {
       "Hosted calls harus efektif OFF selama UX checkpoint dengan ECORIONE_COST_KILL_SWITCH=1.",
     );
   }
+  if (settings.localRuntime !== "openai-compatible") {
+    throw new Error("Runtime lokal yang dilaporkan bukan openai-compatible.");
+  }
+  if (
+    typeof settings.localModelTag !== "string" ||
+    settings.localModelTag.trim().length === 0
+  ) {
+    throw new Error("Runtime settings tidak melaporkan localModelTag yang valid.");
+  }
   return {
     hostedCallsEnabled: false,
-    localRuntime: settings.localRuntime ?? null,
-    localModelTag: settings.localModelTag ?? null,
+    localRuntime: settings.localRuntime,
+    localModelTag: settings.localModelTag,
+    mutableModelAlias: /(^|[:@])latest$/i.test(settings.localModelTag.trim()),
   };
+}
+
+export function validateNavigationHtml(html) {
+  for (const [label, href] of NAV_ROUTES) {
+    if (!html.includes(`href="${href}"`)) {
+      throw new Error(`Global navigation tidak memuat route ${label} (${href}).`);
+    }
+  }
+}
+
+export function validateOpsSnapshot(payload) {
+  if (payload === null || typeof payload !== "object" || payload.healthy !== true) {
+    throw new Error("Ops aggregator tidak melaporkan healthy=true.");
+  }
+  if (!Array.isArray(payload.services))
+    throw new Error("Ops response tidak memiliki services array.");
+}
+
+export function validateSpaceSnapshot(payload) {
+  if (payload === null || typeof payload !== "object" || !Array.isArray(payload.pages)) {
+    throw new Error("Space pages response tidak memiliki pages array.");
+  }
+}
+
+export function validateFlowSnapshot(payload) {
+  if (payload === null || typeof payload !== "object" || !Array.isArray(payload.nodes)) {
+    throw new Error("Flow nodes response tidak memiliki nodes array.");
+  }
 }
 
 export function validateSurfaceHtml(name, html, marker) {
@@ -105,6 +151,7 @@ export async function inventory() {
     const result = await request(url);
     if (result.status !== 200) throw new Error(`${name} surface gagal HTTP ${result.status}.`);
     validateSurfaceHtml(name, result.text, marker);
+    validateNavigationHtml(result.text);
     surfaces.push({ name, status: result.status, marker });
   }
 
@@ -118,7 +165,7 @@ export async function inventory() {
   if (opsResponse.status !== 200)
     throw new Error(`Ai ops proxy gagal HTTP ${opsResponse.status}.`);
   const ops = parseJson(opsResponse.text, "ops");
-  if (ops?.healthy !== true) throw new Error("Ops aggregator tidak melaporkan healthy=true.");
+  validateOpsSnapshot(ops);
 
   const spaceResponse = await request(
     "http://127.0.0.1:3000/api/space/pages?workspaceId=ws_personal",
@@ -127,16 +174,14 @@ export async function inventory() {
     throw new Error(`Ai Space proxy gagal HTTP ${spaceResponse.status}.`);
   }
   const space = parseJson(spaceResponse.text, "space pages");
-  if (!Array.isArray(space?.pages))
-    throw new Error("Space pages response tidak memiliki pages array.");
+  validateSpaceSnapshot(space);
 
   const flowResponse = await request("http://127.0.0.1:3000/api/flow/nodes");
   if (flowResponse.status !== 200) {
     throw new Error(`Ai Flow proxy gagal HTTP ${flowResponse.status}.`);
   }
   const flow = parseJson(flowResponse.text, "flow nodes");
-  if (!Array.isArray(flow?.nodes))
-    throw new Error("Flow nodes response tidak memiliki nodes array.");
+  validateFlowSnapshot(flow);
 
   return {
     schemaVersion: 1,

@@ -1,12 +1,24 @@
 import { describe, expect, it } from "vitest";
 import {
+  NAV_ROUTES,
   UI_SURFACES,
+  validateFlowSnapshot,
+  validateNavigationHtml,
+  validateOpsSnapshot,
   validateRuntimeSnapshot,
+  validateSpaceSnapshot,
   validateSurfaceHtml,
 } from "../scripts/local-ux-product-evidence.mjs";
 
 describe("local UX/product evidence guards", () => {
   it("mewajibkan lima surface utama Ai", () => {
+    expect(NAV_ROUTES.map(([label]) => label)).toEqual([
+      "Ai",
+      "Space",
+      "Flow",
+      "Operations",
+      "Settings",
+    ]);
     expect(UI_SURFACES.map(([name]) => name)).toEqual([
       "ai",
       "space",
@@ -43,7 +55,35 @@ describe("local UX/product evidence guards", () => {
       hostedCallsEnabled: false,
       localRuntime: "openai-compatible",
       localModelTag: "local-model",
+      mutableModelAlias: false,
     });
+  });
+
+  it("mencatat alias model mutable tanpa mengubahnya menjadi failure UX", () => {
+    expect(
+      validateRuntimeSnapshot({
+        settings: {
+          localRuntime: "openai-compatible",
+          localModelTag: "gemma4:latest",
+          hostedCallsEnabled: false,
+        },
+      }).mutableModelAlias,
+    ).toBe(true);
+  });
+
+  it("mewajibkan global navigation dan contract proxy utama", () => {
+    const navHtml = NAV_ROUTES.map(([label, href]) => `<a href="${href}">${label}</a>`).join(
+      "",
+    );
+    expect(() => validateNavigationHtml(navHtml)).not.toThrow();
+    expect(() => validateNavigationHtml('<a href="/">Ai</a>')).toThrow(/Global navigation/);
+
+    expect(() => validateOpsSnapshot({ healthy: true, services: [] })).not.toThrow();
+    expect(() => validateOpsSnapshot({ healthy: false, services: [] })).toThrow(/healthy=true/);
+    expect(() => validateSpaceSnapshot({ pages: [] })).not.toThrow();
+    expect(() => validateSpaceSnapshot({})).toThrow(/pages array/);
+    expect(() => validateFlowSnapshot({ nodes: [] })).not.toThrow();
+    expect(() => validateFlowSnapshot({})).toThrow(/nodes array/);
   });
 
   it("mewajibkan marker halaman dan menolak framework error marker", () => {

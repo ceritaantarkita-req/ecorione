@@ -487,6 +487,25 @@ hr {
   letter-spacing: -0.01em;
 }
 
+.ai-panel__feedback {
+  margin: -14px 0 0;
+  padding: 8px 0 8px 10px;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.ai-panel__feedback--success {
+  border-left-color: var(--success);
+}
+
+.ai-panel__feedback--error {
+  border-left-color: var(--danger);
+  color: var(--text);
+  background: color-mix(in srgb, var(--danger) 7%, transparent);
+}
+
 .ai-panel__section {
   display: flex;
   flex-direction: column;
