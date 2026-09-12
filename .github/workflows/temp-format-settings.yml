@@ -1,0 +1,37 @@
+name: TEMP Format Settings
+
+on:
+  push:
+    branches:
+      - feat/frontend-typography-accessibility-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/frontend-typography-accessibility-20260912
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --write apps/ai/app/settings/page.tsx
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/ai/app/settings/page.tsx
+          if git diff --cached --quiet; then
+            echo "Already formatted"
+            exit 0
+          fi
+          git commit -m "style: format frontend settings hardening"
+          git push origin HEAD:feat/frontend-typography-accessibility-20260912
