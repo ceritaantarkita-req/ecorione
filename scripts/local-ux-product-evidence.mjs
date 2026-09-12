@@ -29,19 +29,13 @@ function git(args) {
 }
 
 async function request(url, options = {}) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5_000);
-  try {
-    const response = await fetch(url, {
-      cache: "no-store",
-      signal: controller.signal,
-      ...options,
-    });
-    const text = await response.text();
-    return { status: response.status, text };
-  } finally {
-    clearTimeout(timeout);
-  }
+  const response = await fetch(url, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(5_000),
+    ...options,
+  });
+  const text = await response.text();
+  return { status: response.status, text };
 }
 
 function parseJson(text, label) {
