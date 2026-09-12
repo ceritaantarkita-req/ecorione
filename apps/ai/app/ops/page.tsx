@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./OpsDashboard.module.css";
 
 type Counter = { name: string; labels: Record<string, string>; value: number };
@@ -73,8 +73,13 @@ export default function OpsPage() {
   const [data, setData] = useState<OpsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [auto, setAuto] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshInFlight = useRef(false);
 
   const refresh = useCallback(async () => {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    setRefreshing(true);
     try {
       const response = await fetch("/api/ops", { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
@@ -82,6 +87,9 @@ export default function OpsPage() {
       setError(null);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      refreshInFlight.current = false;
+      setRefreshing(false);
     }
   }, []);
 
@@ -136,8 +144,8 @@ export default function OpsPage() {
             />{" "}
             Auto 5s
           </label>
-          <button type="button" onClick={() => void refresh()}>
-            Refresh
+          <button type="button" disabled={refreshing} onClick={() => void refresh()}>
+            {refreshing ? "Refreshing…" : "Refresh"}
           </button>
         </div>
       </header>
@@ -147,52 +155,54 @@ export default function OpsPage() {
           Ops fetch failed: {error}
         </p>
       ) : null}
-      <section className={styles.summary}>
+      <section className={styles.summary} aria-busy={data === null || refreshing}>
         <div>
           <span>Fleet</span>
-          <strong>{data?.healthy ? "Healthy" : "Degraded"}</strong>
+          <strong>{data === null ? "Loading" : data.healthy ? "Healthy" : "Degraded"}</strong>
         </div>
         <div>
           <span>Fleet RSS</span>
-          <strong>{formatBytes(totals.rssBytes)}</strong>
+          <strong>{data === null ? "—" : formatBytes(totals.rssBytes)}</strong>
         </div>
         <div>
           <span>Requests</span>
-          <strong>{formatNumber(totals.requests)}</strong>
+          <strong>{data === null ? "—" : formatNumber(totals.requests)}</strong>
         </div>
         <div>
           <span>Errors</span>
-          <strong>{formatNumber(totals.errors)}</strong>
+          <strong>{data === null ? "—" : formatNumber(totals.errors)}</strong>
         </div>
         <div>
           <span>Model calls</span>
-          <strong>{formatNumber(totals.modelCalls)}</strong>
+          <strong>{data === null ? "—" : formatNumber(totals.modelCalls)}</strong>
         </div>
         <div>
           <span>Tokens in / out</span>
           <strong>
-            {formatNumber(totals.inputTokens)} / {formatNumber(totals.outputTokens)}
+            {data === null
+              ? "—"
+              : `${formatNumber(totals.inputTokens)} / ${formatNumber(totals.outputTokens)}`}
           </strong>
         </div>
         <div>
           <span>Model cost</span>
-          <strong>${totals.costUsd.toFixed(6)}</strong>
+          <strong>{data === null ? "—" : `$${totals.costUsd.toFixed(6)}`}</strong>
         </div>
         <div>
           <span>MCP calls</span>
-          <strong>{formatNumber(totals.mcpCalls)}</strong>
+          <strong>{data === null ? "—" : formatNumber(totals.mcpCalls)}</strong>
         </div>
         <div>
           <span>Flow runs</span>
-          <strong>{formatNumber(totals.flowRuns)}</strong>
+          <strong>{data === null ? "—" : formatNumber(totals.flowRuns)}</strong>
         </div>
         <div>
           <span>ECX packets</span>
-          <strong>{formatNumber(totals.ecxPackets)}</strong>
+          <strong>{data === null ? "—" : formatNumber(totals.ecxPackets)}</strong>
         </div>
         <div>
           <span>ECX hydrated bytes</span>
-          <strong>{formatNumber(totals.ecxBytes)}</strong>
+          <strong>{data === null ? "—" : formatNumber(totals.ecxBytes)}</strong>
         </div>
       </section>
 
