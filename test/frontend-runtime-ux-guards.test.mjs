@@ -39,14 +39,19 @@ describe("frontend runtime UX guard contracts", () => {
       source("apps/ai/app/navigation.css"),
     ]);
 
-    expect(spaceCss).toContain("@media (max-width: 720px)");
-    expect(spaceCss).toMatch(/\.shell\s*\{[^}]*grid-template-columns:\s*1fr/s);
+    expect(spaceCss).toContain("@media (max-width: 760px)");
+    expect(spaceCss).toMatch(
+      /\.workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s,
+    );
 
     expect(flowCss).toContain("@media (max-width: 760px)");
     expect(flowCss).toMatch(/\.canvas\s*\{[^}]*overflow:\s*auto/s);
-    expect(flowCss).toMatch(/\.layout\s*\{[^}]*grid-template-columns:\s*1fr/s);
+    expect(flowCss).toMatch(
+      /\.workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s,
+    );
+    expect(flowCss).toMatch(/\.canvasWrap\s*\{[^}]*overflow-x:\s*auto/s);
 
-    expect(navCss).toContain("@media (max-width: 760px)");
+    expect(navCss).toContain("@media (max-width: 780px)");
     expect(navCss).toMatch(/\.ecr-global-nav__links\s*\{[^}]*overflow-x:\s*auto/s);
     expect(navCss).toMatch(/\.ecr-global-nav__links\s*\{[^}]*min-width:\s*0/s);
   });
