@@ -1,0 +1,36 @@
+name: TEMP Frontend Mutation Guards
+
+on:
+  push:
+    branches:
+      - fix/frontend-mutation-guards-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/frontend-mutation-guards-20260912
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply and format mutation guards
+        run: |
+          python scripts/temp-frontend-mutation-guards.py
+          pnpm exec prettier --write apps/ai/app/settings/page.tsx apps/ai/app/space/page.tsx apps/ai/app/space/Space.module.css
+          git rm scripts/temp-frontend-mutation-guards.py .github/workflows/temp-frontend-mutation-guards.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/ai/app/settings/page.tsx apps/ai/app/space/page.tsx apps/ai/app/space/Space.module.css
+          git commit -m "fix: guard frontend mutations and destructive actions"
+          git push origin HEAD:fix/frontend-mutation-guards-20260912
