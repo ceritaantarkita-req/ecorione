@@ -21,23 +21,21 @@ afterEach(() => {
 
 describe("GET /api/voice/stream", () => {
   it("meneruskan SSE ke Hub dengan bearer, no-store, dan redirect fail-closed", async () => {
-    const fetchMock = vi.fn(
-      async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
-        expect(String(input)).toBe(
-          "http://hub.local/v1/voice/stream?sessionId=sess_voice_test&after=4",
-        );
-        expect(init?.cache).toBe("no-store");
-        expect(init?.redirect).toBe("error");
-        expect(init?.headers).toEqual({
-          accept: "text/event-stream",
-          authorization: "Bearer voice-test-token",
-        });
-        return new Response("data: ok\n\n", {
-          status: 200,
-          headers: { "content-type": "text/event-stream" },
-        });
-      },
-    );
+    const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      expect(String(input)).toBe(
+        "http://hub.local/v1/voice/stream?sessionId=sess_voice_test&after=4",
+      );
+      expect(init?.cache).toBe("no-store");
+      expect(init?.redirect).toBe("error");
+      expect(init?.headers).toEqual({
+        accept: "text/event-stream",
+        authorization: "Bearer voice-test-token",
+      });
+      return new Response("data: ok\n\n", {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      });
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     const response = await GET(
@@ -46,9 +44,7 @@ describe("GET /api/voice/stream", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe(
-      "text/event-stream; charset=utf-8",
-    );
+    expect(response.headers.get("content-type")).toBe("text/event-stream; charset=utf-8");
     expect(await response.text()).toBe("data: ok\n\n");
   });
 
