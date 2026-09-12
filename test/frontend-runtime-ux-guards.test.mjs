@@ -30,9 +30,13 @@ describe("frontend runtime UX guard contracts", () => {
       "Draft berubah selama validasi. Validasi lama diabaikan; jalankan Validate lagi.",
     );
     expect(flow).toContain("draft berubah selama request. Simpan lagi sebelum Run.");
-    expect(flow).toContain("Ada perubahan yang belum disimpan. Save dulu sebelum Run.");
+    expect(flow).toContain(
+      "Ada perubahan yang belum disimpan. Save dulu sebelum Run.",
+    );
     expect(flow).toContain("if (revision === draftRevisionRef.current)");
-    expect(flow).toContain("disabled={busy || validating || runStarting || graphId === null || dirty}");
+    expect(flow).toContain(
+      "disabled={busy || validating || runStarting || graphId === null || dirty}",
+    );
   });
 
   it("preserves narrow responsive fallbacks and intentional Flow canvas scrolling", async () => {
