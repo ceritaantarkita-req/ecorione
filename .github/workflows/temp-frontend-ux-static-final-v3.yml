@@ -1,0 +1,67 @@
+name: TEMP Frontend UX Static Final v3
+
+on:
+  push:
+    branches:
+      - fix/frontend-ux-static-final-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/frontend-ux-static-final-20260912
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply audited patch and verify
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          source = Path('.github/workflows/temp-frontend-ux-static-final.yml').read_text()
+          start = source.index("          python3 <<'PY'\n") + len("          python3 <<'PY'\n")
+          end = source.index("\n          PY\n", start)
+          block = source[start:end]
+          lines = []
+          for line in block.splitlines():
+              lines.append(line[10:] if line.startswith('          ') else line)
+          Path('/tmp/frontend_patch.py').write_text('\n'.join(lines) + '\n')
+          PY
+          python3 /tmp/frontend_patch.py
+
+          pnpm exec prettier --write \
+            apps/ai/app/page.tsx \
+            apps/ai/app/globals.css \
+            apps/ai/app/space/page.tsx \
+            apps/ai/app/flow/page.tsx \
+            apps/ai/app/settings/page.tsx \
+            apps/ai/app/settings/Settings.module.css \
+            apps/ai/app/ops/page.tsx \
+            apps/ai/app/ops/OpsDashboard.module.css \
+            apps/ai/app/ProductNav.tsx \
+            scripts/local-ux-product-evidence.mjs \
+            test/local-ux-product-evidence.test.mjs \
+            vitest.config.ts \
+            docs/verification/frontend-static-audit-final-2026-09-12.md \
+            docs/ux-runtime-walkthrough-checklist.md \
+            docs/immutable-local-model-identity-plan.md
+
+          pnpm vitest run test/local-ux-product-evidence.test.mjs
+          pnpm run typecheck
+          git diff --check
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/ai scripts/local-ux-product-evidence.mjs test/local-ux-product-evidence.test.mjs vitest.config.ts docs
+          git commit -m 'fix: finish static frontend UX hardening'
+          git push origin HEAD:fix/frontend-ux-static-final-20260912
