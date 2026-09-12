@@ -612,6 +612,18 @@ export default function SpacePageView() {
                           <button
                             type="button"
                             className={styles.iconButton}
+                            aria-label={`Inspect ${block.type} block`}
+                            aria-pressed={selectedBlockId === block.id}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedBlockId(block.id);
+                            }}
+                          >
+                            Inspect
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.iconButton}
                             disabled={index === 0}
                             aria-label={`Move ${block.type} block up`}
                             onClick={(event) => {
