@@ -2,15 +2,17 @@
 
 Status: **READY / REQUIRES OPERATOR LAPTOP**
 
-Run only on synchronized clean `main` with `ECORIONE_COST_KILL_SWITCH=1` and the merged Phase 4 stack.
+Run only on synchronized clean **current `origin/main`** with `ECORIONE_COST_KILL_SWITCH=1` and the merged Phase 4 stack. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` is the latest code-bearing UX/static baseline and must be present in the synchronized commit ancestry; do not checkout that older SHA merely to run evidence.
 
 ## Preflight
 
-1. `git rev-parse HEAD` equals `git rev-parse origin/main`.
-2. `git status --short` is empty.
-3. restart `pnpm dev:phase4` from that revision; do not stop Temporal/PostgreSQL containers.
-4. run `pnpm evidence:ux:inventory`; stop on FAIL. The inventory must include the Settings MCP workspace-list proxy check added after PR #63.
-5. open `http://127.0.0.1:3000` with browser devtools console visible.
+1. fetch remote refs and synchronize local `main` to current `origin/main`.
+2. `git rev-parse HEAD` equals `git rev-parse origin/main`.
+3. `git status --short` is empty.
+4. `git merge-base --is-ancestor f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca HEAD` exits successfully.
+5. restart `pnpm dev:phase4` from that exact synchronized revision; do not stop Temporal/PostgreSQL containers.
+6. run `pnpm evidence:ux:inventory`; stop on FAIL. The inventory must include the Settings MCP workspace-list proxy check added after PR #63.
+7. open `http://127.0.0.1:3000` with browser devtools console visible.
 
 ## Desktop walkthrough
 
