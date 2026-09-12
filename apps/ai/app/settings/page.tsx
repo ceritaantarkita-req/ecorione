@@ -23,6 +23,8 @@ type McpServer = {
   toolPolicies: unknown[];
 };
 
+const PERSONAL_WORKSPACE_ID = "ws_personal";
+
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
   const text = await response.text();
@@ -54,7 +56,7 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
 export default function SettingsPage() {
   const [runtime, setRuntime] = useState<RuntimeSnapshot | null>(null);
   const [credentials, setCredentials] = useState<Credential[]>([]);
-  const [workspaceId, setWorkspaceId] = useState("workspace-default");
+  const [workspaceId, setWorkspaceId] = useState(PERSONAL_WORKSPACE_ID);
   const [servers, setServers] = useState<McpServer[]>([]);
   const [secret, setSecret] = useState("");
   const [secretProvider, setSecretProvider] = useState("anthropic");
@@ -408,7 +410,7 @@ export default function SettingsPage() {
           disabled={pendingAction !== null}
           onChange={(event) => setMcpJson(event.target.value)}
           aria-label="MCP server JSON"
-          placeholder='{"id":"example","displayName":"Example","enabled":false,"workspaceIds":["workspace-default"],"transport":{"type":"streamable-http","url":"https://example.com/mcp"},"toolPolicies":[],"connectTimeoutMs":10000,"requestTimeoutMs":30000}'
+          placeholder='{"id":"example","displayName":"Example","enabled":false,"workspaceIds":["ws_personal"],"transport":{"type":"streamable-http","url":"https://example.com/mcp"},"toolPolicies":[],"connectTimeoutMs":10000,"requestTimeoutMs":30000}'
         />
         <div className={styles.actions}>
           <button
