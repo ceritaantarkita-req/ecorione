@@ -343,6 +343,12 @@
   background: var(--surface-2);
 }
 
+.deleteButtonConfirm {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+
 .blockContent {
   min-width: 0;
   font-size: 13px;

@@ -210,6 +210,7 @@ export default function SpacePageView() {
   const [renameDraft, setRenameDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const selectedBlock = useMemo(
     () => document?.blocks.find((block) => block.id === selectedBlockId) ?? null,
@@ -381,6 +382,7 @@ export default function SpacePageView() {
         ),
       );
       setSelectedBlockId(null);
+      setDeleteConfirmId(null);
       await loadPage(document.page.id);
       await refreshPages();
       setNotice("Block dihapus.");
@@ -647,14 +649,25 @@ export default function SpacePageView() {
                           </button>
                           <button
                             type="button"
-                            className={`${styles.iconButton} ${styles.deleteButton}`}
-                            aria-label={`Delete ${block.type} block`}
+                            className={`${styles.iconButton} ${styles.deleteButton} ${deleteConfirmId === block.id ? styles.deleteButtonConfirm : ""}`}
+                            aria-label={
+                              deleteConfirmId === block.id
+                                ? `Confirm delete ${block.type} block`
+                                : `Delete ${block.type} block`
+                            }
                             onClick={(event) => {
                               event.stopPropagation();
-                              void deleteBlock(block);
+                              if (deleteConfirmId === block.id) {
+                                void deleteBlock(block);
+                              } else {
+                                setDeleteConfirmId(block.id);
+                                setNotice(
+                                  "Klik Confirm delete sekali lagi untuk menghapus block.",
+                                );
+                              }
                             }}
                           >
-                            Delete
+                            {deleteConfirmId === block.id ? "Confirm delete" : "Delete"}
                           </button>
                         </span>
                       </div>

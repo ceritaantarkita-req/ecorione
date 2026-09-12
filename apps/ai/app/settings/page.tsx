@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./Settings.module.css";
 
 type RuntimeSnapshot = {
@@ -60,6 +60,20 @@ export default function SettingsPage() {
   const [secretProvider, setSecretProvider] = useState("anthropic");
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("Loading control state…");
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const actionInFlight = useRef(false);
+
+  function beginAction(action: string): boolean {
+    if (actionInFlight.current) return false;
+    actionInFlight.current = true;
+    setPendingAction(action);
+    return true;
+  }
+
+  function finishAction(): void {
+    actionInFlight.current = false;
+    setPendingAction(null);
+  }
 
   const refresh = useCallback(async () => {
     try {
@@ -90,8 +104,9 @@ export default function SettingsPage() {
   useEffect(() => void refresh(), [refresh]);
 
   async function saveRuntime() {
-    if (runtime === null) return;
+    if (runtime === null || !beginAction("runtime")) return;
     const requestedHosted = runtime.settings.hostedCallsEnabled;
+    setStatus("Saving runtime settings…");
     try {
       const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
         method: "PUT",
@@ -108,10 +123,13 @@ export default function SettingsPage() {
       }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
     }
   }
-
   async function saveCredential() {
+    if (!beginAction("credential")) return;
+    setStatus("Encrypting credential…");
     try {
       await json(`/api/settings/settings/credentials/${secretProvider}`, {
         method: "PUT",
@@ -123,10 +141,13 @@ export default function SettingsPage() {
       setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
     }
   }
-
   async function runCanary() {
+    if (!beginAction("canary")) return;
+    setStatus("Running local canary…");
     try {
       const result = await json<{
         pass: boolean;
@@ -143,10 +164,13 @@ export default function SettingsPage() {
       );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
     }
   }
-
   async function saveMcpServer() {
+    if (!beginAction("mcp")) return;
+    setStatus("Validating and saving MCP server…");
     try {
       const parsed = JSON.parse(mcpJson) as McpServer;
       await json(`/api/settings/settings/mcp/servers/${encodeURIComponent(parsed.id)}`, {
@@ -160,6 +184,8 @@ export default function SettingsPage() {
       );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
     }
   }
 
@@ -243,15 +269,20 @@ export default function SettingsPage() {
               turn Hosted off, but cannot override a closed operator gate.
             </p>
             <div className={styles.actions}>
-              <button type="button" onClick={() => void saveRuntime()}>
-                Save runtime
+              <button
+                type="button"
+                disabled={pendingAction !== null}
+                onClick={() => void saveRuntime()}
+              >
+                {pendingAction === "runtime" ? "Saving…" : "Save runtime"}
               </button>
               <button
                 type="button"
                 className={styles.secondary}
+                disabled={pendingAction !== null}
                 onClick={() => void runCanary()}
               >
-                Run local canary
+                {pendingAction === "canary" ? "Running…" : "Run local canary"}
               </button>
             </div>
           </div>
@@ -289,10 +320,10 @@ export default function SettingsPage() {
           />
           <button
             type="button"
-            disabled={secret.length === 0}
+            disabled={secret.length === 0 || pendingAction !== null}
             onClick={() => void saveCredential()}
           >
-            Encrypt & save
+            {pendingAction === "credential" ? "Encrypting…" : "Encrypt & save"}
           </button>
         </div>
       </section>
@@ -335,10 +366,10 @@ export default function SettingsPage() {
         <div className={styles.actions}>
           <button
             type="button"
-            disabled={mcpJson.trim().length === 0}
+            disabled={mcpJson.trim().length === 0 || pendingAction !== null}
             onClick={() => void saveMcpServer()}
           >
-            Validate & save MCP server
+            {pendingAction === "mcp" ? "Saving…" : "Validate & save MCP server"}
           </button>
         </div>
         <p className={styles.muted}>
