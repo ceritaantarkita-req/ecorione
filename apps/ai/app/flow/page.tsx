@@ -119,6 +119,8 @@ export default function FlowCanvasPage() {
   const [versions, setVersions] = useState<FlowGraphVersionView[]>([]);
   const [validation, setValidation] = useState<FlowGraphValidationResult | null>(null);
   const [busy, setBusy] = useState(false);
+  const [runStarting, setRunStarting] = useState(false);
+  const [pendingNodeAction, setPendingNodeAction] = useState<string | null>(null);
   const [message, setMessage] = useState("Draft lokal");
   const [runInput, setRunInput] = useState('{"hello":"world"}');
   const [run, setRun] = useState<(FlowGraphRunState & { temporalStatus?: string }) | null>(
@@ -156,7 +158,15 @@ export default function FlowCanvasPage() {
       const response = await fetch(`/api/flow/graph-runs/${encodeURIComponent(runId)}`);
       const body = (await response.json().catch(() => null)) as
         (FlowGraphRunState & { temporalStatus?: string }) | null;
-      if (!cancelled && response.ok && body !== null) setRun(body);
+      if (!response.ok || body === null) {
+        throw new Error(
+          errorMessage(
+            body,
+            response.ok ? "Respons status run tidak valid." : `HTTP ${String(response.status)}`,
+          ),
+        );
+      }
+      if (!cancelled) setRun(body);
     };
     const refreshSafely = () => {
       void refresh().catch((reason) => {
@@ -368,69 +378,98 @@ export default function FlowCanvasPage() {
   }
   async function loadVersions(id: string): Promise<void> {
     const response = await fetch(`/api/flow/graphs/${encodeURIComponent(id)}/versions`);
-    if (response.ok)
-      setVersions(((await response.json()) as { versions: FlowGraphVersionView[] }).versions);
+    const body = (await response.json().catch(() => null)) as {
+      versions?: FlowGraphVersionView[];
+      error?: unknown;
+    } | null;
+    if (!response.ok || body?.versions === undefined) {
+      throw new Error(
+        errorMessage(
+          body,
+          response.ok ? "Respons versions tidak valid." : `HTTP ${String(response.status)}`,
+        ),
+      );
+    }
+    setVersions(body.versions);
   }
   async function runGraph(): Promise<void> {
+    if (runStarting) return;
     if (graphId === null) {
       setMessage("Simpan graph sebelum Run.");
       return;
     }
-    const checked = validation?.valid ? validation : await validate();
-    if (checked?.valid !== true) return;
-    const response = await fetch(`/api/flow/graphs/${encodeURIComponent(graphId)}/runs`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ version, input: parseInput(runInput) }),
-    });
-    const body = (await response.json().catch(() => null)) as {
-      runId?: string;
-      traceOperationId?: string;
-    } | null;
-    if (!response.ok || body?.runId === undefined) {
-      setMessage(errorMessage(body, `Run gagal (${response.status}).`));
-      return;
+    setRunStarting(true);
+    try {
+      const checked = validation?.valid ? validation : await validate();
+      if (checked?.valid !== true) return;
+      const response = await fetch(`/api/flow/graphs/${encodeURIComponent(graphId)}/runs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ version, input: parseInput(runInput) }),
+      });
+      const body = (await response.json().catch(() => null)) as {
+        runId?: string;
+        traceOperationId?: string;
+      } | null;
+      if (!response.ok || body?.runId === undefined) {
+        setMessage(errorMessage(body, `Run gagal (${response.status}).`));
+        return;
+      }
+      setRunId(body.runId);
+      setRun(null);
+      setMessage(`Run ${body.runId} dimulai. Trace ${body.traceOperationId ?? "-"}.`);
+    } finally {
+      setRunStarting(false);
     }
-    setRunId(body.runId);
-    setRun(null);
-    setMessage(`Run ${body.runId} dimulai. Trace ${body.traceOperationId ?? "-"}.`);
   }
   async function decide(node: NodeRunState, decision: "APPROVE" | "REJECT"): Promise<void> {
-    if (runId === null || node.approvalKey === null) return;
-    const response = await fetch(
-      `/api/flow/graph-runs/${encodeURIComponent(runId)}/nodes/${encodeURIComponent(node.nodeId)}/decision`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ decision, note: null, approvalKey: node.approvalKey }),
-      },
-    );
-    if (!response.ok)
-      setMessage(
-        errorMessage(
-          await response.json().catch(() => null),
-          `Decision gagal (${response.status}).`,
-        ),
+    if (runId === null || node.approvalKey === null || pendingNodeAction !== null) return;
+    const actionKey = `${node.nodeId}:decision`;
+    setPendingNodeAction(actionKey);
+    try {
+      const response = await fetch(
+        `/api/flow/graph-runs/${encodeURIComponent(runId)}/nodes/${encodeURIComponent(node.nodeId)}/decision`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ decision, note: null, approvalKey: node.approvalKey }),
+        },
       );
+      if (!response.ok)
+        setMessage(
+          errorMessage(
+            await response.json().catch(() => null),
+            `Decision gagal (${response.status}).`,
+          ),
+        );
+    } finally {
+      setPendingNodeAction(null);
+    }
   }
   async function submitHuman(node: NodeRunState): Promise<void> {
-    if (runId === null) return;
-    const response = await fetch(
-      `/api/flow/graph-runs/${encodeURIComponent(runId)}/nodes/${encodeURIComponent(node.nodeId)}/input`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ value: parseInput(humanDraft) }),
-      },
-    );
-    if (response.ok) setHumanDraft("");
-    else
-      setMessage(
-        errorMessage(
-          await response.json().catch(() => null),
-          `Input gagal (${response.status}).`,
-        ),
+    if (runId === null || pendingNodeAction !== null) return;
+    const actionKey = `${node.nodeId}:input`;
+    setPendingNodeAction(actionKey);
+    try {
+      const response = await fetch(
+        `/api/flow/graph-runs/${encodeURIComponent(runId)}/nodes/${encodeURIComponent(node.nodeId)}/input`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ value: parseInput(humanDraft) }),
+        },
       );
+      if (response.ok) setHumanDraft("");
+      else
+        setMessage(
+          errorMessage(
+            await response.json().catch(() => null),
+            `Input gagal (${response.status}).`,
+          ),
+        );
+    } finally {
+      setPendingNodeAction(null);
+    }
   }
 
   return (
@@ -458,9 +497,9 @@ export default function FlowCanvasPage() {
           <button
             className="ecr-btn ecr-btn--secondary"
             onClick={() => void runUiAction("Run gagal", runGraph)}
-            disabled={busy || graphId === null}
+            disabled={busy || runStarting || graphId === null}
           >
-            Run
+            {runStarting ? "Starting…" : "Run"}
           </button>
         </div>
       </header>
@@ -556,9 +595,11 @@ export default function FlowCanvasPage() {
         </aside>
         <section className={styles.canvasWrap}>
           <div className={styles.canvasToolbar}>
-            <span>{message}</span>
+            <span role="status" aria-live="polite">
+              {message}
+            </span>
             {connectFrom === null ? (
-              <span>Drag node dari kiri. Klik node untuk edit.</span>
+              <span>Klik atau drag node dari kiri. Klik node di canvas untuk edit.</span>
             ) : (
               <strong>Connect dari {connectFrom} · klik target</strong>
             )}
@@ -763,14 +804,16 @@ export default function FlowCanvasPage() {
                 <div className={styles.inlineActions}>
                   <button
                     className="ecr-btn ecr-btn--primary"
+                    disabled={pendingNodeAction !== null}
                     onClick={() =>
                       void runUiAction("Approval gagal", () => decide(node, "APPROVE"))
                     }
                   >
-                    Approve
+                    {pendingNodeAction === `${node.nodeId}:decision` ? "Sending…" : "Approve"}
                   </button>
                   <button
                     className="ecr-btn ecr-btn--secondary"
+                    disabled={pendingNodeAction !== null}
                     onClick={() =>
                       void runUiAction("Rejection gagal", () => decide(node, "REJECT"))
                     }
@@ -789,9 +832,10 @@ export default function FlowCanvasPage() {
                   />
                   <button
                     className="ecr-btn ecr-btn--primary"
+                    disabled={pendingNodeAction !== null}
                     onClick={() => void runUiAction("Input gagal", () => submitHuman(node))}
                   >
-                    Send
+                    {pendingNodeAction === `${node.nodeId}:input` ? "Sending…" : "Send"}
                   </button>
                 </div>
               ) : null}
