@@ -44,6 +44,7 @@
     "evidence:backup-restore:inventory": "pnpm run build:runtime-deps && node scripts/local-backup-restore-evidence.mjs --phase inventory",
     "evidence:observability": "pnpm run build:runtime-deps && node scripts/local-observability-evidence.mjs",
     "evidence:observability:inventory": "pnpm run build:runtime-deps && node scripts/local-observability-evidence.mjs --phase inventory",
+    "evidence:ux:inventory": "node scripts/local-ux-product-evidence.mjs",
     "production:preflight": "bash scripts/production-preflight.sh",
     "production:smoke": "node scripts/production-public-smoke.mjs",
     "production:ops-snapshot": "node scripts/production-ops-snapshot.mjs",
