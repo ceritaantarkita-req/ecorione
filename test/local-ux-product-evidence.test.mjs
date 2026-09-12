@@ -89,9 +89,16 @@ describe("local UX/product evidence guards", () => {
     expect(() => validateFlowSnapshot({})).toThrow(/nodes array/);
   });
 
-  it("mewajibkan marker halaman dan menolak framework error marker", () => {
+  it("mewajibkan marker halaman, menerima entity SSR, dan menolak framework error marker", () => {
     expect(() =>
       validateSurfaceHtml("ai", "<h1>ecorione — Ai</h1>", "ecorione — Ai"),
+    ).not.toThrow();
+    expect(() =>
+      validateSurfaceHtml(
+        "ops",
+        "<h1>Runtime health &amp; telemetry</h1>",
+        "Runtime health & telemetry",
+      ),
     ).not.toThrow();
     expect(() =>
       validateSurfaceHtml("ops", "Application error", "Runtime health & telemetry"),
