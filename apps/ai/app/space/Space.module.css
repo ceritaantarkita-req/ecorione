@@ -337,12 +337,24 @@
 }
 
 .blockContent {
+  min-width: 0;
   font-size: 13px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .blockContent p {
   margin: 0;
+}
+
+.blockContent ul,
+.blockContent ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.blockContent label {
+  display: block;
 }
 
 .blockContent a {
@@ -350,8 +362,14 @@
   text-underline-offset: 3px;
 }
 
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .blockContent table {
   width: 100%;
+  min-width: 420px;
   border-collapse: collapse;
   font-size: 11.5px;
 }
