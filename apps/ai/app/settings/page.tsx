@@ -25,10 +25,30 @@ type McpServer = {
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
-  const payload = (await response.json()) as T & { error?: { message?: string } };
-  if (!response.ok)
-    throw new Error(payload.error?.message ?? `HTTP ${String(response.status)}`);
-  return payload;
+  const text = await response.text();
+  let payload: unknown = null;
+
+  if (text.length > 0) {
+    try {
+      payload = JSON.parse(text) as unknown;
+    } catch {
+      if (!response.ok) {
+        throw new Error(`HTTP ${String(response.status)}: ${text.slice(0, 240)}`);
+      }
+      throw new Error(`HTTP ${String(response.status)} returned a non-JSON response.`);
+    }
+  }
+
+  if (!response.ok) {
+    const error =
+      typeof payload === "object" && payload !== null
+        ? (payload as { error?: { message?: unknown } }).error
+        : undefined;
+    const message = typeof error?.message === "string" ? error.message : undefined;
+    throw new Error(message ?? `HTTP ${String(response.status)}`);
+  }
+
+  return payload as T;
 }
 
 export default function SettingsPage() {
@@ -151,7 +171,7 @@ export default function SettingsPage() {
           <p>Provider, model, credential, and MCP configuration. Secrets never render back.</p>
         </div>
       </header>
-      <p className={styles.status} aria-live="polite">
+      <p className={styles.status} aria-live="polite" role="status">
         {status}
       </p>
 
@@ -223,8 +243,14 @@ export default function SettingsPage() {
               turn Hosted off, but cannot override a closed operator gate.
             </p>
             <div className={styles.actions}>
-              <button onClick={() => void saveRuntime()}>Save runtime</button>
-              <button className={styles.secondary} onClick={() => void runCanary()}>
+              <button type="button" onClick={() => void saveRuntime()}>
+                Save runtime
+              </button>
+              <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => void runCanary()}
+              >
                 Run local canary
               </button>
             </div>
@@ -261,7 +287,11 @@ export default function SettingsPage() {
             value={secret}
             onChange={(event) => setSecret(event.target.value)}
           />
-          <button disabled={secret.length === 0} onClick={() => void saveCredential()}>
+          <button
+            type="button"
+            disabled={secret.length === 0}
+            onClick={() => void saveCredential()}
+          >
             Encrypt & save
           </button>
         </div>
@@ -275,13 +305,14 @@ export default function SettingsPage() {
             value={workspaceId}
             onChange={(event) => setWorkspaceId(event.target.value)}
           />
-          <button className={styles.secondary} onClick={() => void refreshMcp()}>
+          <button type="button" className={styles.secondary} onClick={() => void refreshMcp()}>
             Load workspace
           </button>
         </div>
         <div className={styles.serverList}>
           {servers.map((server) => (
             <button
+              type="button"
               className={styles.server}
               key={server.id}
               onClick={() => setMcpJson(JSON.stringify(server, null, 2))}
@@ -302,7 +333,11 @@ export default function SettingsPage() {
           placeholder='{"id":"example","displayName":"Example","enabled":false,"workspaceIds":["workspace-default"],"transport":{"type":"streamable-http","url":"https://example.com/mcp"},"toolPolicies":[],"connectTimeoutMs":10000,"requestTimeoutMs":30000}'
         />
         <div className={styles.actions}>
-          <button disabled={mcpJson.trim().length === 0} onClick={() => void saveMcpServer()}>
+          <button
+            type="button"
+            disabled={mcpJson.trim().length === 0}
+            onClick={() => void saveMcpServer()}
+          >
             Validate & save MCP server
           </button>
         </div>

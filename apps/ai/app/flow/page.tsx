@@ -128,6 +128,15 @@ export default function FlowCanvasPage() {
   const [humanDraft, setHumanDraft] = useState("");
   const selected = nodes.find((node) => node.id === selectedId) ?? null;
 
+  async function runUiAction(label: string, action: () => Promise<unknown>): Promise<void> {
+    try {
+      await action();
+    } catch (reason) {
+      const detail = reason instanceof Error ? reason.message : String(reason);
+      setMessage(`${label}: ${detail}`);
+    }
+  }
+
   useEffect(() => {
     void fetch("/api/flow/nodes")
       .then(async (response) => {
@@ -149,8 +158,16 @@ export default function FlowCanvasPage() {
         (FlowGraphRunState & { temporalStatus?: string }) | null;
       if (!cancelled && response.ok && body !== null) setRun(body);
     };
-    void refresh();
-    const timer = window.setInterval(() => void refresh(), 1200);
+    const refreshSafely = () => {
+      void refresh().catch((reason) => {
+        if (!cancelled) {
+          const detail = reason instanceof Error ? reason.message : String(reason);
+          setMessage(`Run refresh gagal: ${detail}`);
+        }
+      });
+    };
+    refreshSafely();
+    const timer = window.setInterval(refreshSafely, 1200);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
@@ -426,21 +443,21 @@ export default function FlowCanvasPage() {
         <div className={styles.topActions}>
           <button
             className="ecr-btn ecr-btn--secondary"
-            onClick={() => void validate()}
+            onClick={() => void runUiAction("Validasi gagal", validate)}
             disabled={busy}
           >
             Validate
           </button>
           <button
             className="ecr-btn ecr-btn--primary"
-            onClick={() => void save()}
+            onClick={() => void runUiAction("Save gagal", save)}
             disabled={busy}
           >
             Save
           </button>
           <button
             className="ecr-btn ecr-btn--secondary"
-            onClick={() => void runGraph()}
+            onClick={() => void runUiAction("Run gagal", runGraph)}
             disabled={busy || graphId === null}
           >
             Run
@@ -480,7 +497,7 @@ export default function FlowCanvasPage() {
         />
         <button
           className="ecr-btn ecr-btn--secondary"
-          onClick={() => void loadGraph()}
+          onClick={() => void runUiAction("Load gagal", () => loadGraph())}
           disabled={busy}
         >
           Load
@@ -502,6 +519,33 @@ export default function FlowCanvasPage() {
                   event.dataTransfer.setData("application/x-ecorione-kind", definition.kind);
                   event.dataTransfer.effectAllowed = "copy";
                 }}
+                onClick={() => {
+                  const id = newNodeId(definition.kind);
+                  setNodes((current) => {
+                    const index = current.length;
+                    return [
+                      ...current,
+                      {
+                        id,
+                        kind: definition.kind,
+                        version: 1,
+                        label: definition.label,
+                        position: {
+                          x: 72 + (index % 4) * 190,
+                          y: 96 + Math.floor(index / 4) * 100,
+                        },
+                        config: defaultConfig(definition.kind),
+                        secretRefs: [],
+                        limits: {},
+                        retry: {},
+                      },
+                    ];
+                  });
+                  setSelectedId(id);
+                  setValidation(null);
+                  setMessage(`${definition.label} ditambahkan ke canvas.`);
+                }}
+                aria-label={`Add ${definition.label} node`}
                 className={styles.paletteNode}
               >
                 <strong>{definition.label}</strong>
@@ -681,7 +725,11 @@ export default function FlowCanvasPage() {
               {versions.map((item) => (
                 <button
                   key={item.version}
-                  onClick={() => void loadGraph(item.graphId, item.version)}
+                  onClick={() =>
+                    void runUiAction("Load version gagal", () =>
+                      loadGraph(item.graphId, item.version),
+                    )
+                  }
                 >
                   v{item.version}
                   <small>{item.digest.slice(0, 8)}</small>
@@ -715,13 +763,17 @@ export default function FlowCanvasPage() {
                 <div className={styles.inlineActions}>
                   <button
                     className="ecr-btn ecr-btn--primary"
-                    onClick={() => void decide(node, "APPROVE")}
+                    onClick={() =>
+                      void runUiAction("Approval gagal", () => decide(node, "APPROVE"))
+                    }
                   >
                     Approve
                   </button>
                   <button
                     className="ecr-btn ecr-btn--secondary"
-                    onClick={() => void decide(node, "REJECT")}
+                    onClick={() =>
+                      void runUiAction("Rejection gagal", () => decide(node, "REJECT"))
+                    }
                   >
                     Reject
                   </button>
@@ -737,7 +789,7 @@ export default function FlowCanvasPage() {
                   />
                   <button
                     className="ecr-btn ecr-btn--primary"
-                    onClick={() => void submitHuman(node)}
+                    onClick={() => void runUiAction("Input gagal", () => submitHuman(node))}
                   >
                     Send
                   </button>

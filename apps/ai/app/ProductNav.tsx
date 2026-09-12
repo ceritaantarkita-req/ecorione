@@ -38,19 +38,36 @@ function SealMark() {
   );
 }
 
+function rootTheme(): ThemeChoice {
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
+
+function readBrowserTheme(): ThemeChoice {
+  try {
+    return readStoredTheme(window.localStorage);
+  } catch {
+    // Accessing the localStorage property itself can throw in privacy-restricted contexts.
+    return rootTheme();
+  }
+}
+
 export default function ProductNav() {
   const pathname = usePathname();
   const [theme, setTheme] = useState<ThemeChoice | null>(null);
 
   useEffect(() => {
-    const initial = readStoredTheme(window.localStorage);
+    const initial = readBrowserTheme();
     applyTheme(initial, document.documentElement);
     setTheme(initial);
   }, []);
 
   function chooseTheme(choice: ThemeChoice): void {
     applyTheme(choice, document.documentElement);
-    persistTheme(choice, window.localStorage);
+    try {
+      persistTheme(choice, window.localStorage);
+    } catch {
+      // The visible theme should still change even when browser storage is unavailable.
+    }
     setTheme(choice);
   }
 

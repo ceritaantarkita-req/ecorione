@@ -121,7 +121,6 @@ export default function OpsPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>ECORIONE OPERATIONS</p>
           <h1>Runtime health & telemetry</h1>
           <p className={styles.subtle}>
             Process-lifetime operational metrics. Long-term retention belongs in an external
@@ -143,7 +142,11 @@ export default function OpsPage() {
         </div>
       </header>
 
-      {error !== null ? <p className={styles.error}>Ops fetch failed: {error}</p> : null}
+      {error !== null ? (
+        <p className={styles.error} role="alert">
+          Ops fetch failed: {error}
+        </p>
+      ) : null}
       <section className={styles.summary}>
         <div>
           <span>Fleet</span>

@@ -418,8 +418,27 @@
 
 @media (max-width: 1050px) {
   .workspace {
-    grid-template-columns: 160px minmax(620px, 1fr) 260px;
-    overflow-x: auto;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: visible;
+  }
+
+  .palette {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .paletteList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+
+  .canvasWrap {
+    min-height: 660px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .inspector {
+    border-left: 0;
   }
 
   .runPanel {
@@ -445,9 +464,19 @@
   }
 
   .workspace {
-    min-height: 560px;
-    grid-template-columns: 150px 700px 260px;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: visible;
+  }
+
+  .canvasWrap {
+    min-height: 600px;
     overflow-x: auto;
+  }
+
+  .canvas {
+    min-width: 720px;
+    min-height: 560px;
   }
 
   .runPanel {
