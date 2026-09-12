@@ -28,6 +28,10 @@ This note records the code-side frontend hardening completed after the first pro
 8. Narrow Flow layouts horizontally scrolled the whole three-column workspace rather than isolating canvas overflow.
 9. The chat composer did not account for mobile safe-area bottom inset.
 
+## Verification discipline
+
+The static-hardening claim is valid only at an exact branch head where the normal repository CI completes successfully. Temporary patch/format workflows are implementation aids only and are not accepted as verification evidence; they must not remain in the final diff.
+
 ## Claim boundary
 
 This checkpoint proves only code review plus repository CI for the hardened frontend. It does not prove final visual quality, actual browser layout on the operator laptop, real local-model interaction, or end-to-end desktop/mobile UX. Those claims remain gated on the real rendered UX walkthrough defined by `docs/ux-product-validation.md`.
