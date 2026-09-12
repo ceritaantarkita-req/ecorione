@@ -23,9 +23,16 @@ function inMemoryRuntime(hostedCallsEnabled: boolean): RuntimeSettingsAdmin {
       settings: { ...snapshot.settings },
     }),
     update: (patch: RuntimeSettingsPatch) => {
+      const prior = snapshot.settings;
       snapshot = {
         revision: snapshot.revision + 1,
-        settings: { ...snapshot.settings, ...patch },
+        settings: {
+          hostedProvider: patch.hostedProvider ?? prior.hostedProvider,
+          localRuntime: patch.localRuntime ?? prior.localRuntime,
+          localBaseUrl: patch.localBaseUrl ?? prior.localBaseUrl,
+          localModelTag: patch.localModelTag ?? prior.localModelTag,
+          hostedCallsEnabled: patch.hostedCallsEnabled ?? prior.hostedCallsEnabled,
+        },
       };
       return {
         revision: snapshot.revision,
