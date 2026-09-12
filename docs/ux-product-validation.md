@@ -5,7 +5,7 @@ Date: **2026-09-12**
 
 This is the active checkpoint after local observability closure. It validates real user journeys on the already-closed local technical baseline. It is not a new Batch 13 and it does not reopen Historical Ledger, ECX, persistence, backup/restore, or observability closure.
 
-The code-side frontend hardening baseline through PR #60 has received one additional final pre-runtime audit/hardening pass. That pass closes remaining static race, stale-state, unsaved-Flow-run, mutation-feedback, evidence-test-coverage, and model-identity-warning gaps. Its canonical evidence is `docs/verification/frontend-static-audit-final-2026-09-12.md`.
+The code-side frontend hardening sequence is merged through PR #62, with a later owner-proxy contract follow-up in PR #63 (`6ea63f570b3e764154837bc2ad7ca2c1123f06bc`). The follow-up fixed a real Settings MCP workspace-query mismatch found after the earlier final static audit and strengthened Ai → owner proxy boundaries without changing the runtime/browser claim boundary. Canonical evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and the severity/disposition ledger `docs/verification/frontend-static-defect-ledger-2026-09-12.md`.
 
 The remaining gate is the real local rendered inventory/walkthrough described below. `docs/ux-runtime-walkthrough-checklist.md` is the exact operator procedure; static review does not substitute for it.
 
@@ -47,8 +47,9 @@ The preparation/static-hardening sequence found and fixed concrete product defec
 7. **Operations state correctness** — first load shows `Loading`/`—`, not false `Degraded`/zero values; auto/manual refresh cannot overlap; failures are surfaced through alert semantics.
 8. **Ai request race safety** — chat send and forget actions use synchronous request locks in addition to React state so same-frame repeated events cannot dispatch duplicate requests.
 9. **Mobile interaction baseline** — chat safe-area spacing and key compact touch targets were hardened before the narrow-viewport walkthrough.
+10. **Ai → owner proxy contract safety** — Settings MCP workspace loading now accepts the supported single `workspaceId` query instead of rejecting it before Connect; Settings/Space/Flow paths are bounded before owner URL construction; Hub/Settings/Space/Flow/Ops internal requests fail closed on redirects; deterministic proxy regressions are part of normal/release test coverage.
 
-Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md` plus the final pre-runtime audit `docs/verification/frontend-static-audit-final-2026-09-12.md`.
+Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md`, the final pre-runtime audit `docs/verification/frontend-static-audit-final-2026-09-12.md`, the later owner-proxy follow-up `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and `docs/verification/frontend-static-defect-ledger-2026-09-12.md` for S0–S3 source-review disposition.
 
 These fixes count only as code-side/static hardening. They do not replace the real rendered runtime walkthrough.
 
@@ -68,6 +69,7 @@ The inventory is intentionally read-only. It requires:
 - RnD, Context, Connect, Hub, Artifact, Sandbox, Space, and Flow healthy;
 - Ai routes `/`, `/space`, `/flow`, `/ops`, `/settings` returning expected page markers and the shared global navigation contract;
 - Ai Settings proxy reporting effective `hostedCallsEnabled=false`, `localRuntime=openai-compatible`, and a non-empty local model tag while recording whether the tag is a mutable `latest` alias;
+- Ai Settings MCP workspace-list proxy readable through the same `workspaceId` contract used by the rendered Settings surface;
 - Ai Ops proxy healthy;
 - Ai Space pages proxy readable;
 - Ai Flow node registry proxy readable.
@@ -118,6 +120,8 @@ Do not treat a passing build, HTTP route smoke, static code review, or the stati
 
 S0/S1 findings block closure. S2 must be fixed or explicitly accepted with a reason. S3 may remain documented.
 
+The pre-runtime static ledger is `docs/verification/frontend-static-defect-ledger-2026-09-12.md`. Its green disposition does not pre-authorize runtime findings: the laptop walkthrough must add or reopen S0–S3 items whenever actual rendered behavior disagrees with the static evidence.
+
 ## PASS definition
 
 The checkpoint can be marked **CLOSED / PASS WITH LIMITATIONS** only when all of the following are true:
@@ -132,7 +136,7 @@ The checkpoint can be marked **CLOSED / PASS WITH LIMITATIONS** only when all of
 - hosted calls remain effectively disabled throughout the checkpoint;
 - sanitized closure evidence is committed without private raw screenshots/logs.
 
-As of the final static-hardening merge, the first two bullets are satisfied for the code-side baseline. The runtime/browser bullets remain pending and must not be inferred from CI.
+As of merged PR #63 (`6ea63f570b3e764154837bc2ad7ca2c1123f06bc`), the repository-side implementation, exact-head CI and post-merge CI conditions are satisfied for the current code-side baseline. The local inventory and rendered browser bullets remain pending and must not be inferred from CI.
 
 ## Claim boundary
 

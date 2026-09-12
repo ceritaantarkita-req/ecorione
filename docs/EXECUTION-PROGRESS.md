@@ -57,7 +57,9 @@ Canonical verification sources:
 - `docs/verification/local-persistence-restart-closure-2026-09-11.md`
 - `docs/verification/local-backup-restore-closure-2026-09-11.md`
 - `docs/verification/local-observability-closure-2026-09-12.md`
-- `docs/verification/frontend-static-hardening-2026-09-12.md` for the current UX code-side baseline; rendered UX closure is still pending.
+- `docs/verification/frontend-static-hardening-2026-09-12.md`
+- `docs/verification/frontend-static-audit-final-2026-09-12.md`
+- `docs/verification/frontend-static-proxy-followup-2026-09-12.md` for the latest UX code-side owner-proxy follow-up; rendered UX closure is still pending.
 
 ## 4. Comparative ECX — CLOSED / PASS WITH LIMITATIONS
 
@@ -264,15 +266,15 @@ Production deployment is not a blocker for current local R&D.
 
 This is a new explicit scope, not Batch 13.
 
-Code-side/static hardening includes PR #56, #58, #59 and #60 plus the final pre-runtime audit/hardening pass recorded in `docs/verification/frontend-static-audit-final-2026-09-12.md`. The final pass also fixes the test-configuration gap that previously excluded `test/**/*.test.mjs` from the root Vitest suite.
+Code-side/static hardening includes PR #56, #58, #59, #60 and #62 plus the owner-proxy follow-up in PR #63. Current merged repository-side baseline is `6ea63f570b3e764154837bc2ad7ca2c1123f06bc`; exact-head CI, external MCP acceptance and post-merge CI are green. The proxy follow-up fixed a real Settings MCP workspace-query mismatch and added bounded path/redirect regressions across Ai → owner boundaries.
 
-This remains **code-side evidence only** until the final hardening PR is merged, post-merge CI passes, and the operator reruns the local inventory/browser walkthrough on synchronized `main`.
+This remains **code-side evidence only**. The repository-side merge/gate conditions are satisfied, but the operator must still rerun the strict local inventory and real rendered browser walkthrough on synchronized `main` before this workstream can close.
 
 The remaining work now crosses the real browser/runtime boundary and therefore cannot be inferred from static review or CI. It requires:
 
-1. synchronize local `main` to the final merged revision and verify a clean tracked tree;
+1. synchronize local `main` to the current merged revision and verify a clean tracked tree;
 2. restart Phase 4 from that synchronized code with `ECORIONE_COST_KILL_SWITCH=1`;
-3. run `pnpm evidence:ux:inventory` and require PASS;
+3. run `pnpm evidence:ux:inventory` and require PASS, including the Settings MCP workspace proxy contract;
 4. exercise representative Local chat first-turn and same-session continuity through the real Ai surface;
 5. verify visible memory/routing/cost state and keep Hosted effectively off;
 6. walk Space, Flow, Operations and Settings through the real rendered product;
@@ -283,7 +285,7 @@ The remaining work now crosses the real browser/runtime boundary and therefore c
 
 No VPS, Cloudflare, domain, firewall or hosted-provider spending mutation belongs to this workstream.
 
-Canonical protocol: `docs/ux-product-validation.md`. Runtime checklist: `docs/ux-runtime-walkthrough-checklist.md`. Static evidence: `docs/verification/frontend-static-hardening-2026-09-12.md` and `docs/verification/frontend-static-audit-final-2026-09-12.md`.
+Canonical protocol: `docs/ux-product-validation.md`. Runtime checklist: `docs/ux-runtime-walkthrough-checklist.md`. Static evidence: `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, and `docs/verification/frontend-static-proxy-followup-2026-09-12.md`.
 
 ## 10. Persistent architecture/evidence rules
 
@@ -335,6 +337,6 @@ For backup/restore specifically, also require explicit source identity, backup r
 
 ## 12. Immediate next action
 
-After the final static-hardening PR is merged and post-merge CI is green, use the operator laptop to synchronize reviewed `main`, restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, then execute `docs/ux-runtime-walkthrough-checklist.md`. Do not mutate VPS/Cloudflare or hosted-provider state.
+On the operator laptop, synchronize reviewed `main` to at least the merged PR #63 baseline `6ea63f570b3e764154837bc2ad7ca2c1123f06bc`, restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, then execute `docs/ux-runtime-walkthrough-checklist.md`. Do not mutate VPS/Cloudflare or hosted-provider state.
 
 Canonical handoff: `docs/current-state-and-next-steps.md`.
