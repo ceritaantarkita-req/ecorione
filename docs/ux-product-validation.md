@@ -5,13 +5,9 @@ Date: **2026-09-12**
 
 This is the active checkpoint after local observability closure. It validates real user journeys on the already-closed local technical baseline. It is not a new Batch 13 and it does not reopen Historical Ledger, ECX, persistence, backup/restore, or observability closure.
 
-The code-side frontend hardening pass is complete through merged `main` revision:
+The code-side frontend hardening baseline through PR #60 has received one additional final pre-runtime audit/hardening pass. That pass closes remaining static race, stale-state, unsaved-Flow-run, mutation-feedback, evidence-test-coverage, and model-identity-warning gaps. Its canonical evidence is `docs/verification/frontend-static-audit-final-2026-09-12.md`.
 
-```text
-63646960da0f4dce946208470eed1c7d6f3068e4
-```
-
-Normal repository CI passed at the exact PR #60 head and again after that merge. The remaining gate is the real local rendered inventory/walkthrough described below.
+The remaining gate is the real local rendered inventory/walkthrough described below. `docs/ux-runtime-walkthrough-checklist.md` is the exact operator procedure; static review does not substitute for it.
 
 ## Objective
 
@@ -52,7 +48,7 @@ The preparation/static-hardening sequence found and fixed concrete product defec
 8. **Ai request race safety** — chat send and forget actions use synchronous request locks in addition to React state so same-frame repeated events cannot dispatch duplicate requests.
 9. **Mobile interaction baseline** — chat safe-area spacing and key compact touch targets were hardened before the narrow-viewport walkthrough.
 
-Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md`.
+Canonical static verification: `docs/verification/frontend-static-hardening-2026-09-12.md` plus the final pre-runtime audit `docs/verification/frontend-static-audit-final-2026-09-12.md`.
 
 These fixes count only as code-side/static hardening. They do not replace the real rendered runtime walkthrough.
 
@@ -70,13 +66,13 @@ The inventory is intentionally read-only. It requires:
 - clean tracked working tree;
 - `ECORIONE_COST_KILL_SWITCH=1`;
 - RnD, Context, Connect, Hub, Artifact, Sandbox, Space, and Flow healthy;
-- Ai routes `/`, `/space`, `/flow`, `/ops`, `/settings` returning expected page markers;
-- Ai Settings proxy reporting effective `hostedCallsEnabled=false`;
+- Ai routes `/`, `/space`, `/flow`, `/ops`, `/settings` returning expected page markers and the shared global navigation contract;
+- Ai Settings proxy reporting effective `hostedCallsEnabled=false`, `localRuntime=openai-compatible`, and a non-empty local model tag while recording whether the tag is a mutable `latest` alias;
 - Ai Ops proxy healthy;
 - Ai Space pages proxy readable;
 - Ai Flow node registry proxy readable.
 
-Inventory PASS means the product is ready for rendered walkthrough. It is not UX closure by itself.
+Inventory PASS means the product is ready for rendered walkthrough. It is not UX closure by itself. The rendered sequence and evidence requirements are frozen in `docs/ux-runtime-walkthrough-checklist.md`.
 
 ## Journey matrix
 
