@@ -239,7 +239,9 @@ export default function SpacePageView() {
       const next = (await readJson<{ pages: SpacePage[] }>(response)).pages;
       setPages(next);
       setSelectedPageId((current) =>
-        current !== null && next.some((page) => page.id === current) ? current : (next[0]?.id ?? null),
+        current !== null && next.some((page) => page.id === current)
+          ? current
+          : (next[0]?.id ?? null),
       );
       setError(null);
     } catch (err) {
@@ -582,7 +584,11 @@ export default function SpacePageView() {
                   </div>
                 )}
                 {!renaming ? (
-                  <button type="button" className={styles.button} onClick={() => setRenaming(true)}>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    onClick={() => setRenaming(true)}
+                  >
                     Rename
                   </button>
                 ) : null}
@@ -671,7 +677,11 @@ export default function SpacePageView() {
                   aria-label={`${draftKind} block JSON`}
                 />
                 <div className={styles.editorActions}>
-                  <button type="button" className={styles.buttonPrimary} onClick={() => void addBlock()}>
+                  <button
+                    type="button"
+                    className={styles.buttonPrimary}
+                    onClick={() => void addBlock()}
+                  >
                     Add {draftKind}
                   </button>
                 </div>
@@ -700,15 +710,25 @@ export default function SpacePageView() {
                     aria-label="Selected block JSON"
                   />
                   <div className={styles.inspectorActions}>
-                    <button type="button" className={styles.buttonPrimary} onClick={() => void saveBlock()}>
+                    <button
+                      type="button"
+                      className={styles.buttonPrimary}
+                      onClick={() => void saveBlock()}
+                    >
                       Save block
                     </button>
-                    <button type="button" className={styles.button} onClick={() => void resolveBlock()}>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      onClick={() => void resolveBlock()}
+                    >
                       Resolve link
                     </button>
                   </div>
                   {resolution !== null ? (
-                    <pre className={styles.resolution}>{JSON.stringify(resolution, null, 2)}</pre>
+                    <pre className={styles.resolution}>
+                      {JSON.stringify(resolution, null, 2)}
+                    </pre>
                   ) : null}
                 </>
               )}

@@ -20,7 +20,9 @@
   --danger: #a6564a;
 
   --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body:
+    "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --radius-sm: 5px;
   --radius-md: 9px;

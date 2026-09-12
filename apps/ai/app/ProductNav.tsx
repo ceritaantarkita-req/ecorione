@@ -91,7 +91,9 @@ export default function ProductNav() {
         <div className="ecr-theme-switch" aria-label="Tema tampilan">
           <button
             type="button"
-            className={theme === "light" ? "ecr-theme-switch__item is-active" : "ecr-theme-switch__item"}
+            className={
+              theme === "light" ? "ecr-theme-switch__item is-active" : "ecr-theme-switch__item"
+            }
             aria-pressed={theme === "light"}
             onClick={() => chooseTheme("light")}
           >
@@ -99,7 +101,9 @@ export default function ProductNav() {
           </button>
           <button
             type="button"
-            className={theme === "dark" ? "ecr-theme-switch__item is-active" : "ecr-theme-switch__item"}
+            className={
+              theme === "dark" ? "ecr-theme-switch__item is-active" : "ecr-theme-switch__item"
+            }
             aria-pressed={theme === "dark"}
             onClick={() => chooseTheme("dark")}
           >

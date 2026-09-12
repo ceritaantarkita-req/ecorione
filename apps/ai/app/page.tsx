@@ -223,7 +223,9 @@ export default function ChatPage() {
       <header className="ai-topbar">
         <div className="ai-topbar__copy">
           <h1 className="ai-topbar__title">ecorione — Ai</h1>
-          <p className="ai-topbar__lead">Local-first chat with visible routing, memory, and cost.</p>
+          <p className="ai-topbar__lead">
+            Local-first chat with visible routing, memory, and cost.
+          </p>
         </div>
         <span className="ai-topbar__session" title={hydrated ? sessionId : "sess_pending"}>
           {hydrated ? sessionId : "sess_pending"}

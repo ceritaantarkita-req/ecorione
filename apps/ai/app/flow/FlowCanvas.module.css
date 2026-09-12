@@ -156,7 +156,10 @@
   min-height: 620px;
   overflow: auto;
   background-color: var(--bg);
-  background-image: radial-gradient(color-mix(in srgb, var(--border) 72%, transparent) 0.8px, transparent 0.8px);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--border) 72%, transparent) 0.8px,
+    transparent 0.8px
+  );
   background-size: 20px 20px;
 }
 

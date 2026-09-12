@@ -219,8 +219,8 @@ export default function SettingsPage() {
               Hosted calls enabled
             </label>
             <p className={`${styles.muted} ${styles.wide}`}>
-              The process-level operator kill switch is a hard ceiling. Runtime settings can turn
-              Hosted off, but cannot override a closed operator gate.
+              The process-level operator kill switch is a hard ceiling. Runtime settings can
+              turn Hosted off, but cannot override a closed operator gate.
             </p>
             <div className={styles.actions}>
               <button onClick={() => void saveRuntime()}>Save runtime</button>
