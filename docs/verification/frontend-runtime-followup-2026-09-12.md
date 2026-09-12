@@ -50,9 +50,9 @@ Flow already surfaces an explicit invalid-config message (`Config harus JSON val
 
 Static CSS review found existing narrow fallbacks rather than a new source-provable page-level overflow defect:
 
-- Space collapses to one column at `max-width: 720px`;
+- Space collapses to one column at `max-width: 760px`;
 - Flow collapses to one column at `max-width: 760px` and keeps the canvas itself intentionally scrollable;
-- global navigation gives the product-link row `min-width: 0` plus horizontal scrolling at narrow widths instead of forcing page-level overflow.
+- global navigation preserves a `min-width: 0` scrollable product-link row and switches to its narrower chrome at `max-width: 780px` instead of forcing page-level overflow.
 
 The operator's 430px screenshots are useful partial evidence, but UX-12 remains pending the explicit ~390px rendered check.
 
