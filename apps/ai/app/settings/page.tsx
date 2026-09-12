@@ -246,7 +246,11 @@ export default function SettingsPage() {
               <button type="button" onClick={() => void saveRuntime()}>
                 Save runtime
               </button>
-              <button type="button" className={styles.secondary} onClick={() => void runCanary()}>
+              <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => void runCanary()}
+              >
                 Run local canary
               </button>
             </div>
@@ -283,7 +287,11 @@ export default function SettingsPage() {
             value={secret}
             onChange={(event) => setSecret(event.target.value)}
           />
-          <button type="button" disabled={secret.length === 0} onClick={() => void saveCredential()}>
+          <button
+            type="button"
+            disabled={secret.length === 0}
+            onClick={() => void saveCredential()}
+          >
             Encrypt & save
           </button>
         </div>
