@@ -1,134 +1,169 @@
 .shell {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--app-nav-height));
   display: flex;
   flex-direction: column;
   background: var(--bg);
   color: var(--text);
 }
+
 .topbar {
-  height: 72px;
-  padding: 14px 20px;
+  min-height: 74px;
+  padding: 17px 20px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
 }
+
 .topbar h1 {
-  font-size: 18px;
+  font-size: 24px;
+  letter-spacing: -0.02em;
 }
+
 .topbar p {
-  margin: 4px 0 0;
+  margin: 5px 0 0;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 9.5px;
   font-family: var(--font-mono);
 }
+
 .topActions {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
 }
+
 .metaBar {
   min-height: 48px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 7px;
+  padding: 7px 16px;
   background: var(--surface);
 }
+
 .metaBar input:first-child {
-  width: 180px;
+  width: 190px;
 }
+
 .metaBar code {
   margin-left: auto;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 9.5px;
+  white-space: nowrap;
 }
+
 .workspace {
-  height: calc(100dvh - 310px);
-  min-height: 480px;
+  flex: 1;
+  min-height: 500px;
   display: grid;
   grid-template-columns: 190px minmax(420px, 1fr) 300px;
 }
+
 .palette,
 .inspector {
-  background: var(--surface);
+  min-width: 0;
   overflow: auto;
   padding: 14px;
+  background: var(--surface);
+}
+
+.palette {
   border-right: 1px solid var(--border);
 }
+
 .inspector {
-  border-right: 0;
   border-left: 1px solid var(--border);
 }
+
 .panelTitle {
+  margin-bottom: 10px;
+  color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--text-muted);
-  margin-bottom: 10px;
 }
+
 .paletteList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
+
 .paletteNode {
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 9px 10px;
+  background: transparent;
+  color: var(--text);
+  padding: 8px 9px;
   text-align: left;
   cursor: grab;
   font-family: var(--font-body);
 }
-.paletteNode:hover {
-  border-color: var(--accent);
+
+.paletteNode:hover,
+.paletteNode:focus-visible {
+  border-color: var(--border);
+  background: var(--surface-2);
 }
+
 .paletteNode strong {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
 }
+
 .paletteNode span {
   display: block;
+  margin-top: 2px;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 9px;
-  margin-top: 3px;
+  font-size: 8.5px;
 }
+
 .canvasWrap {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow: auto;
 }
+
 .canvasToolbar {
-  height: 34px;
-  padding: 0 12px;
+  min-height: 35px;
+  padding: 7px 12px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 9px;
   font-family: var(--font-mono);
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 86%, var(--bg));
 }
+
 .canvasToolbar strong {
   color: var(--accent);
 }
+
 .canvas {
   position: relative;
   flex: 1;
-  overflow: auto;
-  background-color: var(--bg);
-  background-image: radial-gradient(var(--border) 1px, transparent 1px);
-  background-size: 20px 20px;
   min-width: 900px;
   min-height: 620px;
+  overflow: auto;
+  background-color: var(--bg);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--border) 72%, transparent) 0.8px,
+    transparent 0.8px
+  );
+  background-size: 20px 20px;
 }
+
 .edges {
   position: absolute;
   inset: 0;
@@ -137,11 +172,14 @@
   overflow: visible;
   pointer-events: none;
 }
+
 .edges path {
   fill: none;
   stroke: var(--text-muted);
-  stroke-width: 1.4;
+  stroke-width: 1.1;
+  opacity: 0.7;
 }
+
 .canvasNode {
   position: absolute;
   left: 0;
@@ -150,93 +188,116 @@
   min-height: 64px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--text);
-  text-align: left;
   padding: 10px 12px;
+  text-align: left;
   cursor: grab;
-  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.12);
   font-family: var(--font-body);
+  box-shadow: none;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
 }
+
+.canvasNode:hover {
+  background: var(--surface-2);
+}
+
 .canvasNode strong {
   display: block;
-  font-size: 12px;
   margin-top: 3px;
+  font-size: 11.5px;
 }
+
 .canvasNode small,
 .nodeKind {
-  font-family: var(--font-mono);
-  font-size: 9px;
   color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
 }
+
 .canvasNode small {
   display: block;
   margin-top: 5px;
 }
+
 .selected {
   border-color: var(--accent);
-  box-shadow:
-    var(--elevation-active-rail),
-    0 5px 18px rgba(0, 0, 0, 0.16);
+  box-shadow: var(--elevation-active-rail);
 }
+
 .status_running {
   border-color: var(--accent);
 }
+
 .status_waiting_approval,
 .status_waiting_input {
   border-color: var(--warning);
 }
+
 .status_succeeded {
   border-color: var(--success);
 }
+
 .status_failed {
   border-color: var(--danger);
 }
+
 .status_skipped {
   opacity: 0.55;
 }
+
 .inspectorBody {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
 }
+
 .inspectorBody label {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 10px;
   color: var(--text-muted);
+  font-size: 9px;
   font-family: var(--font-mono);
 }
+
 .inspectorBody input,
 .inspectorBody select {
   width: 100%;
 }
+
 .inspectorBody textarea,
 .runPanel textarea {
   resize: vertical;
   min-height: 130px;
-  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  background: var(--surface-2);
   color: var(--text);
   padding: 9px;
-  font: 11px/1.45 var(--font-mono);
+  font: 10px/1.5 var(--font-mono);
 }
+
 .section {
-  border-top: 1px solid var(--border);
   margin-top: 18px;
   padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
+
 .muted {
-  font-size: 11px;
-  color: var(--text-muted);
   margin: 4px 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.5;
 }
+
 .ok {
-  font-size: 11px;
   color: var(--success);
+  font-size: 10px;
 }
+
 .issueList {
   list-style: none;
   padding: 0;
@@ -245,123 +306,162 @@
   flex-direction: column;
   gap: 8px;
 }
+
 .issueList li {
-  font-size: 10px;
-  line-height: 1.4;
   color: var(--text-muted);
+  font-size: 9.5px;
+  line-height: 1.45;
 }
+
 .issueList code {
   display: block;
   color: var(--danger);
-  font-size: 9px;
+  font-size: 8.5px;
 }
+
 .versionList {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
+
 .versionList button {
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text);
-  border-radius: var(--radius-sm);
   padding: 5px 7px;
-  font: 10px var(--font-mono);
+  font: 9px var(--font-mono);
   cursor: pointer;
 }
+
+.versionList button:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
 .versionList small {
   display: block;
-  color: var(--text-muted);
   margin-top: 2px;
+  color: var(--text-muted);
 }
+
 .runPanel {
   min-height: 190px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 350px 1fr;
   gap: 18px;
   padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
+
 .runPanel textarea {
   width: 100%;
   min-height: 80px;
 }
+
 .runMeta {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 10px;
   margin-top: 8px;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-.runNodes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 8px;
-  align-content: start;
-  max-height: 160px;
-  overflow: auto;
-}
-.runNode {
-  border-left: 2px solid var(--border);
-  padding: 6px 9px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 10px;
-  background: var(--surface-2);
-}
-.runNode code {
   color: var(--text-muted);
   font-size: 9px;
 }
-.runNode strong {
-  font: 10px var(--font-mono);
+
+.runNodes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 0 12px;
+  align-content: start;
+  max-height: 165px;
+  overflow: auto;
+  border-top: 1px solid var(--border-soft);
 }
+
+.runNode {
+  min-width: 0;
+  padding: 7px 2px;
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 9.5px;
+}
+
+.runNode code {
+  color: var(--text-muted);
+  font-size: 8.5px;
+}
+
+.runNode strong {
+  font: 9px var(--font-mono);
+}
+
 .runNode span {
   color: var(--text-muted);
-  line-height: 1.35;
+  line-height: 1.4;
 }
+
 .inlineActions {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 6px;
 }
+
 .inlineActions input {
   min-width: 0;
   flex: 1;
 }
+
 @media (max-width: 1050px) {
   .workspace {
-    grid-template-columns: 160px minmax(600px, 1fr) 260px;
+    grid-template-columns: 160px minmax(620px, 1fr) 260px;
     overflow-x: auto;
   }
+
   .runPanel {
     grid-template-columns: 300px 1fr;
   }
 }
+
 @media (max-width: 760px) {
   .topbar {
-    height: auto;
+    min-height: 0;
+    padding: 14px;
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .topActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .metaBar {
     overflow-x: auto;
   }
+
   .workspace {
-    height: auto;
+    min-height: 560px;
     grid-template-columns: 150px 700px 260px;
     overflow-x: auto;
   }
-  .canvas {
-    min-height: 560px;
-  }
+
   .runPanel {
     grid-template-columns: 1fr;
+    padding-inline: 14px;
   }
+
   .runNodes {
     max-height: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvasNode {
+    transition: none;
   }
 }

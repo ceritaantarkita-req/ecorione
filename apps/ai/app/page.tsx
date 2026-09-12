@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   useSyncExternalStore,
   type FormEvent,
@@ -65,6 +66,7 @@ export default function ChatPage() {
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
+  const threadEndRef = useRef<HTMLDivElement | null>(null);
   const latestAssistant = [...turns]
     .reverse()
     .find((t): t is AssistantTurn => t.kind === "assistant");
@@ -86,6 +88,11 @@ export default function ChatPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || turns.length === 0) return;
+    threadEndRef.current?.scrollIntoView({ block: "nearest" });
+  }, [hydrated, sending, turns.length]);
 
   async function sendMessage(text: string): Promise<void> {
     const trimmed = text.trim();
@@ -214,24 +221,33 @@ export default function ChatPage() {
   return (
     <div className="ai-shell">
       <header className="ai-topbar">
-        <h1 className="ai-topbar__title">ecorione — Ai</h1>
-        <span className="ai-topbar__session">{hydrated ? sessionId : "sess_pending"}</span>
+        <div className="ai-topbar__copy">
+          <h1 className="ai-topbar__title">ecorione — Ai</h1>
+          <p className="ai-topbar__lead">
+            Local-first chat with visible routing, memory, and cost.
+          </p>
+        </div>
+        <span className="ai-topbar__session" title={hydrated ? sessionId : "sess_pending"}>
+          {hydrated ? sessionId : "sess_pending"}
+        </span>
       </header>
       <main className="ai-main">
-        <section className="ai-conversation">
-          <div className="ai-thread">
+        <section className="ai-conversation" aria-label="Conversation">
+          <div className="ai-thread" aria-live="polite">
             {turns.length === 0 ? (
               <p className="ai-empty">
-                Belum ada percakapan di sesi ini. Ketik pesan di bawah.
+                Mulai percakapan. Routing, biaya, dan memori yang benar-benar dipakai akan tetap
+                terlihat setelah setiap balasan.
               </p>
             ) : (
               turns.map((turn) => <TurnView key={turn.id} turn={turn} />)
             )}
             {sending ? (
-              <div className="ai-turn ai-turn--assistant" aria-live="polite">
+              <div className="ai-turn ai-turn--assistant">
                 <div className="ai-bubble">Menunggu balasan…</div>
               </div>
             ) : null}
+            <div ref={threadEndRef} aria-hidden="true" />
           </div>
           <div className="ai-route-control">
             <label className="ai-route-control__label" htmlFor="chat-target">
@@ -253,8 +269,10 @@ export default function ChatPage() {
           </div>
           <form className="ai-composer" onSubmit={handleSubmit}>
             <textarea
-              className="ecr-input ai-composer__field"
+              className="ai-composer__field"
               placeholder="Tulis pesan… (Enter untuk kirim, Shift+Enter baris baru)"
+              aria-label="Pesan"
+              rows={2}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -269,7 +287,7 @@ export default function ChatPage() {
             </button>
           </form>
         </section>
-        <aside className="ai-panel">
+        <aside className="ai-panel" aria-label="Memory used">
           <div className="ai-panel__title">Memori yang dipakai</div>
           {latestAssistant === undefined ? (
             <p className="ai-panel__empty">

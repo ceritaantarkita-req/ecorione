@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type {
   CoreMemory,
   SpaceBlock,
@@ -10,6 +9,7 @@ import type {
   SpaceDocument,
   SpacePage,
 } from "@ecorione/shared-schema";
+import styles from "./Space.module.css";
 
 const WORKSPACE_ID = "ws_personal";
 const BLOCK_KINDS: SpaceBlockType[] = [
@@ -30,7 +30,14 @@ const BLOCK_KINDS: SpaceBlockType[] = [
 
 async function readJson<T>(response: Response): Promise<T> {
   const text = await response.text();
-  const body = text.length === 0 ? null : (JSON.parse(text) as unknown);
+  let body: unknown = null;
+  if (text.length > 0) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      body = text;
+    }
+  }
   if (!response.ok) throw new Error(`HTTP ${String(response.status)}: ${JSON.stringify(body)}`);
   return body as T;
 }
@@ -76,13 +83,11 @@ function templateFor(kind: SpaceBlockType, document: SpaceDocument | null): unkn
   }
 }
 
-function blockPreview(block: SpaceBlock) {
+function BlockPreview({ block }: { block: SpaceBlock }) {
   const body = block.body;
   switch (body.kind) {
     case "paragraph":
-      return (
-        <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{body.text || "Empty paragraph"}</p>
-      );
+      return <p>{body.text || "Empty paragraph"}</p>;
     case "heading":
       return (
         <strong style={{ fontSize: body.level === 1 ? 28 : body.level === 2 ? 22 : 18 }}>
@@ -92,7 +97,7 @@ function blockPreview(block: SpaceBlock) {
     case "list": {
       const Tag = body.style === "numbered" ? "ol" : "ul";
       return (
-        <Tag style={{ margin: 0 }}>
+        <Tag>
           {body.items.map((item, index) => (
             <li key={index}>{item}</li>
           ))}
@@ -103,7 +108,7 @@ function blockPreview(block: SpaceBlock) {
       return (
         <div>
           {body.items.map((item) => (
-            <label key={item.id} style={{ display: "block" }}>
+            <label key={item.id}>
               <input type="checkbox" checked={item.checked} readOnly /> {item.text}
             </label>
           ))}
@@ -111,17 +116,12 @@ function blockPreview(block: SpaceBlock) {
       );
     case "table":
       return (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className={styles.tableWrap}>
+          <table>
             <thead>
               <tr>
                 {body.columns.map((column) => (
-                  <th
-                    key={column.id}
-                    style={{ textAlign: "left", borderBottom: "1px solid #ddd", padding: 6 }}
-                  >
-                    {column.label}
-                  </th>
+                  <th key={column.id}>{column.label}</th>
                 ))}
               </tr>
             </thead>
@@ -129,9 +129,7 @@ function blockPreview(block: SpaceBlock) {
               {body.rows.slice(0, 8).map((row) => (
                 <tr key={row.id}>
                   {body.columns.map((column) => (
-                    <td key={column.id} style={{ borderBottom: "1px solid #eee", padding: 6 }}>
-                      {row.cells[column.id] ?? ""}
-                    </td>
+                    <td key={column.id}>{row.cells[column.id] ?? ""}</td>
                   ))}
                 </tr>
               ))}
@@ -165,7 +163,7 @@ function blockPreview(block: SpaceBlock) {
       return (
         <div>
           <strong>AI via Flow {body.graphId}</strong>
-          <p style={{ marginBottom: 0 }}>{body.prompt}</p>
+          <p>{body.prompt}</p>
         </div>
       );
     case "context-link":
@@ -208,6 +206,8 @@ export default function SpacePageView() {
   const [memoryLabel, setMemoryLabel] = useState("preferences");
   const [memoryDescription, setMemoryDescription] = useState("Preferensi pengguna");
   const [memoryValue, setMemoryValue] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [renameDraft, setRenameDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -238,7 +238,11 @@ export default function SpacePageView() {
       });
       const next = (await readJson<{ pages: SpacePage[] }>(response)).pages;
       setPages(next);
-      setSelectedPageId((current) => current ?? next[0]?.id ?? null);
+      setSelectedPageId((current) =>
+        current !== null && next.some((page) => page.id === current)
+          ? current
+          : (next[0]?.id ?? null),
+      );
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -264,6 +268,7 @@ export default function SpacePageView() {
 
   useEffect(() => {
     if (selectedPageId !== null) void loadPage(selectedPageId);
+    else setDocument(null);
   }, [loadPage, selectedPageId]);
 
   useEffect(() => {
@@ -276,7 +281,12 @@ export default function SpacePageView() {
     }
   }, [selectedBlock]);
 
-  async function createPage(event: React.FormEvent) {
+  useEffect(() => {
+    setRenameDraft(document?.page.title ?? "");
+    setRenaming(false);
+  }, [document?.page.id, document?.page.title]);
+
+  async function createPage(event: FormEvent) {
     event.preventDefault();
     if (newPageTitle.trim().length === 0) return;
     try {
@@ -295,18 +305,19 @@ export default function SpacePageView() {
       await refreshPages();
       setSelectedPageId(page.id);
       setNotice("Page dibuat.");
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
   }
 
   function chooseKind(kind: SpaceBlockType) {
-    setDraftKind(kind);
     const template = templateFor(kind, document);
     if (template === null) {
       setError("Buat table block dulu sebelum database-view.");
       return;
     }
+    setDraftKind(kind);
     setDraftJson(JSON.stringify(template, null, 2));
     setError(null);
   }
@@ -330,6 +341,7 @@ export default function SpacePageView() {
       await refreshPages();
       setSelectedBlockId(result.block.id);
       setNotice(`${draftKind} block ditambahkan.`);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -353,6 +365,7 @@ export default function SpacePageView() {
       await loadPage(document.page.id);
       await refreshPages();
       setNotice("Block disimpan.");
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -371,6 +384,7 @@ export default function SpacePageView() {
       await loadPage(document.page.id);
       await refreshPages();
       setNotice("Block dihapus.");
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -396,6 +410,7 @@ export default function SpacePageView() {
       );
       await loadPage(document.page.id);
       await refreshPages();
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -417,10 +432,11 @@ export default function SpacePageView() {
     }
   }
 
-  async function renamePage() {
+  async function renamePage(event: FormEvent) {
+    event.preventDefault();
     if (document === null) return;
-    const title = globalThis.prompt("Judul page", document.page.title)?.trim();
-    if (!title) return;
+    const title = renameDraft.trim();
+    if (title.length === 0) return;
     try {
       await readJson(
         await fetch(`/api/space/pages/${document.page.id}?workspaceId=${WORKSPACE_ID}`, {
@@ -431,12 +447,15 @@ export default function SpacePageView() {
       );
       await loadPage(document.page.id);
       await refreshPages();
+      setRenaming(false);
+      setNotice("Judul page diperbarui.");
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
   }
 
-  async function saveMemory(event: React.FormEvent) {
+  async function saveMemory(event: FormEvent) {
     event.preventDefault();
     try {
       await readJson(
@@ -454,202 +473,195 @@ export default function SpacePageView() {
       );
       await refreshMemory();
       setNotice("Core memory disimpan oleh Context.");
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
   }
 
-  const panel = {
-    border: "1px solid #d8d8d8",
-    borderRadius: 12,
-    padding: 16,
-    background: "#fff",
-  } as const;
-  const button = {
-    padding: "7px 10px",
-    border: "1px solid #bbb",
-    borderRadius: 8,
-    background: "#fff",
-    cursor: "pointer",
-  } as const;
-
   return (
-    <main
-      style={{
-        maxWidth: 1480,
-        margin: "0 auto",
-        padding: 24,
-        fontFamily: "sans-serif",
-        color: "#191919",
-      }}
-    >
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
-        }}
-      >
+    <main className={styles.page}>
+      <header className={styles.header}>
         <div>
-          <Link href="/" style={{ color: "inherit" }}>
-            ← Ai
-          </Link>
-          <h1 style={{ marginBottom: 4 }}>Space</h1>
-          <p style={{ marginTop: 0, color: "#666" }}>
+          <h1>Space</h1>
+          <p>
             Composition lives here. Memory, files, and durable execution remain linked to their
             owner services.
           </p>
         </div>
-        <span style={{ fontSize: 12, color: "#666" }}>workspace: {WORKSPACE_ID}</span>
+        <span className={styles.workspaceId}>workspace · {WORKSPACE_ID}</span>
       </header>
 
       {error !== null ? (
-        <p role="alert" style={{ padding: 10, background: "#fff0f0", borderRadius: 8 }}>
+        <p role="alert" className={`${styles.feedback} ${styles.error}`}>
           {error}
         </p>
       ) : null}
       {notice !== null ? (
-        <p style={{ padding: 10, background: "#f3f7f3", borderRadius: 8 }}>{notice}</p>
+        <p aria-live="polite" className={`${styles.feedback} ${styles.notice}`}>
+          {notice}
+        </p>
       ) : null}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "240px minmax(0,1fr) 360px",
-          gap: 16,
-          alignItems: "start",
-        }}
-      >
-        <aside style={panel}>
-          <h2 style={{ marginTop: 0, fontSize: 16 }}>Pages</h2>
-          <form onSubmit={createPage} style={{ display: "grid", gap: 8, marginBottom: 12 }}>
+      <div className={styles.workspace}>
+        <aside className={styles.rail}>
+          <h2 className={styles.panelTitle}>Pages</h2>
+          <form onSubmit={createPage} className={styles.createForm}>
             <input
+              className={styles.input}
               value={newPageTitle}
               onChange={(event) => setNewPageTitle(event.target.value)}
               placeholder="New page"
-              style={{ padding: 9, border: "1px solid #ccc", borderRadius: 8 }}
+              aria-label="New page title"
             />
-            <button type="submit" style={button}>
+            <button
+              type="submit"
+              className={styles.button}
+              disabled={newPageTitle.trim().length === 0}
+            >
               Create page
             </button>
           </form>
-          <div style={{ display: "grid", gap: 6 }}>
-            {pages.map((page) => (
-              <button
-                key={page.id}
-                type="button"
-                onClick={() => setSelectedPageId(page.id)}
-                style={{
-                  ...button,
-                  textAlign: "left",
-                  background: page.id === selectedPageId ? "#f1f1f1" : "#fff",
-                }}
-              >
-                <strong>{page.title}</strong>
-                <br />
-                <small>
-                  v{page.version} · {page.scope}
-                </small>
-              </button>
-            ))}
+          <div className={styles.pageList}>
+            {pages.length === 0 ? (
+              <p className={styles.help}>No pages yet.</p>
+            ) : (
+              pages.map((page) => (
+                <button
+                  key={page.id}
+                  type="button"
+                  onClick={() => setSelectedPageId(page.id)}
+                  className={`${styles.pageButton} ${page.id === selectedPageId ? styles.pageButtonActive : ""}`}
+                  aria-pressed={page.id === selectedPageId}
+                >
+                  <strong>{page.title}</strong>
+                  <small>
+                    v{page.version} · {page.scope}
+                  </small>
+                </button>
+              ))
+            )}
           </div>
         </aside>
 
-        <section style={panel}>
+        <section className={styles.document}>
           {document === null ? (
-            <p>Create or select a page.</p>
+            <div className={styles.documentEmpty}>Create or select a page.</div>
           ) : (
             <>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <h2 style={{ margin: 0 }}>{document.page.title}</h2>
-                  <small>page v{document.page.version}</small>
-                </div>
-                <button type="button" style={button} onClick={() => void renamePage()}>
-                  Rename
-                </button>
-              </div>
-
-              <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
-                {document.blocks.map((block, index) => (
-                  <article
-                    key={block.id}
-                    onClick={() => setSelectedBlockId(block.id)}
-                    style={{
-                      border:
-                        selectedBlockId === block.id ? "2px solid #555" : "1px solid #ddd",
-                      borderRadius: 10,
-                      padding: 14,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 10,
-                        marginBottom: 8,
+              <div className={styles.documentHeader}>
+                {renaming ? (
+                  <form className={styles.renameRow} onSubmit={renamePage}>
+                    <input
+                      className={styles.input}
+                      value={renameDraft}
+                      onChange={(event) => setRenameDraft(event.target.value)}
+                      aria-label="Page title"
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      className={styles.buttonPrimary}
+                      disabled={renameDraft.trim().length === 0}
+                    >
+                      Save title
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      onClick={() => {
+                        setRenameDraft(document.page.title);
+                        setRenaming(false);
                       }}
                     >
-                      <small>
-                        {block.type} · block v{block.version}
-                      </small>
-                      <span style={{ display: "flex", gap: 4 }}>
-                        <button
-                          type="button"
-                          style={button}
-                          disabled={index === 0}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void moveBlock(block, -1);
-                          }}
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          style={button}
-                          disabled={index === document.blocks.length - 1}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void moveBlock(block, 1);
-                          }}
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          style={button}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void deleteBlock(block);
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </span>
-                    </div>
-                    {blockPreview(block)}
-                  </article>
-                ))}
+                      Cancel
+                    </button>
+                  </form>
+                ) : (
+                  <div>
+                    <h2>{document.page.title}</h2>
+                    <span className={styles.meta}>page v{document.page.version}</span>
+                  </div>
+                )}
+                {!renaming ? (
+                  <button
+                    type="button"
+                    className={styles.button}
+                    onClick={() => setRenaming(true)}
+                  >
+                    Rename
+                  </button>
+                ) : null}
               </div>
 
-              <div style={{ marginTop: 22, borderTop: "1px solid #ddd", paddingTop: 16 }}>
+              <div className={styles.blocks}>
+                {document.blocks.length === 0 ? (
+                  <div className={styles.documentEmpty}>This page has no blocks yet.</div>
+                ) : (
+                  document.blocks.map((block, index) => (
+                    <article
+                      key={block.id}
+                      onClick={() => setSelectedBlockId(block.id)}
+                      className={`${styles.block} ${selectedBlockId === block.id ? styles.blockSelected : ""}`}
+                    >
+                      <div className={styles.blockToolbar}>
+                        <span className={styles.blockMeta}>
+                          {block.type} · block v{block.version}
+                        </span>
+                        <span className={styles.blockActions}>
+                          <button
+                            type="button"
+                            className={styles.iconButton}
+                            disabled={index === 0}
+                            aria-label={`Move ${block.type} block up`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void moveBlock(block, -1);
+                            }}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.iconButton}
+                            disabled={index === document.blocks.length - 1}
+                            aria-label={`Move ${block.type} block down`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void moveBlock(block, 1);
+                            }}
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.iconButton} ${styles.deleteButton}`}
+                            aria-label={`Delete ${block.type} block`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void deleteBlock(block);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </span>
+                      </div>
+                      <div className={styles.blockContent}>
+                        <BlockPreview block={block} />
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
+
+              <div className={styles.addBlock}>
                 <h3>Add block</h3>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                <div className={styles.kindList}>
                   {BLOCK_KINDS.map((kind) => (
                     <button
                       key={kind}
                       type="button"
-                      style={{ ...button, background: kind === draftKind ? "#eee" : "#fff" }}
+                      className={`${styles.kindButton} ${kind === draftKind ? styles.kindButtonActive : ""}`}
                       onClick={() => chooseKind(kind)}
                     >
                       {kind}
@@ -657,123 +669,121 @@ export default function SpacePageView() {
                   ))}
                 </div>
                 <textarea
+                  className={styles.textarea}
                   value={draftJson}
                   onChange={(event) => setDraftJson(event.target.value)}
                   rows={9}
                   spellCheck={false}
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    fontFamily: "monospace",
-                    fontSize: 12,
-                    padding: 10,
-                  }}
+                  aria-label={`${draftKind} block JSON`}
                 />
-                <button
-                  type="button"
-                  style={{ ...button, marginTop: 8 }}
-                  onClick={() => void addBlock()}
-                >
-                  Add {draftKind}
-                </button>
+                <div className={styles.editorActions}>
+                  <button
+                    type="button"
+                    className={styles.buttonPrimary}
+                    onClick={() => void addBlock()}
+                  >
+                    Add {draftKind}
+                  </button>
+                </div>
               </div>
             </>
           )}
         </section>
 
-        <aside style={{ display: "grid", gap: 16 }}>
-          <section style={panel}>
-            <h2 style={{ marginTop: 0, fontSize: 16 }}>Block inspector</h2>
-            {selectedBlock === null ? (
-              <p>Select a block.</p>
-            ) : (
-              <>
-                <small>
-                  {selectedBlock.id} · {selectedBlock.type} · v{selectedBlock.version}
-                </small>
-                <textarea
-                  value={inspectorJson}
-                  onChange={(event) => setInspectorJson(event.target.value)}
-                  rows={15}
-                  spellCheck={false}
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    marginTop: 10,
-                    fontFamily: "monospace",
-                    fontSize: 12,
-                    padding: 10,
-                  }}
-                />
-                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                  <button type="button" style={button} onClick={() => void saveBlock()}>
-                    Save block
-                  </button>
-                  <button type="button" style={button} onClick={() => void resolveBlock()}>
-                    Resolve link
-                  </button>
-                </div>
-                {resolution !== null ? (
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      overflowWrap: "anywhere",
-                      fontSize: 11,
-                      background: "#f6f6f6",
-                      padding: 10,
-                      borderRadius: 8,
+        <aside className={styles.inspector}>
+          <div className={styles.inspectorStack}>
+            <section className={styles.inspectorSection}>
+              <h2 className={styles.panelTitle}>Block inspector</h2>
+              {selectedBlock === null ? (
+                <p className={styles.help}>Select a block to inspect its owner-backed body.</p>
+              ) : (
+                <>
+                  <div className={styles.meta}>
+                    {selectedBlock.id} · {selectedBlock.type} · v{selectedBlock.version}
+                  </div>
+                  <textarea
+                    className={styles.textarea}
+                    value={inspectorJson}
+                    onChange={(event) => setInspectorJson(event.target.value)}
+                    rows={15}
+                    spellCheck={false}
+                    aria-label="Selected block JSON"
+                  />
+                  <div className={styles.inspectorActions}>
+                    <button
+                      type="button"
+                      className={styles.buttonPrimary}
+                      onClick={() => void saveBlock()}
+                    >
+                      Save block
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      onClick={() => void resolveBlock()}
+                    >
+                      Resolve link
+                    </button>
+                  </div>
+                  {resolution !== null ? (
+                    <pre className={styles.resolution}>
+                      {JSON.stringify(resolution, null, 2)}
+                    </pre>
+                  ) : null}
+                </>
+              )}
+            </section>
+
+            <section className={styles.inspectorSection}>
+              <h2 className={styles.panelTitle}>Context core memory</h2>
+              <p className={styles.help}>
+                Editor proxy only. Values are stored by Context, not Space.
+              </p>
+              <div className={styles.memoryList}>
+                {memory.blocks.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    className={styles.memoryButton}
+                    onClick={() => {
+                      setMemoryLabel(item.label);
+                      setMemoryDescription(item.description);
+                      setMemoryValue(item.value);
                     }}
                   >
-                    {JSON.stringify(resolution, null, 2)}
-                  </pre>
-                ) : null}
-              </>
-            )}
-          </section>
-
-          <section style={panel}>
-            <h2 style={{ marginTop: 0, fontSize: 16 }}>Context core memory</h2>
-            <p style={{ fontSize: 12, color: "#666" }}>
-              Editor proxy only. Values are stored by Context, not Space.
-            </p>
-            <div style={{ marginBottom: 10 }}>
-              {memory.blocks.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  style={{ ...button, margin: 2 }}
-                  onClick={() => {
-                    setMemoryLabel(item.label);
-                    setMemoryDescription(item.description);
-                    setMemoryValue(item.value);
-                  }}
-                >
-                  {item.label}
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <form onSubmit={saveMemory} className={styles.memoryForm}>
+                <input
+                  className={styles.input}
+                  value={memoryLabel}
+                  onChange={(event) => setMemoryLabel(event.target.value)}
+                  placeholder="label"
+                  aria-label="Core memory label"
+                />
+                <input
+                  className={styles.input}
+                  value={memoryDescription}
+                  onChange={(event) => setMemoryDescription(event.target.value)}
+                  placeholder="description"
+                  aria-label="Core memory description"
+                />
+                <textarea
+                  className={styles.textarea}
+                  value={memoryValue}
+                  onChange={(event) => setMemoryValue(event.target.value)}
+                  rows={7}
+                  placeholder="Context-owned value"
+                  aria-label="Core memory value"
+                />
+                <button type="submit" className={styles.buttonPrimary}>
+                  Save to Context
                 </button>
-              ))}
-            </div>
-            <form onSubmit={saveMemory} style={{ display: "grid", gap: 8 }}>
-              <input
-                value={memoryLabel}
-                onChange={(event) => setMemoryLabel(event.target.value)}
-                placeholder="label"
-              />
-              <input
-                value={memoryDescription}
-                onChange={(event) => setMemoryDescription(event.target.value)}
-                placeholder="description"
-              />
-              <textarea
-                value={memoryValue}
-                onChange={(event) => setMemoryValue(event.target.value)}
-                rows={7}
-                placeholder="Context-owned value"
-              />
-              <button type="submit" style={button}>
-                Save to Context
-              </button>
-            </form>
-          </section>
+              </form>
+            </section>
+          </div>
         </aside>
       </div>
     </main>

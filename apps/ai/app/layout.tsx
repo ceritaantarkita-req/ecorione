@@ -1,37 +1,24 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { THEME_BOOTSTRAP_SCRIPT } from "@ecorione/shared-ui";
+import ProductNav from "./ProductNav";
 import "./globals.css";
 import "./navigation.css";
 
 export const metadata: Metadata = {
   title: "ecorione — Ai",
   description:
-    "Antarmuka chat ecorione — memori dan biaya selalu terlihat, tidak ada fallback diam-diam.",
+    "Workspace local-first ecorione untuk Ai, Space, Flow, Operations, dan pengaturan runtime.",
 };
-
-const NAV_ITEMS = [
-  ["Ai", "/"],
-  ["Space", "/space"],
-  ["Flow", "/flow"],
-  ["Operations", "/ops"],
-  ["Settings", "/settings"],
-] as const;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+      </head>
       <body>
-        <nav className="ecr-global-nav" aria-label="Navigasi utama ecorione">
-          <Link className="ecr-global-nav__brand" href="/">
-            ecorione
-          </Link>
-          {NAV_ITEMS.map(([label, href]) => (
-            <Link className="ecr-global-nav__link" href={href} key={href}>
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <ProductNav />
         {children}
       </body>
     </html>
