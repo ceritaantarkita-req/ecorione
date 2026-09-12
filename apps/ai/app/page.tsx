@@ -66,6 +66,8 @@ export default function ChatPage() {
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
+  const sendingRef = useRef(false);
+  const forgettingRef = useRef<string | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
   const latestAssistant = [...turns]
     .reverse()
@@ -96,7 +98,7 @@ export default function ChatPage() {
 
   async function sendMessage(text: string): Promise<void> {
     const trimmed = text.trim();
-    if (!hydrated || trimmed.length === 0 || sending) return;
+    if (!hydrated || trimmed.length === 0 || sendingRef.current) return;
     if (target === "hosted" && hostedAvailable !== true) {
       setTurns((prev) => [
         ...prev,
@@ -108,6 +110,7 @@ export default function ChatPage() {
       ]);
       return;
     }
+    sendingRef.current = true;
     setTurns((prev) => [...prev, { kind: "user", id: nextTurnId(), text: trimmed }]);
     setDraft("");
     setSending(true);
@@ -147,12 +150,14 @@ export default function ChatPage() {
         { kind: "error", id: nextTurnId(), message: "Tidak bisa menghubungi server." },
       ]);
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   }
 
   async function forgetFact(factId: string): Promise<void> {
-    if (forgettingId !== null) return;
+    if (forgettingRef.current !== null) return;
+    forgettingRef.current = factId;
     setForgettingId(factId);
     try {
       const res = await fetch("/api/forget", {
@@ -195,6 +200,7 @@ export default function ChatPage() {
         },
       ]);
     } finally {
+      forgettingRef.current = null;
       setForgettingId(null);
     }
   }
@@ -385,9 +391,9 @@ function MemoryPanel({
                 type="button"
                 className="ecr-btn ecr-btn--secondary ai-forget-btn"
                 onClick={() => onForget(fact.id)}
-                disabled={forgettingId === fact.id}
+                disabled={forgettingId !== null}
               >
-                Lupakan
+                {forgettingId === fact.id ? "Melupakan…" : "Lupakan"}
               </button>
             </div>
           ))
