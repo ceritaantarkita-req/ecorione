@@ -45,7 +45,11 @@ describe("proxyToFlow", () => {
   it("meneruskan request valid dan bearer token ke Flow", async () => {
     let sawAuth: string | undefined;
     pool
-      .intercept({ path: "/v1/graphs/validate", method: "POST", body: JSON.stringify({ nodes: [] }) })
+      .intercept({
+        path: "/v1/graphs/validate",
+        method: "POST",
+        body: JSON.stringify({ nodes: [] }),
+      })
       .reply(200, (opts) => {
         sawAuth = (opts.headers as Record<string, string> | undefined)?.authorization;
         return { valid: true };
