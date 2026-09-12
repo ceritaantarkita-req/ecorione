@@ -865,6 +865,7 @@ export default function SpacePageView() {
                     key={item.label}
                     type="button"
                     className={styles.memoryButton}
+                    disabled={pendingMutation !== null}
                     onClick={() => {
                       setMemoryLabel(item.label);
                       setMemoryDescription(item.description);
@@ -882,6 +883,7 @@ export default function SpacePageView() {
                   onChange={(event) => setMemoryLabel(event.target.value)}
                   placeholder="label"
                   aria-label="Core memory label"
+                  disabled={pendingMutation !== null}
                 />
                 <input
                   className={styles.input}
@@ -889,6 +891,7 @@ export default function SpacePageView() {
                   onChange={(event) => setMemoryDescription(event.target.value)}
                   placeholder="description"
                   aria-label="Core memory description"
+                  disabled={pendingMutation !== null}
                 />
                 <textarea
                   className={styles.textarea}
@@ -897,6 +900,7 @@ export default function SpacePageView() {
                   rows={7}
                   placeholder="Context-owned value"
                   aria-label="Core memory value"
+                  disabled={pendingMutation !== null}
                 />
                 <button
                   type="submit"

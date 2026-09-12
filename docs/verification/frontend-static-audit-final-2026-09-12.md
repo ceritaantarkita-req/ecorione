@@ -30,6 +30,9 @@ This pass is the final repository-side UX hardening before the real local browse
 11. **Operations had ambiguous blank sections when no service/trace rows existed.** Explicit empty states were added.
 12. **Mobile theme controls visually replace text with symbols.** Explicit accessible labels were added so hidden visual text does not reduce control naming.
 13. **UX inventory only smoke-checked route markers.** It now also requires global navigation on every surface, typed Ops/Space/Flow response shapes, a non-empty local model identity, and records whether that identity is a mutable alias.
+14. **Credential save refreshed the whole Settings snapshot.** That could discard unrelated unsaved runtime edits; credential mutation now refreshes only credential metadata.
+15. **Space core-memory fields stayed editable while their save was in flight.** They now lock with the owner mutation so the visible draft cannot diverge silently from the submitted value.
+16. **Flow version-history refresh could make a successful Save/Load look like a failed operation.** Save/Load success now remains explicit while version-history refresh failure is reported separately.
 
 ## Static security/safety findings
 

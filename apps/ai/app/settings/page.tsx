@@ -92,6 +92,13 @@ export default function SettingsPage() {
     }
   }, []);
 
+  const refreshCredentials = useCallback(async () => {
+    const result = await json<{ credentials: Credential[] }>(
+      "/api/settings/settings/credentials",
+    );
+    setCredentials(result.credentials);
+  }, []);
+
   const refreshMcp = useCallback(async () => {
     const requestId = ++mcpLoadRequestRef.current;
     const requestedWorkspace = workspaceId;
@@ -155,7 +162,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ secret }),
       });
       setSecret("");
-      await refresh();
+      await refreshCredentials();
       setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));

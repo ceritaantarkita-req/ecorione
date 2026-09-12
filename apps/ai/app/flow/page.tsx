@@ -397,7 +397,14 @@ export default function FlowCanvasPage() {
           `v${body.version.version} tersimpan, tetapi draft berubah selama request. Simpan lagi sebelum Run.`,
         );
       }
-      await loadVersions(body.version.graphId);
+      try {
+        await loadVersions(body.version.graphId);
+      } catch (reason) {
+        const detail = reason instanceof Error ? reason.message : String(reason);
+        setMessage(
+          `v${body.version.version} tersimpan, tetapi riwayat versi gagal dimuat: ${detail}`,
+        );
+      }
     } finally {
       finishBusy();
     }
@@ -429,7 +436,14 @@ export default function FlowCanvasPage() {
       setDirty(false);
       setValidation(body.validation);
       setMessage(`Memuat ${body.graphId} v${body.version}.`);
-      await loadVersions(body.graphId);
+      try {
+        await loadVersions(body.graphId);
+      } catch (reason) {
+        const detail = reason instanceof Error ? reason.message : String(reason);
+        setMessage(
+          `Graph ${body.graphId} v${body.version} termuat, tetapi riwayat versi gagal dimuat: ${detail}`,
+        );
+      }
     } finally {
       finishBusy();
     }
