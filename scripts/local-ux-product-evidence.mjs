@@ -3,6 +3,8 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, resolve } from "node:path";
 
+export const UX_WORKSPACE_ID = "ws_personal";
+
 export const OWNER_HEALTH = [
   ["rnd", "http://127.0.0.1:17021/healthz"],
   ["context", "http://127.0.0.1:17022/healthz"],
@@ -182,7 +184,7 @@ export async function inventory() {
   const runtime = validateRuntimeSnapshot(parseJson(runtimeResponse.text, "runtime settings"));
 
   const mcpSettingsResponse = await request(
-    "http://127.0.0.1:3000/api/settings/settings/mcp/servers?workspaceId=workspace-default",
+    `http://127.0.0.1:3000/api/settings/settings/mcp/servers?workspaceId=${UX_WORKSPACE_ID}`,
   );
   if (mcpSettingsResponse.status !== 200) {
     throw new Error(`Ai Settings MCP proxy gagal HTTP ${mcpSettingsResponse.status}.`);
@@ -197,7 +199,7 @@ export async function inventory() {
   validateOpsSnapshot(ops);
 
   const spaceResponse = await request(
-    "http://127.0.0.1:3000/api/space/pages?workspaceId=ws_personal",
+    `http://127.0.0.1:3000/api/space/pages?workspaceId=${UX_WORKSPACE_ID}`,
   );
   if (spaceResponse.status !== 200) {
     throw new Error(`Ai Space proxy gagal HTTP ${spaceResponse.status}.`);

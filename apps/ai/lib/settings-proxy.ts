@@ -1,3 +1,4 @@
+import { WorkspaceIdSchema } from "@ecorione/shared-schema";
 import { connectUrl, internalToken } from "./env";
 import { normalizeOwnerProxyPath } from "./owner-proxy-path";
 import { jsonError } from "./proxy";
@@ -19,9 +20,11 @@ function allowedSettingsPath(path: string, method: Method): string | null {
 
   if (normalized.pathname === "/v1/settings/mcp/servers" && method === "GET") {
     const keys = [...normalized.searchParams.keys()];
+    const workspaceIds = normalized.searchParams.getAll("workspaceId");
     if (
       keys.some((key) => key !== "workspaceId") ||
-      normalized.searchParams.getAll("workspaceId").length > 1
+      workspaceIds.length > 1 ||
+      (workspaceIds.length === 1 && !WorkspaceIdSchema.safeParse(workspaceIds[0]).success)
     ) {
       return null;
     }

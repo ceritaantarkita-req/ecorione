@@ -42,11 +42,11 @@ function request(method: string, body?: string): Request {
 }
 
 describe("proxyToConnectSettings", () => {
-  it("meneruskan GET MCP workspace query yang memang didukung Connect", async () => {
+  it("meneruskan GET MCP workspace query valid yang didukung Connect", async () => {
     let sawAuth: string | undefined;
     pool
       .intercept({
-        path: "/v1/settings/mcp/servers?workspaceId=workspace-default",
+        path: "/v1/settings/mcp/servers?workspaceId=ws_personal",
         method: "GET",
       })
       .reply(200, (opts) => {
@@ -56,13 +56,25 @@ describe("proxyToConnectSettings", () => {
 
     const response = await proxyToConnectSettings(
       request("GET"),
-      "/v1/settings/mcp/servers?workspaceId=workspace-default",
+      "/v1/settings/mcp/servers?workspaceId=ws_personal",
       "GET",
     );
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ servers: [] });
     expect(sawAuth).toBe("Bearer test-token");
+  });
+
+  it("menolak MCP workspace id yang tidak memenuhi shared workspace contract", async () => {
+    const response = await proxyToConnectSettings(
+      request("GET"),
+      "/v1/settings/mcp/servers?workspaceId=workspace-default",
+      "GET",
+    );
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: { type: string } }).error.type).toBe(
+      "BAD_REQUEST",
+    );
   });
 
   it("menolak query Settings yang tidak termasuk kontrak allowlist", async () => {
@@ -80,14 +92,14 @@ describe("proxyToConnectSettings", () => {
   it("menolak duplicate dan unknown MCP workspace query", async () => {
     const duplicate = await proxyToConnectSettings(
       request("GET"),
-      "/v1/settings/mcp/servers?workspaceId=a&workspaceId=b",
+      "/v1/settings/mcp/servers?workspaceId=ws_personal&workspaceId=ws_other",
       "GET",
     );
     expect(duplicate.status).toBe(400);
 
     const unknown = await proxyToConnectSettings(
       request("GET"),
-      "/v1/settings/mcp/servers?workspaceId=a&admin=true",
+      "/v1/settings/mcp/servers?workspaceId=ws_personal&admin=true",
       "GET",
     );
     expect(unknown.status).toBe(400);

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   NAV_ROUTES,
   UI_SURFACES,
+  UX_WORKSPACE_ID,
   validateFlowSnapshot,
   validateMcpSettingsSnapshot,
   validateNavigationHtml,
@@ -12,7 +13,7 @@ import {
 } from "../scripts/local-ux-product-evidence.mjs";
 
 describe("local UX/product evidence guards", () => {
-  it("mewajibkan lima surface utama Ai", () => {
+  it("mewajibkan lima surface utama Ai dan workspace lokal kanonik", () => {
     expect(NAV_ROUTES.map(([label]) => label)).toEqual([
       "Ai",
       "Space",
@@ -27,6 +28,7 @@ describe("local UX/product evidence guards", () => {
       "ops",
       "settings",
     ]);
+    expect(UX_WORKSPACE_ID).toBe("ws_personal");
   });
 
   it("fail closed jika hosted calls masih efektif aktif", () => {
