@@ -90,6 +90,7 @@ async function fetchJson(url: string, headers: HeadersInit = {}): Promise<unknow
   const response = await fetch(url, {
     headers,
     cache: "no-store",
+    redirect: "error",
     signal: AbortSignal.timeout(2_000),
   });
   if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
