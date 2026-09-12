@@ -1,0 +1,349 @@
+name: TEMP Frontend State Hardening
+
+on:
+  push:
+    branches:
+      - fix/frontend-interaction-state-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/frontend-interaction-state-20260912
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Harden frontend interaction states
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: Path, old: str, new: str, label: str) -> None:
+              text = path.read_text()
+              if old not in text:
+                  raise SystemExit(f'{label} target not found')
+              path.write_text(text.replace(old, new, 1))
+
+          flow = Path('apps/ai/app/flow/page.tsx')
+          replace_once(
+              flow,
+              '  const [busy, setBusy] = useState(false);\n  const [message, setMessage] = useState("Draft lokal");',
+              '  const [busy, setBusy] = useState(false);\n  const [runStarting, setRunStarting] = useState(false);\n  const [pendingNodeAction, setPendingNodeAction] = useState<string | null>(null);\n  const [message, setMessage] = useState("Draft lokal");',
+              'flow pending state',
+          )
+          replace_once(
+              flow,
+              '''      const body = (await response.json().catch(() => null)) as
+                (FlowGraphRunState & { temporalStatus?: string }) | null;
+              if (!cancelled && response.ok && body !== null) setRun(body);''',
+              '''      const body = (await response.json().catch(() => null)) as
+                (FlowGraphRunState & { temporalStatus?: string }) | null;
+              if (!response.ok || body === null) {
+                throw new Error(
+                  errorMessage(
+                    body,
+                    response.ok
+                      ? "Respons status run tidak valid."
+                      : `HTTP ${String(response.status)}`,
+                  ),
+                );
+              }
+              if (!cancelled) setRun(body);''',
+              'flow poll failure',
+          )
+          replace_once(
+              flow,
+              '''  async function loadVersions(id: string): Promise<void> {
+    const response = await fetch(`/api/flow/graphs/${encodeURIComponent(id)}/versions`);
+    if (response.ok)
+      setVersions(((await response.json()) as { versions: FlowGraphVersionView[] }).versions);
+  }''',
+              '''  async function loadVersions(id: string): Promise<void> {
+    const response = await fetch(`/api/flow/graphs/${encodeURIComponent(id)}/versions`);
+    const body = (await response.json().catch(() => null)) as {
+      versions?: FlowGraphVersionView[];
+      error?: unknown;
+    } | null;
+    if (!response.ok || body?.versions === undefined) {
+      throw new Error(
+        errorMessage(
+          body,
+          response.ok ? "Respons versions tidak valid." : `HTTP ${String(response.status)}`,
+        ),
+      );
+    }
+    setVersions(body.versions);
+  }''',
+              'flow versions failure',
+          )
+          text = flow.read_text()
+          start = text.index('  async function runGraph(): Promise<void> {')
+          end = text.index('\n  async function decide(', start)
+          old = text[start:end]
+          new = '''  async function runGraph(): Promise<void> {
+    if (runStarting) return;
+    if (graphId === null) {
+      setMessage("Simpan graph sebelum Run.");
+      return;
+    }
+    setRunStarting(true);
+    try {
+      const checked = validation?.valid ? validation : await validate();
+      if (checked?.valid !== true) return;
+      const response = await fetch(`/api/flow/graphs/${encodeURIComponent(graphId)}/runs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ version, input: parseInput(runInput) }),
+      });
+      const body = (await response.json().catch(() => null)) as {
+        runId?: string;
+        traceOperationId?: string;
+      } | null;
+      if (!response.ok || body?.runId === undefined) {
+        setMessage(errorMessage(body, `Run gagal (${response.status}).`));
+        return;
+      }
+      setRunId(body.runId);
+      setRun(null);
+      setMessage(`Run ${body.runId} dimulai. Trace ${body.traceOperationId ?? "-"}.`);
+    } finally {
+      setRunStarting(false);
+    }
+  }'''
+          flow.write_text(text[:start] + new + text[end:])
+
+          text = flow.read_text()
+          start = text.index('  async function decide(')
+          end = text.index('\n  async function submitHuman(', start)
+          new = '''  async function decide(node: NodeRunState, decision: "APPROVE" | "REJECT"): Promise<void> {
+    if (runId === null || node.approvalKey === null || pendingNodeAction !== null) return;
+    const actionKey = `${node.nodeId}:decision`;
+    setPendingNodeAction(actionKey);
+    try {
+      const response = await fetch(
+        `/api/flow/graph-runs/${encodeURIComponent(runId)}/nodes/${encodeURIComponent(node.nodeId)}/decision`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ decision, note: null, approvalKey: node.approvalKey }),
+        },
+      );
+      if (!response.ok)
+        setMessage(
+          errorMessage(
+            await response.json().catch(() => null),
+            `Decision gagal (${response.status}).`,
+          ),
+        );
+    } finally {
+      setPendingNodeAction(null);
+    }
+  }'''
+          flow.write_text(text[:start] + new + text[end:])
+
+          text = flow.read_text()
+          start = text.index('  async function submitHuman(')
+          end = text.index('\n\n  return (', start)
+          new = '''  async function submitHuman(node: NodeRunState): Promise<void> {
+    if (runId === null || pendingNodeAction !== null) return;
+    const actionKey = `${node.nodeId}:input`;
+    setPendingNodeAction(actionKey);
+    try {
+      const response = await fetch(
+        `/api/flow/graph-runs/${encodeURIComponent(runId)}/nodes/${encodeURIComponent(node.nodeId)}/input`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ value: parseInput(humanDraft) }),
+        },
+      );
+      if (response.ok) setHumanDraft("");
+      else
+        setMessage(
+          errorMessage(
+            await response.json().catch(() => null),
+            `Input gagal (${response.status}).`,
+          ),
+        );
+    } finally {
+      setPendingNodeAction(null);
+    }
+  }'''
+          flow.write_text(text[:start] + new + text[end:])
+
+          replace_once(
+              flow,
+              '            disabled={busy || graphId === null}\n          >\n            Run\n',
+              '            disabled={busy || runStarting || graphId === null}\n          >\n            {runStarting ? "Starting…" : "Run"}\n',
+              'flow run button',
+          )
+          replace_once(
+              flow,
+              '            <span>{message}</span>\n            {connectFrom === null ? (\n              <span>Drag node dari kiri. Klik node untuk edit.</span>',
+              '            <span role="status" aria-live="polite">\n              {message}\n            </span>\n            {connectFrom === null ? (\n              <span>Klik atau drag node dari kiri. Klik node di canvas untuk edit.</span>',
+              'flow status copy',
+          )
+          replace_once(
+              flow,
+              '''                  <button
+                    className="ecr-btn ecr-btn--primary"
+                    onClick={() =>
+                      void runUiAction("Approval gagal", () => decide(node, "APPROVE"))
+                    }
+                  >
+                    Approve
+                  </button>''',
+              '''                  <button
+                    className="ecr-btn ecr-btn--primary"
+                    disabled={pendingNodeAction !== null}
+                    onClick={() =>
+                      void runUiAction("Approval gagal", () => decide(node, "APPROVE"))
+                    }
+                  >
+                    {pendingNodeAction === `${node.nodeId}:decision` ? "Sending…" : "Approve"}
+                  </button>''',
+              'flow approve lock',
+          )
+          replace_once(
+              flow,
+              '''                  <button
+                    className="ecr-btn ecr-btn--secondary"
+                    onClick={() =>
+                      void runUiAction("Rejection gagal", () => decide(node, "REJECT"))
+                    }
+                  >
+                    Reject
+                  </button>''',
+              '''                  <button
+                    className="ecr-btn ecr-btn--secondary"
+                    disabled={pendingNodeAction !== null}
+                    onClick={() =>
+                      void runUiAction("Rejection gagal", () => decide(node, "REJECT"))
+                    }
+                  >
+                    Reject
+                  </button>''',
+              'flow reject lock',
+          )
+          replace_once(
+              flow,
+              '''                  <button
+                    className="ecr-btn ecr-btn--primary"
+                    onClick={() => void runUiAction("Input gagal", () => submitHuman(node))}
+                  >
+                    Send
+                  </button>''',
+              '''                  <button
+                    className="ecr-btn ecr-btn--primary"
+                    disabled={pendingNodeAction !== null}
+                    onClick={() => void runUiAction("Input gagal", () => submitHuman(node))}
+                  >
+                    {pendingNodeAction === `${node.nodeId}:input` ? "Sending…" : "Send"}
+                  </button>''',
+              'flow input lock',
+          )
+
+          ops = Path('apps/ai/app/ops/page.tsx')
+          replace_once(
+              ops,
+              'import { useCallback, useEffect, useMemo, useState } from "react";',
+              'import { useCallback, useEffect, useMemo, useRef, useState } from "react";',
+              'ops useRef import',
+          )
+          replace_once(
+              ops,
+              '  const [error, setError] = useState<string | null>(null);\n  const [auto, setAuto] = useState(true);',
+              '  const [error, setError] = useState<string | null>(null);\n  const [auto, setAuto] = useState(true);\n  const [refreshing, setRefreshing] = useState(false);\n  const refreshInFlight = useRef(false);',
+              'ops refresh state',
+          )
+          text = ops.read_text()
+          start = text.index('  const refresh = useCallback(async () => {')
+          end = text.index('\n  }, []);', start) + len('\n  }, []);')
+          new = '''  const refresh = useCallback(async () => {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    setRefreshing(true);
+    try {
+      const response = await fetch("/api/ops", { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
+      setData((await response.json()) as OpsResponse);
+      setError(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      refreshInFlight.current = false;
+      setRefreshing(false);
+    }
+  }, []);'''
+          ops.write_text(text[:start] + new + text[end:])
+          replace_once(
+              ops,
+              '''          <button type="button" onClick={() => void refresh()}>
+            Refresh
+          </button>''',
+              '''          <button type="button" disabled={refreshing} onClick={() => void refresh()}>
+            {refreshing ? "Refreshing…" : "Refresh"}
+          </button>''',
+              'ops refresh button',
+          )
+          replace_once(
+              ops,
+              '<strong>{data?.healthy ? "Healthy" : "Degraded"}</strong>',
+              '<strong>{data === null ? "Loading" : data.healthy ? "Healthy" : "Degraded"}</strong>',
+              'ops fleet initial state',
+          )
+          replacements = {
+              '<strong>{formatBytes(totals.rssBytes)}</strong>': '<strong>{data === null ? "—" : formatBytes(totals.rssBytes)}</strong>',
+              '<strong>{formatNumber(totals.requests)}</strong>': '<strong>{data === null ? "—" : formatNumber(totals.requests)}</strong>',
+              '<strong>{formatNumber(totals.errors)}</strong>': '<strong>{data === null ? "—" : formatNumber(totals.errors)}</strong>',
+              '<strong>{formatNumber(totals.modelCalls)}</strong>': '<strong>{data === null ? "—" : formatNumber(totals.modelCalls)}</strong>',
+              '<strong>${totals.costUsd.toFixed(6)}</strong>': '<strong>{data === null ? "—" : `$${totals.costUsd.toFixed(6)}`}</strong>',
+              '<strong>{formatNumber(totals.mcpCalls)}</strong>': '<strong>{data === null ? "—" : formatNumber(totals.mcpCalls)}</strong>',
+              '<strong>{formatNumber(totals.flowRuns)}</strong>': '<strong>{data === null ? "—" : formatNumber(totals.flowRuns)}</strong>',
+              '<strong>{formatNumber(totals.ecxPackets)}</strong>': '<strong>{data === null ? "—" : formatNumber(totals.ecxPackets)}</strong>',
+              '<strong>{formatNumber(totals.ecxBytes)}</strong>': '<strong>{data === null ? "—" : formatNumber(totals.ecxBytes)}</strong>',
+          }
+          for old, new in replacements.items():
+              replace_once(ops, old, new, f'ops metric {old[:24]}')
+          replace_once(
+              ops,
+              '''          <strong>
+            {formatNumber(totals.inputTokens)} / {formatNumber(totals.outputTokens)}
+          </strong>''',
+              '''          <strong>
+            {data === null
+              ? "—"
+              : `${formatNumber(totals.inputTokens)} / ${formatNumber(totals.outputTokens)}`}
+          </strong>''',
+              'ops token initial state',
+          )
+
+          nav = Path('apps/ai/app/ProductNav.tsx')
+          replace_once(
+              nav,
+              '<div className="ecr-theme-switch" aria-label="Tema tampilan">',
+              '<div className="ecr-theme-switch" role="group" aria-label="Tema tampilan">',
+              'theme control group',
+          )
+          PY
+          pnpm exec prettier --write \
+            apps/ai/app/flow/page.tsx \
+            apps/ai/app/ops/page.tsx \
+            apps/ai/app/ProductNav.tsx
+          git rm .github/workflows/temp-frontend-state-hardening.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/ai/app/flow/page.tsx apps/ai/app/ops/page.tsx apps/ai/app/ProductNav.tsx
+          git commit -m "fix: harden frontend async interaction states"
+          git push origin HEAD:fix/frontend-interaction-state-20260912
