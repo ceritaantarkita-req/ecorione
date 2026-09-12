@@ -24,82 +24,22 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Apply typography and accessibility fixes
+      - name: Apply remaining accessibility fixes
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          globals_path = Path('apps/ai/app/globals.css')
-          text = globals_path.read_text()
-          old = '''  --font-display: "Fraunces", ui-serif, Georgia, serif;
-          --font-body:
-            "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-            sans-serif;
-          --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-          '''
-          new = '''  --font-display: var(--ecr-font-display), "Fraunces", ui-serif, Georgia, serif;
-          --font-body:
-            var(--ecr-font-body), "Manrope", ui-sans-serif, system-ui, -apple-system,
-            BlinkMacSystemFont, "Segoe UI", sans-serif;
-          --font-mono:
-            var(--ecr-font-mono), "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono",
-            monospace;
-          '''
-          if old not in text:
-              raise SystemExit('font token target not found')
-          globals_path.write_text(text.replace(old, new, 1))
-
-          settings_path = Path('apps/ai/app/settings/page.tsx')
-          text = settings_path.read_text()
-          old = '''async function json<T>(url: string, init?: RequestInit): Promise<T> {
-            const response = await fetch(url, { cache: "no-store", ...init });
-            const payload = (await response.json()) as T & { error?: { message?: string } };
-            if (!response.ok)
-              throw new Error(payload.error?.message ?? `HTTP ${String(response.status)}`);
-            return payload;
-          }
-          '''
-          new = '''async function json<T>(url: string, init?: RequestInit): Promise<T> {
-            const response = await fetch(url, { cache: "no-store", ...init });
-            const text = await response.text();
-            let payload: unknown = null;
-            if (text.length > 0) {
-              try {
-                payload = JSON.parse(text) as unknown;
-              } catch {
-                if (!response.ok) {
-                  throw new Error(`HTTP ${String(response.status)}: ${text.slice(0, 240)}`);
-                }
-                throw new Error(`HTTP ${String(response.status)} returned a non-JSON response.`);
-              }
-            }
-            if (!response.ok) {
-              const error =
-                typeof payload === "object" && payload !== null
-                  ? (payload as { error?: { message?: unknown } }).error
-                  : undefined;
-              const message = typeof error?.message === "string" ? error.message : undefined;
-              throw new Error(message ?? `HTTP ${String(response.status)}`);
-            }
-            return payload as T;
-          }
-          '''
-          if old not in text:
-              raise SystemExit('settings json target not found')
-          settings_path.write_text(text.replace(old, new, 1))
-
           space_path = Path('apps/ai/app/space/page.tsx')
           text = space_path.read_text()
-          old = '''                        <span className={styles.blockActions}>
+          inspect_label = 'aria-label={`Inspect ${block.type} block`}'
+          marker = '<span className={styles.blockActions}>'
+          if inspect_label not in text:
+              if marker not in text:
+                  raise SystemExit('space block action marker not found')
+              insert = '''<span className={styles.blockActions}>
                           <button
                             type="button"
                             className={styles.iconButton}
-                            disabled={index === 0}
-          '''
-          new = '''                        <span className={styles.blockActions}>
-                          <button
-                            type="button"
-                            className={`${styles.iconButton} ${styles.deleteButton}`}
                             aria-label={`Inspect ${block.type} block`}
                             aria-pressed={selectedBlockId === block.id}
                             onClick={(event) => {
@@ -108,50 +48,35 @@ jobs:
                             }}
                           >
                             Inspect
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.iconButton}
-                            disabled={index === 0}
-          '''
-          if old not in text:
-              raise SystemExit('space inspect target not found')
-          space_path.write_text(text.replace(old, new, 1))
+                          </button>'''
+              text = text.replace(marker, insert, 1)
+              space_path.write_text(text)
 
           ops_path = Path('apps/ai/app/ops/page.tsx')
           text = ops_path.read_text()
-          old = '''          <p className={styles.eyebrow}>ECORIONE OPERATIONS</p>
-          '''
-          if old not in text:
-              raise SystemExit('ops eyebrow target not found')
-          text = text.replace(old, '', 1)
-          old = '''      {error !== null ? <p className={styles.error}>Ops fetch failed: {error}</p> : null}
-          '''
-          new = '''      {error !== null ? (
+          text = text.replace('          <p className={styles.eyebrow}>ECORIONE OPERATIONS</p>\n', '', 1)
+          old = '      {error !== null ? <p className={styles.error}>Ops fetch failed: {error}</p> : null}\n'
+          if old in text:
+              new = '''      {error !== null ? (
             <p className={styles.error} role="alert">
               Ops fetch failed: {error}
             </p>
           ) : null}
-          '''
-          if old not in text:
+'''
+              text = text.replace(old, new, 1)
+          elif 'className={styles.error} role="alert"' not in text:
               raise SystemExit('ops error target not found')
-          ops_path.write_text(text.replace(old, new, 1))
+          ops_path.write_text(text)
           PY
           pnpm exec prettier --write \
-            apps/ai/app/globals.css \
-            apps/ai/app/settings/page.tsx \
             apps/ai/app/space/page.tsx \
-            apps/ai/app/ops/page.tsx \
-            apps/ai/app/ProductNav.tsx \
-            apps/ai/app/layout.tsx
+            apps/ai/app/ops/page.tsx
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            apps/ai/app/globals.css \
-            apps/ai/app/settings/page.tsx \
-            apps/ai/app/space/page.tsx \
-            apps/ai/app/ops/page.tsx \
-            apps/ai/app/ProductNav.tsx \
-            apps/ai/app/layout.tsx
-          git commit -m "fix: finish frontend typography and accessibility pass"
+          git add apps/ai/app/space/page.tsx apps/ai/app/ops/page.tsx
+          if git diff --cached --quiet; then
+            echo "No remaining patch changes"
+            exit 0
+          fi
+          git commit -m "fix: finish frontend accessibility pass"
           git push origin HEAD:feat/frontend-typography-accessibility-20260912
