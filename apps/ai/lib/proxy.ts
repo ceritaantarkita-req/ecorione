@@ -70,6 +70,8 @@ export async function proxyToHub<T>(
       method: "POST",
       headers,
       body: JSON.stringify(parsed.data),
+      redirect: "error",
+      cache: "no-store",
     });
   } catch {
     return jsonError(502, "UPSTREAM_UNAVAILABLE", "Hub tidak bisa dihubungi.");
