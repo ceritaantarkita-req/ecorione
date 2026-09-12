@@ -1,16 +1,16 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-11**
+Last updated: **2026-09-12**
 
 Status: **CURRENT / canonical handoff for humans and AI agents**
 
-This is the shortest current-state source after the Batch 1–12 implementation closure, real laptop rehearsal, Historical Ledger + ECX evidence, Comparative ECX measurement, local persistence/restart closure, and isolated local backup/restore closure.
+This is the shortest current-state source after the Batch 1–12 implementation closure, real laptop rehearsal, Historical Ledger + ECX evidence, Comparative ECX measurement, local persistence/restart closure, isolated local backup/restore closure, and bounded local observability closure.
 
 Historical plans/audits remain useful evidence but are not the current implementation-status source.
 
 ## 1. Current verdict
 
-**ECORIONE production/self-host repository baseline READY; real local runtime + Historical Ledger/ECX evidence CLOSED; final corrected local Comparative ECX checkpoint CLOSED / PASS WITH LIMITATIONS; local persistence/restart CLOSED / PASS; isolated local backup/restore CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS; local observability baseline is the active next checkpoint; compute-host/VPS + Cloudflare remains DEFERRED BY OPERATOR.**
+**ECORIONE production/self-host repository baseline READY; real local runtime + Historical Ledger/ECX evidence CLOSED; final corrected local Comparative ECX checkpoint CLOSED / PASS WITH LIMITATIONS; local persistence/restart CLOSED / PASS; isolated local backup/restore CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS; local observability baseline CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS; UX/product validation is the active next checkpoint; compute-host/VPS + Cloudflare remains DEFERRED BY OPERATOR.**
 
 Roadmap framing remains:
 
@@ -32,8 +32,8 @@ Roadmap framing remains:
 | Automatic semantic ref selector | **NOT PROVEN** | `refIndexes` remain caller-supplied; oracle lane is not autonomous selection. |
 | Local persistence/restart | **PASS / CLOSED** | Owner processes + Temporal + PostgreSQL container restart boundary passed after path/bootstrap fixes. |
 | Isolated local backup/restore | **PASS / CLOSED WITH LIMITATIONS** | Existing durable owner state restored into isolated targets; Temporal/PostgreSQL logical restore verified; absent optional Sync/Connect source state is not claimed as runtime-restored. |
-| Local observability baseline | **ACTIVE NEXT CHECKPOINT** | Measure representative local workloads and establish bounded latency/error/resource baselines. |
-| UX/product validation | **PENDING** | Exercise real flows after observability baseline. |
+| Local observability baseline | **PASS / CLOSED WITH BOUNDED LOCAL LIMITATIONS** | Representative owner reads, ECX hydration, uncached local-model calls, trace continuity and owner-process resource deltas measured on the tested laptop. |
+| UX/product validation | **ACTIVE NEXT CHECKPOINT** | Exercise real user journeys and identify functional/usability defects on the closed local runtime baseline. |
 | Immutable local model identity hardening | **PENDING** | Replace mutable rehearsal aliases before durable production model-identity claims. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Resume only on explicit operator decision. |
 | Hosted-provider comparative validation | **OPTIONAL/FUTURE** | Requires operator-owned credentials and explicit spend intent. |
@@ -52,7 +52,8 @@ Important merged progression includes:
 - first-drill failure documentation PR #47;
 - compiled runtime-dependency bootstrap fix PR #48 (`673af91642ea1b9440079e396675c69f53647951`);
 - persistence/restart closure PR #49;
-- isolated backup/restore implementation PR #50 → `4e6bcd94776fc7dd75440ee35dd8fddf0b602233`.
+- isolated backup/restore implementation PR #50 → `4e6bcd94776fc7dd75440ee35dd8fddf0b602233`;
+- local observability implementation PR #52 → `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`.
 
 Valid failed evidence remains preserved rather than rewritten away.
 
@@ -177,7 +178,62 @@ This checkpoint does **not** prove:
 
 Sync/Connect `missing` is intentional evidence honesty: the harness did not seed active durable state merely to manufacture a backup claim.
 
-## 7. Baseline already present
+## 7. Local observability baseline closure
+
+Canonical docs:
+
+- `docs/local-observability-evidence.md`
+- `docs/verification/local-observability-closure-2026-09-12.md`
+
+Exact tested merged revision:
+
+```text
+bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6
+```
+
+Real-laptop run:
+
+```text
+runId: obs-20260912020700-00fbd7e5
+owner reads: 8 per lane
+ECX: 5 samples
+local model: 5 measured cache-miss samples
+workload errors: 0
+ECX Hub→Artifact trace coverage: 5/5
+```
+
+Measured local model identity:
+
+```text
+runtime: openai-compatible
+model: gemma4:latest
+hosted calls: disabled
+cache hits: 0
+cache misses: 5
+actual cost USD: 0
+```
+
+Representative p50/p95 client latency facts from this small local run:
+
+- Hub read: `5.981 / 26.439 ms`;
+- Context read: `4.436 / 17.534 ms`;
+- Artifact read: `12.150 / 62.738 ms`;
+- Flow read: `11.997 / 142.314 ms`;
+- ECX plan: `5.349 / 14.645 ms`;
+- ECX hydrate: `18.623 / 57.065 ms`;
+- local-model end-to-end: `1145.401 / 9109.495 ms`;
+- provider-reported model latency: `1138.240 / 9104.578 ms`;
+- client-minus-provider residual: `6.711 / 7.161 ms`.
+
+The harness also captured bounded before/after Node-process RSS/heap and CPU deltas for all eight owner services.
+
+### Observability limitation
+
+This checkpoint establishes only a **bounded laptop baseline**. It does not prove production SLA/SLO, peak host/GPU/resource utilization, concurrency/load capacity, leak freedom, hosted-provider behavior, or VPS/Cloudflare behavior.
+
+`gemma4:latest` remains a mutable alias. Its presence in this measurement proves what runtime identity was reported, not an immutable production model identity.
+
+## 8. Baseline already present
 
 Current platform baseline includes:
 
@@ -193,11 +249,11 @@ Current platform baseline includes:
 - RnD trace/evaluation + dataset governance;
 - multimodal/realtime voice baseline;
 - owner-scoped backup/restore primitives and strict isolated local evidence harness;
-- production observability surfaces, provider canaries, Compose/Caddy, release/upgrade/rollback tooling;
+- production observability surfaces, strict bounded local observability evidence harness, provider canaries, Compose/Caddy, release/upgrade/rollback tooling;
 - full-history + Git-boundary secret scanning;
 - real public HTTPS MCP acceptance.
 
-## 8. Next execution order
+## 9. Next execution order
 
 Future work remains a new explicit scope, not Batch 13.
 
@@ -205,8 +261,8 @@ Current operator-approved local-first order:
 
 1. **Local persistence/restart — CLOSED / PASS**
 2. **Isolated local backup/restore — CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**
-3. **Local observability baseline — ACTIVE NEXT CHECKPOINT**
-4. **UX/product validation — PENDING**
+3. **Local observability baseline — CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**
+4. **UX/product validation — ACTIVE NEXT CHECKPOINT**
 5. **Immutable local model identity hardening — PENDING**
 6. **Compute-host/VPS + Cloudflare — DEFERRED BY OPERATOR**
 7. **Hosted-provider comparative validation — OPTIONAL/FUTURE**
@@ -216,24 +272,26 @@ Current operator-approved local-first order:
 
 Production deployment is not a blocker for current local R&D.
 
-## 9. Next checkpoint — local observability baseline
+## 10. Next checkpoint — UX/product validation
 
-The next scope should measure representative local workloads without inventing production-scale claims.
+The next scope should validate real user journeys on the already-closed local technical baseline before adding new infrastructure or production deployment work.
 
 Minimum intended work:
 
-- inventory existing `/ops`, telemetry, Flow and Connect metrics;
-- define a small representative local workload set before measurement;
-- capture latency, error and resource signals with sample counts attached;
-- separate model latency from orchestration/transport where available;
-- keep cache/model identity visible in measurements;
-- avoid universal SLA claims from laptop-scale samples;
-- preserve raw local evidence gitignored;
-- commit only sanitized summaries after exact-head/runtime/post-merge verification.
+- inventory the current Ai-facing user journeys and expected outcomes before testing;
+- exercise representative Local-mode chat flows through the actual Ai surface rather than service-only probes;
+- validate continuity/memory behavior and user-visible state transitions without rewriting Historical Ledger or Context ground truth;
+- exercise `/space`, `/ops`, and `/settings` navigation and critical actions that are safe for the local checkpoint;
+- validate Local/Hosted routing clarity while keeping hosted calls disabled and `ECORIONE_COST_KILL_SWITCH=1`;
+- exercise approval/error/recovery states where existing safe fixtures or local flows make them available;
+- record functional defects, confusing UX, missing feedback, broken navigation, stale state, and severity;
+- distinguish product/UX defects from performance observations already covered by the observability baseline;
+- preserve raw screenshots/logs locally when they contain machine/user-specific detail and commit only sanitized evidence;
+- require exact-head gates, runtime evidence and post-merge verification before closing the checkpoint.
 
-No VPS/Cloudflare/provider-account mutation is part of this checkpoint.
+No VPS/Cloudflare/provider-account mutation belongs to this checkpoint.
 
-## 10. Rules for the next agent
+## 11. Rules for the next agent
 
 Before implementing new work:
 
@@ -248,31 +306,36 @@ Before implementing new work:
 - benchmark cache namespaces must remain isolated across invocations;
 - do not represent fixture-declared `refIndexes` as an autonomous optimizer;
 - do not convert local benchmark percentages into universal/public savings claims;
+- do not convert the small observability sample into a production SLA/SLO;
+- keep the mutable local model alias limitation attached until immutable identity hardening is explicitly completed;
 - create/update ADRs only when architecture/ownership/authority/invariants change;
 - keep VPS/Cloudflare deferred until explicit operator instruction.
 
-## 11. Recommended reading order
+## 12. Recommended reading order
 
 1. `docs/current-state-and-next-steps.md`
 2. `AGENTS.md`
-3. `docs/verification/local-backup-restore-closure-2026-09-11.md`
-4. `docs/local-backup-restore-evidence.md`
-5. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
-6. `docs/local-persistence-restart-evidence.md`
-7. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
-8. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
-9. `docs/comparative-ecx-evidence.md`
-10. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-11. `docs/verification/local-production-rehearsal-2026-09-10.md`
-12. `docs/EXECUTION-PROGRESS.md`
-13. relevant operations/ADR docs
-14. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
+3. `docs/verification/local-observability-closure-2026-09-12.md`
+4. `docs/local-observability-evidence.md`
+5. `docs/verification/local-backup-restore-closure-2026-09-11.md`
+6. `docs/local-backup-restore-evidence.md`
+7. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
+8. `docs/local-persistence-restart-evidence.md`
+9. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
+10. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
+11. `docs/comparative-ecx-evidence.md`
+12. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
+13. `docs/verification/local-production-rehearsal-2026-09-10.md`
+14. `docs/EXECUTION-PROGRESS.md`
+15. relevant operations/ADR docs
+16. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
 
-## 12. Canonical references
+## 13. Canonical references
 
 - current handoff: `docs/current-state-and-next-steps.md`
+- observability closure: `docs/verification/local-observability-closure-2026-09-12.md`
+- observability protocol: `docs/local-observability-evidence.md`
 - backup/restore closure: `docs/verification/local-backup-restore-closure-2026-09-11.md`
-- backup/restore protocol: `docs/local-backup-restore-evidence.md`
 - persistence closure: `docs/verification/local-persistence-restart-closure-2026-09-11.md`
 - Comparative ECX final evidence: `docs/verification/comparative-closure-grade-final-2026-09-11.md`
 - detailed tracker: `docs/EXECUTION-PROGRESS.md`

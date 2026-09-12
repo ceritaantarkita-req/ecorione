@@ -4,7 +4,7 @@
 
 Pindah lintas provider/model tanpa kehilangan kesinambungan kerja, sambil menjaga boundary local-first, approval, audit trail, durable execution, MCP, dan biaya kontrafaktual tetap eksplisit.
 
-> **Current status — 2026-09-11:** **production/self-host repository baseline READY · planned Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · Comparative ECX CLOSED / PASS WITH LIMITATIONS · local persistence/restart CLOSED / PASS · isolated local backup/restore CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS · local observability baseline is the active next checkpoint · compute-host/VPS + Cloudflare DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
+> **Current status — 2026-09-12:** **production/self-host repository baseline READY · planned Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · Comparative ECX CLOSED / PASS WITH LIMITATIONS · local persistence/restart CLOSED / PASS · isolated local backup/restore CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS · local observability CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS · UX/product validation is the active next checkpoint · compute-host/VPS + Cloudflare DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
 
 Untuk agent/manusia yang baru masuk repo: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`AGENTS.md`](AGENTS.md). Jangan pakai blueprint/audit lama sebagai current-state source.
 
@@ -19,12 +19,14 @@ Key local closure progression:
 - final persistence/restart rerun: **CLOSED / PASS**;
 - isolated backup/restore implementation PR #50 merged as `4e6bcd94776fc7dd75440ee35dd8fddf0b602233`;
 - full isolated backup/restore run: **PASS**;
-- post-run temp resources: **clean**;
-- active owners after drill: **healthy**.
+- local observability implementation PR #52 merged as `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`;
+- bounded local observability run: **PASS** with 0 workload errors and 5/5 ECX Hub→Artifact trace coverage.
 
 Canonical current evidence:
 
 - [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md)
+- [`docs/verification/local-observability-closure-2026-09-12.md`](docs/verification/local-observability-closure-2026-09-12.md)
+- [`docs/local-observability-evidence.md`](docs/local-observability-evidence.md)
 - [`docs/verification/local-backup-restore-closure-2026-09-11.md`](docs/verification/local-backup-restore-closure-2026-09-11.md)
 - [`docs/local-backup-restore-evidence.md`](docs/local-backup-restore-evidence.md)
 - [`docs/verification/local-persistence-restart-closure-2026-09-11.md`](docs/verification/local-persistence-restart-closure-2026-09-11.md)
@@ -54,6 +56,7 @@ Canonical current evidence:
 | **Comparative evidence** | 5× corrected local run, 5/5 task gates PASS WITH LIMITATIONS |
 | **Local persistence** | Strict restart evidence CLOSED / PASS |
 | **Local backup/restore** | Strict isolated restore evidence CLOSED / PASS WITH ABSENT-OWNER LIMITATIONS |
+| **Local observability** | Bounded strict local baseline CLOSED / PASS; small-sample facts only, not SLA/SLO |
 | **AutoClick** | Deferred by design sampai ada use case non-API nyata |
 
 ## Arsitektur inti
@@ -171,6 +174,39 @@ NO_ISOLATED_LISTENERS
 
 Same-laptop restore correctness **bukan** off-host DR. Backup bytes yang masih berada di laptop yang sama tetap berada di failure domain yang sama.
 
+## Local observability evidence
+
+Implementation baseline:
+
+```text
+bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6
+```
+
+Measured run:
+
+```text
+runId = obs-20260912020700-00fbd7e5
+owner reads = 8 per lane
+ECX samples = 5
+local model samples = 5
+workload errors = 0
+Hub→Artifact trace coverage = 5/5
+```
+
+Measured route:
+
+```text
+runtime = openai-compatible
+model = gemma4:latest
+provider = local
+cache hits = 0
+cache misses = 5
+actual cost USD = 0
+hosted calls = disabled
+```
+
+P50/p95 yang tersimpan adalah **small-sample local facts**, bukan production SLA/SLO. `gemma4:latest` juga tetap alias mutable, jadi observability run ini tidak menutup immutable model-identity hardening.
+
 ## Menjalankan lokal
 
 Butuh Node >=22 dan pnpm 10.
@@ -206,6 +242,10 @@ pnpm evidence:persistence-restart --phase cleanup
 # isolated backup/restore
 pnpm evidence:backup-restore:inventory
 pnpm evidence:backup-restore
+
+# bounded local observability
+pnpm evidence:observability:inventory
+pnpm evidence:observability
 ```
 
 Runtime evidence commands bukan deterministic CI substitutes. Raw runtime evidence tetap lokal/gitignored.
@@ -227,8 +267,8 @@ Tidak ada automatic Batch 13. Urutan operator-approved sekarang:
 
 1. local persistence/restart — **CLOSED / PASS**;
 2. isolated local backup/restore — **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**;
-3. **local observability baseline — ACTIVE NEXT CHECKPOINT**;
-4. product/UX validation;
+3. local observability baseline — **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**;
+4. **product/UX validation — ACTIVE NEXT CHECKPOINT**;
 5. immutable local model identity hardening;
 6. VPS/compute-host + Cloudflare hanya kalau operator explicitly resume;
 7. hosted-provider comparative validation hanya dengan credential + spend intent;
@@ -265,6 +305,8 @@ READY baseline bukan klaim bahwa:
 - Sync/Connect runtime restore sudah terbukti ketika source durable state mereka tidak ada pada drill;
 - ECX savings universal/general production sudah terbukti;
 - oracle hydration membuktikan automatic reference selection;
+- bounded laptop observability membuktikan production SLA/SLO, concurrency, peak host/GPU use atau leak freedom;
+- mutable `gemma4:latest` membuktikan immutable production model identity;
 - laptop evidence membuktikan VPS/Cloudflare behavior;
 - Fase 6+ selesai permanen.
 
@@ -272,15 +314,17 @@ READY baseline bukan klaim bahwa:
 
 1. [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md)
 2. [`AGENTS.md`](AGENTS.md)
-3. [`docs/verification/local-backup-restore-closure-2026-09-11.md`](docs/verification/local-backup-restore-closure-2026-09-11.md)
-4. [`docs/local-backup-restore-evidence.md`](docs/local-backup-restore-evidence.md)
-5. [`docs/verification/local-persistence-restart-closure-2026-09-11.md`](docs/verification/local-persistence-restart-closure-2026-09-11.md)
-6. [`docs/local-persistence-restart-evidence.md`](docs/local-persistence-restart-evidence.md)
-7. [`docs/verification/comparative-closure-grade-final-2026-09-11.md`](docs/verification/comparative-closure-grade-final-2026-09-11.md)
-8. [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md)
-9. [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md)
-10. relevant production/ADR docs
-11. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
+3. [`docs/verification/local-observability-closure-2026-09-12.md`](docs/verification/local-observability-closure-2026-09-12.md)
+4. [`docs/local-observability-evidence.md`](docs/local-observability-evidence.md)
+5. [`docs/verification/local-backup-restore-closure-2026-09-11.md`](docs/verification/local-backup-restore-closure-2026-09-11.md)
+6. [`docs/local-backup-restore-evidence.md`](docs/local-backup-restore-evidence.md)
+7. [`docs/verification/local-persistence-restart-closure-2026-09-11.md`](docs/verification/local-persistence-restart-closure-2026-09-11.md)
+8. [`docs/local-persistence-restart-evidence.md`](docs/local-persistence-restart-evidence.md)
+9. [`docs/verification/comparative-closure-grade-final-2026-09-11.md`](docs/verification/comparative-closure-grade-final-2026-09-11.md)
+10. [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md)
+11. [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md)
+12. relevant production/ADR docs
+13. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
 
 ## Lisensi
 

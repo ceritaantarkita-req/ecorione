@@ -1,8 +1,12 @@
 # Local Observability Baseline Evidence
 
-Status: **ACTIVE CHECKPOINT — implementation harness prepared; real-laptop measurement required before closure**
+Status: **CLOSED / PASS — real-laptop baseline measured on 2026-09-12**
 
 This protocol establishes a bounded local observability baseline for ECORIONE. It is intentionally a laptop-scale evidence checkpoint, not a production SLA or universal performance claim.
+
+Canonical closure note:
+
+- `docs/verification/local-observability-closure-2026-09-12.md`
 
 ## Goal
 
@@ -163,6 +167,26 @@ A measured run passes only when:
 
 No threshold gate is imposed on p50/p95 latency or memory growth in this first baseline. The purpose is to establish measured facts before deciding whether a future regression threshold is justified.
 
+## Measured closure result
+
+Strict inventory and strict measurement both passed on:
+
+```text
+revision: bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6
+runId: obs-20260912020700-00fbd7e5
+owner reads: 8 per lane
+ECX samples: 5
+local model samples: 5
+workload errors: 0
+ECX hydrate trace coverage: 5/5
+local model cache hits: 0
+local model cache misses: 5
+```
+
+Measured local runtime/model identity was `openai-compatible` / `gemma4:latest`, with hosted calls disabled. The mutable `:latest` alias is retained as a limitation rather than upgraded into an immutable production identity claim.
+
+See `docs/verification/local-observability-closure-2026-09-12.md` for the sanitized latency/resource tables and exact claim boundary.
+
 ## Claim boundary
 
 A successful run proves only a bounded local baseline on the exact tested laptop/revision/runtime configuration.
@@ -184,13 +208,13 @@ It does **not** prove:
 
 ## Closure procedure
 
-After implementation CI is green and merged:
+The closure procedure was completed in this order:
 
-1. synchronize local `main` to the exact merge SHA;
-2. restart the Phase 4 process group so all owners run the merged observability contract;
-3. run `pnpm evidence:observability:inventory`;
-4. if inventory passes, run `pnpm evidence:observability` without interrupting it;
-5. preserve the raw gitignored evidence;
-6. verify the active runtime remains healthy and the working tree remains clean;
-7. create a sanitized closure note with exact revision, run ID, sample counts, model/cache identity, latency summaries, trace coverage, process resource deltas, and limitations;
-8. require exact-head CI, merge, then post-merge CI before marking the checkpoint closed.
+1. implementation CI passed and the observability harness was merged;
+2. local `main` synchronized to the exact merge SHA;
+3. Phase 4 restarted on the merged observability revision;
+4. `pnpm evidence:observability:inventory` passed;
+5. `pnpm evidence:observability` passed without interruption;
+6. raw evidence remained gitignored;
+7. a sanitized closure note was prepared with exact revision, run ID, sample counts, model/cache identity, latency summaries, trace coverage, process resource deltas, and limitations;
+8. closure documentation is subject to exact-head CI, merge, then post-merge CI before the canonical tracker is considered fully synchronized.

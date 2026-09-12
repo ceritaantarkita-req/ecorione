@@ -1,6 +1,6 @@
 # Fase 6+ — evidence-driven hardening baseline
 
-**Status:** ACTIVE / OPEN-ENDED · reconciled through local persistence/restart closure on 2026-09-11
+**Status:** ACTIVE / OPEN-ENDED · reconciled through bounded local observability closure on 2026-09-12
 
 Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. Yang sudah CLOSED adalah **planned platform/production roadmap Batch 1–12** dan beberapa checkpoint evidence lokal yang eksplisit. Dokumen ini mencatat hardening baseline yang sudah masuk `main` dan area evidence-driven yang masih bisa berkembang.
 
@@ -23,19 +23,24 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - repo-root runtime-path fix PR #46 merge: `778e7eb19a0e2f528c64e68459d8ff6e6ecbe1ce`
 - local runtime-dependency bootstrap fix PR #48 merge: `673af91642ea1b9440079e396675c69f53647951`
 - final local persistence/restart rerun: **CLOSED / PASS**
-- active next checkpoint: **ISOLATED LOCAL BACKUP/RESTORE EVIDENCE**
+- isolated local backup/restore implementation PR #50 merge: `4e6bcd94776fc7dd75440ee35dd8fddf0b602233`
+- isolated local backup/restore runtime checkpoint: **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**
+- local observability implementation PR #52 merge: `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`
+- local observability runtime checkpoint: **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**
+- active next checkpoint: **UX/PRODUCT VALIDATION**
 - compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**
 - AutoClick: **DEFERRED BY DESIGN**
 - no implicit Batch 13
 
-Current persistence references:
+Current evidence references:
 
+- `docs/verification/local-observability-closure-2026-09-12.md`
+- `docs/local-observability-evidence.md`
+- `docs/verification/local-backup-restore-closure-2026-09-11.md`
+- `docs/local-backup-restore-evidence.md`
 - `docs/local-persistence-restart-evidence.md`
 - `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
 - `docs/verification/local-persistence-restart-closure-2026-09-11.md`
-
-Comparative references:
-
 - `docs/comparative-ecx-evidence.md`
 - `docs/verification/comparative-harness-implementation-2026-09-11.md`
 - `docs/verification/comparative-smoke-cache-defect-2026-09-11.md`
@@ -61,7 +66,7 @@ Comparative references:
 - provider-scoped Vault credentials;
 - provider-aware spend/cache telemetry.
 
-`gemma4:latest` used in local rehearsal/benchmark is temporary runtime evidence. The mutable alias is not a durable production identity and remains a later local hardening checkpoint.
+`gemma4:latest` used in local rehearsal/benchmark/observability is temporary runtime evidence. The mutable alias is not a durable production identity and remains a later local hardening checkpoint.
 
 ### MCP + extension + permission plane
 
@@ -89,7 +94,9 @@ Comparative references:
 - dry-run/digest/receipt patterns;
 - dataset governance through RnD;
 - owner-scoped backup/restore procedures;
-- Temporal/Flow persistence treated according to its owner/runtime boundary.
+- Temporal/Flow persistence treated according to its owner/runtime boundary;
+- isolated local restore evidence for owner state that existed at source;
+- Temporal/PostgreSQL logical restore evidence into isolated temporary infrastructure.
 
 ### Production operations / observability
 
@@ -100,6 +107,8 @@ Comparative references:
 - process metrics + W3C-compatible trace propagation;
 - Ai `/ops` aggregation;
 - provider canary mechanism;
+- bounded Node-process resource snapshots;
+- strict local observability evidence harness;
 - Production Operations acceptance in CI;
 - install/upgrade/rollback scripts;
 - release/security acceptance;
@@ -181,31 +190,83 @@ Final verification: `docs/verification/local-persistence-restart-closure-2026-09
 
 Claim boundary: this proves the controlled **local owner storage + process + Temporal-container + PostgreSQL-container restart boundary**. It does not prove backup/restore, off-host DR, host loss, hard power-loss/fsync behavior, arbitrary corruption recovery, VPS durability or Cloudflare behavior.
 
-## Active next evidence scope — isolated local backup/restore
+## Closed isolated local backup/restore evidence
 
-The next checkpoint is isolated local backup/restore evidence. It is a new explicit scope, not Batch 13.
+Status: **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**.
+
+Implementation baseline:
+
+```text
+4e6bcd94776fc7dd75440ee35dd8fddf0b602233
+```
+
+Real run:
+
+```text
+runId: backup-20260911154453-f4ac8743
+phase: restore-verified
+```
+
+Existing source state was backed up through owner-scoped adapters for Context, Hub, RnD, Space, Flow graph registry, Artifact and Sandbox. Optional Sync and Connect durable state was absent at source and remained reported as `missing`; the drill did not seed active state to manufacture coverage.
+
+Temporal logical restore verified 39 `temporal` tables and 3 `temporal_visibility` tables in a dedicated isolated PostgreSQL/Temporal stack. Restored Ledger, Context, Artifact, Flow and approval semantics matched source through isolated owner APIs.
+
+Same-laptop restore correctness is not off-host DR and does not prove disk-loss survival, hard power-loss/fsync, arbitrary corruption recovery, PITR or cross-owner transactional snapshot atomicity.
+
+Final verification: `docs/verification/local-backup-restore-closure-2026-09-11.md`.
+
+## Closed bounded local observability evidence
+
+Status: **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**.
+
+Implementation baseline:
+
+```text
+bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6
+```
+
+Real run:
+
+```text
+runId: obs-20260912020700-00fbd7e5
+owner reads: 8 per lane
+ECX samples: 5
+local model samples: 5
+workload errors: 0
+Hub→Artifact trace coverage: 5/5
+```
+
+Measured route used `openai-compatible` / `gemma4:latest`, provider `local`, 0 cache hits, 5 cache misses, hosted calls disabled and actual cost USD 0. Five ECX plans/hydrations and five local cache misses appeared in the corresponding metric deltas.
+
+This closes only a small-sample laptop baseline. It does not create production SLA/SLO thresholds, prove peak host/GPU/model-server use, concurrency/load capacity, leak freedom, hosted-provider behavior, or immutable model identity.
+
+Final verification: `docs/verification/local-observability-closure-2026-09-12.md`.
+
+## Active next evidence scope — UX/product validation
+
+The next checkpoint is UX/product validation against the already-closed local technical baseline. It is a new explicit scope, not Batch 13.
 
 Target evidence should include:
 
 1. synchronized reviewed `main` baseline;
-2. inventory of existing owner backup/restore tooling and current durable paths;
-3. no mutation/overwrite of active durable state while collecting source backups;
-4. owner-scoped backup receipts/digests;
-5. explicit Hub, Context, Artifact, Flow/Temporal/PostgreSQL ownership semantics;
-6. restore only into isolated targets;
-7. isolated restore integrity verification;
-8. owner API/service-level readability where an isolated restored service can be started safely;
-9. explicit distinction between same-host backup correctness and off-host DR;
-10. sanitized verification note before closure.
+2. inventory of actual Ai-facing user journeys and expected outcomes before test execution;
+3. representative Local chat flows through the real Ai surface;
+4. continuity/memory and visible state-transition checks without rewriting ground truth;
+5. `/space`, `/ops`, and `/settings` navigation and safe critical-action checks;
+6. Local/Hosted routing clarity while hosted calls remain disabled and the cost kill switch remains on;
+7. approval/error/recovery behavior where safe existing flows permit it;
+8. issue capture with severity and explicit distinction between functional, UX and already-known performance observations;
+9. raw machine/user-specific screenshots/logs retained locally when appropriate;
+10. sanitized closure evidence with exact-head/runtime/post-merge verification.
 
 ## What remains open-ended after Batch 12
 
 Current operator-approved order:
 
 1. local persistence/restart drill — **CLOSED / PASS**;
-2. isolated local backup/restore drill — **ACTIVE NEXT CHECKPOINT**;
-3. local observability baseline;
-4. product/UX validation from real use;
+2. isolated local backup/restore drill — **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**;
+3. local observability baseline — **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**;
+4. product/UX validation from real use — **ACTIVE NEXT CHECKPOINT**;
 5. immutable local model identity hardening;
 6. resume compute-host/VPS + Cloudflare only when operator explicitly chooses;
 7. validate hosted providers/cost only with operator credentials + explicit spend intent;
@@ -273,5 +334,12 @@ For backup/restore specifically:
 - restore only into an isolated target;
 - preserve owner boundaries instead of opening another service's DB directly;
 - distinguish same-host restore correctness from off-host disaster recovery.
+
+For observability specifically:
+
+- attach exact revision, sample counts, model/cache identity and route to every measured result;
+- do not invent SLA/SLO thresholds from small local samples;
+- distinguish endpoint-time process snapshots from sampled peaks or whole-host metrics;
+- do not turn local USD 0 into hosted billed-cost evidence.
 
 Do not reopen Batch 12 merely because Fase 6+ continues. Create a new explicit scope instead.
