@@ -46,7 +46,9 @@ describe("GET /api/voice/stream", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe("text/event-stream; charset=utf-8");
+    expect(response.headers.get("content-type")).toBe(
+      "text/event-stream; charset=utf-8",
+    );
     expect(await response.text()).toBe("data: ok\n\n");
   });
 
