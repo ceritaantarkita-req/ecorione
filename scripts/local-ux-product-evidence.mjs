@@ -121,7 +121,8 @@ export async function inventory() {
   const runtime = validateRuntimeSnapshot(parseJson(runtimeResponse.text, "runtime settings"));
 
   const opsResponse = await request("http://127.0.0.1:3000/api/ops");
-  if (opsResponse.status !== 200) throw new Error(`Ai ops proxy gagal HTTP ${opsResponse.status}.`);
+  if (opsResponse.status !== 200)
+    throw new Error(`Ai ops proxy gagal HTTP ${opsResponse.status}.`);
   const ops = parseJson(opsResponse.text, "ops");
   if (ops?.healthy !== true) throw new Error("Ops aggregator tidak melaporkan healthy=true.");
 
@@ -132,14 +133,16 @@ export async function inventory() {
     throw new Error(`Ai Space proxy gagal HTTP ${spaceResponse.status}.`);
   }
   const space = parseJson(spaceResponse.text, "space pages");
-  if (!Array.isArray(space?.pages)) throw new Error("Space pages response tidak memiliki pages array.");
+  if (!Array.isArray(space?.pages))
+    throw new Error("Space pages response tidak memiliki pages array.");
 
   const flowResponse = await request("http://127.0.0.1:3000/api/flow/nodes");
   if (flowResponse.status !== 200) {
     throw new Error(`Ai Flow proxy gagal HTTP ${flowResponse.status}.`);
   }
   const flow = parseJson(flowResponse.text, "flow nodes");
-  if (!Array.isArray(flow?.nodes)) throw new Error("Flow nodes response tidak memiliki nodes array.");
+  if (!Array.isArray(flow?.nodes))
+    throw new Error("Flow nodes response tidak memiliki nodes array.");
 
   return {
     schemaVersion: 1,
@@ -165,10 +168,13 @@ async function main() {
 }
 
 const isDirect =
-  process.argv[1] !== undefined && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+  process.argv[1] !== undefined &&
+  pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
 if (isDirect) {
   main().catch((error) => {
-    console.error(`FAIL UX/product inventory: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `FAIL UX/product inventory: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exitCode = 1;
   });
 }

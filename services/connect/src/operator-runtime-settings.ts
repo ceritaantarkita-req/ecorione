@@ -30,9 +30,7 @@ export function withHostedOperatorGate(
       return applyOperatorGate(runtimeSettings.get(), hostedCallsAllowed);
     },
     update(patch: RuntimeSettingsPatch): RuntimeSettingsSnapshot {
-      const safePatch = hostedCallsAllowed
-        ? patch
-        : { ...patch, hostedCallsEnabled: false };
+      const safePatch = hostedCallsAllowed ? patch : { ...patch, hostedCallsEnabled: false };
       return applyOperatorGate(runtimeSettings.update(safePatch), hostedCallsAllowed);
     },
   };

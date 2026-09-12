@@ -47,7 +47,11 @@ describe("local UX/product evidence guards", () => {
   });
 
   it("mewajibkan marker halaman dan menolak framework error marker", () => {
-    expect(() => validateSurfaceHtml("ai", "<h1>ecorione — Ai</h1>", "ecorione — Ai")).not.toThrow();
-    expect(() => validateSurfaceHtml("ops", "Application error", "Runtime health & telemetry")).toThrow();
+    expect(() =>
+      validateSurfaceHtml("ai", "<h1>ecorione — Ai</h1>", "ecorione — Ai"),
+    ).not.toThrow();
+    expect(() =>
+      validateSurfaceHtml("ops", "Application error", "Runtime health & telemetry"),
+    ).toThrow();
   });
 });
