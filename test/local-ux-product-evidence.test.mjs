@@ -3,6 +3,7 @@ import {
   NAV_ROUTES,
   UI_SURFACES,
   validateFlowSnapshot,
+  validateMcpSettingsSnapshot,
   validateNavigationHtml,
   validateOpsSnapshot,
   validateRuntimeSnapshot,
@@ -80,6 +81,8 @@ describe("local UX/product evidence guards", () => {
 
     expect(() => validateOpsSnapshot({ healthy: true, services: [] })).not.toThrow();
     expect(() => validateOpsSnapshot({ healthy: false, services: [] })).toThrow(/healthy=true/);
+    expect(() => validateMcpSettingsSnapshot({ servers: [] })).not.toThrow();
+    expect(() => validateMcpSettingsSnapshot({})).toThrow(/servers array/);
     expect(() => validateSpaceSnapshot({ pages: [] })).not.toThrow();
     expect(() => validateSpaceSnapshot({})).toThrow(/pages array/);
     expect(() => validateFlowSnapshot({ nodes: [] })).not.toThrow();
