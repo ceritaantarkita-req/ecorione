@@ -33,6 +33,7 @@ type Span = {
 };
 type Service = {
   name: string;
+  required: boolean;
   healthy: boolean;
   error: string | null;
   observability: null | {
@@ -222,12 +223,15 @@ export default function OpsPage() {
             const errorCount = sum(counters, "ecorione_http_errors_total");
             const timing = latency(service.observability?.histograms ?? []);
             const resources = service.observability?.process;
+            const optionalDown = !service.healthy && !service.required;
             return (
               <article className={styles.card} key={service.name}>
                 <div className={styles.cardTitle}>
                   <strong>{service.name}</strong>
-                  <span className={service.healthy ? styles.ok : styles.bad}>
-                    {service.healthy ? "UP" : "DOWN"}
+                  <span
+                    className={service.healthy ? styles.ok : optionalDown ? styles.subtle : styles.bad}
+                  >
+                    {service.healthy ? "UP" : optionalDown ? "OPTIONAL DOWN" : "DOWN"}
                   </span>
                 </div>
                 <dl>
