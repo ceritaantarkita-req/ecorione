@@ -118,7 +118,9 @@ export default function FlowCanvasPage() {
   const [version, setVersion] = useState<number | null>(null);
   const [versions, setVersions] = useState<FlowGraphVersionView[]>([]);
   const [validation, setValidation] = useState<FlowGraphValidationResult | null>(null);
+  const [dirty, setDirty] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [runStarting, setRunStarting] = useState(false);
   const [pendingNodeAction, setPendingNodeAction] = useState<string | null>(null);
   const [message, setMessage] = useState("Draft lokal");
@@ -128,7 +130,30 @@ export default function FlowCanvasPage() {
   );
   const [runId, setRunId] = useState<string | null>(null);
   const [humanDraft, setHumanDraft] = useState("");
+  const busyInFlightRef = useRef(false);
+  const validationInFlightRef = useRef(false);
+  const runInFlightRef = useRef(false);
+  const nodeActionInFlightRef = useRef(false);
+  const draftRevisionRef = useRef(0);
   const selected = nodes.find((node) => node.id === selectedId) ?? null;
+
+  function markDraftChanged(): void {
+    draftRevisionRef.current += 1;
+    setDirty(true);
+    setValidation(null);
+  }
+
+  function beginBusy(): boolean {
+    if (busyInFlightRef.current) return false;
+    busyInFlightRef.current = true;
+    setBusy(true);
+    return true;
+  }
+
+  function finishBusy(): void {
+    busyInFlightRef.current = false;
+    setBusy(false);
+  }
 
   async function runUiAction(label: string, action: () => Promise<unknown>): Promise<void> {
     try {
@@ -217,6 +242,7 @@ export default function FlowCanvasPage() {
       setNodes((current) =>
         current.map((node) => (node.id === moving ? { ...node, position: { x, y } } : node)),
       );
+      markDraftChanged();
       return;
     }
     const kind = event.dataTransfer.getData("application/x-ecorione-kind") as FlowNodeKind;
@@ -237,7 +263,7 @@ export default function FlowCanvasPage() {
       },
     ]);
     setSelectedId(id);
-    setValidation(null);
+    markDraftChanged();
   }
   function selectNode(id: string): void {
     if (connectFrom !== null && connectFrom !== id) {
@@ -257,7 +283,7 @@ export default function FlowCanvasPage() {
       }
       setConnectFrom(null);
       setConnectPort("out");
-      setValidation(null);
+      markDraftChanged();
     }
     setSelectedId(id);
   }
@@ -268,7 +294,7 @@ export default function FlowCanvasPage() {
       setNodes((current) =>
         current.map((node) => (node.id === selected.id ? { ...node, config: parsed } : node)),
       );
-      setValidation(null);
+      markDraftChanged();
       setMessage("Config node diterapkan ke draft.");
     } catch {
       setMessage("Config harus JSON valid.");
@@ -279,7 +305,7 @@ export default function FlowCanvasPage() {
       setNodes((current) =>
         current.map((node) => (node.id === selected.id ? { ...node, ...patch } : node)),
       );
-      setValidation(null);
+      markDraftChanged();
     }
   }
   function removeSelected(): void {
@@ -291,27 +317,47 @@ export default function FlowCanvasPage() {
       ),
     );
     setSelectedId("node_trigger1");
-    setValidation(null);
+    markDraftChanged();
   }
   async function validate(): Promise<FlowGraphValidationResult | null> {
-    const response = await fetch("/api/flow/graphs/validate", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(graphDocument()),
-    });
-    const body = (await response.json().catch(() => null)) as FlowGraphValidationResult | null;
-    if (!response.ok || body === null) {
-      setMessage(errorMessage(body, `Validasi gagal (${response.status}).`));
-      return null;
+    if (validationInFlightRef.current) return null;
+    validationInFlightRef.current = true;
+    setValidating(true);
+    const revision = draftRevisionRef.current;
+    const snapshot = graphDocument();
+    try {
+      const response = await fetch("/api/flow/graphs/validate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(snapshot),
+      });
+      const body = (await response
+        .json()
+        .catch(() => null)) as FlowGraphValidationResult | null;
+      if (!response.ok || body === null) {
+        setMessage(errorMessage(body, `Validasi gagal (${response.status}).`));
+        return null;
+      }
+      if (revision !== draftRevisionRef.current) {
+        setMessage(
+          "Draft berubah selama validasi. Validasi lama diabaikan; jalankan Validate lagi.",
+        );
+        return null;
+      }
+      setValidation(body);
+      setMessage(
+        body.valid ? "Graph valid dan compileable." : `${body.issues.length} masalah validasi.`,
+      );
+      return body;
+    } finally {
+      validationInFlightRef.current = false;
+      setValidating(false);
     }
-    setValidation(body);
-    setMessage(
-      body.valid ? "Graph valid dan compileable." : `${body.issues.length} masalah validasi.`,
-    );
-    return body;
   }
   async function save(): Promise<void> {
-    setBusy(true);
+    if (!beginBusy()) return;
+    const revision = draftRevisionRef.current;
+    const snapshot = graphDocument();
     try {
       const target =
         graphId === null
@@ -319,8 +365,8 @@ export default function FlowCanvasPage() {
           : `/api/flow/graphs/${encodeURIComponent(graphId)}`;
       const payload =
         graphId === null
-          ? { ...graphDocument(), id: undefined }
-          : { ...graphDocument(), id: undefined, expectedVersion: version ?? 1 };
+          ? { ...snapshot, id: undefined }
+          : { ...snapshot, id: undefined, expectedVersion: version ?? 1 };
       const response = await fetch(target, {
         method: graphId === null ? "POST" : "PUT",
         headers: { "content-type": "application/json" },
@@ -334,23 +380,31 @@ export default function FlowCanvasPage() {
       setGraphId(body.version.graphId);
       setLoadId(body.version.graphId);
       setVersion(body.version.version);
-      setNodes(body.version.graph.nodes);
-      setEdges(body.version.graph.edges);
-      setValidation(body.version.validation);
-      setMessage(
-        body.deduplicated
-          ? `Tidak ada perubahan — tetap v${body.version.version}.`
-          : `Tersimpan sebagai v${body.version.version}.`,
-      );
+      if (revision === draftRevisionRef.current) {
+        setNodes(body.version.graph.nodes);
+        setEdges(body.version.graph.edges);
+        setValidation(body.version.validation);
+        setDirty(false);
+        setMessage(
+          body.deduplicated
+            ? `Tidak ada perubahan — tetap v${body.version.version}.`
+            : `Tersimpan sebagai v${body.version.version}.`,
+        );
+      } else {
+        setValidation(null);
+        setDirty(true);
+        setMessage(
+          `v${body.version.version} tersimpan, tetapi draft berubah selama request. Simpan lagi sebelum Run.`,
+        );
+      }
       await loadVersions(body.version.graphId);
     } finally {
-      setBusy(false);
+      finishBusy();
     }
   }
   async function loadGraph(id = loadId, requestedVersion?: number): Promise<void> {
     const clean = id.trim();
-    if (clean.length === 0) return;
-    setBusy(true);
+    if (clean.length === 0 || !beginBusy()) return;
     try {
       const response = await fetch(
         `/api/flow/graphs/${encodeURIComponent(clean)}${requestedVersion === undefined ? "" : `?version=${String(requestedVersion)}`}`,
@@ -368,12 +422,16 @@ export default function FlowCanvasPage() {
       setSensitivity(body.graph.sensitivity);
       setNodes(body.graph.nodes);
       setEdges(body.graph.edges);
-      setSelectedId(body.graph.nodes[0]?.id ?? "");
+      const firstNode = body.graph.nodes[0] ?? null;
+      setSelectedId(firstNode?.id ?? "");
+      setConfigDraft(JSON.stringify(firstNode?.config ?? {}, null, 2));
+      draftRevisionRef.current += 1;
+      setDirty(false);
       setValidation(body.validation);
       setMessage(`Memuat ${body.graphId} v${body.version}.`);
       await loadVersions(body.graphId);
     } finally {
-      setBusy(false);
+      finishBusy();
     }
   }
   async function loadVersions(id: string): Promise<void> {
@@ -393,11 +451,16 @@ export default function FlowCanvasPage() {
     setVersions(body.versions);
   }
   async function runGraph(): Promise<void> {
-    if (runStarting) return;
+    if (runInFlightRef.current || runStarting) return;
     if (graphId === null) {
       setMessage("Simpan graph sebelum Run.");
       return;
     }
+    if (dirty) {
+      setMessage("Ada perubahan yang belum disimpan. Save dulu sebelum Run.");
+      return;
+    }
+    runInFlightRef.current = true;
     setRunStarting(true);
     try {
       const checked = validation?.valid ? validation : await validate();
@@ -419,12 +482,20 @@ export default function FlowCanvasPage() {
       setRun(null);
       setMessage(`Run ${body.runId} dimulai. Trace ${body.traceOperationId ?? "-"}.`);
     } finally {
+      runInFlightRef.current = false;
       setRunStarting(false);
     }
   }
   async function decide(node: NodeRunState, decision: "APPROVE" | "REJECT"): Promise<void> {
-    if (runId === null || node.approvalKey === null || pendingNodeAction !== null) return;
+    if (
+      runId === null ||
+      node.approvalKey === null ||
+      pendingNodeAction !== null ||
+      nodeActionInFlightRef.current
+    )
+      return;
     const actionKey = `${node.nodeId}:decision`;
+    nodeActionInFlightRef.current = true;
     setPendingNodeAction(actionKey);
     try {
       const response = await fetch(
@@ -443,12 +514,14 @@ export default function FlowCanvasPage() {
           ),
         );
     } finally {
+      nodeActionInFlightRef.current = false;
       setPendingNodeAction(null);
     }
   }
   async function submitHuman(node: NodeRunState): Promise<void> {
-    if (runId === null || pendingNodeAction !== null) return;
+    if (runId === null || pendingNodeAction !== null || nodeActionInFlightRef.current) return;
     const actionKey = `${node.nodeId}:input`;
+    nodeActionInFlightRef.current = true;
     setPendingNodeAction(actionKey);
     try {
       const response = await fetch(
@@ -468,6 +541,7 @@ export default function FlowCanvasPage() {
           ),
         );
     } finally {
+      nodeActionInFlightRef.current = false;
       setPendingNodeAction(null);
     }
   }
@@ -483,9 +557,9 @@ export default function FlowCanvasPage() {
           <button
             className="ecr-btn ecr-btn--secondary"
             onClick={() => void runUiAction("Validasi gagal", validate)}
-            disabled={busy}
+            disabled={busy || validating}
           >
-            Validate
+            {validating ? "Validating…" : "Validate"}
           </button>
           <button
             className="ecr-btn ecr-btn--primary"
@@ -497,7 +571,8 @@ export default function FlowCanvasPage() {
           <button
             className="ecr-btn ecr-btn--secondary"
             onClick={() => void runUiAction("Run gagal", runGraph)}
-            disabled={busy || runStarting || graphId === null}
+            disabled={busy || validating || runStarting || graphId === null || dirty}
+            title={dirty ? "Save perubahan terbaru sebelum Run" : undefined}
           >
             {runStarting ? "Starting…" : "Run"}
           </button>
@@ -507,19 +582,28 @@ export default function FlowCanvasPage() {
         <input
           className="ecr-input"
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => {
+            setName(event.target.value);
+            markDraftChanged();
+          }}
           aria-label="Flow name"
         />
         <input
           className="ecr-input"
           value={scope}
-          onChange={(event) => setScope(event.target.value)}
+          onChange={(event) => {
+            setScope(event.target.value);
+            markDraftChanged();
+          }}
           aria-label="Scope"
         />
         <select
           className="ecr-input"
           value={sensitivity}
-          onChange={(event) => setSensitivity(event.target.value)}
+          onChange={(event) => {
+            setSensitivity(event.target.value);
+            markDraftChanged();
+          }}
           aria-label="Sensitivity"
         >
           <option>PUBLIC</option>
@@ -544,6 +628,7 @@ export default function FlowCanvasPage() {
         <code>
           {graphId ?? "unsaved"}
           {version === null ? "" : ` · v${version}`}
+          {dirty ? " · unsaved changes" : ""}
         </code>
       </div>
       <main className={styles.workspace}>
@@ -581,7 +666,7 @@ export default function FlowCanvasPage() {
                     ];
                   });
                   setSelectedId(id);
-                  setValidation(null);
+                  markDraftChanged();
                   setMessage(`${definition.label} ditambahkan ke canvas.`);
                 }}
                 aria-label={`Add ${definition.label} node`}
@@ -766,6 +851,7 @@ export default function FlowCanvasPage() {
               {versions.map((item) => (
                 <button
                   key={item.version}
+                  disabled={busy}
                   onClick={() =>
                     void runUiAction("Load version gagal", () =>
                       loadGraph(item.graphId, item.version),

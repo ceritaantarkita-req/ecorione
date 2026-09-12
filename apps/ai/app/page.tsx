@@ -66,6 +66,10 @@ export default function ChatPage() {
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
+  const [memoryFeedback, setMemoryFeedback] = useState<{
+    kind: "success" | "error";
+    message: string;
+  } | null>(null);
   const sendInFlightRef = useRef(false);
   const forgetInFlightRef = useRef<string | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
@@ -159,6 +163,7 @@ export default function ChatPage() {
     if (forgettingId !== null || forgetInFlightRef.current !== null) return;
     forgetInFlightRef.current = factId;
     setForgettingId(factId);
+    setMemoryFeedback(null);
     try {
       const res = await fetch("/api/forget", {
         method: "POST",
@@ -167,16 +172,19 @@ export default function ChatPage() {
       });
       const body: unknown = await res.json().catch(() => undefined);
       if (!res.ok) {
+        const message = extractErrorMessage(body) ?? `Gagal melupakan fakta (${res.status}).`;
+        setMemoryFeedback({ kind: "error", message });
         setTurns((prev) => [
           ...prev,
           {
             kind: "error",
             id: nextTurnId(),
-            message: extractErrorMessage(body) ?? `Gagal melupakan fakta (${res.status}).`,
+            message,
           },
         ]);
         return;
       }
+      setMemoryFeedback({ kind: "success", message: "Fakta berhasil dilupakan." });
       setTurns((prev) =>
         prev.map((t) =>
           t.kind === "assistant"
@@ -191,12 +199,14 @@ export default function ChatPage() {
         ),
       );
     } catch {
+      const message = "Tidak bisa menghubungi server untuk melupakan fakta.";
+      setMemoryFeedback({ kind: "error", message });
       setTurns((prev) => [
         ...prev,
         {
           kind: "error",
           id: nextTurnId(),
-          message: "Tidak bisa menghubungi server untuk melupakan fakta.",
+          message,
         },
       ]);
     } finally {
@@ -295,6 +305,14 @@ export default function ChatPage() {
         </section>
         <aside className="ai-panel" aria-label="Memory used">
           <div className="ai-panel__title">Memori yang dipakai</div>
+          {memoryFeedback !== null ? (
+            <p
+              className={`ai-panel__feedback ai-panel__feedback--${memoryFeedback.kind}`}
+              role={memoryFeedback.kind === "error" ? "alert" : "status"}
+            >
+              {memoryFeedback.message}
+            </p>
+          ) : null}
           {latestAssistant === undefined ? (
             <p className="ai-panel__empty">
               Belum ada balasan — panel terisi setelah giliran pertama.
@@ -391,9 +409,9 @@ function MemoryPanel({
                 type="button"
                 className="ecr-btn ecr-btn--secondary ai-forget-btn"
                 onClick={() => onForget(fact.id)}
-                disabled={forgettingId === fact.id}
+                disabled={forgettingId !== null}
               >
-                Lupakan
+                {forgettingId === fact.id ? "Melupakan…" : "Lupakan"}
               </button>
             </div>
           ))

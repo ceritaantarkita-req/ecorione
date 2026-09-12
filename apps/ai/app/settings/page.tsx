@@ -61,7 +61,10 @@ export default function SettingsPage() {
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("Loading control state…");
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [mcpLoading, setMcpLoading] = useState(false);
   const actionInFlight = useRef(false);
+  const mcpLoadRequestRef = useRef(0);
+  const workspaceIdRef = useRef(workspaceId);
 
   function beginAction(action: string): boolean {
     if (actionInFlight.current) return false;
@@ -90,18 +93,33 @@ export default function SettingsPage() {
   }, []);
 
   const refreshMcp = useCallback(async () => {
+    const requestId = ++mcpLoadRequestRef.current;
+    const requestedWorkspace = workspaceId;
+    setMcpLoading(true);
     try {
       const result = await json<{ servers: McpServer[] }>(
-        `/api/settings/settings/mcp/servers?workspaceId=${encodeURIComponent(workspaceId)}`,
+        `/api/settings/settings/mcp/servers?workspaceId=${encodeURIComponent(requestedWorkspace)}`,
       );
+      if (
+        requestId !== mcpLoadRequestRef.current ||
+        workspaceIdRef.current !== requestedWorkspace
+      )
+        return;
       setServers(result.servers);
       setStatus(`Loaded ${String(result.servers.length)} MCP server configuration(s).`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
+      if (requestId === mcpLoadRequestRef.current) {
+        setStatus(error instanceof Error ? error.message : String(error));
+      }
+    } finally {
+      if (requestId === mcpLoadRequestRef.current) setMcpLoading(false);
     }
   }, [workspaceId]);
 
   useEffect(() => void refresh(), [refresh]);
+
+  const mutableLocalModel =
+    runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());
 
   async function saveRuntime() {
     if (runtime === null || !beginAction("runtime")) return;
@@ -211,6 +229,7 @@ export default function SettingsPage() {
               Hosted provider
               <select
                 value={runtime.settings.hostedProvider}
+                disabled={pendingAction !== null}
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
@@ -231,6 +250,7 @@ export default function SettingsPage() {
               Local model
               <input
                 value={runtime.settings.localModelTag}
+                disabled={pendingAction !== null}
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
@@ -243,6 +263,7 @@ export default function SettingsPage() {
               Local base URL
               <input
                 value={runtime.settings.localBaseUrl}
+                disabled={pendingAction !== null}
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
@@ -255,6 +276,7 @@ export default function SettingsPage() {
               <input
                 type="checkbox"
                 checked={runtime.settings.hostedCallsEnabled}
+                disabled={pendingAction !== null}
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
@@ -264,6 +286,12 @@ export default function SettingsPage() {
               />
               Hosted calls enabled
             </label>
+            {mutableLocalModel ? (
+              <p className={`${styles.warning} ${styles.wide}`}>
+                Local model memakai alias mutable <code>{runtime.settings.localModelTag}</code>.
+                Cocok untuk rehearsal, belum immutable production identity.
+              </p>
+            ) : null}
             <p className={`${styles.muted} ${styles.wide}`}>
               The process-level operator kill switch is a hard ceiling. Runtime settings can
               turn Hosted off, but cannot override a closed operator gate.
@@ -303,6 +331,7 @@ export default function SettingsPage() {
           <select
             aria-label="Credential provider"
             value={secretProvider}
+            disabled={pendingAction !== null}
             onChange={(event) => setSecretProvider(event.target.value)}
           >
             <option value="anthropic">Anthropic</option>
@@ -316,6 +345,7 @@ export default function SettingsPage() {
             placeholder="New secret"
             aria-label="New credential secret"
             value={secret}
+            disabled={pendingAction !== null}
             onChange={(event) => setSecret(event.target.value)}
           />
           <button
@@ -334,10 +364,19 @@ export default function SettingsPage() {
           <input
             aria-label="MCP workspace id"
             value={workspaceId}
-            onChange={(event) => setWorkspaceId(event.target.value)}
+            disabled={mcpLoading || pendingAction !== null}
+            onChange={(event) => {
+              workspaceIdRef.current = event.target.value;
+              setWorkspaceId(event.target.value);
+            }}
           />
-          <button type="button" className={styles.secondary} onClick={() => void refreshMcp()}>
-            Load workspace
+          <button
+            type="button"
+            className={styles.secondary}
+            disabled={mcpLoading || pendingAction !== null}
+            onClick={() => void refreshMcp()}
+          >
+            {mcpLoading ? "Loading…" : "Load workspace"}
           </button>
         </div>
         <div className={styles.serverList}>
@@ -359,6 +398,7 @@ export default function SettingsPage() {
           rows={12}
           spellCheck={false}
           value={mcpJson}
+          disabled={pendingAction !== null}
           onChange={(event) => setMcpJson(event.target.value)}
           aria-label="MCP server JSON"
           placeholder='{"id":"example","displayName":"Example","enabled":false,"workspaceIds":["workspace-default"],"transport":{"type":"streamable-http","url":"https://example.com/mcp"},"toolPolicies":[],"connectTimeoutMs":10000,"requestTimeoutMs":30000}'

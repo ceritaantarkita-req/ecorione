@@ -213,13 +213,41 @@ export default function SpacePageView() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [creatingPage, setCreatingPage] = useState(false);
   const createPageInFlightRef = useRef(false);
+  const [pendingMutation, setPendingMutation] = useState<string | null>(null);
+  const mutationInFlightRef = useRef(false);
   const selectedPageIdRef = useRef<string | null>(null);
   const pageRequestRef = useRef(0);
+  const pagesRequestRef = useRef(0);
+  const memoryRequestRef = useRef(0);
 
   const selectedBlock = useMemo(
     () => document?.blocks.find((block) => block.id === selectedBlockId) ?? null,
     [document, selectedBlockId],
   );
+
+  function beginMutation(action: string): boolean {
+    if (createPageInFlightRef.current || mutationInFlightRef.current) return false;
+    mutationInFlightRef.current = true;
+    setPendingMutation(action);
+    return true;
+  }
+
+  function finishMutation(): void {
+    mutationInFlightRef.current = false;
+    setPendingMutation(null);
+  }
+
+  function selectPage(id: string): void {
+    if (selectedPageIdRef.current === id) return;
+    pageRequestRef.current += 1;
+    selectedPageIdRef.current = id;
+    setSelectedPageId(id);
+    setDocument(null);
+    setSelectedBlockId(null);
+    setDeleteConfirmId(null);
+    setResolution(null);
+    setRenaming(false);
+  }
 
   const loadPage = useCallback(async (id: string) => {
     const requestId = ++pageRequestRef.current;
@@ -239,11 +267,13 @@ export default function SpacePageView() {
   }, []);
 
   const refreshPages = useCallback(async () => {
+    const requestId = ++pagesRequestRef.current;
     try {
       const response = await fetch(`/api/space/pages?workspaceId=${WORKSPACE_ID}`, {
         cache: "no-store",
       });
       const next = (await readJson<{ pages: SpacePage[] }>(response)).pages;
+      if (requestId !== pagesRequestRef.current) return;
       setPages(next);
       setSelectedPageId((current) =>
         current !== null && next.some((page) => page.id === current)
@@ -252,19 +282,26 @@ export default function SpacePageView() {
       );
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      if (requestId === pagesRequestRef.current) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
     }
   }, []);
 
   const refreshMemory = useCallback(async () => {
+    const requestId = ++memoryRequestRef.current;
     try {
       const response = await fetch(
         "/api/space/core-memory?scope=personal&maxSensitivity=RESTRICTED",
         { cache: "no-store" },
       );
-      setMemory(await readJson<CoreMemory>(response));
+      const next = await readJson<CoreMemory>(response);
+      if (requestId !== memoryRequestRef.current) return;
+      setMemory(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      if (requestId === memoryRequestRef.current) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
     }
   }, []);
 
@@ -303,7 +340,12 @@ export default function SpacePageView() {
 
   async function createPage(event: FormEvent) {
     event.preventDefault();
-    if (newPageTitle.trim().length === 0 || createPageInFlightRef.current) return;
+    if (
+      newPageTitle.trim().length === 0 ||
+      createPageInFlightRef.current ||
+      mutationInFlightRef.current
+    )
+      return;
     createPageInFlightRef.current = true;
     setCreatingPage(true);
     try {
@@ -320,7 +362,7 @@ export default function SpacePageView() {
       );
       setNewPageTitle("");
       await refreshPages();
-      setSelectedPageId(page.id);
+      selectPage(page.id);
       setNotice("Page dibuat.");
       setError(null);
     } catch (err) {
@@ -343,7 +385,7 @@ export default function SpacePageView() {
   }
 
   async function addBlock() {
-    if (document === null) return;
+    if (document === null || !beginMutation("add-block")) return;
     try {
       const body = JSON.parse(draftJson) as unknown;
       const result = await readJson<{ block: SpaceBlock; pageVersion: number }>(
@@ -364,11 +406,13 @@ export default function SpacePageView() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      finishMutation();
     }
   }
 
   async function saveBlock() {
-    if (document === null || selectedBlock === null) return;
+    if (document === null || selectedBlock === null || !beginMutation("save-block")) return;
     try {
       const body = JSON.parse(inspectorJson) as unknown;
       await readJson(
@@ -388,11 +432,13 @@ export default function SpacePageView() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      finishMutation();
     }
   }
 
   async function deleteBlock(block: SpaceBlock) {
-    if (document === null) return;
+    if (document === null || !beginMutation("delete-block")) return;
     try {
       await readJson(
         await fetch(
@@ -408,6 +454,8 @@ export default function SpacePageView() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      finishMutation();
     }
   }
 
@@ -416,6 +464,7 @@ export default function SpacePageView() {
     const index = document.blocks.findIndex((item) => item.id === block.id);
     const target = index + delta;
     if (index < 0 || target < 0 || target >= document.blocks.length) return;
+    if (!beginMutation("move-block")) return;
     const blockIds = document.blocks.map((item) => item.id);
     [blockIds[index], blockIds[target]] = [blockIds[target]!, blockIds[index]!];
     try {
@@ -434,11 +483,13 @@ export default function SpacePageView() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      finishMutation();
     }
   }
 
   async function resolveBlock() {
-    if (selectedBlock === null) return;
+    if (selectedBlock === null || !beginMutation("resolve-block")) return;
     try {
       const value = await readJson<SpaceBlockReferenceResolution>(
         await fetch(
@@ -450,6 +501,8 @@ export default function SpacePageView() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      finishMutation();
     }
   }
 
@@ -457,7 +510,7 @@ export default function SpacePageView() {
     event.preventDefault();
     if (document === null) return;
     const title = renameDraft.trim();
-    if (title.length === 0) return;
+    if (title.length === 0 || !beginMutation("rename-page")) return;
     try {
       await readJson(
         await fetch(`/api/space/pages/${document.page.id}?workspaceId=${WORKSPACE_ID}`, {
@@ -473,11 +526,14 @@ export default function SpacePageView() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      finishMutation();
     }
   }
 
   async function saveMemory(event: FormEvent) {
     event.preventDefault();
+    if (!beginMutation("save-memory")) return;
     try {
       await readJson(
         await fetch(`/api/space/core-memory/${encodeURIComponent(memoryLabel)}`, {
@@ -497,6 +553,8 @@ export default function SpacePageView() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      finishMutation();
     }
   }
 
@@ -538,7 +596,9 @@ export default function SpacePageView() {
             <button
               type="submit"
               className={styles.button}
-              disabled={newPageTitle.trim().length === 0 || creatingPage}
+              disabled={
+                newPageTitle.trim().length === 0 || creatingPage || pendingMutation !== null
+              }
             >
               {creatingPage ? "Creating…" : "Create page"}
             </button>
@@ -551,9 +611,10 @@ export default function SpacePageView() {
                 <button
                   key={page.id}
                   type="button"
-                  onClick={() => setSelectedPageId(page.id)}
+                  onClick={() => selectPage(page.id)}
                   className={`${styles.pageButton} ${page.id === selectedPageId ? styles.pageButtonActive : ""}`}
                   aria-pressed={page.id === selectedPageId}
+                  disabled={creatingPage || pendingMutation !== null}
                 >
                   <strong>{page.title}</strong>
                   <small>
@@ -578,12 +639,13 @@ export default function SpacePageView() {
                       value={renameDraft}
                       onChange={(event) => setRenameDraft(event.target.value)}
                       aria-label="Page title"
+                      disabled={pendingMutation !== null}
                       autoFocus
                     />
                     <button
                       type="submit"
                       className={styles.buttonPrimary}
-                      disabled={renameDraft.trim().length === 0}
+                      disabled={renameDraft.trim().length === 0 || pendingMutation !== null}
                     >
                       Save title
                     </button>
@@ -608,6 +670,7 @@ export default function SpacePageView() {
                   <button
                     type="button"
                     className={styles.button}
+                    disabled={pendingMutation !== null}
                     onClick={() => setRenaming(true)}
                   >
                     Rename
@@ -649,7 +712,7 @@ export default function SpacePageView() {
                           <button
                             type="button"
                             className={styles.iconButton}
-                            disabled={index === 0}
+                            disabled={index === 0 || pendingMutation !== null}
                             aria-label={`Move ${block.type} block up`}
                             onClick={(event) => {
                               event.stopPropagation();
@@ -661,7 +724,9 @@ export default function SpacePageView() {
                           <button
                             type="button"
                             className={styles.iconButton}
-                            disabled={index === document.blocks.length - 1}
+                            disabled={
+                              index === document.blocks.length - 1 || pendingMutation !== null
+                            }
                             aria-label={`Move ${block.type} block down`}
                             onClick={(event) => {
                               event.stopPropagation();
@@ -673,6 +738,7 @@ export default function SpacePageView() {
                           <button
                             type="button"
                             className={`${styles.iconButton} ${styles.deleteButton} ${deleteConfirmId === block.id ? styles.deleteButtonConfirm : ""}`}
+                            disabled={pendingMutation !== null}
                             aria-label={
                               deleteConfirmId === block.id
                                 ? `Confirm delete ${block.type} block`
@@ -711,6 +777,7 @@ export default function SpacePageView() {
                       type="button"
                       className={`${styles.kindButton} ${kind === draftKind ? styles.kindButtonActive : ""}`}
                       onClick={() => chooseKind(kind)}
+                      disabled={pendingMutation !== null}
                     >
                       {kind}
                     </button>
@@ -723,11 +790,13 @@ export default function SpacePageView() {
                   rows={9}
                   spellCheck={false}
                   aria-label={`${draftKind} block JSON`}
+                  disabled={pendingMutation !== null}
                 />
                 <div className={styles.editorActions}>
                   <button
                     type="button"
                     className={styles.buttonPrimary}
+                    disabled={pendingMutation !== null}
                     onClick={() => void addBlock()}
                   >
                     Add {draftKind}
@@ -756,11 +825,13 @@ export default function SpacePageView() {
                     rows={15}
                     spellCheck={false}
                     aria-label="Selected block JSON"
+                    disabled={pendingMutation !== null}
                   />
                   <div className={styles.inspectorActions}>
                     <button
                       type="button"
                       className={styles.buttonPrimary}
+                      disabled={pendingMutation !== null}
                       onClick={() => void saveBlock()}
                     >
                       Save block
@@ -768,6 +839,7 @@ export default function SpacePageView() {
                     <button
                       type="button"
                       className={styles.button}
+                      disabled={pendingMutation !== null}
                       onClick={() => void resolveBlock()}
                     >
                       Resolve link
@@ -826,8 +898,12 @@ export default function SpacePageView() {
                   placeholder="Context-owned value"
                   aria-label="Core memory value"
                 />
-                <button type="submit" className={styles.buttonPrimary}>
-                  Save to Context
+                <button
+                  type="submit"
+                  className={styles.buttonPrimary}
+                  disabled={pendingMutation !== null}
+                >
+                  {pendingMutation === "save-memory" ? "Saving…" : "Save to Context"}
                 </button>
               </form>
             </section>
