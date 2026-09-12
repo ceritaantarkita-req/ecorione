@@ -8,7 +8,8 @@ export async function proxyToSpace(
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
 ): Promise<Response> {
   const normalized = normalizeOwnerProxyPath(path);
-  if (normalized === null) return jsonError(400, "BAD_REQUEST", "Space proxy path tidak valid.");
+  if (normalized === null)
+    return jsonError(400, "BAD_REQUEST", "Space proxy path tidak valid.");
 
   const token = internalToken();
   const headers: Record<string, string> = {};
