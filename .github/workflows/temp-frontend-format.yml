@@ -1,0 +1,50 @@
+name: TEMP Frontend Format
+
+on:
+  push:
+    branches:
+      - feat/frontend-product-polish-20260912
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/frontend-product-polish-20260912
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format frontend files
+        run: |
+          pnpm exec prettier --write \
+            apps/ai/app/flow/FlowCanvas.module.css \
+            apps/ai/app/globals.css \
+            apps/ai/app/page.tsx \
+            apps/ai/app/ProductNav.tsx \
+            apps/ai/app/settings/page.tsx \
+            apps/ai/app/space/page.tsx
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            apps/ai/app/flow/FlowCanvas.module.css \
+            apps/ai/app/globals.css \
+            apps/ai/app/page.tsx \
+            apps/ai/app/ProductNav.tsx \
+            apps/ai/app/settings/page.tsx \
+            apps/ai/app/space/page.tsx
+          if git diff --cached --quiet; then
+            echo "No format changes needed"
+            exit 0
+          fi
+          git commit -m "style: format frontend polish"
+          git push origin HEAD:feat/frontend-product-polish-20260912
