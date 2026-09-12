@@ -267,13 +267,15 @@ Production deployment is not a blocker for current local R&D.
 
 This is a new explicit scope, not Batch 13.
 
-Code-side/static hardening includes PR #56, #58, #59, #60 and #62, generic owner-proxy hardening in PR #63, documentation synchronization in PR #64, and the dedicated realtime voice SSE owner-boundary follow-up in PR #65. Current merged repository-side baseline is `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; exact-head CI, external MCP/public HTTPS acceptance, and post-merge CI are green. PR #63 fixed the Settings MCP workspace-query mismatch and generic Ai → owner path/redirect behavior; PR #65 closed the remaining audited direct Ai voice-stream → Hub redirect gap and added deterministic release-acceptance coverage.
+Code-side/static hardening includes PR #56, #58, #59, #60 and #62, generic owner-proxy hardening in PR #63, documentation synchronization in PR #64, and the dedicated realtime voice SSE owner-boundary follow-up in PR #65. The latest code-bearing repository-side UX/static baseline is PR #65 at `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; exact-head CI, external MCP/public HTTPS acceptance, and post-merge CI are green for that code-bearing baseline. PR #63 fixed the Settings MCP workspace-query mismatch and generic Ai → owner path/redirect behavior; PR #65 closed the remaining audited direct Ai voice-stream → Hub redirect gap and added deterministic release-acceptance coverage.
+
+Documentation-only merges after PR #65 may advance `main` without changing that code-bearing baseline. Runtime evidence must therefore run from synchronized **current `origin/main`**, not by checking out the older code-bearing SHA. The synchronized runtime commit must contain PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` in its ancestry.
 
 This remains **code-side evidence only**. The repository-side merge/gate conditions are satisfied, but the operator must still rerun the strict local inventory and real rendered browser walkthrough on synchronized `main` before this workstream can close. Realtime voice runtime/browser behavior is not part of the minimum UX-01–UX-12 closure claim unless separately exercised.
 
 The remaining work now crosses the real browser/runtime boundary and therefore cannot be inferred from static review or CI. It requires:
 
-1. synchronize local `main` to the current merged revision and verify a clean tracked tree;
+1. fetch and synchronize local `main` to current `origin/main`, verify `HEAD == origin/main`, verify a clean tracked tree, and verify the synchronized commit descends from PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`;
 2. restart Phase 4 from that synchronized code with `ECORIONE_COST_KILL_SWITCH=1`;
 3. run `pnpm evidence:ux:inventory` and require PASS, including the Settings MCP workspace proxy contract;
 4. exercise representative Local chat first-turn and same-session continuity through the real Ai surface;
@@ -338,6 +340,6 @@ For backup/restore specifically, also require explicit source identity, backup r
 
 ## 12. Immediate next action
 
-On the operator laptop, synchronize reviewed `main` to the exact merged repository-side baseline `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`, restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, then execute `docs/ux-runtime-walkthrough-checklist.md`. Do not mutate VPS/Cloudflare or hosted-provider state.
+On the operator laptop, fetch and synchronize reviewed `main` to **current `origin/main`**; require `HEAD == origin/main`, a clean tracked tree, and ancestry containing PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`. Then restart Phase 4 with the hosted-cost kill switch enabled, run `pnpm evidence:ux:inventory`, and execute `docs/ux-runtime-walkthrough-checklist.md`. Do not checkout the older code-bearing SHA merely to run evidence, and do not mutate VPS/Cloudflare or hosted-provider state.
 
 Canonical handoff: `docs/current-state-and-next-steps.md`.
