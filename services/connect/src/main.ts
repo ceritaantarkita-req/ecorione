@@ -10,6 +10,7 @@ import { McpManager } from "./mcp-client/manager.js";
 import { FileMcpRegistry } from "./mcp-client/registry.js";
 import { SdkMcpClientFactory } from "./mcp-client/sdk-client.js";
 import { HttpMultimodalAdapter } from "./multimodal.js";
+import { withHostedOperatorGate } from "./operator-runtime-settings.js";
 import { parseHostedProvider } from "./provider-types.js";
 import { parseLocalRuntime } from "./providers/local-runtime.js";
 import { FileRuntimeSettings } from "./runtime-settings.js";
@@ -51,19 +52,23 @@ function developmentHostedApiKey(provider = hostedProvider): string | undefined 
 const localRuntime = parseLocalRuntime(process.env.ECORIONE_LOCAL_RUNTIME);
 const localBaseUrl = process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11434/v1";
 const localModelTag = process.env.ECORIONE_LOCAL_MODEL ?? "qwen3:8b-instruct-q4_K_M";
-const hostedCallsEnabled = process.env.ECORIONE_COST_KILL_SWITCH !== "1";
+const hostedCallsAllowedByOperator = process.env.ECORIONE_COST_KILL_SWITCH !== "1";
 const runtimeSettingsPath = resolveRepoRuntimePath(
   REPO_ROOT,
   process.env.ECORIONE_CONNECT_SETTINGS_PATH,
   "data/connect-runtime-settings.json",
 );
-const runtimeSettings = new FileRuntimeSettings(runtimeSettingsPath, {
+const runtimeSettingsStore = new FileRuntimeSettings(runtimeSettingsPath, {
   hostedProvider,
   localRuntime,
   localBaseUrl,
   localModelTag,
-  hostedCallsEnabled,
+  hostedCallsEnabled: hostedCallsAllowedByOperator,
 });
+const runtimeSettings = withHostedOperatorGate(
+  runtimeSettingsStore,
+  hostedCallsAllowedByOperator,
+);
 
 const spendDailyUsd = parseOptionalBudgetUsd(
   "ECORIONE_SPEND_DAILY_USD",
@@ -144,7 +149,7 @@ const app = buildConnectServer({
   localRuntime,
   localBaseUrl,
   localModelTag,
-  hostedCallsEnabled,
+  hostedCallsEnabled: hostedCallsAllowedByOperator,
   spendBudget,
   mcpManager,
   localMultimodalAdapter,

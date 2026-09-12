@@ -1,10 +1,21 @@
 "use client";
 
-import { useState, useSyncExternalStore, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
 import { makeSessionId } from "../lib/session";
 
 type ChatTarget = "local" | "hosted";
+type RuntimeSnapshot = {
+  settings?: {
+    hostedCallsEnabled?: boolean;
+  };
+};
 interface UserTurn {
   kind: "user";
   id: string;
@@ -51,15 +62,45 @@ export default function ChatPage() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
+  const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
   const latestAssistant = [...turns]
     .reverse()
     .find((t): t is AssistantTurn => t.kind === "assistant");
 
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/settings/settings/runtime", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
+        return (await response.json()) as RuntimeSnapshot;
+      })
+      .then((snapshot) => {
+        if (!cancelled) setHostedAvailable(snapshot.settings?.hostedCallsEnabled === true);
+      })
+      .catch(() => {
+        if (!cancelled) setHostedAvailable(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function sendMessage(text: string): Promise<void> {
     const trimmed = text.trim();
     if (!hydrated || trimmed.length === 0 || sending) return;
+    if (target === "hosted" && hostedAvailable !== true) {
+      setTurns((prev) => [
+        ...prev,
+        {
+          kind: "error",
+          id: nextTurnId(),
+          message: "Hosted route sedang dinonaktifkan. Gunakan Local untuk sesi ini.",
+        },
+      ]);
+      return;
+    }
     setTurns((prev) => [...prev, { kind: "user", id: nextTurnId(), text: trimmed }]);
     setDraft("");
     setSending(true);
@@ -137,6 +178,15 @@ export default function ChatPage() {
             : t,
         ),
       );
+    } catch {
+      setTurns((prev) => [
+        ...prev,
+        {
+          kind: "error",
+          id: nextTurnId(),
+          message: "Tidak bisa menghubungi server untuk melupakan fakta.",
+        },
+      ]);
     } finally {
       setForgettingId(null);
     }
@@ -151,6 +201,15 @@ export default function ChatPage() {
       void sendMessage(draft);
     }
   }
+
+  const routeHint =
+    turns.length > 0
+      ? "Pilihan dikunci setelah pesan pertama agar boundary sesi tidak berubah diam-diam."
+      : hostedAvailable === null
+        ? "Memeriksa ketersediaan Hosted. Local tetap aman digunakan."
+        : hostedAvailable
+          ? "Pilih route sebelum pesan pertama; route akan dikunci untuk sesi ini."
+          : "Hosted sedang dinonaktifkan oleh operator/runtime. Sesi ini Local-only.";
 
   return (
     <div className="ai-shell">
@@ -169,7 +228,7 @@ export default function ChatPage() {
               turns.map((turn) => <TurnView key={turn.id} turn={turn} />)
             )}
             {sending ? (
-              <div className="ai-turn ai-turn--assistant">
+              <div className="ai-turn ai-turn--assistant" aria-live="polite">
                 <div className="ai-bubble">Menunggu balasan…</div>
               </div>
             ) : null}
@@ -186,11 +245,11 @@ export default function ChatPage() {
               disabled={!hydrated || sending || turns.length > 0}
             >
               <option value="local">Local</option>
-              <option value="hosted">Hosted</option>
+              <option value="hosted" disabled={hostedAvailable !== true}>
+                {hostedAvailable === true ? "Hosted" : "Hosted — off"}
+              </option>
             </select>
-            <span className="ai-route-control__hint">
-              Pilihan dikunci setelah pesan pertama agar boundary sesi tidak berubah diam-diam.
-            </span>
+            <span className="ai-route-control__hint">{routeHint}</span>
           </div>
           <form className="ai-composer" onSubmit={handleSubmit}>
             <textarea
@@ -238,7 +297,7 @@ function TurnView({ turn }: { turn: Turn }) {
     );
   if (turn.kind === "error")
     return (
-      <div className="ai-turn ai-turn--assistant">
+      <div className="ai-turn ai-turn--assistant" role="alert">
         <div className="ai-bubble ai-bubble--error">{turn.message}</div>
       </div>
     );
