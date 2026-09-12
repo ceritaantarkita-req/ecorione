@@ -55,6 +55,15 @@ function parseJson(text, label) {
   }
 }
 
+function escapeHtmlText(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#x27;");
+}
+
 export function validateRuntimeSnapshot(payload) {
   if (payload === null || typeof payload !== "object") {
     throw new Error("Runtime settings response bukan object.");
@@ -120,7 +129,8 @@ export function validateFlowSnapshot(payload) {
 }
 
 export function validateSurfaceHtml(name, html, marker) {
-  if (!html.includes(marker)) {
+  const escapedMarker = escapeHtmlText(marker);
+  if (!html.includes(marker) && !html.includes(escapedMarker)) {
     throw new Error(`${name} tidak memuat marker UI yang diharapkan: ${marker}`);
   }
   if (/__next_error__|nextjs-container-errors|Application error/i.test(html)) {
@@ -140,6 +150,9 @@ export async function inventory() {
   }
   if (process.env.ECORIONE_COST_KILL_SWITCH !== "1") {
     throw new Error("ECORIONE_COST_KILL_SWITCH harus bernilai 1 untuk checkpoint ini.");
+  }
+  if ((process.env.ECORIONE_INTERNAL_TOKEN ?? "").trim().length === 0) {
+    throw new Error("ECORIONE_INTERNAL_TOKEN harus disource untuk UX inventory.");
   }
 
   const owners = [];

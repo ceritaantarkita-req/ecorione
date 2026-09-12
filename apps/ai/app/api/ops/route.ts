@@ -44,45 +44,62 @@ type OperationalSnapshot = {
   recentRequests: RecentRequestSpan[];
 };
 
-type ServiceTarget = { name: string; url: string; metrics: boolean };
+type ServiceTarget = { name: string; url: string; metrics: boolean; required: boolean };
 
 const targets: ServiceTarget[] = [
-  { name: "rnd", url: process.env.ECORIONE_RND_URL ?? "http://127.0.0.1:17021", metrics: true },
+  {
+    name: "rnd",
+    url: process.env.ECORIONE_RND_URL ?? "http://127.0.0.1:17021",
+    metrics: true,
+    required: true,
+  },
   {
     name: "context",
     url: process.env.ECORIONE_CONTEXT_URL ?? "http://127.0.0.1:17022",
     metrics: true,
+    required: true,
   },
   {
     name: "connect",
     url: process.env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023",
     metrics: true,
+    required: true,
   },
-  { name: "hub", url: process.env.ECORIONE_HUB_URL ?? "http://127.0.0.1:17024", metrics: true },
+  {
+    name: "hub",
+    url: process.env.ECORIONE_HUB_URL ?? "http://127.0.0.1:17024",
+    metrics: true,
+    required: true,
+  },
   {
     name: "artifact",
     url: process.env.ECORIONE_ARTIFACT_URL ?? "http://127.0.0.1:17025",
     metrics: true,
+    required: true,
   },
   {
     name: "sandbox",
     url: process.env.ECORIONE_SANDBOX_URL ?? "http://127.0.0.1:17026",
     metrics: true,
+    required: true,
   },
   {
     name: "space",
     url: process.env.ECORIONE_SPACE_URL ?? "http://127.0.0.1:17027",
     metrics: true,
+    required: true,
   },
   {
     name: "flow",
     url: process.env.ECORIONE_FLOW_URL ?? "http://127.0.0.1:17028",
     metrics: true,
+    required: true,
   },
   {
     name: "sync",
     url: process.env.ECORIONE_SYNC_URL ?? "http://127.0.0.1:17011",
     metrics: false,
+    required: false,
   },
 ];
 
@@ -99,6 +116,7 @@ async function fetchJson(url: string, headers: HeadersInit = {}): Promise<unknow
 
 async function inspect(target: ServiceTarget): Promise<{
   name: string;
+  required: boolean;
   healthy: boolean;
   health: unknown | null;
   observability: OperationalSnapshot | null;
@@ -116,10 +134,18 @@ async function inspect(target: ServiceTarget): Promise<{
         authorization: `Bearer ${token}`,
       })) as OperationalSnapshot;
     }
-    return { name: target.name, healthy: true, health, observability, error: null };
+    return {
+      name: target.name,
+      required: target.required,
+      healthy: true,
+      health,
+      observability,
+      error: null,
+    };
   } catch (error) {
     return {
       name: target.name,
+      required: target.required,
       healthy: false,
       health: null,
       observability: null,
@@ -152,7 +178,7 @@ export async function GET(): Promise<Response> {
 
   return Response.json({
     generatedAt: new Date().toISOString(),
-    healthy: services.every((service) => service.healthy),
+    healthy: services.filter((service) => service.required).every((service) => service.healthy),
     services,
     recentTraces,
   });
