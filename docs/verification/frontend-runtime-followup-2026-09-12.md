@@ -34,17 +34,17 @@ The rendered UX-09 rapid-switch behavior still requires operator verification be
 
 The Flow client already contains the main repository-side UX-10 safety contracts:
 
-- every draft edit increments `draftRevisionRef`, clears prior validation and clears execution state;
+- every applied draft edit increments `draftRevisionRef`, marks the draft dirty and clears prior validation;
 - validation captures the draft revision and discards a response when the draft changed while validation was in flight;
-- `lastPersistedRevisionRef` distinguishes saved from dirty drafts;
-- Run refuses a dirty draft and the rendered Run button is disabled unless the current draft is saved and has a valid current validation;
+- save also captures the draft revision and marks the draft clean only when that same revision is still current; if the user edits during save, the response does not overwrite the newer draft and the UI explicitly asks for another save before Run;
+- Run refuses an unsaved graph or dirty draft; the rendered Run button is disabled for those states, while a saved draft may be validated on demand by `runGraph` before execution;
 - `runInFlightRef`, `validationInFlightRef` and the general busy guard prevent overlapping mutations/actions.
 
 The real browser must still exercise edit/save/validate/run ordering before UX-10 can close.
 
 ### Error/recovery
 
-Flow already surfaces an explicit invalid-config message (`Config harus JSON valid sebelum diterapkan.`) and invalid operations release action guards. Space catches invalid block/inspector JSON and surfaces the parser/API error through the visible error state while releasing its mutation guard. This is structural support only; UX-11 still requires the planned safe invalid-input browser test to confirm that the message is understandable and that the user can immediately recover without reload/restart.
+Flow already surfaces an explicit invalid-config message (`Config harus JSON valid.`) and invalid operations release action guards. Space catches invalid block/inspector JSON and surfaces the parser/API error through the visible error state while releasing its mutation guard. This is structural support only; UX-11 still requires the planned safe invalid-input browser test to confirm that the message is understandable and that the user can immediately recover without reload/restart.
 
 ### Narrow layout
 
@@ -52,6 +52,8 @@ Static CSS review found existing narrow fallbacks rather than a new source-prova
 
 - Space collapses to one column at `max-width: 760px`;
 - Flow collapses to one column at `max-width: 760px` and keeps the canvas itself intentionally scrollable;
+- Operations reduces its service grid to one column at `max-width: 760px`;
+- Settings collapses its form grid and inline controls at `max-width: 720px`;
 - global navigation preserves a `min-width: 0` scrollable product-link row and switches to its narrower chrome at `max-width: 780px` instead of forcing page-level overflow.
 
 The operator's 430px screenshots are useful partial evidence, but UX-12 remains pending the explicit ~390px rendered check.
@@ -67,8 +69,8 @@ Chrome's `GET /favicon.ico 404`, by contrast, is an application-owned S3 finding
 `test/frontend-runtime-ux-guards.test.mjs` locks the source contracts that materially support UX-09, UX-10 and UX-12:
 
 - Space stale-request and duplicate-create guards;
-- Flow draft revision, stale-validation and saved-current-draft Run guards;
-- Space/Flow narrow breakpoints;
+- Flow draft revision, stale-validation, stale-save and dirty-draft Run guards;
+- Space/Flow/Operations/Settings narrow breakpoints;
 - intentional Flow canvas scrolling;
 - narrow global-nav scrolling and `min-width: 0` containment.
 
