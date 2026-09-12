@@ -1,9 +1,8 @@
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 async function source(path) {
-  return readFile(resolve(process.cwd(), path), "utf8");
+  return readFile(new URL(`../${path}`, import.meta.url), "utf8");
 }
 
 describe("frontend runtime UX guard contracts", () => {
