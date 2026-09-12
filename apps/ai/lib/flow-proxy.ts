@@ -1,4 +1,5 @@
 import { flowUrl, internalToken } from "./env";
+import { normalizeOwnerProxyPath } from "./owner-proxy-path";
 import { jsonError } from "./proxy";
 
 export async function proxyToFlow(
@@ -6,8 +7,9 @@ export async function proxyToFlow(
   path: string,
   method: "GET" | "POST" | "PUT",
 ): Promise<Response> {
-  if (!path.startsWith("/v1/") || path.includes("..") || path.includes("\\"))
-    return jsonError(400, "BAD_REQUEST", "Flow proxy path tidak valid.");
+  const normalized = normalizeOwnerProxyPath(path);
+  if (normalized === null) return jsonError(400, "BAD_REQUEST", "Flow proxy path tidak valid.");
+
   const token = internalToken();
   const headers: Record<string, string> = {};
   if (token !== undefined) headers.authorization = `Bearer ${token}`;
@@ -21,7 +23,13 @@ export async function proxyToFlow(
     }
   }
   try {
-    const upstream = await fetch(`${flowUrl()}${path}`, { method, headers, body });
+    const upstream = await fetch(`${flowUrl()}${normalized.path}`, {
+      method,
+      headers,
+      body,
+      redirect: "error",
+      cache: "no-store",
+    });
     const text = await upstream.text();
     return new Response(text.length === 0 ? undefined : text, {
       status: upstream.status,
