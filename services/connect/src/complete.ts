@@ -76,6 +76,8 @@ export interface CompleteResult {
   readonly budget?: CompleteBudgetResult | undefined;
 }
 const POLICY_VERSION = "3";
+/** Bump whenever local provider message framing changes so stale replies cannot cross formats. */
+const LOCAL_PROMPT_FRAMING_VERSION = "2";
 
 function developmentApiKey(deps: CompleteDeps, provider: HostedProviderId): string | undefined {
   switch (provider) {
@@ -110,7 +112,7 @@ export async function complete(
   const providerIdentity = local ? "local" : hostedProvider;
   const model = local ? deps.localModelTag : decision.model;
   const modelCacheIdentity = local
-    ? `${providerIdentity}:${deps.localRuntime ?? "openai-compatible"}:${deps.localBaseUrl}:${model}`
+    ? `${providerIdentity}:${deps.localRuntime ?? "openai-compatible"}:${deps.localBaseUrl}:${model}:prompt-v${LOCAL_PROMPT_FRAMING_VERSION}`
     : `${providerIdentity}:${model}`;
   const key = cacheKey({
     model: modelCacheIdentity,
