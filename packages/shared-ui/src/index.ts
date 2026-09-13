@@ -12,4 +12,5 @@
 export * from "./tokens.js";
 export * from "./css.js";
 export * from "./theme.js";
+export * from "./sidebar.js";
 export * from "./components.js";

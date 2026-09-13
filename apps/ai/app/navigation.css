@@ -1,23 +1,53 @@
+/*
+ * Sidebar navigasi kiri, collapsible — kontrak atribut: `data-sidebar="collapsed"` di <html>,
+ * dipasang oleh `SIDEBAR_BOOTSTRAP_SCRIPT` sebelum cat pertama dan oleh `ProductNav` saat
+ * pengguna menekan tombol collapse (`packages/shared-ui/src/sidebar.ts`). Di layar sempit
+ * (`@media (max-width: 780px)` di bawah), atribut yang dipakai berbeda: `data-mobile-nav="open"`,
+ * transient (tidak disimpan), mengontrol drawer yang melayang di atas rel ikon.
+ *
+ * `.ecr-global-nav` (luar) HANYA mengurus posisi & lebar rel — lebarnya tidak pernah berubah
+ * saat drawer mobile dibuka/ditutup, supaya `.ecr-app-content` di sebelahnya tidak pernah
+ * "kedorong" atau berantakan. `.ecr-global-nav__inner` (dalam) yang membesar jadi drawer
+ * lewat `position: absolute`, melayang di atas konten tanpa memengaruhi tata letak luar.
+ */
 .ecr-global-nav {
-  --ecr-nav-height: 58px;
+  --ecr-sidebar-w: var(--ecr-sidebar-width);
   position: sticky;
   top: 0;
   z-index: 100;
-  height: var(--ecr-nav-height);
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 94%, transparent);
-  backdrop-filter: blur(18px) saturate(120%);
+  flex: none;
+  align-self: flex-start;
+  width: var(--ecr-sidebar-w);
+  height: 100dvh;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  transition: width 160ms ease;
+}
+
+html[data-sidebar="collapsed"] .ecr-global-nav {
+  --ecr-sidebar-w: var(--ecr-sidebar-width-collapsed);
 }
 
 .ecr-global-nav__inner {
-  width: min(100%, 1500px);
+  width: 100%;
   height: 100%;
-  margin: 0 auto;
-  padding: 0 18px;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: 14px 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.ecr-global-nav__brand-row {
+  display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 4px;
 }
 
 .ecr-global-nav__brand {
@@ -25,12 +55,19 @@
   align-items: center;
   gap: 9px;
   min-width: 0;
+  flex: 1;
   color: var(--text);
   text-decoration: none;
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+.ecr-global-nav__brand-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .ecr-global-nav__seal {
@@ -44,44 +81,89 @@
   stroke-linejoin: round;
 }
 
-.ecr-global-nav__links {
-  display: flex;
-  align-items: stretch;
-  min-width: 0;
-  height: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
+.ecr-global-nav__collapse-btn {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
-.ecr-global-nav__links::-webkit-scrollbar {
-  display: none;
+.ecr-global-nav__collapse-btn:hover,
+.ecr-global-nav__collapse-btn:focus-visible {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.ecr-global-nav__collapse-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ecr-global-nav__links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .ecr-global-nav__link {
   position: relative;
   flex: none;
-  min-width: 64px;
-  height: 100%;
-  padding: 0 13px;
+  min-height: 38px;
+  padding: 0 10px;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 11px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 12.5px;
   font-weight: 550;
   text-decoration: none;
+  white-space: nowrap;
   transition:
     color 140ms ease,
     background 140ms ease;
 }
 
-.ecr-global-nav__link::after {
+.ecr-global-nav__icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ecr-global-nav__link--active .ecr-global-nav__icon {
+  stroke: var(--accent);
+}
+
+.ecr-global-nav__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ecr-global-nav__link::before {
   content: "";
   position: absolute;
-  left: 13px;
-  right: 13px;
-  bottom: -1px;
-  height: 1px;
+  left: -10px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
   background: transparent;
   transition: background 140ms ease;
 }
@@ -89,38 +171,55 @@
 .ecr-global-nav__link:hover,
 .ecr-global-nav__link:focus-visible {
   color: var(--text);
-  background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+  background: var(--surface-2);
 }
 
 .ecr-global-nav__link--active {
   color: var(--text);
+  background: var(--surface-2);
 }
 
-.ecr-global-nav__link--active::after {
+.ecr-global-nav__link--active::before {
   background: var(--accent);
 }
 
 .ecr-theme-switch {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   background: var(--surface);
 }
 
 .ecr-theme-switch__item {
-  min-width: 52px;
-  height: 27px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 8px;
   border: 0;
-  border-radius: 999px;
-  padding: 0 9px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.ecr-theme-switch__icon {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .ecr-theme-switch__item:hover,
@@ -133,63 +232,101 @@
   color: var(--text);
 }
 
+.ecr-theme-switch__item.is-active .ecr-theme-switch__icon {
+  stroke: var(--accent);
+}
+
+/* Collapsed (desktop): sembunyikan label teks, sisakan ikon rata tengah + tooltip lewat `title`. */
+html[data-sidebar="collapsed"] .ecr-global-nav__label,
+html[data-sidebar="collapsed"] .ecr-global-nav__brand-label {
+  display: none;
+}
+
+html[data-sidebar="collapsed"] .ecr-global-nav__brand-row {
+  flex-direction: column;
+  height: auto;
+  gap: 10px;
+}
+
+html[data-sidebar="collapsed"] .ecr-global-nav__link,
+html[data-sidebar="collapsed"] .ecr-theme-switch__item {
+  justify-content: center;
+  padding: 0;
+}
+
+/* Ekstra tak terlihat penting: `.ecr-global-nav__backdrop` di-render hanya saat drawer
+   mobile terbuka (lihat `ProductNav`), tapi tetap disembunyikan di layar lebar untuk jaga-jaga. */
+.ecr-global-nav__backdrop {
+  display: none;
+}
+
 @media (max-width: 780px) {
-  .ecr-global-nav__inner {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 8px;
-    padding-inline: 10px;
+  .ecr-global-nav {
+    --ecr-sidebar-w: var(--ecr-sidebar-width-collapsed);
   }
 
-  .ecr-global-nav__brand span {
+  .ecr-global-nav__label,
+  .ecr-global-nav__brand-label {
     display: none;
   }
 
-  .ecr-global-nav__link {
-    min-width: auto;
-    padding-inline: 10px;
-    font-size: 11.5px;
+  .ecr-global-nav__brand-row {
+    flex-direction: column;
+    height: auto;
+    gap: 10px;
   }
 
-  .ecr-global-nav__link::after {
-    left: 10px;
-    right: 10px;
-  }
-
+  .ecr-global-nav__link,
   .ecr-theme-switch__item {
-    min-width: 36px;
-    width: 36px;
-    height: 36px;
+    justify-content: center;
     padding: 0;
-    overflow: hidden;
-    color: transparent;
-    position: relative;
   }
 
-  .ecr-theme-switch__item::before {
+  /* Drawer terbuka: hanya `__inner` yang membesar & melayang (absolute), rel luar
+     (`.ecr-global-nav`) tetap 60px sepanjang waktu — jadi tidak ada reflow konten. */
+  html[data-mobile-nav="open"] .ecr-global-nav__inner {
     position: absolute;
+    top: 0;
+    left: 0;
+    width: min(80vw, 264px);
+    height: 100dvh;
+    z-index: 210;
+    border-right: 1px solid var(--border);
+    box-shadow: 0 16px 44px rgba(10, 9, 6, 0.4);
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__label,
+  html[data-mobile-nav="open"] .ecr-global-nav__brand-label {
+    display: inline;
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__brand-row {
+    flex-direction: row;
+    height: auto;
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__link,
+  html[data-mobile-nav="open"] .ecr-theme-switch__item {
+    justify-content: flex-start;
+    padding: 0 10px;
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__backdrop {
+    display: block;
+    position: fixed;
     inset: 0;
-    display: grid;
-    place-items: center;
-    color: var(--text-muted);
-    font-size: 12px;
-  }
-
-  .ecr-theme-switch__item:first-child::before {
-    content: "○";
-  }
-
-  .ecr-theme-switch__item:last-child::before {
-    content: "●";
-  }
-
-  .ecr-theme-switch__item.is-active::before {
-    color: var(--text);
+    z-index: 205;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(10, 9, 6, 0.45);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ecr-global-nav,
   .ecr-global-nav__link,
-  .ecr-global-nav__link::after {
+  .ecr-global-nav__link::before {
     transition: none;
   }
 }

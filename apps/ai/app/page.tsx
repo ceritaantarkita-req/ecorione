@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
@@ -36,10 +37,19 @@ interface ErrorTurn {
   message: string;
 }
 type Turn = UserTurn | AssistantTurn | ErrorTurn;
+interface Attachment {
+  id: string;
+  label: string;
+}
 let turnCounter = 0;
 function nextTurnId(): string {
   turnCounter += 1;
   return `turn-${turnCounter}`;
+}
+let attachmentCounter = 0;
+function nextAttachmentId(): string {
+  attachmentCounter += 1;
+  return `att-${attachmentCounter}`;
 }
 function formatUsd(value: number): string {
   return `$${value.toFixed(4)}`;
@@ -65,14 +75,23 @@ export default function ChatPage() {
   const [target, setTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
   const [memoryFeedback, setMemoryFeedback] = useState<{
     kind: "success" | "error";
     message: string;
   } | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualDraft, setManualDraft] = useState("");
   const sendInFlightRef = useRef(false);
   const forgetInFlightRef = useRef<string | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
+  const attachMenuRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const folderInputRef = useRef<HTMLInputElement | null>(null);
   const latestAssistant = [...turns]
     .reverse()
     .find((t): t is AssistantTurn => t.kind === "assistant");
@@ -100,6 +119,24 @@ export default function ChatPage() {
     threadEndRef.current?.scrollIntoView({ block: "nearest" });
   }, [hydrated, sending, turns.length]);
 
+  // Folder attach needs a browser-only, non-standard attribute (`webkitdirectory`) that
+  // React's typings don't know about — set it imperatively so TS stays honest.
+  useEffect(() => {
+    folderInputRef.current?.setAttribute("webkitdirectory", "");
+    folderInputRef.current?.setAttribute("directory", "");
+  }, []);
+
+  useEffect(() => {
+    if (!attachMenuOpen) return;
+    function onDocPointerDown(event: MouseEvent): void {
+      if (attachMenuRef.current && !attachMenuRef.current.contains(event.target as Node)) {
+        setAttachMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocPointerDown);
+    return () => document.removeEventListener("mousedown", onDocPointerDown);
+  }, [attachMenuOpen]);
+
   async function sendMessage(text: string): Promise<void> {
     const trimmed = text.trim();
     if (!hydrated || trimmed.length === 0 || sending || sendInFlightRef.current) return;
@@ -109,7 +146,7 @@ export default function ChatPage() {
         {
           kind: "error",
           id: nextTurnId(),
-          message: "Hosted route sedang dinonaktifkan. Gunakan Local untuk sesi ini.",
+          message: "Hosted sedang nonaktif. Pakai Local untuk sesi ini.",
         },
       ]);
       return;
@@ -214,47 +251,92 @@ export default function ChatPage() {
       setForgettingId(null);
     }
   }
+
+  function removeAttachment(id: string): void {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  }
+
+  function addFilesAs(fileList: FileList | null, prefix: string): void {
+    if (!fileList || fileList.length === 0) return;
+    const additions = Array.from(fileList).map((file) => ({
+      id: nextAttachmentId(),
+      label: `${prefix}: ${file.name}`,
+    }));
+    setAttachments((prev) => [...prev, ...additions]);
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
+    addFilesAs(event.target.files, "File");
+    event.target.value = "";
+  }
+
+  function handlePhotoChange(event: ChangeEvent<HTMLInputElement>): void {
+    addFilesAs(event.target.files, "Foto");
+    event.target.value = "";
+  }
+
+  function handleFolderChange(event: ChangeEvent<HTMLInputElement>): void {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const first = files[0] as File & { webkitRelativePath?: string };
+      const folderName = first.webkitRelativePath?.split("/")[0] ?? "folder";
+      setAttachments((prev) => [
+        ...prev,
+        { id: nextAttachmentId(), label: `Folder: ${folderName} (${files.length} file)` },
+      ]);
+    }
+    event.target.value = "";
+  }
+
+  function addManualNote(): void {
+    const trimmed = manualDraft.trim();
+    if (trimmed.length === 0) return;
+    setAttachments((prev) => [
+      ...prev,
+      { id: nextAttachmentId(), label: `Catatan: ${trimmed}` },
+    ]);
+    setManualDraft("");
+    setManualOpen(false);
+  }
+
+  function submitDraft(): void {
+    const attachmentText =
+      attachments.length > 0 ? attachments.map((a) => `[${a.label}]`).join("\n") : "";
+    const finalText = attachmentText ? `${draft}\n\n${attachmentText}`.trim() : draft;
+    void sendMessage(finalText);
+    setAttachments([]);
+  }
+
   function handleSubmit(e: FormEvent): void {
     e.preventDefault();
-    void sendMessage(draft);
+    submitDraft();
   }
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>): void {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      void sendMessage(draft);
+      submitDraft();
     }
   }
 
   const routeHint =
     turns.length > 0
-      ? "Pilihan dikunci setelah pesan pertama agar boundary sesi tidak berubah diam-diam."
-      : hostedAvailable === null
-        ? "Memeriksa ketersediaan Hosted. Local tetap aman digunakan."
-        : hostedAvailable
-          ? "Pilih route sebelum pesan pertama; route akan dikunci untuk sesi ini."
-          : "Hosted sedang dinonaktifkan oleh operator/runtime. Sesi ini Local-only.";
+      ? "Terkunci untuk sesi ini."
+      : hostedAvailable === true
+        ? "Terkunci setelah pesan pertama."
+        : "Hosted nonaktif — sesi ini Local-only.";
+
+  const canSend = hydrated && !sending && (draft.trim().length > 0 || attachments.length > 0);
 
   return (
     <div className="ai-shell">
-      <header className="ai-topbar">
-        <div className="ai-topbar__copy">
-          <h1 className="ai-topbar__title">ecorione — Ai</h1>
-          <p className="ai-topbar__lead">
-            Local-first chat with visible routing, memory, and cost.
-          </p>
-        </div>
-        <span className="ai-topbar__session" title={hydrated ? sessionId : "sess_pending"}>
-          {hydrated ? sessionId : "sess_pending"}
-        </span>
-      </header>
-      <main className="ai-main">
-        <section className="ai-conversation" aria-label="Conversation">
+      <span className="ai-session-tag" title={hydrated ? sessionId : "sess_pending"}>
+        {hydrated ? sessionId : "sess_pending"}
+      </span>
+      <main className={`ai-main${panelCollapsed ? " ai-main--panel-collapsed" : ""}`}>
+        <section className="ai-conversation" aria-label="Percakapan">
           <div className="ai-thread" aria-live="polite">
             {turns.length === 0 ? (
-              <p className="ai-empty">
-                Mulai percakapan. Routing, biaya, dan memori yang benar-benar dipakai akan tetap
-                terlihat setelah setiap balasan.
-              </p>
+              <p className="ai-empty">Ketik pesan untuk mulai.</p>
             ) : (
               turns.map((turn) => <TurnView key={turn.id} turn={turn} />)
             )}
@@ -265,28 +347,63 @@ export default function ChatPage() {
             ) : null}
             <div ref={threadEndRef} aria-hidden="true" />
           </div>
-          <div className="ai-route-control">
-            <label className="ai-route-control__label" htmlFor="chat-target">
-              Route
-            </label>
-            <select
-              id="chat-target"
-              className="ecr-input ai-route-control__select"
-              value={target}
-              onChange={(e) => setTarget(e.target.value as ChatTarget)}
-              disabled={!hydrated || sending || turns.length > 0}
-            >
-              <option value="local">Local</option>
-              <option value="hosted" disabled={hostedAvailable !== true}>
-                {hostedAvailable === true ? "Hosted" : "Hosted — off"}
-              </option>
-            </select>
-            <span className="ai-route-control__hint">{routeHint}</span>
-          </div>
+
           <form className="ai-composer" onSubmit={handleSubmit}>
+            {attachments.length > 0 ? (
+              <div className="ai-composer__chips">
+                {attachments.map((a) => (
+                  <span className="ai-chip" key={a.id}>
+                    <span className="ai-chip__label">{a.label}</span>
+                    <button
+                      type="button"
+                      className="ai-chip__remove"
+                      aria-label={`Hapus ${a.label}`}
+                      onClick={() => removeAttachment(a.id)}
+                    >
+                      <XIcon />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            {manualOpen ? (
+              <div className="ai-manual-note">
+                <textarea
+                  className="ai-manual-note__field"
+                  placeholder="Tulis catatan manual…"
+                  aria-label="Catatan manual"
+                  rows={2}
+                  value={manualDraft}
+                  onChange={(e) => setManualDraft(e.target.value)}
+                  autoFocus
+                />
+                <div className="ai-manual-note__actions">
+                  <button
+                    type="button"
+                    className="ecr-btn ecr-btn--secondary"
+                    onClick={() => {
+                      setManualOpen(false);
+                      setManualDraft("");
+                    }}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    className="ecr-btn ecr-btn--primary"
+                    onClick={addManualNote}
+                    disabled={manualDraft.trim().length === 0}
+                  >
+                    Tambah
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <textarea
               className="ai-composer__field"
-              placeholder="Tulis pesan… (Enter untuk kirim, Shift+Enter baris baru)"
+              placeholder="Tulis pesan…"
               aria-label="Pesan"
               rows={2}
               value={draft}
@@ -294,39 +411,242 @@ export default function ChatPage() {
               onKeyDown={handleKeyDown}
               disabled={!hydrated || sending}
             />
-            <button
-              type="submit"
-              className="ecr-btn ecr-btn--primary"
-              disabled={!hydrated || sending || draft.trim().length === 0}
-            >
-              Kirim
-            </button>
+
+            <div className="ai-composer__toolbar">
+              <div className="ai-composer__tools" ref={attachMenuRef}>
+                <button
+                  type="button"
+                  className="ai-tool-btn"
+                  aria-label="Tambah lampiran"
+                  aria-haspopup="menu"
+                  aria-expanded={attachMenuOpen}
+                  onClick={() => setAttachMenuOpen((prev) => !prev)}
+                >
+                  <PlusIcon />
+                </button>
+                {attachMenuOpen ? (
+                  <div className="ai-attach-menu" role="menu">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                        setAttachMenuOpen(false);
+                      }}
+                    >
+                      <FileIcon />
+                      Unggah file
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        photoInputRef.current?.click();
+                        setAttachMenuOpen(false);
+                      }}
+                    >
+                      <PhotoIcon />
+                      Unggah foto
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        folderInputRef.current?.click();
+                        setAttachMenuOpen(false);
+                      }}
+                    >
+                      <FolderIcon />
+                      Tambah folder
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setManualOpen(true);
+                        setAttachMenuOpen(false);
+                      }}
+                    >
+                      <PencilIcon />
+                      Manual
+                    </button>
+                  </div>
+                ) : null}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  hidden
+                  onChange={handleFileChange}
+                />
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={handlePhotoChange}
+                />
+                <input ref={folderInputRef} type="file" hidden onChange={handleFolderChange} />
+              </div>
+
+              <div className="ai-model-select" title={routeHint}>
+                <select
+                  id="chat-target"
+                  aria-label="Model"
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value as ChatTarget)}
+                  disabled={!hydrated || sending || turns.length > 0}
+                >
+                  <option value="local">Local</option>
+                  <option value="hosted" disabled={hostedAvailable !== true}>
+                    {hostedAvailable === true ? "Hosted" : "Hosted (nonaktif)"}
+                  </option>
+                </select>
+                <ChevronIcon />
+              </div>
+
+              <button
+                type="submit"
+                className="ai-send-btn"
+                aria-label="Kirim pesan"
+                disabled={!canSend}
+              >
+                <SendIcon />
+              </button>
+            </div>
           </form>
         </section>
-        <aside className="ai-panel" aria-label="Memory used">
-          <div className="ai-panel__title">Memori yang dipakai</div>
-          {memoryFeedback !== null ? (
-            <p
-              className={`ai-panel__feedback ai-panel__feedback--${memoryFeedback.kind}`}
-              role={memoryFeedback.kind === "error" ? "alert" : "status"}
+        <aside
+          className={`ai-panel${panelCollapsed ? " ai-panel--collapsed" : ""}`}
+          aria-label="Memory used"
+        >
+          <div className="ai-panel__header">
+            {panelCollapsed ? null : <div className="ai-panel__title">Memori yang dipakai</div>}
+            <button
+              type="button"
+              className="ai-panel__toggle"
+              aria-label={panelCollapsed ? "Buka panel memori" : "Ciutkan panel memori"}
+              aria-expanded={!panelCollapsed}
+              onClick={() => setPanelCollapsed((prev) => !prev)}
             >
-              {memoryFeedback.message}
-            </p>
-          ) : null}
-          {latestAssistant === undefined ? (
-            <p className="ai-panel__empty">
-              Belum ada balasan — panel terisi setelah giliran pertama.
-            </p>
-          ) : (
-            <MemoryPanel
-              memoryUsed={latestAssistant.memoryUsed}
-              onForget={forgetFact}
-              forgettingId={forgettingId}
-            />
-          )}
+              <PanelToggleIcon collapsed={panelCollapsed} />
+            </button>
+          </div>
+          <div className="ai-panel__body">
+            {memoryFeedback !== null ? (
+              <p
+                className={`ai-panel__feedback ai-panel__feedback--${memoryFeedback.kind}`}
+                role={memoryFeedback.kind === "error" ? "alert" : "status"}
+              >
+                {memoryFeedback.message}
+              </p>
+            ) : null}
+            {latestAssistant === undefined ? (
+              <p className="ai-panel__empty">Belum ada balasan.</p>
+            ) : (
+              <MemoryPanel
+                memoryUsed={latestAssistant.memoryUsed}
+                onForget={forgetFact}
+                forgettingId={forgettingId}
+              />
+            )}
+          </div>
         </aside>
       </main>
     </div>
+  );
+}
+
+function PanelToggleIcon({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg
+      className="ai-panel__toggle-icon"
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="3" y="3.5" width="14" height="13" rx="2" />
+      <path d={collapsed ? "M12 6.5v7M8 8.6l2 1.4-2 1.4" : "M12 6.5v7M10 8.6l-2 1.4 2 1.4"} />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg className="ai-tool-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M10 4v12M4 10h12" />
+    </svg>
+  );
+}
+
+function FileIcon() {
+  return (
+    <svg className="ai-menu-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M6 3h6l3 3v11H6Z" />
+      <path d="M12 3v3h3" />
+    </svg>
+  );
+}
+
+function PhotoIcon() {
+  return (
+    <svg className="ai-menu-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <rect x="3" y="4.5" width="14" height="11" rx="1.5" />
+      <circle cx="7.3" cy="8.3" r="1.3" />
+      <path d="M4 14 8 10l3 3 2.5-2.5L16.5 14" />
+    </svg>
+  );
+}
+
+function FolderIcon() {
+  return (
+    <svg className="ai-menu-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M3 6.2c0-.66.6-1.2 1.2-1.2h3.4l1.4 1.6h6.8c.66 0 1.2.54 1.2 1.2v6.4c0 .66-.54 1.2-1.2 1.2H4.2C3.54 15.4 3 14.86 3 14.2Z" />
+    </svg>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg className="ai-menu-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M12.9 3.9 16.1 7.1 7 16.2l-3.5.7.7-3.5Z" />
+      <path d="M11.4 5.4 14.6 8.6" />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg
+      className="ai-chip__remove-icon"
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg
+      className="ai-model-select__chevron"
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M6 8l4 4 4-4" />
+    </svg>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg className="ai-send-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M10 15.5V4.5M10 4.5 5.3 9.2M10 4.5l4.7 4.7" />
+    </svg>
   );
 }
 
@@ -385,7 +705,7 @@ function MemoryPanel({
       <div className="ai-panel__section">
         <div className="ai-panel__section-title">Memori inti</div>
         {memoryUsed.coreMemoryBlocks.length === 0 ? (
-          <p className="ai-panel__empty">Tidak ada blok memori inti.</p>
+          <p className="ai-panel__empty">Tidak ada.</p>
         ) : (
           memoryUsed.coreMemoryBlocks.map((label, i) => (
             <div className="ai-core-block" key={`${label}-${i}`}>
@@ -397,7 +717,7 @@ function MemoryPanel({
       <div className="ai-panel__section">
         <div className="ai-panel__section-title">Fakta yang ditarik</div>
         {memoryUsed.recalledFacts.length === 0 ? (
-          <p className="ai-panel__empty">Tidak ada fakta yang ditarik.</p>
+          <p className="ai-panel__empty">Tidak ada.</p>
         ) : (
           memoryUsed.recalledFacts.map((fact) => (
             <div className="ai-fact" key={fact.id}>
@@ -420,7 +740,7 @@ function MemoryPanel({
       <div className="ai-panel__section">
         <div className="ai-panel__section-title">Ringkasan episodik</div>
         {memoryUsed.episodicSummaries.length === 0 ? (
-          <p className="ai-panel__empty">Tidak ada ringkasan episodik.</p>
+          <p className="ai-panel__empty">Tidak ada.</p>
         ) : (
           memoryUsed.episodicSummaries.map((ep) => (
             <div className="ai-episode" key={ep.id}>

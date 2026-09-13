@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, IBM_Plex_Mono, Manrope } from "next/font/google";
 import type { CSSProperties, ReactNode } from "react";
-import { THEME_BOOTSTRAP_SCRIPT } from "@ecorione/shared-ui";
+import { SIDEBAR_BOOTSTRAP_SCRIPT, THEME_BOOTSTRAP_SCRIPT } from "@ecorione/shared-ui";
 import ProductNav from "./ProductNav";
 import "./globals.css";
 import "./navigation.css";
@@ -46,10 +46,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: SIDEBAR_BOOTSTRAP_SCRIPT }} />
       </head>
       <body style={appFontTokens}>
-        <ProductNav />
-        {children}
+        <div className="ecr-app-shell">
+          <ProductNav />
+          <div className="ecr-app-content">{children}</div>
+        </div>
       </body>
     </html>
   );

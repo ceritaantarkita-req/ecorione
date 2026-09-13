@@ -14,11 +14,11 @@ export const THEME_STORAGE_KEY = "ecorione-theme-preview";
 /**
  * Tema saat preferensi tidak diketahui (belum pernah memilih, atau storage gagal dibaca).
  *
- * Terang, bukan gelap: `design.md` §9 memakai "Terang" sebagai keadaan awal pratinjau, dan
- * bagi pengguna yang OS-nya terang, `prefers-color-scheme` di CSS sudah lebih dulu memberi
- * tampilan terang — nilai ini menjaga JS tidak melawan CSS.
+ * Gelap: default produk sekarang adalah dark mode, terlepas dari preferensi OS pengguna.
+ * Pengguna tetap bisa memilih terang secara eksplisit lewat tombol tema — pilihan itu yang
+ * disimpan dan dihormati (lihat `readStoredTheme`/`THEME_BOOTSTRAP_SCRIPT`).
  */
-export const DEFAULT_THEME: ThemeChoice = "light";
+export const DEFAULT_THEME: ThemeChoice = "dark";
 
 /**
  * Permukaan minimal `localStorage` yang benar-benar dipakai. Sengaja struktural: paket ini
@@ -89,7 +89,7 @@ export function persistTheme(choice: ThemeChoice, storage: ThemeStorage): boolea
 export const THEME_BOOTSTRAP_SCRIPT = `(function(){
   try {
     var saved = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
-    document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
   } catch (e) {
     document.documentElement.setAttribute('data-theme', ${JSON.stringify(DEFAULT_THEME)});
   }

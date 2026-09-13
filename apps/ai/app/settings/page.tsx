@@ -61,7 +61,7 @@ export default function SettingsPage() {
   const [secret, setSecret] = useState("");
   const [secretProvider, setSecretProvider] = useState("anthropic");
   const [mcpJson, setMcpJson] = useState("");
-  const [status, setStatus] = useState("Loading control state…");
+  const [status, setStatus] = useState("");
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [mcpLoading, setMcpLoading] = useState(false);
   const actionInFlight = useRef(false);
@@ -88,7 +88,6 @@ export default function SettingsPage() {
       ]);
       setRuntime(runtimeResult);
       setCredentials(credentialResult.credentials);
-      setStatus(`Control state loaded · runtime revision ${String(runtimeResult.revision)}.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -221,12 +220,13 @@ export default function SettingsPage() {
       <header className={styles.header}>
         <div>
           <h1>Control Center</h1>
-          <p>Provider, model, credential, and MCP configuration. Secrets never render back.</p>
         </div>
       </header>
-      <p className={styles.status} aria-live="polite" role="status">
-        {status}
-      </p>
+      {status ? (
+        <p className={styles.status} aria-live="polite" role="status">
+          {status}
+        </p>
+      ) : null}
 
       <section className={styles.section}>
         <h2>Runtime</h2>
@@ -302,8 +302,7 @@ export default function SettingsPage() {
               </p>
             ) : null}
             <p className={`${styles.muted} ${styles.wide}`}>
-              The process-level operator kill switch is a hard ceiling. Runtime settings can
-              turn Hosted off, but cannot override a closed operator gate.
+              Operator kill switch selalu menang, terlepas dari pengaturan di atas.
             </p>
             <div className={styles.actions}>
               <button

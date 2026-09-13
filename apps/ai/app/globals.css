@@ -38,8 +38,18 @@
   --space-4xl: 64px;
   --elevation-none: none;
   --elevation-active-rail: inset 2px 0 0 var(--accent);
-  --app-nav-height: 58px;
+  /*
+   * Sisa dari saat navigasi utama masih bar horizontal di atas halaman (lihat riwayat git).
+   * Navigasi sekarang adalah sidebar kiri (`navigation.css`) yang tidak makan tinggi viewport,
+   * jadi nilainya 0 — tetap dipertahankan sebagai token (bukan dihapus) supaya
+   * `flow/FlowCanvas.module.css`, `ops/OpsDashboard.module.css`, `settings/Settings.module.css`,
+   * dan `space/Space.module.css` yang masih memakainya di ekspresi
+   * `calc(100dvh - var(--app-nav-height))` tidak perlu diubah satu per satu.
+   */
+  --app-nav-height: 0px;
   --content-max: 1240px;
+  --ecr-sidebar-width: 236px;
+  --ecr-sidebar-width-collapsed: 60px;
 }
 
 @media (prefers-color-scheme: light) {
@@ -250,55 +260,56 @@ hr {
   outline-offset: 1px;
 }
 
+/* App shell — sidebar kiri (navigation.css) + konten produk ------------------ */
+.ecr-app-shell {
+  display: flex;
+  align-items: stretch;
+  min-height: 100dvh;
+}
+
+.ecr-app-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* Ai --------------------------------------------------------------------- */
 .ai-shell {
+  position: relative;
   min-height: calc(100dvh - var(--app-nav-height));
   display: flex;
   flex-direction: column;
 }
 
-.ai-topbar {
-  width: min(100%, var(--content-max));
-  margin: 0 auto;
-  padding: 30px 28px 20px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-lg);
-  border-bottom: 1px solid var(--border);
-}
-
-.ai-topbar__title {
-  font-size: clamp(24px, 3.4vw, 38px);
-  line-height: 1.05;
-  letter-spacing: -0.025em;
-}
-
-.ai-topbar__lead {
-  margin: 7px 0 0;
-  color: var(--text-muted);
-  font-size: 11.5px;
-  line-height: 1.55;
-}
-
-.ai-topbar__session {
-  max-width: 260px;
+/* Tag sesi kecil, tak mencolok — dulu bagian dari header besar; sekarang cuma
+   penanda debug tipis di pojok, sesuai gaya minim Claude/ChatGPT. */
+.ai-session-tag {
+  position: absolute;
+  top: 14px;
+  right: 28px;
+  z-index: 1;
+  max-width: 220px;
   overflow: hidden;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   text-overflow: ellipsis;
   white-space: nowrap;
+  opacity: 0.6;
 }
 
 .ai-main {
   width: min(100%, var(--content-max));
   flex: 1;
   margin: 0 auto;
-  padding: 0 28px 56px;
+  padding: 20px 28px 56px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   align-items: stretch;
+  transition: grid-template-columns 160ms ease;
+}
+
+.ai-main--panel-collapsed {
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .ai-conversation {
@@ -402,55 +413,27 @@ hr {
   color: var(--success);
 }
 
-.ai-route-control {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 0 9px;
-  border-top: 1px solid var(--border);
-}
-
-.ai-route-control__label {
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.ai-route-control__select {
-  width: 118px;
-}
-
-.ai-route-control__hint {
-  min-width: min(100%, 300px);
-  flex: 1;
-  color: var(--text-muted);
-  font-size: 10.5px;
-}
-
+/* Composer — satu kotak membulat gaya Claude/ChatGPT: textarea di atas, baris alat
+   (lampiran + model + kirim) menyatu di bawahnya dalam kotak yang sama. */
 .ai-composer {
   position: sticky;
   bottom: 0;
   z-index: 10;
   margin: 0 -10px;
   padding: 10px 10px max(10px, env(safe-area-inset-bottom));
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
   background: color-mix(in srgb, var(--bg) 94%, transparent);
   backdrop-filter: blur(14px);
 }
 
 .ai-composer__field {
+  width: 100%;
   min-height: 48px;
   max-height: 200px;
-  flex: 1;
   resize: vertical;
-  padding: 12px 13px;
+  padding: 12px 13px 4px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom: 0;
   background: var(--surface);
   color: var(--text);
   font-family: var(--font-body);
@@ -462,6 +445,260 @@ hr {
   border-color: var(--accent);
   outline: 1px solid var(--accent);
   outline-offset: 1px;
+}
+
+.ai-composer__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--surface);
+}
+
+.ai-composer__tools {
+  position: relative;
+}
+
+.ai-tool-btn {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ai-tool-btn:hover,
+.ai-tool-btn:focus-visible {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.ai-tool-icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ai-attach-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  width: 178px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: 0 10px 30px rgba(10, 9, 6, 0.3);
+}
+
+.ai-attach-menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ai-attach-menu button:hover,
+.ai-attach-menu button:focus-visible {
+  background: var(--surface-3);
+}
+
+.ai-menu-icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ai-model-select {
+  position: relative;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ai-model-select select {
+  appearance: none;
+  min-height: 28px;
+  padding: 0 22px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ai-model-select select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ai-model-select__chevron {
+  position: absolute;
+  right: 7px;
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.ai-send-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+  transition:
+    opacity 140ms ease,
+    background 140ms ease;
+}
+
+.ai-send-btn:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.ai-send-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.ai-send-icon {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Chip lampiran, di atas textarea. */
+.ai-composer__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 8px 0;
+}
+
+.ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  padding: 4px 6px 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 11px;
+}
+
+.ai-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-chip__remove {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ai-chip__remove:hover {
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.ai-chip__remove-icon {
+  width: 9px;
+  height: 9px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+/* Catatan manual — popover ringan di atas textarea, dibuka dari menu lampiran. */
+.ai-manual-note {
+  margin: 8px 8px 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.ai-manual-note__field {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.ai-manual-note__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .ai-panel {
@@ -478,6 +715,71 @@ hr {
   gap: 26px;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
+  transition:
+    width 160ms ease,
+    padding 160ms ease;
+}
+
+/* Viewport kanan yang bisa diciutkan lewat ikon di `.ai-panel__toggle` — konten
+   (`.ai-panel__body`) disembunyikan, hanya sisa rel sempit dengan tombol buka. */
+.ai-panel--collapsed {
+  width: 40px;
+  min-width: 40px;
+  overflow: visible;
+  padding: 30px 0 0 12px;
+}
+
+.ai-panel--collapsed .ai-panel__body {
+  display: none;
+}
+
+.ai-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-panel--collapsed .ai-panel__header {
+  justify-content: center;
+}
+
+.ai-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ai-panel__toggle {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ai-panel__toggle:hover,
+.ai-panel__toggle:focus-visible {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.ai-panel__toggle-icon {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .ai-panel__title {
@@ -594,21 +896,22 @@ hr {
     border-top: 1px solid var(--border);
     border-left: 0;
   }
+
+  .ai-panel--collapsed {
+    width: auto;
+    min-width: 0;
+    margin-top: 16px;
+    padding: 0;
+  }
 }
 
 @media (max-width: 640px) {
-  .ai-topbar {
-    padding: 22px 16px 15px;
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .ai-topbar__session {
-    max-width: 100%;
+  .ai-session-tag {
+    right: 16px;
   }
 
   .ai-main {
-    padding: 0 16px 38px;
+    padding: 16px 16px 38px;
   }
 
   .ai-conversation {
@@ -624,22 +927,15 @@ hr {
     max-width: 95%;
   }
 
-  .ai-route-control {
-    align-items: flex-start;
-  }
-
-  .ai-route-control__hint {
-    flex-basis: 100%;
-  }
-
   .ai-composer {
     margin-inline: -6px;
     padding-inline: 6px;
   }
 
-  .ai-composer .ecr-btn {
-    min-width: 68px;
-    min-height: 44px;
+  .ai-send-btn,
+  .ai-tool-btn {
+    width: 36px;
+    height: 36px;
   }
 }
 

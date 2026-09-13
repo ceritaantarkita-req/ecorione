@@ -1,3 +1,18 @@
+#!/usr/bin/env bash
+# Menerapkan perbaikan sidebar (ikon, mobile drawer, ikon tema) ke clone ecorione ini.
+# Jalankan dari root repo ecorione, contoh:
+#   cd ~/projects/ecorione && bash apply-sidebar-fixes-2.sh
+set -euo pipefail
+
+if [[ ! -f "package.json" ]] || ! grep -q '"name": "ecorione"' package.json 2>/dev/null; then
+  if [[ ! -d "apps/ai" || ! -d "packages/shared-ui" ]]; then
+    echo "Error: jalankan script ini dari root repo ecorione (folder yang berisi apps/ai dan packages/shared-ui)." >&2
+    exit 1
+  fi
+fi
+
+echo "==> Menulis apps/ai/app/ProductNav.tsx"
+cat > apps/ai/app/ProductNav.tsx << 'FILE_EOF'
 "use client";
 
 import Link from "next/link";
@@ -315,3 +330,343 @@ export default function ProductNav() {
     </nav>
   );
 }
+FILE_EOF
+
+echo "==> Menulis apps/ai/app/navigation.css"
+cat > apps/ai/app/navigation.css << 'FILE_EOF'
+/*
+ * Sidebar navigasi kiri, collapsible — kontrak atribut: `data-sidebar="collapsed"` di <html>,
+ * dipasang oleh `SIDEBAR_BOOTSTRAP_SCRIPT` sebelum cat pertama dan oleh `ProductNav` saat
+ * pengguna menekan tombol collapse (`packages/shared-ui/src/sidebar.ts`). Di layar sempit
+ * (`@media (max-width: 780px)` di bawah), atribut yang dipakai berbeda: `data-mobile-nav="open"`,
+ * transient (tidak disimpan), mengontrol drawer yang melayang di atas rel ikon.
+ *
+ * `.ecr-global-nav` (luar) HANYA mengurus posisi & lebar rel — lebarnya tidak pernah berubah
+ * saat drawer mobile dibuka/ditutup, supaya `.ecr-app-content` di sebelahnya tidak pernah
+ * "kedorong" atau berantakan. `.ecr-global-nav__inner` (dalam) yang membesar jadi drawer
+ * lewat `position: absolute`, melayang di atas konten tanpa memengaruhi tata letak luar.
+ */
+.ecr-global-nav {
+  --ecr-sidebar-w: var(--ecr-sidebar-width);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex: none;
+  align-self: flex-start;
+  width: var(--ecr-sidebar-w);
+  height: 100dvh;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  transition: width 160ms ease;
+}
+
+html[data-sidebar="collapsed"] .ecr-global-nav {
+  --ecr-sidebar-w: var(--ecr-sidebar-width-collapsed);
+}
+
+.ecr-global-nav__inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: 14px 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.ecr-global-nav__brand-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 4px;
+}
+
+.ecr-global-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.ecr-global-nav__brand-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ecr-global-nav__seal {
+  width: 23px;
+  height: 23px;
+  flex: none;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.05;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ecr-global-nav__collapse-btn {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ecr-global-nav__collapse-btn:hover,
+.ecr-global-nav__collapse-btn:focus-visible {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.ecr-global-nav__collapse-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ecr-global-nav__links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ecr-global-nav__link {
+  position: relative;
+  flex: none;
+  min-height: 38px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 550;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color 140ms ease,
+    background 140ms ease;
+}
+
+.ecr-global-nav__icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ecr-global-nav__link--active .ecr-global-nav__icon {
+  stroke: var(--accent);
+}
+
+.ecr-global-nav__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ecr-global-nav__link::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: transparent;
+  transition: background 140ms ease;
+}
+
+.ecr-global-nav__link:hover,
+.ecr-global-nav__link:focus-visible {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.ecr-global-nav__link--active {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.ecr-global-nav__link--active::before {
+  background: var(--accent);
+}
+
+.ecr-theme-switch {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.ecr-theme-switch__item {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ecr-theme-switch__icon {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ecr-theme-switch__item:hover,
+.ecr-theme-switch__item:focus-visible {
+  color: var(--text);
+}
+
+.ecr-theme-switch__item.is-active {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.ecr-theme-switch__item.is-active .ecr-theme-switch__icon {
+  stroke: var(--accent);
+}
+
+/* Collapsed (desktop): sembunyikan label teks, sisakan ikon rata tengah + tooltip lewat `title`. */
+html[data-sidebar="collapsed"] .ecr-global-nav__label,
+html[data-sidebar="collapsed"] .ecr-global-nav__brand-label {
+  display: none;
+}
+
+html[data-sidebar="collapsed"] .ecr-global-nav__brand-row {
+  flex-direction: column;
+  height: auto;
+  gap: 10px;
+}
+
+html[data-sidebar="collapsed"] .ecr-global-nav__link,
+html[data-sidebar="collapsed"] .ecr-theme-switch__item {
+  justify-content: center;
+  padding: 0;
+}
+
+/* Ekstra tak terlihat penting: `.ecr-global-nav__backdrop` di-render hanya saat drawer
+   mobile terbuka (lihat `ProductNav`), tapi tetap disembunyikan di layar lebar untuk jaga-jaga. */
+.ecr-global-nav__backdrop {
+  display: none;
+}
+
+@media (max-width: 780px) {
+  .ecr-global-nav {
+    --ecr-sidebar-w: var(--ecr-sidebar-width-collapsed);
+  }
+
+  .ecr-global-nav__label,
+  .ecr-global-nav__brand-label {
+    display: none;
+  }
+
+  .ecr-global-nav__brand-row {
+    flex-direction: column;
+    height: auto;
+    gap: 10px;
+  }
+
+  .ecr-global-nav__link,
+  .ecr-theme-switch__item {
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* Drawer terbuka: hanya `__inner` yang membesar & melayang (absolute), rel luar
+     (`.ecr-global-nav`) tetap 60px sepanjang waktu — jadi tidak ada reflow konten. */
+  html[data-mobile-nav="open"] .ecr-global-nav__inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(80vw, 264px);
+    height: 100dvh;
+    z-index: 210;
+    border-right: 1px solid var(--border);
+    box-shadow: 0 16px 44px rgba(10, 9, 6, 0.4);
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__label,
+  html[data-mobile-nav="open"] .ecr-global-nav__brand-label {
+    display: inline;
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__brand-row {
+    flex-direction: row;
+    height: auto;
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__link,
+  html[data-mobile-nav="open"] .ecr-theme-switch__item {
+    justify-content: flex-start;
+    padding: 0 10px;
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 205;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(10, 9, 6, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ecr-global-nav,
+  .ecr-global-nav__link,
+  .ecr-global-nav__link::before {
+    transition: none;
+  }
+}
+FILE_EOF
+
+echo "==> Selesai. Tidak perlu rebuild shared-ui kali ini (hanya file di apps/ai yang berubah)."
+echo "==> Restart dev server (Ctrl+C lalu 'pnpm dev' lagi) kalau perubahan belum otomatis ke-refresh, lalu hard-refresh browser (Ctrl+Shift+R)."
