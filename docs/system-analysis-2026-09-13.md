@@ -1,91 +1,119 @@
 # Analisis Sistem — 2026-09-13
 
-Ditulis oleh Claude (Anthropic) atas permintaan Amanda, sebagai lanjutan dari `final-audit-2026-09-09.md`
-dan audit repo yang dilakukan di awal sesi ini (2026-09-13). Disusun dari kombinasi: dokumen internal
-repo (`docs/final-audit-2026-09-09.md`, `docs/current-state-and-next-steps.md`,
-`docs/ux-runtime-walkthrough-checklist.md`), pemeriksaan langsung `package.json`/config, dan pekerjaan
-tangan-langsung memperbaiki UI `apps/ai` (sidebar, dark mode, composer) selama sesi ini.
+> Reconciled against current repository state on **2026-09-14**.
+>
+> Dokumen ini awalnya ditulis sebagai analisis sesi 2026-09-13. Nilai historisnya dipertahankan, tetapi status temuan di bawah sudah diselaraskan dengan implementation/evidence yang benar-benar ada di repository. Untuk status operasional terbaru, baca juga `docs/current-state-and-next-steps.md` dan `docs/active-work-plan.md`.
 
-## Yang sudah kuat
+## Ringkasan current verdict
 
-Disiplin dokumentasi dan testing di atas rata-rata proyek solo — 33 ADR, 112 file test, dan tiap
-checkpoint punya "claim boundary" eksplisit (tidak menyatakan selesai sebelum benar-benar terbukti).
-Audit internal repo sendiri (`docs/final-audit-2026-09-09.md`) sudah jujur menyimpulkan: **GO untuk
-dev/alpha lokal, NO-GO untuk diklaim production-ready**. Itu tanda proses berpikir yang sehat, bukan
-self-hype.
+Analisis 2026-09-13 tetap berguna sebagai kritik produk: kompleksitas sistem sudah tinggi sementara validasi penggunaan nyata, product eval, UX runtime, dan hosted economic validation masih terbatas. Namun sebagian blocker teknis yang disebut saat itu sudah tidak akurat terhadap codebase sekarang.
 
-## Temuan — apa yang salah / berisiko
+Current framing yang benar:
 
-### 1. Kompleksitas jauh di atas validasi pemakaian nyata
+- planned Batch 1–12: **CLOSED**;
+- production/self-host repository baseline: **READY**;
+- Historical Ledger + ECX local evidence: **CLOSED / PASS**;
+- Comparative ECX: **CLOSED / PASS WITH LIMITATIONS**;
+- automatic semantic reference selector: **NOT PROVEN**;
+- UX/product validation: **ACTIVE / runtime walkthrough current main masih perlu ditutup**;
+- Fase 5 AutoClick: **DEFERRED BY DESIGN**;
+- Fase 6+: **OPEN-ENDED / evidence-driven**;
+- tidak ada implicit Batch 13.
 
-11 modul + Temporal + Docker + observability + backup harness, untuk tool yang dipakai satu orang.
-Tidak ada bukti eksplisit di dokumen manapun bahwa sistem ini sudah dipakai sehari-hari untuk kerjaan
-nyata. Sebelum menambah lapisan baru, pertanyaan yang belum terjawab: apakah kompleksitas ini sepadan
-dengan value yang sudah terbukti?
+## Reconciliation temuan 2026-09-13
 
-### 2. `pnpm dev` hanya menjalankan 5 dari 11 servis
+### 1. Kompleksitas jauh di atas validasi pemakaian nyata — VALID
 
-Script `dev` di root `package.json` hanya start `rnd, context, connect, hub, ai`. Space, Flow, Artifact,
-Sandbox baru jalan lewat `pnpm dev:phase3`/`dev:phase4`. Ini menjelaskan langsung 502 yang muncul di
-screenshot walkthrough sesi ini pada Space/Flow ("tidak bisa dihubungi") dan status "Degraded" di
-Operations — bukan bug, servisnya memang belum dinyalakan. Tapi ini tetap gap UX nyata: aplikasi tidak
-memberi sinyal "kamu sedang menjalankan stack partial", hanya menampilkan 502 mentah yang terlihat
-seperti kerusakan.
+11 modul, Temporal, Docker, observability, backup/restore, policy boundary, dan berbagai evidence harness sudah membentuk platform yang jauh lebih kompleks daripada jumlah pemakaian harian nyata yang sudah dibuktikan. Ini bukan defect arsitektur, tetapi risiko produk.
 
-### 3. Klaim inti produk (penghematan biaya AI) belum pernah diuji terhadap biaya nyata
+**Current action:** jangan tambah modul besar baru sebelum UX/product validation, product eval, onboarding, dan agentic/optimizer evidence memberi alasan nyata.
 
-Kill switch hosted-calls konsisten OFF sepanjang development. Evidence "hemat token 77.86%"
-(`docs/comparative-ecx-evidence.md`) berasal dari local model (`gemma4:latest` via endpoint kompatibel
-Ollama), bukan dari panggilan hosted (Claude/GPT/OpenRouter) yang membebankan biaya nyata. Fitur utama
-produk ini — cost optimizer — belum divalidasi terhadap kondisi yang justru ingin dioptimasi.
+### 2. `pnpm dev` hanya menjalankan partial stack — VALID
 
-### 4. Model lokal masih memakai alias mutable (`gemma4:latest`)
+Root development command tetap bukan full Phase 4 stack. `dev:phase3`/`dev:phase4` diperlukan untuk service tambahan seperti Artifact, Sandbox, Space, Flow, dan Temporal-dependent runtime.
 
-Alias `:latest` bisa berubah isinya kapan saja tanpa disadari — buruk untuk reproducibility
-eval/benchmark. Sudah diflag di audit internal sendiri dan sudah ada rencana perbaikan
-(`docs/immutable-local-model-identity-plan.md`), tapi belum dieksekusi.
+Ini intentional untuk development staging, tetapi masih menjadi gap usability karena user bisa melihat 502/degraded state tanpa penjelasan bahwa stack yang berjalan memang partial.
 
-### 5. Backup/restore punya lubang yang diketahui: state Sync & Connect tidak ikut ter-restore
+**Current action:** W04/W09 di `docs/active-work-plan.md` — human-readable partial/full-stack state dan satu jalur startup full-system yang sederhana.
 
-Didokumentasikan secara jujur (bukan disembunyikan) di evidence backup/restore, tapi tetap berarti
-sebagian state akan hilang jika suatu saat diperlukan restore dari backup.
+### 3. Penghematan ECX belum diuji sebagai hosted-dollar saving — VALID WITH BOUNDARY
 
-### 6. Checklist walkthrough UX resmi belum pernah dijalankan sesuai prosedurnya
+Comparative ECX sudah membuktikan manfaat lokal pada benchmark terkontrol: selective transport/input-context reduction dan task-level gates. Itu bukti nyata untuk context/transport efficiency, tetapi **bukan** bukti universal actual USD saving pada Claude/OpenAI/OpenRouter.
 
-`docs/ux-runtime-walkthrough-checklist.md` mensyaratkan: commit tersinkron dengan `origin/main`,
-`ECORIONE_COST_KILL_SWITCH=1` di-set eksplisit, Temporal harus reachable, dan harus menjalankan
-`pnpm dev:phase4` (stack penuh) — baru menjalankan 12 langkah UX terdokumentasi plus defect ledger.
-Sesi perbaikan UI kali ini menyentuh beberapa area yang tumpang tindih dengan checklist tersebut
-(navigasi, tampilan mobile, dsb.), tapi belum dijalankan sesuai prosedur resminya (masih di `pnpm dev`
-biasa, bukan `dev:phase4` dengan precondition lengkap). Ini gerbang yang menurut dokumen sendiri harus
-dilewati sebelum lanjut ke immutable model identity → deployment.
+Hosted-provider comparative validation tetap future/optional dan harus dilakukan dengan explicit operator spend intent serta budget yang bounded.
 
-### 7. Ditemukan langsung: satu file test tidak pernah dijalankan
+### 4. Mutable local model alias — VALID
 
-`apps/ai/app/page.hydration.test.tsx` ada dan isinya valid, tapi `include` glob di config vitest hanya
-menangkap `*.test.ts`, bukan `*.test.tsx` — sehingga selama ini tidak pernah dieksekusi oleh `pnpm test`.
-Dampaknya kecil, tapi berarti angka "112 file test" punya satu yang silent-skip dari CI/local run.
+Evidence observability lama memakai `gemma4:latest`. Mutable alias tidak cukup untuk durable reproducibility claims.
 
-### 8. Fitur attach di composer Ai (hasil kerja sesi ini) masih UI-only
+**Current action:** W13 — pin identity/version/digest dan rekam exact identity dalam trace/evidence.
 
-Tombol "+" untuk unggah file/foto/tambah folder/catatan manual di halaman Ai belum terhubung ke backend
-upload — belum ada endpoint untuk itu. Saat ini lampiran hanya ditempel sebagai teks polos ke pesan yang
-dikirim, bukan benar-benar diproses sebagai file. Perlu ditandai eksplisit di sini supaya tidak
-terlupakan sebagai "fitur setengah jadi" di kemudian hari.
+### 5. Backup/restore Sync & Connect — ORIGINAL WORDING MISLEADING
 
-### 9. Production blocker yang sudah dicatat sendiri oleh repo
+Pernyataan lama bahwa "state Sync & Connect tidak ikut ter-restore" terlalu luas.
 
-Kalau suatu saat sistem ini dipakai di luar laptop pribadi: credential vault belum production-grade,
-spend budget belum durable-terhadap-restart, belum ada acceptance test MCP eksternal nyata, belum ada
-full-history secret scan, dan eval suite produk (30–40 kasus tugas nyata) belum ada — 333 unit/integration
-test diakui sendiri oleh `docs/final-audit-2026-09-09.md` bukan pengganti eval suite tersebut.
+Evidence backup/restore sebenarnya mencatat Sync dan Connect sebagai **missing optional source state** pada run tersebut. Harness tidak men-seed state palsu hanya agar bisa mengklaim restore. Jadi run tersebut **tidak membuktikan runtime restore untuk state Sync/Connect yang absent**, tetapi juga tidak membuktikan bahwa existing state pasti hilang.
 
-## Rekomendasi urutan prioritas
+Repository sekarang juga memiliki Connect backup plumbing untuk credential vault/runtime settings. Claim boundary tetap harus eksplisit: absent source state tidak boleh dihitung sebagai restore proof.
 
-1. Jalankan validasi UX walkthrough resmi (temuan #6) — gerbang yang paling dekat dan sudah terdefinisi
-   jelas prosedurnya.
-2. Pin model lokal ke identitas immutable (temuan #4) — kecil dan murah untuk dibereskan.
-3. Jalankan minimal satu hosted call nyata untuk memvalidasi klaim cost-saving (temuan #3) — paling
-   menentukan apakah value inti produk benar-benar terbukti.
-4. Baru pertimbangkan production blockers (temuan #9) kalau memang berniat mengeluarkan sistem ini dari
-   laptop pribadi.
+### 6. UX walkthrough resmi current main belum ditutup — VALID
+
+Checklist UX mensyaratkan synchronized current main, full Phase 4 stack, Temporal reachable, dan precondition lengkap. Perubahan UI 2026-09-13 terjadi setelah sebagian evidence sebelumnya, sehingga current visual/runtime tetap harus direvalidasi.
+
+**Current action:** W03. Visual sekarang di-freeze; pekerjaan UX fokus pada defect/runtime/functionality, bukan redesign.
+
+### 7. `*.test.tsx` tidak masuk Vitest discovery — VALID DEFECT
+
+`vitest.config.ts` hanya memasukkan `*.test.ts` untuk apps/packages/services dan satu test nyata `apps/ai/app/page.hydration.test.tsx` ada di repository. Artinya test tersebut silent-skip dari normal `pnpm test`/CI discovery.
+
+**Current action:** W02 memperluas discovery ke `*.test.tsx` dan memverifikasi tidak ada pola serupa yang tertinggal.
+
+### 8. Attachment composer masih UI-only — VALID
+
+Attachment current composer belum merupakan real upload/content ingestion. File/foto/folder direpresentasikan sebagai label teks ke request chat; bytes belum mengalir melalui Artifact → Context pointer → controlled hydration.
+
+**Current action:** W12. Visual composer tidak perlu didesain ulang; yang diperbaiki adalah backend path dan state/error semantics.
+
+### 9. Production blockers — PARTLY OUTDATED / PARTLY VALID
+
+Bagian original mencampur blocker dari audit lama dengan current implementation.
+
+**Sudah ada di current repository dan tidak boleh lagi disebut "belum ada":**
+
+- encrypted file-backed Credential Vault dengan Connect sebagai credential authority;
+- durable file-backed spend budget/reservation ledger untuk single-host boundary;
+- external/public HTTPS MCP acceptance workflow;
+- full-history secret scan implementation/script;
+- production/self-host repository baseline yang sudah melewati closure evidence terkait.
+
+**Nuance yang masih aktif:**
+
+- full-history secret scanner ada, tetapi normal per-commit CI tidak saat ini menjalankan history scan sebagai continuous gate;
+- product eval suite target 30–40 kasus tugas nyata belum terisi secara memadai (`evals/README.md` masih baseline kosong);
+- branch/release governance masih dapat diperketat;
+- hosted economic validation belum dilakukan sebagai actual-dollar proof;
+- current UX/product validation belum closed;
+- immutable local model identity masih pending.
+
+## Prioritas setelah reconciliation
+
+Urutan current work tidak mengikuti blocker lama secara buta. Source of truth aktif adalah `docs/active-work-plan.md`.
+
+Prioritas saat reconciliation ini:
+
+1. W02 — tutup test discovery gap;
+2. W03 — runtime UX/product validation pada current main;
+3. W04 — partial/full-stack usability;
+4. W05–W08 — provider onboarding + Credential Vault UX;
+5. W09–W11 — one-command startup, doctor, installer/launcher path;
+6. W12 — real attachment pipeline;
+7. W13 — immutable model identity;
+8. W14–W15 — real product eval + agentic local-model validation;
+9. W16–W18 — semantic selector, ECX no-oracle, hosted economic validation;
+10. W19–W20 — release/security governance dan final current-state sync.
+
+## Claim boundary
+
+Dokumen ini bukan pengganti evidence files. Ia adalah reconciliation atas analisis 2026-09-13 agar historical findings tidak dibaca sebagai current blockers ketika code/evidence yang lebih baru sudah menutupnya.
+
+Jika ada konflik antara wording historical audit dengan current code + current evidence + canonical current-state docs, gunakan kondisi repository yang lebih baru dan catat perbedaannya secara eksplisit.
