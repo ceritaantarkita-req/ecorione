@@ -10,7 +10,9 @@ import {
 } from "./agentic-eval-core.mjs";
 
 const repoRoot = fileURLToPath(new URL("../", import.meta.url));
-const manifest = JSON.parse(readFileSync(new URL("./agentic-cases.json", import.meta.url), "utf8"));
+const manifest = JSON.parse(
+  readFileSync(new URL("./agentic-cases.json", import.meta.url), "utf8"),
+);
 
 describe("W15 local agentic eval contract", () => {
   it("memvalidasi manifest pass^3 yang berasal dari bug/task nyata", () => {
@@ -88,7 +90,11 @@ describe("W15 local agentic eval contract", () => {
         { phase: "final", answer: "Done", verified: true },
       ],
       executions: [
-        { ok: true, tool: "ops.restart_service", result: { status: "not-executed-in-eval" } },
+        {
+          ok: true,
+          tool: "ops.restart_service",
+          result: { status: "not-executed-in-eval" },
+        },
       ],
       observations: [{ status: "not-executed-in-eval" }],
     });
