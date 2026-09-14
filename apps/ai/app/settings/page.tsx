@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ClientResponseError, readJson } from "../../lib/client-response";
+import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
 import styles from "./Settings.module.css";
 
 type RuntimeSnapshot = {
@@ -24,6 +26,7 @@ type CredentialProvider =
   | "glm"
   | "custom-openai"
   | "mcp";
+type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "error";
 type McpServer = {
   id: string;
   displayName: string;
@@ -52,30 +55,7 @@ const CREDENTIAL_PROVIDER_OPTIONS: readonly {
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
-  const text = await response.text();
-  let payload: unknown = null;
-
-  if (text.length > 0) {
-    try {
-      payload = JSON.parse(text) as unknown;
-    } catch {
-      if (!response.ok) {
-        throw new Error(`HTTP ${String(response.status)}: ${text.slice(0, 240)}`);
-      }
-      throw new Error(`HTTP ${String(response.status)} returned a non-JSON response.`);
-    }
-  }
-
-  if (!response.ok) {
-    const error =
-      typeof payload === "object" && payload !== null
-        ? (payload as { error?: { message?: unknown } }).error
-        : undefined;
-    const message = typeof error?.message === "string" ? error.message : undefined;
-    throw new Error(message ?? `HTTP ${String(response.status)}`);
-  }
-
-  return payload as T;
+  return readJson<T>(response);
 }
 
 export default function SettingsPage() {
@@ -87,6 +67,10 @@ export default function SettingsPage() {
   const [secretProvider, setSecretProvider] = useState<CredentialProvider>("anthropic");
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("");
+  const [hostedHealth, setHostedHealth] = useState<{
+    provider: RuntimeSnapshot["settings"]["hostedProvider"];
+    status: HostedCanaryStatus;
+  } | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [mcpLoading, setMcpLoading] = useState(false);
   const actionInFlight = useRef(false);
@@ -157,6 +141,16 @@ export default function SettingsPage() {
     credentials.find((item) => item.provider === secretProvider) ?? null;
   const selectedProviderOption =
     CREDENTIAL_PROVIDER_OPTIONS.find((item) => item.value === secretProvider) ?? null;
+  const selectedProviderHealth = providerHealth({
+    hasCredential: selectedCredential !== null,
+    routingReady: selectedProviderOption?.routingReady ?? false,
+    isCurrentHostedProvider: runtime?.settings.hostedProvider === secretProvider,
+    hostedCallsEnabled: runtime?.settings.hostedCallsEnabled ?? false,
+    canaryStatus:
+      hostedHealth !== null && hostedHealth.provider === secretProvider
+        ? hostedHealth.status
+        : undefined,
+  });
 
   async function saveRuntime() {
     if (runtime === null || !beginAction("runtime")) return;
@@ -169,6 +163,7 @@ export default function SettingsPage() {
         body: JSON.stringify(runtime.settings),
       });
       setRuntime(result);
+      setHostedHealth(null);
       if (requestedHosted && !result.settings.hostedCallsEnabled) {
         setStatus(
           `Runtime revision ${String(result.revision)} saved. Hosted remains OFF because the operator gate is closed.`,
@@ -193,6 +188,9 @@ export default function SettingsPage() {
         body: JSON.stringify({ secret }),
       });
       setSecret("");
+      setHostedHealth((current) =>
+        current?.provider === secretProvider ? null : current,
+      );
       await refreshCredentials();
       setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
     } catch (error) {
@@ -210,6 +208,9 @@ export default function SettingsPage() {
         method: "DELETE",
       });
       setSecret("");
+      setHostedHealth((current) =>
+        current?.provider === secretProvider ? null : current,
+      );
       await refreshCredentials();
       setStatus("Credential removed from Connect vault.");
     } catch (error) {
@@ -222,6 +223,7 @@ export default function SettingsPage() {
   async function runCanary(target: "local" | "hosted") {
     if (!beginAction(`canary-${target}`)) return;
     setStatus(target === "local" ? "Running local canary…" : "Running hosted canary…");
+    const testedProvider = runtime?.settings.hostedProvider;
     try {
       const result = await json<{
         pass: boolean;
@@ -233,10 +235,37 @@ export default function SettingsPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ target }),
       });
+      if (target === "hosted" && testedProvider !== undefined) {
+        setHostedHealth({
+          provider: testedProvider,
+          status: result.pass ? "connected" : "error",
+        });
+      }
       setStatus(
         `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms`,
       );
     } catch (error) {
+      if (target === "hosted" && testedProvider !== undefined) {
+        if (
+          error instanceof ClientResponseError &&
+          error.code === "PROVIDER_CREDENTIAL_MISSING"
+        ) {
+          setHostedHealth(null);
+          try {
+            await refreshCredentials();
+          } catch {
+            // Preserve the original canary failure as the user-facing result.
+          }
+        } else {
+          setHostedHealth({
+            provider: testedProvider,
+            status:
+              error instanceof ClientResponseError
+                ? (canaryStatusFromErrorCode(error.code) ?? "error")
+                : "error",
+          });
+        }
+      }
       setStatus(error instanceof Error ? error.message : String(error));
     } finally {
       finishAction();
@@ -288,7 +317,8 @@ export default function SettingsPage() {
               <select
                 value={runtime.settings.hostedProvider}
                 disabled={pendingAction !== null}
-                onChange={(event) =>
+                onChange={(event) => {
+                  setHostedHealth(null);
                   setRuntime({
                     ...runtime,
                     settings: {
@@ -296,8 +326,8 @@ export default function SettingsPage() {
                       hostedProvider: event.target
                         .value as RuntimeSnapshot["settings"]["hostedProvider"],
                     },
-                  })
-                }
+                  });
+                }}
               >
                 <option value="anthropic">Anthropic</option>
                 <option value="openai">OpenAI</option>
@@ -335,12 +365,13 @@ export default function SettingsPage() {
                 type="checkbox"
                 checked={runtime.settings.hostedCallsEnabled}
                 disabled={pendingAction !== null}
-                onChange={(event) =>
+                onChange={(event) => {
+                  setHostedHealth(null);
                   setRuntime({
                     ...runtime,
                     settings: { ...runtime.settings, hostedCallsEnabled: event.target.checked },
-                  })
-                }
+                  });
+                }}
               />
               Hosted calls enabled
             </label>
@@ -435,12 +466,10 @@ export default function SettingsPage() {
           </button>
         </div>
         <p className={styles.muted}>
+          {selectedProviderHealth.label}
           {selectedCredential === null
-            ? "Not connected."
-            : `Connected · generation ${String(selectedCredential.generation)} · updated ${selectedCredential.updatedAt}.`}
-          {selectedProviderOption !== null && !selectedProviderOption.routingReady
-            ? " Credential storage is ready; model routing for this provider is not enabled yet."
-            : ""}
+            ? ""
+            : ` generation ${String(selectedCredential.generation)} · updated ${selectedCredential.updatedAt}.`}
         </p>
       </section>
 
