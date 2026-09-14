@@ -3,19 +3,14 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import {
   CREDENTIAL_PROVIDERS,
-  type CredentialProvider,
-  type CredentialPurpose,
   type CredentialVaultAdmin,
 } from "./credential-vault.js";
 import { nowIso } from "./clock.js";
+import { PROVIDER_CATALOG, credentialPurposeForProvider } from "./provider-catalog.js";
 import { RuntimeSettingsPatchSchema, type RuntimeSettingsAdmin } from "./runtime-settings.js";
 
 const CredentialParamsSchema = z.object({ provider: z.enum(CREDENTIAL_PROVIDERS) });
 const CredentialBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
-
-function credentialPurpose(provider: CredentialProvider): CredentialPurpose {
-  return provider === "mcp" ? "tokens" : "messages";
-}
 
 export interface ConnectControlOptions {
   readonly runtimeSettings?: RuntimeSettingsAdmin | undefined;
@@ -53,6 +48,8 @@ export function registerConnectControlRoutes(
     return result;
   });
 
+  app.get("/v1/settings/providers", async () => ({ providers: PROVIDER_CATALOG }));
+
   app.get("/v1/settings/credentials", async () => ({
     available: options.credentialVault !== undefined,
     credentials: options.credentialVault?.list() ?? [],
@@ -62,7 +59,7 @@ export function registerConnectControlRoutes(
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
       const { secret } = parseOrBadRequest(CredentialBodySchema, req.body);
-      const metadata = vault().set(provider, credentialPurpose(provider), secret, nowIso());
+      const metadata = vault().set(provider, credentialPurposeForProvider(provider), secret, nowIso());
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
         provider,
@@ -75,7 +72,7 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
-      const removed = vault().remove(provider, credentialPurpose(provider));
+      const removed = vault().remove(provider, credentialPurposeForProvider(provider));
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
         provider,
