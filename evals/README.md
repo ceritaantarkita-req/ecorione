@@ -82,6 +82,14 @@ Strict evidence run — default menuntut verified immutable identity:
 ECORIONE_LOCAL_MODEL_DIGEST=<digest-runtime-yang-benar> pnpm eval:agentic:local
 ```
 
+Inference memakai timeout terpisah dari inventory. Default-nya 120 detik per model call dan dapat dinaikkan secara eksplisit sampai 600 detik untuk runtime lokal yang lambat:
+
+```bash
+ECORIONE_AGENTIC_MODEL_TIMEOUT_MS=180000 pnpm eval:agentic:local
+```
+
+Pada setiap run gagal, terminal menampilkan failure stage (`call`, `parse`, atau `execute`) dan alasan ringkas. Bila parsing gagal setelah model sudah merespons, trace tetap mempertahankan latency/token call dan menyimpan preview output maksimal 400 karakter supaya kegagalan protocol tidak salah terbaca sebagai `0 ms / 0 token`.
+
 Exploratory run bila runtime tidak menyediakan provenance yang dapat diverifikasi:
 
 ```bash
