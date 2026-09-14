@@ -8,6 +8,7 @@ import {
   makeId,
 } from "@ecorione/shared-schema";
 import {
+  BadGatewayError,
   createServer,
   HttpError,
   observabilityFor,
@@ -39,7 +40,7 @@ import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 
 export const DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES = 32 * 1024 * 1024;
 
-function toHttpError(err: unknown): unknown {
+function toHttpError(err: unknown, detailedProviderHealth = false): unknown {
   if (err instanceof CostKillSwitchError)
     return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
   if (err instanceof CredentialVaultError)
@@ -48,9 +49,13 @@ function toHttpError(err: unknown): unknown {
     return new HttpError(429, "SPEND_BUDGET_EXCEEDED", err.message);
   if (err instanceof SpendBudgetError)
     return new HttpError(503, "SPEND_BUDGET_UNAVAILABLE", err.message);
-  if (err instanceof MissingCredentialError)
-    return new HttpError(502, "PROVIDER_CREDENTIAL_MISSING", err.message);
+  if (err instanceof MissingCredentialError) {
+    return detailedProviderHealth
+      ? new HttpError(502, "PROVIDER_CREDENTIAL_MISSING", err.message)
+      : new BadGatewayError(err.message);
+  }
   if (err instanceof ProviderError) {
+    if (!detailedProviderHealth) return new BadGatewayError(err.message);
     if (err.kind === "invalid-credential")
       return new HttpError(502, "PROVIDER_INVALID_CREDENTIAL", err.message);
     if (err.kind === "unreachable")
@@ -245,7 +250,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         model: body.target === "local" ? runtime.localModelTag : "configured",
         outcome: "error",
       });
-      throw toHttpError(err);
+      throw toHttpError(err, true);
     }
   });
 
