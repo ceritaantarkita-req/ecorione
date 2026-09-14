@@ -125,8 +125,13 @@ async function callModel(messages) {
       modelTimeoutMs,
     );
   } catch (error) {
-    if (error instanceof Error && ["AbortError", "TimeoutError"].includes(error.name)) {
-      throw new Error(`local model request timeout setelah ${String(modelTimeoutMs)} ms`);
+    if (
+      error instanceof Error &&
+      ["AbortError", "TimeoutError"].includes(error.name)
+    ) {
+      throw new Error(
+        `local model request timeout setelah ${String(modelTimeoutMs)} ms`,
+      );
     }
     throw error;
   }
@@ -263,7 +268,9 @@ async function main() {
         `${item.id} run ${String(repetition)}/${String(manifest.repetitions)}: ${result.pass ? "PASS" : "FAIL"}${suffix}`,
       );
       if (!result.pass && result.modelOutputPreview !== null) {
-        console.log(`  output preview: ${JSON.stringify(result.modelOutputPreview)}`);
+        console.log(
+          `  output preview: ${JSON.stringify(result.modelOutputPreview)}`,
+        );
       }
     }
   }
