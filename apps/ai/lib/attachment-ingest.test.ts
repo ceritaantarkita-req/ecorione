@@ -26,10 +26,7 @@ function artifactPointer(syncClass: "LOCAL_ONLY" | "CLOUD_ALLOWED", mimeType = "
   };
 }
 
-function analyzeResponse(
-  routeUsed: "local" | "hosted",
-  task: "ocr" | "vision" | "transcribe",
-) {
+function analyzeResponse(routeUsed: "local" | "hosted", task: "ocr" | "vision" | "transcribe") {
   return {
     operationId,
     sessionId,
@@ -71,7 +68,9 @@ describe("attachment MIME mapping", () => {
 
   it("uses a bounded extension fallback only when browser MIME is missing/generic", () => {
     expect(resolveAttachmentMimeType("notes.md", "")).toBe("text/markdown");
-    expect(resolveAttachmentMimeType("photo.JPG", "application/octet-stream")).toBe("image/jpeg");
+    expect(resolveAttachmentMimeType("photo.JPG", "application/octet-stream")).toBe(
+      "image/jpeg",
+    );
     expect(resolveAttachmentMimeType("archive.zip", "application/octet-stream")).toBe(
       "application/octet-stream",
     );
