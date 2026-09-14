@@ -13,12 +13,7 @@ export interface ProviderHealthInput {
   readonly routingReady: boolean;
   readonly isCurrentHostedProvider: boolean;
   readonly hostedCallsEnabled: boolean;
-  readonly canaryStatus?:
-    | "connected"
-    | "invalid-key"
-    | "unreachable"
-    | "error"
-    | undefined;
+  readonly canaryStatus?: "connected" | "invalid-key" | "unreachable" | "error" | undefined;
 }
 
 export interface ProviderHealthView {
@@ -26,7 +21,9 @@ export interface ProviderHealthView {
   readonly label: string;
 }
 
-export function canaryStatusFromErrorCode(code: string | undefined): ProviderHealthInput["canaryStatus"] {
+export function canaryStatusFromErrorCode(
+  code: string | undefined,
+): ProviderHealthInput["canaryStatus"] {
   switch (code) {
     case "PROVIDER_INVALID_CREDENTIAL":
       return "invalid-key";
@@ -61,7 +58,10 @@ export function providerHealth(input: ProviderHealthInput): ProviderHealthView {
     case "connected":
       return { status: "connected", label: "Connected · provider canary passed." };
     case "invalid-key":
-      return { status: "invalid-key", label: "Invalid key · provider rejected the credential." };
+      return {
+        status: "invalid-key",
+        label: "Invalid key · provider rejected the credential.",
+      };
     case "unreachable":
       return { status: "unreachable", label: "Unreachable · provider could not be contacted." };
     case "error":
