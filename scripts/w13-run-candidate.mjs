@@ -13,6 +13,18 @@ writeFileSync(materializerPath, materializer);
 
 await import(`${materializerPath.href}?candidate=${Date.now().toString()}`);
 
+const runtimePath = new URL("../services/connect/src/runtime-settings.ts", import.meta.url);
+let runtime = readFileSync(runtimePath, "utf8");
+const oldFallback =
+  "      return { version: 1, revision: 0, settings: cloneSettings(this.defaults) };";
+const newFallback =
+  "      return { version: 1, revision: 0, settings: RuntimeSettingsSchema.parse(this.defaults) };";
+if (!runtime.includes(oldFallback)) {
+  throw new Error("runtime settings normalized fallback marker not found");
+}
+runtime = runtime.replace(oldFallback, newFallback);
+writeFileSync(runtimePath, runtime);
+
 const httpPath = new URL("../services/connect/src/http.ts", import.meta.url);
 let http = readFileSync(httpPath, "utf8");
 const oldCredentialResponse =
@@ -26,4 +38,4 @@ if (count !== 1) {
 http = http.replace(oldCredentialResponse, newCredentialResponse);
 writeFileSync(httpPath, http);
 
-console.log("W13 candidate response shapes materialized");
+console.log("W13 candidate identity boundaries materialized");
