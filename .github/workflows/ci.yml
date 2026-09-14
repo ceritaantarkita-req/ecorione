@@ -29,6 +29,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Apply W12 staged composer candidate
+        run: |
+          git apply --recount scripts/w12-staged-composer.patch
+          pnpm exec prettier apps/ai/app/page.tsx --write
+
       - name: Format
         run: pnpm run format:check
 
