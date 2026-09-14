@@ -78,6 +78,6 @@ describe("ECORIONE desktop release bundle", () => {
     expect(sums).toContain("RELEASE-MANIFEST.json");
     expect(sums).toContain("ecorione.ps1");
     expect(sums.trim()).toBe(recomputed);
-    expect(sums).toMatch(/^[a-f0-9]{64}  /m);
+    expect(sums).toMatch(/^[a-f0-9]{64} {2}/m);
   });
 });
