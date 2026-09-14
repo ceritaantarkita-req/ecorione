@@ -49,8 +49,15 @@ function toHttpError(err: unknown): unknown {
     return new HttpError(429, "SPEND_BUDGET_EXCEEDED", err.message);
   if (err instanceof SpendBudgetError)
     return new HttpError(503, "SPEND_BUDGET_UNAVAILABLE", err.message);
-  if (err instanceof MissingCredentialError) return new BadGatewayError(err.message);
-  if (err instanceof ProviderError) return new BadGatewayError(err.message);
+  if (err instanceof MissingCredentialError)
+    return new HttpError(502, "PROVIDER_CREDENTIAL_MISSING", err.message);
+  if (err instanceof ProviderError) {
+    if (err.kind === "invalid-credential")
+      return new HttpError(502, "PROVIDER_INVALID_CREDENTIAL", err.message);
+    if (err.kind === "unreachable")
+      return new HttpError(503, "PROVIDER_UNREACHABLE", err.message);
+    return new HttpError(502, "PROVIDER_UPSTREAM_ERROR", err.message);
+  }
   return err;
 }
 
