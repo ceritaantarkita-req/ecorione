@@ -155,7 +155,7 @@ describe("ECORIONE local engine bootstrap", () => {
 
       kill(signal) {
         this.signals.push(signal);
-        queueMicrotask(() => {
+        void Promise.resolve().then(() => {
           this.signalCode = signal;
           this.emit("exit", null, signal);
         });
