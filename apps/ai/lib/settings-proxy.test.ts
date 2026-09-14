@@ -120,6 +120,29 @@ describe("proxyToConnectSettings", () => {
     },
   );
 
+  it("meneruskan transient credential test tanpa mengubah secret body", async () => {
+    let sawAuth: string | undefined;
+    let sawBody = "";
+    pool
+      .intercept({ path: "/v1/settings/credentials/openai/test", method: "POST" })
+      .reply(200, (opts) => {
+        sawAuth = (opts.headers as Record<string, string> | undefined)?.authorization;
+        sawBody = String(opts.body ?? "");
+        return { pass: true, persisted: false, provider: "openai" };
+      });
+
+    const response = await proxyToConnectSettings(
+      request("POST", JSON.stringify({ secret: "transient-secret" })),
+      "/v1/settings/credentials/openai/test",
+      "POST",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ pass: true, persisted: false, provider: "openai" });
+    expect(sawAuth).toBe("Bearer test-token");
+    expect(JSON.parse(sawBody)).toEqual({ secret: "transient-secret" });
+  });
+
   it("membatasi path credential ke namespace aman dan membiarkan Connect memvalidasi provider id", async () => {
     pool
       .intercept({ path: "/v1/settings/credentials/unknown-provider", method: "PUT" })
