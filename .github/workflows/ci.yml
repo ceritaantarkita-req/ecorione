@@ -29,6 +29,18 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Apply W12 composer candidate
+        run: |
+          git apply scripts/w12-ui.patch
+          pnpm exec prettier apps/ai/app/page.tsx --write
+
+      - name: Capture W12 composer candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: w12-composer-page
+          path: apps/ai/app/page.tsx
+          if-no-files-found: error
+
       - name: Format
         run: pnpm run format:check
 
