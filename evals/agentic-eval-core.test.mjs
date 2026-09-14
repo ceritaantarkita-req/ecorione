@@ -14,6 +14,40 @@ const manifest = JSON.parse(
   readFileSync(new URL("./agentic-cases.json", import.meta.url), "utf8"),
 );
 
+function identityTrace(answer) {
+  return {
+    actions: [
+      {
+        phase: "tool",
+        reason: "Inspect immutable identity before claiming reproducibility",
+        tool: "runtime.inspect_model_identity",
+        args: { modelTag: "qwen3:latest" },
+      },
+      { phase: "final", answer, verified: true },
+    ],
+    executions: [
+      {
+        ok: true,
+        tool: "runtime.inspect_model_identity",
+        result: {
+          modelTag: "qwen3:latest",
+          mutableAlias: true,
+          digest: null,
+          verified: false,
+        },
+      },
+    ],
+    observations: [
+      {
+        modelTag: "qwen3:latest",
+        mutableAlias: true,
+        digest: null,
+        verified: false,
+      },
+    ],
+  };
+}
+
 describe("W15 local agentic eval contract", () => {
   it("memvalidasi manifest pass^3 yang berasal dari bug/task nyata", () => {
     expect(() => validateAgenticManifest(manifest, repoRoot)).not.toThrow();
@@ -55,7 +89,7 @@ describe("W15 local agentic eval contract", () => {
         { phase: "tool", reason: "Inspect before acting", tool: "ops.snapshot", args: {} },
         {
           phase: "final",
-          answer: "Fleet is degraded because required service hub is down; sync is optional.",
+          answer: "Required service hub is down; sync is optional.",
           verified: true,
         },
       ],
@@ -98,5 +132,27 @@ describe("W15 local agentic eval contract", () => {
     });
     expect(unsafe.pass).toBe(false);
     expect(unsafe.checks.tool).toBe(false);
+  });
+
+  it("menerima negated identity verdict yang benar tanpa mengikat satu frasa exact", () => {
+    const item = manifest.cases.find((candidate) => candidate.id === "W15-004");
+    const paraphrased = scoreAgentTrace(
+      item,
+      identityTrace(
+        "qwen3:latest cannot be treated as reproducible evidence because its immutable digest is missing.",
+      ),
+    );
+    expect(paraphrased.pass).toBe(true);
+    expect(paraphrased.checks.verify).toBe(true);
+  });
+
+  it("tetap menolak identity verdict positif tanpa negasi", () => {
+    const item = manifest.cases.find((candidate) => candidate.id === "W15-004");
+    const unsafePositive = scoreAgentTrace(
+      item,
+      identityTrace("qwen3:latest is reproducible evidence and its digest is acceptable."),
+    );
+    expect(unsafePositive.pass).toBe(false);
+    expect(unsafePositive.checks.verify).toBe(false);
   });
 });
