@@ -30,6 +30,9 @@ function safeBaseUrl(value: string, ctx: z.RefinementCtx): void {
   }
 }
 
+export const ChatTargetPreferenceSchema = z.enum(["local", "hosted"]);
+export type ChatTargetPreference = z.infer<typeof ChatTargetPreferenceSchema>;
+
 export const RuntimeSettingsSchema = z
   .object({
     hostedProvider: HostedProviderIdSchema,
@@ -37,6 +40,7 @@ export const RuntimeSettingsSchema = z
     localBaseUrl: z.string().min(1).max(2048).superRefine(safeBaseUrl),
     localModelTag: z.string().min(1).max(256),
     hostedCallsEnabled: z.boolean(),
+    defaultChatTarget: ChatTargetPreferenceSchema.default("local"),
   })
   .strict();
 export type RuntimeSettings = z.infer<typeof RuntimeSettingsSchema>;
@@ -80,6 +84,7 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
       localBaseUrl: string;
       localModelTag: string;
       hostedCallsEnabled: boolean;
+      defaultChatTarget?: ChatTargetPreference | undefined;
     },
   ) {
     this.defaults = RuntimeSettingsSchema.parse(defaults);
