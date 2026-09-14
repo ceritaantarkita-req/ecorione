@@ -17,7 +17,10 @@ function structuredError(payload: unknown): { code?: string; message?: string } 
     typeof error.message === "string" && error.message.trim().length > 0
       ? error.message.trim()
       : undefined;
-  return { ...(code === undefined ? {} : { code }), ...(message === undefined ? {} : { message }) };
+  return {
+    ...(code === undefined ? {} : { code }),
+    ...(message === undefined ? {} : { message }),
+  };
 }
 
 export class ClientResponseError extends Error {
@@ -49,7 +52,11 @@ export async function readJson<T>(
 
   if (!response.ok) {
     const error = structuredError(body);
-    throw new ClientResponseError(error.message ?? fallbackMessage, response.status, error.code);
+    throw new ClientResponseError(
+      error.message ?? fallbackMessage,
+      response.status,
+      error.code,
+    );
   }
 
   return body as T;
