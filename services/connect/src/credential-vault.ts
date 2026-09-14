@@ -22,10 +22,7 @@ export const AI_CREDENTIAL_PROVIDERS = [
 ] as const;
 export type AiCredentialProvider = (typeof AI_CREDENTIAL_PROVIDERS)[number];
 
-export const CREDENTIAL_PROVIDERS = [
-  ...AI_CREDENTIAL_PROVIDERS,
-  "mcp",
-] as const;
+export const CREDENTIAL_PROVIDERS = [...AI_CREDENTIAL_PROVIDERS, "mcp"] as const;
 export type CredentialProvider = (typeof CREDENTIAL_PROVIDERS)[number];
 
 export const CREDENTIAL_PURPOSES = ["messages", "tokens"] as const;
