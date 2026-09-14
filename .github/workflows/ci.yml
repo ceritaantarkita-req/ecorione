@@ -31,7 +31,7 @@ jobs:
 
       - name: Apply W13 immutable model identity candidate
         run: |
-          node scripts/w13-materialize-v2.mjs
+          node scripts/w13-run-candidate.mjs
           pnpm exec prettier \
             services/connect/src/local-model-identity.ts \
             services/connect/src/local-model-identity.test.ts \
@@ -54,6 +54,7 @@ jobs:
             docs/active-work-plan.md \
             scripts/w13-materialize.mjs \
             scripts/w13-materialize-v2.mjs \
+            scripts/w13-run-candidate.mjs \
             --write
 
       - name: Format
@@ -140,7 +141,7 @@ jobs:
 
       - name: Materialize verified W13 candidate
         run: |
-          node scripts/w13-materialize-v2.mjs
+          node scripts/w13-run-candidate.mjs
           pnpm exec prettier \
             services/connect/src/local-model-identity.ts \
             services/connect/src/local-model-identity.test.ts \
@@ -162,7 +163,7 @@ jobs:
             docs/adr/0014-pinned-models.md \
             docs/active-work-plan.md \
             --write
-          rm scripts/w13-materialize.mjs scripts/w13-materialize-v2.mjs
+          rm scripts/w13-materialize.mjs scripts/w13-materialize-v2.mjs scripts/w13-run-candidate.mjs
           git fetch origin main --depth=1
           git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
           test "$(git hash-object .github/workflows/ci.yml)" = "838ed8d288a6f4ef8ca560c8168bbf79d8122f9a"
