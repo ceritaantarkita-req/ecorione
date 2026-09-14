@@ -8,10 +8,18 @@ function applyOperatorGate(
   snapshot: RuntimeSettingsSnapshot,
   hostedCallsAllowed: boolean,
 ): RuntimeSettingsSnapshot {
-  if (hostedCallsAllowed || !snapshot.settings.hostedCallsEnabled) return snapshot;
+  if (
+    hostedCallsAllowed ||
+    (!snapshot.settings.hostedCallsEnabled && snapshot.settings.defaultChatTarget === "local")
+  )
+    return snapshot;
   return {
     revision: snapshot.revision,
-    settings: { ...snapshot.settings, hostedCallsEnabled: false },
+    settings: {
+      ...snapshot.settings,
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    },
   };
 }
 
@@ -19,7 +27,8 @@ function applyOperatorGate(
  * Operator-level emergency stop for hosted calls.
  *
  * Runtime settings may further disable hosted calls, but they can never re-enable
- * hosted dispatch while the process-level operator gate is closed.
+ * hosted dispatch while the process-level operator gate is closed. A hosted default
+ * is also normalized to local so first-run chat cannot imply a route the operator forbids.
  */
 export function withHostedOperatorGate(
   runtimeSettings: RuntimeSettingsAdmin,
@@ -30,7 +39,9 @@ export function withHostedOperatorGate(
       return applyOperatorGate(runtimeSettings.get(), hostedCallsAllowed);
     },
     update(patch: RuntimeSettingsPatch): RuntimeSettingsSnapshot {
-      const safePatch = hostedCallsAllowed ? patch : { ...patch, hostedCallsEnabled: false };
+      const safePatch = hostedCallsAllowed
+        ? patch
+        : { ...patch, hostedCallsEnabled: false, defaultChatTarget: "local" as const };
       return applyOperatorGate(runtimeSettings.update(safePatch), hostedCallsAllowed);
     },
   };
