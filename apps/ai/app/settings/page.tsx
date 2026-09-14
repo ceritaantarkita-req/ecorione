@@ -188,9 +188,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ secret }),
       });
       setSecret("");
-      setHostedHealth((current) =>
-        current?.provider === secretProvider ? null : current,
-      );
+      setHostedHealth((current) => (current?.provider === secretProvider ? null : current));
       await refreshCredentials();
       setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
     } catch (error) {
@@ -208,9 +206,7 @@ export default function SettingsPage() {
         method: "DELETE",
       });
       setSecret("");
-      setHostedHealth((current) =>
-        current?.provider === secretProvider ? null : current,
-      );
+      setHostedHealth((current) => (current?.provider === secretProvider ? null : current));
       await refreshCredentials();
       setStatus("Credential removed from Connect vault.");
     } catch (error) {
