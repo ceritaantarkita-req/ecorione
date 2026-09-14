@@ -4,9 +4,13 @@ export default defineConfig({
   test: {
     include: [
       "packages/**/*.test.ts",
+      "packages/**/*.test.tsx",
       "services/**/*.test.ts",
+      "services/**/*.test.tsx",
       "apps/**/*.test.ts",
+      "apps/**/*.test.tsx",
       "test/**/*.test.ts",
+      "test/**/*.test.tsx",
       "test/**/*.test.mjs",
     ],
     environment: "node",
