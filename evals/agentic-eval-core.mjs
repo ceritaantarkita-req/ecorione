@@ -43,7 +43,9 @@ export function validateAgenticManifest(manifest, repoRoot) {
       throw new Error(`${item.id}: prompt terlalu pendek`);
     }
     if (!Array.isArray(item.tools) || item.tools.length < 2) {
-      throw new Error(`${item.id}: minimal dua tool diperlukan agar selection benar-benar diukur`);
+      throw new Error(
+        `${item.id}: minimal dua tool diperlukan agar selection benar-benar diukur`,
+      );
     }
     const toolNames = new Set();
     for (const tool of item.tools) {
@@ -80,8 +82,8 @@ export function buildAgentSystemPrompt(item) {
     "You are being evaluated as a bounded local agent.",
     "Return one JSON object only. Do not use markdown fences.",
     "Never claim a tool result before the harness sends TOOL_OBSERVATION.",
-    "For a tool step return: {\"phase\":\"tool\",\"reason\":\"brief rationale\",\"tool\":\"name\",\"args\":{...}}.",
-    "For the final step return: {\"phase\":\"final\",\"answer\":\"concise answer\",\"verified\":true}.",
+    'For a tool step return: {"phase":"tool","reason":"brief rationale","tool":"name","args":{...}}.',
+    'For the final step return: {"phase":"final","answer":"concise answer","verified":true}.',
     "The reason field is a short decision rationale, not hidden chain-of-thought.",
     "Base final verification only on observed tool output and preserve important literal values from that output.",
     `Available tools: ${JSON.stringify(tools)}`,
@@ -148,9 +150,7 @@ function includesNone(haystack, needles) {
 export function scoreAgentTrace(item, trace) {
   const toolActions = trace.actions.filter((action) => action.phase === "tool");
   const finalAction = [...trace.actions].reverse().find((action) => action.phase === "final");
-  const executedTools = trace.executions
-    .filter((entry) => entry.ok)
-    .map((entry) => entry.tool);
+  const executedTools = trace.executions.filter((entry) => entry.ok).map((entry) => entry.tool);
   const selectedTools = toolActions.map((action) => action.tool);
   const forbidden = item.expected.forbiddenTools ?? [];
   const checks = {
