@@ -78,7 +78,8 @@ export function ensureLocalEnv(root = ROOT) {
     generated.push("ECORIONE_CONNECT_VAULT_MASTER_KEY");
   }
 
-  if (created || generated.length > 0) writeFileSync(envPath, text, { encoding: "utf8", mode: 0o600 });
+  if (created || generated.length > 0)
+    writeFileSync(envPath, text, { encoding: "utf8", mode: 0o600 });
   return { envPath, created, generated, values: parseSimpleEnv(text) };
 }
 
@@ -109,7 +110,7 @@ async function waitForPort(port, timeoutMs, label) {
 }
 
 function commandName(name) {
-  return process.platform === "win32" ? `${name}.cmd` : name;
+  return process.platform === "win32" && name === "pnpm" ? "pnpm.cmd" : name;
 }
 
 function runChecked(command, args, options = {}) {
@@ -147,11 +148,7 @@ async function ensureTemporal(env) {
     );
   }
   console.log("• Menyalakan Temporal lokal…");
-  runChecked(
-    "docker",
-    ["compose", "-f", LOCAL_TEMPORAL_COMPOSE, "up", "-d"],
-    { env },
-  );
+  runChecked("docker", ["compose", "-f", LOCAL_TEMPORAL_COMPOSE, "up", "-d"], { env });
   await waitForPort(7233, 60_000, "Temporal");
   console.log("✓ Temporal ready");
 }
@@ -174,7 +171,9 @@ async function doctor() {
 
   console.log("ECORIONE doctor\n");
   const nodeMajor = Number.parseInt(process.versions.node.split(".")[0] ?? "0", 10);
-  console.log(`${nodeMajor >= 22 ? "✓" : "✗"} Node ${process.versions.node}${nodeMajor >= 22 ? "" : " (butuh >=22)"}`);
+  console.log(
+    `${nodeMajor >= 22 ? "✓" : "✗"} Node ${process.versions.node}${nodeMajor >= 22 ? "" : " (butuh >=22)"}`,
+  );
   if (nodeMajor < 22) criticalFailure = true;
 
   try {
@@ -185,8 +184,10 @@ async function doctor() {
     criticalFailure = true;
   }
 
-  console.log(`${existsSync(envPath) ? "✓" : "!"} .env ${existsSync(envPath) ? "tersedia" : "belum dibuat (engine:start akan membuatnya)"}`);
-  console.log(`${dockerAvailable() ? "✓" : "!"} Docker ${dockerAvailable() ? "reachable" : "tidak reachable"}`);
+  const hasEnv = existsSync(envPath);
+  const hasDocker = dockerAvailable();
+  console.log(`${hasEnv ? "✓" : "!"} .env ${hasEnv ? "tersedia" : "belum dibuat (engine:start akan membuatnya)"}`);
+  console.log(`${hasDocker ? "✓" : "!"} Docker ${hasDocker ? "reachable" : "tidak reachable"}`);
   console.log(`${(await isPortReachable(7233)) ? "✓" : "!"} Temporal 127.0.0.1:7233`);
 
   const token = env.ECORIONE_INTERNAL_TOKEN ?? "";
@@ -214,9 +215,16 @@ function openBrowser(url) {
 }
 
 async function start() {
+  if (await isPortReachable(3000)) {
+    throw new Error(
+      "Port 3000 sudah dipakai. Jika ECORIONE sudah berjalan, buka http://127.0.0.1:3000; jika bukan, hentikan proses yang memakai port tersebut.",
+    );
+  }
+
   const local = ensureLocalEnv();
   if (local.created) console.log("✓ .env dibuat dari .env.example");
-  for (const key of local.generated) console.log(`✓ ${key} dibuat otomatis untuk local-only runtime`);
+  for (const key of local.generated)
+    console.log(`✓ ${key} dibuat otomatis untuk local-only runtime`);
   const env = { ...local.values, ...process.env };
 
   await ensureTemporal(env);
