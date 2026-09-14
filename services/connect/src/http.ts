@@ -28,7 +28,11 @@ import { registerConnectControlRoutes } from "./control-http.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
-import { DEFAULT_HOSTED_PROVIDER, type HostedProviderId } from "./provider-types.js";
+import {
+  DEFAULT_HOSTED_PROVIDER,
+  HostedProviderIdSchema,
+  type HostedProviderId,
+} from "./provider-types.js";
 import type {
   ChatTargetPreference,
   RuntimeSettings,
@@ -94,6 +98,9 @@ const ProviderCanaryBodySchema = z
     maxLatencyMs: z.number().int().min(100).max(120_000).default(15_000),
   })
   .strict();
+
+const CredentialTestParamsSchema = z.object({ provider: HostedProviderIdSchema });
+const CredentialTestBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
 
 export interface BuildConnectServerOptions {
   readonly token?: string | undefined;
@@ -185,6 +192,23 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     metrics.addCounter("ecorione_model_cost_usd_total", result.cost.actualUsd, labels);
   }
 
+  function probeBody(target: "hosted" | "local", prompt: string) {
+    return CompleteBodySchema.parse({
+      target,
+      prefix: {
+        systemPrompt:
+          "You are a deterministic provider health canary. Follow the user instruction exactly.",
+        toolDefinitions: [],
+        coreMemory: { blocks: [] },
+      },
+      dynamicText: "",
+      userMessage: prompt,
+      sensitivity: "PUBLIC",
+      operationId: makeId("operation"),
+      now: nowIso(),
+    });
+  }
+
   app.post("/v1/complete", async (req) => {
     const body = parseOrBadRequest(CompleteBodySchema, req.body);
     const controller = new AbortController();
@@ -201,26 +225,66 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     }
   });
 
+  app.post<{ Params: { provider: string } }>(
+    "/v1/settings/credentials/:provider/test",
+    async (req) => {
+      const { provider } = parseOrBadRequest(CredentialTestParamsSchema, req.params);
+      const { secret } = parseOrBadRequest(CredentialTestBodySchema, req.body);
+      const runtime = currentRuntime();
+      const transientCredential: ProviderCredentialReader = {
+        get(candidate, purpose) {
+          return candidate === provider && purpose === "messages" ? secret : undefined;
+        },
+      };
+      const body = probeBody("hosted", "Reply exactly ECORIONE_CREDENTIAL_OK");
+      const started = performance.now();
+      try {
+        const result = await complete(
+          {
+            ...currentDeps({ ...runtime, hostedProvider: provider }),
+            credentialVault: transientCredential,
+            cache: new ExactMatchCache(),
+          },
+          body,
+        );
+        const latencyMs = performance.now() - started;
+        recordCompletion(body, result);
+        metrics.addCounter("ecorione_provider_credential_test_total", 1, {
+          provider,
+          outcome: "pass",
+        });
+        return {
+          pass: true,
+          persisted: false,
+          provider: result.provider,
+          model: result.model,
+          pricingModel: result.pricingModel,
+          responseModel: result.responseModel,
+          cacheHit: result.cacheHit,
+          latencyMs,
+          usage: result.usage,
+          cost: result.cost,
+        };
+      } catch (err) {
+        metrics.addCounter("ecorione_provider_credential_test_total", 1, {
+          provider,
+          outcome: "error",
+        });
+        throw toHttpError(err, true);
+      }
+    },
+  );
+
   app.post("/v1/ops/provider-canary", async (req) => {
     const body = parseOrBadRequest(ProviderCanaryBodySchema, req.body ?? {});
     const runtime = currentRuntime();
     const started = performance.now();
-    const completeBody = CompleteBodySchema.parse({
-      target: body.target,
-      prefix: {
-        systemPrompt:
-          "You are a deterministic provider health canary. Follow the user instruction exactly.",
-        toolDefinitions: [],
-        coreMemory: { blocks: [] },
-      },
-      dynamicText: "",
-      userMessage: body.prompt,
-      sensitivity: "PUBLIC",
-      operationId: makeId("operation"),
-      now: nowIso(),
-    });
+    const completeBody = probeBody(body.target, body.prompt);
     try {
-      const result = await complete(currentDeps(runtime), completeBody);
+      const result = await complete(
+        { ...currentDeps(runtime), cache: new ExactMatchCache() },
+        completeBody,
+      );
       const latencyMs = performance.now() - started;
       recordCompletion(completeBody, result);
       const pass =
