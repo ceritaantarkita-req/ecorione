@@ -30,10 +30,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Format
-        run: |
-          pnpm exec prettier --write scripts/ecorione-engine.mjs test/ecorione-engine.test.mjs
-          git diff -- scripts/ecorione-engine.mjs test/ecorione-engine.test.mjs
-          pnpm run format:check
+        run: pnpm run format:check
 
       - name: Lint
         run: pnpm run lint
