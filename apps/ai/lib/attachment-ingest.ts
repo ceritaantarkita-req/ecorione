@@ -2,6 +2,7 @@ import {
   ArtifactPointerSchema,
   MultimodalAnalyzeResponseSchema,
   makeId,
+  type OperationId,
   type SessionId,
 } from "@ecorione/shared-schema";
 
@@ -48,7 +49,11 @@ export class AttachmentUpstreamError extends Error {
   readonly code = "ATTACHMENT_UPSTREAM_UNAVAILABLE";
 
   constructor(service: "Artifact" | "Hub", message?: string) {
-    super(message === undefined ? `${service} tidak tersedia untuk lampiran.` : `${service}: ${message}`);
+    super(
+      message === undefined
+        ? `${service} tidak tersedia untuk lampiran.`
+        : `${service}: ${message}`,
+    );
     this.name = "AttachmentUpstreamError";
   }
 }
@@ -66,7 +71,7 @@ export interface AttachmentIngestDeps {
   readonly hubUrl: string;
   readonly internalToken?: string | undefined;
   readonly fetchImpl?: typeof fetch | undefined;
-  readonly operationId?: (() => ReturnType<typeof makeId<"operation">>) | undefined;
+  readonly operationId?: (() => OperationId) | undefined;
 }
 
 export interface IngestedAttachment {
@@ -81,7 +86,10 @@ export interface IngestedAttachment {
   readonly state: "READY";
 }
 
-export function resolveAttachmentMimeType(fileName: string, declaredMimeType: string): string {
+export function resolveAttachmentMimeType(
+  fileName: string,
+  declaredMimeType: string,
+): string {
   const declared = declaredMimeType.trim().toLowerCase();
   if (declared !== "" && declared !== "application/octet-stream") return declared;
   const normalizedName = fileName.trim().toLowerCase();
