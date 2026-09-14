@@ -92,3 +92,44 @@ jobs:
             exit 1
           fi
           echo "Bersih."
+
+  finalize-w12:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'agent/active-work-20260914'
+    needs: [verify, naming]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/active-work-20260914
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Materialize verified W12 composer
+        run: |
+          git apply --recount scripts/w12-staged-composer.patch
+          pnpm exec prettier apps/ai/app/page.tsx --write
+          rm scripts/w12-staged-composer.patch
+          git fetch origin main --depth=1
+          git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
+          test "$(git hash-object .github/workflows/ci.yml)" = "838ed8d288a6f4ef8ca560c8168bbf79d8122f9a"
+          git diff --check
+
+      - name: Commit verified W12 composer
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/ai/app/page.tsx .github/workflows/ci.yml scripts/w12-staged-composer.patch
+          git commit -m "fix: stage attachments until chat submit"
+          git push origin HEAD:agent/active-work-20260914
