@@ -14,6 +14,16 @@ type RuntimeSnapshot = {
   };
 };
 type Credential = { provider: string; purpose: string; generation: number; updatedAt: string };
+type CredentialProvider =
+  | "anthropic"
+  | "openai"
+  | "openrouter"
+  | "kimi"
+  | "gemini"
+  | "qwen"
+  | "glm"
+  | "custom-openai"
+  | "mcp";
 type McpServer = {
   id: string;
   displayName: string;
@@ -24,6 +34,21 @@ type McpServer = {
 };
 
 const PERSONAL_WORKSPACE_ID = "ws_personal";
+const CREDENTIAL_PROVIDER_OPTIONS: readonly {
+  value: CredentialProvider;
+  label: string;
+  routingReady: boolean;
+}[] = [
+  { value: "anthropic", label: "Claude / Anthropic", routingReady: true },
+  { value: "openai", label: "OpenAI / ChatGPT API", routingReady: true },
+  { value: "openrouter", label: "OpenRouter", routingReady: true },
+  { value: "kimi", label: "Kimi / Moonshot", routingReady: false },
+  { value: "gemini", label: "Google Gemini", routingReady: false },
+  { value: "qwen", label: "Qwen", routingReady: false },
+  { value: "glm", label: "GLM", routingReady: false },
+  { value: "custom-openai", label: "Custom OpenAI-compatible", routingReady: false },
+  { value: "mcp", label: "MCP token", routingReady: false },
+];
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
@@ -59,7 +84,7 @@ export default function SettingsPage() {
   const [workspaceId, setWorkspaceId] = useState(PERSONAL_WORKSPACE_ID);
   const [servers, setServers] = useState<McpServer[]>([]);
   const [secret, setSecret] = useState("");
-  const [secretProvider, setSecretProvider] = useState("anthropic");
+  const [secretProvider, setSecretProvider] = useState<CredentialProvider>("anthropic");
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("");
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -128,6 +153,9 @@ export default function SettingsPage() {
 
   const mutableLocalModel =
     runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());
+  const selectedCredential = credentials.find((item) => item.provider === secretProvider) ?? null;
+  const selectedProviderOption =
+    CREDENTIAL_PROVIDER_OPTIONS.find((item) => item.value === secretProvider) ?? null;
 
   async function saveRuntime() {
     if (runtime === null || !beginAction("runtime")) return;
@@ -153,6 +181,7 @@ export default function SettingsPage() {
       finishAction();
     }
   }
+
   async function saveCredential() {
     if (!beginAction("credential")) return;
     setStatus("Encrypting credential…");
@@ -171,9 +200,27 @@ export default function SettingsPage() {
       finishAction();
     }
   }
-  async function runCanary() {
-    if (!beginAction("canary")) return;
-    setStatus("Running local canary…");
+
+  async function removeCredential() {
+    if (selectedCredential === null || !beginAction("remove-credential")) return;
+    setStatus("Removing credential…");
+    try {
+      await json(`/api/settings/settings/credentials/${secretProvider}`, {
+        method: "DELETE",
+      });
+      setSecret("");
+      await refreshCredentials();
+      setStatus("Credential removed from Connect vault.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
+  async function runCanary(target: "local" | "hosted") {
+    if (!beginAction(`canary-${target}`)) return;
+    setStatus(target === "local" ? "Running local canary…" : "Running hosted canary…");
     try {
       const result = await json<{
         pass: boolean;
@@ -183,7 +230,7 @@ export default function SettingsPage() {
       }>("/api/settings/ops/provider-canary", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ target: "local" }),
+        body: JSON.stringify({ target }),
       });
       setStatus(
         `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms`,
@@ -194,6 +241,7 @@ export default function SettingsPage() {
       finishAction();
     }
   }
+
   async function saveMcpServer() {
     if (!beginAction("mcp")) return;
     setStatus("Validating and saving MCP server…");
@@ -316,9 +364,17 @@ export default function SettingsPage() {
                 type="button"
                 className={styles.secondary}
                 disabled={pendingAction !== null}
-                onClick={() => void runCanary()}
+                onClick={() => void runCanary("local")}
               >
-                {pendingAction === "canary" ? "Running…" : "Run local canary"}
+                {pendingAction === "canary-local" ? "Running…" : "Run local canary"}
+              </button>
+              <button
+                type="button"
+                className={styles.secondary}
+                disabled={pendingAction !== null || !runtime.settings.hostedCallsEnabled}
+                onClick={() => void runCanary("hosted")}
+              >
+                {pendingAction === "canary-hosted" ? "Running…" : "Test hosted provider"}
               </button>
             </div>
           </div>
@@ -340,17 +396,18 @@ export default function SettingsPage() {
             aria-label="Credential provider"
             value={secretProvider}
             disabled={pendingAction !== null}
-            onChange={(event) => setSecretProvider(event.target.value)}
+            onChange={(event) => setSecretProvider(event.target.value as CredentialProvider)}
           >
-            <option value="anthropic">Anthropic</option>
-            <option value="openai">OpenAI</option>
-            <option value="openrouter">OpenRouter</option>
-            <option value="mcp">MCP token</option>
+            {CREDENTIAL_PROVIDER_OPTIONS.map((provider) => (
+              <option key={provider.value} value={provider.value}>
+                {provider.label}
+              </option>
+            ))}
           </select>
           <input
             type="password"
             autoComplete="new-password"
-            placeholder="New secret"
+            placeholder={selectedCredential === null ? "New secret" : "Replace secret"}
             aria-label="New credential secret"
             value={secret}
             disabled={pendingAction !== null}
@@ -361,9 +418,29 @@ export default function SettingsPage() {
             disabled={secret.length === 0 || pendingAction !== null}
             onClick={() => void saveCredential()}
           >
-            {pendingAction === "credential" ? "Encrypting…" : "Encrypt & save"}
+            {pendingAction === "credential"
+              ? "Encrypting…"
+              : selectedCredential === null
+                ? "Encrypt & save"
+                : "Replace credential"}
+          </button>
+          <button
+            type="button"
+            className={styles.secondary}
+            disabled={selectedCredential === null || pendingAction !== null}
+            onClick={() => void removeCredential()}
+          >
+            {pendingAction === "remove-credential" ? "Removing…" : "Remove"}
           </button>
         </div>
+        <p className={styles.muted}>
+          {selectedCredential === null
+            ? "Not connected."
+            : `Connected · generation ${String(selectedCredential.generation)} · updated ${selectedCredential.updatedAt}.`}
+          {selectedProviderOption !== null && !selectedProviderOption.routingReady
+            ? " Credential storage is ready; model routing for this provider is not enabled yet."
+            : ""}
+        </p>
       </section>
 
       <section className={styles.section}>
