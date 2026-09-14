@@ -106,7 +106,9 @@ async function waitForPort(port, timeoutMs, label) {
     if (await isPortReachable(port)) return;
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 500));
   }
-  throw new Error(`${label} belum ready setelah ${String(Math.round(timeoutMs / 1000))} detik.`);
+  throw new Error(
+    `${label} belum ready setelah ${String(Math.round(timeoutMs / 1000))} detik.`,
+  );
 }
 
 function commandName(name) {
@@ -186,7 +188,9 @@ async function doctor() {
 
   const hasEnv = existsSync(envPath);
   const hasDocker = dockerAvailable();
-  console.log(`${hasEnv ? "✓" : "!"} .env ${hasEnv ? "tersedia" : "belum dibuat (engine:start akan membuatnya)"}`);
+  console.log(
+    `${hasEnv ? "✓" : "!"} .env ${hasEnv ? "tersedia" : "belum dibuat (engine:start akan membuatnya)"}`,
+  );
   console.log(`${hasDocker ? "✓" : "!"} Docker ${hasDocker ? "reachable" : "tidak reachable"}`);
   console.log(`${(await isPortReachable(7233)) ? "✓" : "!"} Temporal 127.0.0.1:7233`);
 
@@ -266,7 +270,9 @@ async function main() {
   if (command === "start") return start();
   if (command === "doctor") return doctor();
   if (command === "stop-temporal") return stopTemporal();
-  throw new Error(`Command tidak dikenal: ${command}. Gunakan start, doctor, atau stop-temporal.`);
+  throw new Error(
+    `Command tidak dikenal: ${command}. Gunakan start, doctor, atau stop-temporal.`,
+  );
 }
 
 const invokedPath = process.argv[1] === undefined ? "" : resolve(process.argv[1]);
@@ -274,7 +280,9 @@ if (invokedPath === fileURLToPath(import.meta.url)) {
   try {
     await main();
   } catch (error) {
-    console.error(`\nECORIONE engine error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `\nECORIONE engine error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exitCode = 1;
   }
 }
