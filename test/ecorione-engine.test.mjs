@@ -21,9 +21,11 @@ function tempRoot() {
 
 describe("ECORIONE local engine bootstrap", () => {
   it("parses simple env values without treating comments as config", () => {
-    expect(
-      parseSimpleEnv('# note\nA=one\nB="two words"\nC=\'three words\'\n\n'),
-    ).toEqual({ A: "one", B: "two words", C: "three words" });
+    expect(parseSimpleEnv("# note\nA=one\nB=\"two words\"\nC='three words'\n\n")).toEqual({
+      A: "one",
+      B: "two words",
+      C: "three words",
+    });
   });
 
   it("updates one env value without duplicating its key", () => {
