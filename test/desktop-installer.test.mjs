@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const installer = readFileSync(resolve(ROOT, "desktop/installer.iss"), "utf8");
-const workflow = readFileSync(resolve(ROOT, ".github/workflows/desktop-installer.yml"), "utf8");
+const workflow = readFileSync(
+  resolve(ROOT, ".github/workflows/desktop-installer.yml"),
+  "utf8",
+);
 
 describe("ECORIONE Windows installer specification", () => {
   it("installs only the prepared bundle and never the source repository", () => {
@@ -33,7 +36,9 @@ describe("ECORIONE Windows installer specification", () => {
   it("requires explicit release inputs and emits a versioned Setup executable", () => {
     expect(installer).toContain('#define AppVersion GetEnv("ECORIONE_VERSION")');
     expect(installer).toContain('#define InstallerOut GetEnv("ECORIONE_INSTALLER_OUT")');
-    expect(installer).toContain("#error \"ECORIONE_VERSION environment variable is required\"");
+    expect(installer).toContain(
+      "#error \"ECORIONE_VERSION environment variable is required\"",
+    );
     expect(installer).toContain("OutputBaseFilename=ECORIONE-Setup-{#AppVersion}");
   });
 
