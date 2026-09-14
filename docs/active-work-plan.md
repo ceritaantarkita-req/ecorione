@@ -31,8 +31,8 @@ Empat blok utama:
 
 | ID | Pekerjaan | Status | Definition of done |
 |---|---|---:|---|
-| W01 | Reconcile `system-analysis-2026-09-13.md` dengan kondisi real repo | TODO | Temuan valid/outdated dipisahkan; tidak ada blocker lama yang masih dinyatakan aktif tanpa dasar current code/evidence. |
-| W02 | Tutup gap Vitest `*.test.tsx` | TODO | Semua test TSX yang dimaksud masuk discovery normal/CI dan tidak ada silent-skip sejenis yang terlewat. |
+| W01 | Reconcile `system-analysis-2026-09-13.md` dengan kondisi real repo | **DONE** | Temuan valid/outdated dipisahkan; tidak ada blocker lama yang masih dinyatakan aktif tanpa dasar current code/evidence. |
+| W02 | Tutup gap Vitest `*.test.tsx` | **STARTED** | Semua test TSX yang dimaksud masuk discovery normal/CI dan tidak ada silent-skip sejenis yang terlewat. |
 | W03 | Audit UX/Product Validation di current `main` | TODO | Full Phase 4 walkthrough current main selesai; defect ledger jelas; tidak ada S0/S1 terbuka. |
 | W04 | Rapikan partial-stack vs full-stack behavior | TODO | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
 | W05 | Provider Settings foundation | TODO | User dapat menghubungkan OpenAI, Anthropic/Claude, OpenRouter, Kimi/Moonshot, Gemini, Qwen, GLM, dan custom OpenAI-compatible tanpa edit `.env` manual. |
@@ -185,6 +185,26 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 **Limitation:** belum ada implementation item W01–W20 yang dinyatakan selesai oleh entry ini.
 
 **Next:** mulai W01 kecuali operator mengubah prioritas.
+
+### 2026-09-14 — W01 — DONE
+
+**Scope:** reconcile `docs/system-analysis-2026-09-13.md` terhadap current code/evidence.
+
+**Changed:**
+
+- mempertahankan kritik yang masih valid: complexity-vs-use, partial-stack UX, hosted-dollar validation gap, mutable model identity, UX runtime gap, TSX discovery gap, dan attachment UI-only;
+- mengoreksi wording backup/restore Sync/Connect: run sebelumnya memiliki absent optional source state, bukan bukti bahwa existing state pasti hilang;
+- menghapus status blocker lama yang sudah tidak benar untuk Credential Vault, durable spend ledger, external/public MCP acceptance, dan full-history scanner;
+- mempertahankan nuance bahwa history scanner belum menjadi continuous normal-CI gate dan product eval suite masih belum terisi memadai;
+- mengarahkan prioritas aktif ke dokumen ini, bukan ke audit historical.
+
+**Evidence:** commit `89592d7ed4c5508e8fa1031bdc9197162ae4ad67` pada branch `agent/active-work-20260914`.
+
+**Result:** `system-analysis-2026-09-13.md` sekarang dapat dibaca sebagai historical analysis yang sudah direconcile, bukan current blocker list yang stale.
+
+**Limitation:** runtime UX dan product-eval gaps yang disebut masih harus ditutup oleh work item berikutnya.
+
+**Next:** W02 — perbaiki Vitest discovery untuk `*.test.tsx` dan verifikasi via CI.
 
 ## 10. Claim boundary
 
