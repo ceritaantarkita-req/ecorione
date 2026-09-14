@@ -9,30 +9,26 @@ import {
 } from "node:fs";
 import { dirname } from "node:path";
 import { z } from "zod";
+import {
+  AI_PROVIDER_IDS,
+  CREDENTIAL_PROVIDER_IDS,
+  credentialPurposeForProvider,
+  type AiProviderId,
+  type CredentialProviderId,
+  type CredentialPurpose as CatalogCredentialPurpose,
+} from "./provider-catalog.js";
 
-export const AI_CREDENTIAL_PROVIDERS = [
-  "anthropic",
-  "openai",
-  "openrouter",
-  "kimi",
-  "gemini",
-  "qwen",
-  "glm",
-  "custom-openai",
-] as const;
-export type AiCredentialProvider = (typeof AI_CREDENTIAL_PROVIDERS)[number];
+export const AI_CREDENTIAL_PROVIDERS = AI_PROVIDER_IDS;
+export type AiCredentialProvider = AiProviderId;
 
-export const CREDENTIAL_PROVIDERS = [...AI_CREDENTIAL_PROVIDERS, "mcp"] as const;
-export type CredentialProvider = (typeof CREDENTIAL_PROVIDERS)[number];
+export const CREDENTIAL_PROVIDERS = CREDENTIAL_PROVIDER_IDS;
+export type CredentialProvider = CredentialProviderId;
 
 export const CREDENTIAL_PURPOSES = ["messages", "tokens"] as const;
-export type CredentialPurpose = (typeof CREDENTIAL_PURPOSES)[number];
+export type CredentialPurpose = CatalogCredentialPurpose;
 
 function assertCredentialScope(provider: CredentialProvider, purpose: CredentialPurpose): void {
-  const valid =
-    (provider === "mcp" && purpose === "tokens") ||
-    (provider !== "mcp" && purpose === "messages");
-  if (!valid) {
+  if (credentialPurposeForProvider(provider) !== purpose) {
     throw new CredentialVaultFormatError(
       `scope credential tidak didukung: ${provider}/${purpose}.`,
     );
