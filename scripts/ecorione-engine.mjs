@@ -412,9 +412,7 @@ async function doctor() {
     }`,
   );
   console.log(
-    `${hasDocker ? "✓" : "·"} Docker ${
-      hasDocker ? "reachable" : "tidak reachable (opsional)"
-    }`,
+    `${hasDocker ? "✓" : "·"} Docker ${hasDocker ? "reachable" : "tidak reachable (opsional)"}`,
   );
   if (!hasTemporalCli && !hasDocker) criticalFailure = true;
   console.log(`${(await isPortReachable(7233)) ? "✓" : "!"} Temporal 127.0.0.1:7233`);
