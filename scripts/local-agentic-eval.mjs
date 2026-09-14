@@ -20,7 +20,9 @@ const manifest = validateAgenticManifest(
 const args = new Set(process.argv.slice(2));
 const inventoryOnly = args.has("--inventory");
 const allowUnverifiedIdentity = args.has("--allow-unverified-identity");
-const baseUrl = (process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11434/v1").replace(/\/$/u, "");
+const baseUrl = (
+  process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11434/v1"
+).replace(/\/$/u, "");
 const modelTag = process.env.ECORIONE_LOCAL_MODEL ?? "qwen3:8b-instruct-q4_K_M";
 const declaredDigest = process.env.ECORIONE_LOCAL_MODEL_DIGEST?.trim() || null;
 
@@ -60,7 +62,9 @@ async function inspectIdentity() {
     try {
       const tags = await fetchJson(`${nativeBase}/api/tags`);
       const models = Array.isArray(tags.body?.models) ? tags.body.models : [];
-      const match = models.find((item) => item?.name === modelTag || item?.model === modelTag);
+      const match = models.find(
+        (item) => item?.name === modelTag || item?.model === modelTag,
+      );
       resolvedDigest = typeof match?.digest === "string" ? match.digest : null;
     } catch {
       resolvedDigest = null;
@@ -157,7 +161,10 @@ async function runOnce(item, repetition) {
     messages.push({ role: "assistant", content: call.content });
     messages.push({
       role: "user",
-      content: `TOOL_OBSERVATION ${JSON.stringify({ tool: execution.tool, result: execution.result })}`,
+      content: `TOOL_OBSERVATION ${JSON.stringify({
+        tool: execution.tool,
+        result: execution.result,
+      })}`,
     });
   }
 
@@ -212,12 +219,14 @@ async function main() {
       totalRuns: runs.length,
       avgLatencyMs:
         runs.reduce(
-          (sum, run) => sum + run.calls.reduce((callSum, call) => callSum + call.latencyMs, 0),
+          (sum, run) =>
+            sum + run.calls.reduce((callSum, call) => callSum + call.latencyMs, 0),
           0,
         ) / Math.max(1, runs.length),
       avgOutputTokens:
         runs.reduce(
-          (sum, run) => sum + run.calls.reduce((callSum, call) => callSum + call.outputTokens, 0),
+          (sum, run) =>
+            sum + run.calls.reduce((callSum, call) => callSum + call.outputTokens, 0),
           0,
         ) / Math.max(1, runs.length),
     };
