@@ -9,6 +9,8 @@ import {
   parseSimpleEnv,
   probeLocalRuntime,
   stopSpawnedChild,
+  temporalCliAvailable,
+  temporalInstallHint,
   upsertEnvValue,
   waitForSpawnedChild,
 } from "../scripts/ecorione-engine.mjs";
@@ -193,5 +195,28 @@ describe("ECORIONE local engine bootstrap", () => {
     await stopSpawnedChild(child, 0);
 
     expect(child.signals).toEqual(["SIGTERM", "SIGKILL"]);
+  });
+
+  it("points Windows users at the Temporal CLI PowerShell installer", () => {
+    expect(temporalInstallHint("win32")).toContain("iwr https://temporal.download/cli.ps1");
+  });
+
+  it("offers brew and the shell installer on macOS", () => {
+    const hint = temporalInstallHint("darwin");
+    expect(hint).toContain("brew install temporal");
+    expect(hint).toContain("curl -sSf https://temporal.download/cli.sh | sh");
+  });
+
+  it("falls back to the shell installer on Linux and other platforms", () => {
+    expect(temporalInstallHint("linux")).toContain(
+      "curl -sSf https://temporal.download/cli.sh | sh",
+    );
+  });
+
+  it("reports whether the Temporal CLI binary is on PATH without throwing", () => {
+    // Tidak menganggap CLI-nya terpasang atau tidak di mesin CI — cuma memastikan
+    // pemeriksaannya sendiri tidak pernah melempar, karena ensureTemporal() bergantung
+    // pada ini untuk memilih jalur CLI vs pesan instalasi vs Docker.
+    expect(typeof temporalCliAvailable()).toBe("boolean");
   });
 });
