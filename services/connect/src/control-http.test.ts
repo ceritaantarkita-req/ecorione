@@ -57,6 +57,32 @@ describe("Connect Control Center boundary", () => {
     expect(runtime.get().settings.defaultChatTarget).toBe("hosted");
   });
 
+  it("mengekspos provider catalog metadata tanpa credential plaintext", async () => {
+    const { app } = fixture();
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/settings/providers",
+      headers: auth,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.body).not.toContain("secret");
+    expect(response.json().providers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "anthropic",
+          displayName: "Claude / Anthropic",
+          routingReady: true,
+          connectionTestReady: true,
+        }),
+        expect.objectContaining({
+          id: "kimi",
+          routingReady: false,
+          connectionTestReady: false,
+        }),
+      ]),
+    );
+  });
+
   it("menerima plaintext credential sekali, menyimpan terenkripsi, dan tidak meng-echo secret", async () => {
     const { app, vault } = fixture();
     const secret = "provider-secret-value-that-must-not-echo";
