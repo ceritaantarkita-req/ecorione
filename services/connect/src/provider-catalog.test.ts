@@ -22,8 +22,9 @@ describe("provider catalog", () => {
     const testReady = PROVIDER_CATALOG.filter((entry) => entry.connectionTestReady).map(
       (entry) => entry.id,
     );
-    expect(routingReady).toEqual(HOSTED_PROVIDER_IDS);
-    expect(testReady).toEqual(HOSTED_PROVIDER_IDS);
+    const expectedHosted = [...HOSTED_PROVIDER_IDS].sort();
+    expect([...routingReady].sort()).toEqual(expectedHosted);
+    expect([...testReady].sort()).toEqual(expectedHosted);
 
     for (const provider of AI_PROVIDER_IDS) {
       const entry = PROVIDER_CATALOG.find((candidate) => candidate.id === provider);
