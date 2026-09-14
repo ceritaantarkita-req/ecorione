@@ -1,4 +1,11 @@
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -39,7 +46,7 @@ describe("ECORIONE desktop release bundle", () => {
     expect(normalizeVersion("0.1.0-rc.1")).toBe("0.1.0-rc.1");
   });
 
-  it("stages only the canonical desktop surface and license for normal users", () => {
+  it("stages only the canonical user-facing desktop surface and license", () => {
     const root = tempRoot();
     const layout = buildBundleLayout({ version: "0.1.0", outRoot: root });
     mkdirSync(layout.runtimeDir, { recursive: true });
@@ -52,6 +59,7 @@ describe("ECORIONE desktop release bundle", () => {
     expect(launcher).toContain("ECORIONE_DESKTOP_IMAGE=ecorione:desktop");
     expect(compose).toContain("ECORIONE_DESKTOP_IMAGE");
     expect(license.length).toBeGreaterThan(100);
+    expect(existsSync(join(layout.bundleRoot, "installer.iss"))).toBe(false);
   });
 
   it("writes release metadata and SHA-256 coverage for every staged artifact including runtime image", () => {
