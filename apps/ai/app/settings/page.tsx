@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ClientResponseError, readJson } from "../../lib/client-response";
-import {
-  credentialSaveReady,
-  type CredentialTestStamp,
-} from "../../lib/credential-onboarding";
+import { credentialSaveReady, type CredentialTestStamp } from "../../lib/credential-onboarding";
 import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
 import styles from "./Settings.module.css";
 
