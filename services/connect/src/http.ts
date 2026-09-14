@@ -39,11 +39,14 @@ import type {
   RuntimeSettings,
   RuntimeSettingsAdmin,
 } from "./runtime-settings.js";
+import { MutableLocalModelTagError } from "./runtime-settings.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
   ProviderError,
+  SpendBudgetNotConfiguredError,
 } from "./providers/errors.js";
+import { LocalModelDigestMismatchError } from "./providers/local-model-provenance.js";
 import type { LocalRuntimeId } from "./providers/local-runtime.js";
 import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 
@@ -52,6 +55,14 @@ export const DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES = 32 * 1024 * 1024;
 function toHttpError(err: unknown, detailedProviderHealth = false): unknown {
   if (err instanceof CostKillSwitchError)
     return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
+  if (err instanceof SpendBudgetNotConfiguredError)
+    return new HttpError(503, "SPEND_BUDGET_NOT_CONFIGURED", err.message);
+  if (err instanceof MutableLocalModelTagError)
+    return new HttpError(400, "MUTABLE_LOCAL_MODEL_TAG", err.message);
+  // Runtime melayani model yang berbeda dari yang dideklarasikan operator: fail-closed,
+  // karena hasilnya akan masuk evidence dengan atribusi yang keliru (ADR-14).
+  if (err instanceof LocalModelDigestMismatchError)
+    return new HttpError(409, "LOCAL_MODEL_DIGEST_MISMATCH", err.message);
   if (err instanceof CredentialVaultError)
     return new HttpError(503, "CREDENTIAL_VAULT_UNAVAILABLE", err.message);
   if (err instanceof SpendBudgetExceededError)
@@ -121,6 +132,8 @@ export interface BuildConnectServerOptions {
   readonly hostedCallsEnabled?: boolean | undefined;
   readonly defaultChatTarget?: ChatTargetPreference | undefined;
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
+  readonly hostedSpendUnlimited?: boolean | undefined;
+  readonly resolveLocalProvenance?: CompleteDeps["resolveLocalProvenance"] | undefined;
   readonly cache?: ExactMatchCache | undefined;
   readonly mcpManager?: McpManager | undefined;
   readonly localMultimodalAdapter?: MultimodalAdapter | undefined;
@@ -161,6 +174,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     cache,
     hostedCallsEnabled: runtime.hostedCallsEnabled,
     spendBudget: options.spendBudget,
+    hostedSpendUnlimited: options.hostedSpendUnlimited,
+    resolveLocalProvenance: options.resolveLocalProvenance,
   });
 
   if (options.mcpManager !== undefined) registerOutboundMcpRoutes(app, options.mcpManager);
@@ -267,6 +282,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
           responseModel: result.responseModel,
           modelIdentity: result.modelIdentity,
           modelIdentityPinned: result.modelIdentityPinned,
+          modelIdentityProvenance: result.modelIdentityProvenance,
           cacheHit: result.cacheHit,
           latencyMs,
           usage: result.usage,
@@ -316,6 +332,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         responseModel: result.responseModel,
         modelIdentity: result.modelIdentity,
         modelIdentityPinned: result.modelIdentityPinned,
+        modelIdentityProvenance: result.modelIdentityProvenance,
         cacheHit: result.cacheHit,
         latencyMs,
         outputChars: result.reply.length,
@@ -346,6 +363,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
           hostedProvider: currentRuntime().hostedProvider,
           hostedCallsEnabled: currentRuntime().hostedCallsEnabled,
           spendBudget: options.spendBudget,
+          hostedSpendUnlimited: options.hostedSpendUnlimited,
         },
         body,
         nowIso(),

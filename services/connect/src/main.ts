@@ -2,7 +2,7 @@
 import { resolve } from "node:path";
 import { bindHost, resolveRepoRuntimePath } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
-import { buildConnectServer } from "./http.js";
+import { buildConnectServer, type BuildConnectServerOptions } from "./http.js";
 import { parseOptionalLocalModelDigest } from "./local-model-identity.js";
 import { VaultMcpCredentialReader } from "./mcp-client/credentials.js";
 import { HubMcpGovernance } from "./mcp-client/governance.js";
@@ -13,6 +13,7 @@ import { SdkMcpClientFactory } from "./mcp-client/sdk-client.js";
 import { HttpMultimodalAdapter } from "./multimodal.js";
 import { withHostedOperatorGate } from "./operator-runtime-settings.js";
 import { parseHostedProvider } from "./provider-types.js";
+import { LocalModelProvenanceResolver } from "./providers/local-model-provenance.js";
 import { parseLocalRuntime } from "./providers/local-runtime.js";
 import { FileRuntimeSettings } from "./runtime-settings.js";
 import { FileSpendBudget, parseOptionalBudgetUsd } from "./spend-budget.js";
@@ -93,6 +94,22 @@ const spendBudget =
         dailyUsd: spendDailyUsd,
         monthlyUsd: spendMonthlyUsd,
       });
+/**
+ * ADR-21: dispatch hosted tunduk pada kill switch DAN plafon kumulatif. Tanpa plafon
+ * terkonfigurasi, Connect menolak hosted (`SPEND_BUDGET_NOT_CONFIGURED`) alih-alih
+ * berjalan tanpa admission control sama sekali. Operator yang memang menginginkan
+ * tanpa-plafon harus menyatakannya, bukan mendapatkannya karena lupa mengisi env.
+ */
+const hostedSpendUnlimited = process.env.ECORIONE_SPEND_UNLIMITED === "1";
+
+/**
+ * Identitas model lokal diselesaikan lewat boundary provider, bukan dipercaya dari
+ * deklarasi env (audit 2026-09-14 S2-5). TTL pendek supaya `ollama pull` yang mengganti
+ * isi sebuah tag terlihat, karena justru itu yang sedang dijaga.
+ */
+const localProvenanceResolver = new LocalModelProvenanceResolver();
+const resolveLocalProvenance: BuildConnectServerOptions["resolveLocalProvenance"] = (input) =>
+  localProvenanceResolver.resolve(input);
 
 const localMultimodalUrl = process.env.ECORIONE_MULTIMODAL_LOCAL_URL || undefined;
 const hostedMultimodalUrl = process.env.ECORIONE_MULTIMODAL_HOSTED_URL || undefined;
@@ -155,6 +172,8 @@ const app = buildConnectServer({
   localModelDigest,
   hostedCallsEnabled: hostedCallsAllowedByOperator,
   spendBudget,
+  hostedSpendUnlimited,
+  resolveLocalProvenance,
   mcpManager,
   localMultimodalAdapter,
   hostedMultimodalAdapter,

@@ -20,21 +20,45 @@ export function parseOptionalLocalModelDigest(
   return LocalModelDigestSchema.parse(value);
 }
 
+/**
+ * Bagaimana digest pada identitas ini diperoleh.
+ *
+ * `verified`/`resolved` berarti boundary provider lokal benar-benar melaporkan digest itu.
+ * `declared-unverified` berarti operator menyatakannya tapi runtime tidak bisa
+ * mengonfirmasi — itu klaim, bukan bukti, jadi tidak dihitung `pinned` (audit 2026-09-14
+ * S2-5). Tanpa deklarasi maupun provenance statusnya `unverified`.
+ */
+export type LocalIdentityProvenance =
+  "verified" | "resolved" | "declared-unverified" | "unverified";
+
+const PINNING_PROVENANCE: ReadonlySet<LocalIdentityProvenance> =
+  new Set<LocalIdentityProvenance>(["verified", "resolved"]);
+
 export interface LocalModelIdentity {
   readonly id: string;
   readonly pinned: boolean;
   readonly digest: LocalModelDigest | null;
+  readonly provenance: LocalIdentityProvenance;
 }
 
 export function localModelIdentity(input: {
   runtime: LocalRuntimeId;
   modelTag: string;
   digest: LocalModelDigest | null | undefined;
+  /**
+   * Default `declared-unverified` ketika ada digest dan `unverified` ketika tidak —
+   * yaitu apa yang sebenarnya diketahui pemanggil yang belum melewati boundary provider.
+   */
+  provenance?: LocalIdentityProvenance | undefined;
 }): LocalModelIdentity {
   const digest = input.digest ?? null;
+  const provenance =
+    input.provenance ?? (digest === null ? "unverified" : "declared-unverified");
+  const pinned = PINNING_PROVENANCE.has(provenance) && digest !== null;
   return {
-    id: `local:${input.runtime}:${input.modelTag}@${digest ?? "unpinned"}`,
-    pinned: digest !== null,
+    id: `local:${input.runtime}:${input.modelTag}@${pinned ? digest : "unpinned"}`,
+    pinned,
     digest,
+    provenance,
   };
 }

@@ -28,10 +28,40 @@ describe("local model identity", () => {
       id: "local:openai-compatible:qwen3:8b@unpinned",
       pinned: false,
       digest: null,
+      provenance: "unverified",
     });
   });
 
-  it("builds a reproducible identity when a digest is pinned", () => {
+  it("builds a reproducible identity when the boundary verified the digest", () => {
+    expect(
+      localModelIdentity({
+        runtime: "openai-compatible",
+        modelTag: "qwen3:8b",
+        digest: DIGEST,
+        provenance: "verified",
+      }),
+    ).toEqual({
+      id: `local:openai-compatible:qwen3:8b@${DIGEST}`,
+      pinned: true,
+      digest: DIGEST,
+      provenance: "verified",
+    });
+  });
+
+  it("menghitung digest yang dilaporkan runtime sebagai terpin", () => {
+    expect(
+      localModelIdentity({
+        runtime: "openai-compatible",
+        modelTag: "qwen3:8b",
+        digest: DIGEST,
+        provenance: "resolved",
+      }),
+    ).toMatchObject({ pinned: true, provenance: "resolved" });
+  });
+
+  it("tidak menaikkan deklarasi operator yang tidak terverifikasi jadi terpin", () => {
+    // Audit 2026-09-14 S2-5: ini kontrak inti perbaikannya — digest tetap dilaporkan,
+    // tapi identitasnya tidak diklaim terpin dan tidak boleh mengunci exact cache.
     expect(
       localModelIdentity({
         runtime: "openai-compatible",
@@ -39,9 +69,10 @@ describe("local model identity", () => {
         digest: DIGEST,
       }),
     ).toEqual({
-      id: `local:openai-compatible:qwen3:8b@${DIGEST}`,
-      pinned: true,
+      id: "local:openai-compatible:qwen3:8b@unpinned",
+      pinned: false,
       digest: DIGEST,
+      provenance: "declared-unverified",
     });
   });
 });

@@ -36,3 +36,23 @@ export class CostKillSwitchError extends Error {
     this.name = "CostKillSwitchError";
   }
 }
+
+/**
+ * Tidak ada plafon spend kumulatif yang terkonfigurasi untuk dispatch hosted.
+ *
+ * ADR-21 menyatakan hosted dispatch tunduk pada kill switch DAN budget kumulatif. Sebelum
+ * audit 2026-09-14, `ECORIONE_SPEND_DAILY_USD`/`_MONTHLY_USD` yang kosong menghasilkan
+ * `spendBudget === undefined`, yang berarti dispatch hosted berjalan tanpa admission
+ * control sama sekali — diam-diam unlimited, persis kebalikan dari invariant-nya. Gagal
+ * tertutup di sini, dan minta operator menyatakan niatnya secara eksplisit.
+ */
+export class SpendBudgetNotConfiguredError extends Error {
+  constructor() {
+    super(
+      "Dispatch hosted butuh plafon spend kumulatif. Isi ECORIONE_SPEND_DAILY_USD dan/atau " +
+        "ECORIONE_SPEND_MONTHLY_USD, atau nyatakan tanpa plafon secara eksplisit lewat " +
+        "ECORIONE_SPEND_UNLIMITED=1.",
+    );
+    this.name = "SpendBudgetNotConfiguredError";
+  }
+}

@@ -14,14 +14,23 @@ import {
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import type { ProviderCredentialReader } from "./credential-vault.js";
-import { localModelIdentity, type LocalModelDigest } from "./local-model-identity.js";
+import {
+  localModelIdentity,
+  type LocalIdentityProvenance,
+  type LocalModelDigest,
+} from "./local-model-identity.js";
 import {
   DEFAULT_HOSTED_PROVIDER,
   providerCredentialLabel,
   type HostedProviderId,
 } from "./provider-types.js";
-import { CostKillSwitchError, MissingCredentialError } from "./providers/errors.js";
+import {
+  CostKillSwitchError,
+  MissingCredentialError,
+  SpendBudgetNotConfiguredError,
+} from "./providers/errors.js";
 import { callHostedProvider, estimateHostedReservationUsd } from "./providers/hosted.js";
+import type { LocalModelProvenance } from "./providers/local-model-provenance.js";
 import { callLocalRuntime, type LocalRuntimeId } from "./providers/local-runtime.js";
 import { route, type RouteTarget } from "./routing.js";
 import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
@@ -42,9 +51,28 @@ export interface CompleteDeps {
   readonly localBaseUrl: string;
   readonly localModelTag: string;
   readonly localModelDigest?: LocalModelDigest | null | undefined;
+  /**
+   * Menyelesaikan identitas model lokal lewat boundary provider. Kalau tidak disediakan,
+   * digest yang dideklarasikan operator tetap dilaporkan tapi TIDAK dihitung `pinned`:
+   * deklarasi tanpa verifikasi adalah klaim, bukan bukti (ADR-14, audit S2-5).
+   */
+  readonly resolveLocalProvenance?:
+    | ((input: {
+        baseUrl: string;
+        modelTag: string;
+        declaredDigest: LocalModelDigest | null;
+        signal?: AbortSignal | undefined;
+      }) => Promise<LocalModelProvenance>)
+    | undefined;
   readonly cache: ExactMatchCache;
   readonly hostedCallsEnabled: boolean;
   readonly spendBudget?: SpendBudgetController | undefined;
+  /**
+   * Operator menyatakan secara eksplisit bahwa dispatch hosted boleh jalan tanpa plafon
+   * spend kumulatif. Tanpa ini, `spendBudget` yang tidak ada berarti hosted ditolak
+   * (`SpendBudgetNotConfiguredError`) alih-alih diam-diam unlimited (ADR-21).
+   */
+  readonly hostedSpendUnlimited?: boolean | undefined;
 }
 export interface CompleteInput {
   readonly target: RouteTarget;
@@ -73,8 +101,10 @@ export interface CompleteResult {
   readonly responseModel: string;
   /** Stable identity used for durable evidence/cache boundaries. */
   readonly modelIdentity: string;
-  /** Local identity is pinned only when an explicit immutable digest is configured. */
+  /** Local identity is pinned only when the provider boundary confirmed the digest. */
   readonly modelIdentityPinned: boolean;
+  /** How that identity was established — reported as-is, never rounded up to "pinned". */
+  readonly modelIdentityProvenance: LocalIdentityProvenance | "hosted-pinned";
   readonly cacheHit: boolean;
   readonly usage: TokenUsage;
   readonly cost: CallCostRecord;
@@ -110,22 +140,37 @@ export async function complete(
     hostedProvider,
   });
 
-  if (decision.routeReason !== "local-consolidation" && !deps.hostedCallsEnabled) {
-    throw new CostKillSwitchError();
+  if (decision.routeReason !== "local-consolidation") {
+    if (!deps.hostedCallsEnabled) throw new CostKillSwitchError();
+    if (deps.spendBudget === undefined && deps.hostedSpendUnlimited !== true) {
+      throw new SpendBudgetNotConfiguredError();
+    }
   }
 
   const local = decision.routeReason === "local-consolidation";
   const providerIdentity = local ? "local" : hostedProvider;
   const model = local ? deps.localModelTag : decision.model;
+  const declaredDigest = deps.localModelDigest ?? null;
+  const provenance =
+    local && deps.resolveLocalProvenance !== undefined
+      ? await deps.resolveLocalProvenance({
+          baseUrl: deps.localBaseUrl,
+          modelTag: deps.localModelTag,
+          declaredDigest,
+          signal,
+        })
+      : undefined;
   const localIdentity = local
     ? localModelIdentity({
         runtime: deps.localRuntime ?? "openai-compatible",
         modelTag: deps.localModelTag,
-        digest: deps.localModelDigest,
+        digest: provenance?.digest ?? declaredDigest,
+        provenance: provenance?.status,
       })
     : undefined;
   const modelIdentity = localIdentity?.id ?? `${providerIdentity}:${model}`;
   const modelIdentityPinned = localIdentity?.pinned ?? true;
+  const modelIdentityProvenance = localIdentity?.provenance ?? "hosted-pinned";
   const allowExactCache = !local || modelIdentityPinned;
   const modelCacheIdentity = local
     ? `${modelIdentity}:${deps.localBaseUrl}:prompt-v${LOCAL_PROMPT_FRAMING_VERSION}`
@@ -269,6 +314,7 @@ export async function complete(
     responseModel,
     modelIdentity,
     modelIdentityPinned,
+    modelIdentityProvenance,
     cacheHit,
     usage,
     cost,

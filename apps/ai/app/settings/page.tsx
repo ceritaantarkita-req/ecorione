@@ -299,6 +299,7 @@ export default function SettingsPage() {
         model: string;
         modelIdentity: string;
         modelIdentityPinned: boolean;
+        modelIdentityProvenance?: string;
       }>("/api/settings/ops/provider-canary", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -310,8 +311,14 @@ export default function SettingsPage() {
           status: result.pass ? "connected" : "error",
         });
       }
+      // Provenance ditampilkan apa adanya: `declared-unverified` berarti operator
+      // menyatakan digest tapi runtime tidak bisa mengonfirmasinya — itu bukan PINNED.
+      const provenance =
+        result.modelIdentityProvenance === undefined
+          ? ""
+          : ` (${result.modelIdentityProvenance})`;
       setStatus(
-        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms · identity ${result.modelIdentityPinned ? "PINNED" : "UNPINNED"}`,
+        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms · identity ${result.modelIdentityPinned ? "PINNED" : "UNPINNED"}${provenance}`,
       );
     } catch (error) {
       if (target === "hosted" && testedProvider !== undefined) {

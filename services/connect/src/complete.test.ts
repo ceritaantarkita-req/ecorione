@@ -35,6 +35,8 @@ function deps(overrides: Partial<CompleteDeps> = {}): CompleteDeps {
     localModelTag: "qwen3:8b-instruct-q4_K_M",
     cache: new ExactMatchCache(),
     hostedCallsEnabled: true,
+    // ADR-21: test ini menguji routing/provider, bukan admission control spend.
+    hostedSpendUnlimited: true,
     ...overrides,
   };
 }

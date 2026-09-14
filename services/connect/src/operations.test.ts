@@ -31,6 +31,7 @@ describe("Connect operations telemetry", () => {
       localBaseUrl: `http://127.0.0.1:${String(address.port)}/v1`,
       localModelTag: "local-test-pinned",
       hostedCallsEnabled: false,
+      hostedSpendUnlimited: true,
     });
     closeables.push(connect);
 
@@ -96,6 +97,7 @@ describe("Connect operations telemetry", () => {
       localBaseUrl: `http://127.0.0.1:${String(address.port)}/v1`,
       localModelTag: "local-test-pinned",
       hostedCallsEnabled: false,
+      hostedSpendUnlimited: true,
     });
     closeables.push(connect);
     const canary = await connect.inject({
@@ -114,6 +116,7 @@ describe("Connect operations telemetry", () => {
       localBaseUrl: "http://127.0.0.1:1/v1",
       localModelTag: "unused",
       hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
     });
     closeables.push(connect);
 
@@ -151,6 +154,7 @@ describe("Connect operations telemetry", () => {
       localBaseUrl: "http://127.0.0.1:1/v1",
       localModelTag: "unused",
       hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
     });
     closeables.push(connect);
 
@@ -186,6 +190,7 @@ describe("Connect operations telemetry", () => {
       localBaseUrl: "http://127.0.0.1:1/v1",
       localModelTag: "unused",
       hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
     });
     closeables.push(connect);
 
@@ -204,6 +209,7 @@ describe("Connect operations telemetry", () => {
       localBaseUrl: "http://127.0.0.1:1/v1",
       localModelTag: "local-test-pinned",
       hostedCallsEnabled: false,
+      hostedSpendUnlimited: true,
     });
     closeables.push(connect);
 

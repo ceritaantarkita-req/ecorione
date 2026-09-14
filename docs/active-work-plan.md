@@ -50,7 +50,7 @@ Empat blok utama:
 | W16 | Automatic semantic reference selector | TODO | Auto-selective path tidak lagi membutuhkan caller/oracle `refIndexes`. |
 | W17 | ECX end-to-end tanpa oracle | TODO | Full-context vs auto-selective vs oracle dibandingkan pada task set sama. |
 | W18 | Hosted economic validation | TODO | Actual hosted token/cost dibandingkan secara bounded dengan explicit operator spend intent. |
-| W19 | Release/security governance follow-up | TODO | Full-history secret scan benar-benar menjadi gate dan governance `main` diperketat sesuai keputusan operator. |
+| W19 | Release/security governance follow-up | **DONE — REPO SIDE** | `secret-scan:history` kini job CI tersendiri dengan `fetch-depth: 0`. Governance `main` masih menunggu keputusan operator. |
 | W20 | Final current-state sync | TODO | Canonical docs, implementation, evidence, limitations, dan next checkpoint sinkron. |
 
 ## 4. Prioritas eksekusi
@@ -380,6 +380,44 @@ Evidence: CI `34800259393` **SUCCESS**; MCP External HTTPS `34800259408` **SUCCE
 **Changed candidate:** local model selector dan immutable identity dipisahkan. Runtime settings mendapat optional `localModelDigest` SHA-256; completion/canary mengekspos `modelIdentity` + `modelIdentityPinned`; exact-cache lokal dibypass jika digest belum dipin; mengganti runtime/base URL/model selector membersihkan digest lama; Settings menyediakan field digest tanpa redesign; doctor menampilkan pin state; durable UX dan observability evidence menolak runtime lokal tanpa pinned digest.
 
 **Claim boundary:** digest adalah provenance yang dikonfigurasi operator. Generic OpenAI-compatible runtime tidak selalu memiliki endpoint provenance, jadi ECORIONE tidak mengklaim cryptographic attestation otomatis terhadap bytes model.
+
+### 2026-09-14 — Remediasi audit — S0/S1/S2 ditutup
+
+**Sumber:** audit independen `docs/audit-2026-09-14.md`, yang menjalankan gate dan mem-boot
+service asli alih-alih membaca dokumentasi, dan membuktikan satu celah end-to-end.
+
+**Changed:**
+
+- **S0-1 CSRF (ADR-34).** `apps/ai/middleware.ts` + `apps/ai/lib/request-origin.ts` menolak
+  mutasi lintas-origin; `next.config.ts` memasang CSP dan header keamanan.
+- **S0-2 default installer.** `ECORIONE_COST_KILL_SWITCH=1` dan plafon spend default di
+  `desktop/ecorione.ps1`, `desktop/compose.yml`, `.env.example`. Connect menolak dispatch
+  hosted tanpa plafon terkonfigurasi (`503 SPEND_BUDGET_NOT_CONFIGURED`) kecuali
+  `ECORIONE_SPEND_UNLIMITED=1` dinyatakan eksplisit.
+- **S1-3 jangkauan `localBaseUrl`.** `services/connect/src/local-base-url.ts` membatasi host
+  ke loopback/private/nama non-publik, dengan opt-out `ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC=1`.
+- **S2-4 gerbang alias.** `MODEL_ALIAS_PATTERN` diperluas ke `:`/`@`/`/` dan case-insensitive;
+  gerbang grep CI disamakan; `localModelTag` alias-mutable ditolak pada jalur mutasi kecuali
+  digest terpin ikut dinyatakan.
+- **S2-5 verifikasi digest.** `services/connect/src/providers/local-model-provenance.ts`
+  menyelesaikan identitas lewat boundary provider (`/api/tags`). `pinned` sekarang hanya
+  untuk `verified`/`resolved`; deklarasi operator yang tidak bisa dikonfirmasi dilaporkan
+  `declared-unverified` dan tidak lagi dihitung terpin; digest yang berbeda dari yang
+  dilayani runtime gagal tertutup (`409 LOCAL_MODEL_DIGEST_MISMATCH`).
+- **S3-8 secret scan riwayat.** Job CI `secret-history` dengan `fetch-depth: 0`.
+
+**Evidence:** `format:check`, `lint`, `typecheck`, `secret-scan`, `secret-scan:history`
+(1.342 commit, bersih), `acceptance:production-ops`, `acceptance:release`, dan kedua gerbang
+naming semuanya PASS. Test 746 pass / 752. Serangan CSRF audit diputar ulang terhadap stack
+hidup dan sekarang membalas `403` dengan revision settings tidak berubah; empat kasus
+provenance (resolved / verified / mismatch / declared-unverified) diverifikasi terhadap
+runtime yang mengekspos `/api/tags`.
+
+**Limitation:** 4 test Temporal gagal karena `temporal.download` diblokir egress sandbox
+tempat verifikasi dijalankan, bukan defect repo; hal yang sama membuat `pnpm build` gagal
+mengambil Google Fonts. Keduanya hijau di CI GitHub. CSP masih memakai `'unsafe-inline'`
+pada `script-src`. Item audit 7, 8, 10, dan 11 (pecah branch raksasa, pangkas branch mati,
+W03 walkthrough, W18 validasi biaya hosted) belum dikerjakan dan tetap butuh operator.
 
 ## 10. Claim boundary
 

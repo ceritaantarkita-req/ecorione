@@ -71,9 +71,9 @@ function Ensure-DesktopEnv {
     "ECORIONE_HOSTED_PROVIDER=anthropic",
     "ECORIONE_LOCAL_BASE_URL=http://host.docker.internal:11434/v1",
     "ECORIONE_LOCAL_MODEL=qwen3:8b-instruct-q4_K_M",
-    "ECORIONE_COST_KILL_SWITCH=0",
-    "ECORIONE_SPEND_DAILY_USD=",
-    "ECORIONE_SPEND_MONTHLY_USD="
+    "ECORIONE_COST_KILL_SWITCH=1",
+    "ECORIONE_SPEND_DAILY_USD=1",
+    "ECORIONE_SPEND_MONTHLY_USD=10"
   )
   Write-Utf8NoBom $EnvFile (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
   Write-Info "Local config dibuat di $EnvFile"

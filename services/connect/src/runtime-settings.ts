@@ -7,7 +7,9 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname } from "node:path";
+import { isMutableModelAlias } from "@ecorione/shared-telemetry";
 import { z } from "zod";
+import { isLocalReachableHost, localBaseUrlPublicAllowed } from "./local-base-url.js";
 import { LocalModelDigestSchema, type LocalModelDigest } from "./local-model-identity.js";
 import { HostedProviderIdSchema, type HostedProviderId } from "./provider-types.js";
 import { LocalRuntimeIdSchema, type LocalRuntimeId } from "./providers/local-runtime.js";
@@ -28,6 +30,44 @@ function safeBaseUrl(value: string, ctx: z.RefinementCtx): void {
       code: "custom",
       message: "localBaseUrl tidak boleh memuat credential atau fragment.",
     });
+  }
+  if (!isLocalReachableHost(url.hostname) && !localBaseUrlPublicAllowed()) {
+    ctx.addIssue({
+      code: "custom",
+      message:
+        `localBaseUrl \`${url.hostname}\` di luar jangkauan loopback/private. Target Local ` +
+        "tidak boleh meninggalkan mesin. Set ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC=1 kalau " +
+        "itu memang disengaja.",
+    });
+  }
+}
+
+/**
+ * ADR-14 untuk identitas lokal: tag yang bisa drift (`:latest`, `@latest`, `latest`)
+ * hanya boleh dipakai kalau digest terpin ikut dinyatakan — kalau tidak, nama model di
+ * evidence tidak berarti apa-apa karena isinya bisa berubah tanpa nama berubah.
+ *
+ * Sengaja ditegakkan pada jalur MUTASI saja, bukan di skema yang juga dipakai membaca
+ * file persisten: instalasi lama yang terlanjur menyimpan `gemma4:latest` harus tetap
+ * bisa boot (dan akan terbaca `pinned=false`) alih-alih membuat Connect tidak bisa
+ * dijalankan sama sekali setelah upgrade.
+ */
+export function assertLocalModelTagWritable(settings: {
+  localModelTag: string;
+  localModelDigest?: LocalModelDigest | null | undefined;
+}): void {
+  if (!isMutableModelAlias(settings.localModelTag)) return;
+  if (settings.localModelDigest != null) return;
+  throw new MutableLocalModelTagError(settings.localModelTag);
+}
+
+export class MutableLocalModelTagError extends Error {
+  constructor(tag: string) {
+    super(
+      `Tag model lokal ${JSON.stringify(tag)} adalah alias yang bisa berubah (ADR-14). ` +
+        "Pakai tag berversi, atau sertakan localModelDigest supaya identitasnya terpin.",
+    );
+    this.name = "MutableLocalModelTagError";
   }
 }
 
@@ -94,6 +134,9 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
     },
   ) {
     this.defaults = RuntimeSettingsSchema.parse(defaults);
+    // Konfigurasi proses yang alias-mutable digagalkan saat boot, bukan dibiarkan
+    // menghasilkan evidence dengan nama model yang tidak berarti apa-apa.
+    assertLocalModelTagWritable(this.defaults);
   }
 
   private read(): RuntimeSettingsFile {
@@ -127,6 +170,7 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
         ? { localModelDigest: null }
         : {}),
     });
+    assertLocalModelTagWritable(settings);
     const next: RuntimeSettingsFile = {
       version: 1,
       revision: prior.revision + 1,

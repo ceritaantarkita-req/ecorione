@@ -174,6 +174,9 @@ beforeAll(async () => {
     // Tidak ada kasus `target: "local"` di test ini — URL ini sengaja tidak pernah dipanggil.
     localBaseUrl: "http://127.0.0.1:1",
     localModelTag: "unused",
+    // ADR-21: test ini menguji loop chat, bukan admission control spend. Dispatch hosted
+    // tanpa plafon terkonfigurasi kini ditolak, jadi niatnya dinyatakan eksplisit.
+    hostedSpendUnlimited: true,
   });
   connectUrl = await listenRandomPort(connectApp);
 
@@ -416,6 +419,7 @@ describe("loop chat penuh: Ai→Hub→Context→Connect→RnD", () => {
       anthropicApiKey: undefined,
       localBaseUrl: "http://127.0.0.1:1",
       localModelTag: "unused",
+      hostedSpendUnlimited: true,
     });
     const bareConnectUrl = await listenRandomPort(bareConnectApp);
 

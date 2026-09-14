@@ -7,7 +7,11 @@ import {
   PROVIDER_CATALOG,
   credentialPurposeForProvider as purposeFor,
 } from "./provider-catalog.js";
-import { RuntimeSettingsPatchSchema, type RuntimeSettingsAdmin } from "./runtime-settings.js";
+import {
+  MutableLocalModelTagError,
+  RuntimeSettingsPatchSchema,
+  type RuntimeSettingsAdmin,
+} from "./runtime-settings.js";
 
 const CredentialParamsSchema = z.object({ provider: z.enum(CREDENTIAL_PROVIDERS) });
 const CredentialBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
@@ -43,7 +47,17 @@ export function registerConnectControlRoutes(
 
   app.get("/v1/settings/runtime", async () => runtime().get());
   app.put("/v1/settings/runtime", async (req) => {
-    const result = runtime().update(parseOrBadRequest(RuntimeSettingsPatchSchema, req.body));
+    const patch = parseOrBadRequest(RuntimeSettingsPatchSchema, req.body);
+    let result;
+    try {
+      result = runtime().update(patch);
+    } catch (err) {
+      // Alias model lokal yang mutable adalah input operator yang salah, bukan bug
+      // Connect — 400 eksplisit, bukan 500 generik (ADR-14).
+      if (err instanceof MutableLocalModelTagError)
+        throw new HttpError(400, "MUTABLE_LOCAL_MODEL_TAG", err.message);
+      throw err;
+    }
     metrics.addCounter("ecorione_control_changes_total", 1, { surface: "runtime-settings" });
     return result;
   });
