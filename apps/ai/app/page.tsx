@@ -12,10 +12,11 @@ import {
 import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
 import {
   MAX_COMPOSER_ATTACHMENTS,
+  attachmentCanBeRemoved,
   attachmentChipLabel,
   attachmentsReadyForSend,
   buildAttachmentAwareMessage,
-  uploadChatAttachment,
+  uploadPendingChatAttachments,
   type ChatAttachment,
 } from "../lib/chat-attachments";
 import { makeSessionId } from "../lib/session";
@@ -84,6 +85,7 @@ export default function ChatPage() {
   const [target, setTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
+  const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
   const [memoryFeedback, setMemoryFeedback] = useState<{
@@ -288,11 +290,13 @@ export default function ChatPage() {
   }
 
   function removeAttachment(id: string): void {
-    setAttachments((prev) => prev.filter((a) => a.id !== id));
+    setAttachments((prev) =>
+      prev.filter((attachment) => attachment.id !== id || !attachmentCanBeRemoved(attachment)),
+    );
   }
 
   function addFilesAs(fileList: FileList | null, prefix: "File" | "Foto" | "Folder"): void {
-    if (!fileList || fileList.length === 0) return;
+    if (preparingAttachments || sending || !fileList || fileList.length === 0) return;
     const files = Array.from(fileList);
     const available = Math.max(0, MAX_COMPOSER_ATTACHMENTS - attachments.length);
     if (files.length > available) {
@@ -314,42 +318,11 @@ export default function ChatPage() {
         id: nextAttachmentId(),
         kind: "file",
         label: `${prefix}: ${displayName}`,
-        state: "uploading",
+        state: "staged",
         file,
       };
     });
     setAttachments((prev) => [...prev, ...additions]);
-
-    for (const attachment of additions) {
-      const file = attachment.file;
-      if (file === undefined) continue;
-      void uploadChatAttachment({ sessionId, target, file })
-        .then((uploaded) => {
-          setAttachments((prev) =>
-            prev.map((current) =>
-              current.id === attachment.id
-                ? {
-                    ...current,
-                    state: "ready",
-                    artifactId: uploaded.artifactId,
-                    contextEpisodeId: uploaded.contextEpisodeId,
-                    error: undefined,
-                  }
-                : current,
-            ),
-          );
-        })
-        .catch((error: unknown) => {
-          const message = error instanceof Error ? error.message : "Lampiran gagal diproses.";
-          setAttachments((prev) =>
-            prev.map((current) =>
-              current.id === attachment.id
-                ? { ...current, state: "error", error: message }
-                : current,
-            ),
-          );
-        });
-    }
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -385,16 +358,51 @@ export default function ChatPage() {
   }
 
   function submitDraft(): void {
-    if (!attachmentsReadyForSend(attachments)) return;
+    if (preparingAttachments || sending || !attachmentsReadyForSend(attachments)) return;
     const finalText = buildAttachmentAwareMessage(draft, attachments);
     if (finalText.length === 0) return;
-    const sentAttachmentIds = new Set(attachments.map((attachment) => attachment.id));
-    void sendMessage(finalText).then((sent) => {
-      if (!sent) return;
-      setAttachments((prev) =>
-        prev.filter((attachment) => !sentAttachmentIds.has(attachment.id)),
-      );
-    });
+    const submitted = attachments;
+    const sentAttachmentIds = new Set(submitted.map((attachment) => attachment.id));
+    const uploading = submitted.map((attachment): ChatAttachment =>
+      attachment.kind === "file" && attachment.contextEpisodeId === undefined
+        ? { ...attachment, state: "uploading", error: undefined }
+        : attachment,
+    );
+
+    setPreparingAttachments(true);
+    setAttachments(uploading);
+    void uploadPendingChatAttachments(uploading, { sessionId, target })
+      .then(async (prepared) => {
+        setAttachments(prepared);
+        const failed = prepared.find((attachment) => attachment.state === "error");
+        if (failed !== undefined) {
+          setTurns((prev) => [
+            ...prev,
+            {
+              kind: "error",
+              id: nextTurnId(),
+              message: failed.error ?? "Lampiran gagal diproses.",
+            },
+          ]);
+          return;
+        }
+        const sent = await sendMessage(finalText);
+        if (!sent) return;
+        setAttachments((prev) =>
+          prev.filter((attachment) => !sentAttachmentIds.has(attachment.id)),
+        );
+      })
+      .catch(() => {
+        setTurns((prev) => [
+          ...prev,
+          {
+            kind: "error",
+            id: nextTurnId(),
+            message: "Lampiran gagal diproses.",
+          },
+        ]);
+      })
+      .finally(() => setPreparingAttachments(false));
   }
 
   function handleSubmit(e: FormEvent): void {
@@ -420,6 +428,7 @@ export default function ChatPage() {
   const canSend =
     hydrated &&
     !sending &&
+    !preparingAttachments &&
     attachmentsReadyForSend(attachments) &&
     (draft.trim().length > 0 || attachments.length > 0);
 
@@ -452,14 +461,16 @@ export default function ChatPage() {
                     <span className="ai-chip__label" title={a.error}>
                       {attachmentChipLabel(a)}
                     </span>
-                    <button
-                      type="button"
-                      className="ai-chip__remove"
-                      aria-label={`Hapus ${a.label}`}
-                      onClick={() => removeAttachment(a.id)}
-                    >
-                      <XIcon />
-                    </button>
+                    {attachmentCanBeRemoved(a) ? (
+                      <button
+                        type="button"
+                        className="ai-chip__remove"
+                        aria-label={`Hapus ${a.label}`}
+                        onClick={() => removeAttachment(a.id)}
+                      >
+                        <XIcon />
+                      </button>
+                    ) : null}
                   </span>
                 ))}
               </div>
@@ -507,7 +518,7 @@ export default function ChatPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={!hydrated || sending}
+              disabled={!hydrated || sending || preparingAttachments}
             />
 
             <div className="ai-composer__toolbar">
@@ -518,6 +529,7 @@ export default function ChatPage() {
                   aria-label="Tambah lampiran"
                   aria-haspopup="menu"
                   aria-expanded={attachMenuOpen}
+                  disabled={sending || preparingAttachments}
                   onClick={() => setAttachMenuOpen((prev) => !prev)}
                 >
                   <PlusIcon />
@@ -594,7 +606,13 @@ export default function ChatPage() {
                   aria-label="Model"
                   value={target}
                   onChange={(e) => setTarget(e.target.value as ChatTarget)}
-                  disabled={!hydrated || sending || turns.length > 0 || attachments.length > 0}
+                  disabled={
+                    !hydrated ||
+                    sending ||
+                    preparingAttachments ||
+                    turns.length > 0 ||
+                    attachments.length > 0
+                  }
                 >
                   <option value="local">Local</option>
                   <option value="hosted" disabled={hostedAvailable !== true}>
