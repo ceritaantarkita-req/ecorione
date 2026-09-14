@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { readJson } from "../../lib/client-response";
 import styles from "./OpsDashboard.module.css";
 
 type Counter = { name: string; labels: Record<string, string>; value: number };
@@ -88,8 +89,12 @@ export default function OpsPage() {
     setRefreshing(true);
     try {
       const response = await fetch("/api/ops", { cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
-      setData((await response.json()) as OpsResponse);
+      setData(
+        await readJson<OpsResponse>(
+          response,
+          "Status runtime tidak dapat dimuat. Coba lagi atau periksa engine ECORIONE.",
+        ),
+      );
       setError(null);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
@@ -158,7 +163,7 @@ export default function OpsPage() {
 
       {error !== null ? (
         <p className={styles.error} role="alert">
-          Ops fetch failed: {error}
+          Status runtime: {error}
         </p>
       ) : null}
       <section className={styles.summary} aria-busy={data === null || refreshing}>
