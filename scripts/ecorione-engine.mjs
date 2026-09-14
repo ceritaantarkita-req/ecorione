@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { connect } from "node:net";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const LOCAL_TEMPORAL_COMPOSE = resolve(ROOT, "deploy/local-temporal.yml");
+const TEMPORAL_DEV_DB_PATH = resolve(ROOT, "data", "temporal-dev.db");
 const REQUIRED_SERVICES = [
   ["RnD", "http://127.0.0.1:17021/healthz"],
   ["Context", "http://127.0.0.1:17022/healthz"],
@@ -185,20 +186,106 @@ function dockerAvailable() {
   }
 }
 
+/**
+ * Temporal CLI (binary `temporal`) itu server dev standalone dengan SQLite bawaan —
+ * satu executable, tanpa Docker, tanpa Postgres. Ini yang dipakai sebagai jalur
+ * default supaya orang yang belum tentu paham Docker tetap bisa `pnpm engine:start`
+ * tanpa instalasi tambahan yang berat. Docker compose tetap didukung sebagai jalur
+ * eksplisit (lihat `ensureTemporal`) untuk skenario yang memang butuh Postgres
+ * persisten, mis. script evidence backup/restore.
+ */
+export function temporalCliAvailable() {
+  try {
+    runChecked("temporal", ["--version"]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function temporalInstallHint(platform = process.platform) {
+  if (platform === "win32") {
+    return [
+      "Install Temporal CLI (server dev tanpa Docker) lewat PowerShell:",
+      "    iwr https://temporal.download/cli.ps1 -useb | iex",
+      "lalu buka terminal baru dan ulangi `pnpm engine:start`.",
+    ].join("\n");
+  }
+  if (platform === "darwin") {
+    return [
+      "Install Temporal CLI (server dev tanpa Docker), salah satu:",
+      "    brew install temporal",
+      "  atau:",
+      "    curl -sSf https://temporal.download/cli.sh | sh",
+      "lalu ulangi `pnpm engine:start`.",
+    ].join("\n");
+  }
+  return [
+    "Install Temporal CLI (server dev tanpa Docker):",
+    "    curl -sSf https://temporal.download/cli.sh | sh",
+    "lalu ulangi `pnpm engine:start`.",
+  ].join("\n");
+}
+
+/**
+ * Menyalakan Temporal untuk dev lokal.
+ *
+ * Urutan prioritas:
+ *  1. Sudah reachable di 127.0.0.1:7233 — tidak melakukan apa-apa (bisa server dev
+ *     yang sudah dinyalakan manual, atau Docker yang sudah jalan dari sesi lain).
+ *  2. `ECORIONE_TEMPORAL_USE_DOCKER=1` — jalur Docker compose yang lama, untuk
+ *     skenario yang memang butuh Postgres persisten (bukan cuma dev sekali pakai).
+ *  3. Default: Temporal CLI dev-server. Kalau CLI-nya belum terpasang, gagal
+ *     tertutup dengan instruksi instalasi yang jelas, bukan menuntut Docker.
+ *
+ * Return: child process yang kita spawn sendiri (perlu di-cleanup oleh pemanggil
+ * saat stack berhenti), atau `null` kalau Temporal dikelola di luar proses ini
+ * (sudah reachable sebelumnya, atau lewat Docker).
+ */
 async function ensureTemporal(env) {
   if (await isPortReachable(7233)) {
     console.log("✓ Temporal sudah reachable di 127.0.0.1:7233");
-    return;
+    return null;
   }
-  if (!dockerAvailable()) {
+
+  if (env.ECORIONE_TEMPORAL_USE_DOCKER === "1") {
+    if (!dockerAvailable()) {
+      throw new Error(
+        "ECORIONE_TEMPORAL_USE_DOCKER=1 tapi Docker tidak reachable. Jalankan Docker Desktop " +
+          "lalu ulangi `pnpm engine:start`.",
+      );
+    }
+    console.log("• Menyalakan Temporal lewat Docker compose…");
+    runChecked("docker", ["compose", "-f", LOCAL_TEMPORAL_COMPOSE, "up", "-d"], { env });
+    await waitForPort(7233, 60_000, "Temporal");
+    console.log("✓ Temporal ready (Docker)");
+    return null;
+  }
+
+  if (!temporalCliAvailable()) {
     throw new Error(
-      "Temporal belum aktif dan Docker tidak tersedia. Jalankan Docker Desktop lalu ulangi `pnpm engine:start`.",
+      `Temporal belum aktif dan Temporal CLI tidak ditemukan.\n\n${temporalInstallHint()}\n\n` +
+        "Atau, kalau memang mau pakai Docker (mis. butuh Postgres persisten), set " +
+        "ECORIONE_TEMPORAL_USE_DOCKER=1 lalu ulangi `pnpm engine:start`.",
     );
   }
-  console.log("• Menyalakan Temporal lokal…");
-  runChecked("docker", ["compose", "-f", LOCAL_TEMPORAL_COMPOSE, "up", "-d"], { env });
-  await waitForPort(7233, 60_000, "Temporal");
-  console.log("✓ Temporal ready");
+
+  console.log("• Menyalakan Temporal dev-server (Temporal CLI, tanpa Docker)…");
+  mkdirSync(dirname(TEMPORAL_DEV_DB_PATH), { recursive: true });
+  const child = spawn(
+    "temporal",
+    ["server", "start-dev", "--port", "7233", "--db-filename", TEMPORAL_DEV_DB_PATH, "--headless"],
+    { cwd: ROOT, env, stdio: "ignore" },
+  );
+
+  try {
+    await waitForPort(7233, 30_000, "Temporal (dev-server)");
+  } catch (error) {
+    await stopSpawnedChild(child);
+    throw error;
+  }
+  console.log(`✓ Temporal ready (dev-server, data: ${TEMPORAL_DEV_DB_PATH})`);
+  return child;
 }
 
 async function fetchHealth(url, token) {
@@ -306,11 +393,16 @@ async function doctor() {
   }
 
   const hasEnv = existsSync(envPath);
+  const hasTemporalCli = temporalCliAvailable();
   const hasDocker = dockerAvailable();
   console.log(
     `${hasEnv ? "✓" : "!"} .env ${hasEnv ? "tersedia" : "belum dibuat (engine:start akan membuatnya)"}`,
   );
-  console.log(`${hasDocker ? "✓" : "!"} Docker ${hasDocker ? "reachable" : "tidak reachable"}`);
+  console.log(
+    `${hasTemporalCli ? "✓" : "·"} Temporal CLI ${hasTemporalCli ? "terpasang" : "tidak ditemukan (opsional kalau pakai Docker)"}`,
+  );
+  console.log(`${hasDocker ? "✓" : "·"} Docker ${hasDocker ? "reachable" : "tidak reachable (opsional)"}`);
+  if (!hasTemporalCli && !hasDocker) criticalFailure = true;
   console.log(`${(await isPortReachable(7233)) ? "✓" : "!"} Temporal 127.0.0.1:7233`);
 
   const token = env.ECORIONE_INTERNAL_TOKEN ?? "";
@@ -368,13 +460,18 @@ async function start() {
     console.log(`✓ ${key} dibuat otomatis untuk local-only runtime`);
   const env = { ...local.values, ...process.env };
 
-  await ensureTemporal(env);
+  const temporalChild = await ensureTemporal(env);
   console.log("• Menyalakan full Phase 4 stack…");
 
   const child = spawn(commandName("pnpm"), ["run", "dev:phase4"], {
     cwd: ROOT,
     env,
     stdio: "inherit",
+    // Node >= 18.20.2/20.12.2/21.7.2 (CVE-2024-27980 fix) sengaja melempar
+    // `spawn EINVAL` kalau file yang di-spawn adalah .bat/.cmd di Windows tanpa
+    // shell:true. `commandName("pnpm")` resolve ke `pnpm.cmd` di Windows, jadi
+    // butuh shell eksplisit di platform itu supaya bisa dieksekusi.
+    shell: process.platform === "win32",
   });
   const lifecycle = waitForSpawnedChild(child);
   const token = env.ECORIONE_INTERNAL_TOKEN ?? "";
@@ -388,6 +485,7 @@ async function start() {
     first = await Promise.race([readiness, lifecycle]);
   } catch (error) {
     await stopSpawnedChild(child);
+    if (temporalChild) await stopSpawnedChild(temporalChild);
     throw error;
   }
 
@@ -396,6 +494,7 @@ async function start() {
     console.log("  Tekan Ctrl+C untuk menghentikan proses development stack.\n");
     openBrowser("http://127.0.0.1:3000");
     const finished = await lifecycle;
+    if (temporalChild) await stopSpawnedChild(temporalChild);
     if ("error" in finished) {
       throw new Error(
         `Phase 4 stack mengalami process error: ${finished.error instanceof Error ? finished.error.message : String(finished.error)}.`,
@@ -405,6 +504,7 @@ async function start() {
     return;
   }
 
+  if (temporalChild) await stopSpawnedChild(temporalChild);
   if ("error" in first) {
     throw new Error(
       `Tidak bisa menjalankan Phase 4 stack: ${first.error instanceof Error ? first.error.message : String(first.error)}.`,
@@ -416,9 +516,18 @@ async function start() {
 }
 
 function stopTemporal() {
-  if (!dockerAvailable()) throw new Error("Docker tidak reachable.");
+  // Hanya relevan untuk Temporal yang dinyalakan lewat Docker compose (mode
+  // ECORIONE_TEMPORAL_USE_DOCKER=1) — Temporal CLI dev-server berjalan sebagai child
+  // process `engine:start` dan berhenti sendiri begitu stack itu berhenti.
+  if (!dockerAvailable()) {
+    console.log(
+      "· Docker tidak reachable — kalau Temporal-mu jalan lewat Temporal CLI dev-server, " +
+        "cukup hentikan `pnpm engine:start` (Ctrl+C); tidak ada yang perlu di-stop di sini.",
+    );
+    return;
+  }
   runChecked("docker", ["compose", "-f", LOCAL_TEMPORAL_COMPOSE, "down"]);
-  console.log("✓ ECORIONE local Temporal stopped.");
+  console.log("✓ ECORIONE local Temporal (Docker) stopped.");
 }
 
 async function main() {

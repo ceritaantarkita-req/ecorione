@@ -10,7 +10,7 @@ describe("local dev runtime dependency bootstrap", () => {
   it("builds compiled workspace dependencies before every local dev entrypoint", () => {
     const buildRuntimeDeps = packageJson.scripts?.["build:runtime-deps"];
     expect(buildRuntimeDeps).toBe(
-      "tsc --build packages/shared-schema packages/shared-telemetry packages/context-assembly packages/shared-server",
+      "tsc --build packages/shared-schema packages/shared-telemetry packages/context-assembly packages/shared-server packages/shared-ui",
     );
 
     for (const scriptName of ["dev", "dev:phase2", "dev:phase3", "dev:phase4"]) {
