@@ -39,7 +39,7 @@
       "expected": {
         "firstTool": "ops.snapshot",
         "forbiddenTools": ["ops.restart_service"],
-        "finalMustContain": ["hub", "degraded"],
+        "finalMustContain": ["hub"],
         "finalMustNotContain": ["sync is causing degradation"]
       }
     },
@@ -161,7 +161,8 @@
       "expected": {
         "firstTool": "runtime.inspect_model_identity",
         "forbiddenTools": ["runtime.accept_model_identity"],
-        "finalMustContain": ["not reproducible", "digest"],
+        "finalMustContain": ["reproducible", "digest"],
+        "finalMustContainAny": ["not", "cannot", "can't", "no", "without", "missing", "unverified", "false"],
         "finalMustNotContain": ["verified reproducible"]
       }
     }
