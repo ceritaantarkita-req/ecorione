@@ -7,7 +7,12 @@ import {
   SensitivitySchema,
   makeId,
 } from "@ecorione/shared-schema";
-import { createServer, HttpError, observabilityFor, parseOrBadRequest } from "@ecorione/shared-server";
+import {
+  createServer,
+  HttpError,
+  observabilityFor,
+  parseOrBadRequest,
+} from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { ExactMatchCache } from "./cache.js";
