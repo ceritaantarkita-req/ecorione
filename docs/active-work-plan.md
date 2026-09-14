@@ -19,25 +19,27 @@ Dokumen ini adalah living document untuk pekerjaan aktif ECORIONE setelah Phase 
 
 ## 2. Current repository checkpoint
 
-Current default-branch baseline sebelum PR #77 di-merge:
+Current default-branch baseline setelah PR #77:
 
 ```text
-main: c6c1b78654f5d33d745b85b830d3562065e5c4f1
-PR #76: merged
-PR #77: open — fix current main CI + docs sync
+main: 21ebecd2af7fb5f0f1fa5d54a971ae13582fe72b
+PR #77: merged
+post-merge CI: 34858779881 — SUCCESS
 ```
 
 Kondisi penting:
 
 - PR #74 sudah merged; pekerjaan W01–W13 yang sebelumnya hidup di branch aktif sudah masuk `main`.
 - PR #75 audit/security hardening sudah merged.
-- PR #76 menambahkan Temporal CLI local-runtime path + Windows spawn handling, tetapi masuk ke `main` dengan formatting regression.
-- push CI current `main` run `34848735694` **FAILED** pada `format:check` di `scripts/ecorione-engine.mjs`; lint/typecheck/test/acceptance/build tidak sempat berjalan pada run tersebut.
+- PR #76 menambahkan Temporal CLI local-runtime path + Windows spawn handling, tetapi sempat masuk ke `main` dengan formatting regression.
+- push CI `c6c1b786...` run `34848735694` **FAILED** pada `format:check` di `scripts/ecorione-engine.mjs`; regression tersebut menjadi alasan PR #77.
 - MCP External HTTPS pada exact SHA `c6c1b786...` tetap **SUCCESS** (`34848735622`).
-- PR #77 memperbaiki hanya formatting engine tanpa mengubah runtime behavior.
-- PR #77 code-fix CI `34855810626` **SUCCESS**: Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production operations acceptance, Secret scan, Production build, naming, dan full-history secret scan semuanya PASS.
-- `main` **belum boleh disebut hijau** sampai PR #77 merged dan push CI post-merge juga PASS.
-- GitHub `main` belum memiliki required status-check branch protection; ini governance gap yang harus diselesaikan terpisah.
+- PR #77 memperbaiki formatting engine tanpa mengubah runtime behavior dan menyinkronkan current-state docs.
+- PR #77 branch CI `34856483249` **SUCCESS**.
+- PR #77 merged ke `main` sebagai `21ebecd2af7fb5f0f1fa5d54a971ae13582fe72b`.
+- push CI post-merge `34858779881` **SUCCESS** untuk Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production operations acceptance, Secret scan, Production build, naming, dan full-history secret scan.
+- `main` kembali menjadi **GREEN BASELINE** untuk pekerjaan repo-side berikutnya.
+- GitHub `main` belum memiliki required status-check branch protection; governance gap ini tetap terbuka terpisah.
 
 ## 3. Work queue aktif
 
@@ -62,7 +64,7 @@ Kondisi penting:
 | W17 | ECX end-to-end tanpa oracle | TODO | full vs auto-selective vs oracle pada task set sama. |
 | W18 | Hosted economic validation | TODO | real hosted token/cost with explicit bounded spend intent. |
 | W19 | Release/security governance follow-up | **DONE — REPO SIDE** | full-history secret scan + stronger naming/model-alias gate berada di CI. |
-| W20 | Final current-state sync | **STARTED** | Current docs sedang disinkronkan; final closure baru setelah remaining work/evidence selesai. |
+| W20 | Final current-state sync | **STARTED** | Current docs disinkronkan bertahap; final closure baru setelah remaining work/evidence selesai. |
 
 ## 4. Provider / AI boundary
 
@@ -165,32 +167,38 @@ Tetapi:
 
 Jangan mengubah angka oracle/local benchmark menjadi universal public-savings claim.
 
-## 9. Prioritas eksekusi setelah PR #77
+## 9. Prioritas eksekusi dari green baseline `21ebecd2...`
 
-1. Merge PR #77 hanya setelah branch CI hijau; lalu verifikasi push CI current `main` juga hijau.
-2. W03 rendered operator/browser walkthrough.
-3. W09–W10 clean Windows/operator runtime proof.
-4. W11 real installer artifact + clean-Windows acceptance.
-5. W14–W15 real product + agentic eval.
-6. W16–W18 autonomous selector → no-oracle ECX → bounded hosted economics.
-7. W20 final synchronization.
-8. Governance follow-up: required status checks / branch protection agar CI merah tidak bisa lagi masuk `main`.
+1. **W03** rendered operator/browser walkthrough pada synchronized current `origin/main`.
+2. **W09–W10** clean Windows/operator runtime proof.
+3. **W11** real installer artifact + clean-Windows acceptance.
+4. **W14–W15** real product + agentic eval.
+5. **W16–W18** autonomous selector → no-oracle ECX → bounded hosted economics.
+6. **W20** final synchronization.
+7. Governance follow-up: required status checks / branch protection agar CI merah tidak bisa lagi masuk `main`.
 
-## 10. Execution log — 2026-09-14 current repair
+Repo-side work tidak boleh melompati claim boundary operator: bila checkpoint membutuhkan browser, clean Windows, real credential, atau real hosted spend, statusnya tetap terbuka sampai evidence tersebut ada.
 
-### Current-main CI regression — FIXED ON PR #77 / AWAITING MERGE
+## 10. Execution log — 2026-09-14 baseline repair
 
-**Finding:** PR #76 merged to `main` at `c6c1b786...`, lalu push CI `34848735694` gagal di `format:check` untuk `scripts/ecorione-engine.mjs`. Karena format adalah gate pertama, lint/typecheck/tests/acceptance/build tidak berjalan pada exact current-main push.
+### Current-main CI regression — CLOSED
 
-**Changed:** branch `agent/fix-main-ci-doc-sync-20260914` / PR #77 hanya menyesuaikan file engine ke exact Prettier 3.9.6 output. Temporary CI formatter-oracle instrumentation dipakai untuk mendapatkan diff exact, lalu workflow `.github/workflows/ci.yml` dikembalikan byte-for-byte ke content baseline normal.
+**Finding:** PR #76 merged ke `main` pada `c6c1b786...`, lalu push CI `34848735694` gagal di `format:check` untuk `scripts/ecorione-engine.mjs`. Karena format adalah gate pertama, lint/typecheck/tests/acceptance/build tidak berjalan pada exact push tersebut.
 
-**Evidence:** PR #77 code-fix head `25933a24647568643f71d73dd0c9b05d1a977cb2`; CI `34855810626` **SUCCESS** untuk Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production operations acceptance, Secret scan, Production build, naming, dan secret-history.
+**Changed:** PR #77 (`agent/fix-main-ci-doc-sync-20260914`) menyesuaikan file engine ke exact Prettier 3.9.6 output tanpa mengubah runtime behavior. Temporary formatter-oracle instrumentation dipakai hanya untuk memperoleh diff exact, lalu workflow `.github/workflows/ci.yml` dikembalikan ke baseline normal. Current-state docs ikut disinkronkan.
 
-**Result:** regression repo-side sudah diperbaiki pada PR #77. `main` baru boleh dinaikkan kembali ke green baseline setelah merge + post-merge push CI PASS.
+**Evidence:**
+
+- code-fix head `25933a24647568643f71d73dd0c9b05d1a977cb2`; CI `34855810626` **SUCCESS**;
+- final PR head `d7be123adcd598e9424d3ef84a337befdfe07b2f`; CI `34856483249` **SUCCESS**;
+- merge commit `21ebecd2af7fb5f0f1fa5d54a971ae13582fe72b`;
+- post-merge push CI `34858779881` **SUCCESS**.
+
+**Result:** formatting regression ditutup dan `main` kembali menjadi green baseline. Pekerjaan berikutnya tidak perlu kembali ke PR #76/#77 kecuali ada regression baru yang dapat direproduksi.
 
 **Limitation:** branch protection/required checks belum aktif; merge discipline masih bergantung pada operator sampai governance dikunci.
 
-**Next:** sync canonical current-state docs pada PR #77, rerun CI, merge, lalu verifikasi post-merge main.
+**Next:** jalankan W03 operator/browser walkthrough dari synchronized `21ebecd2...` atau current `origin/main` bila sudah maju hanya melalui merge yang tervalidasi.
 
 ## 11. Claim boundary
 
