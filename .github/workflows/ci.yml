@@ -31,7 +31,7 @@ jobs:
 
       - name: Apply W12 composer candidate
         run: |
-          git apply scripts/w12-ui.patch
+          git apply --recount scripts/w12-ui.patch
           pnpm exec prettier apps/ai/app/page.tsx --write
 
       - name: Capture W12 composer candidate
