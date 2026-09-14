@@ -274,7 +274,15 @@ async function ensureTemporal(env) {
   mkdirSync(dirname(TEMPORAL_DEV_DB_PATH), { recursive: true });
   const child = spawn(
     "temporal",
-    ["server", "start-dev", "--port", "7233", "--db-filename", TEMPORAL_DEV_DB_PATH, "--headless"],
+    [
+      "server",
+      "start-dev",
+      "--port",
+      "7233",
+      "--db-filename",
+      TEMPORAL_DEV_DB_PATH,
+      "--headless",
+    ],
     { cwd: ROOT, env, stdio: "ignore" },
   );
 
@@ -399,9 +407,15 @@ async function doctor() {
     `${hasEnv ? "✓" : "!"} .env ${hasEnv ? "tersedia" : "belum dibuat (engine:start akan membuatnya)"}`,
   );
   console.log(
-    `${hasTemporalCli ? "✓" : "·"} Temporal CLI ${hasTemporalCli ? "terpasang" : "tidak ditemukan (opsional kalau pakai Docker)"}`,
+    `${hasTemporalCli ? "✓" : "·"} Temporal CLI ${
+      hasTemporalCli ? "terpasang" : "tidak ditemukan (opsional kalau pakai Docker)"
+    }`,
   );
-  console.log(`${hasDocker ? "✓" : "·"} Docker ${hasDocker ? "reachable" : "tidak reachable (opsional)"}`);
+  console.log(
+    `${hasDocker ? "✓" : "·"} Docker ${
+      hasDocker ? "reachable" : "tidak reachable (opsional)"
+    }`,
+  );
   if (!hasTemporalCli && !hasDocker) criticalFailure = true;
   console.log(`${(await isPortReachable(7233)) ? "✓" : "!"} Temporal 127.0.0.1:7233`);
 
