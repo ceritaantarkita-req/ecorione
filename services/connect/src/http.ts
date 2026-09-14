@@ -27,6 +27,7 @@ import {
 import { registerConnectControlRoutes } from "./control-http.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
+import type { LocalModelDigest } from "./local-model-identity.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
 import {
   DEFAULT_HOSTED_PROVIDER,
@@ -116,6 +117,7 @@ export interface BuildConnectServerOptions {
   readonly localRuntime?: LocalRuntimeId | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
+  readonly localModelDigest?: LocalModelDigest | null | undefined;
   readonly hostedCallsEnabled?: boolean | undefined;
   readonly defaultChatTarget?: ChatTargetPreference | undefined;
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
@@ -140,6 +142,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localRuntime: options.localRuntime ?? "openai-compatible",
     localBaseUrl: options.localBaseUrl,
     localModelTag: options.localModelTag,
+    localModelDigest: options.localModelDigest ?? null,
     hostedCallsEnabled: options.hostedCallsEnabled ?? true,
     defaultChatTarget: options.defaultChatTarget ?? "local",
   };
@@ -154,6 +157,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localRuntime: runtime.localRuntime,
     localBaseUrl: runtime.localBaseUrl,
     localModelTag: runtime.localModelTag,
+    localModelDigest: runtime.localModelDigest,
     cache,
     hostedCallsEnabled: runtime.hostedCallsEnabled,
     spendBudget: options.spendBudget,
@@ -175,6 +179,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       pricingModel: result.pricingModel,
       target: body.target,
       cache: result.cacheHit ? "hit" : "miss",
+      modelIdentityPinned: result.modelIdentityPinned ? "true" : "false",
     };
     metrics.addCounter("ecorione_model_calls_total", 1, labels);
     metrics.addCounter("ecorione_model_input_tokens_total", result.usage.inputTokens, labels);
@@ -260,6 +265,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
           model: result.model,
           pricingModel: result.pricingModel,
           responseModel: result.responseModel,
+          modelIdentity: result.modelIdentity,
+          modelIdentityPinned: result.modelIdentityPinned,
           cacheHit: result.cacheHit,
           latencyMs,
           usage: result.usage,
@@ -307,6 +314,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         model: result.model,
         pricingModel: result.pricingModel,
         responseModel: result.responseModel,
+        modelIdentity: result.modelIdentity,
+        modelIdentityPinned: result.modelIdentityPinned,
         cacheHit: result.cacheHit,
         latencyMs,
         outputChars: result.reply.length,

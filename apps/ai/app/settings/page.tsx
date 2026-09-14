@@ -14,6 +14,7 @@ type RuntimeSnapshot = {
     localRuntime: "openai-compatible";
     localBaseUrl: string;
     localModelTag: string;
+    localModelDigest: string | null;
     hostedCallsEnabled: boolean;
     defaultChatTarget: "local" | "hosted";
   };
@@ -296,6 +297,8 @@ export default function SettingsPage() {
         latencyMs: number;
         provider: string;
         model: string;
+        modelIdentity: string;
+        modelIdentityPinned: boolean;
       }>("/api/settings/ops/provider-canary", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -308,7 +311,7 @@ export default function SettingsPage() {
         });
       }
       setStatus(
-        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms`,
+        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms · identity ${result.modelIdentityPinned ? "PINNED" : "UNPINNED"}`,
       );
     } catch (error) {
       if (target === "hosted" && testedProvider !== undefined) {
@@ -431,7 +434,29 @@ export default function SettingsPage() {
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
-                    settings: { ...runtime.settings, localModelTag: event.target.value },
+                    settings: {
+                      ...runtime.settings,
+                      localModelTag: event.target.value,
+                      localModelDigest: null,
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className={styles.wide}>
+              Local model SHA-256
+              <input
+                placeholder="sha256:64-hex"
+                value={runtime.settings.localModelDigest ?? ""}
+                disabled={pendingAction !== null}
+                onChange={(event) =>
+                  setRuntime({
+                    ...runtime,
+                    settings: {
+                      ...runtime.settings,
+                      localModelDigest:
+                        event.target.value.trim().length === 0 ? null : event.target.value,
+                    },
                   })
                 }
               />
@@ -444,7 +469,11 @@ export default function SettingsPage() {
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
-                    settings: { ...runtime.settings, localBaseUrl: event.target.value },
+                    settings: {
+                      ...runtime.settings,
+                      localBaseUrl: event.target.value,
+                      localModelDigest: null,
+                    },
                   })
                 }
               />
@@ -476,6 +505,16 @@ export default function SettingsPage() {
                 Cocok untuk rehearsal, belum immutable production identity.
               </p>
             ) : null}
+            {runtime.settings.localModelDigest === null ? (
+              <p className={`${styles.warning} ${styles.wide}`}>
+                Local model identity belum dipin dengan SHA-256. Chat tetap bisa dipakai, tetapi
+                exact-cache lokal dan durable evidence tidak dianggap reproducible.
+              </p>
+            ) : (
+              <p className={`${styles.muted} ${styles.wide}`}>
+                Local model identity dipin ke <code>{runtime.settings.localModelDigest}</code>.
+              </p>
+            )}
             <p className={`${styles.muted} ${styles.wide}`}>
               Operator kill switch selalu menang, terlepas dari pengaturan di atas.
             </p>

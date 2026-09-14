@@ -14,6 +14,7 @@ import {
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import type { ProviderCredentialReader } from "./credential-vault.js";
+import { localModelIdentity, type LocalModelDigest } from "./local-model-identity.js";
 import {
   DEFAULT_HOSTED_PROVIDER,
   providerCredentialLabel,
@@ -40,6 +41,7 @@ export interface CompleteDeps {
   readonly localRuntime?: LocalRuntimeId | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
+  readonly localModelDigest?: LocalModelDigest | null | undefined;
   readonly cache: ExactMatchCache;
   readonly hostedCallsEnabled: boolean;
   readonly spendBudget?: SpendBudgetController | undefined;
@@ -69,6 +71,10 @@ export interface CompleteResult {
   readonly pricingModel: PinnedModelId;
   /** Runtime identity reported by provider/runtime. */
   readonly responseModel: string;
+  /** Stable identity used for durable evidence/cache boundaries. */
+  readonly modelIdentity: string;
+  /** Local identity is pinned only when an explicit immutable digest is configured. */
+  readonly modelIdentityPinned: boolean;
   readonly cacheHit: boolean;
   readonly usage: TokenUsage;
   readonly cost: CallCostRecord;
@@ -111,9 +117,19 @@ export async function complete(
   const local = decision.routeReason === "local-consolidation";
   const providerIdentity = local ? "local" : hostedProvider;
   const model = local ? deps.localModelTag : decision.model;
+  const localIdentity = local
+    ? localModelIdentity({
+        runtime: deps.localRuntime ?? "openai-compatible",
+        modelTag: deps.localModelTag,
+        digest: deps.localModelDigest,
+      })
+    : undefined;
+  const modelIdentity = localIdentity?.id ?? `${providerIdentity}:${model}`;
+  const modelIdentityPinned = localIdentity?.pinned ?? true;
+  const allowExactCache = !local || modelIdentityPinned;
   const modelCacheIdentity = local
-    ? `${providerIdentity}:${deps.localRuntime ?? "openai-compatible"}:${deps.localBaseUrl}:${model}:prompt-v${LOCAL_PROMPT_FRAMING_VERSION}`
-    : `${providerIdentity}:${model}`;
+    ? `${modelIdentity}:${deps.localBaseUrl}:prompt-v${LOCAL_PROMPT_FRAMING_VERSION}`
+    : modelIdentity;
   const key = cacheKey({
     model: modelCacheIdentity,
     prefixDigest: prefixDigest(input.prefix),
@@ -121,7 +137,7 @@ export async function complete(
     userMessage: input.userMessage,
   });
   const nowMs = Date.parse(input.now);
-  const cached = deps.cache.get(key, nowMs);
+  const cached = allowExactCache ? deps.cache.get(key, nowMs) : null;
   const optimizerOverheadMs = performance.now() - overheadStart;
 
   let reply: string;
@@ -154,7 +170,7 @@ export async function complete(
     responseModel = result.model;
     usage = result.usage;
     baselineUsage = usage;
-    deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
+    if (allowExactCache) deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
     cacheHit = false;
   } else {
     const apiKey =
@@ -251,6 +267,8 @@ export async function complete(
     model,
     pricingModel: decision.model,
     responseModel,
+    modelIdentity,
+    modelIdentityPinned,
     cacheHit,
     usage,
     cost,

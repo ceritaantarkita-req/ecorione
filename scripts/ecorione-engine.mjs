@@ -249,6 +249,9 @@ export async function probeLocalRuntime(connectBaseUrl, token, timeoutMs = 20_00
       model: typeof payload?.model === "string" ? payload.model : undefined,
       responseModel:
         typeof payload?.responseModel === "string" ? payload.responseModel : undefined,
+      modelIdentity:
+        typeof payload?.modelIdentity === "string" ? payload.modelIdentity : undefined,
+      modelIdentityPinned: payload?.modelIdentityPinned === true,
       latencyMs: typeof payload?.latencyMs === "number" ? payload.latencyMs : undefined,
     };
   } catch (error) {
@@ -322,7 +325,10 @@ async function doctor() {
     const model = localProbe.responseModel ?? localProbe.model ?? "configured model";
     const latency =
       localProbe.latencyMs === undefined ? "" : ` · ${localProbe.latencyMs.toFixed(1)}ms`;
-    console.log(`✓ Local AI runtime ${model}${latency}`);
+    const identity = localProbe.modelIdentityPinned
+      ? ` · identity pinned ${localProbe.modelIdentity ?? "configured"}`
+      : " · identity UNPINNED (cache/evidence non-reproducible)";
+    console.log(`✓ Local AI runtime ${model}${latency}${identity}`);
   } else if (localProbe.reachable) {
     console.log(`! Local AI runtime test gagal (${localProbe.errorCode ?? "quality failure"})`);
   } else {

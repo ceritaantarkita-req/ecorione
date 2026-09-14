@@ -17,14 +17,14 @@ describe("local model runtime identity settings", () => {
 
   it("normalizes a configured SHA-256 digest", () => {
     const digest = "B".repeat(64);
-    expect(RuntimeSettingsSchema.parse({ ...BASE, localModelDigest: digest }).localModelDigest).toBe(
-      `sha256:${"b".repeat(64)}`,
-    );
+    expect(
+      RuntimeSettingsSchema.parse({ ...BASE, localModelDigest: digest }).localModelDigest,
+    ).toBe(`sha256:${"b".repeat(64)}`);
   });
 
   it("rejects a malformed local model digest", () => {
-    expect(() => RuntimeSettingsSchema.parse({ ...BASE, localModelDigest: "sha256:abc" })).toThrow(
-      /SHA-256/,
-    );
+    expect(() =>
+      RuntimeSettingsSchema.parse({ ...BASE, localModelDigest: "sha256:abc" }),
+    ).toThrow(/SHA-256/);
   });
 });

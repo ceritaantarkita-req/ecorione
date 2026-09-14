@@ -44,7 +44,7 @@ Empat blok utama:
 | W10 | `ecorione doctor` diagnostics | **STARTED — NEEDS OPERATOR RUNTIME** | Dependency/service health/ports/Temporal/local runtime didiagnosis manusiawi; operator matrix belum selesai. |
 | W11 | Installer/Launcher | **STARTED — REPO-SIDE PACKAGING READY** | Launcher, reproducible bundle, installer spec, dan manual packaging workflow tersedia; real `Setup.exe` + clean-Windows install/start proof masih wajib. |
 | W12 | Attachment composer real backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → controlled hydration; staged files remain removable before Send; partial upload failures remain retryable. |
-| W13 | Immutable local model identity | TODO | Runtime/evidence memakai identity/version/digest reproducible; mutable alias tidak dipakai untuk durable claims. |
+| W13 | Immutable local model identity | **STARTED — IDENTITY CONTRACT IMPLEMENTED** | Runtime/evidence memakai selector + SHA-256 digest terpisah; unpinned local runtime tidak memakai exact-cache untuk durable reuse. |
 | W14 | Product eval foundation | TODO | Eval berasal dari tugas/bug nyata dan tumbuh menuju 30–40 cases tanpa synthetic filler. |
 | W15 | Agentic local-model eval v1 | TODO | Local model diuji reason/choose-tool/execute/observe/verify dengan failure modes terukur. |
 | W16 | Automatic semantic reference selector | TODO | Auto-selective path tidak lagi membutuhkan caller/oracle `refIndexes`. |
@@ -374,6 +374,12 @@ Evidence: CI `34800259393` **SUCCESS**; MCP External HTTPS `34800259408` **SUCCE
 - timeout-hardening/full closure candidate CI `34832105529`: **SUCCESS** — format, lint, typecheck, 690 tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming.
 
 **Limitation:** closure ini repo-side. Rendered browser/operator UX proof tetap bagian W03; tidak diklaim dari CI.
+
+### 2026-09-14 — W13 — STARTED — IDENTITY CONTRACT IMPLEMENTED
+
+**Changed candidate:** local model selector dan immutable identity dipisahkan. Runtime settings mendapat optional `localModelDigest` SHA-256; completion/canary mengekspos `modelIdentity` + `modelIdentityPinned`; exact-cache lokal dibypass jika digest belum dipin; mengganti runtime/base URL/model selector membersihkan digest lama; Settings menyediakan field digest tanpa redesign; doctor menampilkan pin state; durable UX dan observability evidence menolak runtime lokal tanpa pinned digest.
+
+**Claim boundary:** digest adalah provenance yang dikonfigurasi operator. Generic OpenAI-compatible runtime tidak selalu memiliki endpoint provenance, jadi ECORIONE tidak mengklaim cryptographic attestation otomatis terhadap bytes model.
 
 ## 10. Claim boundary
 

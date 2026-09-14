@@ -8,6 +8,7 @@ import {
 } from "node:fs";
 import { dirname } from "node:path";
 import { z } from "zod";
+import { LocalModelDigestSchema, type LocalModelDigest } from "./local-model-identity.js";
 import { HostedProviderIdSchema, type HostedProviderId } from "./provider-types.js";
 import { LocalRuntimeIdSchema, type LocalRuntimeId } from "./providers/local-runtime.js";
 
@@ -39,11 +40,15 @@ export const RuntimeSettingsSchema = z
     localRuntime: LocalRuntimeIdSchema,
     localBaseUrl: z.string().min(1).max(2048).superRefine(safeBaseUrl),
     localModelTag: z.string().min(1).max(256),
+    localModelDigest: LocalModelDigestSchema.nullable().default(null),
     hostedCallsEnabled: z.boolean(),
     defaultChatTarget: ChatTargetPreferenceSchema.default("local"),
   })
   .strict();
-export type RuntimeSettings = z.infer<typeof RuntimeSettingsSchema>;
+type ParsedRuntimeSettings = z.infer<typeof RuntimeSettingsSchema>;
+export type RuntimeSettings = Omit<ParsedRuntimeSettings, "localModelDigest"> & {
+  readonly localModelDigest?: LocalModelDigest | null | undefined;
+};
 
 export const RuntimeSettingsPatchSchema = RuntimeSettingsSchema.partial().strict();
 export type RuntimeSettingsPatch = z.infer<typeof RuntimeSettingsPatchSchema>;
@@ -83,6 +88,7 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
       localRuntime: LocalRuntimeId;
       localBaseUrl: string;
       localModelTag: string;
+      localModelDigest?: LocalModelDigest | null | undefined;
       hostedCallsEnabled: boolean;
       defaultChatTarget?: ChatTargetPreference | undefined;
     },
@@ -92,7 +98,7 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
 
   private read(): RuntimeSettingsFile {
     if (!existsSync(this.path)) {
-      return { version: 1, revision: 0, settings: cloneSettings(this.defaults) };
+      return { version: 1, revision: 0, settings: RuntimeSettingsSchema.parse(this.defaults) };
     }
     return RuntimeSettingsFileSchema.parse(
       JSON.parse(readFileSync(this.path, "utf8")) as unknown,
@@ -107,7 +113,20 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
   update(patch: RuntimeSettingsPatch): RuntimeSettingsSnapshot {
     const normalized = RuntimeSettingsPatchSchema.parse(patch);
     const prior = this.read();
-    const settings = RuntimeSettingsSchema.parse({ ...prior.settings, ...normalized });
+    const identityBoundaryChanged =
+      (normalized.localRuntime !== undefined &&
+        normalized.localRuntime !== prior.settings.localRuntime) ||
+      (normalized.localBaseUrl !== undefined &&
+        normalized.localBaseUrl !== prior.settings.localBaseUrl) ||
+      (normalized.localModelTag !== undefined &&
+        normalized.localModelTag !== prior.settings.localModelTag);
+    const settings = RuntimeSettingsSchema.parse({
+      ...prior.settings,
+      ...normalized,
+      ...(identityBoundaryChanged && normalized.localModelDigest === undefined
+        ? { localModelDigest: null }
+        : {}),
+    });
     const next: RuntimeSettingsFile = {
       version: 1,
       revision: prior.revision + 1,

@@ -125,6 +125,13 @@ export function assertObservabilityReport(report) {
     if (typeof sample.provider !== "string" || typeof sample.model !== "string") {
       throw new Error("model/provider identity tidak tersedia");
     }
+    if (
+      sample.modelIdentityPinned !== true ||
+      typeof sample.modelIdentity !== "string" ||
+      !/^local:[^:]+:.+@sha256:[0-9a-f]{64}$/.test(sample.modelIdentity)
+    ) {
+      throw new Error("model sample tidak memiliki pinned SHA-256 identity");
+    }
   }
 
   if (report?.summary?.workloadErrors !== 0) {

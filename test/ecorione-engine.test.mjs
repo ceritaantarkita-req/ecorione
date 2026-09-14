@@ -93,6 +93,8 @@ describe("ECORIONE local engine bootstrap", () => {
             pass: true,
             model: "local/provider-token-zero",
             responseModel: "gemma-test-pinned",
+            modelIdentity: `local:openai-compatible:gemma-test-pinned@sha256:${"a".repeat(64)}`,
+            modelIdentityPinned: true,
             latencyMs: 42.5,
           }),
           { status: 200, headers: { "content-type": "application/json" } },
@@ -110,6 +112,8 @@ describe("ECORIONE local engine bootstrap", () => {
       pass: true,
       model: "local/provider-token-zero",
       responseModel: "gemma-test-pinned",
+      modelIdentity: `local:openai-compatible:gemma-test-pinned@sha256:${"a".repeat(64)}`,
+      modelIdentityPinned: true,
       latencyMs: 42.5,
     });
   });

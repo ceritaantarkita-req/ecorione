@@ -94,6 +94,8 @@ describe("local observability evidence helpers", () => {
       cacheHit: false,
       provider: "local",
       model: "model-a",
+      modelIdentity: `local:openai-compatible:model-a@sha256:${"a".repeat(64)}`,
+      modelIdentityPinned: true,
     }));
     const resources = Object.fromEntries(
       ["hub", "context"].map((service, index) => [
@@ -132,5 +134,8 @@ describe("local observability evidence helpers", () => {
     expect(assertObservabilityReport(report)).toBe(report);
     report.workloads.model[0].cacheHit = true;
     expect(() => assertObservabilityReport(report)).toThrow(/uncached/u);
+    report.workloads.model[0].cacheHit = false;
+    report.workloads.model[0].modelIdentityPinned = false;
+    expect(() => assertObservabilityReport(report)).toThrow(/pinned SHA-256 identity/u);
   });
 });

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { bindHost, resolveRepoRuntimePath } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
 import { buildConnectServer } from "./http.js";
+import { parseOptionalLocalModelDigest } from "./local-model-identity.js";
 import { VaultMcpCredentialReader } from "./mcp-client/credentials.js";
 import { HubMcpGovernance } from "./mcp-client/governance.js";
 import { FileMcpInvocationStore } from "./mcp-client/invocation-store.js";
@@ -52,6 +53,7 @@ function developmentHostedApiKey(provider = hostedProvider): string | undefined 
 const localRuntime = parseLocalRuntime(process.env.ECORIONE_LOCAL_RUNTIME);
 const localBaseUrl = process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11434/v1";
 const localModelTag = process.env.ECORIONE_LOCAL_MODEL ?? "qwen3:8b-instruct-q4_K_M";
+const localModelDigest = parseOptionalLocalModelDigest(process.env.ECORIONE_LOCAL_MODEL_DIGEST);
 const hostedCallsAllowedByOperator = process.env.ECORIONE_COST_KILL_SWITCH !== "1";
 const runtimeSettingsPath = resolveRepoRuntimePath(
   REPO_ROOT,
@@ -63,6 +65,7 @@ const runtimeSettingsStore = new FileRuntimeSettings(runtimeSettingsPath, {
   localRuntime,
   localBaseUrl,
   localModelTag,
+  localModelDigest,
   hostedCallsEnabled: hostedCallsAllowedByOperator,
 });
 const runtimeSettings = withHostedOperatorGate(
@@ -149,6 +152,7 @@ const app = buildConnectServer({
   localRuntime,
   localBaseUrl,
   localModelTag,
+  localModelDigest,
   hostedCallsEnabled: hostedCallsAllowedByOperator,
   spendBudget,
   mcpManager,

@@ -19,6 +19,16 @@ menghasilkan tetangga yang tidak berarti apa-apa.
 Alias model dilarang di kode dan konfigurasi. `assertPinnedModel()` menolak apa pun yang
 cocok `-latest`, dan CI punya gerbang grep terpisah untuk itu.
 
+Untuk runtime lokal OpenAI-compatible, `localModelTag` adalah selector request, bukan bukti
+identitas immutable. Durable evidence/cache identity harus membawa `localModelDigest` SHA-256.
+Jika digest belum dikonfigurasi, local chat tetap boleh berjalan tetapi exact-match cache lokal
+dibypass dan hasil harus dilabeli `modelIdentityPinned=false`. Mengganti runtime, base URL, atau
+model selector membersihkan digest lama kecuali penggantinya dikirim eksplisit.
+
+Digest adalah provenance yang dideklarasikan operator; runtime generik yang tidak memiliki
+provenance API tidak boleh diklaim melakukan cryptographic attestation otomatis terhadap bytes
+model.
+
 Index vektor menyimpan identitas model embedding dan hanya menyentuh satu model.
 
 **Canary set harian**: 5–8 kasus termurah dan paling deterministik, dijalankan terjadwal,

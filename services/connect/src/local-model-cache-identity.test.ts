@@ -82,10 +82,7 @@ describe("local model immutable cache identity", () => {
       .times(1);
 
     const sharedCache = new ExactMatchCache();
-    const first = await complete(
-      deps({ cache: sharedCache, localModelDigest: DIGEST }),
-      input,
-    );
+    const first = await complete(deps({ cache: sharedCache, localModelDigest: DIGEST }), input);
     const second = await complete(
       deps({ cache: sharedCache, localModelDigest: DIGEST }),
       input,
