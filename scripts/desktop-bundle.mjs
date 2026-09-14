@@ -111,7 +111,11 @@ export function stageDesktopSurface(bundleRoot) {
     recursive: true,
     filter: (source) => {
       const rel = relative(DESKTOP_SOURCE, source).replaceAll("\\", "/");
-      return rel !== "runtime" && !rel.startsWith("runtime/");
+      return (
+        rel !== "installer.iss" &&
+        rel !== "runtime" &&
+        !rel.startsWith("runtime/")
+      );
     },
   });
   cpSync(resolve(ROOT, "LICENSE"), resolve(bundleRoot, "LICENSE"));
