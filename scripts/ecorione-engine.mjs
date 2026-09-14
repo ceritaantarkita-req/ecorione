@@ -280,7 +280,9 @@ async function doctor() {
   } else if (localProbe.reachable) {
     console.log(`! Local AI runtime test gagal (${localProbe.errorCode ?? "quality failure"})`);
   } else {
-    console.log(`· Local AI runtime belum dapat diuji (${localProbe.errorCode ?? "unreachable"})`);
+    console.log(
+      `· Local AI runtime belum dapat diuji (${localProbe.errorCode ?? "unreachable"})`,
+    );
   }
 
   if (criticalFailure) process.exitCode = 1;
