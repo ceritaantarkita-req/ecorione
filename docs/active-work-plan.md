@@ -42,7 +42,7 @@ Empat blok utama:
 | W08 | Default AI selection | **DONE — REPO SIDE** | User dapat memilih default Local atau configured Hosted; fail-safe ke Local bila hosted tidak siap; auto-router tidak diklaim. |
 | W09 | One-command full-system startup | **STARTED — NEEDS OPERATOR RUNTIME** | Satu command menyalakan full required stack, menunggu readiness, dan fail-safe membersihkan child stack; real clean Windows proof masih wajib. |
 | W10 | `ecorione doctor` diagnostics | **STARTED — NEEDS OPERATOR RUNTIME** | Dependency/service health/ports/Temporal/local runtime didiagnosis manusiawi; operator matrix belum selesai. |
-| W11 | Installer/Launcher | TODO | Normal user: install → open/start → use; Git clone/pnpm bukan requirement. |
+| W11 | Installer/Launcher | **STARTED — REPO-SIDE PACKAGING READY** | Launcher, reproducible bundle, installer spec, dan manual packaging workflow tersedia; real `Setup.exe` + clean-Windows install/start proof masih wajib. |
 | W12 | Attachment composer real backend path | TODO | File/foto → Artifact → Context pointer → controlled hydration, bukan label-only. |
 | W13 | Immutable local model identity | TODO | Runtime/evidence memakai identity/version/digest reproducible; mutable alias tidak dipakai untuk durable claims. |
 | W14 | Product eval foundation | TODO | Eval berasal dari tugas/bug nyata dan tumbuh menuju 30–40 cases tanpa synthetic filler. |
@@ -57,7 +57,7 @@ Empat blok utama:
 
 Urutan kerja selama tidak ada temuan baru:
 
-1. **W11** — installer/launcher path agar normal user tidak menyentuh source tooling.
+1. **W11 operator/release proof** — repo-side packaging sudah siap; closure menunggu real installer artifact + clean Windows proof.
 2. **W09–W10 operator proof** — tetap terbuka dan ditutup hanya melalui real clean Windows/operator-runtime evidence.
 3. **W12** — real attachment pipeline.
 4. **W13** — immutable model identity.
@@ -134,6 +134,20 @@ Install ECORIONE → Open → Start/auto-start → Use
 ```
 
 Normal user tidak boleh diwajibkan memahami Git, Node, pnpm, Docker command, Temporal command, atau internal service ports.
+
+### Desktop installer/launcher path saat ini
+
+- `desktop/` adalah **single source of truth** launcher normal-user; duplikasi launcher/compose yang sempat muncul selama W11 sudah dibersihkan.
+- `Start-ECORIONE.cmd`, `Doctor-ECORIONE.cmd`, dan `Stop-ECORIONE.cmd` membungkus `desktop/ecorione.ps1` sehingga user tidak perlu menjalankan Git, Node, pnpm, atau command Docker manual.
+- launcher membuat secret lokal saat first start dan menyimpan config di `%LOCALAPPDATA%\\ECORIONE`; plaintext secret tidak dikomit ke repository.
+- launcher memakai prebuilt image `ecorione:desktop` dan dapat memuat `runtime/ecorione-image.tar` dari bundle resmi bila image belum ada.
+- `desktop/compose.yml` menjalankan fleet Phase 4 + Temporal dan hanya publish browser UI ke loopback `127.0.0.1:3000`.
+- persistent Docker volumes dipertahankan pada normal stop; launcher tidak memakai `down -v` atau `docker volume rm`.
+- `pnpm desktop:bundle` membangun image, mengekspor `runtime/ecorione-image.tar`, menyalin launcher canonical, menulis `RELEASE-MANIFEST.json`, dan membuat `SHA256SUMS`.
+- `desktop/installer.iss` adalah installer spec per-user/no-admin; installer hanya membawa prepared bundle, bukan source repository.
+- `.github/workflows/desktop-installer.yml` adalah workflow **manual-only** (`workflow_dispatch`) untuk build bundle Linux x64 lalu compile Windows Setup via Inno Setup dan menghasilkan installer SHA-256.
+- workflow tidak auto-publish GitHub Release dan tidak berjalan otomatis pada push/PR.
+- Docker Desktop masih merupakan prerequisite runtime pada desain W11 saat ini. W11 belum membuktikan install/start pada clean Windows dan belum menghasilkan evidence real `Setup.exe` dari workflow yang sudah berada di default branch.
 
 ### Advanced/developer bridge saat ini
 
@@ -311,6 +325,35 @@ Evidence: CI `34800259393` **SUCCESS**; MCP External HTTPS `34800259408` **SUCCE
 **Evidence:** CI `34806350853` **SUCCESS**; current W06 final CI `34807658553` juga tetap green dengan doctor changes terintegrasi.
 
 **Remaining checkpoint:** operator matrix nyata — Docker mati, Temporal mati, healthy full stack, dan configured local model pada Windows/operator laptop. Karena itu W10 tetap STARTED.
+
+### 2026-09-14 — W11 — STARTED — REPO-SIDE PACKAGING READY
+
+**Changed:**
+
+- mempertahankan `desktop/` sebagai single source of truth launcher normal-user dan membersihkan duplicate launcher/compose yang sempat dibuat selama iterasi W11;
+- launcher canonical menyediakan double-click Start / Doctor / Stop, generated local secrets, user-local config, loopback-only UI, dan persistent volumes;
+- `scripts/desktop-bundle.mjs` + `pnpm desktop:bundle` membangun prebuilt `ecorione:desktop`, mengekspor `runtime/ecorione-image.tar`, menulis versioned release metadata, dan `SHA256SUMS`;
+- bundle staging hanya membawa launcher canonical + runtime image + license/manifest/checksum; source repo dan `desktop/installer.iss` tidak menjadi payload user;
+- `desktop/installer.iss` mendefinisikan installer per-user/no-admin dengan shortcut Start / Doctor / Stop;
+- `.github/workflows/desktop-installer.yml` menyediakan release packaging manual-only: Linux x64 build bundle → artifact handoff → Windows Inno Setup compile → installer SHA-256;
+- static regression tests mengunci launcher/bundle/installer boundaries dan mencegah `git clone`, host pnpm/Node requirement, destructive volume removal, dan automatic push/PR installer builds.
+
+**Evidence:**
+
+- desktop bundle contract CI `34809623674`: **SUCCESS**;
+- desktop bundle MCP External HTTPS `34809623637`: **SUCCESS**;
+- final W11 repo-side CI `34811827567`: **SUCCESS** — format, lint, typecheck, tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming;
+- final W11 MCP External HTTPS Acceptance `34811827677`: **SUCCESS**;
+- final repo-side implementation head before this documentation sync: `eeb92901ecfebe9dd52c7d826658c8dbf9ace9d6`.
+
+**Limitation / remaining checkpoint:**
+
+- manual installer workflow baru bisa menjadi real release evidence setelah workflow tersedia pada default branch dan benar-benar dijalankan;
+- real `ECORIONE-Setup-<version>.exe` belum dibuktikan pada checkpoint ini;
+- clean-Windows install → launch → Docker prerequisite handling → runtime image load → full stack ready → browser open → stop → reinstall/uninstall preservation belum dijalankan pada operator machine;
+- Docker Desktop masih prerequisite yang terlihat pada first-run failure/doctor path. W11 belum mencapai target final installer yang sepenuhnya menyembunyikan prerequisite/runtime complexity.
+
+**Next step:** setelah merge/release checkpoint memungkinkan manual installer workflow dijalankan, build real Setup artifact dan lakukan clean-Windows operator acceptance. Sampai evidence itu ada, W11 tetap STARTED dan tidak boleh dinaikkan menjadi DONE.
 
 ## 10. Claim boundary
 
