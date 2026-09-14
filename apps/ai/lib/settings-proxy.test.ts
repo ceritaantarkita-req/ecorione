@@ -65,7 +65,17 @@ describe("proxyToConnectSettings", () => {
     expect(sawAuth).toBe("Bearer test-token");
   });
 
-  it.each(["anthropic", "openai", "openrouter", "kimi", "gemini", "qwen", "glm", "custom-openai", "mcp"])(
+  it.each([
+    "anthropic",
+    "openai",
+    "openrouter",
+    "kimi",
+    "gemini",
+    "qwen",
+    "glm",
+    "custom-openai",
+    "mcp",
+  ])(
     "mengizinkan mutation credential provider %s yang termasuk kontrak Connect",
     async (provider) => {
       pool
