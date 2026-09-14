@@ -29,6 +29,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Build runtime dependencies
+        run: pnpm run build:runtime-deps
+
       - name: Run real task and bug derived product regressions
         run: |
           pnpm exec vitest run \
