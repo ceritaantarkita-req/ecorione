@@ -123,7 +123,7 @@ describe("callAnthropic", () => {
     });
   });
 
-  it("status bukan 2xx → ProviderError, bukan melempar mentah", async () => {
+  it("401/403 → ProviderError invalid-credential", async () => {
     pool
       .intercept({ path: "/v1/messages", method: "POST" })
       .reply(401, { error: { message: "invalid x-api-key" } });
@@ -136,7 +136,7 @@ describe("callAnthropic", () => {
         dynamicText: "",
         userMessage: "halo",
       }),
-    ).rejects.toBeInstanceOf(ProviderError);
+    ).rejects.toMatchObject({ name: "ProviderError", kind: "invalid-credential" });
   });
 
   it("respons bukan JSON valid → ProviderError", async () => {
@@ -153,7 +153,7 @@ describe("callAnthropic", () => {
     ).rejects.toBeInstanceOf(ProviderError);
   });
 
-  it("kegagalan jaringan → ProviderError, bukan exception fetch mentah", async () => {
+  it("kegagalan jaringan → ProviderError unreachable", async () => {
     pool.intercept({ path: "/v1/messages", method: "POST" }).replyWithError(new Error("boom"));
 
     await expect(
@@ -164,6 +164,6 @@ describe("callAnthropic", () => {
         dynamicText: "",
         userMessage: "halo",
       }),
-    ).rejects.toBeInstanceOf(ProviderError);
+    ).rejects.toMatchObject({ name: "ProviderError", kind: "unreachable" });
   });
 });
