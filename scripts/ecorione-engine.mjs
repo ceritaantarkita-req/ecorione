@@ -115,6 +115,52 @@ function commandName(name) {
   return process.platform === "win32" && name === "pnpm" ? "pnpm.cmd" : name;
 }
 
+export function waitForSpawnedChild(child) {
+  return new Promise((resolvePromise) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      resolvePromise(result);
+    };
+    child.once("error", (error) => finish({ error }));
+    child.once("exit", (code, signal) => finish({ code, signal }));
+  });
+}
+
+export async function stopSpawnedChild(child, timeoutMs = 5_000) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+
+  const exited = new Promise((resolvePromise) => {
+    child.once("exit", () => resolvePromise(true));
+  });
+  try {
+    child.kill("SIGTERM");
+  } catch {
+    return;
+  }
+
+  if (timeoutMs > 0) {
+    await Promise.race([
+      exited,
+      new Promise((resolvePromise) => setTimeout(resolvePromise, timeoutMs)),
+    ]);
+  }
+  if (child.exitCode !== null || child.signalCode !== null) return;
+
+  try {
+    child.kill("SIGKILL");
+  } catch {
+    return;
+  }
+  if (timeoutMs > 0) {
+    await Promise.race([
+      exited,
+      new Promise((resolvePromise) => setTimeout(resolvePromise, Math.min(timeoutMs, 1_000))),
+    ]);
+  }
+}
+
 function runChecked(command, args, options = {}) {
   const result = spawnSync(commandName(command), args, {
     cwd: ROOT,
@@ -324,25 +370,40 @@ async function start() {
     env,
     stdio: "inherit",
   });
-  const exit = new Promise((resolvePromise) => {
-    child.once("exit", (code, signal) => resolvePromise({ code, signal }));
-  });
+  const lifecycle = waitForSpawnedChild(child);
   const token = env.ECORIONE_INTERNAL_TOKEN ?? "";
   const readiness = Promise.all([
     waitForPort(3000, 90_000, "Ai"),
     waitForRequiredServices(token, 90_000),
   ]).then(() => ({ ready: true }));
-  const first = await Promise.race([readiness, exit]);
+
+  let first;
+  try {
+    first = await Promise.race([readiness, lifecycle]);
+  } catch (error) {
+    await stopSpawnedChild(child);
+    throw error;
+  }
 
   if ("ready" in first) {
     console.log("\n✓ ECORIONE ready: http://127.0.0.1:3000");
     console.log("  Tekan Ctrl+C untuk menghentikan proses development stack.\n");
     openBrowser("http://127.0.0.1:3000");
-    const finished = await exit;
+    const finished = await lifecycle;
+    if ("error" in finished) {
+      throw new Error(
+        `Phase 4 stack mengalami process error: ${finished.error instanceof Error ? finished.error.message : String(finished.error)}.`,
+      );
+    }
     if (finished.code !== 0 && finished.code !== null) process.exitCode = finished.code;
     return;
   }
 
+  if ("error" in first) {
+    throw new Error(
+      `Tidak bisa menjalankan Phase 4 stack: ${first.error instanceof Error ? first.error.message : String(first.error)}.`,
+    );
+  }
   throw new Error(
     `Phase 4 stack berhenti sebelum seluruh service ready${first.code === null ? ` (${first.signal ?? "signal"})` : ` (exit ${String(first.code)})`}.`,
   );
