@@ -10,7 +10,19 @@ import {
 import { dirname } from "node:path";
 import { z } from "zod";
 
-export const CREDENTIAL_PROVIDERS = ["anthropic", "openai", "openrouter", "mcp"] as const;
+export const AI_CREDENTIAL_PROVIDERS = [
+  "anthropic",
+  "openai",
+  "openrouter",
+  "kimi",
+  "gemini",
+  "qwen",
+  "glm",
+  "custom-openai",
+] as const;
+export type AiCredentialProvider = (typeof AI_CREDENTIAL_PROVIDERS)[number];
+
+export const CREDENTIAL_PROVIDERS = [...AI_CREDENTIAL_PROVIDERS, "mcp"] as const;
 export type CredentialProvider = (typeof CREDENTIAL_PROVIDERS)[number];
 
 export const CREDENTIAL_PURPOSES = ["messages", "tokens"] as const;
@@ -161,84 +173,65 @@ function decryptEntry(entry: VaultEntry, key: Buffer): string {
   }
 }
 
-function readVault(path: string): VaultFile {
-  if (!existsSync(path)) return { ...EMPTY_VAULT, entries: [] };
-  let parsed: unknown;
+function parseVault(raw: string): VaultFile {
+  let value: unknown;
   try {
-    parsed = JSON.parse(readFileSync(path, "utf8")) as unknown;
-  } catch (error) {
-    throw new CredentialVaultFormatError(
-      error instanceof Error ? error.message : String(error),
-    );
+    value = JSON.parse(raw) as unknown;
+  } catch {
+    throw new CredentialVaultFormatError("file bukan JSON valid.");
   }
-  try {
-    const vault = VaultFileSchema.parse(parsed);
-    const scopes = new Set<string>();
-    for (const entry of vault.entries) {
-      assertCredentialScope(entry.provider, entry.purpose);
-      const scope = scopeKey(entry.provider, entry.purpose);
-      if (scopes.has(scope)) {
-        throw new CredentialVaultFormatError(`scope duplikat: ${scope}.`);
-      }
-      scopes.add(scope);
-    }
-    return vault;
-  } catch (error) {
-    if (error instanceof CredentialVaultFormatError) throw error;
-    throw new CredentialVaultFormatError(
-      error instanceof Error ? error.message : String(error),
-    );
+  const parsed = VaultFileSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new CredentialVaultFormatError(parsed.error.issues[0]?.message ?? "schema tidak cocok.");
   }
+  for (const entry of parsed.data.entries) assertCredentialScope(entry.provider, entry.purpose);
+  const keys = new Set<string>();
+  for (const entry of parsed.data.entries) {
+    const key = scopeKey(entry.provider, entry.purpose);
+    if (keys.has(key)) throw new CredentialVaultFormatError(`scope duplikat: ${key}.`);
+    keys.add(key);
+  }
+  return parsed.data;
 }
 
-function writeVault(path: string, vault: VaultFile): void {
+function writeVault(path: string, next: VaultFile): void {
   mkdirSync(dirname(path), { recursive: true });
-  const tmpPath = `${path}.tmp-${String(process.pid)}`;
-  writeFileSync(tmpPath, `${JSON.stringify(vault, null, 2)}\n`, {
-    encoding: "utf8",
-    mode: 0o600,
-  });
-  renameSync(tmpPath, path);
+  const tmp = `${path}.tmp-${String(process.pid)}`;
+  writeFileSync(tmp, `${JSON.stringify(next, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+  renameSync(tmp, path);
   chmodSync(path, 0o600);
 }
 
-/**
- * Connect-owned encrypted credential store.
- *
- * The master key is supplied out-of-band and is never persisted in the vault file.
- * Reads reload the file so provider-secret rotation can take effect without a process restart.
- */
-export class FileCredentialVault implements ProviderCredentialReader {
+export class FileCredentialVault implements CredentialVaultAdmin {
   private masterKey: Buffer;
 
   constructor(
     private readonly path: string,
-    masterKey: string | Buffer,
+    encodedMasterKey: string,
   ) {
-    this.masterKey = Buffer.isBuffer(masterKey)
-      ? Buffer.from(masterKey)
-      : parseVaultMasterKey(masterKey);
-    if (this.masterKey.byteLength !== 32) {
-      throw new CredentialVaultFormatError("master key harus tepat 32 byte.");
-    }
+    this.masterKey = parseVaultMasterKey(encodedMasterKey);
   }
 
-  get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined {
-    assertCredentialScope(provider, purpose);
-    const vault = readVault(this.path);
-    const entry = vault.entries.find(
-      (candidate) => candidate.provider === provider && candidate.purpose === purpose,
-    );
-    return entry === undefined ? undefined : decryptEntry(entry, this.masterKey);
+  private read(): VaultFile {
+    if (!existsSync(this.path)) return EMPTY_VAULT;
+    return parseVault(readFileSync(this.path, "utf8"));
   }
 
   list(): readonly CredentialMetadata[] {
-    return readVault(this.path).entries.map(({ provider, purpose, generation, updatedAt }) => ({
+    return this.read().entries.map(({ provider, purpose, generation, updatedAt }) => ({
       provider,
       purpose,
       generation,
       updatedAt,
     }));
+  }
+
+  get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined {
+    assertCredentialScope(provider, purpose);
+    const entry = this.read().entries.find(
+      (candidate) => candidate.provider === provider && candidate.purpose === purpose,
+    );
+    return entry === undefined ? undefined : decryptEntry(entry, this.masterKey);
   }
 
   set(
@@ -249,73 +242,69 @@ export class FileCredentialVault implements ProviderCredentialReader {
   ): CredentialMetadata {
     assertCredentialScope(provider, purpose);
     if (secret.length === 0) throw new CredentialVaultFormatError("secret tidak boleh kosong.");
-    let normalizedUpdatedAt: string;
-    try {
-      normalizedUpdatedAt = TimestampSchema.parse(updatedAt);
-    } catch (error) {
-      throw new CredentialVaultFormatError(
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-    const vault = readVault(this.path);
-    const prior = vault.entries.find(
-      (candidate) => candidate.provider === provider && candidate.purpose === purpose,
+    const prior = this.read();
+    const previous = prior.entries.find(
+      (entry) => entry.provider === provider && entry.purpose === purpose,
     );
-    const generation = (prior?.generation ?? 0) + 1;
-    const next = encryptEntry({
+    const generation = (previous?.generation ?? 0) + 1;
+    const nextEntry = encryptEntry({
       provider,
       purpose,
       generation,
-      updatedAt: normalizedUpdatedAt,
+      updatedAt,
       secret,
       key: this.masterKey,
     });
-    const entries = vault.entries
+    const entries = prior.entries
       .filter((entry) => !(entry.provider === provider && entry.purpose === purpose))
-      .concat(next)
-      .sort((a, b) =>
-        scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)),
-      );
-    writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
-    return { provider, purpose, generation, updatedAt: normalizedUpdatedAt };
+      .concat(nextEntry)
+      .sort((a, b) => scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)));
+    writeVault(this.path, {
+      version: 1,
+      revision: prior.revision + 1,
+      entries,
+    });
+    return {
+      provider,
+      purpose,
+      generation,
+      updatedAt,
+    };
   }
 
   remove(provider: CredentialProvider, purpose: CredentialPurpose): boolean {
     assertCredentialScope(provider, purpose);
-    const vault = readVault(this.path);
-    const entries = vault.entries.filter(
+    const prior = this.read();
+    const entries = prior.entries.filter(
       (entry) => !(entry.provider === provider && entry.purpose === purpose),
     );
-    if (entries.length == vault.entries.length) return false;
-    writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
+    if (entries.length === prior.entries.length) return false;
+    writeVault(this.path, {
+      version: 1,
+      revision: prior.revision + 1,
+      entries,
+    });
     return true;
   }
 
-  /** Re-encrypts every entry under a new 32-byte master key as one atomic file replacement. */
-  rotateMasterKey(nextMasterKey: string | Buffer): void {
-    const nextKey = Buffer.isBuffer(nextMasterKey)
-      ? Buffer.from(nextMasterKey)
-      : parseVaultMasterKey(nextMasterKey);
-    if (nextKey.byteLength !== 32) {
-      throw new CredentialVaultFormatError("master key baru harus tepat 32 byte.");
-    }
-    const vault = readVault(this.path);
-    const plaintext = vault.entries.map((entry) => ({
-      entry,
-      secret: decryptEntry(entry, this.masterKey),
-    }));
-    const entries = plaintext.map(({ entry, secret }) =>
+  rotateMasterKey(nextEncodedMasterKey: string): void {
+    const nextKey = parseVaultMasterKey(nextEncodedMasterKey);
+    const prior = this.read();
+    const entries = prior.entries.map((entry) =>
       encryptEntry({
         provider: entry.provider,
         purpose: entry.purpose,
         generation: entry.generation,
         updatedAt: entry.updatedAt,
-        secret,
+        secret: decryptEntry(entry, this.masterKey),
         key: nextKey,
       }),
     );
-    writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
-    this.masterKey.fill(0);
+    writeVault(this.path, {
+      version: 1,
+      revision: prior.revision + 1,
+      entries,
+    });
     this.masterKey = nextKey;
   }
 }
