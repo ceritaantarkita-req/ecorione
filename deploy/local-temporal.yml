@@ -1,0 +1,34 @@
+name: ecorione-local-temporal
+
+services:
+  temporal-db:
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: ecorione-local-temporal
+    volumes:
+      - temporal_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  temporal:
+    image: temporalio/auto-setup:1.29.7
+    restart: unless-stopped
+    depends_on:
+      temporal-db:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: ecorione-local-temporal
+      POSTGRES_SEEDS: temporal-db
+    ports:
+      - "127.0.0.1:7233:7233"
+
+volumes:
+  temporal_db:
