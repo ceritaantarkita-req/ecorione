@@ -22,7 +22,10 @@ export const AI_CREDENTIAL_PROVIDERS = [
 ] as const;
 export type AiCredentialProvider = (typeof AI_CREDENTIAL_PROVIDERS)[number];
 
-export const CREDENTIAL_PROVIDERS = [...AI_CREDENTIAL_PROVIDERS, "mcp"] as const;
+export const CREDENTIAL_PROVIDERS = [
+  ...AI_CREDENTIAL_PROVIDERS,
+  "mcp",
+] as const;
 export type CredentialProvider = (typeof CREDENTIAL_PROVIDERS)[number];
 
 export const CREDENTIAL_PURPOSES = ["messages", "tokens"] as const;
@@ -158,19 +161,23 @@ function encryptEntry(input: {
 
 function decryptEntry(entry: VaultEntry, key: Buffer): string {
   try {
-    const decipher = createDecipheriv(CIPHER, key, Buffer.from(entry.nonce, "base64url"), {
+    const decipher = createDecipheriv(CIPHER, inputBuffer(entry.nonce), {
       authTagLength: AUTH_TAG_BYTES,
     });
     decipher.setAAD(aad(entry));
-    decipher.setAuthTag(Buffer.from(entry.authTag, "base64url"));
+    decipher.setAuthTag(inputBuffer(entry.authTag));
     const plaintext = Buffer.concat([
-      decipher.update(Buffer.from(entry.ciphertext, "base64url")),
+      decipher.update(inputBuffer(entry.ciphertext)),
       decipher.final(),
     ]);
     return plaintext.toString("utf8");
   } catch {
     throw new CredentialVaultIntegrityError(entry.provider, entry.purpose);
   }
+}
+
+function inputBuffer(value: string): Buffer {
+  return Buffer.from(value, "base64url");
 }
 
 function parseVault(raw: string): VaultFile {
