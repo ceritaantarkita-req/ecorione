@@ -165,6 +165,24 @@ async function fetchHealth(url, token) {
   }
 }
 
+async function waitForRequiredServices(token, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  let pending = REQUIRED_SERVICES.map(([name]) => name);
+
+  while (Date.now() < deadline) {
+    const checks = await Promise.all(
+      REQUIRED_SERVICES.map(async ([name, url]) => ({ name, ready: await fetchHealth(url, token) })),
+    );
+    pending = checks.filter((check) => !check.ready).map((check) => check.name);
+    if (pending.length === 0) return;
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 750));
+  }
+
+  throw new Error(
+    `Service Phase 4 belum ready setelah ${String(Math.round(timeoutMs / 1000))} detik: ${pending.join(", ")}.`,
+  );
+}
+
 async function doctor() {
   const envPath = resolve(ROOT, ".env");
   const fileEnv = existsSync(envPath) ? parseSimpleEnv(readFileSync(envPath, "utf8")) : {};
@@ -242,7 +260,11 @@ async function start() {
   const exit = new Promise((resolvePromise) => {
     child.once("exit", (code, signal) => resolvePromise({ code, signal }));
   });
-  const readiness = waitForPort(3000, 90_000, "Ai").then(() => ({ ready: true }));
+  const token = env.ECORIONE_INTERNAL_TOKEN ?? "";
+  const readiness = Promise.all([
+    waitForPort(3000, 90_000, "Ai"),
+    waitForRequiredServices(token, 90_000),
+  ]).then(() => ({ ready: true }));
   const first = await Promise.race([readiness, exit]);
 
   if ("ready" in first) {
@@ -255,7 +277,7 @@ async function start() {
   }
 
   throw new Error(
-    `Phase 4 stack berhenti sebelum Ai ready${first.code === null ? ` (${first.signal ?? "signal"})` : ` (exit ${String(first.code)})`}.`,
+    `Phase 4 stack berhenti sebelum seluruh service ready${first.code === null ? ` (${first.signal ?? "signal"})` : ` (exit ${String(first.code)})`}.`,
   );
 }
 
