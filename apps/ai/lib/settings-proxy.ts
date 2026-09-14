@@ -8,7 +8,7 @@ type Method = "GET" | "POST" | "PUT" | "DELETE";
 const ALLOWED = [
   /^\/v1\/settings\/runtime$/,
   /^\/v1\/settings\/providers$/,
-  /^\/v1\/settings\/credentials(?:\/(?:anthropic|openai|openrouter|kimi|gemini|qwen|glm|custom-openai|mcp))?$/,
+  /^\/v1\/settings\/credentials(?:\/[a-z0-9][a-z0-9-]{0,63})?$/,
   /^\/v1\/settings\/mcp\/servers(?:\/[a-z0-9][a-z0-9._-]*)?(?:\/tools\/[A-Za-z0-9._-]+)?$/,
   /^\/v1\/ops\/provider-canary$/,
 ];
