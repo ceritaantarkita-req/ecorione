@@ -30,10 +30,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Format
-        run: |
-          pnpm exec prettier apps/ai/app/settings/page.tsx apps/ai/lib/client-response.ts apps/ai/lib/provider-health.ts --write
-          git diff -- apps/ai/app/settings/page.tsx apps/ai/lib/client-response.ts apps/ai/lib/provider-health.ts
-          exit 1
+        run: pnpm run format:check
 
       - name: Lint
         run: pnpm run lint
