@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readJson } from "./client-response";
+import { ClientResponseError, readJson } from "./client-response";
 
 describe("readJson", () => {
   it("returns successful JSON payloads", async () => {
@@ -25,6 +25,30 @@ describe("readJson", () => {
 
     const secondResponse = new Response(JSON.stringify(payload), { status: 502 });
     await expect(readJson(secondResponse)).rejects.not.toThrow(/HTTP 502/);
+  });
+
+  it("preserves machine-readable error code and status for health-aware UI", async () => {
+    const response = new Response(
+      JSON.stringify({
+        error: {
+          code: "PROVIDER_INVALID_CREDENTIAL",
+          message: "Credential ditolak provider.",
+        },
+      }),
+      { status: 502 },
+    );
+
+    try {
+      await readJson(response);
+      throw new Error("expected readJson to fail");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ClientResponseError);
+      expect(error).toMatchObject({
+        code: "PROVIDER_INVALID_CREDENTIAL",
+        status: 502,
+        message: "Credential ditolak provider.",
+      });
+    }
   });
 
   it("uses a human-readable fallback for malformed upstream errors", async () => {
