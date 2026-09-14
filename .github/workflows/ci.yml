@@ -30,7 +30,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Apply Temporal runtime timeout hardening candidate
-        run: git apply scripts/temporal-runtime-timeout.patch
+        run: git apply --recount scripts/temporal-runtime-timeout.patch
 
       - name: Format
         run: pnpm run format:check
@@ -107,7 +107,7 @@ jobs:
 
       - name: Materialize verified closure changes
         run: |
-          git apply scripts/temporal-runtime-timeout.patch
+          git apply --recount scripts/temporal-runtime-timeout.patch
           git apply --recount scripts/w12-docs.patch
           rm scripts/temporal-runtime-timeout.patch scripts/w12-docs.patch
           git fetch origin main --depth=1
