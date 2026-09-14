@@ -9,21 +9,22 @@ Dokumen ini adalah living document untuk pekerjaan aktif ECORIONE setelah Phase 
 ## 1. Aturan kerja aktif
 
 1. **Visual current di-freeze.** Jangan redesign sidebar, layout, warna, composer, atau bahasa visual yang sudah ada kecuali ada defect nyata atau kebutuhan fungsi yang tidak bisa diselesaikan tanpa perubahan visual.
-2. **Perubahan UX harus mengikuti desain existing.** Fokus saat ini adalah fungsi, onboarding, reliability, observability, dan usability — bukan redesign.
-3. **Jangan menambah modul besar baru sebelum gap aktif di bawah ditutup atau ada evidence nyata yang membenarkannya.**
-4. **Fase 5 AutoClick tetap DEFERRED BY DESIGN.** Tidak mulai tanpa use case nyata yang tidak dapat diselesaikan melalui API/MCP.
-5. **Fase 6+ tetap OPEN-ENDED / evidence-driven.** Tidak ada Phase 7/8 yang diasumsikan otomatis dan tidak ada implicit Batch 13.
-6. **Source of truth teknis adalah current code + current evidence + canonical current-state docs.** Historical audit tidak boleh mengalahkan kondisi repository yang lebih baru.
-7. **Setiap selesai satu pekerjaan, update dokumen ini terlebih dahulu** dengan status, hasil, evidence, commit/PR, defect/limitation, dan next step.
+2. Perubahan UX harus mengikuti desain existing. Fokus sekarang adalah fungsi, onboarding, reliability, observability, dan usability.
+3. Jangan menambah modul besar baru sebelum gap aktif ditutup atau ada evidence nyata yang membenarkannya.
+4. Fase 5 AutoClick tetap **DEFERRED BY DESIGN** sampai ada use case nyata yang tidak dapat diselesaikan melalui API/MCP.
+5. Fase 6+ tetap **OPEN-ENDED / evidence-driven**. Tidak ada implicit Batch 13 atau urutan phase tambahan yang diasumsikan otomatis.
+6. Source of truth teknis: current code + current evidence + canonical current-state docs.
+7. **Setiap selesai satu pekerjaan, update dokumen ini terlebih dahulu** dengan status, hasil, evidence, commit/PR, limitation, dan next step.
+8. Status `DONE` repo-side tidak boleh dipakai untuk menyamarkan checkpoint yang masih membutuhkan operator laptop/runtime.
 
 ## 2. Target aktif
 
-Target utama tahap ini adalah mengubah ECORIONE dari sistem yang terutama nyaman bagi developer menjadi produk yang dapat dipasang, dinyalakan, dikonfigurasi, dan digunakan oleh user awam tanpa harus memahami Git, pnpm, Docker, Temporal, atau struktur service internal.
+Tujuan tahap ini adalah mengubah ECORIONE dari sistem yang terutama nyaman bagi developer menjadi produk yang dapat dipasang, dinyalakan, dikonfigurasi, dan digunakan user awam tanpa harus memahami Git, pnpm, Docker, Temporal, atau struktur service internal.
 
 Empat blok utama:
 
 - **A. Stabilkan produk** — UX runtime, testing, attachment, health/error handling.
-- **B. Sederhanakan onboarding** — provider credentials, one-command startup, installer/launcher path.
+- **B. Sederhanakan onboarding** — provider credentials, default AI, one-command startup, installer/launcher.
 - **C. Stabilkan AI** — immutable model identity, real product eval, agentic local-model validation.
 - **D. Buktikan optimizer** — automatic semantic reference selector, ECX tanpa oracle, hosted cost validation.
 
@@ -31,53 +32,50 @@ Empat blok utama:
 
 | ID | Pekerjaan | Status | Definition of done |
 |---|---|---:|---|
-| W01 | Reconcile `system-analysis-2026-09-13.md` dengan kondisi real repo | **DONE** | Temuan valid/outdated dipisahkan; tidak ada blocker lama yang masih dinyatakan aktif tanpa dasar current code/evidence. |
-| W02 | Tutup gap Vitest `*.test.tsx` | **DONE** | Semua test TSX yang dimaksud masuk discovery normal/CI dan tidak ada silent-skip sejenis yang terlewat. |
-| W03 | Audit UX/Product Validation di current `main` | **BLOCKED — OPERATOR RUNTIME** | Full Phase 4 walkthrough current main selesai; defect ledger jelas; tidak ada S0/S1 terbuka. |
-| W04 | Rapikan partial-stack vs full-stack behavior | **DONE — REPO SIDE** | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
-| W05 | Provider Settings foundation | **STARTED** | User dapat menghubungkan OpenAI, Anthropic/Claude, OpenRouter, Kimi/Moonshot, Gemini, Qwen, GLM, dan custom OpenAI-compatible tanpa edit `.env` manual. |
-| W06 | Credential Vault integration untuk provider keys | **STARTED** | Paste → test → save → masked display → replace/remove; plaintext tidak disimpan di browser/localStorage dan tidak dibaca kembali oleh UI. |
-| W07 | Provider health/status | **STARTED — TAXONOMY IMPLEMENTED** | Status minimal: Connected, Invalid key, Unreachable, Disabled; test connection bounded dan tidak memicu spend tidak terkendali. |
-| W08 | Default AI selection | TODO | User dapat memilih Local atau provider/model yang sudah terhubung; auto-router belum diklaim. |
-| W09 | One-command full-system startup | **STARTED — NEEDS OPERATOR RUNTIME** | Satu command stabil menyalakan full required stack dan menunggu readiness tanpa langkah manual berantai. |
-| W10 | `ecorione doctor` / diagnostics | **STARTED — NEEDS OPERATOR RUNTIME** | Dependency, service health, ports, Temporal/database, local model, dan masalah umum dapat didiagnosis dengan output manusiawi. |
-| W11 | Installer/Launcher design & implementation path | TODO | Jalur normal-user didefinisikan sebagai install → open/start → use; Git clone/pnpm bukan requirement end user. |
-| W12 | Attachment composer real backend path | TODO | File/foto tidak lagi hanya menjadi label teks; upload → Artifact → Context pointer → controlled hydration terbukti end-to-end. |
-| W13 | Immutable local model identity | TODO | Runtime/evidence menggunakan identity/version/digest yang reproducible; mutable `:latest` tidak dipakai untuk durable claims. |
-| W14 | Product eval foundation | TODO | Eval cases berasal dari tugas/bug nyata; framework siap menuju target 30–40 kasus tanpa synthetic filler. |
-| W15 | Agentic local-model eval v1 | TODO | Local model diuji pada loop reason/choose-tool/execute/observe/verify dengan task completion dan failure modes tercatat. |
-| W16 | Automatic semantic reference selector | TODO | `refIndexes` tidak lagi harus dipilih caller/oracle untuk jalur auto-selective; selector terukur dan punya fallback/error semantics eksplisit. |
-| W17 | ECX end-to-end tanpa oracle | TODO | Full-context vs auto-selective ECX vs oracle ECX dibandingkan pada task set yang sama. |
-| W18 | Hosted economic validation | TODO | Sejumlah kecil call nyata membandingkan actual hosted token/cost full-context vs ECX dengan spend bounded dan operator intent eksplisit. |
-| W19 | Release/security governance follow-up | TODO | Full-history secret scan menjadi gate release/CI yang benar-benar dieksekusi; governance `main` diperketat sesuai keputusan operator. |
-| W20 | Final current-state sync | TODO | Canonical docs, implementation status, evidence, limitations, dan next checkpoint sinkron dengan repository terbaru. |
+| W01 | Reconcile `system-analysis-2026-09-13.md` | **DONE** | Temuan valid/outdated dipisahkan dan blocker lama tidak lagi dianggap current tanpa evidence. |
+| W02 | Tutup gap Vitest `*.test.tsx` | **DONE** | TSX tests masuk discovery normal/CI dan hydration test benar-benar berjalan. |
+| W03 | Audit UX/Product Validation current `main` | **BLOCKED — OPERATOR RUNTIME** | Full rendered Phase 4 walkthrough current main; tidak ada S0/S1 terbuka. |
+| W04 | Rapikan partial-stack vs full-stack behavior | **DONE — REPO SIDE** | Raw HTTP/proxy errors tidak menjadi UX normal; service-down state manusiawi. |
+| W05 | Provider Settings foundation | **STARTED** | Baseline provider dapat dikonfigurasi tanpa edit `.env`; execution support hanya diklaim bila adapter/model/pricing contract nyata tersedia. |
+| W06 | Credential Vault integration | **STARTED** | Paste → test → save → metadata/masked display → replace/remove; plaintext tidak disimpan browser. |
+| W07 | Provider health/status | **DONE WITH LIMITATIONS — REPO SIDE** | Connected / Invalid key / Unreachable / Disabled / routing-unavailable dipetakan dari backend evidence; real external key validation tetap membutuhkan operator credential. |
+| W08 | Default AI selection | **DONE — REPO SIDE** | User dapat memilih default Local atau configured Hosted; fail-safe ke Local bila hosted tidak siap; auto-router tidak diklaim. |
+| W09 | One-command full-system startup | **STARTED — NEEDS OPERATOR RUNTIME** | Satu command menyalakan full required stack dan menunggu readiness; real clean Windows proof masih wajib. |
+| W10 | `ecorione doctor` diagnostics | **STARTED — NEEDS OPERATOR RUNTIME** | Dependency/service health/ports/Temporal/local runtime didiagnosis manusiawi; operator matrix belum selesai. |
+| W11 | Installer/Launcher | TODO | Normal user: install → open/start → use; Git clone/pnpm bukan requirement. |
+| W12 | Attachment composer real backend path | TODO | File/foto → Artifact → Context pointer → controlled hydration, bukan label-only. |
+| W13 | Immutable local model identity | TODO | Runtime/evidence memakai identity/version/digest reproducible; mutable alias tidak dipakai untuk durable claims. |
+| W14 | Product eval foundation | TODO | Eval berasal dari tugas/bug nyata dan tumbuh menuju 30–40 cases tanpa synthetic filler. |
+| W15 | Agentic local-model eval v1 | TODO | Local model diuji reason/choose-tool/execute/observe/verify dengan failure modes terukur. |
+| W16 | Automatic semantic reference selector | TODO | Auto-selective path tidak lagi membutuhkan caller/oracle `refIndexes`. |
+| W17 | ECX end-to-end tanpa oracle | TODO | Full-context vs auto-selective vs oracle dibandingkan pada task set sama. |
+| W18 | Hosted economic validation | TODO | Actual hosted token/cost dibandingkan secara bounded dengan explicit operator spend intent. |
+| W19 | Release/security governance follow-up | TODO | Full-history secret scan benar-benar menjadi gate dan governance `main` diperketat sesuai keputusan operator. |
+| W20 | Final current-state sync | TODO | Canonical docs, implementation, evidence, limitations, dan next checkpoint sinkron. |
 
-## 4. Prioritas eksekusi saat ini
+## 4. Prioritas eksekusi
 
-Urutan default selama tidak ada temuan baru yang memaksa reprioritization:
+Urutan kerja selama tidak ada temuan baru:
 
-1. W01 — current-state/document reconciliation
-2. W02 — test discovery gap
-3. W03 — current-main UX/product validation
-4. W04 — full/partial stack usability
-5. W05–W08 — provider onboarding + Credential Vault
-6. W09–W11 — startup, doctor, installer/launcher path
-7. W12 — real attachment pipeline
-8. W13 — immutable local model identity
-9. W14–W15 — product eval + agentic local-model validation
-10. W16–W18 — semantic selector, ECX no-oracle, hosted economics
-11. W19–W20 — release governance + final synchronization
+1. **W05–W06** — selesaikan provider catalog/routing contract dan end-to-end credential onboarding.
+2. **W09–W10** — repo-side refinement boleh lanjut; closure menunggu operator runtime.
+3. **W11** — installer/launcher path agar normal user tidak menyentuh source tooling.
+4. **W12** — real attachment pipeline.
+5. **W13** — immutable model identity.
+6. **W14–W15** — real product eval + agentic local-model validation.
+7. **W16–W18** — semantic selector, ECX no-oracle, hosted economics.
+8. **W19–W20** — governance + final synchronization.
 
-Jika sebuah checkpoint membutuhkan operator laptop/runtime yang tidak tersedia dari repository execution surface, statusnya harus dicatat `BLOCKED — OPERATOR RUNTIME` atau `STARTED — NEEDS OPERATOR RUNTIME` dan pekerjaan repo-side yang independen boleh dilanjutkan. Status tersebut tidak boleh dipalsukan menjadi `DONE` hanya karena static/CI checks hijau.
+W03 tetap dibuka sampai rendered operator walkthrough selesai dan tidak boleh dipalsukan menjadi DONE melalui CI/static inspection saja.
 
-## 5. Provider onboarding target
+## 5. Provider onboarding boundary
 
 Normal user tidak boleh diwajibkan mengedit `.env` untuk menghubungkan model/provider.
 
 Target flow:
 
 ```text
-Settings → AI Providers → Connect → Paste API key → Test → Save → Choose model
+Settings → AI Provider → Paste API key → Test → Save → Choose route/model
 ```
 
 Provider baseline:
@@ -89,50 +87,49 @@ Provider baseline:
 - Google Gemini
 - Qwen
 - GLM
-- Custom OpenAI-compatible endpoint
-
-Security baseline:
-
-- credential authority tetap **Connect / Credential Vault**;
-- plaintext key tidak disimpan di browser/localStorage;
-- setelah tersimpan UI hanya melihat metadata/masked identity;
-- replace/remove/test harus eksplisit;
-- provider call tetap tunduk pada hosted-call policy dan spend control.
+- Custom OpenAI-compatible
 
 Current implementation boundary:
 
-- credential storage contract sekarang mengenali Anthropic, OpenAI, OpenRouter, Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible, serta MCP token;
-- Anthropic, OpenAI, dan OpenRouter sudah routing-ready melalui Connect existing;
-- Kimi, Gemini, Qwen, GLM, dan custom OpenAI-compatible **baru credential-ready**, belum boleh dianggap routing-ready sampai adapter/endpoint/model identity/pricing contract selesai;
-- provider health taxonomy sekarang membedakan missing credential, invalid credential, unreachable, dan generic upstream failure untuk routing-ready hosted adapters;
-- UI wajib menyatakan boundary tersebut secara eksplisit dan tidak boleh memberi kesan provider baru sudah dapat dipanggil bila routing belum tersedia.
+- Credential Vault mengenali Anthropic, OpenAI, OpenRouter, Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible, dan MCP token.
+- **Anthropic, OpenAI, OpenRouter** adalah routing-ready provider existing.
+- **Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible** saat ini **credential-ready only**. Jangan klaim execution support sebelum endpoint/model identity/pricing/adapters selesai.
+- Credential authority tetap Connect / Credential Vault; UI hanya membaca metadata dan tidak dapat mengambil plaintext kembali.
+- Provider health detail dikeluarkan melalui **provider canary boundary**, bukan mengubah kontrak normal `/v1/complete`.
+- Normal completion tetap backward-compatible: generic provider failure tetap `UPSTREAM_UNAVAILABLE`.
+- Canary dapat membedakan `PROVIDER_CREDENTIAL_MISSING`, `PROVIDER_INVALID_CREDENTIAL`, `PROVIDER_UNREACHABLE`, dan `PROVIDER_UPSTREAM_ERROR`.
+- Local runtime network failure juga diklasifikasikan `unreachable` sehingga health semantics konsisten dengan hosted providers.
 
-## 6. Startup/onboarding target
+## 6. Default AI boundary
 
-Tiga kelas penggunaan harus dipisahkan:
-
-### Normal user
-
-```text
-Install ECORIONE → Open → Start/auto-start engine → Use
-```
-
-User normal tidak perlu tahu Git, Node, pnpm, Docker command, Temporal command, atau service ports.
-
-### Advanced user
-
-Target CLI:
+`defaultChatTarget` sekarang merupakan durable runtime setting dengan nilai:
 
 ```text
-ecorione start
-ecorione stop
-ecorione status
-ecorione restart
-ecorione doctor
-ecorione update
+local | hosted
 ```
 
-Repository-side bridge yang sudah tersedia saat ini:
+Rules:
+
+- default untuk file/settings lama adalah **Local**;
+- Settings current mempunyai `Default AI route` tanpa redesign layout/theme;
+- Chat membaca runtime setting dan credential metadata saat startup;
+- default Hosted hanya dipakai bila hosted calls aktif **dan** credential untuk selected hosted provider tersedia;
+- bila gate/credential tidak siap atau Settings tidak dapat dibaca, chat fail-safe ke **Local**;
+- operator hosted kill switch memaksa `hostedCallsEnabled=false` **dan** `defaultChatTarget=local`;
+- route tetap dapat dipilih manual sebelum pesan pertama dan dikunci untuk sesi setelah percakapan mulai;
+- **Auto routing belum diimplementasikan atau diklaim.**
+
+## 7. Startup/onboarding boundary
+
+### Normal user target
+
+```text
+Install ECORIONE → Open → Start/auto-start → Use
+```
+
+Normal user tidak boleh diwajibkan memahami Git, Node, pnpm, Docker command, Temporal command, atau internal service ports.
+
+### Advanced/developer bridge saat ini
 
 ```text
 pnpm engine:start
@@ -140,284 +137,132 @@ pnpm engine:doctor
 pnpm engine:stop-temporal
 ```
 
-`engine:start` melakukan bootstrap `.env`, membuat local internal token + Vault master key bila belum ada, memastikan Temporal tersedia, menyalakan `dev:phase4`, lalu menunggu Ai dan seluruh required Phase 4 service health sebelum menyatakan ECORIONE ready. Ini masih jalur developer/advanced-user dan belum menggantikan installer/launcher W11.
+`engine:start`:
 
-### Developer
+- membuat `.env` dari `.env.example` bila belum ada;
+- membuat local internal token dan Vault master key;
+- memastikan Temporal lokal tersedia;
+- menjalankan full `dev:phase4`;
+- baru menyatakan ready setelah Ai + RnD + Context + Connect + Hub + Artifact + Sandbox + Space + Flow sehat;
+- browser dibuka best-effort.
 
-Developer workflow tetap boleh menggunakan repo/source tooling (`git`, `pnpm`, development scripts) dan tidak boleh dipaksakan menjadi jalur normal user.
+`engine:doctor` memeriksa Node, pnpm, `.env`, Docker, Temporal, required service health, dan Ai. Real Windows/operator proof tetap diperlukan sebelum W09/W10 ditutup.
 
-One-line PowerShell dapat menjadi jembatan/early-distribution path, tetapi **bukan tujuan UX final**. Tujuan final adalah installer/launcher yang signed/versioned dengan release artifact yang reproducible.
-
-## 7. Visual freeze boundary
+## 8. Visual freeze boundary
 
 Yang boleh berubah tanpa membuka redesign:
 
+- provider/settings controls;
 - onboarding wizard;
-- provider connection/settings controls;
-- service health/status;
+- service/provider health status;
 - human-readable errors;
 - attachment functional state;
 - installer/launcher surface;
 - accessibility/responsiveness defect fixes.
 
-Yang tidak dikerjakan sekarang kecuali ada alasan produk baru yang kuat:
+Yang **tidak** dikerjakan sekarang tanpa alasan produk baru yang kuat:
 
-- redesign sidebar;
-- redesign navigation hierarchy;
+- redesign sidebar/navigation;
 - theme/color overhaul;
 - typography overhaul;
 - composer visual overhaul;
 - decorative UI refactor tanpa functional value.
 
-## 8. Mandatory update protocol
+## 9. Execution log
 
-Setiap pekerjaan Wxx yang dikerjakan harus menambahkan/update entry pada **Execution Log** di bawah sebelum pekerjaan dianggap selesai.
+### 2026-09-14 — W00/W01 — DONE
 
-Setiap entry minimal berisi:
+Living work plan dibuat dan `system-analysis-2026-09-13.md` direconcile dengan real current state. Credential Vault, durable spend ledger, external MCP acceptance, dan existing history scanner tidak lagi salah dibaca sebagai blocker yang belum pernah ada. Kritik yang masih valid dipertahankan: product-use proof, mutable model identity, attachment label-only, hosted-dollar validation, eval suite, dan current rendered UX validation.
 
-- tanggal/waktu;
-- Work ID;
-- status: `STARTED`, `BLOCKED`, `DONE`, atau `DONE WITH LIMITATIONS`;
-- apa yang diubah;
-- test/evidence yang dijalankan;
-- hasil aktual;
-- commit/PR jika ada;
-- limitation/defect baru;
-- next step.
-
-Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **real implementation**, bukan memaksa code agar terlihat cocok dengan rencana lama.
-
-## 9. Execution Log
-
-### 2026-09-14 — W00 — DONE
-
-**Scope:** membuat living work-plan dan aturan dokumentasi wajib.
-
-**Result:**
-
-- visual current ditetapkan sebagai freeze boundary;
-- work queue post-Phase-4 dikunci sebagai baseline kerja aktif;
-- provider onboarding dan startup/onboarding dimasukkan sebagai pekerjaan produk utama;
-- mandatory update protocol ditetapkan: setiap pekerjaan berikutnya wajib memperbarui dokumen ini sebelum dianggap selesai.
-
-**Evidence:** commit yang menambahkan `docs/active-work-plan.md`.
-
-**Limitation:** belum ada implementation item W01–W20 yang dinyatakan selesai oleh entry ini.
-
-**Next:** mulai W01 kecuali operator mengubah prioritas.
-
-### 2026-09-14 — W01 — DONE
-
-**Scope:** reconcile `docs/system-analysis-2026-09-13.md` terhadap current code/evidence.
-
-**Changed:**
-
-- mempertahankan kritik yang masih valid: complexity-vs-use, partial-stack UX, hosted-dollar validation gap, mutable model identity, UX runtime gap, TSX discovery gap, dan attachment UI-only;
-- mengoreksi wording backup/restore Sync/Connect: run sebelumnya memiliki absent optional source state, bukan bukti bahwa existing state pasti hilang;
-- menghapus status blocker lama yang sudah tidak benar untuk Credential Vault, durable spend ledger, external/public MCP acceptance, dan full-history scanner;
-- mempertahankan nuance bahwa history scanner belum menjadi continuous normal-CI gate dan product eval suite masih belum terisi memadai;
-- mengarahkan prioritas aktif ke dokumen ini, bukan ke audit historical.
-
-**Evidence:** commit `89592d7ed4c5508e8fa1031bdc9197162ae4ad67` pada branch `agent/active-work-20260914`.
-
-**Result:** `system-analysis-2026-09-13.md` sekarang dapat dibaca sebagai historical analysis yang sudah direconcile, bukan current blocker list yang stale.
-
-**Limitation:** runtime UX dan product-eval gaps yang disebut masih harus ditutup oleh work item berikutnya.
-
-**Next:** W02 — perbaiki Vitest discovery untuk `*.test.tsx` dan verifikasi via CI.
+Evidence: `docs/active-work-plan.md`, commit W01 `89592d7ed4c5508e8fa1031bdc9197162ae4ad67`.
 
 ### 2026-09-14 — W02 — DONE
 
-**Scope:** menutup silent-skip `*.test.tsx` pada normal Vitest/CI discovery.
+Vitest discovery mencakup `*.test.tsx`; React automatic JSX transform disamakan dengan runtime Next/React. Hydration test yang sebelumnya silent-skip sekarang benar-benar berjalan.
 
-**Changed:**
-
-- menambahkan discovery `*.test.tsx` untuk `packages`, `services`, `apps`, dan root `test`;
-- initial CI setelah discovery membuktikan test `apps/ai/app/page.hydration.test.tsx` memang sebelumnya tersembunyi dan gagal saat pertama benar-benar dijalankan;
-- percobaan import React eksplisit membuktikan masalah berikutnya berada pada transform `page.tsx`, bukan assertion hydration;
-- root cause ditutup dengan menyamakan Vitest ke React automatic JSX runtime (`esbuild.jsx = automatic`), sesuai runtime React/Next modern; test kembali tanpa import React artificial.
-
-**Evidence:**
-
-- discovery commit: `9e8385118d3032c95ec34f65fe0f85a095980c56`;
-- root-cause fix commits: `5b664ffd370966b782bac8e5e41d24de4cb40f08`, `158b51c9ef7ed8807cbe8c09e9c2b743ff10e7fe`;
-- PR: #74;
-- CI run `34796812823`: **SUCCESS**;
-- CI gates success: format, lint, typecheck, test, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming.
-
-**Result:** 120 test files termasuk `page.hydration.test.tsx` masuk normal suite dan test step lulus. Silent TSX gap ditutup tanpa mengubah visual/application behavior.
-
-**Limitation:** W02 membuktikan current TSX discovery + runtime transform. Ia tidak menggantikan rendered browser walkthrough W03.
-
-**Next:** W03 tetap membutuhkan operator-laptop runtime evidence; lanjut repo-side W04 sambil mempertahankan W03 sebagai blocker eksplisit.
+Evidence: CI `34796812823` **SUCCESS**, 120 test files saat closure W02.
 
 ### 2026-09-14 — W03 — BLOCKED — OPERATOR RUNTIME
 
-**Scope repo-side audit:** membaca ulang official UX walkthrough dan current Ai surfaces tanpa mengklaim rendered closure.
-
-**Findings:**
-
-- official walkthrough memang mensyaratkan synchronized current main, full Phase 4 stack, Temporal reachable, cost kill switch precondition, browser/devtools, serta UX-01..UX-12;
-- Operations route sudah membedakan required Phase 4 fleet dari optional Sync; optional Sync down tidak otomatis membuat required fleet degraded;
-- Flow sudah memiliki human-readable registry failure path;
-- Space sebelumnya dapat mengubah upstream structured failure menjadi raw `HTTP 502: {...}` pada client surface — defect repo-side tersebut sudah dipindahkan dan ditutup melalui W04.
-
-**Evidence:** static/current-code inspection pada branch PR #74 dan `docs/ux-runtime-walkthrough-checklist.md`.
-
-**Result:** repository-side audit memberi target W04 yang konkret, tetapi W03 **tidak** ditutup karena rendered laptop walkthrough belum dijalankan.
-
-**Limitation:** tidak ada browser/runtime evidence baru dari operator laptop pada entry ini.
-
-**Next:** full rendered walkthrough setelah branch siap diuji pada operator laptop.
+Static repo audit selesai, tetapi official UX-01..UX-12 membutuhkan full Phase 4 rendered/browser walkthrough pada operator laptop/current code. Tidak ada klaim closure tanpa evidence tersebut.
 
 ### 2026-09-14 — W04 — DONE — REPO SIDE
 
-**Scope:** membuat failure state partial/down-service lebih manusiawi tanpa mengubah layout atau visual language current UI.
+Shared client-response parser dipakai untuk human-readable structured failures. Space/Operations tidak lagi menjadikan raw `HTTP 502: {...}` sebagai UX normal. Tidak ada visual redesign.
 
-**Changed:**
-
-- menambahkan shared client response/error parser pada Ai app dengan regression tests;
-- Operations menggunakan structured human-readable error semantics dan tetap membedakan required Phase 4 fleet dari optional Sync;
-- Space commit `32e55748df6e99ae73804328d92d36a7db83369c` menghapus local raw HTTP parser dan memakai shared `readJson`, sehingga structured upstream message seperti `Space tidak bisa dihubungi.` tidak lagi dirender sebagai `HTTP 502: {...}`;
-- tidak ada perubahan theme, sidebar, navigation hierarchy, typography, atau decorative redesign.
-
-**Evidence:**
-
-- PR #74;
-- `apps/ai/lib/client-response.test.ts` masuk normal suite;
-- CI run `34800259393`: **SUCCESS** untuk format, lint, typecheck, tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, dan naming;
-- MCP External HTTPS Acceptance run `34800259408`: **SUCCESS**.
-
-**Result:** raw-error leak yang ditemukan pada current Space/Operations repo path sudah ditutup dan full repository CI tetap hijau.
-
-**Limitation:** rendered browser walkthrough tetap bagian W03 dan membutuhkan operator runtime; W04 DONE di sini adalah closure repository-side, bukan pengganti W03.
-
-**Next:** lanjut provider onboarding W05–W08 sambil menunggu kesempatan operator-runtime untuk W03.
+Evidence: CI `34800259393` **SUCCESS**; MCP External HTTPS `34800259408` **SUCCESS**.
 
 ### 2026-09-14 — W05 — STARTED
 
-**Scope:** provider Settings foundation di surface existing, tanpa membuat layar/redesign baru.
+Provider identities baseline ditambahkan ke Vault dan Settings proxy/selector. Kimi/Gemini/Qwen/GLM/custom OpenAI-compatible tetap diberi label jujur sebagai credential-ready, belum routing-ready.
 
-**Changed:**
+Evidence baseline: CI `34798632249` **SUCCESS**.
 
-- Credential Vault provider identity diperluas untuk Anthropic, OpenAI, OpenRouter, Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible, plus MCP token;
-- internal crypto/key-rotation/timestamp behavior Vault dipertahankan; refactor yang tidak diperlukan sempat terdeteksi lalu di-rollback sehingga final Vault diff tetap minimal;
-- Settings proxy allowlist diperluas untuk provider credential paths baru;
-- Settings provider selector existing sekarang menampilkan Claude/Anthropic, OpenAI/ChatGPT API, OpenRouter, Kimi/Moonshot, Google Gemini, Qwen, GLM, Custom OpenAI-compatible, dan MCP token;
-- UI menyatakan secara eksplisit bila provider hanya credential-ready dan belum routing-ready.
-
-**Evidence:**
-
-- minimal Vault provider expansion commit `0d9556362b039c57793e0eb1aa3934e03185b2a1`;
-- settings proxy commit `cf9fe8134ea64a88ed7e4a6a845f2c1ac65ad2c5`;
-- proxy regression commit `5483fef3bb4cd925d3235ba4f31375aa16cb17ab`;
-- Settings onboarding commit `23e3a8369f80a73d14d373d12d5a4d6d15d27f40`;
-- formatting commits `ad3fbf7c51b948bf9b806d0be0817e6d1b1959f6`, `12a3fb0b6fae78457be62413349a3d02eb6cfdef`;
-- CI run `34798632249`: **SUCCESS**, termasuk `apps/ai/lib/settings-proxy.test.ts` 18/18 PASS dan Vault tests 7/7 PASS.
-
-**Result:** normal user tidak perlu menambah/edit `.env` hanya untuk menyimpan credential provider yang masuk baseline; provider dapat dipilih dari Settings existing.
-
-**Limitation:** hosted routing runtime masih resmi hanya `anthropic | openai | openrouter`. Kimi, Gemini, Qwen, GLM, dan custom OpenAI-compatible belum mempunyai complete routing/model identity/pricing contract, sehingga W05 tetap STARTED dan belum boleh diklaim sebagai provider execution support penuh.
-
-**Next:** definisikan provider catalog/adapter contract untuk provider baru tanpa mengorbankan exact model identity dan spend accounting.
+Next: provider catalog/adapter contract dengan exact endpoint, model identity, capability, dan pricing semantics sebelum execution diaktifkan.
 
 ### 2026-09-14 — W06 — STARTED
 
-**Scope:** menjadikan Connect Credential Vault sebagai satu-satunya authority untuk onboarding key pada provider baseline.
+Secure save/replace/remove sudah memakai Connect Credential Vault. Plaintext tidak dikembalikan ke UI dan tidak disimpan di localStorage. UI hanya melihat provider/purpose/generation/updatedAt.
+
+Limitation: full `Paste → Test → Save` untuk seluruh provider baseline belum bisa ditutup karena credential-only providers belum memiliki executable adapter contract.
+
+### 2026-09-14 — W07 — DONE WITH LIMITATIONS — REPO SIDE
 
 **Changed:**
 
-- existing Settings flow mendukung paste → encrypted save;
-- credential existing dapat direplace dan generation metadata berubah melalui Vault contract;
-- credential dapat di-remove secara eksplisit melalui DELETE control path;
-- UI hanya membaca metadata (`provider`, `purpose`, `generation`, `updatedAt`), bukan plaintext secret;
-- typed secret hanya hidup sementara dalam React state dan dibersihkan setelah save/remove; tidak ada localStorage credential path yang ditambahkan;
-- plaintext tidak dikembalikan oleh Connect control API.
+- `ProviderError` memiliki taxonomy `unreachable | invalid-credential | upstream`;
+- OpenAI/OpenRouter/Anthropic network errors dan 401/403 diklasifikasikan secara explicit;
+- local model network failure sekarang juga `unreachable`;
+- canary HTTP boundary mengekspos machine-readable health codes;
+- normal completion tetap memakai backward-compatible generic upstream failure;
+- Settings current memetakan state menjadi Not connected / Credential stored / Disabled / Connected / Invalid key / Unreachable / Routing unavailable;
+- structured client errors membawa `error.code` tanpa raw HTTP payload UX;
+- regression tests mengunci hosted dan local health taxonomy.
 
 **Evidence:**
 
-- Vault/control implementation + regression tests pada PR #74;
-- CI run `34798632249`: full verify **SUCCESS**, 121 test files / 630 PASS + 1 skipped, Phase 4 acceptance PASS, production ops PASS, secret scan bersih, production build PASS;
-- temporary Prettier CI instrumentation yang dipakai untuk mendapatkan exact formatting telah dihapus kembali; normal workflow direstore.
+- latest implementation head sebelum docs update: `571ce60e610d0c700586e10d2c88e4e777728bc2`;
+- CI run `34802392193`: **SUCCESS** — format, lint, typecheck, tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming;
+- MCP External HTTPS Acceptance `34802392287`: **SUCCESS**;
+- test suite pada final W07/W08 head: **123 test files**, seluruh test step PASS.
 
-**Result:** secure save/replace/remove dan metadata-only display foundation tersedia tanpa perubahan desain besar.
+**Limitation:** tidak ada real external provider credential yang digunakan pada repo CI. Karena itu status ini adalah closure behavior/contract repo-side, bukan bukti bahwa suatu API key milik operator saat ini valid.
 
-**Limitation:** definition of done W06 belum penuh karena provider baru yang belum routing-ready belum dapat menjalani connection test nyata melalui provider adapter masing-masing; UI juga belum memiliki status health lengkap Invalid key / Unreachable / Disabled. Karena itu W06 tetap STARTED.
+**Next:** real provider canary hanya saat operator memberikan credential + explicit spend intent; lanjut W05/W06 provider execution contract.
 
-**Next:** lanjut W07 health semantics dan provider-specific connection test contract; setelah itu W06 dapat ditutup bila seluruh baseline flow Paste → Test → Save → metadata/masked → Replace/Remove terbukti.
-
-### 2026-09-14 — W07 — STARTED — TAXONOMY IMPLEMENTED
-
-**Scope:** provider health/test foundation yang tidak bergantung pada parsing pesan error di frontend.
+### 2026-09-14 — W08 — DONE — REPO SIDE
 
 **Changed:**
 
-- existing local + hosted canary tetap melewati Connect normal boundary, hosted-call policy, spend guard, metrics, dan credential resolution;
-- `ProviderError` sekarang membawa kind eksplisit: `unreachable`, `invalid-credential`, atau `upstream`;
-- OpenAI/OpenRouter adapter shared mengklasifikasikan network failure sebagai `unreachable` dan HTTP 401/403 sebagai `invalid-credential`;
-- Anthropic adapter melakukan klasifikasi yang sama;
-- Connect HTTP sekarang mengekspos machine-readable codes: `PROVIDER_CREDENTIAL_MISSING`, `PROVIDER_INVALID_CREDENTIAL`, `PROVIDER_UNREACHABLE`, dan `PROVIDER_UPSTREAM_ERROR`;
-- regression test commit `06ab297b20a84d882bea674407a580dbc0d8fadf` mengharuskan Anthropic 401/403 menjadi `invalid-credential` dan network failure menjadi `unreachable`.
+- menambahkan durable `defaultChatTarget = local | hosted`;
+- legacy settings v1 tanpa field baru otomatis dibaca sebagai `local`;
+- Control Center dapat menyimpan preference tersebut;
+- current Settings Runtime form mempunyai `Default AI route` dengan style/layout existing;
+- Chat memakai default Hosted hanya bila hosted gate aktif dan credential selected hosted provider tersedia;
+- fallback selalu Local bila provider belum siap atau settings fetch gagal;
+- operator kill switch memaksa default kembali Local;
+- tidak ada auto-router dan tidak ada perubahan visual besar.
 
 **Evidence:**
 
-- taxonomy commits `a1bfc9306902dc4ca559c57430c0bff18bab29db`, `0bb5e067be5b87adba6f7fcb84b78a884f06fa27`, `30e8d40e8ca4e663304149f146e952ffaf5e2015`, `b0cb1f4e0cd920535014acaebae357975dea7f6d`;
-- CI run `34800259393` at commit `30e8d40e...`: **SUCCESS** across all normal gates;
-- direct taxonomy test commit `06ab297b20a84d882bea674407a580dbc0d8fadf` dibuat setelah run tersebut dan masih membutuhkan latest-head CI confirmation sebelum W07 dapat dinaikkan lebih jauh.
+- persistence, control API, operator gate, Settings, Chat startup, dan regression tests seluruhnya terdapat pada head `571ce60e610d0c700586e10d2c88e4e777728bc2`;
+- CI `34802392193`: **SUCCESS**;
+- relevant tests termasuk runtime settings migration, Control Center runtime update, operator gate, hydration, provider-health, dan canary taxonomy PASS.
 
-**Result:** backend sekarang memiliki sinyal yang cukup untuk membedakan Invalid key vs Unreachable secara deterministic pada routing-ready hosted providers, tanpa frontend string heuristics.
+**Limitation:** `Hosted` berarti configured hosted provider existing; ini bukan arbitrary model selector dan bukan automatic model router. Provider credential-only masih menunggu W05/W06.
 
-**Limitation:** Settings belum memetakan machine-readable code tersebut menjadi persistent selected-provider status label; provider credential-ready yang belum routing-ready tetap tidak boleh diuji seolah sudah executable. Status Disabled juga perlu menggabungkan runtime hosted switch/operator gate secara eksplisit.
-
-**Next:** sambungkan error code ke Settings status state (`Connected / Invalid key / Unreachable / Disabled`) untuk provider routing-ready; tetap tampilkan `credential-ready / routing unavailable` untuk Kimi/Gemini/Qwen/GLM/custom sampai adapter contract mereka selesai.
+**Next:** kembali ke W05/W06 untuk provider catalog + adapter contract sebelum memperluas executable providers.
 
 ### 2026-09-14 — W09 — STARTED — NEEDS OPERATOR RUNTIME
 
-**Scope:** menyediakan satu entry point yang menyalakan full local Phase 4 stack tanpa rangkaian command manual.
-
-**Changed:**
-
-- menambahkan `scripts/ecorione-engine.mjs` dan package command `pnpm engine:start`;
-- bila `.env` belum ada, engine membuatnya dari `.env.example` dan membuat `ECORIONE_INTERNAL_TOKEN` serta `ECORIONE_CONNECT_VAULT_MASTER_KEY` secara lokal;
-- Temporal lokal dideteksi terlebih dahulu dan, bila belum aktif, engine menyalakannya melalui pinned local compose boundary;
-- engine menyalakan `pnpm dev:phase4` dan mendukung Windows `pnpm.cmd`;
-- browser dibuka best-effort setelah readiness;
-- commit `efefcc80623f4af048000c242cdbb9bd1e0c28fb` memperketat readiness: status ready sekarang menunggu Ai **dan seluruh required Phase 4 health endpoints** (RnD, Context, Connect, Hub, Artifact, Sandbox, Space, Flow), bukan hanya port 3000;
-- formatting follow-up `75d8d63c4f94e49301b255944c4b50e1a1a17d54` menutup format gate tanpa behavioral change.
-
-**Evidence:**
-
-- implementation commits `39698a5299ba3a8f7f24e492e2c69da71086418f`, `eed399245cbd2dab593bdb0ad7102052de77db15`, `efefcc80623f4af048000c242cdbb9bd1e0c28fb`;
-- bootstrap regression test commit `f2243f9216c05002474b4113126739110046acbf`;
-- exact formatting commits `e114ec126369cc754fc7f5726cfb746d90827520`, `46048202feff978f6116472510e3cbc72fb31950`, `75d8d63c4f94e49301b255944c4b50e1a1a17d54`;
-- CI run `34800259393`: **SUCCESS** after full-fleet readiness change.
-
-**Result:** repository-side one-command engine exists dan no longer reports ready on Ai-only readiness.
-
-**Limitation:** real Windows/operator-laptop startup from a clean user environment has not yet been proven. User still needs Node/pnpm/Docker at this stage; removing those user-facing prerequisites belongs to W11 installer/launcher.
-
-**Next:** run `pnpm engine:start` on operator Windows/laptop from a clean stopped state and record exact readiness/evidence before W09 can be DONE.
+`pnpm engine:start` tersedia dan menunggu full required Phase 4 fleet sebelum menyatakan ready. Repository CI/engine helper tests sudah berjalan, tetapi clean Windows/operator-laptop startup belum dibuktikan.
 
 ### 2026-09-14 — W10 — STARTED — NEEDS OPERATOR RUNTIME
 
-**Scope:** memberi diagnostics manusiawi sebelum user harus memahami service ports atau internal stack.
-
-**Changed:**
-
-- menambahkan `pnpm engine:doctor`;
-- checks mencakup Node >=22, pnpm, keberadaan `.env`, Docker reachability, Temporal port, health RnD/Context/Connect/Hub/Artifact/Sandbox/Space/Flow, dan Ai port;
-- critical dependency failure seperti Node/pnpm menghasilkan non-zero exit; service state tetap dilaporkan sebagai readable status, bukan raw stack trace.
-
-**Evidence:** engine implementation pada PR #74 dan `test/ecorione-engine.test.mjs` untuk bootstrap/env helpers; CI run `34800259393` green setelah full-fleet engine update.
-
-**Result:** repo-side diagnostic command tersedia dan dapat digunakan sebelum/ketika troubleshooting local engine.
-
-**Limitation:** belum ada operator-laptop evidence untuk output `doctor` pada kondisi real seperti Docker mati, Temporal mati, dan full stack sehat. Local model runtime/model inventory check juga belum lengkap dan akan diperdalam bersama W13/onboarding.
-
-**Next:** operator-runtime matrix untuk `engine:doctor`, lalu tambahkan diagnosis local-model identity bila W13 contract sudah dipastikan.
+`pnpm engine:doctor` tersedia untuk dependency/service checks. Closure memerlukan operator matrix nyata (Docker mati, Temporal mati, healthy full stack, local model identity).
 
 ## 10. Claim boundary
 
-Dokumen ini adalah **active execution plan + work log**, bukan bukti bahwa seluruh item sudah selesai. Status `DONE` hanya boleh diberikan setelah implementation/evidence aktual mendukungnya.
+Dokumen ini adalah active execution plan + work log. `DONE` hanya boleh diberikan bila implementation/evidence aktual mendukungnya. `DONE — REPO SIDE` tidak menggantikan runtime/browser/operator evidence yang secara eksplisit masih dibutuhkan.
 
-Canonical historical evidence dan current-state documents tetap berlaku untuk claim yang sudah ditutup sebelumnya; dokumen ini tidak menghapus evidence lama.
+Canonical historical evidence dan current-state documents tetap berlaku untuk claim lama yang sudah ditutup; dokumen ini tidak menghapus evidence tersebut.
