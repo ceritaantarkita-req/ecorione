@@ -38,14 +38,23 @@ describe("Connect Control Center boundary", () => {
       method: "PUT",
       url: "/v1/settings/runtime",
       headers: { ...auth, "content-type": "application/json" },
-      payload: { hostedProvider: "openai", hostedCallsEnabled: false },
+      payload: {
+        hostedProvider: "openai",
+        hostedCallsEnabled: false,
+        defaultChatTarget: "hosted",
+      },
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       revision: 1,
-      settings: { hostedProvider: "openai", hostedCallsEnabled: false },
+      settings: {
+        hostedProvider: "openai",
+        hostedCallsEnabled: false,
+        defaultChatTarget: "hosted",
+      },
     });
     expect(runtime.get().settings.hostedProvider).toBe("openai");
+    expect(runtime.get().settings.defaultChatTarget).toBe("hosted");
   });
 
   it("menerima plaintext credential sekali, menyimpan terenkripsi, dan tidak meng-echo secret", async () => {
