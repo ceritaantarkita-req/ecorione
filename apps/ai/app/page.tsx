@@ -16,7 +16,12 @@ type ChatTarget = "local" | "hosted";
 type RuntimeSnapshot = {
   settings?: {
     hostedCallsEnabled?: boolean;
+    hostedProvider?: "anthropic" | "openrouter" | "openai";
+    defaultChatTarget?: ChatTarget;
   };
+};
+type CredentialSnapshot = {
+  credentials?: Array<{ provider: string }>;
 };
 interface UserTurn {
   kind: "user";
@@ -98,16 +103,40 @@ export default function ChatPage() {
 
   useEffect(() => {
     let cancelled = false;
-    void fetch("/api/settings/settings/runtime", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
-        return (await response.json()) as RuntimeSnapshot;
+    void Promise.all([
+      fetch("/api/settings/settings/runtime", { cache: "no-store" }),
+      fetch("/api/settings/settings/credentials", { cache: "no-store" }),
+    ])
+      .then(async ([runtimeResponse, credentialResponse]) => {
+        if (!runtimeResponse.ok) throw new Error(`HTTP ${String(runtimeResponse.status)}`);
+        const runtimeSnapshot = (await runtimeResponse.json()) as RuntimeSnapshot;
+        const credentialSnapshot = credentialResponse.ok
+          ? ((await credentialResponse.json()) as CredentialSnapshot)
+          : { credentials: [] };
+        return { runtimeSnapshot, credentialSnapshot };
       })
-      .then((snapshot) => {
-        if (!cancelled) setHostedAvailable(snapshot.settings?.hostedCallsEnabled === true);
+      .then(({ runtimeSnapshot, credentialSnapshot }) => {
+        if (cancelled) return;
+        const hostedProvider = runtimeSnapshot.settings?.hostedProvider;
+        const hasHostedCredential =
+          hostedProvider !== undefined &&
+          (credentialSnapshot.credentials ?? []).some(
+            (credential) => credential.provider === hostedProvider,
+          );
+        const hostedReady =
+          runtimeSnapshot.settings?.hostedCallsEnabled === true && hasHostedCredential;
+        setHostedAvailable(hostedReady);
+        setTarget(
+          runtimeSnapshot.settings?.defaultChatTarget === "hosted" && hostedReady
+            ? "hosted"
+            : "local",
+        );
       })
       .catch(() => {
-        if (!cancelled) setHostedAvailable(false);
+        if (!cancelled) {
+          setHostedAvailable(false);
+          setTarget("local");
+        }
       });
     return () => {
       cancelled = true;
