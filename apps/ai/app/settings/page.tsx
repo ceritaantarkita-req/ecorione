@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ClientResponseError, readJson } from "../../lib/client-response";
+import {
+  credentialSaveReady,
+  type CredentialTestStamp,
+} from "../../lib/credential-onboarding";
 import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
 import styles from "./Settings.module.css";
 
@@ -51,7 +55,9 @@ export default function SettingsPage() {
   const [workspaceId, setWorkspaceId] = useState(PERSONAL_WORKSPACE_ID);
   const [servers, setServers] = useState<McpServer[]>([]);
   const [secret, setSecret] = useState("");
+  const [secretRevision, setSecretRevision] = useState(0);
   const [secretProvider, setSecretProvider] = useState("anthropic");
+  const [credentialTest, setCredentialTest] = useState<CredentialTestStamp | null>(null);
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("");
   const [hostedHealth, setHostedHealth] = useState<{
@@ -134,6 +140,22 @@ export default function SettingsPage() {
     credentials.find((item) => item.provider === secretProvider) ?? null;
   const selectedProviderOption =
     providers.find((provider) => provider.id === secretProvider) ?? null;
+  const selectedProviderRequiresTest = selectedProviderOption?.connectionTestReady ?? false;
+  const credentialTestPassed =
+    selectedProviderRequiresTest &&
+    credentialTest?.pass === true &&
+    credentialTest.provider === secretProvider &&
+    credentialTest.revision === secretRevision;
+  const credentialReadyToSave =
+    selectedProviderOption !== null &&
+    selectedProviderOption.credentialReady &&
+    credentialSaveReady({
+      secret,
+      provider: secretProvider,
+      revision: secretRevision,
+      connectionTestReady: selectedProviderRequiresTest,
+      test: credentialTest,
+    });
   const selectedProviderHealth = providerHealth({
     hasCredential: selectedCredential !== null,
     routingReady: selectedProviderOption?.routingReady ?? false,
@@ -171,7 +193,61 @@ export default function SettingsPage() {
     }
   }
 
+  async function testCredential() {
+    if (selectedProviderOption === null || !selectedProviderOption.connectionTestReady) {
+      setStatus("Connection test belum tersedia untuk provider ini.");
+      return;
+    }
+    if (secret.length === 0) {
+      setStatus("Paste API key terlebih dahulu sebelum menjalankan test.");
+      return;
+    }
+    if (!beginAction("test-credential")) return;
+
+    const provider = secretProvider;
+    const revision = secretRevision;
+    setCredentialTest(null);
+    setStatus(`Testing ${selectedProviderOption.displayName} credential without saving…`);
+    try {
+      const result = await json<{
+        pass: boolean;
+        persisted: boolean;
+        provider: string;
+        model: string;
+        latencyMs: number;
+      }>(`/api/settings/settings/credentials/${encodeURIComponent(provider)}/test`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ secret }),
+      });
+      const pass = result.pass && !result.persisted;
+      setCredentialTest({ provider, revision, pass });
+      setStatus(
+        pass
+          ? `Credential test PASS: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms. Secret belum disimpan.`
+          : "Credential test gagal. Secret belum disimpan.",
+      );
+    } catch (error) {
+      setCredentialTest({ provider, revision, pass: false });
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
   async function saveCredential() {
+    if (selectedProviderOption === null || !selectedProviderOption.credentialReady) {
+      setStatus("Provider credential metadata belum tersedia.");
+      return;
+    }
+    if (!credentialReadyToSave) {
+      setStatus(
+        selectedProviderRequiresTest
+          ? "Test API key dan pastikan hasilnya PASS sebelum menyimpan."
+          : "Paste credential terlebih dahulu.",
+      );
+      return;
+    }
     if (!beginAction("credential")) return;
     setStatus("Encrypting credential…");
     try {
@@ -181,6 +257,8 @@ export default function SettingsPage() {
         body: JSON.stringify({ secret }),
       });
       setSecret("");
+      setSecretRevision((current) => current + 1);
+      setCredentialTest(null);
       setHostedHealth((current) => (current?.provider === secretProvider ? null : current));
       await refreshCredentials();
       setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
@@ -199,6 +277,8 @@ export default function SettingsPage() {
         method: "DELETE",
       });
       setSecret("");
+      setSecretRevision((current) => current + 1);
+      setCredentialTest(null);
       setHostedHealth((current) => (current?.provider === secretProvider ? null : current));
       await refreshCredentials();
       setStatus("Credential removed from Connect vault.");
@@ -446,7 +526,13 @@ export default function SettingsPage() {
             aria-label="Credential provider"
             value={secretProvider}
             disabled={pendingAction !== null}
-            onChange={(event) => setSecretProvider(event.target.value)}
+            onChange={(event) => {
+              setSecretProvider(event.target.value);
+              setSecret("");
+              setSecretRevision((current) => current + 1);
+              setCredentialTest(null);
+              setHostedHealth(null);
+            }}
           >
             {credentialProviderOptions.map((provider) => (
               <option key={provider.id} value={provider.id}>
@@ -461,11 +547,27 @@ export default function SettingsPage() {
             aria-label="New credential secret"
             value={secret}
             disabled={pendingAction !== null}
-            onChange={(event) => setSecret(event.target.value)}
+            onChange={(event) => {
+              setSecret(event.target.value);
+              setSecretRevision((current) => current + 1);
+              setCredentialTest(null);
+            }}
           />
           <button
             type="button"
-            disabled={secret.length === 0 || pendingAction !== null}
+            className={styles.secondary}
+            disabled={
+              secret.length === 0 ||
+              pendingAction !== null ||
+              !selectedProviderOption?.connectionTestReady
+            }
+            onClick={() => void testCredential()}
+          >
+            {pendingAction === "test-credential" ? "Testing…" : "Test key"}
+          </button>
+          <button
+            type="button"
+            disabled={!credentialReadyToSave || pendingAction !== null}
             onClick={() => void saveCredential()}
           >
             {pendingAction === "credential"
@@ -488,6 +590,15 @@ export default function SettingsPage() {
           {selectedCredential === null
             ? ""
             : ` generation ${String(selectedCredential.generation)} · updated ${selectedCredential.updatedAt}.`}
+        </p>
+        <p className={styles.muted}>
+          {selectedProviderOption?.connectionTestReady
+            ? credentialTestPassed
+              ? "Transient test PASS. Secret belum disimpan; klik Encrypt & save untuk menyimpannya ke Vault."
+              : "Test key melakukan real hosted canary tanpa menyimpan plaintext. Save baru aktif setelah PASS."
+            : selectedProviderOption?.routingReady
+              ? "Connection test belum tersedia untuk provider ini."
+              : "Credential dapat disimpan, tetapi connection test dan model routing belum diaktifkan untuk provider ini."}
         </p>
       </section>
 
