@@ -65,6 +65,33 @@ describe("proxyToConnectSettings", () => {
     expect(sawAuth).toBe("Bearer test-token");
   });
 
+  it.each(["anthropic", "openai", "openrouter", "kimi", "gemini", "qwen", "glm", "custom-openai", "mcp"])(
+    "mengizinkan mutation credential provider %s yang termasuk kontrak Connect",
+    async (provider) => {
+      pool
+        .intercept({ path: `/v1/settings/credentials/${provider}`, method: "PUT" })
+        .reply(200, { provider });
+
+      const response = await proxyToConnectSettings(
+        request("PUT", JSON.stringify({ secret: "test-secret" })),
+        `/v1/settings/credentials/${provider}`,
+        "PUT",
+      );
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ provider });
+    },
+  );
+
+  it("menolak credential provider di luar allowlist", async () => {
+    const response = await proxyToConnectSettings(
+      request("PUT", JSON.stringify({ secret: "test-secret" })),
+      "/v1/settings/credentials/unknown-provider",
+      "PUT",
+    );
+    expect(response.status).toBe(400);
+  });
+
   it("menolak MCP workspace id yang tidak memenuhi shared workspace contract", async () => {
     const response = await proxyToConnectSettings(
       request("GET"),
