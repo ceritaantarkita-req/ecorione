@@ -34,13 +34,13 @@ Empat blok utama:
 | W01 | Reconcile `system-analysis-2026-09-13.md` dengan kondisi real repo | **DONE** | Temuan valid/outdated dipisahkan; tidak ada blocker lama yang masih dinyatakan aktif tanpa dasar current code/evidence. |
 | W02 | Tutup gap Vitest `*.test.tsx` | **DONE** | Semua test TSX yang dimaksud masuk discovery normal/CI dan tidak ada silent-skip sejenis yang terlewat. |
 | W03 | Audit UX/Product Validation di current `main` | **BLOCKED — OPERATOR RUNTIME** | Full Phase 4 walkthrough current main selesai; defect ledger jelas; tidak ada S0/S1 terbuka. |
-| W04 | Rapikan partial-stack vs full-stack behavior | **STARTED** | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
+| W04 | Rapikan partial-stack vs full-stack behavior | **STARTED — CI VERIFYING** | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
 | W05 | Provider Settings foundation | **STARTED** | User dapat menghubungkan OpenAI, Anthropic/Claude, OpenRouter, Kimi/Moonshot, Gemini, Qwen, GLM, dan custom OpenAI-compatible tanpa edit `.env` manual. |
 | W06 | Credential Vault integration untuk provider keys | **STARTED** | Paste → test → save → masked display → replace/remove; plaintext tidak disimpan di browser/localStorage dan tidak dibaca kembali oleh UI. |
 | W07 | Provider health/status | **STARTED** | Status minimal: Connected, Invalid key, Unreachable, Disabled; test connection bounded dan tidak memicu spend tidak terkendali. |
 | W08 | Default AI selection | TODO | User dapat memilih Local atau provider/model yang sudah terhubung; auto-router belum diklaim. |
-| W09 | One-command full-system startup | TODO | Satu command stabil menyalakan full required stack dan menunggu readiness tanpa langkah manual berantai. |
-| W10 | `ecorione doctor` / diagnostics | TODO | Dependency, service health, ports, Temporal/database, local model, dan masalah umum dapat didiagnosis dengan output manusiawi. |
+| W09 | One-command full-system startup | **STARTED — NEEDS OPERATOR RUNTIME** | Satu command stabil menyalakan full required stack dan menunggu readiness tanpa langkah manual berantai. |
+| W10 | `ecorione doctor` / diagnostics | **STARTED — NEEDS OPERATOR RUNTIME** | Dependency, service health, ports, Temporal/database, local model, dan masalah umum dapat didiagnosis dengan output manusiawi. |
 | W11 | Installer/Launcher design & implementation path | TODO | Jalur normal-user didefinisikan sebagai install → open/start → use; Git clone/pnpm bukan requirement end user. |
 | W12 | Attachment composer real backend path | TODO | File/foto tidak lagi hanya menjadi label teks; upload → Artifact → Context pointer → controlled hydration terbukti end-to-end. |
 | W13 | Immutable local model identity | TODO | Runtime/evidence menggunakan identity/version/digest yang reproducible; mutable `:latest` tidak dipakai untuk durable claims. |
@@ -68,7 +68,7 @@ Urutan default selama tidak ada temuan baru yang memaksa reprioritization:
 10. W16–W18 — semantic selector, ECX no-oracle, hosted economics
 11. W19–W20 — release governance + final synchronization
 
-Jika sebuah checkpoint membutuhkan operator laptop/runtime yang tidak tersedia dari repository execution surface, statusnya harus dicatat `BLOCKED — OPERATOR RUNTIME` dan pekerjaan repo-side yang independen boleh dilanjutkan. Status tersebut tidak boleh dipalsukan menjadi `DONE` hanya karena static/CI checks hijau.
+Jika sebuah checkpoint membutuhkan operator laptop/runtime yang tidak tersedia dari repository execution surface, statusnya harus dicatat `BLOCKED — OPERATOR RUNTIME` atau `STARTED — NEEDS OPERATOR RUNTIME` dan pekerjaan repo-side yang independen boleh dilanjutkan. Status tersebut tidak boleh dipalsukan menjadi `DONE` hanya karena static/CI checks hijau.
 
 ## 5. Provider onboarding target
 
@@ -130,6 +130,16 @@ ecorione restart
 ecorione doctor
 ecorione update
 ```
+
+Repository-side bridge yang sudah tersedia saat ini:
+
+```text
+pnpm engine:start
+pnpm engine:doctor
+pnpm engine:stop-temporal
+```
+
+`engine:start` melakukan bootstrap `.env`, membuat local internal token + Vault master key bila belum ada, memastikan Temporal tersedia, menyalakan `dev:phase4`, lalu menunggu Ai dan seluruh required Phase 4 service health sebelum menyatakan ECORIONE ready. Ini masih jalur developer/advanced-user dan belum menggantikan installer/launcher W11.
 
 ### Developer
 
@@ -259,7 +269,7 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 
 **Next:** W04 — humanize partial/down-service behavior tanpa redesign visual.
 
-### 2026-09-14 — W04 — STARTED
+### 2026-09-14 — W04 — STARTED — CI VERIFYING
 
 **Scope:** membuat failure state partial/down-service lebih manusiawi tanpa mengubah layout atau visual language current UI.
 
@@ -267,19 +277,21 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 
 - menambahkan shared client response/error parser pada Ai app dengan regression tests;
 - Operations menggunakan structured human-readable error semantics dan tetap membedakan required Phase 4 fleet dari optional Sync;
+- Space commit `32e55748df6e99ae73804328d92d36a7db83369c` menghapus local raw HTTP parser dan memakai shared `readJson`, sehingga structured upstream message seperti `Space tidak bisa dihubungi.` tidak lagi dirender sebagai `HTTP 502: {...}`;
 - tidak ada perubahan theme, sidebar, navigation hierarchy, typography, atau decorative redesign.
 
 **Evidence:**
 
 - PR #74;
 - `apps/ai/lib/client-response.test.ts` masuk normal suite dan PASS pada CI run `34798632249`;
-- run tersebut juga PASS lint, typecheck, full tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, dan naming.
+- sebelum Space migration, run tersebut juga PASS lint, typecheck, full tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, dan naming;
+- CI untuk head setelah Space migration masih berjalan saat entry ini ditulis dan status belum boleh dinaikkan ke DONE sebelum run tersebut selesai.
 
-**Result:** shared error handling foundation dan Operations path sudah tervalidasi secara repository/CI.
+**Result:** raw-error leak yang ditemukan pada Space sudah ditutup di code; repository verification final untuk commit tersebut masih pending.
 
-**Limitation:** Space masih memiliki parser lokal yang dapat menampilkan `HTTP 502: {...}` mentah. W04 belum boleh ditutup sebelum jalur tersebut dihumanize dan regression test yang relevan tersedia.
+**Limitation:** rendered browser walkthrough tetap bagian W03 dan membutuhkan operator runtime.
 
-**Next:** migrasikan Space ke shared error semantics tanpa redesign, lalu rerun CI.
+**Next:** tunggu normal CI head Space migration; jika green, W04 dapat ditutup secara repo-side dengan browser closure tetap dilacak W03.
 
 ### 2026-09-14 — W05 — STARTED
 
@@ -325,7 +337,7 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 
 - Vault/control implementation + regression tests pada PR #74;
 - CI run `34798632249`: full verify **SUCCESS**, 121 test files / 630 PASS + 1 skipped, Phase 4 acceptance PASS, production ops PASS, secret scan bersih, production build PASS;
-- temporary Prettier CI instrumentation yang dipakai untuk mendapatkan exact formatting telah dihapus kembali; normal workflow direstore oleh commit `007ca856249eae9d59f12a58965822404d5e6c6d`.
+- temporary Prettier CI instrumentation yang dipakai untuk mendapatkan exact formatting telah dihapus kembali; normal workflow direstore.
 
 **Result:** secure save/replace/remove dan metadata-only display foundation tersedia tanpa perubahan desain besar.
 
@@ -350,6 +362,50 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 **Limitation:** belum ada per-provider status machine `Connected / Invalid key / Unreachable / Disabled` untuk seluruh provider baseline; Kimi/Gemini/Qwen/GLM/custom belum routing-ready sehingga belum dapat diberi false health claim.
 
 **Next:** bangun provider health contract yang memisahkan `credential present`, `routing supported`, `disabled`, `invalid credential`, dan `unreachable`.
+
+### 2026-09-14 — W09 — STARTED — NEEDS OPERATOR RUNTIME
+
+**Scope:** menyediakan satu entry point yang menyalakan full local Phase 4 stack tanpa rangkaian command manual.
+
+**Changed:**
+
+- menambahkan `scripts/ecorione-engine.mjs` dan package command `pnpm engine:start`;
+- bila `.env` belum ada, engine membuatnya dari `.env.example` dan membuat `ECORIONE_INTERNAL_TOKEN` serta `ECORIONE_CONNECT_VAULT_MASTER_KEY` secara lokal;
+- Temporal lokal dideteksi terlebih dahulu dan, bila belum aktif, engine menyalakannya melalui pinned local compose boundary;
+- engine menyalakan `pnpm dev:phase4` dan mendukung Windows `pnpm.cmd`;
+- browser dibuka best-effort setelah readiness;
+- commit `efefcc80623f4af048000c242cdbb9bd1e0c28fb` memperketat readiness: status ready sekarang menunggu Ai **dan seluruh required Phase 4 health endpoints** (RnD, Context, Connect, Hub, Artifact, Sandbox, Space, Flow), bukan hanya port 3000.
+
+**Evidence:**
+
+- implementation commits `39698a5299ba3a8f7f24e492e2c69da71086418f`, `eed399245cbd2dab593bdb0ad7102052de77db15`, `efefcc80623f4af048000c242cdbb9bd1e0c28fb`;
+- bootstrap regression test commit `f2243f9216c05002474b4113126739110046acbf`;
+- exact formatting commits `e114ec126369cc754fc7f5726cfb746d90827520`, `46048202feff978f6116472510e3cbc72fb31950`;
+- prior CI run `34799506335` proved engine tests + full repository gates green under temporary formatter capture; normal workflow was restored by `6237d4d17c0b5b6594d73cf955b43ddf5c9d1d8a`.
+
+**Result:** repository-side one-command engine exists and no longer reports ready on Ai-only readiness.
+
+**Limitation:** real Windows/operator-laptop startup from a clean user environment has not yet been proven. User still needs Node/pnpm/Docker at this stage; removing those user-facing prerequisites belongs to W11 installer/launcher.
+
+**Next:** run `pnpm engine:start` on operator Windows/laptop from a clean stopped state and record exact readiness/evidence before W09 can be DONE.
+
+### 2026-09-14 — W10 — STARTED — NEEDS OPERATOR RUNTIME
+
+**Scope:** memberi diagnostics manusiawi sebelum user harus memahami service ports atau internal stack.
+
+**Changed:**
+
+- menambahkan `pnpm engine:doctor`;
+- checks mencakup Node >=22, pnpm, keberadaan `.env`, Docker reachability, Temporal port, health RnD/Context/Connect/Hub/Artifact/Sandbox/Space/Flow, dan Ai port;
+- critical dependency failure seperti Node/pnpm menghasilkan non-zero exit; service state tetap dilaporkan sebagai readable status, bukan raw stack trace.
+
+**Evidence:** engine implementation pada PR #74 dan `test/ecorione-engine.test.mjs` untuk bootstrap/env helpers; prior full CI run `34799506335` green setelah exact formatter output diterapkan.
+
+**Result:** repo-side diagnostic command tersedia dan dapat digunakan sebelum/ketika troubleshooting local engine.
+
+**Limitation:** belum ada operator-laptop evidence untuk output `doctor` pada kondisi real seperti Docker mati, Temporal mati, dan full stack sehat. Local model runtime/model inventory check juga belum lengkap dan akan diperdalam bersama W13/onboarding.
+
+**Next:** operator-runtime matrix untuk `engine:doctor`, lalu tambahkan diagnosis local-model identity bila W13 contract sudah dipastikan.
 
 ## 10. Claim boundary
 
