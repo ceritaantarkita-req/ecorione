@@ -5,6 +5,16 @@ function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function validateStringArray(value, label) {
+  if (value === undefined) return;
+  if (
+    !Array.isArray(value) ||
+    value.some((item) => typeof item !== "string" || item.trim().length === 0)
+  ) {
+    throw new Error(`${label} harus array string non-kosong`);
+  }
+}
+
 export function validateAgenticManifest(manifest, repoRoot) {
   if (!isRecord(manifest)) throw new Error("agentic manifest harus object");
   if (manifest.version !== 1) throw new Error("agentic manifest version harus 1");
@@ -68,6 +78,16 @@ export function validateAgenticManifest(manifest, repoRoot) {
     if (!toolNames.has(item.expected.firstTool)) {
       throw new Error(`${item.id}: expected.firstTool tidak tersedia`);
     }
+    validateStringArray(item.expected.forbiddenTools, `${item.id}: expected.forbiddenTools`);
+    validateStringArray(item.expected.finalMustContain, `${item.id}: expected.finalMustContain`);
+    validateStringArray(
+      item.expected.finalMustContainAny,
+      `${item.id}: expected.finalMustContainAny`,
+    );
+    validateStringArray(
+      item.expected.finalMustNotContain,
+      `${item.id}: expected.finalMustNotContain`,
+    );
   }
   return manifest;
 }
@@ -142,6 +162,12 @@ function includesAll(haystack, needles) {
   return (needles ?? []).every((needle) => normalized.includes(String(needle).toLowerCase()));
 }
 
+function includesAny(haystack, needles) {
+  const normalized = haystack.toLowerCase();
+  const expected = needles ?? [];
+  return expected.length === 0 || expected.some((needle) => normalized.includes(String(needle).toLowerCase()));
+}
+
 function includesNone(haystack, needles) {
   const normalized = haystack.toLowerCase();
   return (needles ?? []).every((needle) => !normalized.includes(String(needle).toLowerCase()));
@@ -165,6 +191,7 @@ export function scoreAgentTrace(item, trace) {
       finalAction !== undefined &&
       finalAction.verified === true &&
       includesAll(finalAction.answer, item.expected.finalMustContain) &&
+      includesAny(finalAction.answer, item.expected.finalMustContainAny) &&
       includesNone(finalAction.answer, item.expected.finalMustNotContain),
   };
   return {
