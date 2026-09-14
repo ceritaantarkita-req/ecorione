@@ -113,13 +113,14 @@ describe("ECORIONE local engine bootstrap", () => {
   it("reports a machine-readable local runtime failure returned by Connect", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            error: { type: "PROVIDER_UNREACHABLE", message: "runtime down" },
-          }),
-          { status: 503, headers: { "content-type": "application/json" } },
-        ),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              error: { type: "PROVIDER_UNREACHABLE", message: "runtime down" },
+            }),
+            { status: 503, headers: { "content-type": "application/json" } },
+          ),
       ),
     );
 
