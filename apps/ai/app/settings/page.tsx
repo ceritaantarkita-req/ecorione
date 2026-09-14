@@ -13,6 +13,7 @@ type RuntimeSnapshot = {
     localBaseUrl: string;
     localModelTag: string;
     hostedCallsEnabled: boolean;
+    defaultChatTarget: "local" | "hosted";
   };
 };
 type Credential = { provider: string; purpose: string; generation: number; updatedAt: string };
@@ -331,6 +332,28 @@ export default function SettingsPage() {
               </select>
             </label>
             <label>
+              Default AI route
+              <select
+                value={runtime.settings.defaultChatTarget}
+                disabled={pendingAction !== null}
+                onChange={(event) =>
+                  setRuntime({
+                    ...runtime,
+                    settings: {
+                      ...runtime.settings,
+                      defaultChatTarget: event.target
+                        .value as RuntimeSnapshot["settings"]["defaultChatTarget"],
+                    },
+                  })
+                }
+              >
+                <option value="local">Local AI</option>
+                <option value="hosted" disabled={!runtime.settings.hostedCallsEnabled}>
+                  Hosted AI
+                </option>
+              </select>
+            </label>
+            <label>
               Local model
               <input
                 value={runtime.settings.localModelTag}
@@ -365,7 +388,13 @@ export default function SettingsPage() {
                   setHostedHealth(null);
                   setRuntime({
                     ...runtime,
-                    settings: { ...runtime.settings, hostedCallsEnabled: event.target.checked },
+                    settings: {
+                      ...runtime.settings,
+                      hostedCallsEnabled: event.target.checked,
+                      defaultChatTarget: event.target.checked
+                        ? runtime.settings.defaultChatTarget
+                        : "local",
+                    },
                   });
                 }}
               />
