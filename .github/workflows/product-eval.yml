@@ -1,0 +1,48 @@
+name: Product Eval
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  product-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build runtime dependencies
+        run: pnpm run build:runtime-deps
+
+      - name: Run real task and bug derived product regressions
+        run: |
+          pnpm exec vitest run \
+            evals/product-regressions.test.ts \
+            apps/ai/lib/settings-proxy.test.ts \
+            apps/ai/lib/space-proxy.test.ts \
+            apps/ai/lib/flow-proxy.test.ts \
+            apps/ai/app/api/voice/stream/route.test.ts \
+            services/connect/src/runtime-settings.test.ts \
+            apps/ai/app/api/chat/route.test.ts \
+            apps/ai/app/api/forget/route.test.ts \
+            apps/ai/app/api/ops/route.test.ts \
+            --maxWorkers=1 \
+            --minWorkers=1
