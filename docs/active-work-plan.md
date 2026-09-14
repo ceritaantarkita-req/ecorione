@@ -36,8 +36,8 @@ Empat blok utama:
 | W02 | Tutup gap Vitest `*.test.tsx` | **DONE** | TSX tests masuk discovery normal/CI dan hydration test benar-benar berjalan. |
 | W03 | Audit UX/Product Validation current `main` | **BLOCKED — OPERATOR RUNTIME** | Full rendered Phase 4 walkthrough current main; tidak ada S0/S1 terbuka. |
 | W04 | Rapikan partial-stack vs full-stack behavior | **DONE — REPO SIDE** | Raw HTTP/proxy errors tidak menjadi UX normal; service-down state manusiawi. |
-| W05 | Provider Settings foundation | **STARTED** | Baseline provider dapat dikonfigurasi tanpa edit `.env`; execution support hanya diklaim bila adapter/model/pricing contract nyata tersedia. |
-| W06 | Credential Vault integration | **STARTED** | Paste → test → save → metadata/masked display → replace/remove; plaintext tidak disimpan browser. |
+| W05 | Provider Settings foundation | **DONE — REPO SIDE** | Baseline provider dapat dikonfigurasi tanpa edit `.env`; execution support hanya diklaim bila adapter/model/pricing contract nyata tersedia. |
+| W06 | Credential Vault integration | **STARTED — BACKEND CONTRACT DONE** | Paste → test → save → metadata/masked display → replace/remove; plaintext tidak disimpan browser. |
 | W07 | Provider health/status | **DONE WITH LIMITATIONS — REPO SIDE** | Connected / Invalid key / Unreachable / Disabled / routing-unavailable dipetakan dari backend evidence; real external key validation tetap membutuhkan operator credential. |
 | W08 | Default AI selection | **DONE — REPO SIDE** | User dapat memilih default Local atau configured Hosted; fail-safe ke Local bila hosted tidak siap; auto-router tidak diklaim. |
 | W09 | One-command full-system startup | **STARTED — NEEDS OPERATOR RUNTIME** | Satu command menyalakan full required stack dan menunggu readiness; real clean Windows proof masih wajib. |
@@ -57,7 +57,7 @@ Empat blok utama:
 
 Urutan kerja selama tidak ada temuan baru:
 
-1. **W05–W06** — selesaikan provider catalog/routing contract dan end-to-end credential onboarding.
+1. **W06** — selesaikan UI `Paste → Test → Save` di atas backend transient credential-test yang sudah green.
 2. **W09–W10** — repo-side refinement boleh lanjut; closure menunggu operator runtime.
 3. **W11** — installer/launcher path agar normal user tidak menyentuh source tooling.
 4. **W12** — real attachment pipeline.
@@ -91,12 +91,15 @@ Provider baseline:
 
 Current implementation boundary:
 
+- Connect-owned **Provider Catalog** adalah source of truth metadata onboarding provider untuk Settings dan Credential Vault.
 - Credential Vault mengenali Anthropic, OpenAI, OpenRouter, Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible, dan MCP token.
-- **Anthropic, OpenAI, OpenRouter** adalah routing-ready provider existing.
-- **Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible** saat ini **credential-ready only**. Jangan klaim execution support sebelum endpoint/model identity/pricing/adapters selesai.
+- **Anthropic, OpenAI, OpenRouter** adalah routing-ready dan connection-test-ready karena adapter/model/pricing contract existing tersedia.
+- **Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible** saat ini **credential-ready only**. Jangan klaim execution/test support sebelum endpoint/model identity/pricing/adapters selesai.
 - Credential authority tetap Connect / Credential Vault; UI hanya membaca metadata dan tidak dapat mengambil plaintext kembali.
+- `POST /v1/settings/credentials/:provider/test` menguji secret secara transient untuk routing-ready provider tanpa menyimpannya ke Vault; provider credential-only ditolak oleh schema hosted-provider.
 - Provider health detail dikeluarkan melalui **provider canary boundary**, bukan mengubah kontrak normal `/v1/complete`.
-- Normal completion tetap backward-compatible: generic provider failure tetap `UPSTREAM_UNAVAILABLE`.
+- Provider canary dan transient credential test memakai cache terisolasi sehingga health result tidak dapat PASS hanya karena exact-match cache lama.
+- Normal completion tetap backward-compatible dan tetap memakai exact-match cache normal; generic provider failure tetap `UPSTREAM_UNAVAILABLE`.
 - Canary dapat membedakan `PROVIDER_CREDENTIAL_MISSING`, `PROVIDER_INVALID_CREDENTIAL`, `PROVIDER_UNREACHABLE`, dan `PROVIDER_UPSTREAM_ERROR`.
 - Local runtime network failure juga diklasifikasikan `unreachable` sehingga health semantics konsisten dengan hosted providers.
 
@@ -192,19 +195,45 @@ Shared client-response parser dipakai untuk human-readable structured failures. 
 
 Evidence: CI `34800259393` **SUCCESS**; MCP External HTTPS `34800259408` **SUCCESS**.
 
-### 2026-09-14 — W05 — STARTED
+### 2026-09-14 — W05 — DONE — REPO SIDE
 
-Provider identities baseline ditambahkan ke Vault dan Settings proxy/selector. Kimi/Gemini/Qwen/GLM/custom OpenAI-compatible tetap diberi label jujur sebagai credential-ready, belum routing-ready.
+**Changed:**
 
-Evidence baseline: CI `34798632249` **SUCCESS**.
+- Connect-owned Provider Catalog menjadi source of truth metadata provider untuk Settings/Vault;
+- Settings membaca provider catalog dari Connect, bukan hardcode provider metadata sendiri;
+- Vault provider namespace/purpose memakai catalog yang sama sehingga tidak ada duplicate provider list untuk onboarding;
+- Anthropic/OpenAI/OpenRouter tetap satu-satunya routing-ready + connection-test-ready baseline;
+- Kimi/Gemini/Qwen/GLM/custom OpenAI-compatible tetap credential-ready only dan tidak dipalsukan sebagai executable provider;
+- settings proxy membatasi namespace/path tetapi membiarkan Connect menjadi authority validasi provider ID.
 
-Next: provider catalog/adapter contract dengan exact endpoint, model identity, capability, dan pricing semantics sebelum execution diaktifkan.
+**Evidence:**
 
-### 2026-09-14 — W06 — STARTED
+- catalog regression closure commit `6bd8947c05efd8cfa50a0d53c2a38841ba53b502`;
+- CI `34804967775`: **SUCCESS** — format, lint, typecheck, tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming;
+- MCP External HTTPS Acceptance `34804967763`: **SUCCESS**.
 
-Secure save/replace/remove sudah memakai Connect Credential Vault. Plaintext tidak dikembalikan ke UI dan tidak disimpan di localStorage. UI hanya melihat provider/purpose/generation/updatedAt.
+**Claim boundary:** menambahkan credential slot tidak sama dengan menambahkan model execution. Provider baru baru boleh `routingReady=true` setelah adapter, pinned runtime/model identity, dan cost/pricing semantics dapat diaudit.
 
-Limitation: full `Paste → Test → Save` untuk seluruh provider baseline belum bisa ditutup karena credential-only providers belum memiliki executable adapter contract.
+### 2026-09-14 — W06 — STARTED — BACKEND CONTRACT DONE
+
+**Changed:**
+
+- secure save/replace/remove tetap memakai Connect Credential Vault; plaintext tidak dikembalikan dari Vault API;
+- `POST /v1/settings/credentials/:provider/test` menambahkan test credential transient untuk provider routing-ready tanpa persistence;
+- transient test memakai provider adapter + pinned model/pricing + spend boundary yang sama dengan real completion;
+- provider credential-only seperti Kimi sengaja ditolak dari transient execution test sampai adapter contract benar-benar ada;
+- provider canary sekarang memakai cache fresh terisolasi, sehingga repeat health check selalu menyentuh provider/runtime dan tidak dapat false-positive dari exact-match cache lama;
+- regression test membuktikan dua local canary menghasilkan dua provider calls dan selalu `cacheHit=false`;
+- regression test membuktikan OpenAI transient secret diteruskan ke adapter tetapi tidak muncul sebagai persisted credential;
+- Settings proxy mendukung path `/credentials/:provider/test` dengan path normalization/allowlist existing.
+
+**Evidence:**
+
+- backend/proxy hardening head `89ac7d5bbbebdd497494290549e44c9df9d950b6`;
+- CI `34805318105`: **SUCCESS** — format, lint, typecheck, tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming;
+- MCP External HTTPS Acceptance `34805318063`: **SUCCESS**.
+
+**Remaining limitation:** current Settings page masih melakukan save langsung. UI `Paste → transient Test → Save`, reset test-state ketika provider/key berubah, dan masked confirmation belum selesai di branch karena write frontend terakhir tidak diterapkan. W06 tidak boleh dinyatakan DONE sebelum wiring tersebut masuk dan full CI kembali hijau.
 
 ### 2026-09-14 — W07 — DONE WITH LIMITATIONS — REPO SIDE
 
@@ -228,7 +257,7 @@ Limitation: full `Paste → Test → Save` untuk seluruh provider baseline belum
 
 **Limitation:** tidak ada real external provider credential yang digunakan pada repo CI. Karena itu status ini adalah closure behavior/contract repo-side, bukan bukti bahwa suatu API key milik operator saat ini valid.
 
-**Next:** real provider canary hanya saat operator memberikan credential + explicit spend intent; lanjut W05/W06 provider execution contract.
+**Next:** real provider canary hanya saat operator memberikan credential + explicit spend intent; lanjut W06 UI credential onboarding.
 
 ### 2026-09-14 — W08 — DONE — REPO SIDE
 
@@ -249,9 +278,9 @@ Limitation: full `Paste → Test → Save` untuk seluruh provider baseline belum
 - CI `34802392193`: **SUCCESS**;
 - relevant tests termasuk runtime settings migration, Control Center runtime update, operator gate, hydration, provider-health, dan canary taxonomy PASS.
 
-**Limitation:** `Hosted` berarti configured hosted provider existing; ini bukan arbitrary model selector dan bukan automatic model router. Provider credential-only masih menunggu W05/W06.
+**Limitation:** `Hosted` berarti configured hosted provider existing; ini bukan arbitrary model selector dan bukan automatic model router. Provider credential-only masih menunggu executable adapter contract.
 
-**Next:** kembali ke W05/W06 untuk provider catalog + adapter contract sebelum memperluas executable providers.
+**Next:** W06 UI credential onboarding, lalu W09/W10 repo-side refinement.
 
 ### 2026-09-14 — W09 — STARTED — NEEDS OPERATOR RUNTIME
 
