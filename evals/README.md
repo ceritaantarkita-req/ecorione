@@ -18,7 +18,28 @@ Aturan penambahan kasus tetap sama: kalau sebuah kasus baru tidak bisa menunjuk 
 
 ## W15 — agent/model eval
 
-Prompt/model evaluation tetap menggunakan [promptfoo](https://github.com/promptfoo/promptfoo) (MIT, dapat berjalan lokal) melalui `promptfooconfig.yaml`. W15 akan mengukur reason/tool/execute/observe/verify; W14 tidak menyamarkan deterministic product tests sebagai model quality evidence.
+W15 sekarang punya harness lokal executable yang terpisah dari product runtime:
+
+- `agentic-cases.json` — task/bug-derived agent cases dan deterministic tool fixtures;
+- `agentic-eval-core.mjs` — parser, executor fixture, dan scorer;
+- `agentic-eval-core.test.mjs` — CI contract tests untuk harness;
+- `scripts/local-agentic-eval.mjs` — runner real local model melalui endpoint OpenAI-compatible.
+
+Harness mengukur lima checkpoint secara eksplisit:
+
+1. **reason** — model memberi short decision rationale, bukan hidden chain-of-thought;
+2. **tool** — model memilih tool yang benar dan tidak memilih forbidden write/tool trap;
+3. **execute** — harness benar-benar mengeksekusi deterministic tool fixture dengan exact args;
+4. **observe** — tool result dikirim balik sebagai `TOOL_OBSERVATION` sebelum final answer;
+5. **verify** — final answer harus menyatakan `verified: true` dan lolos assertion deterministik kasus.
+
+Current seed berisi empat kasus nyata: Operations degraded-vs-optional diagnosis, workspace-aware MCP lookup, public `localBaseUrl` rejection, dan immutable local-model identity. Tiap kasus dijalankan **3 kali** dan hanya lulus jika semuanya lulus (`pass^3`).
+
+### Claim boundary W15
+
+Harness ini mengukur kemampuan model lokal dalam **bounded evaluation agent loop**. Ia **tidak** membuktikan bahwa jalur chat produk ECORIONE saat ini sudah menjadi autonomous tool-calling agent. Current product chat masih menggunakan completion pipeline dengan `toolDefinitions: []`; claim tersebut tetap terpisah sampai product runtime benar-benar punya agent loop.
+
+Hasil W15 juga tidak boleh dipakai sebagai reproducible closure evidence bila immutable model identity belum terverifikasi. Runner mencoba membaca runtime model list dan, untuk Ollama-compatible base URL `/v1`, mencocokkan `ECORIONE_LOCAL_MODEL_DIGEST` terhadap `/api/tags`. Run exploratory tanpa verified identity boleh dilakukan dengan flag eksplisit, tetapi `closureEligible` akan tetap `false`.
 
 ## Aturan yang mengikat
 
@@ -26,44 +47,47 @@ Prompt/model evaluation tetap menggunakan [promptfoo](https://github.com/promptf
 
 **Setiap kasus harus lahir dari bug atau tugas yang benar-benar pernah terjadi.** Tidak ada coverage spekulatif. Kalau tidak bisa menunjuk kejadian nyatanya, kasusnya belum layak masuk.
 
-**Habiskan usaha pada tracing, bukan pada scoring.** Untuk sistem personal, **kamu sendiri adalah ground truth-nya** — trace viewer yang bagus menghemat sepuluh kali lebih banyak jam debugging daripada scorer canggih.
+**Habiskan usaha pada tracing, bukan pada scoring.** Untuk sistem personal, **kamu sendiri adalah ground truth-nya** — trace viewer yang bagus lebih penting daripada scorer yang kompleks.
 
 ## Komposisi target model eval (30–40 kasus)
 
 | Kategori | Jumlah | Catatan |
 |---|---|---|
 | Happy path | ~15 | Satu per kapabilitas utama |
-| **Keamanan** | **~8** | Prompt injection di halaman yang diambil, instruksi di nama file, tugas yang menggoda aksi destruktif. **Semua meng-assert penolakan atau konfirmasi** — ini yang menangkap regresi paling menakutkan |
+| **Keamanan** | **~8** | Prompt injection, instruksi tidak dipercaya, dan aksi destruktif; assert penolakan/konfirmasi |
 | Pemilihan tool | ~8 | Ada tool salah yang masuk akal sebagai jebakan |
-| Permintaan ambigu | ~5 | Jawaban benarnya **bertanya balik**, bukan menebak |
+| Permintaan ambigu | ~5 | Jawaban benar bertanya balik, bukan menebak |
 | Memori / konteks | ~4 | Retrieval, scope, invalidasi |
 
-## Cara menilai model eval, berurutan prioritas
+## Cara menilai model eval
 
-1. **Assertion deterministik** di mana pun mungkin — state file, nama tool, exit code, regex. Murah, stabil, nol bias juri.
-2. **LLM-as-judge hanya untuk ~20% yang benar-benar kabur**, dengan:
-   - tukar posisi **AB+BA** (position bias spesifik-model, rentangnya 0.002–0.192 antar model — dua model dari keluarga yang sama pernah berbeda ~70×)
-   - **keluarga model berbeda dari aktor** (self-preference)
-   - 20 contoh berlabel manusia untuk memvalidasi ulang juri tiap kali model juri diganti
-   - laporkan **κ (Cohen's kappa), bukan persetujuan mentah** — persetujuan mentah melebih-lebihkan κ sebesar 33.8–41.3 poin
-
-Jangan over-engineer melawan verbosity bias: itu sudah teratasi di model modern (semua 21 model di studi terbaru di bawah 0.011).
+1. **Assertion deterministik** di mana pun mungkin — nama tool, args, state fixture, forbidden action, expected evidence.
+2. LLM-as-judge hanya untuk kasus yang benar-benar tidak dapat dinilai deterministik dan harus dipisahkan dari core pass/fail harness.
 
 ## pass^k, bukan pass@k
 
-Tiap kasus model dijalankan **k=3** dan dilaporkan sebagai **pass^3** — ketiganya harus lulus. Ini mengukur **keandalan**, bukan keberuntungan best-of-n. Variansi agent adalah risiko produk yang sebenarnya; pass@k menyembunyikannya.
+Tiap kasus model dijalankan **k=3** dan dilaporkan sebagai **pass^3** — ketiganya harus lulus. Ini mengukur keandalan, bukan keberuntungan best-of-n.
 
-## Canary harian
+## Menjalankan W15
 
-5–8 kasus termurah dan paling deterministik, terjadwal harian. Dicatat: pass rate per-kasus, **rata-rata jumlah token output**, dan **rata-rata latensi**.
-
-Provider yang menukar model di balik alias muncul sebagai **step change pada token atau latensi berhari-hari sebelum** muncul sebagai kegagalan. **Alert pada tren, bukan cuma pada kegagalan** (ADR-14).
-
-## Menjalankan W15 nanti
+Inventory tanpa inference:
 
 ```bash
-npx promptfoo@latest eval -c promptfooconfig.yaml
-npx promptfoo@latest view
+pnpm eval:agentic:inventory
 ```
 
-`promptfooconfig.yaml` sengaja belum diisi dengan provider/model case pada W14. Pengisian itu adalah W15 dan harus menggunakan task/trace nyata, bukan fixture spekulatif.
+Strict evidence run — default menuntut verified immutable identity:
+
+```bash
+ECORIONE_LOCAL_MODEL_DIGEST=<digest-runtime-yang-benar> pnpm eval:agentic:local
+```
+
+Exploratory run bila runtime tidak menyediakan provenance yang dapat diverifikasi:
+
+```bash
+pnpm eval:agentic:local -- --allow-unverified-identity
+```
+
+Output evidence ditulis ke `traces/w15-agentic-eval-*.json` dan direktori tersebut memang tidak di-commit karena dapat memuat detail runtime operator.
+
+`promptfooconfig.yaml` tetap dipertahankan sebagai ruang eksperimen prompt/model tambahan, tetapi bukan source of truth untuk trace `reason/tool/execute/observe/verify` W15. Source of truth W15 adalah executable harness di atas.
