@@ -19,12 +19,13 @@ Dokumen ini adalah living document untuk pekerjaan aktif ECORIONE setelah Phase 
 
 ## 2. Current repository checkpoint
 
-Current default-branch baseline setelah PR #77:
+Current default-branch baseline setelah PR #79:
 
 ```text
-main: 21ebecd2af7fb5f0f1fa5d54a971ae13582fe72b
-PR #77: merged
-post-merge CI: 34858779881 — SUCCESS
+main: 01efc87ef0409118ad0104a660f4d97f6a49f667
+PR #79: merged
+post-merge CI: 34865204054 — SUCCESS
+post-merge Product Eval: 34865204071 — SUCCESS
 ```
 
 Kondisi penting:
@@ -32,13 +33,13 @@ Kondisi penting:
 - PR #74 sudah merged; pekerjaan W01–W13 yang sebelumnya hidup di branch aktif sudah masuk `main`.
 - PR #75 audit/security hardening sudah merged.
 - PR #76 menambahkan Temporal CLI local-runtime path + Windows spawn handling, tetapi sempat masuk ke `main` dengan formatting regression.
-- push CI `c6c1b786...` run `34848735694` **FAILED** pada `format:check` di `scripts/ecorione-engine.mjs`; regression tersebut menjadi alasan PR #77.
-- MCP External HTTPS pada exact SHA `c6c1b786...` tetap **SUCCESS** (`34848735622`).
-- PR #77 memperbaiki formatting engine tanpa mengubah runtime behavior dan menyinkronkan current-state docs.
-- PR #77 branch CI `34856483249` **SUCCESS**.
-- PR #77 merged ke `main` sebagai `21ebecd2af7fb5f0f1fa5d54a971ae13582fe72b`.
-- push CI post-merge `34858779881` **SUCCESS** untuk Format, Lint, Typecheck, Test, Phase 4 real-process acceptance, Production operations acceptance, Secret scan, Production build, naming, dan full-history secret scan.
-- `main` kembali menjadi **GREEN BASELINE** untuk pekerjaan repo-side berikutnya.
+- PR #77 menutup formatting regression tersebut; branch CI `34856483249` dan post-merge CI `34858779881` **SUCCESS**.
+- PR #78 menyinkronkan canonical current-state docs setelah perbaikan `main`.
+- PR #79 menambahkan W14 Product Eval Foundation: manifest bounded berisi 12 kasus nyata, provenance validator, dan workflow Product Eval terpisah.
+- PR #79 head `183b9f3281dbedc16e459a3f09dea000d6756ba1` lulus CI `34864902355` dan Product Eval `34864902358`.
+- PR #79 merged ke `main` sebagai `01efc87ef0409118ad0104a660f4d97f6a49f667`.
+- push post-merge `main` lulus CI `34865204054` dan Product Eval `34865204071`.
+- `main` adalah **GREEN BASELINE** untuk pekerjaan repo-side berikutnya.
 - GitHub `main` belum memiliki required status-check branch protection; governance gap ini tetap terbuka terpisah.
 
 ## 3. Work queue aktif
@@ -58,7 +59,7 @@ Kondisi penting:
 | W11 | Installer/Launcher | **STARTED — REPO-SIDE PACKAGING READY** | Launcher/bundle/installer workflow ada; real Setup + clean-Windows evidence belum ada. |
 | W12 | Attachment composer real backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → controlled hydration. |
 | W13 | Immutable local model identity | **DONE WITH LIMITATIONS — REPO SIDE** | Alias gate + runtime provenance resolution + mismatch fail-closed implemented; actual operator model identity tetap butuh runtime evidence. |
-| W14 | Product eval foundation | TODO | Real task/bug-derived eval suite. |
+| W14 | Product eval foundation | **DONE — REPO SIDE** | 12 real task/bug-derived deterministic regressions + provenance validation + dedicated CI gate. Tidak mengklaim kualitas agent/model. |
 | W15 | Agentic local-model eval v1 | TODO | reason/tool/execute/observe/verify measured. |
 | W16 | Automatic semantic reference selector | TODO | `refIndexes` tidak lagi caller/oracle-supplied. |
 | W17 | ECX end-to-end tanpa oracle | TODO | full vs auto-selective vs oracle pada task set sama. |
@@ -167,19 +168,49 @@ Tetapi:
 
 Jangan mengubah angka oracle/local benchmark menjadi universal public-savings claim.
 
-## 9. Prioritas eksekusi dari green baseline `21ebecd2...`
+## 9. Product eval boundary
+
+W14 sekarang **DONE — REPO SIDE** melalui PR #79.
+
+Current deterministic product-eval contract:
+
+- `evals/product-regressions.json` adalah manifest versioned dan bounded maksimal 50 kasus;
+- seed saat ini berisi 12 kasus dari defect/tugas repository nyata;
+- setiap kasus wajib menunjuk provenance source/ref dan deterministic test target yang benar-benar ada;
+- `evals/product-regressions.test.ts` memvalidasi provenance, uniqueness, bounded size, dan target test;
+- `.github/workflows/product-eval.yml` menjalankan validator + deterministic target regressions pada pull request dan push ke `main`;
+- workflow membangun runtime dependencies sebelum test sehingga internal package resolution valid di clean runner.
+
+Claim boundary:
+
+- W14 membuktikan regression-eval foundation dan gate deterministik;
+- W14 **tidak** membuktikan reasoning quality, tool selection quality, execution reliability, pass^3 model reliability, atau general agentic quality;
+- metrik tersebut tetap W15.
+
+Evidence W14:
+
+```text
+PR #79 head: 183b9f3281dbedc16e459a3f09dea000d6756ba1
+PR CI: 34864902355 — SUCCESS
+PR Product Eval: 34864902358 — SUCCESS
+merge: 01efc87ef0409118ad0104a660f4d97f6a49f667
+post-merge CI: 34865204054 — SUCCESS
+post-merge Product Eval: 34865204071 — SUCCESS
+```
+
+## 10. Prioritas eksekusi dari green baseline `01efc87e...`
 
 1. **W03** rendered operator/browser walkthrough pada synchronized current `origin/main`.
 2. **W09–W10** clean Windows/operator runtime proof.
 3. **W11** real installer artifact + clean-Windows acceptance.
-4. **W14–W15** real product + agentic eval.
+4. **W15** agentic local-model eval v1; jangan menyamakan deterministic W14 dengan model evidence.
 5. **W16–W18** autonomous selector → no-oracle ECX → bounded hosted economics.
 6. **W20** final synchronization.
 7. Governance follow-up: required status checks / branch protection agar CI merah tidak bisa lagi masuk `main`.
 
-Repo-side work tidak boleh melompati claim boundary operator: bila checkpoint membutuhkan browser, clean Windows, real credential, atau real hosted spend, statusnya tetap terbuka sampai evidence tersebut ada.
+Repo-side work dapat terus maju pada item independen, tetapi tidak boleh melompati claim boundary operator: bila checkpoint membutuhkan browser, clean Windows, real credential, local-model runtime, atau real hosted spend, statusnya tetap terbuka sampai evidence tersebut ada.
 
-## 10. Execution log — 2026-09-14 baseline repair
+## 11. Execution log — 2026-09-14 baseline repair
 
 ### Current-main CI regression — CLOSED
 
@@ -198,8 +229,22 @@ Repo-side work tidak boleh melompati claim boundary operator: bila checkpoint me
 
 **Limitation:** branch protection/required checks belum aktif; merge discipline masih bergantung pada operator sampai governance dikunci.
 
-**Next:** jalankan W03 operator/browser walkthrough dari synchronized `21ebecd2...` atau current `origin/main` bila sudah maju hanya melalui merge yang tervalidasi.
+## 12. Execution log — W14 Product Eval Foundation
 
-## 11. Claim boundary
+### W14 — CLOSED REPO SIDE
+
+**Finding:** eval infrastructure sudah memiliki Promptfoo scaffolding dan aturan suite, tetapi belum memiliki real task/bug-derived executable product suite; `tests: []` belum memberi regression evidence.
+
+**Changed:** PR #79 menambahkan 12-case deterministic product manifest, provenance validator, dedicated Product Eval workflow, dan dokumentasi yang memisahkan W14 deterministic regressions dari W15 agent/model evaluation.
+
+**Evidence:** PR head dan post-merge `main` sama-sama lulus CI normal dan Product Eval sebagaimana dicatat di §9.
+
+**Result:** W14 ditutup repo-side. Defect/task nyata sekarang dapat dipertahankan sebagai bounded regression contract yang dieksekusi di CI.
+
+**Limitation:** suite ini tidak melakukan model call dan tidak mengukur reason/tool/execute/observe/verify. W15 tetap terbuka.
+
+**Next:** repo-side berikutnya adalah W15 foundation sejauh dapat dibangun tanpa memalsukan local-runtime evidence; W03/W09/W10/W11 tetap menunggu operator checkpoints masing-masing.
+
+## 13. Claim boundary
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. `DONE — REPO SIDE` tidak menggantikan operator/browser/runtime evidence. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini hanya menyatakan current execution state dan tidak menghapus limitation historis.
