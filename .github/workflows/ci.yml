@@ -49,7 +49,6 @@ jobs:
             scripts/local-observability-evidence.mjs \
             scripts/local-observability-evidence-lib.mjs \
             test/local-observability-evidence.test.mjs \
-            .env.example \
             docs/adr/0014-pinned-models.md \
             docs/active-work-plan.md \
             scripts/w13-materialize.mjs \
@@ -159,7 +158,6 @@ jobs:
             scripts/local-observability-evidence.mjs \
             scripts/local-observability-evidence-lib.mjs \
             test/local-observability-evidence.test.mjs \
-            .env.example \
             docs/adr/0014-pinned-models.md \
             docs/active-work-plan.md \
             --write
