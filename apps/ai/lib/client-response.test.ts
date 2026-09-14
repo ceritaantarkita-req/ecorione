@@ -19,7 +19,10 @@ describe("readJson", () => {
           message: "Space tidak bisa dihubungi.",
         },
       }),
-      { status: 502, headers: { "content-type": "application/json" } },
+      {
+        status: 502,
+        headers: { "content-type": "application/json" },
+      },
     );
 
     await expect(readJson(response)).rejects.toThrow("Space tidak bisa dihubungi.");
