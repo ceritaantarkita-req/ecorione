@@ -32,9 +32,9 @@ Empat blok utama:
 | ID | Pekerjaan | Status | Definition of done |
 |---|---|---:|---|
 | W01 | Reconcile `system-analysis-2026-09-13.md` dengan kondisi real repo | **DONE** | Temuan valid/outdated dipisahkan; tidak ada blocker lama yang masih dinyatakan aktif tanpa dasar current code/evidence. |
-| W02 | Tutup gap Vitest `*.test.tsx` | **STARTED** | Semua test TSX yang dimaksud masuk discovery normal/CI dan tidak ada silent-skip sejenis yang terlewat. |
-| W03 | Audit UX/Product Validation di current `main` | TODO | Full Phase 4 walkthrough current main selesai; defect ledger jelas; tidak ada S0/S1 terbuka. |
-| W04 | Rapikan partial-stack vs full-stack behavior | TODO | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
+| W02 | Tutup gap Vitest `*.test.tsx` | **DONE** | Semua test TSX yang dimaksud masuk discovery normal/CI dan tidak ada silent-skip sejenis yang terlewat. |
+| W03 | Audit UX/Product Validation di current `main` | **BLOCKED — OPERATOR RUNTIME** | Full Phase 4 walkthrough current main selesai; defect ledger jelas; tidak ada S0/S1 terbuka. |
+| W04 | Rapikan partial-stack vs full-stack behavior | **STARTED** | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
 | W05 | Provider Settings foundation | TODO | User dapat menghubungkan OpenAI, Anthropic/Claude, OpenRouter, Kimi/Moonshot, Gemini, Qwen, GLM, dan custom OpenAI-compatible tanpa edit `.env` manual. |
 | W06 | Credential Vault integration untuk provider keys | TODO | Paste → test → save → masked display → replace/remove; plaintext tidak disimpan di browser/localStorage dan tidak dibaca kembali oleh UI. |
 | W07 | Provider health/status | TODO | Status minimal: Connected, Invalid key, Unreachable, Disabled; test connection bounded dan tidak memicu spend tidak terkendali. |
@@ -67,6 +67,8 @@ Urutan default selama tidak ada temuan baru yang memaksa reprioritization:
 9. W14–W15 — product eval + agentic local-model validation
 10. W16–W18 — semantic selector, ECX no-oracle, hosted economics
 11. W19–W20 — release governance + final synchronization
+
+Jika sebuah checkpoint membutuhkan operator laptop/runtime yang tidak tersedia dari repository execution surface, statusnya harus dicatat `BLOCKED — OPERATOR RUNTIME` dan pekerjaan repo-side yang independen boleh dilanjutkan. Status tersebut tidak boleh dipalsukan menjadi `DONE` hanya karena static/CI checks hijau.
 
 ## 5. Provider onboarding target
 
@@ -205,6 +207,50 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 **Limitation:** runtime UX dan product-eval gaps yang disebut masih harus ditutup oleh work item berikutnya.
 
 **Next:** W02 — perbaiki Vitest discovery untuk `*.test.tsx` dan verifikasi via CI.
+
+### 2026-09-14 — W02 — DONE
+
+**Scope:** menutup silent-skip `*.test.tsx` pada normal Vitest/CI discovery.
+
+**Changed:**
+
+- menambahkan discovery `*.test.tsx` untuk `packages`, `services`, `apps`, dan root `test`;
+- initial CI setelah discovery membuktikan test `apps/ai/app/page.hydration.test.tsx` memang sebelumnya tersembunyi dan gagal saat pertama benar-benar dijalankan;
+- percobaan import React eksplisit membuktikan masalah berikutnya berada pada transform `page.tsx`, bukan assertion hydration;
+- root cause ditutup dengan menyamakan Vitest ke React automatic JSX runtime (`esbuild.jsx = automatic`), sesuai runtime React/Next modern; test kembali tanpa import React artificial.
+
+**Evidence:**
+
+- discovery commit: `9e8385118d3032c95ec34f65fe0f85a095980c56`;
+- root-cause fix commits: `5b664ffd370966b782bac8e5e41d24de4cb40f08`, `158b51c9ef7ed8807cbe8c09e9c2b743ff10e7fe`;
+- PR: #74;
+- CI run `34796812823`: **SUCCESS**;
+- CI gates success: format, lint, typecheck, test, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming.
+
+**Result:** 120 test files termasuk `page.hydration.test.tsx` masuk normal suite dan test step lulus. Silent TSX gap ditutup tanpa mengubah visual/application behavior.
+
+**Limitation:** W02 membuktikan current TSX discovery + runtime transform. Ia tidak menggantikan rendered browser walkthrough W03.
+
+**Next:** W03 tetap membutuhkan operator-laptop runtime evidence; lanjut repo-side W04 sambil mempertahankan W03 sebagai blocker eksplisit.
+
+### 2026-09-14 — W03 — BLOCKED — OPERATOR RUNTIME
+
+**Scope repo-side audit:** membaca ulang official UX walkthrough dan current Ai surfaces tanpa mengklaim rendered closure.
+
+**Findings:**
+
+- official walkthrough memang mensyaratkan synchronized current main, full Phase 4 stack, Temporal reachable, cost kill switch precondition, browser/devtools, serta UX-01..UX-12;
+- Operations route sudah membedakan required Phase 4 fleet dari optional Sync; optional Sync down tidak otomatis membuat required fleet degraded;
+- Flow sudah memiliki human-readable registry failure path;
+- Space masih dapat mengubah upstream structured failure menjadi raw `HTTP 502: {...}` pada client surface — ini defect usability repo-side yang dipindahkan ke W04.
+
+**Evidence:** static/current-code inspection pada branch PR #74 dan `docs/ux-runtime-walkthrough-checklist.md`.
+
+**Result:** repository-side audit memberi target W04 yang konkret, tetapi W03 **tidak** ditutup karena rendered laptop walkthrough belum dijalankan.
+
+**Limitation:** tidak ada browser/runtime evidence baru dari operator laptop pada entry ini.
+
+**Next:** W04 — humanize partial/down-service behavior tanpa redesign visual.
 
 ## 10. Claim boundary
 
