@@ -319,7 +319,7 @@ describe("Fase 4 real Temporal restart acceptance", () => {
       if (workerTwoRun !== null) await workerTwoRun.catch(() => undefined);
       await env.teardown();
     }
-  }, 60_000);
+  }, 120_000);
 
   it.skipIf(process.env.ECORIONE_PHASE4_PROCESS_ACCEPTANCE !== "1")(
     "survives a forced worker crash and completes through real Hub, Connect, Sandbox and RnD boundaries",

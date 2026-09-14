@@ -43,7 +43,7 @@ Empat blok utama:
 | W09 | One-command full-system startup | **STARTED — NEEDS OPERATOR RUNTIME** | Satu command menyalakan full required stack, menunggu readiness, dan fail-safe membersihkan child stack; real clean Windows proof masih wajib. |
 | W10 | `ecorione doctor` diagnostics | **STARTED — NEEDS OPERATOR RUNTIME** | Dependency/service health/ports/Temporal/local runtime didiagnosis manusiawi; operator matrix belum selesai. |
 | W11 | Installer/Launcher | **STARTED — REPO-SIDE PACKAGING READY** | Launcher, reproducible bundle, installer spec, dan manual packaging workflow tersedia; real `Setup.exe` + clean-Windows install/start proof masih wajib. |
-| W12 | Attachment composer real backend path | TODO | File/foto → Artifact → Context pointer → controlled hydration, bukan label-only. |
+| W12 | Attachment composer real backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → controlled hydration; staged files remain removable before Send; partial upload failures remain retryable. |
 | W13 | Immutable local model identity | TODO | Runtime/evidence memakai identity/version/digest reproducible; mutable alias tidak dipakai untuk durable claims. |
 | W14 | Product eval foundation | TODO | Eval berasal dari tugas/bug nyata dan tumbuh menuju 30–40 cases tanpa synthetic filler. |
 | W15 | Agentic local-model eval v1 | TODO | Local model diuji reason/choose-tool/execute/observe/verify dengan failure modes terukur. |
@@ -59,11 +59,10 @@ Urutan kerja selama tidak ada temuan baru:
 
 1. **W11 operator/release proof** — repo-side packaging sudah siap; closure menunggu real installer artifact + clean Windows proof.
 2. **W09–W10 operator proof** — tetap terbuka dan ditutup hanya melalui real clean Windows/operator-runtime evidence.
-3. **W12** — real attachment pipeline.
-4. **W13** — immutable model identity.
-5. **W14–W15** — real product eval + agentic local-model validation.
-6. **W16–W18** — semantic selector, ECX no-oracle, hosted economics.
-7. **W19–W20** — governance + final synchronization.
+3. **W13** — immutable model identity.
+4. **W14–W15** — real product eval + agentic local-model validation.
+5. **W16–W18** — semantic selector, ECX no-oracle, hosted economics.
+6. **W19–W20** — governance + final synchronization.
 
 W03 tetap dibuka sampai rendered operator walkthrough selesai dan tidak boleh dipalsukan menjadi DONE melalui CI/static inspection saja.
 
@@ -354,6 +353,27 @@ Evidence: CI `34800259393` **SUCCESS**; MCP External HTTPS `34800259408` **SUCCE
 - Docker Desktop masih prerequisite yang terlihat pada first-run failure/doctor path. W11 belum mencapai target final installer yang sepenuhnya menyembunyikan prerequisite/runtime complexity.
 
 **Next step:** setelah merge/release checkpoint memungkinkan manual installer workflow dijalankan, build real Setup artifact dan lakukan clean-Windows operator acceptance. Sampai evidence itu ada, W11 tetap STARTED dan tidak boleh dinaikkan menjadi DONE.
+
+### 2026-09-14 — W12 — DONE — REPO SIDE
+
+**Changed:**
+
+- composer file/foto/folder attachment sekarang staged di browser sampai user menekan Send; memilih file tidak lagi diam-diam membuat Context episode;
+- saat Send, file di-ingest melalui Artifact lalu pointer/context episode dibuat melalui Context sebelum chat request dikirim;
+- successful attachment menyimpan `artifactId` + `contextEpisodeId`, dan chat hanya membawa controlled pointer metadata, bukan raw bytes;
+- staged/error attachment dapat dihapus; attachment yang sudah berhasil masuk Context tidak lagi menampilkan remove action palsu;
+- partial batch failure mempertahankan attachment yang sudah berhasil dan hanya mengulang item yang belum punya `contextEpisodeId`;
+- UI state `preparingAttachments` mencegah send/target/file mutation race selama ingest;
+- helper/test coverage mengunci max attachment count, staged/removable semantics, upload → Artifact → Context order, controlled hydration pointer, partial failure, dan retry retention;
+- real Temporal restart acceptance timeout dinaikkan dari 60s ke 120s setelah satu runner-heavy CI timeout tepat di hard limit; assertion dan test tetap aktif/tidak di-skip.
+
+**Evidence:**
+
+- staged-composer candidate CI `34830648734`: **SUCCESS**; MCP External HTTPS `34830648703`: **SUCCESS**;
+- clean materialized W12 CI `34831383633`: **SUCCESS**; MCP External HTTPS `34831383606`: **SUCCESS**;
+- timeout-hardening/full closure candidate CI `34832105529`: **SUCCESS** — format, lint, typecheck, 690 tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming.
+
+**Limitation:** closure ini repo-side. Rendered browser/operator UX proof tetap bagian W03; tidak diklaim dari CI.
 
 ## 10. Claim boundary
 
