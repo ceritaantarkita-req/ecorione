@@ -86,10 +86,7 @@ export interface IngestedAttachment {
   readonly state: "READY";
 }
 
-export function resolveAttachmentMimeType(
-  fileName: string,
-  declaredMimeType: string,
-): string {
+export function resolveAttachmentMimeType(fileName: string, declaredMimeType: string): string {
   const declared = declaredMimeType.trim().toLowerCase();
   if (declared !== "" && declared !== "application/octet-stream") return declared;
   const normalizedName = fileName.trim().toLowerCase();
@@ -112,7 +109,8 @@ function authHeaders(token: string | undefined): Record<string, string> {
 }
 
 function safeUpstreamMessage(payload: unknown): string | undefined {
-  if (typeof payload !== "object" || payload === null || !("error" in payload)) return undefined;
+  if (typeof payload !== "object" || payload === null || !("error" in payload))
+    return undefined;
   const error = (payload as { error?: unknown }).error;
   if (typeof error !== "object" || error === null || !("message" in error)) return undefined;
   const message = (error as { message?: unknown }).message;
