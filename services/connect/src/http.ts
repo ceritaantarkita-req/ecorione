@@ -29,7 +29,11 @@ import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
 import { DEFAULT_HOSTED_PROVIDER, type HostedProviderId } from "./provider-types.js";
-import type { RuntimeSettings, RuntimeSettingsAdmin } from "./runtime-settings.js";
+import type {
+  ChatTargetPreference,
+  RuntimeSettings,
+  RuntimeSettingsAdmin,
+} from "./runtime-settings.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
@@ -106,6 +110,7 @@ export interface BuildConnectServerOptions {
   readonly localBaseUrl: string;
   readonly localModelTag: string;
   readonly hostedCallsEnabled?: boolean | undefined;
+  readonly defaultChatTarget?: ChatTargetPreference | undefined;
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
   readonly cache?: ExactMatchCache | undefined;
   readonly mcpManager?: McpManager | undefined;
@@ -129,6 +134,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localBaseUrl: options.localBaseUrl,
     localModelTag: options.localModelTag,
     hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+    defaultChatTarget: options.defaultChatTarget ?? "local",
   };
   const currentRuntime = (): RuntimeSettings =>
     options.runtimeSettings?.get().settings ?? defaults;
