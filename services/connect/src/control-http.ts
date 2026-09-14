@@ -1,10 +1,7 @@
 import { HttpError, observabilityFor, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import {
-  CREDENTIAL_PROVIDERS,
-  type CredentialVaultAdmin,
-} from "./credential-vault.js";
+import { CREDENTIAL_PROVIDERS, type CredentialVaultAdmin } from "./credential-vault.js";
 import { nowIso } from "./clock.js";
 import {
   PROVIDER_CATALOG,
