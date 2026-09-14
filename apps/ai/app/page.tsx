@@ -10,6 +10,14 @@ import {
   type KeyboardEvent,
 } from "react";
 import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
+import {
+  MAX_COMPOSER_ATTACHMENTS,
+  attachmentChipLabel,
+  attachmentsReadyForSend,
+  buildAttachmentAwareMessage,
+  uploadChatAttachment,
+  type ChatAttachment,
+} from "../lib/chat-attachments";
 import { makeSessionId } from "../lib/session";
 
 type ChatTarget = "local" | "hosted";
@@ -42,10 +50,6 @@ interface ErrorTurn {
   message: string;
 }
 type Turn = UserTurn | AssistantTurn | ErrorTurn;
-interface Attachment {
-  id: string;
-  label: string;
-}
 let turnCounter = 0;
 function nextTurnId(): string {
   turnCounter += 1;
@@ -86,7 +90,7 @@ export default function ChatPage() {
     kind: "success" | "error";
     message: string;
   } | null>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualDraft, setManualDraft] = useState("");
@@ -166,9 +170,9 @@ export default function ChatPage() {
     return () => document.removeEventListener("mousedown", onDocPointerDown);
   }, [attachMenuOpen]);
 
-  async function sendMessage(text: string): Promise<void> {
+  async function sendMessage(text: string): Promise<boolean> {
     const trimmed = text.trim();
-    if (!hydrated || trimmed.length === 0 || sending || sendInFlightRef.current) return;
+    if (!hydrated || trimmed.length === 0 || sending || sendInFlightRef.current) return false;
     if (target === "hosted" && hostedAvailable !== true) {
       setTurns((prev) => [
         ...prev,
@@ -178,7 +182,7 @@ export default function ChatPage() {
           message: "Hosted sedang nonaktif. Pakai Local untuk sesi ini.",
         },
       ]);
-      return;
+      return false;
     }
     sendInFlightRef.current = true;
     setTurns((prev) => [...prev, { kind: "user", id: nextTurnId(), text: trimmed }]);
@@ -200,7 +204,7 @@ export default function ChatPage() {
             message: extractErrorMessage(body) ?? `Hub membalas status ${res.status}.`,
           },
         ]);
-        return;
+        return false;
       }
       const chat = body as ChatResponse;
       setTurns((prev) => [
@@ -214,11 +218,13 @@ export default function ChatPage() {
           memoryUsed: chat.memoryUsed,
         },
       ]);
+      return true;
     } catch {
       setTurns((prev) => [
         ...prev,
         { kind: "error", id: nextTurnId(), message: "Tidak bisa menghubungi server." },
       ]);
+      return false;
     } finally {
       sendInFlightRef.current = false;
       setSending(false);
@@ -285,13 +291,65 @@ export default function ChatPage() {
     setAttachments((prev) => prev.filter((a) => a.id !== id));
   }
 
-  function addFilesAs(fileList: FileList | null, prefix: string): void {
+  function addFilesAs(fileList: FileList | null, prefix: "File" | "Foto" | "Folder"): void {
     if (!fileList || fileList.length === 0) return;
-    const additions = Array.from(fileList).map((file) => ({
-      id: nextAttachmentId(),
-      label: `${prefix}: ${file.name}`,
-    }));
+    const files = Array.from(fileList);
+    const available = Math.max(0, MAX_COMPOSER_ATTACHMENTS - attachments.length);
+    if (files.length > available) {
+      setTurns((prev) => [
+        ...prev,
+        {
+          kind: "error",
+          id: nextTurnId(),
+          message: `Maksimal ${String(MAX_COMPOSER_ATTACHMENTS)} lampiran per pesan.`,
+        },
+      ]);
+      return;
+    }
+
+    const additions: ChatAttachment[] = files.map((file) => {
+      const relativePath = (file as File & { webkitRelativePath?: string }).webkitRelativePath;
+      const displayName = prefix === "Folder" && relativePath ? relativePath : file.name;
+      return {
+        id: nextAttachmentId(),
+        kind: "file",
+        label: `${prefix}: ${displayName}`,
+        state: "uploading",
+        file,
+      };
+    });
     setAttachments((prev) => [...prev, ...additions]);
+
+    for (const attachment of additions) {
+      const file = attachment.file;
+      if (file === undefined) continue;
+      void uploadChatAttachment({ sessionId, target, file })
+        .then((uploaded) => {
+          setAttachments((prev) =>
+            prev.map((current) =>
+              current.id === attachment.id
+                ? {
+                    ...current,
+                    state: "ready",
+                    artifactId: uploaded.artifactId,
+                    contextEpisodeId: uploaded.contextEpisodeId,
+                    error: undefined,
+                  }
+                : current,
+            ),
+          );
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : "Lampiran gagal diproses.";
+          setAttachments((prev) =>
+            prev.map((current) =>
+              current.id === attachment.id
+                ? { ...current, state: "error", error: message }
+                : current,
+            ),
+          );
+        });
+    }
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -305,15 +363,7 @@ export default function ChatPage() {
   }
 
   function handleFolderChange(event: ChangeEvent<HTMLInputElement>): void {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      const first = files[0] as File & { webkitRelativePath?: string };
-      const folderName = first.webkitRelativePath?.split("/")[0] ?? "folder";
-      setAttachments((prev) => [
-        ...prev,
-        { id: nextAttachmentId(), label: `Folder: ${folderName} (${files.length} file)` },
-      ]);
-    }
+    addFilesAs(event.target.files, "Folder");
     event.target.value = "";
   }
 
@@ -322,18 +372,29 @@ export default function ChatPage() {
     if (trimmed.length === 0) return;
     setAttachments((prev) => [
       ...prev,
-      { id: nextAttachmentId(), label: `Catatan: ${trimmed}` },
+      {
+        id: nextAttachmentId(),
+        kind: "note",
+        label: `Catatan: ${trimmed}`,
+        noteText: trimmed,
+        state: "ready",
+      },
     ]);
     setManualDraft("");
     setManualOpen(false);
   }
 
   function submitDraft(): void {
-    const attachmentText =
-      attachments.length > 0 ? attachments.map((a) => `[${a.label}]`).join("\n") : "";
-    const finalText = attachmentText ? `${draft}\n\n${attachmentText}`.trim() : draft;
-    void sendMessage(finalText);
-    setAttachments([]);
+    if (!attachmentsReadyForSend(attachments)) return;
+    const finalText = buildAttachmentAwareMessage(draft, attachments);
+    if (finalText.length === 0) return;
+    const sentAttachmentIds = new Set(attachments.map((attachment) => attachment.id));
+    void sendMessage(finalText).then((sent) => {
+      if (!sent) return;
+      setAttachments((prev) =>
+        prev.filter((attachment) => !sentAttachmentIds.has(attachment.id)),
+      );
+    });
   }
 
   function handleSubmit(e: FormEvent): void {
@@ -350,11 +411,17 @@ export default function ChatPage() {
   const routeHint =
     turns.length > 0
       ? "Terkunci untuk sesi ini."
-      : hostedAvailable === true
-        ? "Terkunci setelah pesan pertama."
-        : "Hosted nonaktif — sesi ini Local-only.";
+      : attachments.length > 0
+        ? "Terkunci selama lampiran dipakai di sesi ini."
+        : hostedAvailable === true
+          ? "Terkunci setelah pesan pertama."
+          : "Hosted nonaktif — sesi ini Local-only.";
 
-  const canSend = hydrated && !sending && (draft.trim().length > 0 || attachments.length > 0);
+  const canSend =
+    hydrated &&
+    !sending &&
+    attachmentsReadyForSend(attachments) &&
+    (draft.trim().length > 0 || attachments.length > 0);
 
   return (
     <div className="ai-shell">
@@ -382,7 +449,9 @@ export default function ChatPage() {
               <div className="ai-composer__chips">
                 {attachments.map((a) => (
                   <span className="ai-chip" key={a.id}>
-                    <span className="ai-chip__label">{a.label}</span>
+                    <span className="ai-chip__label" title={a.error}>
+                      {attachmentChipLabel(a)}
+                    </span>
                     <button
                       type="button"
                       className="ai-chip__remove"
@@ -525,7 +594,7 @@ export default function ChatPage() {
                   aria-label="Model"
                   value={target}
                   onChange={(e) => setTarget(e.target.value as ChatTarget)}
-                  disabled={!hydrated || sending || turns.length > 0}
+                  disabled={!hydrated || sending || turns.length > 0 || attachments.length > 0}
                 >
                   <option value="local">Local</option>
                   <option value="hosted" disabled={hostedAvailable !== true}>

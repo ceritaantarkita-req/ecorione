@@ -20,7 +20,9 @@ function fileAttachment(overrides: Partial<ChatAttachment> = {}): ChatAttachment
 
 describe("attachment composer helpers", () => {
   it("never injects file labels as fake prompt content", () => {
-    expect(buildAttachmentAwareMessage("Tolong ringkas", [fileAttachment()])).toBe("Tolong ringkas");
+    expect(buildAttachmentAwareMessage("Tolong ringkas", [fileAttachment()])).toBe(
+      "Tolong ringkas",
+    );
     expect(buildAttachmentAwareMessage("", [fileAttachment()])).toBe(
       "Analisis lampiran yang saya kirim.",
     );
@@ -113,9 +115,11 @@ describe("uploadChatAttachment", () => {
   });
 
   it("fails closed when a successful endpoint returns malformed metadata", async () => {
-    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify({ attachment: { state: "READY" } }), { status: 201 }),
-    );
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ attachment: { state: "READY" } }), { status: 201 }),
+      );
     const file = new File(["hello"], "notes.txt", { type: "text/plain" });
 
     await expect(
