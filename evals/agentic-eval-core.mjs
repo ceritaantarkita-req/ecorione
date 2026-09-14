@@ -79,7 +79,10 @@ export function validateAgenticManifest(manifest, repoRoot) {
       throw new Error(`${item.id}: expected.firstTool tidak tersedia`);
     }
     validateStringArray(item.expected.forbiddenTools, `${item.id}: expected.forbiddenTools`);
-    validateStringArray(item.expected.finalMustContain, `${item.id}: expected.finalMustContain`);
+    validateStringArray(
+      item.expected.finalMustContain,
+      `${item.id}: expected.finalMustContain`,
+    );
     validateStringArray(
       item.expected.finalMustContainAny,
       `${item.id}: expected.finalMustContainAny`,
@@ -165,7 +168,10 @@ function includesAll(haystack, needles) {
 function includesAny(haystack, needles) {
   const normalized = haystack.toLowerCase();
   const expected = needles ?? [];
-  return expected.length === 0 || expected.some((needle) => normalized.includes(String(needle).toLowerCase()));
+  return (
+    expected.length === 0 ||
+    expected.some((needle) => normalized.includes(String(needle).toLowerCase()))
+  );
 }
 
 function includesNone(haystack, needles) {
