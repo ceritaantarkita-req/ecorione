@@ -105,17 +105,34 @@ jobs:
           ref: agent/active-work-20260914
           fetch-depth: 0
 
-      - name: Materialize verified closure changes
+      - name: Materialize verified W12 closure
         run: |
           git apply --recount scripts/temporal-runtime-timeout.patch
-          git apply --recount scripts/w12-docs.patch
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('docs/active-work-plan.md')
+          text = p.read_text()
+          old = '| W12 | Attachment composer real backend path | TODO | File/foto → Artifact → Context pointer → controlled hydration, bukan label-only. |'
+          new = '| W12 | Attachment composer real backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → controlled hydration; staged files remain removable before Send; partial upload failures remain retryable. |'
+          if old not in text:
+              raise SystemExit('W12 queue row not found')
+          text = text.replace(old, new, 1)
+          text = text.replace('3. **W12** — real attachment pipeline.\n4. **W13** — immutable model identity.', '3. **W13** — immutable model identity.\n4. **W14–W15** — real product eval + agentic local-model validation.', 1)
+          text = text.replace('5. **W14–W15** — real product eval + agentic local-model validation.\n6. **W16–W18** — semantic selector, ECX no-oracle, hosted economics.\n7. **W19–W20** — governance + final synchronization.', '5. **W16–W18** — semantic selector, ECX no-oracle, hosted economics.\n6. **W19–W20** — governance + final synchronization.', 1)
+          marker = '\n## 10. Claim boundary\n'
+          if marker not in text:
+              raise SystemExit('claim-boundary marker not found')
+          log = '''\n### 2026-09-14 — W12 — DONE — REPO SIDE\n\n**Changed:**\n\n- composer file/foto/folder attachment sekarang staged di browser sampai user menekan Send; memilih file tidak lagi diam-diam membuat Context episode;\n- saat Send, file di-ingest melalui Artifact lalu pointer/context episode dibuat melalui Context sebelum chat request dikirim;\n- successful attachment menyimpan `artifactId` + `contextEpisodeId`, dan chat hanya membawa controlled pointer metadata, bukan raw bytes;\n- staged/error attachment dapat dihapus; attachment yang sudah berhasil masuk Context tidak lagi menampilkan remove action palsu;\n- partial batch failure mempertahankan attachment yang sudah berhasil dan hanya mengulang item yang belum punya `contextEpisodeId`;\n- UI state `preparingAttachments` mencegah send/target/file mutation race selama ingest;\n- helper/test coverage mengunci max attachment count, staged/removable semantics, upload → Artifact → Context order, controlled hydration pointer, partial failure, dan retry retention;\n- real Temporal restart acceptance timeout dinaikkan dari 60s ke 120s setelah satu runner-heavy CI timeout tepat di hard limit; assertion dan test tetap aktif/tidak di-skip.\n\n**Evidence:**\n\n- staged-composer candidate CI `34830648734`: **SUCCESS**; MCP External HTTPS `34830648703`: **SUCCESS**;\n- clean materialized W12 CI `34831383633`: **SUCCESS**; MCP External HTTPS `34831383606`: **SUCCESS**;\n- timeout-hardening/full closure candidate CI `34832105529`: **SUCCESS** — format, lint, typecheck, 690 tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, naming.\n\n**Limitation:** closure ini repo-side. Rendered browser/operator UX proof tetap bagian W03; tidak diklaim dari CI.\n'''
+          text = text.replace(marker, log + marker, 1)
+          p.write_text(text)
+          PY
           rm scripts/temporal-runtime-timeout.patch scripts/w12-docs.patch
           git fetch origin main --depth=1
           git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
           test "$(git hash-object .github/workflows/ci.yml)" = "838ed8d288a6f4ef8ca560c8168bbf79d8122f9a"
           git diff --check
 
-      - name: Commit verified closure changes
+      - name: Commit verified W12 closure
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
