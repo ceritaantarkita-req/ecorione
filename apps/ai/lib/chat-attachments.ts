@@ -1,7 +1,7 @@
 import { readJson } from "./client-response";
 
 export type ChatAttachmentTarget = "local" | "hosted";
-export type ChatAttachmentState = "uploading" | "ready" | "error";
+export type ChatAttachmentState = "staged" | "uploading" | "ready" | "error";
 
 export interface ChatAttachment {
   readonly id: string;
@@ -76,8 +76,66 @@ export async function uploadChatAttachment(
   };
 }
 
+export async function uploadPendingChatAttachments(
+  attachments: readonly ChatAttachment[],
+  input: {
+    readonly sessionId: string;
+    readonly target: ChatAttachmentTarget;
+  },
+  fetchImpl: typeof fetch = fetch,
+): Promise<ChatAttachment[]> {
+  return await Promise.all(
+    attachments.map(async (attachment): Promise<ChatAttachment> => {
+      if (attachment.kind !== "file" || attachment.contextEpisodeId !== undefined) {
+        return attachment;
+      }
+      if (attachment.file === undefined) {
+        return {
+          ...attachment,
+          state: "error",
+          error: "File lampiran tidak tersedia.",
+        };
+      }
+      try {
+        const uploaded = await uploadChatAttachment(
+          { sessionId: input.sessionId, target: input.target, file: attachment.file },
+          fetchImpl,
+        );
+        return {
+          ...attachment,
+          state: "ready",
+          artifactId: uploaded.artifactId,
+          contextEpisodeId: uploaded.contextEpisodeId,
+          error: undefined,
+        };
+      } catch (error) {
+        return {
+          ...attachment,
+          state: "error",
+          error: error instanceof Error ? error.message : "Lampiran gagal diproses.",
+        };
+      }
+    }),
+  );
+}
+
+export function attachmentCanBeRemoved(attachment: ChatAttachment): boolean {
+  if (attachment.kind === "note") return true;
+  return attachment.contextEpisodeId === undefined && attachment.state !== "uploading";
+}
+
+export function attachmentNeedsUpload(attachment: ChatAttachment): boolean {
+  return (
+    attachment.kind === "file" &&
+    attachment.contextEpisodeId === undefined &&
+    attachment.state !== "error"
+  );
+}
+
 export function attachmentsReadyForSend(attachments: readonly ChatAttachment[]): boolean {
-  return attachments.every((attachment) => attachment.state === "ready");
+  return attachments.every(
+    (attachment) => attachment.state === "staged" || attachment.state === "ready",
+  );
 }
 
 export function buildAttachmentAwareMessage(
