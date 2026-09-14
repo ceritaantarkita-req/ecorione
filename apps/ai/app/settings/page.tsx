@@ -153,7 +153,8 @@ export default function SettingsPage() {
 
   const mutableLocalModel =
     runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());
-  const selectedCredential = credentials.find((item) => item.provider === secretProvider) ?? null;
+  const selectedCredential =
+    credentials.find((item) => item.provider === secretProvider) ?? null;
   const selectedProviderOption =
     CREDENTIAL_PROVIDER_OPTIONS.find((item) => item.value === secretProvider) ?? null;
 
