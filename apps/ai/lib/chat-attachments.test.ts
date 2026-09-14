@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   MAX_COMPOSER_ATTACHMENTS,
+  attachmentCanBeRemoved,
   attachmentChipLabel,
+  attachmentNeedsUpload,
   attachmentsReadyForSend,
   buildAttachmentAwareMessage,
   uploadChatAttachment,
+  uploadPendingChatAttachments,
   type ChatAttachment,
 } from "./chat-attachments";
 
@@ -41,15 +44,30 @@ describe("attachment composer helpers", () => {
     );
   });
 
-  it("blocks send until every attachment is ready", () => {
-    expect(attachmentsReadyForSend([fileAttachment()])).toBe(true);
+  it("treats staged files as removable and sendable, but blocks in-flight/error files", () => {
+    const staged = fileAttachment({ state: "staged" });
+    expect(attachmentsReadyForSend([staged])).toBe(true);
+    expect(attachmentNeedsUpload(staged)).toBe(true);
+    expect(attachmentCanBeRemoved(staged)).toBe(true);
+
     expect(attachmentsReadyForSend([fileAttachment({ state: "uploading" })])).toBe(false);
+    expect(attachmentCanBeRemoved(fileAttachment({ state: "uploading" }))).toBe(false);
     expect(attachmentsReadyForSend([fileAttachment({ state: "error" })])).toBe(false);
+  });
+
+  it("does not offer fake removal after an attachment has entered session Context", () => {
+    const uploaded = fileAttachment({
+      artifactId: `art_${"a".repeat(64)}`,
+      contextEpisodeId: "epi_attachmentclient001",
+    });
+    expect(attachmentNeedsUpload(uploaded)).toBe(false);
+    expect(attachmentCanBeRemoved(uploaded)).toBe(false);
   });
 
   it("surfaces compact chip status without changing the underlying label", () => {
     expect(attachmentChipLabel(fileAttachment({ state: "uploading" }))).toContain("mengunggah");
     expect(attachmentChipLabel(fileAttachment({ state: "error" }))).toContain("gagal");
+    expect(attachmentChipLabel(fileAttachment({ state: "staged" }))).toBe("File: report.pdf");
     expect(attachmentChipLabel(fileAttachment())).toBe("File: report.pdf");
     expect(MAX_COMPOSER_ATTACHMENTS).toBe(20);
   });
@@ -128,5 +146,80 @@ describe("uploadChatAttachment", () => {
         fetchImpl,
       ),
     ).rejects.toThrow("Respons lampiran tidak valid.");
+  });
+});
+
+describe("uploadPendingChatAttachments", () => {
+  it("preserves successful pointers when another file fails", async () => {
+    const first = new File(["one"], "one.txt", { type: "text/plain" });
+    const second = new File(["two"], "two.txt", { type: "text/plain" });
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            attachment: {
+              artifactId: `art_${"b".repeat(64)}`,
+              contextEpisodeId: "epi_attachmentbatch001",
+              state: "READY",
+            },
+          }),
+          { status: 201 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: {
+              code: "ATTACHMENT_UPSTREAM_UNAVAILABLE",
+              message: "Hub tidak tersedia untuk lampiran.",
+            },
+          }),
+          { status: 502 },
+        ),
+      );
+
+    const result = await uploadPendingChatAttachments(
+      [
+        fileAttachment({ id: "att-1", file: first, state: "uploading" }),
+        fileAttachment({ id: "att-2", file: second, state: "uploading" }),
+      ],
+      { sessionId: "sess_attachmentbatch001", target: "local" },
+      fetchImpl,
+    );
+
+    expect(result[0]).toMatchObject({
+      state: "ready",
+      artifactId: `art_${"b".repeat(64)}`,
+      contextEpisodeId: "epi_attachmentbatch001",
+    });
+    expect(result[1]).toMatchObject({
+      state: "error",
+      error: "Hub tidak tersedia untuk lampiran.",
+    });
+  });
+
+  it("does not upload notes or file pointers that are already governed", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    const note: ChatAttachment = {
+      id: "att-note",
+      kind: "note",
+      label: "Catatan: tetap lokal",
+      noteText: "tetap lokal",
+      state: "ready",
+    };
+    const uploaded = fileAttachment({
+      artifactId: `art_${"c".repeat(64)}`,
+      contextEpisodeId: "epi_attachmentbatch002",
+    });
+
+    const result = await uploadPendingChatAttachments(
+      [note, uploaded],
+      { sessionId: "sess_attachmentbatch002", target: "local" },
+      fetchImpl,
+    );
+
+    expect(result).toEqual([note, uploaded]);
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });
