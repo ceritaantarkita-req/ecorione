@@ -137,6 +137,7 @@ export async function callAnthropic(
     throw new ProviderError(
       "hosted",
       `Tidak bisa menghubungi Anthropic: ${err instanceof Error ? err.message : String(err)}`,
+      "unreachable",
     );
   }
   const text = await res.text();
@@ -153,6 +154,7 @@ export async function callAnthropic(
     throw new ProviderError(
       "hosted",
       `Anthropic membalas status ${String(res.status)}: ${text.slice(0, 400)}`,
+      res.status === 401 || res.status === 403 ? "invalid-credential" : "upstream",
     );
   const reply = (parsed.content ?? [])
     .filter((b) => b.type === "text" && typeof b.text === "string")
