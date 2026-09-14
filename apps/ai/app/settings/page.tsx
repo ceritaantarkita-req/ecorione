@@ -5,10 +5,11 @@ import { ClientResponseError, readJson } from "../../lib/client-response";
 import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
 import styles from "./Settings.module.css";
 
+type HostedProviderId = "anthropic" | "openrouter" | "openai";
 type RuntimeSnapshot = {
   revision: number;
   settings: {
-    hostedProvider: "anthropic" | "openrouter" | "openai";
+    hostedProvider: HostedProviderId;
     localRuntime: "openai-compatible";
     localBaseUrl: string;
     localModelTag: string;
@@ -17,16 +18,15 @@ type RuntimeSnapshot = {
   };
 };
 type Credential = { provider: string; purpose: string; generation: number; updatedAt: string };
-type CredentialProvider =
-  | "anthropic"
-  | "openai"
-  | "openrouter"
-  | "kimi"
-  | "gemini"
-  | "qwen"
-  | "glm"
-  | "custom-openai"
-  | "mcp";
+type ProviderCatalogEntry = {
+  id: string;
+  displayName: string;
+  category: "ai" | "integration";
+  credentialPurpose: "messages" | "tokens";
+  credentialReady: boolean;
+  routingReady: boolean;
+  connectionTestReady: boolean;
+};
 type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "error";
 type McpServer = {
   id: string;
@@ -38,21 +38,6 @@ type McpServer = {
 };
 
 const PERSONAL_WORKSPACE_ID = "ws_personal";
-const CREDENTIAL_PROVIDER_OPTIONS: readonly {
-  value: CredentialProvider;
-  label: string;
-  routingReady: boolean;
-}[] = [
-  { value: "anthropic", label: "Claude / Anthropic", routingReady: true },
-  { value: "openai", label: "OpenAI / ChatGPT API", routingReady: true },
-  { value: "openrouter", label: "OpenRouter", routingReady: true },
-  { value: "kimi", label: "Kimi / Moonshot", routingReady: false },
-  { value: "gemini", label: "Google Gemini", routingReady: false },
-  { value: "qwen", label: "Qwen", routingReady: false },
-  { value: "glm", label: "GLM", routingReady: false },
-  { value: "custom-openai", label: "Custom OpenAI-compatible", routingReady: false },
-  { value: "mcp", label: "MCP token", routingReady: false },
-];
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
@@ -61,15 +46,16 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
 
 export default function SettingsPage() {
   const [runtime, setRuntime] = useState<RuntimeSnapshot | null>(null);
+  const [providers, setProviders] = useState<ProviderCatalogEntry[]>([]);
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [workspaceId, setWorkspaceId] = useState(PERSONAL_WORKSPACE_ID);
   const [servers, setServers] = useState<McpServer[]>([]);
   const [secret, setSecret] = useState("");
-  const [secretProvider, setSecretProvider] = useState<CredentialProvider>("anthropic");
+  const [secretProvider, setSecretProvider] = useState("anthropic");
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("");
   const [hostedHealth, setHostedHealth] = useState<{
-    provider: RuntimeSnapshot["settings"]["hostedProvider"];
+    provider: HostedProviderId;
     status: HostedCanaryStatus;
   } | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -92,11 +78,13 @@ export default function SettingsPage() {
 
   const refresh = useCallback(async () => {
     try {
-      const [runtimeResult, credentialResult] = await Promise.all([
+      const [runtimeResult, providerResult, credentialResult] = await Promise.all([
         json<RuntimeSnapshot>("/api/settings/settings/runtime"),
+        json<{ providers: ProviderCatalogEntry[] }>("/api/settings/settings/providers"),
         json<{ credentials: Credential[] }>("/api/settings/settings/credentials"),
       ]);
       setRuntime(runtimeResult);
+      setProviders(providerResult.providers);
       setCredentials(credentialResult.credentials);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
@@ -138,10 +126,14 @@ export default function SettingsPage() {
 
   const mutableLocalModel =
     runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());
+  const hostedProviderOptions = providers.filter(
+    (provider) => provider.category === "ai" && provider.routingReady,
+  );
+  const credentialProviderOptions = providers.filter((provider) => provider.credentialReady);
   const selectedCredential =
     credentials.find((item) => item.provider === secretProvider) ?? null;
   const selectedProviderOption =
-    CREDENTIAL_PROVIDER_OPTIONS.find((item) => item.value === secretProvider) ?? null;
+    providers.find((provider) => provider.id === secretProvider) ?? null;
   const selectedProviderHealth = providerHealth({
     hasCredential: selectedCredential !== null,
     routingReady: selectedProviderOption?.routingReady ?? false,
@@ -183,7 +175,7 @@ export default function SettingsPage() {
     if (!beginAction("credential")) return;
     setStatus("Encrypting credential…");
     try {
-      await json(`/api/settings/settings/credentials/${secretProvider}`, {
+      await json(`/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ secret }),
@@ -203,7 +195,7 @@ export default function SettingsPage() {
     if (selectedCredential === null || !beginAction("remove-credential")) return;
     setStatus("Removing credential…");
     try {
-      await json(`/api/settings/settings/credentials/${secretProvider}`, {
+      await json(`/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`, {
         method: "DELETE",
       });
       setSecret("");
@@ -320,15 +312,16 @@ export default function SettingsPage() {
                     ...runtime,
                     settings: {
                       ...runtime.settings,
-                      hostedProvider: event.target
-                        .value as RuntimeSnapshot["settings"]["hostedProvider"],
+                      hostedProvider: event.target.value as HostedProviderId,
                     },
                   });
                 }}
               >
-                <option value="anthropic">Anthropic</option>
-                <option value="openai">OpenAI</option>
-                <option value="openrouter">OpenRouter</option>
+                {hostedProviderOptions.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.displayName}
+                  </option>
+                ))}
               </select>
             </label>
             <label>
@@ -453,11 +446,11 @@ export default function SettingsPage() {
             aria-label="Credential provider"
             value={secretProvider}
             disabled={pendingAction !== null}
-            onChange={(event) => setSecretProvider(event.target.value as CredentialProvider)}
+            onChange={(event) => setSecretProvider(event.target.value)}
           >
-            {CREDENTIAL_PROVIDER_OPTIONS.map((provider) => (
-              <option key={provider.value} value={provider.value}>
-                {provider.label}
+            {credentialProviderOptions.map((provider) => (
+              <option key={provider.id} value={provider.id}>
+                {provider.displayName}
               </option>
             ))}
           </select>
