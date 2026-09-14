@@ -66,9 +66,7 @@ describe("W15 local agentic eval contract", () => {
           result: { fleet: "degraded", requiredDown: ["hub"], optionalDown: ["sync"] },
         },
       ],
-      observations: [
-        { fleet: "degraded", requiredDown: ["hub"], optionalDown: ["sync"] },
-      ],
+      observations: [{ fleet: "degraded", requiredDown: ["hub"], optionalDown: ["sync"] }],
     });
     expect(good.pass).toBe(true);
     expect(good.checks).toEqual({
