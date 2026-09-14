@@ -10,7 +10,9 @@ import {
 describe("provider catalog", () => {
   it("mempunyai satu entry untuk setiap credential provider", () => {
     expect(PROVIDER_CATALOG.map((entry) => entry.id)).toEqual(CREDENTIAL_PROVIDER_IDS);
-    expect(new Set(PROVIDER_CATALOG.map((entry) => entry.id)).size).toBe(PROVIDER_CATALOG.length);
+    expect(new Set(PROVIDER_CATALOG.map((entry) => entry.id)).size).toBe(
+      PROVIDER_CATALOG.length,
+    );
   });
 
   it("hanya provider hosted existing yang boleh dinyatakan routing/test ready", () => {
