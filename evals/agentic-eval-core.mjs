@@ -8,12 +8,17 @@ function isRecord(value) {
 export function validateAgenticManifest(manifest, repoRoot) {
   if (!isRecord(manifest)) throw new Error("agentic manifest harus object");
   if (manifest.version !== 1) throw new Error("agentic manifest version harus 1");
-  if (manifest.suite !== "ecorione-local-agentic-v1") throw new Error("suite W15 tidak dikenal");
+  if (manifest.suite !== "ecorione-local-agentic-v1")
+    throw new Error("suite W15 tidak dikenal");
   if (manifest.repetitions !== 3) throw new Error("W15 wajib memakai pass^3");
   if (!Number.isInteger(manifest.maxSteps) || manifest.maxSteps < 2 || manifest.maxSteps > 8) {
     throw new Error("maxSteps W15 harus integer 2..8");
   }
-  if (!Array.isArray(manifest.cases) || manifest.cases.length === 0 || manifest.cases.length > 50) {
+  if (
+    !Array.isArray(manifest.cases) ||
+    manifest.cases.length === 0 ||
+    manifest.cases.length > 50
+  ) {
     throw new Error("W15 harus punya 1..50 kasus");
   }
 
@@ -42,7 +47,11 @@ export function validateAgenticManifest(manifest, repoRoot) {
     }
     const toolNames = new Set();
     for (const tool of item.tools) {
-      if (!isRecord(tool) || typeof tool.name !== "string" || typeof tool.description !== "string") {
+      if (
+        !isRecord(tool) ||
+        typeof tool.name !== "string" ||
+        typeof tool.description !== "string"
+      ) {
         throw new Error(`${item.id}: definisi tool tidak valid`);
       }
       if (toolNames.has(tool.name)) throw new Error(`${item.id}: tool duplikat ${tool.name}`);
@@ -81,7 +90,10 @@ export function buildAgentSystemPrompt(item) {
 
 export function parseAgentAction(text) {
   if (typeof text !== "string") throw new Error("model output bukan string");
-  const trimmed = text.trim().replace(/^```(?:json)?\s*/u, "").replace(/\s*```$/u, "");
+  const trimmed = text
+    .trim()
+    .replace(/^```(?:json)?\s*/u, "")
+    .replace(/\s*```$/u, "");
   const start = trimmed.indexOf("{");
   const end = trimmed.lastIndexOf("}");
   if (start < 0 || end < start) throw new Error("model output tidak berisi JSON object");
@@ -136,12 +148,17 @@ function includesNone(haystack, needles) {
 export function scoreAgentTrace(item, trace) {
   const toolActions = trace.actions.filter((action) => action.phase === "tool");
   const finalAction = [...trace.actions].reverse().find((action) => action.phase === "final");
-  const executedTools = trace.executions.filter((entry) => entry.ok).map((entry) => entry.tool);
+  const executedTools = trace.executions
+    .filter((entry) => entry.ok)
+    .map((entry) => entry.tool);
   const selectedTools = toolActions.map((action) => action.tool);
   const forbidden = item.expected.forbiddenTools ?? [];
   const checks = {
-    reason: toolActions.length > 0 && toolActions.every((action) => action.reason.trim().length > 0),
-    tool: selectedTools[0] === item.expected.firstTool && forbidden.every((name) => !selectedTools.includes(name)),
+    reason:
+      toolActions.length > 0 && toolActions.every((action) => action.reason.trim().length > 0),
+    tool:
+      selectedTools[0] === item.expected.firstTool &&
+      forbidden.every((name) => !selectedTools.includes(name)),
     execute: executedTools.includes(item.expected.firstTool),
     observe: trace.observations.length > 0,
     verify:
