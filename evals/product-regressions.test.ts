@@ -63,8 +63,12 @@ describe("W14 product eval manifest", () => {
 
       const sourceText = readFileSync(sourcePath, "utf8");
       const targetText = readFileSync(targetPath, "utf8");
-      expect(sourceText, `${item.id}: provenance ${item.origin.ref}`).toContain(item.origin.ref);
-      expect(targetText, `${item.id}: test ${item.target.testName}`).toContain(item.target.testName);
+      expect(sourceText, `${item.id}: provenance ${item.origin.ref}`).toContain(
+        item.origin.ref,
+      );
+      expect(targetText, `${item.id}: test ${item.target.testName}`).toContain(
+        item.target.testName,
+      );
     }
   });
 });
