@@ -98,4 +98,42 @@ describe("Connect operations telemetry", () => {
     expect(canary.statusCode).toBe(200);
     expect(canary.json()).toMatchObject({ pass: false, expectedSubstringMatched: false });
   });
+
+  it("hosted canary membedakan credential yang belum tersedia", async () => {
+    const connect = buildConnectServer({
+      token: "ops-token",
+      localBaseUrl: "http://127.0.0.1:1/v1",
+      localModelTag: "unused",
+      hostedCallsEnabled: true,
+    });
+    closeables.push(connect);
+
+    const canary = await connect.inject({
+      method: "POST",
+      url: "/v1/ops/provider-canary",
+      headers: { authorization: "Bearer ops-token" },
+      payload: { target: "hosted" },
+    });
+    expect(canary.statusCode).toBe(502);
+    expect(canary.json().error.type).toBe("PROVIDER_CREDENTIAL_MISSING");
+  });
+
+  it("local canary membedakan runtime provider yang tidak bisa dihubungi", async () => {
+    const connect = buildConnectServer({
+      token: "ops-token",
+      localBaseUrl: "http://127.0.0.1:1/v1",
+      localModelTag: "local-test-pinned",
+      hostedCallsEnabled: false,
+    });
+    closeables.push(connect);
+
+    const canary = await connect.inject({
+      method: "POST",
+      url: "/v1/ops/provider-canary",
+      headers: { authorization: "Bearer ops-token" },
+      payload: { target: "local" },
+    });
+    expect(canary.statusCode).toBe(503);
+    expect(canary.json().error.type).toBe("PROVIDER_UNREACHABLE");
+  });
 });
