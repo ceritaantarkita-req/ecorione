@@ -30,10 +30,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Format
-        run: |
-          pnpm exec prettier --write apps/ai/app/settings/page.tsx apps/ai/lib/settings-proxy.test.ts
-          git diff -- apps/ai/app/settings/page.tsx apps/ai/lib/settings-proxy.test.ts
-          pnpm run format:check
+        run: pnpm run format:check
 
       - name: Lint
         run: pnpm run lint
