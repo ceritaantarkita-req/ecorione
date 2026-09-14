@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,23 +28,6 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-
-      - name: Apply W12 composer candidate
-        run: |
-          if ! grep -q 'from "../lib/chat-attachments"' apps/ai/app/page.tsx; then
-            git apply --recount scripts/w12-ui.patch
-            git apply scripts/w12-ui-post.patch
-            pnpm exec prettier apps/ai/app/page.tsx apps/ai/lib/chat-attachments.test.ts --write
-          fi
-
-      - name: Capture W12 composer candidate
-        uses: actions/upload-artifact@v4
-        with:
-          name: w12-composer-candidate
-          path: |
-            apps/ai/app/page.tsx
-            apps/ai/lib/chat-attachments.test.ts
-          if-no-files-found: error
 
       - name: Format
         run: pnpm run format:check
@@ -73,40 +56,6 @@ jobs:
 
       - name: Production build
         run: pnpm run build
-
-      - name: Permanenkan exact W12 candidate yang sudah lolos gate
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-          EXPECTED_PAGE_SHA256: 0cf20bd224dc4c1bf49a0b3d421482fb66d02822599f3386382a5652d0bdfabd
-          EXPECTED_TEST_SHA256: 043f9e90b1a5089390b9fd5a674ddf16771ffba4e1601e7c4d86732e224945f0
-        run: |
-          test "$(sha256sum apps/ai/app/page.tsx | awk '{print $1}')" = "$EXPECTED_PAGE_SHA256"
-          test "$(sha256sum apps/ai/lib/chat-attachments.test.ts | awk '{print $1}')" = "$EXPECTED_TEST_SHA256"
-
-          git reset --hard HEAD
-          git fetch origin "$HEAD_REF"
-          git checkout -B "$HEAD_REF" "origin/$HEAD_REF"
-
-          if ! grep -q 'from "../lib/chat-attachments"' apps/ai/app/page.tsx; then
-            git apply --recount scripts/w12-ui.patch
-            git apply scripts/w12-ui-post.patch
-            pnpm exec prettier apps/ai/app/page.tsx apps/ai/lib/chat-attachments.test.ts --write
-          fi
-
-          test "$(sha256sum apps/ai/app/page.tsx | awk '{print $1}')" = "$EXPECTED_PAGE_SHA256"
-          test "$(sha256sum apps/ai/lib/chat-attachments.test.ts | awk '{print $1}')" = "$EXPECTED_TEST_SHA256"
-
-          if git diff --quiet -- apps/ai/app/page.tsx apps/ai/lib/chat-attachments.test.ts; then
-            echo "W12 candidate sudah permanen pada branch."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/ai/app/page.tsx apps/ai/lib/chat-attachments.test.ts
-          git commit -m "feat: wire governed chat attachments"
-          git push origin "HEAD:$HEAD_REF"
 
   naming:
     runs-on: ubuntu-latest
