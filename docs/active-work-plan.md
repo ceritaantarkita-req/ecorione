@@ -34,10 +34,10 @@ Empat blok utama:
 | W01 | Reconcile `system-analysis-2026-09-13.md` dengan kondisi real repo | **DONE** | Temuan valid/outdated dipisahkan; tidak ada blocker lama yang masih dinyatakan aktif tanpa dasar current code/evidence. |
 | W02 | Tutup gap Vitest `*.test.tsx` | **DONE** | Semua test TSX yang dimaksud masuk discovery normal/CI dan tidak ada silent-skip sejenis yang terlewat. |
 | W03 | Audit UX/Product Validation di current `main` | **BLOCKED — OPERATOR RUNTIME** | Full Phase 4 walkthrough current main selesai; defect ledger jelas; tidak ada S0/S1 terbuka. |
-| W04 | Rapikan partial-stack vs full-stack behavior | **STARTED — CI VERIFYING** | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
+| W04 | Rapikan partial-stack vs full-stack behavior | **DONE — REPO SIDE** | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
 | W05 | Provider Settings foundation | **STARTED** | User dapat menghubungkan OpenAI, Anthropic/Claude, OpenRouter, Kimi/Moonshot, Gemini, Qwen, GLM, dan custom OpenAI-compatible tanpa edit `.env` manual. |
 | W06 | Credential Vault integration untuk provider keys | **STARTED** | Paste → test → save → masked display → replace/remove; plaintext tidak disimpan di browser/localStorage dan tidak dibaca kembali oleh UI. |
-| W07 | Provider health/status | **STARTED** | Status minimal: Connected, Invalid key, Unreachable, Disabled; test connection bounded dan tidak memicu spend tidak terkendali. |
+| W07 | Provider health/status | **STARTED — TAXONOMY IMPLEMENTED** | Status minimal: Connected, Invalid key, Unreachable, Disabled; test connection bounded dan tidak memicu spend tidak terkendali. |
 | W08 | Default AI selection | TODO | User dapat memilih Local atau provider/model yang sudah terhubung; auto-router belum diklaim. |
 | W09 | One-command full-system startup | **STARTED — NEEDS OPERATOR RUNTIME** | Satu command stabil menyalakan full required stack dan menunggu readiness tanpa langkah manual berantai. |
 | W10 | `ecorione doctor` / diagnostics | **STARTED — NEEDS OPERATOR RUNTIME** | Dependency, service health, ports, Temporal/database, local model, dan masalah umum dapat didiagnosis dengan output manusiawi. |
@@ -104,6 +104,7 @@ Current implementation boundary:
 - credential storage contract sekarang mengenali Anthropic, OpenAI, OpenRouter, Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible, serta MCP token;
 - Anthropic, OpenAI, dan OpenRouter sudah routing-ready melalui Connect existing;
 - Kimi, Gemini, Qwen, GLM, dan custom OpenAI-compatible **baru credential-ready**, belum boleh dianggap routing-ready sampai adapter/endpoint/model identity/pricing contract selesai;
+- provider health taxonomy sekarang membedakan missing credential, invalid credential, unreachable, dan generic upstream failure untuk routing-ready hosted adapters;
 - UI wajib menyatakan boundary tersebut secara eksplisit dan tidak boleh memberi kesan provider baru sudah dapat dipanggil bila routing belum tersedia.
 
 ## 6. Startup/onboarding target
@@ -259,7 +260,7 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 - official walkthrough memang mensyaratkan synchronized current main, full Phase 4 stack, Temporal reachable, cost kill switch precondition, browser/devtools, serta UX-01..UX-12;
 - Operations route sudah membedakan required Phase 4 fleet dari optional Sync; optional Sync down tidak otomatis membuat required fleet degraded;
 - Flow sudah memiliki human-readable registry failure path;
-- Space masih dapat mengubah upstream structured failure menjadi raw `HTTP 502: {...}` pada client surface — ini defect usability repo-side yang dipindahkan ke W04.
+- Space sebelumnya dapat mengubah upstream structured failure menjadi raw `HTTP 502: {...}` pada client surface — defect repo-side tersebut sudah dipindahkan dan ditutup melalui W04.
 
 **Evidence:** static/current-code inspection pada branch PR #74 dan `docs/ux-runtime-walkthrough-checklist.md`.
 
@@ -267,9 +268,9 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 
 **Limitation:** tidak ada browser/runtime evidence baru dari operator laptop pada entry ini.
 
-**Next:** W04 — humanize partial/down-service behavior tanpa redesign visual.
+**Next:** full rendered walkthrough setelah branch siap diuji pada operator laptop.
 
-### 2026-09-14 — W04 — STARTED — CI VERIFYING
+### 2026-09-14 — W04 — DONE — REPO SIDE
 
 **Scope:** membuat failure state partial/down-service lebih manusiawi tanpa mengubah layout atau visual language current UI.
 
@@ -283,15 +284,15 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 **Evidence:**
 
 - PR #74;
-- `apps/ai/lib/client-response.test.ts` masuk normal suite dan PASS pada CI run `34798632249`;
-- sebelum Space migration, run tersebut juga PASS lint, typecheck, full tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, dan naming;
-- CI untuk head setelah Space migration masih berjalan saat entry ini ditulis dan status belum boleh dinaikkan ke DONE sebelum run tersebut selesai.
+- `apps/ai/lib/client-response.test.ts` masuk normal suite;
+- CI run `34800259393`: **SUCCESS** untuk format, lint, typecheck, tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, dan naming;
+- MCP External HTTPS Acceptance run `34800259408`: **SUCCESS**.
 
-**Result:** raw-error leak yang ditemukan pada Space sudah ditutup di code; repository verification final untuk commit tersebut masih pending.
+**Result:** raw-error leak yang ditemukan pada current Space/Operations repo path sudah ditutup dan full repository CI tetap hijau.
 
-**Limitation:** rendered browser walkthrough tetap bagian W03 dan membutuhkan operator runtime.
+**Limitation:** rendered browser walkthrough tetap bagian W03 dan membutuhkan operator runtime; W04 DONE di sini adalah closure repository-side, bukan pengganti W03.
 
-**Next:** tunggu normal CI head Space migration; jika green, W04 dapat ditutup secara repo-side dengan browser closure tetap dilacak W03.
+**Next:** lanjut provider onboarding W05–W08 sambil menunggu kesempatan operator-runtime untuk W03.
 
 ### 2026-09-14 — W05 — STARTED
 
@@ -345,23 +346,30 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 
 **Next:** lanjut W07 health semantics dan provider-specific connection test contract; setelah itu W06 dapat ditutup bila seluruh baseline flow Paste → Test → Save → metadata/masked → Replace/Remove terbukti.
 
-### 2026-09-14 — W07 — STARTED
+### 2026-09-14 — W07 — STARTED — TAXONOMY IMPLEMENTED
 
-**Scope:** provider health/test foundation.
+**Scope:** provider health/test foundation yang tidak bergantung pada parsing pesan error di frontend.
 
 **Changed:**
 
-- Settings mempertahankan local canary existing;
-- menambahkan hosted canary action melalui normal `/v1/ops/provider-canary` boundary untuk provider hosted yang sudah routing-ready;
-- canary tetap melewati Connect completion, credential, hosted-call policy, spend control, metrics, dan normal failure semantics.
+- existing local + hosted canary tetap melewati Connect normal boundary, hosted-call policy, spend guard, metrics, dan credential resolution;
+- `ProviderError` sekarang membawa kind eksplisit: `unreachable`, `invalid-credential`, atau `upstream`;
+- OpenAI/OpenRouter adapter shared mengklasifikasikan network failure sebagai `unreachable` dan HTTP 401/403 sebagai `invalid-credential`;
+- Anthropic adapter melakukan klasifikasi yang sama;
+- Connect HTTP sekarang mengekspos machine-readable codes: `PROVIDER_CREDENTIAL_MISSING`, `PROVIDER_INVALID_CREDENTIAL`, `PROVIDER_UNREACHABLE`, dan `PROVIDER_UPSTREAM_ERROR`;
+- regression test commit `06ab297b20a84d882bea674407a580dbc0d8fadf` mengharuskan Anthropic 401/403 menjadi `invalid-credential` dan network failure menjadi `unreachable`.
 
-**Evidence:** CI run `34798632249` full verify SUCCESS dan existing provider-canary/Connect coverage tetap green.
+**Evidence:**
 
-**Result:** user dapat menguji local runtime dan configured hosted provider yang memang sudah supported tanpa bypass arsitektur Connect.
+- taxonomy commits `a1bfc9306902dc4ca559c57430c0bff18bab29db`, `0bb5e067be5b87adba6f7fcb84b78a884f06fa27`, `30e8d40e8ca4e663304149f146e952ffaf5e2015`, `b0cb1f4e0cd920535014acaebae357975dea7f6d`;
+- CI run `34800259393` at commit `30e8d40e...`: **SUCCESS** across all normal gates;
+- direct taxonomy test commit `06ab297b20a84d882bea674407a580dbc0d8fadf` dibuat setelah run tersebut dan masih membutuhkan latest-head CI confirmation sebelum W07 dapat dinaikkan lebih jauh.
 
-**Limitation:** belum ada per-provider status machine `Connected / Invalid key / Unreachable / Disabled` untuk seluruh provider baseline; Kimi/Gemini/Qwen/GLM/custom belum routing-ready sehingga belum dapat diberi false health claim.
+**Result:** backend sekarang memiliki sinyal yang cukup untuk membedakan Invalid key vs Unreachable secara deterministic pada routing-ready hosted providers, tanpa frontend string heuristics.
 
-**Next:** bangun provider health contract yang memisahkan `credential present`, `routing supported`, `disabled`, `invalid credential`, dan `unreachable`.
+**Limitation:** Settings belum memetakan machine-readable code tersebut menjadi persistent selected-provider status label; provider credential-ready yang belum routing-ready tetap tidak boleh diuji seolah sudah executable. Status Disabled juga perlu menggabungkan runtime hosted switch/operator gate secara eksplisit.
+
+**Next:** sambungkan error code ke Settings status state (`Connected / Invalid key / Unreachable / Disabled`) untuk provider routing-ready; tetap tampilkan `credential-ready / routing unavailable` untuk Kimi/Gemini/Qwen/GLM/custom sampai adapter contract mereka selesai.
 
 ### 2026-09-14 — W09 — STARTED — NEEDS OPERATOR RUNTIME
 
@@ -374,16 +382,17 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 - Temporal lokal dideteksi terlebih dahulu dan, bila belum aktif, engine menyalakannya melalui pinned local compose boundary;
 - engine menyalakan `pnpm dev:phase4` dan mendukung Windows `pnpm.cmd`;
 - browser dibuka best-effort setelah readiness;
-- commit `efefcc80623f4af048000c242cdbb9bd1e0c28fb` memperketat readiness: status ready sekarang menunggu Ai **dan seluruh required Phase 4 health endpoints** (RnD, Context, Connect, Hub, Artifact, Sandbox, Space, Flow), bukan hanya port 3000.
+- commit `efefcc80623f4af048000c242cdbb9bd1e0c28fb` memperketat readiness: status ready sekarang menunggu Ai **dan seluruh required Phase 4 health endpoints** (RnD, Context, Connect, Hub, Artifact, Sandbox, Space, Flow), bukan hanya port 3000;
+- formatting follow-up `75d8d63c4f94e49301b255944c4b50e1a1a17d54` menutup format gate tanpa behavioral change.
 
 **Evidence:**
 
 - implementation commits `39698a5299ba3a8f7f24e492e2c69da71086418f`, `eed399245cbd2dab593bdb0ad7102052de77db15`, `efefcc80623f4af048000c242cdbb9bd1e0c28fb`;
 - bootstrap regression test commit `f2243f9216c05002474b4113126739110046acbf`;
-- exact formatting commits `e114ec126369cc754fc7f5726cfb746d90827520`, `46048202feff978f6116472510e3cbc72fb31950`;
-- prior CI run `34799506335` proved engine tests + full repository gates green under temporary formatter capture; normal workflow was restored by `6237d4d17c0b5b6594d73cf955b43ddf5c9d1d8a`.
+- exact formatting commits `e114ec126369cc754fc7f5726cfb746d90827520`, `46048202feff978f6116472510e3cbc72fb31950`, `75d8d63c4f94e49301b255944c4b50e1a1a17d54`;
+- CI run `34800259393`: **SUCCESS** after full-fleet readiness change.
 
-**Result:** repository-side one-command engine exists and no longer reports ready on Ai-only readiness.
+**Result:** repository-side one-command engine exists dan no longer reports ready on Ai-only readiness.
 
 **Limitation:** real Windows/operator-laptop startup from a clean user environment has not yet been proven. User still needs Node/pnpm/Docker at this stage; removing those user-facing prerequisites belongs to W11 installer/launcher.
 
@@ -399,7 +408,7 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 - checks mencakup Node >=22, pnpm, keberadaan `.env`, Docker reachability, Temporal port, health RnD/Context/Connect/Hub/Artifact/Sandbox/Space/Flow, dan Ai port;
 - critical dependency failure seperti Node/pnpm menghasilkan non-zero exit; service state tetap dilaporkan sebagai readable status, bukan raw stack trace.
 
-**Evidence:** engine implementation pada PR #74 dan `test/ecorione-engine.test.mjs` untuk bootstrap/env helpers; prior full CI run `34799506335` green setelah exact formatter output diterapkan.
+**Evidence:** engine implementation pada PR #74 dan `test/ecorione-engine.test.mjs` untuk bootstrap/env helpers; CI run `34800259393` green setelah full-fleet engine update.
 
 **Result:** repo-side diagnostic command tersedia dan dapat digunakan sebelum/ketika troubleshooting local engine.
 
