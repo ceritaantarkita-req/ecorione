@@ -1,12 +1,18 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { ensureLocalEnv, parseSimpleEnv, upsertEnvValue } from "../scripts/ecorione-engine.mjs";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  ensureLocalEnv,
+  parseSimpleEnv,
+  probeLocalRuntime,
+  upsertEnvValue,
+} from "../scripts/ecorione-engine.mjs";
 
 const roots = [];
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   while (roots.length > 0) {
     const root = roots.pop();
     if (root) rmSync(root, { recursive: true, force: true });
@@ -66,5 +72,63 @@ describe("ECORIONE local engine bootstrap", () => {
     expect(second.generated).toEqual([]);
     expect(afterSecond.ECORIONE_INTERNAL_TOKEN).toBe(token);
     expect(afterSecond.ECORIONE_CONNECT_VAULT_MASTER_KEY).toBe(vaultKey);
+  });
+
+  it("probes the configured local AI through Connect without vendor-specific runtime logic", async () => {
+    let seenUrl = "";
+    let seenAuthorization = "";
+    let seenBody = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url, init) => {
+        seenUrl = String(url);
+        seenAuthorization = new Headers(init?.headers).get("authorization") ?? "";
+        seenBody = String(init?.body ?? "");
+        return new Response(
+          JSON.stringify({
+            pass: true,
+            model: "local/provider-token-zero",
+            responseModel: "gemma-test-pinned",
+            latencyMs: 42.5,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }),
+    );
+
+    const result = await probeLocalRuntime("http://127.0.0.1:17023/", "doctor-token", 5_000);
+
+    expect(seenUrl).toBe("http://127.0.0.1:17023/v1/ops/provider-canary");
+    expect(seenAuthorization).toBe("Bearer doctor-token");
+    expect(JSON.parse(seenBody)).toEqual({ target: "local" });
+    expect(result).toEqual({
+      reachable: true,
+      pass: true,
+      model: "local/provider-token-zero",
+      responseModel: "gemma-test-pinned",
+      latencyMs: 42.5,
+    });
+  });
+
+  it("reports a machine-readable local runtime failure returned by Connect", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            error: { type: "PROVIDER_UNREACHABLE", message: "runtime down" },
+          }),
+          { status: 503, headers: { "content-type": "application/json" } },
+        ),
+      ),
+    );
+
+    await expect(
+      probeLocalRuntime("http://127.0.0.1:17023", "doctor-token", 5_000),
+    ).resolves.toEqual({
+      reachable: true,
+      pass: false,
+      errorCode: "PROVIDER_UNREACHABLE",
+    });
   });
 });
