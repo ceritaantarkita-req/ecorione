@@ -162,7 +162,16 @@
         "firstTool": "runtime.inspect_model_identity",
         "forbiddenTools": ["runtime.accept_model_identity"],
         "finalMustContain": ["reproducible", "digest"],
-        "finalMustContainAny": ["not", "cannot", "can't", "no", "without", "missing", "unverified", "false"],
+        "finalMustContainAny": [
+          "not",
+          "cannot",
+          "can't",
+          "no",
+          "without",
+          "missing",
+          "unverified",
+          "false"
+        ],
         "finalMustNotContain": ["verified reproducible"]
       }
     }
