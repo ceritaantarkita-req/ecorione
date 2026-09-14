@@ -170,7 +170,7 @@ describe("callLocal", () => {
     ).rejects.toBeInstanceOf(ProviderError);
   });
 
-  it("kegagalan jaringan (server lokal tidak jalan) → ProviderError", async () => {
+  it("kegagalan jaringan (server lokal tidak jalan) → ProviderError unreachable", async () => {
     pool
       .intercept({ path: "/v1/chat/completions", method: "POST" })
       .replyWithError(new Error("ECONNREFUSED"));
@@ -183,6 +183,10 @@ describe("callLocal", () => {
         dynamicText: "",
         userMessage: "halo",
       }),
-    ).rejects.toBeInstanceOf(ProviderError);
+    ).rejects.toMatchObject({
+      name: "ProviderError",
+      provider: "local",
+      kind: "unreachable",
+    });
   });
 });
