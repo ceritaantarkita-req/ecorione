@@ -11,7 +11,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { basename, join, relative, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
@@ -19,6 +19,7 @@ const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const DEFAULT_OUT_ROOT = resolve(ROOT, ".ecorione/desktop-release");
 const DESKTOP_SOURCE = resolve(ROOT, "desktop");
 const DOCKERFILE = resolve(ROOT, "Dockerfile");
+const DESKTOP_IMAGE_TAG = "ecorione:desktop";
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -38,7 +39,9 @@ function run(command, args, options = {}) {
 export function normalizeVersion(value) {
   const version = String(value ?? "").trim();
   if (!/^[0-9A-Za-z][0-9A-Za-z._-]{0,63}$/.test(version)) {
-    throw new Error("Desktop bundle version harus 1-64 karakter: huruf, angka, titik, underscore, atau dash.");
+    throw new Error(
+      "Desktop bundle version harus 1-64 karakter: huruf, angka, titik, underscore, atau dash.",
+    );
   }
   return version;
 }
@@ -79,7 +82,7 @@ export function buildBundleLayout({ version, outRoot = DEFAULT_OUT_ROOT }) {
     bundleRoot: resolve(outRoot, bundleName),
     runtimeDir: resolve(outRoot, bundleName, "runtime"),
     imageTar: resolve(outRoot, bundleName, "runtime", "ecorione-image.tar"),
-    imageTag: `ecorione:desktop-${normalized}`,
+    imageTag: DESKTOP_IMAGE_TAG,
   };
 }
 
@@ -103,7 +106,7 @@ function assertReleaseInputs() {
   }
 }
 
-function copyDesktopSurface(bundleRoot) {
+export function stageDesktopSurface(bundleRoot) {
   cpSync(DESKTOP_SOURCE, bundleRoot, {
     recursive: true,
     filter: (source) => {
@@ -125,7 +128,10 @@ export function writeReleaseMetadata(layout, revision) {
     sourceRevision: revision,
     createdAt: new Date().toISOString(),
   };
-  writeFileSync(resolve(layout.bundleRoot, "RELEASE-MANIFEST.json"), `${JSON.stringify(metadata, null, 2)}\n`);
+  writeFileSync(
+    resolve(layout.bundleRoot, "RELEASE-MANIFEST.json"),
+    `${JSON.stringify(metadata, null, 2)}\n`,
+  );
   const sums = checksumManifest(layout.bundleRoot);
   writeFileSync(resolve(layout.bundleRoot, "SHA256SUMS"), `${sums}\n`);
   return metadata;
@@ -134,7 +140,6 @@ export function writeReleaseMetadata(layout, revision) {
 function parseArgs(argv) {
   let version = packageVersion();
   let outRoot = DEFAULT_OUT_ROOT;
-  let skipBuild = false;
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--version") {
@@ -143,34 +148,30 @@ function parseArgs(argv) {
       const value = argv[++index];
       if (!value) throw new Error("--out membutuhkan path.");
       outRoot = resolve(ROOT, value);
-    } else if (arg === "--skip-build") {
-      skipBuild = true;
     } else {
       throw new Error(`Argumen desktop bundle tidak dikenal: ${arg}`);
     }
   }
-  return { version, outRoot, skipBuild };
+  return { version, outRoot };
 }
 
-export function buildDesktopBundle({ version, outRoot = DEFAULT_OUT_ROOT, skipBuild = false } = {}) {
+export function buildDesktopBundle({ version, outRoot = DEFAULT_OUT_ROOT } = {}) {
   assertReleaseInputs();
   const layout = buildBundleLayout({ version: version ?? packageVersion(), outRoot });
   rmSync(layout.bundleRoot, { recursive: true, force: true });
   mkdirSync(layout.runtimeDir, { recursive: true });
-  copyDesktopSurface(layout.bundleRoot);
+  stageDesktopSurface(layout.bundleRoot);
 
-  if (!skipBuild) {
-    console.log(`• Building ${layout.imageTag} ...`);
-    run("docker", ["build", "--pull", "--tag", layout.imageTag, "--file", DOCKERFILE, "."], {
-      stdio: "inherit",
-    });
-    console.log("• Exporting runtime image ...");
-    run("docker", ["save", "--output", layout.imageTar, layout.imageTag], { stdio: "inherit" });
-  } else if (!existsSync(layout.imageTar)) {
-    throw new Error(`--skip-build membutuhkan image tar existing: ${layout.imageTar}`);
+  console.log(`• Building ${layout.imageTag} ...`);
+  run("docker", ["build", "--pull", "--tag", layout.imageTag, "--file", DOCKERFILE, "."], {
+    stdio: "inherit",
+  });
+  console.log("• Exporting runtime image ...");
+  run("docker", ["save", "--output", layout.imageTar, layout.imageTag], { stdio: "inherit" });
+
+  if (!existsSync(layout.imageTar) || statSync(layout.imageTar).size === 0) {
+    throw new Error("Runtime image tar tidak dibuat atau kosong.");
   }
-
-  if (statSync(layout.imageTar).size === 0) throw new Error("Runtime image tar kosong.");
   const metadata = writeReleaseMetadata(layout, sourceRevision());
   console.log(`✓ Desktop bundle ready: ${layout.bundleRoot}`);
   console.log(`  Image: ${metadata.image}`);
@@ -183,7 +184,9 @@ if (invokedPath === fileURLToPath(import.meta.url)) {
   try {
     buildDesktopBundle(parseArgs(process.argv.slice(2)));
   } catch (error) {
-    console.error(`ECORIONE desktop bundle error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `ECORIONE desktop bundle error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exitCode = 1;
   }
 }
