@@ -28,7 +28,10 @@ export interface ProviderCatalogEntry {
 
 const ROUTING_READY = new Set<string>(HOSTED_PROVIDER_IDS);
 
-function aiProvider(id: AiProviderId, displayName: string): ProviderCatalogEntry {
+function aiProvider(
+  id: AiProviderId,
+  displayName: string,
+): ProviderCatalogEntry {
   const routingReady = ROUTING_READY.has(id);
   return {
     id,
@@ -61,6 +64,8 @@ export const PROVIDER_CATALOG: readonly ProviderCatalogEntry[] = [
   },
 ] as const;
 
-export function credentialPurposeForProvider(provider: CredentialProviderId): CredentialPurpose {
+export function credentialPurposeForProvider(
+  provider: CredentialProviderId,
+): CredentialPurpose {
   return provider === "mcp" ? "tokens" : "messages";
 }
