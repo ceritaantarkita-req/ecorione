@@ -51,7 +51,9 @@ export function registerConnectControlRoutes(
     return result;
   });
 
-  app.get("/v1/settings/providers", async () => ({ providers: PROVIDER_CATALOG }));
+  app.get("/v1/settings/providers", async () => ({
+    providers: PROVIDER_CATALOG,
+  }));
 
   app.get("/v1/settings/credentials", async () => ({
     available: options.credentialVault !== undefined,
