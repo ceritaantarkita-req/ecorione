@@ -1,3 +1,4 @@
+import { EventEmitter } from "node:events";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,7 +8,9 @@ import {
   ensureLocalEnv,
   parseSimpleEnv,
   probeLocalRuntime,
+  stopSpawnedChild,
   upsertEnvValue,
+  waitForSpawnedChild,
 } from "../scripts/ecorione-engine.mjs";
 
 const roots = [];
@@ -132,5 +135,59 @@ describe("ECORIONE local engine bootstrap", () => {
       pass: false,
       errorCode: "PROVIDER_UNREACHABLE",
     });
+  });
+
+  it("reports child spawn errors immediately instead of waiting for readiness timeout", async () => {
+    const child = new EventEmitter();
+    const lifecycle = waitForSpawnedChild(child);
+    const error = new Error("spawn pnpm ENOENT");
+
+    child.emit("error", error);
+
+    await expect(lifecycle).resolves.toEqual({ error });
+  });
+
+  it("stops a spawned stack gracefully during startup cleanup", async () => {
+    class FakeChild extends EventEmitter {
+      exitCode = null;
+      signalCode = null;
+      signals = [];
+
+      kill(signal) {
+        this.signals.push(signal);
+        queueMicrotask(() => {
+          this.signalCode = signal;
+          this.emit("exit", null, signal);
+        });
+        return true;
+      }
+    }
+
+    const child = new FakeChild();
+    await stopSpawnedChild(child, 50);
+
+    expect(child.signals).toEqual(["SIGTERM"]);
+  });
+
+  it("escalates startup cleanup to SIGKILL when graceful termination does not finish", async () => {
+    class FakeChild extends EventEmitter {
+      exitCode = null;
+      signalCode = null;
+      signals = [];
+
+      kill(signal) {
+        this.signals.push(signal);
+        if (signal === "SIGKILL") {
+          this.signalCode = signal;
+          this.emit("exit", null, signal);
+        }
+        return true;
+      }
+    }
+
+    const child = new FakeChild();
+    await stopSpawnedChild(child, 0);
+
+    expect(child.signals).toEqual(["SIGTERM", "SIGKILL"]);
   });
 });
