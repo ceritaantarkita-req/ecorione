@@ -26,7 +26,10 @@ function artifactPointer(syncClass: "LOCAL_ONLY" | "CLOUD_ALLOWED", mimeType = "
   };
 }
 
-function analyzeResponse(routeUsed: "local" | "hosted", task: "ocr" | "vision" | "transcribe") {
+function analyzeResponse(
+  routeUsed: "local" | "hosted",
+  task: "ocr" | "vision" | "transcribe",
+) {
   return {
     operationId,
     sessionId,
@@ -79,7 +82,9 @@ describe("ingestAttachment", () => {
   it("stores bytes in Artifact before asking Hub to hydrate the same session", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
-      .mockResolvedValueOnce(jsonResponse({ pointer: artifactPointer("LOCAL_ONLY"), deduplicated: false }, 201))
+      .mockResolvedValueOnce(
+        jsonResponse({ pointer: artifactPointer("LOCAL_ONLY"), deduplicated: false }, 201),
+      )
       .mockResolvedValueOnce(jsonResponse(analyzeResponse("local", "vision")));
 
     const result = await ingestAttachment(
@@ -139,7 +144,13 @@ describe("ingestAttachment", () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(
-        jsonResponse({ pointer: artifactPointer("CLOUD_ALLOWED", "application/pdf"), deduplicated: false }, 201),
+        jsonResponse(
+          {
+            pointer: artifactPointer("CLOUD_ALLOWED", "application/pdf"),
+            deduplicated: false,
+          },
+          201,
+        ),
       )
       .mockResolvedValueOnce(jsonResponse(analyzeResponse("hosted", "ocr")));
 
@@ -202,7 +213,13 @@ describe("ingestAttachment", () => {
   it("surfaces only the structured upstream message instead of dumping raw payloads", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(
       jsonResponse(
-        { error: { type: "UPSTREAM_UNAVAILABLE", message: "Artifact sedang tidak tersedia." }, debug: "raw-secret" },
+        {
+          error: {
+            type: "UPSTREAM_UNAVAILABLE",
+            message: "Artifact sedang tidak tersedia.",
+          },
+          debug: "raw-secret",
+        },
         503,
       ),
     );
