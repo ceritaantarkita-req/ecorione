@@ -9,10 +9,10 @@ Current code + current evidence + dokumen ini adalah source of truth pekerjaan a
 ## 1. Current repository checkpoint
 
 ```text
-main: 88c6a19c931fb18d00e14ecd53df140754ed78f0
-PR #82: merged
-post-merge CI: 34872595763 — SUCCESS
-post-merge Product Eval: 34872595817 — SUCCESS
+main: f54a11af582d92a955207b087c246b2c56848ab7
+PR #83: merged
+post-merge CI: 34876265107 / CI #790 — SUCCESS
+post-merge Product Eval: 34876265034 / Product Eval #29 — SUCCESS
 ```
 
 `main` adalah green baseline. GitHub `main` belum memiliki required status-check branch protection; governance gap ini tetap terbuka.
@@ -35,7 +35,7 @@ post-merge Product Eval: 34872595817 — SUCCESS
 | W12 | Attachment composer backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → hydration. |
 | W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Current operator runtime berhasil memverifikasi selector + immutable digest; perubahan model/runtime tetap harus diverifikasi ulang. |
 | W14 | Product eval foundation | **DONE — REPO SIDE** | 12 task/bug-derived deterministic regressions + dedicated gate. |
-| W15 | Agentic local-model eval v1 | **STARTED — VERIFIED MODEL; FIRST RUN FAILED; FIX IN PROGRESS** | Real verified-model run sudah terjadi tetapi belum `pass^3`; runner observability defect ditemukan. |
+| W15 | Agentic local-model eval v1 | **STARTED — VERIFIED MODEL; 2/4 CASES PASS^3; VERIFY ASSERTION FIX IN PROGRESS** | Runtime/tool loop sehat; dua remaining failures hanya checkpoint `verify`. |
 | W16 | Automatic semantic reference selector | TODO | `refIndexes` tidak lagi caller/oracle-supplied. |
 | W17 | ECX no-oracle validation | TODO | full vs auto-selective vs oracle pada task set sama. |
 | W18 | Hosted economic validation | TODO | Real bounded hosted token/cost evidence. |
@@ -96,7 +96,7 @@ W14 tidak membuktikan model reasoning/tool quality; itu tetap W15.
 
 ## 6. W15 Agentic Local-Model Eval
 
-Status: **STARTED — VERIFIED MODEL; FIRST STRICT RUN FAILED; RUNTIME DIAGNOSTIC FIX IN PROGRESS**.
+Status: **STARTED — VERIFIED MODEL; 2/4 CASES PASS^3; VERIFY ASSERTION FIX IN PROGRESS**.
 
 PR #81 menambahkan bounded evaluation loop terpisah dari normal product chat runtime:
 
@@ -112,8 +112,6 @@ PR #81 menambahkan bounded evaluation loop terpisah dari normal product chat run
 
 ### Runtime evidence 2026-09-15
 
-Operator clone tersinkron bersih pada `88c6a19c931fb18d00e14ecd53df140754ed78f0`.
-
 Verified local model:
 
 ```text
@@ -126,40 +124,34 @@ resolvedDigestPresent: true
 identityVerified: true
 ```
 
-First strict run:
+First strict run pada baseline `88c6a19c...` menghasilkan 0/12 dan metrics 0 karena runner belum membedakan call failure vs parse failure dengan benar. PR #83 memperbaiki observability itu tanpa mengubah scoring dan seluruh post-merge gate hijau.
+
+Second strict run pada baseline `f54a11af582d92a955207b087c246b2c56848ab7`:
 
 ```text
-4 cases × 3 repetitions = 12 runs
-passed: 0/12
+W15-001: 0/3 — FAIL hanya checkpoint verify
+W15-002: 3/3 — PASS^3
+W15-003: 3/3 — PASS^3
+W15-004: 0/3 — FAIL hanya checkpoint verify
 allPass3: false
 closureEligible: false
-trace: traces/w15-agentic-eval-2026-09-14T17-19-28-389Z.json
-reported avgLatencyMs: 0
-reported avgOutputTokens: 0
+trace: traces/w15-agentic-eval-2026-09-14T18-02-00-833Z.json
 ```
 
-Temuan penting: runner awal hanya menambahkan metadata call setelah `parseAgentAction` sukses. Akibatnya respons HTTP yang sudah datang tetapi gagal diparse dapat salah terlihat sebagai `0 ms / 0 token`, sama seperti failure sebelum respons. Karena itu hasil pertama **tidak boleh** diinterpretasikan sebagai model-quality failure sebelum stage failure diketahui.
+Runtime evidence sekarang membuktikan model call, parsing, tool selection, exact fixture execution, dan observation loop bekerja. W15-001 dan W15-004 tidak gagal di `reason`, `tool`, `execute`, atau `observe`; kegagalannya hanya assertion final-answer.
 
-Branch `agent/w15-runtime-observability-fix-20260915` memperbaiki evidence boundary tanpa mengubah scoring: call metadata dicatat sebelum parse, failure stage `call|parse|execute` ditampilkan, parse failure menyimpan preview output terbatas, dan model inference memakai timeout terpisah/default 120 detik yang dapat diubah eksplisit.
+Audit assertion menemukan dua false-negative risk yang deterministic tetapi terlalu terikat wording:
 
-Evidence PR #81:
+- W15-001 sebelumnya mewajibkan literal `degraded` padahal tugas utamanya adalah mengidentifikasi required service `hub` dan tidak menyalahkan optional `sync`.
+- W15-004 sebelumnya mewajibkan literal `not reproducible`; paraphrase benar seperti `cannot be treated as reproducible` tetap gagal.
 
-```text
-PR head: 36aafca593b7ce73166aa0ffbcd8f37e90041e6f
-PR CI: 34869356356 — SUCCESS
-PR Product Eval: 34869356361 — SUCCESS
-PR MCP External HTTPS: 34869356334 — SUCCESS
-merge: ca059202fc8b8f41ebf3731b2a07bb8a24431143
-post-merge CI: 34869692122 — SUCCESS
-post-merge Product Eval: 34869692186 — SUCCESS
-post-merge MCP External HTTPS: 34869692114 — SUCCESS
-```
+Branch `agent/w15-verify-assertion-fix-20260915` memperbaiki boundary tanpa memakai LLM-as-judge: W15-001 tetap wajib menyebut `hub` dan tidak boleh menyalahkan `sync`; W15-004 tetap wajib menyebut `reproducible` + `digest` dan minimal satu explicit negative marker. Regression test juga memastikan paraphrase benar PASS sementara positive reproducibility claim tetap FAIL. Runner juga akan mencetak final answer saat verify gagal agar failure berikutnya dapat diaudit langsung.
 
 Claim boundary: harness W15 adalah bounded evaluation agent loop. Normal product chat tetap completion pipeline dan belum boleh disebut autonomous tool-calling agent.
 
 ## 7. Immediate next action
 
-Prioritas langsung adalah menyelesaikan **W15 runtime diagnostic fix** lalu mengulang exact verified-model run:
+Prioritas langsung adalah menyelesaikan **W15 verify assertion fix** lalu mengulang exact verified-model run:
 
 ```text
 1. branch fix → PR → CI/Product Eval → merge → post-merge green
@@ -168,15 +160,14 @@ Prioritas langsung adalah menyelesaikan **W15 runtime diagnostic fix** lalu meng
 4. pertahankan verified ECORIONE_LOCAL_MODEL_DIGEST
 5. pnpm eval:agentic:inventory
 6. pnpm eval:agentic:local
-7. baca failure stage + output preview bila gagal
-8. hanya perbaiki protocol/model interaction bila evidence membuktikannya
-9. tutup W15 hanya jika seluruh case pass^3 dan closureEligible=true
+7. bila semua 4 case pass^3 dan closureEligible=true: tutup W15
+8. bila verify masih gagal: gunakan final answer yang sekarang dicetak untuk audit assertion/model behavior berikutnya
 ```
 
 Setelah W15: W03 → W09/W10 → W11 → W16/W17 → W18 → W20. Repo-side item independen boleh maju lebih dulu, tetapi tidak boleh menghapus runtime claim boundaries.
 
 ## 8. Historical note
 
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state dan post-merge CI/Product Eval hijau.
+PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state. PR #83 memperbaiki W15 runtime observability dan post-merge CI/Product Eval hijau.
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.

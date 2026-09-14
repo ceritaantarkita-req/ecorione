@@ -263,6 +263,9 @@ async function main() {
       if (!result.pass && result.modelOutputPreview !== null) {
         console.log(`  output preview: ${JSON.stringify(result.modelOutputPreview)}`);
       }
+      if (!result.pass && result.failure === null && result.finalAnswer !== null) {
+        console.log(`  final answer: ${JSON.stringify(result.finalAnswer.slice(0, 400))}`);
+      }
     }
   }
 
