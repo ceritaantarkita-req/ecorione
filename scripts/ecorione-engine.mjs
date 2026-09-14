@@ -165,6 +165,55 @@ async function fetchHealth(url, token) {
   }
 }
 
+export async function probeLocalRuntime(connectBaseUrl, token, timeoutMs = 20_000) {
+  const baseUrl = connectBaseUrl.replace(/\/+$/, "");
+  const headers = { "content-type": "application/json" };
+  if (token) headers.authorization = `Bearer ${token}`;
+
+  try {
+    const response = await fetch(`${baseUrl}/v1/ops/provider-canary`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ target: "local" }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    const text = await response.text();
+    let payload = {};
+    try {
+      payload = text.length === 0 ? {} : JSON.parse(text);
+    } catch {
+      return {
+        reachable: true,
+        pass: false,
+        errorCode: `HTTP_${String(response.status)}_INVALID_JSON`,
+      };
+    }
+
+    if (!response.ok) {
+      return {
+        reachable: true,
+        pass: false,
+        errorCode: payload?.error?.type ?? `HTTP_${String(response.status)}`,
+      };
+    }
+
+    return {
+      reachable: true,
+      pass: payload?.pass === true,
+      model: typeof payload?.model === "string" ? payload.model : undefined,
+      responseModel:
+        typeof payload?.responseModel === "string" ? payload.responseModel : undefined,
+      latencyMs: typeof payload?.latencyMs === "number" ? payload.latencyMs : undefined,
+    };
+  } catch (error) {
+    return {
+      reachable: false,
+      pass: false,
+      errorCode: error instanceof Error ? error.name : "UNREACHABLE",
+    };
+  }
+}
+
 async function waitForRequiredServices(token, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   let pending = REQUIRED_SERVICES.map(([name]) => name);
@@ -220,6 +269,19 @@ async function doctor() {
     console.log(`${(await fetchHealth(url, token)) ? "✓" : "·"} ${name}`);
   }
   console.log(`${(await isPortReachable(3000)) ? "✓" : "·"} Ai http://127.0.0.1:3000`);
+
+  const connectBaseUrl = env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
+  const localProbe = await probeLocalRuntime(connectBaseUrl, token);
+  if (localProbe.pass) {
+    const model = localProbe.responseModel ?? localProbe.model ?? "configured model";
+    const latency =
+      localProbe.latencyMs === undefined ? "" : ` · ${localProbe.latencyMs.toFixed(1)}ms`;
+    console.log(`✓ Local AI runtime ${model}${latency}`);
+  } else if (localProbe.reachable) {
+    console.log(`! Local AI runtime test gagal (${localProbe.errorCode ?? "quality failure"})`);
+  } else {
+    console.log(`· Local AI runtime belum dapat diuji (${localProbe.errorCode ?? "unreachable"})`);
+  }
 
   if (criticalFailure) process.exitCode = 1;
 }
