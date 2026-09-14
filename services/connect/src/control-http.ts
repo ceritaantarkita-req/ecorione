@@ -6,7 +6,10 @@ import {
   type CredentialVaultAdmin,
 } from "./credential-vault.js";
 import { nowIso } from "./clock.js";
-import { PROVIDER_CATALOG, credentialPurposeForProvider } from "./provider-catalog.js";
+import {
+  PROVIDER_CATALOG,
+  credentialPurposeForProvider as purposeFor,
+} from "./provider-catalog.js";
 import { RuntimeSettingsPatchSchema, type RuntimeSettingsAdmin } from "./runtime-settings.js";
 
 const CredentialParamsSchema = z.object({ provider: z.enum(CREDENTIAL_PROVIDERS) });
@@ -58,8 +61,8 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
-      const { secret } = parseOrBadRequest(CredentialBodySchema, req.body);
-      const metadata = vault().set(provider, credentialPurposeForProvider(provider), secret, nowIso());
+      const { secret: value } = parseOrBadRequest(CredentialBodySchema, req.body);
+      const metadata = vault().set(provider, purposeFor(provider), value, nowIso());
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
         provider,
@@ -72,7 +75,7 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
-      const removed = vault().remove(provider, credentialPurposeForProvider(provider));
+      const removed = vault().remove(provider, purposeFor(provider));
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
         provider,
