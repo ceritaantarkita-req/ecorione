@@ -33,7 +33,7 @@ describe("ECORIONE Windows installer specification", () => {
   it("requires explicit release inputs and emits a versioned Setup executable", () => {
     expect(installer).toContain('#define AppVersion GetEnv("ECORIONE_VERSION")');
     expect(installer).toContain('#define InstallerOut GetEnv("ECORIONE_INSTALLER_OUT")');
-    expect(installer).toContain("#error \"ECORIONE_VERSION environment variable is required\"");
+    expect(installer).toContain('#error "ECORIONE_VERSION environment variable is required"');
     expect(installer).toContain("OutputBaseFilename=ECORIONE-Setup-{#AppVersion}");
   });
 
