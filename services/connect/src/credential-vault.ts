@@ -161,23 +161,19 @@ function encryptEntry(input: {
 
 function decryptEntry(entry: VaultEntry, key: Buffer): string {
   try {
-    const decipher = createDecipheriv(CIPHER, inputBuffer(entry.nonce), {
+    const decipher = createDecipheriv(CIPHER, key, Buffer.from(entry.nonce, "base64url"), {
       authTagLength: AUTH_TAG_BYTES,
     });
     decipher.setAAD(aad(entry));
-    decipher.setAuthTag(inputBuffer(entry.authTag));
+    decipher.setAuthTag(Buffer.from(entry.authTag, "base64url"));
     const plaintext = Buffer.concat([
-      decipher.update(inputBuffer(entry.ciphertext)),
+      decipher.update(Buffer.from(entry.ciphertext, "base64url")),
       decipher.final(),
     ]);
     return plaintext.toString("utf8");
   } catch {
     throw new CredentialVaultIntegrityError(entry.provider, entry.purpose);
   }
-}
-
-function inputBuffer(value: string): Buffer {
-  return Buffer.from(value, "base64url");
 }
 
 function parseVault(raw: string): VaultFile {
