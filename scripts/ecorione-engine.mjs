@@ -171,7 +171,10 @@ async function waitForRequiredServices(token, timeoutMs) {
 
   while (Date.now() < deadline) {
     const checks = await Promise.all(
-      REQUIRED_SERVICES.map(async ([name, url]) => ({ name, ready: await fetchHealth(url, token) })),
+      REQUIRED_SERVICES.map(async ([name, url]) => ({
+        name,
+        ready: await fetchHealth(url, token),
+      })),
     );
     pending = checks.filter((check) => !check.ready).map((check) => check.name);
     if (pending.length === 0) return;
