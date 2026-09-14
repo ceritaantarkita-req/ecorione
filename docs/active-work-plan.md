@@ -35,9 +35,9 @@ Empat blok utama:
 | W02 | Tutup gap Vitest `*.test.tsx` | **DONE** | Semua test TSX yang dimaksud masuk discovery normal/CI dan tidak ada silent-skip sejenis yang terlewat. |
 | W03 | Audit UX/Product Validation di current `main` | **BLOCKED — OPERATOR RUNTIME** | Full Phase 4 walkthrough current main selesai; defect ledger jelas; tidak ada S0/S1 terbuka. |
 | W04 | Rapikan partial-stack vs full-stack behavior | **STARTED** | UI/status tidak menampilkan raw 502 sebagai UX normal; state service yang belum aktif dapat dipahami user. |
-| W05 | Provider Settings foundation | TODO | User dapat menghubungkan OpenAI, Anthropic/Claude, OpenRouter, Kimi/Moonshot, Gemini, Qwen, GLM, dan custom OpenAI-compatible tanpa edit `.env` manual. |
-| W06 | Credential Vault integration untuk provider keys | TODO | Paste → test → save → masked display → replace/remove; plaintext tidak disimpan di browser/localStorage dan tidak dibaca kembali oleh UI. |
-| W07 | Provider health/status | TODO | Status minimal: Connected, Invalid key, Unreachable, Disabled; test connection bounded dan tidak memicu spend tidak terkendali. |
+| W05 | Provider Settings foundation | **STARTED** | User dapat menghubungkan OpenAI, Anthropic/Claude, OpenRouter, Kimi/Moonshot, Gemini, Qwen, GLM, dan custom OpenAI-compatible tanpa edit `.env` manual. |
+| W06 | Credential Vault integration untuk provider keys | **STARTED** | Paste → test → save → masked display → replace/remove; plaintext tidak disimpan di browser/localStorage dan tidak dibaca kembali oleh UI. |
+| W07 | Provider health/status | **STARTED** | Status minimal: Connected, Invalid key, Unreachable, Disabled; test connection bounded dan tidak memicu spend tidak terkendali. |
 | W08 | Default AI selection | TODO | User dapat memilih Local atau provider/model yang sudah terhubung; auto-router belum diklaim. |
 | W09 | One-command full-system startup | TODO | Satu command stabil menyalakan full required stack dan menunggu readiness tanpa langkah manual berantai. |
 | W10 | `ecorione doctor` / diagnostics | TODO | Dependency, service health, ports, Temporal/database, local model, dan masalah umum dapat didiagnosis dengan output manusiawi. |
@@ -98,6 +98,13 @@ Security baseline:
 - setelah tersimpan UI hanya melihat metadata/masked identity;
 - replace/remove/test harus eksplisit;
 - provider call tetap tunduk pada hosted-call policy dan spend control.
+
+Current implementation boundary:
+
+- credential storage contract sekarang mengenali Anthropic, OpenAI, OpenRouter, Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible, serta MCP token;
+- Anthropic, OpenAI, dan OpenRouter sudah routing-ready melalui Connect existing;
+- Kimi, Gemini, Qwen, GLM, dan custom OpenAI-compatible **baru credential-ready**, belum boleh dianggap routing-ready sampai adapter/endpoint/model identity/pricing contract selesai;
+- UI wajib menyatakan boundary tersebut secara eksplisit dan tidak boleh memberi kesan provider baru sudah dapat dipanggil bila routing belum tersedia.
 
 ## 6. Startup/onboarding target
 
@@ -251,6 +258,98 @@ Jika implementation berbeda dari rencana awal, dokumen ini harus mengikuti **rea
 **Limitation:** tidak ada browser/runtime evidence baru dari operator laptop pada entry ini.
 
 **Next:** W04 — humanize partial/down-service behavior tanpa redesign visual.
+
+### 2026-09-14 — W04 — STARTED
+
+**Scope:** membuat failure state partial/down-service lebih manusiawi tanpa mengubah layout atau visual language current UI.
+
+**Changed:**
+
+- menambahkan shared client response/error parser pada Ai app dengan regression tests;
+- Operations menggunakan structured human-readable error semantics dan tetap membedakan required Phase 4 fleet dari optional Sync;
+- tidak ada perubahan theme, sidebar, navigation hierarchy, typography, atau decorative redesign.
+
+**Evidence:**
+
+- PR #74;
+- `apps/ai/lib/client-response.test.ts` masuk normal suite dan PASS pada CI run `34798632249`;
+- run tersebut juga PASS lint, typecheck, full tests, Phase 4 real-process acceptance, production operations acceptance, secret scan, production build, dan naming.
+
+**Result:** shared error handling foundation dan Operations path sudah tervalidasi secara repository/CI.
+
+**Limitation:** Space masih memiliki parser lokal yang dapat menampilkan `HTTP 502: {...}` mentah. W04 belum boleh ditutup sebelum jalur tersebut dihumanize dan regression test yang relevan tersedia.
+
+**Next:** migrasikan Space ke shared error semantics tanpa redesign, lalu rerun CI.
+
+### 2026-09-14 — W05 — STARTED
+
+**Scope:** provider Settings foundation di surface existing, tanpa membuat layar/redesign baru.
+
+**Changed:**
+
+- Credential Vault provider identity diperluas untuk Anthropic, OpenAI, OpenRouter, Kimi, Gemini, Qwen, GLM, custom OpenAI-compatible, plus MCP token;
+- internal crypto/key-rotation/timestamp behavior Vault dipertahankan; refactor yang tidak diperlukan sempat terdeteksi lalu di-rollback sehingga final Vault diff tetap minimal;
+- Settings proxy allowlist diperluas untuk provider credential paths baru;
+- Settings provider selector existing sekarang menampilkan Claude/Anthropic, OpenAI/ChatGPT API, OpenRouter, Kimi/Moonshot, Google Gemini, Qwen, GLM, Custom OpenAI-compatible, dan MCP token;
+- UI menyatakan secara eksplisit bila provider hanya credential-ready dan belum routing-ready.
+
+**Evidence:**
+
+- minimal Vault provider expansion commit `0d9556362b039c57793e0eb1aa3934e03185b2a1`;
+- settings proxy commit `cf9fe8134ea64a88ed7e4a6a845f2c1ac65ad2c5`;
+- proxy regression commit `5483fef3bb4cd925d3235ba4f31375aa16cb17ab`;
+- Settings onboarding commit `23e3a8369f80a73d14d373d12d5a4d6d15d27f40`;
+- formatting commits `ad3fbf7c51b948bf9b806d0be0817e6d1b1959f6`, `12a3fb0b6fae78457be62413349a3d02eb6cfdef`;
+- CI run `34798632249`: **SUCCESS**, termasuk `apps/ai/lib/settings-proxy.test.ts` 18/18 PASS dan Vault tests 7/7 PASS.
+
+**Result:** normal user tidak perlu menambah/edit `.env` hanya untuk menyimpan credential provider yang masuk baseline; provider dapat dipilih dari Settings existing.
+
+**Limitation:** hosted routing runtime masih resmi hanya `anthropic | openai | openrouter`. Kimi, Gemini, Qwen, GLM, dan custom OpenAI-compatible belum mempunyai complete routing/model identity/pricing contract, sehingga W05 tetap STARTED dan belum boleh diklaim sebagai provider execution support penuh.
+
+**Next:** definisikan provider catalog/adapter contract untuk provider baru tanpa mengorbankan exact model identity dan spend accounting.
+
+### 2026-09-14 — W06 — STARTED
+
+**Scope:** menjadikan Connect Credential Vault sebagai satu-satunya authority untuk onboarding key pada provider baseline.
+
+**Changed:**
+
+- existing Settings flow mendukung paste → encrypted save;
+- credential existing dapat direplace dan generation metadata berubah melalui Vault contract;
+- credential dapat di-remove secara eksplisit melalui DELETE control path;
+- UI hanya membaca metadata (`provider`, `purpose`, `generation`, `updatedAt`), bukan plaintext secret;
+- typed secret hanya hidup sementara dalam React state dan dibersihkan setelah save/remove; tidak ada localStorage credential path yang ditambahkan;
+- plaintext tidak dikembalikan oleh Connect control API.
+
+**Evidence:**
+
+- Vault/control implementation + regression tests pada PR #74;
+- CI run `34798632249`: full verify **SUCCESS**, 121 test files / 630 PASS + 1 skipped, Phase 4 acceptance PASS, production ops PASS, secret scan bersih, production build PASS;
+- temporary Prettier CI instrumentation yang dipakai untuk mendapatkan exact formatting telah dihapus kembali; normal workflow direstore oleh commit `007ca856249eae9d59f12a58965822404d5e6c6d`.
+
+**Result:** secure save/replace/remove dan metadata-only display foundation tersedia tanpa perubahan desain besar.
+
+**Limitation:** definition of done W06 belum penuh karena provider baru yang belum routing-ready belum dapat menjalani connection test nyata melalui provider adapter masing-masing; UI juga belum memiliki status health lengkap Invalid key / Unreachable / Disabled. Karena itu W06 tetap STARTED.
+
+**Next:** lanjut W07 health semantics dan provider-specific connection test contract; setelah itu W06 dapat ditutup bila seluruh baseline flow Paste → Test → Save → metadata/masked → Replace/Remove terbukti.
+
+### 2026-09-14 — W07 — STARTED
+
+**Scope:** provider health/test foundation.
+
+**Changed:**
+
+- Settings mempertahankan local canary existing;
+- menambahkan hosted canary action melalui normal `/v1/ops/provider-canary` boundary untuk provider hosted yang sudah routing-ready;
+- canary tetap melewati Connect completion, credential, hosted-call policy, spend control, metrics, dan normal failure semantics.
+
+**Evidence:** CI run `34798632249` full verify SUCCESS dan existing provider-canary/Connect coverage tetap green.
+
+**Result:** user dapat menguji local runtime dan configured hosted provider yang memang sudah supported tanpa bypass arsitektur Connect.
+
+**Limitation:** belum ada per-provider status machine `Connected / Invalid key / Unreachable / Disabled` untuk seluruh provider baseline; Kimi/Gemini/Qwen/GLM/custom belum routing-ready sehingga belum dapat diberi false health claim.
+
+**Next:** bangun provider health contract yang memisahkan `credential present`, `routing supported`, `disabled`, `invalid credential`, dan `unreachable`.
 
 ## 10. Claim boundary
 
