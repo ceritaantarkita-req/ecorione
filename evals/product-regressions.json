@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "suite": "ecorione-product-regressions",
+  "claimBoundary": "Deterministic product regressions derived from real defects/tasks. This suite does not measure agent/model quality; W15 owns agentic model evaluation.",
+  "cases": [
+    {
+      "id": "W14-001",
+      "category": "routing",
+      "surface": "Settings / MCP",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-009"
+      },
+      "target": {
+        "file": "apps/ai/lib/settings-proxy.test.ts",
+        "testName": "meneruskan GET MCP workspace query valid yang didukung Connect"
+      },
+      "expected": "A valid workspaceId query reaches Connect instead of being rejected by the Ai proxy."
+    },
+    {
+      "id": "W14-002",
+      "category": "security",
+      "surface": "Settings owner boundary",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-018"
+      },
+      "target": {
+        "file": "apps/ai/lib/settings-proxy.test.ts",
+        "testName": "redirect owner tidak diikuti sambil membawa bearer token"
+      },
+      "expected": "Owner redirects fail closed and never carry the internal bearer token across a followed redirect."
+    },
+    {
+      "id": "W14-003",
+      "category": "security",
+      "surface": "Space owner boundary",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-018"
+      },
+      "target": {
+        "file": "apps/ai/lib/space-proxy.test.ts",
+        "testName": "menolak literal dan encoded dot-segment escape"
+      },
+      "expected": "Literal and encoded path traversal attempts are rejected before an owner URL is constructed."
+    },
+    {
+      "id": "W14-004",
+      "category": "security",
+      "surface": "Flow owner boundary",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-018"
+      },
+      "target": {
+        "file": "apps/ai/lib/flow-proxy.test.ts",
+        "testName": "redirect owner tidak diikuti sambil membawa bearer token"
+      },
+      "expected": "Flow owner redirects fail closed while requests containing the internal bearer token are in flight."
+    },
+    {
+      "id": "W14-005",
+      "category": "security",
+      "surface": "Realtime voice owner boundary",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-023"
+      },
+      "target": {
+        "file": "apps/ai/app/api/voice/stream/route.test.ts",
+        "testName": "meneruskan SSE ke Hub dengan bearer, no-store, dan redirect fail-closed"
+      },
+      "expected": "Realtime voice uses no-store and redirect=error while forwarding the internal bearer token to Hub."
+    },
+    {
+      "id": "W14-006",
+      "category": "security",
+      "surface": "Local runtime settings",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/audit-2026-09-14.md",
+        "ref": "S1-3"
+      },
+      "target": {
+        "file": "services/connect/src/runtime-settings.test.ts",
+        "testName": "menolak localBaseUrl yang keluar dari loopback/private"
+      },
+      "expected": "Public localBaseUrl values are rejected by default so local routing cannot be silently redirected to a public host."
+    },
+    {
+      "id": "W14-007",
+      "category": "identity",
+      "surface": "Local model identity",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/audit-2026-09-14.md",
+        "ref": "S2-4"
+      },
+      "target": {
+        "file": "services/connect/src/runtime-settings.test.ts",
+        "testName": "menolak tag model lokal yang mutable tanpa digest terpin"
+      },
+      "expected": "Mutable local model aliases are rejected unless an immutable digest is supplied."
+    },
+    {
+      "id": "W14-008",
+      "category": "credentials",
+      "surface": "Provider Settings",
+      "origin": {
+        "kind": "task",
+        "source": "docs/active-work-plan.md",
+        "ref": "W06"
+      },
+      "target": {
+        "file": "apps/ai/lib/settings-proxy.test.ts",
+        "testName": "meneruskan transient credential test tanpa mengubah secret body"
+      },
+      "expected": "A transient provider credential test reaches Connect without silently mutating the secret payload or persisting it in the browser path."
+    },
+    {
+      "id": "W14-009",
+      "category": "routing",
+      "surface": "Ai chat",
+      "origin": {
+        "kind": "task",
+        "source": "docs/active-work-plan.md",
+        "ref": "W08"
+      },
+      "target": {
+        "file": "apps/ai/app/api/chat/route.test.ts",
+        "testName": "target local adalah input valid dan tetap diteruskan ke Hub"
+      },
+      "expected": "Explicit Local chat selection remains a valid product path and is forwarded to Hub unchanged."
+    },
+    {
+      "id": "W14-010",
+      "category": "memory",
+      "surface": "Ai memory",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-003"
+      },
+      "target": {
+        "file": "apps/ai/app/api/forget/route.test.ts",
+        "testName": "body valid → diteruskan ke Hub POST /v1/memory/forget"
+      },
+      "expected": "The Forget product path reaches the authoritative Hub memory-forget endpoint and returns its invalidation evidence."
+    },
+    {
+      "id": "W14-011",
+      "category": "reliability",
+      "surface": "Operations",
+      "origin": {
+        "kind": "task",
+        "source": "docs/active-work-plan.md",
+        "ref": "W04"
+      },
+      "target": {
+        "file": "apps/ai/app/api/ops/route.test.ts",
+        "testName": "satu owner wajib gagal tetap menghasilkan snapshot eksplisit degraded"
+      },
+      "expected": "A failed required Phase 4 owner produces an explicit degraded snapshot instead of a false healthy state."
+    },
+    {
+      "id": "W14-012",
+      "category": "reliability",
+      "surface": "Operations",
+      "origin": {
+        "kind": "task",
+        "source": "docs/active-work-plan.md",
+        "ref": "W04"
+      },
+      "target": {
+        "file": "apps/ai/app/api/ops/route.test.ts",
+        "testName": "Sync lokal yang tidak dijalankan tetap terlihat tetapi tidak mendegradasi fleet Phase 4"
+      },
+      "expected": "Optional Sync remains visible when down but does not incorrectly degrade the required Phase 4 fleet."
+    }
+  ]
+}
