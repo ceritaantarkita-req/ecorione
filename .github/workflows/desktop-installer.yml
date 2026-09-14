@@ -1,0 +1,103 @@
+name: Desktop Installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, e.g. 0.1.0"
+        required: true
+        default: "0.1.0"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ECORIONE_VERSION: ${{ inputs.version }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Validate release version
+        run: node -e "import('./scripts/desktop-bundle.mjs').then((m) => console.log(m.normalizeVersion(process.env.ECORIONE_VERSION)))"
+
+      - name: Build desktop runtime bundle
+        run: pnpm desktop:bundle -- --version "$ECORIONE_VERSION"
+
+      - name: Upload prepared desktop bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecorione-desktop-bundle
+          path: .ecorione/desktop-release/ECORIONE-${{ inputs.version }}-windows-x64
+          if-no-files-found: error
+          retention-days: 7
+
+  installer:
+    needs: bundle
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      ECORIONE_VERSION: ${{ inputs.version }}
+      ECORIONE_BUNDLE_DIR: ${{ github.workspace }}\bundle
+      ECORIONE_INSTALLER_OUT: ${{ github.workspace }}\installer-out
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download prepared desktop bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ecorione-desktop-bundle
+          path: bundle
+
+      - name: Install Inno Setup compiler
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Compile Setup executable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:ECORIONE_INSTALLER_OUT | Out-Null
+          $candidates = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+          )
+          $iscc = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if (-not $iscc) {
+            throw "Inno Setup compiler ISCC.exe tidak ditemukan setelah instalasi."
+          }
+          & $iscc "desktop\installer.iss"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Inno Setup compiler gagal dengan exit code $LASTEXITCODE."
+          }
+
+      - name: Generate installer SHA-256
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -LiteralPath $env:ECORIONE_INSTALLER_OUT -Filter "ECORIONE-Setup-*.exe" | Select-Object -First 1
+          if (-not $installer) {
+            throw "Setup executable tidak ditemukan."
+          }
+          $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($installer.Name)" | Set-Content -LiteralPath (Join-Path $env:ECORIONE_INSTALLER_OUT "SHA256SUMS") -Encoding ascii
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ECORIONE-Setup-${{ inputs.version }}
+          path: installer-out
+          if-no-files-found: error
+          retention-days: 14
