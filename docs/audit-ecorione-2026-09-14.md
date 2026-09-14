@@ -1,0 +1,245 @@
+# Audit ECORIONE — 2026-09-14
+
+Repo: `ceritaantarkita-req/ecorione`
+`main` HEAD: `4731ce7` (2026-09-14, docs-only)
+Branch kerja: `agent/active-work-20260914` HEAD `dc6304f` (187 commit di depan `main`)
+
+**Metode:** bukan baca docs. Semua di bawah ini hasil menjalankan kode beneran —
+gate CI dijalankan lokal di `main` dan di branch W13, service di-boot asli, satu
+celah keamanan dibuktikan end-to-end terhadap stack yang hidup.
+
+---
+
+## 1. Yang lu bangun
+
+Lapisan memori + kontrol bersama untuk semua AI (lokal & hosted): Hub sebagai
+policy/approval boundary, Connect sebagai provider/credential/MCP authority,
+Context (memori L0–L3), Artifact (CAS), Sandbox, Space, Flow (Temporal), RnD,
+Sync, dan Ai (Next.js) sebagai UI. 11 modul, monorepo pnpm.
+
+Skala nyata: **55.780 baris** source (ts/tsx/mjs, non-vendor), **133 file test**,
+**13.652 baris** dokumentasi, 33 ADR, **1.243 commit dalam 7 hari** (8–14 Sept).
+Dari 1.243 commit itu, **4 ditulis Amanda**, sisanya agent. 81 remote branch.
+
+---
+
+## 2. Hasil verifikasi gate (gue jalanin sendiri)
+
+| Gate | `main` (`4731ce7`) | Branch W13 (`dc6304f`) |
+|---|---|---|
+| `format:check` | PASS | PASS |
+| `lint` | PASS | PASS |
+| `typecheck` | PASS | PASS |
+| `test` | 610/616 pass | **695/701 pass** |
+| `secret-scan` | PASS | PASS |
+| `acceptance:production-ops` | — | PASS |
+| `secret-scan:history` (1.342 commit) | **PASS / bersih** | — |
+
+6 test "gagal" di kedua sisi identik dan **bukan defect repo**: Temporal
+ephemeral server gagal di-download karena egress sandbox gue diblokir
+(`temporal.download`). Di CI GitHub ini hijau.
+
+**Klaim lu soal W13 terkonfirmasi.** Implementasi kandidat W13 memang lolos
+seluruh gate main CI. Gue reproduksi independen.
+
+### Boot runtime asli
+
+RnD/Context/Connect/Hub semua listen bersih, menolak request tanpa token (401),
+dan chat tanpa model lokal gagal **fail-closed** dengan error terstruktur
+(`UPSTREAM_UNAVAILABLE`) — bukan crash, bukan silent fallback. Kontrak W13 hidup
+di response: `"localModelDigest": null`, `"defaultChatTarget": "local"`,
+`"hostedCallsEnabled": false`.
+
+---
+
+## 3. Temuan — diurut dari yang paling parah
+
+### S0-1 — CSRF total di seluruh API Ai. **Dibuktikan end-to-end.**
+
+Tidak ada satu pun pengecekan `Origin` / `Sec-Fetch-Site` / CSRF token di
+`apps/ai`. Tidak ada `middleware.ts`. `next.config.ts` kosong (tanpa CSP, tanpa
+security header). 15 route handler semuanya menganggap "same-origin" tanpa
+memverifikasinya, padahal masing-masing **menyuntikkan internal token
+server-side** ke Hub/Connect.
+
+Bukti nyata terhadap Connect asli yang hidup:
+
+```
+BEFORE : "localBaseUrl":"http://127.0.0.1:11434/v1"   revision 0
+
+ATTACK : PUT http://127.0.0.1:3111/api/settings/settings/runtime
+         Origin: https://evil.example
+         Content-Type: text/plain          <- simple request, tanpa preflight
+         (tanpa token apa pun)
+         {"localBaseUrl":"https://evil.example/v1","hostedCallsEnabled":true}
+         --> HTTP 200
+
+AFTER  : "localBaseUrl":"https://evil.example/v1"      revision 1
+```
+
+Dampak: **website mana pun yang lu buka** sementara ECORIONE jalan bisa
+mengarahkan seluruh percakapan "Local" lu ke server dia — beserta memori/context
+yang terhidrasi ke dalam prompt. UI tetap menulis "Local". Selain itu bisa:
+tulis ke Context/Artifact (`/api/attachments`, multipart = simple request, gue
+tes tembus sampai validasi MIME), picu panggilan model (`/api/chat`), hapus data
+(`/api/forget`), dan mutasi Space/Flow/MCP.
+
+Satu pertahanan **berhasil menahan**: `hostedCallsEnabled: true` ditolak karena
+operator kill switch. Bagus — tapi itu satu-satunya yang menahan.
+
+Ironisnya polanya sudah ada di repo lu sendiri: `services/connect/src/mcp/auth.ts`
+punya `validateOrigin()`. Cuma tidak pernah dipasang di permukaan yang justru
+dibuka ke browser.
+
+### S0-2 — Installer desktop default: kill switch MATI, tanpa plafon biaya
+
+`desktop/ecorione.ps1` menulis config first-run:
+
+```
+ECORIONE_COST_KILL_SWITCH=0
+ECORIONE_SPEND_DAILY_USD=
+ECORIONE_SPEND_MONTHLY_USD=
+```
+
+Di `services/connect/src/main.ts`, kalau dua env spend itu kosong →
+`spendBudget = undefined` → **tidak ada budget controller sama sekali**.
+
+Jadi jalur "normal user" yang lagi lu bangun mengirim produk dengan hosted call
+aktif dan tanpa batas spend — melanggar invariant lu sendiri ("Hosted dispatch
+obeys kill switch + cumulative budget"). Gabungkan dengan S0-1 = jalur kerugian
+uang. Seluruh evidence R&D lu dijalankan dengan `KILL_SWITCH=1`; yang dikirim ke
+user justru kebalikannya.
+
+### S1-3 — `localBaseUrl` tidak dibatasi ke loopback/private
+
+`safeBaseUrl()` cuma menolak protokol non-HTTP(S), credential inline, dan
+fragment. Host bebas. Salah ketik atau salah paste saja sudah cukup untuk
+mengirim semua prompt "Local" keluar mesin — tanpa perlu attacker.
+
+### S2-4 — Gerbang anti-alias ADR-14 punya titik buta `:latest`
+
+CI gate: `grep -rnE '"[a-z0-9./-]+-latest"'` — butuh tanda hubung literal.
+`"gemma4:latest"` (gaya Ollama) **tidak pernah cocok**.
+`MODEL_ALIAS_PATTERN` di `pricing.ts` sebenarnya sudah mengandung `:latest$`,
+tapi `assertPinnedModel()` cuma dipanggil untuk model hosted/pricing —
+`localModelTag` hanya divalidasi `z.string().min(1).max(256)`.
+
+Inilah sebabnya `gemma4:latest` lolos melewati **setiap** checkpoint evidence
+selama berminggu-minggu tanpa satu gerbang pun menyalak. W13 menambah digest
+tapi **tetap tidak menolak** tag lokal yang mutable.
+
+### S2-5 — Digest W13 dideklarasikan operator, tidak diverifikasi
+
+Rencana asli (`docs/immutable-local-model-identity-plan.md` langkah 2):
+*"Resolve the local runtime identity at startup/preflight through the existing
+local provider boundary; never infer a digest from the alias string."*
+
+Implementasi: baca `ECORIONE_LOCAL_MODEL_DIGEST` dari env/settings. Tidak ada
+yang mengecek digest itu cocok dengan model yang benar-benar dilayani. Jadi
+`modelIdentityPinned=true` adalah **klaim, bukan bukti** — dan itu persis kelas
+masalah yang W13 dibuat untuk menutupnya.
+
+ADR-nya jujur menyebut keterbatasan ini, dan jujur itu bagus. Tapi verifikasi
+sebenarnya **bisa dilakukan**: runtime default lu Ollama di `:11434`, dan Ollama
+mengekspos `/api/show` + `/api/tags` yang mengembalikan digest asli.
+
+### S2-6 — Disiplin branch bobol
+
+`agent/active-work-20260914` = 187 commit, 68 file, +4.861/−394, mencakup
+W01→W13 sekaligus: attachment pipeline, provider catalog, credential vault,
+provider health, default route, engine script, launcher desktop, spec installer,
+workflow GitHub baru, dan model identity — dalam satu branch.
+
+`AGENTS.md` lu sendiri mewajibkan satu branch eksplisit per scope. Akibat nyata:
+tidak bisa di-review per unit, tidak bisa di-revert per item, dan kalau W13
+bermasalah lu ikut menahan W02/W04/W12 yang sudah beres.
+
+### S2-7 — `main` basi
+
+`main` HEAD adalah commit docs-only. Seluruh kerja W01–W13 yang nyata
+menggantung di branch samping. Aturan repo lu sendiri menyuruh agent/manusia
+baru "mulai dari synchronized `main`" — yang sekarang menampilkan keadaan yang
+sudah tidak benar. Plus 81 remote branch, mayoritas mati.
+
+### S3-8 — `secret-scan:history` belum jadi gate CI
+
+Sudah tercatat sebagai W19. Gue jalanin manual: **bersih, 1.342 commit**. Jadi
+tidak ada kebocoran — murni lubang gerbang.
+
+---
+
+## 4. Temuan strategis
+
+**Inti nilai produk justru ditaruh paling belakang.** W16–W18 (automatic semantic
+selector, ECX tanpa oracle, validasi biaya hosted) semuanya masih TODO.
+
+Angka andalan lu — reduksi input-token median 77,86% — berasal dari lane oracle.
+Gue baca implementasinya: `services/hub/src/exchange-http.ts` pada
+`/v1/exchange/hydrate` **hanya mengindeks `input.refIndexes` ke `packet.refs`**.
+Tidak ada selector. Yang memilih referensi adalah pemanggil.
+
+Dan **nol** panggilan hosted-provider nyata pernah diukur sepanjang proyek. Jadi
+klaim ekonomi produk — satu-satunya alasan orang mau memakai lapisan ini —
+belum tervalidasi sama sekali, sementara ~4.800 baris terakhir masuk ke
+installer.
+
+**W03 macet di satu-satunya hal yang cuma bisa lu kerjakan.** Rendered browser
+walkthrough jadi "active checkpoint" sejak 12 Sept dan masih BLOCKED. Semua
+checkpoint lain bisa didorong agent; yang ini butuh lu buka browser dan memakai
+produknya.
+
+**Kompleksitas vs pemakai tunggal.** 11 service + Temporal + PostgreSQL + Docker
+Desktop untuk tool personal local-first. Jalur installer pun masih menuntut
+Docker Desktop sebagai prasyarat.
+
+**Yang bagus dan harus dipertahankan:** disiplin claim-boundary lu di atas
+rata-rata — evidence gagal disimpan, bukan dihapus; `missing` tidak dipoles jadi
+"restored"; batasan menempel ke setiap klaim. Itu langka bahkan di tim ber-budget.
+Masalahnya bukan kejujuran dokumentasi. Masalahnya kejujuran itu belum pernah
+diuji oleh pemakaian nyata dan oleh uang sungguhan.
+
+---
+
+## 5. Harus ngapain — berurutan
+
+**Sebelum merge apa pun:**
+
+1. **Tutup CSRF.** Tambah `apps/ai/middleware.ts` yang menolak semua method
+   mutasi (POST/PUT/DELETE/PATCH) kalau `Sec-Fetch-Site` bukan `same-origin`,
+   dengan fallback pengecekan `Origin` terhadap host. ~30 baris. Ini
+   satu-satunya item yang benar-benar mendesak.
+2. **Pasang security header** di `next.config.ts`: CSP, `X-Frame-Options: DENY`,
+   `X-Content-Type-Options: nosniff`, `Referrer-Policy`.
+3. **Balik default installer**: `ECORIONE_COST_KILL_SWITCH=1`, isi plafon
+   harian/bulanan default (mis. 1 / 10 USD), dan buat Connect **menolak** hosted
+   dispatch kalau tidak ada budget terkonfigurasi — jangan diam-diam unlimited.
+4. **Batasi `localBaseUrl`** ke loopback/private-range secara default, dengan
+   opt-out env yang eksplisit.
+
+**Lalu baru selesaikan W13 dengan benar:**
+
+5. **Tambal gerbang alias**: masukkan `:latest` ke regex CI, dan buat
+   `localModelTag` menolak alias mutable kecuali ada digest terpin.
+6. **Verifikasi digest, jangan dideklarasikan**: resolve lewat Ollama
+   `/api/show`, bandingkan dengan nilai yang dideklarasikan, dan set
+   `pinned=true` **hanya** kalau cocok. Kalau runtime tidak punya endpoint
+   provenance, laporkan `declared-unverified` — bukan `pinned`.
+
+**Lalu rapikan git:**
+
+7. **Pecah branch raksasa** dan merge berurutan: W01/W02/W04 → W05–W08 → W12 →
+   W13. Jaga `main` selalu current.
+8. **Pangkas ~75 branch mati.**
+9. **Jadikan `secret-scan:history` gate CI** (W19) — sudah bersih, tinggal
+   dikunci.
+
+**Lalu dua hal yang menentukan nasib proyek:**
+
+10. **Kerjakan W03 sendiri.** Nyalakan `dev:phase4`, pakai produknya satu jam
+    untuk kerjaan beneran, catat setiap defect. Ini gerbang segalanya dan sudah
+    macet dua hari.
+11. **Lompati W14–W17, kerjakan W18 duluan.** Satu perbandingan hosted nyata —
+    full-context vs ECX — pada satu provider, dengan budget dibatasi. Biayanya
+    di bawah $1. Hasilnya cuma dua: tesis inti lu tervalidasi, atau mati. Dua-duanya
+    jauh lebih berharga daripada menambah satu modul lagi di atas premis yang
+    belum teruji.
