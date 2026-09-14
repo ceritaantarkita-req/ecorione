@@ -30,7 +30,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Format
-        run: pnpm run format:check
+        run: |
+          pnpm exec prettier apps/ai/lib/attachment-ingest.ts apps/ai/lib/attachment-ingest.test.ts --write
+          git diff -- apps/ai/lib/attachment-ingest.ts apps/ai/lib/attachment-ingest.test.ts
+          exit 1
 
       - name: Lint
         run: pnpm run lint
