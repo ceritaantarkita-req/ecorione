@@ -9,6 +9,7 @@ import type {
   SpaceDocument,
   SpacePage,
 } from "@ecorione/shared-schema";
+import { readJson } from "../../lib/client-response";
 import styles from "./Space.module.css";
 
 const WORKSPACE_ID = "ws_personal";
@@ -27,20 +28,6 @@ const BLOCK_KINDS: SpaceBlockType[] = [
   "artifact-link",
   "flow-link",
 ];
-
-async function readJson<T>(response: Response): Promise<T> {
-  const text = await response.text();
-  let body: unknown = null;
-  if (text.length > 0) {
-    try {
-      body = JSON.parse(text) as unknown;
-    } catch {
-      body = text;
-    }
-  }
-  if (!response.ok) throw new Error(`HTTP ${String(response.status)}: ${JSON.stringify(body)}`);
-  return body as T;
-}
 
 function templateFor(kind: SpaceBlockType, document: SpaceDocument | null): unknown | null {
   switch (kind) {

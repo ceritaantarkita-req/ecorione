@@ -38,6 +38,8 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [30](0030-node-registry-visual-flow.md) | Node Registry + Visual Flow memakai Flow control plane, Hub authority, dan Temporal runtime |
 | [31](0031-space-block-runtime.md) | Space menyimpan composition/version/order; linked memory/blob/Flow tetap pointer-only ke owner service |
 | [32](0032-production-operations-observability.md) | Production ops memakai owner-local metrics + trace propagation dan self-host deployment tanpa source-of-truth baru |
+| [33](0033-final-security-release-closure.md) | Readiness label produksi/self-host digerbangi hardening HTTP, secret scan, dan evidence repo |
+| [34](0034-browser-surface-trust-boundary.md) | Permukaan browser Ai memverifikasi same-origin di middleware dan memasang header keamanan |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris

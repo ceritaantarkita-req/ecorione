@@ -137,6 +137,7 @@ export async function callOpenAiCompatibleHosted(
     throw new ProviderError(
       "hosted",
       `Tidak bisa menghubungi ${input.providerName}: ${error instanceof Error ? error.message : String(error)}`,
+      "unreachable",
     );
   }
 
@@ -154,6 +155,7 @@ export async function callOpenAiCompatibleHosted(
     throw new ProviderError(
       "hosted",
       `${input.providerName} membalas status ${String(res.status)}: ${text.slice(0, 400)}`,
+      res.status === 401 || res.status === 403 ? "invalid-credential" : "upstream",
     );
   }
 

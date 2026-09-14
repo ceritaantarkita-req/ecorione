@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  AI_CREDENTIAL_PROVIDERS,
   CredentialVaultFormatError,
   CredentialVaultIntegrityError,
   FileCredentialVault,
@@ -37,6 +38,23 @@ describe("FileCredentialVault", () => {
       { provider: "anthropic", purpose: "messages", generation: 1, updatedAt: NOW },
     ]);
     if (process.platform !== "win32") expect(statSync(path).mode & 0o777).toBe(0o600);
+  });
+
+  it("menerima seluruh provider AI onboarding tanpa mengubah scope secret", () => {
+    const path = vaultPath();
+    const vault = new FileCredentialVault(path, master(8));
+
+    for (const provider of AI_CREDENTIAL_PROVIDERS) {
+      const secret = `secret-${provider}`;
+      vault.set(provider, "messages", secret, NOW);
+      expect(vault.get(provider, "messages")).toBe(secret);
+    }
+
+    const persisted = readFileSync(path, "utf8");
+    for (const provider of AI_CREDENTIAL_PROVIDERS) {
+      expect(persisted).not.toContain(`secret-${provider}`);
+    }
+    expect(vault.list()).toHaveLength(AI_CREDENTIAL_PROVIDERS.length);
   });
 
   it("rotasi credential menaikkan generation dan provider membaca nilai terbaru tanpa restart", () => {

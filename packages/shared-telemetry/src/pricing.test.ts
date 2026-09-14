@@ -4,6 +4,7 @@ import {
   ModelAliasError,
   UnknownModelError,
   assertPinnedModel,
+  isMutableModelAlias,
   isPinnedModel,
   pinnedModelIds,
   priceFor,
@@ -12,9 +13,34 @@ import {
 describe("assertPinnedModel (ADR-14)", () => {
   it("menolak alias latest dan unsuffixed provider alias", () => {
     expect(() => assertPinnedModel("claude-x-latest")).toThrow(ModelAliasError); // naming-gate:allow
-    expect(() => assertPinnedModel("latest")).toThrow(ModelAliasError);
-    expect(() => assertPinnedModel("openai/gpt-4.1:latest")).toThrow(ModelAliasError);
+    expect(() => assertPinnedModel("latest")).toThrow(ModelAliasError); // naming-gate:allow
+    expect(() => assertPinnedModel("openai/gpt-4.1:latest")).toThrow(ModelAliasError); // naming-gate:allow
     expect(() => assertPinnedModel("gpt-5.6")).toThrow(ModelAliasError);
+  });
+
+  it("menangkap bentuk alias yang dulu lolos gerbang (audit 2026-09-14 S2-4)", () => {
+    // `gemma4:latest` gaya Ollama melewati setiap checkpoint evidence selama
+    // berminggu-minggu karena gerbang CI mensyaratkan tanda hubung literal.
+    for (const tag of [
+      "gemma4:latest", // naming-gate:allow
+      "gemma4@latest", // naming-gate:allow
+      "library/gemma4/latest", // naming-gate:allow
+      "GEMMA4:LATEST", // naming-gate:allow
+      "  qwen3:latest  ", // naming-gate:allow
+    ]) {
+      expect(isMutableModelAlias(tag)).toBe(true);
+    }
+  });
+
+  it("tidak menandai tag lokal berversi sebagai alias", () => {
+    for (const tag of [
+      "qwen3:8b-instruct-q4_K_M",
+      "gemma4:12b",
+      "claude-sonnet-4-5-20250929",
+      "latestable-model",
+    ]) {
+      expect(isMutableModelAlias(tag)).toBe(false);
+    }
   });
 
   it("alias diperiksa sebelum keanggotaan tabel", () => {

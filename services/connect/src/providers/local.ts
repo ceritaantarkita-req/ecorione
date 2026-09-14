@@ -55,6 +55,7 @@ export async function callLocal(
     throw new ProviderError(
       "local",
       `Tidak bisa menghubungi model lokal di ${input.baseUrl}: ${err instanceof Error ? err.message : String(err)}`,
+      "unreachable",
     );
   }
   const text = await res.text();

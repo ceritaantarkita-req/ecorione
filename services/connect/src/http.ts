@@ -27,30 +27,61 @@ import {
 import { registerConnectControlRoutes } from "./control-http.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
+import type { LocalModelDigest } from "./local-model-identity.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
-import { DEFAULT_HOSTED_PROVIDER, type HostedProviderId } from "./provider-types.js";
-import type { RuntimeSettings, RuntimeSettingsAdmin } from "./runtime-settings.js";
+import {
+  DEFAULT_HOSTED_PROVIDER,
+  HostedProviderIdSchema,
+  type HostedProviderId,
+} from "./provider-types.js";
+import type {
+  ChatTargetPreference,
+  RuntimeSettings,
+  RuntimeSettingsAdmin,
+} from "./runtime-settings.js";
+import { MutableLocalModelTagError } from "./runtime-settings.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
   ProviderError,
+  SpendBudgetNotConfiguredError,
 } from "./providers/errors.js";
+import { LocalModelDigestMismatchError } from "./providers/local-model-provenance.js";
 import type { LocalRuntimeId } from "./providers/local-runtime.js";
 import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 
 export const DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES = 32 * 1024 * 1024;
 
-function toHttpError(err: unknown): unknown {
+function toHttpError(err: unknown, detailedProviderHealth = false): unknown {
   if (err instanceof CostKillSwitchError)
     return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
+  if (err instanceof SpendBudgetNotConfiguredError)
+    return new HttpError(503, "SPEND_BUDGET_NOT_CONFIGURED", err.message);
+  if (err instanceof MutableLocalModelTagError)
+    return new HttpError(400, "MUTABLE_LOCAL_MODEL_TAG", err.message);
+  // Runtime melayani model yang berbeda dari yang dideklarasikan operator: fail-closed,
+  // karena hasilnya akan masuk evidence dengan atribusi yang keliru (ADR-14).
+  if (err instanceof LocalModelDigestMismatchError)
+    return new HttpError(409, "LOCAL_MODEL_DIGEST_MISMATCH", err.message);
   if (err instanceof CredentialVaultError)
     return new HttpError(503, "CREDENTIAL_VAULT_UNAVAILABLE", err.message);
   if (err instanceof SpendBudgetExceededError)
     return new HttpError(429, "SPEND_BUDGET_EXCEEDED", err.message);
   if (err instanceof SpendBudgetError)
     return new HttpError(503, "SPEND_BUDGET_UNAVAILABLE", err.message);
-  if (err instanceof MissingCredentialError) return new BadGatewayError(err.message);
-  if (err instanceof ProviderError) return new BadGatewayError(err.message);
+  if (err instanceof MissingCredentialError) {
+    return detailedProviderHealth
+      ? new HttpError(502, "PROVIDER_CREDENTIAL_MISSING", err.message)
+      : new BadGatewayError(err.message);
+  }
+  if (err instanceof ProviderError) {
+    if (!detailedProviderHealth) return new BadGatewayError(err.message);
+    if (err.kind === "invalid-credential")
+      return new HttpError(502, "PROVIDER_INVALID_CREDENTIAL", err.message);
+    if (err.kind === "unreachable")
+      return new HttpError(503, "PROVIDER_UNREACHABLE", err.message);
+    return new HttpError(502, "PROVIDER_UPSTREAM_ERROR", err.message);
+  }
   return err;
 }
 
@@ -80,6 +111,9 @@ const ProviderCanaryBodySchema = z
   })
   .strict();
 
+const CredentialTestParamsSchema = z.object({ provider: HostedProviderIdSchema });
+const CredentialTestBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
+
 export interface BuildConnectServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
@@ -94,8 +128,12 @@ export interface BuildConnectServerOptions {
   readonly localRuntime?: LocalRuntimeId | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
+  readonly localModelDigest?: LocalModelDigest | null | undefined;
   readonly hostedCallsEnabled?: boolean | undefined;
+  readonly defaultChatTarget?: ChatTargetPreference | undefined;
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
+  readonly hostedSpendUnlimited?: boolean | undefined;
+  readonly resolveLocalProvenance?: CompleteDeps["resolveLocalProvenance"] | undefined;
   readonly cache?: ExactMatchCache | undefined;
   readonly mcpManager?: McpManager | undefined;
   readonly localMultimodalAdapter?: MultimodalAdapter | undefined;
@@ -117,7 +155,9 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localRuntime: options.localRuntime ?? "openai-compatible",
     localBaseUrl: options.localBaseUrl,
     localModelTag: options.localModelTag,
+    localModelDigest: options.localModelDigest ?? null,
     hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+    defaultChatTarget: options.defaultChatTarget ?? "local",
   };
   const currentRuntime = (): RuntimeSettings =>
     options.runtimeSettings?.get().settings ?? defaults;
@@ -130,9 +170,12 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localRuntime: runtime.localRuntime,
     localBaseUrl: runtime.localBaseUrl,
     localModelTag: runtime.localModelTag,
+    localModelDigest: runtime.localModelDigest,
     cache,
     hostedCallsEnabled: runtime.hostedCallsEnabled,
     spendBudget: options.spendBudget,
+    hostedSpendUnlimited: options.hostedSpendUnlimited,
+    resolveLocalProvenance: options.resolveLocalProvenance,
   });
 
   if (options.mcpManager !== undefined) registerOutboundMcpRoutes(app, options.mcpManager);
@@ -151,6 +194,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       pricingModel: result.pricingModel,
       target: body.target,
       cache: result.cacheHit ? "hit" : "miss",
+      modelIdentityPinned: result.modelIdentityPinned ? "true" : "false",
     };
     metrics.addCounter("ecorione_model_calls_total", 1, labels);
     metrics.addCounter("ecorione_model_input_tokens_total", result.usage.inputTokens, labels);
@@ -166,6 +210,23 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       labels,
     );
     metrics.addCounter("ecorione_model_cost_usd_total", result.cost.actualUsd, labels);
+  }
+
+  function probeBody(target: "hosted" | "local", prompt: string) {
+    return CompleteBodySchema.parse({
+      target,
+      prefix: {
+        systemPrompt:
+          "You are a deterministic provider health canary. Follow the user instruction exactly.",
+        toolDefinitions: [],
+        coreMemory: { blocks: [] },
+      },
+      dynamicText: "",
+      userMessage: prompt,
+      sensitivity: "PUBLIC",
+      operationId: makeId("operation"),
+      now: nowIso(),
+    });
   }
 
   app.post("/v1/complete", async (req) => {
@@ -184,26 +245,69 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     }
   });
 
+  app.post<{ Params: { provider: string } }>(
+    "/v1/settings/credentials/:provider/test",
+    async (req) => {
+      const { provider } = parseOrBadRequest(CredentialTestParamsSchema, req.params);
+      const { secret } = parseOrBadRequest(CredentialTestBodySchema, req.body);
+      const runtime = currentRuntime();
+      const transientCredential: ProviderCredentialReader = {
+        get(candidate, purpose) {
+          return candidate === provider && purpose === "messages" ? secret : undefined;
+        },
+      };
+      const body = probeBody("hosted", "Reply exactly ECORIONE_CREDENTIAL_OK");
+      const started = performance.now();
+      try {
+        const result = await complete(
+          {
+            ...currentDeps({ ...runtime, hostedProvider: provider }),
+            credentialVault: transientCredential,
+            cache: new ExactMatchCache(),
+          },
+          body,
+        );
+        const latencyMs = performance.now() - started;
+        recordCompletion(body, result);
+        metrics.addCounter("ecorione_provider_credential_test_total", 1, {
+          provider,
+          outcome: "pass",
+        });
+        return {
+          pass: true,
+          persisted: false,
+          provider: result.provider,
+          model: result.model,
+          pricingModel: result.pricingModel,
+          responseModel: result.responseModel,
+          modelIdentity: result.modelIdentity,
+          modelIdentityPinned: result.modelIdentityPinned,
+          modelIdentityProvenance: result.modelIdentityProvenance,
+          cacheHit: result.cacheHit,
+          latencyMs,
+          usage: result.usage,
+          cost: result.cost,
+        };
+      } catch (err) {
+        metrics.addCounter("ecorione_provider_credential_test_total", 1, {
+          provider,
+          outcome: "error",
+        });
+        throw toHttpError(err, true);
+      }
+    },
+  );
+
   app.post("/v1/ops/provider-canary", async (req) => {
     const body = parseOrBadRequest(ProviderCanaryBodySchema, req.body ?? {});
     const runtime = currentRuntime();
     const started = performance.now();
-    const completeBody = CompleteBodySchema.parse({
-      target: body.target,
-      prefix: {
-        systemPrompt:
-          "You are a deterministic provider health canary. Follow the user instruction exactly.",
-        toolDefinitions: [],
-        coreMemory: { blocks: [] },
-      },
-      dynamicText: "",
-      userMessage: body.prompt,
-      sensitivity: "PUBLIC",
-      operationId: makeId("operation"),
-      now: nowIso(),
-    });
+    const completeBody = probeBody(body.target, body.prompt);
     try {
-      const result = await complete(currentDeps(runtime), completeBody);
+      const result = await complete(
+        { ...currentDeps(runtime), cache: new ExactMatchCache() },
+        completeBody,
+      );
       const latencyMs = performance.now() - started;
       recordCompletion(completeBody, result);
       const pass =
@@ -226,6 +330,9 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         model: result.model,
         pricingModel: result.pricingModel,
         responseModel: result.responseModel,
+        modelIdentity: result.modelIdentity,
+        modelIdentityPinned: result.modelIdentityPinned,
+        modelIdentityProvenance: result.modelIdentityProvenance,
         cacheHit: result.cacheHit,
         latencyMs,
         outputChars: result.reply.length,
@@ -239,7 +346,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         model: body.target === "local" ? runtime.localModelTag : "configured",
         outcome: "error",
       });
-      throw toHttpError(err);
+      throw toHttpError(err, true);
     }
   });
 
@@ -256,6 +363,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
           hostedProvider: currentRuntime().hostedProvider,
           hostedCallsEnabled: currentRuntime().hostedCallsEnabled,
           spendBudget: options.spendBudget,
+          hostedSpendUnlimited: options.hostedSpendUnlimited,
         },
         body,
         nowIso(),

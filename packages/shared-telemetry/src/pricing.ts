@@ -120,8 +120,26 @@ export const MODEL_PRICES: Readonly<typeof PRICE_TABLE> = Object.freeze(PRICE_TA
 
 export type PinnedModelId = keyof typeof PRICE_TABLE;
 
-/** Alias provider yang dapat drift diam-diam dilarang. */
-export const MODEL_ALIAS_PATTERN = /-latest$|^latest$|:latest$|^gpt-5\.6$/;
+/**
+ * Alias provider yang dapat drift diam-diam dilarang.
+ *
+ * Audit 2026-09-14 S2-4: pola lama hanya mengenali `-latest`, `latest`, dan `:latest`
+ * dengan huruf kecil. Bentuk `@latest`, `/latest`, dan variasi huruf besar lolos —
+ * begitu pula gerbang CI yang mensyaratkan tanda hubung literal, sehingga
+ * `gemma4:latest` gaya Ollama melewati setiap checkpoint tanpa satu gerbang pun menyalak.
+ */
+export const MODEL_ALIAS_PATTERN = /(?:^|[-:@/])latest$|^gpt-5\.6$/i;
+
+/**
+ * Apakah `tag` adalah alias yang bisa berubah isi tanpa berubah nama.
+ *
+ * Dipakai untuk tag model LOKAL, yang tidak ada di pricing snapshot sehingga
+ * `assertPinnedModel` tidak bisa dipakai: identitas lokal dipinkan oleh digest
+ * (ADR-14 / W13), bukan oleh keberadaannya di tabel harga.
+ */
+export function isMutableModelAlias(tag: string): boolean {
+  return MODEL_ALIAS_PATTERN.test(tag.trim());
+}
 
 export class ModelAliasError extends Error {
   constructor(model: string) {

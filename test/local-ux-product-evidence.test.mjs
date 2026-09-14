@@ -12,6 +12,8 @@ import {
   validateSurfaceHtml,
 } from "../scripts/local-ux-product-evidence.mjs";
 
+const DIGEST = `sha256:${"d".repeat(64)}`;
+
 describe("local UX/product evidence guards", () => {
   it("mewajibkan lima surface utama Ai dan workspace lokal kanonik", () => {
     expect(NAV_ROUTES.map(([label]) => label)).toEqual([
@@ -38,6 +40,7 @@ describe("local UX/product evidence guards", () => {
         settings: {
           localRuntime: "openai-compatible",
           localModelTag: "local-model",
+          localModelDigest: DIGEST,
           hostedCallsEnabled: true,
         },
       }),
@@ -51,6 +54,7 @@ describe("local UX/product evidence guards", () => {
         settings: {
           localRuntime: "openai-compatible",
           localModelTag: "local-model",
+          localModelDigest: DIGEST,
           hostedCallsEnabled: false,
         },
       }),
@@ -58,8 +62,22 @@ describe("local UX/product evidence guards", () => {
       hostedCallsEnabled: false,
       localRuntime: "openai-compatible",
       localModelTag: "local-model",
+      localModelDigest: DIGEST,
+      modelIdentity: `local:openai-compatible:local-model@${DIGEST}`,
       mutableModelAlias: false,
     });
+  });
+
+  it("menolak durable evidence jika digest model lokal belum dipin", () => {
+    expect(() =>
+      validateRuntimeSnapshot({
+        settings: {
+          localRuntime: "openai-compatible",
+          localModelTag: "local-model",
+          hostedCallsEnabled: false,
+        },
+      }),
+    ).toThrow(/localModelDigest/);
   });
 
   it("mencatat alias model mutable tanpa mengubahnya menjadi failure UX", () => {
@@ -68,6 +86,7 @@ describe("local UX/product evidence guards", () => {
         settings: {
           localRuntime: "openai-compatible",
           localModelTag: "gemma4:latest",
+          localModelDigest: DIGEST,
           hostedCallsEnabled: false,
         },
       }).mutableModelAlias,

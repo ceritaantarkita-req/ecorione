@@ -1,19 +1,35 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ClientResponseError, readJson } from "../../lib/client-response";
+import { credentialSaveReady, type CredentialTestStamp } from "../../lib/credential-onboarding";
+import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
 import styles from "./Settings.module.css";
 
+type HostedProviderId = "anthropic" | "openrouter" | "openai";
 type RuntimeSnapshot = {
   revision: number;
   settings: {
-    hostedProvider: "anthropic" | "openrouter" | "openai";
+    hostedProvider: HostedProviderId;
     localRuntime: "openai-compatible";
     localBaseUrl: string;
     localModelTag: string;
+    localModelDigest: string | null;
     hostedCallsEnabled: boolean;
+    defaultChatTarget: "local" | "hosted";
   };
 };
 type Credential = { provider: string; purpose: string; generation: number; updatedAt: string };
+type ProviderCatalogEntry = {
+  id: string;
+  displayName: string;
+  category: "ai" | "integration";
+  credentialPurpose: "messages" | "tokens";
+  credentialReady: boolean;
+  routingReady: boolean;
+  connectionTestReady: boolean;
+};
+type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "error";
 type McpServer = {
   id: string;
   displayName: string;
@@ -27,41 +43,25 @@ const PERSONAL_WORKSPACE_ID = "ws_personal";
 
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
-  const text = await response.text();
-  let payload: unknown = null;
-
-  if (text.length > 0) {
-    try {
-      payload = JSON.parse(text) as unknown;
-    } catch {
-      if (!response.ok) {
-        throw new Error(`HTTP ${String(response.status)}: ${text.slice(0, 240)}`);
-      }
-      throw new Error(`HTTP ${String(response.status)} returned a non-JSON response.`);
-    }
-  }
-
-  if (!response.ok) {
-    const error =
-      typeof payload === "object" && payload !== null
-        ? (payload as { error?: { message?: unknown } }).error
-        : undefined;
-    const message = typeof error?.message === "string" ? error.message : undefined;
-    throw new Error(message ?? `HTTP ${String(response.status)}`);
-  }
-
-  return payload as T;
+  return readJson<T>(response);
 }
 
 export default function SettingsPage() {
   const [runtime, setRuntime] = useState<RuntimeSnapshot | null>(null);
+  const [providers, setProviders] = useState<ProviderCatalogEntry[]>([]);
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [workspaceId, setWorkspaceId] = useState(PERSONAL_WORKSPACE_ID);
   const [servers, setServers] = useState<McpServer[]>([]);
   const [secret, setSecret] = useState("");
+  const [secretRevision, setSecretRevision] = useState(0);
   const [secretProvider, setSecretProvider] = useState("anthropic");
+  const [credentialTest, setCredentialTest] = useState<CredentialTestStamp | null>(null);
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("");
+  const [hostedHealth, setHostedHealth] = useState<{
+    provider: HostedProviderId;
+    status: HostedCanaryStatus;
+  } | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [mcpLoading, setMcpLoading] = useState(false);
   const actionInFlight = useRef(false);
@@ -82,11 +82,13 @@ export default function SettingsPage() {
 
   const refresh = useCallback(async () => {
     try {
-      const [runtimeResult, credentialResult] = await Promise.all([
+      const [runtimeResult, providerResult, credentialResult] = await Promise.all([
         json<RuntimeSnapshot>("/api/settings/settings/runtime"),
+        json<{ providers: ProviderCatalogEntry[] }>("/api/settings/settings/providers"),
         json<{ credentials: Credential[] }>("/api/settings/settings/credentials"),
       ]);
       setRuntime(runtimeResult);
+      setProviders(providerResult.providers);
       setCredentials(credentialResult.credentials);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
@@ -128,6 +130,40 @@ export default function SettingsPage() {
 
   const mutableLocalModel =
     runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());
+  const hostedProviderOptions = providers.filter(
+    (provider) => provider.category === "ai" && provider.routingReady,
+  );
+  const credentialProviderOptions = providers.filter((provider) => provider.credentialReady);
+  const selectedCredential =
+    credentials.find((item) => item.provider === secretProvider) ?? null;
+  const selectedProviderOption =
+    providers.find((provider) => provider.id === secretProvider) ?? null;
+  const selectedProviderRequiresTest = selectedProviderOption?.connectionTestReady ?? false;
+  const credentialTestPassed =
+    selectedProviderRequiresTest &&
+    credentialTest?.pass === true &&
+    credentialTest.provider === secretProvider &&
+    credentialTest.revision === secretRevision;
+  const credentialReadyToSave =
+    selectedProviderOption !== null &&
+    selectedProviderOption.credentialReady &&
+    credentialSaveReady({
+      secret,
+      provider: secretProvider,
+      revision: secretRevision,
+      connectionTestReady: selectedProviderRequiresTest,
+      test: credentialTest,
+    });
+  const selectedProviderHealth = providerHealth({
+    hasCredential: selectedCredential !== null,
+    routingReady: selectedProviderOption?.routingReady ?? false,
+    isCurrentHostedProvider: runtime?.settings.hostedProvider === secretProvider,
+    hostedCallsEnabled: runtime?.settings.hostedCallsEnabled ?? false,
+    canaryStatus:
+      hostedHealth !== null && hostedHealth.provider === secretProvider
+        ? hostedHealth.status
+        : undefined,
+  });
 
   async function saveRuntime() {
     if (runtime === null || !beginAction("runtime")) return;
@@ -140,6 +176,7 @@ export default function SettingsPage() {
         body: JSON.stringify(runtime.settings),
       });
       setRuntime(result);
+      setHostedHealth(null);
       if (requestedHosted && !result.settings.hostedCallsEnabled) {
         setStatus(
           `Runtime revision ${String(result.revision)} saved. Hosted remains OFF because the operator gate is closed.`,
@@ -153,16 +190,74 @@ export default function SettingsPage() {
       finishAction();
     }
   }
+
+  async function testCredential() {
+    if (selectedProviderOption === null || !selectedProviderOption.connectionTestReady) {
+      setStatus("Connection test belum tersedia untuk provider ini.");
+      return;
+    }
+    if (secret.length === 0) {
+      setStatus("Paste API key terlebih dahulu sebelum menjalankan test.");
+      return;
+    }
+    if (!beginAction("test-credential")) return;
+
+    const provider = secretProvider;
+    const revision = secretRevision;
+    setCredentialTest(null);
+    setStatus(`Testing ${selectedProviderOption.displayName} credential without saving…`);
+    try {
+      const result = await json<{
+        pass: boolean;
+        persisted: boolean;
+        provider: string;
+        model: string;
+        latencyMs: number;
+      }>(`/api/settings/settings/credentials/${encodeURIComponent(provider)}/test`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ secret }),
+      });
+      const pass = result.pass && !result.persisted;
+      setCredentialTest({ provider, revision, pass });
+      setStatus(
+        pass
+          ? `Credential test PASS: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms. Secret belum disimpan.`
+          : "Credential test gagal. Secret belum disimpan.",
+      );
+    } catch (error) {
+      setCredentialTest({ provider, revision, pass: false });
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
   async function saveCredential() {
+    if (selectedProviderOption === null || !selectedProviderOption.credentialReady) {
+      setStatus("Provider credential metadata belum tersedia.");
+      return;
+    }
+    if (!credentialReadyToSave) {
+      setStatus(
+        selectedProviderRequiresTest
+          ? "Test API key dan pastikan hasilnya PASS sebelum menyimpan."
+          : "Paste credential terlebih dahulu.",
+      );
+      return;
+    }
     if (!beginAction("credential")) return;
     setStatus("Encrypting credential…");
     try {
-      await json(`/api/settings/settings/credentials/${secretProvider}`, {
+      await json(`/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ secret }),
       });
       setSecret("");
+      setSecretRevision((current) => current + 1);
+      setCredentialTest(null);
+      setHostedHealth((current) => (current?.provider === secretProvider ? null : current));
       await refreshCredentials();
       setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
     } catch (error) {
@@ -171,29 +266,88 @@ export default function SettingsPage() {
       finishAction();
     }
   }
-  async function runCanary() {
-    if (!beginAction("canary")) return;
-    setStatus("Running local canary…");
+
+  async function removeCredential() {
+    if (selectedCredential === null || !beginAction("remove-credential")) return;
+    setStatus("Removing credential…");
     try {
-      const result = await json<{
-        pass: boolean;
-        latencyMs: number;
-        provider: string;
-        model: string;
-      }>("/api/settings/ops/provider-canary", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ target: "local" }),
+      await json(`/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`, {
+        method: "DELETE",
       });
-      setStatus(
-        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms`,
-      );
+      setSecret("");
+      setSecretRevision((current) => current + 1);
+      setCredentialTest(null);
+      setHostedHealth((current) => (current?.provider === secretProvider ? null : current));
+      await refreshCredentials();
+      setStatus("Credential removed from Connect vault.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     } finally {
       finishAction();
     }
   }
+
+  async function runCanary(target: "local" | "hosted") {
+    if (!beginAction(`canary-${target}`)) return;
+    setStatus(target === "local" ? "Running local canary…" : "Running hosted canary…");
+    const testedProvider = runtime?.settings.hostedProvider;
+    try {
+      const result = await json<{
+        pass: boolean;
+        latencyMs: number;
+        provider: string;
+        model: string;
+        modelIdentity: string;
+        modelIdentityPinned: boolean;
+        modelIdentityProvenance?: string;
+      }>("/api/settings/ops/provider-canary", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ target }),
+      });
+      if (target === "hosted" && testedProvider !== undefined) {
+        setHostedHealth({
+          provider: testedProvider,
+          status: result.pass ? "connected" : "error",
+        });
+      }
+      // Provenance ditampilkan apa adanya: `declared-unverified` berarti operator
+      // menyatakan digest tapi runtime tidak bisa mengonfirmasinya — itu bukan PINNED.
+      const provenance =
+        result.modelIdentityProvenance === undefined
+          ? ""
+          : ` (${result.modelIdentityProvenance})`;
+      setStatus(
+        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms · identity ${result.modelIdentityPinned ? "PINNED" : "UNPINNED"}${provenance}`,
+      );
+    } catch (error) {
+      if (target === "hosted" && testedProvider !== undefined) {
+        if (
+          error instanceof ClientResponseError &&
+          error.code === "PROVIDER_CREDENTIAL_MISSING"
+        ) {
+          setHostedHealth(null);
+          try {
+            await refreshCredentials();
+          } catch {
+            // Preserve the original canary failure as the user-facing result.
+          }
+        } else {
+          setHostedHealth({
+            provider: testedProvider,
+            status:
+              error instanceof ClientResponseError
+                ? (canaryStatusFromErrorCode(error.code) ?? "error")
+                : "error",
+          });
+        }
+      }
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
   async function saveMcpServer() {
     if (!beginAction("mcp")) return;
     setStatus("Validating and saving MCP server…");
@@ -239,20 +393,44 @@ export default function SettingsPage() {
               <select
                 value={runtime.settings.hostedProvider}
                 disabled={pendingAction !== null}
+                onChange={(event) => {
+                  setHostedHealth(null);
+                  setRuntime({
+                    ...runtime,
+                    settings: {
+                      ...runtime.settings,
+                      hostedProvider: event.target.value as HostedProviderId,
+                    },
+                  });
+                }}
+              >
+                {hostedProviderOptions.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.displayName}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Default AI route
+              <select
+                value={runtime.settings.defaultChatTarget}
+                disabled={pendingAction !== null}
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
                     settings: {
                       ...runtime.settings,
-                      hostedProvider: event.target
-                        .value as RuntimeSnapshot["settings"]["hostedProvider"],
+                      defaultChatTarget: event.target
+                        .value as RuntimeSnapshot["settings"]["defaultChatTarget"],
                     },
                   })
                 }
               >
-                <option value="anthropic">Anthropic</option>
-                <option value="openai">OpenAI</option>
-                <option value="openrouter">OpenRouter</option>
+                <option value="local">Local AI</option>
+                <option value="hosted" disabled={!runtime.settings.hostedCallsEnabled}>
+                  Hosted AI
+                </option>
               </select>
             </label>
             <label>
@@ -263,7 +441,29 @@ export default function SettingsPage() {
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
-                    settings: { ...runtime.settings, localModelTag: event.target.value },
+                    settings: {
+                      ...runtime.settings,
+                      localModelTag: event.target.value,
+                      localModelDigest: null,
+                    },
+                  })
+                }
+              />
+            </label>
+            <label className={styles.wide}>
+              Local model SHA-256
+              <input
+                placeholder="sha256:64-hex"
+                value={runtime.settings.localModelDigest ?? ""}
+                disabled={pendingAction !== null}
+                onChange={(event) =>
+                  setRuntime({
+                    ...runtime,
+                    settings: {
+                      ...runtime.settings,
+                      localModelDigest:
+                        event.target.value.trim().length === 0 ? null : event.target.value,
+                    },
                   })
                 }
               />
@@ -276,7 +476,11 @@ export default function SettingsPage() {
                 onChange={(event) =>
                   setRuntime({
                     ...runtime,
-                    settings: { ...runtime.settings, localBaseUrl: event.target.value },
+                    settings: {
+                      ...runtime.settings,
+                      localBaseUrl: event.target.value,
+                      localModelDigest: null,
+                    },
                   })
                 }
               />
@@ -286,12 +490,19 @@ export default function SettingsPage() {
                 type="checkbox"
                 checked={runtime.settings.hostedCallsEnabled}
                 disabled={pendingAction !== null}
-                onChange={(event) =>
+                onChange={(event) => {
+                  setHostedHealth(null);
                   setRuntime({
                     ...runtime,
-                    settings: { ...runtime.settings, hostedCallsEnabled: event.target.checked },
-                  })
-                }
+                    settings: {
+                      ...runtime.settings,
+                      hostedCallsEnabled: event.target.checked,
+                      defaultChatTarget: event.target.checked
+                        ? runtime.settings.defaultChatTarget
+                        : "local",
+                    },
+                  });
+                }}
               />
               Hosted calls enabled
             </label>
@@ -301,6 +512,16 @@ export default function SettingsPage() {
                 Cocok untuk rehearsal, belum immutable production identity.
               </p>
             ) : null}
+            {runtime.settings.localModelDigest === null ? (
+              <p className={`${styles.warning} ${styles.wide}`}>
+                Local model identity belum dipin dengan SHA-256. Chat tetap bisa dipakai, tetapi
+                exact-cache lokal dan durable evidence tidak dianggap reproducible.
+              </p>
+            ) : (
+              <p className={`${styles.muted} ${styles.wide}`}>
+                Local model identity dipin ke <code>{runtime.settings.localModelDigest}</code>.
+              </p>
+            )}
             <p className={`${styles.muted} ${styles.wide}`}>
               Operator kill switch selalu menang, terlepas dari pengaturan di atas.
             </p>
@@ -316,9 +537,17 @@ export default function SettingsPage() {
                 type="button"
                 className={styles.secondary}
                 disabled={pendingAction !== null}
-                onClick={() => void runCanary()}
+                onClick={() => void runCanary("local")}
               >
-                {pendingAction === "canary" ? "Running…" : "Run local canary"}
+                {pendingAction === "canary-local" ? "Running…" : "Run local canary"}
+              </button>
+              <button
+                type="button"
+                className={styles.secondary}
+                disabled={pendingAction !== null || !runtime.settings.hostedCallsEnabled}
+                onClick={() => void runCanary("hosted")}
+              >
+                {pendingAction === "canary-hosted" ? "Running…" : "Test hosted provider"}
               </button>
             </div>
           </div>
@@ -340,30 +569,80 @@ export default function SettingsPage() {
             aria-label="Credential provider"
             value={secretProvider}
             disabled={pendingAction !== null}
-            onChange={(event) => setSecretProvider(event.target.value)}
+            onChange={(event) => {
+              setSecretProvider(event.target.value);
+              setSecret("");
+              setSecretRevision((current) => current + 1);
+              setCredentialTest(null);
+              setHostedHealth(null);
+            }}
           >
-            <option value="anthropic">Anthropic</option>
-            <option value="openai">OpenAI</option>
-            <option value="openrouter">OpenRouter</option>
-            <option value="mcp">MCP token</option>
+            {credentialProviderOptions.map((provider) => (
+              <option key={provider.id} value={provider.id}>
+                {provider.displayName}
+              </option>
+            ))}
           </select>
           <input
             type="password"
             autoComplete="new-password"
-            placeholder="New secret"
+            placeholder={selectedCredential === null ? "New secret" : "Replace secret"}
             aria-label="New credential secret"
             value={secret}
             disabled={pendingAction !== null}
-            onChange={(event) => setSecret(event.target.value)}
+            onChange={(event) => {
+              setSecret(event.target.value);
+              setSecretRevision((current) => current + 1);
+              setCredentialTest(null);
+            }}
           />
           <button
             type="button"
-            disabled={secret.length === 0 || pendingAction !== null}
+            className={styles.secondary}
+            disabled={
+              secret.length === 0 ||
+              pendingAction !== null ||
+              !selectedProviderOption?.connectionTestReady
+            }
+            onClick={() => void testCredential()}
+          >
+            {pendingAction === "test-credential" ? "Testing…" : "Test key"}
+          </button>
+          <button
+            type="button"
+            disabled={!credentialReadyToSave || pendingAction !== null}
             onClick={() => void saveCredential()}
           >
-            {pendingAction === "credential" ? "Encrypting…" : "Encrypt & save"}
+            {pendingAction === "credential"
+              ? "Encrypting…"
+              : selectedCredential === null
+                ? "Encrypt & save"
+                : "Replace credential"}
+          </button>
+          <button
+            type="button"
+            className={styles.secondary}
+            disabled={selectedCredential === null || pendingAction !== null}
+            onClick={() => void removeCredential()}
+          >
+            {pendingAction === "remove-credential" ? "Removing…" : "Remove"}
           </button>
         </div>
+        <p className={styles.muted}>
+          {selectedProviderHealth.label}
+          {selectedCredential === null
+            ? ""
+            : ` generation ${String(selectedCredential.generation)} · updated ${selectedCredential.updatedAt}.`}
+        </p>
+        <p className={styles.muted}>
+          {selectedProviderOption?.connectionTestReady
+            ? credentialTestPassed
+              ? "Transient test PASS. Secret belum disimpan; klik Encrypt & save untuk menyimpannya ke Vault."
+              : "Test key melakukan real hosted canary tanpa menyimpan plaintext. Save baru aktif setelah PASS."
+            : selectedProviderOption?.routingReady
+              ? "Connection test belum tersedia untuk provider ini."
+              : "Credential dapat disimpan, tetapi connection test dan model routing belum diaktifkan untuk provider ini."}
+        </p>
       </section>
 
       <section className={styles.section}>

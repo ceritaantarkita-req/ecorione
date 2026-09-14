@@ -10,13 +10,27 @@ import {
   type KeyboardEvent,
 } from "react";
 import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
+import {
+  MAX_COMPOSER_ATTACHMENTS,
+  attachmentCanBeRemoved,
+  attachmentChipLabel,
+  attachmentsReadyForSend,
+  buildAttachmentAwareMessage,
+  uploadPendingChatAttachments,
+  type ChatAttachment,
+} from "../lib/chat-attachments";
 import { makeSessionId } from "../lib/session";
 
 type ChatTarget = "local" | "hosted";
 type RuntimeSnapshot = {
   settings?: {
     hostedCallsEnabled?: boolean;
+    hostedProvider?: "anthropic" | "openrouter" | "openai";
+    defaultChatTarget?: ChatTarget;
   };
+};
+type CredentialSnapshot = {
+  credentials?: Array<{ provider: string }>;
 };
 interface UserTurn {
   kind: "user";
@@ -37,10 +51,6 @@ interface ErrorTurn {
   message: string;
 }
 type Turn = UserTurn | AssistantTurn | ErrorTurn;
-interface Attachment {
-  id: string;
-  label: string;
-}
 let turnCounter = 0;
 function nextTurnId(): string {
   turnCounter += 1;
@@ -75,13 +85,14 @@ export default function ChatPage() {
   const [target, setTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
+  const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [forgettingId, setForgettingId] = useState<string | null>(null);
   const [memoryFeedback, setMemoryFeedback] = useState<{
     kind: "success" | "error";
     message: string;
   } | null>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualDraft, setManualDraft] = useState("");
@@ -98,16 +109,40 @@ export default function ChatPage() {
 
   useEffect(() => {
     let cancelled = false;
-    void fetch("/api/settings/settings/runtime", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
-        return (await response.json()) as RuntimeSnapshot;
+    void Promise.all([
+      fetch("/api/settings/settings/runtime", { cache: "no-store" }),
+      fetch("/api/settings/settings/credentials", { cache: "no-store" }),
+    ])
+      .then(async ([runtimeResponse, credentialResponse]) => {
+        if (!runtimeResponse.ok) throw new Error(`HTTP ${String(runtimeResponse.status)}`);
+        const runtimeSnapshot = (await runtimeResponse.json()) as RuntimeSnapshot;
+        const credentialSnapshot = credentialResponse.ok
+          ? ((await credentialResponse.json()) as CredentialSnapshot)
+          : { credentials: [] };
+        return { runtimeSnapshot, credentialSnapshot };
       })
-      .then((snapshot) => {
-        if (!cancelled) setHostedAvailable(snapshot.settings?.hostedCallsEnabled === true);
+      .then(({ runtimeSnapshot, credentialSnapshot }) => {
+        if (cancelled) return;
+        const hostedProvider = runtimeSnapshot.settings?.hostedProvider;
+        const hasHostedCredential =
+          hostedProvider !== undefined &&
+          (credentialSnapshot.credentials ?? []).some(
+            (credential) => credential.provider === hostedProvider,
+          );
+        const hostedReady =
+          runtimeSnapshot.settings?.hostedCallsEnabled === true && hasHostedCredential;
+        setHostedAvailable(hostedReady);
+        setTarget(
+          runtimeSnapshot.settings?.defaultChatTarget === "hosted" && hostedReady
+            ? "hosted"
+            : "local",
+        );
       })
       .catch(() => {
-        if (!cancelled) setHostedAvailable(false);
+        if (!cancelled) {
+          setHostedAvailable(false);
+          setTarget("local");
+        }
       });
     return () => {
       cancelled = true;
@@ -137,9 +172,9 @@ export default function ChatPage() {
     return () => document.removeEventListener("mousedown", onDocPointerDown);
   }, [attachMenuOpen]);
 
-  async function sendMessage(text: string): Promise<void> {
+  async function sendMessage(text: string): Promise<boolean> {
     const trimmed = text.trim();
-    if (!hydrated || trimmed.length === 0 || sending || sendInFlightRef.current) return;
+    if (!hydrated || trimmed.length === 0 || sending || sendInFlightRef.current) return false;
     if (target === "hosted" && hostedAvailable !== true) {
       setTurns((prev) => [
         ...prev,
@@ -149,7 +184,7 @@ export default function ChatPage() {
           message: "Hosted sedang nonaktif. Pakai Local untuk sesi ini.",
         },
       ]);
-      return;
+      return false;
     }
     sendInFlightRef.current = true;
     setTurns((prev) => [...prev, { kind: "user", id: nextTurnId(), text: trimmed }]);
@@ -171,7 +206,7 @@ export default function ChatPage() {
             message: extractErrorMessage(body) ?? `Hub membalas status ${res.status}.`,
           },
         ]);
-        return;
+        return false;
       }
       const chat = body as ChatResponse;
       setTurns((prev) => [
@@ -185,11 +220,13 @@ export default function ChatPage() {
           memoryUsed: chat.memoryUsed,
         },
       ]);
+      return true;
     } catch {
       setTurns((prev) => [
         ...prev,
         { kind: "error", id: nextTurnId(), message: "Tidak bisa menghubungi server." },
       ]);
+      return false;
     } finally {
       sendInFlightRef.current = false;
       setSending(false);
@@ -253,15 +290,38 @@ export default function ChatPage() {
   }
 
   function removeAttachment(id: string): void {
-    setAttachments((prev) => prev.filter((a) => a.id !== id));
+    setAttachments((prev) =>
+      prev.filter((attachment) => attachment.id !== id || !attachmentCanBeRemoved(attachment)),
+    );
   }
 
-  function addFilesAs(fileList: FileList | null, prefix: string): void {
-    if (!fileList || fileList.length === 0) return;
-    const additions = Array.from(fileList).map((file) => ({
-      id: nextAttachmentId(),
-      label: `${prefix}: ${file.name}`,
-    }));
+  function addFilesAs(fileList: FileList | null, prefix: "File" | "Foto" | "Folder"): void {
+    if (preparingAttachments || sending || !fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
+    const available = Math.max(0, MAX_COMPOSER_ATTACHMENTS - attachments.length);
+    if (files.length > available) {
+      setTurns((prev) => [
+        ...prev,
+        {
+          kind: "error",
+          id: nextTurnId(),
+          message: `Maksimal ${String(MAX_COMPOSER_ATTACHMENTS)} lampiran per pesan.`,
+        },
+      ]);
+      return;
+    }
+
+    const additions: ChatAttachment[] = files.map((file) => {
+      const relativePath = (file as File & { webkitRelativePath?: string }).webkitRelativePath;
+      const displayName = prefix === "Folder" && relativePath ? relativePath : file.name;
+      return {
+        id: nextAttachmentId(),
+        kind: "file",
+        label: `${prefix}: ${displayName}`,
+        state: "staged",
+        file,
+      };
+    });
     setAttachments((prev) => [...prev, ...additions]);
   }
 
@@ -276,15 +336,7 @@ export default function ChatPage() {
   }
 
   function handleFolderChange(event: ChangeEvent<HTMLInputElement>): void {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      const first = files[0] as File & { webkitRelativePath?: string };
-      const folderName = first.webkitRelativePath?.split("/")[0] ?? "folder";
-      setAttachments((prev) => [
-        ...prev,
-        { id: nextAttachmentId(), label: `Folder: ${folderName} (${files.length} file)` },
-      ]);
-    }
+    addFilesAs(event.target.files, "Folder");
     event.target.value = "";
   }
 
@@ -293,18 +345,64 @@ export default function ChatPage() {
     if (trimmed.length === 0) return;
     setAttachments((prev) => [
       ...prev,
-      { id: nextAttachmentId(), label: `Catatan: ${trimmed}` },
+      {
+        id: nextAttachmentId(),
+        kind: "note",
+        label: `Catatan: ${trimmed}`,
+        noteText: trimmed,
+        state: "ready",
+      },
     ]);
     setManualDraft("");
     setManualOpen(false);
   }
 
   function submitDraft(): void {
-    const attachmentText =
-      attachments.length > 0 ? attachments.map((a) => `[${a.label}]`).join("\n") : "";
-    const finalText = attachmentText ? `${draft}\n\n${attachmentText}`.trim() : draft;
-    void sendMessage(finalText);
-    setAttachments([]);
+    if (preparingAttachments || sending || !attachmentsReadyForSend(attachments)) return;
+    const finalText = buildAttachmentAwareMessage(draft, attachments);
+    if (finalText.length === 0) return;
+    const submitted = attachments;
+    const sentAttachmentIds = new Set(submitted.map((attachment) => attachment.id));
+    const uploading = submitted.map((attachment): ChatAttachment =>
+      attachment.kind === "file" && attachment.contextEpisodeId === undefined
+        ? { ...attachment, state: "uploading", error: undefined }
+        : attachment,
+    );
+
+    setPreparingAttachments(true);
+    setAttachments(uploading);
+    void uploadPendingChatAttachments(uploading, { sessionId, target })
+      .then(async (prepared) => {
+        setAttachments(prepared);
+        const failed = prepared.find((attachment) => attachment.state === "error");
+        if (failed !== undefined) {
+          setTurns((prev) => [
+            ...prev,
+            {
+              kind: "error",
+              id: nextTurnId(),
+              message: failed.error ?? "Lampiran gagal diproses.",
+            },
+          ]);
+          return;
+        }
+        const sent = await sendMessage(finalText);
+        if (!sent) return;
+        setAttachments((prev) =>
+          prev.filter((attachment) => !sentAttachmentIds.has(attachment.id)),
+        );
+      })
+      .catch(() => {
+        setTurns((prev) => [
+          ...prev,
+          {
+            kind: "error",
+            id: nextTurnId(),
+            message: "Lampiran gagal diproses.",
+          },
+        ]);
+      })
+      .finally(() => setPreparingAttachments(false));
   }
 
   function handleSubmit(e: FormEvent): void {
@@ -321,11 +419,18 @@ export default function ChatPage() {
   const routeHint =
     turns.length > 0
       ? "Terkunci untuk sesi ini."
-      : hostedAvailable === true
-        ? "Terkunci setelah pesan pertama."
-        : "Hosted nonaktif — sesi ini Local-only.";
+      : attachments.length > 0
+        ? "Terkunci selama lampiran dipakai di sesi ini."
+        : hostedAvailable === true
+          ? "Terkunci setelah pesan pertama."
+          : "Hosted nonaktif — sesi ini Local-only.";
 
-  const canSend = hydrated && !sending && (draft.trim().length > 0 || attachments.length > 0);
+  const canSend =
+    hydrated &&
+    !sending &&
+    !preparingAttachments &&
+    attachmentsReadyForSend(attachments) &&
+    (draft.trim().length > 0 || attachments.length > 0);
 
   return (
     <div className="ai-shell">
@@ -353,15 +458,19 @@ export default function ChatPage() {
               <div className="ai-composer__chips">
                 {attachments.map((a) => (
                   <span className="ai-chip" key={a.id}>
-                    <span className="ai-chip__label">{a.label}</span>
-                    <button
-                      type="button"
-                      className="ai-chip__remove"
-                      aria-label={`Hapus ${a.label}`}
-                      onClick={() => removeAttachment(a.id)}
-                    >
-                      <XIcon />
-                    </button>
+                    <span className="ai-chip__label" title={a.error}>
+                      {attachmentChipLabel(a)}
+                    </span>
+                    {attachmentCanBeRemoved(a) ? (
+                      <button
+                        type="button"
+                        className="ai-chip__remove"
+                        aria-label={`Hapus ${a.label}`}
+                        onClick={() => removeAttachment(a.id)}
+                      >
+                        <XIcon />
+                      </button>
+                    ) : null}
                   </span>
                 ))}
               </div>
@@ -409,7 +518,7 @@ export default function ChatPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={!hydrated || sending}
+              disabled={!hydrated || sending || preparingAttachments}
             />
 
             <div className="ai-composer__toolbar">
@@ -420,6 +529,7 @@ export default function ChatPage() {
                   aria-label="Tambah lampiran"
                   aria-haspopup="menu"
                   aria-expanded={attachMenuOpen}
+                  disabled={sending || preparingAttachments}
                   onClick={() => setAttachMenuOpen((prev) => !prev)}
                 >
                   <PlusIcon />
@@ -496,7 +606,13 @@ export default function ChatPage() {
                   aria-label="Model"
                   value={target}
                   onChange={(e) => setTarget(e.target.value as ChatTarget)}
-                  disabled={!hydrated || sending || turns.length > 0}
+                  disabled={
+                    !hydrated ||
+                    sending ||
+                    preparingAttachments ||
+                    turns.length > 0 ||
+                    attachments.length > 0
+                  }
                 >
                   <option value="local">Local</option>
                   <option value="hosted" disabled={hostedAvailable !== true}>

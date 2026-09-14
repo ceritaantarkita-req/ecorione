@@ -11,6 +11,7 @@ import {
   CostKillSwitchError,
   MissingCredentialError,
   ProviderError,
+  SpendBudgetNotConfiguredError,
 } from "./providers/errors.js";
 import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
 
@@ -120,6 +121,8 @@ export interface MultimodalDeps {
   readonly hostedProvider: HostedProviderId;
   readonly hostedCallsEnabled: boolean;
   readonly spendBudget?: SpendBudgetController | undefined;
+  /** Lihat `CompleteDeps.hostedSpendUnlimited` — kontrak ADR-21 yang sama. */
+  readonly hostedSpendUnlimited?: boolean | undefined;
 }
 
 function requireAdapter(deps: MultimodalDeps, route: "local" | "hosted"): MultimodalAdapter {
@@ -145,6 +148,9 @@ async function callRoute(
       );
     }
     if (!deps.hostedCallsEnabled) throw new CostKillSwitchError();
+    if (deps.spendBudget === undefined && deps.hostedSpendUnlimited !== true) {
+      throw new SpendBudgetNotConfiguredError();
+    }
   }
   const adapter = requireAdapter(deps, route);
   let reservation: SpendEntry | undefined;

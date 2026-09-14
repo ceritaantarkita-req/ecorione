@@ -15,6 +15,7 @@ function inMemoryRuntime(hostedCallsEnabled: boolean): RuntimeSettingsAdmin {
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "local-model",
       hostedCallsEnabled,
+      defaultChatTarget: hostedCallsEnabled ? "hosted" : "local",
     },
   };
   return {
@@ -32,6 +33,7 @@ function inMemoryRuntime(hostedCallsEnabled: boolean): RuntimeSettingsAdmin {
           localBaseUrl: patch.localBaseUrl ?? prior.localBaseUrl,
           localModelTag: patch.localModelTag ?? prior.localModelTag,
           hostedCallsEnabled: patch.hostedCallsEnabled ?? prior.hostedCallsEnabled,
+          defaultChatTarget: patch.defaultChatTarget ?? prior.defaultChatTarget,
         },
       };
       return {
@@ -43,21 +45,29 @@ function inMemoryRuntime(hostedCallsEnabled: boolean): RuntimeSettingsAdmin {
 }
 
 describe("withHostedOperatorGate", () => {
-  it("memaksa hosted off saat operator gate tertutup walaupun durable settings sebelumnya true", () => {
+  it("memaksa hosted off dan default route local saat operator gate tertutup", () => {
     const runtime = withHostedOperatorGate(inMemoryRuntime(true), false);
     expect(runtime.get().settings.hostedCallsEnabled).toBe(false);
+    expect(runtime.get().settings.defaultChatTarget).toBe("local");
   });
 
-  it("tidak mengizinkan update runtime mengaktifkan hosted saat operator gate tertutup", () => {
+  it("tidak mengizinkan update runtime mengaktifkan hosted/default hosted saat gate tertutup", () => {
     const runtime = withHostedOperatorGate(inMemoryRuntime(false), false);
-    const result = runtime.update({ hostedCallsEnabled: true, hostedProvider: "openai" });
+    const result = runtime.update({
+      hostedCallsEnabled: true,
+      hostedProvider: "openai",
+      defaultChatTarget: "hosted",
+    });
     expect(result.settings.hostedCallsEnabled).toBe(false);
+    expect(result.settings.defaultChatTarget).toBe("local");
     expect(result.settings.hostedProvider).toBe("openai");
     expect(runtime.get().settings.hostedCallsEnabled).toBe(false);
   });
 
   it("membiarkan runtime setting mengontrol hosted saat operator gate terbuka", () => {
     const runtime = withHostedOperatorGate(inMemoryRuntime(false), true);
-    expect(runtime.update({ hostedCallsEnabled: true }).settings.hostedCallsEnabled).toBe(true);
+    const result = runtime.update({ hostedCallsEnabled: true, defaultChatTarget: "hosted" });
+    expect(result.settings.hostedCallsEnabled).toBe(true);
+    expect(result.settings.defaultChatTarget).toBe("hosted");
   });
 });

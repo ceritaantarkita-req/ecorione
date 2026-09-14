@@ -88,10 +88,20 @@ export function validateRuntimeSnapshot(payload) {
   ) {
     throw new Error("Runtime settings tidak melaporkan localModelTag yang valid.");
   }
+  if (
+    typeof settings.localModelDigest !== "string" ||
+    !/^sha256:[0-9a-f]{64}$/.test(settings.localModelDigest)
+  ) {
+    throw new Error(
+      "Runtime settings belum memiliki localModelDigest SHA-256 yang pinned untuk durable UX evidence.",
+    );
+  }
   return {
     hostedCallsEnabled: false,
     localRuntime: settings.localRuntime,
     localModelTag: settings.localModelTag,
+    localModelDigest: settings.localModelDigest,
+    modelIdentity: `local:${settings.localRuntime}:${settings.localModelTag}@${settings.localModelDigest}`,
     mutableModelAlias: /(^|[:@])latest$/i.test(settings.localModelTag.trim()),
   };
 }

@@ -57,6 +57,28 @@ jobs:
       - name: Production build
         run: pnpm run build
 
+  secret-history:
+    # W19 / audit 2026-09-14 S3-8: `secret-scan` hanya memeriksa working tree, jadi secret
+    # yang pernah di-commit lalu dihapus tidak pernah tertangkap gerbang mana pun. Job
+    # terpisah karena butuh riwayat penuh (`fetch-depth: 0`), sementara job `verify`
+    # sengaja tetap memakai checkout dangkal supaya cepat.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Secret scan seluruh riwayat git
+        run: node scripts/secret-history-scan.mjs
+
   naming:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -76,10 +98,16 @@ jobs:
           fi
           echo "Bersih."
 
-      - name: Tidak ada alias model `-latest` (ADR-14)
+      - name: Tidak ada alias model mutable (ADR-14)
+        # Audit 2026-09-14 S2-4: pola lama mensyaratkan tanda hubung literal
+        # (`"...-latest"`), sehingga alias gaya Ollama `"gemma4:latest"` tidak pernah
+        # cocok dan lolos melewati setiap checkpoint evidence selama berminggu-minggu.
+        # Sekarang `-`, `:`, `@`, `/`, dan bentuk telanjang `"latest"` semuanya
+        # tertangkap, sejajar dengan MODEL_ALIAS_PATTERN di packages/shared-telemetry.
         run: |
-          if grep -rnE '"[a-z0-9./-]+-latest"' \
-              --include='*.ts' --include='*.json' --include='*.yaml' \
+          if grep -rnE '"[A-Za-z0-9._/-]*[-:@/]latest"|"latest"' \
+              --include='*.ts' --include='*.tsx' --include='*.mjs' --include='*.json' \
+              --include='*.yaml' --include='*.yml' \
               --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git \
               packages services apps 2>/dev/null \
               | grep -v 'naming-gate:allow' ; then

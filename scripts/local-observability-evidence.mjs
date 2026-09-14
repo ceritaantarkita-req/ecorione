@@ -282,6 +282,7 @@ async function inventory({ print = true } = {}) {
           revision: runtime.revision,
           localRuntime: runtime.settings?.localRuntime ?? null,
           localModelTag: runtime.settings?.localModelTag ?? null,
+          localModelDigest: runtime.settings?.localModelDigest ?? null,
           hostedCallsEnabled: runtime.settings?.hostedCallsEnabled ?? null,
         }
       : null,
@@ -328,10 +329,12 @@ async function inventory({ print = true } = {}) {
   if (
     runtime === null ||
     typeof runtime.settings?.localRuntime !== "string" ||
-    typeof runtime.settings?.localModelTag !== "string"
+    typeof runtime.settings?.localModelTag !== "string" ||
+    typeof runtime.settings?.localModelDigest !== "string" ||
+    !/^sha256:[0-9a-f]{64}$/.test(runtime.settings.localModelDigest)
   ) {
     throw new Error(
-      "observability inventory gagal: local runtime/model identity tidak tersedia",
+      "observability inventory gagal: pinned local runtime/model SHA-256 identity tidak tersedia",
     );
   }
   if (
@@ -557,6 +560,8 @@ async function canarySample(requestId, prompt, maxLatencyMs) {
     model: body.model ?? null,
     responseModel: body.responseModel ?? null,
     pricingModel: body.pricingModel ?? null,
+    modelIdentity: body.modelIdentity ?? null,
+    modelIdentityPinned: body.modelIdentityPinned === true,
     cacheHit: body.cacheHit ?? null,
     providerLatencyMs: Number(body.latencyMs ?? 0),
     outputChars: Number(body.outputChars ?? 0),

@@ -52,6 +52,7 @@ describe("POST /v1/complete", () => {
       anthropicApiKey: "test-provider-key",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedSpendUnlimited: true,
     });
 
     const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
@@ -73,6 +74,7 @@ describe("POST /v1/complete", () => {
       anthropicApiKey: "test-provider-key",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedSpendUnlimited: true,
     });
 
     const res = await app.inject({
@@ -92,6 +94,7 @@ describe("POST /v1/complete", () => {
     const app = buildConnectServer({
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedSpendUnlimited: true,
     });
 
     const res = await app.inject({
@@ -107,6 +110,7 @@ describe("POST /v1/complete", () => {
     const app = buildConnectServer({
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedSpendUnlimited: true,
     });
 
     const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
@@ -125,6 +129,7 @@ describe("POST /v1/complete", () => {
       anthropicApiKey: "dev-fallback-must-not-run",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedSpendUnlimited: true,
     });
 
     const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
@@ -139,12 +144,54 @@ describe("POST /v1/complete", () => {
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
       hostedCallsEnabled: false,
+      hostedSpendUnlimited: true,
     });
 
     const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
     expect(res.statusCode).toBe(503);
     expect(res.json().error.type).toBe("COST_KILL_SWITCH_ACTIVE");
     expect(res.json().error.message).toContain("ECORIONE_COST_KILL_SWITCH");
+    await app.close();
+  });
+
+  it("hosted tanpa plafon spend terkonfigurasi → 503, bukan unlimited diam-diam", async () => {
+    // Audit 2026-09-14 S0-2: `ECORIONE_SPEND_DAILY_USD`/`_MONTHLY_USD` yang kosong dulunya
+    // menghasilkan `spendBudget === undefined`, dan dispatch hosted tetap jalan tanpa
+    // admission control apa pun. ADR-21 mengharuskan kill switch DAN plafon kumulatif.
+    const app = buildConnectServer({
+      anthropicApiKey: "test-provider-key",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+    });
+
+    const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
+    expect(res.statusCode).toBe(503);
+    expect(res.json().error.type).toBe("SPEND_BUDGET_NOT_CONFIGURED");
+    expect(res.json().error.message).toContain("ECORIONE_SPEND_UNLIMITED");
+    await app.close();
+  });
+
+  it("target local tetap jalan tanpa plafon spend — gerbang hanya untuk hosted", async () => {
+    localPool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, {
+      model: "qwen3:8b-instruct-q4_K_M",
+      choices: [{ message: { content: "lokal oke" } }],
+      usage: { prompt_tokens: 8, completion_tokens: 2 },
+    });
+
+    const app = buildConnectServer({
+      anthropicApiKey: undefined,
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+    });
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/complete",
+      payload: baseBody({ target: "local" }),
+    });
+    expect(res.statusCode).toBe(200);
     await app.close();
   });
 
@@ -263,6 +310,7 @@ describe("POST /v1/complete", () => {
       anthropicApiKey: "test-provider-key",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedSpendUnlimited: true,
     });
 
     const res = await app.inject({ method: "POST", url: "/v1/complete", payload: baseBody() });
@@ -277,6 +325,7 @@ describe("/healthz", () => {
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "qwen3:8b-instruct-q4_K_M",
       token: "test-internal-token",
+      hostedSpendUnlimited: true,
     });
     const res = await app.inject({ method: "GET", url: "/healthz" });
     expect(res.json()).toEqual({ status: "ok", service: "connect" });

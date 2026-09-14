@@ -1,21 +1,20 @@
 import { HttpError, observabilityFor, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import {
-  CREDENTIAL_PROVIDERS,
-  type CredentialProvider,
-  type CredentialPurpose,
-  type CredentialVaultAdmin,
-} from "./credential-vault.js";
+import { CREDENTIAL_PROVIDERS, type CredentialVaultAdmin } from "./credential-vault.js";
 import { nowIso } from "./clock.js";
-import { RuntimeSettingsPatchSchema, type RuntimeSettingsAdmin } from "./runtime-settings.js";
+import {
+  PROVIDER_CATALOG,
+  credentialPurposeForProvider as purposeFor,
+} from "./provider-catalog.js";
+import {
+  MutableLocalModelTagError,
+  RuntimeSettingsPatchSchema,
+  type RuntimeSettingsAdmin,
+} from "./runtime-settings.js";
 
 const CredentialParamsSchema = z.object({ provider: z.enum(CREDENTIAL_PROVIDERS) });
 const CredentialBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
-
-function credentialPurpose(provider: CredentialProvider): CredentialPurpose {
-  return provider === "mcp" ? "tokens" : "messages";
-}
 
 export interface ConnectControlOptions {
   readonly runtimeSettings?: RuntimeSettingsAdmin | undefined;
@@ -48,10 +47,24 @@ export function registerConnectControlRoutes(
 
   app.get("/v1/settings/runtime", async () => runtime().get());
   app.put("/v1/settings/runtime", async (req) => {
-    const result = runtime().update(parseOrBadRequest(RuntimeSettingsPatchSchema, req.body));
+    const patch = parseOrBadRequest(RuntimeSettingsPatchSchema, req.body);
+    let result;
+    try {
+      result = runtime().update(patch);
+    } catch (err) {
+      // Alias model lokal yang mutable adalah input operator yang salah, bukan bug
+      // Connect — 400 eksplisit, bukan 500 generik (ADR-14).
+      if (err instanceof MutableLocalModelTagError)
+        throw new HttpError(400, "MUTABLE_LOCAL_MODEL_TAG", err.message);
+      throw err;
+    }
     metrics.addCounter("ecorione_control_changes_total", 1, { surface: "runtime-settings" });
     return result;
   });
+
+  app.get("/v1/settings/providers", async () => ({
+    providers: PROVIDER_CATALOG,
+  }));
 
   app.get("/v1/settings/credentials", async () => ({
     available: options.credentialVault !== undefined,
@@ -61,8 +74,8 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
-      const { secret } = parseOrBadRequest(CredentialBodySchema, req.body);
-      const metadata = vault().set(provider, credentialPurpose(provider), secret, nowIso());
+      const { secret: value } = parseOrBadRequest(CredentialBodySchema, req.body);
+      const metadata = vault().set(provider, purposeFor(provider), value, nowIso());
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
         provider,
@@ -75,7 +88,7 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
-      const removed = vault().remove(provider, credentialPurpose(provider));
+      const removed = vault().remove(provider, purposeFor(provider));
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
         provider,
