@@ -1,13 +1,35 @@
 type ErrorEnvelope = {
   error?: {
+    code?: unknown;
     message?: unknown;
   };
 };
 
-function structuredErrorMessage(payload: unknown): string | undefined {
-  if (payload === null || typeof payload !== "object") return undefined;
-  const message = (payload as ErrorEnvelope).error?.message;
-  return typeof message === "string" && message.trim().length > 0 ? message.trim() : undefined;
+function structuredError(payload: unknown): { code?: string; message?: string } {
+  if (payload === null || typeof payload !== "object") return {};
+  const error = (payload as ErrorEnvelope).error;
+  if (error === undefined) return {};
+  const code =
+    typeof error.code === "string" && error.code.trim().length > 0
+      ? error.code.trim()
+      : undefined;
+  const message =
+    typeof error.message === "string" && error.message.trim().length > 0
+      ? error.message.trim()
+      : undefined;
+  return { ...(code === undefined ? {} : { code }), ...(message === undefined ? {} : { message }) };
+}
+
+export class ClientResponseError extends Error {
+  readonly code: string | undefined;
+  readonly status: number;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "ClientResponseError";
+    this.status = status;
+    this.code = code;
+  }
 }
 
 export async function readJson<T>(
@@ -26,7 +48,8 @@ export async function readJson<T>(
   }
 
   if (!response.ok) {
-    throw new Error(structuredErrorMessage(body) ?? fallbackMessage);
+    const error = structuredError(body);
+    throw new ClientResponseError(error.message ?? fallbackMessage, response.status, error.code);
   }
 
   return body as T;
