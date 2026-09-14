@@ -27,6 +27,18 @@ const baseUrl = (process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11434/
 );
 const modelTag = process.env.ECORIONE_LOCAL_MODEL ?? "qwen3:8b-instruct-q4_K_M";
 const declaredDigest = process.env.ECORIONE_LOCAL_MODEL_DIGEST?.trim() || null;
+const inventoryTimeoutMs = 10_000;
+const modelTimeoutMs = readTimeoutMs("ECORIONE_AGENTIC_MODEL_TIMEOUT_MS", 120_000);
+
+function readTimeoutMs(name, fallback) {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 1_000 || parsed > 600_000) {
+    throw new Error(`${name} harus integer 1000..600000 ms`);
+  }
+  return parsed;
+}
 
 function normalizeDigest(value) {
   if (typeof value !== "string") return null;
@@ -36,8 +48,8 @@ function normalizeDigest(value) {
     .replace(/^sha256:/u, "");
 }
 
-async function fetchJson(url, init = {}) {
-  const signal = AbortSignal.timeout(10_000);
+async function fetchJson(url, init = {}, timeoutMs = inventoryTimeoutMs) {
+  const signal = AbortSignal.timeout(timeoutMs);
   const response = await fetch(url, { ...init, signal });
   const text = await response.text();
   let body = null;
@@ -97,15 +109,27 @@ async function inspectIdentity() {
 
 async function callModel(messages) {
   const started = performance.now();
-  const response = await fetchJson(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      model: modelTag,
-      temperature: 0,
-      messages,
-    }),
-  });
+  let response;
+  try {
+    response = await fetchJson(
+      `${baseUrl}/chat/completions`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          model: modelTag,
+          temperature: 0,
+          messages,
+        }),
+      },
+      modelTimeoutMs,
+    );
+  } catch (error) {
+    if (error instanceof Error && ["AbortError", "TimeoutError"].includes(error.name)) {
+      throw new Error(`local model request timeout setelah ${String(modelTimeoutMs)} ms`);
+    }
+    throw error;
+  }
   const latencyMs = performance.now() - started;
   if (!response.ok) {
     throw new Error(
@@ -133,23 +157,35 @@ async function runOnce(item, repetition) {
   const trace = { actions: [], executions: [], observations: [] };
   const calls = [];
   let failure = null;
+  let failureStage = null;
+  let modelOutputPreview = null;
 
   for (let step = 0; step < manifest.maxSteps; step += 1) {
     let call;
-    let action;
     try {
       call = await callModel(messages);
-      action = parseAgentAction(call.content);
     } catch (error) {
       failure = error instanceof Error ? error.message : String(error);
+      failureStage = "call";
       break;
     }
+
     calls.push({
       responseModel: call.responseModel,
       latencyMs: call.latencyMs,
       inputTokens: call.inputTokens,
       outputTokens: call.outputTokens,
     });
+
+    let action;
+    try {
+      action = parseAgentAction(call.content);
+    } catch (error) {
+      failure = error instanceof Error ? error.message : String(error);
+      failureStage = "parse";
+      modelOutputPreview = call.content.slice(0, 400);
+      break;
+    }
     trace.actions.push(action);
 
     if (action.phase === "final") break;
@@ -158,6 +194,7 @@ async function runOnce(item, repetition) {
     trace.executions.push(execution);
     if (!execution.ok) {
       failure = execution.error;
+      failureStage = "execute";
       break;
     }
     trace.observations.push(execution.result);
@@ -181,14 +218,28 @@ async function runOnce(item, repetition) {
     selectedTools: score.selectedTools,
     executedTools: score.executedTools,
     finalAnswer: score.finalAnswer,
+    failureStage,
     failure,
+    modelOutputPreview,
     calls,
   };
 }
 
+function describeFailure(result) {
+  if (result.failure !== null) {
+    return `${result.failureStage ?? "unknown"}: ${result.failure}`;
+  }
+  const failedChecks = Object.entries(result.checks)
+    .filter(([, passed]) => !passed)
+    .map(([name]) => name);
+  return `checks: ${failedChecks.join(", ") || "unknown"}`;
+}
+
 async function main() {
   const inventory = await inspectIdentity();
-  console.log(JSON.stringify({ phase: "inventory", ...inventory }, null, 2));
+  console.log(
+    JSON.stringify({ phase: "inventory", modelTimeoutMs, ...inventory }, null, 2),
+  );
   if (inventoryOnly) {
     process.exitCode = inventory.modelsReachable ? 0 : 1;
     return;
@@ -207,9 +258,13 @@ async function main() {
     for (let repetition = 1; repetition <= manifest.repetitions; repetition += 1) {
       const result = await runOnce(item, repetition);
       records.push(result);
+      const suffix = result.pass ? "" : ` — ${describeFailure(result)}`;
       console.log(
-        `${item.id} run ${String(repetition)}/${String(manifest.repetitions)}: ${result.pass ? "PASS" : "FAIL"}`,
+        `${item.id} run ${String(repetition)}/${String(manifest.repetitions)}: ${result.pass ? "PASS" : "FAIL"}${suffix}`,
       );
+      if (!result.pass && result.modelOutputPreview !== null) {
+        console.log(`  output preview: ${JSON.stringify(result.modelOutputPreview)}`);
+      }
     }
   }
 
@@ -240,7 +295,7 @@ async function main() {
     suite: manifest.suite,
     recordedAt: new Date().toISOString(),
     claimBoundary: manifest.claimBoundary,
-    inventory,
+    inventory: { ...inventory, modelTimeoutMs },
     allPass3,
     closureEligible,
     caseSummaries,
