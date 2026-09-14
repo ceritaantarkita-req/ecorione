@@ -3,13 +3,21 @@
  * kegagalan provider/kontrol operator bukan bug di Connect (`docs/api-fase1.md` §Connect).
  */
 
+export type ProviderErrorKind = "unreachable" | "invalid-credential" | "upstream";
+
 export class ProviderError extends Error {
   readonly provider: "hosted" | "local";
+  readonly kind: ProviderErrorKind;
 
-  constructor(provider: "hosted" | "local", message: string) {
+  constructor(
+    provider: "hosted" | "local",
+    message: string,
+    kind: ProviderErrorKind = "upstream",
+  ) {
     super(message);
     this.name = "ProviderError";
     this.provider = provider;
+    this.kind = kind;
   }
 }
 
