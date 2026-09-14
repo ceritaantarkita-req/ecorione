@@ -29,6 +29,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Apply Temporal runtime timeout hardening candidate
+        run: git apply scripts/temporal-runtime-timeout.patch
+
       - name: Format
         run: pnpm run format:check
 
@@ -102,19 +105,20 @@ jobs:
           ref: agent/active-work-20260914
           fetch-depth: 0
 
-      - name: Materialize canonical W12 work-plan closure
+      - name: Materialize verified closure changes
         run: |
+          git apply scripts/temporal-runtime-timeout.patch
           git apply --recount scripts/w12-docs.patch
-          rm scripts/w12-docs.patch
+          rm scripts/temporal-runtime-timeout.patch scripts/w12-docs.patch
           git fetch origin main --depth=1
           git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
           test "$(git hash-object .github/workflows/ci.yml)" = "838ed8d288a6f4ef8ca560c8168bbf79d8122f9a"
           git diff --check
 
-      - name: Commit canonical W12 closure
+      - name: Commit verified closure changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/active-work-plan.md .github/workflows/ci.yml scripts/w12-docs.patch
-          git commit -m "docs: close W12 repo-side attachment pipeline"
+          git add test/phase4-temporal-runtime.test.ts docs/active-work-plan.md .github/workflows/ci.yml scripts/temporal-runtime-timeout.patch scripts/w12-docs.patch
+          git commit -m "docs: close W12 and harden Temporal acceptance timeout"
           git push origin HEAD:agent/active-work-20260914
