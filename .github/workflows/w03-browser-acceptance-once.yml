@@ -1,0 +1,266 @@
+name: W03 Rendered Browser Acceptance Once
+
+on:
+  push:
+    branches:
+      - feat/w03-flow-responsive-redesign-20260915
+
+permissions:
+  contents: write
+
+jobs:
+  rendered-browser-acceptance:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/w03-flow-responsive-redesign-20260915
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install ephemeral browser QA dependency
+        run: |
+          pnpm add -Dw playwright@1.55.0
+          pnpm exec playwright install --with-deps chromium
+
+      - name: Build product UI
+        run: pnpm run build
+
+      - name: Start Ai UI
+        run: |
+          nohup pnpm --filter @ecorione/ai start > /tmp/w03-ai.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3000/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/w03-ai.log
+          exit 1
+
+      - name: Write browser acceptance harness
+        run: |
+          cat > scripts/.w03-browser-acceptance.mjs <<'EOF'
+          import { chromium } from "playwright";
+          import { mkdir } from "node:fs/promises";
+
+          const baseUrl = "http://127.0.0.1:3000";
+          const outDir = "artifacts/w03-browser";
+          await mkdir(outDir, { recursive: true });
+
+          const flowNodes = [
+            { id: "trigger", kind: "trigger", label: "Trigger", category: "Control" },
+            { id: "ai", kind: "ai", label: "AI", category: "Execution" },
+            { id: "http", kind: "http", label: "HTTP", category: "Execution" },
+            { id: "condition", kind: "condition", label: "Condition", category: "Control" },
+            { id: "delay", kind: "delay", label: "Delay", category: "Control" },
+          ];
+
+          const browser = await chromium.launch({ headless: true });
+          const failures = [];
+
+          function badConsoleMessage(type, text) {
+            if (type === "error") return true;
+            if (type !== "warning") return false;
+            return /(hydration|hydrate|validateDOMNesting|unhandled|uncaught|nested.*button|cannot update)/i.test(text);
+          }
+
+          async function installApiMocks(context) {
+            await context.route("**/api/**", async (route) => {
+              const url = new URL(route.request().url());
+              if (url.pathname === "/api/flow/nodes") {
+                await route.fulfill({
+                  status: 200,
+                  contentType: "application/json",
+                  body: JSON.stringify({ nodes: flowNodes }),
+                });
+                return;
+              }
+              if (url.pathname === "/api/flow/graphs/validate") {
+                await route.fulfill({
+                  status: 200,
+                  contentType: "application/json",
+                  body: JSON.stringify({ valid: true, issues: [], plan: { planDigest: "a".repeat(64) } }),
+                });
+                return;
+              }
+              await route.fulfill({
+                status: 503,
+                contentType: "application/json",
+                body: JSON.stringify({ error: { message: "W03 browser QA stub" } }),
+              });
+            });
+          }
+
+          async function assertNoPageOverflow(page, label) {
+            const metrics = await page.evaluate(() => ({
+              innerWidth: window.innerWidth,
+              htmlScrollWidth: document.documentElement.scrollWidth,
+              bodyScrollWidth: document.body.scrollWidth,
+            }));
+            if (
+              metrics.htmlScrollWidth > metrics.innerWidth + 1 ||
+              metrics.bodyScrollWidth > metrics.innerWidth + 1
+            ) {
+              throw new Error(`${label}: page-level horizontal overflow ${JSON.stringify(metrics)}`);
+            }
+            console.log(`PASS ${label} overflow ${JSON.stringify(metrics)}`);
+          }
+
+          async function openCheckedPage(context, path, label) {
+            const page = await context.newPage();
+            const consoleProblems = [];
+            const pageErrors = [];
+            page.on("console", (message) => {
+              const text = message.text();
+              if (badConsoleMessage(message.type(), text)) {
+                consoleProblems.push(`${message.type()}: ${text}`);
+              }
+            });
+            page.on("pageerror", (error) => pageErrors.push(error.message));
+
+            const response = await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle" });
+            if (response === null || response.status() >= 400) {
+              throw new Error(`${label}: route failed with ${response?.status() ?? "no response"}`);
+            }
+            await page.waitForTimeout(300);
+            const bodyText = await page.locator("body").innerText();
+            if (bodyText.trim().length < 10) throw new Error(`${label}: rendered body is unexpectedly empty`);
+            await assertNoPageOverflow(page, label);
+
+            return {
+              page,
+              assertConsoleClean() {
+                if (pageErrors.length > 0 || consoleProblems.length > 0) {
+                  throw new Error(
+                    `${label}: browser console/page errors: ${JSON.stringify({ pageErrors, consoleProblems })}`,
+                  );
+                }
+                console.log(`PASS ${label} console`);
+              },
+            };
+          }
+
+          async function runNarrowRoute(path, label) {
+            const context = await browser.newContext({ viewport: { width: 410, height: 844 } });
+            await installApiMocks(context);
+            try {
+              const checked = await openCheckedPage(context, path, label);
+              await checked.page.screenshot({ path: `${outDir}/${label}.png`, fullPage: true });
+              checked.assertConsoleClean();
+              await checked.page.close();
+            } finally {
+              await context.close();
+            }
+          }
+
+          for (const [path, label] of [
+            ["/", "narrow-ai"],
+            ["/space", "narrow-space"],
+            ["/ops", "narrow-operations"],
+            ["/settings", "narrow-settings"],
+          ]) {
+            try {
+              await runNarrowRoute(path, label);
+            } catch (error) {
+              failures.push(error instanceof Error ? error.message : String(error));
+            }
+          }
+
+          try {
+            const context = await browser.newContext({ viewport: { width: 410, height: 844 } });
+            await installApiMocks(context);
+            const checked = await openCheckedPage(context, "/flow", "narrow-flow-stack");
+            const page = checked.page;
+
+            await page.getByRole("button", { name: "Stack", exact: true }).waitFor();
+            await page.getByRole("button", { name: "Add AI node" }).click();
+            await page.getByRole("button", { name: "Nodes", exact: true }).click();
+            await page.getByRole("button", { name: "Add HTTP node" }).click();
+            await assertNoPageOverflow(page, "narrow-flow-stack-after-node-add");
+            await page.screenshot({ path: `${outDir}/narrow-flow-stack.png`, fullPage: true });
+
+            await page.getByRole("button", { name: "Canvas", exact: true }).click();
+            await page.locator('svg[aria-label="Flow connections"]').waitFor();
+            const canvasOverflow = await page.locator('svg[aria-label="Flow connections"]').evaluate((svg) => {
+              const canvas = svg.parentElement;
+              const wrap = canvas?.parentElement;
+              return wrap === null || wrap === undefined ? null : getComputedStyle(wrap).overflowX;
+            });
+            if (canvasOverflow !== "auto" && canvasOverflow !== "scroll") {
+              throw new Error(`narrow-flow-canvas: expected contained horizontal overflow, got ${canvasOverflow}`);
+            }
+            await assertNoPageOverflow(page, "narrow-flow-canvas");
+            await page.screenshot({ path: `${outDir}/narrow-flow-canvas.png`, fullPage: true });
+            checked.assertConsoleClean();
+            await context.close();
+          } catch (error) {
+            failures.push(error instanceof Error ? error.message : String(error));
+          }
+
+          try {
+            const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+            await installApiMocks(context);
+            const checked = await openCheckedPage(context, "/flow", "desktop-flow");
+            const page = checked.page;
+
+            await page.getByRole("button", { name: "Add AI node" }).click();
+            await page.getByRole("button", { name: "Nodes", exact: true }).click();
+            await page.getByRole("button", { name: "Add Condition node" }).click();
+            await page.getByRole("button", { name: /Connect from AI/ }).waitFor();
+            await page.getByRole("button", { name: /Connect Condition true output/ }).waitFor();
+            await page.getByRole("button", { name: /Connect Condition false output/ }).waitFor();
+
+            const collapse = page.getByRole("button", { name: "Collapse builder panel" });
+            await collapse.click();
+            await page.getByRole("button", { name: "Expand builder panel" }).click();
+            await page.screenshot({ path: `${outDir}/desktop-flow.png`, fullPage: true });
+            checked.assertConsoleClean();
+            await context.close();
+          } catch (error) {
+            failures.push(error instanceof Error ? error.message : String(error));
+          }
+
+          await browser.close();
+
+          if (failures.length > 0) {
+            console.error("W03 rendered browser acceptance FAILED");
+            for (const failure of failures) console.error(`- ${failure}`);
+            process.exit(1);
+          }
+
+          console.log("W03 rendered browser acceptance PASSED");
+          EOF
+
+      - name: Run rendered browser acceptance
+        run: node scripts/.w03-browser-acceptance.mjs
+
+      - name: Upload rendered evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: w03-rendered-browser-evidence
+          path: |
+            artifacts/w03-browser/*.png
+            /tmp/w03-ai.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Remove one-shot workflow after PASS
+        run: |
+          rm -f scripts/.w03-browser-acceptance.mjs
+          git checkout -- package.json pnpm-lock.yaml
+          git rm .github/workflows/w03-browser-acceptance-once.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: remove one-shot W03 browser acceptance workflow"
+          git push origin HEAD:feat/w03-flow-responsive-redesign-20260915
