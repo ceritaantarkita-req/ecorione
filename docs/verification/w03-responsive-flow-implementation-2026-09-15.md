@@ -2,7 +2,7 @@
 
 Date: **2026-09-15**
 
-Status: **IMPLEMENTED / CI RE-RUN PENDING / RENDERED ACCEPTANCE PENDING**
+Status: **IMPLEMENTED / CI GREEN / RENDERED ACCEPTANCE PENDING**
 
 Canonical design contract: `docs/flow-responsive-ux-redesign.md`.
 
@@ -42,9 +42,10 @@ e3a487e feat(flow): complete responsive builder and mobile styles
 b35e052 fix(flow): harden responsive connection interactions
 cca95d9 test(flow): lock responsive interaction contracts
 1f35828 chore: format W03 implementation
+0055719 docs: update W03 implementation verification state
 ```
 
-A one-shot formatter workflow was used only to run the repository's own Prettier version against the two files identified by CI and removed itself in the same formatting commit. It is not part of the resulting branch tree.
+A one-shot formatter workflow was used only to run the repository's own Prettier version against the two files identified by the first CI attempt and removed itself in the same formatting commit. It is not part of the resulting branch tree.
 
 ## Preserved boundaries
 
@@ -75,18 +76,32 @@ No unrelated page changes were introduced where the existing structural contract
 - [x] make mobile Stack connection summaries explicit (`From → To`) and actionable;
 - [x] verify app-shell and Ai / Space / Operations / Settings narrow-layout structural contracts;
 - [x] add stable regression coverage for Flow interaction/state contracts;
-- [ ] complete fresh repository CI/checks on the formatted current head;
+- [x] complete fresh repository CI/checks on the formatted implementation head;
 - [ ] perform fresh rendered W03 walkthrough at 390–430 CSS px;
 - [ ] update defect ledger and canonical active-work plan only after evidence supports closure.
 
-## CI / Product Eval history
+## CI / Product Eval evidence
 
 The first PR-head Product Eval completed successfully. The first CI `verify` attempt stopped at `format:check` and identified only:
 
 - `apps/ai/app/flow/page.tsx`;
 - `test/flow-responsive-source-contract.test.ts`.
 
-Both files have now been formatted with the repository's own Prettier command. A fresh CI run is required on the resulting head before this checkpoint can advance to rendered acceptance.
+Both files were formatted with the repository's own Prettier command. On the resulting implementation head (`00557194365f1b363c2c1f49552d2c04d27bb9d1`), the fresh checks completed successfully:
+
+- Product Eval: success;
+- CI naming: success;
+- CI secret-history: success;
+- CI verify / Format: success;
+- CI verify / Lint: success;
+- CI verify / Typecheck: success;
+- CI verify / Test: success;
+- CI verify / Phase 4 real-process acceptance: success;
+- CI verify / Production operations acceptance: success;
+- CI verify / Secret scan: success;
+- CI verify / Production build: success.
+
+This establishes a green automated checkpoint for the implementation. It does not replace the rendered narrow-viewport acceptance required by W03.
 
 ## Closure rule
 
