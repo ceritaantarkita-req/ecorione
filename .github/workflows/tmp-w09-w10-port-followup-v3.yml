@@ -1,0 +1,221 @@
+name: W09 W10 Port Runtime Follow-up v3
+
+on:
+  push:
+    branches:
+      - fix/w09-w10-port-runtime-followup-v3-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Patch runtime port contract
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected 1 match, got {count}")
+              return text.replace(old, new, 1)
+
+          package_path = Path("apps/ai/package.json")
+          package = package_path.read_text()
+          package = replace_once(package, '"dev": "next dev -p 3000"', '"dev": "next dev"', "ai dev script")
+          package = replace_once(package, '"start": "next start -p 3000"', '"start": "next start"', "ai start script")
+          package_path.write_text(package)
+
+          env_path = Path(".env.example")
+          env_text = env_path.read_text()
+          env_text = replace_once(
+              env_text,
+              "ECORIONE_AI_PORT=17020\n",
+              "ECORIONE_AI_PORT=17020\nECORIONE_AI_PORT_MIGRATION_VERSION=1\n",
+              "env migration marker",
+          )
+          env_path.write_text(env_text)
+
+          engine_path = Path("scripts/ecorione-engine.mjs")
+          engine = engine_path.read_text()
+          engine = replace_once(
+              engine,
+              '''export const RESERVED_SERVICE_PORTS = Object.freeze(\n  Array.from({ length: 8 }, (_, index) => 17021 + index),\n);\n''',
+              '''export const RESERVED_SERVICE_PORTS = Object.freeze(\n  Array.from({ length: 8 }, (_, index) => 17021 + index),\n);\nexport const AI_PORT_MIGRATION_VERSION = "1";\n''',
+              "engine migration constant",
+          )
+          engine = replace_once(
+              engine,
+              '''  let text = readFileSync(envPath, "utf8");\n  let values = parseSimpleEnv(text);\n  const generated = [];\n\n  if (!values.ECORIONE_INTERNAL_TOKEN) {\n''',
+              '''  let text = readFileSync(envPath, "utf8");\n  let values = parseSimpleEnv(text);\n  const generated = [];\n  let migratedLegacyAiPort = false;\n  let configUpdated = false;\n\n  if (values.ECORIONE_AI_PORT_MIGRATION_VERSION !== AI_PORT_MIGRATION_VERSION) {\n    if (values.ECORIONE_AI_PORT === "3000") {\n      text = upsertEnvValue(text, "ECORIONE_AI_PORT", String(DEFAULT_AI_PORT));\n      migratedLegacyAiPort = true;\n    }\n    text = upsertEnvValue(\n      text,\n      "ECORIONE_AI_PORT_MIGRATION_VERSION",\n      AI_PORT_MIGRATION_VERSION,\n    );\n    configUpdated = true;\n    values = parseSimpleEnv(text);\n  }\n\n  if (!values.ECORIONE_INTERNAL_TOKEN) {\n''',
+              "engine env migration block",
+          )
+          engine = replace_once(
+              engine,
+              '''  if (created || generated.length > 0)\n    writeFileSync(envPath, text, { encoding: "utf8", mode: 0o600 });\n  return { envPath, created, generated, values: parseSimpleEnv(text) };\n}\n''',
+              '''  if (created || generated.length > 0 || configUpdated)\n    writeFileSync(envPath, text, { encoding: "utf8", mode: 0o600 });\n  return {\n    envPath,\n    created,\n    generated,\n    migratedLegacyAiPort,\n    values: parseSimpleEnv(text),\n  };\n}\n''',
+              "engine env return",
+          )
+          engine = replace_once(
+              engine,
+              '''export async function selectAiPort(preferredPort, classify = classifyAiPort) {\n''',
+              '''export async function waitForAiReady(\n  port,\n  timeoutMs = 90_000,\n  classify = classifyAiPort,\n  pollMs = 500,\n) {\n  const deadline = Date.now() + timeoutMs;\n  while (Date.now() < deadline) {\n    if ((await classify(port)) === "ecorione") return;\n    await new Promise((resolvePromise) => setTimeout(resolvePromise, pollMs));\n  }\n  throw new Error(\n    `Ai belum HTTP-ready sebagai ECORIONE setelah ${String(Math.round(timeoutMs / 1000))} detik di ${aiUrl(port)}.`,\n  );\n}\n\nexport async function selectAiPort(preferredPort, classify = classifyAiPort) {\n''',
+              "wait for ai identity",
+          )
+          engine = replace_once(
+              engine,
+              '''  const local = ensureLocalEnv();\n  if (local.created) console.log("✓ .env dibuat dari .env.example");\n  for (const key of local.generated)\n''',
+              '''  const local = ensureLocalEnv();\n  if (local.created) console.log("✓ .env dibuat dari .env.example");\n  if (local.migratedLegacyAiPort) {\n    console.log(\n      `✓ Legacy Ai port 3000 dimigrasikan sekali ke ${String(DEFAULT_AI_PORT)}; ECORIONE_AI_PORT tetap bisa dioverride eksplisit.`,\n    );\n  }\n  for (const key of local.generated)\n''',
+              "start migration message",
+          )
+          engine = replace_once(
+              engine,
+              '''    const readiness = Promise.all([\n      waitForPort(selectedAi.port, 90_000, "Ai"),\n      waitForRequiredServices(token, 90_000),\n    ]).then(() => ({ ready: true }));\n''',
+              '''    const readiness = Promise.all([\n      waitForAiReady(selectedAi.port, 90_000),\n      waitForRequiredServices(token, 90_000),\n    ]).then(() => ({ ready: true }));\n''',
+              "http ai readiness",
+          )
+          engine_path.write_text(engine)
+
+          acceptance_path = Path("scripts/windows-engine-acceptance.mjs")
+          acceptance = acceptance_path.read_text()
+          acceptance = replace_once(
+              acceptance,
+              '''import { spawn, spawnSync } from "node:child_process";\nimport { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";\n''',
+              '''import { spawn, spawnSync } from "node:child_process";\nimport { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";\nimport { createServer } from "node:net";\n''',
+              "acceptance net import",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''  DEFAULT_AI_PORT,\n  isPortReachable,\n''',
+              '''  DEFAULT_AI_PORT,\n  ensureLocalEnv,\n  isPortReachable,\n''',
+              "acceptance ensure env import",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''function readLocalEnv() {\n  if (!existsSync(ENV_PATH)) return {};\n  return parseSimpleEnv(readFileSync(ENV_PATH, "utf8"));\n}\n\n''',
+              "",
+              "remove unused readLocalEnv",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''function doctorCommand(env) {\n  return runSync("pnpm", ["engine:doctor"], { env, timeoutMs: 90_000 });\n}\n\nasync function runAcceptance() {\n''',
+              '''function doctorCommand(env) {\n  return runSync("pnpm", ["engine:doctor"], { env, timeoutMs: 90_000 });\n}\n\nfunction listenServer(server, port) {\n  return new Promise((resolvePromise, rejectPromise) => {\n    const onError = (error) => {\n      server.off("listening", onListening);\n      rejectPromise(error);\n    };\n    const onListening = () => {\n      server.off("error", onError);\n      resolvePromise();\n    };\n    server.once("error", onError);\n    server.once("listening", onListening);\n    server.listen(port, "127.0.0.1");\n  });\n}\n\nfunction closeServer(server) {\n  if (!server) return Promise.resolve();\n  return new Promise((resolvePromise) => server.close(() => resolvePromise()));\n}\n\nasync function runAcceptance() {\n''',
+              "acceptance sentinel helpers",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''  let engineChild;\n  let preexistingTemporal = false;\n''',
+              '''  let engineChild;\n  let preexistingTemporal = false;\n  let protectedPort3000Server;\n  let port3000Preexisting = false;\n''',
+              "acceptance sentinel vars",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''    const temporalVersion = runSync("temporal", ["--version"]);\n    const dockerVersion = runSync("docker", ["version", "--format", "{{.Server.Version}}"]);\n    const localEnv = readLocalEnv();\n    preexistingTemporal = await isPortReachable(7233);\n''',
+              '''    const temporalVersion = runSync("temporal", ["--version"]);\n    const dockerVersion = runSync("docker", ["version", "--format", "{{.Server.Version}}"]);\n    const localBootstrap = ensureLocalEnv(ROOT);\n    const localEnv = localBootstrap.values;\n    port3000Preexisting = await isPortReachable(3000);\n    if (!port3000Preexisting) {\n      protectedPort3000Server = createServer((socket) => socket.end("foreign-port-3000\\n"));\n      await listenServer(protectedPort3000Server, 3000);\n    }\n    if (!(await isPortReachable(3000))) {\n      throw new Error("Acceptance gagal membuat atau mempertahankan foreign listener di port 3000.");\n    }\n    preexistingTemporal = await isPortReachable(7233);\n''',
+              "acceptance bootstrap and sentinel",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''      envExistedBefore: existsSync(ENV_PATH),\n      temporalPreexisting: preexistingTemporal,\n''',
+              '''      envExistedBefore: existsSync(ENV_PATH),\n      legacyAiPortMigrated: localBootstrap.migratedLegacyAiPort,\n      port3000Preexisting,\n      port3000Protected: true,\n      temporalPreexisting: preexistingTemporal,\n''',
+              "acceptance report sentinel",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''    const appPorts = [started.port, ...SERVICE_PORTS];\n    report.phases.start = {\n''',
+              '''    if (started.port === 3000) {\n      throw new Error("ECORIONE tidak boleh memakai protected foreign port 3000 pada acceptance ini.");\n    }\n    if (!(await isPortReachable(3000))) {\n      throw new Error("Foreign listener port 3000 hilang setelah ECORIONE start.");\n    }\n    const appPorts = [started.port, ...SERVICE_PORTS];\n    report.phases.start = {\n''',
+              "acceptance start protection",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''      fallbackUsed: started.port !== preferredAiPort,\n      ports: await portState(appPorts),\n''',
+              '''      fallbackUsed: started.port !== preferredAiPort,\n      foreignPort3000Preserved: true,\n      ports: await portState(appPorts),\n''',
+              "acceptance start report",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''    engineChild = undefined;\n    report.phases.cleanup = {\n''',
+              '''    if (!(await isPortReachable(3000))) {\n      throw new Error("Cleanup ECORIONE menyentuh foreign listener di port 3000.");\n    }\n    engineChild = undefined;\n    report.phases.cleanup = {\n''',
+              "acceptance cleanup protection",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''      appPortsReleased: true,\n      engineProcessExited: true,\n''',
+              '''      appPortsReleased: true,\n      engineProcessExited: true,\n      foreignPort3000Preserved: true,\n''',
+              "acceptance cleanup report",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''    console.log("✓ W09-D Windows process tree cleanup PASS");\n\n    const postDoctor = doctorCommand(acceptanceEnv);\n''',
+              '''    console.log("✓ W09-D Windows process tree cleanup PASS");\n\n    if (protectedPort3000Server) {\n      await closeServer(protectedPort3000Server);\n      protectedPort3000Server = undefined;\n    }\n\n    const postDoctor = doctorCommand(acceptanceEnv);\n''',
+              "acceptance sentinel success cleanup",
+          )
+          acceptance = replace_once(
+              acceptance,
+              '''    if (engineChild && Number.isInteger(engineChild.pid)) {\n      try {\n        killWindowsTree(engineChild.pid);\n      } catch (cleanupError) {\n        report.cleanupError =\n          cleanupError instanceof Error ? cleanupError.message : String(cleanupError);\n      }\n    }\n    const reportPath = writeReport(report);\n''',
+              '''    if (engineChild && Number.isInteger(engineChild.pid)) {\n      try {\n        killWindowsTree(engineChild.pid);\n      } catch (cleanupError) {\n        report.cleanupError =\n          cleanupError instanceof Error ? cleanupError.message : String(cleanupError);\n      }\n    }\n    try {\n      await closeServer(protectedPort3000Server);\n    } catch (sentinelCleanupError) {\n      report.sentinelCleanupError =\n        sentinelCleanupError instanceof Error\n          ? sentinelCleanupError.message\n          : String(sentinelCleanupError);\n    }\n    const reportPath = writeReport(report);\n''',
+              "acceptance sentinel failure cleanup",
+          )
+          acceptance_path.write_text(acceptance)
+
+          test_path = Path("test/ecorione-engine.test.mjs")
+          tests = test_path.read_text()
+          tests = replace_once(
+              tests,
+              '''  writeEngineRuntimeState,\n  stopSpawnedChild,\n''',
+              '''  writeEngineRuntimeState,\n  stopSpawnedChild,\n  waitForAiReady,\n''',
+              "engine test wait import",
+          )
+          insertion = '''\n  it("migrates the historical generated Ai port 3000 exactly once", () => {\n    const root = tempRoot();\n    writeFileSync(\n      join(root, ".env"),\n      [\n        "ECORIONE_AI_PORT=3000",\n        "ECORIONE_INTERNAL_TOKEN=already-set",\n        "ECORIONE_CONNECT_VAULT_MASTER_KEY=already-set",\n        "",\n      ].join("\\n"),\n    );\n\n    const first = ensureLocalEnv(root);\n    expect(first.migratedLegacyAiPort).toBe(true);\n    expect(first.values.ECORIONE_AI_PORT).toBe("17020");\n    expect(first.values.ECORIONE_AI_PORT_MIGRATION_VERSION).toBe("1");\n\n    let text = readFileSync(join(root, ".env"), "utf8");\n    text = upsertEnvValue(text, "ECORIONE_AI_PORT", "3000");\n    writeFileSync(join(root, ".env"), text);\n    const second = ensureLocalEnv(root);\n    expect(second.migratedLegacyAiPort).toBe(false);\n    expect(second.values.ECORIONE_AI_PORT).toBe("3000");\n  });\n\n  it("waits for the ECORIONE HTTP identity rather than accepting a bare TCP listener", async () => {\n    const dispositions = ["occupied", "occupied", "ecorione"];\n    const classify = vi.fn(async () => dispositions.shift() ?? "ecorione");\n\n    await expect(waitForAiReady(17020, 100, classify, 1)).resolves.toBeUndefined();\n    expect(classify).toHaveBeenCalledTimes(3);\n  });\n\n  it("does not hardcode port 3000 in the Ai package scripts", () => {\n    const aiPackage = JSON.parse(\n      readFileSync(new URL("../apps/ai/package.json", import.meta.url), "utf8"),\n    );\n    expect(aiPackage.scripts.dev).toBe("next dev");\n    expect(aiPackage.scripts.start).toBe("next start");\n  });\n'''
+          anchor = '  it("probes the configured local AI through Connect without vendor-specific runtime logic", async () => {'
+          tests = replace_once(tests, anchor, insertion + "\n" + anchor, "engine regression insertion")
+          test_path.write_text(tests)
+
+          doc_path = Path("docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md")
+          doc = doc_path.read_text()
+          marker = "## Operator rerun blocker 3 — selected port was not propagated to Next.js"
+          if marker not in doc:
+              doc += '''\n\n## Operator rerun blocker 3 — selected port was not propagated to Next.js\n\nThe current-main Windows rerun at `c9e017217533230bbd427057fc1aa0eb6fdde7ab` exposed two remaining integration gaps after the collision-safe port refactor. The operator's historical ignored `.env` still carried the former generated default `ECORIONE_AI_PORT=3000`, and `apps/ai/package.json` still invoked `next dev -p 3000` / `next start -p 3000`, which overrides the engine-selected `PORT`. The engine then declared TCP readiness before Next.js had finished serving the ECORIONE page, so an immediate runtime doctor could miss the Ai identity marker.\n\nDisposition: source startup now performs a one-time migration of the historical generated `3000` default to `17020` while preserving later explicit overrides; the Ai package scripts no longer hardcode a CLI port and therefore honor the selected `PORT`; engine readiness waits for the ECORIONE HTTP identity, not only an open TCP socket; and the Windows acceptance protects port `3000` with a foreign listener (or preserves an existing listener) throughout start and cleanup so regressions cannot silently reintroduce a dependency on that common development port. W09/W10 remain open until a fresh exact-current-main Windows run reaches the final PASS marker.\n'''
+          doc_path.write_text(doc)
+          PY
+
+          pnpm exec prettier --write \
+            apps/ai/package.json \
+            scripts/ecorione-engine.mjs \
+            scripts/windows-engine-acceptance.mjs \
+            test/ecorione-engine.test.mjs \
+            docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md
+          pnpm exec vitest run \
+            test/ecorione-engine.test.mjs \
+            test/windows-engine-acceptance.test.mjs \
+            test/desktop-bundle.test.mjs
+          pnpm run typecheck
+          pnpm run lint
+          git diff --check
+
+      - name: Commit fix
+        run: |
+          rm .github/workflows/tmp-w09-w10-port-followup-v3.yml
+          git add \
+            apps/ai/package.json \
+            .env.example \
+            scripts/ecorione-engine.mjs \
+            scripts/windows-engine-acceptance.mjs \
+            test/ecorione-engine.test.mjs \
+            docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md \
+            .github/workflows/tmp-w09-w10-port-followup-v3.yml
+          git diff --cached --check
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git commit -m "fix W09/W10 Ai port propagation and readiness"
+          git push origin HEAD
