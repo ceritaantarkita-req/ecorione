@@ -1,8 +1,12 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   NAV_ROUTES,
   UI_SURFACES,
   UX_WORKSPACE_ID,
+  hydrateInventoryToken,
   validateFlowSnapshot,
   validateMcpSettingsSnapshot,
   validateNavigationHtml,
@@ -31,6 +35,40 @@ describe("local UX/product evidence guards", () => {
       "settings",
     ]);
     expect(UX_WORKSPACE_ID).toBe("ws_personal");
+  });
+
+  it("mengambil internal token dari root .env tanpa menimpa shell yang sudah terisi", () => {
+    const root = mkdtempSync(join(tmpdir(), "ecorione-ux-env-"));
+    try {
+      writeFileSync(
+        join(root, ".env"),
+        "ECORIONE_INTERNAL_TOKEN=from-file\nECORIONE_COST_KILL_SWITCH=0\n",
+      );
+
+      const emptyEnv = {};
+      expect(hydrateInventoryToken(emptyEnv, root)).toBe(true);
+      expect(emptyEnv.ECORIONE_INTERNAL_TOKEN).toBe("from-file");
+      expect(emptyEnv.ECORIONE_COST_KILL_SWITCH).toBeUndefined();
+
+      const explicitEnv = { ECORIONE_INTERNAL_TOKEN: "from-shell" };
+      expect(hydrateInventoryToken(explicitEnv, root)).toBe(false);
+      expect(explicitEnv.ECORIONE_INTERNAL_TOKEN).toBe("from-shell");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("tidak menganggap token tersedia jika .env hilang atau kosong", () => {
+    const root = mkdtempSync(join(tmpdir(), "ecorione-ux-env-empty-"));
+    try {
+      const env = {};
+      expect(hydrateInventoryToken(env, root)).toBe(false);
+      writeFileSync(join(root, ".env"), "ECORIONE_INTERNAL_TOKEN=\n");
+      expect(hydrateInventoryToken(env, root)).toBe(false);
+      expect(env.ECORIONE_INTERNAL_TOKEN).toBeUndefined();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("fail closed jika hosted calls masih efektif aktif", () => {
