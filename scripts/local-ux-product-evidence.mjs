@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, resolve } from "node:path";
+import { parseSimpleEnv } from "./ecorione-engine.mjs";
 
 export const UX_WORKSPACE_ID = "ws_personal";
 
@@ -64,6 +66,21 @@ function escapeHtmlText(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#x27;");
+}
+
+export function hydrateInventoryToken(env = process.env, root = ROOT) {
+  const current = env.ECORIONE_INTERNAL_TOKEN;
+  if (typeof current === "string" && current.trim().length > 0) return false;
+
+  const envPath = resolve(root, ".env");
+  if (!existsSync(envPath)) return false;
+
+  const values = parseSimpleEnv(readFileSync(envPath, "utf8"));
+  const token = values.ECORIONE_INTERNAL_TOKEN;
+  if (typeof token !== "string" || token.trim().length === 0) return false;
+
+  env.ECORIONE_INTERNAL_TOKEN = token;
+  return true;
 }
 
 export function validateRuntimeSnapshot(payload) {
@@ -164,7 +181,7 @@ export async function inventory() {
     throw new Error("ECORIONE_COST_KILL_SWITCH harus bernilai 1 untuk checkpoint ini.");
   }
   if ((process.env.ECORIONE_INTERNAL_TOKEN ?? "").trim().length === 0) {
-    throw new Error("ECORIONE_INTERNAL_TOKEN harus disource untuk UX inventory.");
+    throw new Error("ECORIONE_INTERNAL_TOKEN harus tersedia di root .env atau shell UX inventory.");
   }
 
   const owners = [];
@@ -240,6 +257,7 @@ export async function inventory() {
 }
 
 async function main() {
+  hydrateInventoryToken();
   console.log("=== LOCAL UX / PRODUCT VALIDATION INVENTORY ===");
   const result = await inventory();
   console.log(JSON.stringify(result, null, 2));
