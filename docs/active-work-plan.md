@@ -9,10 +9,10 @@ Current code + current evidence + dokumen ini adalah source of truth pekerjaan a
 ## 1. Current repository checkpoint
 
 ```text
-main: 00765be1c58198aaacdd867bada83e544fd9edd0
-PR #84: merged
-post-merge CI: 34882228907 / CI #796 — SUCCESS
-post-merge Product Eval: 34882228970 / Product Eval #35 — SUCCESS
+main: 558c8f0ecfecc23655afe0c5951622265efc1449
+PR #86: merged
+post-merge CI: 34917269145 / CI #803 — SUCCESS
+post-merge Product Eval: 34917269095 / Product Eval #42 — SUCCESS
 ```
 
 `main` adalah green baseline. GitHub `main` belum memiliki required status-check branch protection; governance gap ini tetap terbuka.
@@ -23,7 +23,7 @@ post-merge Product Eval: 34882228970 / Product Eval #35 — SUCCESS
 |---|---|---:|---|
 | W01 | Reconcile system analysis | **DONE** | Temuan valid/outdated sudah dipisahkan. |
 | W02 | Vitest `*.test.tsx` discovery | **DONE** | TSX tests masuk normal CI. |
-| W03 | UX/Product Validation current main | **BLOCKED — OPERATOR RUNTIME** | Full rendered walkthrough; no S0/S1 open. |
+| W03 | UX/Product Validation current main | **READY — OPERATOR RUNTIME** | Repo-side Windows/PowerShell hardening selesai; butuh fresh exact-head inventory + rendered UX-01–UX-12, no S0/S1 open. |
 | W04 | Partial/full stack behavior | **DONE — REPO SIDE** | Human-readable service-down/proxy failures. |
 | W05 | Provider Settings foundation | **DONE — REPO SIDE** | Provider catalog + Settings/Vault authority. |
 | W06 | Credential Vault integration | **DONE WITH LIMITATIONS — REPO SIDE** | Test/save/replace/remove; no browser plaintext persistence. |
@@ -98,20 +98,6 @@ W14 tidak membuktikan model reasoning/tool quality; itu tetap dipisahkan dari W1
 
 Status: **DONE — VERIFIED LOCAL MODEL PASS^3 / CLOSURE ELIGIBLE**.
 
-PR #81 menambahkan bounded evaluation loop terpisah dari normal product chat runtime:
-
-- empat seed case nyata: Operations diagnosis, workspace-aware MCP lookup, public `localBaseUrl` rejection, immutable model identity;
-- tiap kasus punya minimal dua tool dan dapat punya forbidden/trap tool;
-- `evals/agentic-eval-core.mjs` menilai `reason → tool → execute → observe → verify`;
-- deterministic fixture mencegah model mengarang tool result;
-- `scripts/local-agentic-eval.mjs` memanggil real local OpenAI-compatible `/chat/completions`;
-- setiap kasus dijalankan 3× dan closure membutuhkan `pass^3`;
-- evidence lokal ditulis ke `traces/` dan tidak di-commit;
-- strict closure hanya eligible bila immutable local model digest verified terhadap runtime provenance;
-- `--allow-unverified-identity` hanya exploratory.
-
-### Runtime evidence 2026-09-15
-
 Verified local model:
 
 ```text
@@ -124,15 +110,6 @@ resolvedDigestPresent: true
 identityVerified: true
 identityStatus: verified
 ```
-
-Historical strict runs:
-
-```text
-run 1 baseline 88c6a19c...: 0/12; runner observability defect made 0 ms / 0 token ambiguous
-run 2 baseline f54a11af...: W15-002 + W15-003 pass^3; W15-001 + W15-004 failed only brittle verify wording
-```
-
-PR #83 memperbaiki observability runtime. PR #84 memperbaiki deterministic verify assertions tanpa memakai LLM-as-judge dan menambah regression coverage agar paraphrase benar diterima sementara positive reproducibility claim yang salah tetap gagal.
 
 Final strict closure run pada baseline `00765be1c58198aaacdd867bada83e544fd9edd0`:
 
@@ -157,24 +134,62 @@ W15-004 avgLatencyMs: 66684.78923333331 / avgOutputTokens: 357
 
 Closure interpretation: W15 membuktikan model lokal immutable-identity `qwen3.5:9b` mampu melewati empat task/bug-derived cases secara `pass^3` dalam bounded evaluation agent loop saat diuji pada runtime operator tersebut. Evidence ini **tidak** membuktikan jalur chat produk ECORIONE sudah menjadi autonomous tool-calling agent; current product chat tetap completion pipeline dan claim boundary itu tetap berlaku.
 
-## 7. Immediate next action
+## 7. W03 UX/Product Validation
 
-W15 sudah selesai. Urutan remaining evidence/work sekarang:
+Status: **READY — OPERATOR RUNTIME**.
+
+PR #86 menutup friction repo-side sebelum fresh rendered walkthrough:
+
+- canonical W03 flow sekarang memakai cross-platform `pnpm engine:start`, bukan manual Bash/WSL env sourcing;
+- UX inventory dapat mengambil hanya `ECORIONE_INTERNAL_TOKEN` dari root `.env` bila shell belum memilikinya, tanpa pernah mencetak token;
+- kill switch **tidak** diambil dari `.env`; operator tetap wajib menetapkan `ECORIONE_COST_KILL_SWITCH=1` di shell dan inventory tetap memverifikasi Hosted efektif OFF dari runtime settings;
+- regression tests melindungi token hydration dan memastikan shell token tidak ditimpa;
+- App Router icon ditambahkan untuk menutup application-owned `favicon.ico 404` noise;
+- runtime defect ledger disinkronkan: PR #71 exact-string framing/cache fix sudah merged, tetapi UX-RUNTIME-005 dan UX-RUNTIME-006 masih membutuhkan fresh browser recheck.
+
+PR #86 evidence:
 
 ```text
-1. W03 — full rendered UX/Product Validation current main
-2. W09/W10 — clean-Windows one-command startup + doctor matrix
-3. W11 — real Setup/launcher + clean-Windows acceptance
-4. W16 — automatic semantic reference selector
-5. W17 — ECX no-oracle validation
-6. W18 — bounded hosted economic validation
-7. W20 — final current-state sync/closure
+head: bc626370c3a8c0b255b4a04f581c829eefe67073
+PR CI: 34917070928 / CI #802 — SUCCESS
+PR Product Eval: 34917070937 / Product Eval #41 — SUCCESS
+merge: 558c8f0ecfecc23655afe0c5951622265efc1449
+post-merge CI: 34917269145 / CI #803 — SUCCESS
+post-merge Product Eval: 34917269095 / Product Eval #42 — SUCCESS
+```
+
+W03 belum DONE. Closure masih membutuhkan pada exact current main yang sama:
+
+```text
+1. clean/synchronized tracked tree
+2. ECORIONE_COST_KILL_SWITCH=1
+3. pnpm engine:start pada Windows operator
+4. pnpm evidence:ux:inventory — PASS
+5. rendered UX-01..UX-12 dengan DevTools Console
+6. UX-02/UX-03 exact-string Local chat recheck
+7. no application-owned favicon 404 / framework console errors
+8. no open S0/S1; S2 fixed atau explicitly accepted
+```
+
+Raw screenshots/logs yang mengandung detail mesin tetap lokal; hanya sanitized findings yang boleh di-commit.
+
+## 8. Immediate next action
+
+Prioritas langsung adalah menjalankan **W03 operator checkpoint pada current main**. Setelah W03 closure:
+
+```text
+1. W09/W10 — clean-Windows one-command startup + doctor matrix
+2. W11 — real Setup/launcher + clean-Windows acceptance
+3. W16 — automatic semantic reference selector
+4. W17 — ECX no-oracle validation
+5. W18 — bounded hosted economic validation
+6. W20 — final current-state sync/closure
 ```
 
 Repo-side item independen boleh maju lebih dulu, tetapi runtime/browser/hosted claim boundaries tidak boleh dihapus atau diganti dengan asumsi.
 
-## 8. Historical note
+## 9. Historical note
 
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state. PR #83 memperbaiki W15 runtime observability. PR #84 memperbaiki W15 verify assertions; post-merge CI #796 dan Product Eval #35 hijau sebelum final strict local-model closure run menghasilkan 12/12 PASS dan `closureEligible=true`.
+PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state. PR #83 memperbaiki W15 runtime observability. PR #84 memperbaiki W15 verify assertions. PR #85 mencatat W15 closure evidence. PR #86 mengeraskan W03 Windows runtime flow dan menutup repo-side favicon/token-hydration friction.
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.
