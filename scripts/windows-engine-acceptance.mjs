@@ -96,7 +96,9 @@ function requireCommand(result, label) {
 function readLocalToken() {
   if (process.env.ECORIONE_INTERNAL_TOKEN) return process.env.ECORIONE_INTERNAL_TOKEN;
   if (!existsSync(ENV_PATH)) return "";
-  return parseSimpleEnv(readFileSync(ENV_PATH, "utf8")).ECORIONE_INTERNAL_TOKEN ?? "";
+  return (
+    parseSimpleEnv(readFileSync(ENV_PATH, "utf8")).ECORIONE_INTERNAL_TOKEN ?? ""
+  );
 }
 
 function readLocalEnv() {
@@ -209,7 +211,9 @@ function killWindowsTree(pid) {
   });
   if (result.error) throw result.error;
   if (result.status !== 0 && result.status !== 128) {
-    throw new Error(`taskkill gagal (exit ${String(result.status)}): ${result.stderr ?? ""}`);
+    throw new Error(
+      `taskkill gagal (exit ${String(result.status)}): ${result.stderr ?? ""}`,
+    );
   }
 }
 
@@ -241,8 +245,14 @@ async function runAcceptance() {
     console.log("=== W09/W10 Windows engine acceptance ===");
     console.log("Tidak ada secret yang akan dicetak.\n");
 
-    requireCommand(runSync("git", ["fetch", "origin", "--prune"], { timeoutMs: 60_000 }), "git fetch");
-    const head = requireCommand(runSync("git", ["rev-parse", "HEAD"]), "git rev-parse HEAD");
+    requireCommand(
+      runSync("git", ["fetch", "origin", "--prune"], { timeoutMs: 60_000 }),
+      "git fetch",
+    );
+    const head = requireCommand(
+      runSync("git", ["rev-parse", "HEAD"]),
+      "git rev-parse HEAD",
+    );
     const originMain = requireCommand(
       runSync("git", ["rev-parse", "origin/main"]),
       "git rev-parse origin/main",
@@ -254,19 +264,36 @@ async function runAcceptance() {
     if (head !== originMain) {
       throw new Error(`HEAD ${head} tidak sama dengan origin/main ${originMain}.`);
     }
-    if (trackedStatus !== "") throw new Error("Tracked worktree harus bersih sebelum acceptance.");
+    if (trackedStatus !== "") {
+      throw new Error("Tracked worktree harus bersih sebelum acceptance.");
+    }
 
-    const nodeMajor = Number.parseInt(process.versions.node.split(".")[0] ?? "0", 10);
-    if (nodeMajor < 22) throw new Error(`Node ${process.version} tidak memenuhi >=22.`);
-    const pnpmVersion = requireCommand(runSync("pnpm", ["--version"]), "pnpm --version");
+    const nodeMajor = Number.parseInt(
+      process.versions.node.split(".")[0] ?? "0",
+      10,
+    );
+    if (nodeMajor < 22) {
+      throw new Error(`Node ${process.version} tidak memenuhi >=22.`);
+    }
+    const pnpmVersion = requireCommand(
+      runSync("pnpm", ["--version"]),
+      "pnpm --version",
+    );
     const temporalVersion = runSync("temporal", ["--version"]);
-    const dockerVersion = runSync("docker", ["version", "--format", "{{.Server.Version}}"]);
+    const dockerVersion = runSync("docker", [
+      "version",
+      "--format",
+      "{{.Server.Version}}",
+    ]);
     const localEnv = readLocalEnv();
     preexistingTemporal = await isPortReachable(7233);
-    const useDocker = (process.env.ECORIONE_TEMPORAL_USE_DOCKER ?? localEnv.ECORIONE_TEMPORAL_USE_DOCKER) === "1";
+    const useDocker =
+      (process.env.ECORIONE_TEMPORAL_USE_DOCKER ??
+        localEnv.ECORIONE_TEMPORAL_USE_DOCKER) === "1";
     const temporalCliReady = temporalVersion.code === 0;
     const dockerReady = dockerVersion.code === 0;
-    const hasLaunchPath = preexistingTemporal || (useDocker ? dockerReady : temporalCliReady);
+    const hasLaunchPath =
+      preexistingTemporal || (useDocker ? dockerReady : temporalCliReady);
     if (!hasLaunchPath) {
       throw new Error(
         useDocker
@@ -296,7 +323,11 @@ async function runAcceptance() {
       temporalPreexisting: preexistingTemporal,
       temporalCliAvailable: temporalCliReady,
       dockerReachable: dockerReady,
-      temporalMode: preexistingTemporal ? "external/reused" : useDocker ? "docker" : "cli-dev-server",
+      temporalMode: preexistingTemporal
+        ? "external/reused"
+        : useDocker
+          ? "docker"
+          : "cli-dev-server",
     };
     console.log(`✓ W09-A preflight: ${head}`);
 
@@ -362,14 +393,18 @@ async function runAcceptance() {
     }
     const doctorEvaluation = evaluateRunningDoctor(runningDoctor.stdout);
     if (!doctorEvaluation.pass) {
-      throw new Error(`Runtime doctor kehilangan marker: ${doctorEvaluation.missing.join(", ")}.`);
+      throw new Error(
+        `Runtime doctor kehilangan marker: ${doctorEvaluation.missing.join(", ")}.`,
+      );
     }
     report.phases.runningDoctor = {
       pass: true,
       output: safeDoctorOutput(runningDoctor.stdout),
       localRuntime: doctorEvaluation.localRuntime,
     };
-    console.log(`✓ W10-B doctor runtime healthy · Local AI ${doctorEvaluation.localRuntime}`);
+    console.log(
+      `✓ W10-B doctor runtime healthy · Local AI ${doctorEvaluation.localRuntime}`,
+    );
 
     const duplicate = runSync("pnpm", ["engine:start"], {
       env: acceptanceEnv,
@@ -388,7 +423,9 @@ async function runAcceptance() {
     };
     console.log("✓ W09-C duplicate-start guard fail-closed");
 
-    if (!Number.isInteger(engineChild.pid)) throw new Error("PID engine acceptance tidak tersedia.");
+    if (!Number.isInteger(engineChild.pid)) {
+      throw new Error("PID engine acceptance tidak tersedia.");
+    }
     killWindowsTree(engineChild.pid);
     const closedPorts = await waitForPortsClosed(APP_PORTS);
     const stillOpen = Object.entries(closedPorts)
@@ -400,14 +437,18 @@ async function runAcceptance() {
     if (!preexistingTemporal) {
       const temporalClosed = await waitForPortsClosed([7233]);
       if (temporalClosed["7233"] !== false) {
-        throw new Error("Temporal dev-server yang dimiliki acceptance masih reachable setelah cleanup.");
+        throw new Error(
+          "Temporal dev-server yang dimiliki acceptance masih reachable setelah cleanup.",
+        );
       }
     }
     engineChild = undefined;
     report.phases.cleanup = {
       pass: true,
       appPortsReleased: true,
-      temporalDisposition: preexistingTemporal ? "preexisting-left-running" : "acceptance-owned-stopped",
+      temporalDisposition: preexistingTemporal
+        ? "preexisting-left-running"
+        : "acceptance-owned-stopped",
     };
     console.log("✓ W09-D Windows process tree cleanup PASS");
 
@@ -427,7 +468,7 @@ async function runAcceptance() {
     report.result = "PASS";
     report.finishedAt = new Date().toISOString();
     const reportPath = writeReport(report);
-    console.log(`\nPASS W09/W10 Windows engine acceptance`);
+    console.log("\nPASS W09/W10 Windows engine acceptance");
     console.log(`Sanitized report: ${reportPath}`);
   } catch (error) {
     report.result = "FAIL";
@@ -437,7 +478,8 @@ async function runAcceptance() {
       try {
         killWindowsTree(engineChild.pid);
       } catch (cleanupError) {
-        report.cleanupError = cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
+        report.cleanupError =
+          cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
       }
     }
     const reportPath = writeReport(report);
@@ -449,7 +491,9 @@ async function runAcceptance() {
 
 async function main() {
   if (process.argv.includes("--plan")) {
-    console.log(JSON.stringify({ platformRequired: "win32", plan: acceptancePlan() }, null, 2));
+    console.log(
+      JSON.stringify({ platformRequired: "win32", plan: acceptancePlan() }, null, 2),
+    );
     return;
   }
   await runAcceptance();
