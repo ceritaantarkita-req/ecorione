@@ -29,7 +29,7 @@ export const NAV_ROUTES = [
 export const UI_SURFACES = [
   ["ai", "http://127.0.0.1:3000/", "ecorione — Ai"],
   ["space", "http://127.0.0.1:3000/space", "Space"],
-  ["flow", "http://127.0.0.1:3000/flow", "ecorione — Flow"],
+  ["flow", "http://127.0.0.1:3000/flow", "Visual workflow builder"],
   ["ops", "http://127.0.0.1:3000/ops", "Runtime health & telemetry"],
   ["settings", "http://127.0.0.1:3000/settings", "Control Center"],
 ];
