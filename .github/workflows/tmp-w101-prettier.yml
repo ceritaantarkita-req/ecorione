@@ -19,9 +19,9 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Print canonical formatted engine
+      - name: Print canonical prettier diff
         run: |
           pnpm exec prettier --write scripts/ecorione-engine.mjs
-          echo '=== W101_PRETTIER_BEGIN ==='
-          cat scripts/ecorione-engine.mjs
-          echo '=== W101_PRETTIER_END ==='
+          echo '=== W101_PRETTIER_DIFF_BEGIN ==='
+          git diff -- scripts/ecorione-engine.mjs
+          echo '=== W101_PRETTIER_DIFF_END ==='
