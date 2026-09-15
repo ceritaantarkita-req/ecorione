@@ -79,52 +79,48 @@ function activities(): FlowGraphActivities {
 }
 
 describe("Temporal graphExecutionWorkflow", () => {
-  it(
-    "survives a durable timer, consumes human input, routes a branch, and resumes approval",
-    async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-      try {
-        const graphActivities = activities();
-        const taskQueue = "flow-graph-runtime-test";
-        const worker = await Worker.create({
-          connection: env.nativeConnection,
+  it("survives a durable timer, consumes human input, routes a branch, and resumes approval", async () => {
+    const env = await TestWorkflowEnvironment.createTimeSkipping();
+    try {
+      const graphActivities = activities();
+      const taskQueue = "flow-graph-runtime-test";
+      const worker = await Worker.create({
+        connection: env.nativeConnection,
+        taskQueue,
+        workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
+        activities: graphActivities,
+      });
+      const input = execution();
+      const result = await worker.runUntil(async () => {
+        const handle = await env.client.workflow.start("graphExecutionWorkflow", {
+          workflowId: input.runId,
           taskQueue,
-          workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
-          activities: graphActivities,
+          args: [input],
         });
-        const input = execution();
-        const result = await worker.runUntil(async () => {
-          const handle = await env.client.workflow.start("graphExecutionWorkflow", {
-            workflowId: input.runId,
-            taskQueue,
-            args: [input],
-          });
-          await handle.signal("graphNodeInput", {
-            nodeId: "node_human001",
-            value: true,
-          });
-          await handle.signal("graphNodeDecision", {
-            nodeId: "node_approval1",
-            decision: "APPROVE",
-            note: null,
-          });
-          return handle.result();
+        await handle.signal("graphNodeInput", {
+          nodeId: "node_human001",
+          value: true,
         });
+        await handle.signal("graphNodeDecision", {
+          nodeId: "node_approval1",
+          decision: "APPROVE",
+          note: null,
+        });
+        return handle.result();
+      });
 
-        expect(result).toMatchObject({
-          runId: input.runId,
-          graphId: input.plan.graph.id,
-          graphVersion: 1,
-          output: true,
-          traceOperationId: input.operationId,
-        });
-        expect(graphActivities.requestGraphApproval).toHaveBeenCalledTimes(1);
-        expect(graphActivities.executeGraphNode).not.toHaveBeenCalled();
-        expect(graphActivities.authorizeGraphNode).toHaveBeenCalledTimes(5);
-      } finally {
-        await env.teardown();
-      }
-    },
-    TEMPORAL_INTEGRATION_TIMEOUT_MS,
-  );
+      expect(result).toMatchObject({
+        runId: input.runId,
+        graphId: input.plan.graph.id,
+        graphVersion: 1,
+        output: true,
+        traceOperationId: input.operationId,
+      });
+      expect(graphActivities.requestGraphApproval).toHaveBeenCalledTimes(1);
+      expect(graphActivities.executeGraphNode).not.toHaveBeenCalled();
+      expect(graphActivities.authorizeGraphNode).toHaveBeenCalledTimes(5);
+    } finally {
+      await env.teardown();
+    }
+  }, TEMPORAL_INTEGRATION_TIMEOUT_MS);
 });
