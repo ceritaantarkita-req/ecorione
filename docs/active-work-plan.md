@@ -9,13 +9,16 @@ Current code + current evidence + dokumen ini adalah source of truth pekerjaan a
 ## 1. Current repository checkpoint
 
 ```text
-main: 88b409f6497166213beeb301aad53d78e922b72e
-PR #93: merged — W03 responsive + Flow redesign
-post-merge CI: 34954861030 — SUCCESS
-post-merge Product Eval: 34954861022 — SUCCESS
+current main: c745de0b863c541d31941d7edfba1582caae3d87
+PR #98: merged — W03 real-laptop progress sync (docs-only)
+current W03 product-code baseline: 746dc0705e12d419f93d3592bc6c7bdb55e4b76e
+PR #97 post-merge CI: 34968981113 — SUCCESS
+PR #97 post-merge Product Eval: 34968981026 — SUCCESS
 ```
 
-`main` adalah green baseline. GitHub `main` belum memiliki required status-check branch protection; governance gap ini tetap terbuka.
+PR #98 only changed documentation, so the final operator runtime/browser closure performed after it still exercised the same product code at `746dc0705e12d419f93d3592bc6c7bdb55e4b76e`.
+
+`main` remains the green baseline. GitHub `main` still does not have required status-check branch protection; that governance gap remains separate from W03.
 
 ## 2. Work queue
 
@@ -23,7 +26,7 @@ post-merge Product Eval: 34954861022 — SUCCESS
 |---|---|---:|---|
 | W01 | Reconcile system analysis | **DONE** | Temuan valid/outdated sudah dipisahkan. |
 | W02 | Vitest `*.test.tsx` discovery | **DONE** | TSX tests masuk normal CI. |
-| W03 | UX/Product Validation current main | **IN PROGRESS — INTEGRATED / FINAL OPERATOR RECHECK** | Responsive + Flow redesign sudah merged; PR-head, branch rendered QA, dan exact post-merge main gates green. Closure masih menunggu canonical real-laptop/current-main walkthrough. |
+| W03 | UX/Product Validation current main | **DONE — REAL-LAPTOP VERIFIED** | Responsive + Flow redesign integrated; Windows inventory, desktop checks, 390–430 px recheck, clean-console Local chat, Flow wiring/validation/save/run, and Condition true/false branching all passed. |
 | W04 | Partial/full stack behavior | **DONE — REPO SIDE** | Human-readable service-down/proxy failures. |
 | W05 | Provider Settings foundation | **DONE — REPO SIDE** | Provider catalog + Settings/Vault authority. |
 | W06 | Credential Vault integration | **DONE WITH LIMITATIONS — REPO SIDE** | Test/save/replace/remove; no browser plaintext persistence. |
@@ -40,9 +43,76 @@ post-merge Product Eval: 34954861022 — SUCCESS
 | W17 | ECX no-oracle validation | TODO | full vs auto-selective vs oracle pada task set sama. |
 | W18 | Hosted economic validation | TODO | Real bounded hosted token/cost evidence. |
 | W19 | Release/security governance follow-up | **DONE — REPO SIDE** | History secret scan + naming/model-alias gate di CI; branch protection gap terpisah. |
-| W20 | Final current-state sync | **STARTED** | Final closure setelah remaining evidence selesai. |
+| W20 | Final current-state sync | **STARTED** | Continue after the remaining W09/W10/W11/W16/W17/W18 evidence. |
 
-## 3. Security / runtime boundaries
+## 3. W03 final closure evidence
+
+Status: **DONE — REAL-LAPTOP VERIFIED**.
+
+Canonical detailed evidence lives in `docs/verification/w03-responsive-flow-implementation-2026-09-15.md`; the reusable procedure remains `docs/ux-runtime-walkthrough-checklist.md`.
+
+Final operator evidence on Windows established:
+
+```text
+tracked worktree: clean
+HEAD == origin/main at runtime baseline: 746dc0705e12d419f93d3592bc6c7bdb55e4b76e
+ECORIONE_COST_KILL_SWITCH=1
+pnpm engine:start: READY
+Temporal local dev-server: READY
+all required Phase 4 owners: healthy
+pnpm evidence:ux:inventory: PASS
+Hosted effective state: OFF
+local model: qwen3.5:9b
+local model digest: sha256:6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+mutable model alias: false
+```
+
+Desktop/runtime acceptance covered navigation, Local exact-string replies, same-session continuity, memory readability, Local/Hosted route state, Operations refresh/Auto 5s, Settings workspace/local canary behavior, Space switching, Flow dirty/save/load/Validate behavior, and safe invalid-config handling. UX-05 remained `NOT_EXERCISED` because no disposable recalled fact was available; the checklist explicitly allows that disposition.
+
+The responsive defects found in the first pass were fixed through PR #93, PR #95, PR #96, and PR #97. Final ~430 CSS px real-laptop checks then passed for Ai, Space, Operations, Settings, Flow Stack, and contained Flow Canvas. Settings long values no longer expanded the page, Space hierarchy was usable without the previous dead space, and Flow lifecycle controls/catalog/connect affordances were usable on mobile.
+
+Final Flow functional proof:
+
+```text
+Trigger → AI
+workflow: COMPLETED
+Trigger: SUCCEEDED
+AI: SUCCEEDED
+```
+
+Because Flow execution authority is fail-closed, the operator granted `node.execute` through the normal `POLICY_ADMIN` approval path for the exact node definitions used by the test; no governance bypass or auto-grant was introduced.
+
+Final branching proof used the saved graph:
+
+```text
+4 nodes / 3 connections
+Trigger [out] → Condition / Switch
+Condition / Switch [true] → AI
+Condition / Switch [false] → Artifact
+```
+
+With truthy input, the real Temporal run completed as:
+
+```text
+workflow: COMPLETED
+Trigger: SUCCEEDED
+Condition / Switch: SUCCEEDED
+AI: SUCCEEDED
+Artifact: SKIPPED — no active incoming edge
+```
+
+The same graph was rechecked in mobile Stack mode at ~430 CSS px, where the true/false connection summaries and `Edit / connect` affordances remained visible and usable. Clean-console Local chat also passed with the exact response `UX_CONSOLE_OK`; the previously observed `VM... / reportAllChanges / startTime` exception was tooling/browser-injected noise and was not reproducible as an application-owned error in the clean-console check.
+
+Closure defect disposition:
+
+```text
+S0 open: 0
+S1 open: 0
+S2 open/unaccepted: 0
+W03 closure: PASS
+```
+
+## 4. Security / runtime boundaries
 
 Sudah ada di `main`: same-origin mutation guard, CSP/security headers, stricter hosted-spend guard, private/loopback `localBaseUrl` default, mutable model-alias gate, runtime provenance resolver dengan digest mismatch fail-closed, dan full-history secret scan.
 
@@ -58,7 +128,7 @@ pnpm engine:stop-temporal
 
 Temporal CLI local path, Windows `pnpm.cmd` handling, required-service readiness, Connect Windows startup, dan spawned-process-tree cleanup sudah repo-side. W09/W10 tetap terbuka sampai clean-Windows proof lengkap.
 
-## 4. ECX claim boundary
+## 5. ECX claim boundary
 
 Historical Ledger + ECX local evidence tetap CLOSED/PASS. Comparative ECX tetap PASS WITH LIMITATIONS:
 
@@ -73,132 +143,31 @@ median selective/full latency ratio = 0.8672873729681319
 
 Tetapi `ecx-selective-oracle` masih oracle/control, `refIndexes` masih caller-supplied, automatic semantic selector belum terbukti, dan hosted dollar economics belum tervalidasi. Angka local/oracle tidak boleh menjadi universal public-savings claim.
 
-## 5. W14 Product Eval
+## 6. W14 / W15 retained claim boundaries
 
-Status: **DONE — REPO SIDE**.
+W14 remains **DONE — REPO SIDE** with bounded deterministic product regressions and dedicated Product Eval CI.
 
-- `evals/product-regressions.json`: bounded maksimal 50 kasus; seed 12 kasus nyata.
-- setiap kasus punya provenance + deterministic target.
-- `.github/workflows/product-eval.yml` menjalankan validator + regressions di PR dan push main.
+W15 remains **DONE — VERIFIED LOCAL MODEL PASS^3** for the immutable local identity `qwen3.5:9b` with digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`. Its evidence proves the bounded evaluation agent loop, not that the normal product chat is an autonomous tool-calling agent.
 
-Evidence:
+Historical verification documents remain the detailed source of truth for W14/W15 metrics and run IDs.
 
-```text
-PR #79 head: 183b9f3281dbedc16e459a3f09dea000d6756ba1
-PR CI: 34864902355 — SUCCESS
-PR Product Eval: 34864902358 — SUCCESS
-merge: 01efc87ef0409118ad0104a660f4d97f6a49f667
-post-merge CI: 34865204054 — SUCCESS
-post-merge Product Eval: 34865204071 — SUCCESS
-```
+## 7. Immediate next action
 
-W14 tidak membuktikan model reasoning/tool quality; itu tetap dipisahkan dari W15.
-
-## 6. W15 Agentic Local-Model Eval
-
-Status: **DONE — VERIFIED LOCAL MODEL PASS^3 / CLOSURE ELIGIBLE**.
-
-Verified local model:
+With W03 closed, priority resumes at:
 
 ```text
-baseUrl: http://127.0.0.1:11434/v1
-model: qwen3.5:9b
-digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
-modelsReachable: true
-listed: true
-resolvedDigestPresent: true
-identityVerified: true
-identityStatus: verified
+1. W09/W10 — complete clean-Windows one-command startup + doctor acceptance matrix
+2. W11 — complete real Setup/launcher acceptance on clean Windows
+3. W16 — implement automatic semantic reference selector
+4. W17 — run ECX no-oracle comparison on the same task set
+5. W18 — collect bounded real hosted token/cost evidence
+6. W20 — final current-state sync after remaining evidence closes
 ```
 
-Final strict closure run pada baseline `00765be1c58198aaacdd867bada83e544fd9edd0`:
+Do not reopen W03 unless a new reproducible regression appears on product code newer than the verified baseline.
 
-```text
-W15-001: 3/3 — PASS^3
-W15-002: 3/3 — PASS^3
-W15-003: 3/3 — PASS^3
-W15-004: 3/3 — PASS^3
-allPass3: true
-closureEligible: true
-trace: traces/w15-agentic-eval-2026-09-15T00-23-08-194Z.json
-```
+## 8. Historical note
 
-Observed final-run averages:
-
-```text
-W15-001 avgLatencyMs: 45325.57093333333 / avgOutputTokens: 218
-W15-002 avgLatencyMs: 51400.95243333335 / avgOutputTokens: 278
-W15-003 avgLatencyMs: 67915.01980000002 / avgOutputTokens: 370
-W15-004 avgLatencyMs: 66684.78923333331 / avgOutputTokens: 357
-```
-
-Closure interpretation: W15 membuktikan model lokal immutable-identity `qwen3.5:9b` mampu melewati empat task/bug-derived cases secara `pass^3` dalam bounded evaluation agent loop saat diuji pada runtime operator tersebut. Evidence ini **tidak** membuktikan jalur chat produk ECORIONE sudah menjadi autonomous tool-calling agent; current product chat tetap completion pipeline dan claim boundary itu tetap berlaku.
-
-## 7. W03 UX/Product Validation
-
-Status: **IN PROGRESS — IMPLEMENTATION INTEGRATED / FINAL REAL-LAPTOP RECHECK PENDING**.
-
-The first current-main real-laptop walkthrough established the pre-redesign runtime baseline:
-
-```text
-- synchronized tracked-clean current main
-- ECORIONE_COST_KILL_SWITCH=1
-- pnpm engine:start on Windows: READY
-- Temporal local dev-server: READY
-- all eight required Phase 4 owners: healthy
-- pnpm evidence:ux:inventory: PASS
-- immutable local model qwen3.5:9b digest: verified/pinned
-- UX-02 exact-string Local reply: PASS
-- UX-03 same-session continuity: PASS
-- UX-04 memory state readability: PASS
-- UX-05: NOT_EXERCISED (no disposable recalled fact)
-- UX-06 Local route / Hosted OFF: PASS
-- UX-07 Operations refresh/Auto 5s: PASS
-- UX-08 MCP empty workspace + Local canary feedback: functionally exercised
-- UX-09 Space two-page switching: PASS
-- UX-10 Flow dirty/Validate/Save/Load behavior: PASS
-- UX-11 invalid config safe failure: PASS
-```
-
-That walkthrough found the responsive/Flow S2 defects captured by `docs/flow-responsive-ux-redesign.md`. PR #93 has now implemented and integrated the approved redesign.
-
-Integrated repository evidence:
-
-```text
-PR #93 head: e2e2e3efe5d383ff305cad48e4fcd50b0262e60d
-PR #93: merged
-main merge: 88b409f6497166213beeb301aad53d78e922b72e
-post-merge CI: 34954861030 — SUCCESS
-post-merge Product Eval: 34954861022 — SUCCESS
-branch rendered browser QA: 34954226991 — SUCCESS
-rendered viewport: 410 × 844 CSS px + 1440 × 900 desktop Flow
-```
-
-The rendered branch QA showed no page-level horizontal overflow on Ai, Space, Operations, Settings, Flow Stack, or contained Flow Canvas; exercised Flow node insertion, visible ports, Condition `true`/`false` outputs, and builder collapse/reopen; and kept application-owned hydration/DOM-nesting/unhandled/page errors fatal. Its non-Flow backend requests were deliberately stubbed, so it is supporting rendered evidence rather than the final operator runtime proof.
-
-Canonical closure still requires the fresh current-main real-laptop walkthrough in `docs/ux-runtime-walkthrough-checklist.md` with the real operator `.env`, explicit kill switch, local Temporal/Phase 4 fleet, strict inventory, local model, and browser DevTools Console. That pass must recheck UX-F01–UX-F08 and UX-12A–UX-12F and record any new finding using the defect-ledger format.
-
-W03 remains **not DONE** until that evidence exists. Raw screenshots/logs that expose machine/user-specific detail stay local; sanitized findings and dispositions are committed.
-
-## 8. Immediate next action
-
-Priority is now:
-
-```text
-1. synchronize operator laptop to exact current origin/main
-2. require clean tracked worktree and exact HEAD == origin/main
-3. set ECORIONE_COST_KILL_SWITCH=1 and start pnpm engine:start
-4. run pnpm evidence:ux:inventory and require PASS
-5. execute fresh desktop + Flow redesign + 390–430 px narrow walkthrough with DevTools Console visible
-6. record defects/dispositions; fix any S0/S1 and any unaccepted S2
-7. if final evidence is clean, mark W03 DONE and update canonical closure docs
-8. resume W09/W10, W11, W16, W17, W18, W20
-```
-
-Repo-side W03 implementation and integration are complete. The remaining W03 gate is operator-owned runtime/rendered evidence; do not substitute GitHub-runner stubs for that claim.
-
-## 9. Historical note
-
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state. PR #83 memperbaiki W15 runtime observability. PR #84 memperbaiki W15 verify assertions. PR #85 mencatat W15 closure evidence. PR #86 mengeraskan W03 Windows runtime flow. PR #88 memperbaiki Connect startup pada Windows. PR #89 memperbaiki cleanup process tree Windows. PR #90 memperbaiki feedback Settings dan action stacking narrow viewport. PR #93 mengintegrasikan responsive + Flow redesign dan lulus exact-main CI/Product Eval setelah merge.
+PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya. PR #80 menyinkronkan W14. PR #81–#85 membangun dan menutup W15 evidence. PR #86/#88/#89 mengeraskan Windows runtime flow. PR #90 memperbaiki Settings feedback/action stacking. PR #93 mengintegrasikan responsive + Flow redesign. PR #95 memperbaiki Flow inventory marker drift. PR #96 dan PR #97 menyelesaikan mobile Settings/Space/Flow corrections. PR #98 menyinkronkan progress real-laptop sebelum final functional closure.
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.
