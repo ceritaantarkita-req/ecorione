@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type DragEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
 import type {
   FlowGraphEdge,
   FlowGraphNode,
@@ -502,17 +495,23 @@ export default function FlowCanvasPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(snapshot),
       });
-      const body = (await response.json().catch(() => null)) as FlowGraphValidationResult | null;
+      const body = (await response
+        .json()
+        .catch(() => null)) as FlowGraphValidationResult | null;
       if (!response.ok || body === null) {
         setMessage(errorMessage(body, `Validasi gagal (${response.status}).`));
         return null;
       }
       if (revision !== draftRevisionRef.current) {
-        setMessage("Draft berubah selama validasi. Validasi lama diabaikan; jalankan Validate lagi.");
+        setMessage(
+          "Draft berubah selama validasi. Validasi lama diabaikan; jalankan Validate lagi.",
+        );
         return null;
       }
       setValidation(body);
-      setMessage(body.valid ? "Graph valid dan compileable." : `${body.issues.length} masalah validasi.`);
+      setMessage(
+        body.valid ? "Graph valid dan compileable." : `${body.issues.length} masalah validasi.`,
+      );
       return body;
     } finally {
       validationInFlightRef.current = false;
@@ -525,7 +524,10 @@ export default function FlowCanvasPage() {
     const revision = draftRevisionRef.current;
     const snapshot = graphDocument();
     try {
-      const target = graphId === null ? "/api/flow/graphs" : `/api/flow/graphs/${encodeURIComponent(graphId)}`;
+      const target =
+        graphId === null
+          ? "/api/flow/graphs"
+          : `/api/flow/graphs/${encodeURIComponent(graphId)}`;
       const payload =
         graphId === null
           ? { ...snapshot, id: undefined }
@@ -556,13 +558,17 @@ export default function FlowCanvasPage() {
       } else {
         setValidation(null);
         setDirty(true);
-        setMessage(`v${body.version.version} tersimpan, tetapi draft berubah selama request. Simpan lagi sebelum Run.`);
+        setMessage(
+          `v${body.version.version} tersimpan, tetapi draft berubah selama request. Simpan lagi sebelum Run.`,
+        );
       }
       try {
         await loadVersions(body.version.graphId);
       } catch (reason) {
         const detail = reason instanceof Error ? reason.message : String(reason);
-        setMessage(`v${body.version.version} tersimpan, tetapi riwayat versi gagal dimuat: ${detail}`);
+        setMessage(
+          `v${body.version.version} tersimpan, tetapi riwayat versi gagal dimuat: ${detail}`,
+        );
       }
     } finally {
       finishBusy();
@@ -601,7 +607,9 @@ export default function FlowCanvasPage() {
         await loadVersions(body.graphId);
       } catch (reason) {
         const detail = reason instanceof Error ? reason.message : String(reason);
-        setMessage(`Graph ${body.graphId} v${body.version} termuat, tetapi riwayat versi gagal dimuat: ${detail}`);
+        setMessage(
+          `Graph ${body.graphId} v${body.version} termuat, tetapi riwayat versi gagal dimuat: ${detail}`,
+        );
       }
     } finally {
       finishBusy();
@@ -616,7 +624,10 @@ export default function FlowCanvasPage() {
     } | null;
     if (!response.ok || body?.versions === undefined) {
       throw new Error(
-        errorMessage(body, response.ok ? "Respons versions tidak valid." : `HTTP ${String(response.status)}`),
+        errorMessage(
+          body,
+          response.ok ? "Respons versions tidak valid." : `HTTP ${String(response.status)}`,
+        ),
       );
     }
     setVersions(body.versions);
@@ -682,7 +693,10 @@ export default function FlowCanvasPage() {
       );
       if (!response.ok) {
         setMessage(
-          errorMessage(await response.json().catch(() => null), `Decision gagal (${response.status}).`),
+          errorMessage(
+            await response.json().catch(() => null),
+            `Decision gagal (${response.status}).`,
+          ),
         );
       }
     } finally {
@@ -708,7 +722,10 @@ export default function FlowCanvasPage() {
       if (response.ok) setHumanDraft("");
       else {
         setMessage(
-          errorMessage(await response.json().catch(() => null), `Input gagal (${response.status}).`),
+          errorMessage(
+            await response.json().catch(() => null),
+            `Input gagal (${response.status}).`,
+          ),
         );
       }
     } finally {
@@ -799,7 +816,9 @@ export default function FlowCanvasPage() {
               className="ecr-input"
               type="number"
               value={numberConfig(node, "milliseconds", 1000)}
-              onChange={(event) => patchNodeConfig(node, { milliseconds: Number(event.target.value) })}
+              onChange={(event) =>
+                patchNodeConfig(node, { milliseconds: Number(event.target.value) })
+              }
             />
           </label>
         );
@@ -1004,8 +1023,12 @@ export default function FlowCanvasPage() {
         </button>
       </div>
 
-      <main className={`${styles.workspace} ${builderCollapsed ? styles.workspaceCollapsed : ""}`}>
-        <aside className={`${styles.builder} ${builderCollapsed ? styles.builderCollapsed : ""}`}>
+      <main
+        className={`${styles.workspace} ${builderCollapsed ? styles.workspaceCollapsed : ""}`}
+      >
+        <aside
+          className={`${styles.builder} ${builderCollapsed ? styles.builderCollapsed : ""}`}
+        >
           <div className={styles.builderHeader}>
             {builderCollapsed ? null : (
               <div className={styles.builderTabs}>
@@ -1046,7 +1069,10 @@ export default function FlowCanvasPage() {
                     key={definition.id}
                     draggable
                     onDragStart={(event) => {
-                      event.dataTransfer.setData("application/x-ecorione-kind", definition.kind);
+                      event.dataTransfer.setData(
+                        "application/x-ecorione-kind",
+                        definition.kind,
+                      );
                       event.dataTransfer.effectAllowed = "copy";
                     }}
                     onClick={() => addNode(definition)}
@@ -1071,7 +1097,9 @@ export default function FlowCanvasPage() {
                 <>
                   <div className={styles.panelIntro}>
                     <strong>{selected.label}</strong>
-                    <span>{selected.kind} · v{selected.version}</span>
+                    <span>
+                      {selected.kind} · v{selected.version}
+                    </span>
                   </div>
                   {renderQuickSettings(selected)}
                   <details className={styles.advancedSection}>
@@ -1142,7 +1170,9 @@ export default function FlowCanvasPage() {
                 {validation === null ? (
                   <p className={styles.muted}>Belum divalidasi.</p>
                 ) : validation.valid ? (
-                  <p className={styles.ok}>Valid · plan {validation.plan?.planDigest.slice(0, 10)}…</p>
+                  <p className={styles.ok}>
+                    Valid · plan {validation.plan?.planDigest.slice(0, 10)}…
+                  </p>
                 ) : (
                   <ul className={styles.issueList}>
                     {validation.issues.map((issue, index) => (
@@ -1163,7 +1193,9 @@ export default function FlowCanvasPage() {
                       key={item.version}
                       disabled={busy}
                       onClick={() =>
-                        void runUiAction("Load version gagal", () => loadGraph(item.graphId, item.version))
+                        void runUiAction("Load version gagal", () =>
+                          loadGraph(item.graphId, item.version),
+                        )
                       }
                     >
                       v{item.version}
@@ -1188,7 +1220,9 @@ export default function FlowCanvasPage() {
                 <span>Drag from an output dot to an input dot.</span>
               ) : (
                 <strong>
-                  Connecting {nodes.find((node) => node.id === connectFrom)?.label ?? connectFrom} · {connectPort}
+                  Connecting{" "}
+                  {nodes.find((node) => node.id === connectFrom)?.label ?? connectFrom} ·{" "}
+                  {connectPort}
                 </strong>
               )}
               {connectFrom !== null ? (
@@ -1266,11 +1300,13 @@ export default function FlowCanvasPage() {
                         event.preventDefault();
                         event.stopPropagation();
                         const payload = readEdgeDrag(event);
-                        if (payload !== null) connectNodes(payload.sourceNodeId, payload.sourcePort, node.id);
+                        if (payload !== null)
+                          connectNodes(payload.sourceNodeId, payload.sourcePort, node.id);
                       }}
                       onClick={(event) => {
                         event.stopPropagation();
-                        if (connectFrom !== null) connectNodes(connectFrom, connectPort, node.id);
+                        if (connectFrom !== null)
+                          connectNodes(connectFrom, connectPort, node.id);
                         else selectNode(node.id);
                       }}
                     />
@@ -1361,18 +1397,24 @@ export default function FlowCanvasPage() {
                       </button>
                     </span>
                   </div>
-                  {expanded ? <div className={styles.nodeQuickPopover}>{renderQuickSettings(node)}</div> : null}
+                  {expanded ? (
+                    <div className={styles.nodeQuickPopover}>{renderQuickSettings(node)}</div>
+                  ) : null}
                 </div>
               );
             })}
           </div>
         </section>
 
-        <section className={`${styles.mobileStack} ${mobileMode === "stack" ? styles.mobileStackActive : ""}`}>
+        <section
+          className={`${styles.mobileStack} ${mobileMode === "stack" ? styles.mobileStackActive : ""}`}
+        >
           <div className={styles.mobileStackHeader}>
             <div>
               <strong>Flow steps</strong>
-              <span>{nodes.length} node(s) · {edges.length} connection(s)</span>
+              <span>
+                {nodes.length} node(s) · {edges.length} connection(s)
+              </span>
             </div>
             <button
               className="ecr-btn ecr-btn--secondary"
@@ -1407,12 +1449,17 @@ export default function FlowCanvasPage() {
                     <b>{expanded ? "−" : "+"}</b>
                   </button>
                   <div className={styles.stackEdgeSummary}>
-                    {incoming.length === 0 && outgoing.length === 0 ? <span>No connections</span> : null}
+                    {incoming.length === 0 && outgoing.length === 0 ? (
+                      <span>No connections</span>
+                    ) : null}
                     {incoming.map((edge) => {
-                      const source = nodes.find((candidate) => candidate.id === edge.sourceNodeId);
+                      const source = nodes.find(
+                        (candidate) => candidate.id === edge.sourceNodeId,
+                      );
                       return (
                         <span key={`in-${edge.id}`}>
-                          {source?.label ?? edge.sourceNodeId} [{edge.sourcePort}] → {node.label}
+                          {source?.label ?? edge.sourceNodeId} [{edge.sourcePort}] →{" "}
+                          {node.label}
                           {" · "}
                           <button
                             type="button"
@@ -1425,10 +1472,13 @@ export default function FlowCanvasPage() {
                       );
                     })}
                     {outgoing.map((edge) => {
-                      const target = nodes.find((candidate) => candidate.id === edge.targetNodeId);
+                      const target = nodes.find(
+                        (candidate) => candidate.id === edge.targetNodeId,
+                      );
                       return (
                         <span key={`out-${edge.id}`}>
-                          {node.label} [{edge.sourcePort}] → {target?.label ?? edge.targetNodeId}
+                          {node.label} [{edge.sourcePort}] →{" "}
+                          {target?.label ?? edge.targetNodeId}
                           {" · "}
                           <button
                             type="button"
@@ -1488,14 +1538,18 @@ export default function FlowCanvasPage() {
                   <button
                     className="ecr-btn ecr-btn--primary"
                     disabled={pendingNodeAction !== null}
-                    onClick={() => void runUiAction("Approval gagal", () => decide(node, "APPROVE"))}
+                    onClick={() =>
+                      void runUiAction("Approval gagal", () => decide(node, "APPROVE"))
+                    }
                   >
                     {pendingNodeAction === `${node.nodeId}:decision` ? "Sending…" : "Approve"}
                   </button>
                   <button
                     className="ecr-btn ecr-btn--secondary"
                     disabled={pendingNodeAction !== null}
-                    onClick={() => void runUiAction("Rejection gagal", () => decide(node, "REJECT"))}
+                    onClick={() =>
+                      void runUiAction("Rejection gagal", () => decide(node, "REJECT"))
+                    }
                   >
                     Reject
                   </button>

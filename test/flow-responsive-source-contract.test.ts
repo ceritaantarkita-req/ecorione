@@ -23,7 +23,7 @@ describe("W03 responsive Flow source contracts", () => {
     const page = await source(flowPagePath);
 
     expect(page).toContain('role="button"');
-    expect(page).toContain('tabIndex={0}');
+    expect(page).toContain("tabIndex={0}");
     expect(page).toContain('event.key === "Enter" || event.key === " "');
     expect(page).not.toMatch(/<button[\s\S]{0,400}className=\{styles\.nodeMain\}/);
   });
@@ -54,7 +54,9 @@ describe("W03 responsive Flow source contracts", () => {
 
     expect(css).toContain("@media (max-width: 780px)");
     expect(css).toContain('html[data-mobile-nav="open"] .ecr-global-nav__inner');
-    expect(css).toMatch(/html\[data-mobile-nav="open"\] \.ecr-global-nav__inner\s*\{[\s\S]*?position:\s*absolute;/);
+    expect(css).toMatch(
+      /html\[data-mobile-nav="open"\] \.ecr-global-nav__inner\s*\{[\s\S]*?position:\s*absolute;/,
+    );
     expect(css).toContain('html[data-mobile-nav="open"] .ecr-global-nav__backdrop');
   });
 });
