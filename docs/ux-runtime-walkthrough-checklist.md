@@ -1,10 +1,37 @@
 # UX Runtime Walkthrough Checklist
 
-Status: **IN PROGRESS / REDESIGN RECHECK REQUIRED**
+Status: **COMPLETE / W03 CLOSED ON 2026-09-15**
 
-Run only on synchronized clean **current `origin/main`** with `ECORIONE_COST_KILL_SWITCH=1`. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` remains part of the required UX ancestry; do not checkout that older SHA merely to run evidence.
+This checklist remains the reusable procedure for future regressions. W03 closure was completed on the verified Windows operator baseline described in `docs/verification/w03-responsive-flow-implementation-2026-09-15.md`.
 
-The first current-main real-laptop pass on 2026-09-15 verified the core Windows runtime, exact-string Local chat, memory/route/Operations behavior, Settings MCP load, Space switching, Flow dirty/save/load/validate behavior, and safe failure. That pass also found app-wide narrow-layout and Flow discoverability defects. The redesign contract is `docs/flow-responsive-ux-redesign.md`; W03 remains open until the redesigned current main is rechecked.
+Run future rechecks only on synchronized clean **current `origin/main`** with `ECORIONE_COST_KILL_SWITCH=1`. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` remains part of the required UX ancestry; do not checkout that older SHA merely to run evidence.
+
+## 2026-09-15 W03 closure result
+
+The final W03 pass established:
+
+```text
+Windows canonical stack: READY
+tracked worktree: clean
+strict UX/product inventory: PASS
+Hosted effective state: OFF
+local model: qwen3.5:9b
+immutable digest: verified/pinned
+desktop walkthrough: PASS
+390–430 px responsive walkthrough: PASS
+Flow Stack / Canvas usability: PASS
+Trigger → AI governed execution: COMPLETED
+Condition true/false wiring: PASS
+Condition truthy run: Trigger/Condition/AI SUCCEEDED, false-branch Artifact SKIPPED
+clean-console Local chat exact response UX_CONSOLE_OK: PASS
+S0 open: 0
+S1 open: 0
+S2 open/unaccepted: 0
+```
+
+UX-05 remained `NOT_EXERCISED` because no disposable recalled fact was available; that is an allowed disposition under this checklist.
+
+The previously observed `VM... / reportAllChanges / startTime` exception was tooling/browser-injected noise and was not reproducible as an application-owned error during the clean-console check.
 
 ## Preflight
 
@@ -54,8 +81,6 @@ The inventory may hydrate `ECORIONE_INTERNAL_TOKEN` from root `.env` when the sh
 
 ## Flow redesign walkthrough
 
-These checks are mandatory after `docs/flow-responsive-ux-redesign.md` implementation lands.
-
 | ID | Action | PASS observation |
 |---|---|---|
 | UX-F01 | Scan the Flow node catalog as a first-time user | each node visibly communicates add/insert behavior; click-to-add and drag remain available |
@@ -80,15 +105,47 @@ Primary viewport: **390–430 CSS px**.
 | UX-12E | Flow default mobile mode | Stack/List mode is usable without desktop-canvas precision; node cards/config/connect actions reachable |
 | UX-12F | Flow optional Canvas mode | any horizontal panning is contained inside Flow canvas only, never the full page |
 
+For Flow functional acceptance, additionally prove on the narrow viewport that a saved graph can expose connection controls/summaries for Condition `true` and `false` outputs. The 2026-09-15 closure graph used:
+
+```text
+Trigger [out] → Condition / Switch
+Condition / Switch [true] → AI
+Condition / Switch [false] → Artifact
+```
+
+The real run used a truthy input and completed with the false branch skipped, confirming branch semantics without requiring the inactive Artifact branch to execute.
+
+## Flow execution authority
+
+Flow execution authority is fail-closed. A declaration visible in Flow does not itself grant `node.execute`.
+
+If a node run fails with an authority denial, use the normal Hub governance path for the exact node definition:
+
+```text
+authority.grant request
+→ POLICY_ADMIN approval required
+→ explicit operator decision
+→ retry exact grant request
+```
+
+Do not bypass authority, auto-grant broad node families, or weaken the policy merely to make the walkthrough pass.
+
 ## Browser console
 
 Record console errors/warnings after each route. Framework/hydration/unhandled-promise errors are defects. Expected application-level request failures intentionally triggered for UX-11 must be distinguished from unhandled browser errors.
 
-The repository includes an App Router icon asset to prevent the previously observed application-owned `GET /favicon.ico 404` noise. Extension-injected `VM...`/anonymous script errors are not application defects unless reproduced in a clean browser context.
+The repository includes an App Router icon asset to prevent the previously observed application-owned `GET /favicon.ico 404` noise. Extension/tooling-injected `VM...`/anonymous script errors are not application defects unless reproduced in a clean browser context or directly correlated with an ECORIONE interaction.
 
 ## Defect ledger format
 
-For every finding record: `ID | severity S0-S3 | route | exact steps | expected | observed | console evidence | disposition`. No S0/S1 may remain for closure; S2 must be fixed or explicitly accepted.
+For every finding record: `ID | severity S0-S3 | route | exact steps | expected | observed | console evidence | disposition`.
+
+Closure rule:
+
+- no S0/S1 may remain open;
+- any S2 must be fixed or explicitly accepted;
+- expected governed failures must not be mislabeled as successful product execution;
+- tooling/browser noise must be separated from application-owned errors using a clean-console reproduction check.
 
 ## Minimum screenshots
 
@@ -102,6 +159,7 @@ For every finding record: `ID | severity S0-S3 | route | exact steps | expected 
 - narrow Ai;
 - narrow Space or Operations;
 - narrow Settings;
-- narrow Flow Stack/List mode.
+- narrow Flow Stack/List mode;
+- for a branch-wiring regression, narrow Flow showing Condition `true`/`false` connection summaries.
 
 Raw screenshots stay local if they expose machine/user-specific details. Commit only sanitized findings.
