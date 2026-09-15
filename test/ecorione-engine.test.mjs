@@ -197,6 +197,32 @@ describe("ECORIONE local engine bootstrap", () => {
     expect(child.signals).toEqual(["SIGTERM", "SIGKILL"]);
   });
 
+  it("kills the full spawned process tree during Windows startup cleanup", async () => {
+    class FakeWindowsChild extends EventEmitter {
+      pid = 4321;
+      exitCode = null;
+      signalCode = null;
+      signals = [];
+
+      kill(signal) {
+        this.signals.push(signal);
+        return true;
+      }
+    }
+
+    const child = new FakeWindowsChild();
+    const treePids = [];
+    await stopSpawnedChild(child, 0, "win32", (pid) => {
+      treePids.push(pid);
+      child.exitCode = 1;
+      child.emit("exit", 1, null);
+      return true;
+    });
+
+    expect(treePids).toEqual([4321]);
+    expect(child.signals).toEqual([]);
+  });
+
   it("points Windows users at the Temporal CLI PowerShell installer", () => {
     expect(temporalInstallHint("win32")).toContain("iwr https://temporal.download/cli.ps1");
   });
