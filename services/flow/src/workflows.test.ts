@@ -11,6 +11,8 @@ import { Worker } from "@temporalio/worker";
 import { describe, expect, it, vi } from "vitest";
 import type { FlowActivities } from "./activities.js";
 
+const TEMPORAL_INTEGRATION_TIMEOUT_MS = 60_000;
+
 function workflowInput(): FlowWorkflowInput {
   return FlowWorkflowInputSchema.parse({
     flowId: assertId("workflow", "wf_temporaltest001"),
@@ -48,90 +50,98 @@ function receipt(): SandboxExecutionReceipt {
 }
 
 describe("Temporal operationWorkflow", () => {
-  it("survives durable delay, waits for approval signal, then runs AI/Sandbox/verification", async () => {
-    const env = await TestWorkflowEnvironment.createTimeSkipping();
-    try {
-      const activities: FlowActivities = {
-        requestApproval: vi.fn(async () => undefined),
-        callAi: vi.fn(async () => ({ reply: "AI reply" })),
-        executeSandbox: vi.fn(async () => receipt()),
-        verifyExecution: vi.fn(async () => true),
-        recordTrace: vi.fn(async () => undefined),
-      };
-      const taskQueue = "flow-workflow-test";
-      const worker = await Worker.create({
-        connection: env.nativeConnection,
-        taskQueue,
-        workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
-        activities,
-      });
-      const input = workflowInput();
-      const result = await worker.runUntil(async () => {
-        const handle = await env.client.workflow.start("operationWorkflow", {
-          workflowId: input.flowId,
-          taskQueue,
-          args: [input],
-        });
-        await handle.signal("approval", { decision: "APPROVE", note: null });
-        return handle.result();
-      });
-      expect(result).toEqual({
-        flowId: input.flowId,
-        operationId: input.operationId,
-        transformed: "durable input",
-        aiReply: "AI reply",
-        sandboxReceiptId: "sbx_temporaltest001",
-        verified: true,
-      });
-      expect(activities.requestApproval).toHaveBeenCalledTimes(1);
-      expect(activities.callAi).toHaveBeenCalledTimes(1);
-      expect(activities.executeSandbox).toHaveBeenCalledTimes(1);
-      expect(activities.verifyExecution).toHaveBeenCalledTimes(1);
-    } finally {
-      await env.teardown();
-    }
-  }, 30_000);
-
-  it("fails closed when the independent verifier rejects the execution proof", async () => {
-    const env = await TestWorkflowEnvironment.createTimeSkipping();
-    try {
-      const activities: FlowActivities = {
-        requestApproval: vi.fn(async () => undefined),
-        callAi: vi.fn(async () => ({ reply: "AI reply" })),
-        executeSandbox: vi.fn(async () => receipt()),
-        verifyExecution: vi.fn(async () => false),
-        recordTrace: vi.fn(async () => undefined),
-      };
-      const taskQueue = "flow-verifier-test";
-      const worker = await Worker.create({
-        connection: env.nativeConnection,
-        taskQueue,
-        workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
-        activities,
-      });
-      const input = workflowInput();
+  it(
+    "survives durable delay, waits for approval signal, then runs AI/Sandbox/verification",
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
       try {
-        await worker.runUntil(async () => {
+        const activities: FlowActivities = {
+          requestApproval: vi.fn(async () => undefined),
+          callAi: vi.fn(async () => ({ reply: "AI reply" })),
+          executeSandbox: vi.fn(async () => receipt()),
+          verifyExecution: vi.fn(async () => true),
+          recordTrace: vi.fn(async () => undefined),
+        };
+        const taskQueue = "flow-workflow-test";
+        const worker = await Worker.create({
+          connection: env.nativeConnection,
+          taskQueue,
+          workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
+          activities,
+        });
+        const input = workflowInput();
+        const result = await worker.runUntil(async () => {
           const handle = await env.client.workflow.start("operationWorkflow", {
-            workflowId: assertId("workflow", "wf_temporalverify002"),
+            workflowId: input.flowId,
             taskQueue,
-            args: [{ ...input, flowId: assertId("workflow", "wf_temporalverify002") }],
+            args: [input],
           });
           await handle.signal("approval", { decision: "APPROVE", note: null });
           return handle.result();
         });
-        throw new Error("Expected verifier failure");
-      } catch (err) {
-        expect(err).toBeInstanceOf(WorkflowFailedError);
-        const cause = (err as WorkflowFailedError).cause as {
-          type?: string;
-          nonRetryable?: boolean;
-        } | null;
-        expect(cause?.type).toBe("FLOW_VERIFICATION_FAILED");
-        expect(cause?.nonRetryable).toBe(true);
+        expect(result).toEqual({
+          flowId: input.flowId,
+          operationId: input.operationId,
+          transformed: "durable input",
+          aiReply: "AI reply",
+          sandboxReceiptId: "sbx_temporaltest001",
+          verified: true,
+        });
+        expect(activities.requestApproval).toHaveBeenCalledTimes(1);
+        expect(activities.callAi).toHaveBeenCalledTimes(1);
+        expect(activities.executeSandbox).toHaveBeenCalledTimes(1);
+        expect(activities.verifyExecution).toHaveBeenCalledTimes(1);
+      } finally {
+        await env.teardown();
       }
-    } finally {
-      await env.teardown();
-    }
-  }, 30_000);
+    },
+    TEMPORAL_INTEGRATION_TIMEOUT_MS,
+  );
+
+  it(
+    "fails closed when the independent verifier rejects the execution proof",
+    async () => {
+      const env = await TestWorkflowEnvironment.createTimeSkipping();
+      try {
+        const activities: FlowActivities = {
+          requestApproval: vi.fn(async () => undefined),
+          callAi: vi.fn(async () => ({ reply: "AI reply" })),
+          executeSandbox: vi.fn(async () => receipt()),
+          verifyExecution: vi.fn(async () => false),
+          recordTrace: vi.fn(async () => undefined),
+        };
+        const taskQueue = "flow-verifier-test";
+        const worker = await Worker.create({
+          connection: env.nativeConnection,
+          taskQueue,
+          workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
+          activities,
+        });
+        const input = workflowInput();
+        try {
+          await worker.runUntil(async () => {
+            const handle = await env.client.workflow.start("operationWorkflow", {
+              workflowId: assertId("workflow", "wf_temporalverify002"),
+              taskQueue,
+              args: [{ ...input, flowId: assertId("workflow", "wf_temporalverify002") }],
+            });
+            await handle.signal("approval", { decision: "APPROVE", note: null });
+            return handle.result();
+          });
+          throw new Error("Expected verifier failure");
+        } catch (err) {
+          expect(err).toBeInstanceOf(WorkflowFailedError);
+          const cause = (err as WorkflowFailedError).cause as {
+            type?: string;
+            nonRetryable?: boolean;
+          } | null;
+          expect(cause?.type).toBe("FLOW_VERIFICATION_FAILED");
+          expect(cause?.nonRetryable).toBe(true);
+        }
+      } finally {
+        await env.teardown();
+      }
+    },
+    TEMPORAL_INTEGRATION_TIMEOUT_MS,
+  );
 });
