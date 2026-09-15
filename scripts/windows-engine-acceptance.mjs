@@ -4,7 +4,11 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { isPortReachable, parseSimpleEnv } from "./ecorione-engine.mjs";
+import {
+  isPortReachable,
+  parseSimpleEnv,
+  resolveCommandInvocation,
+} from "./ecorione-engine.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const ENV_PATH = resolve(ROOT, ".env");
@@ -62,17 +66,14 @@ export function acceptancePlan() {
   ];
 }
 
-function commandName(name) {
-  return process.platform === "win32" && name === "pnpm" ? "pnpm.cmd" : name;
-}
-
 function runSync(command, args, options = {}) {
-  const result = spawnSync(commandName(command), args, {
+  const env = options.env ?? process.env;
+  const invocation = resolveCommandInvocation(command, args, process.platform, env);
+  const result = spawnSync(invocation.command, invocation.args, {
     cwd: ROOT,
-    env: options.env ?? process.env,
+    env,
     encoding: "utf8",
     windowsHide: true,
-    shell: process.platform === "win32" && command === "pnpm",
     timeout: options.timeoutMs ?? 60_000,
   });
   return {
@@ -201,6 +202,36 @@ async function waitForPortsClosed(ports, timeoutMs = 20_000) {
   return portState(ports);
 }
 
+async function waitForChildExit(childState, timeoutMs = 5_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (!childState.exited && Date.now() < deadline) {
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 100));
+  }
+  return childState.exited;
+}
+
+export function evaluateWindowsCleanup({
+  taskkillCode,
+  appPortState,
+  temporalPreexisting,
+  temporalReachable,
+  engineExited,
+}) {
+  const stillOpen = Object.entries(appPortState)
+    .filter(([, reachable]) => reachable)
+    .map(([port]) => port);
+  const temporalStopped = temporalPreexisting || temporalReachable === false;
+  const taskkillNonZero = taskkillCode !== null && taskkillCode !== 0 && taskkillCode !== 128;
+  return {
+    pass: stillOpen.length === 0 && temporalStopped && engineExited,
+    stillOpen,
+    temporalStopped,
+    engineExited,
+    taskkillCode,
+    taskkillNonZero,
+  };
+}
+
 function killWindowsTree(pid) {
   const result = spawnSync("taskkill", ["/PID", String(pid), "/T", "/F"], {
     cwd: ROOT,
@@ -208,9 +239,11 @@ function killWindowsTree(pid) {
     windowsHide: true,
   });
   if (result.error) throw result.error;
-  if (result.status !== 0 && result.status !== 128) {
-    throw new Error(`taskkill gagal (exit ${String(result.status)}): ${result.stderr ?? ""}`);
-  }
+  return {
+    code: result.status,
+    stdout: result.stdout ?? "",
+    stderr: result.stderr ?? "",
+  };
 }
 
 function doctorCommand(env) {
@@ -335,11 +368,16 @@ async function runAcceptance() {
     const stdoutRef = { value: "" };
     const stderrRef = { value: "" };
     const childState = { exited: false, code: null, signal: null };
-    engineChild = spawn(commandName("pnpm"), ["engine:start"], {
+    const engineInvocation = resolveCommandInvocation(
+      "pnpm",
+      ["engine:start"],
+      process.platform,
+      acceptanceEnv,
+    );
+    engineChild = spawn(engineInvocation.command, engineInvocation.args, {
       cwd: ROOT,
       env: acceptanceEnv,
       windowsHide: true,
-      shell: true,
       stdio: ["ignore", "pipe", "pipe"],
     });
     engineChild.stdout?.setEncoding("utf8");
@@ -406,26 +444,54 @@ async function runAcceptance() {
     if (!Number.isInteger(engineChild.pid)) {
       throw new Error("PID engine acceptance tidak tersedia.");
     }
-    killWindowsTree(engineChild.pid);
+    const taskkillResult = killWindowsTree(engineChild.pid);
     const closedPorts = await waitForPortsClosed(APP_PORTS);
-    const stillOpen = Object.entries(closedPorts)
-      .filter(([, reachable]) => reachable)
-      .map(([port]) => port);
-    if (stillOpen.length > 0) {
-      throw new Error(`Cleanup menyisakan port aplikasi: ${stillOpen.join(", ")}.`);
-    }
+    const engineExited = await waitForChildExit(childState);
+    let temporalReachable = preexistingTemporal;
     if (!preexistingTemporal) {
       const temporalClosed = await waitForPortsClosed([7233]);
-      if (temporalClosed["7233"] !== false) {
-        throw new Error(
-          "Temporal dev-server yang dimiliki acceptance masih reachable setelah cleanup.",
-        );
-      }
+      temporalReachable = temporalClosed["7233"] === true;
+    }
+    const cleanupEvaluation = evaluateWindowsCleanup({
+      taskkillCode: taskkillResult.code,
+      appPortState: closedPorts,
+      temporalPreexisting: preexistingTemporal,
+      temporalReachable,
+      engineExited,
+    });
+    if (!cleanupEvaluation.pass) {
+      const diagnostics = [
+        cleanupEvaluation.stillOpen.length > 0
+          ? `port aplikasi masih terbuka: ${cleanupEvaluation.stillOpen.join(", ")}`
+          : null,
+        cleanupEvaluation.temporalStopped
+          ? null
+          : "Temporal dev-server milik acceptance masih reachable",
+        cleanupEvaluation.engineExited ? null : "engine:start root process belum exit",
+        cleanupEvaluation.taskkillNonZero
+          ? `taskkill exit ${String(taskkillResult.code)}: ${tail(
+              `${taskkillResult.stdout}
+${taskkillResult.stderr}`,
+              10,
+            )}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("; ");
+      throw new Error(`Cleanup gagal: ${diagnostics}.`);
+    }
+    if (cleanupEvaluation.taskkillNonZero) {
+      console.log(
+        `· taskkill exit ${String(taskkillResult.code)} saat descendant sedang berhenti; cleanup diterima setelah root process exit dan seluruh port tervalidasi tertutup.`,
+      );
     }
     engineChild = undefined;
     report.phases.cleanup = {
       pass: true,
       appPortsReleased: true,
+      engineProcessExited: true,
+      taskkillCode: taskkillResult.code,
+      taskkillRaceTolerated: cleanupEvaluation.taskkillNonZero,
       temporalDisposition: preexistingTemporal
         ? "preexisting-left-running"
         : "acceptance-owned-stopped",

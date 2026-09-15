@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   acceptancePlan,
   evaluateRunningDoctor,
+  evaluateWindowsCleanup,
 } from "../scripts/windows-engine-acceptance.mjs";
 
 describe("W09/W10 Windows engine acceptance harness", () => {
@@ -88,5 +89,37 @@ describe("W09/W10 Windows engine acceptance harness", () => {
       missing: [],
       localRuntime: "DEGRADED",
     });
+  });
+
+  it("accepts a taskkill descendant race only after runtime shutdown is independently proven", () => {
+    expect(
+      evaluateWindowsCleanup({
+        taskkillCode: 255,
+        appPortState: { 3000: false, 17021: false, 17028: false },
+        temporalPreexisting: false,
+        temporalReachable: false,
+        engineExited: true,
+      }),
+    ).toEqual({
+      pass: true,
+      stillOpen: [],
+      temporalStopped: true,
+      engineExited: true,
+      taskkillCode: 255,
+      taskkillNonZero: true,
+    });
+  });
+
+  it("does not hide a real cleanup failure behind a non-zero taskkill race", () => {
+    const result = evaluateWindowsCleanup({
+      taskkillCode: 255,
+      appPortState: { 3000: false, 17021: true },
+      temporalPreexisting: false,
+      temporalReachable: false,
+      engineExited: true,
+    });
+
+    expect(result.pass).toBe(false);
+    expect(result.stillOpen).toEqual(["17021"]);
   });
 });

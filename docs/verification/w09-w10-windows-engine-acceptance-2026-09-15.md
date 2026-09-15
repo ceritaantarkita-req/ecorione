@@ -94,3 +94,12 @@ W09 and W10 may be marked **DONE — WINDOWS RUNTIME VERIFIED** only when all of
 6. sanitized result is recorded in canonical docs.
 
 Any harness failure remains a W09/W10 blocker until reproduced, fixed or explicitly scoped out with evidence.
+
+
+## Operator rerun blocker 2 — Windows cleanup race
+
+The first rerun after the pnpm doctor fix used synchronized `main` at `840814b66ce1ea326b627b970d7002edd599d4a9`. The operator evidence reached W09-B READY, W10-B healthy for the full application fleet, and W09-C duplicate-start fail-closed. Local AI was recorded as `UNAVAILABLE`, which is intentionally outside the core W09/W10 boot gate.
+
+W09-D then failed because Windows `taskkill /T /F` returned exit `255` while one descendant had already exited (`There is no running instance of the task`). This is a process-tree shutdown race in the acceptance harness, not evidence that the ECORIONE runtime failed to boot. The same run also still emitted Node `DEP0190` because the harness itself used `shell: true` for pnpm, even though the engine helper had already been hardened.
+
+Disposition: the harness now reuses the hardened pnpm command resolver and treats `taskkill` status as diagnostic rather than as the sole cleanup verdict. W09-D only passes after the engine root process has exited, every ECORIONE application port is closed, and acceptance-owned Temporal is closed. A non-zero `taskkill` code is retained in the sanitized report and may be tolerated only when those independent shutdown checks pass. W09/W10 remain open until a fresh current-main Windows run reaches the final PASS marker.
