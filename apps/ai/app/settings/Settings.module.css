@@ -39,13 +39,19 @@
 }
 
 .status {
+  position: sticky;
+  top: 12px;
+  z-index: 4;
+  max-width: 100%;
   margin: 18px 0 6px;
-  padding: 10px 0 10px 12px;
+  padding: 10px 12px;
   border-left: 1px solid var(--accent);
+  background: var(--bg);
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 10.5px;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .section {
@@ -74,6 +80,12 @@
   letter-spacing: 0.02em;
 }
 
+.formGrid input,
+.formGrid select {
+  width: 100%;
+  min-width: 0;
+}
+
 .wide {
   grid-column: 1 / -1;
 }
@@ -99,6 +111,7 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
+  min-width: 0;
   gap: 9px;
   align-items: center;
 }
@@ -251,14 +264,16 @@
     grid-column: auto;
   }
 
-  .inline {
+  .inline,
+  .actions {
     align-items: stretch;
     flex-direction: column;
   }
 
   .inline input,
   .inline select,
-  .inline button {
+  .inline button,
+  .actions button {
     width: 100%;
     min-width: 0;
   }
