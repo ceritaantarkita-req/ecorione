@@ -74,6 +74,14 @@ Repository tests cover the platform-independent contract of the harness:
 
 The real Windows process behavior cannot be closed by Linux GitHub Actions alone. CI proves syntax/contracts; the operator run supplies the remaining platform evidence.
 
+## First operator run — blocker found
+
+The first synchronized Windows run was executed on exact `main` commit `7380bb83073648717370b92901279652602f6692` with Node `24.19.0`. W09-A preflight passed, but W10-A failed because `engine:doctor` printed `pnpm tidak tersedia` even though pnpm was installed and had launched the command.
+
+Root cause: the doctor path resolved pnpm to `pnpm.cmd` and passed that `.cmd` file directly to `spawnSync`. Modern Node on Windows rejects direct `.cmd` spawning on the hardened child-process path. The fix routes trusted Windows pnpm invocations through explicit `cmd.exe /d /s /c`, keeps non-Windows invocation direct, and rejects unsafe shell metacharacters before interpolation. The acceptance matrix must be rerun after the fix is merged; the original failure remains evidence of a real Windows defect, not an operator-setup failure.
+
+The failed run wrote a sanitized local report under `traces/w09-w10-windows-acceptance-2026-09-15T15-53-16-778Z.json`. That raw report remains operator-local and is not committed because closure evidence should only record sanitized findings.
+
 ## Closure rule
 
 W09 and W10 may be marked **DONE — WINDOWS RUNTIME VERIFIED** only when all of the following are true:

@@ -8,6 +8,7 @@ import {
   ensureLocalEnv,
   parseSimpleEnv,
   probeLocalRuntime,
+  resolveCommandInvocation,
   stopSpawnedChild,
   temporalCliAvailable,
   temporalInstallHint,
@@ -141,6 +142,30 @@ describe("ECORIONE local engine bootstrap", () => {
       pass: false,
       errorCode: "PROVIDER_UNREACHABLE",
     });
+  });
+
+  it("uses cmd.exe explicitly for pnpm on Windows instead of spawning pnpm.cmd directly", () => {
+    expect(
+      resolveCommandInvocation("pnpm", ["--version"], "win32", {
+        ComSpec: "C:\\Windows\\System32\\cmd.exe",
+      }),
+    ).toEqual({
+      command: "C:\\Windows\\System32\\cmd.exe",
+      args: ["/d", "/s", "/c", "pnpm.cmd --version"],
+    });
+  });
+
+  it("keeps non-Windows pnpm invocation direct", () => {
+    expect(resolveCommandInvocation("pnpm", ["--version"], "linux", {})).toEqual({
+      command: "pnpm",
+      args: ["--version"],
+    });
+  });
+
+  it("rejects unsafe Windows pnpm arguments instead of interpolating shell metacharacters", () => {
+    expect(() =>
+      resolveCommandInvocation("pnpm", ["run", "dev:phase4 & calc"], "win32", {}),
+    ).toThrow("Argumen pnpm Windows tidak aman");
   });
 
   it("reports child spawn errors immediately instead of waiting for readiness timeout", async () => {
