@@ -1,0 +1,1117 @@
+name: Dynamic Ai Port Refactor Helper
+
+on:
+  push:
+    branches:
+      - automation/dynamic-ai-port-helper-20260915
+
+permissions:
+  contents: write
+
+jobs:
+  build-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply dynamic Ai port architecture
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          import re
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one match, got {count}")
+              return text.replace(old, new, 1)
+
+          def regex_once(text: str, pattern: str, replacement: str, label: str) -> str:
+              updated, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one regex match, got {count}")
+              return updated
+
+          # --- scripts/ecorione-engine.mjs ---
+          p = Path("scripts/ecorione-engine.mjs")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              'import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";',
+              'import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, rmSync } from "node:fs";',
+              "engine fs import",
+          )
+          t = replace_once(
+              t,
+              '''const REQUIRED_SERVICES = [
+            ["RnD", "http://127.0.0.1:17021/healthz"],
+            ["Context", "http://127.0.0.1:17022/healthz"],
+            ["Connect", "http://127.0.0.1:17023/healthz"],
+            ["Hub", "http://127.0.0.1:17024/healthz"],
+            ["Artifact", "http://127.0.0.1:17025/healthz"],
+            ["Sandbox", "http://127.0.0.1:17026/healthz"],
+            ["Space", "http://127.0.0.1:17027/healthz"],
+            ["Flow", "http://127.0.0.1:17028/healthz"],
+          ];''',
+              '''const REQUIRED_SERVICES = [
+            ["RnD", "http://127.0.0.1:17021/healthz"],
+            ["Context", "http://127.0.0.1:17022/healthz"],
+            ["Connect", "http://127.0.0.1:17023/healthz"],
+            ["Hub", "http://127.0.0.1:17024/healthz"],
+            ["Artifact", "http://127.0.0.1:17025/healthz"],
+            ["Sandbox", "http://127.0.0.1:17026/healthz"],
+            ["Space", "http://127.0.0.1:17027/healthz"],
+            ["Flow", "http://127.0.0.1:17028/healthz"],
+          ];
+          export const DEFAULT_AI_PORT = 17020;
+          export const AI_FALLBACK_PORTS = Object.freeze(
+            Array.from({ length: 11 }, (_, index) => 17029 + index),
+          );
+          export const RESERVED_SERVICE_PORTS = Object.freeze(
+            Array.from({ length: 8 }, (_, index) => 17021 + index),
+          );
+          const ENGINE_RUNTIME_DIR = resolve(ROOT, ".ecorione", "runtime");
+          const ENGINE_RUNTIME_STATE = resolve(ENGINE_RUNTIME_DIR, "engine.json");''',
+              "engine port constants",
+          )
+
+          insert_after_port = '''export function isPortReachable(port, host = "127.0.0.1", timeoutMs = 750) {
+            return new Promise((resolvePromise) => {
+              const socket = connect({ port, host });
+              let settled = false;
+              const finish = (value) => {
+                if (settled) return;
+                settled = true;
+                socket.destroy();
+                resolvePromise(value);
+              };
+              socket.setTimeout(timeoutMs);
+              socket.once("connect", () => finish(true));
+              socket.once("timeout", () => finish(false));
+              socket.once("error", () => finish(false));
+            });
+          }
+          '''
+          port_helpers = '''export function isPortReachable(port, host = "127.0.0.1", timeoutMs = 750) {
+            return new Promise((resolvePromise) => {
+              const socket = connect({ port, host });
+              let settled = false;
+              const finish = (value) => {
+                if (settled) return;
+                settled = true;
+                socket.destroy();
+                resolvePromise(value);
+              };
+              socket.setTimeout(timeoutMs);
+              socket.once("connect", () => finish(true));
+              socket.once("timeout", () => finish(false));
+              socket.once("error", () => finish(false));
+            });
+          }
+
+          export function aiUrl(port) {
+            return `http://127.0.0.1:${String(port)}`;
+          }
+
+          export function resolvePreferredAiPort(env = process.env) {
+            const raw = env.ECORIONE_AI_PORT;
+            if (raw === undefined || String(raw).trim() === "") return DEFAULT_AI_PORT;
+            const value = Number(String(raw).trim());
+            if (!Number.isInteger(value) || value < 1 || value > 65535) {
+              throw new Error(`ECORIONE_AI_PORT tidak valid: ${String(raw)}.`);
+            }
+            if (RESERVED_SERVICE_PORTS.includes(value)) {
+              throw new Error(
+                `ECORIONE_AI_PORT ${String(value)} bentrok dengan reserved service port 17021–17028.`,
+              );
+            }
+            return value;
+          }
+
+          export function aiPortCandidates(preferredPort) {
+            return [preferredPort, DEFAULT_AI_PORT, ...AI_FALLBACK_PORTS].filter(
+              (port, index, values) =>
+                !RESERVED_SERVICE_PORTS.includes(port) && values.indexOf(port) === index,
+            );
+          }
+
+          export async function classifyAiPort(port) {
+            if (!(await isPortReachable(port))) return "free";
+            try {
+              const response = await fetch(`${aiUrl(port)}/`, {
+                cache: "no-store",
+                redirect: "error",
+                signal: AbortSignal.timeout(1_500),
+              });
+              const html = await response.text();
+              if (/ecorione\s*[—-]\s*Ai/i.test(html)) return "ecorione";
+            } catch {
+              // A listening non-HTTP process or unrelated local app is still an occupied port.
+            }
+            return "occupied";
+          }
+
+          export async function selectAiPort(preferredPort, classify = classifyAiPort) {
+            const collisions = [];
+            for (const port of aiPortCandidates(preferredPort)) {
+              const disposition = await classify(port);
+              if (disposition === "free") {
+                return { port, preferredPort, fallbackUsed: port !== preferredPort, collisions };
+              }
+              if (disposition === "ecorione") {
+                throw new Error(
+                  `ECORIONE sudah berjalan di ${aiUrl(port)}. Gunakan instance tersebut atau hentikan dulu sebelum start baru.`,
+                );
+              }
+              collisions.push(port);
+            }
+            throw new Error(
+              `Tidak ada Ai port kosong. Preferred ${String(preferredPort)} dan fallback 17020, 17029–17039 sedang terpakai.`,
+            );
+          }
+
+          function runtimeStatePath(root = ROOT) {
+            return resolve(root, ".ecorione", "runtime", "engine.json");
+          }
+
+          export function writeEngineRuntimeState(state, root = ROOT) {
+            const path = runtimeStatePath(root);
+            mkdirSync(dirname(path), { recursive: true });
+            writeFileSync(path, `${JSON.stringify(state, null, 2)}\n`, {
+              encoding: "utf8",
+              mode: 0o600,
+            });
+            return path;
+          }
+
+          export function readEngineRuntimeState(root = ROOT) {
+            const path = runtimeStatePath(root);
+            if (!existsSync(path)) return null;
+            try {
+              const value = JSON.parse(readFileSync(path, "utf8"));
+              if (
+                value?.schemaVersion !== 1 ||
+                !Number.isInteger(value?.aiPort) ||
+                value.aiPort < 1 ||
+                value.aiPort > 65535 ||
+                value?.aiUrl !== aiUrl(value.aiPort)
+              ) {
+                return null;
+              }
+              return value;
+            } catch {
+              return null;
+            }
+          }
+
+          export function clearEngineRuntimeState(root = ROOT) {
+            rmSync(runtimeStatePath(root), { force: true });
+          }
+
+          export function resolveAiRuntime(env = process.env, root = ROOT) {
+            const state = readEngineRuntimeState(root);
+            if (state) {
+              return {
+                port: state.aiPort,
+                url: state.aiUrl,
+                preferredPort: state.preferredAiPort,
+                fallbackUsed: state.fallbackUsed === true,
+                source: "runtime-state",
+              };
+            }
+            const preferredPort = resolvePreferredAiPort(env);
+            return {
+              port: preferredPort,
+              url: aiUrl(preferredPort),
+              preferredPort,
+              fallbackUsed: false,
+              source: "config",
+            };
+          }
+          '''
+          t = replace_once(t, insert_after_port, port_helpers, "engine port helpers")
+
+          old_doctor_ai = '  console.log(`${(await isPortReachable(3000)) ? "✓" : "·"} Ai http://127.0.0.1:3000`);'
+          new_doctor_ai = '''  const aiRuntime = resolveAiRuntime(env);
+            const aiDisposition = await classifyAiPort(aiRuntime.port);
+            const aiSuffix =
+              aiDisposition === "occupied"
+                ? " (port occupied by another application)"
+                : aiRuntime.fallbackUsed
+                  ? ` (fallback from ${String(aiRuntime.preferredPort)})`
+                  : "";
+            console.log(`${aiDisposition === "ecorione" ? "✓" : "·"} Ai ${aiRuntime.url}${aiSuffix}`);'''
+          t = replace_once(t, old_doctor_ai, new_doctor_ai, "doctor dynamic ai")
+
+          start_pattern = r'''async function start\(\) \{.*?\n\}\n\nfunction stopTemporal\(\)'''
+          start_replacement = '''async function start() {
+            const local = ensureLocalEnv();
+            if (local.created) console.log("✓ .env dibuat dari .env.example");
+            for (const key of local.generated)
+              console.log(`✓ ${key} dibuat otomatis untuk local-only runtime`);
+            const env = { ...local.values, ...process.env };
+            const preferredAiPort = resolvePreferredAiPort(env);
+            const selectedAi = await selectAiPort(preferredAiPort);
+            for (const occupiedPort of selectedAi.collisions) {
+              console.log(
+                `· Ai port ${String(occupiedPort)} dipakai aplikasi lain; mencoba fallback ECORIONE…`,
+              );
+            }
+            if (selectedAi.fallbackUsed) {
+              console.log(
+                `✓ Ai fallback port ${String(selectedAi.port)} dipilih (preferred ${String(preferredAiPort)})`,
+              );
+            }
+            const runtimeEnv = {
+              ...env,
+              ECORIONE_AI_PORT: String(selectedAi.port),
+              PORT: String(selectedAi.port),
+            };
+            const runtimeBase = {
+              schemaVersion: 1,
+              enginePid: process.pid,
+              preferredAiPort,
+              aiPort: selectedAi.port,
+              aiUrl: aiUrl(selectedAi.port),
+              fallbackUsed: selectedAi.fallbackUsed,
+              collisions: selectedAi.collisions,
+              startedAt: new Date().toISOString(),
+            };
+            clearEngineRuntimeState();
+            writeEngineRuntimeState({ ...runtimeBase, status: "starting" });
+
+            let temporalChild = null;
+            try {
+              temporalChild = await ensureTemporal(runtimeEnv);
+              console.log("• Menyalakan full Phase 4 stack…");
+
+              const pnpmInvocation = resolveCommandInvocation(
+                "pnpm",
+                ["run", "dev:phase4"],
+                process.platform,
+                runtimeEnv,
+              );
+              const child = spawn(pnpmInvocation.command, pnpmInvocation.args, {
+                cwd: ROOT,
+                env: runtimeEnv,
+                stdio: "inherit",
+                windowsHide: true,
+              });
+              const lifecycle = waitForSpawnedChild(child);
+              const token = runtimeEnv.ECORIONE_INTERNAL_TOKEN ?? "";
+              const readiness = Promise.all([
+                waitForPort(selectedAi.port, 90_000, "Ai"),
+                waitForRequiredServices(token, 90_000),
+              ]).then(() => ({ ready: true }));
+
+              let first;
+              try {
+                first = await Promise.race([readiness, lifecycle]);
+              } catch (error) {
+                await stopSpawnedChild(child);
+                if (temporalChild) await stopSpawnedChild(temporalChild);
+                throw error;
+              }
+
+              if ("ready" in first) {
+                const url = aiUrl(selectedAi.port);
+                writeEngineRuntimeState({
+                  ...runtimeBase,
+                  status: "ready",
+                  readyAt: new Date().toISOString(),
+                });
+                console.log(`\n✓ ECORIONE ready: ${url}`);
+                console.log("  Tekan Ctrl+C untuk menghentikan proses development stack.\n");
+                openBrowser(url);
+                const finished = await lifecycle;
+                if (temporalChild) await stopSpawnedChild(temporalChild);
+                if ("error" in finished) {
+                  throw new Error(
+                    `Phase 4 stack mengalami process error: ${finished.error instanceof Error ? finished.error.message : String(finished.error)}.`,
+                  );
+                }
+                if (finished.code !== 0 && finished.code !== null) process.exitCode = finished.code;
+                return;
+              }
+
+              if (temporalChild) await stopSpawnedChild(temporalChild);
+              if ("error" in first) {
+                throw new Error(
+                  `Tidak bisa menjalankan Phase 4 stack: ${first.error instanceof Error ? first.error.message : String(first.error)}.`,
+                );
+              }
+              throw new Error(
+                `Phase 4 stack berhenti sebelum seluruh service ready${first.code === null ? ` (${first.signal ?? "signal"})` : ` (exit ${String(first.code)})`}.`,
+              );
+            } finally {
+              clearEngineRuntimeState();
+            }
+          }
+
+          function stopTemporal()'''
+          t = regex_once(t, start_pattern, start_replacement, "engine start function")
+          p.write_text(t)
+
+          # --- scripts/ai-next.mjs ---
+          Path("scripts/ai-next.mjs").write_text('''#!/usr/bin/env node
+
+          import { spawn } from "node:child_process";
+          import { resolve } from "node:path";
+          import { fileURLToPath } from "node:url";
+          import {
+            resolveCommandInvocation,
+            resolvePreferredAiPort,
+          } from "./ecorione-engine.mjs";
+
+          const mode = process.argv[2];
+          if (mode !== "dev" && mode !== "start") {
+            throw new Error(`Mode Ai Next tidak dikenal: ${String(mode)}.`);
+          }
+
+          const env = {
+            ...process.env,
+            ECORIONE_AI_PORT:
+              process.env.ECORIONE_AI_PORT ?? process.env.PORT ?? undefined,
+          };
+          const port = resolvePreferredAiPort(env);
+          const runtimeEnv = {
+            ...process.env,
+            ECORIONE_AI_PORT: String(port),
+            PORT: String(port),
+          };
+          const invocation = resolveCommandInvocation(
+            "pnpm",
+            ["exec", "next", mode, "-p", String(port)],
+            process.platform,
+            runtimeEnv,
+          );
+          const child = spawn(invocation.command, invocation.args, {
+            cwd: process.cwd(),
+            env: runtimeEnv,
+            stdio: "inherit",
+            windowsHide: true,
+          });
+
+          child.once("error", (error) => {
+            console.error(`Ai Next process error: ${error.message}`);
+            process.exitCode = 1;
+          });
+          child.once("exit", (code, signal) => {
+            if (signal) process.kill(process.pid, signal);
+            else process.exitCode = code ?? 1;
+          });
+
+          const invokedPath = process.argv[1] === undefined ? "" : resolve(process.argv[1]);
+          if (invokedPath !== fileURLToPath(import.meta.url)) process.exitCode = 1;
+          ''')
+
+          # --- apps/ai/package.json ---
+          p = Path("apps/ai/package.json")
+          data = json.loads(p.read_text())
+          data["scripts"]["dev"] = "node ../../scripts/ai-next.mjs dev"
+          data["scripts"]["start"] = "node ../../scripts/ai-next.mjs start"
+          p.write_text(json.dumps(data, indent=2) + "\n")
+
+          # --- .env.example ---
+          p = Path(".env.example")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              "ECORIONE_AI_PORT=3000",
+              "# Preferred Ai/Web port. engine:start auto-fallbacks to 17029–17039 when occupied.\nECORIONE_AI_PORT=17020",
+              "env ai port",
+          )
+          p.write_text(t)
+
+          # --- scripts/local-ux-product-evidence.mjs ---
+          p = Path("scripts/local-ux-product-evidence.mjs")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              'import { parseSimpleEnv } from "./ecorione-engine.mjs";',
+              '''import {
+            DEFAULT_AI_PORT,
+            parseSimpleEnv,
+            resolveAiRuntime,
+          } from "./ecorione-engine.mjs";''',
+              "ux imports",
+          )
+          t = replace_once(
+              t,
+              '''export const UI_SURFACES = [
+            ["ai", "http://127.0.0.1:3000/", "ecorione — Ai"],
+            ["space", "http://127.0.0.1:3000/space", "Space"],
+            ["flow", "http://127.0.0.1:3000/flow", "Visual workflow builder"],
+            ["ops", "http://127.0.0.1:3000/ops", "Runtime health & telemetry"],
+            ["settings", "http://127.0.0.1:3000/settings", "Control Center"],
+          ];''',
+              '''export function buildUiSurfaces(baseUrl) {
+            const base = baseUrl.replace(/\\/+$/, "");
+            return [
+              ["ai", `${base}/`, "ecorione — Ai"],
+              ["space", `${base}/space`, "Space"],
+              ["flow", `${base}/flow`, "Visual workflow builder"],
+              ["ops", `${base}/ops`, "Runtime health & telemetry"],
+              ["settings", `${base}/settings`, "Control Center"],
+            ];
+          }
+
+          export const UI_SURFACES = buildUiSurfaces(`http://127.0.0.1:${String(DEFAULT_AI_PORT)}`);''',
+              "ux surfaces",
+          )
+          t = replace_once(
+              t,
+              '''  const owners = [];
+            for (const [name, url] of OWNER_HEALTH) {''',
+              '''  const envPath = resolve(ROOT, ".env");
+            const fileEnv = existsSync(envPath) ? parseSimpleEnv(readFileSync(envPath, "utf8")) : {};
+            const aiRuntime = resolveAiRuntime({ ...fileEnv, ...process.env }, ROOT);
+            const uiSurfaces = buildUiSurfaces(aiRuntime.url);
+
+            const owners = [];
+            for (const [name, url] of OWNER_HEALTH) {''',
+              "ux ai runtime resolve",
+          )
+          t = replace_once(t, "  for (const [name, url, marker] of UI_SURFACES) {", "  for (const [name, url, marker] of uiSurfaces) {", "ux dynamic surfaces loop")
+          t = t.replace('request("http://127.0.0.1:3000/api/settings/settings/runtime")', 'request(`${aiRuntime.url}/api/settings/settings/runtime`)')
+          t = t.replace('`http://127.0.0.1:3000/api/settings/settings/mcp/servers?workspaceId=${UX_WORKSPACE_ID}`', '`${aiRuntime.url}/api/settings/settings/mcp/servers?workspaceId=${UX_WORKSPACE_ID}`')
+          t = t.replace('request("http://127.0.0.1:3000/api/ops")', 'request(`${aiRuntime.url}/api/ops`)')
+          t = t.replace('`http://127.0.0.1:3000/api/space/pages?workspaceId=${UX_WORKSPACE_ID}`', '`${aiRuntime.url}/api/space/pages?workspaceId=${UX_WORKSPACE_ID}`')
+          t = t.replace('request("http://127.0.0.1:3000/api/flow/nodes")', 'request(`${aiRuntime.url}/api/flow/nodes`)')
+          t = replace_once(
+              t,
+              '''    costKillSwitch: "1",
+                owners,''',
+              '''    costKillSwitch: "1",
+                aiRuntime,
+                owners,''',
+              "ux result runtime",
+          )
+          p.write_text(t)
+
+          # --- scripts/windows-engine-acceptance.mjs ---
+          p = Path("scripts/windows-engine-acceptance.mjs")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              '''import {
+            isPortReachable,
+            parseSimpleEnv,
+            resolveCommandInvocation,
+          } from "./ecorione-engine.mjs";''',
+              '''import {
+            DEFAULT_AI_PORT,
+            isPortReachable,
+            parseSimpleEnv,
+            resolveCommandInvocation,
+            resolvePreferredAiPort,
+          } from "./ecorione-engine.mjs";''',
+              "acceptance imports",
+          )
+          t = replace_once(
+              t,
+              '''const APP_PORTS = [3000, ...REQUIRED_SERVICES.map(([, port]) => port)];
+          const READY_MARKER = "✓ ECORIONE ready: http://127.0.0.1:3000";''',
+              '''const SERVICE_PORTS = REQUIRED_SERVICES.map(([, port]) => port);
+
+          export function parseReadyAi(output) {
+            const match = output.match(/✓ ECORIONE ready: (http:\\/\\/127\\.0\\.0\\.1:(\\d+))/);
+            if (!match) return null;
+            return { url: match[1], port: Number(match[2]) };
+          }''',
+              "acceptance dynamic constants",
+          )
+          t = t.replace(
+              'pass: "Windows, clean tracked worktree, HEAD == origin/main, Node >=22, pnpm available",',
+              'pass: "Windows, clean tracked worktree, HEAD == origin/main, Node >=22, pnpm available; fixed owner ports free while Ai preferred-port collision may fallback",',
+          )
+          t = t.replace(
+              'pass: "second pnpm engine:start fails closed on occupied port 3000 before mutating runtime",',
+              'pass: "second pnpm engine:start detects the already-running ECORIONE Ai identity and fails closed",',
+          )
+          t = replace_once(
+              t,
+              '''export function evaluateRunningDoctor(output) {
+            const requiredMarkers = [
+              "✓ Temporal 127.0.0.1:7233",
+              ...REQUIRED_SERVICES.map(([name]) => `✓ ${name}`),
+              "✓ Ai http://127.0.0.1:3000",
+            ];''',
+              '''export function evaluateRunningDoctor(output, aiPort = DEFAULT_AI_PORT) {
+            const requiredMarkers = [
+              "✓ Temporal 127.0.0.1:7233",
+              ...REQUIRED_SERVICES.map(([name]) => `✓ ${name}`),
+              `✓ Ai http://127.0.0.1:${String(aiPort)}`,
+            ];''',
+              "acceptance doctor dynamic marker",
+          )
+          t = regex_once(
+              t,
+              r'''async function waitForRuntime\(childState, stdoutRef, timeoutMs = 150_000\) \{.*?\n\}\n\nasync function waitForPortsClosed''',
+              '''async function waitForRuntime(childState, stdoutRef, timeoutMs = 150_000) {
+            const deadline = Date.now() + timeoutMs;
+            while (Date.now() < deadline) {
+              if (childState.exited) {
+                throw new Error(
+                  `engine:start berhenti sebelum ready (exit ${String(childState.code)}, signal ${String(childState.signal)}).`,
+                );
+              }
+
+              const token = readLocalToken();
+              const readyAi = parseReadyAi(stdoutRef.value);
+              const aiReady = readyAi ? await isPortReachable(readyAi.port) : false;
+              const health = await Promise.all(
+                REQUIRED_SERVICES.map(async ([name, , url]) => ({
+                  name,
+                  ready: await fetchHealth(url, token),
+                })),
+              );
+              const servicesReady = health.every((entry) => entry.ready);
+              if (aiReady && servicesReady && readyAi) return { health, ...readyAi };
+
+              await new Promise((resolvePromise) => setTimeout(resolvePromise, 750));
+            }
+            throw new Error("engine:start belum mencapai full readiness setelah 150 detik.");
+          }
+
+          async function waitForPortsClosed''',
+              "acceptance wait runtime",
+          )
+          t = replace_once(
+              t,
+              '''    const beforePorts = await portState(APP_PORTS);
+            const occupied = Object.entries(beforePorts)
+              .filter(([, reachable]) => reachable)
+              .map(([port]) => port);
+            if (occupied.length > 0) {
+              throw new Error(
+                `ECORIONE harus berhenti sebelum acceptance. Port aplikasi masih terpakai: ${occupied.join(", ")}.`,
+              );
+            }
+
+            report.phases.preflight = {''',
+              '''    const configuredEnv = { ...localEnv, ...process.env };
+            const preferredAiPort = resolvePreferredAiPort(configuredEnv);
+            const preferredAiOccupiedBefore = await isPortReachable(preferredAiPort);
+            const beforePorts = await portState(SERVICE_PORTS);
+            const occupied = Object.entries(beforePorts)
+              .filter(([, reachable]) => reachable)
+              .map(([port]) => port);
+            if (occupied.length > 0) {
+              throw new Error(
+                `ECORIONE fixed service ports harus kosong sebelum acceptance: ${occupied.join(", ")}.`,
+              );
+            }
+
+            report.phases.preflight = {''',
+              "acceptance preflight",
+          )
+          t = replace_once(
+              t,
+              '''      temporalCliAvailable: temporalCliReady,
+                dockerReachable: dockerReady,''',
+              '''      temporalCliAvailable: temporalCliReady,
+                dockerReachable: dockerReady,
+                preferredAiPort,
+                preferredAiOccupiedBefore,''',
+              "acceptance preflight report",
+          )
+          t = replace_once(
+              t,
+              '''    await waitForRuntime(childState, stdoutRef);
+            report.phases.start = {
+              pass: true,
+              readyMarker: true,
+              ports: await portState(APP_PORTS),
+              logTail: tail(`${stdoutRef.value}\n${stderrRef.value}`),
+            };''',
+              '''    const started = await waitForRuntime(childState, stdoutRef);
+            const appPorts = [started.port, ...SERVICE_PORTS];
+            report.phases.start = {
+              pass: true,
+              readyMarker: true,
+              preferredAiPort,
+              resolvedAiPort: started.port,
+              aiUrl: started.url,
+              fallbackUsed: started.port !== preferredAiPort,
+              ports: await portState(appPorts),
+              logTail: tail(`${stdoutRef.value}\n${stderrRef.value}`),
+            };''',
+              "acceptance started runtime",
+          )
+          t = t.replace("const doctorEvaluation = evaluateRunningDoctor(runningDoctor.stdout);", "const doctorEvaluation = evaluateRunningDoctor(runningDoctor.stdout, started.port);")
+          t = replace_once(
+              t,
+              '''    if (duplicate.code === 0 || !duplicateText.includes("Port 3000 sudah dipakai")) {''',
+              '''    if (duplicate.code === 0 || !duplicateText.includes("ECORIONE sudah berjalan di")) {''',
+              "acceptance duplicate marker",
+          )
+          t = t.replace("const closedPorts = await waitForPortsClosed(APP_PORTS);", "const closedPorts = await waitForPortsClosed(appPorts);")
+          t = replace_once(
+              t,
+              '''      temporalDisposition: preexistingTemporal
+                    ? "preexisting-left-running"
+                    : "acceptance-owned-stopped",
+                };''',
+              '''      temporalDisposition: preexistingTemporal
+                    ? "preexisting-left-running"
+                    : "acceptance-owned-stopped",
+                  preferredAiPort,
+                  resolvedAiPort: started.port,
+                  preferredPortWasExternalCollision:
+                    preferredAiOccupiedBefore && started.port !== preferredAiPort,
+                };''',
+              "acceptance cleanup report",
+          )
+          p.write_text(t)
+
+          # --- desktop/ecorione.ps1 ---
+          p = Path("desktop/ecorione.ps1")
+          t = p.read_text()
+          t = replace_once(t, '$AiUrl = "http://127.0.0.1:3000"', '$AiPort = 17020\n$AiUrl = "http://127.0.0.1:$AiPort"', "desktop ai default")
+          t = replace_once(
+              t,
+              '''    "ECORIONE_DESKTOP_IMAGE=ecorione:desktop",
+                "ECORIONE_INTERNAL_TOKEN=$(New-Base64UrlSecret)",''',
+              '''    "ECORIONE_DESKTOP_IMAGE=ecorione:desktop",
+                "ECORIONE_AI_PORT=17020",
+                "ECORIONE_INTERNAL_TOKEN=$(New-Base64UrlSecret)",''',
+              "desktop env default",
+          )
+          t = replace_once(
+              t,
+              '''  if (Test-Path -LiteralPath $EnvFile) {
+                return Read-DesktopEnv
+              }
+
+              $lines = @(''',
+              '''  if (Test-Path -LiteralPath $EnvFile) {
+                $existing = Read-DesktopEnv
+                if (-not $existing.ContainsKey("ECORIONE_AI_PORT")) {
+                  Add-Content -LiteralPath $EnvFile -Value "ECORIONE_AI_PORT=17020"
+                  $existing = Read-DesktopEnv
+                }
+                return $existing
+              }
+
+              $lines = @(''',
+              "desktop existing env ai port",
+          )
+          insert_before_docker = '''function Assert-Docker {'''
+          helpers = '''function Get-ConfiguredAiPort([hashtable]$Config) {
+            $raw = [string]$Config["ECORIONE_AI_PORT"]
+            if (-not $raw) { return 17020 }
+            $parsed = 0
+            if (-not [int]::TryParse($raw, [ref]$parsed) -or $parsed -lt 1 -or $parsed -gt 65535) {
+              throw "ECORIONE_AI_PORT tidak valid di $EnvFile: $raw"
+            }
+            if ($parsed -ge 17021 -and $parsed -le 17028) {
+              throw "ECORIONE_AI_PORT $parsed bentrok dengan reserved service port 17021-17028."
+            }
+            return $parsed
+          }
+
+          function Test-PortAvailable([int]$Port) {
+            $listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, $Port)
+            try {
+              $listener.Start()
+              return $true
+            } catch {
+              return $false
+            } finally {
+              try { $listener.Stop() } catch {}
+            }
+          }
+
+          function Set-DesktopAiPort([int]$Port) {
+            $lines = @()
+            if (Test-Path -LiteralPath $EnvFile) {
+              $lines = [System.IO.File]::ReadAllLines($EnvFile)
+            }
+            $found = $false
+            for ($i = 0; $i -lt $lines.Length; $i++) {
+              if ($lines[$i].TrimStart().StartsWith("ECORIONE_AI_PORT=")) {
+                $lines[$i] = "ECORIONE_AI_PORT=$Port"
+                $found = $true
+                break
+              }
+            }
+            if (-not $found) { $lines += "ECORIONE_AI_PORT=$Port" }
+            Write-Utf8NoBom $EnvFile (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
+          }
+
+          function Select-FreeAiPort([int]$PreferredPort) {
+            $candidates = @($PreferredPort, 17020) + (17029..17039)
+            $seen = @{}
+            foreach ($candidate in $candidates) {
+              if ($candidate -ge 17021 -and $candidate -le 17028) { continue }
+              if ($seen.ContainsKey($candidate)) { continue }
+              $seen[$candidate] = $true
+              if (Test-PortAvailable $candidate) { return [int]$candidate }
+            }
+            throw "Tidak ada Ai port kosong. Preferred $PreferredPort dan fallback 17020, 17029-17039 sedang terpakai."
+          }
+
+          function Set-AiEndpoint([int]$Port) {
+            $script:AiPort = $Port
+            $script:AiUrl = "http://127.0.0.1:$Port"
+          }
+
+          function Test-ComposeAiRunning {
+            $id = & docker compose --env-file $EnvFile -f $ComposeFile ps -q ai 2>$null
+            return $LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace(($id -join ""))
+          }
+
+          function Assert-Docker {'''
+          t = replace_once(t, insert_before_docker, helpers, "desktop port helpers")
+          t = replace_once(
+              t,
+              '''  $config = Ensure-DesktopEnv
+              $image = Ensure-RuntimeImage $config
+              Write-Info "Menyalakan ECORIONE ($image)..."
+              Invoke-Compose @("up", "-d")''',
+              '''  $config = Ensure-DesktopEnv
+              $configuredPort = Get-ConfiguredAiPort $config
+              Set-AiEndpoint $configuredPort
+              if (-not (Test-ComposeAiRunning)) {
+                $selectedPort = Select-FreeAiPort $configuredPort
+                if ($selectedPort -ne $configuredPort) {
+                  Write-Info "Ai port $configuredPort sedang dipakai; memakai fallback $selectedPort."
+                }
+                Set-DesktopAiPort $selectedPort
+                Set-AiEndpoint $selectedPort
+                $config = Read-DesktopEnv
+              }
+              $image = Ensure-RuntimeImage $config
+              Write-Info "Menyalakan ECORIONE ($image)..."
+              Invoke-Compose @("up", "-d")''',
+              "desktop start select port",
+          )
+          t = replace_once(
+              t,
+              '''  $config = Ensure-DesktopEnv
+              $image = [string]$config["ECORIONE_DESKTOP_IMAGE"]''',
+              '''  $config = Ensure-DesktopEnv
+              Set-AiEndpoint (Get-ConfiguredAiPort $config)
+              $image = [string]$config["ECORIONE_DESKTOP_IMAGE"]''',
+              "desktop doctor ai endpoint",
+          )
+          t = replace_once(
+              t,
+              '''  "open" {
+                if (-not (Test-AiReady)) {''',
+              '''  "open" {
+                $config = Ensure-DesktopEnv
+                Set-AiEndpoint (Get-ConfiguredAiPort $config)
+                if (-not (Test-AiReady)) {''',
+              "desktop open ai endpoint",
+          )
+          p.write_text(t)
+
+          # --- desktop/compose.yml ---
+          p = Path("desktop/compose.yml")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              '''  ai:
+                <<: *app
+                command: ["pnpm", "--filter", "@ecorione/ai", "start"]
+                ports:
+                  - "127.0.0.1:3000:3000"
+                depends_on: [hub, space, flow]''',
+              '''  ai:
+                <<: *app
+                command: ["pnpm", "--filter", "@ecorione/ai", "start"]
+                environment:
+                  <<: *runtime-env
+                  PORT: "3000"
+                  ECORIONE_AI_PORT: "3000"
+                ports:
+                  - "127.0.0.1:${ECORIONE_AI_PORT:-17020}:3000"
+                depends_on: [hub, space, flow]''',
+              "desktop compose ai",
+          )
+          p.write_text(t)
+
+          # --- deploy/compose.yml: keep container-internal contract at 3000 ---
+          p = Path("deploy/compose.yml")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              '''  ai:
+                <<: *app
+                command: ["pnpm", "--filter", "@ecorione/ai", "start"]
+                depends_on: [hub, space, flow]''',
+              '''  ai:
+                <<: *app
+                command: ["pnpm", "--filter", "@ecorione/ai", "start"]
+                environment:
+                  <<: *runtime-env
+                  PORT: "3000"
+                  ECORIONE_AI_PORT: "3000"
+                depends_on: [hub, space, flow]''',
+              "deploy compose ai internal port",
+          )
+          p.write_text(t)
+
+          # --- tests: engine ---
+          p = Path("test/ecorione-engine.test.mjs")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              '''import {
+            ensureLocalEnv,
+            parseSimpleEnv,
+            probeLocalRuntime,
+            resolveCommandInvocation,''',
+              '''import {
+            AI_FALLBACK_PORTS,
+            DEFAULT_AI_PORT,
+            aiPortCandidates,
+            ensureLocalEnv,
+            parseSimpleEnv,
+            probeLocalRuntime,
+            readEngineRuntimeState,
+            resolveAiRuntime,
+            resolveCommandInvocation,
+            resolvePreferredAiPort,
+            selectAiPort,
+            writeEngineRuntimeState,''',
+              "engine test imports",
+          )
+          marker = '''  it("uses cmd.exe explicitly for pnpm on Windows instead of spawning pnpm.cmd directly", () => {'''
+          tests = '''  it("uses 17020 as the Ai default and keeps service ports out of fallback candidates", () => {
+            expect(DEFAULT_AI_PORT).toBe(17020);
+            expect(AI_FALLBACK_PORTS).toEqual([17029, 17030, 17031, 17032, 17033, 17034, 17035, 17036, 17037, 17038, 17039]);
+            expect(aiPortCandidates(17020)).toEqual([17020, ...AI_FALLBACK_PORTS]);
+            expect(aiPortCandidates(18555)).toEqual([18555, 17020, ...AI_FALLBACK_PORTS]);
+            expect(() => resolvePreferredAiPort({ ECORIONE_AI_PORT: "17021" })).toThrow(/reserved service port/);
+          });
+
+          it("falls back without touching an unrelated preferred-port listener", async () => {
+            const seen = [];
+            const selected = await selectAiPort(3000, async (port) => {
+              seen.push(port);
+              if (port === 3000) return "occupied";
+              if (port === 17020) return "free";
+              return "occupied";
+            });
+            expect(seen).toEqual([3000, 17020]);
+            expect(selected).toEqual({
+              port: 17020,
+              preferredPort: 3000,
+              fallbackUsed: true,
+              collisions: [3000],
+            });
+          });
+
+          it("fails closed when the selected candidate already belongs to ECORIONE", async () => {
+            await expect(selectAiPort(17020, async () => "ecorione")).rejects.toThrow(/sudah berjalan/);
+          });
+
+          it("persists and resolves the selected runtime port from gitignored runtime state", () => {
+            const root = tempRoot();
+            writeEngineRuntimeState(
+              {
+                schemaVersion: 1,
+                preferredAiPort: 17020,
+                aiPort: 17029,
+                aiUrl: "http://127.0.0.1:17029",
+                fallbackUsed: true,
+              },
+              root,
+            );
+            expect(readEngineRuntimeState(root)?.aiPort).toBe(17029);
+            expect(resolveAiRuntime({}, root)).toMatchObject({
+              port: 17029,
+              url: "http://127.0.0.1:17029",
+              fallbackUsed: true,
+              source: "runtime-state",
+            });
+          });
+
+          '''
+          t = replace_once(t, marker, tests + marker, "engine dynamic port tests")
+          p.write_text(t)
+
+          # --- tests: Windows acceptance ---
+          p = Path("test/windows-engine-acceptance.test.mjs")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              '''  acceptancePlan,
+            evaluateRunningDoctor,
+            evaluateWindowsCleanup,''',
+              '''  acceptancePlan,
+            evaluateRunningDoctor,
+            evaluateWindowsCleanup,
+            parseReadyAi,''',
+              "acceptance test imports",
+          )
+          t = t.replace('"✓ Ai http://127.0.0.1:3000"', '"✓ Ai http://127.0.0.1:17029"')
+          t = t.replace('expect(evaluateRunningDoctor(output)).toEqual({', 'expect(evaluateRunningDoctor(output, 17029)).toEqual({')
+          t = t.replace('appPortState: { 3000: false, 17021: false, 17028: false }', 'appPortState: { 17029: false, 17021: false, 17028: false }')
+          t = t.replace('appPortState: { 3000: false, 17021: true }', 'appPortState: { 17029: false, 17021: true }')
+          marker = '''  it("requires Temporal, Ai, and every Phase 4 owner in a healthy runtime doctor", () => {'''
+          extra = '''  it("extracts the actual dynamically selected Ai URL from the ready marker", () => {
+            expect(parseReadyAi("noise\\n✓ ECORIONE ready: http://127.0.0.1:17037\\n")).toEqual({
+              url: "http://127.0.0.1:17037",
+              port: 17037,
+            });
+            expect(parseReadyAi("not ready")).toBeNull();
+          });
+
+          '''
+          t = replace_once(t, marker, extra + marker, "acceptance ready parser test")
+          p.write_text(t)
+
+          # --- tests: desktop bundle ---
+          p = Path("test/desktop-bundle.test.mjs")
+          t = p.read_text()
+          t = replace_once(
+              t,
+              '''    expect(compose).toContain('"127.0.0.1:3000:3000"');''',
+              '''    expect(compose).toContain('"127.0.0.1:${ECORIONE_AI_PORT:-17020}:3000"');
+                expect(launcher).toContain("ECORIONE_AI_PORT=17020");
+                expect(launcher).toContain("Select-FreeAiPort");
+                expect(launcher).toContain("17029..17039");''',
+              "desktop bundle dynamic port test",
+          )
+          p.write_text(t)
+
+          # --- docs/api-fase1.md ---
+          p = Path("docs/api-fase1.md")
+          t = p.read_text()
+          t = replace_once(t, "| Ai (Next.js) | 3000 | — |", "| Ai (Next.js) | 17020 preferred; auto-fallback 17029–17039 | `ECORIONE_AI_PORT` |", "api doc ai port")
+          p.write_text(t)
+
+          # --- docs/ux-runtime-walkthrough-checklist.md ---
+          p = Path("docs/ux-runtime-walkthrough-checklist.md")
+          t = p.read_text()
+          t = t.replace(
+              "serves Ai at `http://127.0.0.1:3000`",
+              "serves Ai at the resolved loopback URL printed by the launcher (preferred `http://127.0.0.1:17020`, with automatic fallback to `17029–17039` when occupied)",
+          )
+          t = t.replace("http://127.0.0.1:3000", "<resolved Ai URL from engine:start>")
+          p.write_text(t)
+
+          # --- docs/ux-product-validation.md ---
+          p = Path("docs/ux-product-validation.md")
+          t = p.read_text()
+          t = t.replace(
+              "`http://127.0.0.1:3000`",
+              "the resolved Ai URL printed by `pnpm engine:start` (preferred `http://127.0.0.1:17020`, fallback `17029–17039`)",
+          )
+          p.write_text(t)
+
+          # --- W09/W10 verification doc ---
+          p = Path("docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md")
+          t = p.read_text()
+          t = t.replace(
+              "- no existing ECORIONE application stack occupying ports `3000` or `17021–17028`;",
+              "- no existing ECORIONE fixed owner stack occupying `17021–17028`; the preferred Ai port may be occupied by an unrelated application because the launcher must auto-fallback safely;",
+          )
+          t = t.replace(
+              "`pnpm engine:start` reaches exact ready marker, Ai port 3000, and all eight required Phase 4 owner health endpoints",
+              "`pnpm engine:start` reaches an exact ready marker on the resolved Ai port and all eight required Phase 4 owner health endpoints",
+          )
+          t = t.replace(
+              "second `pnpm engine:start` fails non-zero with the actionable occupied-port-3000 message",
+              "second `pnpm engine:start` detects the already-running ECORIONE Ai identity and fails non-zero without starting another stack",
+          )
+          t = t.replace(
+              "application ports `3000`, `17021–17028` are released",
+              "the resolved Ai port plus `17021–17028` are released; unrelated processes on the preferred Ai port are outside cleanup ownership",
+          )
+          if "## Operator rerun blocker 3 — fixed port collision" not in t:
+              t += '''
+
+          ## Operator rerun blocker 3 — fixed port collision
+
+          The next synchronized Windows rerun used `main` at `b1b3280795fdab95f99f5baa2ff05ea1fd057c42` and stopped in preflight because TCP port `3000` was already occupied by another local application. The operator correctly challenged the product assumption: port 3000 is a common developer port and ECORIONE must not require users to stop unrelated software.
+
+          Disposition: W09/W10 now move from a fixed Ai port to a centralized port policy. `ECORIONE_AI_PORT` is the preferred port, new installs default to `17020`, and `engine:start` falls back through `17029–17039` when the preferred port belongs to another application. Ports `17021–17028` remain reserved for the fixed Phase 4 service fleet and are never selected as Ai fallbacks. The resolved Ai URL is written to gitignored runtime state so doctor and UX evidence consume the same endpoint. Duplicate ECORIONE instances still fail closed by identifying the existing Ai surface; unrelated listeners are never killed. Desktop packaging uses the same preferred host-port policy while keeping container-internal Ai on port 3000.
+
+          This architecture change requires one new merged-main Windows rerun before W09/W10 may close.
+          '''
+          p.write_text(t)
+
+          # --- active work plan ---
+          p = Path("docs/active-work-plan.md")
+          t = p.read_text()
+          t = t.replace(
+              "| W09 | One-command startup | **STARTED — NEEDS OPERATOR RUNTIME** | Windows startup berhasil pada current operator laptop; clean-Windows acceptance matrix belum lengkap. |",
+              "| W09 | One-command startup | **STARTED — PORT COLLISION FIX INTEGRATING** | Windows runtime reached READY; fixed-port assumptions are being replaced by preferred `17020` + safe fallback before final acceptance. |",
+          )
+          t = t.replace(
+              "| W10 | `ecorione doctor` | **STARTED — NEEDS OPERATOR RUNTIME** | Operator matrix belum selesai. |",
+              "| W10 | `ecorione doctor` | **STARTED — PORT-AWARE RERUN REQUIRED** | Doctor follows the resolved Ai runtime state; final Windows matrix still required. |",
+          )
+          t = t.replace(
+              "Temporal CLI local path, Windows `pnpm.cmd` handling, required-service readiness, Connect Windows startup, dan spawned-process-tree cleanup sudah repo-side. W09/W10 tetap terbuka sampai clean-Windows proof lengkap.",
+              "Temporal CLI local path, Windows `pnpm.cmd` handling, required-service readiness, Connect Windows startup, spawned-process-tree cleanup, dan dynamic Ai port selection sudah repo-side. W09/W10 tetap terbuka sampai clean-Windows proof lengkap pada merged `main` terbaru.",
+          )
+          p.write_text(t)
+          PY
+
+          pnpm exec prettier --write \
+            scripts/ecorione-engine.mjs \
+            scripts/ai-next.mjs \
+            scripts/windows-engine-acceptance.mjs \
+            scripts/local-ux-product-evidence.mjs \
+            apps/ai/package.json \
+            .env.example \
+            desktop/ecorione.ps1 \
+            desktop/compose.yml \
+            deploy/compose.yml \
+            test/ecorione-engine.test.mjs \
+            test/windows-engine-acceptance.test.mjs \
+            test/desktop-bundle.test.mjs \
+            docs/api-fase1.md \
+            docs/ux-runtime-walkthrough-checklist.md \
+            docs/ux-product-validation.md \
+            docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md \
+            docs/active-work-plan.md
+
+          pnpm exec vitest run \
+            test/ecorione-engine.test.mjs \
+            test/windows-engine-acceptance.test.mjs \
+            test/desktop-bundle.test.mjs \
+            test/local-ux-product-evidence.test.mjs \
+            test/local-ux-flow-surface-marker.test.mjs
+          pnpm run typecheck
+          pnpm run lint
+          git diff --check
+
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git switch -c feat/w09-w10-dynamic-ai-port-20260915
+          git add \
+            scripts/ecorione-engine.mjs \
+            scripts/ai-next.mjs \
+            scripts/windows-engine-acceptance.mjs \
+            scripts/local-ux-product-evidence.mjs \
+            apps/ai/package.json \
+            .env.example \
+            desktop/ecorione.ps1 \
+            desktop/compose.yml \
+            deploy/compose.yml \
+            test/ecorione-engine.test.mjs \
+            test/windows-engine-acceptance.test.mjs \
+            test/desktop-bundle.test.mjs \
+            docs/api-fase1.md \
+            docs/ux-runtime-walkthrough-checklist.md \
+            docs/ux-product-validation.md \
+            docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md \
+            docs/active-work-plan.md
+          git commit -m "refactor W09/W10 Ai port allocation"
+          git push origin HEAD
