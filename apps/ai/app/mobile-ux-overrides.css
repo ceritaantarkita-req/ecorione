@@ -1,0 +1,215 @@
+/* W03 real-device mobile corrections.
+ * Keep these rules semantic and route-scoped so the responsive fixes do not depend on
+ * CSS-module hash names. The Flow route exposes `aria-label="Flow mobile view"`, which
+ * gives us a stable scoping hook without changing runtime behavior.
+ */
+
+@media (max-width: 780px) {
+  body:has([aria-label="Flow mobile view"]) .ecr-app-content {
+    min-width: 0;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+    overflow-x: clip;
+  }
+
+  /* Primary lifecycle actions belong within thumb reach on phones instead of occupying
+     the top of the builder. The collapsed mobile navigation rail is always 60px wide. */
+  body:has([aria-label="Flow mobile view"]) .ecr-app-content > div > header > div:last-child {
+    position: fixed;
+    left: var(--ecr-sidebar-width-collapsed);
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap: 7px;
+    width: auto;
+    padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    box-shadow: 0 -12px 30px rgb(0 0 0 / 24%);
+    backdrop-filter: blur(14px);
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    .ecr-app-content
+    > div
+    > header
+    > div:last-child
+    > button {
+    min-width: 0;
+    min-height: 46px;
+    padding-inline: 8px;
+  }
+
+  body:has([aria-label="Flow mobile view"]) [aria-label="Flow mobile view"] {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+  }
+
+  /* Node catalogue becomes a compact tray. It remains usable for adding/configuring nodes,
+     but it no longer pushes the actual flow steps far below the fold. */
+  body:has([aria-label="Flow mobile view"]) main > aside {
+    max-height: 238px !important;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  body:has([aria-label="Flow mobile view"]) main > aside > div:last-child {
+    max-height: 190px;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > aside
+    div:has(> button[aria-label^="Add "]) {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    gap: 8px !important;
+    padding-bottom: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-inline: contain;
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > aside
+    div:has(> button[aria-label^="Add "])
+    > button {
+    flex: 0 0 168px;
+    width: 168px;
+    min-height: 54px;
+    scroll-snap-align: start;
+  }
+
+  /* A collapsed step must advertise how connections are made. The existing stack already
+     renders real connection selects after expansion; this makes that affordance explicit. */
+  body:has([aria-label="Flow mobile view"])
+    main
+    > section:last-child
+    article
+    > button:first-child {
+    grid-template-columns: 28px minmax(0, 1fr) auto !important;
+    min-height: 66px;
+    gap: 10px !important;
+    padding: 11px 10px !important;
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > section:last-child
+    article
+    > button:first-child
+    > b:last-child {
+    min-width: 88px;
+    min-height: 32px;
+    padding: 0 9px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    color: transparent;
+    font-size: 0;
+    white-space: nowrap;
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > section:last-child
+    article
+    > button:first-child
+    > b:last-child::after {
+    content: "Edit / connect";
+    color: var(--text);
+    font: 600 9px var(--font-mono);
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > section:last-child
+    article
+    div:has(> label > select) {
+    margin-top: 2px;
+    padding: 11px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--surface-2) 74%, transparent);
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > section:last-child
+    article
+    div:has(> label > select)::before {
+    content: "Connections";
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font: 600 9px var(--font-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > section:last-child
+    article
+    label
+    select {
+    width: 100%;
+    min-height: 44px;
+    border-color: color-mix(in srgb, var(--accent) 62%, var(--border));
+  }
+
+  body:has([aria-label="Flow mobile view"]) main > section:last-child {
+    padding-bottom: 18px;
+  }
+
+  body:has([aria-label="Flow mobile view"]) main > section:last-child article {
+    box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+  }
+}
+
+@media (max-width: 520px) {
+  body:has([aria-label="Flow mobile view"]) .ecr-app-content > div > header > div:last-child {
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap: 5px;
+    padding-inline: 8px;
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    .ecr-app-content
+    > div
+    > header
+    > div:last-child
+    > button {
+    min-height: 44px;
+    padding-inline: 5px;
+    font-size: 10.5px;
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > aside
+    div:has(> button[aria-label^="Add "])
+    > button {
+    flex-basis: 150px;
+    width: 150px;
+  }
+
+  body:has([aria-label="Flow mobile view"])
+    main
+    > section:last-child
+    article
+    > button:first-child
+    > b:last-child {
+    min-width: 82px;
+    padding-inline: 7px;
+  }
+}
