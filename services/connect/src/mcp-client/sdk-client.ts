@@ -11,15 +11,11 @@ import type {
   McpToolCallResult,
 } from "./types.js";
 
-export interface McpSdkLoader {
-  loadClient(): Promise<typeof import("@modelcontextprotocol/client")>;
-  loadStdio(): Promise<typeof import("@modelcontextprotocol/client/stdio")>;
-}
-
-const DEFAULT_MCP_SDK_LOADER: McpSdkLoader = {
+const DEFAULT_MCP_SDK_LOADER = {
   loadClient: () => import("@modelcontextprotocol/client"),
   loadStdio: () => import("@modelcontextprotocol/client/stdio"),
 };
+type McpSdkLoader = typeof DEFAULT_MCP_SDK_LOADER;
 
 export class McpTransportDeniedError extends Error {
   constructor(message: string) {
