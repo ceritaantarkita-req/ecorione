@@ -6,7 +6,7 @@ on:
       - fix/w09-w10-windows-pnpm-doctor-20260915
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   format:
@@ -19,9 +19,12 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Print canonical prettier diff
+      - name: Apply canonical formatting and remove helper
         run: |
           pnpm exec prettier --write scripts/ecorione-engine.mjs
-          echo '=== W101_PRETTIER_DIFF_BEGIN ==='
-          git diff -- scripts/ecorione-engine.mjs
-          echo '=== W101_PRETTIER_DIFF_END ==='
+          rm .github/workflows/tmp-w101-prettier.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/ecorione-engine.mjs .github/workflows/tmp-w101-prettier.yml
+          git commit -m "chore: apply canonical formatting"
+          git push origin HEAD:fix/w09-w10-windows-pnpm-doctor-20260915
