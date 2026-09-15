@@ -32,8 +32,8 @@ PR #98 only changed documentation, so the final operator runtime/browser closure
 | W06 | Credential Vault integration | **DONE WITH LIMITATIONS — REPO SIDE** | Test/save/replace/remove; no browser plaintext persistence. |
 | W07 | Provider health/status | **DONE WITH LIMITATIONS — REPO SIDE** | Real external credential validity tetap operator-owned. |
 | W08 | Default AI selection | **DONE — REPO SIDE** | Durable Local/Hosted default; no auto-router claim. |
-| W09 | One-command startup | **STARTED — NEEDS OPERATOR RUNTIME** | Windows startup berhasil pada current operator laptop; clean-Windows acceptance matrix belum lengkap. |
-| W10 | `ecorione doctor` | **STARTED — NEEDS OPERATOR RUNTIME** | Operator matrix belum selesai. |
+| W09 | One-command startup | **STARTED — PORT COLLISION FIX INTEGRATING** | Runtime reached READY; fixed Ai host-port assumptions are being replaced by preferred `17020` + safe fallback before final Windows acceptance. |
+| W10 | `ecorione doctor` | **STARTED — PORT-AWARE RERUN REQUIRED** | Doctor follows resolved Ai runtime state; final Windows matrix still required. |
 | W11 | Installer/Launcher | **STARTED — REPO-SIDE PACKAGING READY** | Real Setup + clean-Windows acceptance belum ada. |
 | W12 | Attachment composer backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → hydration. |
 | W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Current operator runtime berhasil memverifikasi selector + immutable digest; perubahan model/runtime tetap harus diverifikasi ulang. |

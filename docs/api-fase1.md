@@ -21,7 +21,7 @@ Port & URL dari `.env.example`:
 | Context (HTTP) | 17022 | `ECORIONE_CONTEXT_URL` |
 | Connect (outbound) | 17023 | `ECORIONE_CONNECT_URL` |
 | Hub | 17024 | `ECORIONE_HUB_URL` |
-| Ai (Next.js) | 3000 | — |
+| Ai (Next.js) | 17020 preferred; auto-fallback 17029–17039 | `ECORIONE_AI_PORT` |
 
 Panggilan antar-service pakai `httpJson` dari `@ecorione/shared-server` dengan
 `token: process.env.ECORIONE_INTERNAL_TOKEN`.

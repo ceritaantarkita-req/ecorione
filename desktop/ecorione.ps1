@@ -16,7 +16,8 @@ $DataRoot = if ($env:LOCALAPPDATA) {
   Join-Path $HOME ".ecorione"
 }
 $EnvFile = Join-Path $DataRoot "desktop.env"
-$AiUrl = "http://127.0.0.1:3000"
+$AiPort = 17020
+$AiUrl = "http://127.0.0.1:$AiPort"
 
 function Write-Info([string]$Message) {
   Write-Host "[ECORIONE] $Message"
@@ -65,6 +66,7 @@ function Ensure-DesktopEnv {
 
   $lines = @(
     "ECORIONE_DESKTOP_IMAGE=ecorione:desktop",
+    "ECORIONE_AI_PORT=17020",
     "ECORIONE_INTERNAL_TOKEN=$(New-Base64UrlSecret)",
     "ECORIONE_CONNECT_VAULT_MASTER_KEY=$(New-Base64UrlSecret)",
     "TEMPORAL_POSTGRES_PASSWORD=$(New-Base64UrlSecret)",
@@ -78,6 +80,61 @@ function Ensure-DesktopEnv {
   Write-Utf8NoBom $EnvFile (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
   Write-Info "Local config dibuat di $EnvFile"
   return Read-DesktopEnv
+}
+
+function Get-ConfiguredAiPort([hashtable]$Config) {
+  $raw = [string]$Config["ECORIONE_AI_PORT"]
+  if (-not $raw) { return 17020 }
+  $value = 0
+  if (-not [int]::TryParse($raw, [ref]$value) -or $value -lt 1 -or $value -gt 65535) {
+    throw "ECORIONE_AI_PORT tidak valid: $raw"
+  }
+  if ($value -ge 17021 -and $value -le 17028) {
+    throw "ECORIONE_AI_PORT $value bentrok dengan reserved service port 17021-17028."
+  }
+  return $value
+}
+
+function Test-PortAvailable([int]$Port) {
+  $listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, $Port)
+  try { $listener.Start(); return $true } catch { return $false } finally { try { $listener.Stop() } catch {} }
+}
+
+function Set-DesktopAiPort([int]$Port) {
+  $lines = [System.IO.File]::ReadAllLines($EnvFile)
+  $found = $false
+  for ($i = 0; $i -lt $lines.Length; $i++) {
+    if ($lines[$i].TrimStart().StartsWith("ECORIONE_AI_PORT=")) {
+      $lines[$i] = "ECORIONE_AI_PORT=$Port"
+      $found = $true
+      break
+    }
+  }
+  if (-not $found) { $lines += "ECORIONE_AI_PORT=$Port" }
+  Write-Utf8NoBom $EnvFile (($lines -join [Environment]::NewLine) + [Environment]::NewLine)
+}
+
+function Select-FreeAiPort([int]$PreferredPort) {
+  $candidates = @($PreferredPort, 17020) + (17029..17039)
+  $seen = @{}
+  foreach ($candidate in $candidates) {
+    if ($candidate -ge 17021 -and $candidate -le 17028) { continue }
+    if ($seen.ContainsKey($candidate)) { continue }
+    $seen[$candidate] = $true
+    if (Test-PortAvailable $candidate) { return [int]$candidate }
+  }
+  throw "Tidak ada Ai port kosong. Preferred $PreferredPort dan fallback 17020, 17029-17039 sedang terpakai."
+}
+
+function Set-AiEndpoint([int]$Port) {
+  $script:AiPort = $Port
+  $script:AiUrl = "http://127.0.0.1:$Port"
+}
+
+function Test-ComposeAiRunning {
+  $id = & docker compose --env-file $EnvFile -f $ComposeFile ps -q ai 2>$null
+  if ($LASTEXITCODE -ne 0) { return $false }
+  return -not [string]::IsNullOrWhiteSpace(($id -join ""))
 }
 
 function Assert-Docker {
@@ -153,6 +210,19 @@ function Start-Ecorione {
     throw "Desktop compose tidak ditemukan: $ComposeFile"
   }
   $config = Ensure-DesktopEnv
+  $configuredPort = Get-ConfiguredAiPort $config
+  if (Test-ComposeAiRunning) {
+    Set-AiEndpoint $configuredPort
+    Write-Info "ECORIONE desktop sudah berjalan; memakai endpoint $AiUrl."
+  } else {
+    $selectedPort = Select-FreeAiPort $configuredPort
+    if ($selectedPort -ne $configuredPort) {
+      Write-Info "Ai port $configuredPort sedang dipakai aplikasi lain; memakai fallback $selectedPort."
+    }
+    Set-DesktopAiPort $selectedPort
+    Set-AiEndpoint $selectedPort
+    $config = Read-DesktopEnv
+  }
   $image = Ensure-RuntimeImage $config
   Write-Info "Menyalakan ECORIONE ($image)..."
   Invoke-Compose @("up", "-d")
@@ -186,7 +256,8 @@ function Show-Doctor {
   }
 
   $config = Ensure-DesktopEnv
-  $image = [string]$config["ECORIONE_DESKTOP_IMAGE"]
+    Set-AiEndpoint (Get-ConfiguredAiPort $config)
+    $image = [string]$config["ECORIONE_DESKTOP_IMAGE"]
   if ($image -and (Test-DockerImage $image)) {
     Write-Host "[OK] Runtime image: $image"
   } elseif (Test-Path -LiteralPath $RuntimeImageTar) {
@@ -211,7 +282,9 @@ switch ($Command) {
   "doctor" { Show-Doctor }
   "stop" { Stop-Ecorione }
   "open" {
-    if (-not (Test-AiReady)) {
+      $config = Ensure-DesktopEnv
+      Set-AiEndpoint (Get-ConfiguredAiPort $config)
+      if (-not (Test-AiReady)) {
       throw "ECORIONE belum reachable di $AiUrl. Jalankan Start-ECORIONE.cmd terlebih dahulu."
     }
     Start-Process $AiUrl

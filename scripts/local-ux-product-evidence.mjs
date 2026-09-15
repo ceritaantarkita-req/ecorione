@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, resolve } from "node:path";
-import { parseSimpleEnv } from "./ecorione-engine.mjs";
+import { DEFAULT_AI_PORT, parseSimpleEnv, resolveAiRuntime } from "./ecorione-engine.mjs";
 
 export const UX_WORKSPACE_ID = "ws_personal";
 
@@ -26,13 +26,18 @@ export const NAV_ROUTES = [
   ["Settings", "/settings"],
 ];
 
-export const UI_SURFACES = [
-  ["ai", "http://127.0.0.1:3000/", "ecorione — Ai"],
-  ["space", "http://127.0.0.1:3000/space", "Space"],
-  ["flow", "http://127.0.0.1:3000/flow", "Visual workflow builder"],
-  ["ops", "http://127.0.0.1:3000/ops", "Runtime health & telemetry"],
-  ["settings", "http://127.0.0.1:3000/settings", "Control Center"],
-];
+export function buildUiSurfaces(baseUrl) {
+  const base = baseUrl.replace(/\/+$/, "");
+  return [
+    ["ai", `${base}/`, "ecorione — Ai"],
+    ["space", `${base}/space`, "Space"],
+    ["flow", `${base}/flow`, "Visual workflow builder"],
+    ["ops", `${base}/ops`, "Runtime health & telemetry"],
+    ["settings", `${base}/settings`, "Control Center"],
+  ];
+}
+
+export const UI_SURFACES = buildUiSurfaces(`http://127.0.0.1:${String(DEFAULT_AI_PORT)}`);
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -186,6 +191,11 @@ export async function inventory() {
     );
   }
 
+  const envPath = resolve(ROOT, ".env");
+  const fileEnv = existsSync(envPath) ? parseSimpleEnv(readFileSync(envPath, "utf8")) : {};
+  const aiRuntime = resolveAiRuntime({ ...fileEnv, ...process.env }, ROOT);
+  const uiSurfaces = buildUiSurfaces(aiRuntime.url);
+
   const owners = [];
   for (const [name, url] of OWNER_HEALTH) {
     const result = await request(url);
@@ -198,7 +208,7 @@ export async function inventory() {
   }
 
   const surfaces = [];
-  for (const [name, url, marker] of UI_SURFACES) {
+  for (const [name, url, marker] of uiSurfaces) {
     const result = await request(url);
     if (result.status !== 200) throw new Error(`${name} surface gagal HTTP ${result.status}.`);
     validateSurfaceHtml(name, result.text, marker);
@@ -206,14 +216,14 @@ export async function inventory() {
     surfaces.push({ name, status: result.status, marker });
   }
 
-  const runtimeResponse = await request("http://127.0.0.1:3000/api/settings/settings/runtime");
+  const runtimeResponse = await request(`${aiRuntime.url}/api/settings/settings/runtime`);
   if (runtimeResponse.status !== 200) {
     throw new Error(`Ai settings proxy gagal HTTP ${runtimeResponse.status}.`);
   }
   const runtime = validateRuntimeSnapshot(parseJson(runtimeResponse.text, "runtime settings"));
 
   const mcpSettingsResponse = await request(
-    `http://127.0.0.1:3000/api/settings/settings/mcp/servers?workspaceId=${UX_WORKSPACE_ID}`,
+    `${aiRuntime.url}/api/settings/settings/mcp/servers?workspaceId=${UX_WORKSPACE_ID}`,
   );
   if (mcpSettingsResponse.status !== 200) {
     throw new Error(`Ai Settings MCP proxy gagal HTTP ${mcpSettingsResponse.status}.`);
@@ -221,14 +231,14 @@ export async function inventory() {
   const mcpSettings = parseJson(mcpSettingsResponse.text, "settings MCP servers");
   validateMcpSettingsSnapshot(mcpSettings);
 
-  const opsResponse = await request("http://127.0.0.1:3000/api/ops");
+  const opsResponse = await request(`${aiRuntime.url}/api/ops`);
   if (opsResponse.status !== 200)
     throw new Error(`Ai ops proxy gagal HTTP ${opsResponse.status}.`);
   const ops = parseJson(opsResponse.text, "ops");
   validateOpsSnapshot(ops);
 
   const spaceResponse = await request(
-    `http://127.0.0.1:3000/api/space/pages?workspaceId=${UX_WORKSPACE_ID}`,
+    `${aiRuntime.url}/api/space/pages?workspaceId=${UX_WORKSPACE_ID}`,
   );
   if (spaceResponse.status !== 200) {
     throw new Error(`Ai Space proxy gagal HTTP ${spaceResponse.status}.`);
@@ -236,7 +246,7 @@ export async function inventory() {
   const space = parseJson(spaceResponse.text, "space pages");
   validateSpaceSnapshot(space);
 
-  const flowResponse = await request("http://127.0.0.1:3000/api/flow/nodes");
+  const flowResponse = await request(`${aiRuntime.url}/api/flow/nodes`);
   if (flowResponse.status !== 200) {
     throw new Error(`Ai Flow proxy gagal HTTP ${flowResponse.status}.`);
   }
