@@ -22,6 +22,8 @@ describe("ECORIONE desktop bundle contract", () => {
     expect(compose).toContain('"127.0.0.1:${ECORIONE_AI_PORT:-17020}:3000"');
     expect(launcher).toContain("ECORIONE_AI_PORT=17020");
     expect(launcher).toContain("Select-FreeAiPort");
+    expect(launcher).toContain("Test-ComposeAiRunning");
+    expect(launcher).toContain("ECORIONE desktop sudah berjalan");
     expect(launcher).toContain("17029..17039");
     expect(compose).not.toContain('"80:80"');
     expect(compose).not.toContain('"443:443"');

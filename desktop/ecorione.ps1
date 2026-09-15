@@ -131,6 +131,12 @@ function Set-AiEndpoint([int]$Port) {
   $script:AiUrl = "http://127.0.0.1:$Port"
 }
 
+function Test-ComposeAiRunning {
+  $id = & docker compose --env-file $EnvFile -f $ComposeFile ps -q ai 2>$null
+  if ($LASTEXITCODE -ne 0) { return $false }
+  return -not [string]::IsNullOrWhiteSpace(($id -join ""))
+}
+
 function Assert-Docker {
   if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw "Docker Desktop belum terpasang. Install Docker Desktop, buka sampai status Engine running, lalu jalankan ECORIONE lagi."
@@ -204,17 +210,22 @@ function Start-Ecorione {
     throw "Desktop compose tidak ditemukan: $ComposeFile"
   }
   $config = Ensure-DesktopEnv
-    $configuredPort = Get-ConfiguredAiPort $config
+  $configuredPort = Get-ConfiguredAiPort $config
+  if (Test-ComposeAiRunning) {
+    Set-AiEndpoint $configuredPort
+    Write-Info "ECORIONE desktop sudah berjalan; memakai endpoint $AiUrl."
+  } else {
     $selectedPort = Select-FreeAiPort $configuredPort
     if ($selectedPort -ne $configuredPort) {
-      Write-Info "Ai port $configuredPort sedang dipakai; memakai fallback $selectedPort."
+      Write-Info "Ai port $configuredPort sedang dipakai aplikasi lain; memakai fallback $selectedPort."
     }
     Set-DesktopAiPort $selectedPort
     Set-AiEndpoint $selectedPort
     $config = Read-DesktopEnv
-    $image = Ensure-RuntimeImage $config
-    Write-Info "Menyalakan ECORIONE ($image)..."
-    Invoke-Compose @("up", "-d")
+  }
+  $image = Ensure-RuntimeImage $config
+  Write-Info "Menyalakan ECORIONE ($image)..."
+  Invoke-Compose @("up", "-d")
   Wait-AiReady
   Write-Info "Ready: $AiUrl"
   if (-not $NoOpen) {
