@@ -30,12 +30,7 @@
     backdrop-filter: blur(14px);
   }
 
-  body:has([aria-label="Flow mobile view"])
-    .ecr-app-content
-    > div
-    > header
-    > div:last-child
-    > button {
+  body:has([aria-label="Flow mobile view"]) .ecr-app-content > div > header > div:last-child > button {
     min-width: 0;
     min-height: 46px;
     padding-inline: 8px;
@@ -61,10 +56,7 @@
     overscroll-behavior: contain;
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > aside
-    div:has(> button[aria-label^="Add "]) {
+  body:has([aria-label="Flow mobile view"]) main > aside div:has(> button[aria-label^="Add "]) {
     display: flex !important;
     flex-flow: row nowrap !important;
     gap: 8px !important;
@@ -75,11 +67,7 @@
     overscroll-behavior-inline: contain;
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > aside
-    div:has(> button[aria-label^="Add "])
-    > button {
+  body:has([aria-label="Flow mobile view"]) main > aside div:has(> button[aria-label^="Add "]) > button {
     flex: 0 0 168px;
     width: 168px;
     min-height: 54px;
@@ -88,23 +76,14 @@
 
   /* A collapsed step must advertise how connections are made. The existing stack already
      renders real connection selects after expansion; this makes that affordance explicit. */
-  body:has([aria-label="Flow mobile view"])
-    main
-    > section:last-child
-    article
-    > button:first-child {
+  body:has([aria-label="Flow mobile view"]) main > section:last-child article > button:first-child {
     grid-template-columns: 28px minmax(0, 1fr) auto !important;
     min-height: 66px;
     gap: 10px !important;
     padding: 11px 10px !important;
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > section:last-child
-    article
-    > button:first-child
-    > b:last-child {
+  body:has([aria-label="Flow mobile view"]) main > section:last-child article > button:first-child > b:last-child {
     min-width: 88px;
     min-height: 32px;
     padding: 0 9px;
@@ -119,22 +98,13 @@
     white-space: nowrap;
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > section:last-child
-    article
-    > button:first-child
-    > b:last-child::after {
+  body:has([aria-label="Flow mobile view"]) main > section:last-child article > button:first-child > b:last-child::after {
     content: "Edit / connect";
     color: var(--text);
     font: 600 9px var(--font-mono);
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > section:last-child
-    article
-    div:has(> label > select) {
+  body:has([aria-label="Flow mobile view"]) main > section:last-child article div:has(> label > select) {
     margin-top: 2px;
     padding: 11px;
     border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
@@ -142,11 +112,7 @@
     background: color-mix(in srgb, var(--surface-2) 74%, transparent);
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > section:last-child
-    article
-    div:has(> label > select)::before {
+  body:has([aria-label="Flow mobile view"]) main > section:last-child article div:has(> label > select)::before {
     content: "Connections";
     display: block;
     margin-bottom: 8px;
@@ -156,12 +122,7 @@
     text-transform: uppercase;
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > section:last-child
-    article
-    label
-    select {
+  body:has([aria-label="Flow mobile view"]) main > section:last-child article label select {
     width: 100%;
     min-height: 44px;
     border-color: color-mix(in srgb, var(--accent) 62%, var(--border));
@@ -183,32 +144,18 @@
     padding-inline: 8px;
   }
 
-  body:has([aria-label="Flow mobile view"])
-    .ecr-app-content
-    > div
-    > header
-    > div:last-child
-    > button {
+  body:has([aria-label="Flow mobile view"]) .ecr-app-content > div > header > div:last-child > button {
     min-height: 44px;
     padding-inline: 5px;
     font-size: 10.5px;
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > aside
-    div:has(> button[aria-label^="Add "])
-    > button {
+  body:has([aria-label="Flow mobile view"]) main > aside div:has(> button[aria-label^="Add "]) > button {
     flex-basis: 150px;
     width: 150px;
   }
 
-  body:has([aria-label="Flow mobile view"])
-    main
-    > section:last-child
-    article
-    > button:first-child
-    > b:last-child {
+  body:has([aria-label="Flow mobile view"]) main > section:last-child article > button:first-child > b:last-child {
     min-width: 82px;
     padding-inline: 7px;
   }
