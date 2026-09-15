@@ -1,0 +1,27 @@
+name: W09 Temp Prettier
+
+on:
+  push:
+    branches:
+      - feat/w09-w10-windows-engine-acceptance-20260915
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Print canonical formatted harness
+        run: |
+          pnpm exec prettier --write scripts/windows-engine-acceptance.mjs
+          echo '=== W09_PRETTIER_BEGIN ==='
+          cat scripts/windows-engine-acceptance.mjs
+          echo '=== W09_PRETTIER_END ==='
