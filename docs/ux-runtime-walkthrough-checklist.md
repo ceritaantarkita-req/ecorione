@@ -2,19 +2,35 @@
 
 Status: **READY / REQUIRES OPERATOR LAPTOP**
 
-Run only on synchronized clean **current `origin/main`** with `ECORIONE_COST_KILL_SWITCH=1` and the merged Phase 4 stack. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` is the latest code-bearing UX/static baseline and must be present in the synchronized commit ancestry; do not checkout that older SHA merely to run evidence.
+Run only on synchronized clean **current `origin/main`** with `ECORIONE_COST_KILL_SWITCH=1`. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` is the latest code-bearing UX/static baseline and must be present in the synchronized commit ancestry; do not checkout that older SHA merely to run evidence.
 
 ## Preflight
 
-1. fetch remote refs and synchronize local `main` to current `origin/main`.
-2. `git rev-parse HEAD` equals `git rev-parse origin/main`.
-3. `git status --short` is empty.
-4. `git merge-base --is-ancestor f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca HEAD` exits successfully.
-5. verify the root `.env` exists and contains the already-configured non-empty `ECORIONE_INTERNAL_TOKEN`; never print the token value into evidence or chat.
-6. in the shell that will start Phase 4, export the root environment with `set -a; . ./.env; set +a`, then force `export ECORIONE_COST_KILL_SWITCH=1` so the checkpoint cannot inherit a hosted-enabled value from `.env`.
-7. verify Temporal is already reachable at `127.0.0.1:7233`, then restart `pnpm dev:phase4` from that exact synchronized revision; do not stop Temporal/PostgreSQL containers.
-8. in the separate inventory shell, source the same root `.env`, re-assert `ECORIONE_COST_KILL_SWITCH=1`, then run `pnpm evidence:ux:inventory`; stop on FAIL. The inventory must include the Settings MCP workspace-list proxy check added after PR #63.
-9. open `http://127.0.0.1:3000` with browser devtools console visible.
+1. Fetch remote refs and synchronize local `main` to current `origin/main`.
+2. Require `git rev-parse HEAD` equals `git rev-parse origin/main`.
+3. Require `git status --short` is empty.
+4. Require `git merge-base --is-ancestor f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca HEAD` succeeds.
+5. Verify root `.env` already exists and has a non-empty `ECORIONE_INTERNAL_TOKEN`; never print the token value into evidence or chat.
+6. Start the synchronized Phase 4 stack from **PowerShell terminal A** with the hosted kill switch forced in the process environment:
+
+```powershell
+$env:ECORIONE_COST_KILL_SWITCH = "1"
+pnpm engine:start
+```
+
+`engine:start` is the canonical cross-platform launcher: it reads root `.env`, reuses or starts Temporal, starts the required Phase 4 fleet, waits for readiness, and serves Ai at `http://127.0.0.1:3000`. Leave terminal A running during the walkthrough. If `.env` is unexpectedly absent, stop instead of treating auto-generated local config as W03 evidence.
+
+7. In **PowerShell terminal B**, force the kill switch again and run the strict inventory:
+
+```powershell
+$env:ECORIONE_COST_KILL_SWITCH = "1"
+pnpm evidence:ux:inventory
+```
+
+The inventory may hydrate `ECORIONE_INTERNAL_TOKEN` from root `.env` when the shell does not already contain it, but it never prints the token and it never imports the kill-switch value from `.env`. It still fails closed unless the shell explicitly has `ECORIONE_COST_KILL_SWITCH=1`, and it independently verifies that the running product reports Hosted effectively OFF.
+
+8. Stop on inventory FAIL. PASS must include all eight required owners, all five primary surfaces, pinned local model digest, Settings MCP workspace-list proxy, Ops, Space, and Flow checks.
+9. Open `http://127.0.0.1:3000` with browser DevTools Console visible. If `engine:start` already opened a browser window, use that exact running stack.
 
 `Sync` is not part of the required local Phase 4 fleet. Operations may still expose its optional health when available; an unavailable optional Sync must be labeled as optional and must not degrade the required Phase 4 fleet.
 
@@ -38,6 +54,8 @@ Run only on synchronized clean **current `origin/main`** with `ECORIONE_COST_KIL
 ## Browser console
 
 Record console errors/warnings after each route. Framework/hydration/unhandled-promise errors are defects. Expected application-level request failures intentionally triggered for UX-11 must be distinguished from unhandled browser errors.
+
+The repository now includes an App Router icon asset specifically to prevent the previously observed application-owned `GET /favicon.ico 404` noise from being treated as an unresolved console finding. A clean-console runtime recheck is still required before UX-RUNTIME-006 can be marked runtime-verified.
 
 ## Defect ledger format
 
