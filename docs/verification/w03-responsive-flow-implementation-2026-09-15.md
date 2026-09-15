@@ -2,29 +2,37 @@
 
 Date: **2026-09-15**
 
-Status: **INTEGRATED / MAIN CI GREEN / BRANCH RENDERED ACCEPTANCE GREEN / FINAL REAL-LAPTOP PASS PENDING**
+Status: **INTEGRATED / CURRENT MAIN GREEN / REAL-LAPTOP INVENTORY PASS / MOBILE VISUAL RECHECK PASS / FLOW WIRING FUNCTIONAL RECHECK PENDING**
 
 Canonical design contract: `docs/flow-responsive-ux-redesign.md`.
 Canonical runtime checklist: `docs/ux-runtime-walkthrough-checklist.md`.
 
-## Integrated checkpoint
+## Current integrated checkpoint
 
 ```text
-PR: #93 — W03: implement responsive Flow redesign
-PR head: e2e2e3efe5d383ff305cad48e4fcd50b0262e60d
-merge commit: 88b409f6497166213beeb301aad53d78e922b72e
-main after merge: 88b409f6497166213beeb301aad53d78e922b72e
-post-merge CI run: 34954861030 — SUCCESS
-post-merge Product Eval run: 34954861022 — SUCCESS
+PR #93 — W03 responsive + Flow redesign
+merge: 88b409f6497166213beeb301aad53d78e922b72e
+
+PR #95 — fix W03 Flow inventory marker drift
+merged
+
+PR #96 — refine W03 Settings mobile UX
+merged
+
+PR #97 — fix W03 mobile Space, Settings and Flow UX round 3
+head: 27dcff8410e06393faa5fea8e3bcfb563edc73f1
+merge: 746dc0705e12d419f93d3592bc6c7bdb55e4b76e
+post-merge CI: 34968981113 — SUCCESS
+post-merge Product Eval: 34968981026 — SUCCESS
 ```
 
-PR #93 merged the responsive + Flow redesign into `main` after its exact head passed Product Eval and the complete CI verify pipeline. The resulting merge commit then passed the same push-to-main gates again. This establishes a green repository/integration checkpoint; it does **not** replace the operator-owned real-laptop runtime walkthrough required for W03 closure.
+PR #97 is the current W03 mobile UX baseline. Its exact PR head passed Product Eval and the complete CI verify pipeline before merge, and the merge commit passed the same push-to-main gates again.
 
 ## Implemented scope
 
-The integrated implementation includes:
+The current integrated implementation includes:
 
-- complete responsive Flow CSS/layout for the new interaction model;
+- responsive Flow CSS/layout for the redesigned interaction model;
 - collapsible left builder with `Nodes` and `Configure` modes;
 - explicit click-to-add and drag-to-canvas node affordances;
 - visible input/output ports and Condition `true` / `false` outputs;
@@ -33,10 +41,15 @@ The integrated implementation includes:
 - compact node summaries and quick settings;
 - advanced/raw JSON configuration fallback;
 - mobile `Stack` mode by default plus optional contained `Canvas` mode;
-- explicit mobile connection summaries in `From [port] → To` form with removal controls;
+- explicit mobile connection summaries with removal controls;
 - invalid Trigger targets blocked before edge state mutation;
 - keyboard-selectable canvas node shells without invalid nested interactive `<button>` markup;
-- regression source-contract coverage for Flow interaction/state and narrow navigation contracts.
+- regression source-contract coverage for Flow interaction/state and narrow navigation contracts;
+- mobile Settings cards with contained hash/URL/config fields, compact hosted-call checkbox, full-width actions, and narrow touch targets;
+- mobile Space section cards with reduced dead space, deliberate page/document/editor/inspector hierarchy, and contained form controls;
+- mobile Flow lifecycle controls moved to a bottom action bar;
+- mobile Flow node catalogue reduced to a compact horizontal tray;
+- mobile Flow step cards exposing explicit `Edit / connect` affordance and prominent connection selectors.
 
 ## Preserved boundaries
 
@@ -48,7 +61,7 @@ The integrated implementation includes:
 
 ## Rendered branch acceptance evidence
 
-Before integration, a production Next.js build of the implementation branch was exercised with Chromium / Playwright. The browser pass used a **410 × 844 CSS-pixel** narrow viewport, inside the canonical 390–430 px target, plus a **1440 × 900** desktop Flow pass.
+Before the first W03 redesign integration, a production Next.js build was exercised with Chromium / Playwright at **410 × 844 CSS pixels** plus a **1440 × 900** desktop Flow pass.
 
 ```text
 workflow run: 34954226991
@@ -60,23 +73,77 @@ artifact sha256: a9750a8a6e3b289099b480f3e43c8755725482696ae10f8782246f2505d0680
 artifact expiry: 2026-09-22
 ```
 
-The pass verified:
+The pass verified no page-level horizontal overflow on Ai, Space, Operations, Settings, Flow Stack, or contained Flow Canvas; exercised Flow node insertion, visible ports, Condition `true` / `false` outputs, builder collapse/reopen, and kept application-owned console/page errors fatal. Non-Flow APIs were deliberately stubbed, so this evidence is supporting rendered evidence rather than final operator runtime proof.
 
-- Ai narrow route: `innerWidth=410`, `htmlScrollWidth=410`, `bodyScrollWidth=410`, console/page-error gate clean;
-- Space narrow route: `410 / 410 / 410`, console/page-error gate clean;
-- Operations narrow route: `410 / 410 / 410`, console/page-error gate clean;
-- Settings narrow route: `410 / 410 / 410`, console/page-error gate clean;
-- Flow Stack narrow route: `410 / 410 / 410`;
-- Flow Stack after adding AI + HTTP nodes: `410 / 410 / 410`;
-- Flow Canvas narrow mode: page remains `410 / 410 / 410` while horizontal panning is contained in the Flow canvas wrapper;
-- Flow browser console/page-error gate remains clean after excluding only the intentionally stubbed HTTP `503` resource responses;
-- desktop Flow: `1440 / 1440 / 1440`, ordinary output ports visible, Condition `true` / `false` ports visible, builder collapse/expand exercised, console/page-error gate clean.
+## Current real-laptop evidence
 
-The browser harness kept application-owned console errors, hydration/DOM-nesting warnings, uncaught/unhandled errors, and `pageerror` events fatal. Non-Flow APIs were deliberately stubbed, so this evidence validates the production-built **UI layout, DOM interaction surface, page overflow behavior, responsive Flow modes, and browser error surface** but not real backend availability.
+The operator synchronized a clean Windows checkout to exact current `origin/main` and ran the canonical local stack with explicit cost kill switch.
+
+```text
+current main / operator HEAD:
+746dc0705e12d419f93d3592bc6c7bdb55e4b76e
+
+tracked worktree: clean
+ECORIONE_COST_KILL_SWITCH=1
+pnpm engine:start: READY
+Ai: http://127.0.0.1:3000
+Temporal dev-server: READY
+Flow worker: RUNNING
+```
+
+The local engine log showed all required Phase 4 services listening and health checks returning `200`, followed by `ECORIONE ready: http://127.0.0.1:3000`.
+
+The strict inventory then passed against the same exact current-main commit:
+
+```text
+repo.head == repo.originMain == 746dc0705e12d419f93d3592bc6c7bdb55e4b76e
+trackedClean: true
+costKillSwitch: 1
+owners: rnd/context/connect/hub/artifact/sandbox/space/flow = 200 / ok
+surfaces: ai/space/flow/ops/settings = 200
+hostedCallsEnabled: false
+localRuntime: openai-compatible
+localModelTag: qwen3.5:9b
+localModelDigest: sha256:6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+mutableModelAlias: false
+opsHealthy: true
+spacePageCount: 2
+flowNodeDefinitionCount: 17
+result: PASS UX/product inventory
+```
+
+### Operator mobile visual recheck at ~430 CSS px
+
+The latest current-main real-laptop screenshots support the following visual dispositions:
+
+- **Settings mobile: PASS visual** — Runtime, Credential vault, and MCP server sections are contained; hosted-call checkbox has normal compact sizing; action controls stack cleanly; long hash/URL/config values no longer create page-level overflow.
+- **Space mobile: PASS visual** — page rail, selected page, Add block editor, Block Inspector, and Context Core Memory are now visibly separated into deliberate sections/cards; the previous excessive empty-state spacing has been removed; controls remain contained.
+- **Flow mobile layout: PASS visual** — lifecycle actions now live in the bottom action bar; node catalogue is compact; `Edit / connect` is explicit on Flow step cards; Stack/Canvas choice remains visible; the page itself remains contained.
+
+These visual dispositions do **not** yet prove that mobile graph wiring, validation, save, and execution are functionally usable end to end.
+
+## Previously exercised desktop/runtime checks
+
+The earlier current-main operator walkthrough established:
+
+```text
+UX-02 exact-string Local reply: PASS
+UX-03 same-session continuity: PASS
+UX-04 memory state readability: PASS
+UX-05: NOT_EXERCISED (no disposable recalled fact)
+UX-06 Local route / Hosted OFF: PASS
+UX-07 Operations refresh/Auto 5s: PASS
+UX-08 MCP empty workspace + Local canary feedback: functionally exercised
+UX-09 Space two-page switching: PASS
+UX-10 Flow dirty/Validate/Save/Load behavior: PASS
+UX-11 invalid config safe failure: PASS
+```
+
+A previously observed browser error shaped like `VM... / reportAllChanges / startTime` was reproducible as browser/tooling-injected noise rather than an application-owned ECORIONE exception; a subsequent clean console screenshot showed zero application errors. Any recurrence directly tied to an ECORIONE interaction must still be treated as a new finding.
 
 ## Automated evidence
 
-Exact PR head `e2e2e3efe5d383ff305cad48e4fcd50b0262e60d` passed:
+Current W03 mobile baseline PR #97 exact head `27dcff8410e06393faa5fea8e3bcfb563edc73f1` passed:
 
 - Product Eval;
 - CI naming;
@@ -90,9 +157,9 @@ Exact PR head `e2e2e3efe5d383ff305cad48e4fcd50b0262e60d` passed:
 - Secret scan;
 - Production build.
 
-After PR #93 merged, exact `main` commit `88b409f6497166213beeb301aad53d78e922b72e` passed again:
+After merge, exact `main` commit `746dc0705e12d419f93d3592bc6c7bdb55e4b76e` passed again:
 
-- Product Eval run `34954861022`;
+- Product Eval run `34968981026`;
 - CI naming;
 - CI secret-history;
 - Format;
@@ -102,33 +169,47 @@ After PR #93 merged, exact `main` commit `88b409f6497166213beeb301aad53d78e922b7
 - Phase 4 real-process acceptance;
 - Production operations acceptance;
 - Secret scan;
-- Production build in CI run `34954861030`.
+- Production build in CI run `34968981113`.
 
 ## Remaining canonical acceptance
 
-The remaining closure gate is intentionally **not** reproducible solely from a GitHub runner. `docs/ux-runtime-walkthrough-checklist.md` requires a synchronized clean Windows operator checkout of current `origin/main`, the operator root `.env` / `ECORIONE_INTERNAL_TOKEN`, explicit `ECORIONE_COST_KILL_SWITCH=1`, the local Temporal + Phase 4 fleet started via `pnpm engine:start`, strict `pnpm evidence:ux:inventory`, and a clean browser DevTools walkthrough against `http://127.0.0.1:3000`.
+The remaining W03 closure boundary has narrowed to **mobile Flow functional wiring plus final closure recording** on the current synchronized real-laptop environment.
 
-The required recheck must cover:
+The operator still needs to prove at ~390–430 CSS px that:
 
-- desktop UX-01 through UX-11 as applicable;
-- Flow redesign UX-F01 through UX-F08;
-- narrow/mobile UX-12A through UX-12F at 390–430 CSS px;
-- application-owned browser-console cleanliness with expected request failures distinguished from framework/hydration/unhandled errors.
+1. a non-Trigger node can be added in Stack mode;
+2. `Edit / connect` exposes usable connection controls;
+3. Trigger can be selected as the source and the graph reports the expected connection count;
+4. Validate succeeds on the connected graph;
+5. Save clears dirty state and preserves the graph;
+6. Run executes only after the graph is saved/valid;
+7. Condition / Switch exposes and allows usable `true` and `false` branch wiring;
+8. Canvas mode remains available and contained;
+9. the browser console remains free of application-owned framework/hydration/unhandled errors during those interactions.
+
+If any S0/S1 defect appears it blocks closure. Any S2 must be fixed or explicitly accepted before W03 can be marked DONE.
 
 ## Execution sequence
 
 - [x] design contract approved;
 - [x] responsive + Flow implementation completed;
 - [x] source-contract regression coverage added;
-- [x] exact PR-head CI + Product Eval green;
-- [x] branch production-build rendered browser acceptance green;
-- [x] PR #93 merged with exact-head lock;
-- [x] exact merge-commit `main` CI + Product Eval green;
-- [ ] synchronize operator laptop to exact current `origin/main`;
-- [ ] run canonical real-laptop inventory + rendered walkthrough;
-- [ ] record any findings in defect-ledger format;
-- [ ] mark W03 DONE and advance the canonical active work plan only if that final evidence supports closure.
+- [x] initial rendered browser acceptance green;
+- [x] PR #93 integrated;
+- [x] W03 inventory marker drift fixed via PR #95;
+- [x] Settings mobile correction integrated via PR #96;
+- [x] Space/Settings/Flow mobile round-3 correction integrated via PR #97;
+- [x] exact current-main CI + Product Eval green;
+- [x] operator laptop synchronized to current `origin/main`;
+- [x] canonical real-laptop inventory PASS;
+- [x] current-main mobile Settings visual recheck PASS;
+- [x] current-main mobile Space visual recheck PASS;
+- [x] current-main mobile Flow layout visual recheck PASS;
+- [ ] current-main mobile Flow wiring / Validate / Save / Run functional recheck;
+- [ ] Condition `true` / `false` mobile branch wiring recheck;
+- [ ] final defect disposition and closure documentation;
+- [ ] mark W03 DONE only if final evidence supports closure.
 
 ## Closure rule
 
-W03 is **not DONE yet**. Repository implementation, integration, automated gates, and branch rendered-browser evidence are green. Closure remains evidence-driven and requires the final current-main real-laptop walkthrough defined by `docs/ux-runtime-walkthrough-checklist.md`.
+W03 is **not DONE yet**. Repository implementation, integration, automated gates, synchronized real-laptop inventory, and the latest Settings/Space/Flow mobile visual recheck are green. The sole material functional blocker remaining is current-main mobile Flow wiring/execution acceptance plus final defect disposition.
