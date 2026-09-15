@@ -112,3 +112,10 @@ The next synchronized Windows rerun used `main` at `b1b3280795fdab95f99f5baa2ff0
 Disposition: `ECORIONE_AI_PORT` is now a preferred port rather than a fixed host-port claim. New installs default to `17020`; source startup falls back through `17029–17039` when the preferred port belongs to another application. Ports `17021–17028` remain reserved for the fixed owner fleet and are never selected as Ai fallbacks. The resolved endpoint is stored under gitignored `.ecorione/runtime/engine.json`, allowing doctor and UX evidence to follow the same active URL. Existing ECORIONE instances remain duplicate-start blockers, while unrelated listeners are never killed. Desktop packaging uses a dynamic loopback host port while keeping its container-internal Ai endpoint on port 3000.
 
 One fresh merged-main Windows acceptance run is still required before W09/W10 may close.
+
+
+## Operator rerun blocker 3 — selected port was not propagated to Next.js
+
+The current-main Windows rerun at `c9e017217533230bbd427057fc1aa0eb6fdde7ab` exposed two remaining integration gaps after the collision-safe port refactor. The operator's historical ignored `.env` still carried the former generated default `ECORIONE_AI_PORT=3000`, and `apps/ai/package.json` still invoked `next dev -p 3000` / `next start -p 3000`, which overrides the engine-selected `PORT`. The engine then declared TCP readiness before Next.js had finished serving the ECORIONE page, so an immediate runtime doctor could miss the Ai identity marker.
+
+Disposition: source startup now performs a one-time migration of the historical generated `3000` default to `17020` while preserving later explicit overrides; the Ai package scripts no longer hardcode a CLI port and therefore honor the selected `PORT`; engine readiness waits for the ECORIONE HTTP identity, not only an open TCP socket; and the Windows acceptance protects port `3000` with a foreign listener (or preserves an existing listener) throughout start and cleanup so regressions cannot silently reintroduce a dependency on that common development port. W09/W10 remain open until a fresh exact-current-main Windows run reaches the final PASS marker.

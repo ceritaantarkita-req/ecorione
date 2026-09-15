@@ -2,10 +2,12 @@
 
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   DEFAULT_AI_PORT,
+  ensureLocalEnv,
   isPortReachable,
   parseSimpleEnv,
   resolveCommandInvocation,
@@ -105,11 +107,6 @@ function readLocalToken() {
   if (process.env.ECORIONE_INTERNAL_TOKEN) return process.env.ECORIONE_INTERNAL_TOKEN;
   if (!existsSync(ENV_PATH)) return "";
   return parseSimpleEnv(readFileSync(ENV_PATH, "utf8")).ECORIONE_INTERNAL_TOKEN ?? "";
-}
-
-function readLocalEnv() {
-  if (!existsSync(ENV_PATH)) return {};
-  return parseSimpleEnv(readFileSync(ENV_PATH, "utf8"));
 }
 
 async function fetchHealth(url, token) {
@@ -256,6 +253,27 @@ function doctorCommand(env) {
   return runSync("pnpm", ["engine:doctor"], { env, timeoutMs: 90_000 });
 }
 
+function listenServer(server, port) {
+  return new Promise((resolvePromise, rejectPromise) => {
+    const onError = (error) => {
+      server.off("listening", onListening);
+      rejectPromise(error);
+    };
+    const onListening = () => {
+      server.off("error", onError);
+      resolvePromise();
+    };
+    server.once("error", onError);
+    server.once("listening", onListening);
+    server.listen(port, "127.0.0.1");
+  });
+}
+
+function closeServer(server) {
+  if (!server) return Promise.resolve();
+  return new Promise((resolvePromise) => server.close(() => resolvePromise()));
+}
+
 async function runAcceptance() {
   if (process.platform !== "win32") {
     throw new Error(
@@ -275,6 +293,8 @@ async function runAcceptance() {
   };
   let engineChild;
   let preexistingTemporal = false;
+  let protectedPort3000Server;
+  let port3000Preexisting = false;
 
   try {
     console.log("=== W09/W10 Windows engine acceptance ===");
@@ -307,7 +327,18 @@ async function runAcceptance() {
     const pnpmVersion = requireCommand(runSync("pnpm", ["--version"]), "pnpm --version");
     const temporalVersion = runSync("temporal", ["--version"]);
     const dockerVersion = runSync("docker", ["version", "--format", "{{.Server.Version}}"]);
-    const localEnv = readLocalEnv();
+    const localBootstrap = ensureLocalEnv(ROOT);
+    const localEnv = localBootstrap.values;
+    port3000Preexisting = await isPortReachable(3000);
+    if (!port3000Preexisting) {
+      protectedPort3000Server = createServer((socket) => socket.end("foreign-port-3000\n"));
+      await listenServer(protectedPort3000Server, 3000);
+    }
+    if (!(await isPortReachable(3000))) {
+      throw new Error(
+        "Acceptance gagal membuat atau mempertahankan foreign listener di port 3000.",
+      );
+    }
     preexistingTemporal = await isPortReachable(7233);
     const useDocker =
       (process.env.ECORIONE_TEMPORAL_USE_DOCKER ?? localEnv.ECORIONE_TEMPORAL_USE_DOCKER) ===
@@ -344,6 +375,9 @@ async function runAcceptance() {
       node: process.version,
       pnpm: pnpmVersion,
       envExistedBefore: existsSync(ENV_PATH),
+      legacyAiPortMigrated: localBootstrap.migratedLegacyAiPort,
+      port3000Preexisting,
+      port3000Protected: true,
       temporalPreexisting: preexistingTemporal,
       temporalCliAvailable: temporalCliReady,
       dockerReachable: dockerReady,
@@ -408,6 +442,14 @@ async function runAcceptance() {
     });
 
     const started = await waitForRuntime(childState, stdoutRef);
+    if (started.port === 3000) {
+      throw new Error(
+        "ECORIONE tidak boleh memakai protected foreign port 3000 pada acceptance ini.",
+      );
+    }
+    if (!(await isPortReachable(3000))) {
+      throw new Error("Foreign listener port 3000 hilang setelah ECORIONE start.");
+    }
     const appPorts = [started.port, ...SERVICE_PORTS];
     report.phases.start = {
       pass: true,
@@ -416,6 +458,7 @@ async function runAcceptance() {
       resolvedAiPort: started.port,
       aiUrl: started.url,
       fallbackUsed: started.port !== preferredAiPort,
+      foreignPort3000Preserved: true,
       ports: await portState(appPorts),
       logTail: tail(`${stdoutRef.value}
 ${stderrRef.value}`),
@@ -502,11 +545,15 @@ ${taskkillResult.stderr}`,
         `· taskkill exit ${String(taskkillResult.code)} saat descendant sedang berhenti; cleanup diterima setelah root process exit dan seluruh port tervalidasi tertutup.`,
       );
     }
+    if (!(await isPortReachable(3000))) {
+      throw new Error("Cleanup ECORIONE menyentuh foreign listener di port 3000.");
+    }
     engineChild = undefined;
     report.phases.cleanup = {
       pass: true,
       appPortsReleased: true,
       engineProcessExited: true,
+      foreignPort3000Preserved: true,
       taskkillCode: taskkillResult.code,
       taskkillRaceTolerated: cleanupEvaluation.taskkillNonZero,
       temporalDisposition: preexistingTemporal
@@ -514,6 +561,11 @@ ${taskkillResult.stderr}`,
         : "acceptance-owned-stopped",
     };
     console.log("✓ W09-D Windows process tree cleanup PASS");
+
+    if (protectedPort3000Server) {
+      await closeServer(protectedPort3000Server);
+      protectedPort3000Server = undefined;
+    }
 
     const postDoctor = doctorCommand(acceptanceEnv);
     if (postDoctor.error || postDoctor.code !== 0) {
@@ -544,6 +596,14 @@ ${taskkillResult.stderr}`,
         report.cleanupError =
           cleanupError instanceof Error ? cleanupError.message : String(cleanupError);
       }
+    }
+    try {
+      await closeServer(protectedPort3000Server);
+    } catch (sentinelCleanupError) {
+      report.sentinelCleanupError =
+        sentinelCleanupError instanceof Error
+          ? sentinelCleanupError.message
+          : String(sentinelCleanupError);
     }
     const reportPath = writeReport(report);
     console.error(`\nFAIL W09/W10: ${report.error}`);

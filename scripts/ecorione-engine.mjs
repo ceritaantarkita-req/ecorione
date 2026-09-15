@@ -34,6 +34,7 @@ export const AI_FALLBACK_PORTS = Object.freeze(
 export const RESERVED_SERVICE_PORTS = Object.freeze(
   Array.from({ length: 8 }, (_, index) => 17021 + index),
 );
+export const AI_PORT_MIGRATION_VERSION = "1";
 
 export function parseSimpleEnv(text) {
   const result = {};
@@ -79,6 +80,22 @@ export function ensureLocalEnv(root = ROOT) {
   let text = readFileSync(envPath, "utf8");
   let values = parseSimpleEnv(text);
   const generated = [];
+  let migratedLegacyAiPort = false;
+  let configUpdated = false;
+
+  if (values.ECORIONE_AI_PORT_MIGRATION_VERSION !== AI_PORT_MIGRATION_VERSION) {
+    if (values.ECORIONE_AI_PORT === "3000") {
+      text = upsertEnvValue(text, "ECORIONE_AI_PORT", String(DEFAULT_AI_PORT));
+      migratedLegacyAiPort = true;
+    }
+    text = upsertEnvValue(
+      text,
+      "ECORIONE_AI_PORT_MIGRATION_VERSION",
+      AI_PORT_MIGRATION_VERSION,
+    );
+    configUpdated = true;
+    values = parseSimpleEnv(text);
+  }
 
   if (!values.ECORIONE_INTERNAL_TOKEN) {
     const value = randomBytes(32).toString("base64url");
@@ -93,9 +110,15 @@ export function ensureLocalEnv(root = ROOT) {
     generated.push("ECORIONE_CONNECT_VAULT_MASTER_KEY");
   }
 
-  if (created || generated.length > 0)
+  if (created || generated.length > 0 || configUpdated)
     writeFileSync(envPath, text, { encoding: "utf8", mode: 0o600 });
-  return { envPath, created, generated, values: parseSimpleEnv(text) };
+  return {
+    envPath,
+    created,
+    generated,
+    migratedLegacyAiPort,
+    values: parseSimpleEnv(text),
+  };
 }
 
 export function isPortReachable(port, host = "127.0.0.1", timeoutMs = 750) {
@@ -154,6 +177,22 @@ export async function classifyAiPort(port) {
     // A non-HTTP listener or unrelated application is still an occupied port.
   }
   return "occupied";
+}
+
+export async function waitForAiReady(
+  port,
+  timeoutMs = 90_000,
+  classify = classifyAiPort,
+  pollMs = 500,
+) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if ((await classify(port)) === "ecorione") return;
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, pollMs));
+  }
+  throw new Error(
+    `Ai belum HTTP-ready sebagai ECORIONE setelah ${String(Math.round(timeoutMs / 1000))} detik di ${aiUrl(port)}.`,
+  );
 }
 
 export async function selectAiPort(preferredPort, classify = classifyAiPort) {
@@ -663,6 +702,11 @@ function openBrowser(url) {
 async function start() {
   const local = ensureLocalEnv();
   if (local.created) console.log("✓ .env dibuat dari .env.example");
+  if (local.migratedLegacyAiPort) {
+    console.log(
+      `✓ Legacy Ai port 3000 dimigrasikan sekali ke ${String(DEFAULT_AI_PORT)}; ECORIONE_AI_PORT tetap bisa dioverride eksplisit.`,
+    );
+  }
   for (const key of local.generated)
     console.log(`✓ ${key} dibuat otomatis untuk local-only runtime`);
   const env = { ...local.values, ...process.env };
@@ -716,7 +760,7 @@ async function start() {
     const lifecycle = waitForSpawnedChild(child);
     const token = runtimeEnv.ECORIONE_INTERNAL_TOKEN ?? "";
     const readiness = Promise.all([
-      waitForPort(selectedAi.port, 90_000, "Ai"),
+      waitForAiReady(selectedAi.port, 90_000),
       waitForRequiredServices(token, 90_000),
     ]).then(() => ({ ready: true }));
 
