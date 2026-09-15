@@ -1,8 +1,10 @@
 # UX Runtime Walkthrough Checklist
 
-Status: **READY / REQUIRES OPERATOR LAPTOP**
+Status: **IN PROGRESS / REDESIGN RECHECK REQUIRED**
 
-Run only on synchronized clean **current `origin/main`** with `ECORIONE_COST_KILL_SWITCH=1`. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` is the latest code-bearing UX/static baseline and must be present in the synchronized commit ancestry; do not checkout that older SHA merely to run evidence.
+Run only on synchronized clean **current `origin/main`** with `ECORIONE_COST_KILL_SWITCH=1`. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` remains part of the required UX ancestry; do not checkout that older SHA merely to run evidence.
+
+The first current-main real-laptop pass on 2026-09-15 verified the core Windows runtime, exact-string Local chat, memory/route/Operations behavior, Settings MCP load, Space switching, Flow dirty/save/load/validate behavior, and safe failure. That pass also found app-wide narrow-layout and Flow discoverability defects. The redesign contract is `docs/flow-responsive-ux-redesign.md`; W03 remains open until the redesigned current main is rechecked.
 
 ## Preflight
 
@@ -18,7 +20,7 @@ $env:ECORIONE_COST_KILL_SWITCH = "1"
 pnpm engine:start
 ```
 
-`engine:start` is the canonical cross-platform launcher: it reads root `.env`, reuses or starts Temporal, starts the required Phase 4 fleet, waits for readiness, and serves Ai at `http://127.0.0.1:3000`. Leave terminal A running during the walkthrough. If `.env` is unexpectedly absent, stop instead of treating auto-generated local config as W03 evidence.
+`engine:start` is the canonical cross-platform launcher: it reads root `.env`, reuses or starts Temporal, starts the required Phase 4 fleet, waits for readiness, and serves Ai at `http://127.0.0.1:3000`. Leave terminal A running during the walkthrough.
 
 7. In **PowerShell terminal B**, force the kill switch again and run the strict inventory:
 
@@ -27,12 +29,12 @@ $env:ECORIONE_COST_KILL_SWITCH = "1"
 pnpm evidence:ux:inventory
 ```
 
-The inventory may hydrate `ECORIONE_INTERNAL_TOKEN` from root `.env` when the shell does not already contain it, but it never prints the token and it never imports the kill-switch value from `.env`. It still fails closed unless the shell explicitly has `ECORIONE_COST_KILL_SWITCH=1`, and it independently verifies that the running product reports Hosted effectively OFF.
+The inventory may hydrate `ECORIONE_INTERNAL_TOKEN` from root `.env` when the shell does not already contain it, but it never prints the token and it never imports the kill-switch value from `.env`. It fails closed unless the shell explicitly has `ECORIONE_COST_KILL_SWITCH=1`, and independently verifies that the running product reports Hosted effectively OFF.
 
 8. Stop on inventory FAIL. PASS must include all eight required owners, all five primary surfaces, pinned local model digest, Settings MCP workspace-list proxy, Ops, Space, and Flow checks.
-9. Open `http://127.0.0.1:3000` with browser DevTools Console visible. If `engine:start` already opened a browser window, use that exact running stack.
+9. Open `http://127.0.0.1:3000` with browser DevTools Console visible. Prefer a browser profile without extensions for final console evidence.
 
-`Sync` is not part of the required local Phase 4 fleet. Operations may still expose its optional health when available; an unavailable optional Sync must be labeled as optional and must not degrade the required Phase 4 fleet.
+`Sync` is not part of the required local Phase 4 fleet. Operations may expose its optional health when available; unavailable optional Sync must be labeled optional and must not degrade the required fleet.
 
 ## Desktop walkthrough
 
@@ -44,18 +46,45 @@ The inventory may hydrate `ECORIONE_INTERNAL_TOKEN` from root `.env` when the sh
 | UX-04 | Inspect memory panel | core/recalled/episodic state is understandable and reflects returned data | screenshot |
 | UX-05 | If a disposable recalled fact exists, use Forget once | button enters pending state; success/failure appears visibly; no duplicate request | screenshot; otherwise NOT_EXERCISED |
 | UX-06 | Inspect route control and Settings | Local available; Hosted shown OFF/effectively disabled under kill switch | screenshot |
-| UX-07 | Operations: manual Refresh, toggle Auto 5s off/on | no overlapping refresh glitch; required Phase 4 fleet stays understandable; optional Sync, if unavailable, is clearly labeled optional rather than degrading the fleet | screenshot |
-| UX-08 | Settings: click `Load workspace` for the current MCP workspace, then run Local canary only | workspace load completes without local proxy 400/stale swap; MCP server list or explicit empty result is understandable; canary pending/result is visible; Hosted remains OFF | screenshot + console check |
-| UX-09 | Space: open two existing pages quickly; create disposable page only if desired | old document is not interactable while new page loads; no stale content swap; owner-backed actions give feedback | screenshot |
-| UX-10 | Flow: edit a draft after save/load | Run becomes unavailable while `unsaved changes` is visible; Validate ignores stale results if draft changes during request | screenshot |
-| UX-11 | Safe failure: invalid Space block JSON or invalid Flow config JSON | actionable visible error, app remains usable without full reload | screenshot |
-| UX-12 | repeat Ai + one management surface at narrow viewport ~390px | no page-level horizontal trap except intentional Flow canvas scroll; controls remain reachable | screenshots |
+| UX-07 | Operations: manual Refresh, toggle Auto 5s off/on | no overlapping refresh glitch; required fleet stays understandable; optional Sync remains explicitly optional | screenshot |
+| UX-08 | Settings: `Load workspace` for current MCP workspace, then Local canary only | explicit empty/list state is visible near the action; canary pending/result remains visible while working lower on the page; Hosted remains OFF | screenshot + console check |
+| UX-09 | Space: switch quickly between two pages | old document is not interactable while new page loads; no stale content swap; selected page and content agree | screenshot |
+| UX-10 | Flow: edit after save/load, Validate, edit again | Run unavailable while dirty; stale validation is cleared/ignored after draft change | screenshot |
+| UX-11 | Safe failure: invalid Space block JSON or invalid Flow config JSON | actionable visible error; app remains usable without full reload | screenshot |
+
+## Flow redesign walkthrough
+
+These checks are mandatory after `docs/flow-responsive-ux-redesign.md` implementation lands.
+
+| ID | Action | PASS observation |
+|---|---|---|
+| UX-F01 | Scan the Flow node catalog as a first-time user | each node visibly communicates add/insert behavior; click-to-add and drag remain available |
+| UX-F02 | Insert two ordinary nodes | cards appear without requiring knowledge of the inspector; draft becomes dirty |
+| UX-F03 | Connect two nodes using visible ports | output/input ports are visible; drag or click connection succeeds; edge appears; draft becomes dirty |
+| UX-F04 | Add Condition/Switch and inspect its outputs | `true` and `false` branch ports are visually distinct and usable |
+| UX-F05 | Open `View more` on a node | common settings are available without raw JSON |
+| UX-F06 | Open advanced configuration | left builder panel switches/opens Configure; selected node state is preserved |
+| UX-F07 | Collapse and reopen builder panel | canvas gains room; reopening preserves selected node and configuration draft |
+| UX-F08 | Delete/select an edge or cancel active connect mode | graph remains consistent; no phantom edge is created |
+
+## Narrow/mobile walkthrough
+
+Primary viewport: **390–430 CSS px**.
+
+| ID | Surface | PASS observation |
+|---|---|---|
+| UX-12A | Ai | composer, replies, metadata, memory panel reachable; no accidental page-level horizontal trap |
+| UX-12B | Space | page navigation and active page remain usable without pinch-zoom or page-level horizontal trap |
+| UX-12C | Operations | fleet metrics/services/traces stack readably; controls reachable |
+| UX-12D | Settings | Runtime/Vault/MCP actions stack; hashes/URLs do not expand the page; all buttons reachable |
+| UX-12E | Flow default mobile mode | Stack/List mode is usable without desktop-canvas precision; node cards/config/connect actions reachable |
+| UX-12F | Flow optional Canvas mode | any horizontal panning is contained inside Flow canvas only, never the full page |
 
 ## Browser console
 
 Record console errors/warnings after each route. Framework/hydration/unhandled-promise errors are defects. Expected application-level request failures intentionally triggered for UX-11 must be distinguished from unhandled browser errors.
 
-The repository now includes an App Router icon asset specifically to prevent the previously observed application-owned `GET /favicon.ico 404` noise from being treated as an unresolved console finding. A clean-console runtime recheck is still required before UX-RUNTIME-006 can be marked runtime-verified.
+The repository includes an App Router icon asset to prevent the previously observed application-owned `GET /favicon.ico 404` noise. Extension-injected `VM...`/anonymous script errors are not application defects unless reproduced in a clean browser context.
 
 ## Defect ledger format
 
@@ -63,12 +92,16 @@ For every finding record: `ID | severity S0-S3 | route | exact steps | expected 
 
 ## Minimum screenshots
 
-- desktop Ai before message;
 - desktop Ai after successful Local reply;
 - same-session second turn;
-- Space; Flow; Operations; Settings;
-- Settings Hosted OFF plus the exercised MCP workspace load state;
-- narrow/mobile Ai;
-- narrow/mobile one management surface.
+- Space with two pages;
+- Flow desktop showing visible ports and left builder/config panel;
+- Flow node quick settings;
+- Operations;
+- Settings Hosted OFF plus MCP workspace-load/canary feedback;
+- narrow Ai;
+- narrow Space or Operations;
+- narrow Settings;
+- narrow Flow Stack/List mode.
 
 Raw screenshots stay local if they expose machine/user-specific details. Commit only sanitized findings.
