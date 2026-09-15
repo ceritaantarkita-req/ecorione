@@ -153,7 +153,10 @@ export class SdkMcpClientFactory implements McpClientFactory {
   }
 
   async connect(config: McpServerConfig, workspaceId: WorkspaceId): Promise<McpClientFacade> {
-    if (config.transport.type === "stdio" && !this.stdioAllowlist.has(config.transport.command)) {
+    if (
+      config.transport.type === "stdio" &&
+      !this.stdioAllowlist.has(config.transport.command)
+    ) {
       throw new McpTransportDeniedError(
         `Command stdio MCP tidak ada di ECORIONE_MCP_STDIO_ALLOWLIST: ${config.transport.command}.`,
       );
@@ -186,7 +189,8 @@ export class SdkMcpClientFactory implements McpClientFactory {
           config.connectTimeoutMs,
         );
       } else {
-        const { StdioClientTransport, getDefaultEnvironment } = await this.sdkLoader.loadStdio();
+        const { StdioClientTransport, getDefaultEnvironment } =
+          await this.sdkLoader.loadStdio();
         const env: Record<string, string> = {
           ...getDefaultEnvironment(),
           ...config.transport.env,
