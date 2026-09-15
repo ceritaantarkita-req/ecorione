@@ -2,7 +2,7 @@
 
 Date: **2026-09-15**
 
-Status: **IMPLEMENTED / CI GREEN / RENDERED ACCEPTANCE PENDING**
+Status: **IMPLEMENTED / CI GREEN / BRANCH RENDERED ACCEPTANCE GREEN / FINAL REAL-ENVIRONMENT PASS PENDING**
 
 Canonical design contract: `docs/flow-responsive-ux-redesign.md`.
 
@@ -43,9 +43,10 @@ b35e052 fix(flow): harden responsive connection interactions
 cca95d9 test(flow): lock responsive interaction contracts
 1f35828 chore: format W03 implementation
 0055719 docs: update W03 implementation verification state
+7184eee docs: record green W03 CI checkpoint
 ```
 
-A one-shot formatter workflow was used only to run the repository's own Prettier version against the two files identified by the first CI attempt and removed itself in the same formatting commit. It is not part of the resulting branch tree.
+Temporary QA workflows used to run repository-native formatting and rendered-browser acceptance were removed after use and are not intended to remain in the final PR tree.
 
 ## Preserved boundaries
 
@@ -66,6 +67,40 @@ The current branch preserves the already-implemented product-shell behavior outs
 
 No unrelated page changes were introduced where the existing structural contract already matched the approved W03 design.
 
+## Rendered branch acceptance evidence
+
+A production Next.js build of the implementation branch was started on GitHub Actions and exercised with Chromium / Playwright. The browser pass used a **410 × 844 CSS-pixel** narrow viewport, which is inside the canonical 390–430 px target, plus a **1440 × 900** desktop Flow pass.
+
+Rendered browser run:
+
+```text
+workflow run: 34954226991
+QA commit: 5651796c6452f6ea63a6500ea69ffb98a41097ec
+result: success
+artifact: w03-rendered-browser-evidence
+artifact id: 10390846876
+artifact sha256: a9750a8a6e3b289099b480f3e43c8755725482696ae10f8782246f2505d0680a
+artifact expiry: 2026-09-22
+```
+
+The pass produced rendered screenshots and verified:
+
+- Ai narrow route: `innerWidth=410`, `htmlScrollWidth=410`, `bodyScrollWidth=410`, console/page-error gate clean;
+- Space narrow route: `410 / 410 / 410`, console/page-error gate clean;
+- Operations narrow route: `410 / 410 / 410`, console/page-error gate clean;
+- Settings narrow route: `410 / 410 / 410`, console/page-error gate clean;
+- Flow Stack narrow route: `410 / 410 / 410`;
+- Flow Stack after adding AI + HTTP nodes: `410 / 410 / 410`;
+- Flow Canvas narrow mode: page remains `410 / 410 / 410` while the canvas wrapper itself exposes contained horizontal overflow;
+- Flow browser console/page-error gate: clean after excluding only the intentionally stubbed HTTP `503` resource responses;
+- desktop Flow: `1440 / 1440 / 1440`, output ports visible, Condition `true` / `false` ports visible, builder collapse/expand exercised, console/page-error gate clean.
+
+The first browser attempt exposed only a QA-harness classification issue: non-Flow APIs were deliberately answered with `503`, and Chromium reports those expected request failures as console resource errors. The rerun explicitly excludes only that known stub response while keeping application-owned console errors, hydration / DOM-nesting warnings, uncaught / unhandled errors, and `pageerror` events fatal.
+
+### Evidence boundary
+
+This rendered pass validates the production-built **UI layout, DOM interaction surface, page overflow behavior, responsive Flow modes, and browser error surface** on the PR branch. Non-Flow backend requests were intentionally stubbed, and the Flow node registry was supplied by the QA harness. Therefore this is not evidence of backend service availability or a substitute for the canonical real-environment/current-main walkthrough after integration.
+
 ## Execution sequence
 
 - [x] design contract approved and merged to current `main`;
@@ -76,9 +111,11 @@ No unrelated page changes were introduced where the existing structural contract
 - [x] make mobile Stack connection summaries explicit (`From → To`) and actionable;
 - [x] verify app-shell and Ai / Space / Operations / Settings narrow-layout structural contracts;
 - [x] add stable regression coverage for Flow interaction/state contracts;
-- [x] complete fresh repository CI/checks on the formatted implementation head;
-- [ ] perform fresh rendered W03 walkthrough at 390–430 CSS px;
-- [ ] update defect ledger and canonical active-work plan only after evidence supports closure.
+- [x] complete repository CI/checks on the implementation;
+- [x] perform branch rendered walkthrough at 410 CSS px and desktop Flow browser acceptance;
+- [ ] merge only after current-head PR gates are green and integration disposition is approved;
+- [ ] perform the canonical final real-environment/current-main walkthrough after integration;
+- [ ] update defect ledger and canonical active-work plan to DONE only after that final evidence supports closure.
 
 ## CI / Product Eval evidence
 
@@ -87,7 +124,7 @@ The first PR-head Product Eval completed successfully. The first CI `verify` att
 - `apps/ai/app/flow/page.tsx`;
 - `test/flow-responsive-source-contract.test.ts`.
 
-Both files were formatted with the repository's own Prettier command. On the resulting implementation head (`00557194365f1b363c2c1f49552d2c04d27bb9d1`), the fresh checks completed successfully:
+Both files were formatted with the repository's own Prettier command. On the resulting implementation checkpoint (`00557194365f1b363c2c1f49552d2c04d27bb9d1`), the fresh checks completed successfully:
 
 - Product Eval: success;
 - CI naming: success;
@@ -101,8 +138,8 @@ Both files were formatted with the repository's own Prettier command. On the res
 - CI verify / Secret scan: success;
 - CI verify / Production build: success.
 
-This establishes a green automated checkpoint for the implementation. It does not replace the rendered narrow-viewport acceptance required by W03.
+The rendered-browser production build also completed successfully before the Chromium walkthrough. A fresh normal CI / Product Eval pass is required on the final documentation/cleanup head before integration.
 
 ## Closure rule
 
-This checkpoint records implementation state only. It does **not** mark W03 DONE. W03 remains open until the acceptance additions in `docs/flow-responsive-ux-redesign.md` pass on a fresh rendered current-head walkthrough and no application-owned framework, hydration, or unhandled-promise error is present in the browser console.
+This checkpoint does **not** mark W03 DONE. The branch now has green automated code gates and green rendered-browser evidence, but canonical closure still requires the real-environment/current-main walkthrough defined by `docs/ux-runtime-walkthrough-checklist.md` after integration, including application-owned browser-console cleanliness and expected Ai / Space / Operations / Settings / Flow behavior with the real environment available.
