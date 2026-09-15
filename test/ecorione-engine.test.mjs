@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import { URL } from "node:url";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -18,6 +19,7 @@ import {
   selectAiPort,
   writeEngineRuntimeState,
   stopSpawnedChild,
+  waitForAiReady,
   temporalCliAvailable,
   temporalInstallHint,
   upsertEnvValue,
@@ -87,6 +89,47 @@ describe("ECORIONE local engine bootstrap", () => {
     expect(second.generated).toEqual([]);
     expect(afterSecond.ECORIONE_INTERNAL_TOKEN).toBe(token);
     expect(afterSecond.ECORIONE_CONNECT_VAULT_MASTER_KEY).toBe(vaultKey);
+  });
+
+  it("migrates the historical generated Ai port 3000 exactly once", () => {
+    const root = tempRoot();
+    writeFileSync(
+      join(root, ".env"),
+      [
+        "ECORIONE_AI_PORT=3000",
+        "ECORIONE_INTERNAL_TOKEN=already-set",
+        "ECORIONE_CONNECT_VAULT_MASTER_KEY=already-set",
+        "",
+      ].join("\n"),
+    );
+
+    const first = ensureLocalEnv(root);
+    expect(first.migratedLegacyAiPort).toBe(true);
+    expect(first.values.ECORIONE_AI_PORT).toBe("17020");
+    expect(first.values.ECORIONE_AI_PORT_MIGRATION_VERSION).toBe("1");
+
+    let text = readFileSync(join(root, ".env"), "utf8");
+    text = upsertEnvValue(text, "ECORIONE_AI_PORT", "3000");
+    writeFileSync(join(root, ".env"), text);
+    const second = ensureLocalEnv(root);
+    expect(second.migratedLegacyAiPort).toBe(false);
+    expect(second.values.ECORIONE_AI_PORT).toBe("3000");
+  });
+
+  it("waits for the ECORIONE HTTP identity rather than accepting a bare TCP listener", async () => {
+    const dispositions = ["occupied", "occupied", "ecorione"];
+    const classify = vi.fn(async () => dispositions.shift() ?? "ecorione");
+
+    await expect(waitForAiReady(17020, 100, classify, 1)).resolves.toBeUndefined();
+    expect(classify).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not hardcode port 3000 in the Ai package scripts", () => {
+    const aiPackage = JSON.parse(
+      readFileSync(new URL("../apps/ai/package.json", import.meta.url), "utf8"),
+    );
+    expect(aiPackage.scripts.dev).toBe("next dev");
+    expect(aiPackage.scripts.start).toBe("next start");
   });
 
   it("probes the configured local AI through Connect without vendor-specific runtime logic", async () => {
