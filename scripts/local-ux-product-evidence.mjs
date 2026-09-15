@@ -181,7 +181,9 @@ export async function inventory() {
     throw new Error("ECORIONE_COST_KILL_SWITCH harus bernilai 1 untuk checkpoint ini.");
   }
   if ((process.env.ECORIONE_INTERNAL_TOKEN ?? "").trim().length === 0) {
-    throw new Error("ECORIONE_INTERNAL_TOKEN harus tersedia di root .env atau shell UX inventory.");
+    throw new Error(
+      "ECORIONE_INTERNAL_TOKEN harus tersedia di root .env atau shell UX inventory.",
+    );
   }
 
   const owners = [];
