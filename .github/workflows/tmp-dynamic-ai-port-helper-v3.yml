@@ -1,0 +1,87 @@
+name: Dynamic Ai Port Refactor Helper v3
+
+on:
+  push:
+    branches:
+      - automation/dynamic-ai-port-helper-20260915
+
+permissions:
+  contents: write
+
+jobs:
+  build-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Extract and harden v2 patch script
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path('.github/workflows/tmp-dynamic-ai-port-helper-v2.yml').read_text()
+          body = source.split("python3 - <<'PY'\n", 1)[1].split("\n          PY", 1)[0]
+          body = "\n".join(line[10:] if line.startswith("          ") else line for line in body.splitlines()) + "\n"
+
+          old = '''def one(text, old, new, label):
+              n = text.count(old)
+              if n != 1:
+                  raise SystemExit(f"{label}: expected one match, got {n}")
+              return text.replace(old, new, 1)
+          '''
+          new = '''def one(text, old, new, label):
+              n = text.count(old)
+              if n == 1:
+                  return text.replace(old, new, 1)
+              if label == "acceptance preflight":
+                  pattern = r''' + "'''" + r'''    const beforePorts = await portState\(APP_PORTS\);.*?    report\.phases\.preflight = \{''' + "'''" + '''
+                  out, count = re.subn(pattern, new, text, count=1, flags=re.S)
+                  if count == 1:
+                      return out
+              raise SystemExit(f"{label}: expected one match, got {n}")
+          '''
+          if old not in body:
+              raise SystemExit('could not harden one() helper')
+          body = body.replace(old, new, 1)
+          Path('/tmp/dynamic-ai-port-patch.py').write_text(body)
+          PY
+      - name: Apply patch on exact current main and verify
+        run: |
+          git switch main
+          git reset --hard origin/main
+          python3 /tmp/dynamic-ai-port-patch.py
+          pnpm exec prettier --write \
+            scripts/ecorione-engine.mjs \
+            scripts/windows-engine-acceptance.mjs \
+            scripts/local-ux-product-evidence.mjs \
+            .env.example \
+            desktop/ecorione.ps1 \
+            desktop/compose.yml \
+            deploy/compose.yml \
+            test/ecorione-engine.test.mjs \
+            test/windows-engine-acceptance.test.mjs \
+            test/desktop-bundle.test.mjs \
+            docs/api-fase1.md \
+            docs/ux-runtime-walkthrough-checklist.md \
+            docs/ux-product-validation.md \
+            docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md \
+            docs/active-work-plan.md
+          pnpm exec vitest run test/ecorione-engine.test.mjs test/windows-engine-acceptance.test.mjs test/desktop-bundle.test.mjs test/local-ux-product-evidence.test.mjs test/local-ux-flow-surface-marker.test.mjs
+          pnpm run typecheck
+          pnpm run lint
+          git diff --check
+      - name: Publish implementation branch
+        run: |
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git switch -C feat/w09-w10-dynamic-ai-port-20260915
+          git add scripts/ecorione-engine.mjs scripts/windows-engine-acceptance.mjs scripts/local-ux-product-evidence.mjs .env.example desktop/ecorione.ps1 desktop/compose.yml deploy/compose.yml test/ecorione-engine.test.mjs test/windows-engine-acceptance.test.mjs test/desktop-bundle.test.mjs docs/api-fase1.md docs/ux-runtime-walkthrough-checklist.md docs/ux-product-validation.md docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md docs/active-work-plan.md
+          git commit -m "refactor W09/W10 Ai port allocation"
+          git push --force-with-lease origin HEAD
