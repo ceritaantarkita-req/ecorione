@@ -324,6 +324,7 @@
   .section {
     margin-top: 14px;
     padding: 16px;
+    overflow: hidden;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: color-mix(in srgb, var(--surface-1) 82%, transparent);
@@ -386,15 +387,28 @@
   }
 
   .check {
-    align-items: flex-start;
-    min-height: auto;
+    align-items: center;
+    min-height: 40px;
     padding: 2px 0;
     line-height: 1.45;
   }
 
   .check input {
-    flex: 0 0 auto;
-    margin-top: 2px;
+    width: 16px !important;
+    min-width: 16px !important;
+    max-width: 16px !important;
+    height: 16px !important;
+    min-height: 16px !important;
+    padding: 0 !important;
+    flex: 0 0 16px;
+    margin: 0;
+  }
+
+  .monoField {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9.5px !important;
   }
 
   .muted,

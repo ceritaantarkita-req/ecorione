@@ -1,9 +1,17 @@
 .page {
   width: min(100%, 1500px);
+  min-width: 0;
   min-height: calc(100dvh - var(--app-nav-height));
   margin: 0 auto;
   padding: 28px 24px 64px;
+  overflow-x: clip;
   color: var(--text);
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
 }
 
 .header {
@@ -11,6 +19,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
+  min-width: 0;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--border);
 }
@@ -32,9 +41,11 @@
 
 .workspaceId {
   flex: none;
+  max-width: 100%;
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 9.5px;
+  overflow-wrap: anywhere;
 }
 
 .feedback {
@@ -43,6 +54,7 @@
   border-left: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 11.5px;
+  overflow-wrap: anywhere;
 }
 
 .error {
@@ -59,6 +71,7 @@
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr) 330px;
   align-items: stretch;
+  min-width: 0;
   margin-top: 20px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -66,8 +79,15 @@
 }
 
 .rail,
-.inspector {
+.document,
+.inspector,
+.inspectorStack,
+.inspectorSection {
   min-width: 0;
+}
+
+.rail,
+.inspector {
   background: var(--surface);
 }
 
@@ -77,7 +97,6 @@
 }
 
 .document {
-  min-width: 0;
   padding: 24px 28px 34px;
 }
 
@@ -115,6 +134,8 @@
 .textarea,
 .select {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 34px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -126,6 +147,7 @@
 
 .textarea {
   resize: vertical;
+  overflow: auto;
   font-family: var(--font-mono);
   font-size: 10.5px;
   line-height: 1.55;
@@ -205,6 +227,7 @@
 .pageButton {
   position: relative;
   width: 100%;
+  min-width: 0;
   min-height: 48px;
   padding: 8px 9px 8px 12px;
   border-color: transparent;
@@ -260,20 +283,24 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--border);
 }
 
 .documentHeader h2 {
+  min-width: 0;
   margin: 0 0 5px;
   font-size: clamp(1.5rem, 3vw, 2.1rem);
   line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .renameRow {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .renameRow .input {
@@ -289,6 +316,7 @@
 
 .block {
   position: relative;
+  min-width: 0;
   padding: 14px 12px 14px 14px;
   border: 0;
   border-bottom: 1px solid var(--border-soft);
@@ -377,7 +405,9 @@
 
 .tableWrap {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
 }
 
 .blockContent table {
@@ -452,6 +482,7 @@
   color: var(--text-muted);
   font-size: 10.5px;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .resolution {
@@ -496,44 +527,74 @@
 
 @media (max-width: 760px) {
   .page {
-    padding: 22px 14px 48px;
+    width: 100%;
+    max-width: none;
+    padding: 18px 12px 40px;
+    overflow-x: clip;
   }
 
   .header {
     align-items: flex-start;
     flex-direction: column;
+    gap: 8px;
+    padding-bottom: 16px;
+  }
+
+  .header h1 {
+    margin-bottom: 4px;
+    font-size: clamp(1.9rem, 9vw, 2.35rem);
+  }
+
+  .workspaceId {
+    font-size: 9px;
   }
 
   .workspace {
     grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
     min-height: 0;
+    margin-top: 14px;
+    border: 0;
+  }
+
+  .rail,
+  .document,
+  .inspectorSection {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--surface) 90%, var(--bg));
   }
 
   .rail {
-    padding: 16px 0;
-    border-right: 0;
+    padding: 14px;
+    border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
   }
 
+  .createForm {
+    margin-bottom: 10px;
+  }
+
   .pageList {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .pageButton {
+    min-height: 54px;
+    border-color: var(--border-soft);
+    background: var(--bg);
   }
 
   .document {
-    padding: 22px 0 28px;
-  }
-
-  .inspector {
-    grid-column: auto;
-  }
-
-  .inspectorStack {
-    grid-template-columns: 1fr;
+    padding: 16px 14px 18px;
   }
 
   .documentHeader {
     align-items: stretch;
     flex-direction: column;
+    gap: 12px;
+    padding-bottom: 14px;
   }
 
   .renameRow {
@@ -545,13 +606,108 @@
     min-width: 0;
   }
 
+  .documentEmpty {
+    min-height: 150px;
+    padding: 28px 12px;
+  }
+
+  .blocks {
+    margin-top: 12px;
+  }
+
   .blockToolbar {
     align-items: stretch;
     flex-direction: column;
   }
 
   .blockActions {
-    align-self: flex-end;
+    align-self: stretch;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .inspectButton,
+  .deleteButton,
+  .iconButton {
+    width: 100%;
+    min-height: 38px;
+  }
+
+  .addBlock {
+    margin-top: 18px;
+    padding-top: 16px;
+  }
+
+  .kindList {
+    gap: 6px;
+  }
+
+  .kindButton,
+  .memoryButton {
+    min-height: 36px;
+    padding-inline: 10px;
+  }
+
+  .input,
+  .select,
+  .button,
+  .buttonPrimary,
+  .buttonDanger {
+    min-height: 44px;
+  }
+
+  .textarea {
+    min-height: 180px;
+  }
+
+  .editorActions,
+  .inspectorActions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editorActions > *,
+  .inspectorActions > * {
+    width: 100%;
+  }
+
+  .inspector {
+    grid-column: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .inspectorStack {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .inspectorSection,
+  .inspectorSection + .inspectorSection {
+    padding: 14px;
+    border-top: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding-inline: 10px;
+  }
+
+  .pageList {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .document,
+  .rail,
+  .inspectorSection,
+  .inspectorSection + .inspectorSection {
+    padding: 12px;
+  }
+
+  .blockActions {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

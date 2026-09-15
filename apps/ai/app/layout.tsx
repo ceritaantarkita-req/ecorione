@@ -5,6 +5,7 @@ import { SIDEBAR_BOOTSTRAP_SCRIPT, THEME_BOOTSTRAP_SCRIPT } from "@ecorione/shar
 import ProductNav from "./ProductNav";
 import "./globals.css";
 import "./navigation.css";
+import "./mobile-ux-overrides.css";
 
 const displayFont = Fraunces({
   subsets: ["latin"],
