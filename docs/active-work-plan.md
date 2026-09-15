@@ -9,10 +9,10 @@ Current code + current evidence + dokumen ini adalah source of truth pekerjaan a
 ## 1. Current repository checkpoint
 
 ```text
-main: d0bf34ae1ec8b0ab4f2052863f3057f7a98254e1
-PR #90: merged
-post-merge CI: exact-main retry — SUCCESS
-post-merge Product Eval: SUCCESS
+main: 88b409f6497166213beeb301aad53d78e922b72e
+PR #93: merged — W03 responsive + Flow redesign
+post-merge CI: 34954861030 — SUCCESS
+post-merge Product Eval: 34954861022 — SUCCESS
 ```
 
 `main` adalah green baseline. GitHub `main` belum memiliki required status-check branch protection; governance gap ini tetap terbuka.
@@ -23,7 +23,7 @@ post-merge Product Eval: SUCCESS
 |---|---|---:|---|
 | W01 | Reconcile system analysis | **DONE** | Temuan valid/outdated sudah dipisahkan. |
 | W02 | Vitest `*.test.tsx` discovery | **DONE** | TSX tests masuk normal CI. |
-| W03 | UX/Product Validation current main | **IN PROGRESS — RESPONSIVE/FLOW REDESIGN** | Exact-head inventory + major walkthrough gates sudah terbukti, tetapi real-laptop evidence menemukan mobile layout failure dan Flow discoverability/connection UX yang harus diperbaiki sebelum closure. |
+| W03 | UX/Product Validation current main | **IN PROGRESS — INTEGRATED / FINAL OPERATOR RECHECK** | Responsive + Flow redesign sudah merged; PR-head, branch rendered QA, dan exact post-merge main gates green. Closure masih menunggu canonical real-laptop/current-main walkthrough. |
 | W04 | Partial/full stack behavior | **DONE — REPO SIDE** | Human-readable service-down/proxy failures. |
 | W05 | Provider Settings foundation | **DONE — REPO SIDE** | Provider catalog + Settings/Vault authority. |
 | W06 | Credential Vault integration | **DONE WITH LIMITATIONS — REPO SIDE** | Test/save/replace/remove; no browser plaintext persistence. |
@@ -136,9 +136,9 @@ Closure interpretation: W15 membuktikan model lokal immutable-identity `qwen3.5:
 
 ## 7. W03 UX/Product Validation
 
-Status: **IN PROGRESS — RESPONSIVE/FLOW REDESIGN REQUIRED**.
+Status: **IN PROGRESS — IMPLEMENTATION INTEGRATED / FINAL REAL-LAPTOP RECHECK PENDING**.
 
-The real-laptop walkthrough on current main established the following verified checkpoints before redesign:
+The first current-main real-laptop walkthrough established the pre-redesign runtime baseline:
 
 ```text
 - synchronized tracked-clean current main
@@ -160,48 +160,45 @@ The real-laptop walkthrough on current main established the following verified c
 - UX-11 invalid config safe failure: PASS
 ```
 
-The walkthrough also exposed new S2 findings that block W03 closure:
+That walkthrough found the responsive/Flow S2 defects captured by `docs/flow-responsive-ux-redesign.md`. PR #93 has now implemented and integrated the approved redesign.
 
-1. narrow/mobile management views are still materially compressed and inconsistent; Flow is unusable as a normal mobile interaction model;
-2. Flow node insertion is not self-explanatory enough for a first-time user;
-3. Flow connection creation relies on a hidden mental model (`Mulai koneksi` then click target) instead of visible connection ports;
-4. permanent right-side inspector reduces canvas space and makes the builder feel more technical than necessary;
-5. common node configuration needs progressive disclosure instead of forcing users toward raw JSON too early.
-
-The approved redesign is specified in `docs/flow-responsive-ux-redesign.md` and is now part of W03 closure scope.
-
-PRs already produced during the runtime checkpoint include:
+Integrated repository evidence:
 
 ```text
-#88 Connect Windows startup hardening
-#89 Windows spawned-process-tree cleanup
-#90 Settings async-feedback visibility + narrow action stacking
+PR #93 head: e2e2e3efe5d383ff305cad48e4fcd50b0262e60d
+PR #93: merged
+main merge: 88b409f6497166213beeb301aad53d78e922b72e
+post-merge CI: 34954861030 — SUCCESS
+post-merge Product Eval: 34954861022 — SUCCESS
+branch rendered browser QA: 34954226991 — SUCCESS
+rendered viewport: 410 × 844 CSS px + 1440 × 900 desktop Flow
 ```
 
-W03 cannot be marked DONE until the redesigned current main passes a fresh rendered recheck, especially narrow viewport acceptance and first-use Flow connection discoverability.
+The rendered branch QA showed no page-level horizontal overflow on Ai, Space, Operations, Settings, Flow Stack, or contained Flow Canvas; exercised Flow node insertion, visible ports, Condition `true`/`false` outputs, and builder collapse/reopen; and kept application-owned hydration/DOM-nesting/unhandled/page errors fatal. Its non-Flow backend requests were deliberately stubbed, so it is supporting rendered evidence rather than the final operator runtime proof.
 
-Raw screenshots/logs that expose machine/user-specific detail stay local; sanitized findings and dispositions are committed.
+Canonical closure still requires the fresh current-main real-laptop walkthrough in `docs/ux-runtime-walkthrough-checklist.md` with the real operator `.env`, explicit kill switch, local Temporal/Phase 4 fleet, strict inventory, local model, and browser DevTools Console. That pass must recheck UX-F01–UX-F08 and UX-12A–UX-12F and record any new finding using the defect-ledger format.
+
+W03 remains **not DONE** until that evidence exists. Raw screenshots/logs that expose machine/user-specific detail stay local; sanitized findings and dispositions are committed.
 
 ## 8. Immediate next action
 
 Priority is now:
 
 ```text
-1. implement app-wide responsive cleanup
-2. implement Flow collapsible left builder/config panel
-3. add discoverable node insertion affordances
-4. add visible port-based node connections
-5. add node quick-settings + advanced-config handoff
-6. add Flow mobile Stack/List mode
-7. run repo CI/Product Eval
-8. fresh operator W03 rendered recheck and defect-ledger closure
-9. resume W09/W10, W11, W16, W17, W18, W20
+1. synchronize operator laptop to exact current origin/main
+2. require clean tracked worktree and exact HEAD == origin/main
+3. set ECORIONE_COST_KILL_SWITCH=1 and start pnpm engine:start
+4. run pnpm evidence:ux:inventory and require PASS
+5. execute fresh desktop + Flow redesign + 390–430 px narrow walkthrough with DevTools Console visible
+6. record defects/dispositions; fix any S0/S1 and any unaccepted S2
+7. if final evidence is clean, mark W03 DONE and update canonical closure docs
+8. resume W09/W10, W11, W16, W17, W18, W20
 ```
 
-Repo-side implementation may advance autonomously, but browser/runtime/hosted claim boundaries remain evidence-driven.
+Repo-side W03 implementation and integration are complete. The remaining W03 gate is operator-owned runtime/rendered evidence; do not substitute GitHub-runner stubs for that claim.
 
 ## 9. Historical note
 
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state. PR #83 memperbaiki W15 runtime observability. PR #84 memperbaiki W15 verify assertions. PR #85 mencatat W15 closure evidence. PR #86 mengeraskan W03 Windows runtime flow. PR #88 memperbaiki Connect startup pada Windows. PR #89 memperbaiki cleanup process tree Windows. PR #90 memperbaiki feedback Settings dan action stacking narrow viewport.
+PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state. PR #83 memperbaiki W15 runtime observability. PR #84 memperbaiki W15 verify assertions. PR #85 mencatat W15 closure evidence. PR #86 mengeraskan W03 Windows runtime flow. PR #88 memperbaiki Connect startup pada Windows. PR #89 memperbaiki cleanup process tree Windows. PR #90 memperbaiki feedback Settings dan action stacking narrow viewport. PR #93 mengintegrasikan responsive + Flow redesign dan lulus exact-main CI/Product Eval setelah merge.
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.
