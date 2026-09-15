@@ -129,12 +129,47 @@ export function waitForSpawnedChild(child) {
   });
 }
 
-export async function stopSpawnedChild(child, timeoutMs = 5_000) {
+export function killWindowsProcessTree(pid) {
+  const result = spawnSync("taskkill", ["/PID", String(pid), "/T", "/F"], {
+    encoding: "utf8",
+    stdio: "ignore",
+    windowsHide: true,
+  });
+  if (result.error) throw result.error;
+  return result.status === 0;
+}
+
+export async function stopSpawnedChild(
+  child,
+  timeoutMs = 5_000,
+  platform = process.platform,
+  windowsTreeKiller = killWindowsProcessTree,
+) {
   if (child.exitCode !== null || child.signalCode !== null) return;
 
   const exited = new Promise((resolvePromise) => {
     child.once("exit", () => resolvePromise(true));
   });
+
+  if (platform === "win32" && Number.isInteger(child.pid)) {
+    try {
+      windowsTreeKiller(child.pid);
+    } catch {
+      try {
+        child.kill("SIGKILL");
+      } catch {
+        return;
+      }
+    }
+    if (timeoutMs > 0) {
+      await Promise.race([
+        exited,
+        new Promise((resolvePromise) => setTimeout(resolvePromise, Math.min(timeoutMs, 1_000))),
+      ]);
+    }
+    return;
+  }
+
   try {
     child.kill("SIGTERM");
   } catch {
