@@ -1,8 +1,4 @@
-import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import {
-  StdioClientTransport,
-  getDefaultEnvironment,
-} from "@modelcontextprotocol/client/stdio";
+import type { Client as McpSdkClient } from "@modelcontextprotocol/client";
 import type { WorkspaceId } from "@ecorione/shared-schema";
 import type {
   McpClientFacade,
@@ -14,6 +10,12 @@ import type {
   McpServerConfig,
   McpToolCallResult,
 } from "./types.js";
+
+const DEFAULT_MCP_SDK_LOADER = {
+  loadClient: () => import("@modelcontextprotocol/client"),
+  loadStdio: () => import("@modelcontextprotocol/client/stdio"),
+};
+type McpSdkLoader = typeof DEFAULT_MCP_SDK_LOADER;
 
 export class McpTransportDeniedError extends Error {
   constructor(message: string) {
@@ -58,14 +60,14 @@ async function withTimeout<T>(
   }
 }
 
-function protocolEra(client: Client): McpProtocolEra {
+function protocolEra(client: McpSdkClient): McpProtocolEra {
   const era = client.getProtocolEra();
   return era === "modern" || era === "legacy" ? era : "unknown";
 }
 
 class SdkMcpClientFacade implements McpClientFacade {
   constructor(
-    private readonly client: Client,
+    private readonly client: McpSdkClient,
     readonly protocolEra: McpProtocolEra,
   ) {}
 
@@ -122,12 +124,20 @@ function splitAllowlist(raw: string | readonly string[]): ReadonlySet<string> {
   return new Set(values);
 }
 
+/**
+ * MCP SDK transport modules are deliberately loaded on first outbound MCP use instead
+ * of during Connect startup. On Windows, `tsx watch` under prefixed `concurrently`
+ * can hang while evaluating some process/stdio-heavy dependency graphs. Keeping MCP
+ * transports out of the boot graph also means a user who never configures outbound MCP
+ * does not pay its startup/import cost.
+ */
 export class SdkMcpClientFactory implements McpClientFactory {
   private readonly stdioAllowlist: ReadonlySet<string>;
 
   constructor(
     private readonly credentials: McpCredentialReader | undefined,
     stdioAllowlist: string | readonly string[] = [],
+    private readonly sdkLoader: McpSdkLoader = DEFAULT_MCP_SDK_LOADER,
   ) {
     this.stdioAllowlist = splitAllowlist(stdioAllowlist);
   }
@@ -139,6 +149,16 @@ export class SdkMcpClientFactory implements McpClientFactory {
   }
 
   async connect(config: McpServerConfig, workspaceId: WorkspaceId): Promise<McpClientFacade> {
+    if (
+      config.transport.type === "stdio" &&
+      !this.stdioAllowlist.has(config.transport.command)
+    ) {
+      throw new McpTransportDeniedError(
+        `Command stdio MCP tidak ada di ECORIONE_MCP_STDIO_ALLOWLIST: ${config.transport.command}.`,
+      );
+    }
+
+    const { Client, StreamableHTTPClientTransport } = await this.sdkLoader.loadClient();
     const client = new Client(
       { name: "ecorione-connect", version: "0.1.0" },
       {
@@ -148,49 +168,49 @@ export class SdkMcpClientFactory implements McpClientFactory {
       },
     );
 
-    let transport: StreamableHTTPClientTransport | StdioClientTransport;
-    if (config.transport.type === "streamable-http") {
-      const credentialRef = config.transport.credentialRef;
-      transport =
-        credentialRef === undefined
-          ? new StreamableHTTPClientTransport(new URL(config.transport.url))
-          : new StreamableHTTPClientTransport(new URL(config.transport.url), {
-              authProvider: {
-                token: async () => this.secret(credentialRef),
-              },
-            });
-    } else {
-      if (!this.stdioAllowlist.has(config.transport.command)) {
-        throw new McpTransportDeniedError(
-          `Command stdio MCP tidak ada di ECORIONE_MCP_STDIO_ALLOWLIST: ${config.transport.command}.`,
+    try {
+      if (config.transport.type === "streamable-http") {
+        const credentialRef = config.transport.credentialRef;
+        const transport =
+          credentialRef === undefined
+            ? new StreamableHTTPClientTransport(new URL(config.transport.url))
+            : new StreamableHTTPClientTransport(new URL(config.transport.url), {
+                authProvider: {
+                  token: async () => this.secret(credentialRef),
+                },
+              });
+        await withTimeout(
+          client.connect(transport),
+          `MCP connect ${config.id}`,
+          config.connectTimeoutMs,
+        );
+      } else {
+        const { StdioClientTransport, getDefaultEnvironment } =
+          await this.sdkLoader.loadStdio();
+        const env: Record<string, string> = {
+          ...getDefaultEnvironment(),
+          ...config.transport.env,
+        };
+        if (
+          config.transport.credentialRef !== undefined &&
+          config.transport.credentialEnv !== undefined
+        ) {
+          env[config.transport.credentialEnv] = this.secret(config.transport.credentialRef);
+        }
+        const parameters = {
+          command: config.transport.command,
+          args: [...config.transport.args],
+          env,
+          stderr: "pipe" as const,
+          ...(config.transport.cwd === undefined ? {} : { cwd: config.transport.cwd }),
+        };
+        const transport = new StdioClientTransport(parameters);
+        await withTimeout(
+          client.connect(transport),
+          `MCP connect ${config.id}`,
+          config.connectTimeoutMs,
         );
       }
-      const env: Record<string, string> = {
-        ...getDefaultEnvironment(),
-        ...config.transport.env,
-      };
-      if (
-        config.transport.credentialRef !== undefined &&
-        config.transport.credentialEnv !== undefined
-      ) {
-        env[config.transport.credentialEnv] = this.secret(config.transport.credentialRef);
-      }
-      const parameters = {
-        command: config.transport.command,
-        args: [...config.transport.args],
-        env,
-        stderr: "pipe" as const,
-        ...(config.transport.cwd === undefined ? {} : { cwd: config.transport.cwd }),
-      };
-      transport = new StdioClientTransport(parameters);
-    }
-
-    try {
-      await withTimeout(
-        client.connect(transport),
-        `MCP connect ${config.id}`,
-        config.connectTimeoutMs,
-      );
       return new SdkMcpClientFacade(client, protocolEra(client));
     } catch (error) {
       await client.close().catch(() => undefined);
