@@ -18,7 +18,7 @@ Aturan penambahan kasus tetap sama: kalau sebuah kasus baru tidak bisa menunjuk 
 
 ## W15 — agent/model eval
 
-W15 sekarang punya harness lokal executable yang terpisah dari product runtime:
+W15 punya harness lokal executable yang terpisah dari product runtime:
 
 - `agentic-cases.json` — task/bug-derived agent cases dan deterministic tool fixtures;
 - `agentic-eval-core.mjs` — parser, executor fixture, dan scorer;
@@ -34,6 +34,31 @@ Harness mengukur lima checkpoint secara eksplisit:
 5. **verify** — final answer harus menyatakan `verified: true` dan lolos assertion deterministik kasus.
 
 Current seed berisi empat kasus nyata: Operations degraded-vs-optional diagnosis, workspace-aware MCP lookup, public `localBaseUrl` rejection, dan immutable local-model identity. Tiap kasus dijalankan **3 kali** dan hanya lulus jika semuanya lulus (`pass^3`).
+
+### Current closure evidence
+
+Pada 2026-09-15, strict run terakhir dijalankan di baseline `00765be1c58198aaacdd867bada83e544fd9edd0` dengan runtime lokal berikut:
+
+```text
+baseUrl: http://127.0.0.1:11434/v1
+model: qwen3.5:9b
+digest: 6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
+identityVerified: true
+```
+
+Hasil strict closure run:
+
+```text
+W15-001: 3/3 — PASS^3
+W15-002: 3/3 — PASS^3
+W15-003: 3/3 — PASS^3
+W15-004: 3/3 — PASS^3
+allPass3: true
+closureEligible: true
+trace: traces/w15-agentic-eval-2026-09-15T00-23-08-194Z.json
+```
+
+Trace runtime tetap lokal/gitignored karena dapat memuat detail runtime operator. Closure di atas berlaku untuk model identity yang diverifikasi tersebut dan bounded harness saat itu; perubahan model, digest, runtime, atau kasus memerlukan evidence baru.
 
 ### Claim boundary W15
 
@@ -88,7 +113,7 @@ Inference memakai timeout terpisah dari inventory. Default-nya 120 detik per mod
 ECORIONE_AGENTIC_MODEL_TIMEOUT_MS=180000 pnpm eval:agentic:local
 ```
 
-Pada setiap run gagal, terminal menampilkan failure stage (`call`, `parse`, atau `execute`) dan alasan ringkas. Bila parsing gagal setelah model sudah merespons, trace tetap mempertahankan latency/token call dan menyimpan preview output maksimal 400 karakter supaya kegagalan protocol tidak salah terbaca sebagai `0 ms / 0 token`.
+Pada setiap run gagal, terminal menampilkan failure stage (`call`, `parse`, atau `execute`) dan alasan ringkas. Bila parsing gagal setelah model sudah merespons, trace tetap mempertahankan latency/token call dan menyimpan preview output maksimal 400 karakter supaya kegagalan protocol tidak salah terbaca sebagai `0 ms / 0 token`. Bila deterministic `verify` gagal, runner juga mencetak final answer agar assertion dapat diaudit tanpa membuka seluruh trace.
 
 Exploratory run bila runtime tidak menyediakan provenance yang dapat diverifikasi:
 

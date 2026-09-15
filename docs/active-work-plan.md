@@ -9,10 +9,10 @@ Current code + current evidence + dokumen ini adalah source of truth pekerjaan a
 ## 1. Current repository checkpoint
 
 ```text
-main: f54a11af582d92a955207b087c246b2c56848ab7
-PR #83: merged
-post-merge CI: 34876265107 / CI #790 — SUCCESS
-post-merge Product Eval: 34876265034 / Product Eval #29 — SUCCESS
+main: 00765be1c58198aaacdd867bada83e544fd9edd0
+PR #84: merged
+post-merge CI: 34882228907 / CI #796 — SUCCESS
+post-merge Product Eval: 34882228970 / Product Eval #35 — SUCCESS
 ```
 
 `main` adalah green baseline. GitHub `main` belum memiliki required status-check branch protection; governance gap ini tetap terbuka.
@@ -35,7 +35,7 @@ post-merge Product Eval: 34876265034 / Product Eval #29 — SUCCESS
 | W12 | Attachment composer backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → hydration. |
 | W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Current operator runtime berhasil memverifikasi selector + immutable digest; perubahan model/runtime tetap harus diverifikasi ulang. |
 | W14 | Product eval foundation | **DONE — REPO SIDE** | 12 task/bug-derived deterministic regressions + dedicated gate. |
-| W15 | Agentic local-model eval v1 | **STARTED — VERIFIED MODEL; 2/4 CASES PASS^3; VERIFY ASSERTION FIX IN PROGRESS** | Runtime/tool loop sehat; dua remaining failures hanya checkpoint `verify`. |
+| W15 | Agentic local-model eval v1 | **DONE — VERIFIED LOCAL MODEL PASS^3** | 4/4 real cases pass^3 dengan immutable digest verified; claim hanya bounded eval harness, bukan autonomous product chat. |
 | W16 | Automatic semantic reference selector | TODO | `refIndexes` tidak lagi caller/oracle-supplied. |
 | W17 | ECX no-oracle validation | TODO | full vs auto-selective vs oracle pada task set sama. |
 | W18 | Hosted economic validation | TODO | Real bounded hosted token/cost evidence. |
@@ -92,11 +92,11 @@ post-merge CI: 34865204054 — SUCCESS
 post-merge Product Eval: 34865204071 — SUCCESS
 ```
 
-W14 tidak membuktikan model reasoning/tool quality; itu tetap W15.
+W14 tidak membuktikan model reasoning/tool quality; itu tetap dipisahkan dari W15.
 
 ## 6. W15 Agentic Local-Model Eval
 
-Status: **STARTED — VERIFIED MODEL; 2/4 CASES PASS^3; VERIFY ASSERTION FIX IN PROGRESS**.
+Status: **DONE — VERIFIED LOCAL MODEL PASS^3 / CLOSURE ELIGIBLE**.
 
 PR #81 menambahkan bounded evaluation loop terpisah dari normal product chat runtime:
 
@@ -122,52 +122,59 @@ modelsReachable: true
 listed: true
 resolvedDigestPresent: true
 identityVerified: true
+identityStatus: verified
 ```
 
-First strict run pada baseline `88c6a19c...` menghasilkan 0/12 dan metrics 0 karena runner belum membedakan call failure vs parse failure dengan benar. PR #83 memperbaiki observability itu tanpa mengubah scoring dan seluruh post-merge gate hijau.
-
-Second strict run pada baseline `f54a11af582d92a955207b087c246b2c56848ab7`:
+Historical strict runs:
 
 ```text
-W15-001: 0/3 — FAIL hanya checkpoint verify
-W15-002: 3/3 — PASS^3
-W15-003: 3/3 — PASS^3
-W15-004: 0/3 — FAIL hanya checkpoint verify
-allPass3: false
-closureEligible: false
-trace: traces/w15-agentic-eval-2026-09-14T18-02-00-833Z.json
+run 1 baseline 88c6a19c...: 0/12; runner observability defect made 0 ms / 0 token ambiguous
+run 2 baseline f54a11af...: W15-002 + W15-003 pass^3; W15-001 + W15-004 failed only brittle verify wording
 ```
 
-Runtime evidence sekarang membuktikan model call, parsing, tool selection, exact fixture execution, dan observation loop bekerja. W15-001 dan W15-004 tidak gagal di `reason`, `tool`, `execute`, atau `observe`; kegagalannya hanya assertion final-answer.
+PR #83 memperbaiki observability runtime. PR #84 memperbaiki deterministic verify assertions tanpa memakai LLM-as-judge dan menambah regression coverage agar paraphrase benar diterima sementara positive reproducibility claim yang salah tetap gagal.
 
-Audit assertion menemukan dua false-negative risk yang deterministic tetapi terlalu terikat wording:
+Final strict closure run pada baseline `00765be1c58198aaacdd867bada83e544fd9edd0`:
 
-- W15-001 sebelumnya mewajibkan literal `degraded` padahal tugas utamanya adalah mengidentifikasi required service `hub` dan tidak menyalahkan optional `sync`.
-- W15-004 sebelumnya mewajibkan literal `not reproducible`; paraphrase benar seperti `cannot be treated as reproducible` tetap gagal.
+```text
+W15-001: 3/3 — PASS^3
+W15-002: 3/3 — PASS^3
+W15-003: 3/3 — PASS^3
+W15-004: 3/3 — PASS^3
+allPass3: true
+closureEligible: true
+trace: traces/w15-agentic-eval-2026-09-15T00-23-08-194Z.json
+```
 
-Branch `agent/w15-verify-assertion-fix-20260915` memperbaiki boundary tanpa memakai LLM-as-judge: W15-001 tetap wajib menyebut `hub` dan tidak boleh menyalahkan `sync`; W15-004 tetap wajib menyebut `reproducible` + `digest` dan minimal satu explicit negative marker. Regression test juga memastikan paraphrase benar PASS sementara positive reproducibility claim tetap FAIL. Runner juga akan mencetak final answer saat verify gagal agar failure berikutnya dapat diaudit langsung.
+Observed final-run averages:
 
-Claim boundary: harness W15 adalah bounded evaluation agent loop. Normal product chat tetap completion pipeline dan belum boleh disebut autonomous tool-calling agent.
+```text
+W15-001 avgLatencyMs: 45325.57093333333 / avgOutputTokens: 218
+W15-002 avgLatencyMs: 51400.95243333335 / avgOutputTokens: 278
+W15-003 avgLatencyMs: 67915.01980000002 / avgOutputTokens: 370
+W15-004 avgLatencyMs: 66684.78923333331 / avgOutputTokens: 357
+```
+
+Closure interpretation: W15 membuktikan model lokal immutable-identity `qwen3.5:9b` mampu melewati empat task/bug-derived cases secara `pass^3` dalam bounded evaluation agent loop saat diuji pada runtime operator tersebut. Evidence ini **tidak** membuktikan jalur chat produk ECORIONE sudah menjadi autonomous tool-calling agent; current product chat tetap completion pipeline dan claim boundary itu tetap berlaku.
 
 ## 7. Immediate next action
 
-Prioritas langsung adalah menyelesaikan **W15 verify assertion fix** lalu mengulang exact verified-model run:
+W15 sudah selesai. Urutan remaining evidence/work sekarang:
 
 ```text
-1. branch fix → PR → CI/Product Eval → merge → post-merge green
-2. sync operator clone ke current main
-3. pertahankan ECORIONE_LOCAL_MODEL=qwen3.5:9b
-4. pertahankan verified ECORIONE_LOCAL_MODEL_DIGEST
-5. pnpm eval:agentic:inventory
-6. pnpm eval:agentic:local
-7. bila semua 4 case pass^3 dan closureEligible=true: tutup W15
-8. bila verify masih gagal: gunakan final answer yang sekarang dicetak untuk audit assertion/model behavior berikutnya
+1. W03 — full rendered UX/Product Validation current main
+2. W09/W10 — clean-Windows one-command startup + doctor matrix
+3. W11 — real Setup/launcher + clean-Windows acceptance
+4. W16 — automatic semantic reference selector
+5. W17 — ECX no-oracle validation
+6. W18 — bounded hosted economic validation
+7. W20 — final current-state sync/closure
 ```
 
-Setelah W15: W03 → W09/W10 → W11 → W16/W17 → W18 → W20. Repo-side item independen boleh maju lebih dulu, tetapi tidak boleh menghapus runtime claim boundaries.
+Repo-side item independen boleh maju lebih dulu, tetapi runtime/browser/hosted claim boundaries tidak boleh dihapus atau diganti dengan asumsi.
 
 ## 8. Historical note
 
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state. PR #83 memperbaiki W15 runtime observability dan post-merge CI/Product Eval hijau.
+PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya dan post-merge CI `34858779881` SUCCESS. PR #80 menyinkronkan W14. PR #81 menambahkan W15 harness. PR #82 menyinkronkan canonical W15 state. PR #83 memperbaiki W15 runtime observability. PR #84 memperbaiki W15 verify assertions; post-merge CI #796 dan Product Eval #35 hijau sebelum final strict local-model closure run menghasilkan 12/12 PASS dan `closureEligible=true`.
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.
