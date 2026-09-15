@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { cwd } from "node:process";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(
-  resolve(process.cwd(), "services/connect/src/mcp-client/sdk-client.ts"),
+  resolve(cwd(), "services/connect/src/mcp-client/sdk-client.ts"),
   "utf8",
 );
 
