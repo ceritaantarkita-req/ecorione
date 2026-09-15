@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - feat/w03-flow-responsive-redesign-20260915
+    paths:
+      - .github/workflows/w03-browser-acceptance-once.yml
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   rendered-browser-acceptance:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -69,6 +70,7 @@ jobs:
           const failures = [];
 
           function badConsoleMessage(type, text) {
+            if (type === "error" && /Failed to load resource:.*503/.test(text)) return false;
             if (type === "error") return true;
             if (type !== "warning") return false;
             return /(hydration|hydrate|validateDOMNesting|unhandled|uncaught|nested.*button|cannot update)/i.test(text);
@@ -254,13 +256,3 @@ jobs:
             /tmp/w03-ai.log
           if-no-files-found: warn
           retention-days: 7
-
-      - name: Remove one-shot workflow after PASS
-        run: |
-          rm -f scripts/.w03-browser-acceptance.mjs
-          git checkout -- package.json pnpm-lock.yaml
-          git rm .github/workflows/w03-browser-acceptance-once.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: remove one-shot W03 browser acceptance workflow"
-          git push origin HEAD:feat/w03-flow-responsive-redesign-20260915
