@@ -112,8 +112,25 @@ async function waitForPort(port, timeoutMs, label) {
   );
 }
 
-function commandName(name) {
-  return process.platform === "win32" && name === "pnpm" ? "pnpm.cmd" : name;
+const SAFE_WINDOWS_PNPM_ARG = /^[A-Za-z0-9@:_./=-]+$/;
+
+export function resolveCommandInvocation(
+  command,
+  args,
+  platform = process.platform,
+  env = process.env,
+) {
+  if (platform === "win32" && command === "pnpm") {
+    const unsafeArg = args.find((arg) => !SAFE_WINDOWS_PNPM_ARG.test(String(arg)));
+    if (unsafeArg !== undefined) {
+      throw new Error(`Argumen pnpm Windows tidak aman untuk cmd.exe: ${String(unsafeArg)}`);
+    }
+    return {
+      command: env.ComSpec ?? env.COMSPEC ?? "cmd.exe",
+      args: ["/d", "/s", "/c", ["pnpm.cmd", ...args].join(" ")],
+    };
+  }
+  return { command, args };
 }
 
 export function waitForSpawnedChild(child) {
@@ -198,11 +215,14 @@ export async function stopSpawnedChild(
 }
 
 function runChecked(command, args, options = {}) {
-  const result = spawnSync(commandName(command), args, {
+  const env = options.env ?? process.env;
+  const invocation = resolveCommandInvocation(command, args, process.platform, env);
+  const result = spawnSync(invocation.command, invocation.args, {
     cwd: ROOT,
-    env: options.env ?? process.env,
+    env,
     encoding: "utf8",
     stdio: options.stdio ?? "pipe",
+    windowsHide: true,
   });
   if (result.error) throw result.error;
   if (result.status !== 0) {
@@ -510,15 +530,17 @@ async function start() {
   const temporalChild = await ensureTemporal(env);
   console.log("• Menyalakan full Phase 4 stack…");
 
-  const child = spawn(commandName("pnpm"), ["run", "dev:phase4"], {
+  const pnpmInvocation = resolveCommandInvocation(
+    "pnpm",
+    ["run", "dev:phase4"],
+    process.platform,
+    env,
+  );
+  const child = spawn(pnpmInvocation.command, pnpmInvocation.args, {
     cwd: ROOT,
     env,
     stdio: "inherit",
-    // Node >= 18.20.2/20.12.2/21.7.2 (CVE-2024-27980 fix) sengaja melempar
-    // `spawn EINVAL` kalau file yang di-spawn adalah .bat/.cmd di Windows tanpa
-    // shell:true. `commandName("pnpm")` resolve ke `pnpm.cmd` di Windows, jadi
-    // butuh shell eksplisit di platform itu supaya bisa dieksekusi.
-    shell: process.platform === "win32",
+    windowsHide: true,
   });
   const lifecycle = waitForSpawnedChild(child);
   const token = env.ECORIONE_INTERNAL_TOKEN ?? "";
