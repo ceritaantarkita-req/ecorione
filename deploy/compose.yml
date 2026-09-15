@@ -181,6 +181,10 @@ services:
   ai:
     <<: *app
     command: ["pnpm", "--filter", "@ecorione/ai", "start"]
+    environment:
+      <<: *runtime-env
+      PORT: "3000"
+      ECORIONE_AI_PORT: "3000"
     depends_on: [hub, space, flow]
 
   caddy:

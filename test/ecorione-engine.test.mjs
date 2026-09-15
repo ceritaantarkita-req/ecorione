@@ -5,10 +5,18 @@ import { join } from "node:path";
 import { Headers, Response } from "undici";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  AI_FALLBACK_PORTS,
+  DEFAULT_AI_PORT,
+  aiPortCandidates,
   ensureLocalEnv,
   parseSimpleEnv,
   probeLocalRuntime,
+  readEngineRuntimeState,
+  resolveAiRuntime,
   resolveCommandInvocation,
+  resolvePreferredAiPort,
+  selectAiPort,
+  writeEngineRuntimeState,
   stopSpawnedChild,
   temporalCliAvailable,
   temporalInstallHint,
@@ -141,6 +149,55 @@ describe("ECORIONE local engine bootstrap", () => {
       reachable: true,
       pass: false,
       errorCode: "PROVIDER_UNREACHABLE",
+    });
+  });
+
+  it("reserves a collision-safe Ai port range", () => {
+    expect(DEFAULT_AI_PORT).toBe(17020);
+    expect(AI_FALLBACK_PORTS).toEqual([
+      17029, 17030, 17031, 17032, 17033, 17034, 17035, 17036, 17037, 17038, 17039,
+    ]);
+    expect(aiPortCandidates(17020)).toEqual([17020, ...AI_FALLBACK_PORTS]);
+    expect(aiPortCandidates(18555)).toEqual([18555, 17020, ...AI_FALLBACK_PORTS]);
+    expect(() => resolvePreferredAiPort({ ECORIONE_AI_PORT: "17021" })).toThrow(
+      /reserved service port/,
+    );
+  });
+
+  it("falls back without touching an unrelated preferred-port listener", async () => {
+    const selected = await selectAiPort(3000, async (port) =>
+      port === 3000 ? "occupied" : port === 17020 ? "free" : "occupied",
+    );
+    expect(selected).toEqual({
+      port: 17020,
+      preferredPort: 3000,
+      fallbackUsed: true,
+      collisions: [3000],
+    });
+  });
+
+  it("fails closed when a candidate already belongs to ECORIONE", async () => {
+    await expect(selectAiPort(17020, async () => "ecorione")).rejects.toThrow(/sudah berjalan/);
+  });
+
+  it("resolves the selected Ai endpoint from local runtime state", () => {
+    const root = tempRoot();
+    writeEngineRuntimeState(
+      {
+        schemaVersion: 1,
+        preferredAiPort: 17020,
+        aiPort: 17029,
+        aiUrl: "http://127.0.0.1:17029",
+        fallbackUsed: true,
+      },
+      root,
+    );
+    expect(readEngineRuntimeState(root)?.aiPort).toBe(17029);
+    expect(resolveAiRuntime({}, root)).toMatchObject({
+      port: 17029,
+      url: "http://127.0.0.1:17029",
+      fallbackUsed: true,
+      source: "runtime-state",
     });
   });
 

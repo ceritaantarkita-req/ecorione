@@ -5,9 +5,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  DEFAULT_AI_PORT,
   isPortReachable,
   parseSimpleEnv,
   resolveCommandInvocation,
+  resolvePreferredAiPort,
 } from "./ecorione-engine.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -23,8 +25,13 @@ const REQUIRED_SERVICES = [
   ["Space", 17027, "http://127.0.0.1:17027/healthz"],
   ["Flow", 17028, "http://127.0.0.1:17028/healthz"],
 ];
-const APP_PORTS = [3000, ...REQUIRED_SERVICES.map(([, port]) => port)];
-const READY_MARKER = "✓ ECORIONE ready: http://127.0.0.1:3000";
+const SERVICE_PORTS = REQUIRED_SERVICES.map(([, port]) => port);
+
+export function parseReadyAi(output) {
+  const match = output.match(/✓ ECORIONE ready: (http:\/\/127\.0\.0\.1:(\d+))/);
+  if (!match) return null;
+  return { url: match[1], port: Number(match[2]) };
+}
 
 export function acceptancePlan() {
   return [
@@ -51,7 +58,7 @@ export function acceptancePlan() {
     {
       id: "W09-C",
       name: "duplicate-start guard",
-      pass: "second pnpm engine:start fails closed on occupied port 3000 before mutating runtime",
+      pass: "second pnpm engine:start detects the already-running ECORIONE Ai identity and fails closed",
     },
     {
       id: "W09-D",
@@ -131,11 +138,11 @@ function localRuntimeDisposition(output) {
   return "UNKNOWN";
 }
 
-export function evaluateRunningDoctor(output) {
+export function evaluateRunningDoctor(output, aiPort = DEFAULT_AI_PORT) {
   const requiredMarkers = [
     "✓ Temporal 127.0.0.1:7233",
     ...REQUIRED_SERVICES.map(([name]) => `✓ ${name}`),
-    "✓ Ai http://127.0.0.1:3000",
+    `✓ Ai http://127.0.0.1:${String(aiPort)}`,
   ];
   const missing = requiredMarkers.filter((marker) => !output.includes(marker));
   return {
@@ -174,19 +181,18 @@ async function waitForRuntime(childState, stdoutRef, timeoutMs = 150_000) {
         `engine:start berhenti sebelum ready (exit ${String(childState.code)}, signal ${String(childState.signal)}).`,
       );
     }
-
     const token = readLocalToken();
-    const aiReady = await isPortReachable(3000);
+    const readyAi = parseReadyAi(stdoutRef.value);
+    const aiReady = readyAi ? await isPortReachable(readyAi.port) : false;
     const health = await Promise.all(
       REQUIRED_SERVICES.map(async ([name, , url]) => ({
         name,
         ready: await fetchHealth(url, token),
       })),
     );
-    const servicesReady = health.every((entry) => entry.ready);
-    const markerReady = stdoutRef.value.includes(READY_MARKER);
-    if (aiReady && servicesReady && markerReady) return health;
-
+    if (readyAi && aiReady && health.every((entry) => entry.ready)) {
+      return { health, ...readyAi };
+    }
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 750));
   }
   throw new Error("engine:start belum mencapai full readiness setelah 150 detik.");
@@ -317,13 +323,16 @@ async function runAcceptance() {
       );
     }
 
-    const beforePorts = await portState(APP_PORTS);
+    const configuredEnv = { ...localEnv, ...process.env };
+    const preferredAiPort = resolvePreferredAiPort(configuredEnv);
+    const preferredAiOccupiedBefore = await isPortReachable(preferredAiPort);
+    const beforePorts = await portState(SERVICE_PORTS);
     const occupied = Object.entries(beforePorts)
       .filter(([, reachable]) => reachable)
       .map(([port]) => port);
     if (occupied.length > 0) {
       throw new Error(
-        `ECORIONE harus berhenti sebelum acceptance. Port aplikasi masih terpakai: ${occupied.join(", ")}.`,
+        `ECORIONE fixed service ports harus kosong sebelum acceptance: ${occupied.join(", ")}.`,
       );
     }
 
@@ -338,6 +347,8 @@ async function runAcceptance() {
       temporalPreexisting: preexistingTemporal,
       temporalCliAvailable: temporalCliReady,
       dockerReachable: dockerReady,
+      preferredAiPort,
+      preferredAiOccupiedBefore,
       temporalMode: preexistingTemporal
         ? "external/reused"
         : useDocker
@@ -396,12 +407,18 @@ async function runAcceptance() {
       childState.signal = signal;
     });
 
-    await waitForRuntime(childState, stdoutRef);
+    const started = await waitForRuntime(childState, stdoutRef);
+    const appPorts = [started.port, ...SERVICE_PORTS];
     report.phases.start = {
       pass: true,
       readyMarker: true,
-      ports: await portState(APP_PORTS),
-      logTail: tail(`${stdoutRef.value}\n${stderrRef.value}`),
+      preferredAiPort,
+      resolvedAiPort: started.port,
+      aiUrl: started.url,
+      fallbackUsed: started.port !== preferredAiPort,
+      ports: await portState(appPorts),
+      logTail: tail(`${stdoutRef.value}
+${stderrRef.value}`),
     };
     console.log("\n✓ W09-B one-command cold start READY");
 
@@ -411,7 +428,7 @@ async function runAcceptance() {
         `Runtime doctor gagal: ${runningDoctor.error ?? `${runningDoctor.stdout}\n${runningDoctor.stderr}`}`,
       );
     }
-    const doctorEvaluation = evaluateRunningDoctor(runningDoctor.stdout);
+    const doctorEvaluation = evaluateRunningDoctor(runningDoctor.stdout, started.port);
     if (!doctorEvaluation.pass) {
       throw new Error(
         `Runtime doctor kehilangan marker: ${doctorEvaluation.missing.join(", ")}.`,
@@ -429,7 +446,7 @@ async function runAcceptance() {
       timeoutMs: 30_000,
     });
     const duplicateText = `${duplicate.stdout}\n${duplicate.stderr}`;
-    if (duplicate.code === 0 || !duplicateText.includes("Port 3000 sudah dipakai")) {
+    if (duplicate.code === 0 || !duplicateText.includes("ECORIONE sudah berjalan di")) {
       throw new Error(
         `Duplicate-start guard tidak fail-closed seperti yang diharapkan. exit=${String(duplicate.code)} output=${tail(duplicateText, 30)}`,
       );
@@ -445,7 +462,7 @@ async function runAcceptance() {
       throw new Error("PID engine acceptance tidak tersedia.");
     }
     const taskkillResult = killWindowsTree(engineChild.pid);
-    const closedPorts = await waitForPortsClosed(APP_PORTS);
+    const closedPorts = await waitForPortsClosed(appPorts);
     const engineExited = await waitForChildExit(childState);
     let temporalReachable = preexistingTemporal;
     if (!preexistingTemporal) {

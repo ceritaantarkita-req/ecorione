@@ -3,6 +3,7 @@ import {
   acceptancePlan,
   evaluateRunningDoctor,
   evaluateWindowsCleanup,
+  parseReadyAi,
 } from "../scripts/windows-engine-acceptance.mjs";
 
 describe("W09/W10 Windows engine acceptance harness", () => {
@@ -23,6 +24,14 @@ describe("W09/W10 Windows engine acceptance harness", () => {
     expect(plan.some((entry) => entry.name.includes("process-tree cleanup"))).toBe(true);
   });
 
+  it("extracts the dynamically selected Ai URL from the ready marker", () => {
+    expect(parseReadyAi("noise\n✓ ECORIONE ready: http://127.0.0.1:17037\n")).toEqual({
+      url: "http://127.0.0.1:17037",
+      port: 17037,
+    });
+    expect(parseReadyAi("not ready")).toBeNull();
+  });
+
   it("requires Temporal, Ai, and every Phase 4 owner in a healthy runtime doctor", () => {
     const output = [
       "ECORIONE doctor",
@@ -37,11 +46,11 @@ describe("W09/W10 Windows engine acceptance harness", () => {
       "✓ Sandbox",
       "✓ Space",
       "✓ Flow",
-      "✓ Ai http://127.0.0.1:3000",
+      "✓ Ai http://127.0.0.1:17029",
       "✓ Local AI runtime qwen3.5:9b · identity pinned local:test",
     ].join("\n");
 
-    expect(evaluateRunningDoctor(output)).toEqual({
+    expect(evaluateRunningDoctor(output, 17029)).toEqual({
       pass: true,
       missing: [],
       localRuntime: "PASS",
@@ -58,11 +67,11 @@ describe("W09/W10 Windows engine acceptance harness", () => {
       "✓ Artifact",
       "✓ Sandbox",
       "✓ Space",
-      "✓ Ai http://127.0.0.1:3000",
+      "✓ Ai http://127.0.0.1:17029",
       "· Local AI runtime belum dapat diuji (unreachable)",
     ].join("\n");
 
-    expect(evaluateRunningDoctor(output)).toEqual({
+    expect(evaluateRunningDoctor(output, 17029)).toEqual({
       pass: false,
       missing: ["✓ Flow"],
       localRuntime: "UNAVAILABLE",
@@ -80,11 +89,11 @@ describe("W09/W10 Windows engine acceptance harness", () => {
       "✓ Sandbox",
       "✓ Space",
       "✓ Flow",
-      "✓ Ai http://127.0.0.1:3000",
+      "✓ Ai http://127.0.0.1:17029",
       "! Local AI runtime test gagal (PROVIDER_UNREACHABLE)",
     ].join("\n");
 
-    expect(evaluateRunningDoctor(output)).toEqual({
+    expect(evaluateRunningDoctor(output, 17029)).toEqual({
       pass: true,
       missing: [],
       localRuntime: "DEGRADED",
@@ -95,7 +104,7 @@ describe("W09/W10 Windows engine acceptance harness", () => {
     expect(
       evaluateWindowsCleanup({
         taskkillCode: 255,
-        appPortState: { 3000: false, 17021: false, 17028: false },
+        appPortState: { 17029: false, 17021: false, 17028: false },
         temporalPreexisting: false,
         temporalReachable: false,
         engineExited: true,
@@ -113,7 +122,7 @@ describe("W09/W10 Windows engine acceptance harness", () => {
   it("does not hide a real cleanup failure behind a non-zero taskkill race", () => {
     const result = evaluateWindowsCleanup({
       taskkillCode: 255,
-      appPortState: { 3000: false, 17021: true },
+      appPortState: { 17029: false, 17021: true },
       temporalPreexisting: false,
       temporalReachable: false,
       engineExited: true,

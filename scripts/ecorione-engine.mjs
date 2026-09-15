@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  copyFileSync,
+  rmSync,
+} from "node:fs";
 import { connect } from "node:net";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +27,13 @@ const REQUIRED_SERVICES = [
   ["Space", "http://127.0.0.1:17027/healthz"],
   ["Flow", "http://127.0.0.1:17028/healthz"],
 ];
+export const DEFAULT_AI_PORT = 17020;
+export const AI_FALLBACK_PORTS = Object.freeze(
+  Array.from({ length: 11 }, (_, index) => 17029 + index),
+);
+export const RESERVED_SERVICE_PORTS = Object.freeze(
+  Array.from({ length: 8 }, (_, index) => 17021 + index),
+);
 
 export function parseSimpleEnv(text) {
   const result = {};
@@ -99,6 +113,130 @@ export function isPortReachable(port, host = "127.0.0.1", timeoutMs = 750) {
     socket.once("timeout", () => finish(false));
     socket.once("error", () => finish(false));
   });
+}
+
+export function aiUrl(port) {
+  return `http://127.0.0.1:${String(port)}`;
+}
+
+export function resolvePreferredAiPort(env = process.env) {
+  const raw = env.ECORIONE_AI_PORT;
+  if (raw === undefined || String(raw).trim() === "") return DEFAULT_AI_PORT;
+  const value = Number(String(raw).trim());
+  if (!Number.isInteger(value) || value < 1 || value > 65535) {
+    throw new Error(`ECORIONE_AI_PORT tidak valid: ${String(raw)}.`);
+  }
+  if (RESERVED_SERVICE_PORTS.includes(value)) {
+    throw new Error(
+      `ECORIONE_AI_PORT ${String(value)} bentrok dengan reserved service port 17021–17028.`,
+    );
+  }
+  return value;
+}
+
+export function aiPortCandidates(preferredPort) {
+  return [preferredPort, DEFAULT_AI_PORT, ...AI_FALLBACK_PORTS].filter(
+    (port, index, values) =>
+      !RESERVED_SERVICE_PORTS.includes(port) && values.indexOf(port) === index,
+  );
+}
+
+export async function classifyAiPort(port) {
+  if (!(await isPortReachable(port))) return "free";
+  try {
+    const response = await fetch(`${aiUrl(port)}/`, {
+      redirect: "error",
+      signal: AbortSignal.timeout(1_500),
+    });
+    const html = await response.text();
+    if (/ecorione\s*[—-]\s*Ai/i.test(html)) return "ecorione";
+  } catch {
+    // A non-HTTP listener or unrelated application is still an occupied port.
+  }
+  return "occupied";
+}
+
+export async function selectAiPort(preferredPort, classify = classifyAiPort) {
+  const collisions = [];
+  for (const port of aiPortCandidates(preferredPort)) {
+    const disposition = await classify(port);
+    if (disposition === "free") {
+      return { port, preferredPort, fallbackUsed: port !== preferredPort, collisions };
+    }
+    if (disposition === "ecorione") {
+      throw new Error(
+        `ECORIONE sudah berjalan di ${aiUrl(port)}. Gunakan instance tersebut atau hentikan dulu sebelum start baru.`,
+      );
+    }
+    collisions.push(port);
+  }
+  throw new Error(
+    `Tidak ada Ai port kosong. Preferred ${String(preferredPort)} dan fallback 17020, 17029–17039 sedang terpakai.`,
+  );
+}
+
+function runtimeStatePath(root = ROOT) {
+  return resolve(root, ".ecorione", "runtime", "engine.json");
+}
+
+export function writeEngineRuntimeState(state, root = ROOT) {
+  const path = runtimeStatePath(root);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(
+    path,
+    `${JSON.stringify(state, null, 2)}
+`,
+    {
+      encoding: "utf8",
+      mode: 0o600,
+    },
+  );
+  return path;
+}
+
+export function readEngineRuntimeState(root = ROOT) {
+  const path = runtimeStatePath(root);
+  if (!existsSync(path)) return null;
+  try {
+    const value = JSON.parse(readFileSync(path, "utf8"));
+    if (
+      value?.schemaVersion !== 1 ||
+      !Number.isInteger(value?.aiPort) ||
+      value.aiPort < 1 ||
+      value.aiPort > 65535 ||
+      value?.aiUrl !== aiUrl(value.aiPort)
+    ) {
+      return null;
+    }
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+export function clearEngineRuntimeState(root = ROOT) {
+  rmSync(runtimeStatePath(root), { force: true });
+}
+
+export function resolveAiRuntime(env = process.env, root = ROOT) {
+  const state = readEngineRuntimeState(root);
+  if (state) {
+    return {
+      port: state.aiPort,
+      url: state.aiUrl,
+      preferredPort: state.preferredAiPort,
+      fallbackUsed: state.fallbackUsed === true,
+      source: "runtime-state",
+    };
+  }
+  const preferredPort = resolvePreferredAiPort(env);
+  return {
+    port: preferredPort,
+    url: aiUrl(preferredPort),
+    preferredPort,
+    fallbackUsed: false,
+    source: "config",
+  };
 }
 
 async function waitForPort(port, timeoutMs, label) {
@@ -476,7 +614,15 @@ async function doctor() {
   for (const [name, url] of REQUIRED_SERVICES) {
     console.log(`${(await fetchHealth(url, token)) ? "✓" : "·"} ${name}`);
   }
-  console.log(`${(await isPortReachable(3000)) ? "✓" : "·"} Ai http://127.0.0.1:3000`);
+  const aiRuntime = resolveAiRuntime(env);
+  const aiDisposition = await classifyAiPort(aiRuntime.port);
+  const aiSuffix =
+    aiDisposition === "occupied"
+      ? " (port occupied by another application)"
+      : aiRuntime.fallbackUsed
+        ? ` (fallback from ${String(aiRuntime.preferredPort)})`
+        : "";
+  console.log(`${aiDisposition === "ecorione" ? "✓" : "·"} Ai ${aiRuntime.url}${aiSuffix}`);
 
   const connectBaseUrl = env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
   const localProbe = await probeLocalRuntime(connectBaseUrl, token);
@@ -515,73 +661,108 @@ function openBrowser(url) {
 }
 
 async function start() {
-  if (await isPortReachable(3000)) {
-    throw new Error(
-      "Port 3000 sudah dipakai. Jika ECORIONE sudah berjalan, buka http://127.0.0.1:3000; jika bukan, hentikan proses yang memakai port tersebut.",
-    );
-  }
-
   const local = ensureLocalEnv();
   if (local.created) console.log("✓ .env dibuat dari .env.example");
   for (const key of local.generated)
     console.log(`✓ ${key} dibuat otomatis untuk local-only runtime`);
   const env = { ...local.values, ...process.env };
-
-  const temporalChild = await ensureTemporal(env);
-  console.log("• Menyalakan full Phase 4 stack…");
-
-  const pnpmInvocation = resolveCommandInvocation(
-    "pnpm",
-    ["run", "dev:phase4"],
-    process.platform,
-    env,
-  );
-  const child = spawn(pnpmInvocation.command, pnpmInvocation.args, {
-    cwd: ROOT,
-    env,
-    stdio: "inherit",
-    windowsHide: true,
-  });
-  const lifecycle = waitForSpawnedChild(child);
-  const token = env.ECORIONE_INTERNAL_TOKEN ?? "";
-  const readiness = Promise.all([
-    waitForPort(3000, 90_000, "Ai"),
-    waitForRequiredServices(token, 90_000),
-  ]).then(() => ({ ready: true }));
-
-  let first;
-  try {
-    first = await Promise.race([readiness, lifecycle]);
-  } catch (error) {
-    await stopSpawnedChild(child);
-    if (temporalChild) await stopSpawnedChild(temporalChild);
-    throw error;
-  }
-
-  if ("ready" in first) {
-    console.log("\n✓ ECORIONE ready: http://127.0.0.1:3000");
-    console.log("  Tekan Ctrl+C untuk menghentikan proses development stack.\n");
-    openBrowser("http://127.0.0.1:3000");
-    const finished = await lifecycle;
-    if (temporalChild) await stopSpawnedChild(temporalChild);
-    if ("error" in finished) {
-      throw new Error(
-        `Phase 4 stack mengalami process error: ${finished.error instanceof Error ? finished.error.message : String(finished.error)}.`,
-      );
-    }
-    if (finished.code !== 0 && finished.code !== null) process.exitCode = finished.code;
-    return;
-  }
-
-  if (temporalChild) await stopSpawnedChild(temporalChild);
-  if ("error" in first) {
-    throw new Error(
-      `Tidak bisa menjalankan Phase 4 stack: ${first.error instanceof Error ? first.error.message : String(first.error)}.`,
+  const preferredAiPort = resolvePreferredAiPort(env);
+  const selectedAi = await selectAiPort(preferredAiPort);
+  for (const occupiedPort of selectedAi.collisions) {
+    console.log(
+      `· Ai port ${String(occupiedPort)} dipakai aplikasi lain; mencoba fallback ECORIONE…`,
     );
   }
-  throw new Error(
-    `Phase 4 stack berhenti sebelum seluruh service ready${first.code === null ? ` (${first.signal ?? "signal"})` : ` (exit ${String(first.code)})`}.`,
-  );
+  if (selectedAi.fallbackUsed) {
+    console.log(
+      `✓ Ai fallback port ${String(selectedAi.port)} dipilih (preferred ${String(preferredAiPort)})`,
+    );
+  }
+
+  const runtimeEnv = {
+    ...env,
+    ECORIONE_AI_PORT: String(selectedAi.port),
+    PORT: String(selectedAi.port),
+  };
+  const runtimeBase = {
+    schemaVersion: 1,
+    enginePid: process.pid,
+    preferredAiPort,
+    aiPort: selectedAi.port,
+    aiUrl: aiUrl(selectedAi.port),
+    fallbackUsed: selectedAi.fallbackUsed,
+    collisions: selectedAi.collisions,
+    startedAt: new Date().toISOString(),
+  };
+  clearEngineRuntimeState();
+  writeEngineRuntimeState({ ...runtimeBase, status: "starting" });
+
+  let temporalChild = null;
+  try {
+    temporalChild = await ensureTemporal(runtimeEnv);
+    console.log("• Menyalakan full Phase 4 stack…");
+    const pnpmInvocation = resolveCommandInvocation(
+      "pnpm",
+      ["run", "dev:phase4"],
+      process.platform,
+      runtimeEnv,
+    );
+    const child = spawn(pnpmInvocation.command, pnpmInvocation.args, {
+      cwd: ROOT,
+      env: runtimeEnv,
+      stdio: "inherit",
+      windowsHide: true,
+    });
+    const lifecycle = waitForSpawnedChild(child);
+    const token = runtimeEnv.ECORIONE_INTERNAL_TOKEN ?? "";
+    const readiness = Promise.all([
+      waitForPort(selectedAi.port, 90_000, "Ai"),
+      waitForRequiredServices(token, 90_000),
+    ]).then(() => ({ ready: true }));
+
+    let first;
+    try {
+      first = await Promise.race([readiness, lifecycle]);
+    } catch (error) {
+      await stopSpawnedChild(child);
+      if (temporalChild) await stopSpawnedChild(temporalChild);
+      throw error;
+    }
+
+    if ("ready" in first) {
+      const url = aiUrl(selectedAi.port);
+      writeEngineRuntimeState({
+        ...runtimeBase,
+        status: "ready",
+        readyAt: new Date().toISOString(),
+      });
+      console.log(`
+✓ ECORIONE ready: ${url}`);
+      console.log("  Tekan Ctrl+C untuk menghentikan proses development stack.\n");
+      openBrowser(url);
+      const finished = await lifecycle;
+      if (temporalChild) await stopSpawnedChild(temporalChild);
+      if ("error" in finished) {
+        throw new Error(
+          `Phase 4 stack mengalami process error: ${finished.error instanceof Error ? finished.error.message : String(finished.error)}.`,
+        );
+      }
+      if (finished.code !== 0 && finished.code !== null) process.exitCode = finished.code;
+      return;
+    }
+
+    if (temporalChild) await stopSpawnedChild(temporalChild);
+    if ("error" in first) {
+      throw new Error(
+        `Tidak bisa menjalankan Phase 4 stack: ${first.error instanceof Error ? first.error.message : String(first.error)}.`,
+      );
+    }
+    throw new Error(
+      `Phase 4 stack berhenti sebelum seluruh service ready${first.code === null ? ` (${first.signal ?? "signal"})` : ` (exit ${String(first.code)})`}.`,
+    );
+  } finally {
+    clearEngineRuntimeState();
+  }
 }
 
 function stopTemporal() {

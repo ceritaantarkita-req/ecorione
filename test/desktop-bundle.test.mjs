@@ -19,7 +19,10 @@ describe("ECORIONE desktop bundle contract", () => {
   });
 
   it("keeps the desktop web surface loopback-only and omits the public edge", () => {
-    expect(compose).toContain('"127.0.0.1:3000:3000"');
+    expect(compose).toContain('"127.0.0.1:${ECORIONE_AI_PORT:-17020}:3000"');
+    expect(launcher).toContain("ECORIONE_AI_PORT=17020");
+    expect(launcher).toContain("Select-FreeAiPort");
+    expect(launcher).toContain("17029..17039");
     expect(compose).not.toContain('"80:80"');
     expect(compose).not.toContain('"443:443"');
     expect(compose).not.toMatch(/^\s+caddy:/m);

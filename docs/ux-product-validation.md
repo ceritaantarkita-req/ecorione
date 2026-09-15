@@ -15,7 +15,7 @@ The remaining gate is the real local rendered inventory/walkthrough described be
 
 Prove that the current Ai-facing product is understandable and usable for representative local workflows, not merely that owner APIs and infrastructure are technically healthy.
 
-The checkpoint must exercise the real Ai surface at `http://127.0.0.1:3000` while hosted calls remain disabled.
+The checkpoint must exercise the real Ai surface at the resolved Ai URL printed by `pnpm engine:start` (preferred `http://127.0.0.1:17020`, fallback `17029–17039`) while hosted calls remain disabled.
 
 ## Safety boundary
 
@@ -97,7 +97,7 @@ Inventory PASS means the product is ready for rendered walkthrough. It is not UX
 
 ## Rendered walkthrough procedure
 
-Use a real browser against `http://127.0.0.1:3000` on the same synchronized **current `origin/main`** revision that passed the strict inventory.
+Use a real browser against the resolved Ai URL printed by `pnpm engine:start` (preferred `http://127.0.0.1:17020`, fallback `17029–17039`) on the same synchronized **current `origin/main`** revision that passed the strict inventory.
 
 Minimum evidence:
 

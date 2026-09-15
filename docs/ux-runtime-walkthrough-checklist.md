@@ -47,7 +47,7 @@ $env:ECORIONE_COST_KILL_SWITCH = "1"
 pnpm engine:start
 ```
 
-`engine:start` is the canonical cross-platform launcher: it reads root `.env`, reuses or starts Temporal, starts the required Phase 4 fleet, waits for readiness, and serves Ai at `http://127.0.0.1:3000`. Leave terminal A running during the walkthrough.
+`engine:start` is the canonical cross-platform launcher: it reads root `.env`, reuses or starts Temporal, starts the required Phase 4 fleet, waits for readiness, and serves Ai at the resolved loopback URL printed by the launcher (preferred `http://127.0.0.1:17020`, fallback `17029–17039`). Leave terminal A running during the walkthrough.
 
 7. In **PowerShell terminal B**, force the kill switch again and run the strict inventory:
 
@@ -59,7 +59,7 @@ pnpm evidence:ux:inventory
 The inventory may hydrate `ECORIONE_INTERNAL_TOKEN` from root `.env` when the shell does not already contain it, but it never prints the token and it never imports the kill-switch value from `.env`. It fails closed unless the shell explicitly has `ECORIONE_COST_KILL_SWITCH=1`, and independently verifies that the running product reports Hosted effectively OFF.
 
 8. Stop on inventory FAIL. PASS must include all eight required owners, all five primary surfaces, pinned local model digest, Settings MCP workspace-list proxy, Ops, Space, and Flow checks.
-9. Open `http://127.0.0.1:3000` with browser DevTools Console visible. Prefer a browser profile without extensions for final console evidence.
+9. Open `<resolved Ai URL from engine:start>` with browser DevTools Console visible. Prefer a browser profile without extensions for final console evidence.
 
 `Sync` is not part of the required local Phase 4 fleet. Operations may expose its optional health when available; unavailable optional Sync must be labeled optional and must not degrade the required fleet.
 

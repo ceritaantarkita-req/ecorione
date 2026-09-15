@@ -146,7 +146,7 @@ services:
     <<: *app
     command: ["pnpm", "--filter", "@ecorione/ai", "start"]
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:${ECORIONE_AI_PORT:-17020}:3000"
     depends_on: [hub, space, flow]
 
 networks:
