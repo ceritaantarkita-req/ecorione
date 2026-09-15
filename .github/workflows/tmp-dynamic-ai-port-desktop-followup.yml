@@ -1,0 +1,116 @@
+name: Dynamic Ai Port Desktop Follow-up
+
+on:
+  push:
+    branches:
+      - automation/dynamic-ai-port-desktop-followup-20260915
+
+permissions:
+  contents: write
+
+jobs:
+  patch-target:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Patch desktop reuse behavior on target branch
+        run: |
+          git fetch origin feat/w09-w10-dynamic-ai-port-20260915
+          git switch -C feat/w09-w10-dynamic-ai-port-20260915 origin/feat/w09-w10-dynamic-ai-port-20260915
+          python3 - <<'PY'
+          from pathlib import Path
+
+          ps1 = Path('desktop/ecorione.ps1')
+          text = ps1.read_text()
+
+          anchor = '''function Set-AiEndpoint([int]$Port) {
+            $script:AiPort = $Port
+            $script:AiUrl = "http://127.0.0.1:$Port"
+          }
+
+          function Assert-Docker {'''
+          replacement = '''function Set-AiEndpoint([int]$Port) {
+            $script:AiPort = $Port
+            $script:AiUrl = "http://127.0.0.1:$Port"
+          }
+
+          function Test-ComposeAiRunning {
+            $id = & docker compose --env-file $EnvFile -f $ComposeFile ps -q ai 2>$null
+            if ($LASTEXITCODE -ne 0) { return $false }
+            return -not [string]::IsNullOrWhiteSpace(($id -join ""))
+          }
+
+          function Assert-Docker {'''
+          if text.count(anchor) != 1:
+              raise SystemExit('desktop helper anchor mismatch')
+          text = text.replace(anchor, replacement, 1)
+
+          old = '''  $config = Ensure-DesktopEnv
+            $configuredPort = Get-ConfiguredAiPort $config
+            $selectedPort = Select-FreeAiPort $configuredPort
+            if ($selectedPort -ne $configuredPort) {
+              Write-Info "Ai port $configuredPort sedang dipakai; memakai fallback $selectedPort."
+            }
+            Set-DesktopAiPort $selectedPort
+            Set-AiEndpoint $selectedPort
+            $config = Read-DesktopEnv
+            $image = Ensure-RuntimeImage $config
+            Write-Info "Menyalakan ECORIONE ($image)..."
+            Invoke-Compose @("up", "-d")'''
+          new = '''  $config = Ensure-DesktopEnv
+            $configuredPort = Get-ConfiguredAiPort $config
+            if (Test-ComposeAiRunning) {
+              Set-AiEndpoint $configuredPort
+              Write-Info "ECORIONE desktop sudah berjalan; memakai endpoint $AiUrl."
+            } else {
+              $selectedPort = Select-FreeAiPort $configuredPort
+              if ($selectedPort -ne $configuredPort) {
+                Write-Info "Ai port $configuredPort sedang dipakai aplikasi lain; memakai fallback $selectedPort."
+              }
+              Set-DesktopAiPort $selectedPort
+              Set-AiEndpoint $selectedPort
+              $config = Read-DesktopEnv
+            }
+            $image = Ensure-RuntimeImage $config
+            Write-Info "Menyalakan ECORIONE ($image)..."
+            Invoke-Compose @("up", "-d")'''
+          if text.count(old) != 1:
+              raise SystemExit('desktop Start-Ecorione block mismatch')
+          text = text.replace(old, new, 1)
+          ps1.write_text(text)
+
+          test = Path('test/desktop-bundle.test.mjs')
+          t = test.read_text()
+          old_test = '''    expect(launcher).toContain("Select-FreeAiPort");
+                expect(launcher).toContain("17029..17039");'''
+          new_test = '''    expect(launcher).toContain("Select-FreeAiPort");
+                expect(launcher).toContain("Test-ComposeAiRunning");
+                expect(launcher).toContain("ECORIONE desktop sudah berjalan");
+                expect(launcher).toContain("17029..17039");'''
+          if t.count(old_test) != 1:
+              raise SystemExit('desktop contract test block mismatch')
+          test.write_text(t.replace(old_test, new_test, 1))
+          PY
+          pnpm exec prettier --write test/desktop-bundle.test.mjs
+          if command -v pwsh >/dev/null 2>&1; then
+            pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path "desktop/ecorione.ps1"), [ref]$tokens, [ref]$errors) > $null; if ($errors.Count) { $errors | ForEach-Object { Write-Error $_.ToString() }; exit 1 }'
+          fi
+          pnpm exec vitest run test/desktop-bundle.test.mjs test/ecorione-engine.test.mjs test/windows-engine-acceptance.test.mjs test/local-ux-product-evidence.test.mjs
+          pnpm run typecheck
+          pnpm run lint
+          git diff --check
+      - name: Commit target branch
+        run: |
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git add desktop/ecorione.ps1 test/desktop-bundle.test.mjs
+          git commit -m "harden desktop Ai port reuse"
+          git push origin HEAD:feat/w09-w10-dynamic-ai-port-20260915
