@@ -380,6 +380,11 @@ export default function FlowCanvasPage() {
     const source = nodes.find((node) => node.id === sourceNodeId);
     const target = nodes.find((node) => node.id === targetNodeId);
     if (source === undefined || target === undefined) return;
+    if (target.kind === "trigger") {
+      setConnectFrom(null);
+      setMessage("Trigger tidak menerima koneksi masuk.");
+      return;
+    }
     const normalizedPort = source.kind === "condition" ? sourcePort : "out";
     const duplicate = edges.some(
       (edge) =>
@@ -473,12 +478,16 @@ export default function FlowCanvasPage() {
     markDraftChanged();
   }
 
-  function removeSelectedEdge(): void {
-    if (selectedEdgeId === null) return;
-    setEdges((current) => current.filter((edge) => edge.id !== selectedEdgeId));
-    setSelectedEdgeId(null);
+  function removeEdge(edgeId: string): void {
+    setEdges((current) => current.filter((edge) => edge.id !== edgeId));
+    if (selectedEdgeId === edgeId) setSelectedEdgeId(null);
     markDraftChanged();
     setMessage("Koneksi dihapus dari draft.");
+  }
+
+  function removeSelectedEdge(): void {
+    if (selectedEdgeId === null) return;
+    removeEdge(selectedEdgeId);
   }
 
   async function validate(): Promise<FlowGraphValidationResult | null> {
@@ -870,7 +879,7 @@ export default function FlowCanvasPage() {
             Choose node…
           </option>
           {nodes
-            .filter((candidate) => candidate.id !== node.id)
+            .filter((candidate) => candidate.id !== node.id && candidate.kind !== "trigger")
             .map((candidate) => (
               <option key={candidate.id} value={candidate.id}>
                 {candidate.label}
@@ -1316,7 +1325,9 @@ export default function FlowCanvasPage() {
                     />
                   )}
 
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     draggable
                     onDragStart={(event) => {
                       event.stopPropagation();
@@ -1324,6 +1335,12 @@ export default function FlowCanvasPage() {
                       event.dataTransfer.effectAllowed = "move";
                     }}
                     onClick={() => selectNode(node.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        selectNode(node.id);
+                      }
+                    }}
                     className={styles.nodeMain}
                   >
                     <span className={styles.nodeKind}>{node.kind}</span>
@@ -1343,7 +1360,7 @@ export default function FlowCanvasPage() {
                         {expanded ? "Less" : "View more"}
                       </button>
                     </span>
-                  </button>
+                  </div>
                   {expanded ? <div className={styles.nodeQuickPopover}>{renderQuickSettings(node)}</div> : null}
                 </div>
               );
@@ -1390,8 +1407,39 @@ export default function FlowCanvasPage() {
                     <b>{expanded ? "−" : "+"}</b>
                   </button>
                   <div className={styles.stackEdgeSummary}>
-                    <span>In {incoming.length}</span>
-                    <span>Out {outgoing.length}</span>
+                    {incoming.length === 0 && outgoing.length === 0 ? <span>No connections</span> : null}
+                    {incoming.map((edge) => {
+                      const source = nodes.find((candidate) => candidate.id === edge.sourceNodeId);
+                      return (
+                        <span key={`in-${edge.id}`}>
+                          {source?.label ?? edge.sourceNodeId} [{edge.sourcePort}] → {node.label}
+                          {" · "}
+                          <button
+                            type="button"
+                            className={styles.linkButtonDanger}
+                            onClick={() => removeEdge(edge.id)}
+                          >
+                            Remove
+                          </button>
+                        </span>
+                      );
+                    })}
+                    {outgoing.map((edge) => {
+                      const target = nodes.find((candidate) => candidate.id === edge.targetNodeId);
+                      return (
+                        <span key={`out-${edge.id}`}>
+                          {node.label} [{edge.sourcePort}] → {target?.label ?? edge.targetNodeId}
+                          {" · "}
+                          <button
+                            type="button"
+                            className={styles.linkButtonDanger}
+                            onClick={() => removeEdge(edge.id)}
+                          >
+                            Remove
+                          </button>
+                        </span>
+                      );
+                    })}
                   </div>
                   {expanded ? (
                     <div className={styles.stackBody}>
