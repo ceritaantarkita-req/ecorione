@@ -37,8 +37,9 @@ describe("W03 Settings responsive source contracts", () => {
 
     expect(css).toMatch(/\.section p,[\s\S]*?\.section code\s*\{[\s\S]*?overflow-wrap:\s*anywhere;/);
     expect(css).toMatch(/\.server span\s*\{[\s\S]*?overflow-wrap:\s*anywhere;/);
+    expect(css).toMatch(/\.page textarea\s*\{[\s\S]*?overflow:\s*auto;/);
     expect(css).toMatch(
-      /@media \(max-width: 720px\)[\s\S]*?\.page textarea\s*\{[\s\S]*?overflow-behavior-inline:\s*contain;/,
+      /@media \(max-width: 720px\)[\s\S]*?\.page textarea\s*\{[\s\S]*?overscroll-behavior-inline:\s*contain;/,
     );
   });
 
