@@ -25,6 +25,7 @@ const RUNTIME_SKIP_TOP = new Set([
   ".ecorione",
   "coverage",
   "data",
+  "desktop",
   "docs",
   "node_modules",
   "test",
@@ -153,16 +154,22 @@ function shouldCopyRuntimeSource(source) {
   const parts = rel.split("/");
   if (parts.length === 1 && RUNTIME_SKIP_TOP.has(parts[0])) return false;
   if (parts.some((part) => RUNTIME_SKIP_ANY.has(part))) return false;
-  if (parts[0] === "desktop") return false;
   if (rel.endsWith(".tsbuildinfo")) return false;
   return true;
 }
 
-function stageRuntimeApp(appRoot) {
-  cpSync(ROOT, appRoot, {
-    recursive: true,
-    filter: shouldCopyRuntimeSource,
-  });
+export function stageRuntimeApp(appRoot) {
+  mkdirSync(appRoot, { recursive: true });
+  for (const entry of readdirSync(ROOT, { withFileTypes: true })) {
+    if (RUNTIME_SKIP_TOP.has(entry.name)) continue;
+    const source = resolve(ROOT, entry.name);
+    const target = resolve(appRoot, entry.name);
+    if (entry.isDirectory()) {
+      cpSync(source, target, { recursive: true, filter: shouldCopyRuntimeSource });
+    } else if (entry.isFile() && shouldCopyRuntimeSource(source)) {
+      copyFileSync(source, target);
+    }
+  }
 }
 
 function parseArgs(argv) {
