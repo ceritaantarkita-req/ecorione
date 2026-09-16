@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 30
     env:
       ECORIONE_VERSION: "0.1.0"
-      W11_SOURCE_REVISION: "45610d3e618a6004a84525054f9c12c214ccab8d"
+      W11_SOURCE_REVISION: "d6b2f7f58f5a6af26e91ee026536e39fcf11d227"
 
     steps:
       - uses: actions/checkout@v5
@@ -39,7 +39,7 @@ jobs:
         run: node -e "import('./scripts/desktop-bundle.mjs').then((m) => console.log(m.normalizeVersion(process.env.ECORIONE_VERSION)))"
 
       - name: Build desktop runtime bundle
-        run: pnpm desktop:bundle -- --version "$ECORIONE_VERSION"
+        run: node scripts/desktop-bundle.mjs --version "$ECORIONE_VERSION"
 
       - name: Assert release manifest revision
         shell: bash
@@ -49,7 +49,7 @@ jobs:
       - name: Upload prepared desktop bundle
         uses: actions/upload-artifact@v4
         with:
-          name: ecorione-w11-desktop-bundle-45610d3e
+          name: ecorione-w11-desktop-bundle-d6b2f7f5
           path: .ecorione/desktop-release/ECORIONE-0.1.0-windows-x64
           if-no-files-found: error
           retention-days: 14
@@ -62,7 +62,7 @@ jobs:
       ECORIONE_VERSION: "0.1.0"
       ECORIONE_BUNDLE_DIR: ${{ github.workspace }}\bundle
       ECORIONE_INSTALLER_OUT: ${{ github.workspace }}\installer-out
-      W11_SOURCE_REVISION: "45610d3e618a6004a84525054f9c12c214ccab8d"
+      W11_SOURCE_REVISION: "d6b2f7f58f5a6af26e91ee026536e39fcf11d227"
 
     steps:
       - uses: actions/checkout@v5
@@ -72,7 +72,7 @@ jobs:
       - name: Download prepared desktop bundle
         uses: actions/download-artifact@v4
         with:
-          name: ecorione-w11-desktop-bundle-45610d3e
+          name: ecorione-w11-desktop-bundle-d6b2f7f5
           path: bundle
 
       - name: Assert downloaded release manifest revision
@@ -117,7 +117,7 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: ECORIONE-W11-Setup-0.1.0-45610d3e
+          name: ECORIONE-W11-Setup-0.1.0-d6b2f7f5
           path: installer-out
           if-no-files-found: error
           retention-days: 14
