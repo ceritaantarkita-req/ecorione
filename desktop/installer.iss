@@ -41,7 +41,7 @@ Name: "{group}\ECORIONE Doctor"; Filename: "{app}\Doctor-ECORIONE.cmd"; WorkingD
 Name: "{group}\Stop ECORIONE"; Filename: "{app}\Stop-ECORIONE.cmd"; WorkingDir: "{app}"
 
 [Run]
-Filename: "{app}\Doctor-ECORIONE.cmd"; Description: "Check Docker Desktop and ECORIONE runtime prerequisites"; Flags: postinstall nowait skipifsilent unchecked
+Filename: "{app}\Doctor-ECORIONE.cmd"; Description: "Check the bundled ECORIONE native runtime"; Flags: postinstall nowait skipifsilent unchecked
 
 [Code]
 function InitializeSetup(): Boolean;
