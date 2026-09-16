@@ -1,0 +1,163 @@
+name: Temporary W18 branch fix and format
+
+on:
+  push:
+    branches:
+      - feat/w18-hosted-economics-harness-20260917
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/w18-hosted-economics-harness-20260917
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Harden W18 runner before formatting
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('scripts/w18-hosted-economics.mjs')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''  if (settings.hostedCallsEnabled !== true) {
+            failures.push("runtime hostedCallsEnabled harus true");
+          }
+          '''
+          if old not in text:
+              raise SystemExit('hostedCallsEnabled readiness block not found')
+          text = text.replace(old, '', 1)
+
+          old = '''  assertSpendAuthorization({
+            allowSpend: process.env.ECORIONE_W18_ALLOW_SPEND,
+            maxSpendUsd,
+            configuredCeilingUsd: spend.effectiveCeilingUsd,
+            costKillSwitch: env.ECORIONE_COST_KILL_SWITCH,
+          });
+          '''
+          new = old + '''  if (!readiness.runtime.hostedCallsEnabled) {
+            throw new Error("runtime hostedCallsEnabled harus true untuk run W18 formal");
+          }
+          '''
+          if old not in text:
+              raise SystemExit('formal authorization block not found')
+          text = text.replace(old, new, 1)
+
+          old = '''    if (run.pricingModel !== W18_PRICING_MODEL) {
+            failures.push(`${run.mode} pair ${run.pairIndex} pricingModel tidak pinned ke W18 model`);
+          }
+          '''
+          new = old + '''    if (!run.responseModel) {
+            failures.push(`${run.mode} pair ${run.pairIndex} responseModel kosong`);
+          }
+          '''
+          if old not in text:
+              raise SystemExit('pricing-model gate block not found')
+          text = text.replace(old, new, 1)
+
+          old = '''  const fullCostUsd = sum(fullRuns.map((run) => run.billedCostUsd));
+          '''
+          new = '''  if (new Set(runs.map((run) => run.responseModel)).size !== 1) {
+            failures.push("provider responseModel berubah dalam paired task run");
+          }
+          const fullCostUsd = sum(fullRuns.map((run) => run.billedCostUsd));
+          '''
+          if old not in text:
+              raise SystemExit('task cost aggregation anchor not found')
+          text = text.replace(old, new, 1)
+
+          old = '''        actualSpentUsd += run.billedCostUsd;
+          if (actualSpentUsd > maxSpendUsd) {
+          '''
+          new = '''        actualSpentUsd += run.billedCostUsd;
+          console.log(
+            `W18 billed call costUsd=${run.billedCostUsd.toFixed(8)} cumulativeUsd=${actualSpentUsd.toFixed(8)}`,
+          );
+          if (actualSpentUsd > maxSpendUsd) {
+          '''
+          if old not in text:
+              raise SystemExit('spend logging anchor not found')
+          text = text.replace(old, new, 1)
+
+          old = '''  const summaryPath = outputPath.replace(/\\.json$/u, ".summary.json");
+          '''
+          new = '''  const summaryPath = summaryPathFor(outputPath);
+          if (existsSync(summaryPath)) throw new Error(`summary output sudah ada: ${summaryPath}`);
+          '''
+          if old not in text:
+              raise SystemExit('summary path anchor not found')
+          text = text.replace(old, new, 1)
+
+          anchor = '''function sha256File(path) {
+            return createHash("sha256").update(readFileSync(path)).digest("hex");
+          }
+          '''
+          replacement = anchor + '''
+          export function summaryPathFor(outputPath) {
+            return outputPath.endsWith(".json")
+              ? `${outputPath.slice(0, -".json".length)}.summary.json`
+              : `${outputPath}.summary.json`;
+          }
+          '''
+          if anchor not in text:
+              raise SystemExit('sha256 anchor not found')
+          text = text.replace(anchor, replacement, 1)
+          path.write_text(text, encoding='utf-8')
+
+          test_path = Path('test/w18-hosted-economics.test.mjs')
+          test = test_path.read_text(encoding='utf-8')
+          old = '''  evaluateW18Task,
+            W18_EXPECTED_MODEL_CALLS,
+          '''
+          new = '''  evaluateW18Task,
+            summaryPathFor,
+            W18_EXPECTED_MODEL_CALLS,
+          '''
+          if old not in test:
+              raise SystemExit('test import anchor not found')
+          test = test.replace(old, new, 1)
+
+          anchor = '''  it("derives the tighter durable spend ceiling", () => {
+          '''
+          addition = '''  it("keeps evidence and summary paths distinct", () => {
+            expect(summaryPathFor("C:/tmp/w18.json")).toBe("C:/tmp/w18.summary.json");
+            expect(summaryPathFor("C:/tmp/w18-evidence")).toBe("C:/tmp/w18-evidence.summary.json");
+          });
+
+          '''
+          if anchor not in test:
+              raise SystemExit('test insertion anchor not found')
+          test = test.replace(anchor, addition + anchor, 1)
+          test_path.write_text(test, encoding='utf-8')
+
+          doc_path = Path('docs/verification/w18-hosted-economics-preflight-2026-09-17.md')
+          doc = doc_path.read_text(encoding='utf-8')
+          old = '''It checks repository state, service health, runtime provider state, credential metadata, and durable budget configuration. It never prints credential secrets.
+          '''
+          new = '''It checks repository state, service health, runtime provider state, credential metadata, and durable budget configuration. It never prints credential secrets. Preflight may run while hosted calls remain disabled; `hostedCallsEnabled=true` is required only after current-run spend authorization for the formal paid run.
+          '''
+          if old not in doc:
+              raise SystemExit('doc preflight anchor not found')
+          doc_path.write_text(doc.replace(old, new, 1), encoding='utf-8')
+      - name: Format W18 scope
+        run: pnpm exec prettier --write scripts/w18-hosted-economics.mjs test/w18-hosted-economics.test.mjs services/connect/src/providers/openai-compatible.ts services/connect/src/providers/openai-compatible-cost.test.ts docs/verification/w18-hosted-economics-preflight-2026-09-17.md
+      - name: Remove temporary workflow and commit
+        shell: bash
+        run: |
+          rm .github/workflows/w18-branch-fix-format.yml
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git add -A
+          git commit -m "fix(w18): harden preflight and evidence output"
+          git push origin HEAD:feat/w18-hosted-economics-harness-20260917
