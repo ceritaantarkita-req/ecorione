@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   buildBundleLayout,
   checksumManifest,
+  normalizeSpawnOutput,
   normalizeVersion,
   stageDesktopSurface,
   writeReleaseMetadata,
@@ -44,6 +45,12 @@ describe("ECORIONE desktop release bundle", () => {
     expect(() => normalizeVersion("../release")).toThrow(/version/i);
     expect(() => normalizeVersion("v1 bad")).toThrow(/version/i);
     expect(normalizeVersion("0.1.0-rc.1")).toBe("0.1.0-rc.1");
+  });
+
+  it("normalizes spawn output when inherited stdio returns null instead of text", () => {
+    expect(normalizeSpawnOutput("  ready\n")).toBe("ready");
+    expect(normalizeSpawnOutput(null)).toBe("");
+    expect(normalizeSpawnOutput(undefined)).toBe("");
   });
 
   it("stages only the canonical user-facing desktop surface and license", () => {

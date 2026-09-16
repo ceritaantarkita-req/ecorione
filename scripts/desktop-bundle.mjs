@@ -21,6 +21,10 @@ const DESKTOP_SOURCE = resolve(ROOT, "desktop");
 const DOCKERFILE = resolve(ROOT, "Dockerfile");
 const DESKTOP_IMAGE_TAG = "ecorione:desktop";
 
+export function normalizeSpawnOutput(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd ?? ROOT,
@@ -29,11 +33,13 @@ function run(command, args, options = {}) {
     stdio: options.stdio ?? "pipe",
   });
   if (result.error) throw result.error;
+  const stdout = normalizeSpawnOutput(result.stdout);
+  const stderr = normalizeSpawnOutput(result.stderr);
   if (result.status !== 0) {
-    const detail = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
+    const detail = [stdout, stderr].filter(Boolean).join("\n");
     throw new Error(`${command} ${args.join(" ")} gagal${detail ? `:\n${detail}` : "."}`);
   }
-  return result.stdout.trim();
+  return stdout;
 }
 
 export function normalizeVersion(value) {
