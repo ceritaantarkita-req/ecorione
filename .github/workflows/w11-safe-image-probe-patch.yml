@@ -1,0 +1,96 @@
+name: W11 Safe Image Probe Patch
+
+on:
+  push:
+    branches:
+      - agent/w11-safe-image-probe-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/w11-safe-image-probe-20260916
+          fetch-depth: 0
+
+      - name: Patch W11 image probes and regression test
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          harness_path = Path('scripts/windows-desktop-installer-acceptance.ps1')
+          harness = harness_path.read_text(encoding='utf-8')
+
+          old_pre = '''  & $docker.Source image inspect "ecorione:desktop" *> $null
+          $ImagePreexisting = $LASTEXITCODE -eq 0
+          Assert-True (-not $ImagePreexisting) "Image ecorione:desktop sudah ada. W11 fresh-install proof membutuhkan image tersebut belum ada agar bundled runtime load benar-benar diuji."
+          '''
+          new_pre = '''  $cachedImageOutput = & $docker.Source image ls --quiet --filter "reference=ecorione:desktop" 2>$null
+          $cachedImageListExitCode = $LASTEXITCODE
+          Assert-True ($cachedImageListExitCode -eq 0) "Gagal memeriksa cache image ecorione:desktop."
+          $cachedImageIds = @($cachedImageOutput | Where-Object { $_ })
+          $ImagePreexisting = $cachedImageIds.Count -gt 0
+          Assert-True (-not $ImagePreexisting) "Image ecorione:desktop sudah ada. W11 fresh-install proof membutuhkan image tersebut belum ada agar bundled runtime load benar-benar diuji."
+          '''
+          if old_pre not in harness:
+              raise SystemExit('preflight image-inspect block not found')
+          harness = harness.replace(old_pre, new_pre, 1)
+
+          old_post = '''  & docker.exe image inspect "ecorione:desktop" *> $null
+          Assert-True ($LASTEXITCODE -eq 0) "Bundled runtime image tidak ter-load setelah first start."
+          '''
+          new_post = '''  $loadedImageOutput = & docker.exe image ls --quiet --filter "reference=ecorione:desktop" 2>$null
+          $loadedImageListExitCode = $LASTEXITCODE
+          Assert-True ($loadedImageListExitCode -eq 0) "Gagal memeriksa bundled runtime image setelah first start."
+          $loadedImageIds = @($loadedImageOutput | Where-Object { $_ })
+          Assert-True ($loadedImageIds.Count -gt 0) "Bundled runtime image tidak ter-load setelah first start."
+          '''
+          if old_post not in harness:
+              raise SystemExit('post-start image-inspect block not found')
+          harness = harness.replace(old_post, new_post, 1)
+          harness_path.write_text(harness, encoding='utf-8')
+
+          test_path = Path('test/windows-desktop-installer-acceptance.test.mjs')
+          test = test_path.read_text(encoding='utf-8')
+          old_test = '''    expect(harness).toContain("Image ecorione:desktop sudah ada");
+              expect(harness).toContain("fresh-install proof");
+              expect(harness).toContain("Bundled runtime image tidak ter-load");
+          '''
+          new_test = '''    expect(harness).toContain("Image ecorione:desktop sudah ada");
+              expect(harness).toContain("fresh-install proof");
+              expect(harness).toContain('image ls --quiet --filter "reference=ecorione:desktop"');
+              expect(harness).not.toContain('image inspect "ecorione:desktop"');
+              expect(harness).toContain("Gagal memeriksa cache image ecorione:desktop.");
+              expect(harness).toContain("Bundled runtime image tidak ter-load");
+          '''
+          if old_test not in test:
+              raise SystemExit('acceptance regression assertion block not found')
+          test = test.replace(old_test, new_test, 1)
+          test_path.write_text(test, encoding='utf-8')
+
+          doc_path = Path('docs/verification/w11-windows-installer-acceptance-2026-09-16.md')
+          doc = doc_path.read_text(encoding='utf-8')
+          marker = '## Execution order from the current handoff\n'
+          note = '''## Operator attempt 1 — fresh-image probe defect\n\nThe first real Windows operator attempt used the checksum-verified `0.1.0` Setup artifact whose release manifest is pinned to `d6b2f7f58f5a6af26e91ee026536e39fcf11d227`. The attempt stopped before Setup installation because the harness used `docker image inspect ecorione:desktop` while `$ErrorActionPreference = "Stop"`; Docker's expected `No such image` stderr for a fresh machine became a terminating PowerShell error instead of being interpreted as the required fresh-install condition.\n\nNo packaged image was loaded and no `ecorione-desktop` stack was created during that attempt, so the fresh-install boundary remains intact. The harness now probes image presence with `docker image ls --quiet --filter reference=...`, which is non-erroring when the image is absent, while still failing closed if the image-list command itself fails. The post-start bundled-image assertion uses the same safe probe. The installer artifact itself is unchanged and may be reused for the rerun.\n\n'''
+          if marker not in doc:
+              raise SystemExit('W11 execution-order marker not found')
+          if '## Operator attempt 1 — fresh-image probe defect' not in doc:
+              doc = doc.replace(marker, note + marker, 1)
+          doc_path.write_text(doc, encoding='utf-8')
+          PY
+
+      - name: Commit patch and remove one-shot helper
+        shell: bash
+        run: |
+          rm -f .github/workflows/w11-safe-image-probe-patch.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/windows-desktop-installer-acceptance.ps1 test/windows-desktop-installer-acceptance.test.mjs docs/verification/w11-windows-installer-acceptance-2026-09-16.md .github/workflows/w11-safe-image-probe-patch.yml
+          git commit -m "fix(w11): make fresh image probe non-throwing"
+          git push origin HEAD:agent/w11-safe-image-probe-20260916
