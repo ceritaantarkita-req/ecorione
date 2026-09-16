@@ -44,7 +44,7 @@ The final real-Windows W09/W10 run was synchronized exactly to that main commit.
 | W17 | ECX no-oracle validation | TODO | full vs auto-selective vs oracle pada task set sama. |
 | W18 | Hosted economic validation | TODO | Real bounded hosted token/cost evidence. |
 | W19 | Release/security governance follow-up | **DONE — REPO SIDE** | History secret scan + naming/model-alias gate di CI; branch protection gap terpisah. |
-| W20 | Final current-state sync | **STARTED** | Continue after the remaining W09/W10/W11/W16/W17/W18 evidence. |
+| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W16/W17/W18 evidence. |
 
 ## 3. W03 final closure evidence
 
