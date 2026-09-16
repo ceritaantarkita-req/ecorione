@@ -220,6 +220,12 @@ function sha256File(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
+export function summaryPathFor(outputPath) {
+  return outputPath.endsWith(".json")
+    ? `${outputPath.slice(0, -".json".length)}.summary.json`
+    : `${outputPath}.summary.json`;
+}
+
 function parseArgs(argv) {
   const result = { output: "" };
   for (let index = 0; index < argv.length; index += 1) {
@@ -304,7 +310,8 @@ async function main() {
     throw new Error(`W17 evidence validation gagal: ${validation.failures.join("; ")}`);
   }
 
-  const summaryPath = outputPath.replace(/\.json$/u, ".summary.json");
+  const summaryPath = summaryPathFor(outputPath);
+  if (existsSync(summaryPath)) throw new Error(`summary output sudah ada: ${summaryPath}`);
   const summary = {
     schemaVersion: 1,
     recordedAt,
