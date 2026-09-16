@@ -5,7 +5,7 @@ import {
   getGlobalDispatcher,
   type Interceptable,
 } from "undici";
-import { callLocal } from "./local.js";
+import { callLocal, localGenerationControls } from "./local.js";
 import { ProviderError } from "./errors.js";
 import { prefix } from "../test-helpers.js";
 
@@ -54,6 +54,9 @@ describe("callLocal", () => {
     const body = capturedBody as {
       model: string;
       messages: Array<{ role: string; content: string }>;
+      reasoning_effort?: string;
+      max_tokens?: number;
+      temperature?: number;
     };
     expect(body.model).toBe("qwen3:8b-instruct-q4_K_M");
     expect(body.messages).toHaveLength(2);
@@ -63,6 +66,68 @@ describe("callLocal", () => {
     expect(body.messages[1]).toEqual({
       role: "user",
       content: "ekstrak fakta dari episode berikut",
+    });
+    expect(body.reasoning_effort).toBeUndefined();
+    expect(body.max_tokens).toBeUndefined();
+    expect(body.temperature).toBeUndefined();
+  });
+
+  it("parses optional bounded generation controls fail-closed", () => {
+    expect(
+      localGenerationControls({
+        ECORIONE_LOCAL_REASONING_EFFORT: "none",
+        ECORIONE_LOCAL_MAX_TOKENS: "128",
+        ECORIONE_LOCAL_TEMPERATURE: "0",
+      }),
+    ).toEqual({ reasoning_effort: "none", max_tokens: 128, temperature: 0 });
+    expect(() =>
+      localGenerationControls({ ECORIONE_LOCAL_REASONING_EFFORT: "unbounded" }),
+    ).toThrow(/ECORIONE_LOCAL_REASONING_EFFORT/u);
+    expect(() => localGenerationControls({ ECORIONE_LOCAL_MAX_TOKENS: "0" })).toThrow(
+      /ECORIONE_LOCAL_MAX_TOKENS/u,
+    );
+    expect(() => localGenerationControls({ ECORIONE_LOCAL_TEMPERATURE: "3" })).toThrow(
+      /ECORIONE_LOCAL_TEMPERATURE/u,
+    );
+  });
+
+  it("sends configured bounded generation controls to the local runtime", async () => {
+    let capturedBody: unknown;
+    pool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, (opts) => {
+      capturedBody = JSON.parse(opts.body as string);
+      return { choices: [{ message: { content: "ok" } }], usage: {} };
+    });
+
+    const previous = {
+      reasoning: process.env.ECORIONE_LOCAL_REASONING_EFFORT,
+      maxTokens: process.env.ECORIONE_LOCAL_MAX_TOKENS,
+      temperature: process.env.ECORIONE_LOCAL_TEMPERATURE,
+    };
+    process.env.ECORIONE_LOCAL_REASONING_EFFORT = "none";
+    process.env.ECORIONE_LOCAL_MAX_TOKENS = "128";
+    process.env.ECORIONE_LOCAL_TEMPERATURE = "0";
+    try {
+      await callLocal({
+        baseUrl: "http://127.0.0.1:11434/v1",
+        modelTag: "qwen3.5:9b",
+        prefix: prefix(),
+        dynamicText: "benchmark context",
+        userMessage: "return json",
+      });
+    } finally {
+      if (previous.reasoning === undefined) delete process.env.ECORIONE_LOCAL_REASONING_EFFORT;
+      else process.env.ECORIONE_LOCAL_REASONING_EFFORT = previous.reasoning;
+      if (previous.maxTokens === undefined) delete process.env.ECORIONE_LOCAL_MAX_TOKENS;
+      else process.env.ECORIONE_LOCAL_MAX_TOKENS = previous.maxTokens;
+      if (previous.temperature === undefined) delete process.env.ECORIONE_LOCAL_TEMPERATURE;
+      else process.env.ECORIONE_LOCAL_TEMPERATURE = previous.temperature;
+    }
+
+    expect(capturedBody).toMatchObject({
+      model: "qwen3.5:9b",
+      reasoning_effort: "none",
+      max_tokens: 128,
+      temperature: 0,
     });
   });
 
