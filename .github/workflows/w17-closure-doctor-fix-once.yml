@@ -17,9 +17,6 @@ jobs:
         with:
           ref: agent/w17-closure-doctor-fix-20260916
           fetch-depth: 0
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
       - name: Apply bounded doctor fix and W17 closure evidence
         shell: bash
         run: |
@@ -28,7 +25,7 @@ jobs:
 
           engine = Path('scripts/ecorione-engine.mjs')
           text = engine.read_text(encoding='utf-8')
-          old = '      body: JSON.stringify({ target: "local" }),'
+          old = '      body: JSON.stringify({ target: "local" }),' 
           new = '      body: JSON.stringify({ target: "local", maxLatencyMs: timeoutMs }),' 
           if text.count(old) != 1:
               raise SystemExit(f'expected exactly one doctor canary body, found {text.count(old)}')
