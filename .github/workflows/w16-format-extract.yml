@@ -6,28 +6,32 @@ on:
       - agent/w16-auto-ref-selector-20260916
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   format-extract:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: agent/w16-auto-ref-selector-20260916
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Emit exact Prettier output
+      - name: Apply exact Prettier output
         shell: bash
         run: |
           pnpm exec prettier --write services/hub/src/exchange-http.ts services/hub/src/exchange-selector.test.ts
-          echo '===BEGIN_EXCHANGE_HTTP_BASE64==='
-          base64 -w 0 services/hub/src/exchange-http.ts
-          echo
-          echo '===END_EXCHANGE_HTTP_BASE64==='
-          echo '===BEGIN_SELECTOR_TEST_BASE64==='
-          base64 -w 0 services/hub/src/exchange-selector.test.ts
-          echo
-          echo '===END_SELECTOR_TEST_BASE64==='
+          if git diff --quiet -- services/hub/src/exchange-http.ts services/hub/src/exchange-selector.test.ts; then
+            echo 'No formatting changes required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add services/hub/src/exchange-http.ts services/hub/src/exchange-selector.test.ts
+          git commit -m 'style(ecx): apply canonical prettier output'
+          git push origin HEAD:agent/w16-auto-ref-selector-20260916
