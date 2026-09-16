@@ -20,6 +20,7 @@
     "engine:doctor": "node scripts/ecorione-engine.mjs doctor",
     "engine:stop-temporal": "node scripts/ecorione-engine.mjs stop-temporal",
     "desktop:bundle": "node scripts/desktop-bundle.mjs",
+    "desktop:native-bundle": "node scripts/desktop-native-bundle.mjs",
     "typecheck": "tsc --build --verbose && pnpm --filter @ecorione/ai run typecheck && tsc --noEmit -p test/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -66,14 +67,14 @@
     "@temporalio/worker": "1.23.0",
     "@types/node": "^22.20.0",
     "concurrently": "^9.1.2",
-    "eslint": "^9.39.0",
+    "eslint": "9.39.5",
     "@next/eslint-plugin-next": "15.5.25",
-    "prettier": "^3.6.2",
-    "tsx": "^4.19.2",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.0",
-    "undici": "^7.2.3",
-    "vitest": "^3.2.4"
+    "prettier": "3.9.6",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.0",
+    "undici": "7.29.1",
+    "vitest": "3.2.7"
   },
   "pnpm": {
     "overrides": {
