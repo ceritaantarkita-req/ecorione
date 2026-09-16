@@ -10,7 +10,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc --build && pnpm --filter @ecorione/ai run build",
+    "build": "tsc --build && pnpm --filter @ecorione/context run copy:runtime-assets && pnpm --filter @ecorione/ai run build",
     "build:runtime-deps": "tsc --build packages/shared-schema packages/shared-telemetry packages/context-assembly packages/shared-server packages/shared-ui",
     "dev": "pnpm run build:runtime-deps && concurrently -n rnd,context,connect,hub,ai -c yellow,cyan,magenta,green,blue \"pnpm --filter @ecorione/rnd run dev\" \"pnpm --filter @ecorione/context run dev\" \"pnpm --filter @ecorione/connect run dev\" \"pnpm --filter @ecorione/hub run dev\" \"pnpm --filter @ecorione/ai run dev\"",
     "dev:phase2": "pnpm run build:runtime-deps && concurrently -n rnd,context,connect,hub,mcp,sync,ai \"pnpm --filter @ecorione/rnd run dev\" \"pnpm --filter @ecorione/context run dev\" \"pnpm --filter @ecorione/connect run dev\" \"pnpm --filter @ecorione/hub run dev\" \"pnpm --filter @ecorione/connect run mcp:http\" \"pnpm --filter @ecorione/sync run dev\" \"pnpm --filter @ecorione/ai run dev\"",
