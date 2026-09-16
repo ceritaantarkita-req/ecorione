@@ -33,7 +33,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$ECORIONE_RELEASE_SHA"
       - name: Build exact-main desktop runtime bundle
         shell: bash
-        run: pnpm desktop:bundle -- --version "$ECORIONE_VERSION"
+        run: node scripts/desktop-bundle.mjs --version "$ECORIONE_VERSION"
       - name: Verify bundle provenance and checksums
         shell: bash
         run: |
