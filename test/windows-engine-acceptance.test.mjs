@@ -1,6 +1,10 @@
+import { createConnection } from "node:net";
+import { setTimeout as sleep } from "node:timers/promises";
+
 import { describe, expect, it } from "vitest";
 import {
   acceptancePlan,
+  createProtectedPortSentinel,
   evaluateRunningDoctor,
   evaluateWindowsCleanup,
   parseReadyAi,
@@ -30,6 +34,33 @@ describe("W09/W10 Windows engine acceptance harness", () => {
       port: 17037,
     });
     expect(parseReadyAi("not ready")).toBeNull();
+  });
+
+  it("keeps the protected foreign-port sentinel alive across an immediate client reset", async () => {
+    const server = createProtectedPortSentinel();
+    await new Promise((resolvePromise, rejectPromise) => {
+      server.once("error", rejectPromise);
+      server.listen(0, "127.0.0.1", resolvePromise);
+    });
+
+    const address = server.address();
+    expect(address).not.toBeNull();
+    expect(typeof address).toBe("object");
+    if (!address || typeof address === "string") throw new Error("Unexpected sentinel address");
+
+    await new Promise((resolvePromise) => {
+      const client = createConnection({ host: "127.0.0.1", port: address.port });
+      client.once("connect", () => {
+        if (typeof client.resetAndDestroy === "function") client.resetAndDestroy();
+        else client.destroy();
+      });
+      client.once("error", resolvePromise);
+      client.once("close", resolvePromise);
+    });
+
+    await sleep(25);
+    expect(server.listening).toBe(true);
+    await new Promise((resolvePromise) => server.close(resolvePromise));
   });
 
   it("requires Temporal, Ai, and every Phase 4 owner in a healthy runtime doctor", () => {
