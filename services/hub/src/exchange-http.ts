@@ -9,6 +9,7 @@ import {
   type EcxReference,
   type HistoryEventDraft,
   type MemoryFact,
+  type Sensitivity,
 } from "@ecorione/shared-schema";
 import {
   BadGatewayError,
@@ -77,7 +78,7 @@ function mapOwnerError(service: string, error: unknown): unknown {
 
 function selectorGrant(input: {
   scope: string;
-  maxSensitivity: string;
+  maxSensitivity: Sensitivity;
   hostedEligible: boolean;
 }) {
   return {
@@ -106,7 +107,7 @@ async function readArtifactSelectorText(
   ref: Extract<EcxReference, { kind: "artifact" }>,
   input: {
     scope: string;
-    maxSensitivity: string;
+    maxSensitivity: Sensitivity;
     hostedEligible: boolean;
     contextUrl: string;
     artifactUrl: string;
@@ -149,7 +150,9 @@ async function readArtifactSelectorText(
     response = await fetch(contentUrl, { headers });
   } catch (error) {
     throw new BadGatewayError(
-      `Artifact selector preview tidak tersedia: ${error instanceof Error ? error.message : String(error)}`,
+      `Artifact selector preview tidak tersedia: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
   }
   if (!response.ok) {
@@ -173,7 +176,7 @@ async function buildSelectionDescriptors(
   ledger: HistoryLedger,
   input: {
     scope: string;
-    maxSensitivity: string;
+    maxSensitivity: Sensitivity;
     hostedEligible: boolean;
     contextUrl: string;
     artifactUrl: string;
