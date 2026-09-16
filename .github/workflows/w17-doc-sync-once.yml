@@ -1,0 +1,98 @@
+name: W17 doc sync once
+
+on:
+  push:
+    branches:
+      - docs/w17-closure-sync-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: docs/w17-closure-sync-20260916
+          fetch-depth: 0
+      - name: Sync active work plan to verified W17 closure
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('docs/active-work-plan.md')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = [
+          ('''current main repo-verified baseline: 504e6aef86092d6f398ff290a40f77593c8882ca
+PR #112: merged — W16 automatic semantic ECX reference selector
+post-merge CI: 35085550485 (#906) — SUCCESS
+post-merge Product Eval: 35085550544 (#145) — SUCCESS
+post-merge MCP External HTTPS Acceptance: 35085550463 (#448) — SUCCESS
+W16 repo-side closure: PASS
+W17 branch: agent/w17-no-oracle-validation-20260916
+W17 focused selector/helper tests: 14/14 PASS''', '''current main repo-verified baseline: 4f58c9a088fee5e778875f91ce61c816f81326de
+PR #116: merged — W17 formal local closure + doctor canary threshold alignment
+post-merge CI: 35100203476 (#920) — SUCCESS
+post-merge Product Eval: 35100203475 (#159) — SUCCESS
+W17 formal local closure: PASS
+formal runtime evidence baseline: 90bc800649b02be1de752d8c67c365c65a9d21a6
+raw evidence sha256: a76a6a195aea6e117651f948e41b3fdcbbd2532cbdf556c14a2437fa50483fb3
+W17 measured calls: 100 (5 tasks × 5 repeats × 4 lanes)'''),
+          ('''W16 is now merged and green on `main`. The automatic semantic selector supports bounded `selection: { mode: "semantic-v1", maxRefs }` hydration without requiring caller/oracle-supplied `refIndexes`, while preserving the explicit-index compatibility path and existing hydration policy/budget gates.''', '''W16 remains merged and green on `main`. W17 is now closed on top of that selector: the formal fail-closed local run completed 100 measured calls across full-inline, all-ref, automatic no-oracle, and oracle-control lanes with 5/5 task gates, selector recall 1, zero cache hits, and verified immutable `qwen3.5:9b` identity. Automatic-selector evidence remains bounded and does not establish hosted billed-cost or end-to-end network savings.'''),
+          ('''| W17 | ECX no-oracle validation | **STARTED — HARNESS READY / REAL LOCAL RUN PENDING** | Four-lane full/all/auto/oracle harness + 5/5 fixture selector recall contract ready; formal real local-model run belum dilakukan. |''', '''| W17 | ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS (100 CALLS)** | 5 tasks × 5 repeats × 4 lanes; 5/5 task gates; auto selector recall 1; cache hits 0; immutable `qwen3.5:9b` verified; bounded local evidence only. |'''),
+          ('''| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W17/W18 evidence. |''', '''| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W18 evidence. |'''),
+          ('''Formal W17 real local-model evidence masih pending. Target closure profile:
+
+```text
+5 tasks × 5 repeats × 4 lanes = 100 measured model calls
++ one excluded warm-up completion
+```''', '''Formal W17 real local-model evidence is now closed. The fail-closed runner completed:
+
+```text
+runtime evidence baseline: 90bc800649b02be1de752d8c67c365c65a9d21a6
+5 tasks × 5 repeats × 4 lanes = 100 measured model calls
++ one excluded warm-up completion
+passed task gates = 5/5
+failed tasks = 0
+cache hits = 0
+median automatic selector recall = 1.0
+median automatic selector precision = 0.6666666666666666
+median automatic selected-hydration transport reduction = 46.089385474860336%
+median automatic input-token reduction = 50.80489375402447%
+median automatic/full latency ratio = 0.9839322301085884
+automatic known-transport-floor beat task count = 0/5
+closureEligible = true
+raw evidence sha256 = a76a6a195aea6e117651f948e41b3fdcbbd2532cbdf556c14a2437fa50483fb3
+```
+
+The `0/5` known-transport-floor result is intentional evidence, not a failed gate: automatic selection currently scans bounded authorized candidate text before hydration, so W17 proves model-context/input-token and selected-hydration reductions but **does not** claim end-to-end automatic-selection network savings.'''),
+          ('''1. W11 — complete real Setup/launcher acceptance on clean Windows
+2. W17 — merge the no-oracle harness after full repo gates, then run the formal 5×5×4 local-model comparison
+3. W18 — collect bounded real hosted token/cost evidence
+4. W20 — final current-state sync after remaining evidence closes''', '''1. W11 — complete real Setup/launcher acceptance on clean Windows
+2. W18 — collect bounded real hosted token/cost evidence (explicit spend authorization required)
+3. W20 — final current-state sync after W11/W18 close'''),
+          ('''Do not reopen W03, W09/W10, or W16 unless a new reproducible regression appears on product code newer than the verified baselines.''', '''Do not reopen W03, W09/W10, W16, or W17 unless a new reproducible regression appears on product code newer than the verified baselines.'''),
+          ('''PR #112 mengimplementasikan dan menutup repo-side W16 automatic semantic ECX reference selector pada merge baseline `504e6aef86092d6f398ff290a40f77593c8882ca` dengan post-merge CI/Product Eval/MCP acceptance green.''', '''PR #112 mengimplementasikan dan menutup repo-side W16 automatic semantic ECX reference selector pada merge baseline `504e6aef86092d6f398ff290a40f77593c8882ca` dengan post-merge CI/Product Eval/MCP acceptance green. PR #113 menambahkan four-lane no-oracle harness; PR #114 menambahkan fail-closed local closure runner; PR #115 menambahkan bounded local generation controls untuk menutup runaway reasoning pada evidence run; dan PR #116 merekam formal 100-call W17 PASS sekaligus menyelaraskan doctor canary latency ceiling dengan probe timeout. PR #116 merged sebagai `4f58c9a088fee5e778875f91ce61c816f81326de`, dengan post-merge CI #920 dan Product Eval #159 SUCCESS.''')
+          ]
+
+          for old, new in replacements:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'expected one work-plan marker, found {count}: {old[:100]!r}')
+              text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          rm .github/workflows/w17-doc-sync-once.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/active-work-plan.md .github/workflows/w17-doc-sync-once.yml
+          git diff --cached --check
+          git commit -m "docs(w17): sync formal local closure status"
+          git push origin HEAD:docs/w17-closure-sync-20260916
