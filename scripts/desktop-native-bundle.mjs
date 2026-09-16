@@ -81,7 +81,9 @@ export function normalizeVersion(value) {
 }
 
 function packageVersion() {
-  return normalizeVersion(JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")).version);
+  return normalizeVersion(
+    JSON.parse(readFileSync(resolve(ROOT, "package.json"), "utf8")).version,
+  );
 }
 
 function sourceRevision() {
@@ -189,7 +191,9 @@ function parseArgs(argv) {
 
 export function buildNativeDesktopBundle({ version, outRoot = DEFAULT_OUT_ROOT, temporalExe }) {
   if (process.platform !== "win32") {
-    throw new Error("Native Windows bundle harus dibangun pada Windows agar native Node modules cocok.");
+    throw new Error(
+      "Native Windows bundle harus dibangun pada Windows agar native Node modules cocok.",
+    );
   }
   if (!temporalExe || !existsSync(temporalExe)) {
     throw new Error(`Temporal CLI tidak ditemukan: ${String(temporalExe)}`);
@@ -224,8 +228,12 @@ export function buildNativeDesktopBundle({ version, outRoot = DEFAULT_OUT_ROOT, 
 
   const nextRuntime = resolve(layout.appRoot, "node_modules", "next", "dist", "bin", "next");
   const sqliteRuntime = resolve(layout.appRoot, "node_modules", "better-sqlite3");
-  if (!existsSync(nextRuntime)) throw new Error("Next.js production runtime tidak ditemukan setelah pnpm install --prod.");
-  if (!existsSync(sqliteRuntime)) throw new Error("better-sqlite3 production runtime tidak ditemukan setelah pnpm install --prod.");
+  if (!existsSync(nextRuntime))
+    throw new Error("Next.js production runtime tidak ditemukan setelah pnpm install --prod.");
+  if (!existsSync(sqliteRuntime))
+    throw new Error(
+      "better-sqlite3 production runtime tidak ditemukan setelah pnpm install --prod.",
+    );
 
   copyFileSync(process.execPath, layout.nodeExe);
   copyFileSync(temporalExe, layout.temporalExe);
@@ -251,7 +259,11 @@ export function buildNativeDesktopBundle({ version, outRoot = DEFAULT_OUT_ROOT, 
     `${JSON.stringify(metadata, null, 2)}\n`,
     "utf8",
   );
-  writeFileSync(resolve(layout.bundleRoot, "SHA256SUMS"), `${checksumManifest(layout.bundleRoot)}\n`, "utf8");
+  writeFileSync(
+    resolve(layout.bundleRoot, "SHA256SUMS"),
+    `${checksumManifest(layout.bundleRoot)}\n`,
+    "utf8",
+  );
 
   console.log(`✓ Native Windows bundle ready: ${layout.bundleRoot}`);
   console.log(`  Source: ${metadata.sourceRevision}`);
@@ -266,7 +278,9 @@ if (invoked === fileURLToPath(import.meta.url)) {
   try {
     buildNativeDesktopBundle(parseArgs(process.argv.slice(2)));
   } catch (error) {
-    console.error(`ECORIONE native bundle error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `ECORIONE native bundle error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exitCode = 1;
   }
 }

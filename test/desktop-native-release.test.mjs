@@ -22,9 +22,9 @@ describe("ECORIONE native Windows release bundle", () => {
       command: "git",
       args: ["rev-parse", "HEAD"],
     });
-    expect(() => resolveNativeBundleCommand("pnpm", ["run", "build&whoami"], "win32", {})).toThrow(
-      /tidak aman/i,
-    );
+    expect(() =>
+      resolveNativeBundleCommand("pnpm", ["run", "build&whoami"], "win32", {}),
+    ).toThrow(/tidak aman/i);
   });
 
   it("keeps non-Windows pnpm direct", () => {

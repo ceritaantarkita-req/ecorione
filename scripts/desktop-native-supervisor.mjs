@@ -7,7 +7,9 @@ import { dirname, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 
 const DEFAULT_AI_PORT = 17020;
-const AI_FALLBACK_PORTS = Object.freeze(Array.from({ length: 11 }, (_, index) => 17029 + index));
+const AI_FALLBACK_PORTS = Object.freeze(
+  Array.from({ length: 11 }, (_, index) => 17029 + index),
+);
 const RESERVED_PORTS = new Set(Array.from({ length: 8 }, (_, index) => 17021 + index));
 const OWNER_SERVICES = Object.freeze([
   ["rnd", 17021],
@@ -154,7 +156,9 @@ async function selectAiPort(preferred) {
   for (const port of candidates) {
     if (!(await portReachable(port))) return port;
   }
-  throw new Error("Tidak ada Ai port kosong pada preferred port maupun fallback 17020, 17029-17039.");
+  throw new Error(
+    "Tidak ada Ai port kosong pada preferred port maupun fallback 17020, 17029-17039.",
+  );
 }
 
 function runtimeEnv(config, dataRoot, aiPort) {
@@ -182,7 +186,10 @@ function runtimeEnv(config, dataRoot, aiPort) {
     ECORIONE_CONNECT_SETTINGS_PATH: resolve(data("connect"), "connect-runtime-settings.json"),
     ECORIONE_SPEND_BUDGET_PATH: resolve(data("connect"), "connect-spend-budget.json"),
     ECORIONE_MCP_OUTBOUND_REGISTRY_PATH: resolve(data("connect"), "connect-mcp-registry.json"),
-    ECORIONE_MCP_OUTBOUND_INVOCATION_PATH: resolve(data("connect"), "connect-mcp-invocations.json"),
+    ECORIONE_MCP_OUTBOUND_INVOCATION_PATH: resolve(
+      data("connect"),
+      "connect-mcp-invocations.json",
+    ),
     ECORIONE_HUB_DB_PATH: resolve(data("hub"), "hub.db"),
     ECORIONE_ARTIFACT_DIR: resolve(data("artifact"), "artifacts"),
     ECORIONE_SANDBOX_WORKSPACE_ROOT: resolve(data("sandbox"), "workspaces"),
@@ -206,11 +213,22 @@ async function startMode(values) {
   const envFile = resolve(values["env-file"] ?? resolve(dataRoot, "desktop.env"));
   const existing = readState(dataRoot);
   if (existing && processAlive(existing.supervisorPid)) {
-    throw new Error(`ECORIONE native runtime sudah berjalan dengan PID ${existing.supervisorPid}.`);
+    throw new Error(
+      `ECORIONE native runtime sudah berjalan dengan PID ${existing.supervisorPid}.`,
+    );
   }
   clearState(dataRoot);
   mkdirSync(resolve(dataRoot, "logs"), { recursive: true });
-  for (const name of ["rnd", "context", "connect", "hub", "artifact", "sandbox", "flow", "space"]) {
+  for (const name of [
+    "rnd",
+    "context",
+    "connect",
+    "hub",
+    "artifact",
+    "sandbox",
+    "flow",
+    "space",
+  ]) {
     mkdirSync(resolve(dataRoot, "data", name), { recursive: true });
   }
 
@@ -277,7 +295,8 @@ async function startMode(values) {
     await waitUntil(() => portReachable(7233), "Temporal", 60_000);
   }
 
-  const serviceEntry = (name, file = "main.js") => resolve(appRoot, "services", name, "dist", file);
+  const serviceEntry = (name, file = "main.js") =>
+    resolve(appRoot, "services", name, "dist", file);
   const servicePlan = [
     ["RnD", "rnd", 17021],
     ["Connect", "connect", 17023],
@@ -296,7 +315,8 @@ async function startMode(values) {
   }
 
   const workerEntry = serviceEntry("flow", "worker-main.js");
-  if (!existsSync(workerEntry)) throw new Error(`Flow worker runtime entry tidak ditemukan: ${workerEntry}`);
+  if (!existsSync(workerEntry))
+    throw new Error(`Flow worker runtime entry tidak ditemukan: ${workerEntry}`);
   spawnChild("Flow worker", nodeExe, [workerEntry]);
 
   const nextBin = findFile(
@@ -306,7 +326,12 @@ async function startMode(values) {
     ],
     "Next.js runtime",
   );
-  spawnChild("Ai", nodeExe, [nextBin, "start", "-H", "127.0.0.1", "-p", String(aiPort)], resolve(appRoot, "apps", "ai"));
+  spawnChild(
+    "Ai",
+    nodeExe,
+    [nextBin, "start", "-H", "127.0.0.1", "-p", String(aiPort)],
+    resolve(appRoot, "apps", "ai"),
+  );
   await waitUntil(
     () => httpReady(`http://127.0.0.1:${aiPort}/`, /ecorione\s*[—-]\s*Ai/i),
     "Ai",
@@ -346,13 +371,15 @@ async function doctorMode(values) {
     console.log("[OK] Temporal reachable");
   }
   for (const [name, port] of OWNER_SERVICES) {
-    if (await httpReady(`http://127.0.0.1:${port}/healthz`)) console.log(`[OK] ${name} reachable`);
+    if (await httpReady(`http://127.0.0.1:${port}/healthz`))
+      console.log(`[OK] ${name} reachable`);
     else {
       console.log(`[FAIL] ${name} unreachable`);
       healthy = false;
     }
   }
-  if (await httpReady(state.aiUrl, /ecorione\s*[—-]\s*Ai/i)) console.log(`[OK] Ai reachable: ${state.aiUrl}`);
+  if (await httpReady(state.aiUrl, /ecorione\s*[—-]\s*Ai/i))
+    console.log(`[OK] Ai reachable: ${state.aiUrl}`);
   else {
     console.log(`[FAIL] Ai unreachable: ${state.aiUrl}`);
     healthy = false;
@@ -375,7 +402,9 @@ async function stopMode(values) {
     });
     if (result.error) throw result.error;
     if (result.status !== 0 && processAlive(state.supervisorPid)) {
-      throw new Error(`Gagal menghentikan ECORIONE process tree (taskkill ${String(result.status)}).`);
+      throw new Error(
+        `Gagal menghentikan ECORIONE process tree (taskkill ${String(result.status)}).`,
+      );
     }
   } else {
     process.kill(state.supervisorPid, "SIGTERM");
@@ -395,6 +424,8 @@ try {
   else if (mode === "stop") await stopMode(values);
   else throw new Error(`Mode tidak dikenal: ${mode}`);
 } catch (error) {
-  console.error(`ECORIONE native supervisor error: ${error instanceof Error ? error.message : String(error)}`);
+  console.error(
+    `ECORIONE native supervisor error: ${error instanceof Error ? error.message : String(error)}`,
+  );
   process.exitCode = 1;
 }
