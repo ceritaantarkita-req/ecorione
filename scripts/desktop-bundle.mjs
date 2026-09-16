@@ -97,13 +97,22 @@ function packageVersion() {
   return normalizeVersion(pkg.version);
 }
 
+export function chooseSourceRevision(gitHead, githubSha) {
+  const checkedOut = normalizeSpawnOutput(gitHead);
+  if (checkedOut) return checkedOut;
+  const workflowSha = normalizeSpawnOutput(githubSha);
+  if (workflowSha) return workflowSha;
+  return "unknown";
+}
+
 function sourceRevision() {
-  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+  let gitHead = "";
   try {
-    return run("git", ["rev-parse", "HEAD"]);
+    gitHead = run("git", ["rev-parse", "HEAD"]);
   } catch {
-    return "unknown";
+    // Fall through to workflow metadata only when the checkout itself cannot be inspected.
   }
+  return chooseSourceRevision(gitHead, process.env.GITHUB_SHA);
 }
 
 function assertReleaseInputs() {
