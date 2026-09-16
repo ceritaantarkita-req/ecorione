@@ -1,0 +1,108 @@
+name: W11 build exact-main installer
+
+on:
+  push:
+    branches:
+      - ops/w11-installer-build-20260916
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      ECORIONE_VERSION: "0.1.0"
+      ECORIONE_RELEASE_SHA: "2c3bed011577be8a7604f05054c31c152be29c4d"
+    steps:
+      - name: Checkout exact merged source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.ECORIONE_RELEASE_SHA }}
+          fetch-depth: 1
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Assert exact source revision
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$ECORIONE_RELEASE_SHA"
+      - name: Build exact-main desktop runtime bundle
+        shell: bash
+        run: pnpm desktop:bundle -- --version "$ECORIONE_VERSION"
+      - name: Verify bundle provenance and checksums
+        shell: bash
+        run: |
+          BUNDLE=".ecorione/desktop-release/ECORIONE-${ECORIONE_VERSION}-windows-x64"
+          node -e 'const fs=require("fs"); const p=process.argv[1]; const expected=process.argv[2]; const m=JSON.parse(fs.readFileSync(p,"utf8")); if(m.sourceRevision!==expected) throw new Error(`sourceRevision ${m.sourceRevision} != ${expected}`); console.log(m);' "$BUNDLE/RELEASE-MANIFEST.json" "$ECORIONE_RELEASE_SHA"
+          cd "$BUNDLE"
+          sha256sum --check SHA256SUMS
+      - name: Upload prepared exact-main desktop bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecorione-desktop-bundle-main-2c3bed0
+          path: .ecorione/desktop-release/ECORIONE-0.1.0-windows-x64
+          if-no-files-found: error
+          retention-days: 7
+
+  installer:
+    needs: bundle
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      ECORIONE_VERSION: "0.1.0"
+      ECORIONE_RELEASE_SHA: "2c3bed011577be8a7604f05054c31c152be29c4d"
+      ECORIONE_BUNDLE_DIR: ${{ github.workspace }}\bundle
+      ECORIONE_INSTALLER_OUT: ${{ github.workspace }}\installer-out
+    steps:
+      - name: Checkout exact merged source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.ECORIONE_RELEASE_SHA }}
+          fetch-depth: 1
+      - name: Download prepared exact-main desktop bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ecorione-desktop-bundle-main-2c3bed0
+          path: bundle
+      - name: Verify downloaded bundle provenance
+        shell: pwsh
+        run: |
+          $manifest = Get-Content -LiteralPath (Join-Path $env:ECORIONE_BUNDLE_DIR "RELEASE-MANIFEST.json") -Raw | ConvertFrom-Json
+          if ($manifest.sourceRevision -ne $env:ECORIONE_RELEASE_SHA) {
+            throw "Bundle sourceRevision $($manifest.sourceRevision) != $env:ECORIONE_RELEASE_SHA"
+          }
+      - name: Install Inno Setup compiler
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+      - name: Compile exact-main Setup executable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:ECORIONE_INSTALLER_OUT | Out-Null
+          $candidates = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+          )
+          $iscc = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "ISCC.exe tidak ditemukan setelah instalasi Inno Setup." }
+          & $iscc "desktop\installer.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compiler gagal dengan exit code $LASTEXITCODE." }
+      - name: Generate and verify installer SHA-256
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -LiteralPath $env:ECORIONE_INSTALLER_OUT -Filter "ECORIONE-Setup-*.exe" | Select-Object -First 1
+          if (-not $installer) { throw "Setup executable tidak ditemukan." }
+          $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($installer.Name)" | Set-Content -LiteralPath (Join-Path $env:ECORIONE_INSTALLER_OUT "SHA256SUMS") -Encoding ascii
+          Get-Content -LiteralPath (Join-Path $env:ECORIONE_INSTALLER_OUT "SHA256SUMS")
+      - name: Upload exact-main Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ECORIONE-Setup-0.1.0-main-2c3bed0
+          path: installer-out
+          if-no-files-found: error
+          retention-days: 14
