@@ -54,7 +54,7 @@ describe("provider selection", () => {
     openrouterPool.intercept({ path: "/api/v1/chat/completions", method: "POST" }).reply(200, {
       model: "anthropic/claude-sonnet-4.5",
       choices: [{ message: { content: "router reply" } }],
-      usage: { prompt_tokens: 20, completion_tokens: 4 },
+      usage: { prompt_tokens: 20, completion_tokens: 4, cost: 0.001 },
     });
     let reservedProvider: string | undefined;
     const result = await complete(
@@ -120,7 +120,7 @@ describe("provider selection", () => {
   it("vault provider scope menang atas semua raw env fallback", async () => {
     openrouterPool.intercept({ path: "/api/v1/chat/completions", method: "POST" }).reply(200, {
       choices: [{ message: { content: "vault router" } }],
-      usage: {},
+      usage: { cost: 0.0005 },
     });
     let requestedScope: string | undefined;
     const result = await complete(
