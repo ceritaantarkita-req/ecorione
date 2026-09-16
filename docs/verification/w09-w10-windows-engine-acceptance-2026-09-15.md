@@ -2,7 +2,7 @@
 
 Date: **2026-09-15**
 
-Status: **HARNESS READY / OPERATOR RUN PENDING**
+Status: **DONE — WINDOWS RUNTIME VERIFIED**
 
 Scope:
 
@@ -135,3 +135,44 @@ The exact-current-main Windows rerun at `7a31b6b983d941c44fd7fd74612f662d98f8bc0
 The protected listener itself was still implemented as an immediate server-side close: each accepted probe socket called `socket.end()` as soon as it connected. On Windows/Node 24, the reachability client can race that immediate FIN/RST and report `false` even while the listening server remains alive. The previous regression only proved that an immediate client reset did not crash the server; it did not prove that the sentinel remained positively TCP-reachable to the same probe used by the acceptance harness.
 
 Disposition: the sentinel now keeps accepted sockets open until the probing client closes, bounds idle sockets with a short timeout, and continues to absorb disposable reset errors. Protected-port verification also retries reachability for a bounded interval rather than making a single race-sensitive probe. A regression test now runs repeated `isPortReachable` checks against the sentinel and requires every probe to succeed while the server remains listening. W09/W10 remain open until a fresh merged-main Windows run reaches the final PASS marker.
+
+
+## Final operator closure — PASS
+
+Closed: **2026-09-16**
+
+The final exact-current-main Windows run used synchronized `main` commit `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8` with a clean tracked worktree and `HEAD == origin/main`. The harness completed all seven acceptance phases and finished with `PASS W09/W10 Windows engine acceptance`.
+
+Canonical operator evidence:
+
+```text
+W09-A preflight: PASS
+W10-A doctor pre-start: PASS
+W09-B one-command cold start: PASS
+resolved Ai endpoint: http://127.0.0.1:17020
+W10-B runtime doctor: PASS
+Local AI disposition: UNAVAILABLE (recorded separately; not a W09/W10 core boot blocker)
+W09-C duplicate-start guard: PASS / fail-closed
+W09-D Windows process-tree cleanup: PASS
+W10-C doctor post-stop: PASS
+final result: PASS W09/W10 Windows engine acceptance
+```
+
+The run preserved the protected foreign listener on port `3000`, proving the ECORIONE source runtime no longer depends on that common development port. W09-D independently verified that the resolved Ai port plus fixed owner ports `17021–17028` were released and the engine root process exited before cleanup was accepted.
+
+The harness wrote the sanitized local report:
+
+```text
+traces/w09-w10-windows-acceptance-2026-09-16T02-04-06-435Z.json
+```
+
+Because the harness sets `report.result = "PASS"` immediately before writing that report and only then emits the final PASS marker, the generated report is the canonical sanitized PASS artifact for this operator run. The raw JSON remains operator-local and is not committed because it may contain machine-specific runtime diagnostics.
+
+Repository integration preceding this run was merged through PR #106. Exact post-merge gates for `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8` were:
+
+```text
+CI run 35044646171 (#876): SUCCESS
+Product Eval run 35044646183 (#115): SUCCESS
+```
+
+All W09/W10 closure conditions are satisfied. W09 and W10 are therefore **DONE — WINDOWS RUNTIME VERIFIED**. W11 remains separate and still requires real end-user Setup/launcher acceptance on a clean Windows machine.
