@@ -1,0 +1,41 @@
+name: W111 one-shot format
+
+on:
+  push:
+    branches:
+      - feat/w11-native-windows-runtime-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(w11): apply prettier') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/w11-native-windows-runtime-20260916
+          fetch-depth: 1
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format W11 native files and self-delete helper
+        shell: bash
+        run: |
+          pnpm exec prettier --write \
+            scripts/desktop-native-bundle.mjs \
+            scripts/desktop-native-supervisor.mjs \
+            test/desktop-native-release.test.mjs
+          rm -f .github/workflows/tmp-w111-format.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "chore(w11): apply prettier to native runtime"
+          git push origin HEAD:feat/w11-native-windows-runtime-20260916
