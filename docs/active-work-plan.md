@@ -9,17 +9,21 @@ Current code + current evidence + dokumen ini adalah source of truth pekerjaan a
 ## 1. Current repository checkpoint
 
 ```text
-current main runtime-verified baseline: 4ea5b942ec705b61fe51c4b47a75bc59ac6019b8
-PR #106: merged — harden W09/W10 protected-port reachability
-post-merge CI: 35044646171 (#876) — SUCCESS
-post-merge Product Eval: 35044646183 (#115) — SUCCESS
-W09/W10 final Windows acceptance: PASS
-operator report: traces/w09-w10-windows-acceptance-2026-09-16T02-04-06-435Z.json
+current main repo-verified baseline: 504e6aef86092d6f398ff290a40f77593c8882ca
+PR #112: merged — W16 automatic semantic ECX reference selector
+post-merge CI: 35085550485 (#906) — SUCCESS
+post-merge Product Eval: 35085550544 (#145) — SUCCESS
+post-merge MCP External HTTPS Acceptance: 35085550463 (#448) — SUCCESS
+W16 repo-side closure: PASS
+W17 branch: agent/w17-no-oracle-validation-20260916
+W17 focused selector/helper tests: 14/14 PASS
 ```
 
-The final real-Windows W09/W10 run was synchronized exactly to that main commit. Ai resolved to `127.0.0.1:17020`; the protected foreign listener on port `3000` survived start and cleanup; the full fixed owner fleet was healthy; duplicate start failed closed; cleanup released the ECORIONE application ports; and doctor remained usable after shutdown. Local AI was `UNAVAILABLE` in that run and remains intentionally outside the W09/W10 core process-readiness gate because immutable local-model evidence is governed by W13/W15.
+W16 is now merged and green on `main`. The automatic semantic selector supports bounded `selection: { mode: "semantic-v1", maxRefs }` hydration without requiring caller/oracle-supplied `refIndexes`, while preserving the explicit-index compatibility path and existing hydration policy/budget gates.
 
-`main` remains the green baseline. GitHub `main` still does not have required status-check branch protection; that governance gap remains separate from W09/W10.
+The final real-Windows W09/W10 run remains synchronized to its verified runtime baseline `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`. Ai resolved to `127.0.0.1:17020`; the protected foreign listener on port `3000` survived start and cleanup; the full fixed owner fleet was healthy; duplicate start failed closed; cleanup released the ECORIONE application ports; and doctor remained usable after shutdown. Local AI was `UNAVAILABLE` in that run and remains intentionally outside the W09/W10 core process-readiness gate because immutable local-model evidence is governed by W13/W15.
+
+`main` remains the green baseline. GitHub `main` still does not have required status-check branch protection; that governance gap remains separate from W09/W10/W16.
 
 ## 2. Work queue
 
@@ -40,11 +44,11 @@ The final real-Windows W09/W10 run was synchronized exactly to that main commit.
 | W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Current operator runtime berhasil memverifikasi selector + immutable digest; perubahan model/runtime tetap harus diverifikasi ulang. |
 | W14 | Product eval foundation | **DONE — REPO SIDE** | 12 task/bug-derived deterministic regressions + dedicated gate. |
 | W15 | Agentic local-model eval v1 | **DONE — VERIFIED LOCAL MODEL PASS^3** | 4/4 real cases pass^3 dengan immutable digest verified; claim hanya bounded eval harness, bukan autonomous product chat. |
-| W16 | Automatic semantic reference selector | TODO | `refIndexes` tidak lagi caller/oracle-supplied. |
-| W17 | ECX no-oracle validation | TODO | full vs auto-selective vs oracle pada task set sama. |
+| W16 | Automatic semantic reference selector | **DONE — REPO SIDE** | `selection: semantic-v1` memilih bounded refs otomatis; explicit `refIndexes` tetap backward-compatible; post-merge CI/Product Eval/MCP green. |
+| W17 | ECX no-oracle validation | **STARTED — HARNESS READY / REAL LOCAL RUN PENDING** | Four-lane full/all/auto/oracle harness + 5/5 fixture selector recall contract ready; formal real local-model run belum dilakukan. |
 | W18 | Hosted economic validation | TODO | Real bounded hosted token/cost evidence. |
 | W19 | Release/security governance follow-up | **DONE — REPO SIDE** | History secret scan + naming/model-alias gate di CI; branch protection gap terpisah. |
-| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W16/W17/W18 evidence. |
+| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W17/W18 evidence. |
 
 ## 3. W03 final closure evidence
 
@@ -115,7 +119,7 @@ W03 closure: PASS
 
 ## 4. Security / runtime boundaries
 
-Sudah ada di `main`: same-origin mutation guard, CSP/security headers, stricter hosted-spend guard, private/loopback `localBaseUrl` default, mutable model-alias gate, runtime provenance resolver dengan digest mismatch fail-closed, dan full-history secret scan.
+Sudah ada di `main`: same-origin mutation guard, CSP/security headers, stricter hosted-spend guard, private/loopback `localBaseUrl` default, mutable model-alias gate, runtime provenance resolver dengan digest mismatch fail-closed, full-history secret scan, dan W16 automatic ECX selector yang tetap melewati owner authorization + hydration policy/budget boundary.
 
 Known limitation: CSP masih membutuhkan `'unsafe-inline'` pada current Next App Router bootstrap. Required status checks/branch protection juga belum aktif.
 
@@ -131,7 +135,7 @@ Temporal CLI local path, Windows `pnpm.cmd` handling, collision-safe Ai port sel
 
 ## 5. ECX claim boundary
 
-Historical Ledger + ECX local evidence tetap CLOSED/PASS. Comparative ECX tetap PASS WITH LIMITATIONS:
+Historical Ledger + ECX local evidence tetap CLOSED/PASS. Historical comparative ECX oracle-control evidence tetap retained sebagai:
 
 ```text
 5 tasks × 5 repeats × 3 lanes = 75 measured calls
@@ -142,7 +146,28 @@ median selective input-token reduction = 77.8580814717477%
 median selective/full latency ratio = 0.8672873729681319
 ```
 
-Tetapi `ecx-selective-oracle` masih oracle/control, `refIndexes` masih caller-supplied, automatic semantic selector belum terbukti, dan hosted dollar economics belum tervalidasi. Angka local/oracle tidak boleh menjadi universal public-savings claim.
+Angka di atas adalah evidence lama untuk `ecx-selective-oracle`; jangan dibaca sebagai hasil automatic selector.
+
+W16 sekarang sudah menghapus kebutuhan caller/oracle-supplied index untuk lane otomatis. W17 harness menambahkan lane keempat `ecx-selective-auto` dengan `selection: { mode: "semantic-v1", maxRefs: 3 }`, sementara fixture `relevantRefIndexes` hanya dipakai untuk evaluasi recall dan oracle-control.
+
+Preparation W17 menemukan defect recall nyata pada `incident-triage` (0.5), lalu selector diperbaiki agar `maxRefs` menjadi bounded top-K positive semantic budget tanpa cutoff relatif yang membuang secondary evidence. Focused validation setelah fix:
+
+```text
+comparative helper tests = 9/9 PASS
+no-oracle selector fixture tests = 5/5 PASS
+total focused = 14/14 PASS
+```
+
+Formal W17 real local-model evidence masih pending. Target closure profile:
+
+```text
+5 tasks × 5 repeats × 4 lanes = 100 measured model calls
++ one excluded warm-up completion
+```
+
+W17 juga memisahkan selected-hydration savings dari selector candidate scanning. Karena W16 saat ini membaca bounded authorized text candidates untuk ranking, `packet + selected hydration` tidak boleh disebut end-to-end transport savings tanpa menghitung candidate scan. Harness merekam conservative known transport floor secara terpisah.
+
+Local/no-oracle evidence tidak boleh menjadi universal public-savings claim. Hosted dollar economics tetap belum tervalidasi dan merupakan W18.
 
 ## 6. W14 / W15 retained claim boundaries
 
@@ -154,20 +179,19 @@ Historical verification documents remain the detailed source of truth for W14/W1
 
 ## 7. Immediate next action
 
-With W03 and W09/W10 closed, priority resumes at:
+With W03, W09/W10, and W16 closed, priority is:
 
 ```text
 1. W11 — complete real Setup/launcher acceptance on clean Windows
-2. W16 — implement automatic semantic reference selector
-3. W17 — run ECX no-oracle comparison on the same task set
-4. W18 — collect bounded real hosted token/cost evidence
-5. W20 — final current-state sync after remaining evidence closes
+2. W17 — merge the no-oracle harness after full repo gates, then run the formal 5×5×4 local-model comparison
+3. W18 — collect bounded real hosted token/cost evidence
+4. W20 — final current-state sync after remaining evidence closes
 ```
 
-Do not reopen W03 or W09/W10 unless a new reproducible regression appears on product code newer than the verified baselines.
+Do not reopen W03, W09/W10, or W16 unless a new reproducible regression appears on product code newer than the verified baselines.
 
 ## 8. Historical note
 
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya. PR #80 menyinkronkan W14. PR #81–#85 membangun dan menutup W15 evidence. PR #86/#88/#89 mengeraskan Windows runtime flow. PR #90 memperbaiki Settings feedback/action stacking. PR #93 mengintegrasikan responsive + Flow redesign. PR #95 memperbaiki Flow inventory marker drift. PR #96 dan PR #97 menyelesaikan mobile Settings/Space/Flow corrections. PR #98 menyinkronkan progress real-laptop sebelum final functional closure. PR #100–#106 membangun, memperbaiki, dan menutup real-Windows W09/W10 acceptance sampai final PASS pada `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`.
+PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya. PR #80 menyinkronkan W14. PR #81–#85 membangun dan menutup W15 evidence. PR #86/#88/#89 mengeraskan Windows runtime flow. PR #90 memperbaiki Settings feedback/action stacking. PR #93 mengintegrasikan responsive + Flow redesign. PR #95 memperbaiki Flow inventory marker drift. PR #96 dan PR #97 menyelesaikan mobile Settings/Space/Flow corrections. PR #98 menyinkronkan progress real-laptop sebelum final functional closure. PR #100–#106 membangun, memperbaiki, dan menutup real-Windows W09/W10 acceptance sampai final PASS pada `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`. PR #112 mengimplementasikan dan menutup repo-side W16 automatic semantic ECX reference selector pada merge baseline `504e6aef86092d6f398ff290a40f77593c8882ca` dengan post-merge CI/Product Eval/MCP acceptance green.
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.

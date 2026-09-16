@@ -316,7 +316,8 @@ export const FIXTURES = [
   },
 ];
 
-export const MODES = ["full-inline", "ecx-all", "ecx-selective-oracle"];
+export const AUTO_SELECTION = Object.freeze({ mode: "semantic-v1", maxRefs: 3 });
+export const MODES = ["full-inline", "ecx-all", "ecx-selective-auto", "ecx-selective-oracle"];
 
 export function median(values) {
   if (!Array.isArray(values) || values.length === 0) return 0;
@@ -377,11 +378,32 @@ export function summarizeRuns(runs) {
   };
 }
 
+export function referenceSelectionMetrics(autoSelectedRefIndexes, oracleRefIndexes) {
+  const selected = [...new Set(autoSelectedRefIndexes)].sort((a, b) => a - b);
+  const oracle = [...new Set(oracleRefIndexes)].sort((a, b) => a - b);
+  const oracleSet = new Set(oracle);
+  const intersectionCount = selected.filter((index) => oracleSet.has(index)).length;
+  return {
+    selectedCount: selected.length,
+    oracleCount: oracle.length,
+    intersectionCount,
+    recall: oracle.length === 0 ? 1 : intersectionCount / oracle.length,
+    precision: selected.length === 0 ? 0 : intersectionCount / selected.length,
+    exactMatch:
+      selected.length === oracle.length &&
+      selected.every((index, position) => index === oracle[position]),
+  };
+}
+
 export function evaluateTaskGates({
   fullContextBytes,
   packetBytes,
   ecxAllHydratedBytes,
-  selectiveHydratedBytes,
+  autoHydratedBytes,
+  oracleHydratedBytes,
+  autoSelectorCandidateContentBytes,
+  autoSelectedRefIndexes,
+  oracleRefIndexes,
   summaries,
   allRuns,
   expectedRecipient,
@@ -390,10 +412,15 @@ export function evaluateTaskGates({
 }) {
   const full = summaries["full-inline"];
   const all = summaries["ecx-all"];
-  const selective = summaries["ecx-selective-oracle"];
+  const auto = summaries["ecx-selective-auto"];
+  const oracle = summaries["ecx-selective-oracle"];
   const maxControlTokenDelta = Math.max(2, Math.ceil(full.inputTokensMedian * 0.05));
   const controlTokenDelta = Math.abs(all.inputTokensMedian - full.inputTokensMedian);
-  const selectiveTransportBytes = packetBytes + selectiveHydratedBytes;
+  const autoHydrationTransportBytes = packetBytes + autoHydratedBytes;
+  const oracleTransportBytes = packetBytes + oracleHydratedBytes;
+  const autoKnownTransportFloorBytes =
+    packetBytes + autoSelectorCandidateContentBytes + autoHydratedBytes;
+  const selection = referenceSelectionMetrics(autoSelectedRefIndexes, oracleRefIndexes);
   const failures = [];
 
   if (actualRecipient !== expectedRecipient) {
@@ -411,21 +438,54 @@ export function evaluateTaskGates({
       `ecx-all control input-token delta ${controlTokenDelta} > ${maxControlTokenDelta}`,
     );
   }
-  if (selectiveHydratedBytes >= ecxAllHydratedBytes) {
-    failures.push("selective hydration did not reduce hydrated bytes");
+  if (autoSelectedRefIndexes.length === 0) {
+    failures.push("automatic selector returned no refs");
   }
-  if (selectiveTransportBytes >= fullContextBytes) {
-    failures.push("selective ECX transport bytes did not beat full-inline context bytes");
+  if (new Set(autoSelectedRefIndexes).size !== autoSelectedRefIndexes.length) {
+    failures.push("automatic selector returned duplicate refs");
   }
-  if (selective.inputTokensMedian >= full.inputTokensMedian) {
-    failures.push("selective median input tokens did not beat full-inline");
+  if (autoSelectedRefIndexes.length > AUTO_SELECTION.maxRefs) {
+    failures.push(
+      `automatic selector returned ${autoSelectedRefIndexes.length} refs > max ${AUTO_SELECTION.maxRefs}`,
+    );
+  }
+  if (selection.recall < 1) {
+    failures.push(`automatic selector oracle recall ${selection.recall.toFixed(3)} < 1`);
+  }
+  if (autoHydratedBytes >= ecxAllHydratedBytes) {
+    failures.push("automatic selective hydration did not reduce hydrated bytes");
+  }
+  if (oracleHydratedBytes >= ecxAllHydratedBytes) {
+    failures.push("oracle selective hydration did not reduce hydrated bytes");
+  }
+  if (autoHydrationTransportBytes >= fullContextBytes) {
+    failures.push(
+      "automatic selected hydration transport did not beat full-inline context bytes",
+    );
+  }
+  if (oracleTransportBytes >= fullContextBytes) {
+    failures.push("oracle selective transport bytes did not beat full-inline context bytes");
+  }
+  if (auto.inputTokensMedian >= full.inputTokensMedian) {
+    failures.push("automatic selective median input tokens did not beat full-inline");
+  }
+  if (oracle.inputTokensMedian >= full.inputTokensMedian) {
+    failures.push("oracle selective median input tokens did not beat full-inline");
   }
   if (
     full.latencyMsMedian > 0 &&
-    selective.latencyMsMedian > full.latencyMsMedian * latencyToleranceRatio
+    auto.latencyMsMedian > full.latencyMsMedian * latencyToleranceRatio
   ) {
     failures.push(
-      `selective median latency ratio ${(selective.latencyMsMedian / full.latencyMsMedian).toFixed(3)} > ${latencyToleranceRatio}`,
+      `automatic selective median latency ratio ${(auto.latencyMsMedian / full.latencyMsMedian).toFixed(3)} > ${latencyToleranceRatio}`,
+    );
+  }
+  if (
+    full.latencyMsMedian > 0 &&
+    oracle.latencyMsMedian > full.latencyMsMedian * latencyToleranceRatio
+  ) {
+    failures.push(
+      `oracle selective median latency ratio ${(oracle.latencyMsMedian / full.latencyMsMedian).toFixed(3)} > ${latencyToleranceRatio}`,
     );
   }
 
@@ -436,21 +496,45 @@ export function evaluateTaskGates({
       fullContextBytes,
       packetBytes,
       ecxAllHydratedBytes,
-      selectiveHydratedBytes,
-      selectiveTransportBytes,
+      autoHydratedBytes,
+      oracleHydratedBytes,
+      autoSelectorCandidateContentBytes,
+      autoHydrationTransportBytes,
+      oracleTransportBytes,
+      autoKnownTransportFloorBytes,
+      autoKnownTransportBeatsFullInline: autoKnownTransportFloorBytes < fullContextBytes,
+      autoKnownTransportFloorReductionPct:
+        fullContextBytes === 0
+          ? 0
+          : ((fullContextBytes - autoKnownTransportFloorBytes) / fullContextBytes) * 100,
+      autoHydrationTransportReductionPct:
+        fullContextBytes === 0
+          ? 0
+          : ((fullContextBytes - autoHydrationTransportBytes) / fullContextBytes) * 100,
       transportReductionPct:
         fullContextBytes === 0
           ? 0
-          : ((fullContextBytes - selectiveTransportBytes) / fullContextBytes) * 100,
+          : ((fullContextBytes - oracleTransportBytes) / fullContextBytes) * 100,
+      autoInputTokenReductionPct:
+        full.inputTokensMedian === 0
+          ? 0
+          : ((full.inputTokensMedian - auto.inputTokensMedian) / full.inputTokensMedian) * 100,
       inputTokenReductionPct:
         full.inputTokensMedian === 0
           ? 0
-          : ((full.inputTokensMedian - selective.inputTokensMedian) / full.inputTokensMedian) *
+          : ((full.inputTokensMedian - oracle.inputTokensMedian) / full.inputTokensMedian) *
             100,
+      autoVsFullLatencyRatio:
+        full.latencyMsMedian === 0 ? 0 : auto.latencyMsMedian / full.latencyMsMedian,
       selectiveVsFullLatencyRatio:
-        full.latencyMsMedian === 0 ? 0 : selective.latencyMsMedian / full.latencyMsMedian,
+        full.latencyMsMedian === 0 ? 0 : oracle.latencyMsMedian / full.latencyMsMedian,
+      autoVsOracleInputTokenRatio:
+        oracle.inputTokensMedian === 0 ? 0 : auto.inputTokensMedian / oracle.inputTokensMedian,
+      autoVsOracleHydratedByteRatio:
+        oracleHydratedBytes === 0 ? 0 : autoHydratedBytes / oracleHydratedBytes,
       controlTokenDelta,
       maxControlTokenDelta,
+      selection,
     },
   };
 }
@@ -575,23 +659,42 @@ async function planPacket({ task, pointers, hubUrl, token, timeoutMs }) {
   };
 }
 
-async function hydratePacket({ packet, indexes, hubUrl, token, timeoutMs }) {
+async function hydratePacket({ packet, indexes, selection, hubUrl, token, timeoutMs }) {
+  const explicit = Array.isArray(indexes);
+  const automatic = selection !== undefined;
+  if (explicit === automatic) {
+    throw new Error("hydratePacket requires exactly one of indexes or selection");
+  }
+  const started = performance.now();
   const response = await requestJson(`${hubUrl}/v1/exchange/hydrate`, {
     token,
     timeoutMs,
     body: {
       packet,
-      refIndexes: indexes,
+      ...(explicit ? { refIndexes: indexes } : { selection }),
       scope: "personal",
       maxSensitivity: "INTERNAL",
       hostedEligible: false,
     },
   });
+  const hydrateLatencyMs = performance.now() - started;
   const items = Array.isArray(response?.items) ? response.items : [];
-  if (items.length !== indexes.length) {
+  if (explicit && items.length !== indexes.length) {
     throw new Error(
       `Hydration returned ${items.length} items for ${indexes.length} requested refs`,
     );
+  }
+  if (automatic && items.length > selection.maxRefs) {
+    throw new Error(
+      `Automatic hydration returned ${items.length} refs above max ${selection.maxRefs}`,
+    );
+  }
+  if (automatic && packet.refs.length > 0 && items.length === 0) {
+    throw new Error("Automatic hydration returned no refs for a non-empty packet");
+  }
+  const selectedRefIndexes = items.map((item) => Number(item.index)).sort((a, b) => a - b);
+  if (new Set(selectedRefIndexes).size !== selectedRefIndexes.length) {
+    throw new Error("Hydration returned duplicate ref indexes");
   }
   const documents = [...items]
     .sort((a, b) => Number(a.index) - Number(b.index))
@@ -601,6 +704,8 @@ async function hydratePacket({ packet, indexes, hubUrl, token, timeoutMs }) {
     }));
   return {
     hydratedBytes: Number(response?.hydratedBytes ?? 0),
+    hydrateLatencyMs,
+    selectedRefIndexes,
     context: assembleContext(documents),
   };
 }
@@ -761,7 +866,14 @@ export async function main(argv = process.argv.slice(2)) {
       token,
       timeoutMs,
     });
-    const selective = await hydratePacket({
+    const auto = await hydratePacket({
+      packet,
+      selection: AUTO_SELECTION,
+      hubUrl,
+      token,
+      timeoutMs,
+    });
+    const oracle = await hydratePacket({
       packet,
       indexes: task.relevantRefIndexes,
       hubUrl,
@@ -770,13 +882,18 @@ export async function main(argv = process.argv.slice(2)) {
     });
     const fullContext = assembleContext(task.documents);
     const fullContextBytes = Buffer.byteLength(fullContext, "utf8");
+    const autoSelectorCandidateContentBytes = pointers.reduce(
+      (sum, pointer) => sum + Number(pointer.sizeBytes ?? 0),
+      0,
+    );
 
     const runsByMode = Object.fromEntries(MODES.map((mode) => [mode, []]));
     for (let pairedRunIndex = 1; pairedRunIndex <= args.repeats; pairedRunIndex += 1) {
       const contexts = {
         "full-inline": fullContext,
         "ecx-all": ecxAll.context,
-        "ecx-selective-oracle": selective.context,
+        "ecx-selective-auto": auto.context,
+        "ecx-selective-oracle": oracle.context,
       };
       for (const mode of MODES) {
         console.log(
@@ -805,7 +922,11 @@ export async function main(argv = process.argv.slice(2)) {
       fullContextBytes,
       packetBytes,
       ecxAllHydratedBytes: ecxAll.hydratedBytes,
-      selectiveHydratedBytes: selective.hydratedBytes,
+      autoHydratedBytes: auto.hydratedBytes,
+      oracleHydratedBytes: oracle.hydratedBytes,
+      autoSelectorCandidateContentBytes,
+      autoSelectedRefIndexes: auto.selectedRefIndexes,
+      oracleRefIndexes: task.relevantRefIndexes,
       summaries,
       allRuns,
       expectedRecipient,
@@ -823,7 +944,14 @@ export async function main(argv = process.argv.slice(2)) {
         recipient: packet.recipient,
         packetBytes,
         allHydratedBytes: ecxAll.hydratedBytes,
-        selectiveHydratedBytes: selective.hydratedBytes,
+        autoHydratedBytes: auto.hydratedBytes,
+        oracleHydratedBytes: oracle.hydratedBytes,
+        autoSelectedRefIndexes: auto.selectedRefIndexes,
+        oracleRefIndexes: task.relevantRefIndexes,
+        autoSelectorCandidateContentBytes,
+        allHydrateLatencyMs: ecxAll.hydrateLatencyMs,
+        autoHydrateLatencyMs: auto.hydrateLatencyMs,
+        oracleHydrateLatencyMs: oracle.hydrateLatencyMs,
       },
       summaries,
       runs: runsByMode,
@@ -846,15 +974,35 @@ export async function main(argv = process.argv.slice(2)) {
     medianSelectiveVsFullLatencyRatio: median(
       taskResults.map((task) => task.gates.measurements.selectiveVsFullLatencyRatio),
     ),
+    medianAutoHydrationTransportReductionPct: median(
+      taskResults.map((task) => task.gates.measurements.autoHydrationTransportReductionPct),
+    ),
+    medianAutoInputTokenReductionPct: median(
+      taskResults.map((task) => task.gates.measurements.autoInputTokenReductionPct),
+    ),
+    medianAutoVsFullLatencyRatio: median(
+      taskResults.map((task) => task.gates.measurements.autoVsFullLatencyRatio),
+    ),
+    medianAutoOracleRecall: median(
+      taskResults.map((task) => task.gates.measurements.selection.recall),
+    ),
+    medianAutoOraclePrecision: median(
+      taskResults.map((task) => task.gates.measurements.selection.precision),
+    ),
+    autoKnownTransportBeatTaskCount: taskResults.filter(
+      (task) => task.gates.measurements.autoKnownTransportBeatsFullInline,
+    ).length,
   };
   const evidence = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     profile: {
       target: "local",
       repeats: args.repeats,
       tasks: selectedTasks.map((task) => task.id),
       modes: MODES,
+      autoSelection: AUTO_SELECTION,
+      oracleIndexesSuppliedToAutoLane: false,
       latencyToleranceRatio,
       cachePolicy:
         "Every invocation gets a unique cache namespace; each measured lane uses a fixed-shape task/pair/mode marker and any cacheHit fails the task.",
@@ -864,9 +1012,11 @@ export async function main(argv = process.argv.slice(2)) {
     aggregate,
     claimBoundary: {
       verifiedByThisHarness:
-        "Paired local-model evidence for full-inline transport, ECX all-ref hydration, and ECX selective hydration using fixture-declared oracle ref indexes.",
+        "Paired local-model evidence for full-inline, ECX all-ref, ECX automatic semantic selection, and fixture-oracle control on the same tasks. The automatic lane receives no fixture relevance indexes; oracle indexes are used only for evaluation/control.",
+      transportAccounting:
+        "Automatic-selection hydration bytes are measured separately from selector candidate scanning. autoKnownTransportFloorBytes counts packet bytes + candidate artifact content bytes + selected hydration bytes, before metadata/HTTP overhead, so hydration/model-context savings are not presented as end-to-end transport savings.",
       notVerified:
-        "This harness does not prove automatic reference selection, hosted-provider billed-cost savings, production savings, or general workload quality. ECX selective-oracle is an upper-bound/control lane, not a production selector.",
+        "This harness does not prove hosted-provider billed-cost savings, production savings, universal workload quality, or end-to-end network savings. Hosted economics remain a separate W18 checkpoint.",
     },
   };
 
@@ -884,7 +1034,7 @@ export async function main(argv = process.argv.slice(2)) {
   }
 
   console.log(
-    "PASS comparative-evidence: paired local ECX transport/selective-hydration evidence meets predeclared gates; savings claims remain bounded",
+    "PASS comparative-evidence: paired local ECX automatic/no-oracle and oracle-control evidence meets predeclared gates; savings claims remain bounded",
   );
 }
 
