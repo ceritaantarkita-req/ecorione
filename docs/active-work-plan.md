@@ -1,6 +1,6 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-15**
+Last updated: **2026-09-16**
 
 Status: **ACTIVE / canonical execution log**
 
@@ -9,16 +9,17 @@ Current code + current evidence + dokumen ini adalah source of truth pekerjaan a
 ## 1. Current repository checkpoint
 
 ```text
-current main: c745de0b863c541d31941d7edfba1582caae3d87
-PR #98: merged — W03 real-laptop progress sync (docs-only)
-current W03 product-code baseline: 746dc0705e12d419f93d3592bc6c7bdb55e4b76e
-PR #97 post-merge CI: 34968981113 — SUCCESS
-PR #97 post-merge Product Eval: 34968981026 — SUCCESS
+current main runtime-verified baseline: 4ea5b942ec705b61fe51c4b47a75bc59ac6019b8
+PR #106: merged — harden W09/W10 protected-port reachability
+post-merge CI: 35044646171 (#876) — SUCCESS
+post-merge Product Eval: 35044646183 (#115) — SUCCESS
+W09/W10 final Windows acceptance: PASS
+operator report: traces/w09-w10-windows-acceptance-2026-09-16T02-04-06-435Z.json
 ```
 
-PR #98 only changed documentation, so the final operator runtime/browser closure performed after it still exercised the same product code at `746dc0705e12d419f93d3592bc6c7bdb55e4b76e`.
+The final real-Windows W09/W10 run was synchronized exactly to that main commit. Ai resolved to `127.0.0.1:17020`; the protected foreign listener on port `3000` survived start and cleanup; the full fixed owner fleet was healthy; duplicate start failed closed; cleanup released the ECORIONE application ports; and doctor remained usable after shutdown. Local AI was `UNAVAILABLE` in that run and remains intentionally outside the W09/W10 core process-readiness gate because immutable local-model evidence is governed by W13/W15.
 
-`main` remains the green baseline. GitHub `main` still does not have required status-check branch protection; that governance gap remains separate from W03.
+`main` remains the green baseline. GitHub `main` still does not have required status-check branch protection; that governance gap remains separate from W09/W10.
 
 ## 2. Work queue
 
@@ -32,8 +33,8 @@ PR #98 only changed documentation, so the final operator runtime/browser closure
 | W06 | Credential Vault integration | **DONE WITH LIMITATIONS — REPO SIDE** | Test/save/replace/remove; no browser plaintext persistence. |
 | W07 | Provider health/status | **DONE WITH LIMITATIONS — REPO SIDE** | Real external credential validity tetap operator-owned. |
 | W08 | Default AI selection | **DONE — REPO SIDE** | Durable Local/Hosted default; no auto-router claim. |
-| W09 | One-command startup | **STARTED — PORT COLLISION FIX INTEGRATING** | Runtime reached READY; fixed Ai host-port assumptions are being replaced by preferred `17020` + safe fallback before final Windows acceptance. |
-| W10 | `ecorione doctor` | **STARTED — PORT-AWARE RERUN REQUIRED** | Doctor follows resolved Ai runtime state; final Windows matrix still required. |
+| W09 | One-command startup | **DONE — WINDOWS RUNTIME VERIFIED** | Exact-current-main Windows harness passed cold start, port-3000 isolation, duplicate-start guard, and process-tree cleanup. |
+| W10 | `ecorione doctor` | **DONE — WINDOWS RUNTIME VERIFIED** | Pre-start, running, and post-stop doctor phases passed on exact-current-main Windows. |
 | W11 | Installer/Launcher | **STARTED — REPO-SIDE PACKAGING READY** | Real Setup + clean-Windows acceptance belum ada. |
 | W12 | Attachment composer backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → hydration. |
 | W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Current operator runtime berhasil memverifikasi selector + immutable digest; perubahan model/runtime tetap harus diverifikasi ulang. |
@@ -43,7 +44,7 @@ PR #98 only changed documentation, so the final operator runtime/browser closure
 | W17 | ECX no-oracle validation | TODO | full vs auto-selective vs oracle pada task set sama. |
 | W18 | Hosted economic validation | TODO | Real bounded hosted token/cost evidence. |
 | W19 | Release/security governance follow-up | **DONE — REPO SIDE** | History secret scan + naming/model-alias gate di CI; branch protection gap terpisah. |
-| W20 | Final current-state sync | **STARTED** | Continue after the remaining W09/W10/W11/W16/W17/W18 evidence. |
+| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W16/W17/W18 evidence. |
 
 ## 3. W03 final closure evidence
 
@@ -126,7 +127,7 @@ pnpm engine:doctor
 pnpm engine:stop-temporal
 ```
 
-Temporal CLI local path, Windows `pnpm.cmd` handling, required-service readiness, Connect Windows startup, dan spawned-process-tree cleanup sudah repo-side. W09/W10 tetap terbuka sampai clean-Windows proof lengkap.
+Temporal CLI local path, Windows `pnpm.cmd` handling, collision-safe Ai port selection, required-service readiness, Connect Windows startup, dan spawned-process-tree cleanup sudah terbukti pada real Windows. W09/W10 closed sebagai **DONE — WINDOWS RUNTIME VERIFIED**.
 
 ## 5. ECX claim boundary
 
@@ -153,21 +154,20 @@ Historical verification documents remain the detailed source of truth for W14/W1
 
 ## 7. Immediate next action
 
-With W03 closed, priority resumes at:
+With W03 and W09/W10 closed, priority resumes at:
 
 ```text
-1. W09/W10 — complete clean-Windows one-command startup + doctor acceptance matrix
-2. W11 — complete real Setup/launcher acceptance on clean Windows
-3. W16 — implement automatic semantic reference selector
-4. W17 — run ECX no-oracle comparison on the same task set
-5. W18 — collect bounded real hosted token/cost evidence
-6. W20 — final current-state sync after remaining evidence closes
+1. W11 — complete real Setup/launcher acceptance on clean Windows
+2. W16 — implement automatic semantic reference selector
+3. W17 — run ECX no-oracle comparison on the same task set
+4. W18 — collect bounded real hosted token/cost evidence
+5. W20 — final current-state sync after remaining evidence closes
 ```
 
-Do not reopen W03 unless a new reproducible regression appears on product code newer than the verified baseline.
+Do not reopen W03 or W09/W10 unless a new reproducible regression appears on product code newer than the verified baselines.
 
 ## 8. Historical note
 
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya. PR #80 menyinkronkan W14. PR #81–#85 membangun dan menutup W15 evidence. PR #86/#88/#89 mengeraskan Windows runtime flow. PR #90 memperbaiki Settings feedback/action stacking. PR #93 mengintegrasikan responsive + Flow redesign. PR #95 memperbaiki Flow inventory marker drift. PR #96 dan PR #97 menyelesaikan mobile Settings/Space/Flow corrections. PR #98 menyinkronkan progress real-laptop sebelum final functional closure.
+PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya. PR #80 menyinkronkan W14. PR #81–#85 membangun dan menutup W15 evidence. PR #86/#88/#89 mengeraskan Windows runtime flow. PR #90 memperbaiki Settings feedback/action stacking. PR #93 mengintegrasikan responsive + Flow redesign. PR #95 memperbaiki Flow inventory marker drift. PR #96 dan PR #97 menyelesaikan mobile Settings/Space/Flow corrections. PR #98 menyinkronkan progress real-laptop sebelum final functional closure. PR #100–#106 membangun, memperbaiki, dan menutup real-Windows W09/W10 acceptance sampai final PASS pada `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`.
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.
