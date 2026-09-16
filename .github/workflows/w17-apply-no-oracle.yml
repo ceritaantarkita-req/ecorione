@@ -28,24 +28,24 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path('scripts/comparative-evidence.mjs')
+          path = Path("scripts/comparative-evidence.mjs")
           text = path.read_text()
 
           def replace_once(old, new):
               global text
               count = text.count(old)
               if count != 1:
-                  raise SystemExit(f'expected exactly one match, found {count}: {old[:80]!r}')
+                  raise SystemExit(f"expected exactly one match, found {count}: {old[:100]!r}")
               text = text.replace(old, new, 1)
 
           def replace_between(start, end, replacement):
               global text
               start_i = text.find(start)
               if start_i < 0:
-                  raise SystemExit(f'start marker not found: {start!r}')
+                  raise SystemExit(f"start marker not found: {start!r}")
               end_i = text.find(end, start_i)
               if end_i < 0:
-                  raise SystemExit(f'end marker not found: {end!r}')
+                  raise SystemExit(f"end marker not found: {end!r}")
               text = text[:start_i] + replacement + text[end_i:]
 
           replace_once(
@@ -61,7 +61,7 @@ jobs:
 
           replace_between(
               'export function evaluateTaskGates({',
-              '\nfunction parseArgs(argv) {',
+              'function parseArgs(argv) {',
               '''export function referenceSelectionMetrics(autoSelectedRefIndexes, oracleRefIndexes) {
             const selected = [...new Set(autoSelectedRefIndexes)].sort((a, b) => a - b);
             const oracle = [...new Set(oracleRefIndexes)].sort((a, b) => a - b);
@@ -221,12 +221,13 @@ jobs:
               },
             };
           }
+
           ''',
           )
 
           replace_between(
               'async function hydratePacket({ packet, indexes, hubUrl, token, timeoutMs }) {',
-              '\nasync function runCompletion({',
+              'async function runCompletion({',
               '''async function hydratePacket({
             packet,
             indexes,
@@ -286,79 +287,96 @@ jobs:
               context: assembleContext(documents),
             };
           }
+
           ''',
           )
 
-          replace_once(
-              '''    const selective = await hydratePacket({
-                packet,
-                indexes: task.relevantRefIndexes,
-                hubUrl,
-                token,
-                timeoutMs,
-              });
-              const fullContext = assembleContext(task.documents);
-              const fullContextBytes = Buffer.byteLength(fullContext, "utf8");''',
-              '''    const auto = await hydratePacket({
-                packet,
-                selection: AUTO_SELECTION,
-                hubUrl,
-                token,
-                timeoutMs,
-              });
-              const oracle = await hydratePacket({
-                packet,
-                indexes: task.relevantRefIndexes,
-                hubUrl,
-                token,
-                timeoutMs,
-              });
-              const fullContext = assembleContext(task.documents);
-              const fullContextBytes = Buffer.byteLength(fullContext, "utf8");
-              const autoSelectorCandidateContentBytes = pointers.reduce(
-                (sum, pointer) => sum + Number(pointer.sizeBytes ?? 0),
-                0,
-              );''',
-          )
+          replace_between(
+              '    const allIndexes = task.documents.map((_, index) => index);',
+              '    const summaries = Object.fromEntries(',
+              '''    const allIndexes = task.documents.map((_, index) => index);
+            const ecxAll = await hydratePacket({
+              packet,
+              indexes: allIndexes,
+              hubUrl,
+              token,
+              timeoutMs,
+            });
+            const auto = await hydratePacket({
+              packet,
+              selection: AUTO_SELECTION,
+              hubUrl,
+              token,
+              timeoutMs,
+            });
+            const oracle = await hydratePacket({
+              packet,
+              indexes: task.relevantRefIndexes,
+              hubUrl,
+              token,
+              timeoutMs,
+            });
+            const fullContext = assembleContext(task.documents);
+            const fullContextBytes = Buffer.byteLength(fullContext, "utf8");
+            const autoSelectorCandidateContentBytes = pointers.reduce(
+              (sum, pointer) => sum + Number(pointer.sizeBytes ?? 0),
+              0,
+            );
 
-          replace_once(
-              '''      const contexts = {
-                "full-inline": fullContext,
-                "ecx-all": ecxAll.context,
-                "ecx-selective-oracle": selective.context,
-              };''',
-              '''      const contexts = {
+            const runsByMode = Object.fromEntries(MODES.map((mode) => [mode, []]));
+            for (let pairedRunIndex = 1; pairedRunIndex <= args.repeats; pairedRunIndex += 1) {
+              const contexts = {
                 "full-inline": fullContext,
                 "ecx-all": ecxAll.context,
                 "ecx-selective-auto": auto.context,
                 "ecx-selective-oracle": oracle.context,
-              };''',
+              };
+              for (const mode of MODES) {
+                console.log(
+                  `comparative-evidence: task=${task.id} pair=${pairedRunIndex}/${args.repeats} mode=${mode}`,
+                );
+                const run = await runCompletion({
+                  task,
+                  mode,
+                  context: contexts[mode],
+                  connectUrl,
+                  token,
+                  timeoutMs,
+                  pairedRunIndex,
+                  cacheNamespace,
+                  taskIndex,
+                });
+                runsByMode[mode].push(run);
+              }
+            }
+
+          ''',
           )
 
-          replace_once(
-              '''      ecxAllHydratedBytes: ecxAll.hydratedBytes,
-                selectiveHydratedBytes: selective.hydratedBytes,
-                summaries,
-                allRuns,
-                expectedRecipient,
-                actualRecipient: String(packet.recipient ?? ""),
-                latencyToleranceRatio,''',
-              '''      ecxAllHydratedBytes: ecxAll.hydratedBytes,
-                autoHydratedBytes: auto.hydratedBytes,
-                oracleHydratedBytes: oracle.hydratedBytes,
-                autoSelectorCandidateContentBytes,
-                autoSelectedRefIndexes: auto.selectedRefIndexes,
-                oracleRefIndexes: task.relevantRefIndexes,
-                summaries,
-                allRuns,
-                expectedRecipient,
-                actualRecipient: String(packet.recipient ?? ""),
-                latencyToleranceRatio,''',
+          replace_between(
+              '    const gates = evaluateTaskGates({',
+              '    taskResults.push({',
+              '''    const gates = evaluateTaskGates({
+              fullContextBytes,
+              packetBytes,
+              ecxAllHydratedBytes: ecxAll.hydratedBytes,
+              autoHydratedBytes: auto.hydratedBytes,
+              oracleHydratedBytes: oracle.hydratedBytes,
+              autoSelectorCandidateContentBytes,
+              autoSelectedRefIndexes: auto.selectedRefIndexes,
+              oracleRefIndexes: task.relevantRefIndexes,
+              summaries,
+              allRuns,
+              expectedRecipient,
+              actualRecipient: String(packet.recipient ?? ""),
+              latencyToleranceRatio,
+            });
+          ''',
           )
 
           replace_between(
               '    taskResults.push({',
-              '    });\n  }\n\n  const failedTasks',
+              '  const failedTasks = taskResults.filter',
               '''    taskResults.push({
               id: task.id,
               title: task.title,
@@ -385,7 +403,7 @@ jobs:
             });
           }
 
-          const failedTasks''',
+          ''',
           )
 
           replace_between(
@@ -424,12 +442,12 @@ jobs:
               (task) => task.gates.measurements.autoKnownTransportBeatsFullInline,
             ).length,
           };
-          const evidence = {''',
+          ''',
           )
 
           replace_between(
               '  const evidence = {',
-              '\n\n  console.log(JSON.stringify(evidence, null, 2));',
+              '  console.log(JSON.stringify(evidence, null, 2));',
               '''  const evidence = {
             schemaVersion: 2,
             generatedAt: new Date().toISOString(),
@@ -455,7 +473,9 @@ jobs:
               notVerified:
                 "This harness does not prove hosted-provider billed-cost savings, production savings, universal workload quality, or end-to-end network savings. Hosted economics remain a separate W18 checkpoint.",
             },
-          };''',
+          };
+
+          ''',
           )
 
           replace_once(
