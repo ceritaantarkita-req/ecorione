@@ -35,7 +35,7 @@ jobs:
         run: node -e "import('./scripts/desktop-bundle.mjs').then((m) => console.log(m.normalizeVersion(process.env.ECORIONE_VERSION)))"
 
       - name: Build desktop runtime bundle
-        run: pnpm desktop:bundle -- --version "$ECORIONE_VERSION"
+        run: node scripts/desktop-bundle.mjs --version "$ECORIONE_VERSION"
 
       - name: Upload prepared desktop bundle
         uses: actions/upload-artifact@v4
