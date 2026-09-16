@@ -1,0 +1,35 @@
+name: W09 W10 closure tidy
+
+on:
+  push:
+    branches:
+      - docs/w09-w10-windows-closure-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Remove stale queue boundary and commit
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('docs/active-work-plan.md')
+          s = p.read_text(encoding='utf-8')
+          old = '| W20 | Final current-state sync | **STARTED** | Continue after the remaining W09/W10/W11/W16/W17/W18 evidence. |'
+          new = '| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W16/W17/W18 evidence. |'
+          if old not in s:
+              raise SystemExit('expected W20 boundary not found')
+          p.write_text(s.replace(old, new), encoding='utf-8')
+          PY
+          rm .github/workflows/tmp-w09-w10-closure-tidy.yml
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git add docs/active-work-plan.md .github/workflows/tmp-w09-w10-closure-tidy.yml
+          git diff --cached --check
+          git commit -m "docs: remove stale W09 W10 queue boundary"
+          git push
