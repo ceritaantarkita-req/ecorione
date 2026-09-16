@@ -144,6 +144,12 @@ function authorityMultiplier(text: string): number {
  * Deterministic local selector for W16. It ranks already-authorized reference
  * descriptors against packet intent/task/need. This is deliberately not a
  * hosted-model call and does not mutate the packet or bypass hydration policy.
+ *
+ * maxRefs is the caller's hard context budget. Once semantic overlap exists,
+ * fill that budget with the highest positive-score references rather than
+ * applying a relative cutoff that can discard secondary evidence needed to
+ * answer a multi-field task. Authority penalties still rank noise below more
+ * current/final evidence; the budget remains the hard upper bound.
  */
 export function selectEcxReferenceIndexes(
   packet: EcxPacket,
@@ -194,9 +200,8 @@ export function selectEcxReferenceIndexes(
       .slice(0, Math.min(options.maxRefs, scored.length));
   }
 
-  const cutoff = topScore * 0.28;
   const selected = scored
-    .filter((entry) => entry.score >= cutoff)
+    .filter((entry) => entry.score > 0)
     .slice(0, Math.min(options.maxRefs, scored.length))
     .map((entry) => entry.index);
 
