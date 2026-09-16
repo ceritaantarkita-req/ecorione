@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   assembleContext,
+  AUTO_SELECTION,
   benchmarkCacheMarker,
   evaluateTaskGates,
   extractJsonObject,
   FIXTURES,
   median,
+  referenceSelectionMetrics,
   scoreReply,
   summarizeRuns,
 } from "../scripts/comparative-evidence.mjs";
@@ -87,6 +89,21 @@ describe("comparative evidence helpers", () => {
     );
   });
 
+  it("uses a fixed no-oracle selector budget across benchmark tasks", () => {
+    expect(AUTO_SELECTION).toEqual({ mode: "semantic-v1", maxRefs: 3 });
+  });
+
+  it("computes selector recall and precision without feeding oracle indexes to selection", () => {
+    expect(referenceSelectionMetrics([1, 2, 4], [2, 4])).toEqual({
+      selectedCount: 3,
+      oracleCount: 2,
+      intersectionCount: 2,
+      recall: 1,
+      precision: 2 / 3,
+      exactMatch: false,
+    });
+  });
+
   it("isolates cache markers across invocations while keeping paired marker shape stable", () => {
     const first = benchmarkCacheMarker({
       cacheNamespace: "a".repeat(32),
@@ -114,10 +131,13 @@ describe("comparative evidence helpers", () => {
     expect(nextInvocation).toContain("b".repeat(32));
   });
 
-  it("passes predeclared gates when selective hydration reduces bytes and tokens", () => {
+  it("passes no-oracle gates when auto selection preserves quality and oracle recall", () => {
     const byMode = {
       "full-inline": [run({ mode: "full-inline", inputTokens: 1000, latencyMs: 1000 })],
       "ecx-all": [run({ mode: "ecx-all", inputTokens: 1010, latencyMs: 980 })],
+      "ecx-selective-auto": [
+        run({ mode: "ecx-selective-auto", inputTokens: 450, latencyMs: 850 }),
+      ],
       "ecx-selective-oracle": [
         run({ mode: "ecx-selective-oracle", inputTokens: 400, latencyMs: 800 }),
       ],
@@ -129,7 +149,11 @@ describe("comparative evidence helpers", () => {
       fullContextBytes: 10_000,
       packetBytes: 500,
       ecxAllHydratedBytes: 9_500,
-      selectiveHydratedBytes: 3_000,
+      autoHydratedBytes: 3_500,
+      oracleHydratedBytes: 3_000,
+      autoSelectorCandidateContentBytes: 9_500,
+      autoSelectedRefIndexes: [2, 4],
+      oracleRefIndexes: [2, 4],
       summaries,
       allRuns: Object.values(byMode).flat(),
       expectedRecipient: "agent:reviewer",
@@ -140,19 +164,27 @@ describe("comparative evidence helpers", () => {
     expect(gates.failures).toEqual([]);
     expect(gates.measurements.transportReductionPct).toBe(65);
     expect(gates.measurements.inputTokenReductionPct).toBe(60);
+    expect(gates.measurements.autoHydrationTransportReductionPct).toBe(60);
+    expect(gates.measurements.autoInputTokenReductionPct).toBe(55);
+    expect(gates.measurements.autoKnownTransportFloorBytes).toBe(13_500);
+    expect(gates.measurements.autoKnownTransportBeatsFullInline).toBe(false);
+    expect(gates.measurements.selection.recall).toBe(1);
   });
 
-  it("fails when a measured lane is cached or loses required quality", () => {
+  it("fails when a measured lane is cached, loses quality, or auto selection misses oracle refs", () => {
     const byMode = {
       "full-inline": [run({ mode: "full-inline", inputTokens: 1000, latencyMs: 1000 })],
       "ecx-all": [run({ mode: "ecx-all", inputTokens: 1000, latencyMs: 1000, cacheHit: true })],
-      "ecx-selective-oracle": [
+      "ecx-selective-auto": [
         run({
-          mode: "ecx-selective-oracle",
-          inputTokens: 400,
+          mode: "ecx-selective-auto",
+          inputTokens: 350,
           latencyMs: 800,
           quality: 2 / 3,
         }),
+      ],
+      "ecx-selective-oracle": [
+        run({ mode: "ecx-selective-oracle", inputTokens: 300, latencyMs: 750 }),
       ],
     };
     const summaries = Object.fromEntries(
@@ -162,7 +194,11 @@ describe("comparative evidence helpers", () => {
       fullContextBytes: 10_000,
       packetBytes: 500,
       ecxAllHydratedBytes: 9_500,
-      selectiveHydratedBytes: 3_000,
+      autoHydratedBytes: 2_500,
+      oracleHydratedBytes: 2_000,
+      autoSelectorCandidateContentBytes: 9_500,
+      autoSelectedRefIndexes: [2],
+      oracleRefIndexes: [2, 4],
       summaries,
       allRuns: Object.values(byMode).flat(),
       expectedRecipient: "agent:reviewer",
@@ -171,6 +207,7 @@ describe("comparative evidence helpers", () => {
 
     expect(gates.pass).toBe(false);
     expect(gates.failures).toContain("measured run hit exact cache");
-    expect(gates.failures).toContain("ecx-selective-oracle median quality < 1");
+    expect(gates.failures).toContain("ecx-selective-auto median quality < 1");
+    expect(gates.failures).toContain("automatic selector oracle recall 0.500 < 1");
   });
 });
