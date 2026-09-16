@@ -106,16 +106,41 @@ export const EcxPlanResponseSchema = z.object({
 });
 export type EcxPlanResponse = z.infer<typeof EcxPlanResponseSchema>;
 
+export const EcxReferenceSelectionSchema = z.object({
+  mode: z.literal("semantic-v1"),
+  maxRefs: z.number().int().min(1).max(32).default(4),
+});
+export type EcxReferenceSelection = z.infer<typeof EcxReferenceSelectionSchema>;
+
 export const EcxHydrateRequestSchema = z
   .object({
     packet: EcxPacketSchema,
-    refIndexes: z.array(z.number().int().nonnegative()).min(1).max(32),
+    refIndexes: z.array(z.number().int().nonnegative()).min(1).max(32).optional(),
+    selection: EcxReferenceSelectionSchema.optional(),
     scope: ScopeSchema,
     maxSensitivity: SensitivitySchema,
     hostedEligible: z.boolean().default(false),
   })
-  .refine((value) => new Set(value.refIndexes).size === value.refIndexes.length, {
-    message: "refIndexes tidak boleh duplikat.",
+  .superRefine((value, ctx) => {
+    const explicit = value.refIndexes !== undefined;
+    const automatic = value.selection !== undefined;
+    if (explicit === automatic) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Pilih tepat satu: refIndexes atau selection.",
+        path: ["refIndexes"],
+      });
+    }
+    if (
+      value.refIndexes !== undefined &&
+      new Set(value.refIndexes).size !== value.refIndexes.length
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "refIndexes tidak boleh duplikat.",
+        path: ["refIndexes"],
+      });
+    }
   });
 export type EcxHydrateRequest = z.infer<typeof EcxHydrateRequestSchema>;
 

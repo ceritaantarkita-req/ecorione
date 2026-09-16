@@ -83,6 +83,102 @@ describe("ECX HTTP integration", () => {
     expect(ledger.getSession(sessionId)?.nextSeq).toBe(2);
   });
 
+  it("automatically selects a relevant history reference before hydration", async () => {
+    const { ledger, app } = setup();
+    const legacySessionId = assertId("session", "sess_ecxselectorlegacy001");
+    const currentSessionId = assertId("session", "sess_ecxselectorcurrent001");
+
+    for (const sessionId of [legacySessionId, currentSessionId]) {
+      ledger.createSession({
+        id: sessionId,
+        createdAt: NOW,
+        scope: "personal",
+        sensitivity: "INTERNAL",
+        syncClass: "CLOUD_ALLOWED",
+      });
+    }
+    ledger.append(legacySessionId, 0, {
+      id: assertId("event", "evt_ecxselectorlegacy001"),
+      recordedAt: NOW,
+      eventType: "user.message",
+      actor: "user",
+      operationId: null,
+      parentEventId: null,
+      payload: {
+        text: "Archived legacy training notes describe unrelated closed incidents.",
+      },
+    });
+    ledger.append(currentSessionId, 0, {
+      id: assertId("event", "evt_ecxselectorcurrent001"),
+      recordedAt: NOW,
+      eventType: "user.message",
+      actor: "user",
+      operationId: null,
+      parentEventId: null,
+      payload: {
+        text: "CURRENT INCIDENT. Incident ID INC-7421. Current severity SEV-2.",
+      },
+    });
+
+    const plan = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/plan",
+      payload: {
+        operationId: assertId("operation", "op_ecxselector001"),
+        requestedAt: NOW,
+        sender: "agent:planner",
+        intent: "incident-review",
+        task: "Return the incidentId and severity from the current incident record.",
+        need: ["incident", "verification"],
+        refs: [
+          {
+            kind: "history",
+            sessionId: legacySessionId,
+            afterSeq: -1,
+            throughSeq: 0,
+          },
+          {
+            kind: "history",
+            sessionId: currentSessionId,
+            afterSeq: -1,
+            throughSeq: 0,
+          },
+        ],
+        budget: { maxHydratedBytes: 4096 },
+        candidates: [
+          {
+            agentId: "agent:reviewer",
+            capabilities: ["incident", "verification"],
+            estimatedCost: 1,
+          },
+        ],
+      },
+    });
+    expect(plan.statusCode).toBe(200);
+    const packet = (plan.json() as { packets: unknown[] }).packets[0];
+
+    const hydrated = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/hydrate",
+      payload: {
+        packet,
+        selection: { mode: "semantic-v1", maxRefs: 1 },
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        hostedEligible: false,
+      },
+    });
+    expect(hydrated.statusCode).toBe(200);
+    const body = hydrated.json() as {
+      items: Array<{ index: number; contentBase64: string }>;
+    };
+    expect(body.items).toHaveLength(1);
+    expect(body.items[0]?.index).toBe(1);
+    expect(Buffer.from(body.items[0]!.contentBase64, "base64").toString("utf8")).toContain(
+      "INC-7421",
+    );
+  });
+
   it("fails closed when hosted hydration points at LOCAL_ONLY history", async () => {
     const { ledger, app } = setup();
     const sessionId = assertId("session", "sess_ecxlocal001");
