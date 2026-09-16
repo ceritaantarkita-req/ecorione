@@ -52,8 +52,8 @@ jobs:
           tests = replace_once(
               tests,
               '''import { describe, expect, it } from "vitest";\n''',
-              '''import { createConnection } from "node:net";\n\nimport { describe, expect, it } from "vitest";\n''',
-              "test net import",
+              '''import { createConnection } from "node:net";\nimport { setTimeout as sleep } from "node:timers/promises";\n\nimport { describe, expect, it } from "vitest";\n''',
+              "test net/timer imports",
           )
           tests = replace_once(
               tests,
@@ -62,7 +62,7 @@ jobs:
               "test sentinel import",
           )
           insertion_anchor = '''  it("requires Temporal, Ai, and every Phase 4 owner in a healthy runtime doctor", () => {\n'''
-          insertion = '''  it("keeps the protected foreign-port sentinel alive across an immediate client reset", async () => {\n    const server = createProtectedPortSentinel();\n    await new Promise((resolvePromise, rejectPromise) => {\n      server.once("error", rejectPromise);\n      server.listen(0, "127.0.0.1", resolvePromise);\n    });\n\n    const address = server.address();\n    expect(address).not.toBeNull();\n    expect(typeof address).toBe("object");\n    if (!address || typeof address === "string") throw new Error("Unexpected sentinel address");\n\n    await new Promise((resolvePromise) => {\n      const client = createConnection({ host: "127.0.0.1", port: address.port });\n      client.once("connect", () => {\n        if (typeof client.resetAndDestroy === "function") client.resetAndDestroy();\n        else client.destroy();\n      });\n      client.once("error", resolvePromise);\n      client.once("close", resolvePromise);\n    });\n\n    await new Promise((resolvePromise) => setTimeout(resolvePromise, 25));\n    expect(server.listening).toBe(true);\n    await new Promise((resolvePromise) => server.close(resolvePromise));\n  });\n\n'''
+          insertion = '''  it("keeps the protected foreign-port sentinel alive across an immediate client reset", async () => {\n    const server = createProtectedPortSentinel();\n    await new Promise((resolvePromise, rejectPromise) => {\n      server.once("error", rejectPromise);\n      server.listen(0, "127.0.0.1", resolvePromise);\n    });\n\n    const address = server.address();\n    expect(address).not.toBeNull();\n    expect(typeof address).toBe("object");\n    if (!address || typeof address === "string") throw new Error("Unexpected sentinel address");\n\n    await new Promise((resolvePromise) => {\n      const client = createConnection({ host: "127.0.0.1", port: address.port });\n      client.once("connect", () => {\n        if (typeof client.resetAndDestroy === "function") client.resetAndDestroy();\n        else client.destroy();\n      });\n      client.once("error", resolvePromise);\n      client.once("close", resolvePromise);\n    });\n\n    await sleep(25);\n    expect(server.listening).toBe(true);\n    await new Promise((resolvePromise) => server.close(resolvePromise));\n  });\n\n'''
           tests = replace_once(tests, insertion_anchor, insertion + insertion_anchor, "sentinel regression test")
           test_path.write_text(tests)
 
