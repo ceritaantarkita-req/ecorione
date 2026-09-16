@@ -1,0 +1,33 @@
+name: Temporary W16 Format Extract
+
+on:
+  push:
+    branches:
+      - agent/w16-auto-ref-selector-20260916
+
+permissions:
+  contents: read
+
+jobs:
+  format-extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Emit exact Prettier output
+        shell: bash
+        run: |
+          pnpm exec prettier --write services/hub/src/exchange-http.ts services/hub/src/exchange-selector.test.ts
+          echo '===BEGIN_EXCHANGE_HTTP_BASE64==='
+          base64 -w 0 services/hub/src/exchange-http.ts
+          echo
+          echo '===END_EXCHANGE_HTTP_BASE64==='
+          echo '===BEGIN_SELECTOR_TEST_BASE64==='
+          base64 -w 0 services/hub/src/exchange-selector.test.ts
+          echo
+          echo '===END_SELECTOR_TEST_BASE64==='
