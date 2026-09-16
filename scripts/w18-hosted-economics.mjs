@@ -104,7 +104,10 @@ export function parseOptionalPositiveUsd(value, label) {
 }
 
 export function configuredSpendCeiling(env) {
-  const daily = parseOptionalPositiveUsd(env.ECORIONE_SPEND_DAILY_USD, "ECORIONE_SPEND_DAILY_USD");
+  const daily = parseOptionalPositiveUsd(
+    env.ECORIONE_SPEND_DAILY_USD,
+    "ECORIONE_SPEND_DAILY_USD",
+  );
   const monthly = parseOptionalPositiveUsd(
     env.ECORIONE_SPEND_MONTHLY_USD,
     "ECORIONE_SPEND_MONTHLY_USD",
@@ -125,7 +128,9 @@ export function assertSpendAuthorization({
 }) {
   const failures = [];
   if (allowSpend !== "YES") {
-    failures.push("ECORIONE_W18_ALLOW_SPEND harus persis YES pada process environment saat run formal");
+    failures.push(
+      "ECORIONE_W18_ALLOW_SPEND harus persis YES pada process environment saat run formal",
+    );
   }
   if (!Number.isFinite(maxSpendUsd) || maxSpendUsd <= 0) {
     failures.push("ECORIONE_W18_MAX_SPEND_USD harus angka USD positif");
@@ -144,7 +149,8 @@ export function assertSpendAuthorization({
       `durable spend ceiling $${configuredCeilingUsd} lebih longgar dari izin W18 $${maxSpendUsd}`,
     );
   }
-  if (failures.length > 0) throw new Error(`W18 spend authorization gagal: ${failures.join("; ")}`);
+  if (failures.length > 0)
+    throw new Error(`W18 spend authorization gagal: ${failures.join("; ")}`);
 }
 
 async function requestJson(url, { token, body, timeoutMs = 10_000 }) {
@@ -189,7 +195,9 @@ async function readHostedReadiness(env) {
   await assertHealthyService("Artifact", artifactUrl, token);
 
   const runtime = await requestJson(`${connectUrl}/v1/settings/runtime`, { token });
-  const credentialInventory = await requestJson(`${connectUrl}/v1/settings/credentials`, { token });
+  const credentialInventory = await requestJson(`${connectUrl}/v1/settings/credentials`, {
+    token,
+  });
   const settings = runtime?.settings ?? {};
   const credentials = Array.isArray(credentialInventory?.credentials)
     ? credentialInventory.credentials
@@ -199,10 +207,9 @@ async function readHostedReadiness(env) {
   );
   const failures = [];
   if (settings.hostedProvider !== W18_PROVIDER) {
-    failures.push(`runtime hostedProvider harus ${W18_PROVIDER}, aktual ${String(settings.hostedProvider)}`);
-  }
-  if (settings.hostedCallsEnabled !== true) {
-    failures.push("runtime hostedCallsEnabled harus true");
+    failures.push(
+      `runtime hostedProvider harus ${W18_PROVIDER}, aktual ${String(settings.hostedProvider)}`,
+    );
   }
   if (credentialInventory?.available !== true) {
     failures.push("Connect credential vault harus available");
@@ -402,7 +409,8 @@ export function evaluateW18Task({
   const selection = referenceSelectionMetrics(selectedRefIndexes, relevantRefIndexes);
   const runs = [...fullRuns, ...autoRuns];
   if (actualRecipient !== expectedRecipient) failures.push("ECX recipient mismatch");
-  if (selection.recall !== 1) failures.push(`automatic selector recall ${selection.recall} != 1`);
+  if (selection.recall !== 1)
+    failures.push(`automatic selector recall ${selection.recall} != 1`);
   if (selectedRefIndexes.length < 1 || selectedRefIndexes.length > AUTO_SELECTION.maxRefs) {
     failures.push("automatic selector selected refs harus 1..3");
   }
@@ -417,6 +425,9 @@ export function evaluateW18Task({
     if (run.pricingModel !== W18_PRICING_MODEL) {
       failures.push(`${run.mode} pair ${run.pairIndex} pricingModel tidak pinned ke W18 model`);
     }
+    if (!run.responseModel) {
+      failures.push(`${run.mode} pair ${run.pairIndex} responseModel kosong`);
+    }
     if (run.quality?.score !== 1) {
       failures.push(`${run.mode} pair ${run.pairIndex} quality score != 1`);
     }
@@ -430,11 +441,15 @@ export function evaluateW18Task({
       failures.push(`${run.mode} pair ${run.pairIndex} budget actualUsd != billed cost`);
     }
   }
+  if (new Set(runs.map((run) => run.responseModel)).size !== 1) {
+    failures.push("provider responseModel berubah dalam paired task run");
+  }
   const fullCostUsd = sum(fullRuns.map((run) => run.billedCostUsd));
   const autoCostUsd = sum(autoRuns.map((run) => run.billedCostUsd));
   const fullInputTokens = sum(fullRuns.map((run) => run.usage.inputTokens));
   const autoInputTokens = sum(autoRuns.map((run) => run.usage.inputTokens));
-  if (!(autoCostUsd < fullCostUsd)) failures.push("automatic billed cost tidak mengalahkan full-inline");
+  if (!(autoCostUsd < fullCostUsd))
+    failures.push("automatic billed cost tidak mengalahkan full-inline");
   if (!(autoInputTokens < fullInputTokens)) {
     failures.push("automatic input tokens tidak mengalahkan full-inline");
   }
@@ -468,7 +483,8 @@ export function evaluateW18Aggregate(taskResults, maxSpendUsd) {
     failures.push(`task count harus ${W18_EXPECTED_TASKS}`);
   }
   if (failedTasks.length > 0) failures.push(`task gate gagal: ${failedTasks.join(", ")}`);
-  if (!(autoCostUsd < fullCostUsd)) failures.push("aggregate automatic billed cost tidak turun");
+  if (!(autoCostUsd < fullCostUsd))
+    failures.push("aggregate automatic billed cost tidak turun");
   if (!(actualRunSpendUsd <= maxSpendUsd)) {
     failures.push(`actual run spend $${actualRunSpendUsd} melewati izin $${maxSpendUsd}`);
   }
@@ -508,6 +524,12 @@ function parseArgs(argv) {
 
 function sha256File(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+export function summaryPathFor(outputPath) {
+  return outputPath.endsWith(".json")
+    ? `${outputPath.slice(0, -".json".length)}.summary.json`
+    : `${outputPath}.summary.json`;
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -552,6 +574,10 @@ async function main(argv = process.argv.slice(2)) {
     configuredCeilingUsd: spend.effectiveCeilingUsd,
     costKillSwitch: env.ECORIONE_COST_KILL_SWITCH,
   });
+
+  if (!readiness.runtime.hostedCallsEnabled) {
+    throw new Error("runtime hostedCallsEnabled harus true untuk run W18 formal");
+  }
 
   const timeoutMs = Number(env.ECORIONE_W18_TIMEOUT_MS ?? "120000");
   if (!Number.isFinite(timeoutMs) || timeoutMs < 5_000 || timeoutMs > 300_000) {
@@ -606,6 +632,9 @@ async function main(argv = process.argv.slice(2)) {
         });
         target.push(run);
         actualSpentUsd += run.billedCostUsd;
+        console.log(
+          `W18 billed call costUsd=${run.billedCostUsd.toFixed(8)} cumulativeUsd=${actualSpentUsd.toFixed(8)}`,
+        );
         if (actualSpentUsd > maxSpendUsd) {
           throw new Error(
             `W18 actual spend $${actualSpentUsd} melewati explicit cap $${maxSpendUsd}; future calls dihentikan`,
@@ -685,7 +714,8 @@ async function main(argv = process.argv.slice(2)) {
     },
   };
   writeFileSync(outputPath, `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o600 });
-  const summaryPath = outputPath.replace(/\.json$/u, ".summary.json");
+  const summaryPath = summaryPathFor(outputPath);
+  if (existsSync(summaryPath)) throw new Error(`summary output sudah ada: ${summaryPath}`);
   const summary = {
     schemaVersion: 1,
     recordedAt,

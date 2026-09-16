@@ -4,11 +4,19 @@ import {
   configuredSpendCeiling,
   evaluateW18Aggregate,
   evaluateW18Task,
+  summaryPathFor,
   W18_EXPECTED_MODEL_CALLS,
   W18_EXPECTED_TASKS,
 } from "../scripts/w18-hosted-economics.mjs";
 
-function run({ mode, pairIndex, cost, inputTokens, provider = "openrouter", settlement = "settled" }) {
+function run({
+  mode,
+  pairIndex,
+  cost,
+  inputTokens,
+  provider = "openrouter",
+  settlement = "settled",
+}) {
   return {
     mode,
     pairIndex,
@@ -53,6 +61,11 @@ function passingTask(id = "task") {
 }
 
 describe("W18 hosted economics helpers", () => {
+  it("keeps evidence and summary paths distinct", () => {
+    expect(summaryPathFor("C:/tmp/w18.json")).toBe("C:/tmp/w18.summary.json");
+    expect(summaryPathFor("C:/tmp/w18-evidence")).toBe("C:/tmp/w18-evidence.summary.json");
+  });
+
   it("derives the tighter durable spend ceiling", () => {
     expect(
       configuredSpendCeiling({
@@ -134,8 +147,12 @@ describe("W18 hosted economics helpers", () => {
     });
 
     expect(gate.pass).toBe(false);
-    expect(gate.failures.some((failure) => failure.includes("provider bukan openrouter"))).toBe(true);
-    expect(gate.failures.some((failure) => failure.includes("settlement bukan settled"))).toBe(true);
+    expect(gate.failures.some((failure) => failure.includes("provider bukan openrouter"))).toBe(
+      true,
+    );
+    expect(gate.failures.some((failure) => failure.includes("settlement bukan settled"))).toBe(
+      true,
+    );
   });
 
   it("closes aggregate only with all five tasks, bounded spend, and lower automatic billed cost", () => {

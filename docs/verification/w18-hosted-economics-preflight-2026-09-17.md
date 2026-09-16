@@ -78,7 +78,7 @@ The runner supports a preflight mode that does not dispatch hosted inference:
 node .\scripts\w18-hosted-economics.mjs --preflight
 ```
 
-It checks repository state, service health, runtime provider state, credential metadata, and durable budget configuration. It never prints credential secrets.
+It checks repository state, service health, runtime provider state, credential metadata, and durable budget configuration. It never prints credential secrets. Preflight may run while hosted calls remain disabled; `hostedCallsEnabled=true` is required only after current-run spend authorization for the formal paid run.
 
 ## Formal closure gate
 
