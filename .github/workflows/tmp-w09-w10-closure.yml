@@ -1,0 +1,78 @@
+name: W09 W10 closure sync
+
+on:
+  push:
+    branches:
+      - docs/w09-w10-windows-closure-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Patch canonical W09/W10 closure docs
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          verification = Path('docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md')
+          text = verification.read_text(encoding='utf-8')
+          text = text.replace('Status: **HARNESS READY / OPERATOR RUN PENDING**', 'Status: **DONE — WINDOWS RUNTIME VERIFIED**')
+          if '## Final operator closure — PASS' not in text:
+              text += '''\n\n## Final operator closure — PASS\n\nClosed: **2026-09-16**\n\nThe final exact-current-main Windows run used synchronized `main` commit `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8` with a clean tracked worktree and `HEAD == origin/main`. The harness completed all seven acceptance phases and finished with `PASS W09/W10 Windows engine acceptance`.\n\nCanonical operator evidence:\n\n```text\nW09-A preflight: PASS\nW10-A doctor pre-start: PASS\nW09-B one-command cold start: PASS\nresolved Ai endpoint: http://127.0.0.1:17020\nW10-B runtime doctor: PASS\nLocal AI disposition: UNAVAILABLE (recorded separately; not a W09/W10 core boot blocker)\nW09-C duplicate-start guard: PASS / fail-closed\nW09-D Windows process-tree cleanup: PASS\nW10-C doctor post-stop: PASS\nfinal result: PASS W09/W10 Windows engine acceptance\n```\n\nThe run preserved the protected foreign listener on port `3000`, proving the ECORIONE source runtime no longer depends on that common development port. W09-D independently verified that the resolved Ai port plus fixed owner ports `17021–17028` were released and the engine root process exited before cleanup was accepted.\n\nThe harness wrote the sanitized local report:\n\n```text\ntraces/w09-w10-windows-acceptance-2026-09-16T02-04-06-435Z.json\n```\n\nBecause the harness sets `report.result = "PASS"` immediately before writing that report and only then emits the final PASS marker, the generated report is the canonical sanitized PASS artifact for this operator run. The raw JSON remains operator-local and is not committed because it may contain machine-specific runtime diagnostics.\n\nRepository integration preceding this run was merged through PR #106. Exact post-merge gates for `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8` were:\n\n```text\nCI run 35044646171 (#876): SUCCESS\nProduct Eval run 35044646183 (#115): SUCCESS\n```\n\nAll W09/W10 closure conditions are satisfied. W09 and W10 are therefore **DONE — WINDOWS RUNTIME VERIFIED**. W11 remains separate and still requires real end-user Setup/launcher acceptance on a clean Windows machine.\n'''
+          verification.write_text(text, encoding='utf-8')
+
+          plan = Path('docs/active-work-plan.md')
+          text = plan.read_text(encoding='utf-8')
+          text = text.replace('Last updated: **2026-09-15**', 'Last updated: **2026-09-16**')
+          text = re.sub(
+              r'## 1\. Current repository checkpoint\n.*?\n## 2\. Work queue',
+              '''## 1. Current repository checkpoint\n\n```text\ncurrent main runtime-verified baseline: 4ea5b942ec705b61fe51c4b47a75bc59ac6019b8\nPR #106: merged — harden W09/W10 protected-port reachability\npost-merge CI: 35044646171 (#876) — SUCCESS\npost-merge Product Eval: 35044646183 (#115) — SUCCESS\nW09/W10 final Windows acceptance: PASS\noperator report: traces/w09-w10-windows-acceptance-2026-09-16T02-04-06-435Z.json\n```\n\nThe final real-Windows W09/W10 run was synchronized exactly to that main commit. Ai resolved to `127.0.0.1:17020`; the protected foreign listener on port `3000` survived start and cleanup; the full fixed owner fleet was healthy; duplicate start failed closed; cleanup released the ECORIONE application ports; and doctor remained usable after shutdown. Local AI was `UNAVAILABLE` in that run and remains intentionally outside the W09/W10 core process-readiness gate because immutable local-model evidence is governed by W13/W15.\n\n`main` remains the green baseline. GitHub `main` still does not have required status-check branch protection; that governance gap remains separate from W09/W10.\n\n## 2. Work queue''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          text = re.sub(
+              r'\| W09 \| One-command startup \| \*\*.*?\*\* \|.*?\|',
+              '| W09 | One-command startup | **DONE — WINDOWS RUNTIME VERIFIED** | Exact-current-main Windows harness passed cold start, port-3000 isolation, duplicate-start guard, and process-tree cleanup. |',
+              text,
+              count=1,
+          )
+          text = re.sub(
+              r'\| W10 \| `ecorione doctor` \| \*\*.*?\*\* \|.*?\|',
+              '| W10 | `ecorione doctor` | **DONE — WINDOWS RUNTIME VERIFIED** | Pre-start, running, and post-stop doctor phases passed on exact-current-main Windows. |',
+              text,
+              count=1,
+          )
+          text = text.replace(
+              'Temporal CLI local path, Windows `pnpm.cmd` handling, required-service readiness, Connect Windows startup, dan spawned-process-tree cleanup sudah repo-side. W09/W10 tetap terbuka sampai clean-Windows proof lengkap.',
+              'Temporal CLI local path, Windows `pnpm.cmd` handling, collision-safe Ai port selection, required-service readiness, Connect Windows startup, dan spawned-process-tree cleanup sudah terbukti pada real Windows. W09/W10 closed sebagai **DONE — WINDOWS RUNTIME VERIFIED**.',
+          )
+          text = re.sub(
+              r'## 7\. Immediate next action\n.*?\n## 8\. Historical note',
+              '''## 7. Immediate next action\n\nWith W03 and W09/W10 closed, priority resumes at:\n\n```text\n1. W11 — complete real Setup/launcher acceptance on clean Windows\n2. W16 — implement automatic semantic reference selector\n3. W17 — run ECX no-oracle comparison on the same task set\n4. W18 — collect bounded real hosted token/cost evidence\n5. W20 — final current-state sync after remaining evidence closes\n```\n\nDo not reopen W03 or W09/W10 unless a new reproducible regression appears on product code newer than the verified baselines.\n\n## 8. Historical note''',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          text = text.replace(
+              'PR #98 menyinkronkan progress real-laptop sebelum final functional closure.',
+              'PR #98 menyinkronkan progress real-laptop sebelum final functional closure. PR #100–#106 membangun, memperbaiki, dan menutup real-Windows W09/W10 acceptance sampai final PASS pada `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`.',
+          )
+          plan.write_text(text, encoding='utf-8')
+      - name: Remove temporary workflow and commit closure
+        shell: bash
+        run: |
+          rm .github/workflows/tmp-w09-w10-closure.yml
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git add docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md docs/active-work-plan.md .github/workflows/tmp-w09-w10-closure.yml
+          git diff --cached --check
+          git commit -m "docs: close W09 W10 Windows runtime acceptance"
+          git push
