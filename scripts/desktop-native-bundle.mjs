@@ -12,7 +12,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
@@ -31,11 +31,31 @@ const RUNTIME_SKIP_TOP = new Set([
   "traces",
 ]);
 const RUNTIME_SKIP_ANY = new Set(["node_modules", "coverage", ".vitest"]);
+const SAFE_WINDOWS_PNPM_ARG = /^[A-Za-z0-9@:_./=-]+$/;
+
+export function resolveNativeBundleCommand(
+  command,
+  args,
+  platform = process.platform,
+  env = process.env,
+) {
+  if (platform !== "win32" || command !== "pnpm") return { command, args };
+  const unsafeArg = args.find((arg) => !SAFE_WINDOWS_PNPM_ARG.test(String(arg)));
+  if (unsafeArg !== undefined) {
+    throw new Error(`Argumen pnpm Windows tidak aman untuk cmd.exe: ${String(unsafeArg)}`);
+  }
+  return {
+    command: env.ComSpec ?? env.COMSPEC ?? "cmd.exe",
+    args: ["/d", "/s", "/c", ["pnpm.cmd", ...args].join(" ")],
+  };
+}
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, {
+  const env = options.env ?? process.env;
+  const invocation = resolveNativeBundleCommand(command, args, process.platform, env);
+  const result = spawnSync(invocation.command, invocation.args, {
     cwd: options.cwd ?? ROOT,
-    env: options.env ?? process.env,
+    env,
     encoding: "utf8",
     stdio: options.stdio ?? "pipe",
     windowsHide: true,
