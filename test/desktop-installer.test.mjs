@@ -41,7 +41,8 @@ describe("ECORIONE Windows installer specification", () => {
     expect(workflow).toContain("workflow_dispatch:");
     expect(workflow).not.toMatch(/^\s+push:/m);
     expect(workflow).not.toMatch(/^\s+pull_request:/m);
-    expect(workflow).toContain("pnpm desktop:bundle");
+    expect(workflow).toContain('node scripts/desktop-bundle.mjs --version "$ECORIONE_VERSION"');
+    expect(workflow).not.toContain("desktop:bundle -- --version");
     expect(workflow).toContain("actions/upload-artifact@v4");
     expect(workflow).toContain("actions/download-artifact@v4");
     expect(workflow).toContain("Get-FileHash");
