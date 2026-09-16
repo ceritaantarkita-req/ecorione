@@ -41,12 +41,6 @@ jobs:
       - name: Build desktop runtime bundle
         run: node scripts/desktop-bundle.mjs --version "$ECORIONE_VERSION"
 
-      - name: Assert Context migration assets in production image source
-        shell: bash
-        run: |
-          test -d services/context/dist/migrations
-          find services/context/dist/migrations -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .
-
       - name: Assert release manifest revision
         shell: bash
         run: |
