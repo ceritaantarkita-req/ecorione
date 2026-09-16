@@ -154,8 +154,11 @@ function Assert-Docker {
 }
 
 function Test-DockerImage([string]$Image) {
-  & docker image inspect $Image *> $null
-  return $LASTEXITCODE -eq 0
+  $ids = & docker image ls --quiet --filter "reference=$Image" 2>$null
+  if ($LASTEXITCODE -ne 0) {
+    throw "Gagal memeriksa Docker image '$Image'."
+  }
+  return @($ids | Where-Object { $_ }).Count -gt 0
 }
 
 function Ensure-RuntimeImage([hashtable]$Config) {
