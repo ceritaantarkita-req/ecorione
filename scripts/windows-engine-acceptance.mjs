@@ -253,6 +253,15 @@ function doctorCommand(env) {
   return runSync("pnpm", ["engine:doctor"], { env, timeoutMs: 90_000 });
 }
 
+export function createProtectedPortSentinel() {
+  return createServer((socket) => {
+    // Port probes connect and immediately close/reset. The sentinel owns no protocol,
+    // so socket-level reset errors are expected and must never crash acceptance.
+    socket.on("error", () => {});
+    socket.end();
+  });
+}
+
 function listenServer(server, port) {
   return new Promise((resolvePromise, rejectPromise) => {
     const onError = (error) => {
@@ -331,7 +340,7 @@ async function runAcceptance() {
     const localEnv = localBootstrap.values;
     port3000Preexisting = await isPortReachable(3000);
     if (!port3000Preexisting) {
-      protectedPort3000Server = createServer((socket) => socket.end("foreign-port-3000\n"));
+      protectedPort3000Server = createProtectedPortSentinel();
       await listenServer(protectedPort3000Server, 3000);
     }
     if (!(await isPortReachable(3000))) {
