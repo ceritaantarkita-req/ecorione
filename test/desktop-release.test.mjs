@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   buildBundleLayout,
   checksumManifest,
+  chooseSourceRevision,
   normalizeSpawnOutput,
   normalizeVersion,
   stageDesktopSurface,
@@ -51,6 +52,14 @@ describe("ECORIONE desktop release bundle", () => {
     expect(normalizeSpawnOutput("  ready\n")).toBe("ready");
     expect(normalizeSpawnOutput(null)).toBe("");
     expect(normalizeSpawnOutput(undefined)).toBe("");
+  });
+
+  it("records the checked-out HEAD instead of the workflow trigger SHA", () => {
+    expect(chooseSourceRevision(" checked-out-head\n", "workflow-trigger-sha")).toBe(
+      "checked-out-head",
+    );
+    expect(chooseSourceRevision("", " workflow-trigger-sha ")).toBe("workflow-trigger-sha");
+    expect(chooseSourceRevision("", "")).toBe("unknown");
   });
 
   it("stages only the canonical user-facing desktop surface and license", () => {
