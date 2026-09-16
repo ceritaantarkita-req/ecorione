@@ -41,6 +41,7 @@
     "canary:providers": "node scripts/provider-matrix-canary.mjs",
     "evidence:comparative": "node scripts/comparative-evidence.mjs",
     "evidence:comparative:smoke": "node scripts/comparative-evidence.mjs --smoke",
+    "evidence:w17:closure": "node scripts/w17-local-closure.mjs",
     "evidence:persistence-restart": "node scripts/local-persistence-restart-evidence-strict.mjs",
     "evidence:persistence-restart:inventory": "node scripts/local-persistence-restart-evidence-strict.mjs --phase inventory",
     "evidence:persistence-restart:raw": "node scripts/local-persistence-restart-evidence.mjs",
