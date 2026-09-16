@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const root = resolve(import.meta.dirname, "..");
 const compose = readFileSync(resolve(root, "desktop/compose.yml"), "utf8");
-const launcher = readFileSync(resolve(root, "desktop/ecorione.ps1"), "utf8");
+const launcher = readFileSync(resolve(root, "desktop/ecorione-docker.ps1"), "utf8");
 const startWrapper = readFileSync(resolve(root, "desktop/Start-ECORIONE.cmd"), "utf8");
 const doctorWrapper = readFileSync(resolve(root, "desktop/Doctor-ECORIONE.cmd"), "utf8");
 const stopWrapper = readFileSync(resolve(root, "desktop/Stop-ECORIONE.cmd"), "utf8");
