@@ -23,10 +23,7 @@ import {
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
-import {
-  selectEcxReferenceIndexes,
-  type EcxReferenceDescriptor,
-} from "./exchange-selector.js";
+import { selectEcxReferenceIndexes, type EcxReferenceDescriptor } from "./exchange-selector.js";
 import { planEcx } from "./exchange.js";
 import {
   HistoryAccessDeniedError,
@@ -117,9 +114,7 @@ async function readArtifactSelectorText(
     token?: string | undefined;
   },
 ): Promise<string> {
-  const authorizeUrl = new URL(
-    `${input.contextUrl}/v1/artifacts/${ref.artifactId}/authorize`,
-  );
+  const authorizeUrl = new URL(`${input.contextUrl}/v1/artifacts/${ref.artifactId}/authorize`);
   authorizeUrl.searchParams.set("scope", input.scope);
   authorizeUrl.searchParams.set("maxSensitivity", input.maxSensitivity);
   authorizeUrl.searchParams.set("hostedEligible", input.hostedEligible ? "1" : "0");

@@ -14,8 +14,7 @@ function packet(overrides: Partial<EcxPacket> = {}): EcxPacket {
     sender: "agent:planner",
     recipient: "agent:reviewer",
     intent: "comparative-evidence",
-    task:
-      'Return JSON with exactly these keys: {"supplier":"","leadTimeDays":0,"maxFirstBatchUnits":0}. Preserve strings exactly and use JSON numbers for numeric fields.',
+    task: 'Return JSON with exactly these keys: {"supplier":"","leadTimeDays":0,"maxFirstBatchUnits":0}. Preserve strings exactly and use JSON numbers for numeric fields.',
     need: ["procurement", "verification"],
     refs: [
       artifactRef("art_selector001"),
@@ -37,18 +36,15 @@ describe("ECX automatic reference selector", () => {
       [
         {
           index: 0,
-          text:
-            "legacy budget history. Earlier drafts do not state the final supplier, lead time, or first batch quantity.",
+          text: "legacy budget history. Earlier drafts do not state the final supplier, lead time, or first batch quantity.",
         },
         {
           index: 1,
-          text:
-            "older atlas proposal. Non-authoritative vendor marketing without the requested final delivery facts.",
+          text: "older atlas proposal. Non-authoritative vendor marketing without the requested final delivery facts.",
         },
         {
           index: 2,
-          text:
-            "FINAL PROCUREMENT AWARD. Approved supplier: Boreal Systems. Award status: final.",
+          text: "FINAL PROCUREMENT AWARD. Approved supplier: Boreal Systems. Award status: final.",
         },
         {
           index: 3,
@@ -56,8 +52,7 @@ describe("ECX automatic reference selector", () => {
         },
         {
           index: 4,
-          text:
-            "FINAL DELIVERY COMMITMENT. Lead time: 12 days. Maximum first batch: 320 units.",
+          text: "FINAL DELIVERY COMMITMENT. Lead time: 12 days. Maximum first batch: 320 units.",
         },
       ],
       { maxRefs: 2 },
