@@ -20,6 +20,7 @@
     "engine:doctor": "node scripts/ecorione-engine.mjs doctor",
     "engine:stop-temporal": "node scripts/ecorione-engine.mjs stop-temporal",
     "desktop:bundle": "node scripts/desktop-bundle.mjs",
+    "desktop:native-bundle": "node scripts/desktop-native-bundle.mjs",
     "typecheck": "tsc --build --verbose && pnpm --filter @ecorione/ai run typecheck && tsc --noEmit -p test/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
