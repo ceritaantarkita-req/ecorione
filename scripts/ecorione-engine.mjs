@@ -547,7 +547,7 @@ export async function probeLocalRuntime(connectBaseUrl, token, timeoutMs = 20_00
     const response = await fetch(`${baseUrl}/v1/ops/provider-canary`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ target: "local" }),
+      body: JSON.stringify({ target: "local", maxLatencyMs: timeoutMs }),
       signal: AbortSignal.timeout(timeoutMs),
     });
     const text = await response.text();

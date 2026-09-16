@@ -160,7 +160,7 @@ describe("ECORIONE local engine bootstrap", () => {
 
     expect(seenUrl).toBe("http://127.0.0.1:17023/v1/ops/provider-canary");
     expect(seenAuthorization).toBe("Bearer doctor-token");
-    expect(JSON.parse(seenBody)).toEqual({ target: "local" });
+    expect(JSON.parse(seenBody)).toEqual({ target: "local", maxLatencyMs: 5_000 });
     expect(result).toEqual({
       reachable: true,
       pass: true,
