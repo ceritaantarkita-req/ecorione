@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 45
     env:
       ECORIONE_VERSION: "0.1.0"
-      ECORIONE_RELEASE_SHA: "c922884b9c2664a0e5df8b1909b9ff73ce398ded"
+      ECORIONE_RELEASE_SHA: "936909135e40e7a82004f08d57269f9af59e2fd6"
     steps:
       - name: Checkout exact merged source
         uses: actions/checkout@v5
@@ -44,7 +44,7 @@ jobs:
       - name: Upload prepared exact-main desktop bundle
         uses: actions/upload-artifact@v4
         with:
-          name: ecorione-desktop-bundle-main-c922884
+          name: ecorione-desktop-bundle-main-9369091
           path: .ecorione/desktop-release/ECORIONE-0.1.0-windows-x64
           if-no-files-found: error
           retention-days: 7
@@ -55,7 +55,7 @@ jobs:
     timeout-minutes: 30
     env:
       ECORIONE_VERSION: "0.1.0"
-      ECORIONE_RELEASE_SHA: "c922884b9c2664a0e5df8b1909b9ff73ce398ded"
+      ECORIONE_RELEASE_SHA: "936909135e40e7a82004f08d57269f9af59e2fd6"
       ECORIONE_BUNDLE_DIR: ${{ github.workspace }}\bundle
       ECORIONE_INSTALLER_OUT: ${{ github.workspace }}\installer-out
     steps:
@@ -67,7 +67,7 @@ jobs:
       - name: Download prepared exact-main desktop bundle
         uses: actions/download-artifact@v4
         with:
-          name: ecorione-desktop-bundle-main-c922884
+          name: ecorione-desktop-bundle-main-9369091
           path: bundle
       - name: Verify downloaded bundle provenance
         shell: pwsh
@@ -102,7 +102,7 @@ jobs:
       - name: Upload exact-main Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: ECORIONE-Setup-0.1.0-main-c922884
+          name: ECORIONE-Setup-0.1.0-main-9369091
           path: installer-out
           if-no-files-found: error
           retention-days: 14
