@@ -6,6 +6,7 @@ import { ProviderError } from "./errors.js";
 const LIVE_REQUEST_NOTE =
   "The final user message is the live request. Follow it directly. If it asks for an exact string, return exactly that string and nothing else.";
 const LOCAL_REASONING_EFFORTS = new Set(["none", "low", "medium", "high", "max"]);
+type LocalReasoningEffort = "none" | "low" | "medium" | "high" | "max";
 
 export interface LocalCallInput {
   readonly baseUrl: string;
@@ -26,7 +27,7 @@ interface OpenAiChatResponseBody {
 }
 
 export interface LocalGenerationControls {
-  readonly reasoning_effort?: "none" | "low" | "medium" | "high" | "max";
+  readonly reasoning_effort?: LocalReasoningEffort;
   readonly max_tokens?: number;
   readonly temperature?: number;
 }
@@ -43,7 +44,7 @@ export function localGenerationControls(
   env: NodeJS.ProcessEnv = process.env,
 ): LocalGenerationControls {
   const controls: {
-    reasoning_effort?: "none" | "low" | "medium" | "high" | "max";
+    reasoning_effort?: LocalReasoningEffort;
     max_tokens?: number;
     temperature?: number;
   } = {};
@@ -55,7 +56,7 @@ export function localGenerationControls(
         "ECORIONE_LOCAL_REASONING_EFFORT harus salah satu none|low|medium|high|max",
       );
     }
-    controls.reasoning_effort = reasoning as LocalGenerationControls["reasoning_effort"];
+    controls.reasoning_effort = reasoning as LocalReasoningEffort;
   }
 
   const maxTokensRaw = env.ECORIONE_LOCAL_MAX_TOKENS?.trim();
