@@ -1,0 +1,71 @@
+name: W17 closure doctor fix once
+
+on:
+  push:
+    branches:
+      - agent/w17-closure-doctor-fix-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/w17-closure-doctor-fix-20260916
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Apply bounded doctor fix and W17 closure evidence
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          engine = Path('scripts/ecorione-engine.mjs')
+          text = engine.read_text(encoding='utf-8')
+          old = '      body: JSON.stringify({ target: "local" }),'
+          new = '      body: JSON.stringify({ target: "local", maxLatencyMs: timeoutMs }),' 
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one doctor canary body, found {text.count(old)}')
+          engine.write_text(text.replace(old, new), encoding='utf-8')
+
+          test = Path('test/ecorione-engine.test.mjs')
+          text = test.read_text(encoding='utf-8')
+          old = '    expect(JSON.parse(seenBody)).toEqual({ target: "local" });'
+          new = '    expect(JSON.parse(seenBody)).toEqual({ target: "local", maxLatencyMs: 5_000 });'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one doctor body assertion, found {text.count(old)}')
+          test.write_text(text.replace(old, new), encoding='utf-8')
+
+          doc = Path('docs/verification/w17-no-oracle-harness-2026-09-16.md')
+          text = doc.read_text(encoding='utf-8')
+          replacements = {
+              'Status: **HARNESS READY / REAL LOCAL-MODEL RUN PENDING**': 'Status: **DONE — VERIFIED LOCAL MODEL PASS (100 measured calls)**',
+              'W17 remains open until the real local runtime executes the same five tasks with the four lanes and the configured repeat count. The intended formal closure profile is:': 'W17 required the real local runtime to execute the same five tasks with the four lanes and the configured repeat count. The completed formal closure profile was:',
+              'Until that real run is captured, W17 status is **HARNESS READY / REAL LOCAL-MODEL RUN PENDING**.': 'The real run is now captured and passed the predeclared closure gates. W17 is closed for this bounded local evidence profile.',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing W17 doc marker: {old}')
+              text = text.replace(old, new, 1)
+
+          marker = '## Claim boundary\n'
+          if marker not in text:
+              raise SystemExit('missing claim boundary marker')
+          closure = '''## Real local-model closure evidence\n\nThe operator executed the formal fail-closed closure runner on Windows against clean synchronized `main`:\n\n```text\nruntime baseline: 90bc800649b02be1de752d8c67c365c65a9d21a6\nbranch: main\nHEAD == origin/main: yes\nworktree clean: yes\nlocal model: qwen3.5:9b\nimmutable identity verified: yes\nrun shape: 5 tasks × 5 repeats × 4 lanes\nmeasured model calls: 100\npassed tasks: 5/5\nfailed tasks: 0\nautomatic lane oracle indexes supplied: false\nmedian automatic selector recall: 1.0\nmedian automatic selector precision: 0.6666666666666666\ncache hits: 0\nclosureEligible: true\n```\n\nThe raw local evidence was written to the gitignored evidence directory and sealed by the closure runner:\n\n```text\nfile: .ecorione/evidence/w17-no-oracle-2026-09-16T12-35-29-327Z.json\nsha256: a76a6a195aea6e117651f948e41b3fdcbbd2532cbdf556c14a2437fa50483fb3\nbytes: 129693\nmodel identity: qwen3.5:9b|qwen3.5:9b\n```\n\nAggregate bounded results:\n\n```text\nmedian oracle-control transport reduction: 73.6379379246037%\nmedian oracle-control input-token reduction: 76.34342186534899%\nmedian oracle-control/full latency ratio: 0.9507074318703778\nmedian automatic selected-hydration transport reduction: 46.089385474860336%\nmedian automatic input-token reduction: 50.80489375402447%\nmedian automatic/full latency ratio: 0.9839322301085884\nautomatic known-transport-floor beat task count: 0/5\n```\n\nThe last metric is intentionally retained: W17 does **not** claim end-to-end network savings for automatic selection because candidate scanning remains part of the known transport floor.\n\nA preceding bounded smoke run also passed all four lanes for `incident-triage` with quality `1`, selector recall `1`, and zero cache hits.\n\n'''
+          text = text.replace(marker, closure + marker, 1)
+          doc.write_text(text, encoding='utf-8')
+          PY
+
+          rm .github/workflows/w17-closure-doctor-fix-once.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add scripts/ecorione-engine.mjs test/ecorione-engine.test.mjs docs/verification/w17-no-oracle-harness-2026-09-16.md .github/workflows/w17-closure-doctor-fix-once.yml
+          git diff --cached --check
+          git commit -m "fix(w17): align doctor canary threshold and record closure"
+          git push origin HEAD:agent/w17-closure-doctor-fix-20260916
