@@ -183,8 +183,18 @@ function Ensure-RuntimeImage([hashtable]$Config) {
 }
 
 function Invoke-Compose([string[]]$Arguments) {
-  & docker compose --env-file $EnvFile -f $ComposeFile @Arguments
-  if ($LASTEXITCODE -ne 0) {
+  $previousErrorActionPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = "Continue"
+    $output = & docker compose --env-file $EnvFile -f $ComposeFile @Arguments 2>&1
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorActionPreference
+  }
+  foreach ($line in @($output)) {
+    Write-Host ([string]$line)
+  }
+  if ($exitCode -ne 0) {
     throw "Docker Compose gagal: $($Arguments -join ' ')"
   }
 }
