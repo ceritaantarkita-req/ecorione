@@ -1,0 +1,38 @@
+name: Temporary W17 Canonical Format
+
+on:
+  push:
+    branches:
+      - agent/w17-local-closure-runner-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: agent/w17-local-closure-runner-20260916
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply repository Prettier
+        run: pnpm exec prettier --write scripts/w17-local-closure.mjs test/w17-local-closure.test.mjs
+      - name: Commit canonical formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- scripts/w17-local-closure.mjs test/w17-local-closure.test.mjs; then
+            echo "No formatting changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/w17-local-closure.mjs test/w17-local-closure.test.mjs
+          git commit -m "style(w17): apply canonical prettier [skip ci]"
+          git push origin HEAD:agent/w17-local-closure-runner-20260916
