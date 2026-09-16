@@ -4,11 +4,15 @@ Status: **HARNESS READY / REAL INSTALLER RUN PENDING**
 
 Date: **2026-09-16**
 
+Current handoff baseline before W11 execution: `62e0d4b64b41cfa0b3038461bc376d67b1a2cbb8` (`main`, PR #117 merged; post-merge CI #922 and Product Eval #161 SUCCESS).
+
 ## Scope
 
 W11 is deliberately separate from W09/W10. W09/W10 proved the synchronized source-workstation engine path on real Windows. W11 must prove that an end user can install and operate the packaged ECORIONE desktop surface without relying on the source checkout, host Node.js, host pnpm, or host Git.
 
 Docker Desktop remains an explicit desktop prerequisite in the current product boundary. The installer does not silently install or configure Docker Desktop.
+
+The post-W17 source-workstation `pnpm engine:doctor` local generation canary can exceed its current 20-second diagnostic timeout after benchmark-only generation limits are removed. That behavior is explicitly **not** a W11 blocker: W11 validates the packaged launcher surface and uses the packaged Doctor behavior defined below. It also does not reopen W09/W10 or W17.
 
 ## Repository-side packaging already present
 
@@ -48,7 +52,7 @@ The harness temporarily sanitizes `PATH` so host Node.js, pnpm, and Git are not 
 
 ### W11-C — installed Doctor before startup
 
-`Doctor-ECORIONE.cmd` must return success when Docker Desktop + Compose are reachable, while accurately reporting that Ai is not running yet. The wrapper now preserves the PowerShell doctor exit code and supports noninteractive acceptance without changing normal double-click behavior.
+`Doctor-ECORIONE.cmd` must return success when Docker Desktop + Compose are reachable, while accurately reporting that Ai is not running yet. The wrapper preserves the PowerShell doctor exit code and supports noninteractive acceptance without changing normal double-click behavior.
 
 ### W11-D — first Start + bundled runtime load + collision-safe port
 
@@ -75,6 +79,15 @@ While running, Doctor must follow the resolved Ai port. A second Start must reco
 
 Doctor must remain usable after Stop and report Ai stopped. The real Inno Setup uninstaller must then remove the installed launcher surface successfully. User data retention is recorded rather than silently destroyed.
 
+## Execution order from the current handoff
+
+1. Build a real Setup artifact from the exact intended merged source revision.
+2. Retain the generated `SHA256SUMS` alongside the Setup executable.
+3. Confirm Docker Desktop is reachable on the real Windows operator machine.
+4. Run the isolated acceptance harness with both checksum and exact expected source revision supplied.
+5. Treat any harness failure as a real W11 defect unless the failure is an explicitly external prerequisite failure (for example Docker Desktop unavailable).
+6. Close W11 only after the sanitized report records `result: "PASS"`.
+
 ## Operator command
 
 After a Setup artifact and its checksum file are available locally, run from synchronized source `main`:
@@ -100,7 +113,7 @@ W11 may become **DONE — WINDOWS INSTALLER VERIFIED** only when all of the foll
 
 - the W11 harness/launcher hardening is merged and exact post-merge CI + Product Eval are green;
 - a real Setup executable built from the intended merged source revision is used;
-- optional checksum verification is supplied for closure evidence, not skipped;
+- checksum verification is supplied for closure evidence, not skipped;
 - `RELEASE-MANIFEST.json` matches the exact expected source revision;
 - W11-A through W11-G pass on real Windows;
 - final output is `PASS W11 Windows installer/launcher acceptance`;
