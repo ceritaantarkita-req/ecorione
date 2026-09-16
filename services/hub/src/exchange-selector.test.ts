@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 import { selectEcxReferenceIndexes } from "./exchange-selector.js";
 
 function artifactRef(id: string) {
-  return {
-    kind: "artifact" as const,
-    artifactId: assertId("artifact", id),
-  };
+  return { kind: "artifact" as const, artifactId: assertId("artifact", id) };
 }
 
 function packet(overrides: Partial<EcxPacket> = {}): EcxPacket {
@@ -40,15 +37,18 @@ describe("ECX automatic reference selector", () => {
       [
         {
           index: 0,
-          text: "legacy budget history. Earlier drafts do not state the final supplier, lead time, or first batch quantity.",
+          text:
+            "legacy budget history. Earlier drafts do not state the final supplier, lead time, or first batch quantity.",
         },
         {
           index: 1,
-          text: "older atlas proposal. Non-authoritative vendor marketing without the requested final delivery facts.",
+          text:
+            "older atlas proposal. Non-authoritative vendor marketing without the requested final delivery facts.",
         },
         {
           index: 2,
-          text: "FINAL PROCUREMENT AWARD. Approved supplier: Boreal Systems. Award status: final.",
+          text:
+            "FINAL PROCUREMENT AWARD. Approved supplier: Boreal Systems. Award status: final.",
         },
         {
           index: 3,
@@ -56,7 +56,8 @@ describe("ECX automatic reference selector", () => {
         },
         {
           index: 4,
-          text: "FINAL DELIVERY COMMITMENT. Lead time: 12 days. Maximum first batch: 320 units.",
+          text:
+            "FINAL DELIVERY COMMITMENT. Lead time: 12 days. Maximum first batch: 320 units.",
         },
       ],
       { maxRefs: 2 },
@@ -67,10 +68,7 @@ describe("ECX automatic reference selector", () => {
 
   it("uses deterministic index ordering when descriptors have no semantic overlap", () => {
     const selected = selectEcxReferenceIndexes(
-      packet({
-        task: "Find a completely absent concept.",
-        need: ["absent-concept"],
-      }),
+      packet({ task: "Find a completely absent concept.", need: ["absent-concept"] }),
       [
         { index: 3, text: "alpha beta gamma" },
         { index: 1, text: "delta epsilon zeta" },
