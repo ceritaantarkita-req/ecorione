@@ -48,12 +48,13 @@ jobs:
             $errors | ForEach-Object { Write-Error $_.Message }
             exit 1
           }
-      - name: Run targeted contract tests
+      - name: Format and run targeted contract tests
         shell: bash
         run: |
           corepack enable
           corepack prepare pnpm@10.28.0 --activate
           pnpm install --frozen-lockfile
+          pnpm exec prettier --write test/windows-desktop-installer-acceptance.test.mjs docs/verification/w11-windows-installer-acceptance-2026-09-16.md docs/active-work-plan.md
           pnpm vitest run test/windows-desktop-installer-acceptance.test.mjs test/desktop-installer.test.mjs test/desktop-bundle.test.mjs
           pnpm exec prettier --check test/windows-desktop-installer-acceptance.test.mjs docs/verification/w11-windows-installer-acceptance-2026-09-16.md docs/active-work-plan.md
           git diff --check
@@ -63,7 +64,7 @@ jobs:
           rm .github/workflows/tmp-w11-prep-tidy.yml
           git config user.name "ceritaantarkita-req"
           git config user.email "ceritaantarkita@gmail.com"
-          git add scripts/windows-desktop-installer-acceptance.ps1 docs/active-work-plan.md .github/workflows/tmp-w11-prep-tidy.yml
+          git add scripts/windows-desktop-installer-acceptance.ps1 test/windows-desktop-installer-acceptance.test.mjs docs/verification/w11-windows-installer-acceptance-2026-09-16.md docs/active-work-plan.md .github/workflows/tmp-w11-prep-tidy.yml
           git diff --cached --check
           git commit -m "chore(w11): finalize installer acceptance prep"
           git push
