@@ -1,0 +1,38 @@
+name: Temporary W11 Prettier
+
+on:
+  push:
+    branches:
+      - fix/w11-native-docker-stderr-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: fix/w11-native-docker-stderr-20260916
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --write test/desktop-launcher-image-probe.test.mjs
+      - name: Commit formatted file and remove helper
+        shell: bash
+        run: |
+          git rm .github/workflows/tmp-w11-prettier.yml
+          git add test/desktop-launcher-image-probe.test.mjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 1
+          fi
+          git commit -m "style(w11): apply repo prettier"
+          git push origin HEAD:fix/w11-native-docker-stderr-20260916
