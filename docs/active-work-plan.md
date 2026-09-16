@@ -35,7 +35,7 @@ The final real-Windows W09/W10 run was synchronized exactly to that main commit.
 | W08 | Default AI selection | **DONE — REPO SIDE** | Durable Local/Hosted default; no auto-router claim. |
 | W09 | One-command startup | **DONE — WINDOWS RUNTIME VERIFIED** | Exact-current-main Windows harness passed cold start, port-3000 isolation, duplicate-start guard, and process-tree cleanup. |
 | W10 | `ecorione doctor` | **DONE — WINDOWS RUNTIME VERIFIED** | Pre-start, running, and post-stop doctor phases passed on exact-current-main Windows. |
-| W11 | Installer/Launcher | **STARTED — REPO-SIDE PACKAGING READY** | Real Setup + clean-Windows acceptance belum ada. |
+| W11 | Installer/Launcher | **STARTED — HARNESS READY / REAL INSTALLER RUN PENDING** | Packaging + isolated Windows installer acceptance harness siap; real Setup artifact + operator run masih wajib. |
 | W12 | Attachment composer backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → hydration. |
 | W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Current operator runtime berhasil memverifikasi selector + immutable digest; perubahan model/runtime tetap harus diverifikasi ulang. |
 | W14 | Product eval foundation | **DONE — REPO SIDE** | 12 task/bug-derived deterministic regressions + dedicated gate. |
