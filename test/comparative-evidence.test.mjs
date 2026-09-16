@@ -165,7 +165,7 @@ describe("comparative evidence helpers", () => {
     expect(gates.measurements.transportReductionPct).toBe(65);
     expect(gates.measurements.inputTokenReductionPct).toBe(60);
     expect(gates.measurements.autoHydrationTransportReductionPct).toBe(60);
-    expect(gates.measurements.autoInputTokenReductionPct).toBe(55);
+    expect(gates.measurements.autoInputTokenReductionPct).toBeCloseTo(55, 10);
     expect(gates.measurements.autoKnownTransportFloorBytes).toBe(13_500);
     expect(gates.measurements.autoKnownTransportBeatsFullInline).toBe(false);
     expect(gates.measurements.selection.recall).toBe(1);
