@@ -1,10 +1,12 @@
 # W18 — hosted economic validation preflight
 
-Status: **HARNESS IMPLEMENTATION / REAL HOSTED SPEND NOT YET AUTHORIZED**
+Status: **HARNESS READY / REAL HOSTED SPEND NOT YET AUTHORIZED**
 
 Date: **2026-09-17**
 
 Baseline entering W18: `100d0f92db9778c42fb3549ae10584eee6d2f11d` (`main`, W11 closure merged).
+
+Repository-side implementation is ready for exact-head CI and zero-spend operator preflight; this status does **not** authorize hosted inference.
 
 ## Goal
 
