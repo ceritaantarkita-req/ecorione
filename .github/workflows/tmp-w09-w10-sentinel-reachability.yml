@@ -1,0 +1,99 @@
+name: W09 W10 sentinel reachability fix
+
+on:
+  push:
+    branches:
+      - fix/w09-w10-sentinel-reachability-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Patch protected-port reachability
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected 1 match, got {count}")
+              return text.replace(old, new, 1)
+
+          script_path = Path("scripts/windows-engine-acceptance.mjs")
+          script = script_path.read_text()
+
+          script = replace_once(
+              script,
+              '''async function waitForPortsClosed(ports, timeoutMs = 20_000) {\n''',
+              '''async function waitForPortReachable(port, timeoutMs = 5_000) {\n  const deadline = Date.now() + timeoutMs;\n  while (Date.now() < deadline) {\n    if (await isPortReachable(port)) return true;\n    await new Promise((resolvePromise) => setTimeout(resolvePromise, 100));\n  }\n  return isPortReachable(port);\n}\n\nasync function waitForPortsClosed(ports, timeoutMs = 20_000) {\n''',
+              "reachable wait helper",
+          )
+
+          script = replace_once(
+              script,
+              '''export function createProtectedPortSentinel() {\n  return createServer((socket) => {\n    // Port probes connect and immediately close/reset. The sentinel owns no protocol,\n    // so socket-level reset errors are expected and must never crash acceptance.\n    socket.on("error", () => {});\n    socket.end();\n  });\n}\n''',
+              '''export function createProtectedPortSentinel() {\n  return createServer((socket) => {\n    // The sentinel owns no application protocol. Keep accepted sockets open until the\n    // client closes so a Windows reachability probe can observe a completed TCP connect\n    // instead of racing an immediate server-side FIN/RST. Disposable socket errors are\n    // expected when probes reset the connection.\n    socket.on("error", () => {});\n    socket.setTimeout(2_000, () => socket.destroy());\n    socket.resume();\n  });\n}\n''',
+              "sentinel socket lifecycle",
+          )
+
+          script = script.replace('''if (!(await isPortReachable(3000))) {\n''', '''if (!(await waitForPortReachable(3000))) {\n''')
+          if script.count('''if (!(await waitForPortReachable(3000))) {\n''') != 3:
+              raise SystemExit("expected exactly 3 protected-port reachability checks")
+
+          script_path.write_text(script)
+
+          test_path = Path("test/windows-engine-acceptance.test.mjs")
+          tests = test_path.read_text()
+          tests = replace_once(
+              tests,
+              '''import { describe, expect, it } from "vitest";\n''',
+              '''import { describe, expect, it } from "vitest";\nimport { isPortReachable } from "../scripts/ecorione-engine.mjs";\n''',
+              "reachability import",
+          )
+
+          anchor = '''  it("requires Temporal, Ai, and every Phase 4 owner in a healthy runtime doctor", () => {\n'''
+          regression = '''  it("keeps the protected foreign-port sentinel TCP-reachable across repeated probes", async () => {\n    const server = createProtectedPortSentinel();\n    await new Promise((resolvePromise, rejectPromise) => {\n      server.once("error", rejectPromise);\n      server.listen(0, "127.0.0.1", resolvePromise);\n    });\n\n    const address = server.address();\n    expect(address).not.toBeNull();\n    expect(typeof address).toBe("object");\n    if (!address || typeof address === "string") throw new Error("Unexpected sentinel address");\n\n    for (let attempt = 0; attempt < 5; attempt += 1) {\n      expect(await isPortReachable(address.port)).toBe(true);\n    }\n    expect(server.listening).toBe(true);\n    await new Promise((resolvePromise) => server.close(resolvePromise));\n  });\n\n'''
+          tests = replace_once(tests, anchor, regression + anchor, "reachability regression")
+          test_path.write_text(tests)
+
+          doc_path = Path("docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md")
+          doc = doc_path.read_text()
+          marker = "## Operator rerun blocker 5 — protected listener reachability race after cleanup"
+          if marker not in doc:
+              doc += '''\n\n## Operator rerun blocker 5 — protected listener reachability race after cleanup\n\nThe exact-current-main Windows rerun at `7a31b6b983d941c44fd7fd74612f662d98f8bc00` passed W09-A, W10-A, W09-B, W10-B, and W09-C. The application fleet reached READY on Ai port `17020`, all required runtime owners were healthy, and the duplicate-start guard failed closed as designed. During W09-D, the engine tree and application services were terminated, but the final protected-port check reported port 3000 unreachable and therefore correctly refused to claim cleanup safety.\n\nThe protected listener itself was still implemented as an immediate server-side close: each accepted probe socket called `socket.end()` as soon as it connected. On Windows/Node 24, the reachability client can race that immediate FIN/RST and report `false` even while the listening server remains alive. The previous regression only proved that an immediate client reset did not crash the server; it did not prove that the sentinel remained positively TCP-reachable to the same probe used by the acceptance harness.\n\nDisposition: the sentinel now keeps accepted sockets open until the probing client closes, bounds idle sockets with a short timeout, and continues to absorb disposable reset errors. Protected-port verification also retries reachability for a bounded interval rather than making a single race-sensitive probe. A regression test now runs repeated `isPortReachable` checks against the sentinel and requires every probe to succeed while the server remains listening. W09/W10 remain open until a fresh merged-main Windows run reaches the final PASS marker.\n'''
+          doc_path.write_text(doc)
+          PY
+
+          pnpm exec prettier --write \
+            scripts/windows-engine-acceptance.mjs \
+            test/windows-engine-acceptance.test.mjs \
+            docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md
+          pnpm exec vitest run test/windows-engine-acceptance.test.mjs test/ecorione-engine.test.mjs test/desktop-bundle.test.mjs
+          pnpm run typecheck
+          pnpm run lint
+          git diff --check
+      - name: Commit fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/tmp-w09-w10-sentinel-reachability.yml
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git add scripts/windows-engine-acceptance.mjs test/windows-engine-acceptance.test.mjs docs/verification/w09-w10-windows-engine-acceptance-2026-09-15.md .github/workflows/tmp-w09-w10-sentinel-reachability.yml
+          git commit -m "fix W09/W10 protected-port reachability race"
+          git push origin HEAD:fix/w09-w10-sentinel-reachability-20260916
