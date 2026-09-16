@@ -23,8 +23,11 @@ import {
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
+import {
+  selectEcxReferenceIndexes,
+  type EcxReferenceDescriptor,
+} from "./exchange-selector.js";
 import { planEcx } from "./exchange.js";
-import { selectEcxReferenceIndexes, type EcxReferenceDescriptor } from "./exchange-selector.js";
 import {
   HistoryAccessDeniedError,
   HistoryIntegrityError,
@@ -149,11 +152,8 @@ async function readArtifactSelectorText(
   try {
     response = await fetch(contentUrl, { headers });
   } catch (error) {
-    throw new BadGatewayError(
-      `Artifact selector preview tidak tersedia: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    );
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new BadGatewayError(`Artifact selector preview tidak tersedia: ${detail}`);
   }
   if (!response.ok) {
     if (response.status === 404 || response.status === 403) {
