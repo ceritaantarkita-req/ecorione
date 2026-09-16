@@ -25,59 +25,65 @@ jobs:
           from pathlib import Path
 
           harness_path = Path('scripts/windows-desktop-installer-acceptance.ps1')
-          harness = harness_path.read_text(encoding='utf-8')
+          lines = harness_path.read_text(encoding='utf-8').splitlines()
 
-          old_pre = '''  & $docker.Source image inspect "ecorione:desktop" *> $null
-          $ImagePreexisting = $LASTEXITCODE -eq 0
-          Assert-True (-not $ImagePreexisting) "Image ecorione:desktop sudah ada. W11 fresh-install proof membutuhkan image tersebut belum ada agar bundled runtime load benar-benar diuji."
-          '''
-          new_pre = '''  $cachedImageOutput = & $docker.Source image ls --quiet --filter "reference=ecorione:desktop" 2>$null
-          $cachedImageListExitCode = $LASTEXITCODE
-          Assert-True ($cachedImageListExitCode -eq 0) "Gagal memeriksa cache image ecorione:desktop."
-          $cachedImageIds = @($cachedImageOutput | Where-Object { $_ })
-          $ImagePreexisting = $cachedImageIds.Count -gt 0
-          Assert-True (-not $ImagePreexisting) "Image ecorione:desktop sudah ada. W11 fresh-install proof membutuhkan image tersebut belum ada agar bundled runtime load benar-benar diuji."
-          '''
-          if old_pre not in harness:
-              raise SystemExit('preflight image-inspect block not found')
-          harness = harness.replace(old_pre, new_pre, 1)
+          pre_index = next((i for i, line in enumerate(lines) if line.strip() == '& $docker.Source image inspect "ecorione:desktop" *> $null'), None)
+          if pre_index is None:
+              raise SystemExit('preflight image-inspect line not found')
+          if lines[pre_index + 1].strip() != '$ImagePreexisting = $LASTEXITCODE -eq 0':
+              raise SystemExit('unexpected preflight image-inspect follow-up')
+          pre_assert = lines[pre_index + 2]
+          if 'Image ecorione:desktop sudah ada.' not in pre_assert:
+              raise SystemExit('unexpected preflight fresh-image assertion')
+          lines[pre_index:pre_index + 3] = [
+              '  $cachedImageOutput = & $docker.Source image ls --quiet --filter "reference=ecorione:desktop" 2>$null',
+              '  $cachedImageListExitCode = $LASTEXITCODE',
+              '  Assert-True ($cachedImageListExitCode -eq 0) "Gagal memeriksa cache image ecorione:desktop."',
+              '  $cachedImageIds = @($cachedImageOutput | Where-Object { $_ })',
+              '  $ImagePreexisting = $cachedImageIds.Count -gt 0',
+              pre_assert,
+          ]
 
-          old_post = '''  & docker.exe image inspect "ecorione:desktop" *> $null
-          Assert-True ($LASTEXITCODE -eq 0) "Bundled runtime image tidak ter-load setelah first start."
-          '''
-          new_post = '''  $loadedImageOutput = & docker.exe image ls --quiet --filter "reference=ecorione:desktop" 2>$null
-          $loadedImageListExitCode = $LASTEXITCODE
-          Assert-True ($loadedImageListExitCode -eq 0) "Gagal memeriksa bundled runtime image setelah first start."
-          $loadedImageIds = @($loadedImageOutput | Where-Object { $_ })
-          Assert-True ($loadedImageIds.Count -gt 0) "Bundled runtime image tidak ter-load setelah first start."
-          '''
-          if old_post not in harness:
-              raise SystemExit('post-start image-inspect block not found')
-          harness = harness.replace(old_post, new_post, 1)
-          harness_path.write_text(harness, encoding='utf-8')
+          post_index = next((i for i, line in enumerate(lines) if line.strip() == '& docker.exe image inspect "ecorione:desktop" *> $null'), None)
+          if post_index is None:
+              raise SystemExit('post-start image-inspect line not found')
+          post_assert = lines[post_index + 1]
+          if 'Bundled runtime image tidak ter-load setelah first start.' not in post_assert:
+              raise SystemExit('unexpected post-start image assertion')
+          lines[post_index:post_index + 2] = [
+              '  $loadedImageOutput = & docker.exe image ls --quiet --filter "reference=ecorione:desktop" 2>$null',
+              '  $loadedImageListExitCode = $LASTEXITCODE',
+              '  Assert-True ($loadedImageListExitCode -eq 0) "Gagal memeriksa bundled runtime image setelah first start."',
+              '  $loadedImageIds = @($loadedImageOutput | Where-Object { $_ })',
+              '  Assert-True ($loadedImageIds.Count -gt 0) "Bundled runtime image tidak ter-load setelah first start."',
+          ]
+          harness_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
           test_path = Path('test/windows-desktop-installer-acceptance.test.mjs')
           test = test_path.read_text(encoding='utf-8')
-          old_test = '''    expect(harness).toContain("Image ecorione:desktop sudah ada");
-              expect(harness).toContain("fresh-install proof");
-              expect(harness).toContain("Bundled runtime image tidak ter-load");
-          '''
-          new_test = '''    expect(harness).toContain("Image ecorione:desktop sudah ada");
-              expect(harness).toContain("fresh-install proof");
-              expect(harness).toContain('image ls --quiet --filter "reference=ecorione:desktop"');
-              expect(harness).not.toContain('image inspect "ecorione:desktop"');
-              expect(harness).toContain("Gagal memeriksa cache image ecorione:desktop.");
-              expect(harness).toContain("Bundled runtime image tidak ter-load");
-          '''
-          if old_test not in test:
-              raise SystemExit('acceptance regression assertion block not found')
-          test = test.replace(old_test, new_test, 1)
+          anchor = '    expect(harness).toContain("fresh-install proof");\n'
+          additions = (
+              anchor
+              + '    expect(harness).toContain(\'image ls --quiet --filter "reference=ecorione:desktop"\');\n'
+              + '    expect(harness).not.toContain(\'image inspect "ecorione:desktop"\');\n'
+              + '    expect(harness).toContain("Gagal memeriksa cache image ecorione:desktop.");\n'
+          )
+          if anchor not in test:
+              raise SystemExit('fresh-install test anchor not found')
+          if 'image ls --quiet --filter "reference=ecorione:desktop"' not in test:
+              test = test.replace(anchor, additions, 1)
           test_path.write_text(test, encoding='utf-8')
 
           doc_path = Path('docs/verification/w11-windows-installer-acceptance-2026-09-16.md')
           doc = doc_path.read_text(encoding='utf-8')
           marker = '## Execution order from the current handoff\n'
-          note = '''## Operator attempt 1 — fresh-image probe defect\n\nThe first real Windows operator attempt used the checksum-verified `0.1.0` Setup artifact whose release manifest is pinned to `d6b2f7f58f5a6af26e91ee026536e39fcf11d227`. The attempt stopped before Setup installation because the harness used `docker image inspect ecorione:desktop` while `$ErrorActionPreference = "Stop"`; Docker's expected `No such image` stderr for a fresh machine became a terminating PowerShell error instead of being interpreted as the required fresh-install condition.\n\nNo packaged image was loaded and no `ecorione-desktop` stack was created during that attempt, so the fresh-install boundary remains intact. The harness now probes image presence with `docker image ls --quiet --filter reference=...`, which is non-erroring when the image is absent, while still failing closed if the image-list command itself fails. The post-start bundled-image assertion uses the same safe probe. The installer artifact itself is unchanged and may be reused for the rerun.\n\n'''
+          note = '''## Operator attempt 1 — fresh-image probe defect
+
+The first real Windows operator attempt used the checksum-verified `0.1.0` Setup artifact whose release manifest is pinned to `d6b2f7f58f5a6af26e91ee026536e39fcf11d227`. The attempt stopped before Setup installation because the harness used `docker image inspect ecorione:desktop` while `$ErrorActionPreference = "Stop"`; Docker's expected `No such image` stderr for a fresh machine became a terminating PowerShell error instead of being interpreted as the required fresh-install condition.
+
+No packaged image was loaded and no `ecorione-desktop` stack was created during that attempt, so the fresh-install boundary remains intact. The harness now probes image presence with `docker image ls --quiet --filter reference=...`, which is non-erroring when the image is absent, while still failing closed if the image-list command itself fails. The post-start bundled-image assertion uses the same safe probe. The installer artifact itself is unchanged and may be reused for the rerun.
+
+'''
           if marker not in doc:
               raise SystemExit('W11 execution-order marker not found')
           if '## Operator attempt 1 — fresh-image probe defect' not in doc:
