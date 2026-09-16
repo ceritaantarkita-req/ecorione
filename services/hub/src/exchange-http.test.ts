@@ -131,12 +131,26 @@ describe("ECX HTTP integration", () => {
         task: "Return the incidentId and severity from the current incident record.",
         need: ["incident", "verification"],
         refs: [
-          { kind: "history", sessionId: legacySessionId, afterSeq: -1, throughSeq: 0 },
-          { kind: "history", sessionId: currentSessionId, afterSeq: -1, throughSeq: 0 },
+          {
+            kind: "history",
+            sessionId: legacySessionId,
+            afterSeq: -1,
+            throughSeq: 0,
+          },
+          {
+            kind: "history",
+            sessionId: currentSessionId,
+            afterSeq: -1,
+            throughSeq: 0,
+          },
         ],
         budget: { maxHydratedBytes: 4096 },
         candidates: [
-          { agentId: "agent:reviewer", capabilities: ["incident", "verification"], estimatedCost: 1 },
+          {
+            agentId: "agent:reviewer",
+            capabilities: ["incident", "verification"],
+            estimatedCost: 1,
+          },
         ],
       },
     });
@@ -155,7 +169,9 @@ describe("ECX HTTP integration", () => {
       },
     });
     expect(hydrated.statusCode).toBe(200);
-    const body = hydrated.json() as { items: Array<{ index: number; contentBase64: string }> };
+    const body = hydrated.json() as {
+      items: Array<{ index: number; contentBase64: string }>;
+    };
     expect(body.items).toHaveLength(1);
     expect(body.items[0]?.index).toBe(1);
     expect(Buffer.from(body.items[0]!.contentBase64, "base64").toString("utf8")).toContain(
