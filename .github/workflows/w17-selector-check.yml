@@ -1,0 +1,22 @@
+name: Temporary W17 Selector Check
+
+on:
+  push:
+    branches:
+      - agent/w17-no-oracle-validation-20260916
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec vitest run test/comparative-evidence.test.mjs test/ecx-no-oracle-selector.test.mjs
