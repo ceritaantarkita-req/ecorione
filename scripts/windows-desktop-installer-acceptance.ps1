@@ -240,6 +240,7 @@ try {
 
   $firstStart = Invoke-Launcher $startPath
   Assert-True ($firstStart.code -eq 0) "Installed Start launcher gagal: $($firstStart.output)"
+  $StackStarted = $true
   Assert-True (Test-Path -LiteralPath $DesktopEnv -PathType Leaf) "First start tidak membuat desktop.env di acceptance LOCALAPPDATA."
   $resolvedPortRaw = Read-EnvValue $DesktopEnv "ECORIONE_AI_PORT"
   $resolvedPort = 0
@@ -257,7 +258,6 @@ try {
   $runningServices = @($runningServicesOutput | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ })
   $missingServices = @($ExpectedServices | Where-Object { $runningServices -notcontains $_ })
   Assert-True ($missingServices.Count -eq 0) "Installed stack kehilangan running services: $($missingServices -join ', ')."
-  $StackStarted = $true
 
   $Report.phases.firstStart = [ordered]@{
     pass = $true

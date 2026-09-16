@@ -37,7 +37,7 @@ describe("W11 Windows installer/launcher acceptance contract", () => {
     expect(harness).toContain("$Protected17020");
     expect(harness).toContain("$resolvedPort -ne 17020");
     expect(harness).toContain("$resolvedPort -ge 17029 -and $resolvedPort -le 17039");
-    expect(harness).toContain('foreign17020Preserved = $true');
+    expect(harness).toContain("foreign17020Preserved = $true");
   });
 
   it("exercises the installed Start, Doctor, and Stop launchers", () => {
