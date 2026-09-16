@@ -129,6 +129,16 @@ export function stageDesktopSurface(bundleRoot) {
       return rel !== "installer.iss" && rel !== "runtime" && !rel.startsWith("runtime/");
     },
   });
+
+  // The repository launcher is the native Windows entrypoint. The legacy Docker
+  // bundle keeps its own launcher and exposes it under the canonical bundle name.
+  const dockerLauncher = resolve(bundleRoot, "ecorione-docker.ps1");
+  if (!existsSync(dockerLauncher)) {
+    throw new Error("Legacy Docker launcher tidak ditemukan: desktop/ecorione-docker.ps1");
+  }
+  cpSync(dockerLauncher, resolve(bundleRoot, "ecorione.ps1"));
+  rmSync(dockerLauncher, { force: true });
+
   cpSync(resolve(ROOT, "LICENSE"), resolve(bundleRoot, "LICENSE"));
 }
 
