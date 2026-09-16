@@ -9,17 +9,17 @@ Current code + current evidence + dokumen ini adalah source of truth pekerjaan a
 ## 1. Current repository checkpoint
 
 ```text
-current main repo-verified baseline: 504e6aef86092d6f398ff290a40f77593c8882ca
-PR #112: merged — W16 automatic semantic ECX reference selector
-post-merge CI: 35085550485 (#906) — SUCCESS
-post-merge Product Eval: 35085550544 (#145) — SUCCESS
-post-merge MCP External HTTPS Acceptance: 35085550463 (#448) — SUCCESS
-W16 repo-side closure: PASS
-W17 branch: agent/w17-no-oracle-validation-20260916
-W17 focused selector/helper tests: 14/14 PASS
+current main repo-verified baseline: 4f58c9a088fee5e778875f91ce61c816f81326de
+PR #116: merged — W17 formal local closure + doctor canary threshold alignment
+post-merge CI: 35100203476 (#920) — SUCCESS
+post-merge Product Eval: 35100203475 (#159) — SUCCESS
+W17 formal local closure: PASS
+formal runtime evidence baseline: 90bc800649b02be1de752d8c67c365c65a9d21a6
+raw evidence sha256: a76a6a195aea6e117651f948e41b3fdcbbd2532cbdf556c14a2437fa50483fb3
+W17 measured calls: 100 (5 tasks × 5 repeats × 4 lanes)
 ```
 
-W16 is now merged and green on `main`. The automatic semantic selector supports bounded `selection: { mode: "semantic-v1", maxRefs }` hydration without requiring caller/oracle-supplied `refIndexes`, while preserving the explicit-index compatibility path and existing hydration policy/budget gates.
+W16 remains merged and green on `main`. W17 is now closed on top of that selector: the formal fail-closed local run completed 100 measured calls across full-inline, all-ref, automatic no-oracle, and oracle-control lanes with 5/5 task gates, selector recall 1, zero cache hits, and verified immutable `qwen3.5:9b` identity. Automatic-selector evidence remains bounded and does not establish hosted billed-cost or end-to-end network savings.
 
 The final real-Windows W09/W10 run remains synchronized to its verified runtime baseline `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`. Ai resolved to `127.0.0.1:17020`; the protected foreign listener on port `3000` survived start and cleanup; the full fixed owner fleet was healthy; duplicate start failed closed; cleanup released the ECORIONE application ports; and doctor remained usable after shutdown. Local AI was `UNAVAILABLE` in that run and remains intentionally outside the W09/W10 core process-readiness gate because immutable local-model evidence is governed by W13/W15.
 
@@ -45,10 +45,10 @@ The final real-Windows W09/W10 run remains synchronized to its verified runtime 
 | W14 | Product eval foundation | **DONE — REPO SIDE** | 12 task/bug-derived deterministic regressions + dedicated gate. |
 | W15 | Agentic local-model eval v1 | **DONE — VERIFIED LOCAL MODEL PASS^3** | 4/4 real cases pass^3 dengan immutable digest verified; claim hanya bounded eval harness, bukan autonomous product chat. |
 | W16 | Automatic semantic reference selector | **DONE — REPO SIDE** | `selection: semantic-v1` memilih bounded refs otomatis; explicit `refIndexes` tetap backward-compatible; post-merge CI/Product Eval/MCP green. |
-| W17 | ECX no-oracle validation | **STARTED — HARNESS READY / REAL LOCAL RUN PENDING** | Four-lane full/all/auto/oracle harness + 5/5 fixture selector recall contract ready; formal real local-model run belum dilakukan. |
+| W17 | ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS (100 CALLS)** | 5 tasks × 5 repeats × 4 lanes; 5/5 task gates; auto selector recall 1; cache hits 0; immutable `qwen3.5:9b` verified; bounded local evidence only. |
 | W18 | Hosted economic validation | TODO | Real bounded hosted token/cost evidence. |
 | W19 | Release/security governance follow-up | **DONE — REPO SIDE** | History secret scan + naming/model-alias gate di CI; branch protection gap terpisah. |
-| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W17/W18 evidence. |
+| W20 | Final current-state sync | **STARTED** | Continue after the remaining W11/W18 evidence. |
 
 ## 3. W03 final closure evidence
 
@@ -158,12 +158,26 @@ no-oracle selector fixture tests = 5/5 PASS
 total focused = 14/14 PASS
 ```
 
-Formal W17 real local-model evidence masih pending. Target closure profile:
+Formal W17 real local-model evidence is now closed. The fail-closed runner completed:
 
 ```text
+runtime evidence baseline: 90bc800649b02be1de752d8c67c365c65a9d21a6
 5 tasks × 5 repeats × 4 lanes = 100 measured model calls
 + one excluded warm-up completion
+passed task gates = 5/5
+failed tasks = 0
+cache hits = 0
+median automatic selector recall = 1.0
+median automatic selector precision = 0.6666666666666666
+median automatic selected-hydration transport reduction = 46.089385474860336%
+median automatic input-token reduction = 50.80489375402447%
+median automatic/full latency ratio = 0.9839322301085884
+automatic known-transport-floor beat task count = 0/5
+closureEligible = true
+raw evidence sha256 = a76a6a195aea6e117651f948e41b3fdcbbd2532cbdf556c14a2437fa50483fb3
 ```
+
+The `0/5` known-transport-floor result is intentional evidence, not a failed gate: automatic selection currently scans bounded authorized candidate text before hydration, so W17 proves model-context/input-token and selected-hydration reductions but **does not** claim end-to-end automatic-selection network savings.
 
 W17 juga memisahkan selected-hydration savings dari selector candidate scanning. Karena W16 saat ini membaca bounded authorized text candidates untuk ranking, `packet + selected hydration` tidak boleh disebut end-to-end transport savings tanpa menghitung candidate scan. Harness merekam conservative known transport floor secara terpisah.
 
@@ -183,15 +197,14 @@ With W03, W09/W10, and W16 closed, priority is:
 
 ```text
 1. W11 — complete real Setup/launcher acceptance on clean Windows
-2. W17 — merge the no-oracle harness after full repo gates, then run the formal 5×5×4 local-model comparison
-3. W18 — collect bounded real hosted token/cost evidence
-4. W20 — final current-state sync after remaining evidence closes
+2. W18 — collect bounded real hosted token/cost evidence (explicit spend authorization required)
+3. W20 — final current-state sync after W11/W18 close
 ```
 
-Do not reopen W03, W09/W10, or W16 unless a new reproducible regression appears on product code newer than the verified baselines.
+Do not reopen W03, W09/W10, W16, or W17 unless a new reproducible regression appears on product code newer than the verified baselines.
 
 ## 8. Historical note
 
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya. PR #80 menyinkronkan W14. PR #81–#85 membangun dan menutup W15 evidence. PR #86/#88/#89 mengeraskan Windows runtime flow. PR #90 memperbaiki Settings feedback/action stacking. PR #93 mengintegrasikan responsive + Flow redesign. PR #95 memperbaiki Flow inventory marker drift. PR #96 dan PR #97 menyelesaikan mobile Settings/Space/Flow corrections. PR #98 menyinkronkan progress real-laptop sebelum final functional closure. PR #100–#106 membangun, memperbaiki, dan menutup real-Windows W09/W10 acceptance sampai final PASS pada `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`. PR #112 mengimplementasikan dan menutup repo-side W16 automatic semantic ECX reference selector pada merge baseline `504e6aef86092d6f398ff290a40f77593c8882ca` dengan post-merge CI/Product Eval/MCP acceptance green.
+PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya. PR #80 menyinkronkan W14. PR #81–#85 membangun dan menutup W15 evidence. PR #86/#88/#89 mengeraskan Windows runtime flow. PR #90 memperbaiki Settings feedback/action stacking. PR #93 mengintegrasikan responsive + Flow redesign. PR #95 memperbaiki Flow inventory marker drift. PR #96 dan PR #97 menyelesaikan mobile Settings/Space/Flow corrections. PR #98 menyinkronkan progress real-laptop sebelum final functional closure. PR #100–#106 membangun, memperbaiki, dan menutup real-Windows W09/W10 acceptance sampai final PASS pada `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`. PR #112 mengimplementasikan dan menutup repo-side W16 automatic semantic ECX reference selector pada merge baseline `504e6aef86092d6f398ff290a40f77593c8882ca` dengan post-merge CI/Product Eval/MCP acceptance green. PR #113 menambahkan four-lane no-oracle harness; PR #114 menambahkan fail-closed local closure runner; PR #115 menambahkan bounded local generation controls untuk menutup runaway reasoning pada evidence run; dan PR #116 merekam formal 100-call W17 PASS sekaligus menyelaraskan doctor canary latency ceiling dengan probe timeout. PR #116 merged sebagai `4f58c9a088fee5e778875f91ce61c816f81326de`, dengan post-merge CI #920 dan Product Eval #159 SUCCESS.
 
 `DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.
