@@ -1,0 +1,80 @@
+name: W11 prep tidy
+
+on:
+  push:
+    branches:
+      - feat/w11-windows-installer-acceptance-20260916
+
+permissions:
+  contents: write
+
+jobs:
+  tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Patch W11 acceptance cleanup and work-plan status
+        shell: python
+        run: |
+          from pathlib import Path
+
+          harness = Path('scripts/windows-desktop-installer-acceptance.ps1')
+          text = harness.read_text(encoding='utf-8')
+          old = '''  $firstStart = Invoke-Launcher $startPath
+  Assert-True ($firstStart.code -eq 0) "Installed Start launcher gagal: $($firstStart.output)"
+  Assert-True (Test-Path -LiteralPath $DesktopEnv -PathType Leaf) "First start tidak membuat desktop.env di acceptance LOCALAPPDATA."'''
+          new = '''  $firstStart = Invoke-Launcher $startPath
+  Assert-True ($firstStart.code -eq 0) "Installed Start launcher gagal: $($firstStart.output)"
+  $StackStarted = $true
+  Assert-True (Test-Path -LiteralPath $DesktopEnv -PathType Leaf) "First start tidak membuat desktop.env di acceptance LOCALAPPDATA."'''
+          if old not in text:
+              raise SystemExit('first-start insertion point not found')
+          text = text.replace(old, new, 1)
+          text = text.replace('''  $missingServices = @($ExpectedServices | Where-Object { $runningServices -notcontains $_ })
+  Assert-True ($missingServices.Count -eq 0) "Installed stack kehilangan running services: $($missingServices -join ', ')."
+  $StackStarted = $true
+''', '''  $missingServices = @($ExpectedServices | Where-Object { $runningServices -notcontains $_ })
+  Assert-True ($missingServices.Count -eq 0) "Installed stack kehilangan running services: $($missingServices -join ', ')."
+''', 1)
+          harness.write_text(text, encoding='utf-8')
+
+          plan = Path('docs/active-work-plan.md')
+          text = plan.read_text(encoding='utf-8')
+          old = '| W11 | Installer/Launcher | **STARTED — REPO-SIDE PACKAGING READY** | Real Setup + clean-Windows acceptance belum ada. |'
+          new = '| W11 | Installer/Launcher | **STARTED — HARNESS READY / REAL INSTALLER RUN PENDING** | Packaging + isolated Windows installer acceptance harness siap; real Setup artifact + operator run masih wajib. |'
+          if old not in text:
+              raise SystemExit('W11 work-plan row not found')
+          plan.write_text(text.replace(old, new, 1), encoding='utf-8')
+      - name: Parse PowerShell acceptance script
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'scripts/windows-desktop-installer-acceptance.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+      - name: Run targeted contract tests
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.28.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm vitest run test/windows-desktop-installer-acceptance.test.mjs test/desktop-installer.test.mjs test/desktop-bundle.test.mjs
+          pnpm exec prettier --check test/windows-desktop-installer-acceptance.test.mjs docs/verification/w11-windows-installer-acceptance-2026-09-16.md docs/active-work-plan.md
+          git diff --check
+      - name: Commit tidy patch
+        shell: bash
+        run: |
+          rm .github/workflows/tmp-w11-prep-tidy.yml
+          git config user.name "ceritaantarkita-req"
+          git config user.email "ceritaantarkita@gmail.com"
+          git add scripts/windows-desktop-installer-acceptance.ps1 docs/active-work-plan.md .github/workflows/tmp-w11-prep-tidy.yml
+          git diff --cached --check
+          git commit -m "chore(w11): finalize installer acceptance prep"
+          git push
