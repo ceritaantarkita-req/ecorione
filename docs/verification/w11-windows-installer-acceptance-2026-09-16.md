@@ -1,129 +1,126 @@
 # W11 — Windows installer/launcher acceptance
 
-Status: **HARNESS READY / REAL INSTALLER RUN PENDING**
+Status: **DONE — WINDOWS INSTALLER VERIFIED**
 
 Date: **2026-09-16**
 
-Current handoff baseline before W11 execution: `62e0d4b64b41cfa0b3038461bc376d67b1a2cbb8` (`main`, PR #117 merged; post-merge CI #922 and Product Eval #161 SUCCESS).
+Final verified runtime/release baseline: `8cb665ff25682e683b284c896ec3a2e77bf716ba` (`main`, PR #123 merged).
+
+Final Setup artifact:
+
+- `ECORIONE-Setup-0.1.0.exe`
+- SHA-256: `ab3a9d11584f0b0073c2f30be374f7455cb39365a6c5b17fbb360bb59433187c`
+
+Detailed final operator evidence: `docs/verification/w11-operator-attempt-5-closure-2026-09-16.md`.
 
 ## Scope
 
-W11 is deliberately separate from W09/W10. W09/W10 proved the synchronized source-workstation engine path on real Windows. W11 must prove that an end user can install and operate the packaged ECORIONE desktop surface without relying on the source checkout, host Node.js, host pnpm, or host Git.
+W11 is deliberately separate from W09/W10. W09/W10 proved the synchronized source-workstation engine path on real Windows. W11 proves that an end user can install and operate the packaged ECORIONE desktop surface without relying on the source checkout, host Node.js, host pnpm, or host Git.
 
 Docker Desktop remains an explicit desktop prerequisite in the current product boundary. The installer does not silently install or configure Docker Desktop.
 
-The post-W17 source-workstation `pnpm engine:doctor` local generation canary can exceed its current 20-second diagnostic timeout after benchmark-only generation limits are removed. That behavior is explicitly **not** a W11 blocker: W11 validates the packaged launcher surface and uses the packaged Doctor behavior defined below. It also does not reopen W09/W10 or W17.
+The source-workstation `pnpm engine:doctor` local generation canary may exceed its diagnostic timeout under normal unbounded local-model behavior. That is not a W11 blocker: W11 validates the packaged launcher/Doctor lifecycle and does not reopen W09/W10 or W17.
 
-## Repository-side packaging already present
+## Packaged release path
 
-The desktop release path consists of:
+The verified desktop release path consists of:
 
 - `scripts/desktop-bundle.mjs` — builds `ecorione:desktop`, exports `runtime/ecorione-image.tar`, writes `RELEASE-MANIFEST.json`, and writes `SHA256SUMS`;
 - `desktop/installer.iss` — per-user Inno Setup package under `%LOCALAPPDATA%\Programs\ECORIONE`;
 - `desktop/Start-ECORIONE.cmd`, `Doctor-ECORIONE.cmd`, and `Stop-ECORIONE.cmd` — user-facing launcher wrappers;
 - `desktop/ecorione.ps1` — Docker prerequisite checks, first-run config, bundled image loading, collision-safe Ai port selection, start/doctor/stop/open behavior;
 - `desktop/compose.yml` — packaged runtime topology;
-- `.github/workflows/desktop-installer.yml` — explicit manual release workflow that builds the Linux Docker runtime bundle and compiles the Windows Setup executable with Inno Setup.
+- `scripts/windows-desktop-installer-acceptance.ps1` — fail-closed real-Windows end-user acceptance harness.
 
-Repo-side packaging tests remain part of normal Vitest/CI.
-
-## W11 acceptance harness
-
-`scripts/windows-desktop-installer-acceptance.ps1` accepts a real `ECORIONE-Setup-*.exe` and performs an isolated end-user-style install. It writes only sanitized phase/result metadata to `traces/w11-windows-installer-acceptance-*.json`.
-
-The harness is fail-closed around fresh-install evidence:
-
-1. Windows is required.
-2. Docker Desktop CLI, engine, and Compose must be reachable.
-3. No existing `ecorione-desktop` compose containers may exist.
-4. `ecorione:desktop` must not already exist, so first Start must prove loading the bundled `runtime/ecorione-image.tar` rather than reusing a developer cache.
-5. When `SHA256SUMS` is supplied, the Setup executable hash must match.
-6. When `-ExpectedSourceRevision` is supplied, installed `RELEASE-MANIFEST.json` must match that exact source revision.
+PR #123 additionally fixed the Context production runtime-asset contract so SQL migrations are copied into `dist/migrations`, and Docker production build now fails closed if the migration assets are absent.
 
 ## Acceptance matrix
 
 ### W11-A — real Setup install
 
-Pass when the real Inno Setup executable installs into an isolated per-user directory and the installed bundle contains the launcher wrappers, PowerShell launcher, compose file, release manifest, checksums, and bundled runtime image tar.
+**PASS.** The real Inno Setup executable installed into an isolated per-user directory and the installed bundle contained the launcher surface, compose file, release manifest, checksums, and bundled runtime image.
 
 ### W11-B — no host development-tool dependency
 
-The harness temporarily sanitizes `PATH` so host Node.js, pnpm, and Git are not visible while Docker remains visible. Installed launcher behavior must continue to work in that boundary.
+**PASS.** The harness hid host Node.js, pnpm, and Git while retaining Windows + Docker prerequisites. The installed launcher continued to operate.
 
 ### W11-C — installed Doctor before startup
 
-`Doctor-ECORIONE.cmd` must return success when Docker Desktop + Compose are reachable, while accurately reporting that Ai is not running yet. The wrapper preserves the PowerShell doctor exit code and supports noninteractive acceptance without changing normal double-click behavior.
+**PASS.** Installed Doctor succeeded before first Start while accurately handling the not-yet-running packaged runtime.
 
 ### W11-D — first Start + bundled runtime load + collision-safe port
 
-The harness protects preferred port `17020` with a foreign listener. `Start-ECORIONE.cmd` must:
-
-- create isolated `%LOCALAPPDATA%\ECORIONE\desktop.env`;
-- choose a fallback in `17029–17039`;
-- preserve the foreign listener;
-- load `ecorione:desktop` from the installed runtime tar;
-- bring the packaged compose fleet up;
-- make Ai reachable on the resolved fallback port.
-
-The launcher supports `ECORIONE_DESKTOP_NO_OPEN=1` only for automation; ordinary double-click Start still opens ECORIONE in the browser.
+**PASS.** The fresh-state boundary contained no existing `ecorione-desktop` containers/networks/volumes and no cached `ecorione:desktop` image. First Start loaded the bundled image and brought up the full Compose fleet at fallback Ai port `17029`, proving the preferred-port collision path.
 
 ### W11-E — runtime Doctor + second Start reuse
 
-While running, Doctor must follow the resolved Ai port. A second Start must recognize the existing desktop stack, keep the same port, and not create a parallel instance.
+**PASS.** Runtime Doctor succeeded and a second Start reused the existing desktop instance instead of creating a parallel stack.
 
 ### W11-F — Stop semantics
 
-`Stop-ECORIONE.cmd` must remove runtime containers, release the resolved Ai port, preserve the protected foreign listener, and retain ECORIONE data volumes. It must not use destructive `down -v` behavior.
+**PASS.** Stop removed runtime containers while retaining ECORIONE data volumes.
 
 ### W11-G — Doctor post-stop + uninstall
 
-Doctor must remain usable after Stop and report Ai stopped. The real Inno Setup uninstaller must then remove the installed launcher surface successfully. User data retention is recorded rather than silently destroyed.
+**PASS.** Installed Doctor remained usable after Stop and the Inno Setup uninstaller completed successfully.
 
-## Operator attempt 1 — fresh-image probe defect
+## Final operator run
 
-The first real Windows operator attempt used the checksum-verified `0.1.0` Setup artifact whose release manifest is pinned to `d6b2f7f58f5a6af26e91ee026536e39fcf11d227`. The attempt stopped before Setup installation because the harness used `docker image inspect ecorione:desktop` while `$ErrorActionPreference = "Stop"`; Docker's expected `No such image` stderr for a fresh machine became a terminating PowerShell error instead of being interpreted as the required fresh-install condition.
-
-No packaged image was loaded and no `ecorione-desktop` stack was created during that attempt, so the fresh-install boundary remains intact. The harness now probes image presence with `docker image ls --quiet --filter reference=...`, which is non-erroring when the image is absent, while still failing closed if the image-list command itself fails. The post-start bundled-image assertion uses the same safe probe. The installer artifact itself is unchanged and may be reused for the rerun.
-
-## Execution order from the current handoff
-
-1. Build a real Setup artifact from the exact intended merged source revision.
-2. Retain the generated `SHA256SUMS` alongside the Setup executable.
-3. Confirm Docker Desktop is reachable on the real Windows operator machine.
-4. Run the isolated acceptance harness with both checksum and exact expected source revision supplied.
-5. Treat any harness failure as a real W11 defect unless the failure is an explicitly external prerequisite failure (for example Docker Desktop unavailable).
-6. Close W11 only after the sanitized report records `result: "PASS"`.
-
-## Operator command
-
-After a Setup artifact and its checksum file are available locally, run from synchronized source `main`:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows-desktop-installer-acceptance.ps1 `
-  -InstallerPath "C:\path\to\ECORIONE-Setup-0.1.0.exe" `
-  -ChecksumPath "C:\path\to\SHA256SUMS" `
-  -ExpectedSourceRevision "<release source revision>"
-```
-
-Expected final marker:
+The operator synchronized local `main` to:
 
 ```text
+8cb665ff25682e683b284c896ec3a2e77bf716ba
+```
+
+The Setup hash matched `SHA256SUMS` exactly:
+
+```text
+ab3a9d11584f0b0073c2f30be374f7455cb39365a6c5b17fbb360bb59433187c  ECORIONE-Setup-0.1.0.exe
+```
+
+The acceptance harness then returned:
+
+```text
+[W11] Installer SHA-256 verified
+[W11] Setup installed isolated end-user bundle
+[W11] Host Node/pnpm/Git hidden; launcher limited to Windows + Docker prerequisites
+[W11] Installed Doctor pre-start PASS
+[W11] First Start PASS at fallback port 17029 with full compose fleet
+[W11] Installed Doctor runtime PASS
+[W11] Second Start reused existing desktop instance
+[W11] Stop PASS; runtime containers removed and data volumes retained
+[W11] Installed Doctor post-stop PASS
+[W11] Uninstall PASS
+
 PASS W11 Windows installer/launcher acceptance
 ```
 
-The generated sanitized report path is printed immediately afterwards.
+Sanitized report path printed by the run:
+
+```text
+traces/w11-windows-installer-acceptance-2026-09-16T16-54-50-970Z.json
+```
+
+## Retained defect history
+
+Earlier attempts remain part of the evidence trail rather than being erased. They surfaced real defects in the fresh-image probe, packaged launcher path, and Context production-image packaging. Attempt 4 failed because `/app/services/context/dist/migrations/` did not exist in the packaged production image. PR #123 corrected that build contract before the successful Attempt 5 artifact was produced.
+
+Related records include:
+
+- `docs/verification/w11-operator-attempt-3-2026-09-16.md`;
+- `docs/verification/w11-operator-attempt-4-2026-09-16.md`;
+- `docs/verification/w11-operator-attempt-5-closure-2026-09-16.md`.
 
 ## Closure boundary
 
-W11 may become **DONE — WINDOWS INSTALLER VERIFIED** only when all of the following are true:
+W11 is **DONE — WINDOWS INSTALLER VERIFIED** because all closure requirements now exist simultaneously:
 
-- the W11 harness/launcher hardening is merged and exact post-merge CI + Product Eval are green;
-- a real Setup executable built from the intended merged source revision is used;
-- checksum verification is supplied for closure evidence, not skipped;
-- `RELEASE-MANIFEST.json` matches the exact expected source revision;
-- W11-A through W11-G pass on real Windows;
-- final output is `PASS W11 Windows installer/launcher acceptance`;
-- generated sanitized report has `result: "PASS"`;
-- no existing desktop instance or cached `ecorione:desktop` image was reused to weaken the fresh-install claim.
+- merged packaging/launcher hardening and green post-merge checks;
+- a real Setup executable built from the intended source revision;
+- checksum verification supplied and matched;
+- release manifest/source revision pinned to the intended baseline;
+- W11-A through W11-G passed on real Windows;
+- final marker `PASS W11 Windows installer/launcher acceptance` returned;
+- fresh-install state proved that no existing desktop stack or cached `ecorione:desktop` image weakened the claim.
 
-Until that operator run exists, W11 remains **STARTED — HARNESS READY / REAL INSTALLER RUN PENDING**.
+This closure applies to the exact release/source revision recorded above. Future packaged releases still require their own release validation. W18 hosted-economic validation remains separate and open.
