@@ -97,7 +97,9 @@ describe("W17 local closure validator", () => {
     evidence.taskResults[4].runs["ecx-selective-oracle"][4].responseModel = "other:model";
     const result = validateW17Evidence(evidence);
     expect(result.pass).toBe(false);
-    expect(result.failures).toContain("model identity harus stabil di seluruh 100 measured calls");
+    expect(result.failures).toContain(
+      "model identity harus stabil di seluruh 100 measured calls",
+    );
   });
 
   it("requires a clean synchronized main checkout", () => {

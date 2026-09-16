@@ -66,10 +66,12 @@ export function inspectRepositoryState(root = ROOT) {
 
 export function assertClosureRepositoryState(state) {
   const failures = [];
-  if (state.branch !== "main") failures.push(`branch harus main, aktual ${state.branch || "(detached)"}`);
+  if (state.branch !== "main")
+    failures.push(`branch harus main, aktual ${state.branch || "(detached)"}`);
   if (!state.clean) failures.push("worktree harus clean");
   if (state.head !== state.originMain) failures.push("HEAD harus sama dengan origin/main");
-  if (failures.length > 0) throw new Error(`W17 repository preflight gagal: ${failures.join("; ")}`);
+  if (failures.length > 0)
+    throw new Error(`W17 repository preflight gagal: ${failures.join("; ")}`);
 }
 
 function loadLocalEnvironment(root = ROOT) {
@@ -98,7 +100,8 @@ async function assertHealthyService(name, baseUrl, token) {
       `${name} tidak reachable di ${url}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  if (!response.ok) throw new Error(`${name} health gagal: HTTP ${String(response.status)} di ${url}`);
+  if (!response.ok)
+    throw new Error(`${name} health gagal: HTTP ${String(response.status)} di ${url}`);
 }
 
 async function assertRuntimeServices(env) {
@@ -129,8 +132,10 @@ function readInventory(env) {
   } catch {
     throw new Error("local model inventory tidak menghasilkan JSON yang valid");
   }
-  if (inventory.modelsReachable !== true) throw new Error("local model runtime tidak reachable");
-  if (inventory.listed !== true) throw new Error("ECORIONE_LOCAL_MODEL tidak ditemukan di runtime");
+  if (inventory.modelsReachable !== true)
+    throw new Error("local model runtime tidak reachable");
+  if (inventory.listed !== true)
+    throw new Error("ECORIONE_LOCAL_MODEL tidak ditemukan di runtime");
   if (inventory.identityVerified !== true) {
     throw new Error(
       "immutable local-model identity belum verified; ECORIONE_LOCAL_MODEL_DIGEST harus cocok dengan runtime",
@@ -173,7 +178,10 @@ export function validateW17Evidence(evidence) {
   if (evidence?.aggregate?.passedTasks !== EXPECTED_TASK_COUNT) {
     failures.push(`aggregate.passedTasks harus ${String(EXPECTED_TASK_COUNT)}`);
   }
-  if (!Array.isArray(evidence?.aggregate?.failedTasks) || evidence.aggregate.failedTasks.length !== 0) {
+  if (
+    !Array.isArray(evidence?.aggregate?.failedTasks) ||
+    evidence.aggregate.failedTasks.length !== 0
+  ) {
     failures.push("aggregate.failedTasks harus kosong");
   }
 
@@ -198,7 +206,8 @@ export function validateW17Evidence(evidence) {
         failures.push(`${String(task?.id)} summary ${mode} tidak ada`);
         continue;
       }
-      if (summary.cacheHits !== 0) failures.push(`${String(task?.id)} ${mode} cacheHits harus 0`);
+      if (summary.cacheHits !== 0)
+        failures.push(`${String(task?.id)} ${mode} cacheHits harus 0`);
       if (summary.qualityScoreMedian !== 1) {
         failures.push(`${String(task?.id)} ${mode} median quality harus 1`);
       }
@@ -206,7 +215,8 @@ export function validateW17Evidence(evidence) {
   }
 
   const identities = stableModelIdentity(taskResults);
-  if (identities.size !== 1) failures.push("model identity harus stabil di seluruh 100 measured calls");
+  if (identities.size !== 1)
+    failures.push("model identity harus stabil di seluruh 100 measured calls");
   if (identities.has("|")) failures.push("model identity telemetry tidak boleh kosong");
 
   return {
@@ -302,7 +312,8 @@ async function main() {
   if (run.status !== 0) {
     throw new Error(`W17 comparative run gagal dengan exit code ${String(run.status)}`);
   }
-  if (!existsSync(outputPath)) throw new Error("W17 comparative run tidak menghasilkan evidence file");
+  if (!existsSync(outputPath))
+    throw new Error("W17 comparative run tidak menghasilkan evidence file");
 
   const evidence = JSON.parse(readFileSync(outputPath, "utf8"));
   const validation = validateW17Evidence(evidence);
