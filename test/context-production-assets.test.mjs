@@ -11,6 +11,7 @@ const copyScript = readFileSync(
   resolve(ROOT, "services/context/scripts/copy-migrations.mjs"),
   "utf8",
 );
+const dockerfile = readFileSync(resolve(ROOT, "Dockerfile"), "utf8");
 
 describe("Context production runtime assets", () => {
   it("copies Context migrations during the root production build", () => {
@@ -23,8 +24,15 @@ describe("Context production runtime assets", () => {
   });
 
   it("copies source migrations beside the compiled migration runner", () => {
-    expect(copyScript).toContain('../src/migrations/');
-    expect(copyScript).toContain('../dist/migrations/');
+    expect(copyScript).toContain("../src/migrations/");
+    expect(copyScript).toContain("../dist/migrations/");
     expect(copyScript).toContain("cpSync(src, dest, { recursive: true })");
+  });
+
+  it("fails the production image build if migration SQL assets are missing", () => {
+    expect(dockerfile).toContain("test -d services/context/dist/migrations");
+    expect(dockerfile).toContain(
+      "find services/context/dist/migrations -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .",
+    );
   });
 });
