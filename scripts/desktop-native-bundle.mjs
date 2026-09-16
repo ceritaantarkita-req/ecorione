@@ -221,7 +221,6 @@ export function buildNativeDesktopBundle({ version, outRoot = DEFAULT_OUT_ROOT, 
       "--frozen-lockfile",
       "--config.node-linker=hoisted",
       "--config.package-import-method=copy",
-      "--config.inject-workspace-packages=true",
     ],
     { cwd: layout.appRoot, stdio: "inherit" },
   );
