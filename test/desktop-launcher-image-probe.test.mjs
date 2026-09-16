@@ -15,16 +15,16 @@ describe("W11 packaged desktop image probe", () => {
 
   it("does not treat normal docker compose progress on stderr as a PowerShell failure", () => {
     expect(launcher).toContain(
-      '$previousErrorActionPreference = $ErrorActionPreference',
+      "$previousErrorActionPreference = $ErrorActionPreference",
     );
     expect(launcher).toContain('$ErrorActionPreference = "Continue"');
     expect(launcher).toContain(
-      '$output = & docker compose --env-file $EnvFile -f $ComposeFile @Arguments 2>&1',
+      "$output = & docker compose --env-file $EnvFile -f $ComposeFile @Arguments 2>&1",
     );
-    expect(launcher).toContain('$exitCode = $LASTEXITCODE');
+    expect(launcher).toContain("$exitCode = $LASTEXITCODE");
     expect(launcher).toContain(
-      '$ErrorActionPreference = $previousErrorActionPreference',
+      "$ErrorActionPreference = $previousErrorActionPreference",
     );
-    expect(launcher).toContain('if ($exitCode -ne 0)');
+    expect(launcher).toContain("if ($exitCode -ne 0)");
   });
 });
