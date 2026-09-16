@@ -7,6 +7,8 @@ RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
 
 COPY . .
 RUN pnpm install --frozen-lockfile && pnpm run build
+RUN test -d services/context/dist/migrations \
+  && find services/context/dist/migrations -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .
 RUN mkdir -p /app/data && chown node:node /app/data
 
 ENV NODE_ENV=production
