@@ -108,7 +108,15 @@ function reportedCost(
   providerName: OpenAiCompatibleHostedInput["providerName"],
   value: unknown,
 ): number | undefined {
-  if (value === undefined) return undefined;
+  if (value === undefined) {
+    if (providerName === "OpenRouter") {
+      throw new ProviderError(
+        "hosted",
+        "Respons OpenRouter tidak menyertakan usage.cost; billed-cost authority tidak tersedia.",
+      );
+    }
+    return undefined;
+  }
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     throw new ProviderError(
       "hosted",
