@@ -2,6 +2,7 @@ import { createConnection } from "node:net";
 import { setTimeout as sleep } from "node:timers/promises";
 
 import { describe, expect, it } from "vitest";
+import { isPortReachable } from "../scripts/ecorione-engine.mjs";
 import {
   acceptancePlan,
   createProtectedPortSentinel,
@@ -59,6 +60,25 @@ describe("W09/W10 Windows engine acceptance harness", () => {
     });
 
     await sleep(25);
+    expect(server.listening).toBe(true);
+    await new Promise((resolvePromise) => server.close(resolvePromise));
+  });
+
+  it("keeps the protected foreign-port sentinel TCP-reachable across repeated probes", async () => {
+    const server = createProtectedPortSentinel();
+    await new Promise((resolvePromise, rejectPromise) => {
+      server.once("error", rejectPromise);
+      server.listen(0, "127.0.0.1", resolvePromise);
+    });
+
+    const address = server.address();
+    expect(address).not.toBeNull();
+    expect(typeof address).toBe("object");
+    if (!address || typeof address === "string") throw new Error("Unexpected sentinel address");
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      expect(await isPortReachable(address.port)).toBe(true);
+    }
     expect(server.listening).toBe(true);
     await new Promise((resolvePromise) => server.close(resolvePromise));
   });

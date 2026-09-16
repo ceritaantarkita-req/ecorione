@@ -195,6 +195,15 @@ async function waitForRuntime(childState, stdoutRef, timeoutMs = 150_000) {
   throw new Error("engine:start belum mencapai full readiness setelah 150 detik.");
 }
 
+async function waitForPortReachable(port, timeoutMs = 5_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await isPortReachable(port)) return true;
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 100));
+  }
+  return isPortReachable(port);
+}
+
 async function waitForPortsClosed(ports, timeoutMs = 20_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -255,10 +264,13 @@ function doctorCommand(env) {
 
 export function createProtectedPortSentinel() {
   return createServer((socket) => {
-    // Port probes connect and immediately close/reset. The sentinel owns no protocol,
-    // so socket-level reset errors are expected and must never crash acceptance.
+    // The sentinel owns no application protocol. Keep accepted sockets open until the
+    // client closes so a Windows reachability probe can observe a completed TCP connect
+    // instead of racing an immediate server-side FIN/RST. Disposable socket errors are
+    // expected when probes reset the connection.
     socket.on("error", () => {});
-    socket.end();
+    socket.setTimeout(2_000, () => socket.destroy());
+    socket.resume();
   });
 }
 
@@ -343,7 +355,7 @@ async function runAcceptance() {
       protectedPort3000Server = createProtectedPortSentinel();
       await listenServer(protectedPort3000Server, 3000);
     }
-    if (!(await isPortReachable(3000))) {
+    if (!(await waitForPortReachable(3000))) {
       throw new Error(
         "Acceptance gagal membuat atau mempertahankan foreign listener di port 3000.",
       );
@@ -456,7 +468,7 @@ async function runAcceptance() {
         "ECORIONE tidak boleh memakai protected foreign port 3000 pada acceptance ini.",
       );
     }
-    if (!(await isPortReachable(3000))) {
+    if (!(await waitForPortReachable(3000))) {
       throw new Error("Foreign listener port 3000 hilang setelah ECORIONE start.");
     }
     const appPorts = [started.port, ...SERVICE_PORTS];
@@ -554,7 +566,7 @@ ${taskkillResult.stderr}`,
         `· taskkill exit ${String(taskkillResult.code)} saat descendant sedang berhenti; cleanup diterima setelah root process exit dan seluruh port tervalidasi tertutup.`,
       );
     }
-    if (!(await isPortReachable(3000))) {
+    if (!(await waitForPortReachable(3000))) {
       throw new Error("Cleanup ECORIONE menyentuh foreign listener di port 3000.");
     }
     engineChild = undefined;
