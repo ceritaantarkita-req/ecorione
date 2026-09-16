@@ -135,8 +135,11 @@ try {
   $existingContainers = @(& $docker.Source ps -aq --filter "label=com.docker.compose.project=ecorione-desktop" 2>$null | Where-Object { $_ })
   Assert-True ($existingContainers.Count -eq 0) "Stack ecorione-desktop sudah ada. Hentikan instalasi desktop ECORIONE lain sebelum W11 acceptance."
 
-  & $docker.Source image inspect "ecorione:desktop" *> $null
-  $ImagePreexisting = $LASTEXITCODE -eq 0
+  $cachedImageOutput = & $docker.Source image ls --quiet --filter "reference=ecorione:desktop" 2>$null
+  $cachedImageListExitCode = $LASTEXITCODE
+  Assert-True ($cachedImageListExitCode -eq 0) "Gagal memeriksa cache image ecorione:desktop."
+  $cachedImageIds = @($cachedImageOutput | Where-Object { $_ })
+  $ImagePreexisting = $cachedImageIds.Count -gt 0
   Assert-True (-not $ImagePreexisting) "Image ecorione:desktop sudah ada. W11 fresh-install proof membutuhkan image tersebut belum ada agar bundled runtime load benar-benar diuji."
 
   if ($ChecksumPath) {
@@ -250,8 +253,11 @@ try {
   Assert-True (Test-TcpReachable $resolvedPort 1500) "Ai tidak reachable di resolved port $resolvedPort."
   Assert-True (-not (Test-PortAvailable 17020)) "Foreign listener 17020 hilang setelah Start launcher."
 
-  & docker.exe image inspect "ecorione:desktop" *> $null
-  Assert-True ($LASTEXITCODE -eq 0) "Bundled runtime image tidak ter-load setelah first start."
+  $loadedImageOutput = & docker.exe image ls --quiet --filter "reference=ecorione:desktop" 2>$null
+  $loadedImageListExitCode = $LASTEXITCODE
+  Assert-True ($loadedImageListExitCode -eq 0) "Gagal memeriksa bundled runtime image setelah first start."
+  $loadedImageIds = @($loadedImageOutput | Where-Object { $_ })
+  Assert-True ($loadedImageIds.Count -gt 0) "Bundled runtime image tidak ter-load setelah first start."
 
   $runningServicesOutput = & docker.exe compose --env-file $DesktopEnv -f (Join-Path $InstallRoot "compose.yml") ps --services --status running 2>&1
   Assert-True ($LASTEXITCODE -eq 0) "docker compose ps gagal pada installed bundle."
