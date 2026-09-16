@@ -5,6 +5,7 @@ import { ProviderError } from "./errors.js";
 
 const LIVE_REQUEST_NOTE =
   "The final user message is the live request. Follow it directly. If it asks for an exact string, return exactly that string and nothing else.";
+const LOCAL_REASONING_EFFORTS = new Set(["none", "low", "medium", "high", "max"]);
 
 export interface LocalCallInput {
   readonly baseUrl: string;
@@ -23,6 +24,61 @@ interface OpenAiChatResponseBody {
   readonly choices?: ReadonlyArray<{ readonly message?: { readonly content?: string } }>;
   readonly usage?: { readonly prompt_tokens?: number; readonly completion_tokens?: number };
 }
+
+export interface LocalGenerationControls {
+  readonly reasoning_effort?: "none" | "low" | "medium" | "high" | "max";
+  readonly max_tokens?: number;
+  readonly temperature?: number;
+}
+
+/**
+ * Optional operator controls for OpenAI-compatible local runtimes.
+ *
+ * These are intentionally opt-in: runtimes that do not implement the corresponding
+ * OpenAI-compatible fields keep the old request shape when the variables are unset.
+ * The W17 extraction benchmark can use them to bound thinking/output without changing
+ * the model alias or immutable digest being measured.
+ */
+export function localGenerationControls(
+  env: NodeJS.ProcessEnv = process.env,
+): LocalGenerationControls {
+  const controls: {
+    reasoning_effort?: "none" | "low" | "medium" | "high" | "max";
+    max_tokens?: number;
+    temperature?: number;
+  } = {};
+
+  const reasoning = env.ECORIONE_LOCAL_REASONING_EFFORT?.trim().toLowerCase();
+  if (reasoning) {
+    if (!LOCAL_REASONING_EFFORTS.has(reasoning)) {
+      throw new Error(
+        "ECORIONE_LOCAL_REASONING_EFFORT harus salah satu none|low|medium|high|max",
+      );
+    }
+    controls.reasoning_effort = reasoning as LocalGenerationControls["reasoning_effort"];
+  }
+
+  const maxTokensRaw = env.ECORIONE_LOCAL_MAX_TOKENS?.trim();
+  if (maxTokensRaw) {
+    const maxTokens = Number(maxTokensRaw);
+    if (!Number.isInteger(maxTokens) || maxTokens < 1 || maxTokens > 32_768) {
+      throw new Error("ECORIONE_LOCAL_MAX_TOKENS harus integer 1..32768");
+    }
+    controls.max_tokens = maxTokens;
+  }
+
+  const temperatureRaw = env.ECORIONE_LOCAL_TEMPERATURE?.trim();
+  if (temperatureRaw) {
+    const temperature = Number(temperatureRaw);
+    if (!Number.isFinite(temperature) || temperature < 0 || temperature > 2) {
+      throw new Error("ECORIONE_LOCAL_TEMPERATURE harus angka 0..2");
+    }
+    controls.temperature = temperature;
+  }
+
+  return controls;
+}
+
 function buildContextContent(input: LocalCallInput): string {
   const parts: string[] = [];
   if (input.prefix.coreMemory.blocks.length > 0)
@@ -42,6 +98,7 @@ export async function callLocal(
       ...(contextContent.length === 0 ? [] : [{ role: "user", content: contextContent }]),
       { role: "user", content: input.userMessage },
     ],
+    ...localGenerationControls(),
   };
   let res: Response;
   try {
