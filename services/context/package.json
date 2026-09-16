@@ -13,7 +13,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc --build && node scripts/copy-migrations.mjs",
+    "build": "tsc --build && pnpm run copy:runtime-assets",
+    "copy:runtime-assets": "node scripts/copy-migrations.mjs",
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js"
   },
