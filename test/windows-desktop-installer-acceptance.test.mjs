@@ -64,6 +64,9 @@ describe("W11 Windows installer/launcher acceptance contract", () => {
     expect(harness).toContain("com.docker.compose.project=ecorione-desktop");
     expect(harness).toContain("Image ecorione:desktop sudah ada");
     expect(harness).toContain("fresh-install proof");
+    expect(harness).toContain('image ls --quiet --filter "reference=ecorione:desktop"');
+    expect(harness).not.toContain('image inspect "ecorione:desktop"');
+    expect(harness).toContain("Gagal memeriksa cache image ecorione:desktop.");
     expect(harness).toContain("Bundled runtime image tidak ter-load");
   });
 });

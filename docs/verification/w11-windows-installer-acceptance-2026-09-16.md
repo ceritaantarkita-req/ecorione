@@ -79,6 +79,12 @@ While running, Doctor must follow the resolved Ai port. A second Start must reco
 
 Doctor must remain usable after Stop and report Ai stopped. The real Inno Setup uninstaller must then remove the installed launcher surface successfully. User data retention is recorded rather than silently destroyed.
 
+## Operator attempt 1 — fresh-image probe defect
+
+The first real Windows operator attempt used the checksum-verified `0.1.0` Setup artifact whose release manifest is pinned to `d6b2f7f58f5a6af26e91ee026536e39fcf11d227`. The attempt stopped before Setup installation because the harness used `docker image inspect ecorione:desktop` while `$ErrorActionPreference = "Stop"`; Docker's expected `No such image` stderr for a fresh machine became a terminating PowerShell error instead of being interpreted as the required fresh-install condition.
+
+No packaged image was loaded and no `ecorione-desktop` stack was created during that attempt, so the fresh-install boundary remains intact. The harness now probes image presence with `docker image ls --quiet --filter reference=...`, which is non-erroring when the image is absent, while still failing closed if the image-list command itself fails. The post-start bundled-image assertion uses the same safe probe. The installer artifact itself is unchanged and may be reused for the rerun.
+
 ## Execution order from the current handoff
 
 1. Build a real Setup artifact from the exact intended merged source revision.
