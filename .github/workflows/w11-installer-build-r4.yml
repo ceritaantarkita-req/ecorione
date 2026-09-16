@@ -1,0 +1,129 @@
+name: W11 Installer Build R4
+
+on:
+  push:
+    branches:
+      - agent/w11-installer-build-r4-20260916
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ECORIONE_VERSION: 0.1.0
+      ECORIONE_SOURCE_REVISION: 8cb665ff25682e683b284c896ec3a2e77bf716ba
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: 8cb665ff25682e683b284c896ec3a2e77bf716ba
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Assert exact source revision
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$ECORIONE_SOURCE_REVISION"
+
+      - name: Validate release version
+        run: node -e "import('./scripts/desktop-bundle.mjs').then((m) => console.log(m.normalizeVersion(process.env.ECORIONE_VERSION)))"
+
+      - name: Build desktop runtime bundle
+        run: node scripts/desktop-bundle.mjs --version "$ECORIONE_VERSION"
+
+      - name: Assert Context migration assets in production image source
+        shell: bash
+        run: |
+          test -d services/context/dist/migrations
+          find services/context/dist/migrations -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .
+
+      - name: Assert release manifest revision
+        shell: bash
+        run: |
+          node -e "const fs=require('fs');const p='.ecorione/desktop-release/ECORIONE-0.1.0-windows-x64/RELEASE-MANIFEST.json';const m=JSON.parse(fs.readFileSync(p,'utf8'));if(m.sourceRevision!==process.env.ECORIONE_SOURCE_REVISION){throw new Error('manifest sourceRevision mismatch: '+m.sourceRevision)};console.log(m.sourceRevision)"
+
+      - name: Upload prepared desktop bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecorione-w11-desktop-bundle-8cb665ff
+          path: .ecorione/desktop-release/ECORIONE-0.1.0-windows-x64
+          if-no-files-found: error
+          retention-days: 14
+
+  installer:
+    needs: bundle
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      ECORIONE_VERSION: 0.1.0
+      ECORIONE_BUNDLE_DIR: ${{ github.workspace }}\bundle
+      ECORIONE_INSTALLER_OUT: ${{ github.workspace }}\installer-out
+      ECORIONE_SOURCE_REVISION: 8cb665ff25682e683b284c896ec3a2e77bf716ba
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: 8cb665ff25682e683b284c896ec3a2e77bf716ba
+
+      - name: Download prepared desktop bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ecorione-w11-desktop-bundle-8cb665ff
+          path: bundle
+
+      - name: Assert downloaded release manifest revision
+        shell: pwsh
+        run: |
+          $manifest = Get-Content -LiteralPath "$env:ECORIONE_BUNDLE_DIR\RELEASE-MANIFEST.json" -Raw | ConvertFrom-Json
+          if ($manifest.sourceRevision -ne $env:ECORIONE_SOURCE_REVISION) {
+            throw "manifest sourceRevision mismatch: $($manifest.sourceRevision)"
+          }
+
+      - name: Install Inno Setup compiler
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Compile Setup executable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:ECORIONE_INSTALLER_OUT | Out-Null
+          $candidates = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+          )
+          $iscc = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if (-not $iscc) {
+            throw "Inno Setup compiler ISCC.exe tidak ditemukan setelah instalasi."
+          }
+          & $iscc "desktop\installer.iss"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Inno Setup compiler gagal dengan exit code $LASTEXITCODE."
+          }
+
+      - name: Generate installer SHA-256
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -LiteralPath $env:ECORIONE_INSTALLER_OUT -Filter "ECORIONE-Setup-*.exe" | Select-Object -First 1
+          if (-not $installer) {
+            throw "Setup executable tidak ditemukan."
+          }
+          $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($installer.Name)" | Set-Content -LiteralPath (Join-Path $env:ECORIONE_INSTALLER_OUT "SHA256SUMS") -Encoding ascii
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ECORIONE-W11-Setup-0.1.0-8cb665ff
+          path: installer-out
+          if-no-files-found: error
+          retention-days: 14
