@@ -8,16 +8,26 @@ on:
         required: true
         default: "0.1.0"
         type: string
+  pull_request:
+    paths:
+      - ".github/workflows/desktop-installer.yml"
+      - "desktop/**"
+      - "scripts/desktop-native-*.mjs"
+      - "scripts/windows-desktop-installer-acceptance.ps1"
+      - "test/windows-desktop-installer-acceptance.test.mjs"
 
 permissions:
   contents: read
 
 jobs:
-  bundle:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
+  native-windows-installer:
+    runs-on: windows-latest
+    timeout-minutes: 45
     env:
-      ECORIONE_VERSION: ${{ inputs.version }}
+      ECORIONE_VERSION: ${{ inputs.version || '0.1.0' }}
+      ECORIONE_BUNDLE_DIR: ${{ github.workspace }}\.ecorione\native-release\ECORIONE-${{ inputs.version || '0.1.0' }}-windows-x64
+      ECORIONE_INSTALLER_OUT: ${{ github.workspace }}\installer-out
+      TEMPORAL_CLI_VERSION: "1.8.1"
 
     steps:
       - uses: actions/checkout@v5
@@ -26,48 +36,52 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 22.20.0
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Validate release version
-        run: node -e "import('./scripts/desktop-bundle.mjs').then((m) => console.log(m.normalizeVersion(process.env.ECORIONE_VERSION)))"
+      - name: Capture exact checked-out source revision
+        shell: pwsh
+        run: |
+          "ECORIONE_RELEASE_SHA=$(git rev-parse HEAD)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Build desktop runtime bundle
-        run: pnpm desktop:bundle -- --version "$ECORIONE_VERSION"
+      - name: Download and verify pinned Temporal CLI
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP "temporal-cli"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $zip = Join-Path $root "temporal.zip"
+          $checksums = Join-Path $root "checksums.txt"
+          $base = "https://github.com/temporalio/cli/releases/download/v$env:TEMPORAL_CLI_VERSION"
+          $asset = "temporal_cli_$($env:TEMPORAL_CLI_VERSION)_windows_amd64.zip"
+          Invoke-WebRequest -Uri "$base/$asset" -OutFile $zip
+          Invoke-WebRequest -Uri "$base/checksums.txt" -OutFile $checksums
+          $line = Get-Content -LiteralPath $checksums | Where-Object { $_ -match "\s+$([regex]::Escape($asset))$" } | Select-Object -First 1
+          if (-not $line) { throw "Temporal checksum entry tidak ditemukan untuk $asset" }
+          $expected = ($line -split "\s+")[0].ToLowerInvariant()
+          $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($expected -ne $actual) { throw "Temporal CLI SHA-256 mismatch" }
+          Expand-Archive -LiteralPath $zip -DestinationPath $root -Force
+          $exe = Join-Path $root "temporal.exe"
+          if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { throw "temporal.exe tidak ditemukan" }
+          "ECORIONE_TEMPORAL_EXE=$exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          & $exe --version
 
-      - name: Upload prepared desktop bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: ecorione-desktop-bundle
-          path: .ecorione/desktop-release/ECORIONE-${{ inputs.version }}-windows-x64
-          if-no-files-found: error
-          retention-days: 7
-
-  installer:
-    needs: bundle
-    runs-on: windows-latest
-    timeout-minutes: 20
-    env:
-      ECORIONE_VERSION: ${{ inputs.version }}
-      ECORIONE_BUNDLE_DIR: ${{ github.workspace }}\bundle
-      ECORIONE_INSTALLER_OUT: ${{ github.workspace }}\installer-out
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Download prepared desktop bundle
-        uses: actions/download-artifact@v4
-        with:
-          name: ecorione-desktop-bundle
-          path: bundle
+      - name: Build self-contained native Windows bundle
+        shell: pwsh
+        run: |
+          node scripts/desktop-native-bundle.mjs --version $env:ECORIONE_VERSION --temporal-exe $env:ECORIONE_TEMPORAL_EXE
+          $manifest = Get-Content -LiteralPath (Join-Path $env:ECORIONE_BUNDLE_DIR "RELEASE-MANIFEST.json") -Raw | ConvertFrom-Json
+          if ($manifest.runtime -ne "native-windows") { throw "Runtime manifest bukan native-windows" }
+          if ($manifest.dockerRequired -ne $false) { throw "Native bundle masih menandai Docker required" }
+          if ($manifest.sourceRevision -ne $env:ECORIONE_RELEASE_SHA) { throw "sourceRevision mismatch" }
 
       - name: Install Inno Setup compiler
         shell: pwsh
         run: choco install innosetup --yes --no-progress
 
-      - name: Compile Setup executable
+      - name: Compile native Setup executable
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path $env:ECORIONE_INSTALLER_OUT | Out-Null
@@ -76,28 +90,32 @@ jobs:
             "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
           )
           $iscc = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
-          if (-not $iscc) {
-            throw "Inno Setup compiler ISCC.exe tidak ditemukan setelah instalasi."
-          }
+          if (-not $iscc) { throw "ISCC.exe tidak ditemukan." }
           & $iscc "desktop\installer.iss"
-          if ($LASTEXITCODE -ne 0) {
-            throw "Inno Setup compiler gagal dengan exit code $LASTEXITCODE."
-          }
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compiler gagal dengan exit code $LASTEXITCODE." }
 
       - name: Generate installer SHA-256
         shell: pwsh
         run: |
           $installer = Get-ChildItem -LiteralPath $env:ECORIONE_INSTALLER_OUT -Filter "ECORIONE-Setup-*.exe" | Select-Object -First 1
-          if (-not $installer) {
-            throw "Setup executable tidak ditemukan."
-          }
+          if (-not $installer) { throw "Setup executable tidak ditemukan." }
           $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $($installer.Name)" | Set-Content -LiteralPath (Join-Path $env:ECORIONE_INSTALLER_OUT "SHA256SUMS") -Encoding ascii
+          "ECORIONE_INSTALLER_PATH=$($installer.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Native installer smoke acceptance without host Node pnpm Git or Docker
+        shell: pwsh
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass `
+            -File .\scripts\windows-desktop-installer-acceptance.ps1 `
+            -InstallerPath $env:ECORIONE_INSTALLER_PATH `
+            -ChecksumPath (Join-Path $env:ECORIONE_INSTALLER_OUT "SHA256SUMS") `
+            -ExpectedSourceRevision $env:ECORIONE_RELEASE_SHA
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: ECORIONE-Setup-${{ inputs.version }}
+          name: ECORIONE-Native-Setup-${{ inputs.version || '0.1.0' }}
           path: installer-out
           if-no-files-found: error
           retention-days: 14
