@@ -109,5 +109,11 @@ describe("W18 one-call diagnostic helpers", () => {
     expect(gate.failures).toContain("provider bukan openrouter");
     expect(gate.failures).toContain("pricingModel tidak pinned ke W18 model");
     expect(gate.failures).toContain("budget actualUsd != billed cost");
+
+    const missingActual = evaluateW18DiagnosticRun(
+      passingRun({ budget: { settlement: "settled" } }),
+    );
+    expect(missingActual.pass).toBe(false);
+    expect(missingActual.failures).toContain("budget actualUsd tidak valid");
   });
 });
