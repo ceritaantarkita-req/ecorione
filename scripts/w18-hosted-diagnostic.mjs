@@ -69,10 +69,14 @@ function runZeroSpendPreflight() {
   }
 }
 
+function boundedString(value, fallback, maxLength) {
+  if (typeof value !== "string") return fallback;
+  return value.slice(0, maxLength);
+}
+
 export class W18DiagnosticHttpError extends Error {
   constructor(url, status, payload) {
-    const type =
-      typeof payload?.error?.type === "string" ? payload.error.type : "HTTP_ERROR";
+    const type = boundedString(payload?.error?.type, "HTTP_ERROR", 128);
     super(`${url} HTTP ${String(status)} ${type}`);
     this.name = "W18DiagnosticHttpError";
     this.status = status;
@@ -82,16 +86,13 @@ export class W18DiagnosticHttpError extends Error {
 
 export function sanitizeW18DiagnosticFailure(error) {
   if (error instanceof W18DiagnosticHttpError) {
-    const type =
-      typeof error.payload?.error?.type === "string" ? error.payload.error.type : "HTTP_ERROR";
-    const message =
-      typeof error.payload?.error?.message === "string"
-        ? error.payload.error.message.slice(0, 1_000)
-        : "Upstream request failed without a safe diagnostic message.";
-    const requestId =
-      typeof error.payload?.requestId === "string"
-        ? error.payload.requestId.slice(0, 256)
-        : null;
+    const type = boundedString(error.payload?.error?.type, "HTTP_ERROR", 128);
+    const message = boundedString(
+      error.payload?.error?.message,
+      "Upstream request failed without a safe diagnostic message.",
+      1_000,
+    );
+    const requestId = boundedString(error.payload?.requestId, null, 256);
     return {
       kind: "http",
       status: error.status,
@@ -100,14 +101,13 @@ export function sanitizeW18DiagnosticFailure(error) {
       requestId,
     };
   }
+
+  const message = error instanceof Error ? error.message : String(error);
   return {
     kind: "runtime",
     status: null,
     type: error instanceof Error ? error.name : "Error",
-    message:
-      error instanceof Error
-        ? error.message.slice(0, 1_000)
-        : String(error).slice(0, 1_000),
+    message: message.slice(0, 1_000),
     requestId: null,
   };
 }
@@ -139,8 +139,9 @@ function evidencePathFor(recordedAt) {
 
 function writeDiagnosticEvidence(evidence) {
   const outputPath = evidencePathFor(evidence.recordedAt);
+  const serialized = `${JSON.stringify(evidence, null, 2)}\n`;
   mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o600 });
+  writeFileSync(outputPath, serialized, { mode: 0o600 });
   console.log(JSON.stringify({ ...evidence, evidencePath: outputPath }, null, 2));
   return outputPath;
 }
