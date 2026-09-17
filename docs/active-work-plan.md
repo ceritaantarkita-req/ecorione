@@ -1,217 +1,161 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-16**
+Last updated: **2026-09-18**
 
 Status: **ACTIVE / canonical execution log**
 
-Current code + current evidence + dokumen ini adalah source of truth pekerjaan aktif. `DONE — REPO SIDE` tidak menggantikan browser, Windows, local-model runtime, credential, atau hosted-spend evidence yang memang harus dijalankan operator.
+Current code + current runtime evidence + this document are the source of truth for active work. Historical dated audits and failed attempts remain preserved as evidence snapshots.
 
-## 1. Current repository checkpoint
+## Current repository checkpoint
 
 ```text
-current product/runtime baseline: 8cb665ff25682e683b284c896ec3a2e77bf716ba
-PR #123: merged — Context production migration assets / W11 release fix
-post-merge CI: 35121950569 (#939) — SUCCESS
-post-merge Product Eval: 35121950375 (#178) — SUCCESS
-post-merge MCP External HTTPS Acceptance: 35121950406 (#455) — SUCCESS
+main at documentation-sync start: 9f95d184c6a59da527fd23454fed06065a5738fe
 W11 final Windows installer closure: PASS
-W11 installer sha256: ab3a9d11584f0b0073c2f30be374f7455cb39365a6c5b17fbb360bb59433187c
-W11 sanitized report: traces/w11-windows-installer-acceptance-2026-09-16T16-54-50-970Z.json
 W17 formal local closure: PASS
-formal W17 runtime evidence baseline: 90bc800649b02be1de752d8c67c365c65a9d21a6
-raw W17 evidence sha256: a76a6a195aea6e117651f948e41b3fdcbbd2532cbdf556c14a2437fa50483fb3
-W17 measured calls: 100 (5 tasks × 5 repeats × 4 lanes)
+W18 one-call Anthropic-only diagnostic: PASS
+W18 formal 20-call run: NOT YET EXECUTED
+W20 final sync: BLOCKED ON W18
 ```
 
-W11 is now closed on real Windows. The checksum-verified Setup artifact built from `8cb665ff25682e683b284c896ec3a2e77bf716ba` passed the isolated end-user harness from a fresh desktop state: host Node/pnpm/Git hidden, Doctor pre-start PASS, first Start loaded the bundled runtime and brought up the full Compose fleet at fallback port `17029`, runtime Doctor PASS, second Start reused the instance, Stop removed containers while retaining data volumes, post-stop Doctor PASS, and uninstall PASS. The successful run came after PR #123 fixed the real Context production-image defect where `dist/migrations` was missing.
+The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 then added its sanitized verification record and advanced `main` to `9f95d184c6a59da527fd23454fed06065a5738fe`.
 
-W16 remains merged and green on `main`. W17 is closed on top of that selector: the formal fail-closed local run completed 100 measured calls across full-inline, all-ref, automatic no-oracle, and oracle-control lanes with 5/5 task gates, selector recall 1, zero cache hits, and verified immutable `qwen3.5:9b` identity. Automatic-selector evidence remains bounded and does not establish hosted billed-cost or end-to-end network savings.
-
-Post-W17 cleanup removed the temporary bounded-generation values `ECORIONE_LOCAL_REASONING_EFFORT`, `ECORIONE_LOCAL_MAX_TOKENS`, and `ECORIONE_LOCAL_TEMPERATURE` from the operator `.env`, restoring normal local-model behavior. On that normal behavior, source-workstation `pnpm engine:doctor` can still time out its optional local generation canary at the current 20-second probe boundary while the ECORIONE service fleet remains healthy and the canary request reaches Connect. This is retained as a **non-blocking diagnostic/performance limitation**; it does not reopen W09/W10 or W17 and is separate from the now-closed W11 packaged-installer acceptance.
-
-The final real-Windows W09/W10 run remains synchronized to its verified runtime baseline `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`. Ai resolved to `127.0.0.1:17020`; the protected foreign listener on port `3000` survived start and cleanup; the full fixed owner fleet was healthy; duplicate start failed closed; cleanup released the ECORIONE application ports; and doctor remained usable after shutdown. Local AI was `UNAVAILABLE` in that run and remains intentionally outside the W09/W10 core process-readiness gate because immutable local-model evidence is governed by W13/W15/W17.
-
-`main` remains the green baseline. GitHub `main` still does not have required status-check branch protection; that governance gap remains separate from W09/W10/W11/W16/W17.
-
-## 2. Work queue
+## Work queue
 
 | ID | Pekerjaan | Status | Boundary |
 |---|---|---:|---|
-| W01 | Reconcile system analysis | **DONE** | Temuan valid/outdated sudah dipisahkan. |
-| W02 | Vitest `*.test.tsx` discovery | **DONE** | TSX tests masuk normal CI. |
-| W03 | UX/Product Validation current main | **DONE — REAL-LAPTOP VERIFIED** | Responsive + Flow redesign integrated; Windows inventory, desktop checks, 390–430 px recheck, clean-console Local chat, Flow wiring/validation/save/run, and Condition true/false branching all passed. |
-| W04 | Partial/full stack behavior | **DONE — REPO SIDE** | Human-readable service-down/proxy failures. |
-| W05 | Provider Settings foundation | **DONE — REPO SIDE** | Provider catalog + Settings/Vault authority. |
-| W06 | Credential Vault integration | **DONE WITH LIMITATIONS — REPO SIDE** | Test/save/replace/remove; no browser plaintext persistence. |
-| W07 | Provider health/status | **DONE WITH LIMITATIONS — REPO SIDE** | Real external credential validity tetap operator-owned. |
-| W08 | Default AI selection | **DONE — REPO SIDE** | Durable Local/Hosted default; no auto-router claim. |
-| W09 | One-command startup | **DONE — WINDOWS RUNTIME VERIFIED** | Exact-current-main Windows harness passed cold start, port-3000 isolation, duplicate-start guard, and process-tree cleanup. |
-| W10 | `ecorione doctor` | **DONE — WINDOWS RUNTIME VERIFIED** | Core pre-start/running/post-stop doctor phases passed on real Windows; current optional local generation canary may exceed the 20s diagnostic probe without reopening W10. |
-| W11 | Installer/Launcher | **DONE — WINDOWS INSTALLER VERIFIED** | Checksum-verified real Setup on clean Windows passed install, no-host-dev-tools boundary, Doctor, bundled first Start/full fleet, second-Start reuse, Stop/data retention, post-stop Doctor, and uninstall. |
-| W12 | Attachment composer backend path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → hydration. |
-| W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Current operator runtime berhasil memverifikasi selector + immutable digest; perubahan model/runtime tetap harus diverifikasi ulang. |
-| W14 | Product eval foundation | **DONE — REPO SIDE** | 12 task/bug-derived deterministic regressions + dedicated gate. |
-| W15 | Agentic local-model eval v1 | **DONE — VERIFIED LOCAL MODEL PASS^3** | 4/4 real cases pass^3 dengan immutable digest verified; claim hanya bounded eval harness, bukan autonomous product chat. |
-| W16 | Automatic semantic reference selector | **DONE — REPO SIDE** | `selection: semantic-v1` memilih bounded refs otomatis; explicit `refIndexes` tetap backward-compatible; post-merge CI/Product Eval/MCP green. |
-| W17 | ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS (100 CALLS)** | 5 tasks × 5 repeats × 4 lanes; 5/5 task gates; auto selector recall 1; cache hits 0; immutable `qwen3.5:9b` verified; bounded local evidence only. |
-| W18 | Hosted economic validation | TODO | Real bounded hosted token/cost evidence. |
-| W19 | Release/security governance follow-up | **DONE — REPO SIDE** | History secret scan + naming/model-alias gate di CI; branch protection gap terpisah. |
-| W20 | Final current-state sync | **STARTED** | Continue after the remaining W18 hosted-economic evidence. |
+| W01–W02 | Reconcile analysis + test discovery | **DONE** | Repository scope. |
+| W03 | UX/Product Validation | **DONE — REAL-LAPTOP VERIFIED** | Rendered/runtime evidence closed at documented boundary. |
+| W04–W08 | Runtime/provider/settings foundations | **DONE / REPO SIDE** | Existing limitations remain documented. |
+| W09 | One-command startup | **DONE — WINDOWS RUNTIME VERIFIED** | Real Windows harness. |
+| W10 | `ecorione doctor` | **DONE — WINDOWS RUNTIME VERIFIED** | Optional local generation canary remains diagnostic-only. |
+| W11 | Installer/Launcher | **DONE — WINDOWS INSTALLER VERIFIED** | Clean Windows packaged lifecycle PASS. |
+| W12 | Attachment path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → hydration. |
+| W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Reverify when model/runtime changes. |
+| W14 | Product eval foundation | **DONE — REPO SIDE** | Deterministic product regressions. |
+| W15 | Agentic local-model eval | **DONE — VERIFIED LOCAL MODEL PASS^3** | Bounded eval harness only. |
+| W16 | Automatic semantic reference selector | **DONE — REPO SIDE** | `semantic-v1`, `maxRefs=3`. |
+| W17 | ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5×5×4 = 100 measured calls, 5/5 gates. |
+| W18 | Hosted economic validation | **FORMAL RUN READY / NOT CLOSED** | Attempt 4 diagnostic PASS; formal 20-call evidence remains. |
+| W19 | Release/security governance | **DONE — REPO SIDE** | CI history/naming/model-alias gates retained. |
+| W20 | Final current-state sync | **BLOCKED ON W18** | Continue immediately after W18 closure. |
 
-## 3. W03 final closure evidence
+## W18 current facts
 
-Status: **DONE — REAL-LAPTOP VERIFIED**.
-
-Canonical detailed evidence lives in `docs/verification/w03-responsive-flow-implementation-2026-09-15.md`; the reusable procedure remains `docs/ux-runtime-walkthrough-checklist.md`.
-
-Final operator evidence on Windows established:
+### Formal shape
 
 ```text
-tracked worktree: clean
-HEAD == origin/main at runtime baseline: 746dc0705e12d419f93d3592bc6c7bdb55e4b76e
-ECORIONE_COST_KILL_SWITCH=1
-pnpm engine:start: READY
-Temporal local dev-server: READY
-all required Phase 4 owners: healthy
-pnpm evidence:ux:inventory: PASS
-Hosted effective state: OFF
-local model: qwen3.5:9b
-local model digest: sha256:6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7
-mutable model alias: false
+5 tasks × 2 repeats × 2 lanes = 20 measured hosted calls
+lanes = full-inline, ecx-selective-auto
+warmups = 0
+provider gateway = OpenRouter
+pricing identity = claude-sonnet-4-5-20250929
+runtime model = anthropic/claude-sonnet-4.5
+provider.only = ["anthropic"]
+allow_fallbacks = false
+cost authority = OpenRouter usage.cost
 ```
 
-Desktop/runtime acceptance covered navigation, Local exact-string replies, same-session continuity, memory readability, Local/Hosted route state, Operations refresh/Auto 5s, Settings workspace/local canary behavior, Space switching, Flow dirty/save/load/Validate behavior, and safe invalid-config handling. UX-05 remained `NOT_EXERCISED` because no disposable recalled fact was available; the checklist explicitly allows that disposition.
-
-The responsive defects found in the first pass were fixed through PR #93, PR #95, PR #96, and PR #97. Final ~430 CSS px real-laptop checks then passed for Ai, Space, Operations, Settings, Flow Stack, and contained Flow Canvas. Settings long values no longer expanded the page, Space hierarchy was usable without the previous dead space, and Flow lifecycle controls/catalog/connect affordances were usable on mobile.
-
-Final Flow functional proof:
+### Attempt history
 
 ```text
-Trigger → AI
-workflow: COMPLETED
-Trigger: SUCCEEDED
-AI: SUCCEEDED
+Attempt 1: failed after 8/20; known billed = 0.027000
+Attempt 2: failed on intended call 5; four settled = 0.019266
+Attempt 2 historical uncertain reservation = 0.107157
+Attempt 3 diagnostic: content_filter via Amazon Bedrock; provider-reported cost = 0
+Attempt 4 diagnostic: PASS; billed = 0.006681; settlement = settled; quality = 1
 ```
 
-Because Flow execution authority is fail-closed, the operator granted `node.execute` through the normal `POLICY_ADMIN` approval path for the exact node definitions used by the test; no governance bypass or auto-grant was introduced.
-
-Final branching proof used the saved graph:
+Known settled provider actual through Attempt 4:
 
 ```text
-4 nodes / 3 connections
-Trigger [out] → Condition / Switch
-Condition / Switch [true] → AI
-Condition / Switch [false] → Artifact
+0.027000 + 0.019266 + 0 + 0.006681 = 0.052947
 ```
 
-With truthy input, the real Temporal run completed as:
+Latest postflight ledger:
 
 ```text
-workflow: COMPLETED
-Trigger: SUCCEEDED
-Condition / Switch: SUCCEEDED
-AI: SUCCEEDED
-Artifact: SKIPPED — no active incoming edge
+dailyCommittedUsd = 0.160104
+monthlyCommittedUsd = 0.160104
+unsettledReservations = 1
+dailyHeadroomUsd = 0.839896
+monthlyHeadroomUsd = 9.839896
+hostedCallsEnabled = false
+costKillSwitch = 1
 ```
 
-The same graph was rechecked in mobile Stack mode at ~430 CSS px, where the true/false connection summaries and `Edit / connect` affordances remained visible and usable. Clean-console Local chat also passed with the exact response `UX_CONSOLE_OK`; the previously observed `VM... / reportAllChanges / startTime` exception was tooling/browser-injected noise and was not reproducible as an application-owned error in the clean-console check.
+The one unsettled reservation is historical Attempt 2. Do not rewrite it.
 
-Closure defect disposition:
+## Formal authorization
+
+Operator has explicitly authorized **one formal W18 attempt, maximum US$0.25**.
+
+This authorization is current-run only. It does not authorize retries after a failed/partial formal attempt.
+
+Because the durable budget uses UTC day/month keys, the formal startup wrapper must compute the **current UTC-day committed amount at execution time** and set:
 
 ```text
-S0 open: 0
-S1 open: 0
-S2 open/unaccepted: 0
-W03 closure: PASS
+ECORIONE_SPEND_DAILY_USD = currentCommitted + 0.25
 ```
 
-## 4. Security / runtime boundaries
+That makes Connect's pre-dispatch reservation admission the hard spend stop for the authorized remaining allowance. Do not blindly reuse `$0.410104`; that is valid only while current UTC-day committed remains exactly `$0.160104`.
 
-Sudah ada di `main`: same-origin mutation guard, CSP/security headers, stricter hosted-spend guard, private/loopback `localBaseUrl` default, mutable model-alias gate, runtime provenance resolver dengan digest mismatch fail-closed, full-history secret scan, dan W16 automatic ECX selector yang tetap melewati owner authorization + hydration policy/budget boundary.
+## Formal run checklist
 
-Known limitation: CSP masih membutuhkan `'unsafe-inline'` pada current Next App Router bootstrap. Required status checks/branch protection juga belum aktif.
+Before first dispatch:
 
-Developer bridge:
+1. local `main` synchronized to the documentation-only merge produced by this update;
+2. worktree clean and `HEAD == origin/main`;
+3. old engine stopped;
+4. current UTC-day committed spend calculated from the durable ledger;
+5. Connect process started with `ECORIONE_COST_KILL_SWITCH=0`;
+6. Connect process started with `ECORIONE_OPENROUTER_PROVIDER_ONLY=anthropic`;
+7. temporary daily durable ceiling set to `currentCommitted + 0.25`;
+8. `ECORIONE_W18_ALLOW_SPEND=YES`;
+9. `ECORIONE_W18_MAX_SPEND_USD=0.25`;
+10. runtime `hostedProvider=openrouter` and `hostedCallsEnabled=true` only for the bounded run;
+11. zero-spend preflight PASS;
+12. output path new/non-overwriting.
 
-```text
-pnpm engine:start
-pnpm engine:doctor
-pnpm engine:stop-temporal
-```
+After run, regardless of success/failure:
 
-Temporal CLI local path, Windows `pnpm.cmd` handling, collision-safe Ai port selection, required-service readiness, Connect Windows startup, dan spawned-process-tree cleanup sudah terbukti pada real Windows. W09/W10 closed sebagai **DONE — WINDOWS RUNTIME VERIFIED**. W11 packaged lifecycle juga sekarang closed sebagai **DONE — WINDOWS INSTALLER VERIFIED**. The local generation line in `engine:doctor` is an optional canary: a timeout there does not negate healthy service readiness, but remains useful performance diagnostics for future hardening.
+- disable runtime hosted mode;
+- clear W18 spend/routing env from the operator shell;
+- set shell kill switch back to `1`;
+- stop the engine process that was launched with kill switch `0`;
+- inspect durable ledger before any conclusion;
+- do not rerun after failure without fresh authorization.
 
-## 5. ECX claim boundary
+## Formal closure requirements
 
-Historical Ledger + ECX local evidence tetap CLOSED/PASS. Historical comparative ECX oracle-control evidence tetap retained sebagai:
+Every call must be uncached, use the pinned OpenRouter pricing identity, have positive authoritative provider billed cost, and settle durable accounting. Each task must preserve quality and selector recall while automatic mode reduces input tokens and billed cost versus full-inline.
 
-```text
-5 tasks × 5 repeats × 3 lanes = 75 measured calls
-cache hits = 0
-passed task gates = 5/5
-median selective transport reduction = 73.6379379246037%
-median selective input-token reduction = 77.8580814717477%
-median selective/full latency ratio = 0.8672873729681319
-```
-
-Angka di atas adalah evidence lama untuk `ecx-selective-oracle`; jangan dibaca sebagai hasil automatic selector.
-
-W16 sekarang sudah menghapus kebutuhan caller/oracle-supplied index untuk lane otomatis. W17 harness menambahkan lane keempat `ecx-selective-auto` dengan `selection: { mode: "semantic-v1", maxRefs: 3 }`, sementara fixture `relevantRefIndexes` hanya dipakai untuk evaluasi recall dan oracle-control.
-
-Preparation W17 menemukan defect recall nyata pada `incident-triage` (0.5), lalu selector diperbaiki agar `maxRefs` menjadi bounded top-K positive semantic budget tanpa cutoff relatif yang membuang secondary evidence. Focused validation setelah fix:
-
-```text
-comparative helper tests = 9/9 PASS
-no-oracle selector fixture tests = 5/5 PASS
-total focused = 14/14 PASS
-```
-
-Formal W17 real local-model evidence is now closed. The fail-closed runner completed:
+Aggregate requires:
 
 ```text
-runtime evidence baseline: 90bc800649b02be1de752d8c67c365c65a9d21a6
-5 tasks × 5 repeats × 4 lanes = 100 measured model calls
-+ one excluded warm-up completion
-passed task gates = 5/5
-failed tasks = 0
-cache hits = 0
-median automatic selector recall = 1.0
-median automatic selector precision = 0.6666666666666666
-median automatic selected-hydration transport reduction = 46.089385474860336%
-median automatic input-token reduction = 50.80489375402447%
-median automatic/full latency ratio = 0.9839322301085884
-automatic known-transport-floor beat task count = 0/5
+5 tasks
+20 measured calls
+0 failed tasks
+auto total billed cost < full-inline total billed cost
+actual formal spend <= US$0.25
 closureEligible = true
-raw evidence sha256 = a76a6a195aea6e117651f948e41b3fdcbbd2532cbdf556c14a2437fa50483fb3
 ```
 
-The `0/5` known-transport-floor result is intentional evidence, not a failed gate: automatic selection currently scans bounded authorized candidate text before hydration, so W17 proves model-context/input-token and selected-hydration reductions but **does not** claim end-to-end automatic-selection network savings.
+## Claim boundary
 
-W17 juga memisahkan selected-hydration savings dari selector candidate scanning. Karena W16 saat ini membaca bounded authorized text candidates untuk ranking, `packet + selected hydration` tidak boleh disebut end-to-end transport savings tanpa menghitung candidate scan. Harness merekam conservative known transport floor secara terpisah.
+A W18 PASS proves only a bounded hosted-cost comparison on the five synthetic extraction fixtures under the pinned OpenRouter/Anthropic route. It is not a universal savings claim and does not prove future provider pricing or end-to-end network savings.
 
-Local/no-oracle evidence tidak boleh menjadi universal public-savings claim. Hosted dollar economics tetap belum tervalidasi dan merupakan W18.
+W17's local automatic-selector evidence remains separate: W17 proved no-oracle local quality/selector behavior; W18 is specifically the hosted billed-cost closure.
 
-## 6. W14 / W15 retained claim boundaries
-
-W14 remains **DONE — REPO SIDE** with bounded deterministic product regressions and dedicated Product Eval CI.
-
-W15 remains **DONE — VERIFIED LOCAL MODEL PASS^3** for the immutable local identity `qwen3.5:9b` with digest `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`. Its evidence proves the bounded evaluation agent loop, not that the normal product chat is an autonomous tool-calling agent.
-
-Historical verification documents remain the detailed source of truth for W14/W15 metrics and run IDs.
-
-## 7. Immediate next action
-
-With W03, W09/W10, W11, W16, and W17 closed, priority is:
+## Immediate next action
 
 ```text
-1. W18 — collect bounded real hosted token/cost evidence (explicit spend authorization required)
-2. W20 — final current-state sync after W18 closes
+1. merge documentation sync
+2. synchronize operator laptop
+3. execute one authorized formal W18 attempt (max US$0.25)
+4. preserve evidence and ledger state
+5. if PASS: document/merge W18 closure
+6. continue W20 final current-state sync
+7. if FAIL: stop, diagnose, require fresh authorization before retry
 ```
 
-Do not reopen W03, W09/W10, W11, W16, or W17 unless a new reproducible regression appears on product code newer than the verified baselines. The current 20-second source-doctor local-canary timeout is explicitly tracked as diagnostic performance behavior, not as such a regression.
-
-## 8. Historical note
-
-PR #76 sempat masuk `main` dengan formatting regression. PR #77 menutupnya. PR #80 menyinkronkan W14. PR #81–#85 membangun dan menutup W15 evidence. PR #86/#88/#89 mengeraskan Windows runtime flow. PR #90 memperbaiki Settings feedback/action stacking. PR #93 mengintegrasikan responsive + Flow redesign. PR #95 memperbaiki Flow inventory marker drift. PR #96 dan PR #97 menyelesaikan mobile Settings/Space/Flow corrections. PR #98 menyinkronkan progress real-laptop sebelum final functional closure. PR #100–#106 membangun, memperbaiki, dan menutup real-Windows W09/W10 acceptance sampai final PASS pada `4ea5b942ec705b61fe51c4b47a75bc59ac6019b8`. PR #112 mengimplementasikan dan menutup repo-side W16 automatic semantic ECX reference selector pada merge baseline `504e6aef86092d6f398ff290a40f77593c8882ca` dengan post-merge CI/Product Eval/MCP acceptance green. PR #113 menambahkan four-lane no-oracle harness; PR #114 menambahkan fail-closed local closure runner; PR #115 menambahkan bounded local generation controls untuk menutup runaway reasoning pada evidence run; PR #116 merekam formal 100-call W17 PASS sekaligus menyelaraskan doctor canary latency ceiling dengan probe timeout; dan PR #117 menyinkronkan canonical work plan setelah runtime closure. PR #117 merged sebagai `62e0d4b64b41cfa0b3038461bc376d67b1a2cbb8`, dengan post-merge CI #922 dan Product Eval #161 SUCCESS. W11 kemudian melewati beberapa real-Windows operator attempts yang mempertahankan failure evidence; Attempt 4 menemukan Context production-image migration asset omission. PR #123 memperbaiki root build/runtime asset contract dan menambahkan fail-closed Docker guard, lalu installer dari exact baseline `8cb665ff25682e683b284c896ec3a2e77bf716ba` lulus Attempt 5 penuh dengan post-merge CI #939, Product Eval #178, dan MCP #455 SUCCESS.
-
-`DONE` hanya dipakai bila implementation/evidence aktual mendukung. Historical verification docs tetap source of truth untuk evidence lama; dokumen ini menyatakan current execution state.
+Do not reopen already-closed W03/W09/W10/W11/W16/W17 unless a new reproducible regression appears on newer product code.
