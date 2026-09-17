@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { evaluateW18DiagnosticRun } from "../scripts/w18-hosted-diagnostic.mjs";
+import { estimateOpenRouterReservationUsd } from "../services/connect/src/providers/openrouter.ts";
+import {
+  assertW18DiagnosticReservationWithinCap,
+  buildW18DiagnosticProviderInput,
+  estimateW18DiagnosticReservationUsd,
+  evaluateW18DiagnosticRun,
+} from "../scripts/w18-hosted-diagnostic.mjs";
+import {
+  assembleContext,
+  benchmarkCacheMarker,
+  FIXTURES,
+} from "../scripts/comparative-evidence.mjs";
 
 function passingRun(overrides = {}) {
   return {
@@ -20,6 +31,23 @@ function passingRun(overrides = {}) {
     quality: { score: 1 },
     ...overrides,
   };
+}
+
+function diagnosticProviderInput() {
+  const taskIndex = FIXTURES.findIndex((task) => task.id === "procurement-award");
+  expect(taskIndex).toBeGreaterThanOrEqual(0);
+  const task = FIXTURES[taskIndex];
+  const marker = benchmarkCacheMarker({
+    cacheNamespace: "0".repeat(32),
+    taskIndex,
+    pairedRunIndex: 1,
+    modeIndex: 0,
+  });
+  return buildW18DiagnosticProviderInput({
+    context: assembleContext(task.documents),
+    marker,
+    userMessage: task.prompt,
+  });
 }
 
 describe("W18 one-call hosted diagnostic", () => {
@@ -65,5 +93,30 @@ describe("W18 one-call hosted diagnostic", () => {
         "diagnostic mode bukan full-inline",
       ]),
     );
+  });
+
+  it("keeps the harness reservation estimate coupled to the production OpenRouter estimator", () => {
+    const providerInput = diagnosticProviderInput();
+    const harnessEstimate = estimateW18DiagnosticReservationUsd(providerInput);
+    const productionEstimate = estimateOpenRouterReservationUsd(providerInput);
+
+    expect(harnessEstimate).toBe(productionEstimate);
+    expect(harnessEstimate).toBe(0.107157);
+  });
+
+  it("rejects the provider dispatch when reservation exceeds the explicit diagnostic cap", () => {
+    expect(() =>
+      assertW18DiagnosticReservationWithinCap({
+        reservationUsd: 0.107157,
+        maxSpendUsd: 0.02,
+      }),
+    ).toThrow(/provider call tidak dikirim/iu);
+
+    expect(() =>
+      assertW18DiagnosticReservationWithinCap({
+        reservationUsd: 0.107157,
+        maxSpendUsd: 0.11,
+      }),
+    ).not.toThrow();
   });
 });
