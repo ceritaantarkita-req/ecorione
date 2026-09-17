@@ -104,7 +104,9 @@ describe("W18 one-call hosted diagnostic", () => {
   it("requires an Anthropic-only OpenRouter operator pin", () => {
     expect(assertW18DiagnosticProviderPin("anthropic")).toEqual(["anthropic"]);
     expect(() => assertW18DiagnosticProviderPin(undefined)).toThrow(/persis anthropic/iu);
-    expect(() => assertW18DiagnosticProviderPin("amazon-bedrock")).toThrow(/persis anthropic/iu);
+    expect(() => assertW18DiagnosticProviderPin("amazon-bedrock")).toThrow(
+      /persis anthropic/iu,
+    );
     expect(() => assertW18DiagnosticProviderPin("anthropic,amazon-bedrock")).toThrow(
       /persis anthropic/iu,
     );
