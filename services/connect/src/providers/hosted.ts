@@ -2,6 +2,7 @@ import type { StablePrefix } from "@ecorione/context-assembly";
 import type { PinnedModelId, TokenUsage } from "@ecorione/shared-telemetry";
 import type { HostedProviderId } from "../provider-types.js";
 import { callAnthropic, estimateAnthropicReservationUsd } from "./anthropic.js";
+import type { SafeProviderRoutingMetadata } from "./errors.js";
 import { callOpenAi, estimateOpenAiReservationUsd } from "./openai.js";
 import { callOpenRouter, estimateOpenRouterReservationUsd } from "./openrouter.js";
 
@@ -19,6 +20,7 @@ export interface HostedCallResult {
   readonly model: string;
   readonly usage: TokenUsage;
   readonly providerReportedActualUsd?: number | undefined;
+  readonly routingMetadata?: SafeProviderRoutingMetadata | undefined;
 }
 
 type AdapterInput = Omit<HostedCallInput, "provider" | "apiKey">;
