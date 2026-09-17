@@ -177,9 +177,12 @@ export function evaluateW18DiagnosticRun(run) {
   if (run.budget?.settlement !== "settled") {
     failures.push("durable spend settlement bukan settled");
   }
-  if (
+  const budgetActualUsd = Number(run.budget?.actualUsd);
+  if (!Number.isFinite(budgetActualUsd)) {
+    failures.push("budget actualUsd tidak valid");
+  } else if (
     Number.isFinite(run.billedCostUsd) &&
-    Math.abs(Number(run.budget?.actualUsd) - run.billedCostUsd) > USD_EPSILON
+    Math.abs(budgetActualUsd - run.billedCostUsd) > USD_EPSILON
   ) {
     failures.push("budget actualUsd != billed cost");
   }
@@ -249,6 +252,13 @@ async function main(argv = process.argv.slice(2)) {
   const spend = inspectDurableSpendBudget(env);
   const readiness = await readDiagnosticReadiness(env);
   const { task, taskIndex } = diagnosticTask();
+  const readinessFailures = [...readiness.failures];
+  if (spend.effectiveHeadroomUsd === null) {
+    readinessFailures.push("durable hosted spend budget belum dikonfigurasi");
+  } else if (spend.effectiveHeadroomUsd <= USD_EPSILON) {
+    readinessFailures.push("remaining durable spend headroom harus positif");
+  }
+  const preflightPass = readinessFailures.length === 0;
 
   const preflight = {
     schemaVersion: 1,
@@ -264,11 +274,11 @@ async function main(argv = process.argv.slice(2)) {
     credential: readiness.credential,
     durableSpendBudget: spend,
     costKillSwitch: env.ECORIONE_COST_KILL_SWITCH ?? null,
-    readiness: { pass: readiness.pass, failures: readiness.failures },
+    readiness: { pass: preflightPass, failures: readinessFailures },
   };
   console.log(JSON.stringify(preflight, null, 2));
-  if (!readiness.pass) {
-    throw new Error(`W18 diagnostic readiness gagal: ${readiness.failures.join("; ")}`);
+  if (!preflightPass) {
+    throw new Error(`W18 diagnostic readiness gagal: ${readinessFailures.join("; ")}`);
   }
   if (args.preflight) {
     console.log("PASS W18 diagnostic preflight: no hosted provider call was made");
