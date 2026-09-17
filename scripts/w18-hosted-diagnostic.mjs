@@ -92,7 +92,12 @@ export function evaluateW18DiagnosticRun(run) {
   if (run.budget?.settlement !== "settled") {
     failures.push("durable spend settlement bukan settled");
   }
-  if (Number(run.budget?.actualUsd) !== run.billedCostUsd) {
+  const budgetActualUsd = run.budget?.actualUsd;
+  if (
+    typeof budgetActualUsd !== "number" ||
+    !Number.isFinite(budgetActualUsd) ||
+    budgetActualUsd !== run.billedCostUsd
+  ) {
     failures.push("budget actualUsd != provider billed cost");
   }
   if (run.quality?.score !== 1) failures.push("exact extraction quality score != 1");
