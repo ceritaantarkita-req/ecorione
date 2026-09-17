@@ -45,6 +45,34 @@ describe("OpenAI-compatible billed-cost authority", () => {
     ).rejects.toThrow("usage.cost");
   });
 
+  it("fails closed when a HTTP-success response has no usable completion text", async () => {
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+    agent
+      .get("https://openrouter.ai")
+      .intercept({ path: "/api/v1/chat/completions", method: "POST" })
+      .reply(200, {
+        model: "anthropic/claude-sonnet-4.5",
+        choices: [{ message: { content: "" } }],
+        usage: { prompt_tokens: 12, completion_tokens: 0, cost: 0 },
+      });
+
+    await expect(
+      callOpenAiCompatibleHosted({
+        endpoint: "https://openrouter.ai/api/v1/chat/completions",
+        providerName: "OpenRouter",
+        apiKey: "test-key",
+        runtimeModel: "anthropic/claude-sonnet-4.5",
+        costModel: "claude-sonnet-4-5-20250929",
+        prefix,
+        dynamicText: "fixture",
+        userMessage: "reply",
+        maxTokensField: "max_tokens",
+      }),
+    ).rejects.toThrow(/completion text/);
+  });
+
   it("retains pricing-snapshot fallback for direct OpenAI when cost is not reported", async () => {
     const agent = new MockAgent();
     agent.disableNetConnect();

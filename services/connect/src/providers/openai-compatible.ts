@@ -126,6 +126,20 @@ function reportedCost(
   return value;
 }
 
+function completionText(
+  providerName: OpenAiCompatibleHostedInput["providerName"],
+  parsed: OpenAiCompatibleResponseBody,
+): string {
+  const content = parsed.choices?.[0]?.message?.content;
+  if (typeof content !== "string" || content.trim().length === 0) {
+    throw new ProviderError(
+      "hosted",
+      `Respons ${providerName} HTTP-success tidak membawa completion text yang dapat dipakai.`,
+    );
+  }
+  return content;
+}
+
 export async function callOpenAiCompatibleHosted(
   input: OpenAiCompatibleHostedInput,
   signal?: AbortSignal,
@@ -167,12 +181,13 @@ export async function callOpenAiCompatibleHosted(
     );
   }
 
+  const reply = completionText(input.providerName, parsed);
   const usage = parsed.usage ?? {};
   const totalPrompt = usage.prompt_tokens ?? 0;
   const cachedPrompt = Math.min(totalPrompt, usage.prompt_tokens_details?.cached_tokens ?? 0);
   const providerReportedActualUsd = reportedCost(input.providerName, usage.cost);
   return {
-    reply: parsed.choices?.[0]?.message?.content ?? "",
+    reply,
     model: parsed.model ?? input.runtimeModel,
     usage: {
       inputTokens: totalPrompt - cachedPrompt,

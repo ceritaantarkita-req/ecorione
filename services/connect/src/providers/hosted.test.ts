@@ -79,6 +79,22 @@ describe("hosted provider adapters", () => {
     ).rejects.toThrow(/usage.cost/);
   });
 
+  it("OpenRouter menolak zero billed cost untuk pinned paid model", async () => {
+    openrouterPool.intercept({ path: "/api/v1/chat/completions", method: "POST" }).reply(200, {
+      model: "anthropic/claude-sonnet-4.5",
+      choices: [{ message: { content: "looks successful" } }],
+      usage: { prompt_tokens: 20, completion_tokens: 4, cost: 0 },
+    });
+    await expect(
+      callHostedProvider({
+        provider: "openrouter",
+        apiKey: "router-test-key",
+        model: "claude-sonnet-4-5-20250929",
+        ...base,
+      }),
+    ).rejects.toThrow(/usage.cost <= 0/);
+  });
+
   it("OpenAI memakai explicit pinned model identity tanpa alias", async () => {
     openaiPool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, {
       model: "gpt-5.6-terra",
