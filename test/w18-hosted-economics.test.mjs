@@ -1,9 +1,13 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   assertSpendAuthorization,
   configuredSpendCeiling,
   evaluateW18Aggregate,
   evaluateW18Task,
+  inspectDurableSpendBudget,
   summaryPathFor,
   W18_EXPECTED_MODEL_CALLS,
   W18_EXPECTED_TASKS,
@@ -66,7 +70,7 @@ describe("W18 hosted economics helpers", () => {
     expect(summaryPathFor("C:/tmp/w18-evidence")).toBe("C:/tmp/w18-evidence.summary.json");
   });
 
-  it("derives the tighter durable spend ceiling", () => {
+  it("derives the tighter configured spend ceiling", () => {
     expect(
       configuredSpendCeiling({
         ECORIONE_SPEND_DAILY_USD: "0.75",
@@ -75,12 +79,73 @@ describe("W18 hosted economics helpers", () => {
     ).toEqual({ dailyUsd: 0.75, monthlyUsd: 2, effectiveCeilingUsd: 0.75 });
   });
 
-  it("requires explicit current-run authorization and a durable cap no looser than it", () => {
+  it("computes remaining durable headroom from settled and uncertain reservations", () => {
+    const root = mkdtempSync(join(tmpdir(), "w18-spend-"));
+    try {
+      writeFileSync(
+        join(root, "ledger.json"),
+        JSON.stringify({
+          version: 1,
+          revision: 3,
+          entries: [
+            {
+              reservationId: "spend_11111111111111111111111111111111",
+              operationId: "op_test",
+              provider: "openrouter",
+              model: "claude-sonnet-4-5-20250929",
+              reservedUsd: 0.1,
+              actualUsd: 0.03,
+              status: "settled",
+              createdAt: "2026-09-17T01:00:00.000Z",
+              settledAt: "2026-09-17T01:00:01.000Z",
+            },
+            {
+              reservationId: "spend_22222222222222222222222222222222",
+              operationId: "op_test",
+              provider: "openrouter",
+              model: "claude-sonnet-4-5-20250929",
+              reservedUsd: 0.11,
+              actualUsd: null,
+              status: "uncertain",
+              createdAt: "2026-09-17T02:00:00.000Z",
+              settledAt: null,
+            },
+          ],
+        }),
+        "utf8",
+      );
+
+      expect(
+        inspectDurableSpendBudget(
+          {
+            ECORIONE_SPEND_DAILY_USD: "0.5",
+            ECORIONE_SPEND_MONTHLY_USD: "2",
+            ECORIONE_SPEND_BUDGET_PATH: "ledger.json",
+          },
+          { root, now: new Date("2026-09-17T10:00:00.000Z") },
+        ),
+      ).toMatchObject({
+        dailyUsd: 0.5,
+        monthlyUsd: 2,
+        effectiveCeilingUsd: 0.5,
+        dailyCommittedUsd: 0.14,
+        monthlyCommittedUsd: 0.14,
+        unsettledReservations: 1,
+        dailyHeadroomUsd: 0.36,
+        monthlyHeadroomUsd: 1.86,
+        effectiveHeadroomUsd: 0.36,
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("requires explicit current-run authorization within remaining durable headroom", () => {
     expect(() =>
       assertSpendAuthorization({
         allowSpend: "YES",
-        maxSpendUsd: 1,
-        configuredCeilingUsd: 0.75,
+        maxSpendUsd: 0.25,
+        durableHeadroomUsd: 0.846577,
         costKillSwitch: "0",
       }),
     ).not.toThrow();
@@ -88,8 +153,8 @@ describe("W18 hosted economics helpers", () => {
     expect(() =>
       assertSpendAuthorization({
         allowSpend: undefined,
-        maxSpendUsd: 1,
-        configuredCeilingUsd: 0.75,
+        maxSpendUsd: 0.25,
+        durableHeadroomUsd: 0.846577,
         costKillSwitch: "0",
       }),
     ).toThrow("ECORIONE_W18_ALLOW_SPEND");
@@ -97,11 +162,11 @@ describe("W18 hosted economics helpers", () => {
     expect(() =>
       assertSpendAuthorization({
         allowSpend: "YES",
-        maxSpendUsd: 0.5,
-        configuredCeilingUsd: 1,
+        maxSpendUsd: 0.25,
+        durableHeadroomUsd: 0.2,
         costKillSwitch: "0",
       }),
-    ).toThrow("lebih longgar");
+    ).toThrow("melebihi remaining durable spend headroom");
   });
 
   it("passes a task only when automatic ECX preserves quality and reduces provider billed cost", () => {
