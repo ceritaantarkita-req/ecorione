@@ -71,7 +71,8 @@ function runZeroSpendPreflight() {
 
 export class W18DiagnosticHttpError extends Error {
   constructor(url, status, payload) {
-    const type = typeof payload?.error?.type === "string" ? payload.error.type : "HTTP_ERROR";
+    const type =
+      typeof payload?.error?.type === "string" ? payload.error.type : "HTTP_ERROR";
     super(`${url} HTTP ${String(status)} ${type}`);
     this.name = "W18DiagnosticHttpError";
     this.status = status;
@@ -88,7 +89,9 @@ export function sanitizeW18DiagnosticFailure(error) {
         ? error.payload.error.message.slice(0, 1_000)
         : "Upstream request failed without a safe diagnostic message.";
     const requestId =
-      typeof error.payload?.requestId === "string" ? error.payload.requestId.slice(0, 256) : null;
+      typeof error.payload?.requestId === "string"
+        ? error.payload.requestId.slice(0, 256)
+        : null;
     return {
       kind: "http",
       status: error.status,
