@@ -42,12 +42,16 @@ function loadEnvironment(root = ROOT) {
 }
 
 function runZeroSpendPreflight() {
-  const result = spawnSync(process.execPath, [resolve(ROOT, "scripts/w18-hosted-economics.mjs"), "--preflight"], {
-    cwd: ROOT,
-    env: process.env,
-    encoding: "utf8",
-    stdio: ["ignore", "inherit", "inherit"],
-  });
+  const result = spawnSync(
+    process.execPath,
+    [resolve(ROOT, "scripts/w18-hosted-economics.mjs"), "--preflight"],
+    {
+      cwd: ROOT,
+      env: process.env,
+      encoding: "utf8",
+      stdio: ["ignore", "inherit", "inherit"],
+    },
+  );
   if (result.error !== undefined) throw result.error;
   if (result.status !== 0) {
     throw new Error("W18 diagnostic diblokir karena zero-spend preflight gagal.");
@@ -123,7 +127,10 @@ async function main() {
     throw new Error("ECORIONE_W18_TIMEOUT_MS harus 5000..300000");
   }
 
-  const runtime = await requestJson(`${connectUrl}/v1/settings/runtime`, { token, timeoutMs: 10_000 });
+  const runtime = await requestJson(`${connectUrl}/v1/settings/runtime`, {
+    token,
+    timeoutMs: 10_000,
+  });
   if (runtime?.settings?.hostedProvider !== W18_PROVIDER) {
     throw new Error(`runtime hostedProvider harus ${W18_PROVIDER}`);
   }
@@ -143,7 +150,9 @@ async function main() {
     modeIndex: 0,
   });
 
-  console.log("W18 DIAGNOSTIC: dispatching exactly one procurement-award/full-inline hosted call");
+  console.log(
+    "W18 DIAGNOSTIC: dispatching exactly one procurement-award/full-inline hosted call",
+  );
   const response = await requestJson(`${connectUrl}/v1/complete`, {
     token,
     timeoutMs,
