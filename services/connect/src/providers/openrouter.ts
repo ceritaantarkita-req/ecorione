@@ -1,5 +1,6 @@
 import type { StablePrefix } from "@ecorione/context-assembly";
 import type { PinnedModelId } from "@ecorione/shared-telemetry";
+import { ProviderError } from "./errors.js";
 import {
   callOpenAiCompatibleHosted,
   estimateOpenAiCompatibleReservationUsd,
@@ -46,11 +47,11 @@ export function estimateOpenRouterReservationUsd(
   return estimateOpenAiCompatibleReservationUsd(adapterInput(input));
 }
 
-export function callOpenRouter(
+export async function callOpenRouter(
   input: OpenRouterCallInput,
   signal?: AbortSignal,
 ): Promise<OpenAiCompatibleHostedResult> {
-  return callOpenAiCompatibleHosted(
+  const result = await callOpenAiCompatibleHosted(
     {
       endpoint: OPENROUTER_CHAT_URL,
       providerName: "OpenRouter",
@@ -59,4 +60,11 @@ export function callOpenRouter(
     },
     signal,
   );
+  if (!(result.providerReportedActualUsd !== undefined && result.providerReportedActualUsd > 0)) {
+    throw new ProviderError(
+      "hosted",
+      `Respons OpenRouter untuk pinned paid model ${input.model} melaporkan usage.cost <= 0; billed-cost evidence ditolak fail-closed.`,
+    );
+  }
+  return result;
 }
