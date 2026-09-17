@@ -1,64 +1,66 @@
 # W18 hosted economics — Attempt 2 failure record (2026-09-17)
 
-Status: **NOT CLOSED**. Do not reuse this attempt as closure evidence and do not rerun it unchanged.
+Status: **HISTORICAL FAILED ATTEMPT / NOT CLOSURE EVIDENCE**.
+
+Do not reuse this attempt as closure evidence and do not manually rewrite its historical uncertain reservation.
 
 ## Canonical source
 
-- repository: `ceritaantarkita-req/ecorione`
-- branch: `main`
 - source revision: `b9e837c91eddbf23eeb5c5468d4982013ca54363`
 - provider: `openrouter`
 - pricing identity: `claude-sonnet-4-5-20250929`
 - explicit operator cap: `US$0.25`
 - formal shape: 5 tasks × 2 repeats × 2 lanes = 20 intended model calls
 
-A first authorization check for Attempt 2 stopped before any provider call because the harness compared the cumulative durable ceiling (`US$1`) directly against the per-run authorization (`US$0.25`). The operator then temporarily set the daily durable ceiling to `US$0.25`; preflight passed with `effectiveCeilingUsd=0.25`, `hostedCallsEnabled=true`, OpenRouter credential present, and process kill switch explicitly opened for the authorized run.
+## Observed execution
 
-## Observed paid execution
-
-The paid execution stopped on the fifth intended call. Four `incident-triage` calls completed and settled:
+Four `incident-triage` calls completed and settled:
 
 - full-inline pair 1: `$0.005814`
 - ECX-auto pair 1: `$0.003714`
 - full-inline pair 2: `$0.006024`
 - ECX-auto pair 2: `$0.003714`
 
-Known settled provider-billed amount from Attempt 2 before the failure: **`$0.019266`**.
+Known settled provider-billed amount from Attempt 2: **`$0.019266`**.
 
-The next call, `procurement-award` full-inline pair 1, reached OpenRouter and returned an HTTP-success response without usable completion text. The Connect boundary introduced after Attempt 1 correctly rejected that response as `502 UPSTREAM_UNAVAILABLE` rather than accepting/caching it as a zero-quality completion. The operator wrapper then set runtime `hostedCallsEnabled=false` in `finally`.
-
-No closure-eligible W18 evidence or summary file was emitted.
+The next intended call, `procurement-award` full-inline pair 1, reached OpenRouter and returned HTTP-success without usable completion text. The fail-closed boundary added after Attempt 1 correctly converted this into `502 UPSTREAM_UNAVAILABLE`. No closure-eligible W18 evidence was emitted.
 
 ## Durable ledger after Attempt 2
 
-The post-run ledger inspection reported:
+Post-run inspection reported:
 
-- total entries for 2026-09-17: `13`
-- settled: `12`
-- uncertain: `1`
-- conservative committed amount: `$0.153423`
-- daily limit after the operator returned to the normal configuration: `$1`
-- remaining conservative daily headroom: `$0.846577`
+```text
+total entries = 13
+settled = 12
+uncertain = 1
+conservative committed = 0.153423
+daily limit = 1
+remaining conservative daily headroom = 0.846577
+```
 
-The single uncertain reservation is the rejected `procurement-award` provider call and retains its pre-dispatch reservation of **`$0.107157`**. This reservation must not be manually rewritten: the historical response body is no longer available to reconstruct a trustworthy provider-billed amount.
+The single uncertain reservation is the rejected `procurement-award` call and retains its pre-dispatch reservation of **`$0.107157`**. The historical response did not leave enough trustworthy billing information to reconstruct an actual charge, so this entry must remain conservative.
 
-Across Attempt 1 and the four settled calls from Attempt 2, known settled provider-reported actual cost is **`$0.046266`**. The larger `$0.153423` ledger committed amount is conservative admission accounting because the uncertain `$0.107157` reservation is counted at its full reserved amount; it is not evidence that OpenRouter billed that amount.
+Across Attempt 1 and the four settled Attempt 2 calls, known settled provider actual was **`$0.046266`**. The larger committed value was admission accounting, not a claim that OpenRouter billed `$0.153423`.
 
-## Diagnosis
+## Failure diagnosis
 
-Attempt 2 proves the Attempt 1 fail-closed response validation works, but it exposed a second accounting/diagnostic ordering issue:
+Attempt 2 proved the Attempt 1 completion validation was working, but exposed two additional issues:
 
-1. the OpenAI-compatible adapter rejected the empty completion before propagating safe response diagnostics/billing authority to the completion pipeline;
-2. the completion pipeline therefore had no authoritative provider cost available in the thrown error and conservatively marked the reservation `uncertain`;
-3. the W18 authorization guard also conflated a cumulative durable ceiling with a per-run authorization instead of checking the authorization against remaining durable headroom.
+1. safe billing/response diagnostics were not yet propagated through the thrown provider error, so the rejected reservation had to remain `uncertain`;
+2. the initial W18 authorization guard compared a per-run cap with a cumulative ceiling instead of remaining durable headroom.
 
-## Required fix before another paid call
+Later fixes preserved safe response model/finish reason/token/cost diagnostics, settled rejected responses when authoritative provider cost exists, and changed W18 authorization to compare against remaining durable headroom.
 
-1. Capture only safe HTTP-success diagnostics before rejecting an unusable completion: response model, finish reason, aggregate input/output token counts, and provider-reported `usage.cost` when valid. Never persist or expose prompts, document content, API keys, or the raw provider body.
-2. When a rejected provider response still carries authoritative billed cost, settle its reservation to that cost before rethrowing the provider error. Keep `uncertain` only when billing outcome is genuinely unavailable/ambiguous.
-3. Preserve the current rule that a pinned paid OpenRouter success with `usage.cost <= 0` is not acceptable closure evidence; if the provider explicitly reported that value, it may still be used solely to reconcile accounting for the rejected response.
-4. Change W18 authorization so the per-run cap is checked against **remaining durable headroom**, not against the cumulative configured ceiling itself.
-5. Regression-test all of the above using mocked providers only and merge through normal CI/Product Eval gates.
-6. Only after the merged source is synchronized locally and a zero-spend preflight passes may a separate one-call `procurement-award/full-inline` diagnostic be considered. That call requires a new explicit spend authorization.
+## Current disposition — 2026-09-18
 
-W18 remains open.
+The historical uncertain `$0.107157` reservation remains intentionally untouched.
+
+Subsequent diagnostics established:
+
+- Attempt 3: same task/lane failed with `finishReason=content_filter`, `routingProvider=Amazon Bedrock`, `inputTokens=2002`, `outputTokens=1`, provider-reported cost `$0`; that diagnostic reservation settled to `$0`.
+- Attempt 4: after OpenRouter provider routing was pinned Anthropic-only with fallback disabled, the same diagnostic passed with quality `1`, billed `$0.006681`, and durable settlement `settled`.
+- Latest postflight committed ledger: `$0.160104`.
+- Known settled provider actual through Attempt 4: `$0.052947`.
+- `$0.052947 + $0.107157 = $0.160104`, reconciling the current committed ledger exactly.
+
+Formal W18 is now **FORMAL RUN READY / NOT CLOSED**. See `docs/verification/w18-formal-run-readiness-2026-09-18.md`.
