@@ -126,7 +126,11 @@ function ledgerCommittedUsd(entry) {
   if (!Number.isFinite(reserved) || reserved < 0) {
     throw new Error("W18 durable spend ledger memiliki reservedUsd yang tidak valid");
   }
-  if (entry?.status === "settled" && entry?.actualUsd !== null && entry?.actualUsd !== undefined) {
+  if (
+    entry?.status === "settled" &&
+    entry?.actualUsd !== null &&
+    entry?.actualUsd !== undefined
+  ) {
     const actual = Number(entry.actualUsd);
     if (!Number.isFinite(actual) || actual < 0) {
       throw new Error("W18 durable spend ledger memiliki actualUsd yang tidak valid");
@@ -136,7 +140,10 @@ function ledgerCommittedUsd(entry) {
   return reserved;
 }
 
-export function inspectDurableSpendBudget(env, { root = ROOT, now = new Date() } = {}) {
+export function inspectDurableSpendBudget(
+  env,
+  { root = ROOT, now = new Date() } = {},
+) {
   const configured = configuredSpendCeiling(env);
   const configuredPath = String(env.ECORIONE_SPEND_BUDGET_PATH ?? "").trim();
   const ledgerPath = resolve(root, configuredPath || "data/connect-spend-budget.json");
@@ -150,14 +157,20 @@ export function inspectDurableSpendBudget(env, { root = ROOT, now = new Date() }
         `W18 durable spend ledger tidak valid: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-    if (parsed === null || typeof parsed !== "object" || !Array.isArray(parsed.entries)) {
+    if (
+      parsed === null ||
+      typeof parsed !== "object" ||
+      !Array.isArray(parsed.entries)
+    ) {
       throw new Error("W18 durable spend ledger tidak memiliki entries array");
     }
     entries = parsed.entries;
   }
 
   const instant = now instanceof Date ? now : new Date(now);
-  if (Number.isNaN(instant.getTime())) throw new Error("W18 durable spend timestamp tidak valid");
+  if (Number.isNaN(instant.getTime())) {
+    throw new Error("W18 durable spend timestamp tidak valid");
+  }
   const day = instant.toISOString().slice(0, 10);
   const month = instant.toISOString().slice(0, 7);
   let dailyCommittedUsd = 0;
@@ -165,7 +178,11 @@ export function inspectDurableSpendBudget(env, { root = ROOT, now = new Date() }
   let unsettledReservations = 0;
 
   for (const entry of entries) {
-    if (entry === null || typeof entry !== "object" || typeof entry.createdAt !== "string") {
+    if (
+      entry === null ||
+      typeof entry !== "object" ||
+      typeof entry.createdAt !== "string"
+    ) {
       throw new Error("W18 durable spend ledger memiliki entry yang tidak valid");
     }
     const committed = ledgerCommittedUsd(entry);
@@ -177,12 +194,16 @@ export function inspectDurableSpendBudget(env, { root = ROOT, now = new Date() }
   }
 
   const dailyHeadroomUsd =
-    configured.dailyUsd === null ? null : Math.max(0, configured.dailyUsd - dailyCommittedUsd);
+    configured.dailyUsd === null
+      ? null
+      : Math.max(0, configured.dailyUsd - dailyCommittedUsd);
   const monthlyHeadroomUsd =
     configured.monthlyUsd === null
       ? null
       : Math.max(0, configured.monthlyUsd - monthlyCommittedUsd);
-  const headrooms = [dailyHeadroomUsd, monthlyHeadroomUsd].filter((value) => value !== null);
+  const headrooms = [dailyHeadroomUsd, monthlyHeadroomUsd].filter(
+    (value) => value !== null,
+  );
 
   return {
     ...configured,
