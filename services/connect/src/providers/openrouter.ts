@@ -60,7 +60,9 @@ export async function callOpenRouter(
     },
     signal,
   );
-  if (!(result.providerReportedActualUsd !== undefined && result.providerReportedActualUsd > 0)) {
+  if (
+    !(result.providerReportedActualUsd !== undefined && result.providerReportedActualUsd > 0)
+  ) {
     throw new ProviderError(
       "hosted",
       `Respons OpenRouter untuk pinned paid model ${input.model} melaporkan usage.cost <= 0; billed-cost evidence ditolak fail-closed.`,
