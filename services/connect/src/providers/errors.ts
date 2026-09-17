@@ -13,6 +13,8 @@ export interface ProviderResponseDiagnostics {
   /** Safe aggregate token counts only — never prompt/document content. */
   readonly inputTokens: number;
   readonly outputTokens: number;
+  /** Safe selected provider name surfaced by a router, when available. */
+  readonly routingProvider?: string | undefined;
   /** Authoritative provider-billed cost when the upstream exposed a valid value. */
   readonly providerReportedActualUsd?: number | undefined;
 }

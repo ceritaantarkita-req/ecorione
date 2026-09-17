@@ -56,22 +56,28 @@ export async function callOpenRouter(
       endpoint: OPENROUTER_CHAT_URL,
       providerName: "OpenRouter",
       apiKey: input.apiKey,
+      extraHeaders: { "x-openrouter-metadata": "enabled" },
       ...adapterInput(input),
     },
     signal,
   );
   const billedCostUsd = result.providerReportedActualUsd ?? 0;
   if (billedCostUsd <= 0) {
+    const routingProvider = result.routingProvider ?? "unavailable";
     throw new ProviderResponseError(
       `Respons OpenRouter untuk pinned paid model ${input.model} melaporkan usage.cost <= 0; ` +
         `billed-cost evidence ditolak fail-closed. diagnostic responseModel=${result.model} ` +
-        `finishReason=${result.finishReason ?? "unknown"} inputTokens=${result.usage.inputTokens} ` +
-        `outputTokens=${result.usage.outputTokens} usageCostUsd=${billedCostUsd.toFixed(8)}`,
+        `finishReason=${result.finishReason ?? "unknown"} routingProvider=${routingProvider} ` +
+        `inputTokens=${result.usage.inputTokens} outputTokens=${result.usage.outputTokens} ` +
+        `usageCostUsd=${billedCostUsd.toFixed(8)}`,
       {
         responseModel: result.model,
         finishReason: result.finishReason,
         inputTokens: result.usage.inputTokens,
         outputTokens: result.usage.outputTokens,
+        ...(result.routingProvider === undefined
+          ? {}
+          : { routingProvider: result.routingProvider }),
         providerReportedActualUsd: billedCostUsd,
       },
     );
