@@ -1,6 +1,8 @@
 # W18 hosted economics — Attempt 1 failure record (2026-09-17)
 
-Status: **NOT CLOSED**. Do not reuse this attempt as closure evidence and do not rerun it unchanged.
+Status: **HISTORICAL FAILED ATTEMPT / NOT CLOSURE EVIDENCE**.
+
+Do not reuse this attempt as closure evidence and do not rerun it unchanged. This document preserves the failure that led to later provider-boundary hardening.
 
 ## Canonical source
 
@@ -13,11 +15,11 @@ Status: **NOT CLOSED**. Do not reuse this attempt as closure evidence and do not
 - durable daily/monthly budget: `US$1 / US$10`
 - formal shape: 5 tasks × 2 repeats × 2 lanes = 20 intended model calls
 
-The zero-spend preflight passed before the formal run with `hostedProvider=openrouter`, a configured `openrouter/messages` vault credential, `hostedCallsEnabled=true` only for the bounded run, and the process cost kill switch explicitly opened for the authorized attempt.
+The zero-spend preflight passed before the formal run with the OpenRouter vault credential present, runtime hosted calls enabled only for the bounded run, and the process cost kill switch explicitly opened.
 
 ## Observed paid execution
 
-The run stopped after 8 of the intended 20 hosted calls. Console-reported billed cost before the stop was:
+The run stopped after 8 of 20 intended calls:
 
 - `incident-triage` full-inline pair 1: `$0.006021`
 - `incident-triage` ECX-auto pair 1: `$0.003711`
@@ -28,22 +30,31 @@ The run stopped after 8 of the intended 20 hosted calls. Console-reported billed
 - `procurement-award` full-inline pair 2: `$0.000000`
 - `procurement-award` ECX-auto pair 2: `$0.003768`
 
-Observed cumulative billed amount: **`$0.027000`**.
+Observed cumulative provider-billed amount: **`$0.027000`**.
 
-The `incident-triage` task gate passed because execution advanced to the next task. `procurement-award` failed with both full-inline repetitions reporting quality score != 1 and billed cost `0`, while both ECX-auto calls returned positive billed cost. The task therefore also failed the requirement that automatic billed cost be lower than full-inline.
+`incident-triage` passed its task gate. `procurement-award` failed because both full-inline repetitions had quality score != 1 and billed cost `0`; the automatic-cost comparison also became invalid. The harness stopped and emitted no closure-eligible W18 evidence.
 
-The harness terminated immediately at that task gate. No closure-eligible W18 evidence or summary file was emitted. The operator wrapper then set runtime `hostedCallsEnabled=false` in its `finally` block.
+## Failure diagnosis
 
-## Diagnosis
+Attempt 1 exposed a provider-boundary integrity gap: an HTTP 200 OpenRouter response could be accepted despite empty/unusable completion content, and `usage.cost=0` could be treated as a valid paid-model completion. That could create misleading zero-cost/zero-quality evidence.
 
-The failure exposed a provider-boundary integrity gap rather than valid economic evidence. The OpenAI-compatible adapter accepted an HTTP 200 response even when its completion content was empty/unusable, and the OpenRouter path accepted `usage.cost = 0` although the current OpenRouter mapping is restricted to pinned paid Claude models. Such a response could therefore be cached and settled as though it were a valid completion, producing a misleading zero-cost/zero-quality measurement.
+The required fixes were subsequently implemented and tested:
 
-## Required fix before another paid attempt
+1. reject HTTP-success without usable completion text;
+2. reject non-positive billed cost for pinned paid OpenRouter closure evidence;
+3. preserve safe provider diagnostics on rejection;
+4. settle rejected-response accounting when authoritative cost exists;
+5. keep unknown historical billing conservative rather than inventing a value.
 
-1. Treat HTTP-success responses without usable completion text as provider failures.
-2. For current pinned paid OpenRouter models, reject provider-reported billed cost `<= 0` fail-closed.
-3. Regression-test both boundaries with mocked provider responses; no paid calls are needed for these tests.
-4. Merge only after normal CI/Product Eval gates pass.
-5. Before any later paid attempt, return the operator process to `ECORIONE_COST_KILL_SWITCH=1`, inspect the durable spend ledger, synchronize local `main`, and obtain a fresh explicit spend authorization/cap for the new run.
+## Current disposition — 2026-09-18
 
-W18 remains open until a later bounded real-provider run produces closure-eligible evidence.
+Later work did **not** rewrite this failed evidence.
+
+- Attempt 2 confirmed the unusable-completion boundary now failed closed.
+- Attempt 3 isolated a `content_filter` response served through `routingProvider=Amazon Bedrock` with provider-reported cost `$0`.
+- OpenRouter routing was then pinned to `provider.only=["anthropic"]` with fallback disabled.
+- Attempt 4 repeated `procurement-award/full-inline` and passed with exact quality `1`, positive billed cost `$0.006681`, durable settlement `settled`, and no cache hit.
+- Latest postflight committed ledger is `$0.160104`, including the historical Attempt 2 uncertain reservation.
+- Formal W18 remains open until a fresh 20-call closure run passes.
+
+Current formal-run readiness is documented in `docs/verification/w18-formal-run-readiness-2026-09-18.md`.
