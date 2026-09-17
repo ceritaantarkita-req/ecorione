@@ -1,371 +1,144 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-12**
+Last updated: **2026-09-18**
 
 Status: **CURRENT / canonical handoff for humans and AI agents**
 
-This is the shortest current-state source after the Batch 1–12 implementation closure, real laptop rehearsal, Historical Ledger + ECX evidence, Comparative ECX measurement, local persistence/restart closure, isolated local backup/restore closure, and bounded local observability closure.
+Historical plans, audits, failed attempts, and older verification notes remain evidence snapshots. This file is the shortest current-state source and must not rewrite valid historical failures.
 
-Historical plans/audits remain useful evidence but are not the current implementation-status source.
+## Current verdict
 
-## 1. Current verdict
+ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 are closed at their documented boundaries. The active blocker for final current-state closure is **W18 hosted economic validation**. W18 is **FORMAL RUN READY, NOT CLOSED**: the one-call Anthropic-only diagnostic passed, the durable spend ledger reconciled cleanly afterward, and a fresh operator authorization of **US$0.25 maximum** has been granted for one formal W18 run. W20 remains blocked until formal W18 evidence passes.
 
-**ECORIONE production/self-host repository baseline READY; real local runtime + Historical Ledger/ECX evidence CLOSED; final corrected local Comparative ECX checkpoint CLOSED / PASS WITH LIMITATIONS; local persistence/restart CLOSED / PASS; isolated local backup/restore CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS; local observability baseline CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS; UX/product validation is IN PROGRESS with repository-side static/frontend + owner-boundary hardening complete and the rendered local walkthrough pending; compute-host/VPS + Cloudflare remains DEFERRED BY OPERATOR.**
+Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains deferred by design. Fase 6+ remains evidence-driven/open-ended.
 
-Roadmap framing remains:
+## Current status table
 
-- Batch 1–12: **12/12 CLOSED**;
-- remaining planned batch inside that roadmap: **0**;
-- Fase 5 AutoClick: **DEFERRED BY DESIGN**;
-- Fase 6+: **OPEN-ENDED / evidence-driven**;
-- there is **no implicit Batch 13**.
-
-## 2. Current status table
-
-| Area | Current state | Meaning |
+| Area | Current state | Boundary |
 |---|---:|---|
-| Defined platform/production implementation roadmap | **12/12 CLOSED** | Planned repository implementation scope is finished. |
-| Production/self-host repository baseline | **READY** | Compose/Caddy/release/security baseline exists and repository gates pass. |
-| Real laptop rehearsal | **PASS / LOCAL BOUNDARY CLOSED** | Phase 4, Temporal worker, local model path, Ai/browser surfaces and Git synchronization exercised. |
-| Historical Ledger + ECX local evidence | **PASS / CLOSED** | Real chronology/hash chain, pointer-first handoff and hydration verified. |
-| Comparative ECX | **PASS WITH LIMITATIONS / CLOSED** | 5/5 task gates passed over 75 uncached calls; one individual exact-string punctuation mismatch remains attached to the result. |
-| Automatic semantic ref selector | **NOT PROVEN** | `refIndexes` remain caller-supplied; oracle lane is not autonomous selection. |
-| Local persistence/restart | **PASS / CLOSED** | Owner processes + Temporal + PostgreSQL container restart boundary passed after path/bootstrap fixes. |
-| Isolated local backup/restore | **PASS / CLOSED WITH LIMITATIONS** | Existing durable owner state restored into isolated targets; Temporal/PostgreSQL logical restore verified; absent optional Sync/Connect source state is not claimed as runtime-restored. |
-| Local observability baseline | **PASS / CLOSED WITH BOUNDED LOCAL LIMITATIONS** | Representative owner reads, ECX hydration, uncached local-model calls, trace continuity and owner-process resource deltas measured on the tested laptop. |
-| UX/product validation | **IN PROGRESS — STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING** | Latest code-bearing repository-side static/frontend + audited Ai owner-boundary hardening is PR #65 at `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; exact-head, public HTTPS and post-merge CI are green for that code baseline, while runtime evidence must execute from synchronized current `origin/main`. |
-| Immutable local model identity hardening | **PENDING** | Replace mutable rehearsal aliases before durable production model-identity claims. |
-| Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Resume only on explicit operator decision. |
-| Hosted-provider comparative validation | **OPTIONAL/FUTURE** | Requires operator-owned credentials and explicit spend intent. |
-| Fase 6+ hardening | **OPEN-ENDED** | Evidence-driven, never permanently closed. |
+| Batch 1–12 repository roadmap | **12/12 CLOSED** | Defined implementation scope only. |
+| Production/self-host repository baseline | **READY** | Repository gates/tooling exist; real target-host activation remains operator-owned. |
+| Historical Ledger + ECX local evidence | **PASS / CLOSED** | Real chronology/hash chain and pointer-first handoff/hydration. |
+| Historical Comparative ECX oracle-control | **PASS WITH LIMITATIONS / CLOSED** | Local controlled benchmark; not automatic-selector or hosted-dollar proof. |
+| W03 UX/product validation | **DONE — REAL-LAPTOP VERIFIED** | Current detailed evidence remains in its verification docs. |
+| W09/W10 runtime startup + doctor | **DONE — WINDOWS RUNTIME VERIFIED** | Bounded Windows runtime evidence. |
+| W11 installer/launcher | **DONE — WINDOWS INSTALLER VERIFIED** | Clean Windows installer lifecycle passed. |
+| W16 automatic semantic ref selector | **DONE — REPO SIDE** | `semantic-v1`, bounded `maxRefs=3`; no oracle indexes required by automatic lane. |
+| W17 ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5 tasks × 5 repeats × 4 lanes = 100 measured calls; bounded local evidence. |
+| W18 hosted economic validation | **FORMAL RUN READY / NOT CLOSED** | Attempt 4 one-call Anthropic-only diagnostic passed; formal 20-call evidence still required. |
+| W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
+| W20 final current-state sync | **BLOCKED ON W18** | Start final closure only after formal W18 PASS. |
 
-Do not collapse these into one percentage. `100%` refers only to the defined Batch 1–12 implementation roadmap.
+## W18 provider and experiment profile
 
-## 3. Key post-closure progression
-
-Important merged progression includes:
-
-- Historical Ledger + ECX local evidence closure PR #37;
-- Comparative ECX harness/fixes PR #38–#41;
-- persistence harness/gates/readiness PR #43–#45;
-- repo-root runtime-path fix PR #46;
-- first-drill failure documentation PR #47;
-- compiled runtime-dependency bootstrap fix PR #48 (`673af91642ea1b9440079e396675c69f53647951`);
-- persistence/restart closure PR #49;
-- isolated backup/restore implementation PR #50 → `4e6bcd94776fc7dd75440ee35dd8fddf0b602233`;
-- local observability implementation PR #52 → `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`;
-- UX/frontend hardening continued through PR #56, #58, #59, #60 and #62;
-- generic owner-proxy follow-up PR #63 → `6ea63f570b3e764154837bc2ad7ca2c1123f06bc`, fixing the Settings MCP workspace-query mismatch and strengthening Ai → owner proxy path/redirect boundaries;
-- canonical UX handoff synchronization PR #64 → `662808f7fb1e2ac76cf0c961b2850b6778801466`;
-- dedicated Ai realtime voice SSE owner-boundary follow-up PR #65 → `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`, closing the remaining audited direct Hub redirect gap and adding deterministic normal/release regression coverage. Exact-head, public HTTPS and post-merge gates are green;
-- documentation-only handoff synchronization PR #66 advanced `main` after the code-bearing PR #65 baseline without changing the code claim boundary.
-
-Valid failed evidence remains preserved rather than rewritten away.
-
-## 4. Comparative ECX closure
-
-Canonical protocol/results:
-
-- `docs/comparative-ecx-evidence.md`
-- `docs/verification/comparative-closure-grade-final-2026-09-11.md`
-
-Final corrected run:
-
-- 5 tasks × 5 repeats × 3 lanes = 75 measured calls;
-- measured cache hits: `0`;
-- 5/5 task-level gates PASS;
-- median selective transport reduction: `73.6379379246037%`;
-- median selective input-token reduction: `77.8580814717477%`;
-- median selective/full latency ratio: `0.8672873729681319`.
-
-Limitation that must stay attached: one `retention-policy` `ecx-selective-oracle` repeat scored `1/3` exact fields because two values retained sentence-final periods. The median task gate still passed. Therefore this is **PASS WITH LIMITATIONS**, not “75/75 outputs perfect”.
-
-`ecx-selective-oracle` measures the benefit when relevant references are already known; it does not prove automatic semantic selection. The aggregate percentages are local synthetic benchmark results, not universal/public savings claims.
-
-## 5. Local persistence/restart closure
-
-Canonical docs:
-
-- `docs/local-persistence-restart-evidence.md`
-- `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
-- `docs/verification/local-persistence-restart-closure-2026-09-11.md`
-
-The first strict drill found a real defect: relative durable paths reopened under package-local cwd after restart. Temporal-backed Flow survived, while Hub/Context/Artifact/approval reads reopened the wrong storage location.
-
-PR #46 anchored relative runtime paths to repo root. PR #48 ensured compiled workspace runtime dependencies are rebuilt before local dev entrypoints.
-
-A fresh strict baseline on `673af91642ea1b9440079e396675c69f53647951` then survived controlled restart of:
-
-1. Phase 4 process group;
-2. exact `ecorione-temporal` container;
-3. exact `ecorione-temporal-db` container;
-4. while retaining `ecorione_temporal_db`.
-
-Strict post verified exact Ledger, Context, Artifact, Flow and approval identities; cleanup terminalized the probe.
-
-Closed claim: **controlled local owner-storage + process + Temporal-container + PostgreSQL-container restart persistence**.
-
-## 6. Isolated local backup/restore closure
-
-Canonical docs:
-
-- `docs/local-backup-restore-evidence.md`
-- `docs/verification/local-backup-restore-closure-2026-09-11.md`
-
-Implementation baseline:
+Formal W18 is intentionally narrow:
 
 ```text
-4e6bcd94776fc7dd75440ee35dd8fddf0b602233
+provider gateway: OpenRouter
+pricing identity: claude-sonnet-4-5-20250929
+runtime model: anthropic/claude-sonnet-4.5
+OpenRouter routing: provider.only=["anthropic"]
+provider fallback: disabled
+lanes: full-inline, ecx-selective-auto
+tasks: 5
+repeats: 2
+measured calls: 20
+warm-up calls: 0
+cost authority: OpenRouter usage.cost
 ```
 
-Real-laptop run ID:
+Automatic selection is `semantic-v1` with `maxRefs=3`. Fixture relevance indexes are evaluation-only; they are not supplied to the automatic lane.
+
+## W18 attempt chronology
+
+- **Attempt 1 — failed after 8/20 calls.** Known provider-billed amount `$0.027000`. It exposed acceptance of unusable HTTP-success/zero-cost responses; later fixed fail-closed.
+- **Attempt 2 — failed on call 5.** Four settled calls cost `$0.019266`; the rejected fifth call left one conservative historical `uncertain` reservation of `$0.107157`. That reservation must not be rewritten.
+- **Attempt 3 — one-call diagnostic failed.** OpenRouter HTTP-success returned no usable completion, `finishReason=content_filter`, `routingProvider=Amazon Bedrock`, `inputTokens=2002`, `outputTokens=1`, authoritative `usage.cost=0`; reservation settled to `$0` and did not create another uncertain entry.
+- **Attempt 4 — one-call diagnostic PASS.** OpenRouter request was pinned Anthropic-only with fallback disabled. `procurement-award/full-inline` returned quality `1` (`3/3`), `inputTokens=2002`, `outputTokens=45`, billed `$0.006681`, durable settlement `settled`, no cache hit.
+
+Known settled provider actual across Attempts 1–4 is `$0.052947`. The durable committed amount after Attempt 4 is larger because it conservatively includes the historical Attempt 2 uncertain reservation.
+
+## Latest zero-spend postflight
+
+Observed after Attempt 4 on synchronized `main` `9f95d184c6a59da527fd23454fed06065a5738fe`:
 
 ```text
-backup-20260911154453-f4ac8743
+hostedCallsEnabled: false
+costKillSwitch: 1
+dailyCommittedUsd: 0.160104
+monthlyCommittedUsd: 0.160104
+unsettledReservations: 1
+dailyHeadroomUsd: 0.839896
+monthlyHeadroomUsd: 9.839896
+effectiveHeadroomUsd: 0.839896
+preflight: PASS
+hosted provider call made by postflight: no
 ```
 
-Terminal phase:
+The single unsettled reservation is the historical Attempt 2 entry; Attempt 4 did not leak a new reservation.
+
+The ledger uses UTC day/month keys. If formal W18 is executed after a UTC-day rollover or after any other hosted spend, **recalculate current committed/headroom values**. Do not hardcode the `$0.160104` daily committed value as a future admission assumption.
+
+## Formal W18 authorization and spend boundary
+
+A fresh current-run authorization has been given for:
 
 ```text
-restore-verified
+formal W18 maximum provider spend: US$0.25
 ```
 
-Runtime backups:
+This is a **single formal-run authorization**, not standing permission for later retries. It is consumed by provider dispatches in that formal attempt. Any rerun after a failure requires fresh explicit authorization.
 
-- Context: `backed-up`;
-- Hub: `backed-up`;
-- RnD: `backed-up`;
-- Space: `backed-up`;
-- Flow graph registry: `backed-up`;
-- Artifact: `backed-up`;
-- Sandbox receipts: `backed-up`;
-- Sync: `missing` optional source state;
-- Connect: `missing` optional source state.
-
-The harness logically dumped and restored both Temporal PostgreSQL databases into a temporary isolated stack:
-
-- `temporal`: 39 restored tables;
-- `temporal_visibility`: 3 restored tables.
-
-Through isolated restored owner APIs it re-verified the known closed persistence identities:
-
-- Ledger session `sess_persist_4dea234b52f349608b4f`, `nextSeq=1`, exact head hash;
-- Context episode `epi_bc883574927246858c0e9e0e`, expected text;
-- Artifact `art_6c60...`, 75 bytes, exact SHA-256;
-- Flow `wf_f603...` in expected post-cleanup `FAILED` state;
-- approval `op_5114...` in expected `REJECT` state.
-
-Post-run safety check confirmed:
+Before engine startup for the formal run, set the temporary daily durable ceiling to:
 
 ```text
-NO_EVIDENCE_CONTAINERS
-NO_EVIDENCE_NETWORKS
-NO_ISOLATED_LISTENERS
-PASS backup/restore inventory: repo, owners, isolated ports and Temporal boundary are ready
+current UTC-day committed + 0.25
 ```
 
-The active owners remained healthy and the tracked working tree remained clean.
+This makes Connect's durable pre-dispatch reservation boundary enforce the same remaining allowance as the explicit formal cap. Do not use the illustrative historical value `$0.410104` unless the current UTC-day committed amount is still exactly `$0.160104` at execution time.
 
-### Backup/restore limitation
+The formal runner must additionally have `ECORIONE_W18_ALLOW_SPEND=YES`, `ECORIONE_W18_MAX_SPEND_USD=0.25`, `ECORIONE_COST_KILL_SWITCH=0`, and the Connect process must start with `ECORIONE_OPENROUTER_PROVIDER_ONLY=anthropic`.
 
-This checkpoint does **not** prove:
+## Formal closure gate
 
-- off-host/cross-machine DR;
-- survival of laptop/disk loss while backup bytes remain on the same laptop;
-- encrypted remote backup scheduling;
-- runtime restore of absent Sync or Connect durable source state;
-- Connect Vault master-key recovery;
-- hard power-loss/fsync guarantees;
-- arbitrary corruption recovery;
-- PITR;
-- transactionally atomic cross-owner snapshots;
-- VPS/Cloudflare behavior.
+Every measured call must be uncached, use OpenRouter and the pinned pricing identity, settle durable billed cost, report positive authoritative cost, and return exact task quality. Every task must preserve automatic selector recall `1`, select within the existing bound, reduce automatic input tokens, and reduce automatic provider-billed cost versus full-inline.
 
-Sync/Connect `missing` is intentional evidence honesty: the harness did not seed active durable state merely to manufacture a backup claim.
-
-## 7. Local observability baseline closure
-
-Canonical docs:
-
-- `docs/local-observability-evidence.md`
-- `docs/verification/local-observability-closure-2026-09-12.md`
-
-Exact tested merged revision:
+Aggregate closure requires:
 
 ```text
-bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6
+taskCount = 5
+measuredModelCalls = 20
+failedTasks = 0
+auto billed cost < full-inline billed cost
+actual run spend <= 0.25
+closureEligible = true
 ```
 
-Real-laptop run:
+Raw evidence and summary remain under gitignored `.ecorione/evidence/`; only sanitized verification summaries belong in Git.
 
-```text
-runId: obs-20260912020700-00fbd7e5
-owner reads: 8 per lane
-ECX: 5 samples
-local model: 5 measured cache-miss samples
-workload errors: 0
-ECX Hub→Artifact trace coverage: 5/5
-```
+## Claim boundary
 
-Measured local model identity:
+A formal W18 PASS supports only a bounded statement on the five synthetic extraction fixtures using the same pinned OpenRouter/Anthropic route. It does not establish universal workload savings, future prices, end-to-end network savings, production SLA/SLO, or public percentage-savings marketing claims.
 
-```text
-runtime: openai-compatible
-model: gemma4:latest
-hosted calls: disabled
-cache hits: 0
-cache misses: 5
-actual cost USD: 0
-```
+## Immediate next action
 
-Representative p50/p95 client latency facts from this small local run:
+1. merge this documentation sync through normal CI/Product Eval;
+2. synchronize local `main` to that docs-only merge;
+3. confirm engine is stopped and hosted mode is off;
+4. derive the current UTC-day committed spend from the durable ledger and set the temporary daily ceiling to `committed + 0.25` before starting Connect;
+5. start engine with kill switch open and Anthropic-only OpenRouter routing;
+6. run zero-spend preflight;
+7. execute the single authorized formal W18 run and persist its evidence;
+8. disable hosted mode, restore kill switch/default budget environment, and stop the engine;
+9. if formal W18 passes, document/merge W18 closure and continue W20; if it fails, stop and diagnose without rerunning.
 
-- Hub read: `5.981 / 26.439 ms`;
-- Context read: `4.436 / 17.534 ms`;
-- Artifact read: `12.150 / 62.738 ms`;
-- Flow read: `11.997 / 142.314 ms`;
-- ECX plan: `5.349 / 14.645 ms`;
-- ECX hydrate: `18.623 / 57.065 ms`;
-- local-model end-to-end: `1145.401 / 9109.495 ms`;
-- provider-reported model latency: `1138.240 / 9104.578 ms`;
-- client-minus-provider residual: `6.711 / 7.161 ms`.
+Canonical W18 verification sources:
 
-The harness also captured bounded before/after Node-process RSS/heap and CPU deltas for all eight owner services.
+- `docs/verification/w18-hosted-economics-preflight-2026-09-17.md`
+- `docs/verification/w18-hosted-economics-attempt-1-2026-09-17.md`
+- `docs/verification/w18-hosted-economics-attempt-2-2026-09-17.md`
+- `docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md`
+- `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
+- `docs/verification/w18-formal-run-readiness-2026-09-18.md`
 
-### Observability limitation
-
-This checkpoint establishes only a **bounded laptop baseline**. It does not prove production SLA/SLO, peak host/GPU/resource utilization, concurrency/load capacity, leak freedom, hosted-provider behavior, or VPS/Cloudflare behavior.
-
-`gemma4:latest` remains a mutable alias. Its presence in this measurement proves what runtime identity was reported, not an immutable production model identity.
-
-## 8. Baseline already present
-
-Current platform baseline includes:
-
-- Ai chat with explicit Local/Hosted routing, `/space`, `/ops`, `/settings`;
-- Hub orchestration, policy, approval, audit, Historical Ledger, ECX and capability authority;
-- Connect local/hosted provider gateway, Vault, spend budget, MCP and runtime settings;
-- Context L0–L2 memory + L3 metadata binding;
-- Sync relay + MCP HTTPS bridge;
-- Artifact CAS;
-- Sandbox Tier 0/WASM/hardened Docker boundary;
-- Space notes/block runtime;
-- Flow durable orchestration using Temporal;
-- RnD trace/evaluation + dataset governance;
-- multimodal/realtime voice baseline;
-- owner-scoped backup/restore primitives and strict isolated local evidence harness;
-- production observability surfaces, strict bounded local observability evidence harness, provider canaries, Compose/Caddy, release/upgrade/rollback tooling;
-- full-history + Git-boundary secret scanning;
-- real public HTTPS MCP acceptance.
-
-## 9. Next execution order
-
-Future work remains a new explicit scope, not Batch 13.
-
-Current operator-approved local-first order:
-
-1. **Local persistence/restart — CLOSED / PASS**
-2. **Isolated local backup/restore — CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**
-3. **Local observability baseline — CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**
-4. **UX/product validation — IN PROGRESS; STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING**
-5. **Immutable local model identity hardening — PENDING**
-6. **Compute-host/VPS + Cloudflare — DEFERRED BY OPERATOR**
-7. **Hosted-provider comparative validation — OPTIONAL/FUTURE**
-8. **Automatic selector/optimizer — evidence-driven explicit scope only**
-9. **Maintenance/security/dependency/DR evidence — OPEN-ENDED**
-10. **New features — evidence-driven only**
-
-Production deployment is not a blocker for current local R&D.
-
-## 10. Active checkpoint — UX/product validation
-
-Repository-side frontend/static hardening is complete through PR #62, followed by generic owner-proxy hardening in PR #63, canonical handoff synchronization in PR #64, and the dedicated realtime voice SSE owner-boundary follow-up in PR #65. The latest **code-bearing** repository-side UX/static baseline is PR #65 at `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; exact-head CI, external MCP/public HTTPS acceptance, and post-merge CI are green for that code baseline. Documentation-only merges after PR #65 may advance `main` without changing this code-bearing claim boundary.
-
-Canonical static evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and `docs/verification/frontend-static-defect-ledger-2026-09-12.md`; the exact laptop/browser procedure is `docs/ux-runtime-walkthrough-checklist.md` under the governing protocol `docs/ux-product-validation.md`.
-
-The repository audit found no remaining known redirect gap in the audited direct Ai API → owner fetches after PR #65: Ops was already fail-closed and the dedicated voice SSE path is now covered. This is a bounded repository-side statement, not a general security certification.
-
-The remaining scope crosses the real browser/runtime boundary. It must validate real user journeys on the already-closed local technical baseline before adding new infrastructure or production deployment work. Runtime evidence must run from synchronized **current `origin/main`**, with `HEAD == origin/main`, a clean tracked tree, and ancestry containing PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`; do not checkout the older code-bearing SHA merely to run evidence.
-
-Minimum remaining work:
-
-- fetch and synchronize clean local `main` to current `origin/main`, require `HEAD == origin/main`, verify a clean tracked tree, and verify the synchronized commit descends from PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`;
-- restart Phase 4 from that synchronized code with `ECORIONE_COST_KILL_SWITCH=1`;
-- run `pnpm evidence:ux:inventory`, including the Settings MCP workspace proxy check added after the static follow-up;
-- exercise representative Local-mode chat flows through the actual Ai surface rather than service-only probes;
-- validate continuity/memory behavior and user-visible state transitions without rewriting Historical Ledger or Context ground truth;
-- exercise `/space`, `/flow`, `/ops`, and `/settings` navigation and critical actions that are safe for the local checkpoint;
-- validate Local/Hosted routing clarity while keeping hosted calls disabled;
-- exercise approval/error/recovery states where existing safe fixtures or local flows make them available;
-- check desktop and one narrow/mobile viewport;
-- record browser console errors/warnings plus functional defects, confusing UX, missing feedback, broken navigation, stale state, and severity;
-- distinguish product/UX defects from performance observations already covered by the observability baseline;
-- preserve raw screenshots/logs locally when they contain machine/user-specific detail and commit only sanitized evidence;
-- fix or explicitly bound every observed defect before closure; S0/S1 cannot remain open and S2 must be fixed or explicitly accepted.
-
-No VPS/Cloudflare/provider-account mutation belongs to this checkpoint. Realtime voice runtime/browser behavior is not part of the minimum UX-01–UX-12 closure claim unless separately exercised.
-
-## 11. Rules for the next agent
-
-Before implementing new work:
-
-- start from synchronized reviewed current `origin/main`;
-- require local `HEAD == origin/main` and a clean tracked tree before runtime evidence;
-- read this file first, then `AGENTS.md`;
-- preserve owner-service boundaries;
-- do not rewrite Historical Ledger or Context L0 ground truth;
-- keep Hub as policy/approval authority and Connect as provider/credential/MCP owner;
-- do not weaken CI/security/evidence gates to manufacture PASS;
-- preserve valid historical failures;
-- keep backup/restore evidence isolated from active owner state;
-- benchmark cache namespaces must remain isolated across invocations;
-- do not represent fixture-declared `refIndexes` as an autonomous optimizer;
-- do not convert local benchmark percentages into universal/public savings claims;
-- do not convert the small observability sample into a production SLA/SLO;
-- keep the mutable local model alias limitation attached until immutable identity hardening is explicitly completed;
-- create/update ADRs only when architecture/ownership/authority/invariants change;
-- keep VPS/Cloudflare deferred until explicit operator instruction.
-
-## 12. Recommended reading order
-
-1. `docs/current-state-and-next-steps.md`
-2. `AGENTS.md`
-3. `docs/ux-product-validation.md`
-4. `docs/ux-runtime-walkthrough-checklist.md`
-5. `docs/verification/frontend-static-defect-ledger-2026-09-12.md`
-6. `docs/verification/frontend-static-proxy-followup-2026-09-12.md`
-7. `docs/verification/frontend-static-audit-final-2026-09-12.md`
-8. `docs/verification/frontend-static-hardening-2026-09-12.md`
-9. `docs/verification/local-observability-closure-2026-09-12.md`
-10. `docs/local-observability-evidence.md`
-11. `docs/verification/local-backup-restore-closure-2026-09-11.md`
-12. `docs/local-backup-restore-evidence.md`
-13. `docs/verification/local-persistence-restart-closure-2026-09-11.md`
-14. `docs/local-persistence-restart-evidence.md`
-15. `docs/verification/local-persistence-restart-first-drill-2026-09-11.md`
-16. `docs/verification/comparative-closure-grade-final-2026-09-11.md`
-17. `docs/comparative-ecx-evidence.md`
-18. `docs/verification/historical-ledger-ecx-local-evidence-2026-09-11.md`
-19. `docs/verification/local-production-rehearsal-2026-09-10.md`
-20. `docs/EXECUTION-PROGRESS.md`
-21. relevant operations/ADR docs
-22. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
-
-## 13. Canonical references
-
-- current handoff: `docs/current-state-and-next-steps.md`
-- latest code-bearing repository-side UX/static baseline: PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca`
-- runtime checkout rule: synchronized current `origin/main` with `HEAD == origin/main` and PR #65 in ancestry
-- UX runtime protocol: `docs/ux-product-validation.md`
-- UX laptop/browser checklist: `docs/ux-runtime-walkthrough-checklist.md`
-- UX static S0–S3 ledger: `docs/verification/frontend-static-defect-ledger-2026-09-12.md`
-- UX generic owner-proxy follow-up: `docs/verification/frontend-static-proxy-followup-2026-09-12.md`
-- UX final static audit: `docs/verification/frontend-static-audit-final-2026-09-12.md`
-- UX static hardening baseline evidence: `docs/verification/frontend-static-hardening-2026-09-12.md`
-- next-checkpoint design only: `docs/immutable-local-model-identity-plan.md`
-- observability closure: `docs/verification/local-observability-closure-2026-09-12.md`
-- observability protocol: `docs/local-observability-evidence.md`
-- backup/restore closure: `docs/verification/local-backup-restore-closure-2026-09-11.md`
-- persistence closure: `docs/verification/local-persistence-restart-closure-2026-09-11.md`
-- Comparative ECX final evidence: `docs/verification/comparative-closure-grade-final-2026-09-11.md`
-- detailed tracker: `docs/EXECUTION-PROGRESS.md`
+Historical audits dated before this handoff remain historical snapshots and are not current status sources.
