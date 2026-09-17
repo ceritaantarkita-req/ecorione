@@ -115,16 +115,16 @@ describe("W18 hosted economics helpers", () => {
         "utf8",
       );
 
-      expect(
-        inspectDurableSpendBudget(
-          {
-            ECORIONE_SPEND_DAILY_USD: "0.5",
-            ECORIONE_SPEND_MONTHLY_USD: "2",
-            ECORIONE_SPEND_BUDGET_PATH: "ledger.json",
-          },
-          { root, now: new Date("2026-09-17T10:00:00.000Z") },
-        ),
-      ).toMatchObject({
+      const budget = inspectDurableSpendBudget(
+        {
+          ECORIONE_SPEND_DAILY_USD: "0.5",
+          ECORIONE_SPEND_MONTHLY_USD: "2",
+          ECORIONE_SPEND_BUDGET_PATH: "ledger.json",
+        },
+        { root, now: new Date("2026-09-17T10:00:00.000Z") },
+      );
+
+      expect(budget).toMatchObject({
         dailyUsd: 0.5,
         monthlyUsd: 2,
         effectiveCeilingUsd: 0.5,
@@ -132,9 +132,9 @@ describe("W18 hosted economics helpers", () => {
         monthlyCommittedUsd: 0.14,
         unsettledReservations: 1,
         dailyHeadroomUsd: 0.36,
-        monthlyHeadroomUsd: 1.86,
         effectiveHeadroomUsd: 0.36,
       });
+      expect(budget.monthlyHeadroomUsd).toBeCloseTo(1.86, 12);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
