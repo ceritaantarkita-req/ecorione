@@ -22,6 +22,7 @@ export interface OpenAiCompatibleHostedInput {
   readonly dynamicText: string;
   readonly userMessage: string;
   readonly maxTokensField: "max_tokens" | "max_completion_tokens";
+  readonly extraHeaders?: Readonly<Record<string, string>> | undefined;
 }
 
 export interface OpenAiCompatibleHostedResult {
@@ -29,6 +30,7 @@ export interface OpenAiCompatibleHostedResult {
   readonly model: string;
   readonly finishReason: string | null;
   readonly usage: TokenUsage;
+  readonly routingProvider?: string | undefined;
   /** Optional authoritative billed cost exposed by providers such as OpenRouter. */
   readonly providerReportedActualUsd?: number | undefined;
 }
@@ -44,6 +46,14 @@ interface OpenAiCompatibleResponseBody {
     readonly completion_tokens?: number;
     readonly prompt_tokens_details?: { readonly cached_tokens?: number };
     readonly cost?: unknown;
+  };
+  readonly openrouter_metadata?: {
+    readonly endpoints?: {
+      readonly available?: ReadonlyArray<{
+        readonly provider?: unknown;
+        readonly selected?: unknown;
+      }>;
+    };
   };
 }
 
@@ -128,22 +138,34 @@ function reportedCost(
   return value;
 }
 
+function selectedRoutingProvider(parsed: OpenAiCompatibleResponseBody): string | undefined {
+  const selected = parsed.openrouter_metadata?.endpoints?.available?.find(
+    (endpoint) => endpoint.selected === true,
+  )?.provider;
+  if (typeof selected !== "string") return undefined;
+  const normalized = selected.trim();
+  return normalized.length > 0 ? normalized.slice(0, 128) : undefined;
+}
+
 function safeResponseDiagnosticMessage(input: {
   providerName: OpenAiCompatibleHostedInput["providerName"];
   responseModel: string;
   finishReason: string | null;
   inputTokens: number;
   outputTokens: number;
+  routingProvider?: string | undefined;
   providerReportedActualUsd?: number | undefined;
 }): string {
   const billed =
     input.providerReportedActualUsd === undefined
       ? "unavailable"
       : input.providerReportedActualUsd.toFixed(8);
+  const routingProvider = input.routingProvider ?? "unavailable";
   return (
     `Respons ${input.providerName} HTTP-success tidak membawa completion text yang dapat dipakai. ` +
     `diagnostic responseModel=${input.responseModel} finishReason=${input.finishReason ?? "unknown"} ` +
-    `inputTokens=${input.inputTokens} outputTokens=${input.outputTokens} usageCostUsd=${billed}`
+    `routingProvider=${routingProvider} inputTokens=${input.inputTokens} ` +
+    `outputTokens=${input.outputTokens} usageCostUsd=${billed}`
   );
 }
 
@@ -155,6 +177,7 @@ function completionText(
     finishReason: string | null;
     inputTokens: number;
     outputTokens: number;
+    routingProvider?: string | undefined;
     providerReportedActualUsd?: number | undefined;
   },
 ): string {
@@ -179,6 +202,7 @@ export async function callOpenAiCompatibleHosted(
       headers: {
         authorization: `Bearer ${input.apiKey}`,
         "content-type": "application/json",
+        ...input.extraHeaders,
       },
       body: JSON.stringify(buildOpenAiCompatibleRequestBody(input)),
       ...(signal === undefined ? {} : { signal }),
@@ -217,11 +241,13 @@ export async function callOpenAiCompatibleHosted(
   const providerReportedActualUsd = reportedCost(input.providerName, usage.cost);
   const responseModel = parsed.model ?? input.runtimeModel;
   const finishReason = parsed.choices?.[0]?.finish_reason ?? null;
+  const routingProvider = selectedRoutingProvider(parsed);
   const diagnostics = {
     responseModel,
     finishReason,
     inputTokens,
     outputTokens,
+    ...(routingProvider === undefined ? {} : { routingProvider }),
     ...(providerReportedActualUsd === undefined ? {} : { providerReportedActualUsd }),
   };
   const reply = completionText(input.providerName, parsed, diagnostics);
@@ -235,6 +261,7 @@ export async function callOpenAiCompatibleHosted(
       cacheReadTokens: cachedPrompt,
       cacheWriteTokens: 0,
     },
+    ...(routingProvider === undefined ? {} : { routingProvider }),
     ...(providerReportedActualUsd === undefined ? {} : { providerReportedActualUsd }),
   };
 }
