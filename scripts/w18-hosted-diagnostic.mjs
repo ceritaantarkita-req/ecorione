@@ -77,7 +77,8 @@ async function requestJson(url, { token, body, timeoutMs = 120_000 }) {
 
 export function evaluateW18DiagnosticRun(run) {
   const failures = [];
-  if (run.taskId !== DIAGNOSTIC_TASK_ID) failures.push("diagnostic task bukan procurement-award");
+  if (run.taskId !== DIAGNOSTIC_TASK_ID)
+    failures.push("diagnostic task bukan procurement-award");
   if (run.mode !== DIAGNOSTIC_MODE) failures.push("diagnostic mode bukan full-inline");
   if (run.provider !== W18_PROVIDER) failures.push(`provider bukan ${W18_PROVIDER}`);
   if (run.pricingModel !== W18_PRICING_MODEL) {
