@@ -27,6 +27,7 @@ import {
 import {
   CostKillSwitchError,
   MissingCredentialError,
+  ProviderResponseError,
   SpendBudgetNotConfiguredError,
 } from "./providers/errors.js";
 import { callHostedProvider, estimateHostedReservationUsd } from "./providers/hosted.js";
@@ -265,11 +266,28 @@ export async function complete(
       cacheHit = false;
     } catch (error) {
       if (spendReservation !== undefined && deps.spendBudget !== undefined) {
-        try {
-          deps.spendBudget.markUncertain(spendReservation.reservationId);
-        } catch {
-          // Pre-dispatch reservation is already durable. Retaining `reserved` remains
-          // conservative and must not hide the original provider failure.
+        const authoritativeBilledUsd =
+          error instanceof ProviderResponseError
+            ? error.diagnostics.providerReportedActualUsd
+            : undefined;
+        if (authoritativeBilledUsd !== undefined) {
+          try {
+            deps.spendBudget.settle(
+              spendReservation.reservationId,
+              authoritativeBilledUsd,
+              input.now,
+            );
+          } catch {
+            // Provider already supplied billing authority. If durable settlement itself fails,
+            // retain the reservation conservatively without masking the original provider error.
+          }
+        } else {
+          try {
+            deps.spendBudget.markUncertain(spendReservation.reservationId);
+          } catch {
+            // Pre-dispatch reservation is already durable. Retaining `reserved` remains
+            // conservative and must not hide the original provider failure.
+          }
         }
       }
       throw error;

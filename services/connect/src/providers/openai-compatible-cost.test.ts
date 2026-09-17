@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getGlobalDispatcher, MockAgent, setGlobalDispatcher } from "undici";
+import { ProviderResponseError } from "./errors.js";
 import { callOpenAiCompatibleHosted } from "./openai-compatible.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
@@ -45,7 +46,7 @@ describe("OpenAI-compatible billed-cost authority", () => {
     ).rejects.toThrow("usage.cost");
   });
 
-  it("fails closed when a HTTP-success response has no usable completion text", async () => {
+  it("fails closed with safe diagnostics when HTTP-success has no usable completion text", async () => {
     const agent = new MockAgent();
     agent.disableNetConnect();
     setGlobalDispatcher(agent);
@@ -54,12 +55,13 @@ describe("OpenAI-compatible billed-cost authority", () => {
       .intercept({ path: "/api/v1/chat/completions", method: "POST" })
       .reply(200, {
         model: "anthropic/claude-sonnet-4.5",
-        choices: [{ message: { content: "" } }],
-        usage: { prompt_tokens: 12, completion_tokens: 0, cost: 0 },
+        choices: [{ finish_reason: "length", message: { content: "" } }],
+        usage: { prompt_tokens: 120, completion_tokens: 0, cost: 0.00123 },
       });
 
-    await expect(
-      callOpenAiCompatibleHosted({
+    let captured: unknown;
+    try {
+      await callOpenAiCompatibleHosted({
         endpoint: "https://openrouter.ai/api/v1/chat/completions",
         providerName: "OpenRouter",
         apiKey: "test-key",
@@ -69,8 +71,24 @@ describe("OpenAI-compatible billed-cost authority", () => {
         dynamicText: "fixture",
         userMessage: "reply",
         maxTokensField: "max_tokens",
-      }),
-    ).rejects.toThrow(/completion text/);
+      });
+    } catch (error) {
+      captured = error;
+    }
+
+    expect(captured).toBeInstanceOf(ProviderResponseError);
+    const error = captured as ProviderResponseError;
+    expect(error.diagnostics).toEqual({
+      responseModel: "anthropic/claude-sonnet-4.5",
+      finishReason: "length",
+      inputTokens: 120,
+      outputTokens: 0,
+      providerReportedActualUsd: 0.00123,
+    });
+    expect(error.message).toContain("finishReason=length");
+    expect(error.message).toContain("usageCostUsd=0.00123000");
+    expect(error.message).not.toContain("fixture");
+    expect(error.message).not.toContain("test-key");
   });
 
   it("retains pricing-snapshot fallback for direct OpenAI when cost is not reported", async () => {

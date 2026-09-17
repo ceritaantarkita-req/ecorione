@@ -1,7 +1,7 @@
 /** Shared OpenAI-compatible chat adapter for OpenAI and OpenRouter. */
 import { renderCoreMemoryData, type StablePrefix } from "@ecorione/context-assembly";
 import { priceFor, TOKENS_PER_PRICE_UNIT, type TokenUsage } from "@ecorione/shared-telemetry";
-import { ProviderError } from "./errors.js";
+import { ProviderError, ProviderResponseError } from "./errors.js";
 
 export const OPENAI_COMPAT_MAX_OUTPUT_TOKENS = 4096;
 const PROVIDER_FRAMING_TOKEN_ALLOWANCE = 2048;
@@ -27,6 +27,7 @@ export interface OpenAiCompatibleHostedInput {
 export interface OpenAiCompatibleHostedResult {
   readonly reply: string;
   readonly model: string;
+  readonly finishReason: string | null;
   readonly usage: TokenUsage;
   /** Optional authoritative billed cost exposed by providers such as OpenRouter. */
   readonly providerReportedActualUsd?: number | undefined;
@@ -35,6 +36,7 @@ export interface OpenAiCompatibleHostedResult {
 interface OpenAiCompatibleResponseBody {
   readonly model?: string;
   readonly choices?: ReadonlyArray<{
+    readonly finish_reason?: string | null;
     readonly message?: { readonly content?: string | null };
   }>;
   readonly usage?: {
@@ -126,15 +128,41 @@ function reportedCost(
   return value;
 }
 
+function safeResponseDiagnosticMessage(input: {
+  providerName: OpenAiCompatibleHostedInput["providerName"];
+  responseModel: string;
+  finishReason: string | null;
+  inputTokens: number;
+  outputTokens: number;
+  providerReportedActualUsd?: number | undefined;
+}): string {
+  const billed =
+    input.providerReportedActualUsd === undefined
+      ? "unavailable"
+      : input.providerReportedActualUsd.toFixed(8);
+  return (
+    `Respons ${input.providerName} HTTP-success tidak membawa completion text yang dapat dipakai. ` +
+    `diagnostic responseModel=${input.responseModel} finishReason=${input.finishReason ?? "unknown"} ` +
+    `inputTokens=${input.inputTokens} outputTokens=${input.outputTokens} usageCostUsd=${billed}`
+  );
+}
+
 function completionText(
   providerName: OpenAiCompatibleHostedInput["providerName"],
   parsed: OpenAiCompatibleResponseBody,
+  diagnostics: {
+    responseModel: string;
+    finishReason: string | null;
+    inputTokens: number;
+    outputTokens: number;
+    providerReportedActualUsd?: number | undefined;
+  },
 ): string {
   const content = parsed.choices?.[0]?.message?.content;
   if (typeof content !== "string" || content.trim().length === 0) {
-    throw new ProviderError(
-      "hosted",
-      `Respons ${providerName} HTTP-success tidak membawa completion text yang dapat dipakai.`,
+    throw new ProviderResponseError(
+      safeResponseDiagnosticMessage({ providerName, ...diagnostics }),
+      diagnostics,
     );
   }
   return content;
@@ -181,17 +209,29 @@ export async function callOpenAiCompatibleHosted(
     );
   }
 
-  const reply = completionText(input.providerName, parsed);
   const usage = parsed.usage ?? {};
   const totalPrompt = usage.prompt_tokens ?? 0;
   const cachedPrompt = Math.min(totalPrompt, usage.prompt_tokens_details?.cached_tokens ?? 0);
+  const inputTokens = totalPrompt - cachedPrompt;
+  const outputTokens = usage.completion_tokens ?? 0;
   const providerReportedActualUsd = reportedCost(input.providerName, usage.cost);
+  const responseModel = parsed.model ?? input.runtimeModel;
+  const finishReason = parsed.choices?.[0]?.finish_reason ?? null;
+  const diagnostics = {
+    responseModel,
+    finishReason,
+    inputTokens,
+    outputTokens,
+    ...(providerReportedActualUsd === undefined ? {} : { providerReportedActualUsd }),
+  };
+  const reply = completionText(input.providerName, parsed, diagnostics);
   return {
     reply,
-    model: parsed.model ?? input.runtimeModel,
+    model: responseModel,
+    finishReason,
     usage: {
-      inputTokens: totalPrompt - cachedPrompt,
-      outputTokens: usage.completion_tokens ?? 0,
+      inputTokens,
+      outputTokens,
       cacheReadTokens: cachedPrompt,
       cacheWriteTokens: 0,
     },

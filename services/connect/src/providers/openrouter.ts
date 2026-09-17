@@ -1,6 +1,6 @@
 import type { StablePrefix } from "@ecorione/context-assembly";
 import type { PinnedModelId } from "@ecorione/shared-telemetry";
-import { ProviderError } from "./errors.js";
+import { ProviderResponseError } from "./errors.js";
 import {
   callOpenAiCompatibleHosted,
   estimateOpenAiCompatibleReservationUsd,
@@ -62,9 +62,18 @@ export async function callOpenRouter(
   );
   const billedCostUsd = result.providerReportedActualUsd ?? 0;
   if (billedCostUsd <= 0) {
-    throw new ProviderError(
-      "hosted",
-      `Respons OpenRouter untuk pinned paid model ${input.model} melaporkan usage.cost <= 0; billed-cost evidence ditolak fail-closed.`,
+    throw new ProviderResponseError(
+      `Respons OpenRouter untuk pinned paid model ${input.model} melaporkan usage.cost <= 0; ` +
+        `billed-cost evidence ditolak fail-closed. diagnostic responseModel=${result.model} ` +
+        `finishReason=${result.finishReason ?? "unknown"} inputTokens=${result.usage.inputTokens} ` +
+        `outputTokens=${result.usage.outputTokens} usageCostUsd=${billedCostUsd.toFixed(8)}`,
+      {
+        responseModel: result.model,
+        finishReason: result.finishReason,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        providerReportedActualUsd: billedCostUsd,
+      },
     );
   }
   return result;
