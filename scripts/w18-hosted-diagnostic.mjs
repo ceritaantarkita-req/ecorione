@@ -285,9 +285,7 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
 
-  const maxSpendUsd = Number(
-    process.env.ECORIONE_W18_DIAGNOSTIC_MAX_SPEND_USD ?? Number.NaN,
-  );
+  const maxSpendUsd = Number(process.env.ECORIONE_W18_DIAGNOSTIC_MAX_SPEND_USD ?? Number.NaN);
   assertW18DiagnosticSpendAuthorization({
     allowSpend: process.env.ECORIONE_W18_DIAGNOSTIC_ALLOW_SPEND,
     maxSpendUsd,
