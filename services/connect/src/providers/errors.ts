@@ -5,6 +5,18 @@
 
 export type ProviderErrorKind = "unreachable" | "invalid-credential" | "upstream";
 
+export interface ProviderResponseDiagnostics {
+  /** Provider/runtime model identity returned by the upstream response. */
+  readonly responseModel: string;
+  /** Provider finish reason when exposed; null means absent/unknown. */
+  readonly finishReason: string | null;
+  /** Safe aggregate token counts only — never prompt/document content. */
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  /** Authoritative provider-billed cost when the upstream exposed a valid value. */
+  readonly providerReportedActualUsd?: number | undefined;
+}
+
 export class ProviderError extends Error {
   readonly provider: "hosted" | "local";
   readonly kind: ProviderErrorKind;
@@ -18,6 +30,21 @@ export class ProviderError extends Error {
     this.name = "ProviderError";
     this.provider = provider;
     this.kind = kind;
+  }
+}
+
+/**
+ * Upstream menjawab secara cukup lengkap untuk memberi metadata aman/billing authority,
+ * tetapi completion tetap tidak boleh dipakai. Tidak pernah membawa prompt, document content,
+ * credential, atau raw provider body.
+ */
+export class ProviderResponseError extends ProviderError {
+  readonly diagnostics: ProviderResponseDiagnostics;
+
+  constructor(message: string, diagnostics: ProviderResponseDiagnostics) {
+    super("hosted", message, "upstream");
+    this.name = "ProviderResponseError";
+    this.diagnostics = diagnostics;
   }
 }
 
