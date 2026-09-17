@@ -5,6 +5,21 @@
 
 export type ProviderErrorKind = "unreachable" | "invalid-credential" | "upstream";
 
+/**
+ * Whitelisted provider-routing metadata safe for logs/evidence. It deliberately excludes
+ * prompts, completions, guardrail pipeline payloads, raw provider bodies, and credentials.
+ */
+export interface SafeProviderRoutingMetadata {
+  readonly requested?: string | undefined;
+  readonly strategy?: string | undefined;
+  readonly region?: string | undefined;
+  readonly attempt?: number | undefined;
+  readonly isByok?: boolean | undefined;
+  readonly endpointTotal?: number | undefined;
+  readonly selectedProvider?: string | undefined;
+  readonly selectedModel?: string | undefined;
+}
+
 export interface ProviderResponseDiagnostics {
   /** Provider/runtime model identity returned by the upstream response. */
   readonly responseModel: string;
@@ -15,6 +30,8 @@ export interface ProviderResponseDiagnostics {
   readonly outputTokens: number;
   /** Authoritative provider-billed cost when the upstream exposed a valid value. */
   readonly providerReportedActualUsd?: number | undefined;
+  /** Safe routing identity only; no raw provider metadata is retained. */
+  readonly routingMetadata?: SafeProviderRoutingMetadata | undefined;
 }
 
 export class ProviderError extends Error {
