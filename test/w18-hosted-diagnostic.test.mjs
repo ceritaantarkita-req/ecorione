@@ -5,6 +5,8 @@ import {
   buildW18DiagnosticProviderInput,
   estimateW18DiagnosticReservationUsd,
   evaluateW18DiagnosticRun,
+  sanitizeW18DiagnosticFailure,
+  W18DiagnosticHttpError,
 } from "../scripts/w18-hosted-diagnostic.mjs";
 import {
   assembleContext,
@@ -118,5 +120,36 @@ describe("W18 one-call hosted diagnostic", () => {
         maxSpendUsd: 0.11,
       }),
     ).not.toThrow();
+  });
+
+  it("sanitizes an upstream HTTP failure without retaining arbitrary response fields", () => {
+    const error = new W18DiagnosticHttpError("http://127.0.0.1:17023/v1/complete", 502, {
+      error: {
+        type: "UPSTREAM_UNAVAILABLE",
+        message:
+          "Respons OpenRouter HTTP-success tidak membawa completion text yang dapat dipakai. diagnostic responseModel=anthropic/claude-sonnet-4.5 finishReason=content_filter inputTokens=2002 outputTokens=1 usageCostUsd=0.00000000",
+        rawProviderBody: "must-not-survive",
+      },
+      requestId: "request-safe-id",
+      secret: "must-not-survive",
+    });
+
+    expect(sanitizeW18DiagnosticFailure(error)).toEqual({
+      kind: "http",
+      status: 502,
+      type: "UPSTREAM_UNAVAILABLE",
+      message:
+        "Respons OpenRouter HTTP-success tidak membawa completion text yang dapat dipakai. diagnostic responseModel=anthropic/claude-sonnet-4.5 finishReason=content_filter inputTokens=2002 outputTokens=1 usageCostUsd=0.00000000",
+      requestId: "request-safe-id",
+    });
+  });
+
+  it("sanitizes runtime failures into bounded diagnostic text", () => {
+    const failure = sanitizeW18DiagnosticFailure(new Error("x".repeat(2_000)));
+    expect(failure.kind).toBe("runtime");
+    expect(failure.status).toBeNull();
+    expect(failure.type).toBe("Error");
+    expect(failure.message).toHaveLength(1_000);
+    expect(failure.requestId).toBeNull();
   });
 });
