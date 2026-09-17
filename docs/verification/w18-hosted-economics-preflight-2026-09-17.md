@@ -1,18 +1,17 @@
 # W18 — hosted economic validation preflight
 
-Status: **HARNESS READY / REAL HOSTED SPEND NOT YET AUTHORIZED**
+Status: **FORMAL RUN READY / NOT CLOSED**
 
-Date: **2026-09-17**
+Original date: **2026-09-17**  
+Current synchronization: **2026-09-18**
 
-Baseline entering W18: `100d0f92db9778c42fb3549ae10584eee6d2f11d` (`main`, W11 closure merged).
-
-Repository-side implementation is ready for exact-head CI and zero-spend operator preflight; this status does **not** authorize hosted inference.
+This document began as the zero-spend W18 preflight specification. It is now updated with the provider-failure chronology, successful Anthropic-only diagnostic, reconciled durable ledger, and the formal-run admission rules that apply next.
 
 ## Goal
 
-W18 exists to close the claim that ECX automatic selective context can reduce **real hosted provider billed cost**, not merely local input tokens or a static price-table estimate.
+W18 exists to close the bounded claim that automatic ECX selective context can reduce **real hosted provider billed cost**, not merely local input tokens or a static price-table estimate.
 
-The W17 local-model closure remains authoritative for no-oracle selector recall/quality on the four-lane local benchmark. W18 deliberately narrows the paid experiment to the two lanes needed for economics:
+W17 remains authoritative for bounded no-oracle selector behavior on the local four-lane benchmark. W18 narrows the paid comparison to:
 
 - `full-inline`;
 - `ecx-selective-auto`.
@@ -27,98 +26,178 @@ Formal shape:
 warm-up calls = 0
 ```
 
-## Provider and cost authority
-
-The closure provider is **OpenRouter** with ECORIONE pinned pricing identity:
+## Provider, model, routing, and cost authority
 
 ```text
-claude-sonnet-4-5-20250929
+provider gateway = OpenRouter
+pricing identity = claude-sonnet-4-5-20250929
+runtime model = anthropic/claude-sonnet-4.5
+provider.only = ["anthropic"]
+allow_fallbacks = false
+cost authority = OpenRouter usage.cost
 ```
 
-The runtime OpenRouter mapping remains `anthropic/claude-sonnet-4.5`.
+The Anthropic-only routing policy was introduced after a diagnostic showed the same OpenRouter model route being served through Amazon Bedrock and returning `finishReason=content_filter` with no usable completion.
 
-For W18, provider-billed cost is authoritative. `services/connect/src/providers/openai-compatible.ts` therefore fails closed for successful OpenRouter responses that omit `usage.cost`. Direct OpenAI retains its existing price-snapshot fallback because this W18 closure does not use direct OpenAI.
-
-A successful OpenRouter completion therefore reaches the ECORIONE cost ledger only after provider-reported `usage.cost` has been parsed and supplied as `actualUsdOverride`; the durable spend reservation is settled to that same actual value.
+OpenRouter successful responses must carry usable completion text and valid billing authority. For the pinned paid W18 route, non-positive provider-reported billed cost is rejected for closure evidence. When a rejected response still supplies authoritative cost diagnostics, durable accounting settles to that reported amount before the error is rethrown.
 
 ## Synthetic egress boundary
 
-W18 uses only the benchmark's synthetic extraction fixtures. Artifacts created by the W18 runner are explicitly marked:
+W18 uses only synthetic extraction fixtures. W18 artifacts are marked:
 
 ```text
 sensitivity = INTERNAL
 syncClass = CLOUD_ALLOWED
 ```
 
-Automatic ECX hydration is requested with `hostedEligible=true`, so the selective lane still crosses the normal hosted-egress authorization boundary. Fixture relevance indexes are never supplied to the automatic selector; they are used only after selection to evaluate recall.
+Automatic ECX hydration uses `hostedEligible=true`. Fixture relevance indexes are evaluation-only and are not supplied to the automatic selector.
 
-## Spend safety boundary
+## Attempt chronology retained
 
-No hosted call is permitted merely because this harness exists.
+### Attempt 1
 
-The formal runner requires all of the following before the first hosted dispatch:
+- intended 20 calls;
+- stopped after 8;
+- known billed amount `$0.027000`;
+- exposed unusable HTTP-success and zero-cost acceptance defects.
 
-1. clean `main` with `HEAD == origin/main`;
-2. Connect, Hub, and Artifact healthy;
+### Attempt 2
+
+- four settled calls billed `$0.019266`;
+- fifth intended call failed closed on unusable HTTP-success;
+- historical reservation `$0.107157` remains `uncertain` because authoritative historical billing cannot be reconstructed;
+- conservative committed ledger became `$0.153423`.
+
+### Attempt 3 diagnostic
+
+```text
+responseModel = anthropic/claude-sonnet-4.5
+finishReason = content_filter
+routingProvider = Amazon Bedrock
+inputTokens = 2002
+outputTokens = 1
+usageCostUsd = 0
+```
+
+The explicit provider cost authority was zero, so this diagnostic reservation settled to `$0`. Committed ledger remained `$0.153423`; no new uncertain entry was added.
+
+### Attempt 4 Anthropic-only diagnostic
+
+Request routing:
+
+```text
+provider.only = ["anthropic"]
+allow_fallbacks = false
+```
+
+Result:
+
+```text
+quality = 1 (3/3)
+inputTokens = 2002
+outputTokens = 45
+billedCostUsd = 0.006681
+settlement = settled
+overrun = 0
+cacheHit = false
+gate.pass = true
+```
+
+Postflight committed ledger became `$0.160104`.
+
+## Latest zero-spend postflight
+
+On synchronized `main` `9f95d184c6a59da527fd23454fed06065a5738fe`:
+
+```text
+hostedCallsEnabled = false
+costKillSwitch = 1
+dailyCommittedUsd = 0.160104
+monthlyCommittedUsd = 0.160104
+unsettledReservations = 1
+dailyHeadroomUsd = 0.839896
+monthlyHeadroomUsd = 9.839896
+effectiveHeadroomUsd = 0.839896
+readiness.pass = true
+```
+
+The one unsettled entry is the historical Attempt 2 reservation. Known settled provider actual through Attempt 4 is `$0.052947`; `$0.052947 + $0.107157 = $0.160104`.
+
+## Spend safety boundary for the formal run
+
+A fresh authorization has been granted for **one formal W18 attempt, maximum US$0.25**.
+
+This authorization is not standing permission and is not reusable after a partial/failed run.
+
+The durable Connect spend budget is the pre-dispatch hard admission boundary. Because ledger day keys are UTC-based, the operator must derive the **current UTC-day committed value at execution time** and set the temporary daily ceiling to:
+
+```text
+currentCommitted + 0.25
+```
+
+Do not hardcode `$0.410104` unless current UTC-day committed is still exactly `$0.160104` at execution time.
+
+Formal process requirements before first provider dispatch:
+
+1. synchronized clean `main`, `HEAD == origin/main`;
+2. Connect, Hub, Artifact healthy;
 3. Connect runtime `hostedProvider=openrouter`;
-4. Connect runtime hosted calls enabled;
-5. encrypted credential vault available with `openrouter/messages` configured;
-6. durable daily and/or monthly spend budget configured;
-7. `ECORIONE_COST_KILL_SWITCH=0`;
-8. **current-process** explicit opt-in `ECORIONE_W18_ALLOW_SPEND=YES`;
-9. **current-process** `ECORIONE_W18_MAX_SPEND_USD` set to a positive value;
-10. the durable configured spend ceiling must be no looser than that explicit W18 cap;
-11. W18 has an additional absolute safety ceiling of **USD 5** even if an operator enters a larger value.
+4. Connect credential vault available with `openrouter/messages`;
+5. Connect process started with `ECORIONE_COST_KILL_SWITCH=0`;
+6. Connect process started with `ECORIONE_OPENROUTER_PROVIDER_ONLY=anthropic`;
+7. temporary durable daily ceiling equals current UTC-day committed + `0.25`;
+8. current shell sets `ECORIONE_W18_ALLOW_SPEND=YES`;
+9. current shell sets `ECORIONE_W18_MAX_SPEND_USD=0.25`;
+10. runtime hosted calls enabled only for the bounded run;
+11. zero-spend preflight PASS;
+12. evidence output path is new and cannot overwrite prior evidence.
 
-The runner tracks actual provider-billed cost after every measured call and stops future calls if the explicit W18 cap is exceeded. The durable Connect budget remains the pre-dispatch hard admission boundary.
+W18 also retains its absolute internal safety maximum of USD 5; the operator's current `$0.25` authorization is the tighter limit.
 
 ## No-spend preflight
-
-The runner supports a preflight mode that does not dispatch hosted inference:
 
 ```powershell
 node .\scripts\w18-hosted-economics.mjs --preflight
 ```
 
-It checks repository state, service health, runtime provider state, credential metadata, and durable budget configuration. It never prints credential secrets. Preflight may run while hosted calls remain disabled; `hostedCallsEnabled=true` is required only after current-run spend authorization for the formal paid run.
+Preflight checks repository state, service health, runtime provider state, credential inventory, and durable budget state. It does not dispatch hosted inference.
+
+A preflight can pass while `hostedCallsEnabled=false`; formal dispatch requires hosted mode to be deliberately enabled after all admission settings are in place.
 
 ## Formal closure gate
 
-For every task, both repeats in both lanes must satisfy:
+For each measured call/task:
 
-- provider is `openrouter`;
-- pricing model is exactly `claude-sonnet-4-5-20250929`;
+- provider gateway `openrouter`;
+- pricing model exactly `claude-sonnet-4-5-20250929`;
 - no exact-cache hit;
-- exact extraction quality score is 1;
-- automatic selector recall against fixture relevance is 1;
-- selected refs remain within the existing `maxRefs=3` budget;
-- automatic hydration bytes are lower than full-inline fixture context bytes;
-- durable spend settlement is `settled`;
-- budget `actualUsd` equals the billed cost recorded by the completion;
-- automatic input tokens are lower than full-inline;
-- automatic provider-billed cost is lower than full-inline.
+- exact extraction quality score `1`;
+- automatic selector recall `1`;
+- selected refs remain within `1..3`;
+- automatic hydration bytes < full-inline fixture context bytes;
+- provider billed cost is finite and `> 0`;
+- durable settlement is `settled`;
+- budget actual equals recorded billed cost;
+- automatic input tokens < full-inline input tokens;
+- automatic billed cost < full-inline billed cost.
 
-Aggregate closure additionally requires:
+Aggregate:
 
 ```text
 taskCount = 5
 measuredModelCalls = 20
 failedTasks = 0
 auto billed cost < full-inline billed cost
-actual run spend <= explicit W18 max spend
+actual run spend <= 0.25
 closureEligible = true
 ```
 
-Evidence is written under the gitignored `.ecorione/evidence/` directory with a SHA-256 summary, matching the W17 evidence discipline.
+## Evidence discipline
+
+Raw evidence is written under gitignored `.ecorione/evidence/`, with a separate SHA-256 summary. Commit only sanitized verification records.
+
+A failed formal run must not be rerun under the same authorization. Preserve failure evidence, disable hosted mode, stop the engine launched with kill switch `0`, inspect the ledger, diagnose, and obtain fresh explicit authorization before any new provider dispatch.
 
 ## Claim boundary
 
-A W18 PASS will support only this bounded statement:
-
-> On the five synthetic extraction fixtures, using the same pinned hosted route through OpenRouter, automatic ECX selective context reduced provider-reported billed cost versus full-inline while preserving the exact requested answer quality and selector recall.
-
-It will **not** establish universal workload savings, future provider prices, OpenRouter credit-purchase fees, local hardware/electricity economics, or end-to-end network savings.
-
-## Execution boundary
-
-Repository-side implementation and CI may proceed without spend. The real formal run must remain blocked until the operator explicitly authorizes a maximum USD spend for the current run.
+A W18 PASS supports only a bounded statement on the five synthetic extraction fixtures using the pinned OpenRouter/Anthropic route. It does not establish universal workload savings, future provider pricing, OpenRouter credit-purchase fees, local hardware/electricity economics, end-to-end network savings, production SLA/SLO, or public percentage-savings claims.

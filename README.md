@@ -1,67 +1,60 @@
 # ecorione
 
-**Satu memori bersama untuk semua AI yang lu pakai — lokal maupun hosted — plus lapisan kontrol, eksekusi, observability, dan optimizer biaya yang bisa diaudit.**
+**Satu memori bersama untuk AI lokal maupun hosted, plus governance, eksekusi, observability, dan optimizer biaya yang bisa diaudit.**
 
-Pindah lintas provider/model tanpa kehilangan kesinambungan kerja, sambil menjaga boundary local-first, approval, audit trail, durable execution, MCP, dan biaya kontrafaktual tetap eksplisit.
+ECORIONE menjaga kesinambungan lintas provider/model sambil mempertahankan local-first boundary, approval, audit trail, durable execution, MCP, dan spend control yang eksplisit.
 
-> **Current status — 2026-09-12:** **production/self-host repository baseline READY · planned Batch 1–12 CLOSED · real laptop + Historical Ledger/ECX local evidence CLOSED · Comparative ECX CLOSED / PASS WITH LIMITATIONS · local persistence/restart CLOSED / PASS · isolated local backup/restore CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS · local observability CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS · UX/product validation is the active next checkpoint · compute-host/VPS + Cloudflare DEFERRED BY OPERATOR · AutoClick DEFERRED BY DESIGN.**
+> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **FORMAL RUN READY / NOT CLOSED** after a successful Anthropic-only one-call diagnostic · W20 **BLOCKED ON W18** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
 
-Untuk agent/manusia yang baru masuk repo: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`AGENTS.md`](AGENTS.md). Jangan pakai blueprint/audit lama sebagai current-state source.
+Untuk manusia/agent baru: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`docs/active-work-plan.md`](docs/active-work-plan.md), [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md), dan [`AGENTS.md`](AGENTS.md). Audit bertanggal lama adalah historical snapshots, bukan current-state source.
 
 ## Current closure evidence
 
-Key local closure progression:
+Current progression that matters:
 
 - Historical Ledger + ECX local evidence: **CLOSED / PASS**;
-- Comparative ECX: **CLOSED / PASS WITH LIMITATIONS**;
-- first persistence/restart drill: **valid FAIL**, wrong relative durable-path reopening exposed;
-- runtime path fix PR #46 + local runtime dependency bootstrap PR #48;
-- final persistence/restart rerun: **CLOSED / PASS**;
-- isolated backup/restore implementation PR #50 merged as `4e6bcd94776fc7dd75440ee35dd8fddf0b602233`;
-- full isolated backup/restore run: **PASS**;
-- local observability implementation PR #52 merged as `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`;
-- bounded local observability run: **PASS** with 0 workload errors and 5/5 ECX Hub→Artifact trace coverage.
+- historical Comparative ECX oracle-control benchmark: **CLOSED / PASS WITH LIMITATIONS**;
+- local persistence/restart: **CLOSED / PASS**;
+- isolated local backup/restore: **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**;
+- bounded local observability: **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**;
+- W03 UX/product validation: **DONE — REAL-LAPTOP VERIFIED**;
+- W09/W10 one-command startup + doctor: **DONE — WINDOWS RUNTIME VERIFIED**;
+- W11 packaged installer lifecycle: **DONE — WINDOWS INSTALLER VERIFIED**;
+- W16 automatic semantic selector: **DONE — REPO SIDE**;
+- W17 no-oracle benchmark: **DONE — VERIFIED LOCAL MODEL PASS**, 100 measured calls;
+- W18 Anthropic-only one-call hosted diagnostic: **PASS**;
+- W18 formal 20-call hosted economics: **NOT YET CLOSED**.
 
-Canonical current evidence:
+Canonical W18 docs:
 
-- [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md)
-- [`docs/verification/local-observability-closure-2026-09-12.md`](docs/verification/local-observability-closure-2026-09-12.md)
-- [`docs/local-observability-evidence.md`](docs/local-observability-evidence.md)
-- [`docs/verification/local-backup-restore-closure-2026-09-11.md`](docs/verification/local-backup-restore-closure-2026-09-11.md)
-- [`docs/local-backup-restore-evidence.md`](docs/local-backup-restore-evidence.md)
-- [`docs/verification/local-persistence-restart-closure-2026-09-11.md`](docs/verification/local-persistence-restart-closure-2026-09-11.md)
-- [`docs/local-persistence-restart-evidence.md`](docs/local-persistence-restart-evidence.md)
-- [`docs/verification/comparative-closure-grade-final-2026-09-11.md`](docs/verification/comparative-closure-grade-final-2026-09-11.md)
-- [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md)
-- [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md)
+- [`docs/verification/w18-hosted-economics-preflight-2026-09-17.md`](docs/verification/w18-hosted-economics-preflight-2026-09-17.md)
+- [`docs/verification/w18-hosted-economics-attempt-1-2026-09-17.md`](docs/verification/w18-hosted-economics-attempt-1-2026-09-17.md)
+- [`docs/verification/w18-hosted-economics-attempt-2-2026-09-17.md`](docs/verification/w18-hosted-economics-attempt-2-2026-09-17.md)
+- [`docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md`](docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md)
+- [`docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`](docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md)
+- [`docs/verification/w18-formal-run-readiness-2026-09-18.md`](docs/verification/w18-formal-run-readiness-2026-09-18.md)
 
 ## Apa yang sudah ada
 
 | Modul/area | Current baseline |
 |---|---|
-| **Ai** | Chat, `/space`, `/ops`, `/settings` Control Center |
+| **Ai** | Chat + Local/Hosted routing, `/space`, `/ops`, `/settings` |
 | **Hub** | Policy, approval, audit, orchestration, Historical Ledger, ECX, capability authority |
-| **Connect** | Hosted/local provider gateway, cache/routing/cost telemetry, credential Vault, spend budget, MCP inbound/outbound, runtime settings |
-| **Context** | Memori L0–L2 + L3 metadata binding |
+| **Connect** | Local/hosted provider gateway, exact cache, routing/cost telemetry, encrypted credential Vault, durable spend budget, MCP, runtime settings |
+| **Context** | L0–L2 memory + L3 metadata binding |
 | **Sync** | Pairing/self-host relay + MCP HTTPS bridge |
 | **Artifact** | Content-addressed storage SHA-256 |
 | **Sandbox** | Tier 0, WASM, hardened Docker boundary |
-| **Space** | Notes/block runtime tanpa menggandakan Context source of truth |
-| **Flow** | Durable workflow di Temporal |
+| **Space** | Notes/block runtime without replacing Context source of truth |
+| **Flow** | Durable workflow on Temporal |
 | **RnD** | Trace/eval foundation + dataset governance |
-| **Multimodal / Voice** | Baseline image/document/audio + realtime voice pipeline |
-| **Data / DR** | Owner-scoped backup/restore primitives + strict isolated local evidence harness |
 | **Production Ops** | Compose/Caddy, metrics/traces, provider canary, release/install/upgrade/rollback tooling |
-| **Security closure** | Full-history + working-tree secret scans, dependency/release checks, HTTP/SSRF hardening, real public HTTPS MCP acceptance |
-| **Comparative evidence** | 5× corrected local run, 5/5 task gates PASS WITH LIMITATIONS |
-| **Local persistence** | Strict restart evidence CLOSED / PASS |
-| **Local backup/restore** | Strict isolated restore evidence CLOSED / PASS WITH ABSENT-OWNER LIMITATIONS |
-| **Local observability** | Bounded strict local baseline CLOSED / PASS; small-sample facts only, not SLA/SLO |
-| **AutoClick** | Deferred by design sampai ada use case non-API nyata |
+| **Security** | Full-history/working-tree secret scans, release checks, HTTP/SSRF hardening, public HTTPS MCP acceptance |
+| **ECX optimizer evidence** | W16 automatic selector + W17 no-oracle local validation; W18 hosted-dollar closure pending formal run |
 
 ## Arsitektur inti
 
-Hub adalah supervisor/policy boundary. Tidak ada service yang boleh membuka database service lain secara langsung.
+Hub adalah supervisor/policy boundary. Service tidak boleh membuka database service lain secara langsung.
 
 ```text
 Ai
@@ -81,135 +74,67 @@ Hosted MCP client
  -> Hub governance
 ```
 
-### Memori
+Memory hierarchy:
 
 ```text
-L0  log episodik      append-only ground truth
-L1  fakta semantik    bi-temporal, invalidate ≠ delete
-L2  core memory       kecil, editable manusia, source of truth di Context
-L3  artifact          content-addressed, just-in-time retrieval
+L0 episodic log      append-only ground truth
+L1 semantic facts    bi-temporal
+L2 core memory       small/editable, owned by Context
+L3 artifacts         content-addressed, JIT retrieval
 ```
 
-Historical Ledger di Hub menyimpan chronological/replay history dan tidak menggantikan Context episodic/semantic memory. ECX adalah pointer-first internal agent exchange.
+Historical Ledger in Hub is chronological/replay history; it does not replace Context memory. ECX is pointer-first internal agent exchange.
 
-## Comparative ECX evidence
+## W16/W17 automatic selector evidence
 
-Final corrected local benchmark:
+W16 added automatic `semantic-v1` reference selection with `maxRefs=3`. W17 then ran:
 
 ```text
-5 tasks × 5 repeats × 3 lanes = 75 measured calls
+5 tasks × 5 repeats × 4 lanes = 100 measured model calls
 cache hits = 0
 passed task gates = 5/5
-median selective transport reduction = 73.6379379246037%
-median selective input-token reduction = 77.8580814717477%
-median selective/full latency ratio = 0.8672873729681319
+median automatic selector recall = 1.0
 ```
 
-Satu individual selective `retention-policy` repeat punya exact-string punctuation mismatch. Karena quality gate task memakai median, checkpoint tetap PASS tetapi wording wajib **PASS WITH LIMITATIONS**.
+This is bounded local evidence. It does not prove hosted dollar savings or universal end-to-end network savings.
 
-`ecx-selective-oracle` bukan bukti automatic semantic reference selector. Aggregate benchmark ini juga bukan universal/public savings claim.
+## W18 hosted economics
 
-## Local persistence/restart evidence
-
-Final strict rerun membuktikan exact Ledger, Context, Artifact, Flow dan approval identity bertahan melewati controlled boundary:
+Formal profile:
 
 ```text
-Phase 4 processes
-+ Temporal container
-+ PostgreSQL container
+provider gateway = OpenRouter
+pricing identity = claude-sonnet-4-5-20250929
+runtime model = anthropic/claude-sonnet-4.5
+provider.only = ["anthropic"]
+allow_fallbacks = false
+lanes = full-inline, ecx-selective-auto
+5 tasks × 2 repeats × 2 lanes = 20 calls
+warmups = 0
+cost authority = OpenRouter usage.cost
 ```
 
-Named Temporal DB volume tetap dipertahankan. Claim ini tidak otomatis membuktikan backup/restore, off-host DR, hard power-loss/fsync atau arbitrary corruption recovery.
+Attempts 1–3 preserved valid failures. Attempt 3 identified `content_filter` through `routingProvider=Amazon Bedrock`. After provider routing was pinned Anthropic-only with fallback disabled, Attempt 4 passed on the same `procurement-award/full-inline` diagnostic with quality `1`, billed cost `$0.006681`, and durable settlement `settled`.
 
-## Isolated local backup/restore evidence
-
-Implementation baseline:
+Latest zero-spend postflight after Attempt 4:
 
 ```text
-4e6bcd94776fc7dd75440ee35dd8fddf0b602233
+dailyCommittedUsd = 0.160104
+monthlyCommittedUsd = 0.160104
+unsettledReservations = 1
+dailyHeadroomUsd = 0.839896
+monthlyHeadroomUsd = 9.839896
+hostedCallsEnabled = false
+costKillSwitch = 1
 ```
 
-Real run:
+The single unsettled reservation is historical Attempt 2. Do not rewrite it.
 
-```text
-runId = backup-20260911154453-f4ac8743
-phase = restore-verified
-```
-
-Runtime-backed-up owners:
-
-```text
-Context
-Hub
-RnD
-Space
-Flow graph registry
-Artifact
-Sandbox receipts
-```
-
-Optional absent source state:
-
-```text
-Sync    missing
-Connect missing
-```
-
-Mereka tidak disemai hanya untuk membuat evidence terlihat lengkap.
-
-Temporal restore juga diuji terpisah lewat logical dump/restore:
-
-```text
-temporal             39 restored tables
-temporal_visibility   3 restored tables
-```
-
-Ledger, Context, Artifact, Flow dan approval kemudian dibaca ulang lewat **isolated restored owner APIs** dan cocok dengan source baseline. Setelah selesai:
-
-```text
-NO_EVIDENCE_CONTAINERS
-NO_EVIDENCE_NETWORKS
-NO_ISOLATED_LISTENERS
-```
-
-Same-laptop restore correctness **bukan** off-host DR. Backup bytes yang masih berada di laptop yang sama tetap berada di failure domain yang sama.
-
-## Local observability evidence
-
-Implementation baseline:
-
-```text
-bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6
-```
-
-Measured run:
-
-```text
-runId = obs-20260912020700-00fbd7e5
-owner reads = 8 per lane
-ECX samples = 5
-local model samples = 5
-workload errors = 0
-Hub→Artifact trace coverage = 5/5
-```
-
-Measured route:
-
-```text
-runtime = openai-compatible
-model = gemma4:latest
-provider = local
-cache hits = 0
-cache misses = 5
-actual cost USD = 0
-hosted calls = disabled
-```
-
-P50/p95 yang tersimpan adalah **small-sample local facts**, bukan production SLA/SLO. `gemma4:latest` juga tetap alias mutable, jadi observability run ini tidak menutup immutable model-identity hardening.
+A fresh authorization exists for **one formal W18 attempt up to US$0.25**. This is not standing permission for retries. The formal process must derive current UTC-day committed spend at execution time and use the durable Connect reservation boundary as the pre-dispatch hard stop.
 
 ## Menjalankan lokal
 
-Butuh Node >=22 dan pnpm 10.
+Requires Node >=22 and pnpm 10.
 
 ```bash
 pnpm install
@@ -218,114 +143,56 @@ cp .env.example .env
 pnpm dev
 ```
 
-Runtime bertahap:
+Operator runtime bridge:
 
 ```bash
-pnpm dev:phase2
-pnpm dev:phase3
-pnpm dev:phase4
+pnpm engine:start
+pnpm engine:doctor
+pnpm engine:stop-temporal
 ```
 
-Evidence commands:
+W18 zero-spend preflight:
 
-```bash
-# comparative
-pnpm evidence:comparative:smoke
-pnpm evidence:comparative
-
-# persistence/restart
-pnpm evidence:persistence-restart:inventory
-pnpm evidence:persistence-restart --phase baseline
-pnpm evidence:persistence-restart --phase post
-pnpm evidence:persistence-restart --phase cleanup
-
-# isolated backup/restore
-pnpm evidence:backup-restore:inventory
-pnpm evidence:backup-restore
-
-# bounded local observability
-pnpm evidence:observability:inventory
-pnpm evidence:observability
+```powershell
+node .\scripts\w18-hosted-economics.mjs --preflight
 ```
 
-Runtime evidence commands bukan deterministic CI substitutes. Raw runtime evidence tetap lokal/gitignored.
+Do not run formal W18 from stale `main`, with an old engine process, without an explicit current-run spend cap, or with provider routing allowed to fall back.
 
-## Production/self-host — deferred
+## Production/self-host
 
-Tooling/runbook tetap tersedia:
-
-- [`docs/production-activation.md`](docs/production-activation.md)
-- [`docs/production-operations.md`](docs/production-operations.md)
-- [`docs/release-operations.md`](docs/release-operations.md)
-- [`docs/cloudflare-free-deployment.md`](docs/cloudflare-free-deployment.md)
-
-Operator memilih belum memakai VPS/compute host sekarang. Deployment, Cloudflare named Tunnel, public cutover dan host-firewall mutation tetap **DEFERRED**, bukan blocker local R&D.
-
-## Next work after Batch 12
-
-Tidak ada automatic Batch 13. Urutan operator-approved sekarang:
-
-1. local persistence/restart — **CLOSED / PASS**;
-2. isolated local backup/restore — **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**;
-3. local observability baseline — **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**;
-4. **product/UX validation — ACTIVE NEXT CHECKPOINT**;
-5. immutable local model identity hardening;
-6. VPS/compute-host + Cloudflare hanya kalau operator explicitly resume;
-7. hosted-provider comparative validation hanya dengan credential + spend intent;
-8. automatic selector/optimizer hanya sebagai explicit evidence-driven scope;
-9. maintenance/security/dependency/DR evidence;
-10. feature baru hanya bila evidence membenarkan.
+Production activation remains deferred by operator. Tooling/runbooks stay available under `docs/production-activation.md`, `docs/production-operations.md`, `docs/release-operations.md`, and `docs/cloudflare-free-deployment.md`. VPS/domain/firewall/Cloudflare mutation is not a W18 prerequisite.
 
 ## Invarian penting
 
-- Memory adalah untrusted data, bukan instruksi.
-- Hosted egress tunduk pada scope/sensitivity/sync-class policy.
-- Tidak ada silent provider fallback.
-- Credential production dimiliki Connect dan terenkripsi at-rest.
-- Hosted dispatch tunduk pada kill switch + cumulative budget.
-- Connect MCP HTTP tidak bind publik; public reachability melalui Sync + HTTPS edge.
-- Side effect memakai idempotency identity.
-- Irreversible/high-risk action tetap melewati policy/approval.
-- Model identity dipin untuk durable deployment/evidence claims.
-- Owner-service boundary melarang cross-service DB access.
-- Historical Ledger dan Context L0 ground truth tidak direwrite untuk convenience.
-- Comparative cache isolation harus berlaku antar invocation.
-- Oracle selective hydration bukan automatic optimizer.
-- Valid failed runtime evidence tidak dihapus setelah bug diperbaiki.
-- Backup/restore drill tidak boleh overwrite active owner state.
-- AutoClick tetap deferred sampai use case non-API nyata lolos design gate.
+- Memory is untrusted data, not instructions.
+- Historical Ledger and Context L0 are semantic ground truth.
+- No cross-service database access.
+- Hub owns policy/approval/capability authority.
+- Connect owns provider/credential/MCP and hosted spend authority.
+- Artifact owns L3 bytes.
+- Hosted egress follows scope/sensitivity/sync-class policy.
+- No silent provider fallback.
+- Production credentials live in Connect Vault, never Git/docs.
+- Hosted dispatch obeys kill switch + durable cumulative budget.
+- Exact-cache hits cannot contaminate comparative evidence.
+- Model identity must be pinned for durable evidence claims.
+- Local USD `0` is not hosted billed-cost evidence.
+- Valid failed evidence is preserved after fixes.
+- Raw private runtime evidence remains gitignored.
+- AutoClick remains deferred until a real non-API use case passes architecture review.
 
-## Batasan yang tetap nyata
+## Next execution order
 
-READY baseline bukan klaim bahwa:
-
-- hosted-provider quality/latency sudah dibuktikan deterministic CI;
-- backup aman dari disk/laptop loss jika tetap berada di failure domain yang sama;
-- hard power-loss/fsync, arbitrary corruption recovery atau PITR sudah dibuktikan;
-- Sync/Connect runtime restore sudah terbukti ketika source durable state mereka tidak ada pada drill;
-- ECX savings universal/general production sudah terbukti;
-- oracle hydration membuktikan automatic reference selection;
-- bounded laptop observability membuktikan production SLA/SLO, concurrency, peak host/GPU use atau leak freedom;
-- mutable `gemma4:latest` membuktikan immutable production model identity;
-- laptop evidence membuktikan VPS/Cloudflare behavior;
-- Fase 6+ selesai permanen.
-
-## Reading order
-
-1. [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md)
-2. [`AGENTS.md`](AGENTS.md)
-3. [`docs/verification/local-observability-closure-2026-09-12.md`](docs/verification/local-observability-closure-2026-09-12.md)
-4. [`docs/local-observability-evidence.md`](docs/local-observability-evidence.md)
-5. [`docs/verification/local-backup-restore-closure-2026-09-11.md`](docs/verification/local-backup-restore-closure-2026-09-11.md)
-6. [`docs/local-backup-restore-evidence.md`](docs/local-backup-restore-evidence.md)
-7. [`docs/verification/local-persistence-restart-closure-2026-09-11.md`](docs/verification/local-persistence-restart-closure-2026-09-11.md)
-8. [`docs/local-persistence-restart-evidence.md`](docs/local-persistence-restart-evidence.md)
-9. [`docs/verification/comparative-closure-grade-final-2026-09-11.md`](docs/verification/comparative-closure-grade-final-2026-09-11.md)
-10. [`docs/comparative-ecx-evidence.md`](docs/comparative-ecx-evidence.md)
-11. [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md)
-12. relevant production/ADR docs
-13. `docs/prd.md`, `docs/research.md`, `docs/blueprint.md` for rationale/history
+```text
+1. documentation sync (this update)
+2. synchronize operator laptop to merged main
+3. one authorized formal W18 run, max US$0.25
+4. if PASS: commit W18 closure evidence
+5. W20 final current-state sync
+6. if FAIL: preserve evidence, diagnose, require fresh authorization before retry
+```
 
 ## Lisensi
 
-MIT untuk kode yang sudah dirilis di repository ini. Layanan managed/hosted yang mungkin dibuat kemudian tidak mengubah lisensi kode MIT yang sudah dipublikasikan. Lihat [`docs/LICENSING.md`](docs/LICENSING.md).
+MIT for repository code already released. See [`docs/LICENSING.md`](docs/LICENSING.md).
