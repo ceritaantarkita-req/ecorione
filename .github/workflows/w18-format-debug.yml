@@ -1,0 +1,25 @@
+name: W18 Format Debug
+
+on:
+  push:
+    branches:
+      - agent/w18-one-call-diagnostic-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  format-debug:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Show canonical prettier diff
+        run: |
+          pnpm exec prettier scripts/w18-hosted-diagnostic.mjs --write
+          git diff -- scripts/w18-hosted-diagnostic.mjs
