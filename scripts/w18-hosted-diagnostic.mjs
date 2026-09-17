@@ -26,6 +26,7 @@ const DIAGNOSTIC_TASK_ID = "procurement-award";
 const DIAGNOSTIC_MODE = "full-inline";
 const DIAGNOSTIC_CONFIRMATION = "PROCUREMENT_AWARD_FULL_INLINE";
 const DIAGNOSTIC_RUNTIME_MODEL = "anthropic/claude-sonnet-4.5";
+const DIAGNOSTIC_PROVIDER_ONLY = Object.freeze(["anthropic"]);
 const OPENAI_COMPAT_MAX_OUTPUT_TOKENS = 4096;
 const PROVIDER_FRAMING_TOKEN_ALLOWANCE = 2048;
 const USD_RESERVATION_PRECISION = 1_000_000;
@@ -72,6 +73,19 @@ function runZeroSpendPreflight() {
 function boundedString(value, fallback, maxLength) {
   if (typeof value !== "string") return fallback;
   return value.slice(0, maxLength);
+}
+
+export function assertW18DiagnosticProviderPin(value) {
+  const providers = String(value ?? "")
+    .split(",")
+    .map((provider) => provider.trim())
+    .filter((provider) => provider.length > 0);
+  if (providers.length !== 1 || providers[0] !== DIAGNOSTIC_PROVIDER_ONLY[0]) {
+    throw new Error(
+      "ECORIONE_OPENROUTER_PROVIDER_ONLY harus persis anthropic untuk W18 diagnostic.",
+    );
+  }
+  return DIAGNOSTIC_PROVIDER_ONLY;
 }
 
 export class W18DiagnosticHttpError extends Error {
@@ -156,6 +170,7 @@ export function buildW18DiagnosticProviderInput({ context, marker, userMessage }
     },
     dynamicText: `${context}\n\n${marker}`,
     userMessage,
+    providerOnly: DIAGNOSTIC_PROVIDER_ONLY,
   };
 }
 
@@ -178,6 +193,10 @@ export function estimateW18DiagnosticReservationUsd(providerInput) {
     ],
     tools: [],
     max_tokens: OPENAI_COMPAT_MAX_OUTPUT_TOKENS,
+    provider: {
+      only: providerInput.providerOnly,
+      allow_fallbacks: false,
+    },
   };
   const bodyBytes = Buffer.byteLength(JSON.stringify(body), "utf8");
   const promptTokenCeiling = bodyBytes + PROVIDER_FRAMING_TOKEN_ALLOWANCE;
@@ -242,6 +261,9 @@ async function main() {
       `ECORIONE_W18_DIAGNOSTIC harus persis ${DIAGNOSTIC_CONFIRMATION} untuk one-call diagnostic.`,
     );
   }
+  const providerOnly = assertW18DiagnosticProviderPin(
+    process.env.ECORIONE_OPENROUTER_PROVIDER_ONLY,
+  );
 
   const env = loadEnvironment(ROOT);
   const spend = inspectDurableSpendBudget(env);
@@ -294,7 +316,7 @@ async function main() {
   });
 
   console.log(
-    `W18 DIAGNOSTIC authorization reservationUsd=${estimatedReservationUsd.toFixed(6)} explicitCapUsd=${maxSpendUsd.toFixed(6)}`,
+    `W18 DIAGNOSTIC authorization reservationUsd=${estimatedReservationUsd.toFixed(6)} explicitCapUsd=${maxSpendUsd.toFixed(6)} providerOnly=${providerOnly.join(",")}`,
   );
   console.log(
     "W18 DIAGNOSTIC: dispatching exactly one procurement-award/full-inline hosted call",
@@ -329,6 +351,7 @@ async function main() {
         maxSpendUsd,
         estimatedReservationUsd,
         durableHeadroomUsdAtStart: spend.effectiveHeadroomUsd,
+        providerRouting: { only: providerOnly, allowFallbacks: false },
       },
       run: null,
       failure,
@@ -387,6 +410,7 @@ async function main() {
       maxSpendUsd,
       estimatedReservationUsd,
       durableHeadroomUsdAtStart: spend.effectiveHeadroomUsd,
+      providerRouting: { only: providerOnly, allowFallbacks: false },
     },
     run,
     gate,

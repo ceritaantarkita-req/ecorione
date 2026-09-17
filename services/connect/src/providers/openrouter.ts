@@ -5,9 +5,11 @@ import {
   callOpenAiCompatibleHosted,
   estimateOpenAiCompatibleReservationUsd,
   type OpenAiCompatibleHostedResult,
+  type OpenAiCompatibleProviderRouting,
 } from "./openai-compatible.js";
 
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_PROVIDER_ONLY_ENV = "ECORIONE_OPENROUTER_PROVIDER_ONLY";
 
 const OPENROUTER_RUNTIME_MODELS: Partial<Record<PinnedModelId, string>> = {
   "claude-sonnet-4-5-20250929": "anthropic/claude-sonnet-4.5",
@@ -20,6 +22,7 @@ export interface OpenRouterCallInput {
   readonly prefix: StablePrefix;
   readonly dynamicText: string;
   readonly userMessage: string;
+  readonly providerOnly?: readonly string[] | undefined;
 }
 
 export function openRouterRuntimeModel(model: PinnedModelId): string {
@@ -30,6 +33,36 @@ export function openRouterRuntimeModel(model: PinnedModelId): string {
   return runtime;
 }
 
+function normalizeProviderOnly(values: readonly string[]): string[] {
+  const normalized = values.map((value) => value.trim()).filter((value) => value.length > 0);
+  if (normalized.length === 0) {
+    throw new Error("OpenRouter provider-only routing tidak boleh kosong.");
+  }
+  for (const value of normalized) {
+    if (!/^[a-z0-9][a-z0-9/-]*$/u.test(value)) {
+      throw new Error(`OpenRouter provider slug tidak valid: ${value}`);
+    }
+  }
+  return [...new Set(normalized)];
+}
+
+export function openRouterProviderRouting(
+  input: Pick<OpenRouterCallInput, "providerOnly">,
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): OpenAiCompatibleProviderRouting | undefined {
+  const explicit = input.providerOnly;
+  if (explicit !== undefined) {
+    return { only: normalizeProviderOnly(explicit), allow_fallbacks: false };
+  }
+
+  const configured = env[OPENROUTER_PROVIDER_ONLY_ENV]?.trim();
+  if (!configured) return undefined;
+  return {
+    only: normalizeProviderOnly(configured.split(",")),
+    allow_fallbacks: false,
+  };
+}
+
 function adapterInput(input: Omit<OpenRouterCallInput, "apiKey">) {
   return {
     runtimeModel: openRouterRuntimeModel(input.model),
@@ -38,6 +71,7 @@ function adapterInput(input: Omit<OpenRouterCallInput, "apiKey">) {
     dynamicText: input.dynamicText,
     userMessage: input.userMessage,
     maxTokensField: "max_tokens" as const,
+    providerRouting: openRouterProviderRouting(input),
   };
 }
 
