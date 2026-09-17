@@ -69,6 +69,49 @@ function runZeroSpendPreflight() {
   }
 }
 
+function boundedString(value, fallback, maxLength) {
+  if (typeof value !== "string") return fallback;
+  return value.slice(0, maxLength);
+}
+
+export class W18DiagnosticHttpError extends Error {
+  constructor(url, status, payload) {
+    const type = boundedString(payload?.error?.type, "HTTP_ERROR", 128);
+    super(`${url} HTTP ${String(status)} ${type}`);
+    this.name = "W18DiagnosticHttpError";
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
+export function sanitizeW18DiagnosticFailure(error) {
+  if (error instanceof W18DiagnosticHttpError) {
+    const type = boundedString(error.payload?.error?.type, "HTTP_ERROR", 128);
+    const message = boundedString(
+      error.payload?.error?.message,
+      "Upstream request failed without a safe diagnostic message.",
+      1_000,
+    );
+    const requestId = boundedString(error.payload?.requestId, null, 256);
+    return {
+      kind: "http",
+      status: error.status,
+      type,
+      message,
+      requestId,
+    };
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  return {
+    kind: "runtime",
+    status: null,
+    type: error instanceof Error ? error.name : "Error",
+    message: message.slice(0, 1_000),
+    requestId: null,
+  };
+}
+
 async function requestJson(url, { token, body, timeoutMs = 120_000 }) {
   const response = await fetch(url, {
     method: body === undefined ? "GET" : "POST",
@@ -81,9 +124,26 @@ async function requestJson(url, { token, body, timeoutMs = 120_000 }) {
   });
   const parsed = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(`${url} HTTP ${String(response.status)} ${JSON.stringify(parsed)}`);
+    throw new W18DiagnosticHttpError(url, response.status, parsed);
   }
   return parsed;
+}
+
+function evidencePathFor(recordedAt) {
+  return resolve(
+    ROOT,
+    ".ecorione/evidence",
+    `w18-hosted-diagnostic-${recordedAt.replace(/[:.]/gu, "-")}.json`,
+  );
+}
+
+function writeDiagnosticEvidence(evidence) {
+  const outputPath = evidencePathFor(evidence.recordedAt);
+  const serialized = `${JSON.stringify(evidence, null, 2)}\n`;
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, serialized, { mode: 0o600 });
+  console.log(JSON.stringify({ ...evidence, evidencePath: outputPath }, null, 2));
+  return outputPath;
 }
 
 export function buildW18DiagnosticProviderInput({ context, marker, userMessage }) {
@@ -239,19 +299,57 @@ async function main() {
   console.log(
     "W18 DIAGNOSTIC: dispatching exactly one procurement-award/full-inline hosted call",
   );
-  const response = await requestJson(`${connectUrl}/v1/complete`, {
-    token,
-    timeoutMs,
-    body: {
-      target: "hosted",
-      prefix: providerInput.prefix,
-      dynamicText: providerInput.dynamicText,
-      userMessage: providerInput.userMessage,
-      sensitivity: "INTERNAL",
-      operationId: `op_w18_diag_${randomUUID().replaceAll("-", "")}`,
-      now: new Date().toISOString(),
-    },
-  });
+
+  let response;
+  try {
+    response = await requestJson(`${connectUrl}/v1/complete`, {
+      token,
+      timeoutMs,
+      body: {
+        target: "hosted",
+        prefix: providerInput.prefix,
+        dynamicText: providerInput.dynamicText,
+        userMessage: providerInput.userMessage,
+        sensitivity: "INTERNAL",
+        operationId: `op_w18_diag_${randomUUID().replaceAll("-", "")}`,
+        now: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    const recordedAt = new Date().toISOString();
+    const failure = sanitizeW18DiagnosticFailure(error);
+    const spendAfterFailure = inspectDurableSpendBudget(env);
+    const evidence = {
+      schemaVersion: 1,
+      recordedAt,
+      closureEligible: false,
+      diagnosticOnly: true,
+      repository,
+      authorization: {
+        maxSpendUsd,
+        estimatedReservationUsd,
+        durableHeadroomUsdAtStart: spend.effectiveHeadroomUsd,
+      },
+      run: null,
+      failure,
+      durableSpendBudgetAfterFailure: {
+        dailyCommittedUsd: spendAfterFailure.dailyCommittedUsd,
+        monthlyCommittedUsd: spendAfterFailure.monthlyCommittedUsd,
+        unsettledReservations: spendAfterFailure.unsettledReservations,
+        effectiveHeadroomUsd: spendAfterFailure.effectiveHeadroomUsd,
+      },
+      gate: {
+        pass: false,
+        failures: ["hosted diagnostic request gagal sebelum usable completion"],
+      },
+      nextStep:
+        "Do not run the formal W18 experiment. Diagnose this one-call provider failure first; a retry requires fresh explicit spend authorization.",
+    };
+    const outputPath = writeDiagnosticEvidence(evidence);
+    throw new Error(
+      `W18 one-call diagnostic gagal sebelum usable completion; evidence=${outputPath}; ${failure.type}: ${failure.message}`,
+    );
+  }
 
   const run = {
     taskId: task.id,
@@ -297,14 +395,7 @@ async function main() {
       : "Do not run the formal W18 experiment. Diagnose this one-call failure first.",
   };
 
-  const outputPath = resolve(
-    ROOT,
-    ".ecorione/evidence",
-    `w18-hosted-diagnostic-${recordedAt.replace(/[:.]/gu, "-")}.json`,
-  );
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o600 });
-  console.log(JSON.stringify({ ...evidence, evidencePath: outputPath }, null, 2));
+  writeDiagnosticEvidence(evidence);
 
   if (!gate.pass) {
     throw new Error(`W18 one-call diagnostic gagal: ${gate.failures.join("; ")}`);
