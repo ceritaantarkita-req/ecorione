@@ -140,10 +140,7 @@ function ledgerCommittedUsd(entry) {
   return reserved;
 }
 
-export function inspectDurableSpendBudget(
-  env,
-  { root = ROOT, now = new Date() } = {},
-) {
+export function inspectDurableSpendBudget(env, { root = ROOT, now = new Date() } = {}) {
   const configured = configuredSpendCeiling(env);
   const configuredPath = String(env.ECORIONE_SPEND_BUDGET_PATH ?? "").trim();
   const ledgerPath = resolve(root, configuredPath || "data/connect-spend-budget.json");
@@ -157,11 +154,7 @@ export function inspectDurableSpendBudget(
         `W18 durable spend ledger tidak valid: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-    if (
-      parsed === null ||
-      typeof parsed !== "object" ||
-      !Array.isArray(parsed.entries)
-    ) {
+    if (parsed === null || typeof parsed !== "object" || !Array.isArray(parsed.entries)) {
       throw new Error("W18 durable spend ledger tidak memiliki entries array");
     }
     entries = parsed.entries;
@@ -178,11 +171,7 @@ export function inspectDurableSpendBudget(
   let unsettledReservations = 0;
 
   for (const entry of entries) {
-    if (
-      entry === null ||
-      typeof entry !== "object" ||
-      typeof entry.createdAt !== "string"
-    ) {
+    if (entry === null || typeof entry !== "object" || typeof entry.createdAt !== "string") {
       throw new Error("W18 durable spend ledger memiliki entry yang tidak valid");
     }
     const committed = ledgerCommittedUsd(entry);
@@ -201,9 +190,7 @@ export function inspectDurableSpendBudget(
     configured.monthlyUsd === null
       ? null
       : Math.max(0, configured.monthlyUsd - monthlyCommittedUsd);
-  const headrooms = [dailyHeadroomUsd, monthlyHeadroomUsd].filter(
-    (value) => value !== null,
-  );
+  const headrooms = [dailyHeadroomUsd, monthlyHeadroomUsd].filter((value) => value !== null);
 
   return {
     ...configured,
@@ -242,10 +229,7 @@ export function assertSpendAuthorization({
   }
   if (durableHeadroomUsd === null) {
     failures.push("durable hosted spend budget harus dikonfigurasi (daily dan/atau monthly)");
-  } else if (
-    Number.isFinite(maxSpendUsd) &&
-    maxSpendUsd > durableHeadroomUsd + USD_EPSILON
-  ) {
+  } else if (Number.isFinite(maxSpendUsd) && maxSpendUsd > durableHeadroomUsd + USD_EPSILON) {
     failures.push(
       `izin W18 $${maxSpendUsd} melebihi remaining durable spend headroom $${durableHeadroomUsd}`,
     );
