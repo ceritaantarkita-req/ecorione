@@ -183,9 +183,7 @@ export function inspectDurableSpendBudget(env, { root = ROOT, now = new Date() }
   }
 
   const dailyHeadroomUsd =
-    configured.dailyUsd === null
-      ? null
-      : Math.max(0, configured.dailyUsd - dailyCommittedUsd);
+    configured.dailyUsd === null ? null : Math.max(0, configured.dailyUsd - dailyCommittedUsd);
   const monthlyHeadroomUsd =
     configured.monthlyUsd === null
       ? null
