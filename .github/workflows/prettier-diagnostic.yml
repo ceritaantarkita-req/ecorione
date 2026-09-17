@@ -1,0 +1,27 @@
+name: Prettier Diagnostic
+
+on:
+  push:
+    branches:
+      - fix/w18-provider-diagnostics-settlement-20260917
+
+permissions:
+  contents: read
+
+jobs:
+  prettier-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Show exact Prettier diff without modifying repository
+        run: |
+          cp scripts/w18-hosted-economics.mjs /tmp/w18-before.mjs
+          pnpm exec prettier --write scripts/w18-hosted-economics.mjs
+          diff -u /tmp/w18-before.mjs scripts/w18-hosted-economics.mjs || true
