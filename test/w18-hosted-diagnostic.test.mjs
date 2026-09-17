@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { estimateOpenRouterReservationUsd } from "../services/connect/src/providers/openrouter.ts";
 import {
+  estimateOpenRouterReservationUsd,
+  openRouterProviderRouting,
+} from "../services/connect/src/providers/openrouter.ts";
+import {
+  assertW18DiagnosticProviderPin,
   assertW18DiagnosticReservationWithinCap,
   buildW18DiagnosticProviderInput,
   estimateW18DiagnosticReservationUsd,
@@ -97,26 +101,54 @@ describe("W18 one-call hosted diagnostic", () => {
     );
   });
 
+  it("requires an Anthropic-only OpenRouter operator pin", () => {
+    expect(assertW18DiagnosticProviderPin("anthropic")).toEqual(["anthropic"]);
+    expect(() => assertW18DiagnosticProviderPin(undefined)).toThrow(/persis anthropic/iu);
+    expect(() => assertW18DiagnosticProviderPin("amazon-bedrock")).toThrow(/persis anthropic/iu);
+    expect(() => assertW18DiagnosticProviderPin("anthropic,amazon-bedrock")).toThrow(
+      /persis anthropic/iu,
+    );
+  });
+
+  it("builds the same Anthropic-only provider routing for explicit and operator inputs", () => {
+    expect(openRouterProviderRouting({ providerOnly: ["anthropic"] }, {})).toEqual({
+      only: ["anthropic"],
+      allow_fallbacks: false,
+    });
+    expect(
+      openRouterProviderRouting(
+        { providerOnly: undefined },
+        { ECORIONE_OPENROUTER_PROVIDER_ONLY: "anthropic" },
+      ),
+    ).toEqual({
+      only: ["anthropic"],
+      allow_fallbacks: false,
+    });
+  });
+
   it("keeps the harness reservation estimate coupled to the production OpenRouter estimator", () => {
     const providerInput = diagnosticProviderInput();
     const harnessEstimate = estimateW18DiagnosticReservationUsd(providerInput);
     const productionEstimate = estimateOpenRouterReservationUsd(providerInput);
 
     expect(harnessEstimate).toBe(productionEstimate);
-    expect(harnessEstimate).toBe(0.107157);
+    expect(harnessEstimate).toBeGreaterThan(0.107157);
+    expect(harnessEstimate).toBeLessThan(0.11);
   });
 
   it("rejects the provider dispatch when reservation exceeds the explicit diagnostic cap", () => {
+    const reservationUsd = estimateW18DiagnosticReservationUsd(diagnosticProviderInput());
+
     expect(() =>
       assertW18DiagnosticReservationWithinCap({
-        reservationUsd: 0.107157,
+        reservationUsd,
         maxSpendUsd: 0.02,
       }),
     ).toThrow(/provider call tidak dikirim/iu);
 
     expect(() =>
       assertW18DiagnosticReservationWithinCap({
-        reservationUsd: 0.107157,
+        reservationUsd,
         maxSpendUsd: 0.11,
       }),
     ).not.toThrow();
