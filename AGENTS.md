@@ -211,11 +211,7 @@ F6-E07 = CLOSED / REPO-SIDE PASS
 - MCP External #498 PASS
 - Desktop Installer #41 PASS including real Windows compiler/install/build
 
-F6-E08 = ACTIVE
-- current Docker/container refs are exact-tagged but not digest-pinned
-- scope = digest-pin build/runtime container identities and add deterministic drift review
-- preserve readable version tags alongside digests where supported
-- no provider/deployment mutation
+F6-E08 = IMPLEMENTED / IN REVIEW
 ```
 
 
