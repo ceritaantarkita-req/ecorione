@@ -54,6 +54,9 @@ jobs:
       - name: Secret scan
         run: pnpm run secret-scan
 
+      - name: Dependency policy review
+        run: pnpm run dependency:review
+
       - name: Production build
         run: pnpm run build
 
