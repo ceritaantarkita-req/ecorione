@@ -13,7 +13,7 @@ Agent execution protocol: [product-evolution-agent-guide.md](product-evolution-a
 
 | Batch | Goal | Starts after |
 |---|---|---|
-| PE-00 | Lock architecture contracts + migrations | **ACTIVE** |
+| PE-00 | Lock architecture contracts + migrations | operator activated 2026-09-19 |
 | PE-01 | Project foundation + project-aware Chat/Ledger/Context | PE-00 closed |
 | PE-02 | Project Sources + owner bindings | PE-01 closed |
 | PE-03 | Trigger control plane + manual/time trigger | PE-02 closed |
