@@ -12,12 +12,12 @@ Per **2026-09-18**:
 - W11 installer: **DONE — WINDOWS INSTALLER VERIFIED**;
 - W16 automatic semantic selector: **DONE — REPO SIDE**;
 - W17 no-oracle validation: **DONE — VERIFIED LOCAL MODEL PASS**;
-- W18 hosted economic validation: **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW**;
+- W18 hosted economic validation: **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT**;
 - W18 one-call Anthropic-only diagnostic Attempt 4: **PASS**;
 - W18 formal dispatch/routing/cap guard: **MERGED TO `main`** via PR #135 at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact-head CI #994 + Product Eval #233 **PASS**;
 - W18 formal operator wrapper: **MERGED / REPO-SIDE PASS** via PR #138 at `05ddd248e90e26b9db2c785d533c55ec817db013`; exact head `c4b5b30f02716d66a8974903acb824f36ac1d12f`, CI #1001 + Product Eval #240 + MCP External #461 **PASS**;
-- W18 formal 20-call run: **EXECUTED / PASS** — 20/20 measured calls, US$0.091716 formal spend, `closureEligible=true`; do not rerun;
-- W20: **BLOCKED ON W18 GUARD MERGE**;
+- W18 formal 20-call run: **EXECUTED / PASS** — 20/20 measured calls, US$0.091716 formal spend, `closureEligible=true`; duplicate earlier batch reconciled; one-shot guard merged via PR #142; do not rerun;
+- W20: **CLOSED**;
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**;
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
@@ -48,17 +48,15 @@ Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920
 
 Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
 
-### Ledger reconciliation hold
+### Duplicate-execution incident closure
 
-The immediately preceding zero-spend preflight reported daily committed US$0 and monthly committed US$0.160104. The formal execution began with daily committed **US$0.091596** and monthly committed **US$0.251700**. The supplied transcript does not establish the provenance of that intervening **US$0.091596**.
-
-Therefore the formal harness result is **PASS**, but W18 overall remains **NOT CLOSED** until that earlier spend is reconciled from the local durable ledger. Do not rerun the paid formal benchmark. Preserve the ledger unchanged and commit only a sanitized reconciliation summary.
+The US$0.091596 pre-run delta is reconciled as an earlier complete 20-entry W18-shaped batch. Combined duplicate-execution spend was US$0.183312, below the US$0.25 monetary ceiling. PR #142 fixed the missing single-attempt consumption state and merged at `cff6e21edc8085bb895c6ed59c32b5e4aa134ee0` after CI #1012 and Product Eval #251 PASS. Do not rerun W18.
 
 Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
 
 ### Agent rule after duplicate-execution reconciliation
 
-Do not rerun W18. The US$0.091596 delta is reconciled as an earlier complete 20-entry settled W18-shaped batch; combined two-run spend was US$0.183312, below the US$0.25 dollar ceiling. The duplicate run exposed missing single-attempt consumption state. W18 can be marked CLOSED only after the fail-closed one-shot guard passes exact-head repository gates and merges.
+Do not rerun W18. The duplicate execution is reconciled and the one-shot guard is merged. W18 is CLOSED at its bounded evidence boundary; reopen only for a reproducible regression or a changed runtime/provider/model identity that invalidates the evidence.
 
 ## W16/W17 claim boundary
 
@@ -122,11 +120,11 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 ## Immediate next work
 
 ```text
-1. merge the single-attempt consumption guard after exact-head gates pass
-2. preserve duplicate-execution incident evidence
-3. close W18
-4. complete W20 final current-state sync
-5. do not rerun the passing paid formal benchmark
+W18 = CLOSED
+W20 = CLOSED
+preserve historical/incident evidence
+future work = separate evidence-driven scope
+do not rerun the paid W18 benchmark
 ```
 
 The wrapper remains the required path for any future explicitly authorized hosted validation because it computes the UTC-day ceiling, injects ephemeral runtime overrides, and restores hosted mode off in `finally`.
