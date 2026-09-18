@@ -23,13 +23,14 @@ Readable version tags are intentionally retained next to immutable OCI index dig
 
 The exact digests were resolved on GitHub-hosted Ubuntu 24.04 through Docker Hub's OCI Registry API on CI #1078, job **e08-digest-resolver**. The resolver authenticated for pull scope and read the registry `Docker-Content-Digest` response for each exact tag.
 
-The temporary resolver job was removed after the four full SHA-256 values were recorded. It is not part of the final CI baseline.
+The temporary resolver job was removed after the four full SHA-256 values were recorded. It is not part of the final CI baseline. The resolved identities are now stored once in `deploy/container-image-lock.json`; runtime surfaces are checked against that reviewed lock so a syntactically valid but different digest is rejected.
 
 ## Repository changes
 
-- Dockerfile Node base is tag+digest pinned;
-- `deploy/compose.yml` Postgres, Temporal, and Caddy images are tag+digest pinned;
-- `deploy/local-temporal.yml` Postgres and Temporal images use the same immutable identities;
+- `deploy/container-image-lock.json` is the authoritative reviewed identity map for Node, Postgres, Caddy, and Temporal;
+- Dockerfile Node base is tag+digest pinned and must match the lock;
+- `deploy/compose.yml` Postgres, Temporal, and Caddy images are tag+digest pinned and must match the lock;
+- `deploy/local-temporal.yml` Postgres and Temporal images must use the exact same locked identities;
 - repository-built `ecorione:${ECORIONE_IMAGE_TAG:-local}` remains exempt because it is built from this repository rather than pulled as a third-party image;
 - added `scripts/container-image-digest-review.mjs`;
 - added `pnpm run images:digest-review`;
@@ -42,11 +43,12 @@ The temporary resolver job was removed after the four full SHA-256 values were r
 
 The permanent review requires:
 
-1. every external Dockerfile `FROM` image to use readable `tag@sha256:<64hex>`;
-2. every external `image:` in governed deployment compose files to use the same form;
-3. repository-built ECORIONE image references remain explicitly exempt;
-4. `scratch` build stages remain allowed;
-5. CI and release-security wiring cannot silently disappear.
+1. `deploy/container-image-lock.json` must contain exactly the four reviewed external identities and each must be readable `tag@sha256:<64hex>`;
+2. every external Dockerfile `FROM` image must match the corresponding reviewed lock identity;
+3. every external `image:` in governed deployment compose files must match the corresponding reviewed lock identity;
+4. repository-built ECORIONE image references remain explicitly exempt;
+5. `scratch` build stages remain allowed;
+6. CI, release-security, and production-ops wiring cannot silently disappear.
 
 This scope pins the registry image identity. It does not claim that upstream tags will never be republished; digest pinning is precisely what prevents such tag movement from changing a reviewed build.
 
