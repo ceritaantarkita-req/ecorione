@@ -41,10 +41,10 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | F6-E05 | **CLOSED / REPO-SIDE PASS** | PR #155 merged; CI #1045 + Product Eval #284 + MCP #475 PASS; fixed runner policy green. |
 | F6-E06 | **CLOSED / REPO-SIDE PASS** | PR #157 merged; CI #1055 + Product Eval #294 + MCP #483 PASS; exact Node toolchain gate green. |
 | F6-E07 | **CLOSED / REPO-SIDE PASS** | PR #160 merged; CI #1072 same-head rerun PASS; Product Eval #311 + MCP #498 + Desktop Installer #41 PASS. |
-| F6-E08 | **ACTIVE** | Digest-pin governed container/base images and continuously reject tag-only mutable identities. |
+| F6-E08 | **IMPLEMENTED / IN REVIEW** | Governed external images must match authoritative reviewed tag+digest lock identities; CI/release/production-ops drift gates implemented; exact-head gates pending. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E08** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E08 REVIEW** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -148,4 +148,4 @@ F6-E07 closed through PR #160. Exact reviewed head `472819b3a7c875246ce76daee821
 
 ## F6-E08 active scope
 
-F6-E08 targets tag-only container identity. `Dockerfile` uses `node:22.20.0-bookworm-slim`; deployment compose files use exact Postgres/Caddy/Temporal tags, but none are bound to repository-reviewed `@sha256:` digests. Scope: digest-pin governed build/runtime images while keeping readable version tags, add deterministic drift review + focused tests + CI/release-security self-wiring, and require relevant acceptance before closure. Production deployment remains operator-owned.
+F6-E08 implementation binds the Dockerfile Node base and governed Postgres/Caddy/Temporal images to registry-resolved OCI SHA-256 digests while retaining readable exact tags. CI #1078's temporary resolver job obtained the four full digests directly from Docker Hub's OCI Registry API and was removed after discovery. `deploy/container-image-lock.json` now holds the authoritative reviewed identities; `scripts/container-image-digest-review.mjs` rejects both tag-only refs and valid-but-unreviewed digest drift across Dockerfile and both compose surfaces. Normal CI, release-security acceptance, and production-ops acceptance all protect the lock. Closure waits on exact-head CI/Product Eval and guarded merge. Production deployment remains operator-owned.

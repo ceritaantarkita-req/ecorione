@@ -28,7 +28,7 @@ Per **2026-09-18**:
 - F6-E05 fixed GitHub-hosted runner OS labels: **CLOSED / REPO-SIDE PASS**; PR #155, CI #1045, Product Eval #284, MCP #475;
 - F6-E06 immutable Node toolchain: **CLOSED / REPO-SIDE PASS**; PR #157, CI #1055, Product Eval #294, MCP #483;
 - F6-E07 pinned Inno Setup toolchain: **CLOSED / REPO-SIDE PASS**; PR #160, CI #1072 rerun, Product Eval #311, MCP #498, Desktop Installer #41;
-- F6-E08 container image digest pinning: **ACTIVE**;
+- F6-E08 container image digest pinning: **IMPLEMENTED / IN REVIEW**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -159,12 +159,15 @@ F6-E06 = CLOSED / REPO-SIDE PASS
 - Product Eval #294 PASS
 - MCP External #483 PASS
 
-F6-E07 = ACTIVE
-- pin the Inno Setup Chocolatey package used by Desktop Installer
-- add deterministic installer-toolchain review + tests
-- make CI/release-security protect the pin
-- preserve actual Windows installer compilation as the closure acceptance boundary
-- no provider/deployment mutation
+F6-E07 = CLOSED / REPO-SIDE PASS
+- PR #160 merged at `9362419a9e2766750237e30792a50494d39c9b17`
+- exact head `472819b3a7c875246ce76daee8212a7aed8fc8c9`
+- CI #1072 same-head rerun PASS
+- Product Eval #311 + MCP #498 + Desktop Installer #41 PASS
+
+F6-E08 = IMPLEMENTED / IN REVIEW
+- authoritative image lock + exact digest drift rejection
+- next = exact-head CI/Product Eval -> guarded merge -> closure
 ```
 
 The wrapper remains the required path for any future explicitly authorized hosted validation because it computes the UTC-day ceiling, injects ephemeral runtime overrides, and restores hosted mode off in `finally`.
@@ -185,21 +188,6 @@ The continuous dependency gate enforces deterministic repository policy only. A 
 A PASS means the existing deterministic release-security acceptance ran continuously in normal CI and its CI wiring is also checked by manual/release invocation. It does not prove live vulnerability-feed freshness, production deployment correctness, or provider/model behavior.
 
 
-## F6-E07 current branch
-
-```text
-F6-E07 = IMPLEMENTED / IN REVIEW
-- `.inno-setup-version` pins Inno Setup `6.7.1`
-- Desktop Installer installs Chocolatey `innosetup` with explicit `--version`
-- pull requests touching installer/toolchain inputs now run Desktop Installer automatically
-- `scripts/installer-toolchain-review.mjs` + focused tests added
-- normal CI has named Installer toolchain review step
-- release-security acceptance protects and executes the same policy
-- next = exact-head CI/Product Eval/Desktop Installer -> fix findings -> guarded merge -> closure
-- no provider/deployment mutation
-```
-
-
 ## F6-E07/E08 handoff
 
 ```text
@@ -211,9 +199,24 @@ F6-E07 = CLOSED / REPO-SIDE PASS
 - MCP External #498 PASS
 - Desktop Installer #41 PASS including real Windows compiler/install/build
 
-F6-E08 = ACTIVE
-- current Docker/container refs are exact-tagged but not digest-pinned
-- scope = digest-pin build/runtime container identities and add deterministic drift review
-- preserve readable version tags alongside digests where supported
+F6-E08 = IMPLEMENTED / IN REVIEW
+```
+
+
+## F6-E08 implementation handoff
+
+```text
+F6-E08 = IMPLEMENTED / IN REVIEW
+- Dockerfile Node base pinned as readable tag + OCI sha256 digest
+- deploy/compose.yml Postgres, Temporal, Caddy pinned as tag + digest
+- deploy/local-temporal.yml shares the same Postgres/Temporal digests
+- scripts/container-image-digest-review.mjs enforces governed external image identity
+- repository-built ecorione image and scratch remain explicit exemptions
+- normal CI runs Container image digest review
+- release-security acceptance protects and re-executes the policy
+- production-ops acceptance checks exact reviewed identities
+- resolver was temporary and removed after CI #1078 registry resolution
+- next = exact-head CI/Product Eval -> fix findings -> guarded merge -> closure
+- `deploy/container-image-lock.json` is the authoritative reviewed identity map
 - no provider/deployment mutation
 ```

@@ -6,6 +6,7 @@ const composePath = "deploy/compose.yml";
 const compose = readFileSync(composePath, "utf8");
 const caddy = readFileSync("deploy/Caddyfile", "utf8");
 const dockerfile = readFileSync("Dockerfile", "utf8");
+const imageLock = JSON.parse(readFileSync("deploy/container-image-lock.json", "utf8")).images;
 
 function assert(condition, message) {
   if (!condition) throw new Error(`production-ops acceptance: ${message}`);
@@ -17,15 +18,21 @@ function count(value, needle) {
 assert(!compose.includes("docker.sock"), "host Docker socket tidak boleh dimount");
 assert(count(compose, "\n    ports:\n") === 1, "hanya reverse proxy yang boleh publish ports");
 assert(
-  compose.includes("image: temporalio/auto-setup:1.29.7"),
-  "Temporal harus exact-pinned ke tag pull/run-verified",
+  compose.includes(`image: ${imageLock.temporal}`),
+  "Temporal harus cocok dengan reviewed image lock",
 );
 assert(
   !compose.includes("temporalio/auto-setup:1.31.2"),
   "Temporal tag 1.31.2 yang tidak tersedia tidak boleh kembali",
 );
-assert(compose.includes("image: postgres:17.6-alpine"), "PostgreSQL harus exact-pinned");
-assert(compose.includes("image: caddy:2.11.4-alpine"), "Caddy harus exact-pinned");
+assert(
+  compose.includes(`image: ${imageLock.postgres}`),
+  "PostgreSQL harus cocok dengan reviewed image lock",
+);
+assert(
+  compose.includes(`image: ${imageLock.caddy}`),
+  "Caddy harus cocok dengan reviewed image lock",
+);
 assert(
   compose.includes("network_mode: service:sync"),
   "MCP harus berbagi namespace dengan Sync",
@@ -49,7 +56,10 @@ assert(caddy.includes("basic_auth"), "operator routes harus dilindungi auth reve
 assert(caddy.includes("X-Content-Type-Options"), "security headers Caddy hilang");
 assert(caddy.includes("reverse_proxy sync:17011"), "public MCP harus lewat Sync");
 assert(!caddy.includes("connect:17023"), "Connect tidak boleh diekspos reverse proxy");
-assert(dockerfile.includes("node:22.20.0-bookworm-slim"), "Node image harus exact-pinned");
+assert(
+  dockerfile.includes(`FROM ${imageLock.node}`),
+  "Node image harus cocok dengan reviewed image lock",
+);
 
 const env = {
   ...process.env,
