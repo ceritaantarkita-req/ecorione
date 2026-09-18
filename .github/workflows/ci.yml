@@ -69,6 +69,9 @@ jobs:
       - name: Installer toolchain review
         run: pnpm run toolchain:installer-review
 
+      - name: Container image digest review
+        run: pnpm run images:digest-review
+
       - name: Release security acceptance
         run: node scripts/release-security-acceptance.mjs
 

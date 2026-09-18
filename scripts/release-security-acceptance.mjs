@@ -4,6 +4,7 @@ import { reviewTrackedWorkflows } from "./github-actions-pin-review.mjs";
 import { reviewTrackedRunnerLabels } from "./github-actions-runner-review.mjs";
 import { reviewNodeToolchain } from "./node-toolchain-review.mjs";
 import { reviewInstallerToolchain } from "./installer-toolchain-review.mjs";
+import { reviewGovernedContainerImages } from "./container-image-review.mjs";
 
 const required = [
   "docs/security-review.md",
@@ -20,6 +21,7 @@ const required = [
   "scripts/github-actions-runner-review.mjs",
   "scripts/node-toolchain-review.mjs",
   "scripts/installer-toolchain-review.mjs",
+  "scripts/container-image-review.mjs",
   ".node-version",
   ".inno-setup-version",
   ".github/workflows/desktop-installer.yml",
@@ -82,6 +84,11 @@ if (
   findings.push("toolchain:installer-review package script missing or changed");
 }
 if (
+  packageJson?.scripts?.["images:digest-review"] !== "node scripts/container-image-review.mjs"
+) {
+  findings.push("images:digest-review package script missing or changed");
+}
+if (
   !ci.includes("name: Dependency policy review") ||
   !ci.includes("run: pnpm run dependency:review")
 ) {
@@ -110,6 +117,12 @@ if (
   !ci.includes("run: pnpm run toolchain:installer-review")
 ) {
   findings.push("normal CI must execute toolchain:installer-review");
+}
+if (
+  !ci.includes("name: Container image digest review") ||
+  !ci.includes("run: pnpm run images:digest-review")
+) {
+  findings.push("normal CI must execute images:digest-review");
 }
 if (
   !ci.includes("name: Release security acceptance") ||
@@ -147,6 +160,17 @@ try {
 } catch (error) {
   findings.push(
     `Installer toolchain review failed: ${error instanceof Error ? error.message : String(error)}`,
+  );
+}
+
+try {
+  const containerImageReview = reviewGovernedContainerImages();
+  for (const finding of containerImageReview.findings) {
+    findings.push(`Container image drift: ${finding}`);
+  }
+} catch (error) {
+  findings.push(
+    `Container image review failed: ${error instanceof Error ? error.message : String(error)}`,
   );
 }
 

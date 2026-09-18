@@ -2,7 +2,7 @@ name: ecorione-local-temporal
 
 services:
   temporal-db:
-    image: postgres:17.6-alpine
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
     restart: unless-stopped
     environment:
       POSTGRES_USER: temporal
@@ -16,7 +16,7 @@ services:
       retries: 30
 
   temporal:
-    image: temporalio/auto-setup:1.29.7
+    image: temporalio/auto-setup:1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f
     restart: unless-stopped
     depends_on:
       temporal-db:

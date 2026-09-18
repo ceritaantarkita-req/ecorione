@@ -30,8 +30,8 @@ const PERSISTENCE_STATE_PATH = join(
 const TEMPORAL_CONTAINER = "ecorione-temporal";
 const TEMPORAL_DB_CONTAINER = "ecorione-temporal-db";
 const TEMPORAL_VOLUME = "ecorione_temporal_db";
-const TEMPORAL_IMAGE = "temporalio/auto-setup:1.29.7";
-const POSTGRES_IMAGE = "postgres:17.6-alpine";
+const TEMPORAL_IMAGE = "temporalio/auto-setup:1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f";
+const POSTGRES_IMAGE = "postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94";
 const INTERNAL_TOKEN = process.env.ECORIONE_INTERNAL_TOKEN ?? "";
 
 const ACTIVE_URLS = {

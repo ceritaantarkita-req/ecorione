@@ -37,7 +37,7 @@ Detailed historical execution records live under `docs/verification/` and `docs/
 | F6-E05 | **CLOSED / REPO-SIDE PASS** |
 | F6-E06 | **CLOSED / REPO-SIDE PASS** |
 | F6-E07 | **CLOSED / REPO-SIDE PASS** |
-| F6-E08 | **ACTIVE** |
+| F6-E08 | **IMPLEMENTED / IN REVIEW** |
 
 ## Deferred
 
@@ -47,6 +47,6 @@ Detailed historical execution records live under `docs/verification/` and `docs/
 
 ## Current gate
 
-F6-E08 closes after immutable container-image identity, deterministic drift review, focused tests, CI/release-security wiring, relevant exact-head acceptance, guarded merge, and current-doc synchronization.
+F6-E08 implementation is present: governed external images are tag+digest pinned and the deterministic review is wired into CI/release-security. Closure awaits exact-head acceptance, guarded merge, and final docs sync.
 
 For exact historical run IDs, costs, failure chronology, and closure evidence, use `docs/verification/` rather than expanding this summary again.
