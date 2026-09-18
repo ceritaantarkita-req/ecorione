@@ -22,7 +22,7 @@ on:
     paths:
       - ".inno-setup-version"
 env:
-  ECORIONE_VERSION: ${{ inputs.version || '0.1.0' }}
+  ECORIONE_VERSION: \${{ inputs.version || '0.1.0' }}
 steps:
   - run: |
       $innoVersion = (Get-Content -LiteralPath ".inno-setup-version" -Raw).Trim()
