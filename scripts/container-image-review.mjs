@@ -14,10 +14,7 @@ const REQUIRED_FILES = [
 
 export function isRepositoryBuiltImage(reference, path = "") {
   if (reference.startsWith("ecorione:")) return true;
-  return (
-    path === "desktop/compose.yml" &&
-    reference.startsWith("${ECORIONE_DESKTOP_IMAGE:")
-  );
+  return path === "desktop/compose.yml" && reference.startsWith("${ECORIONE_DESKTOP_IMAGE:");
 }
 
 export function reviewImageReference(path, line, reference) {

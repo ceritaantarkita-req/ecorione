@@ -19,25 +19,19 @@ describe("immutable container image review", () => {
   });
 
   it("rejects tag-only external references", () => {
-    expect(
-      reviewComposeContent("deploy/compose.yml", "image: postgres:17.6-alpine\n"),
-    ).toEqual([
-      "deploy/compose.yml:1 external image harus memakai readable tag + @sha256 digest: postgres:17.6-alpine",
-    ]);
+    expect(reviewComposeContent("deploy/compose.yml", "image: postgres:17.6-alpine\n")).toEqual(
+      [
+        "deploy/compose.yml:1 external image harus memakai readable tag + @sha256 digest: postgres:17.6-alpine",
+      ],
+    );
   });
 
   it("rejects digest-only and malformed digest references", () => {
-    expect(
-      reviewImageReference("deploy/compose.yml", 7, `postgres@${DIGEST}`),
-    ).toContain(
+    expect(reviewImageReference("deploy/compose.yml", 7, `postgres@${DIGEST}`)).toContain(
       `deploy/compose.yml:7 image digest harus mempertahankan explicit readable tag: postgres@${DIGEST}`,
     );
     expect(
-      reviewImageReference(
-        "deploy/compose.yml",
-        8,
-        "postgres:17.6-alpine@sha256:abc",
-      ),
+      reviewImageReference("deploy/compose.yml", 8, "postgres:17.6-alpine@sha256:abc"),
     ).toContain(
       "deploy/compose.yml:8 image digest harus full sha256 64-hex: postgres:17.6-alpine@sha256:abc",
     );
