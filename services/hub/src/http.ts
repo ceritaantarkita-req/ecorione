@@ -1,3 +1,132 @@
+/** Hub HTTP routes: chat, policy, idempotent side effects, approvals, MCP, extensions, audit. */
+import { createHash } from "node:crypto";
+import {
+  ActionRequestSchema,
+  ApprovalDecisionSchema,
+  AuditEventTypeSchema,
+  assertId,
+  ChatRequestSchema,
+  ForgetFactRequestSchema,
+  idempotencyPayload,
+  InvalidIdError,
+  makeId,
+  ModuleNameSchema,
+  MultimodalAdapterResultSchema,
+  OperationIdSchema,
+  TimestampSchema,
+  type ActionRequest,
+  type MemoryFact,
+} from "@ecorione/shared-schema";
+import {
+  BadGatewayError,
+  BadRequestError,
+  ConflictError,
+  createServer,
+  HttpError,
+  httpJson,
+  NotFoundError,
+  parseOrBadRequest,
+  RemoteServiceError,
+} from "@ecorione/shared-server";
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
+import { nowIso } from "./clock.js";
+import { registerCapabilityRoutes } from "./capability-http.js";
+import { CapabilityRegistry } from "./capability-registry.js";
+import { registerExchangeRoutes } from "./exchange-http.js";
+import { registerExtensionRoutes } from "./extension-http.js";
+import { ExtensionRegistry } from "./extension-registry.js";
+import { registerHistoryRoutes } from "./history-http.js";
+import { HistoryLedger } from "./history-ledger.js";
+import type { HubDatabase } from "./db.js";
+import { registerMcpRoutes } from "./mcp.js";
+import { registerNodeAuthorityRoutes } from "./node-authority.js";
+import { registerProjectRoutes } from "./project-http.js";
+import { ProjectRegistry, ProjectArchivedError, ProjectNotFoundError, ProjectRequiredError, ProjectWorkspaceConflictError } from "./project-registry.js";
+import { registerVoiceRoutes } from "./voice-http.js";
+import { RealtimeVoiceRuntime } from "./voice-runtime.js";
+import { VoiceSessionStore } from "./voice-store.js";
+import {
+  chat,
+  CapabilityAuthorityDeniedError,
+  PolicyEngineBugError,
+  UpstreamError,
+  type OrchestrateDeps,
+} from "./orchestrate.js";
+import { evaluatePolicy } from "./policy-engine.js";
+import {
+  ApprovalAlreadyDecidedError,
+  ApprovalNotFoundError,
+  HubRepository,
+  RespondNotAllowedError,
+} from "./repository.js";
+
+function toHttpError(err: unknown): unknown {
+  if (err instanceof UpstreamError) return new BadGatewayError(err.message);
+  if (err instanceof PolicyEngineBugError) return err;
+  if (err instanceof CapabilityAuthorityDeniedError) {
+    return new HttpError(403, "CAPABILITY_DENIED", err.message);
+  }
+  if (err instanceof ProjectNotFoundError) return new NotFoundError(err.message);
+  if (err instanceof ProjectRequiredError) return new BadRequestError(err.message);
+  if (err instanceof ProjectWorkspaceConflictError || err instanceof ProjectArchivedError)
+    return new ConflictError(err.message);
+  if (err instanceof ApprovalNotFoundError) return new NotFoundError(err.message);
+  if (err instanceof ApprovalAlreadyDecidedError) return new ConflictError(err.message);
+  if (err instanceof RespondNotAllowedError || err instanceof InvalidIdError)
+    return new BadRequestError(err.message);
+  return err;
+}
+function forwardOrUpstreamError(service: string, err: unknown): unknown {
+  if (err instanceof RemoteServiceError && err.statusCode >= 400 && err.statusCode < 500) {
+    const body = err.body;
+    const errorField =
+      typeof body === "object" && body !== null && "error" in body
+        ? (body as { error: unknown }).error
+        : undefined;
+    if (typeof errorField === "object" && errorField !== null) {
+      const e = errorField as { type?: unknown; message?: unknown; detail?: unknown };
+      return new HttpError(
+        err.statusCode,
+        typeof e.type === "string" ? e.type : "BAD_REQUEST",
+        typeof e.message === "string" ? e.message : err.message,
+        typeof e.detail === "object" && e.detail !== null
+          ? (e.detail as Record<string, unknown>)
+          : undefined,
+      );
+    }
+  }
+  return toHttpError(new UpstreamError(service, err));
+}
+function makeIdempotencyKey(req: Pick<ActionRequest, "module" | "tool" | "args">): string {
+  return createHash("sha256").update(idempotencyPayload(req)).digest("hex");
+}
+const DecideBodySchema = z.object({
+  decision: ApprovalDecisionSchema,
+  note: z.string().max(1024).optional(),
+});
+const ApprovalLookupQuerySchema = z.object({ idempotencyKey: z.string().min(1).max(512) });
+const AuditQuerySchema = z.object({ operationId: z.string().min(1).optional() });
+const AuditWriteSchema = z.object({
+  type: AuditEventTypeSchema,
+  operationId: OperationIdSchema.nullable(),
+  module: ModuleNameSchema,
+  detail: z.record(z.string(), z.unknown()),
+  ruleId: z.string().max(64).nullable().optional(),
+  now: TimestampSchema,
+});
+export interface BuildHubServerOptions {
+  readonly token?: string | undefined;
+  readonly logger?: boolean | undefined;
+  readonly contextUrl: string;
+  readonly connectUrl: string;
+  readonly rndUrl: string;
+  readonly artifactUrl?: string | undefined;
+  readonly internalToken?: string | undefined;
+}
+
+export function buildHubServer(
+  db: HubDatabase,
   options: BuildHubServerOptions,
 ): FastifyInstance {
   const app = createServer({ name: "hub", token: options.token, logger: options.logger });
@@ -127,3 +256,117 @@
       );
     } catch (err) {
       throw forwardOrUpstreamError("Context", err);
+    }
+    repo.saveIdempotentResult(idempotencyKey, operationId, actionRequest.tool, fact, now);
+    repo.recordAuditEvent({
+      type: "MEMORY_INVALIDATED",
+      operationId,
+      module: "Hub",
+      detail: { factId: body.factId, reason: body.reason, idempotencyKey },
+      now,
+    });
+    return fact;
+  });
+
+  app.post("/v1/actions/evaluate", async (req) => {
+    const body = parseOrBadRequest(ActionRequestSchema, req.body);
+    const now = nowIso();
+    repo.recordAuditEvent({
+      type: "ACTION_REQUESTED",
+      operationId: body.operationId,
+      module: body.module,
+      detail: { tool: body.tool, actionClass: body.actionClass },
+      now,
+    });
+    const evaluation = evaluatePolicy(body);
+    repo.recordAuditEvent({
+      type: "POLICY_EVALUATED",
+      operationId: body.operationId,
+      module: body.module,
+      detail: { outcome: evaluation.verdict.outcome },
+      ruleId: evaluation.rule.id,
+      now,
+    });
+    if (evaluation.verdict.outcome === "REQUIRE_APPROVAL") {
+      repo.ensureApproval({
+        operationId: body.operationId,
+        actionRequest: body,
+        prompt: evaluation.verdict.prompt,
+        now,
+      });
+      repo.recordAuditEvent({
+        type: "APPROVAL_REQUESTED",
+        operationId: body.operationId,
+        module: body.module,
+        detail: { prompt: evaluation.verdict.prompt },
+        ruleId: evaluation.rule.id,
+        now,
+      });
+    }
+    return evaluation.verdict;
+  });
+
+  app.get("/v1/approvals/by-idempotency-key", async (req) => {
+    const query = parseOrBadRequest(ApprovalLookupQuerySchema, req.query);
+    const approval = repo.getApprovalByIdempotencyKey(query.idempotencyKey);
+    if (approval === null) throw new NotFoundError("Approval durable tidak ditemukan.");
+    return approval;
+  });
+
+  app.post<{ Params: { operationId: string } }>(
+    "/v1/approvals/:operationId/decide",
+    async (req) => {
+      const body = parseOrBadRequest(DecideBodySchema, req.body);
+      const now = nowIso();
+      try {
+        const operationId = assertId("operation", req.params.operationId);
+        const approval = repo.decideApproval(
+          operationId,
+          body.decision,
+          "user",
+          body.note ?? null,
+          now,
+        );
+        repo.recordAuditEvent({
+          type: "APPROVAL_DECIDED",
+          operationId,
+          module: "Hub",
+          detail: { decision: body.decision, note: body.note ?? null },
+          now,
+        });
+        return approval;
+      } catch (err) {
+        throw toHttpError(err);
+      }
+    },
+  );
+
+  registerProjectRoutes(app, projects);
+  registerHistoryRoutes(app, history);
+  registerExchangeRoutes(app, history, {
+    contextUrl: options.contextUrl,
+    artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
+    internalToken: options.internalToken,
+  });
+
+  registerMcpRoutes(app, repo, {
+    contextUrl: options.contextUrl,
+    artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
+    internalToken: options.internalToken,
+  });
+  registerCapabilityRoutes(app, authority, repo);
+  registerNodeAuthorityRoutes(app, db);
+  registerExtensionRoutes(app, extensions, repo);
+
+  app.post("/v1/audit/events", async (req, reply) => {
+    const body = parseOrBadRequest(AuditWriteSchema, req.body);
+    const event = repo.recordAuditEvent(body);
+    return reply.code(201).send(event);
+  });
+
+  app.get("/v1/audit", async (req) => {
+    const q = parseOrBadRequest(AuditQuerySchema, req.query);
+    return { events: repo.listAuditEvents({ operationId: q.operationId }) };
+  });
+  return app;
+}
