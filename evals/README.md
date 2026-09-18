@@ -31,7 +31,7 @@ Aturan penting:
 - semua expected relevant refs harus muncul di hasil selector dan hasil tidak boleh melewati budget;
 - tidak ada provider/model call dalam suite ini.
 
-`eval-inventory.test.ts` sekarang menghitung seluruh governed eval manifests: 12 W14 + 4 W15 + 10 F6-E01 = **26 kasus**, tetap di bawah hard ceiling permanen **50** dan seluruh ID harus unik lintas manifest.
+`eval-inventory.test.ts` sekarang **auto-discovers setiap `evals/*.json` yang berbentuk case manifest (`suite` + `cases[]`)**. Jadi manifest kasus baru tidak bisa menghindari budget hanya karena lupa ditambahkan ke daftar hardcoded. Current inventory: 12 W14 + 4 W15 + 10 F6-E01 = **26 kasus**, tetap di bawah hard ceiling permanen **50**, dan seluruh ID harus unik lintas manifest.
 
 Jalankan langsung:
 
