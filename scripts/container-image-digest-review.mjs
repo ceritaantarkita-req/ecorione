@@ -14,7 +14,11 @@ export function isLocalBuiltImage(image) {
 
 export function readContainerImageLock(readFile = readFileSync) {
   const parsed = JSON.parse(readFile(LOCK_FILE, "utf8"));
-  if (parsed?.schemaVersion !== 1 || parsed?.images === null || typeof parsed?.images !== "object") {
+  if (
+    parsed?.schemaVersion !== 1 ||
+    parsed?.images === null ||
+    typeof parsed?.images !== "object"
+  ) {
     throw new Error(`${LOCK_FILE} harus schemaVersion=1 dengan object images`);
   }
 
@@ -112,11 +116,11 @@ export function reviewContainerImageDigests(readFile = readFileSync) {
 
   findings.push(
     ...reviewDockerfileContent(readFile("Dockerfile", "utf8"), [images.node]),
-    ...reviewComposeContent("deploy/compose.yml", readFile("deploy/compose.yml", "utf8"), [
-      images.postgres,
-      images.temporal,
-      images.caddy,
-    ]),
+    ...reviewComposeContent(
+      "deploy/compose.yml",
+      readFile("deploy/compose.yml", "utf8"),
+      [images.postgres, images.temporal, images.caddy],
+    ),
     ...reviewComposeContent(
       "deploy/local-temporal.yml",
       readFile("deploy/local-temporal.yml", "utf8"),
