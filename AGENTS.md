@@ -233,5 +233,6 @@ F6-E08 = IMPLEMENTED / IN REVIEW
 - production-ops acceptance checks exact reviewed identities
 - resolver was temporary and removed after CI #1078 registry resolution
 - next = exact-head CI/Product Eval -> fix findings -> guarded merge -> closure
+- `deploy/container-image-lock.json` is the authoritative reviewed identity map
 - no provider/deployment mutation
 ```
