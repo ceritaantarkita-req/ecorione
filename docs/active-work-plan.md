@@ -26,7 +26,7 @@ F6-E02 dependency policy CI gate: CLOSED / REPO-SIDE PASS
 F6-E03 release-security acceptance CI gate: CLOSED / REPO-SIDE PASS
 F6-E04 immutable GitHub Actions pinning: CLOSED / REPO-SIDE PASS
 F6-E05 fixed runner OS labels: CLOSED / REPO-SIDE PASS
-F6-E06 immutable Node toolchain: ACTIVE
+F6-E06 immutable Node toolchain: IMPLEMENTED / IN REVIEW
 ```
 
 The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
@@ -55,7 +55,7 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | F6-E03 | Continuous release-security acceptance CI gate | **CLOSED / REPO-SIDE PASS** | PR #151; CI #1033 + Product Eval #272 PASS; named CI step observed green. |
 | F6-E04 | Immutable GitHub Actions pinning + CI policy gate | **CLOSED / REPO-SIDE PASS** | PR #153; CI #1041 + Product Eval #280 + MCP #473 PASS; repo-wide scanner green. |
 | F6-E05 | Fixed GitHub-hosted runner OS labels + gate | **CLOSED / REPO-SIDE PASS** | PR #155; CI #1045 + Product Eval #284 + MCP #475 PASS; runner-review and release-security steps green. |
-| F6-E06 | Immutable Node toolchain + drift gate | **ACTIVE** | Replace mutable workflow Node major selector with centralized exact version and enforce cross-surface consistency. |
+| F6-E06 | Immutable Node toolchain + drift gate | **IMPLEMENTED / IN REVIEW** | `.node-version=22.20.0`; setup-node central-file use; Docker consistency + CI/release review; exact-head gates pending. |
 
 ## W18 current facts
 
@@ -100,8 +100,8 @@ F6-E02 = CLOSED / REPO-SIDE PASS
 F6-E03 = CLOSED / REPO-SIDE PASS
 F6-E04 = CLOSED / REPO-SIDE PASS
 F6-E05 = CLOSED / REPO-SIDE PASS
-F6-E06 = ACTIVE
-next = central exact Node version + workflow/container consistency gate + tests -> exact-head CI/Product Eval -> guarded merge
+F6-E06 = IMPLEMENTED / IN REVIEW
+next = exact-head CI/Product Eval/MCP -> fix findings -> guarded merge -> closure
 do not rerun the paid W18 benchmark
 ```
 
