@@ -195,125 +195,110 @@ describe("W18 hosted economics helpers", () => {
     );
   });
 
-  it(
-    "keeps every formal reservation estimate coupled to the production OpenRouter estimator",
-    () => {
-      for (const [taskIndex, task] of FIXTURES.entries()) {
-        const marker = benchmarkCacheMarker({
-          cacheNamespace: "0".repeat(32),
-          taskIndex,
-          pairedRunIndex: 1,
-          modeIndex: 0,
-        });
-        const providerInput = buildW18ProviderInput({
-          context: assembleContext(task.documents),
-          marker,
-          userMessage: task.prompt,
-        });
-        expect(estimateW18ReservationUsd(providerInput)).toBe(
-          estimateOpenRouterReservationUsd(providerInput),
-        );
-      }
-    },
-  );
-
-  it(
-    "blocks a formal provider call before dispatch when the next reservation exceeds remaining authorization",
-    () => {
-      expect(() =>
-        assertW18DispatchWithinCap({
-          actualSpentUsd: 0.1,
-          reservationUsd: 0.107374,
-          maxSpendUsd: 0.25,
-        }),
-      ).not.toThrow();
-
-      expect(() =>
-        assertW18DispatchWithinCap({
-          actualSpentUsd: 0.15,
-          reservationUsd: 0.107374,
-          maxSpendUsd: 0.25,
-        }),
-      ).toThrow(/pre-dispatch guard menolak call/iu);
-    },
-  );
-
-  it(
-    "passes a task only when automatic ECX preserves quality and reduces provider billed cost",
-    () => {
-      const task = passingTask();
-      expect(task.gate.pass).toBe(true);
-      expect(task.gate.failures).toEqual([]);
-      expect(task.gate.selection.recall).toBe(1);
-      expect(task.gate.autoCostUsd).toBeLessThan(task.gate.fullCostUsd);
-      expect(task.gate.inputTokenReductionPct).toBeGreaterThan(0);
-    },
-  );
-
-  it(
-    "fails closed on wrong provider, wrong route, reservation mismatch, or non-settled billing",
-    () => {
-      const fullRuns = [
-        run({ mode: "full-inline", pairIndex: 1, cost: 0.01, inputTokens: 1_000 }),
-        run({ mode: "full-inline", pairIndex: 2, cost: 0.01, inputTokens: 1_000 }),
-      ];
-      const autoRuns = [
-        run({
-          mode: "ecx-selective-auto",
-          pairIndex: 1,
-          cost: 0.004,
-          inputTokens: 400,
-          provider: "anthropic",
-          routingProvider: "Amazon Bedrock",
-        }),
-        run({
-          mode: "ecx-selective-auto",
-          pairIndex: 2,
-          cost: 0.004,
-          inputTokens: 400,
-          settlement: "reservation-retained",
-          budgetReservation: 0.2,
-        }),
-      ];
-      const gate = evaluateW18Task({
-        id: "bad",
-        fullContextBytes: 10_000,
-        autoHydratedBytes: 3_000,
-        selectedRefIndexes: [0, 2],
-        relevantRefIndexes: [0, 2],
-        expectedRecipient: "agent:w18-hosted-economics-reviewer",
-        actualRecipient: "agent:w18-hosted-economics-reviewer",
-        fullRuns,
-        autoRuns,
+  it("keeps every formal reservation estimate coupled to the production OpenRouter estimator", () => {
+    for (const [taskIndex, task] of FIXTURES.entries()) {
+      const marker = benchmarkCacheMarker({
+        cacheNamespace: "0".repeat(32),
+        taskIndex,
+        pairedRunIndex: 1,
+        modeIndex: 0,
       });
+      const providerInput = buildW18ProviderInput({
+        context: assembleContext(task.documents),
+        marker,
+        userMessage: task.prompt,
+      });
+      expect(estimateW18ReservationUsd(providerInput)).toBe(
+        estimateOpenRouterReservationUsd(providerInput),
+      );
+    }
+  });
 
-      expect(gate.pass).toBe(false);
-      expect(gate.failures.some((failure) => failure.includes("provider bukan openrouter"))).toBe(
-        true,
-      );
-      expect(
-        gate.failures.some((failure) => failure.includes("routingProvider bukan Anthropic")),
-      ).toBe(true);
-      expect(
-        gate.failures.some((failure) => failure.includes("reservedUsd != reservation estimate")),
-      ).toBe(true);
-      expect(gate.failures.some((failure) => failure.includes("settlement bukan settled"))).toBe(
-        true,
-      );
-    },
-  );
+  it("blocks a formal provider call before dispatch when the next reservation exceeds remaining authorization", () => {
+    expect(() =>
+      assertW18DispatchWithinCap({
+        actualSpentUsd: 0.1,
+        reservationUsd: 0.107374,
+        maxSpendUsd: 0.25,
+      }),
+    ).not.toThrow();
 
-  it(
-    "closes aggregate only with all five tasks, bounded spend, and lower automatic billed cost",
-    () => {
-      const tasks = Array.from({ length: W18_EXPECTED_TASKS }, (_, index) =>
-        passingTask(`task-${index + 1}`),
-      );
-      const aggregate = evaluateW18Aggregate(tasks, 1);
-      expect(aggregate.pass).toBe(true);
-      expect(aggregate.measuredModelCalls).toBe(W18_EXPECTED_MODEL_CALLS);
-      expect(aggregate.actualRunSpendUsd).toBeLessThan(1);
-      expect(aggregate.savedPct).toBeGreaterThan(0);
-    },
-  );
+    expect(() =>
+      assertW18DispatchWithinCap({
+        actualSpentUsd: 0.15,
+        reservationUsd: 0.107374,
+        maxSpendUsd: 0.25,
+      }),
+    ).toThrow(/pre-dispatch guard menolak call/iu);
+  });
+
+  it("passes a task only when automatic ECX preserves quality and reduces provider billed cost", () => {
+    const task = passingTask();
+    expect(task.gate.pass).toBe(true);
+    expect(task.gate.failures).toEqual([]);
+    expect(task.gate.selection.recall).toBe(1);
+    expect(task.gate.autoCostUsd).toBeLessThan(task.gate.fullCostUsd);
+    expect(task.gate.inputTokenReductionPct).toBeGreaterThan(0);
+  });
+
+  it("fails closed on wrong provider, wrong route, reservation mismatch, or non-settled billing", () => {
+    const fullRuns = [
+      run({ mode: "full-inline", pairIndex: 1, cost: 0.01, inputTokens: 1_000 }),
+      run({ mode: "full-inline", pairIndex: 2, cost: 0.01, inputTokens: 1_000 }),
+    ];
+    const autoRuns = [
+      run({
+        mode: "ecx-selective-auto",
+        pairIndex: 1,
+        cost: 0.004,
+        inputTokens: 400,
+        provider: "anthropic",
+        routingProvider: "Amazon Bedrock",
+      }),
+      run({
+        mode: "ecx-selective-auto",
+        pairIndex: 2,
+        cost: 0.004,
+        inputTokens: 400,
+        settlement: "reservation-retained",
+        budgetReservation: 0.2,
+      }),
+    ];
+    const gate = evaluateW18Task({
+      id: "bad",
+      fullContextBytes: 10_000,
+      autoHydratedBytes: 3_000,
+      selectedRefIndexes: [0, 2],
+      relevantRefIndexes: [0, 2],
+      expectedRecipient: "agent:w18-hosted-economics-reviewer",
+      actualRecipient: "agent:w18-hosted-economics-reviewer",
+      fullRuns,
+      autoRuns,
+    });
+
+    expect(gate.pass).toBe(false);
+    expect(gate.failures.some((failure) => failure.includes("provider bukan openrouter"))).toBe(
+      true,
+    );
+    expect(gate.failures.some((failure) => failure.includes("routingProvider bukan Anthropic"))).toBe(
+      true,
+    );
+    expect(gate.failures.some((failure) => failure.includes("reservedUsd != reservation estimate"))).toBe(
+      true,
+    );
+    expect(gate.failures.some((failure) => failure.includes("settlement bukan settled"))).toBe(
+      true,
+    );
+  });
+
+  it("closes aggregate only with all five tasks, bounded spend, and lower automatic billed cost", () => {
+    const tasks = Array.from({ length: W18_EXPECTED_TASKS }, (_, index) =>
+      passingTask(`task-${index + 1}`),
+    );
+    const aggregate = evaluateW18Aggregate(tasks, 1);
+    expect(aggregate.pass).toBe(true);
+    expect(aggregate.measuredModelCalls).toBe(W18_EXPECTED_MODEL_CALLS);
+    expect(aggregate.actualRunSpendUsd).toBeLessThan(1);
+    expect(aggregate.savedPct).toBeGreaterThan(0);
+  });
 });
