@@ -36,7 +36,7 @@ steps:
 `;
     expect(reviewNodeWorkflowContent(".github/workflows/ci.yml", workflow)).toEqual([
       ".github/workflows/ci.yml:5 node-version langsung dilarang; gunakan node-version-file: .node-version",
-      ".github/workflows/ci.yml:3 actions/setup-node harus memakai node-version-file: .node-version",
+      ".github/workflows/ci.yml:6 actions/setup-node harus memakai node-version-file: .node-version",
     ]);
   });
 
