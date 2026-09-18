@@ -27,7 +27,7 @@ Per **2026-09-18**:
 - F6-E04 immutable GitHub Actions pinning: **CLOSED / REPO-SIDE PASS**; PR #153, CI #1041, Product Eval #280, MCP #473;
 - F6-E05 fixed GitHub-hosted runner OS labels: **CLOSED / REPO-SIDE PASS**; PR #155, CI #1045, Product Eval #284, MCP #475;
 - F6-E06 immutable Node toolchain: **CLOSED / REPO-SIDE PASS**; PR #157, CI #1055, Product Eval #294, MCP #483;
-- F6-E07 pinned Inno Setup toolchain: **ACTIVE**;
+- F6-E07 pinned Inno Setup toolchain: **IMPLEMENTED / IN REVIEW**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -182,3 +182,18 @@ The continuous dependency gate enforces deterministic repository policy only. A 
 ## F6-E03 claim boundary
 
 A PASS means the existing deterministic release-security acceptance ran continuously in normal CI and its CI wiring is also checked by manual/release invocation. It does not prove live vulnerability-feed freshness, production deployment correctness, or provider/model behavior.
+
+
+## F6-E07 current branch
+
+```text
+F6-E07 = IMPLEMENTED / IN REVIEW
+- `.inno-setup-version` pins Inno Setup `6.7.1`
+- Desktop Installer installs Chocolatey `innosetup` with explicit `--version`
+- pull requests touching installer/toolchain inputs now run Desktop Installer automatically
+- `scripts/installer-toolchain-review.mjs` + focused tests added
+- normal CI has named Installer toolchain review step
+- release-security acceptance protects and executes the same policy
+- next = exact-head CI/Product Eval/Desktop Installer -> fix findings -> guarded merge -> closure
+- no provider/deployment mutation
+```
