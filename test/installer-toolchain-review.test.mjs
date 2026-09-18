@@ -21,7 +21,7 @@ describe("pinned Inno Setup installer toolchain review", () => {
         run: |
           $version = (Get-Content -Raw ".inno-setup-version").Trim()
           choco install innosetup --version="$version" --yes --no-progress
-          $candidate = "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe"
+          $candidate = "\${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe"
 `;
     expect(reviewInstallerWorkflowContent(content, "6.7.1")).toEqual([]);
   });
@@ -44,7 +44,7 @@ describe("pinned Inno Setup installer toolchain review", () => {
         run: |
           $version = (Get-Content -Raw ".inno-setup-version").Trim()
           choco install innosetup --version="$version" --yes --no-progress
-          $candidate = "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe"
+          $candidate = "\${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe"
 `;
     expect(reviewInstallerWorkflowContent(content, "7.0.0")).toContain(
       ".github/workflows/desktop-installer.yml: path compiler harus selaras dengan major Inno Setup 7",
