@@ -10,21 +10,22 @@ Before changing the repo:
 2. `docs/current-state-and-next-steps.md`
 3. `docs/active-work-plan.md`
 4. this file
-5. the relevant ADR/runbook for the subsystem being changed
+5. for Product Evolution: architecture + roadmap + agent guide
+6. relevant accepted ADR/runbook
 
 Dated audits and `docs/verification/` are evidence, not current work queues.
 
-## Current state — 2026-09-18
+## Current state — 2026-09-19
 
-- Batch 1–12: **CLOSED**.
-- Windows runtime + installer: **VERIFIED**.
-- W16/W17/W18/W20: **CLOSED at documented boundaries**.
-- F6-E01 through F6-E08: **CLOSED / REPO-SIDE PASS**.
-- production VPS/Cloudflare: **DEFERRED BY OPERATOR**.
+- original Batch 1–12 / W / F6 baseline: **CLOSED**;
+- Windows runtime + installer: **VERIFIED**;
+- Product Evolution architecture + PE-00..PE-08 roadmap: **DOCUMENTED**;
+- PE-00: **PLANNED / NOT ACTIVATED**;
+- PE-01..PE-08: **BLOCKED BY PRIOR PE BATCH**;
+- production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**.
-- Projects / Work / Schedule / Brain: discussed future product evolution, **not active implementation scope yet**.
 
-Do not create an implicit Batch 13 or silently open a new product roadmap. Future product work starts only from a new explicit scope.
+Do not create Batch 13. Do not start PE feature code until the operator explicitly activates PE-00.
 
 ## Architecture invariants
 
@@ -35,7 +36,7 @@ Do not create an implicit Batch 13 or silently open a new product roadmap. Futur
 - Connect owns provider credentials, MCP runtime state and hosted spend authority.
 - Context owns memory semantics; Artifact owns raw artifact bytes.
 - Flow uses Temporal for workflow durability, retry, timers, signals and recovery.
-- Space stores composition and references; it does not copy owner data into a competing source of truth.
+- Space stores composition/references; it does not copy owner data into a competing source of truth.
 - Hosted egress follows scope/sensitivity/sync-class policy.
 - Hosted-derived memory follows quarantine/governed promotion.
 - No silent provider fallback.
@@ -44,27 +45,40 @@ Do not create an implicit Batch 13 or silently open a new product roadmap. Futur
 - Durable evidence claims require pinned/traceable model and runtime identity.
 - AutoClick remains deferred until a concrete non-API case justifies it.
 
+## Product Evolution invariants
+
+- Workspace remains authority/security boundary; Project is inside Workspace.
+- Project is context/product grouping, not a new blob/data owner.
+- `All` is virtual; `Personal` is a real default Project.
+- sibling Project memory never joins a prompt implicitly.
+- Schedule is a time-trigger UI, not a scheduler engine.
+- Temporal remains Flow timer/retry/state/recovery owner.
+- Trigger cannot grant authority.
+- autonomy remains Hub policy; do not create an autonomous service.
+- Run begins as a unified read model; do not create competing execution truth.
+- Brain is a rebuildable projection; no graph DB by default.
+- Context remains retrieval owner; ECX remains context-pack optimizer.
+- no first-class Task domain until a real need is proven.
+- `MAX_AUTONOMY_V1` stays L3.
+
 ## Current active scope
 
-There is **no active item from the previous Batch/W/F6 plan**. The existing baseline is closed at the documented repository/runtime boundaries.
+No PE feature batch is active.
 
-Until a new scope is explicitly opened:
-
-- do not start Projects / Work / Schedule / Brain implementation;
-- do not reopen W18 or other paid evidence for freshness;
-- do not mutate production deployment state;
-- preserve the accepted owner boundaries and release gates.
+When the operator activates PE-00, update `docs/active-work-plan.md` before code and follow `docs/product-evolution-agent-guide.md`.
 
 ## Git / closure discipline
 
 - start from synchronized reviewed `main`;
+- one PE batch at a time;
 - use a short-lived explicit branch;
 - keep scope bounded;
 - add deterministic tests for behavioral/policy changes;
 - require relevant exact-head CI/Product Eval/acceptance;
 - never weaken a gate to manufacture PASS;
 - merge only the reviewed head;
-- synchronize current docs after material state changes.
+- synchronize current docs after material state changes;
+- do not start the next PE batch until the current one is CLOSED.
 
 ## Evidence discipline
 
@@ -72,19 +86,22 @@ Until a new scope is explicitly opened:
 - do not rewrite historical snapshots to make the past look green;
 - keep raw private runtime evidence gitignored;
 - commit sanitized summaries only;
-- do not claim universal savings/security/reliability from a bounded benchmark;
-- do not rerun the paid W18 benchmark merely for freshness;
+- do not claim universal savings/security/reliability from bounded evidence;
+- do not rerun paid W18 merely for freshness;
 - reopen closed evidence only for a reproducible regression or materially changed identity/boundary.
 
 ## Documentation discipline
 
-Current status belongs only in:
+Current status belongs in:
 
 - `docs/current-state-and-next-steps.md`;
 - `docs/active-work-plan.md`;
-- `docs/EXECUTION-PROGRESS.md`;
-- `docs/fase6-hardening.md` for active Fase 6 hardening.
+- `docs/EXECUTION-PROGRESS.md`.
 
-Architecture rationale belongs in ADRs. Operational procedure belongs in runbooks. Dated measurements/failures belong in verification/evidence. Superseded analysis belongs in archive.
+Product Evolution architecture/sequence/procedure belongs in:
 
-If a new document cannot be classified into one of those roles, do not create it until the role is clear.
+- `docs/product-evolution-architecture.md`;
+- `docs/product-evolution-roadmap.md`;
+- `docs/product-evolution-agent-guide.md`.
+
+Architecture decisions belong in ADRs. Operational procedure belongs in runbooks. Dated measurements/failures belong in verification/evidence. Superseded analysis belongs in archive.

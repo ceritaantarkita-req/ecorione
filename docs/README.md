@@ -1,17 +1,18 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-18**
+Last updated: **2026-09-19**
 
-This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below instead of trying to reconcile every historical snapshot.
+This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
 
 ## Read these first
 
-1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — current product/repository state and what is actually next.
-2. **[active-work-plan.md](active-work-plan.md)** — only the work that is active now.
-3. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone/closure summary.
-4. **[../AGENTS.md](../AGENTS.md)** — invariants and working rules for humans/agents editing the repo.
-
-For normal continuation work, these four are enough.
+1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — current state and next scope.
+2. **[active-work-plan.md](active-work-plan.md)** — only work that is actually active.
+3. **[product-evolution-architecture.md](product-evolution-architecture.md)** — next product model and ownership rules.
+4. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — PE-00 through PE-08 batch plan.
+5. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
+6. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
+7. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
 ## Source-of-truth precedence
 
@@ -21,39 +22,52 @@ When wording conflicts:
 current code + tests
   > current-state-and-next-steps.md
   > active-work-plan.md
-  > accepted ADRs / owner runbooks
+  > accepted ADRs
+  > product-evolution-architecture.md
+  > product-evolution-roadmap.md
+  > owner runbooks
   > EXECUTION-PROGRESS.md
   > dated verification/evidence
-  > archived audits and old plans
+  > archive
 ```
 
-Historical failures and measurements remain valid evidence for the point in time they describe; they are not automatically current blockers.
+Accepted ADRs override roadmap prose when they address the same architectural decision.
 
-## Current architecture and product reference
+## Product Evolution
 
-- [prd.md](prd.md) — product/design baseline; **not a current work queue**.
-- [blueprint.md](blueprint.md) — original architecture/phase blueprint; **not a current work queue**.
-- [research.md](research.md) — technical research and source rationale.
+The old Batch 1–12 / W / F6 baseline is closed. The next roadmap uses **PE** identifiers so it cannot be confused with Batch 13.
+
+As of 2026-09-19:
+
+- Product Evolution architecture: **DOCUMENTED**;
+- PE-00: **PLANNED / NOT ACTIVATED**;
+- PE-01 through PE-08: **blocked by prior batch**.
+
+Creating the roadmap does not start implementation. PE-00 becomes active only after explicit operator instruction.
+
+## Architecture and product reference
+
+- [prd.md](prd.md) — original product/design baseline; not a current work queue.
+- [blueprint.md](blueprint.md) — original phase blueprint; not a current work queue.
+- [research.md](research.md) — technical research/source rationale.
 - [adr/README.md](adr/README.md) — accepted architecture decisions.
-- [DECISIONS.md](DECISIONS.md) — lightweight chronological decision log.
+- [DECISIONS.md](DECISIONS.md) — chronological decision log.
 - [design.md](design.md) — visual/product design system.
 - [LICENSING.md](LICENSING.md) — licensing boundary.
-- [developer-sdk.md](developer-sdk.md) — developer-facing integration reference.
+- [developer-sdk.md](developer-sdk.md) — developer integration reference.
 
 ## Implemented phase contracts
 
-These describe what was implemented during earlier phases. They are useful technical references, not active plans:
+Historical implemented contracts:
 
 - [api-fase1.md](api-fase1.md)
 - [api-fase2.md](api-fase2.md)
 - [api-fase3.md](api-fase3.md)
 - [api-fase4.md](api-fase4.md)
 
-The pre-implementation Fase 2 plan remains only because accepted ADRs cite it as historical rationale. It already carries a historical notice.
+## Operating runbooks
 
-## Current operating runbooks
-
-Use these when operating or changing the corresponding subsystem:
+Use the owner-specific runbook when touching its subsystem:
 
 - [production-activation.md](production-activation.md)
 - [production-operations.md](production-operations.md)
@@ -71,20 +85,16 @@ Use these when operating or changing the corresponding subsystem:
 - [node-registry-flow-canvas-operations.md](node-registry-flow-canvas-operations.md)
 - [space-block-runtime-operations.md](space-block-runtime-operations.md)
 
-## Evidence — do not use as a work queue
+## Evidence
 
-[verification/](verification/) contains dated closure records, failed attempts, runtime measurements, and exact-head evidence. They are preserved for auditability.
-
-Other dated evidence documents in `docs/` support specific claims and may be referenced by eval provenance. They should not be interpreted as current status unless the current-state document explicitly says so.
+[verification/](verification/) contains dated closure records, failed attempts, runtime measurements, and exact-head evidence. It is not a work queue.
 
 ## Archive
 
-[archive/](archive/) contains superseded audits, old analysis snapshots, and historical execution material. Archived documents are preserved for provenance only.
+[archive/](archive/) contains superseded audits/plans/snapshots. Do not use it to choose current work.
 
-## Active vs future scope
+## Deferred scopes
 
-Current active scope from the previous implementation/hardening plan: **none**. F6-E08 is CLOSED / REPO-SIDE PASS.
-
-Production VPS/Cloudflare activation is **deferred by operator**. AutoClick is **deferred by design**.
-
-Projects / Work / Schedule / Brain remain a discussed future product evolution. They are intentionally **not yet an active implementation scope**; a new scope/roadmap must be explicitly agreed before implementation.
+- production VPS/Cloudflare activation — deferred by operator;
+- AutoClick — deferred by design;
+- paid W18 rerun — closed/not authorized for freshness.

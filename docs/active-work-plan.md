@@ -1,52 +1,59 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-18**
+Last updated: **2026-09-19**
 
-Status: **NO ACTIVE ITEM / previous baseline closed**
+Status: **NEXT ROADMAP DOCUMENTED / IMPLEMENTATION NOT ACTIVATED**
 
-This document intentionally excludes closed chronology. Exact historical evidence remains in `docs/verification/`.
+The previous Batch 1–12 / W / F6 baseline remains closed. The next Product Evolution roadmap is now documented, but no feature batch is active yet.
 
-## Active item
-
-**None.**
-
-The previously defined implementation/hardening plan is closed at its documented boundaries:
-
-- Batch 1–12: **CLOSED**;
-- W03/W09/W10/W11/W16/W17/W18/W20: **CLOSED at documented boundaries**;
-- F6-E01 through F6-E08: **CLOSED / REPO-SIDE PASS**.
-
-## Latest closure — F6-E08
-
-F6-E08 immutable container-image identity closed through PR #164.
-
-Exact reviewed head:
+## Current state
 
 ```text
-6c46944108cdc275aebc682bd132ec9dc69e14e4
+old baseline          CLOSED
+Product Evolution     DOCUMENTED
+PE-00                  PLANNED / NOT ACTIVATED
+PE-01..PE-08           BLOCKED BY PREVIOUS PE BATCH
 ```
 
-Acceptance:
+Canonical next-scope docs:
 
-```text
-CI #1114                         PASS
-Product Eval #353               PASS
-MCP External HTTPS #528         PASS
-Desktop Installer #70           PASS
-merged main                     cacffa6c59d6871ae1ab4e11ae17cd48847864c1
-```
+- [product-evolution-architecture.md](product-evolution-architecture.md)
+- [product-evolution-roadmap.md](product-evolution-roadmap.md)
+- [product-evolution-agent-guide.md](product-evolution-agent-guide.md)
 
-The new `images:digest-review` policy is wired into normal CI and release-security acceptance. Governed external Node/Postgres/Temporal/Caddy images remain readable-tag + immutable-digest pinned.
+## First executable batch
 
-## Deferred by decision
+**PE-00 — Architecture lock and migration contract**
+
+PE-00 starts only after explicit operator instruction to begin implementation.
+
+PE-00 must settle ADRs/contracts for:
+
+- Workspace vs Project;
+- direct projectId vs optional Project bindings;
+- Project/global memory precedence;
+- Trigger + Temporal schedule ownership;
+- Flow version, concurrency, misfire and idempotency policy;
+- Run projection source mapping;
+- Brain projection/privacy boundary;
+- legacy-data migration.
+
+No PE-01 feature code starts before PE-00 closes.
+
+## Deferred by existing decision
 
 - compute-host/VPS + Cloudflare activation — **DEFERRED BY OPERATOR**;
-- AutoClick — **DEFERRED BY DESIGN**.
+- AutoClick — **DEFERRED BY DESIGN**;
+- paid W18 rerun — **CLOSED / NOT AUTHORIZED FOR FRESHNESS**.
 
-These are not blockers to closure of the existing repository baseline.
+These are not blockers to Product Evolution.
 
-## Future work
+## Activation rule
 
-Projects / Work / Schedule / Brain remain discussion material only. They are **not an active roadmap yet**.
+When the operator says to start the new roadmap:
 
-Before implementation resumes, create a new explicit scope/roadmap after architecture discussion. Do not implicitly continue F6 or create Batch 13.
+1. mark PE-00 **ACTIVE** here;
+2. create a bounded PE-00 branch from synchronized `main`;
+3. follow [product-evolution-agent-guide.md](product-evolution-agent-guide.md);
+4. merge only after exact-head gates;
+5. close PE-00 here before activating PE-01.
