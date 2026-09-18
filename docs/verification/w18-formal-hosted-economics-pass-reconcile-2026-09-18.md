@@ -6,6 +6,18 @@ Status: **FORMAL RUNTIME PASS / CLOSURE HOLD**
 
 This verification note records the operator-provided formal W18 runtime executed from synchronized clean `main` at `f249d9c0681462253bff21ca30354892ca4ce60f`. The formal harness itself passed every encoded W18 closure gate and produced `closureEligible=true`. W18 is not marked CLOSED yet because the durable spend ledger at formal-run start contains an unexplained US$0.091596 increase relative to the immediately preceding zero-spend preflight transcript. That provenance must be reconciled before final closure.
 
+Repository recording status:
+
+```text
+PR = #140
+exact reviewed head = 7118e9e4887438ddbea3e56a787a9f4f910ec1b1
+CI #1005 = PASS
+Product Eval #244 = PASS
+merged main = eba6cbf5b53ad9af4f61e4519ae1e3400f4fdf53
+```
+
+This documentation merge made no hosted provider call and did not modify the local durable spend ledger.
+
 ## Runtime identity
 
 ```text
