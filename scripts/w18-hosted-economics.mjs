@@ -528,7 +528,11 @@ async function runHostedCompletion({
     userMessage: task.prompt,
   });
   const estimatedReservationUsd = estimateW18ReservationUsd(providerInput);
-  assertW18DispatchWithinCap({ actualSpentUsd, reservationUsd: estimatedReservationUsd, maxSpendUsd });
+  assertW18DispatchWithinCap({
+    actualSpentUsd,
+    reservationUsd: estimatedReservationUsd,
+    maxSpendUsd,
+  });
 
   const response = await requestJson(`${connectUrl}/v1/complete`, {
     token,
@@ -621,7 +625,9 @@ export function evaluateW18Task({
       failures.push(`${run.mode} pair ${run.pairIndex} durable spend settlement bukan settled`);
     }
     if (Number(run.budget?.reservedUsd) !== run.estimatedReservationUsd) {
-      failures.push(`${run.mode} pair ${run.pairIndex} budget reservedUsd != reservation estimate`);
+      failures.push(
+        `${run.mode} pair ${run.pairIndex} budget reservedUsd != reservation estimate`,
+      );
     }
     if (Number(run.budget?.actualUsd) !== run.billedCostUsd) {
       failures.push(`${run.mode} pair ${run.pairIndex} budget actualUsd != billed cost`);
