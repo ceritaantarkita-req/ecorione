@@ -22,7 +22,8 @@ W18 closure: CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT
 W20 final sync: CLOSED
 local Windows main sync: VERIFIED @ 943e46bf7cfd53063e8d8e4970d0c9aa7713dce9
 F6-E01 held-out selector eval dataset: CLOSED / REPO-SIDE PASS
-F6-E02 dependency policy CI gate: IMPLEMENTED / IN REVIEW
+F6-E02 dependency policy CI gate: CLOSED / REPO-SIDE PASS
+F6-E03 release-security acceptance CI gate: ACTIVE
 ```
 
 The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
@@ -47,7 +48,8 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | W19 | Release/security governance | **DONE — REPO SIDE** | CI history/naming/model-alias gates retained. |
 | W20 | Final current-state sync | **CLOSED** | Canonical handoff/tracker synchronized after W18 closure. |
 | F6-E01 | Bug/task-derived held-out selector eval dataset + eval-budget governance | **CLOSED / REPO-SIDE PASS** | PR #146 + #147 merged; 10 cases; auto-discovered 26/50 inventory. |
-| F6-E02 | Continuous dependency-policy CI gate | **IMPLEMENTED / IN REVIEW** | CI step + release-acceptance presence guard implemented; exact-head gates pending. |
+| F6-E02 | Continuous dependency-policy CI gate | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
+| F6-E03 | Continuous release-security acceptance CI gate | **ACTIVE** | Add existing deterministic release-security acceptance to normal CI. |
 
 ## W18 current facts
 
@@ -88,10 +90,10 @@ W17's local automatic-selector evidence remains separate: W17 proved no-oracle l
 W18 = CLOSED
 W20 = CLOSED
 F6-E01 = CLOSED / REPO-SIDE PASS
-F6-E02 = IMPLEMENTED / IN REVIEW
-normal CI dependency-policy step = IMPLEMENTED
-release-acceptance gate-presence guard = IMPLEMENTED
-next = exact-head CI/Product Eval -> guarded merge -> closure
+F6-E02 = CLOSED / REPO-SIDE PASS
+F6-E03 = ACTIVE
+gap: release-security acceptance exists but is not run directly by normal CI
+next: add explicit CI step -> exact-head gates -> guarded merge
 do not rerun the paid W18 benchmark
 ```
 
