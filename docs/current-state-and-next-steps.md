@@ -10,7 +10,7 @@ Historical plans, audits, failed attempts, and older verification notes remain e
 
 ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 remain closed at their documented boundaries. The formal W18 hosted benchmark has now completed successfully on synchronized clean `main`: 20 measured calls, zero failed tasks, US$0.091716 formal spend, and `closureEligible=true`.
 
-W18 is nevertheless **not yet formally closed** because the formal run began with US$0.091596 more durable committed spend than the immediately preceding zero-spend preflight. That intervening ledger delta must be reconciled before W18 closure. W20 remains blocked only on this reconciliation/closure step.
+The US$0.091596 pre-run delta is now reconciled as an earlier complete 20-entry settled W18-shaped batch. Together with the later PASS run, total durable spend was US$0.183312, below the documented US$0.25 monetary ceiling. The incident did violate the single-attempt governance boundary, exposing that the wrapper had no persistent authorization-consumption state. W18 remains not yet closed only until the new fail-closed single-attempt guard passes repository gates and merges. W20 remains blocked on that merge/closeout step.
 
 The formal-PASS/reconciliation-hold state is now merged through PR #140 at `eba6cbf5b53ad9af4f61e4519ae1e3400f4fdf53`; exact reviewed head `7118e9e4887438ddbea3e56a787a9f4f910ec1b1` passed CI #1005 and Product Eval #244.
 
@@ -29,9 +29,9 @@ Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains de
 | W11 installer/launcher | **DONE — WINDOWS INSTALLER VERIFIED** | Clean Windows installer lifecycle passed. |
 | W16 automatic semantic ref selector | **DONE — REPO SIDE** | `semantic-v1`, bounded `maxRefs=3`; no oracle indexes required by automatic lane. |
 | W17 ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5 tasks × 5 repeats × 4 lanes = 100 measured calls; bounded local evidence. |
-| W18 hosted economic validation | **FORMAL RUNTIME PASS / CLOSURE HOLD** | 20/20 measured calls PASS, US$0.091716 formal spend, `closureEligible=true`; reconcile US$0.091596 pre-run ledger delta before CLOSED. |
+| W18 hosted economic validation | **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW** | Earlier duplicate batch US$0.091596 + later PASS batch US$0.091716 = US$0.183312 < US$0.25; close after one-shot guard merges. |
 | W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
-| W20 final current-state sync | **BLOCKED ON W18 RECONCILIATION** | Formal runtime already passed; final closure waits only on ledger provenance reconciliation and W18 closeout. |
+| W20 final current-state sync | **BLOCKED ON W18 GUARD MERGE** | Formal runtime and ledger provenance are resolved; final closure waits only on single-attempt guard merge and W18 closeout. |
 
 ## W18 provider and experiment profile
 
@@ -101,10 +101,10 @@ A formal W18 PASS supports only a bounded statement on the five synthetic extrac
 
 ## Immediate next action
 
-1. inspect local `data/connect-spend-budget.json`;
-2. identify the entries contributing the US$0.091596 delta between zero-spend preflight and formal-run start;
-3. preserve the ledger unchanged and produce a sanitized reconciliation note;
-4. once reconciled, mark W18 CLOSED and complete W20 final current-state sync;
+1. merge the fail-closed single-attempt authorization-consumption guard after exact-head CI/Product Eval PASS;
+2. preserve `docs/verification/w18-duplicate-execution-reconciliation-2026-09-18.md` as incident evidence;
+3. mark W18 CLOSED after the guard merge;
+4. complete W20 final current-state sync;
 5. do **not** rerun the paid formal benchmark.
 
 Canonical W18 verification sources:
@@ -118,5 +118,6 @@ Canonical W18 verification sources:
 - `docs/verification/w18-formal-guard-merge-2026-09-18.md`
 - `docs/verification/w18-formal-operator-wrapper-2026-09-18.md`
 - `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`
+- `docs/verification/w18-duplicate-execution-reconciliation-2026-09-18.md`
 
 Historical audits dated before this handoff remain historical snapshots and are not current status sources.

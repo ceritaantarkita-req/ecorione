@@ -4,7 +4,7 @@
 
 ECORIONE menjaga kesinambungan lintas provider/model sambil mempertahankan local-first boundary, approval, audit trail, durable execution, MCP, dan spend control yang eksplisit.
 
-> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **FORMAL RUNTIME PASS / CLOSURE HOLD** pending reconciliation of a US$0.091596 pre-run ledger delta · W20 **BLOCKED ON W18 RECONCILIATION** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
+> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW** after identifying an earlier duplicate 20-call execution; combined spend US$0.183312 remained below the US$0.25 monetary ceiling · W20 **BLOCKED ON W18 GUARD MERGE** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
 
 Untuk manusia/agent baru: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`docs/active-work-plan.md`](docs/active-work-plan.md), [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md), dan [`AGENTS.md`](AGENTS.md). Audit bertanggal lama adalah historical snapshots, bukan current-state source.
 
@@ -25,7 +25,7 @@ Current progression that matters:
 - W18 Anthropic-only one-call hosted diagnostic: **PASS**;
 - W18 formal dispatch/routing/cap guard: **MERGED / REPO-SIDE VERIFIED** (PR #135; CI #994 + Product Eval #233 PASS);
 - W18 formal operator wrapper: **MERGED / REPO-SIDE VERIFIED** (PR #138; CI #1001 + Product Eval #240 + MCP External #461 PASS);
-- W18 formal 20-call hosted economics: **RUNTIME PASS** — 20/20 measured calls, US$0.091716 formal spend, `closureEligible=true`; overall W18 closure held pending reconciliation of a US$0.091596 pre-run ledger delta.
+- W18 formal 20-call hosted economics: **RUNTIME PASS** — later run 20/20 measured calls, US$0.091716, `closureEligible=true`; earlier duplicate 20-call batch reconciled at US$0.091596; combined US$0.183312 < US$0.25. Closure waits only for the single-attempt consumption guard to merge.
 
 Canonical W18 docs:
 
@@ -125,11 +125,11 @@ Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920
 
 Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
 
-### Ledger reconciliation hold
+### Duplicate-execution reconciliation
 
-The immediately preceding zero-spend preflight reported daily committed US$0 and monthly committed US$0.160104. The formal execution began with daily committed **US$0.091596** and monthly committed **US$0.251700**. The supplied transcript does not establish the provenance of that intervening **US$0.091596**.
+The US$0.091596 pre-run delta is now reconciled from the local durable ledger as an earlier 20-entry settled W18-shaped batch at 02:14–02:15 UTC. Its full-inline actual total was US$0.059046 and automatic ECX total US$0.032550. The later recorded PASS batch cost US$0.091716, so combined spend was **US$0.183312**, still below the documented US$0.25 monetary ceiling.
 
-Therefore the formal harness result is **PASS**, but W18 overall remains **NOT CLOSED** until that earlier spend is reconciled from the local durable ledger. Do not rerun the paid formal benchmark. Preserve the ledger unchanged and commit only a sanitized reconciliation summary.
+This exposed a governance bug: the wrapper enforced a dollar cap per invocation but did not persist single-attempt authorization consumption. A fail-closed one-shot marker plus completed-PASS evidence detection is now under repository review. Do not rerun the paid benchmark.
 
 Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
 
@@ -195,11 +195,10 @@ Production activation remains deferred by operator. Tooling/runbooks stay availa
 ## Next execution order
 
 ```text
-1. inspect the local durable spend ledger for the US$0.091596 pre-run delta
-2. document sanitized provenance without rewriting ledger history
-3. if reconciled: close W18
-4. perform W20 final current-state sync
-5. no paid W18 rerun is authorized or needed for the passing formal benchmark
+1. merge the single-attempt authorization-consumption guard after exact-head gates pass
+2. mark W18 CLOSED with the duplicate-execution incident preserved
+3. perform W20 final current-state sync
+4. no paid W18 rerun is authorized or needed
 ```
 
 ## Lisensi

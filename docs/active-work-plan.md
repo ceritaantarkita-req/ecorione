@@ -16,8 +16,9 @@ W18 one-call Anthropic-only diagnostic: PASS
 W18 formal dispatch/routing/cap guard: MERGED / REPO-SIDE PASS
 W18 formal operator wrapper: MERGED / REPO-SIDE PASS
 W18 formal 20-call run: PASS / closureEligible=true / US$0.091716 formal spend
-W18 closure: HOLD pending US$0.091596 pre-run ledger reconciliation
-W20 final sync: BLOCKED ON W18 RECONCILIATION
+W18 duplicate execution: RECONCILED; combined spend US$0.183312 < US$0.25
+W18 closure: WAITING ON SINGLE-ATTEMPT GUARD MERGE
+W20 final sync: BLOCKED ON W18 GUARD MERGE
 ```
 
 The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
@@ -38,9 +39,9 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | W15 | Agentic local-model eval | **DONE — VERIFIED LOCAL MODEL PASS^3** | Bounded eval harness only. |
 | W16 | Automatic semantic reference selector | **DONE — REPO SIDE** | `semantic-v1`, `maxRefs=3`. |
 | W17 | ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5×5×4 = 100 measured calls, 5/5 gates. |
-| W18 | Hosted economic validation | **FORMAL RUNTIME PASS / CLOSURE HOLD** | 20/20 measured calls PASS; reconcile US$0.091596 pre-run ledger delta before CLOSED. |
+| W18 | Hosted economic validation | **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW** | Duplicate earlier 20-call batch identified; close after one-shot authorization guard merges. |
 | W19 | Release/security governance | **DONE — REPO SIDE** | CI history/naming/model-alias gates retained. |
-| W20 | Final current-state sync | **BLOCKED ON W18 RECONCILIATION** | Continue immediately after ledger provenance reconciliation and W18 closure. |
+| W20 | Final current-state sync | **BLOCKED ON W18 GUARD MERGE** | Continue immediately after one-shot guard merge and W18 closure. |
 
 ## W18 current facts
 
@@ -80,12 +81,11 @@ W17's local automatic-selector evidence remains separate: W17 proved no-oracle l
 ## Immediate next action
 
 ```text
-1. inspect data/connect-spend-budget.json locally
-2. reconcile the US$0.091596 pre-run committed-spend delta
-3. preserve ledger history; commit only sanitized provenance
-4. if reconciled, close W18
-5. complete W20 final current-state sync
-6. do not rerun the paid W18 benchmark
+1. merge the fail-closed single-attempt authorization-consumption guard
+2. preserve the duplicate-execution reconciliation evidence
+3. close W18 after exact-head gates pass
+4. complete W20 final current-state sync
+5. do not rerun the paid W18 benchmark
 ```
 
 Do not reopen already-closed W03/W09/W10/W11/W16/W17 unless a new reproducible regression appears on newer product code.
