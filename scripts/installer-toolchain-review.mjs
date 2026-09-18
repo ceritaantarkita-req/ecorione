@@ -25,7 +25,9 @@ export function reviewInstallerWorkflowContent(content, version) {
     .filter(({ line }) => /choco\s+install\s+innosetup\b/i.test(line));
 
   if (installLines.length === 0) {
-    findings.push(`${INSTALLER_WORKFLOW}: Chocolatey Inno Setup install step tidak ditemukan`);
+    findings.push(
+      `${INSTALLER_WORKFLOW}: Chocolatey Inno Setup install step tidak ditemukan`,
+    );
     return findings;
   }
 
