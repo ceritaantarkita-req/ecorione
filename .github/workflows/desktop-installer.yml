@@ -47,7 +47,7 @@ jobs:
 
   installer:
     needs: bundle
-    runs-on: windows-latest
+    runs-on: windows-2025
     timeout-minutes: 20
     env:
       ECORIONE_VERSION: ${{ inputs.version }}
