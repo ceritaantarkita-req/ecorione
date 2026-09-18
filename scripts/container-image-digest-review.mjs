@@ -116,11 +116,11 @@ export function reviewContainerImageDigests(readFile = readFileSync) {
 
   findings.push(
     ...reviewDockerfileContent(readFile("Dockerfile", "utf8"), [images.node]),
-    ...reviewComposeContent(
-      "deploy/compose.yml",
-      readFile("deploy/compose.yml", "utf8"),
-      [images.postgres, images.temporal, images.caddy],
-    ),
+    ...reviewComposeContent("deploy/compose.yml", readFile("deploy/compose.yml", "utf8"), [
+      images.postgres,
+      images.temporal,
+      images.caddy,
+    ]),
     ...reviewComposeContent(
       "deploy/local-temporal.yml",
       readFile("deploy/local-temporal.yml", "utf8"),
