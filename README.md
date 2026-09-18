@@ -4,9 +4,9 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-> **Current status — 2026-09-18:** the defined Batch 1–12 platform roadmap is **CLOSED**; Windows runtime and installer are verified; W16/W17/W18/W20 and **F6-E01 through F6-E08 are CLOSED at their documented boundaries**. There is no active scope in the previous hardening plan. Production host/Cloudflare activation remains deferred by operator. AutoClick remains deferred by design.
+> **Current status — 2026-09-19:** the original Batch 1–12 / W / F6 baseline is **CLOSED**. The next **Product Evolution (PE)** architecture and PE-00..PE-08 roadmap are documented, but implementation is **not activated yet**. Production host/Cloudflare remains deferred by operator; AutoClick remains deferred by design.
 
-**Start here:** [docs/README.md](docs/README.md). Do not use dated audits or verification records as current-state documents.
+**Start here:** [docs/README.md](docs/README.md).
 
 ## What exists today
 
@@ -24,7 +24,7 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 | Sync | Local/self-host bridge and hosted MCP reachability boundary |
 | Production ops | Compose/Caddy baseline, metrics/traces, backup/recovery and release tooling |
 
-## Architecture
+## Current architecture
 
 ```text
 Ai
@@ -38,21 +38,38 @@ Ai
     -> RnD
 ```
 
-Core rules:
+Core rules remain: no cross-service DB access; Hub owns authority/policy; Context owns memory; Artifact owns raw bytes; Connect owns providers/credentials/spend; Flow uses Temporal for durability; side effects remain governed/idempotent.
 
-- owner services do not read another owner's database directly;
-- Hub owns policy/approval/capability authority;
-- Connect owns provider credentials, MCP runtime state, and hosted spend authority;
-- Context owns memory semantics; Artifact owns raw L3 bytes;
-- Flow uses Temporal for durability instead of creating a second scheduler/retry engine;
-- memory and external content are data, never trusted instructions;
-- side effects require idempotency and the appropriate approval boundary.
+## Next product evolution
 
-## Current work
+Canonical model:
 
-The previous implementation/hardening plan has **no active item**. F6-E08 closed after exact-head CI, Product Eval, MCP external acceptance, and Desktop Installer all passed and PR #164 merged.
+```text
+Project = WHERE
+Brain   = WHAT IS KNOWN
+Trigger = WHEN / WHY
+Flow    = HOW
+Agent   = WHO/WHAT executes
+Run     = WHAT HAPPENED
+```
 
-The current repository baseline should now be treated as the clean discussion point for whatever product scope is explicitly approved next. Projects / Work / Schedule / Brain remain **discussion/future scope only**, not an active implementation roadmap.
+Roadmap:
+
+```text
+PE-00 Architecture lock
+PE-01 Project foundation
+PE-02 Project Sources
+PE-03 Trigger control plane
+PE-04 Work + Schedule + Runs
+PE-05 Event/Webhook automation
+PE-06 Brain V1
+PE-07 Brain + Context + ECX
+PE-08 Product closure
+```
+
+Read [docs/product-evolution-architecture.md](docs/product-evolution-architecture.md), [docs/product-evolution-roadmap.md](docs/product-evolution-roadmap.md), and [docs/product-evolution-agent-guide.md](docs/product-evolution-agent-guide.md).
+
+No PE feature implementation starts until PE-00 is explicitly activated.
 
 ## Local development
 
@@ -65,22 +82,9 @@ cp .env.example .env
 pnpm dev
 ```
 
-Phase-expanded runtime helpers remain available through the root package scripts. Windows engine/installer workflows are documented in the current runbooks.
-
 ## Production/self-host
 
-Repository-side production/self-host tooling is ready, but real target-host activation remains operator-owned and currently deferred. Use:
-
-- [docs/production-activation.md](docs/production-activation.md)
-- [docs/production-operations.md](docs/production-operations.md)
-- [docs/release-operations.md](docs/release-operations.md)
-- [docs/cloudflare-free-deployment.md](docs/cloudflare-free-deployment.md)
-
-## Documentation
-
-The documentation map and precedence rules live in [docs/README.md](docs/README.md).
-
-Architecture decisions remain in [docs/adr/](docs/adr/). Historical evidence remains preserved under [docs/verification/](docs/verification/) and [docs/archive/](docs/archive/), but those are not current work queues.
+Repository-side production/self-host tooling is ready, but real target-host activation remains operator-owned and deferred. See the production and release runbooks under `docs/`.
 
 ## License
 
