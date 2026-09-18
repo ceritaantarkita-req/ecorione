@@ -51,6 +51,7 @@
     "evidence:observability": "pnpm run build:runtime-deps && node scripts/local-observability-evidence.mjs",
     "evidence:observability:inventory": "pnpm run build:runtime-deps && node scripts/local-observability-evidence.mjs --phase inventory",
     "evidence:ux:inventory": "node scripts/local-ux-product-evidence.mjs",
+    "eval:selector:heldout": "vitest run evals/eval-inventory.test.ts evals/ecx-selector-heldout.test.ts",
     "eval:agentic:local": "node scripts/local-agentic-eval.mjs",
     "eval:agentic:inventory": "node scripts/local-agentic-eval.mjs --inventory",
     "production:preflight": "bash scripts/production-preflight.sh",
