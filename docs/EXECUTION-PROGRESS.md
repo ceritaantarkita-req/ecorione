@@ -34,9 +34,10 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W18 | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | Formal hosted economics passed; duplicate batch reconciled; one-shot guard merged via PR #142. |
 | W19 | **REPO SIDE DONE** | Release/security governance gates retained. |
 | W20 | **CLOSED** | Final canonical current-state synchronization completed. |
+| F6-E01 | **ACTIVE — NEW EXPLICIT SCOPE** | Bug/task-derived held-out selector regression dataset + global eval-budget governance; no provider spend. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED** | Evidence-driven only. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E01** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -98,3 +99,10 @@ W20 final closure: `docs/verification/w20-final-current-state-closure-2026-09-18
 - Valid failed evidence is preserved after fixes.
 - Raw private runtime evidence remains local/gitignored; commit only sanitized summaries.
 - Historical dated audits are not silently rewritten into current status.
+
+
+## F6-E01 active scope
+
+Baseline is synchronized local/remote `main` at `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9`.
+
+F6-E01 adds deterministic held-out `semantic-v1` selector cases derived only from real bug/task provenance, keeps expected relevant indexes evaluation-only, enforces the permanent repository eval budget of at most 50 governed cases, and runs through Product Eval. It does not call a provider and does not create a universal optimizer/generalization claim.
