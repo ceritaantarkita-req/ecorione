@@ -10,7 +10,7 @@ Historical plans, audits, failed attempts, and older verification notes remain e
 
 ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 remain closed at their documented boundaries. The formal W18 hosted benchmark has now completed successfully on synchronized clean `main`: 20 measured calls, zero failed tasks, US$0.091716 formal spend, and `closureEligible=true`.
 
-The US$0.091596 pre-run delta is now reconciled as an earlier complete 20-entry settled W18-shaped batch. Together with the later PASS run, total durable spend was US$0.183312, below the documented US$0.25 monetary ceiling. The incident did violate the single-attempt governance boundary, exposing that the wrapper had no persistent authorization-consumption state. W18 remains not yet closed only until the new fail-closed single-attempt guard passes repository gates and merges. W20 remains blocked on that merge/closeout step.
+The US$0.091596 pre-run delta is reconciled as an earlier complete 20-entry settled W18-shaped batch. Together with the later PASS run, total durable spend was US$0.183312, below the documented US$0.25 monetary ceiling. The duplicate execution violated the single-attempt governance boundary, but the missing persistent authorization-consumption state was fixed and merged through PR #142 at `cff6e21edc8085bb895c6ed59c32b5e4aa134ee0`; exact reviewed head `1f0d87963857d4bb261579204e76bae970c496b0` passed CI #1012 and Product Eval #251. W18 is now CLOSED at its documented bounded evidence boundary, and W20 final current-state sync is CLOSED.
 
 The formal-PASS/reconciliation-hold state is now merged through PR #140 at `eba6cbf5b53ad9af4f61e4519ae1e3400f4fdf53`; exact reviewed head `7118e9e4887438ddbea3e56a787a9f4f910ec1b1` passed CI #1005 and Product Eval #244.
 
@@ -29,9 +29,9 @@ Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains de
 | W11 installer/launcher | **DONE — WINDOWS INSTALLER VERIFIED** | Clean Windows installer lifecycle passed. |
 | W16 automatic semantic ref selector | **DONE — REPO SIDE** | `semantic-v1`, bounded `maxRefs=3`; no oracle indexes required by automatic lane. |
 | W17 ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5 tasks × 5 repeats × 4 lanes = 100 measured calls; bounded local evidence. |
-| W18 hosted economic validation | **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW** | Earlier duplicate batch US$0.091596 + later PASS batch US$0.091716 = US$0.183312 < US$0.25; close after one-shot guard merges. |
+| W18 hosted economic validation | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | 20-call formal PASS; duplicate earlier batch reconciled; combined US$0.183312 < US$0.25; one-shot guard merged via PR #142. |
 | W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
-| W20 final current-state sync | **BLOCKED ON W18 GUARD MERGE** | Formal runtime and ledger provenance are resolved; final closure waits only on single-attempt guard merge and W18 closeout. |
+| W20 final current-state sync | **CLOSED** | Canonical state synchronized after W18 closure; future work is separate evidence-driven scope. |
 
 ## W18 provider and experiment profile
 
@@ -87,11 +87,11 @@ Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920
 
 Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
 
-### Ledger reconciliation hold
+### Duplicate-execution incident closure
 
-The immediately preceding zero-spend preflight reported daily committed US$0 and monthly committed US$0.160104. The formal execution began with daily committed **US$0.091596** and monthly committed **US$0.251700**. The supplied transcript does not establish the provenance of that intervening **US$0.091596**.
+The US$0.091596 pre-run delta was reconciled from the local ledger as an earlier complete 20-entry settled W18-shaped batch. Combined with the later recorded PASS run, same-day duplicate-execution spend was US$0.183312, below the US$0.25 monetary ceiling.
 
-Therefore the formal harness result is **PASS**, but W18 overall remains **NOT CLOSED** until that earlier spend is reconciled from the local durable ledger. Do not rerun the paid formal benchmark. Preserve the ledger unchanged and commit only a sanitized reconciliation summary.
+The duplicate run exposed missing persistent single-attempt consumption state. PR #142 fixed this fail-closed by refusing completed 20-call PASS evidence and atomically persisting a gitignored authorization-consumption marker before hosted dispatch. CI #1012 and Product Eval #251 passed, and the fix merged at `cff6e21edc8085bb895c6ed59c32b5e4aa134ee0`. Do not rerun the paid benchmark.
 
 Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
 
@@ -101,11 +101,7 @@ A formal W18 PASS supports only a bounded statement on the five synthetic extrac
 
 ## Immediate next action
 
-1. merge the fail-closed single-attempt authorization-consumption guard after exact-head CI/Product Eval PASS;
-2. preserve `docs/verification/w18-duplicate-execution-reconciliation-2026-09-18.md` as incident evidence;
-3. mark W18 CLOSED after the guard merge;
-4. complete W20 final current-state sync;
-5. do **not** rerun the paid formal benchmark.
+W18 and W20 are closed. Preserve the current evidence boundary, do **not** rerun the paid W18 benchmark, and treat future work as a new evidence-driven scope rather than reopening closed workstreams without a reproducible regression or changed runtime/provider/model identity.
 
 Canonical W18 verification sources:
 
@@ -119,5 +115,7 @@ Canonical W18 verification sources:
 - `docs/verification/w18-formal-operator-wrapper-2026-09-18.md`
 - `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`
 - `docs/verification/w18-duplicate-execution-reconciliation-2026-09-18.md`
+- `docs/verification/w18-final-closure-2026-09-18.md`
+- `docs/verification/w20-final-current-state-closure-2026-09-18.md`
 
 Historical audits dated before this handoff remain historical snapshots and are not current status sources.
