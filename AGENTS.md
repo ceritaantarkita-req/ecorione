@@ -25,7 +25,8 @@ Per **2026-09-18**:
 - F6-E02 continuous dependency-policy CI gate: **CLOSED / REPO-SIDE PASS**;
 - F6-E03 continuous release-security acceptance CI gate: **CLOSED / REPO-SIDE PASS**; PR #151, CI #1033, Product Eval #272;
 - F6-E04 immutable GitHub Actions pinning: **CLOSED / REPO-SIDE PASS**; PR #153, CI #1041, Product Eval #280, MCP #473;
-- F6-E05 fixed GitHub-hosted runner OS labels: **IMPLEMENTED / IN REVIEW**;
+- F6-E05 fixed GitHub-hosted runner OS labels: **CLOSED / REPO-SIDE PASS**; PR #155, CI #1045, Product Eval #284, MCP #475;
+- F6-E06 immutable Node toolchain: **ACTIVE**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -142,14 +143,18 @@ F6-E04 = CLOSED / REPO-SIDE PASS
 - Product Eval #280 PASS
 - MCP External #473 PASS
 
-F6-E05 = IMPLEMENTED / IN REVIEW
-- CI/Product Eval/MCP Linux jobs pinned to `ubuntu-24.04`
-- Desktop Installer Windows job pinned to `windows-2025`
-- `scripts/github-actions-runner-review.mjs` scans tracked workflow YAML
-- normal CI has named GitHub Actions runner review step
-- release-security acceptance protects and executes the same policy
-- focused tests added
-- next = exact-head CI/Product Eval + workflow-specific acceptance -> fix any findings -> guarded merge
+F6-E05 = CLOSED / REPO-SIDE PASS
+- PR #155 merged at `2e031d4d540632385279e3b6559d564afcae96d3`
+- exact head `1fb568b1a3fa865f2bad556b06f9fb6e4e2d6da2`
+- CI #1045 PASS including GitHub Actions runner review + Release security acceptance
+- Product Eval #284 PASS
+- MCP External #475 PASS
+
+F6-E06 = ACTIVE
+- mutable CI Node selector `node-version: 22` is the next reproducibility gap
+- centralize an exact Node version and make all workflows/container wiring converge on it
+- add a deterministic drift gate + tests + release-security self-wiring
+- keep Chocolatey/Inno Setup pinning as a separate later scope
 - no provider/deployment mutation
 ```
 

@@ -38,10 +38,11 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | F6-E02 | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
 | F6-E03 | **CLOSED / REPO-SIDE PASS** | PR #151 merged; CI #1033 + Product Eval #272 PASS; named Release security acceptance step PASS. |
 | F6-E04 | **CLOSED / REPO-SIDE PASS** | PR #153 merged; CI #1041 + Product Eval #280 + MCP #473 PASS; pin-review step PASS. |
-| F6-E05 | **IMPLEMENTED / IN REVIEW** | Fixed runner OS labels + continuous latest-label rejection implemented; exact-head gates pending. |
+| F6-E05 | **CLOSED / REPO-SIDE PASS** | PR #155 merged; CI #1045 + Product Eval #284 + MCP #475 PASS; fixed runner policy green. |
+| F6-E06 | **ACTIVE** | Immutable Node toolchain version + continuous drift rejection. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E05 REVIEW** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E06** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -133,4 +134,8 @@ F6-E04 closed through PR #153. Exact reviewed head `e1818eaac40a8166fd2b677aa815
 
 ## F6-E05 active scope
 
-F6-E05 implementation pins current GitHub-hosted Linux jobs to `ubuntu-24.04` and the Desktop Installer Windows job to `windows-2025`. `scripts/github-actions-runner-review.mjs` scans tracked workflow YAML and rejects literal GitHub-hosted `*-latest` labels. Normal CI has a named runner-review step, release-security acceptance protects and executes the policy, and focused tests cover it. Closure waits on exact-head CI/Product Eval plus any workflow-specific acceptance triggered by the changed workflow files. This remains repository-side and does not modify provider/runtime/deployment state.
+F6-E05 closed through PR #155. Exact reviewed head `1fb568b1a3fa865f2bad556b06f9fb6e4e2d6da2` passed CI #1045, Product Eval #284, and MCP External #475; the named GitHub Actions runner review and Release security acceptance steps both passed. Merged main: `2e031d4d540632385279e3b6559d564afcae96d3`.
+
+## F6-E06 active scope
+
+F6-E06 targets the remaining mutable Node toolchain selector in workflows (`node-version: 22`). The intended boundary is one exact central Node version reused by GitHub Actions and the container baseline, plus a deterministic repository gate that rejects drift. Chocolatey/Inno Setup version pinning is explicitly left for a later separate scope so this checkpoint stays bounded.
