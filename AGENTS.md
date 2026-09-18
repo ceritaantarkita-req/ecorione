@@ -26,7 +26,8 @@ Per **2026-09-18**:
 - F6-E03 continuous release-security acceptance CI gate: **CLOSED / REPO-SIDE PASS**; PR #151, CI #1033, Product Eval #272;
 - F6-E04 immutable GitHub Actions pinning: **CLOSED / REPO-SIDE PASS**; PR #153, CI #1041, Product Eval #280, MCP #473;
 - F6-E05 fixed GitHub-hosted runner OS labels: **CLOSED / REPO-SIDE PASS**; PR #155, CI #1045, Product Eval #284, MCP #475;
-- F6-E06 immutable Node toolchain: **IMPLEMENTED / IN REVIEW**;
+- F6-E06 immutable Node toolchain: **CLOSED / REPO-SIDE PASS**; PR #157, CI #1055, Product Eval #294, MCP #483;
+- F6-E07 pinned Inno Setup toolchain: **ACTIVE**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -150,17 +151,18 @@ F6-E05 = CLOSED / REPO-SIDE PASS
 - Product Eval #284 PASS
 - MCP External #475 PASS
 
-F6-E06 = IMPLEMENTED / IN REVIEW
-- `.node-version` pins Node `22.20.0`
-- every tracked `actions/setup-node` consumer uses `node-version-file: ".node-version"`
-- Dockerfile Node base must match the same exact pin
-- `scripts/node-toolchain-review.mjs` enforces workflow/container consistency
-- normal CI has named Node toolchain review step
-- release-security acceptance protects and executes the policy
-- MCP acceptance path filters include `.node-version`
-- focused tests added
-- next = exact-head CI/Product Eval/MCP -> fix findings -> guarded merge -> closure
-- Chocolatey/Inno Setup pinning remains a separate later scope
+F6-E06 = CLOSED / REPO-SIDE PASS
+- PR #157 merged at `f04350a7e05080dd16c1d7bc9710a8e8f5a73b54`
+- exact head `cd04be6385ffb360862e38e63dcd02d27c3a067d`
+- CI #1055 PASS including Node toolchain review + Release security acceptance
+- Product Eval #294 PASS
+- MCP External #483 PASS
+
+F6-E07 = ACTIVE
+- pin the Inno Setup Chocolatey package used by Desktop Installer
+- add deterministic installer-toolchain review + tests
+- make CI/release-security protect the pin
+- preserve actual Windows installer compilation as the closure acceptance boundary
 - no provider/deployment mutation
 ```
 
