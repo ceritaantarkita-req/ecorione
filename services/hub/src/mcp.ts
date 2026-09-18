@@ -246,7 +246,6 @@ export function registerMcpRoutes(
         projectId: body.access.projectId ?? null,
         hostedEligibleOnly: body.access.delivery === "hosted",
         now,
-        projectId: body.access.projectId ?? null,
       },
     });
   });
@@ -341,7 +340,7 @@ export function registerMcpRoutes(
       body.scopes.map((scope) =>
         contextJson<{ episodes: unknown[] }>(
           options,
-          `/v1/episodes?scope=${encodeURIComponent(scope)}&projectId=${encodeURIComponent(body.access.projectId ?? "")}&limit=${String(body.limit)}&hostedEligible=${body.access.delivery === "hosted" ? "1" : "0"}`,
+          `/v1/episodes?scope=${encodeURIComponent(scope)}${body.access.projectId === undefined ? "" : `&projectId=${encodeURIComponent(body.access.projectId)}`}&limit=${String(body.limit)}&hostedEligible=${body.access.delivery === "hosted" ? "1" : "0"}`,
         ),
       ),
     );

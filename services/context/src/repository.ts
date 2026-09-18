@@ -424,11 +424,20 @@ export class ContextRepository {
       return { invalidated: supersede(old, replacement), replacement };
     })();
   }
-  forgetFact(id: MemoryFactId, now: Timestamp): MemoryFact {
+  forgetFact(
+    id: MemoryFactId,
+    now: Timestamp,
+    projectId: ProjectId | null = null,
+  ): MemoryFact {
     const row = this.factRow(id, true);
     if (row === undefined) throw new FactNotFoundError(id);
     if (row.t_invalid !== null) throw new FactAlreadyInvalidatedError(id);
     const fact = rowToFact(row);
+    if (fact.projectId !== projectId) {
+      throw new ContextError(
+        `Fakta ${id} berada di Project lain atau bukan memori global yang diizinkan.`,
+      );
+    }
     if (Date.parse(now) < Date.parse(fact.tValid))
       throw new ContextError(
         `Waktu forget (${now}) mendahului t_valid fakta (${fact.tValid}).`,

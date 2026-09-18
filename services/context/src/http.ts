@@ -110,7 +110,10 @@ const PromoteFactBodySchema = z.object({
   sensitivity: SensitivitySchema,
   syncClass: SyncClassSchema,
 });
-const ForgetFactBodySchema = z.object({ now: z.string().datetime({ offset: false }) });
+const ForgetFactBodySchema = z.object({
+  now: z.string().datetime({ offset: false }),
+  projectId: ProjectIdSchema.nullable().optional(),
+});
 const RetrieveBodySchema = z.object({
   query: z.string().min(1),
   scopes: z.array(ScopeSchema).min(1),
@@ -198,7 +201,7 @@ export function buildContextServer(
       episodes: repo.listEpisodes({
         scopes: q.scope === undefined ? undefined : [q.scope],
         sessionId: q.sessionId,
-        projectId: q.projectId,
+        projectId: q.projectId ?? null,
         hostedEligibleOnly: q.hostedEligible,
         order: "desc",
         limit: q.limit,
@@ -266,7 +269,7 @@ export function buildContextServer(
   app.post<{ Params: { id: string } }>("/v1/facts/:id/forget", async (req) => {
     const body = parseOrBadRequest(ForgetFactBodySchema, req.body);
     try {
-      return repo.forgetFact(req.params.id as MemoryFactId, body.now);
+      return repo.forgetFact(req.params.id as MemoryFactId, body.now, body.projectId ?? null);
     } catch (err) {
       throw toHttpError(err);
     }

@@ -164,7 +164,6 @@ export function rowToQuarantined(row: QuarantineRow): QuarantinedWrite {
 export interface CoreMemoryRow {
   label: string;
   project_id: string | null;
- string;
   description: string;
   value: string;
   read_only: number;
