@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
 
     steps:
@@ -60,6 +60,9 @@ jobs:
       - name: GitHub Actions pin review
         run: pnpm run actions:pin-review
 
+      - name: GitHub Actions runner review
+        run: pnpm run actions:runner-review
+
       - name: Release security acceptance
         run: node scripts/release-security-acceptance.mjs
 
@@ -71,7 +74,7 @@ jobs:
     # yang pernah di-commit lalu dihapus tidak pernah tertangkap gerbang mana pun. Job
     # terpisah karena butuh riwayat penuh (`fetch-depth: 0`), sementara job `verify`
     # sengaja tetap memakai checkout dangkal supaya cepat.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
@@ -89,7 +92,7 @@ jobs:
         run: node scripts/secret-history-scan.mjs
 
   naming:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     steps:

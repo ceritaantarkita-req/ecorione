@@ -25,7 +25,7 @@ Per **2026-09-18**:
 - F6-E02 continuous dependency-policy CI gate: **CLOSED / REPO-SIDE PASS**;
 - F6-E03 continuous release-security acceptance CI gate: **CLOSED / REPO-SIDE PASS**; PR #151, CI #1033, Product Eval #272;
 - F6-E04 immutable GitHub Actions pinning: **CLOSED / REPO-SIDE PASS**; PR #153, CI #1041, Product Eval #280, MCP #473;
-- F6-E05 fixed GitHub-hosted runner OS labels: **ACTIVE**;
+- F6-E05 fixed GitHub-hosted runner OS labels: **IMPLEMENTED / IN REVIEW**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -142,11 +142,14 @@ F6-E04 = CLOSED / REPO-SIDE PASS
 - Product Eval #280 PASS
 - MCP External #473 PASS
 
-F6-E05 = ACTIVE
-- replace `ubuntu-latest` with `ubuntu-24.04`
-- replace `windows-latest` with `windows-2025`
-- scan all tracked workflow YAML and reject GitHub-hosted `*-latest` runner labels
-- add tests and release-security self-wiring
+F6-E05 = IMPLEMENTED / IN REVIEW
+- CI/Product Eval/MCP Linux jobs pinned to `ubuntu-24.04`
+- Desktop Installer Windows job pinned to `windows-2025`
+- `scripts/github-actions-runner-review.mjs` scans tracked workflow YAML
+- normal CI has named GitHub Actions runner review step
+- release-security acceptance protects and executes the same policy
+- focused tests added
+- next = exact-head CI/Product Eval + workflow-specific acceptance -> fix any findings -> guarded merge
 - no provider/deployment mutation
 ```
 

@@ -118,7 +118,7 @@ F6-E03 is **CLOSED / REPO-SIDE PASS**. PR #151 exact head `fdd532e0b6f2fe550708b
 
 F6-E04 is **CLOSED / REPO-SIDE PASS**. PR #153 exact head `e1818eaac40a8166fd2b677aa815670c1ca0d7b6` passed CI #1041, Product Eval #280, and MCP External #473; both the GitHub Actions pin review and Release security acceptance steps were observed PASS. Merged main: `4742a9caf43e67b01345d69f0ea05cbbb2f081f0`.
 
-F6-E05 is **ACTIVE**. The next concrete repository-side reproducibility gap is mutable GitHub-hosted runner aliases. The scope is fixed supported OS labels plus a repo-wide gate that rejects `*-latest` runner labels.
+F6-E05 is **IMPLEMENTED / IN REVIEW**. Current branch pins Linux jobs to `ubuntu-24.04`, the Desktop Installer Windows job to `windows-2025`, adds a repo-wide `runs-on` scanner, wires a named normal-CI runner-review step, and makes release-security acceptance protect and execute the same policy. Closure now depends on exact-head CI/Product Eval plus workflow-specific acceptance for changed workflow files.
 
 This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
 
@@ -150,4 +150,4 @@ F6-E03 verification source: `docs/verification/f6-e03-release-security-acceptanc
 
 F6-E04 verification source: `docs/verification/f6-e04-immutable-github-actions-2026-09-18.md`.
 
-F6-E05 active scope: fixed GitHub-hosted runner labels + continuous latest-label rejection.
+F6-E05 verification source: `docs/verification/f6-e05-fixed-runner-labels-2026-09-18.md`.
