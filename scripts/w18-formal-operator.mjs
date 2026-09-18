@@ -23,7 +23,10 @@ function roundUsd(value) {
   return Math.round(value * USD_PRECISION) / USD_PRECISION;
 }
 
-export function computeFormalDailyCeiling(\n  dailyCommittedUsd,\n  maxSpendUsd = W18_FORMAL_AUTHORIZED_MAX_USD,\n) {
+export function computeFormalDailyCeiling(
+  dailyCommittedUsd,
+  maxSpendUsd = W18_FORMAL_AUTHORIZED_MAX_USD,
+) {
   if (!Number.isFinite(dailyCommittedUsd) || dailyCommittedUsd < 0) {
     throw new Error("W18 daily committed harus USD non-negatif dan finite.");
   }
@@ -88,7 +91,9 @@ export function buildFormalRuntimeEnv(
 
 function parseArgs(argv) {
   const execute = argv.includes("--execute-authorized-w18");
-  const unknown = argv.filter(\n    (arg) => arg !== "--execute-authorized-w18" && arg !== "--preflight-only",\n  );
+  const unknown = argv.filter(
+    (arg) => arg !== "--execute-authorized-w18" && arg !== "--preflight-only",
+  );
   if (unknown.length > 0) throw new Error(`Unknown argument: ${unknown[0]}`);
   if (execute && argv.includes("--preflight-only")) {
     throw new Error("Pilih salah satu: --preflight-only atau --execute-authorized-w18.");
