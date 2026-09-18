@@ -32,9 +32,9 @@ describe("W18 formal operator wrapper", () => {
   });
 
   it("requires monthly headroom for the full formal allowance", () => {
-    expect(() =>
-      assertFormalBudgetReadiness(spend({ monthlyHeadroomUsd: 0.249 })),
-    ).toThrow(/monthly headroom/);
+    expect(() => assertFormalBudgetReadiness(spend({ monthlyHeadroomUsd: 0.249 }))).toThrow(
+      /monthly headroom/,
+    );
   });
 
   it("builds ephemeral fail-closed formal runtime overrides without mutating input", () => {
