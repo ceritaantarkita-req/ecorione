@@ -27,7 +27,7 @@ Per **2026-09-18**:
 - F6-E04 immutable GitHub Actions pinning: **CLOSED / REPO-SIDE PASS**; PR #153, CI #1041, Product Eval #280, MCP #473;
 - F6-E05 fixed GitHub-hosted runner OS labels: **CLOSED / REPO-SIDE PASS**; PR #155, CI #1045, Product Eval #284, MCP #475;
 - F6-E06 immutable Node toolchain: **CLOSED / REPO-SIDE PASS**; PR #157, CI #1055, Product Eval #294, MCP #483;
-- F6-E07 pinned Inno Setup toolchain: **ACTIVE**;
+- F6-E07 pinned Inno Setup toolchain: **IMPLEMENTED / IN REVIEW**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -158,11 +158,14 @@ F6-E06 = CLOSED / REPO-SIDE PASS
 - Product Eval #294 PASS
 - MCP External #483 PASS
 
-F6-E07 = ACTIVE
-- pin the Inno Setup Chocolatey package used by Desktop Installer
-- add deterministic installer-toolchain review + tests
-- make CI/release-security protect the pin
-- preserve actual Windows installer compilation as the closure acceptance boundary
+F6-E07 = IMPLEMENTED / IN REVIEW
+- `.inno-setup-version` pins Inno Setup `6.7.1`
+- Desktop Installer reads the central pin and runs `choco install innosetup --version="$version"`
+- `scripts/installer-toolchain-review.mjs` rejects unversioned install/path-major drift
+- normal CI has named Installer toolchain review step
+- release-security acceptance protects and executes the same policy
+- focused tests added
+- next = exact-head CI/Product Eval + real Desktop Installer workflow acceptance -> fix findings -> guarded merge
 - no provider/deployment mutation
 ```
 
