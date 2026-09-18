@@ -89,3 +89,16 @@ The guard merge made no hosted provider call.
 **W18 = CLOSED / PASS**, with the duplicate-execution incident retained as governance evidence.
 
 Claim boundary remains narrow: this supports a billed-cost reduction result only for the five synthetic extraction fixtures under the tested pinned OpenRouter/Anthropic route. It does not establish universal savings, future provider pricing, end-to-end network savings, or production SLA/SLO.
+
+
+## Final closure merge evidence
+
+```text
+PR = #143
+exact reviewed head = 97890b269e19c9c9b8eaa8a89b4a17bcfdd09e11
+CI #1014 = PASS
+Product Eval #253 = PASS
+merged main = 65142fe14901c87a8e499710081492d4b77e1357
+```
+
+This final closure merge was documentation-only and made no hosted provider call.
