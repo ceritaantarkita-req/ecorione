@@ -1,8 +1,14 @@
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  assertFormalAuthorizationUnused,
   assertFormalBudgetReadiness,
   buildFormalRuntimeEnv,
   computeFormalDailyCeiling,
+  consumeFormalAuthorization,
+  formalAuthorizationMarkerPath,
   W18_FORMAL_AUTHORIZED_MAX_USD,
 } from "../scripts/w18-formal-operator.mjs";
 
@@ -35,6 +41,61 @@ describe("W18 formal operator wrapper", () => {
     expect(() => assertFormalBudgetReadiness(spend({ monthlyHeadroomUsd: 0.249 }))).toThrow(
       /monthly headroom/,
     );
+  });
+
+  it("refuses execution when completed 20-call PASS evidence already exists", () => {
+    const root = mkdtempSync(join(tmpdir(), "ecorione-w18-completed-"));
+    try {
+      const evidenceDir = join(root, ".ecorione", "evidence");
+      mkdirSync(evidenceDir, { recursive: true });
+      writeFileSync(
+        join(evidenceDir, "w18-hosted-economics-2026-09-18T02-15-34-405Z.summary.json"),
+        JSON.stringify({
+          closureEligible: true,
+          evidence: {
+            aggregate: {
+              pass: true,
+              measuredModelCalls: 20,
+              actualRunSpendUsd: 0.091596,
+            },
+          },
+        }),
+      );
+
+      expect(() => assertFormalAuthorizationUnused(root)).toThrow(/PASS evidence sudah ada/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("consumes the single-attempt authorization atomically before dispatch", () => {
+    const root = mkdtempSync(join(tmpdir(), "ecorione-w18-marker-"));
+    try {
+      const consumed = consumeFormalAuthorization({
+        root,
+        repository: {
+          branch: "main",
+          head: "abc123",
+          originMain: "abc123",
+          clean: true,
+        },
+        spendBefore: spend({ dailyCommittedUsd: 0, monthlyCommittedUsd: 0.160104 }),
+        now: new Date("2026-09-18T02:18:00.000Z"),
+      });
+
+      expect(consumed.authorizationId).toMatch(/single-attempt/);
+      expect(existsSync(formalAuthorizationMarkerPath(root))).toBe(true);
+      expect(() =>
+        consumeFormalAuthorization({
+          root,
+          repository: { branch: "main", head: "abc123", originMain: "abc123", clean: true },
+          spendBefore: spend(),
+          now: new Date("2026-09-18T02:19:00.000Z"),
+        }),
+      ).toThrow(/sudah dikonsumsi/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("builds ephemeral fail-closed formal runtime overrides without mutating input", () => {
