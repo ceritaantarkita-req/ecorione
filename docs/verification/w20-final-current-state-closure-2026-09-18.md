@@ -50,3 +50,16 @@ The duplicate-run governance gap was fixed and merged through PR #142 at `cff6e2
 Future work must not reopen closed workstreams merely to continue development. Reopen a closed boundary only for a reproducible regression, changed runtime/provider/model identity that invalidates its evidence, or an explicitly new scope.
 
 Production activation and future evidence-driven phases are separate from W20 closure.
+
+
+## Final closure merge evidence
+
+```text
+PR = #143
+exact reviewed head = 97890b269e19c9c9b8eaa8a89b4a17bcfdd09e11
+CI #1014 = PASS
+Product Eval #253 = PASS
+merged main = 65142fe14901c87a8e499710081492d4b77e1357
+```
+
+The final closure merge changed documentation only and made no hosted provider call.

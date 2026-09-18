@@ -14,6 +14,8 @@ The US$0.091596 pre-run delta is reconciled as an earlier complete 20-entry sett
 
 The formal-PASS/reconciliation-hold state is now merged through PR #140 at `eba6cbf5b53ad9af4f61e4519ae1e3400f4fdf53`; exact reviewed head `7118e9e4887438ddbea3e56a787a9f4f910ec1b1` passed CI #1005 and Product Eval #244.
 
+Final W18/W20 closure documentation merged through PR #143 at `65142fe14901c87a8e499710081492d4b77e1357`; exact reviewed head `97890b269e19c9c9b8eaa8a89b4a17bcfdd09e11` passed CI #1014 and Product Eval #253.
+
 Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains deferred by design. Fase 6+ remains evidence-driven/open-ended.
 
 ## Current status table
