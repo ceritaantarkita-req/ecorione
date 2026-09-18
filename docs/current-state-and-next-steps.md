@@ -38,7 +38,8 @@ The next explicit non-deployment scope is **F6-E01 — bug/task-derived held-out
 | W18 hosted economic validation | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | 20-call formal PASS; duplicate earlier batch reconciled; combined US$0.183312 < US$0.25; one-shot guard merged via PR #142. |
 | W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
 | W20 final current-state sync | **CLOSED** | Canonical state synchronized after W18 closure; future work is separate evidence-driven scope. |
-| F6-E01 held-out selector eval dataset | **IMPLEMENTED / IN REVIEW** | 10 bug/task-derived held-out cases + global 26/50 eval-budget guard + Product Eval wiring; awaiting exact-head gates/merge. |
+| F6-E01 held-out selector eval dataset | **CLOSED / REPO-SIDE PASS** | 10 bug/task-derived held-out cases; auto-discovered 26/50 eval inventory; CI/Product Eval passed and merged. |
+| F6-E02 dependency policy CI gate | **ACTIVE — NEW EXPLICIT SCOPE** | Existing `dependency:review` policy is not executed by normal CI; make it a continuous gate without claiming registry CVE freshness. |
 
 ## W18 provider and experiment profile
 
@@ -108,15 +109,11 @@ A formal W18 PASS supports only a bounded statement on the five synthetic extrac
 
 ## Immediate next action
 
-F6-E01 implementation is now **IN REVIEW**:
+F6-E01 is **CLOSED / REPO-SIDE PASS**. PR #146 merged the held-out selector suite after CI #1023, Product Eval #262, and MCP External #467 PASS. PR #147 then hardened the 50-case budget with automatic case-manifest discovery after CI #1025 and Product Eval #264 PASS.
 
-- 10 held-out selector cases are present and each cites real bug/task provenance;
-- evaluation-only relevance labels are stripped before `semantic-v1` is called;
-- repository-wide governed eval inventory is 26/50;
-- Product Eval runs the held-out selector + inventory guards;
-- no provider/model call is part of the scope.
+The next explicit scope is **F6-E02 — dependency policy as a continuous CI gate**. The repository already has `pnpm dependency:review` and `scripts/dependency-security-review.mjs`, but normal `.github/workflows/ci.yml` does not execute it. F6-E02 will wire that deterministic policy into CI and add a release-acceptance assertion so the gate cannot silently disappear.
 
-Next gate: exact-head CI + Product Eval PASS, guarded merge, then mark F6-E01 CLOSED / REPO-SIDE PASS. Do **not** rerun the paid W18 benchmark.
+Claim boundary: this checks pinned dependency/source policy, Docker image tag policy, and lockfile presence. It is **not** a live registry vulnerability/CVE freshness claim. Do **not** rerun the paid W18 benchmark.
 
 Canonical W18 verification sources:
 
