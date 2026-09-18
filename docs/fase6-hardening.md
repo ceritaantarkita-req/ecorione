@@ -1,7 +1,7 @@
 # Fase 6+ — Evidence-driven hardening
 
 **Status:** ACTIVE / OPEN-ENDED  
-**Current item:** F6-E08 — IMPLEMENTED / IN REVIEW  
+**Current item:** none — F6-E01 through F6-E08 CLOSED  
 **Last reconciled:** 2026-09-18
 
 Fase 6+ is not a permanent “feature phase” and should never become an excuse to keep old workstreams open. Each item is a bounded evidence-driven hardening scope. Closed items stay closed unless new evidence invalidates them.
@@ -19,24 +19,24 @@ Current handoff: [current-state-and-next-steps.md](current-state-and-next-steps.
 | F6-E05 | Fixed GitHub-hosted runner labels | **CLOSED / REPO-SIDE PASS** |
 | F6-E06 | Immutable Node toolchain | **CLOSED / REPO-SIDE PASS** |
 | F6-E07 | Pinned Inno Setup toolchain | **CLOSED / REPO-SIDE PASS** |
+| F6-E08 | Immutable container image digests + drift gate | **CLOSED / REPO-SIDE PASS** |
 
 Exact evidence remains in `docs/verification/`.
 
-## F6-E08 implementation / review
+## F6-E08 closure
 
-Goal: make governed container/base-image identity immutable and continuously reviewable. The implementation is present on the review branch; closure awaits exact-head gates and merge.
+F6-E08 is **CLOSED / REPO-SIDE PASS**.
 
-Required result:
+The repository now:
 
-- Dockerfile/base image references are digest-bound;
-- deployment Compose images are digest-bound where governed;
-- readable version tags remain alongside digests where supported;
-- deterministic drift review rejects tag-only/malformed governed identities;
-- focused tests cover the policy;
-- CI and release-security acceptance run the review;
-- relevant exact-head gates pass before merge.
+- digest-pins governed external Dockerfile/Compose images while retaining readable tags;
+- governs production, local Temporal, and desktop Compose surfaces;
+- rejects tag-only, digest-only, malformed-digest, and unexpected dynamic external refs;
+- runs the deterministic image review in normal CI and release-security acceptance.
 
-This work is repository-side only. It does not authorize provider calls, paid benchmarks, production deployment, or Cloudflare mutation.
+Exact head `6c46944108cdc275aebc682bd132ec9dc69e14e4` passed CI #1114, Product Eval #353, MCP #528, and Desktop Installer #70 before PR #164 merged at `cacffa6c59d6871ae1ab4e11ae17cd48847864c1`.
+
+There is no next F6 item implicitly opened by this closure.
 
 ## Baseline hardening already present
 
@@ -80,4 +80,4 @@ Paid W18 evidence is closed and must not be rerun just to refresh documentation.
 
 ## Future product evolution
 
-Projects / Work / Schedule / Brain are not F6 hardening. Once the existing baseline is frozen after F6-E08, they should begin under a new product roadmap with explicit architecture decisions and migration boundaries.
+Projects / Work / Schedule / Brain are not F6 hardening. They remain discussion material until a new product roadmap is explicitly agreed with architecture decisions and migration boundaries.

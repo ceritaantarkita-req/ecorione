@@ -2,56 +2,51 @@
 
 Last updated: **2026-09-18**
 
-Status: **ACTIVE / current work only**
+Status: **NO ACTIVE ITEM / previous baseline closed**
 
-This document intentionally excludes closed W-series chronology and old benchmark details. Those remain in `docs/verification/`.
+This document intentionally excludes closed chronology. Exact historical evidence remains in `docs/verification/`.
 
 ## Active item
 
-| ID | Work | Status | Boundary |
-|---|---|---:|---|
-| F6-E08 | Immutable container/base image digest pinning + drift gate | **IMPLEMENTED / IN REVIEW** | Repository/release reproducibility only; no deployment or provider mutation. |
+**None.**
 
-F6-E01 through F6-E07 are **CLOSED / REPO-SIDE PASS**.
+The previously defined implementation/hardening plan is closed at its documented boundaries:
 
-## F6-E08 objective
+- Batch 1–12: **CLOSED**;
+- W03/W09/W10/W11/W16/W17/W18/W20: **CLOSED at documented boundaries**;
+- F6-E01 through F6-E08: **CLOSED / REPO-SIDE PASS**.
 
-Current Docker/build/deployment image references are version-tagged but still mutable at the registry level. F6-E08 closes that reproducibility gap without changing runtime architecture.
+## Latest closure — F6-E08
 
-### Implementation checkpoint
+F6-E08 immutable container-image identity closed through PR #164.
 
-Implemented on the F6-E08 branch:
+Exact reviewed head:
 
-- Node/Postgres/Temporal/Caddy external image refs use readable tags plus full sha256 digests;
-- production, local Temporal, and desktop Compose surfaces are governed;
-- repository-built ECORIONE images remain exempt because their identity is source/bundle-derived rather than registry-resolved;
-- `scripts/container-image-review.mjs` rejects tag-only, digest-only, malformed-digest, and unexpected dynamic external refs;
-- focused Vitest coverage is included;
-- normal CI + release-security acceptance execute/protect the review.
+```text
+6c46944108cdc275aebc682bd132ec9dc69e14e4
+```
 
-Closure still requires exact-head CI/Product Eval/relevant acceptance and guarded merge.
+Acceptance:
 
-### Implementation checklist
+```text
+CI #1114                         PASS
+Product Eval #353               PASS
+MCP External HTTPS #528         PASS
+Desktop Installer #70           PASS
+merged main                     cacffa6c59d6871ae1ab4e11ae17cd48847864c1
+```
 
-1. inventory every governed `FROM` and Compose image reference;
-2. bind each governed image to a reviewed digest while preserving a readable version tag;
-3. add a deterministic repository review script that rejects governed tag-only identities;
-4. add focused tests for valid pins, missing digests, malformed digests, and policy drift;
-5. wire the review into normal CI;
-6. wire it into release-security acceptance;
-7. run relevant exact-head CI/Product Eval/acceptance;
-8. guarded merge;
-9. synchronize current docs and mark F6-E08 closed.
+The new `images:digest-review` policy is wired into normal CI and release-security acceptance. Governed external Node/Postgres/Temporal/Caddy images remain readable-tag + immutable-digest pinned.
 
-### Invariants
+## Deferred by decision
 
-- no change to provider/model selection;
-- no hosted spend;
-- no W18 rerun;
-- no VPS/Cloudflare mutation;
-- no second scheduler/runtime;
-- no weakening existing security/release gates to obtain PASS.
+- compute-host/VPS + Cloudflare activation — **DEFERRED BY OPERATOR**;
+- AutoClick — **DEFERRED BY DESIGN**.
 
-## After F6-E08
+These are not blockers to closure of the existing repository baseline.
 
-Close/freeze the existing baseline first. Then, if the operator chooses, create a **new roadmap** for the next product layer. Projects / Work / Schedule / Brain belong to that later roadmap and must not be silently folded into Fase 6 hardening.
+## Future work
+
+Projects / Work / Schedule / Brain remain discussion material only. They are **not an active roadmap yet**.
+
+Before implementation resumes, create a new explicit scope/roadmap after architecture discussion. Do not implicitly continue F6 or create Batch 13.

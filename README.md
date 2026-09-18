@@ -4,7 +4,7 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-> **Current status — 2026-09-18:** the defined Batch 1–12 platform roadmap is **CLOSED**; Windows runtime and installer are verified; W16/W17/W18/W20 and F6-E01 through F6-E07 are closed at their documented boundaries; **F6-E08 container image digest pinning is ACTIVE**. Production host/Cloudflare activation is deferred by operator. AutoClick remains deferred by design.
+> **Current status — 2026-09-18:** the defined Batch 1–12 platform roadmap is **CLOSED**; Windows runtime and installer are verified; W16/W17/W18/W20 and **F6-E01 through F6-E08 are CLOSED at their documented boundaries**. There is no active scope in the previous hardening plan. Production host/Cloudflare activation remains deferred by operator. AutoClick remains deferred by design.
 
 **Start here:** [docs/README.md](docs/README.md). Do not use dated audits or verification records as current-state documents.
 
@@ -50,18 +50,9 @@ Core rules:
 
 ## Current work
 
-Only one bounded repository-hardening scope is active:
+The previous implementation/hardening plan has **no active item**. F6-E08 closed after exact-head CI, Product Eval, MCP external acceptance, and Desktop Installer all passed and PR #164 merged.
 
-```text
-F6-E08
-= pin governed container/base images by immutable digest
-+ deterministic drift review
-+ focused tests
-+ CI/release-security wiring
-+ exact-head acceptance before closure
-```
-
-After F6-E08 is closed, the existing baseline should be frozen/verified before opening the next product roadmap. The discussed Projects / Work / Schedule / Brain evolution is **not part of the active F6-E08 scope**.
+The current repository baseline should now be treated as the clean discussion point for whatever product scope is explicitly approved next. Projects / Work / Schedule / Brain remain **discussion/future scope only**, not an active implementation roadmap.
 
 ## Local development
 
