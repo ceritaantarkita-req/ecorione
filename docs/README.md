@@ -42,10 +42,11 @@ The old Batch 1–12 / W / F6 baseline is closed. The next roadmap uses **PE** i
 As of 2026-09-19:
 
 - Product Evolution architecture: **DOCUMENTED**;
-- PE-00: **ACTIVE / IN REVIEW**;
-- PE-01 through PE-08: **blocked by prior batch**.
+- PE-00: **CLOSED / PASS**;
+- PE-01: **ACTIVE**;
+- PE-02 through PE-08: **blocked by prior batch**.
 
-PE-00 is now active as a docs/contracts batch. PE-01 feature implementation remains blocked until PE-00 closes.
+PE-01 Project foundation is now active. Use ADR-35 + migration matrix + PE-01 acceptance as the implementation contract.
 
 ## Architecture and product reference
 
