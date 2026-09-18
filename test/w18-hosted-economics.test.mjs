@@ -2,9 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-  estimateOpenRouterReservationUsd,
-} from "../services/connect/src/providers/openrouter.ts";
+import { estimateOpenRouterReservationUsd } from "../services/connect/src/providers/openrouter.ts";
 import {
   assembleContext,
   benchmarkCacheMarker,
@@ -280,12 +278,12 @@ describe("W18 hosted economics helpers", () => {
     expect(gate.failures.some((failure) => failure.includes("provider bukan openrouter"))).toBe(
       true,
     );
-    expect(gate.failures.some((failure) => failure.includes("routingProvider bukan Anthropic"))).toBe(
-      true,
-    );
-    expect(gate.failures.some((failure) => failure.includes("reservedUsd != reservation estimate"))).toBe(
-      true,
-    );
+    expect(
+      gate.failures.some((failure) => failure.includes("routingProvider bukan Anthropic")),
+    ).toBe(true);
+    expect(
+      gate.failures.some((failure) => failure.includes("reservedUsd != reservation estimate")),
+    ).toBe(true);
     expect(gate.failures.some((failure) => failure.includes("settlement bukan settled"))).toBe(
       true,
     );
