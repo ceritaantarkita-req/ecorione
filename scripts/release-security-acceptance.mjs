@@ -12,6 +12,8 @@ const required = [
   "scripts/self-host-rollback.sh",
   "scripts/secret-history-scan.mjs",
   "scripts/dependency-security-review.mjs",
+  ".github/workflows/ci.yml",
+  "package.json",
   "apps/ai/app/settings/page.tsx",
   "apps/ai/app/api/settings/[...path]/route.ts",
 ];
@@ -23,6 +25,8 @@ const proxy = readFileSync("apps/ai/lib/settings-proxy.ts", "utf8");
 const flow = readFileSync("services/flow/src/graph-activities.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
+const ci = readFileSync(".github/workflows/ci.yml", "utf8");
+const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 
 if (compose.includes("docker.sock"))
   findings.push("application baseline must not mount docker.sock");
