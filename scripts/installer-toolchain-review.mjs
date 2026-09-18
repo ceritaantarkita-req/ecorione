@@ -25,9 +25,7 @@ export function reviewInstallerWorkflowContent(content, version) {
     .filter(({ line }) => /choco\s+install\s+innosetup\b/i.test(line));
 
   if (installLines.length === 0) {
-    findings.push(
-      `${INSTALLER_WORKFLOW}: Chocolatey Inno Setup install step tidak ditemukan`,
-    );
+    findings.push(`${INSTALLER_WORKFLOW}: Chocolatey Inno Setup install step tidak ditemukan`);
     return findings;
   }
 
@@ -40,14 +38,10 @@ export function reviewInstallerWorkflowContent(content, version) {
   }
 
   if (!content.includes('Get-Content -Raw ".inno-setup-version"')) {
-    findings.push(
-      `${INSTALLER_WORKFLOW}: workflow harus membaca pin dari ${VERSION_FILE}`,
-    );
+    findings.push(`${INSTALLER_WORKFLOW}: workflow harus membaca pin dari ${VERSION_FILE}`);
   }
   if (!content.includes('--version="$version"')) {
-    findings.push(
-      `${INSTALLER_WORKFLOW}: choco install harus memakai --version="$version"`,
-    );
+    findings.push(`${INSTALLER_WORKFLOW}: choco install harus memakai --version="$version"`);
   }
 
   const major = version.split(".")[0];
