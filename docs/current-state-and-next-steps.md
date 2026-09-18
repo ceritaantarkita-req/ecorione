@@ -8,7 +8,7 @@ Historical plans, audits, failed attempts, and older verification notes remain e
 
 ## Current verdict
 
-ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 are closed at their documented boundaries. The active blocker for final current-state closure is **W18 hosted economic validation**. W18 is **FORMAL RUN READY, NOT CLOSED**: the one-call Anthropic-only diagnostic passed, the formal routing/reservation/pre-dispatch cap guard is merged to `main`, the durable spend ledger reconciled cleanly after the diagnostic, a fresh operator authorization of **US$0.25 maximum** has been granted for one formal W18 run, and a fail-closed operator wrapper is being added to remove the remaining manual startup/cleanup risk before execution. W20 remains blocked until formal W18 evidence passes.
+ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 are closed at their documented boundaries. The active blocker for final current-state closure is **W18 hosted economic validation**. W18 is **FORMAL RUN READY, NOT CLOSED**: the one-call Anthropic-only diagnostic passed, the formal routing/reservation/pre-dispatch cap guard is merged to `main`, the durable spend ledger reconciled cleanly after the diagnostic, a fresh operator authorization of **US$0.25 maximum** has been granted for one formal W18 run, and the fail-closed formal operator wrapper is merged through PR #138 at `05ddd248e90e26b9db2c785d533c55ec817db013` to remove the remaining manual startup/cleanup risk before execution. W20 remains blocked until formal W18 evidence passes.
 
 Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains deferred by design. Fase 6+ remains evidence-driven/open-ended.
 
@@ -128,15 +128,12 @@ A formal W18 PASS supports only a bounded statement on the five synthetic extrac
 
 ## Immediate next action
 
-1. merge this documentation sync through normal CI/Product Eval;
-2. synchronize local `main` to that docs-only merge;
-3. confirm engine is stopped and hosted mode is off;
-4. derive the current UTC-day committed spend from the durable ledger and set the temporary daily ceiling to `committed + 0.25` before starting Connect;
-5. start engine with kill switch open and Anthropic-only OpenRouter routing;
-6. run zero-spend preflight;
-7. execute the single authorized formal W18 run and persist its evidence;
-8. disable hosted mode, restore kill switch/default budget environment, and stop the engine;
-9. if formal W18 passes, document/merge W18 closure and continue W20; if it fails, stop and diagnose without rerunning.
+1. synchronize operator laptop to merged `main` `05ddd248e90e26b9db2c785d533c55ec817db013` or newer;
+2. confirm the previous engine is stopped;
+3. run `node .\\scripts\\w18-formal-operator.mjs --preflight-only` (zero spend);
+4. run `node .\\scripts\\w18-formal-operator.mjs --execute-authorized-w18` exactly once under the current US$0.25 authorization;
+5. preserve raw local evidence, its SHA-256 summary, and the postflight ledger state;
+6. if formal W18 passes, document/merge W18 closure and continue W20; if it fails, stop and diagnose without rerunning.
 
 Canonical W18 verification sources:
 
@@ -147,5 +144,6 @@ Canonical W18 verification sources:
 - `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
 - `docs/verification/w18-formal-run-readiness-2026-09-18.md`
 - `docs/verification/w18-formal-guard-merge-2026-09-18.md`
+- `docs/verification/w18-formal-operator-wrapper-2026-09-18.md`
 
 Historical audits dated before this handoff remain historical snapshots and are not current status sources.

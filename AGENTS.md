@@ -15,6 +15,7 @@ Per **2026-09-18**:
 - W18 hosted economic validation: **FORMAL RUN READY / NOT CLOSED**;
 - W18 one-call Anthropic-only diagnostic Attempt 4: **PASS**;
 - W18 formal dispatch/routing/cap guard: **MERGED TO `main`** via PR #135 at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact-head CI #994 + Product Eval #233 **PASS**;
+- W18 formal operator wrapper: **MERGED / REPO-SIDE PASS** via PR #138 at `05ddd248e90e26b9db2c785d533c55ec817db013`; exact head `c4b5b30f02716d66a8974903acb824f36ac1d12f`, CI #1001 + Product Eval #240 + MCP External #461 **PASS**;
 - W18 formal 20-call run: **authorized once up to US$0.25, not yet executed at this documentation checkpoint**;
 - W20: **BLOCKED ON W18**;
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
@@ -169,12 +170,11 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 ## Immediate next work
 
 ```text
-1. merge W18 formal operator wrapper + tests/docs
-2. sync operator laptop to merged main
-3. run wrapper zero-spend preflight
-4. execute wrapper once with --execute-authorized-w18 (max US$0.25)
-5. if PASS: merge W18 closure summary and continue W20
-6. if FAIL: preserve evidence, diagnose, obtain fresh authorization before retry
+1. sync operator laptop to merged main `05ddd248e90e26b9db2c785d533c55ec817db013` or newer
+2. run wrapper zero-spend preflight
+3. execute wrapper once with --execute-authorized-w18 (max US$0.25)
+4. if PASS: merge W18 closure summary and continue W20
+5. if FAIL: preserve evidence, diagnose, obtain fresh authorization before retry
 ```
 
 Prefer the wrapper over manual shell mutation: it computes the UTC-day ceiling from the ledger, injects formal values only into child processes, keeps hosted disabled during preflight, and performs best-effort cleanup in `finally`.

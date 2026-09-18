@@ -24,6 +24,7 @@ Current progression that matters:
 - W17 no-oracle benchmark: **DONE — VERIFIED LOCAL MODEL PASS**, 100 measured calls;
 - W18 Anthropic-only one-call hosted diagnostic: **PASS**;
 - W18 formal dispatch/routing/cap guard: **MERGED / REPO-SIDE VERIFIED** (PR #135; CI #994 + Product Eval #233 PASS);
+- W18 formal operator wrapper: **MERGED / REPO-SIDE VERIFIED** (PR #138; CI #1001 + Product Eval #240 + MCP External #461 PASS);
 - W18 formal 20-call hosted economics: **NOT YET CLOSED**.
 
 Canonical W18 docs:
@@ -160,7 +161,7 @@ W18 zero-spend preflight:
 node .\scripts\w18-hosted-economics.mjs --preflight
 ```
 
-Recommended fail-closed operator wrapper after it is merged to synchronized `main`:
+Recommended fail-closed operator wrapper (merged via PR #138; sync local `main` first):
 
 ```powershell
 node .\scripts\w18-formal-operator.mjs --preflight-only
