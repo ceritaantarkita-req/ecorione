@@ -26,7 +26,9 @@ export function reviewImageReference(path, line, reference) {
   const findings = [];
   const at = reference.lastIndexOf("@");
   if (at <= 0) {
-    return [`${path}:${String(line)} external image harus memakai readable tag + @sha256 digest: ${reference}`];
+    return [
+      `${path}:${String(line)} external image harus memakai readable tag + @sha256 digest: ${reference}`,
+    ];
   }
 
   const nameAndTag = reference.slice(0, at);

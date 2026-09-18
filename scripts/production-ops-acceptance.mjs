@@ -7,10 +7,14 @@ const compose = readFileSync(composePath, "utf8");
 const caddy = readFileSync("deploy/Caddyfile", "utf8");
 const dockerfile = readFileSync("Dockerfile", "utf8");
 
-const NODE_IMAGE = "node:22.20.0-bookworm-slim@sha256:b21fe589dfbe5cc39365d0544b9be3f1f33f55f3c86c87a76ff65a02f8f5848e";
-const POSTGRES_IMAGE = "postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94";
-const TEMPORAL_IMAGE = "temporalio/auto-setup:1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f";
-const CADDY_IMAGE = "caddy:2.11.4-alpine@sha256:ad27e531c8b286ff153c0e6e16587a1583e4111bb58c4d83bd73d6d3ef0a0ce1";
+const NODE_IMAGE =
+  "node:22.20.0-bookworm-slim@sha256:b21fe589dfbe5cc39365d0544b9be3f1f33f55f3c86c87a76ff65a02f8f5848e";
+const POSTGRES_IMAGE =
+  "postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94";
+const TEMPORAL_IMAGE =
+  "temporalio/auto-setup:1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f";
+const CADDY_IMAGE =
+  "caddy:2.11.4-alpine@sha256:ad27e531c8b286ff153c0e6e16587a1583e4111bb58c4d83bd73d6d3ef0a0ce1";
 
 function assert(condition, message) {
   if (!condition) throw new Error(`production-ops acceptance: ${message}`);
@@ -60,7 +64,10 @@ assert(caddy.includes("basic_auth"), "operator routes harus dilindungi auth reve
 assert(caddy.includes("X-Content-Type-Options"), "security headers Caddy hilang");
 assert(caddy.includes("reverse_proxy sync:17011"), "public MCP harus lewat Sync");
 assert(!caddy.includes("connect:17023"), "Connect tidak boleh diekspos reverse proxy");
-assert(dockerfile.includes(`FROM ${NODE_IMAGE}`), "Node image harus exact-pinned ke readable tag + digest");
+assert(
+  dockerfile.includes(`FROM ${NODE_IMAGE}`),
+  "Node image harus exact-pinned ke readable tag + digest",
+);
 
 const env = {
   ...process.env,

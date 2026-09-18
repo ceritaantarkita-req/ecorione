@@ -11,33 +11,24 @@ const DIGEST = `sha256:${"a".repeat(64)}`;
 describe("immutable container image review", () => {
   it("accepts external readable tag + full sha256 digest", () => {
     expect(
-      reviewImageReference(
-        "deploy/compose.yml",
-        3,
-        `postgres:17.6-alpine@${DIGEST}`,
-      ),
+      reviewImageReference("deploy/compose.yml", 3, `postgres:17.6-alpine@${DIGEST}`),
     ).toEqual([]);
     expect(
-      reviewDockerfileContent(
-        "Dockerfile",
-        `FROM node:22.20.0-bookworm-slim@${DIGEST}\n`,
-      ),
+      reviewDockerfileContent("Dockerfile", `FROM node:22.20.0-bookworm-slim@${DIGEST}\n`),
     ).toEqual([]);
   });
 
   it("rejects tag-only external references", () => {
-    expect(reviewComposeContent("deploy/compose.yml", "image: postgres:17.6-alpine\n")).toEqual([
+    expect(
+      reviewComposeContent("deploy/compose.yml", "image: postgres:17.6-alpine\n"),
+    ).toEqual([
       "deploy/compose.yml:1 external image harus memakai readable tag + @sha256 digest: postgres:17.6-alpine",
     ]);
   });
 
   it("rejects digest-only and malformed digest references", () => {
     expect(
-      reviewImageReference(
-        "deploy/compose.yml",
-        7,
-        `postgres@${DIGEST}`,
-      ),
+      reviewImageReference("deploy/compose.yml", 7, `postgres@${DIGEST}`),
     ).toContain(
       `deploy/compose.yml:7 image digest harus mempertahankan explicit readable tag: postgres@${DIGEST}`,
     );
@@ -53,7 +44,9 @@ describe("immutable container image review", () => {
   });
 
   it("allows repository-built ECORIONE images but not arbitrary dynamic images", () => {
-    expect(isRepositoryBuiltImage("ecorione:${ECORIONE_IMAGE_TAG:-local}", "deploy/compose.yml")).toBe(true);
+    expect(
+      isRepositoryBuiltImage("ecorione:${ECORIONE_IMAGE_TAG:-local}", "deploy/compose.yml"),
+    ).toBe(true);
     expect(
       isRepositoryBuiltImage(
         "${ECORIONE_DESKTOP_IMAGE:?set ECORIONE_DESKTOP_IMAGE}",
@@ -61,11 +54,7 @@ describe("immutable container image review", () => {
       ),
     ).toBe(true);
     expect(
-      reviewImageReference(
-        "deploy/compose.yml",
-        10,
-        "${UNTRUSTED_EXTERNAL_IMAGE}",
-      ),
+      reviewImageReference("deploy/compose.yml", 10, "${UNTRUSTED_EXTERNAL_IMAGE}"),
     ).not.toEqual([]);
   });
 
