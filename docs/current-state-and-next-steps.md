@@ -38,7 +38,7 @@ The next explicit non-deployment scope is **F6-E01 — bug/task-derived held-out
 | W18 hosted economic validation | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | 20-call formal PASS; duplicate earlier batch reconciled; combined US$0.183312 < US$0.25; one-shot guard merged via PR #142. |
 | W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
 | W20 final current-state sync | **CLOSED** | Canonical state synchronized after W18 closure; future work is separate evidence-driven scope. |
-| F6-E01 held-out selector eval dataset | **ACTIVE — NEW EXPLICIT SCOPE** | Bug/task-derived deterministic selector cases + global eval-budget governance; no provider spend and no broad optimizer claim. |
+| F6-E01 held-out selector eval dataset | **IMPLEMENTED / IN REVIEW** | 10 bug/task-derived held-out cases + global 26/50 eval-budget guard + Product Eval wiring; awaiting exact-head gates/merge. |
 
 ## W18 provider and experiment profile
 
@@ -108,16 +108,15 @@ A formal W18 PASS supports only a bounded statement on the five synthetic extrac
 
 ## Immediate next action
 
-W18 and W20 remain closed. Execute **F6-E01** as a new repository-side evidence scope:
+F6-E01 implementation is now **IN REVIEW**:
 
-1. define a held-out selector manifest whose cases each cite a real bug/task provenance;
-2. evaluate `semantic-v1` deterministically without feeding oracle indexes into selection;
-3. enforce a repository-wide permanent eval case budget of at most 50 across governed manifests;
-4. add the new deterministic suite to Product Eval;
-5. keep claim boundaries explicit: this is selector regression evidence, not hosted cost/model-quality/general production proof;
-6. merge only after exact-head CI/Product Eval PASS.
+- 10 held-out selector cases are present and each cites real bug/task provenance;
+- evaluation-only relevance labels are stripped before `semantic-v1` is called;
+- repository-wide governed eval inventory is 26/50;
+- Product Eval runs the held-out selector + inventory guards;
+- no provider/model call is part of the scope.
 
-Do **not** rerun the paid W18 benchmark.
+Next gate: exact-head CI + Product Eval PASS, guarded merge, then mark F6-E01 CLOSED / REPO-SIDE PASS. Do **not** rerun the paid W18 benchmark.
 
 Canonical W18 verification sources:
 
@@ -135,3 +134,6 @@ Canonical W18 verification sources:
 - `docs/verification/w20-final-current-state-closure-2026-09-18.md`
 
 Historical audits dated before this handoff remain historical snapshots and are not current status sources.
+
+
+F6-E01 verification source: `docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md`.
