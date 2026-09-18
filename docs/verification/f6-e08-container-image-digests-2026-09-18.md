@@ -52,6 +52,10 @@ The permanent review requires:
 
 This scope pins the registry image identity. It does not claim that upstream tags will never be republished; digest pinning is precisely what prevents such tag movement from changing a reviewed build.
 
+## Lock update rule
+
+Any future third-party image update must change `deploy/container-image-lock.json` and every governed runtime surface in the same reviewed pull request. CI rejects one-sided changes, including a syntactically valid digest that does not match the lock. New digests must be resolved from the upstream registry and their provenance recorded in the corresponding verification note.
+
 ## Closure gate
 
 F6-E08 closes only after:
