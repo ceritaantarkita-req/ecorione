@@ -207,16 +207,19 @@ If any gate/provider/cost/accounting condition fails, stop. Do not rerun under t
 - `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
 - `docs/verification/w18-formal-run-readiness-2026-09-18.md`
 - `docs/verification/w18-formal-guard-merge-2026-09-18.md`
+- `docs/verification/w18-formal-operator-wrapper-2026-09-18.md`
 
 ## Immediate execution order
 
-1. finish/merge the documentation sync;
-2. synchronize operator laptop to the resulting docs-only `main`;
-3. formal W18 zero-spend preflight;
-4. execute the single authorized 20-call formal W18 attempt;
+1. merge the formal operator wrapper and its repository-side tests/docs;
+2. synchronize operator laptop to the resulting `main`;
+3. run `node .\\scripts\\w18-formal-operator.mjs --preflight-only`;
+4. run `node .\\scripts\\w18-formal-operator.mjs --execute-authorized-w18` exactly once;
 5. if PASS, commit sanitized closure verification and close W18;
 6. continue W20 final current-state sync;
 7. if FAIL, preserve evidence and diagnose before any new authorization.
+
+The wrapper is repository-side preparation only until merged and executed from synchronized `main`; its implementation made no hosted provider call.
 
 ## Persistent evidence rules
 

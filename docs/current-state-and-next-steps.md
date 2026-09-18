@@ -8,7 +8,7 @@ Historical plans, audits, failed attempts, and older verification notes remain e
 
 ## Current verdict
 
-ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 are closed at their documented boundaries. The active blocker for final current-state closure is **W18 hosted economic validation**. W18 is **FORMAL RUN READY, NOT CLOSED**: the one-call Anthropic-only diagnostic passed, the formal routing/reservation/pre-dispatch cap guard is merged to `main`, the durable spend ledger reconciled cleanly after the diagnostic, and a fresh operator authorization of **US$0.25 maximum** has been granted for one formal W18 run. W20 remains blocked until formal W18 evidence passes.
+ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 are closed at their documented boundaries. The active blocker for final current-state closure is **W18 hosted economic validation**. W18 is **FORMAL RUN READY, NOT CLOSED**: the one-call Anthropic-only diagnostic passed, the formal routing/reservation/pre-dispatch cap guard is merged to `main`, the durable spend ledger reconciled cleanly after the diagnostic, a fresh operator authorization of **US$0.25 maximum** has been granted for one formal W18 run, and a fail-closed operator wrapper is being added to remove the remaining manual startup/cleanup risk before execution. W20 remains blocked until formal W18 evidence passes.
 
 Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains deferred by design. Fase 6+ remains evidence-driven/open-ended.
 

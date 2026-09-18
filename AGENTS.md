@@ -103,6 +103,7 @@ If any formal call fails, produces unusable completion, non-positive billed cost
 - `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
 - `docs/verification/w18-formal-run-readiness-2026-09-18.md`
 - `docs/verification/w18-formal-guard-merge-2026-09-18.md`
+- `docs/verification/w18-formal-operator-wrapper-2026-09-18.md`
 
 Raw `.ecorione/evidence/` artifacts remain local/gitignored. Commit only sanitized verification summaries.
 
@@ -168,9 +169,12 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 ## Immediate next work
 
 ```text
-1. merge current documentation sync
+1. merge W18 formal operator wrapper + tests/docs
 2. sync operator laptop to merged main
-3. execute one authorized formal W18 attempt (max US$0.25)
-4. if PASS: merge W18 closure summary and continue W20
-5. if FAIL: preserve evidence, diagnose, obtain fresh authorization before retry
+3. run wrapper zero-spend preflight
+4. execute wrapper once with --execute-authorized-w18 (max US$0.25)
+5. if PASS: merge W18 closure summary and continue W20
+6. if FAIL: preserve evidence, diagnose, obtain fresh authorization before retry
 ```
+
+Prefer the wrapper over manual shell mutation: it computes the UTC-day ceiling from the ledger, injects formal values only into child processes, keeps hosted disabled during preflight, and performs best-effort cleanup in `finally`.
