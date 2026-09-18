@@ -40,10 +40,11 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | F6-E04 | **CLOSED / REPO-SIDE PASS** | PR #153 merged; CI #1041 + Product Eval #280 + MCP #473 PASS; pin-review step PASS. |
 | F6-E05 | **CLOSED / REPO-SIDE PASS** | PR #155 merged; CI #1045 + Product Eval #284 + MCP #475 PASS; fixed runner policy green. |
 | F6-E06 | **CLOSED / REPO-SIDE PASS** | PR #157 merged; CI #1055 + Product Eval #294 + MCP #483 PASS; exact Node toolchain gate green. |
-| F6-E07 | **IMPLEMENTED / IN REVIEW** | Inno Setup 6.7.1 pin + installer-toolchain drift gate + PR-triggered Windows installer acceptance implemented; exact-head gates pending. |
+| F6-E07 | **CLOSED / REPO-SIDE PASS** | PR #160 merged; CI #1072 same-head rerun PASS; Product Eval #311 + MCP #498 + Desktop Installer #41 PASS. |
+| F6-E08 | **ACTIVE** | Digest-pin governed container/base images and continuously reject tag-only mutable identities. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E07 REVIEW** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E08** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -143,4 +144,8 @@ F6-E06 closed through PR #157. Exact reviewed head `cd04be6385ffb360862e38e63dcd
 
 ## F6-E07 active scope
 
-F6-E07 implementation pins `.inno-setup-version` to `6.7.1`, changes Desktop Installer to read that file and pass Chocolatey `--version`, adds `scripts/installer-toolchain-review.mjs` plus focused tests, wires the review into normal CI and release-security acceptance, and adds a pull-request trigger so installer/toolchain changes exercise the real Windows installer job. Closure waits on exact-head CI/Product Eval/Desktop Installer.
+F6-E07 closed through PR #160. Exact reviewed head `472819b3a7c875246ce76daee8212a7aed8fc8c9` passed Product Eval #311, MCP External #498, and Desktop Installer #41. CI #1072 initially timed out in the pre-existing Phase 4 Temporal acceptance; a failed-job rerun on the exact same head passed the full verify sequence, including **Installer toolchain review**, **Release security acceptance**, and production build. Merged main: `9362419a9e2766750237e30792a50494d39c9b17`.
+
+## F6-E08 active scope
+
+F6-E08 targets tag-only container identity. `Dockerfile` uses `node:22.20.0-bookworm-slim`; deployment compose files use exact Postgres/Caddy/Temporal tags, but none are bound to repository-reviewed `@sha256:` digests. Scope: digest-pin governed build/runtime images while keeping readable version tags, add deterministic drift review + focused tests + CI/release-security self-wiring, and require relevant acceptance before closure. Production deployment remains operator-owned.
