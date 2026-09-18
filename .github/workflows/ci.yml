@@ -20,6 +20,24 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
+      - name: Resolve E08 container image digests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for image in \
+            node:22.20.0-bookworm-slim \
+            postgres:17.6-alpine \
+            caddy:2.11.4-alpine \
+            temporalio/auto-setup:1.29.7
+          do
+            digest="$(docker buildx imagetools inspect "$image" | awk '/^Digest:/ {print $2; exit}')"
+            if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "::error::Unable to resolve immutable digest for $image: $digest"
+              exit 1
+            fi
+            echo "ECORIONE_E08_IMAGE_DIGEST $image $digest"
+          done
+
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
