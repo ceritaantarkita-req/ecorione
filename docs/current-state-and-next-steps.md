@@ -114,9 +114,9 @@ F6-E01 is **CLOSED / REPO-SIDE PASS**. PR #146 merged the held-out selector suit
 
 F6-E02 is **CLOSED / REPO-SIDE PASS**. PR #149 exact head `1cd4795b1a65baa1a2320713a3c8ffe520cfc98f` passed CI #1029 and Product Eval #268; the new Dependency policy review step itself passed and merged at `20aedfe94ee9f3db321dd3a66625bedd56a334a1`.
 
-F6-E03 is now **IMPLEMENTED / IN REVIEW**. Normal CI contains a named Release security acceptance step that runs `node scripts/release-security-acceptance.mjs`, and the acceptance now checks that its own named CI step/command remains present when invoked manually or through release operations.
+F6-E03 is **CLOSED / REPO-SIDE PASS**. PR #151 exact head `fdd532e0b6f2fe550708b8389ecc1f47afe946f7` passed CI #1033 and Product Eval #272; the named Release security acceptance CI step itself was observed PASS. The merge landed at `b9e42445310921ef3c23cda2220631df49403e41`.
 
-Next gate: exact-head CI must show the new Release security acceptance step PASS; Product Eval must also pass if triggered; then guarded merge + canonical closure sync.
+F6-E04 is **ACTIVE**. The next concrete repository-side gap is mutable GitHub Actions references. The scope is to pin remote action invocations to immutable full commit SHAs, scan every tracked workflow YAML for mutable remote refs, wire that check into normal CI/release acceptance, and add deterministic tests.
 
 This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
 
@@ -145,3 +145,5 @@ F6-E02 verification source: `docs/verification/f6-e02-dependency-policy-ci-gate-
 
 
 F6-E03 verification source: `docs/verification/f6-e03-release-security-acceptance-ci-gate-2026-09-18.md`.
+
+F6-E04 active scope: immutable GitHub Actions pinning + continuous repository policy gate.
