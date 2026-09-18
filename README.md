@@ -4,7 +4,7 @@
 
 ECORIONE menjaga kesinambungan lintas provider/model sambil mempertahankan local-first boundary, approval, audit trail, durable execution, MCP, dan spend control yang eksplisit.
 
-> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **FORMAL RUN READY / NOT CLOSED** after a successful Anthropic-only one-call diagnostic and merged formal dispatch/routing guards · W20 **BLOCKED ON W18** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
+> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **FORMAL RUNTIME PASS / CLOSURE HOLD** pending reconciliation of a US$0.091596 pre-run ledger delta · W20 **BLOCKED ON W18 RECONCILIATION** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
 
 Untuk manusia/agent baru: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`docs/active-work-plan.md`](docs/active-work-plan.md), [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md), dan [`AGENTS.md`](AGENTS.md). Audit bertanggal lama adalah historical snapshots, bukan current-state source.
 
@@ -25,7 +25,7 @@ Current progression that matters:
 - W18 Anthropic-only one-call hosted diagnostic: **PASS**;
 - W18 formal dispatch/routing/cap guard: **MERGED / REPO-SIDE VERIFIED** (PR #135; CI #994 + Product Eval #233 PASS);
 - W18 formal operator wrapper: **MERGED / REPO-SIDE VERIFIED** (PR #138; CI #1001 + Product Eval #240 + MCP External #461 PASS);
-- W18 formal 20-call hosted economics: **NOT YET CLOSED**.
+- W18 formal 20-call hosted economics: **RUNTIME PASS** — 20/20 measured calls, US$0.091716 formal spend, `closureEligible=true`; overall W18 closure held pending reconciliation of a US$0.091596 pre-run ledger delta.
 
 Canonical W18 docs:
 
@@ -104,37 +104,34 @@ This is bounded local evidence. It does not prove hosted dollar savings or unive
 
 ## W18 hosted economics
 
-Formal profile:
+Formal profile remains pinned to OpenRouter / `anthropic/claude-sonnet-4.5`, Anthropic-only routing, fallback disabled, two lanes, five tasks, two repeats, 20 measured calls, and provider-reported `usage.cost` as billing authority.
+
+## W18 formal runtime result
+
+The synchronized formal execution on `main` `f249d9c0681462253bff21ca30354892ca4ce60f` completed the full **5 tasks × 2 repeats × 2 lanes = 20 measured hosted calls** and the harness returned `aggregate.pass=true` plus `closureEligible=true`.
 
 ```text
-provider gateway = OpenRouter
-pricing identity = claude-sonnet-4-5-20250929
-runtime model = anthropic/claude-sonnet-4.5
-provider.only = ["anthropic"]
-allow_fallbacks = false
-lanes = full-inline, ecx-selective-auto
-5 tasks × 2 repeats × 2 lanes = 20 calls
-warmups = 0
-cost authority = OpenRouter usage.cost
+full-inline billed cost = US$0.059106
+ecx-selective-auto billed cost = US$0.032610
+actual formal run spend = US$0.091716
+saved vs full-inline = US$0.026496
+savedPct = 44.827936250126896
+medianTaskSavedPct = 44.4913020558777
+medianTaskInputTokenReductionPct = 50.629874025194965
+failedTasks = 0
 ```
 
-Attempts 1–3 preserved valid failures. Attempt 3 identified `content_filter` through `routingProvider=Amazon Bedrock`. After provider routing was pinned Anthropic-only with fallback disabled, Attempt 4 passed on the same `procurement-award/full-inline` diagnostic with quality `1`, billed cost `$0.006681`, and durable settlement `settled`. PR #135 then merged the formal pre-dispatch cap guard, successful routing evidence, reservation-estimator coupling, and durable reservation consistency checks into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`.
+Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920047a27eb4e3db38cb53e63192af3ea7857617d8f125c7056bd6c162da`.
 
-Latest zero-spend postflight after Attempt 4:
+Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
 
-```text
-dailyCommittedUsd = 0.160104
-monthlyCommittedUsd = 0.160104
-unsettledReservations = 1
-dailyHeadroomUsd = 0.839896
-monthlyHeadroomUsd = 9.839896
-hostedCallsEnabled = false
-costKillSwitch = 1
-```
+### Ledger reconciliation hold
 
-The single unsettled reservation is historical Attempt 2. Do not rewrite it.
+The immediately preceding zero-spend preflight reported daily committed US$0 and monthly committed US$0.160104. The formal execution began with daily committed **US$0.091596** and monthly committed **US$0.251700**. The supplied transcript does not establish the provenance of that intervening **US$0.091596**.
 
-A fresh authorization exists for **one formal W18 attempt up to US$0.25**. This is not standing permission for retries. The formal process must derive current UTC-day committed spend at execution time and use the durable Connect reservation boundary as the pre-dispatch hard stop.
+Therefore the formal harness result is **PASS**, but W18 overall remains **NOT CLOSED** until that earlier spend is reconciled from the local durable ledger. Do not rerun the paid formal benchmark. Preserve the ledger unchanged and commit only a sanitized reconciliation summary.
+
+Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
 
 ## Menjalankan lokal
 
@@ -198,12 +195,11 @@ Production activation remains deferred by operator. Tooling/runbooks stay availa
 ## Next execution order
 
 ```text
-1. documentation sync (this update)
-2. synchronize operator laptop to merged main
-3. one authorized formal W18 run, max US$0.25
-4. if PASS: commit W18 closure evidence
-5. W20 final current-state sync
-6. if FAIL: preserve evidence, diagnose, require fresh authorization before retry
+1. inspect the local durable spend ledger for the US$0.091596 pre-run delta
+2. document sanitized provenance without rewriting ledger history
+3. if reconciled: close W18
+4. perform W20 final current-state sync
+5. no paid W18 rerun is authorized or needed for the passing formal benchmark
 ```
 
 ## Lisensi

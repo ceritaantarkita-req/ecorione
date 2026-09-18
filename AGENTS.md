@@ -12,12 +12,12 @@ Per **2026-09-18**:
 - W11 installer: **DONE — WINDOWS INSTALLER VERIFIED**;
 - W16 automatic semantic selector: **DONE — REPO SIDE**;
 - W17 no-oracle validation: **DONE — VERIFIED LOCAL MODEL PASS**;
-- W18 hosted economic validation: **FORMAL RUN READY / NOT CLOSED**;
+- W18 hosted economic validation: **FORMAL RUNTIME PASS / CLOSURE HOLD** pending US$0.091596 pre-run ledger reconciliation;
 - W18 one-call Anthropic-only diagnostic Attempt 4: **PASS**;
 - W18 formal dispatch/routing/cap guard: **MERGED TO `main`** via PR #135 at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact-head CI #994 + Product Eval #233 **PASS**;
 - W18 formal operator wrapper: **MERGED / REPO-SIDE PASS** via PR #138 at `05ddd248e90e26b9db2c785d533c55ec817db013`; exact head `c4b5b30f02716d66a8974903acb824f36ac1d12f`, CI #1001 + Product Eval #240 + MCP External #461 **PASS**;
-- W18 formal 20-call run: **authorized once up to US$0.25, not yet executed at this documentation checkpoint**;
-- W20: **BLOCKED ON W18**;
+- W18 formal 20-call run: **EXECUTED / PASS** — 20/20 measured calls, US$0.091716 formal spend, `closureEligible=true`; do not rerun;
+- W20: **BLOCKED ON W18 RECONCILIATION**;
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**;
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
@@ -29,84 +29,36 @@ Historical dated audits are snapshots. Do not rewrite their historical claims me
 
 ## W18 current boundary
 
-Formal experiment:
+## W18 formal runtime result
+
+The synchronized formal execution on `main` `f249d9c0681462253bff21ca30354892ca4ce60f` completed the full **5 tasks × 2 repeats × 2 lanes = 20 measured hosted calls** and the harness returned `aggregate.pass=true` plus `closureEligible=true`.
 
 ```text
-provider gateway = OpenRouter
-pricing identity = claude-sonnet-4-5-20250929
-runtime model = anthropic/claude-sonnet-4.5
-provider.only = ["anthropic"]
-allow_fallbacks = false
-modes = full-inline, ecx-selective-auto
-5 tasks × 2 repeats × 2 modes = 20 measured calls
-warmups = 0
-cost authority = OpenRouter usage.cost
+full-inline billed cost = US$0.059106
+ecx-selective-auto billed cost = US$0.032610
+actual formal run spend = US$0.091716
+saved vs full-inline = US$0.026496
+savedPct = 44.827936250126896
+medianTaskSavedPct = 44.4913020558777
+medianTaskInputTokenReductionPct = 50.629874025194965
+failedTasks = 0
 ```
 
-Attempt chronology:
+Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920047a27eb4e3db38cb53e63192af3ea7857617d8f125c7056bd6c162da`.
 
-- Attempt 1 failed after 8/20; known billed `$0.027000`.
-- Attempt 2 failed on intended call 5; four successful calls billed `$0.019266`; one historical uncertain reservation `$0.107157` remains.
-- Attempt 3 one-call diagnostic failed with `content_filter`, `routingProvider=Amazon Bedrock`, authoritative billed cost `$0`; ledger remained `$0.153423` committed.
-- Attempt 4 one-call diagnostic used Anthropic-only routing with fallback disabled and **PASSed**: quality `1`, 2002 input tokens, 45 output tokens, billed `$0.006681`, settlement `settled`, no cache hit.
+Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
 
-Latest postflight:
+### Ledger reconciliation hold
 
-```text
-dailyCommittedUsd = 0.160104
-monthlyCommittedUsd = 0.160104
-unsettledReservations = 1
-dailyHeadroomUsd = 0.839896
-monthlyHeadroomUsd = 9.839896
-hostedCallsEnabled = false
-costKillSwitch = 1
-```
+The immediately preceding zero-spend preflight reported daily committed US$0 and monthly committed US$0.160104. The formal execution began with daily committed **US$0.091596** and monthly committed **US$0.251700**. The supplied transcript does not establish the provenance of that intervening **US$0.091596**.
 
-The ledger day/month keys are UTC-based. Never assume the historical daily committed value remains current after UTC rollover or other hosted activity.
+Therefore the formal harness result is **PASS**, but W18 overall remains **NOT CLOSED** until that earlier spend is reconciled from the local durable ledger. Do not rerun the paid formal benchmark. Preserve the ledger unchanged and commit only a sanitized reconciliation summary.
 
-## Formal W18 authorization rules
+Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
 
-Current authorization: **one formal W18 attempt, max US$0.25**.
+### Agent rule for reconciliation
 
-This is not standing permission and cannot be reused for a retry after a partial/failed formal run.
-
-Before starting Connect for the formal run:
-
-1. derive current UTC-day committed spend from the durable ledger;
-2. set temporary `ECORIONE_SPEND_DAILY_USD = currentCommitted + 0.25`;
-3. start Connect/engine with `ECORIONE_COST_KILL_SWITCH=0`;
-4. start Connect/engine with `ECORIONE_OPENROUTER_PROVIDER_ONLY=anthropic`;
-5. set current-run `ECORIONE_W18_ALLOW_SPEND=YES`;
-6. set current-run `ECORIONE_W18_MAX_SPEND_USD=0.25`;
-7. enable runtime hosted calls only for the bounded run;
-8. require zero-spend preflight PASS before the formal command.
-
-Connect's durable reservation happens before provider dispatch and is the hard admission boundary. The formal harness additionally rejects the next call before dispatch when cumulative actual spend plus the next conservative reservation would exceed the explicit W18 cap. Do not weaken either boundary or manually edit historical ledger entries.
-
-## Formal failure behavior
-
-If any formal call fails, produces unusable completion, non-positive billed cost, unsettled accounting, quality failure, selector recall failure, unexpected cache hit, or any aggregate gate failure:
-
-- stop the run;
-- disable hosted mode;
-- restore kill switch/default environment;
-- stop the engine launched with kill switch `0`;
-- preserve raw local evidence/logs and sanitized facts;
-- inspect ledger;
-- do **not** rerun without a new explicit spend authorization.
-
-## Canonical W18 evidence
-
-- `docs/verification/w18-hosted-economics-preflight-2026-09-17.md`
-- `docs/verification/w18-hosted-economics-attempt-1-2026-09-17.md`
-- `docs/verification/w18-hosted-economics-attempt-2-2026-09-17.md`
-- `docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md`
-- `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
-- `docs/verification/w18-formal-run-readiness-2026-09-18.md`
-- `docs/verification/w18-formal-guard-merge-2026-09-18.md`
-- `docs/verification/w18-formal-operator-wrapper-2026-09-18.md`
-
-Raw `.ecorione/evidence/` artifacts remain local/gitignored. Commit only sanitized verification summaries.
+Do not rerun W18. Inspect the local durable ledger and reconcile the US$0.091596 delta that appeared between the preceding zero-spend preflight and the formal-run start. Preserve raw/private ledger data locally and commit only sanitized provenance. W18 can be marked CLOSED only after this discrepancy is explained without rewriting historical entries.
 
 ## W16/W17 claim boundary
 
@@ -170,11 +122,12 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 ## Immediate next work
 
 ```text
-1. sync operator laptop to merged main `05ddd248e90e26b9db2c785d533c55ec817db013` or newer
-2. run wrapper zero-spend preflight
-3. execute wrapper once with --execute-authorized-w18 (max US$0.25)
-4. if PASS: merge W18 closure summary and continue W20
-5. if FAIL: preserve evidence, diagnose, obtain fresh authorization before retry
+1. inspect the local durable spend ledger
+2. reconcile the US$0.091596 pre-run delta
+3. commit sanitized reconciliation evidence
+4. close W18 if provenance is consistent
+5. complete W20 final current-state sync
+6. do not rerun the passing paid formal benchmark
 ```
 
-Prefer the wrapper over manual shell mutation: it computes the UTC-day ceiling from the ledger, injects formal values only into child processes, keeps hosted disabled during preflight, and performs best-effort cleanup in `finally`.
+The wrapper remains the required path for any future explicitly authorized hosted validation because it computes the UTC-day ceiling, injects ephemeral runtime overrides, and restores hosted mode off in `finally`.
