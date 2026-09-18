@@ -8,6 +8,15 @@ on:
         required: true
         default: "0.1.0"
         type: string
+  pull_request:
+    paths:
+      - ".github/workflows/desktop-installer.yml"
+      - ".inno-setup-version"
+      - ".node-version"
+      - "desktop/**"
+      - "scripts/desktop-bundle.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
 
 permissions:
   contents: read
@@ -17,7 +26,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      ECORIONE_VERSION: ${{ inputs.version }}
+      ECORIONE_VERSION: ${{ inputs.version || '0.1.0' }}
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -41,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ecorione-desktop-bundle
-          path: .ecorione/desktop-release/ECORIONE-${{ inputs.version }}-windows-x64
+          path: .ecorione/desktop-release/ECORIONE-${{ env.ECORIONE_VERSION }}-windows-x64
           if-no-files-found: error
           retention-days: 7
 
@@ -50,7 +59,7 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 20
     env:
-      ECORIONE_VERSION: ${{ inputs.version }}
+      ECORIONE_VERSION: ${{ inputs.version || '0.1.0' }}
       ECORIONE_BUNDLE_DIR: ${{ github.workspace }}\bundle
       ECORIONE_INSTALLER_OUT: ${{ github.workspace }}\installer-out
 
@@ -102,7 +111,7 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: ECORIONE-Setup-${{ inputs.version }}
+          name: ECORIONE-Setup-${{ env.ECORIONE_VERSION }}
           path: installer-out
           if-no-files-found: error
           retention-days: 14
