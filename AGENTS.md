@@ -28,7 +28,7 @@ Per **2026-09-18**:
 - F6-E05 fixed GitHub-hosted runner OS labels: **CLOSED / REPO-SIDE PASS**; PR #155, CI #1045, Product Eval #284, MCP #475;
 - F6-E06 immutable Node toolchain: **CLOSED / REPO-SIDE PASS**; PR #157, CI #1055, Product Eval #294, MCP #483;
 - F6-E07 pinned Inno Setup toolchain: **CLOSED / REPO-SIDE PASS**; PR #160, CI #1072 rerun, Product Eval #311, MCP #498, Desktop Installer #41;
-- F6-E08 container image digest pinning: **ACTIVE**;
+- F6-E08 container image digest pinning: **IMPLEMENTED / IN REVIEW**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -215,5 +215,23 @@ F6-E08 = ACTIVE
 - current Docker/container refs are exact-tagged but not digest-pinned
 - scope = digest-pin build/runtime container identities and add deterministic drift review
 - preserve readable version tags alongside digests where supported
+- no provider/deployment mutation
+```
+
+
+## F6-E08 implementation handoff
+
+```text
+F6-E08 = IMPLEMENTED / IN REVIEW
+- Dockerfile Node base pinned as readable tag + OCI sha256 digest
+- deploy/compose.yml Postgres, Temporal, Caddy pinned as tag + digest
+- deploy/local-temporal.yml shares the same Postgres/Temporal digests
+- scripts/container-image-digest-review.mjs enforces governed external image identity
+- repository-built ecorione image and scratch remain explicit exemptions
+- normal CI runs Container image digest review
+- release-security acceptance protects and re-executes the policy
+- production-ops acceptance checks exact reviewed identities
+- resolver was temporary and removed after CI #1078 registry resolution
+- next = exact-head CI/Product Eval -> fix findings -> guarded merge -> closure
 - no provider/deployment mutation
 ```
