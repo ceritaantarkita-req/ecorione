@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 22
+          node-version-file: ".node-version"
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -63,6 +63,9 @@ jobs:
       - name: GitHub Actions runner review
         run: pnpm run actions:runner-review
 
+      - name: Node toolchain review
+        run: pnpm run toolchain:node-review
+
       - name: Release security acceptance
         run: node scripts/release-security-acceptance.mjs
 
@@ -86,7 +89,7 @@ jobs:
 
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 22
+          node-version-file: ".node-version"
 
       - name: Secret scan seluruh riwayat git
         run: node scripts/secret-history-scan.mjs
