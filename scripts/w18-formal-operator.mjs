@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { spawn, spawnSync } from "node:child_process";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { stopSpawnedChild } from "./ecorione-engine.mjs";
 import {
@@ -18,6 +19,113 @@ const ENGINE = resolve(ROOT, "scripts/ecorione-engine.mjs");
 const USD_PRECISION = 1_000_000;
 
 export const W18_FORMAL_AUTHORIZED_MAX_USD = 0.25;
+export const W18_FORMAL_AUTHORIZATION_ID = "w18-formal-2026-09-18-usd-0.25-single-attempt";
+
+export function formalAuthorizationMarkerPath(root = ROOT) {
+  return resolve(root, ".ecorione/evidence/w18-formal-authorization-consumed.json");
+}
+
+export function findCompletedFormalEvidence(root = ROOT) {
+  const evidenceDir = resolve(root, ".ecorione/evidence");
+  if (!existsSync(evidenceDir)) return null;
+
+  const candidates = readdirSync(evidenceDir)
+    .filter(
+      (name) =>
+        name.startsWith("w18-hosted-economics-") &&
+        name.endsWith(".summary.json"),
+    )
+    .sort()
+    .reverse();
+
+  for (const name of candidates) {
+    const path = resolve(evidenceDir, name);
+    let parsed;
+    try {
+      parsed = JSON.parse(readFileSync(path, "utf8"));
+    } catch {
+      continue;
+    }
+    const aggregate = parsed?.evidence?.aggregate ?? parsed?.aggregate;
+    if (
+      parsed?.closureEligible === true &&
+      aggregate?.pass === true &&
+      aggregate?.measuredModelCalls === 20
+    ) {
+      return {
+        file: name,
+        recordedAt: parsed.recordedAt ?? null,
+        actualRunSpendUsd: aggregate.actualRunSpendUsd ?? null,
+      };
+    }
+  }
+  return null;
+}
+
+export function assertFormalAuthorizationUnused(root = ROOT) {
+  const markerPath = formalAuthorizationMarkerPath(root);
+  if (existsSync(markerPath)) {
+    throw new Error(
+      "W18 formal authorization sudah dikonsumsi. Rerun ditolak; perlu otorisasi baru eksplisit.",
+    );
+  }
+
+  const completed = findCompletedFormalEvidence(root);
+  if (completed) {
+    throw new Error(
+      `W18 formal PASS evidence sudah ada (${completed.file}). Rerun ditolak; benchmark tidak boleh dieksekusi ulang.`,
+    );
+  }
+}
+
+export function consumeFormalAuthorization({
+  root = ROOT,
+  repository,
+  spendBefore,
+  now = new Date(),
+} = {}) {
+  assertFormalAuthorizationUnused(root);
+  const markerPath = formalAuthorizationMarkerPath(root);
+  mkdirSync(dirname(markerPath), { recursive: true });
+  const payload = {
+    schemaVersion: 1,
+    authorizationId: W18_FORMAL_AUTHORIZATION_ID,
+    consumedAt: now.toISOString(),
+    repository: {
+      branch: repository?.branch ?? null,
+      head: repository?.head ?? null,
+      originMain: repository?.originMain ?? null,
+      clean: repository?.clean ?? null,
+    },
+    spendBefore: {
+      day: spendBefore?.day ?? null,
+      month: spendBefore?.month ?? null,
+      dailyCommittedUsd: spendBefore?.dailyCommittedUsd ?? null,
+      monthlyCommittedUsd: spendBefore?.monthlyCommittedUsd ?? null,
+    },
+    maxSpendUsd: W18_FORMAL_AUTHORIZED_MAX_USD,
+  };
+
+  try {
+    writeFileSync(markerPath, `${JSON.stringify(payload, null, 2)}\n`, {
+      flag: "wx",
+      mode: 0o600,
+    });
+  } catch (error) {
+    if (error && typeof error === "object" && error.code === "EEXIST") {
+      throw new Error(
+        "W18 formal authorization sudah dikonsumsi oleh process lain. Rerun ditolak.",
+      );
+    }
+    throw error;
+  }
+
+  return {
+    authorizationId: payload.authorizationId,
+    consumedAt: payload.consumedAt,
+    marker: ".ecorione/evidence/w18-formal-authorization-consumed.json",
+  };
+}
 
 function roundUsd(value) {
   return Math.round(value * USD_PRECISION) / USD_PRECISION;
@@ -187,6 +295,7 @@ export async function runFormalOperator(argv = process.argv.slice(2)) {
 
   const { env: baseEnv } = loadEnvironment(ROOT);
   const spendBefore = inspectDurableSpendBudget(baseEnv, { root: ROOT });
+  if (execute) assertFormalAuthorizationUnused(ROOT);
   const formalEnv = buildFormalRuntimeEnv(baseEnv, spendBefore);
   const connectUrl = formalEnv.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
   const token = formalEnv.ECORIONE_INTERNAL_TOKEN;
@@ -237,6 +346,22 @@ export async function runFormalOperator(argv = process.argv.slice(2)) {
       );
       return;
     }
+
+    const authorizationConsumption = consumeFormalAuthorization({
+      root: ROOT,
+      repository,
+      spendBefore,
+    });
+    console.log(
+      JSON.stringify(
+        {
+          authorizationConsumption,
+          note: "Single-attempt authorization is now consumed before hosted dispatch.",
+        },
+        null,
+        2,
+      ),
+    );
 
     await requestJson(`${connectUrl}/v1/settings/runtime`, {
       token,
