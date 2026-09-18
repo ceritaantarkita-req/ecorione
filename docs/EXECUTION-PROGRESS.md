@@ -36,7 +36,7 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W20 | **CLOSED** | Final canonical current-state synchronization completed. |
 | F6-E01 | **CLOSED / REPO-SIDE PASS** | PR #146/#147 merged; 10 held-out cases; auto-discovered 26/50 eval inventory. |
 | F6-E02 | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
-| F6-E03 | **ACTIVE — NEW EXPLICIT SCOPE** | Existing release-security acceptance is not executed directly by normal CI. |
+| F6-E03 | **IMPLEMENTED / IN REVIEW** | Normal CI runs release-security acceptance; self-wiring assertion added; exact-head gates pending. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
 | Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E03** | Evidence-driven; no implicit Batch 13. |
@@ -123,4 +123,4 @@ F6-E02 closed through PR #149. Exact reviewed head `1cd4795b1a65baa1a2320713a3c8
 
 ## F6-E03 active scope
 
-A follow-up audit shows `scripts/release-security-acceptance.mjs` protects release/security invariants but is not executed directly by normal CI. F6-E03 will wire that deterministic acceptance into the normal verify job. This is repository-side only and does not modify production deployment or provider runtime.
+The F6-E03 branch now wires `scripts/release-security-acceptance.mjs` into the normal CI verify job and makes the acceptance assert that its own named CI step/command remains present. Closure waits on exact-head CI/Product Eval and guarded merge. This is repository-side only and does not modify production deployment or provider runtime.

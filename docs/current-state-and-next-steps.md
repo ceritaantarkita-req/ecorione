@@ -40,7 +40,7 @@ The next explicit non-deployment scope is **F6-E01 — bug/task-derived held-out
 | W20 final current-state sync | **CLOSED** | Canonical state synchronized after W18 closure; future work is separate evidence-driven scope. |
 | F6-E01 held-out selector eval dataset | **CLOSED / REPO-SIDE PASS** | 10 bug/task-derived held-out cases; auto-discovered 26/50 eval inventory; CI/Product Eval passed and merged. |
 | F6-E02 dependency policy CI gate | **CLOSED / REPO-SIDE PASS** | PR #149 merged after CI #1029 + Product Eval #268 PASS; dependency-policy step itself PASS. |
-| F6-E03 release-security acceptance CI gate | **ACTIVE — NEW EXPLICIT SCOPE** | Release-security acceptance exists but normal CI does not execute it directly. |
+| F6-E03 release-security acceptance CI gate | **IMPLEMENTED / IN REVIEW** | Normal CI now executes release-security acceptance; self-wiring assertion added; exact-head gates pending. |
 
 ## W18 provider and experiment profile
 
@@ -114,7 +114,9 @@ F6-E01 is **CLOSED / REPO-SIDE PASS**. PR #146 merged the held-out selector suit
 
 F6-E02 is **CLOSED / REPO-SIDE PASS**. PR #149 exact head `1cd4795b1a65baa1a2320713a3c8ffe520cfc98f` passed CI #1029 and Product Eval #268; the new Dependency policy review step itself passed and merged at `20aedfe94ee9f3db321dd3a66625bedd56a334a1`.
 
-The next concrete non-deployment gap is **F6-E03 — continuous release-security acceptance**. `scripts/release-security-acceptance.mjs` already protects multiple release/security invariants, including the F6-E02 dependency gate wiring, but normal CI does not execute that acceptance directly. F6-E03 will add the deterministic acceptance as a normal CI step.
+F6-E03 is now **IMPLEMENTED / IN REVIEW**. Normal CI contains a named Release security acceptance step that runs `node scripts/release-security-acceptance.mjs`, and the acceptance now checks that its own named CI step/command remains present when invoked manually or through release operations.
+
+Next gate: exact-head CI must show the new Release security acceptance step PASS; Product Eval must also pass if triggered; then guarded merge + canonical closure sync.
 
 This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
 
@@ -140,3 +142,6 @@ F6-E01 verification source: `docs/verification/f6-e01-heldout-selector-eval-2026
 
 
 F6-E02 verification source: `docs/verification/f6-e02-dependency-policy-ci-gate-2026-09-18.md`.
+
+
+F6-E03 verification source: `docs/verification/f6-e03-release-security-acceptance-ci-gate-2026-09-18.md`.
