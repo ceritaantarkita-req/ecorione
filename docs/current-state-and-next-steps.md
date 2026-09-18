@@ -26,7 +26,7 @@ Repository readiness does **not** mean a real VPS/Cloudflare target is currently
 | W18 hosted economics | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** |
 | W20 final current-state sync | **CLOSED** |
 | F6-E01 … F6-E07 | **CLOSED / REPO-SIDE PASS** |
-| F6-E08 container image digest pinning | **ACTIVE** |
+| F6-E08 container image digest pinning | **IMPLEMENTED / IN REVIEW** |
 | Compute-host/VPS + Cloudflare activation | **DEFERRED BY OPERATOR** |
 | AutoClick | **DEFERRED BY DESIGN** |
 
@@ -40,7 +40,7 @@ The currently discussed Projects / Work / Schedule / Brain product layer is **no
 
 ## Active scope — F6-E08
 
-Problem: governed container/base images use readable exact version tags but are not yet bound to repository-reviewed immutable digests.
+Implementation is now present on the F6-E08 branch: external Node/Postgres/Temporal/Caddy references are readable-tag + immutable-digest pinned across Dockerfile, production Compose, local Temporal Compose, and desktop Compose. A deterministic review scans governed container definitions and is wired into normal CI + release-security acceptance.
 
 Scope:
 

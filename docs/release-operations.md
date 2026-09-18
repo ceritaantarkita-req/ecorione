@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-18**
 
-Fase 6+ repository reproducibility gates now include immutable remote-action pin review and fixed GitHub-hosted runner-label review. Normal CI runs `pnpm run actions:pin-review` and `pnpm run actions:runner-review`; release-security acceptance protects and re-executes both policies.
+Fase 6+ repository reproducibility gates now include immutable remote-action pin review, fixed GitHub-hosted runner-label review, exact Node/Inno toolchains, and governed container-image digest review. Normal CI runs `pnpm run actions:pin-review` and `pnpm run actions:runner-review`; release-security acceptance protects and re-executes both policies.
 
 Node build-toolchain identity is centralized in `.node-version` and continuously checked against tracked `actions/setup-node` consumers plus the Dockerfile. Normal CI runs `pnpm run toolchain:node-review`; release-security acceptance protects and re-executes the same policy.
 
@@ -120,3 +120,8 @@ Repository CI does not prove real provider or infrastructure quality. After depl
 If migration, canary, recovery, public edge, or security acceptance fails, do not label the release healthy. Preserve evidence and return to the last verified image/config/data combination appropriate to the failed layer.
 
 Do not weaken a gate, bypass Hub/Connect authority, or mutate data solely to hide an infrastructure/tunnel failure.
+
+
+## Immutable container image review
+
+Run `pnpm run images:digest-review` before release changes that touch Dockerfile or Compose definitions. Governed external images must keep a readable version tag and a full `@sha256:<64-hex>` digest. Repository-built ECORIONE images are exempt because their release identity is derived from the reviewed source/bundle artifact rather than a mutable external registry tag.

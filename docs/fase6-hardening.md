@@ -1,7 +1,7 @@
 # Fase 6+ — Evidence-driven hardening
 
 **Status:** ACTIVE / OPEN-ENDED  
-**Current item:** F6-E08  
+**Current item:** F6-E08 — IMPLEMENTED / IN REVIEW  
 **Last reconciled:** 2026-09-18
 
 Fase 6+ is not a permanent “feature phase” and should never become an excuse to keep old workstreams open. Each item is a bounded evidence-driven hardening scope. Closed items stay closed unless new evidence invalidates them.
@@ -22,9 +22,9 @@ Current handoff: [current-state-and-next-steps.md](current-state-and-next-steps.
 
 Exact evidence remains in `docs/verification/`.
 
-## Active F6-E08
+## F6-E08 implementation / review
 
-Goal: make governed container/base-image identity immutable and continuously reviewable.
+Goal: make governed container/base-image identity immutable and continuously reviewable. The implementation is present on the review branch; closure awaits exact-head gates and merge.
 
 Required result:
 

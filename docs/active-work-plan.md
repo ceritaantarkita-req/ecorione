@@ -10,13 +10,26 @@ This document intentionally excludes closed W-series chronology and old benchmar
 
 | ID | Work | Status | Boundary |
 |---|---|---:|---|
-| F6-E08 | Immutable container/base image digest pinning + drift gate | **ACTIVE** | Repository/release reproducibility only; no deployment or provider mutation. |
+| F6-E08 | Immutable container/base image digest pinning + drift gate | **IMPLEMENTED / IN REVIEW** | Repository/release reproducibility only; no deployment or provider mutation. |
 
 F6-E01 through F6-E07 are **CLOSED / REPO-SIDE PASS**.
 
 ## F6-E08 objective
 
 Current Docker/build/deployment image references are version-tagged but still mutable at the registry level. F6-E08 closes that reproducibility gap without changing runtime architecture.
+
+### Implementation checkpoint
+
+Implemented on the F6-E08 branch:
+
+- Node/Postgres/Temporal/Caddy external image refs use readable tags plus full sha256 digests;
+- production, local Temporal, and desktop Compose surfaces are governed;
+- repository-built ECORIONE images remain exempt because their identity is source/bundle-derived rather than registry-resolved;
+- `scripts/container-image-review.mjs` rejects tag-only, digest-only, malformed-digest, and unexpected dynamic external refs;
+- focused Vitest coverage is included;
+- normal CI + release-security acceptance execute/protect the review.
+
+Closure still requires exact-head CI/Product Eval/relevant acceptance and guarded merge.
 
 ### Implementation checklist
 
