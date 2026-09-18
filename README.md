@@ -4,7 +4,7 @@
 
 ECORIONE menjaga kesinambungan lintas provider/model sambil mempertahankan local-first boundary, approval, audit trail, durable execution, MCP, dan spend control yang eksplisit.
 
-> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **FORMAL RUN READY / NOT CLOSED** after a successful Anthropic-only one-call diagnostic · W20 **BLOCKED ON W18** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
+> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **FORMAL RUN READY / NOT CLOSED** after a successful Anthropic-only one-call diagnostic and merged formal dispatch/routing guards · W20 **BLOCKED ON W18** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
 
 Untuk manusia/agent baru: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`docs/active-work-plan.md`](docs/active-work-plan.md), [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md), dan [`AGENTS.md`](AGENTS.md). Audit bertanggal lama adalah historical snapshots, bukan current-state source.
 
@@ -23,6 +23,7 @@ Current progression that matters:
 - W16 automatic semantic selector: **DONE — REPO SIDE**;
 - W17 no-oracle benchmark: **DONE — VERIFIED LOCAL MODEL PASS**, 100 measured calls;
 - W18 Anthropic-only one-call hosted diagnostic: **PASS**;
+- W18 formal dispatch/routing/cap guard: **MERGED / REPO-SIDE VERIFIED** (PR #135; CI #994 + Product Eval #233 PASS);
 - W18 formal 20-call hosted economics: **NOT YET CLOSED**.
 
 Canonical W18 docs:
@@ -33,6 +34,7 @@ Canonical W18 docs:
 - [`docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md`](docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md)
 - [`docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`](docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md)
 - [`docs/verification/w18-formal-run-readiness-2026-09-18.md`](docs/verification/w18-formal-run-readiness-2026-09-18.md)
+- [`docs/verification/w18-formal-guard-merge-2026-09-18.md`](docs/verification/w18-formal-guard-merge-2026-09-18.md)
 
 ## Apa yang sudah ada
 
@@ -114,7 +116,7 @@ warmups = 0
 cost authority = OpenRouter usage.cost
 ```
 
-Attempts 1–3 preserved valid failures. Attempt 3 identified `content_filter` through `routingProvider=Amazon Bedrock`. After provider routing was pinned Anthropic-only with fallback disabled, Attempt 4 passed on the same `procurement-award/full-inline` diagnostic with quality `1`, billed cost `$0.006681`, and durable settlement `settled`.
+Attempts 1–3 preserved valid failures. Attempt 3 identified `content_filter` through `routingProvider=Amazon Bedrock`. After provider routing was pinned Anthropic-only with fallback disabled, Attempt 4 passed on the same `procurement-award/full-inline` diagnostic with quality `1`, billed cost `$0.006681`, and durable settlement `settled`. PR #135 then merged the formal pre-dispatch cap guard, successful routing evidence, reservation-estimator coupling, and durable reservation consistency checks into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`.
 
 Latest zero-spend postflight after Attempt 4:
 
