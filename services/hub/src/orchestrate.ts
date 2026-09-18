@@ -31,6 +31,7 @@ import {
 } from "@ecorione/shared-telemetry";
 import type { CapabilityRegistry } from "./capability-registry.js";
 import type { HistoryLedger } from "./history-ledger.js";
+import type { ProjectRegistry } from "./project-registry.js";
 import { evaluatePolicy } from "./policy-engine.js";
 import type { HubRepository } from "./repository.js";
 
@@ -69,6 +70,7 @@ export class PolicyEngineBugError extends Error {
 export interface OrchestrateDeps {
   readonly repo: HubRepository;
   readonly history: HistoryLedger;
+  readonly projects: ProjectRegistry;
   readonly authority: CapabilityRegistry;
   readonly contextUrl: string;
   readonly connectUrl: string;
@@ -138,6 +140,12 @@ export async function chat(
   now: Timestamp,
   options: ChatExecutionOptions = {},
 ): Promise<ChatResponse> {
+  const resolved = deps.projects.resolve({
+    workspaceId: req.workspaceId,
+    projectId: req.projectId,
+  });
+  const workspaceId = resolved.workspaceId;
+  const projectId = resolved.project.id;
   const target = options.target ?? req.target ?? "hosted";
   const hosted = target === "hosted";
   const syncClass = options.syncClass ?? (hosted ? "CLOUD_ALLOWED" : "LOCAL_ONLY");
@@ -171,7 +179,6 @@ export async function chat(
   });
   if (verdict.outcome !== "ALLOW") throw new PolicyEngineBugError(verdict.outcome);
 
-  const workspaceId = req.workspaceId ?? assertId("workspace", "ws_personal");
   const capabilityId = (hosted ? "model.invoke.hosted" : "model.invoke.local") as CapabilityId;
   const permissionIds = (
     hosted
@@ -212,6 +219,8 @@ export async function chat(
   deps.history.ensureSession({
     id: req.sessionId,
     createdAt: now,
+    workspaceId,
+    projectId,
     scope: req.scope,
     sensitivity: req.maxSensitivity,
     syncClass,
@@ -231,7 +240,7 @@ export async function chat(
   const max = encodeURIComponent(req.maxSensitivity);
   const coreMemory = await callContext<CoreMemory>(
     deps,
-    `/v1/core-memory?scope=${scope}&maxSensitivity=${max}&hostedEligible=${hosted ? "1" : "0"}`,
+    `/v1/core-memory?scope=${scope}&projectId=${encodeURIComponent(projectId)}&maxSensitivity=${max}&hostedEligible=${hosted ? "1" : "0"}`,
     { signal: options.signal },
   );
   const retrieved = await callContext<RetrieveResponse>(deps, "/v1/retrieve", {
@@ -242,12 +251,13 @@ export async function chat(
       maxSensitivity: req.maxSensitivity,
       hostedEligibleOnly: hosted,
       now,
+      projectId,
       ...(options.signal === undefined ? {} : { signal: options.signal }),
     },
   });
   const episodesRes = await callContext<ListEpisodesResponse>(
     deps,
-    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=${hosted ? "1" : "0"}`,
+    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&projectId=${encodeURIComponent(projectId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=${hosted ? "1" : "0"}`,
     { signal: options.signal },
   );
   const artifactsRes = await callContext<ListArtifactsResponse>(
@@ -371,6 +381,7 @@ export async function chat(
       sensitivity: req.maxSensitivity,
       syncClass,
       trust: "USER",
+      projectId,
     },
     signal: options.signal,
   });
@@ -384,6 +395,7 @@ export async function chat(
       sensitivity: req.maxSensitivity,
       syncClass,
       trust: hosted ? "HOSTED_AGENT" : "LOCAL_AGENT",
+      projectId,
     },
     signal: options.signal,
   });

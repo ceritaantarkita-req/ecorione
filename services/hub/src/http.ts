@@ -41,6 +41,8 @@ import { HistoryLedger } from "./history-ledger.js";
 import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
 import { registerNodeAuthorityRoutes } from "./node-authority.js";
+import { registerProjectRoutes } from "./project-http.js";
+import { ProjectRegistry, ProjectArchivedError, ProjectNotFoundError, ProjectRequiredError, ProjectWorkspaceConflictError } from "./project-registry.js";
 import { registerVoiceRoutes } from "./voice-http.js";
 import { RealtimeVoiceRuntime } from "./voice-runtime.js";
 import { VoiceSessionStore } from "./voice-store.js";
@@ -65,6 +67,10 @@ function toHttpError(err: unknown): unknown {
   if (err instanceof CapabilityAuthorityDeniedError) {
     return new HttpError(403, "CAPABILITY_DENIED", err.message);
   }
+  if (err instanceof ProjectNotFoundError) return new NotFoundError(err.message);
+  if (err instanceof ProjectRequiredError) return new BadRequestError(err.message);
+  if (err instanceof ProjectWorkspaceConflictError || err instanceof ProjectArchivedError)
+    return new ConflictError(err.message);
   if (err instanceof ApprovalNotFoundError) return new NotFoundError(err.message);
   if (err instanceof ApprovalAlreadyDecidedError) return new ConflictError(err.message);
   if (err instanceof RespondNotAllowedError || err instanceof InvalidIdError)
@@ -126,11 +132,13 @@ export function buildHubServer(
   const app = createServer({ name: "hub", token: options.token, logger: options.logger });
   const repo = new HubRepository(db);
   const history = new HistoryLedger(db);
+  const projects = new ProjectRegistry(db);
   const authority = new CapabilityRegistry(db);
   const extensions = new ExtensionRegistry(db, authority);
   const deps: OrchestrateDeps = {
     repo,
     history,
+    projects,
     authority,
     contextUrl: options.contextUrl,
     connectUrl: options.connectUrl,
@@ -320,6 +328,7 @@ export function buildHubServer(
     },
   );
 
+  registerProjectRoutes(app, projects);
   registerHistoryRoutes(app, history);
   registerExchangeRoutes(app, history, {
     contextUrl: options.contextUrl,
