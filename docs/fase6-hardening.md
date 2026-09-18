@@ -35,7 +35,8 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - W20 final current-state sync: **CLOSED**
 - final local/remote baseline: `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9` with clean Windows `main...origin/main`
 - F6-E01 held-out selector eval: **CLOSED / REPO-SIDE PASS** — PR #146/#147
-- F6-E02 continuous dependency-policy CI gate: **IMPLEMENTED / IN REVIEW**
+- F6-E02 continuous dependency-policy CI gate: **CLOSED / REPO-SIDE PASS**
+- active next explicit scope: **F6-E03 — CONTINUOUS RELEASE-SECURITY ACCEPTANCE CI GATE**
 - compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**
 - AutoClick: **DEFERRED BY DESIGN**
 - no implicit Batch 13
@@ -281,12 +282,13 @@ Current operator-approved order:
 6. automatic selector + bounded no-oracle evidence — **DONE / W16–W17 CLOSED AT DOCUMENTED BOUNDARIES**;
 7. hosted billed-cost validation — **DONE / W18 CLOSED AT DOCUMENTED BOUNDARY**;
 8. **F6-E01 held-out bug/task-derived selector evaluation dataset + eval-budget governance — CLOSED / REPO-SIDE PASS**;
-9. **F6-E02 dependency-policy continuous CI gate — IMPLEMENTED / IN REVIEW**;
-10. improve UX/Control Center/approval/error surfaces only from newly observed friction;
-11. integrate other ecosystem projects only through explicit APIs/contracts;
-12. keep dependency/security/model/pricing reviews current;
-13. resume compute-host/VPS + Cloudflare only when operator explicitly chooses;
-14. add features only when evidence justifies them.
+9. **F6-E02 dependency-policy continuous CI gate — CLOSED / REPO-SIDE PASS**;
+10. **F6-E03 release-security acceptance continuous CI gate — ACTIVE NEXT EXPLICIT SCOPE**;
+11. improve UX/Control Center/approval/error surfaces only from newly observed friction;
+12. integrate other ecosystem projects only through explicit APIs/contracts;
+13. keep dependency/security/model/pricing reviews current;
+14. resume compute-host/VPS + Cloudflare only when operator explicitly chooses;
+15. add features only when evidence justifies them.
 
 ## Deployment direction — currently deferred
 
@@ -361,3 +363,10 @@ Do not reopen Batch 12 merely because Fase 6+ continues. Create a new explicit s
 Normal CI now runs `pnpm run dependency:review`. Release-security acceptance now asserts that both the governed package script and the named CI step/command remain present. This is deterministic repository policy enforcement only; it is not a live registry vulnerability/CVE freshness claim.
 
 Verification: `docs/verification/f6-e02-dependency-policy-ci-gate-2026-09-18.md`.
+
+
+## F6-E02 closure / F6-E03 activation
+
+F6-E02 merged via PR #149 after CI #1029 and Product Eval #268 PASS; the new dependency-policy CI step itself passed. F6-E03 follows from a concrete remaining gap: release-security acceptance is deterministic and already protects multiple release invariants, but normal CI does not execute it directly.
+
+F6-E03 will add that acceptance to normal CI. It does not change deployment state, provider routing, or the W18 evidence boundary.
