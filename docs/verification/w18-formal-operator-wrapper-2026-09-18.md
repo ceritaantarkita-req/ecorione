@@ -1,8 +1,21 @@
 # W18 formal operator wrapper — repository preparation (2026-09-18)
 
-Status: **REPO-SIDE PREPARATION / NO HOSTED CALL / FORMAL W18 STILL NOT EXECUTED**
+Status: **MERGED / REPO-SIDE PASS / NO HOSTED CALL / FORMAL W18 STILL NOT EXECUTED**
 
 This change reduces the remaining operator-only risk before the already-authorized formal W18 run. It does not claim W18 closure and does not consume provider spend.
+
+## Merge verification
+
+```text
+PR = #138
+exact reviewed head = c4b5b30f02716d66a8974903acb824f36ac1d12f
+CI #1001 = SUCCESS
+Product Eval #240 = SUCCESS
+MCP External HTTPS Acceptance #461 = SUCCESS
+merged main = 05ddd248e90e26b9db2c785d533c55ec817db013
+```
+
+CI #1001 passed formatting, lint, typecheck, tests, Phase 4 real-process acceptance, production-operations acceptance, secret scan, production build, naming, and full-history secret scan. No hosted provider dispatch occurred during these repository gates or the merge.
 
 ## Added operator path
 
@@ -32,7 +45,7 @@ Zero-spend wrapper rehearsal:
 node .\scripts\w18-formal-operator.mjs --preflight-only
 ```
 
-Single authorized formal attempt after this wrapper is merged and the operator laptop is synchronized to that merged `main`:
+Single authorized formal attempt after the operator laptop is synchronized to merged `main` at or beyond `05ddd248e90e26b9db2c785d533c55ec817db013`:
 
 ```powershell
 node .\scripts\w18-formal-operator.mjs --execute-authorized-w18
