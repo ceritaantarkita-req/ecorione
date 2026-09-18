@@ -26,7 +26,7 @@ Per **2026-09-18**:
 - F6-E03 continuous release-security acceptance CI gate: **CLOSED / REPO-SIDE PASS**; PR #151, CI #1033, Product Eval #272;
 - F6-E04 immutable GitHub Actions pinning: **CLOSED / REPO-SIDE PASS**; PR #153, CI #1041, Product Eval #280, MCP #473;
 - F6-E05 fixed GitHub-hosted runner OS labels: **CLOSED / REPO-SIDE PASS**; PR #155, CI #1045, Product Eval #284, MCP #475;
-- F6-E06 immutable Node toolchain: **ACTIVE**;
+- F6-E06 immutable Node toolchain: **IMPLEMENTED / IN REVIEW**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -150,11 +150,17 @@ F6-E05 = CLOSED / REPO-SIDE PASS
 - Product Eval #284 PASS
 - MCP External #475 PASS
 
-F6-E06 = ACTIVE
-- mutable CI Node selector `node-version: 22` is the next reproducibility gap
-- centralize an exact Node version and make all workflows/container wiring converge on it
-- add a deterministic drift gate + tests + release-security self-wiring
-- keep Chocolatey/Inno Setup pinning as a separate later scope
+F6-E06 = IMPLEMENTED / IN REVIEW
+- `.node-version` pins Node `22.20.0`
+- every tracked `actions/setup-node` consumer uses `node-version-file: ".node-version"`
+- Dockerfile Node base must match the same exact pin
+- `scripts/node-toolchain-review.mjs` enforces workflow/container consistency
+- normal CI has named Node toolchain review step
+- release-security acceptance protects and executes the policy
+- MCP acceptance path filters include `.node-version`
+- focused tests added
+- next = exact-head CI/Product Eval/MCP -> fix findings -> guarded merge -> closure
+- Chocolatey/Inno Setup pinning remains a separate later scope
 - no provider/deployment mutation
 ```
 
