@@ -2,58 +2,52 @@
 
 Last updated: **2026-09-19**
 
-Status: **NEXT ROADMAP DOCUMENTED / IMPLEMENTATION NOT ACTIVATED**
+Status: **PE-00 ACTIVE / ARCHITECTURE LOCK**
 
-The previous Batch 1–12 / W / F6 baseline remains closed. The next Product Evolution roadmap is now documented, but no feature batch is active yet.
-
-## Current state
-
-```text
-old baseline          CLOSED
-Product Evolution     DOCUMENTED
-PE-00                  PLANNED / NOT ACTIVATED
-PE-01..PE-08           BLOCKED BY PREVIOUS PE BATCH
-```
-
-Canonical next-scope docs:
-
-- [product-evolution-architecture.md](product-evolution-architecture.md)
-- [product-evolution-roadmap.md](product-evolution-roadmap.md)
-- [product-evolution-agent-guide.md](product-evolution-agent-guide.md)
-
-## First executable batch
+## Active item
 
 **PE-00 — Architecture lock and migration contract**
 
-PE-00 starts only after explicit operator instruction to begin implementation.
+This batch is docs/contracts only. No Project feature code, Trigger runtime, migration execution, new service, or new database is allowed in PE-00.
 
-PE-00 must settle ADRs/contracts for:
+## PE-00 deliverables
 
-- Workspace vs Project;
-- direct projectId vs optional Project bindings;
-- Project/global memory precedence;
-- Trigger + Temporal schedule ownership;
-- Flow version, concurrency, misfire and idempotency policy;
-- Run projection source mapping;
-- Brain projection/privacy boundary;
-- legacy-data migration.
+- ADR-35 Project/Workspace + linkage/memory;
+- ADR-36 Trigger/Temporal + version/overlap/misfire policy;
+- ADR-37 Run read projection;
+- ADR-38 Brain projection/privacy;
+- [product-evolution-migration-matrix.md](product-evolution-migration-matrix.md);
+- [product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md);
+- current-state/roadmap/agent docs synchronized.
 
-No PE-01 feature code starts before PE-00 closes.
+## Locked PE-01 direction
 
-## Deferred by existing decision
+```text
+Hub      -> Project metadata
+Ledger   -> project-aware sessions, no event rewrite
+Context  -> global + current-Project memory only
+Flow     -> project-aware graph metadata
+Ai       -> explicit Project selection/switch
+All      -> virtual
+Personal -> prj_personal
+```
 
-- compute-host/VPS + Cloudflare activation — **DEFERRED BY OPERATOR**;
-- AutoClick — **DEFERRED BY DESIGN**;
-- paid W18 rerun — **CLOSED / NOT AUTHORIZED FOR FRESHNESS**.
+## External/runtime decision verified
 
-These are not blockers to Product Evolution.
+Temporal Schedule API semantics support Schedule creation, explicit catch-up/overlap policies, and IANA timezone. PE-03 will still compile/runtime-test against the pinned SDK `1.23.0`.
 
-## Activation rule
+## Closure gate
 
-When the operator says to start the new roadmap:
+PE-00 closes only after exact-head:
 
-1. mark PE-00 **ACTIVE** here;
-2. create a bounded PE-00 branch from synchronized `main`;
-3. follow [product-evolution-agent-guide.md](product-evolution-agent-guide.md);
-4. merge only after exact-head gates;
-5. close PE-00 here before activating PE-01.
+- normal CI PASS;
+- Product Eval PASS;
+- canonical docs synchronized.
+
+After closure, PE-01 may be activated. Do not start PE-01 in this branch.
+
+## Existing deferred decisions
+
+- VPS/Cloudflare activation — deferred;
+- AutoClick — deferred;
+- paid W18 rerun — not authorized.

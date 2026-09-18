@@ -10,9 +10,11 @@ This file is the single navigation entry point for repository documentation. If 
 2. **[active-work-plan.md](active-work-plan.md)** — only work that is actually active.
 3. **[product-evolution-architecture.md](product-evolution-architecture.md)** — next product model and ownership rules.
 4. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — PE-00 through PE-08 batch plan.
-5. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
-6. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
-7. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
+5. **[product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)** — PE-01 ownership + migration contract.
+6. **[product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)** — required PE-01 closure behavior.
+7. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
+8. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
+9. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
 ## Source-of-truth precedence
 
@@ -40,10 +42,10 @@ The old Batch 1–12 / W / F6 baseline is closed. The next roadmap uses **PE** i
 As of 2026-09-19:
 
 - Product Evolution architecture: **DOCUMENTED**;
-- PE-00: **PLANNED / NOT ACTIVATED**;
+- PE-00: **ACTIVE / IN REVIEW**;
 - PE-01 through PE-08: **blocked by prior batch**.
 
-Creating the roadmap does not start implementation. PE-00 becomes active only after explicit operator instruction.
+PE-00 is now active as a docs/contracts batch. PE-01 feature implementation remains blocked until PE-00 closes.
 
 ## Architecture and product reference
 
