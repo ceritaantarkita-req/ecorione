@@ -22,7 +22,8 @@ Per **2026-09-18**:
 - AutoClick: **DEFERRED BY DESIGN**;
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
 - F6-E01 held-out selector eval dataset: **CLOSED / REPO-SIDE PASS**; 10 held-out cases, auto-discovered 26/50 governed eval inventory;
-- F6-E02 continuous dependency-policy CI gate: **IMPLEMENTED / IN REVIEW**;
+- F6-E02 continuous dependency-policy CI gate: **CLOSED / REPO-SIDE PASS**;
+- F6-E03 continuous release-security acceptance CI gate: **ACTIVE NEW EXPLICIT SCOPE**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -124,11 +125,13 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 ```text
 F6-E01 = CLOSED / REPO-SIDE PASS
 
-F6-E02:
-- normal CI now executes `pnpm run dependency:review`
-- release-security acceptance now requires the governed package script and CI step
-- deterministic package/source/Docker-tag/lockfile policy only
-- do not claim live registry CVE freshness
+F6-E02 = CLOSED / REPO-SIDE PASS
+
+F6-E03:
+- `scripts/release-security-acceptance.mjs` contains important release/security invariants
+- normal CI still does not execute that acceptance directly
+- add an explicit Release security acceptance step to normal CI
+- keep this deterministic and repo-side; no deployment/provider mutation
 - require exact-head CI with the new step PASS before merge
 ```
 

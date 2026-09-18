@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **IMPLEMENTED / IN REVIEW**
+Status: **CLOSED / REPO-SIDE PASS**
 
 ## Scope
 
@@ -49,3 +49,23 @@ Claim after closure must remain:
 > deterministic dependency/source policy is continuously enforced by normal repository CI and its presence is protected by release acceptance.
 
 Do not expand that into a live vulnerability/CVE freshness claim.
+
+
+## Closure evidence
+
+```text
+PR = #149
+exact reviewed head = 1cd4795b1a65baa1a2320713a3c8ffe520cfc98f
+CI #1029 = PASS
+Product Eval #268 = PASS
+Dependency policy review step = PASS
+merged main = 20aedfe94ee9f3db321dd3a66625bedd56a334a1
+```
+
+No provider/model call, hosted spend, or deployment mutation was made.
+
+## Final verdict
+
+**F6-E02 = CLOSED / REPO-SIDE PASS** at the deterministic continuous dependency-policy boundary.
+
+The closure claim remains limited to repository dependency/source policy, Docker image tag policy, lockfile presence, and CI/release-acceptance wiring. It is not a live registry vulnerability or CVE freshness claim.

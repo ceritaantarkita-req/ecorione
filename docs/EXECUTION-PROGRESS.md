@@ -35,10 +35,11 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W19 | **REPO SIDE DONE** | Release/security governance gates retained. |
 | W20 | **CLOSED** | Final canonical current-state synchronization completed. |
 | F6-E01 | **CLOSED / REPO-SIDE PASS** | PR #146/#147 merged; 10 held-out cases; auto-discovered 26/50 eval inventory. |
-| F6-E02 | **IMPLEMENTED / IN REVIEW** | Normal CI runs dependency:review; release acceptance protects the wiring; exact-head gates pending. |
+| F6-E02 | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
+| F6-E03 | **ACTIVE — NEW EXPLICIT SCOPE** | Existing release-security acceptance is not executed directly by normal CI. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E02** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E03** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -114,3 +115,12 @@ F6-E01 is closed after PR #146/#147 merged the 10-case held-out selector suite a
 The concrete continuous-gating gap is now implemented on the F6-E02 feature branch. Normal CI invokes `pnpm run dependency:review`, and release-security acceptance checks both the governed package script and the CI step/command so the gate cannot silently disappear.
 
 Closure waits on exact-head CI/Product Eval and guarded merge. This scope does not claim live registry vulnerability/CVE freshness.
+
+
+## F6-E02 closure
+
+F6-E02 closed through PR #149. Exact reviewed head `1cd4795b1a65baa1a2320713a3c8ffe520cfc98f` passed CI #1029 and Product Eval #268; the new Dependency policy review step was observed PASS before merge. Merged main: `20aedfe94ee9f3db321dd3a66625bedd56a334a1`.
+
+## F6-E03 active scope
+
+A follow-up audit shows `scripts/release-security-acceptance.mjs` protects release/security invariants but is not executed directly by normal CI. F6-E03 will wire that deterministic acceptance into the normal verify job. This is repository-side only and does not modify production deployment or provider runtime.
