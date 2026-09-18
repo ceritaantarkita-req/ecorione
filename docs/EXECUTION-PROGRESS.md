@@ -40,10 +40,10 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | F6-E04 | **CLOSED / REPO-SIDE PASS** | PR #153 merged; CI #1041 + Product Eval #280 + MCP #473 PASS; pin-review step PASS. |
 | F6-E05 | **CLOSED / REPO-SIDE PASS** | PR #155 merged; CI #1045 + Product Eval #284 + MCP #475 PASS; fixed runner policy green. |
 | F6-E06 | **CLOSED / REPO-SIDE PASS** | PR #157 merged; CI #1055 + Product Eval #294 + MCP #483 PASS; exact Node toolchain gate green. |
-| F6-E07 | **ACTIVE** | Pin the Windows installer compiler package version and continuously reject drift. |
+| F6-E07 | **IMPLEMENTED / IN REVIEW** | Exact Inno Setup 6.7.1 package pin + installer-toolchain drift review implemented; exact-head + real installer acceptance pending. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E07** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E07 REVIEW** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -143,4 +143,4 @@ F6-E06 closed through PR #157. Exact reviewed head `cd04be6385ffb360862e38e63dcd
 
 ## F6-E07 active scope
 
-F6-E07 targets the remaining mutable compiler dependency in `.github/workflows/desktop-installer.yml`: `choco install innosetup` currently resolves whatever Chocolatey serves at execution time. Scope: pin an explicit supported Inno Setup package version, add deterministic repo-side drift review and tests, wire it into CI/release-security, and require real Desktop Installer workflow acceptance before closure.
+F6-E07 implementation adds `.inno-setup-version` pinned to `6.7.1`, makes Desktop Installer read that file and pass the exact value to Chocolatey, and adds `scripts/installer-toolchain-review.mjs` with focused tests. Normal CI and release-security acceptance protect the policy. Closure now requires exact-head CI/Product Eval plus a real Desktop Installer workflow run proving the pinned compiler still builds and hashes the Windows installer.
