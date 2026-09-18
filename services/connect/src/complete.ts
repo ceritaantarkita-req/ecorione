@@ -100,6 +100,8 @@ export interface CompleteResult {
   readonly pricingModel: PinnedModelId;
   /** Runtime identity reported by provider/runtime. */
   readonly responseModel: string;
+  /** Safe OpenRouter-selected provider label when available. */
+  readonly routingProvider?: string | undefined;
   /** Stable identity used for durable evidence/cache boundaries. */
   readonly modelIdentity: string;
   /** Local identity is pinned only when the provider boundary confirmed the digest. */
@@ -188,6 +190,7 @@ export async function complete(
 
   let reply: string;
   let responseModel: string;
+  let routingProvider: string | undefined;
   let usage: TokenUsage;
   let baselineUsage: TokenUsage;
   let cacheHit: boolean;
@@ -259,6 +262,7 @@ export async function complete(
       );
       reply = result.reply;
       responseModel = result.model;
+      routingProvider = result.routingProvider;
       usage = result.usage;
       baselineUsage = usage;
       providerReportedActualUsd = result.providerReportedActualUsd;
@@ -330,6 +334,7 @@ export async function complete(
     model,
     pricingModel: decision.model,
     responseModel,
+    ...(routingProvider === undefined ? {} : { routingProvider }),
     modelIdentity,
     modelIdentityPinned,
     modelIdentityProvenance,

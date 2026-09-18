@@ -2,9 +2,19 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { estimateOpenRouterReservationUsd } from "../services/connect/src/providers/openrouter.ts";
+import {
+  assembleContext,
+  benchmarkCacheMarker,
+  FIXTURES,
+} from "../scripts/comparative-evidence.mjs";
 import {
   assertSpendAuthorization,
+  assertW18DispatchWithinCap,
+  assertW18ProviderPin,
+  buildW18ProviderInput,
   configuredSpendCeiling,
+  estimateW18ReservationUsd,
   evaluateW18Aggregate,
   evaluateW18Task,
   inspectDurableSpendBudget,
@@ -19,7 +29,10 @@ function run({
   cost,
   inputTokens,
   provider = "openrouter",
+  routingProvider = "Anthropic",
   settlement = "settled",
+  reservation = 0.1,
+  budgetReservation = reservation,
 }) {
   return {
     mode,
@@ -27,6 +40,7 @@ function run({
     provider,
     model: "claude-sonnet-4-5-20250929",
     responseModel: "anthropic/claude-sonnet-4.5",
+    routingProvider,
     pricingModel: "claude-sonnet-4-5-20250929",
     cacheHit: false,
     usage: {
@@ -35,8 +49,9 @@ function run({
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
     },
+    estimatedReservationUsd: reservation,
     billedCostUsd: cost,
-    budget: { actualUsd: cost, settlement },
+    budget: { reservedUsd: budgetReservation, actualUsd: cost, settlement },
     quality: { score: 1 },
   };
 }
@@ -169,6 +184,52 @@ describe("W18 hosted economics helpers", () => {
     ).toThrow("melebihi remaining durable spend headroom");
   });
 
+  it("requires exactly the Anthropic-only OpenRouter provider pin", () => {
+    expect(assertW18ProviderPin("anthropic")).toEqual(["anthropic"]);
+    expect(() => assertW18ProviderPin(undefined)).toThrow(/persis anthropic/iu);
+    expect(() => assertW18ProviderPin("amazon-bedrock")).toThrow(/persis anthropic/iu);
+    expect(() => assertW18ProviderPin("anthropic,amazon-bedrock")).toThrow(
+      /persis anthropic/iu,
+    );
+  });
+
+  it("keeps every formal reservation estimate coupled to the production OpenRouter estimator", () => {
+    for (const [taskIndex, task] of FIXTURES.entries()) {
+      const marker = benchmarkCacheMarker({
+        cacheNamespace: "0".repeat(32),
+        taskIndex,
+        pairedRunIndex: 1,
+        modeIndex: 0,
+      });
+      const providerInput = buildW18ProviderInput({
+        context: assembleContext(task.documents),
+        marker,
+        userMessage: task.prompt,
+      });
+      expect(estimateW18ReservationUsd(providerInput)).toBe(
+        estimateOpenRouterReservationUsd(providerInput),
+      );
+    }
+  });
+
+  it("blocks a formal provider call before dispatch when the next reservation exceeds remaining authorization", () => {
+    expect(() =>
+      assertW18DispatchWithinCap({
+        actualSpentUsd: 0.1,
+        reservationUsd: 0.107374,
+        maxSpendUsd: 0.25,
+      }),
+    ).not.toThrow();
+
+    expect(() =>
+      assertW18DispatchWithinCap({
+        actualSpentUsd: 0.15,
+        reservationUsd: 0.107374,
+        maxSpendUsd: 0.25,
+      }),
+    ).toThrow(/pre-dispatch guard menolak call/iu);
+  });
+
   it("passes a task only when automatic ECX preserves quality and reduces provider billed cost", () => {
     const task = passingTask();
     expect(task.gate.pass).toBe(true);
@@ -178,7 +239,7 @@ describe("W18 hosted economics helpers", () => {
     expect(task.gate.inputTokenReductionPct).toBeGreaterThan(0);
   });
 
-  it("fails closed on wrong provider or non-settled billed-cost accounting", () => {
+  it("fails closed on wrong provider, wrong route, reservation mismatch, or non-settled billing", () => {
     const fullRuns = [
       run({ mode: "full-inline", pairIndex: 1, cost: 0.01, inputTokens: 1_000 }),
       run({ mode: "full-inline", pairIndex: 2, cost: 0.01, inputTokens: 1_000 }),
@@ -190,6 +251,7 @@ describe("W18 hosted economics helpers", () => {
         cost: 0.004,
         inputTokens: 400,
         provider: "anthropic",
+        routingProvider: "Amazon Bedrock",
       }),
       run({
         mode: "ecx-selective-auto",
@@ -197,6 +259,7 @@ describe("W18 hosted economics helpers", () => {
         cost: 0.004,
         inputTokens: 400,
         settlement: "reservation-retained",
+        budgetReservation: 0.2,
       }),
     ];
     const gate = evaluateW18Task({
@@ -215,6 +278,12 @@ describe("W18 hosted economics helpers", () => {
     expect(gate.failures.some((failure) => failure.includes("provider bukan openrouter"))).toBe(
       true,
     );
+    expect(
+      gate.failures.some((failure) => failure.includes("routingProvider bukan Anthropic")),
+    ).toBe(true);
+    expect(
+      gate.failures.some((failure) => failure.includes("reservedUsd != reservation estimate")),
+    ).toBe(true);
     expect(gate.failures.some((failure) => failure.includes("settlement bukan settled"))).toBe(
       true,
     );
