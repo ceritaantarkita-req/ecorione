@@ -4,7 +4,7 @@
 
 ECORIONE menjaga kesinambungan lintas provider/model sambil mempertahankan local-first boundary, approval, audit trail, durable execution, MCP, dan spend control yang eksplisit.
 
-> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** · W20 **CLOSED** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
+> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** · W20 **CLOSED** · F6-E01 held-out selector eval dataset **ACTIVE** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
 
 Untuk manusia/agent baru: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`docs/active-work-plan.md`](docs/active-work-plan.md), [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md), dan [`AGENTS.md`](AGENTS.md). Audit bertanggal lama adalah historical snapshots, bukan current-state source.
 
@@ -198,10 +198,11 @@ Production activation remains deferred by operator. Tooling/runbooks stay availa
 ## Next execution order
 
 ```text
-1. W18 is CLOSED at its documented bounded evidence boundary
-2. W20 final current-state sync is CLOSED
-3. production activation remains separately deferred by operator
-4. future work is evidence-driven; do not reopen closed workstreams without a reproducible regression or changed evidence boundary
+1. F6-E01: bug/task-derived held-out semantic-v1 selector eval dataset
+2. enforce repository-wide governed eval budget <= 50
+3. wire deterministic held-out suite into Product Eval
+4. keep W18/W20 closed; do not rerun paid W18
+5. production activation remains separately deferred by operator
 ```
 
 ## Lisensi

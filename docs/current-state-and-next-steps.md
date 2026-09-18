@@ -16,7 +16,11 @@ The formal-PASS/reconciliation-hold state is now merged through PR #140 at `eba6
 
 Final W18/W20 closure documentation merged through PR #143 at `65142fe14901c87a8e499710081492d4b77e1357`; exact reviewed head `97890b269e19c9c9b8eaa8a89b4a17bcfdd09e11` passed CI #1014 and Product Eval #253.
 
+Final post-merge sync PR #144 merged at `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9` after CI #1016 and Product Eval #255 PASS. The operator then synchronized the Windows clone and verified clean `main...origin/main` at exactly the same SHA. This is the local/remote baseline for the next explicit scope.
+
 Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains deferred by design. Fase 6+ remains evidence-driven/open-ended.
+
+The next explicit non-deployment scope is **F6-E01 — bug/task-derived held-out ECX selector evaluation dataset + bounded eval governance**. It does not reopen W16–W20 and does not make a broad optimizer-generalization claim. The objective is to expand deterministic held-out selector coverage from real repository bugs/tasks, keep the repository-wide eval inventory within the permanent 50-case budget, and wire that evidence into Product Eval without provider calls.
 
 ## Current status table
 
@@ -34,6 +38,7 @@ Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains de
 | W18 hosted economic validation | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | 20-call formal PASS; duplicate earlier batch reconciled; combined US$0.183312 < US$0.25; one-shot guard merged via PR #142. |
 | W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
 | W20 final current-state sync | **CLOSED** | Canonical state synchronized after W18 closure; future work is separate evidence-driven scope. |
+| F6-E01 held-out selector eval dataset | **ACTIVE — NEW EXPLICIT SCOPE** | Bug/task-derived deterministic selector cases + global eval-budget governance; no provider spend and no broad optimizer claim. |
 
 ## W18 provider and experiment profile
 
@@ -103,7 +108,16 @@ A formal W18 PASS supports only a bounded statement on the five synthetic extrac
 
 ## Immediate next action
 
-W18 and W20 are closed. Preserve the current evidence boundary, do **not** rerun the paid W18 benchmark, and treat future work as a new evidence-driven scope rather than reopening closed workstreams without a reproducible regression or changed runtime/provider/model identity.
+W18 and W20 remain closed. Execute **F6-E01** as a new repository-side evidence scope:
+
+1. define a held-out selector manifest whose cases each cite a real bug/task provenance;
+2. evaluate `semantic-v1` deterministically without feeding oracle indexes into selection;
+3. enforce a repository-wide permanent eval case budget of at most 50 across governed manifests;
+4. add the new deterministic suite to Product Eval;
+5. keep claim boundaries explicit: this is selector regression evidence, not hosted cost/model-quality/general production proof;
+6. merge only after exact-head CI/Product Eval PASS.
+
+Do **not** rerun the paid W18 benchmark.
 
 Canonical W18 verification sources:
 

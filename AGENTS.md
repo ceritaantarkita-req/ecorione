@@ -21,6 +21,7 @@ Per **2026-09-18**:
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**;
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
+- F6-E01 held-out selector eval dataset: **ACTIVE NEW EXPLICIT SCOPE** from clean local/remote baseline `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9`;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -120,11 +121,18 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 ## Immediate next work
 
 ```text
-W18 = CLOSED
-W20 = CLOSED
-preserve historical/incident evidence
-future work = separate evidence-driven scope
-do not rerun the paid W18 benchmark
+F6-E01:
+- add bug/task-derived held-out semantic-v1 selector manifest
+- keep oracle/relevant indexes evaluation-only
+- enforce total governed eval inventory <= 50 cases
+- wire deterministic suite into Product Eval
+- require exact-head CI + Product Eval before merge
+- no provider calls and no W18 rerun
 ```
 
 The wrapper remains the required path for any future explicitly authorized hosted validation because it computes the UTC-day ceiling, injects ephemeral runtime overrides, and restores hosted mode off in `finally`.
+
+
+## F6-E01 claim boundary
+
+Held-out selector cases must cite real repository bug/task provenance. Deterministic selector success may be claimed only for those cases. Do not turn this scope into model-answer quality, hosted-cost, production representativeness, or universal optimizer proof.

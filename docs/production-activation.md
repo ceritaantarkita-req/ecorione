@@ -7,7 +7,7 @@ This is the post-closure production-deployment workstream. It does not reopen Ba
 
 The operator has explicitly chosen **not to deploy to a VPS/compute host yet**. Do not treat that decision as a blocker or failure. Do not perform target-host, Cloudflare, firewall, domain, or hosted-provider mutations unless the operator explicitly resumes this workstream.
 
-Current active local work is documented in `docs/current-state-and-next-steps.md`. Local persistence/restart, isolated local backup/restore, and the bounded local observability baseline are closed within their documented local boundaries. **UX/product validation is the active next checkpoint.** Comparative ECX remains closed with its documented limitations.
+Current active local work is documented in `docs/current-state-and-next-steps.md`. Local persistence/restart, isolated local backup/restore, bounded local observability, UX/product validation, immutable local-model identity, W16/W17 selector evidence, W18 hosted economics, and W20 final sync are closed at their documented boundaries. **F6-E01 held-out selector eval dataset + eval-budget governance is the active non-deployment scope.** Production activation remains deferred.
 
 ## Objective when resumed
 
@@ -51,8 +51,10 @@ The operator-approved local-first sequence is now:
 local persistence/restart — CLOSED / PASS
   -> isolated local backup/restore — CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS
   -> local observability baseline — CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS
-  -> UX/product validation — ACTIVE NEXT CHECKPOINT
-  -> immutable local model identity hardening
+  -> UX/product validation — CLOSED / REAL-LAPTOP VERIFIED
+  -> immutable local model identity — DONE WITH LIMITATIONS / RUNTIME VERIFIED
+  -> W16/W17/W18 optimizer evidence — CLOSED AT DOCUMENTED BOUNDARIES
+  -> F6-E01 held-out selector eval dataset — ACTIVE NON-DEPLOYMENT SCOPE
   -> production activation only when the operator explicitly chooses to resume it
 ```
 
@@ -87,7 +89,7 @@ Production secrets are never command-line examples in this document. Provider se
 | 3 | Local persistence/restart evidence | **DONE / LOCAL CHECKPOINT CLOSED** | Fresh strict baseline; Phase 4 + Temporal + PostgreSQL restart; exact owner state survived; strict cleanup PASS |
 | 4 | Isolated local backup/restore evidence | **DONE / PASS WITH LIMITATIONS** | Existing owner state restored into isolated targets; Temporal/PostgreSQL logical restore verified; absent Sync/Connect source state not claimed |
 | 5 | Local observability baseline | **DONE / BOUNDED LOCAL PASS** | 8 owner reads/lane, 5 ECX, 5 uncached local-model samples, 0 workload errors, 5/5 trace coverage |
-| 6 | UX/product validation | **ACTIVE IN SEPARATE LOCAL WORKSTREAM** | Real Ai-facing journeys, usability/functionality/error/recovery evidence |
+| 6 | UX/product validation | **DONE / REAL-LAPTOP VERIFIED** | Closed in W03 at its documented runtime boundary |
 | 7 | Deploy to real compute host/VPS | **DEFERRED BY OPERATOR** | No host action until explicit resume |
 | 8 | Install Cloudflare Free + named Tunnel | **DEFERRED WITH #7** | Tooling ready; account/host evidence pending |
 | 9 | Domain/DNS/HTTPS/Caddy/MCP public routing | **DEFERRED WITH #7** | Requires real target hostname/host |

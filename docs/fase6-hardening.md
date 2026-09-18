@@ -1,6 +1,6 @@
 # Fase 6+ — evidence-driven hardening baseline
 
-**Status:** ACTIVE / OPEN-ENDED · reconciled through bounded local observability closure on 2026-09-12
+**Status:** ACTIVE / OPEN-ENDED · reconciled through W20 closure + synchronized Windows main on 2026-09-18
 
 Fase 6+ bukan fase yang boleh diberi label CLOSED permanen. Yang sudah CLOSED adalah **planned platform/production roadmap Batch 1–12** dan beberapa checkpoint evidence lokal yang eksplisit. Dokumen ini mencatat hardening baseline yang sudah masuk `main` dan area evidence-driven yang masih bisa berkembang.
 
@@ -27,7 +27,14 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - isolated local backup/restore runtime checkpoint: **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**
 - local observability implementation PR #52 merge: `bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6`
 - local observability runtime checkpoint: **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**
-- active next checkpoint: **UX/PRODUCT VALIDATION**
+- W03 UX/product validation: **CLOSED — REAL-LAPTOP VERIFIED**
+- W13 immutable local model identity: **DONE WITH LIMITATIONS — RUNTIME VERIFIED**
+- W16 automatic selector: **DONE — REPO SIDE**
+- W17 no-oracle local validation: **CLOSED / PASS**
+- W18 hosted economics: **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT**
+- W20 final current-state sync: **CLOSED**
+- final local/remote baseline: `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9` with clean Windows `main...origin/main`
+- active next explicit scope: **F6-E01 — BUG/TASK-DERIVED HELD-OUT SELECTOR EVAL DATASET + EVAL-BUDGET GOVERNANCE**
 - compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**
 - AutoClick: **DEFERRED BY DESIGN**
 - no implicit Batch 13
@@ -242,22 +249,24 @@ This closes only a small-sample laptop baseline. It does not create production S
 
 Final verification: `docs/verification/local-observability-closure-2026-09-12.md`.
 
-## Active next evidence scope — UX/product validation
+## Active next evidence scope — F6-E01 held-out selector eval dataset
 
-The next checkpoint is UX/product validation against the already-closed local technical baseline. It is a new explicit scope, not Batch 13.
+W03 already closed UX/product validation, W13 closed the bounded immutable-model-identity checkpoint, W16/W17 closed the current automatic-selector/local validation boundary, and W18 closed bounded hosted-dollar evidence. None of those workstreams should be reopened just to keep development moving.
 
-Target evidence should include:
+The next explicit repository-side scope is **F6-E01**. It is a Fase 6+ evidence scope, not Batch 13 and not W21.
 
-1. synchronized reviewed `main` baseline;
-2. inventory of actual Ai-facing user journeys and expected outcomes before test execution;
-3. representative Local chat flows through the real Ai surface;
-4. continuity/memory and visible state-transition checks without rewriting ground truth;
-5. `/space`, `/ops`, and `/settings` navigation and safe critical-action checks;
-6. Local/Hosted routing clarity while hosted calls remain disabled and the cost kill switch remains on;
-7. approval/error/recovery behavior where safe existing flows permit it;
-8. issue capture with severity and explicit distinction between functional, UX and already-known performance observations;
-9. raw machine/user-specific screenshots/logs retained locally when appropriate;
-10. sanitized closure evidence with exact-head/runtime/post-merge verification.
+Target implementation:
+
+1. add a bounded held-out ECX selector manifest under `evals/`;
+2. every case must cite a real repository bug/task provenance and an existing source reference;
+3. cases must contain query intent/task/need plus selector descriptors, while expected relevant indexes remain evaluation-only and are never passed into `semantic-v1`;
+4. deterministic tests must require expected relevant refs to be selected within the declared `maxRefs` budget;
+5. add a repository-wide eval inventory guard so governed case manifests remain within the permanent 50-case ceiling;
+6. wire the new suite into Product Eval;
+7. keep all provider/model calls out of this scope;
+8. document exact-head CI/Product Eval evidence before closure.
+
+Claim boundary: F6-E01 can improve deterministic selector regression coverage and eval governance. It cannot prove model-answer quality, hosted billed-cost savings, universal optimizer effectiveness, production workload representativeness, or future provider behavior.
 
 ## What remains open-ended after Batch 12
 
@@ -266,15 +275,15 @@ Current operator-approved order:
 1. local persistence/restart drill — **CLOSED / PASS**;
 2. isolated local backup/restore drill — **CLOSED / PASS WITH EXPLICIT ABSENT-OWNER LIMITATIONS**;
 3. local observability baseline — **CLOSED / PASS WITH BOUNDED LOCAL LIMITATIONS**;
-4. product/UX validation from real use — **ACTIVE NEXT CHECKPOINT**;
-5. immutable local model identity hardening;
-6. resume compute-host/VPS + Cloudflare only when operator explicitly chooses;
-7. validate hosted providers/cost only with operator credentials + explicit spend intent;
-8. consider automatic reference selection only as a separate held-out-evaluation scope;
-9. build representative evaluation datasets before broad optimizer claims;
-10. improve UX/Control Center/approval/error surfaces based on observed friction;
-11. integrate other ecosystem projects only through explicit APIs/contracts;
-12. keep dependency/security/model/pricing reviews current;
+4. product/UX validation from real use — **CLOSED / REAL-LAPTOP VERIFIED**;
+5. immutable local model identity hardening — **DONE WITH LIMITATIONS / RUNTIME VERIFIED**;
+6. automatic selector + bounded no-oracle evidence — **DONE / W16–W17 CLOSED AT DOCUMENTED BOUNDARIES**;
+7. hosted billed-cost validation — **DONE / W18 CLOSED AT DOCUMENTED BOUNDARY**;
+8. **F6-E01 held-out bug/task-derived selector evaluation dataset + eval-budget governance — ACTIVE NEXT EXPLICIT SCOPE**;
+9. improve UX/Control Center/approval/error surfaces only from newly observed friction;
+10. integrate other ecosystem projects only through explicit APIs/contracts;
+11. keep dependency/security/model/pricing reviews current;
+12. resume compute-host/VPS + Cloudflare only when operator explicitly chooses;
 13. add features only when evidence justifies them.
 
 ## Deployment direction — currently deferred
