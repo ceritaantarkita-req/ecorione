@@ -39,10 +39,11 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | F6-E03 | **CLOSED / REPO-SIDE PASS** | PR #151 merged; CI #1033 + Product Eval #272 PASS; named Release security acceptance step PASS. |
 | F6-E04 | **CLOSED / REPO-SIDE PASS** | PR #153 merged; CI #1041 + Product Eval #280 + MCP #473 PASS; pin-review step PASS. |
 | F6-E05 | **CLOSED / REPO-SIDE PASS** | PR #155 merged; CI #1045 + Product Eval #284 + MCP #475 PASS; fixed runner policy green. |
-| F6-E06 | **IMPLEMENTED / IN REVIEW** | Exact Node 22.20.0 central pin + workflow/Docker drift rejection implemented; exact-head gates pending. |
+| F6-E06 | **CLOSED / REPO-SIDE PASS** | PR #157 merged; CI #1055 + Product Eval #294 + MCP #483 PASS; exact Node toolchain gate green. |
+| F6-E07 | **ACTIVE** | Pin the Windows installer compiler package version and continuously reject drift. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E06 REVIEW** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E07** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -138,4 +139,8 @@ F6-E05 closed through PR #155. Exact reviewed head `1fb568b1a3fa865f2bad556b06f9
 
 ## F6-E06 active scope
 
-F6-E06 implementation adds `.node-version` pinned to `22.20.0`, moves all tracked `actions/setup-node` consumers to `node-version-file: ".node-version"`, and enforces that the production Dockerfile uses the same exact Node version. `scripts/node-toolchain-review.mjs` is wired into normal CI and release-security acceptance with focused tests. MCP External acceptance now triggers when `.node-version` changes. Closure waits on exact-head CI/Product Eval/MCP. Chocolatey/Inno Setup version pinning remains explicitly outside this bounded scope.
+F6-E06 closed through PR #157. Exact reviewed head `cd04be6385ffb360862e38e63dcd02d27c3a067d` passed CI #1055, Product Eval #294, and MCP External #483; both **Node toolchain review** and **Release security acceptance** passed. Merged main: `f04350a7e05080dd16c1d7bc9710a8e8f5a73b54`.
+
+## F6-E07 active scope
+
+F6-E07 targets the remaining mutable compiler dependency in `.github/workflows/desktop-installer.yml`: `choco install innosetup` currently resolves whatever Chocolatey serves at execution time. Scope: pin an explicit supported Inno Setup package version, add deterministic repo-side drift review and tests, wire it into CI/release-security, and require real Desktop Installer workflow acceptance before closure.
