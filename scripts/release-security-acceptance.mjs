@@ -118,7 +118,9 @@ try {
     findings.push(`Node toolchain drift: ${finding}`);
   }
 } catch (error) {
-  findings.push(`Node toolchain review failed: ${error instanceof Error ? error.message : String(error)}`);
+  findings.push(
+    `Node toolchain review failed: ${error instanceof Error ? error.message : String(error)}`,
+  );
 }
 
 if (findings.length > 0) {
