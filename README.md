@@ -35,6 +35,7 @@ Canonical W18 docs:
 - [`docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`](docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md)
 - [`docs/verification/w18-formal-run-readiness-2026-09-18.md`](docs/verification/w18-formal-run-readiness-2026-09-18.md)
 - [`docs/verification/w18-formal-guard-merge-2026-09-18.md`](docs/verification/w18-formal-guard-merge-2026-09-18.md)
+- [`docs/verification/w18-formal-operator-wrapper-2026-09-18.md`](docs/verification/w18-formal-operator-wrapper-2026-09-18.md)
 
 ## Apa yang sudah ada
 
@@ -158,6 +159,15 @@ W18 zero-spend preflight:
 ```powershell
 node .\scripts\w18-hosted-economics.mjs --preflight
 ```
+
+Recommended fail-closed operator wrapper after it is merged to synchronized `main`:
+
+```powershell
+node .\scripts\w18-formal-operator.mjs --preflight-only
+node .\scripts\w18-formal-operator.mjs --execute-authorized-w18
+```
+
+The wrapper derives the current UTC-day ceiling from the durable ledger, keeps hosted calls off during preflight, uses only ephemeral child-process overrides, and performs cleanup in `finally`. The execute command remains a single authorized attempt capped at US$0.25.
 
 Do not run formal W18 from stale `main`, with an old engine process, without an explicit current-run spend cap, or with provider routing allowed to fall back.
 
