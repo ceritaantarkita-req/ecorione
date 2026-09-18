@@ -22,6 +22,7 @@ const required = [
   "scripts/node-toolchain-review.mjs",
   "scripts/installer-toolchain-review.mjs",
   "scripts/container-image-digest-review.mjs",
+  "deploy/container-image-lock.json",
   ".node-version",
   ".inno-setup-version",
   ".github/workflows/desktop-installer.yml",
