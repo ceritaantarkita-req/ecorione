@@ -29,9 +29,7 @@ export function reviewInstallerWorkflow(content) {
   if (!content.includes(`Get-Content -LiteralPath "${VERSION_FILE}"`)) {
     findings.push(`Desktop Installer harus membaca pin dari ${VERSION_FILE}`);
   }
-  if (
-    !content.includes("choco install innosetup --version $innoVersion --yes --no-progress")
-  ) {
+  if (!content.includes("choco install innosetup --version $innoVersion --yes --no-progress")) {
     findings.push("Inno Setup harus di-install dengan --version dari pin repository");
   }
   if (/choco\s+install\s+innosetup(?![^\n]*--version)/i.test(content)) {
