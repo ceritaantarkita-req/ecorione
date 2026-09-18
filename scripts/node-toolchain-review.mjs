@@ -22,16 +22,18 @@ export function reviewNodeWorkflowContent(path, content) {
   const lines = content.split("\n");
   let setupNodeSeen = false;
   let setupNodeIndent = -1;
+  let setupNodeLine = -1;
   let nodeVersionFileSeen = false;
 
-  const flushSetupNode = (lineNumber) => {
+  const flushSetupNode = () => {
     if (setupNodeSeen && !nodeVersionFileSeen) {
       findings.push(
-        `${path}:${String(lineNumber)} actions/setup-node harus memakai node-version-file: ${NODE_VERSION_FILE}`,
+        `${path}:${String(setupNodeLine)} actions/setup-node harus memakai node-version-file: ${NODE_VERSION_FILE}`,
       );
     }
     setupNodeSeen = false;
     setupNodeIndent = -1;
+    setupNodeLine = -1;
     nodeVersionFileSeen = false;
   };
 
@@ -40,13 +42,14 @@ export function reviewNodeWorkflowContent(path, content) {
     const trimmed = line.trim();
 
     if (setupNodeSeen && trimmed && indent <= setupNodeIndent && !trimmed.startsWith("with:")) {
-      flushSetupNode(index + 1);
+      flushSetupNode();
     }
 
     if (/^\s*(?:-\s*)?uses:\s*actions\/setup-node@/i.test(line)) {
-      if (setupNodeSeen) flushSetupNode(index + 1);
+      if (setupNodeSeen) flushSetupNode();
       setupNodeSeen = true;
       setupNodeIndent = indent;
+      setupNodeLine = index + 1;
       continue;
     }
 
@@ -68,7 +71,7 @@ export function reviewNodeWorkflowContent(path, content) {
     }
   }
 
-  if (setupNodeSeen) flushSetupNode(lines.length);
+  if (setupNodeSeen) flushSetupNode();
   return findings;
 }
 
