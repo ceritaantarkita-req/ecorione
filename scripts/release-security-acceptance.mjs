@@ -54,6 +54,12 @@ if (
 ) {
   findings.push("normal CI must execute dependency:review");
 }
+if (
+  !ci.includes("name: Release security acceptance") ||
+  !ci.includes("run: node scripts/release-security-acceptance.mjs")
+) {
+  findings.push("normal CI must execute release-security acceptance");
+}
 
 if (findings.length > 0) {
   console.error("release-security-acceptance: FAIL");
