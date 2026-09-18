@@ -14,6 +14,7 @@ Per **2026-09-18**:
 - W17 no-oracle validation: **DONE — VERIFIED LOCAL MODEL PASS**;
 - W18 hosted economic validation: **FORMAL RUN READY / NOT CLOSED**;
 - W18 one-call Anthropic-only diagnostic Attempt 4: **PASS**;
+- W18 formal dispatch/routing/cap guard: **MERGED TO `main`** via PR #135 at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact-head CI #994 + Product Eval #233 **PASS**;
 - W18 formal 20-call run: **authorized once up to US$0.25, not yet executed at this documentation checkpoint**;
 - W20: **BLOCKED ON W18**;
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
@@ -79,7 +80,7 @@ Before starting Connect for the formal run:
 7. enable runtime hosted calls only for the bounded run;
 8. require zero-spend preflight PASS before the formal command.
 
-Connect's durable reservation happens before provider dispatch and is the hard admission boundary. Do not weaken it or manually edit historical ledger entries.
+Connect's durable reservation happens before provider dispatch and is the hard admission boundary. The formal harness additionally rejects the next call before dispatch when cumulative actual spend plus the next conservative reservation would exceed the explicit W18 cap. Do not weaken either boundary or manually edit historical ledger entries.
 
 ## Formal failure behavior
 
@@ -101,6 +102,7 @@ If any formal call fails, produces unusable completion, non-positive billed cost
 - `docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md`
 - `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
 - `docs/verification/w18-formal-run-readiness-2026-09-18.md`
+- `docs/verification/w18-formal-guard-merge-2026-09-18.md`
 
 Raw `.ecorione/evidence/` artifacts remain local/gitignored. Commit only sanitized verification summaries.
 

@@ -8,7 +8,7 @@ Historical plans, audits, failed attempts, and older verification notes remain e
 
 ## Current verdict
 
-ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 are closed at their documented boundaries. The active blocker for final current-state closure is **W18 hosted economic validation**. W18 is **FORMAL RUN READY, NOT CLOSED**: the one-call Anthropic-only diagnostic passed, the durable spend ledger reconciled cleanly afterward, and a fresh operator authorization of **US$0.25 maximum** has been granted for one formal W18 run. W20 remains blocked until formal W18 evidence passes.
+ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 are closed at their documented boundaries. The active blocker for final current-state closure is **W18 hosted economic validation**. W18 is **FORMAL RUN READY, NOT CLOSED**: the one-call Anthropic-only diagnostic passed, the formal routing/reservation/pre-dispatch cap guard is merged to `main`, the durable spend ledger reconciled cleanly after the diagnostic, and a fresh operator authorization of **US$0.25 maximum** has been granted for one formal W18 run. W20 remains blocked until formal W18 evidence passes.
 
 Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains deferred by design. Fase 6+ remains evidence-driven/open-ended.
 
@@ -25,7 +25,7 @@ Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains de
 | W11 installer/launcher | **DONE — WINDOWS INSTALLER VERIFIED** | Clean Windows installer lifecycle passed. |
 | W16 automatic semantic ref selector | **DONE — REPO SIDE** | `semantic-v1`, bounded `maxRefs=3`; no oracle indexes required by automatic lane. |
 | W17 ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5 tasks × 5 repeats × 4 lanes = 100 measured calls; bounded local evidence. |
-| W18 hosted economic validation | **FORMAL RUN READY / NOT CLOSED** | Attempt 4 one-call Anthropic-only diagnostic passed; formal 20-call evidence still required. |
+| W18 hosted economic validation | **FORMAL RUN READY / NOT CLOSED** | Attempt 4 passed; PR #135 formal guard merged; formal 20-call evidence still required. |
 | W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
 | W20 final current-state sync | **BLOCKED ON W18** | Start final closure only after formal W18 PASS. |
 
@@ -57,6 +57,12 @@ Automatic selection is `semantic-v1` with `maxRefs=3`. Fixture relevance indexes
 - **Attempt 4 — one-call diagnostic PASS.** OpenRouter request was pinned Anthropic-only with fallback disabled. `procurement-award/full-inline` returned quality `1` (`3/3`), `inputTokens=2002`, `outputTokens=45`, billed `$0.006681`, durable settlement `settled`, no cache hit.
 
 Known settled provider actual across Attempts 1–4 is `$0.052947`. The durable committed amount after Attempt 4 is larger because it conservatively includes the historical Attempt 2 uncertain reservation.
+
+## Formal guard repository verification
+
+PR #135 merged the remaining formal safety/audit guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`. Exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
+
+The merged formal runner now requires Anthropic-only routing, records the sanitized selected routing provider, verifies the durable reservation against the formal conservative estimate, and blocks the next dispatch before provider execution if cumulative actual spend plus that next reservation would exceed the explicit W18 cap. This repository-side work made no hosted provider call, so it did not consume the single formal-run authorization.
 
 ## Latest zero-spend postflight
 
@@ -140,5 +146,6 @@ Canonical W18 verification sources:
 - `docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md`
 - `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
 - `docs/verification/w18-formal-run-readiness-2026-09-18.md`
+- `docs/verification/w18-formal-guard-merge-2026-09-18.md`
 
 Historical audits dated before this handoff remain historical snapshots and are not current status sources.

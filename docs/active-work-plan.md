@@ -9,15 +9,16 @@ Current code + current runtime evidence + this document are the source of truth 
 ## Current repository checkpoint
 
 ```text
-main at documentation-sync start: 9f95d184c6a59da527fd23454fed06065a5738fe
+main at documentation-sync start: fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a
 W11 final Windows installer closure: PASS
 W17 formal local closure: PASS
 W18 one-call Anthropic-only diagnostic: PASS
+W18 formal dispatch/routing/cap guard: MERGED / REPO-SIDE PASS
 W18 formal 20-call run: NOT YET EXECUTED
 W20 final sync: BLOCKED ON W18
 ```
 
-The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 then added its sanitized verification record and advanced `main` to `9f95d184c6a59da527fd23454fed06065a5738fe`.
+The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
 
 ## Work queue
 
@@ -35,7 +36,7 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | W15 | Agentic local-model eval | **DONE — VERIFIED LOCAL MODEL PASS^3** | Bounded eval harness only. |
 | W16 | Automatic semantic reference selector | **DONE — REPO SIDE** | `semantic-v1`, `maxRefs=3`. |
 | W17 | ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5×5×4 = 100 measured calls, 5/5 gates. |
-| W18 | Hosted economic validation | **FORMAL RUN READY / NOT CLOSED** | Attempt 4 diagnostic PASS; formal 20-call evidence remains. |
+| W18 | Hosted economic validation | **FORMAL RUN READY / NOT CLOSED** | Attempt 4 diagnostic PASS; formal guard merged; formal 20-call evidence remains. |
 | W19 | Release/security governance | **DONE — REPO SIDE** | CI history/naming/model-alias gates retained. |
 | W20 | Final current-state sync | **BLOCKED ON W18** | Continue immediately after W18 closure. |
 
@@ -85,6 +86,17 @@ costKillSwitch = 1
 
 The one unsettled reservation is historical Attempt 2. Do not rewrite it.
 
+### Repository-side formal guard
+
+```text
+PR #135 reviewed head = 1b6f5d631429eda53be734266a5f47e527390739
+CI #994 = PASS
+Product Eval #233 = PASS
+merged main = fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a
+```
+
+This guard requires Anthropic-only OpenRouter routing, records successful `routingProvider`, couples the harness reservation estimate to the production OpenRouter estimator, validates durable `reservedUsd`, and blocks a next dispatch before provider execution if cumulative actual spend plus the next reservation would exceed the explicit W18 cap. This repository-side work made no hosted provider call.
+
 ## Formal authorization
 
 Operator has explicitly authorized **one formal W18 attempt, maximum US$0.25**.
@@ -127,7 +139,7 @@ After run, regardless of success/failure:
 
 ## Formal closure requirements
 
-Every call must be uncached, use the pinned OpenRouter pricing identity, have positive authoritative provider billed cost, and settle durable accounting. Each task must preserve quality and selector recall while automatic mode reduces input tokens and billed cost versus full-inline.
+Every call must be uncached, use the pinned OpenRouter pricing identity, report Anthropic as the selected routing provider, match durable `reservedUsd` to the formal reservation estimate, have positive authoritative provider billed cost, and settle durable accounting. Each task must preserve quality and selector recall while automatic mode reduces input tokens and billed cost versus full-inline.
 
 Aggregate requires:
 

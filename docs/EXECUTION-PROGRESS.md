@@ -31,7 +31,7 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W12–W15 | **CLOSED at documented boundaries** | Attachment path, immutable identity, product eval, bounded agentic local eval. |
 | W16 | **REPO SIDE DONE** | Automatic `semantic-v1` selector, `maxRefs=3`. |
 | W17 | **CLOSED — VERIFIED LOCAL MODEL PASS** | 100 measured calls, 5/5 task gates, no-oracle automatic lane. |
-| W18 | **FORMAL RUN READY / NOT CLOSED** | Anthropic-only one-call diagnostic passed; 20-call hosted economics still required. |
+| W18 | **FORMAL RUN READY / NOT CLOSED** | Diagnostic passed and formal routing/reservation/pre-dispatch cap guard is merged; 20-call hosted economics still required. |
 | W19 | **REPO SIDE DONE** | Release/security governance gates retained. |
 | W20 | **BLOCKED ON W18** | Final current-state closure follows formal W18. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
@@ -119,6 +119,14 @@ costKillSwitch = 1
 
 Known settled provider actual across Attempts 1–4 is `$0.052947`; the difference to committed `$0.160104` is exactly the historical uncertain reservation `$0.107157`.
 
+### Formal guard merge — repository PASS
+
+PR #135 merged the formal dispatch/routing/cost guard to `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`. Exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
+
+The merged formal path now requires Anthropic-only OpenRouter routing, records `routingProvider`, couples the harness reservation estimate to the production OpenRouter estimator, checks durable `reservedUsd`, and rejects the next dispatch before provider execution when cumulative actual spend plus the next reservation would exceed the explicit run cap.
+
+No hosted provider call was made by this repository-side work, so the single US$0.25 formal authorization remains unconsumed.
+
 ## W18 formal run readiness
 
 Formal shape remains:
@@ -165,6 +173,9 @@ Formal process requirements:
 Each call/task must preserve:
 
 - OpenRouter gateway + pinned pricing identity;
+- `routingProvider` remains Anthropic for every measured call;
+- `budget.reservedUsd` equals the formal conservative reservation estimate;
+- the pre-dispatch cap guard remains active;
 - no exact-cache hit;
 - positive authoritative provider billed cost;
 - durable settlement `settled`;
@@ -195,6 +206,7 @@ If any gate/provider/cost/accounting condition fails, stop. Do not rerun under t
 - `docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md`
 - `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
 - `docs/verification/w18-formal-run-readiness-2026-09-18.md`
+- `docs/verification/w18-formal-guard-merge-2026-09-18.md`
 
 ## Immediate execution order
 

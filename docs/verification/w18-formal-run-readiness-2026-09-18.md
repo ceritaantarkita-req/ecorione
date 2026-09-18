@@ -6,10 +6,10 @@ This record freezes the verified preconditions before the next formal W18 attemp
 
 ## Current repository lineage
 
-Documentation-sync base `main`:
+Formal-guard merged code baseline on `main`:
 
 ```text
-9f95d184c6a59da527fd23454fed06065a5738fe
+fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a
 ```
 
 That baseline contains:
@@ -22,9 +22,13 @@ That baseline contains:
 - safe OpenRouter selected-routing diagnostics;
 - Anthropic-only OpenRouter routing support with fallback disabled;
 - diagnostic conservative reservation estimation including provider-routing request bytes;
-- successful Attempt 4 verification record.
+- successful Attempt 4 verification record;
+- formal Anthropic-only routing assertion on successful calls;
+- formal reservation-estimator coupling to the production OpenRouter estimator;
+- durable `budget.reservedUsd` consistency checks;
+- pre-dispatch rejection when cumulative actual spend plus the next conservative reservation would exceed the explicit W18 run cap.
 
-The documentation-only sync containing this file will advance `main`; the operator must run formal evidence only after synchronizing to that merged head.
+PR #135 supplied the final repository-side formal guard. The documentation-only sync containing this updated record may advance `main` again; the operator must run formal evidence only after synchronizing to the resulting merged head.
 
 ## Formal experiment profile
 
@@ -81,6 +85,20 @@ gate.pass = true
 
 This is diagnostic-only evidence and does not replace the formal run.
 
+## Formal guard merge — repository verification
+
+```text
+PR = #135
+reviewed head = 1b6f5d631429eda53be734266a5f47e527390739
+CI #994 = SUCCESS
+Product Eval #233 = SUCCESS
+merged main = fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a
+```
+
+The net PR diff was limited to the W18 formal harness, Connect completion result plumbing, hosted-provider result typing, and W18 tests. The temporary branch-only formatting diagnostic was removed before the reviewed head.
+
+No hosted provider dispatch occurred during this repository-side work, so the single formal-run authorization remains unconsumed at this checkpoint.
+
 ## Durable ledger reconciliation before formal authorization
 
 Latest zero-spend postflight:
@@ -130,7 +148,7 @@ one formal W18 attempt
 maximum provider spend = US$0.25
 ```
 
-This authorization is **single-run only**. It is not standing permission, and it is not reusable after a partial or failed formal attempt. Documentation-only synchronization does not consume it because no hosted call is made and no provider/cost logic changes.
+This authorization is **single-run only**. It is not standing permission, and it is not reusable after a partial or failed formal attempt. PR #135, its repository CI/Product Eval, its merge, and documentation synchronization do not consume it because they make no hosted provider call. The authorization is consumed only by provider dispatches in the formal attempt.
 
 ## Dynamic durable budget hard stop
 
@@ -193,6 +211,9 @@ For all calls/tasks:
 
 - provider gateway remains OpenRouter;
 - pricing identity remains exactly `claude-sonnet-4-5-20250929`;
+- successful `routingProvider` remains Anthropic;
+- durable `budget.reservedUsd` equals the formal conservative reservation estimate;
+- pre-dispatch cap guard remains active;
 - no exact-cache hit;
 - response usable and task quality score `1`;
 - provider-reported billed cost finite and `> 0`;
