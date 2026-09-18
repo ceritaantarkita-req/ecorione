@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **IMPLEMENTED / IN REVIEW**
+Status: **CLOSED / REPO-SIDE PASS**
 
 ## Scope
 
@@ -54,3 +54,24 @@ F6-E07 closes only after:
 - canonical docs closure sync.
 
 No provider/model call, hosted spend, W18 rerun, or infrastructure deployment mutation is part of this scope.
+
+
+## Closure evidence
+
+```text
+PR = #160
+exact reviewed head = 472819b3a7c875246ce76daee8212a7aed8fc8c9
+CI #1072 = initial verify timeout in Phase 4 Temporal; same-head failed-job rerun PASS
+Product Eval #311 = PASS
+MCP External HTTPS Acceptance #498 = PASS
+Desktop Installer #41 = PASS
+merged main = 9362419a9e2766750237e30792a50494d39c9b17
+```
+
+The first CI verify attempt timed out only in the pre-existing Phase 4 Temporal restart acceptance. No E07 unit or installer-toolchain test failed. The failed verify job was rerun on the exact same reviewed head with no source change and passed the full sequence, including **Installer toolchain review**, **Release security acceptance**, and production build.
+
+Desktop Installer #41 passed the Linux bundle job and real Windows installer job using the repository-pinned Inno Setup version. No provider/model call, hosted spend, W18 rerun, or infrastructure deployment mutation was made.
+
+## Next scope
+
+F6-E08 addresses the remaining tag-only container identities in the Dockerfile and deployment compose surfaces. Exact tags remain human-readable, but repository-reviewed digests are required for immutable build/runtime image identity.
