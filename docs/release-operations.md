@@ -8,6 +8,8 @@ Node build-toolchain identity is centralized in `.node-version` and continuously
 
 Windows installer compiler identity is centralized in `.inno-setup-version`. Desktop Installer reads that exact pin and installs Chocolatey `innosetup` with `--version`; normal CI runs `pnpm run toolchain:installer-review`, release-security acceptance re-executes the policy, and installer/toolchain pull requests run the Desktop Installer workflow.
 
+Third-party container identity is tag+digest pinned for the Dockerfile and governed deployment compose surfaces. Normal CI runs `pnpm run images:digest-review`; release-security acceptance re-executes the same policy, and production-ops acceptance checks the exact reviewed image identities.
+
 Status: **Batch 1–12 release baseline CLOSED / READY within documented self-host boundary**
 
 Current handoff: `docs/current-state-and-next-steps.md`.
