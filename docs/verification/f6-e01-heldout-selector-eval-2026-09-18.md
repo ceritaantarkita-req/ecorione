@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **IMPLEMENTED / IN REVIEW**
+Status: **CLOSED / REPO-SIDE PASS**
 
 ## Scope
 
@@ -98,4 +98,31 @@ It does **not** prove:
 - production SLA/SLO;
 - future provider/model behavior.
 
-Closure requires exact-head CI and Product Eval PASS, guarded merge, then post-merge current-state sync.
+## Closure evidence
+
+Initial implementation:
+
+```text
+PR = #146
+exact reviewed head = 08b2a5f56340c12682c2a66474cd8884899f9013
+CI #1023 = PASS
+Product Eval #262 = PASS
+MCP External HTTPS Acceptance #467 = PASS
+merged main = 2aa1ae10ad418acc1e00c0e6a4bdb3156affc669
+```
+
+Repository-wide inventory hardening:
+
+```text
+PR = #147
+exact reviewed head = 96aad04d33e539e352c1cc4e754f70a2c34c77f4
+CI #1025 = PASS
+Product Eval #264 = PASS
+merged main = d7b759354e3845fde058d5f11f52ce52346699a8
+```
+
+No provider/model call or hosted spend was made by either PR.
+
+## Final verdict
+
+**F6-E01 = CLOSED / REPO-SIDE PASS** at the bounded deterministic selector-regression and eval-governance boundary described above.
