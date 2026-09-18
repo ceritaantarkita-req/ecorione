@@ -159,12 +159,15 @@ F6-E06 = CLOSED / REPO-SIDE PASS
 - Product Eval #294 PASS
 - MCP External #483 PASS
 
-F6-E07 = ACTIVE
-- pin the Inno Setup Chocolatey package used by Desktop Installer
-- add deterministic installer-toolchain review + tests
-- make CI/release-security protect the pin
-- preserve actual Windows installer compilation as the closure acceptance boundary
-- no provider/deployment mutation
+F6-E07 = CLOSED / REPO-SIDE PASS
+- PR #160 merged at `9362419a9e2766750237e30792a50494d39c9b17`
+- exact head `472819b3a7c875246ce76daee8212a7aed8fc8c9`
+- CI #1072 same-head rerun PASS
+- Product Eval #311 + MCP #498 + Desktop Installer #41 PASS
+
+F6-E08 = IMPLEMENTED / IN REVIEW
+- authoritative image lock + exact digest drift rejection
+- next = exact-head CI/Product Eval -> guarded merge -> closure
 ```
 
 The wrapper remains the required path for any future explicitly authorized hosted validation because it computes the UTC-day ceiling, injects ephemeral runtime overrides, and restores hosted mode off in `finally`.
@@ -183,21 +186,6 @@ The continuous dependency gate enforces deterministic repository policy only. A 
 ## F6-E03 claim boundary
 
 A PASS means the existing deterministic release-security acceptance ran continuously in normal CI and its CI wiring is also checked by manual/release invocation. It does not prove live vulnerability-feed freshness, production deployment correctness, or provider/model behavior.
-
-
-## F6-E07 current branch
-
-```text
-F6-E07 = IMPLEMENTED / IN REVIEW
-- `.inno-setup-version` pins Inno Setup `6.7.1`
-- Desktop Installer installs Chocolatey `innosetup` with explicit `--version`
-- pull requests touching installer/toolchain inputs now run Desktop Installer automatically
-- `scripts/installer-toolchain-review.mjs` + focused tests added
-- normal CI has named Installer toolchain review step
-- release-security acceptance protects and executes the same policy
-- next = exact-head CI/Product Eval/Desktop Installer -> fix findings -> guarded merge -> closure
-- no provider/deployment mutation
-```
 
 
 ## F6-E07/E08 handoff
