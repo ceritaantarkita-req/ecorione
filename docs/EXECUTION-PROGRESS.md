@@ -34,7 +34,8 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W18 | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | Formal hosted economics passed; duplicate batch reconciled; one-shot guard merged via PR #142. |
 | W19 | **REPO SIDE DONE** | Release/security governance gates retained. |
 | W20 | **CLOSED** | Final canonical current-state synchronization completed. |
-| F6-E01 | **IMPLEMENTED / IN REVIEW** | 10 held-out bug/task-derived selector cases; 26/50 global eval inventory; Product Eval wired; exact-head gates pending. |
+| F6-E01 | **CLOSED / REPO-SIDE PASS** | PR #146/#147 merged; 10 held-out cases; auto-discovered 26/50 eval inventory. |
+| F6-E02 | **ACTIVE — NEW EXPLICIT SCOPE** | Existing dependency policy script is not run in normal CI; continuous gate hardening next. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
 | Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E01** | Evidence-driven; no implicit Batch 13. |
@@ -105,4 +106,11 @@ W20 final closure: `docs/verification/w20-final-current-state-closure-2026-09-18
 
 Baseline is synchronized local/remote `main` at `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9`.
 
-F6-E01 now implements 10 deterministic held-out `semantic-v1` selector cases derived only from real bug/task provenance, keeps expected relevance evaluation-only, enforces a repository-wide governed inventory of 26/50 cases, and is wired into Product Eval. It does not call a provider and does not create a universal optimizer/generalization claim. Closure waits on exact-head CI/Product Eval and guarded merge.
+F6-E01 is closed after PR #146/#147 merged the 10-case held-out selector suite and auto-discovered 26/50 eval budget guard. CI #1023/#1025, Product Eval #262/#264, and MCP External #467 passed at their relevant exact heads. No provider call was made.
+
+
+## F6-E02 active scope
+
+A current repository audit found a concrete continuous-gating gap: `package.json` exposes `pnpm dependency:review`, and release documentation treats deterministic dependency policy review as part of the release baseline, but normal `.github/workflows/ci.yml` does not invoke it. F6-E02 will make that policy a normal CI gate and make release acceptance assert the CI wiring remains present.
+
+This scope does not claim live registry vulnerability/CVE freshness.
