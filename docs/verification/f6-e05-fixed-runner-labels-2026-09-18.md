@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **IMPLEMENTED / IN REVIEW**
+Status: **CLOSED / REPO-SIDE PASS**
 
 ## Scope
 
@@ -57,3 +57,21 @@ F6-E05 closes only when:
 - canonical docs record closure.
 
 No provider/model call, hosted spend, VPS/Cloudflare mutation, or W18 rerun is part of this scope.
+
+
+## Closure evidence
+
+```text
+PR = #155
+exact reviewed head = 1fb568b1a3fa865f2bad556b06f9fb6e4e2d6da2
+CI #1045 = PASS
+Product Eval #284 = PASS
+MCP External HTTPS Acceptance #475 = PASS
+merged main = 2e031d4d540632385279e3b6559d564afcae96d3
+```
+
+Exact-head CI showed **GitHub Actions runner review** and **Release security acceptance** PASS. The changed MCP workflow also passed its dedicated external HTTPS acceptance on the fixed `ubuntu-24.04` runner. No provider/model call, hosted spend, VPS/Cloudflare mutation, or W18 rerun was made.
+
+## Next scope
+
+F6-E06 addresses mutable Node toolchain selection (`node-version: 22`) by centralizing an exact version and enforcing workflow/container consistency. Unpinned Inno Setup installation remains a later separate toolchain checkpoint.
