@@ -24,7 +24,7 @@ Per **2026-09-18**:
 - F6-E01 held-out selector eval dataset: **CLOSED / REPO-SIDE PASS**; 10 held-out cases, auto-discovered 26/50 governed eval inventory;
 - F6-E02 continuous dependency-policy CI gate: **CLOSED / REPO-SIDE PASS**;
 - F6-E03 continuous release-security acceptance CI gate: **CLOSED / REPO-SIDE PASS**; PR #151, CI #1033, Product Eval #272;
-- F6-E04 immutable GitHub Actions pinning: **ACTIVE**;
+- F6-E04 immutable GitHub Actions pinning: **IMPLEMENTED / IN REVIEW**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -134,11 +134,14 @@ F6-E03 = CLOSED / REPO-SIDE PASS
 - CI #1033 PASS with named Release security acceptance step PASS
 - Product Eval #272 PASS
 
-F6-E04 = ACTIVE
-- replace mutable remote GitHub Action tags with immutable full commit SHAs
-- add a deterministic scanner across tracked workflow YAML files
-- wire the scanner into normal CI and release-security acceptance
-- add focused tests
+F6-E04 = IMPLEMENTED / IN REVIEW
+- `scripts/github-actions-pin-review.mjs` scans every tracked workflow YAML
+- remote action refs require full 40-char commit SHA
+- normal CI has named GitHub Actions pin review step
+- release-security acceptance protects and re-executes the policy
+- focused tests added
+- known CI/Product Eval actions pinned
+- exact-head CI must expose and block any remaining mutable workflow refs
 - no provider/deployment mutation
 ```
 

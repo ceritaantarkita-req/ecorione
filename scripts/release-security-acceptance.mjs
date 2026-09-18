@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from "node:fs";
+import { reviewTrackedWorkflows } from "./github-actions-pin-review.mjs";
 
 const required = [
   "docs/security-review.md",
@@ -12,6 +13,7 @@ const required = [
   "scripts/self-host-rollback.sh",
   "scripts/secret-history-scan.mjs",
   "scripts/dependency-security-review.mjs",
+  "scripts/github-actions-pin-review.mjs",
   ".github/workflows/ci.yml",
   "package.json",
   "apps/ai/app/settings/page.tsx",
@@ -49,16 +51,32 @@ if (
   findings.push("dependency:review package script missing or changed");
 }
 if (
+  packageJson?.scripts?.["actions:pin-review"] !== "node scripts/github-actions-pin-review.mjs"
+) {
+  findings.push("actions:pin-review package script missing or changed");
+}
+if (
   !ci.includes("name: Dependency policy review") ||
   !ci.includes("run: pnpm run dependency:review")
 ) {
   findings.push("normal CI must execute dependency:review");
 }
 if (
+  !ci.includes("name: GitHub Actions pin review") ||
+  !ci.includes("run: pnpm run actions:pin-review")
+) {
+  findings.push("normal CI must execute actions:pin-review");
+}
+if (
   !ci.includes("name: Release security acceptance") ||
   !ci.includes("run: node scripts/release-security-acceptance.mjs")
 ) {
   findings.push("normal CI must execute release-security acceptance");
+}
+
+const actionPinReview = reviewTrackedWorkflows();
+for (const finding of actionPinReview.findings) {
+  findings.push(`mutable GitHub Action ref: ${finding}`);
 }
 
 if (findings.length > 0) {

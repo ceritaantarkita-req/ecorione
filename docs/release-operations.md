@@ -1,6 +1,6 @@
 # ECORIONE Release / Upgrade / Rollback Operations
 
-Last updated: **2026-09-10**
+Last updated: **2026-09-18**
 
 Status: **Batch 1–12 release baseline CLOSED / READY within documented self-host boundary**
 
@@ -85,6 +85,9 @@ A release candidate is not healthy merely because focused tests pass. The exact 
 - Phase 4 real-process acceptance;
 - Production Operations acceptance;
 - Secret Scan;
+- Dependency policy review;
+- GitHub Actions pin review;
+- Release security acceptance;
 - Production Build;
 - public MCP acceptance when the change affects that boundary.
 

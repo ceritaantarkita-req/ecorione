@@ -24,7 +24,7 @@ local Windows main sync: VERIFIED @ 943e46bf7cfd53063e8d8e4970d0c9aa7713dce9
 F6-E01 held-out selector eval dataset: CLOSED / REPO-SIDE PASS
 F6-E02 dependency policy CI gate: CLOSED / REPO-SIDE PASS
 F6-E03 release-security acceptance CI gate: CLOSED / REPO-SIDE PASS
-F6-E04 immutable GitHub Actions pinning: ACTIVE
+F6-E04 immutable GitHub Actions pinning: IMPLEMENTED / IN REVIEW
 ```
 
 The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
@@ -51,7 +51,7 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | F6-E01 | Bug/task-derived held-out selector eval dataset + eval-budget governance | **CLOSED / REPO-SIDE PASS** | PR #146 + #147 merged; 10 cases; auto-discovered 26/50 inventory. |
 | F6-E02 | Continuous dependency-policy CI gate | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
 | F6-E03 | Continuous release-security acceptance CI gate | **CLOSED / REPO-SIDE PASS** | PR #151; CI #1033 + Product Eval #272 PASS; named CI step observed green. |
-| F6-E04 | Immutable GitHub Actions pinning + CI policy gate | **ACTIVE** | Replace mutable remote action tags with full commit SHAs; scan all tracked workflow YAML. |
+| F6-E04 | Immutable GitHub Actions pinning + CI policy gate | **IMPLEMENTED / IN REVIEW** | Repo-wide scanner + tests + CI/release self-wiring + known action pins implemented; exact-head gates pending. |
 
 ## W18 current facts
 
@@ -94,8 +94,8 @@ W20 = CLOSED
 F6-E01 = CLOSED / REPO-SIDE PASS
 F6-E02 = CLOSED / REPO-SIDE PASS
 F6-E03 = CLOSED / REPO-SIDE PASS
-F6-E04 = ACTIVE
-next = immutable action refs + continuous pin-review gate + tests -> exact-head CI/Product Eval -> guarded merge
+F6-E04 = IMPLEMENTED / IN REVIEW
+next = exact-head CI/Product Eval -> fix any repo-wide scanner findings -> guarded merge -> closure
 do not rerun the paid W18 benchmark
 ```
 

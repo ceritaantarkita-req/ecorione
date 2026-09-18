@@ -37,7 +37,7 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | F6-E01 | **CLOSED / REPO-SIDE PASS** | PR #146/#147 merged; 10 held-out cases; auto-discovered 26/50 eval inventory. |
 | F6-E02 | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
 | F6-E03 | **CLOSED / REPO-SIDE PASS** | PR #151 merged; CI #1033 + Product Eval #272 PASS; named Release security acceptance step PASS. |
-| F6-E04 | **ACTIVE** | Immutable full-SHA remote GitHub Action refs + continuous scanner/gate. |
+| F6-E04 | **IMPLEMENTED / IN REVIEW** | Repo-wide immutable remote-action scanner, CI/release gate, tests, and known action pins implemented; exact-head gates pending. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
 | Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E04** | Evidence-driven; no implicit Batch 13. |
@@ -128,4 +128,4 @@ F6-E03 closed through PR #151. Exact reviewed head `fdd532e0b6f2fe550708b8389ecc
 
 ## F6-E04 active scope
 
-F6-E04 closes a repository supply-chain gap: remote GitHub Actions are still referenced by mutable major tags. The scope is to pin remote action invocations to immutable full commit SHAs, continuously scan all tracked workflow YAML for mutable refs, test that scanner deterministically, and make release-security acceptance protect the CI wiring. This scope is repository-only and does not change provider/runtime/deployment state.
+F6-E04 implementation now pins known CI/Product Eval remote actions to immutable full commit SHAs and adds `scripts/github-actions-pin-review.mjs`, which discovers all tracked workflow YAML and rejects mutable remote `uses:` refs. Normal CI has a named GitHub Actions pin review step; release-security acceptance protects the package/CI wiring and executes the same review; focused tests cover the policy. Exact-head CI is the repository-wide discovery gate for any remaining workflow refs. This scope is repository-only and does not change provider/runtime/deployment state.
