@@ -31,9 +31,9 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W12–W15 | **CLOSED at documented boundaries** | Attachment path, immutable identity, product eval, bounded agentic local eval. |
 | W16 | **REPO SIDE DONE** | Automatic `semantic-v1` selector, `maxRefs=3`. |
 | W17 | **CLOSED — VERIFIED LOCAL MODEL PASS** | 100 measured calls, 5/5 task gates, no-oracle automatic lane. |
-| W18 | **FORMAL RUNTIME PASS / CLOSURE HOLD** | 20/20 measured hosted calls PASS; US$0.091716 run spend; reconcile US$0.091596 pre-run ledger delta before CLOSED. |
+| W18 | **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW** | Earlier duplicate 20-call batch reconciled; combined US$0.183312 < US$0.25; closure waits on single-attempt guard merge. |
 | W19 | **REPO SIDE DONE** | Release/security governance gates retained. |
-| W20 | **BLOCKED ON W18 RECONCILIATION** | Final current-state closure follows ledger provenance reconciliation and W18 closure. |
+| W20 | **BLOCKED ON W18 GUARD MERGE** | Final current-state closure follows the one-shot guard merge and W18 closeout. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
 | Fase 6+ | **OPEN-ENDED** | Evidence-driven only. |
@@ -74,11 +74,11 @@ Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920
 
 Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
 
-### Ledger reconciliation hold
+### Duplicate-execution reconciliation
 
-The immediately preceding zero-spend preflight reported daily committed US$0 and monthly committed US$0.160104. The formal execution began with daily committed **US$0.091596** and monthly committed **US$0.251700**. The supplied transcript does not establish the provenance of that intervening **US$0.091596**.
+The local durable ledger resolves the US$0.091596 delta as an earlier complete 20-entry settled W18-shaped batch. Its full-inline actual total was US$0.059046 and automatic ECX total US$0.032550. The later PASS batch cost US$0.091716. Combined durable spend was US$0.183312, below the US$0.25 monetary ceiling.
 
-Therefore the formal harness result is **PASS**, but W18 overall remains **NOT CLOSED** until that earlier spend is reconciled from the local durable ledger. Do not rerun the paid formal benchmark. Preserve the ledger unchanged and commit only a sanitized reconciliation summary.
+The duplicated execution violated the one-attempt process boundary and exposed missing persistent authorization consumption in the wrapper. The repository fix now refuses completed formal PASS evidence and atomically consumes a gitignored one-shot marker before hosted dispatch.
 
 Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
 
