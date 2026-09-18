@@ -2,7 +2,9 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { estimateOpenRouterReservationUsd } from "../services/connect/src/providers/openrouter.ts";
+import {
+  estimateOpenRouterReservationUsd,
+} from "../services/connect/src/providers/openrouter.ts";
 import {
   assembleContext,
   benchmarkCacheMarker,
@@ -188,11 +190,15 @@ describe("W18 hosted economics helpers", () => {
     expect(assertW18ProviderPin("anthropic")).toEqual(["anthropic"]);
     expect(() => assertW18ProviderPin(undefined)).toThrow(/persis anthropic/iu);
     expect(() => assertW18ProviderPin("amazon-bedrock")).toThrow(/persis anthropic/iu);
-    expect(() => assertW18ProviderPin("anthropic,amazon-bedrock")).toThrow(/persis anthropic/iu);
+    expect(() => assertW18ProviderPin("anthropic,amazon-bedrock")).toThrow(
+      /persis anthropic/iu,
+    );
   });
 
-  it("keeps every formal reservation estimate coupled to the production OpenRouter estimator", () => {
-    for (const [taskIndex, task] of FIXTURES.entries()) {
+  it(
+    "keeps every formal reservation estimate coupled to the production OpenRouter estimator",
+    () => {
+      for (const [taskIndex, task] of FIXTURES.entries()) {
       const marker = benchmarkCacheMarker({
         cacheNamespace: "0".repeat(32),
         taskIndex,
@@ -207,10 +213,13 @@ describe("W18 hosted economics helpers", () => {
       expect(estimateW18ReservationUsd(providerInput)).toBe(
         estimateOpenRouterReservationUsd(providerInput),
       );
-    }
-  });
+      }
+    },
+  );
 
-  it("blocks a formal provider call before dispatch when the next reservation exceeds remaining authorization", () => {
+  it(
+    "blocks a formal provider call before dispatch when the next reservation exceeds remaining authorization",
+    () => {
     expect(() =>
       assertW18DispatchWithinCap({
         actualSpentUsd: 0.1,
@@ -226,18 +235,24 @@ describe("W18 hosted economics helpers", () => {
         maxSpendUsd: 0.25,
       }),
     ).toThrow(/pre-dispatch guard menolak call/iu);
-  });
+    },
+  );
 
-  it("passes a task only when automatic ECX preserves quality and reduces provider billed cost", () => {
+  it(
+    "passes a task only when automatic ECX preserves quality and reduces provider billed cost",
+    () => {
     const task = passingTask();
     expect(task.gate.pass).toBe(true);
     expect(task.gate.failures).toEqual([]);
     expect(task.gate.selection.recall).toBe(1);
     expect(task.gate.autoCostUsd).toBeLessThan(task.gate.fullCostUsd);
-    expect(task.gate.inputTokenReductionPct).toBeGreaterThan(0);
-  });
+      expect(task.gate.inputTokenReductionPct).toBeGreaterThan(0);
+    },
+  );
 
-  it("fails closed on wrong provider, wrong route, reservation mismatch, or non-settled billing", () => {
+  it(
+    "fails closed on wrong provider, wrong route, reservation mismatch, or non-settled billing",
+    () => {
     const fullRuns = [
       run({ mode: "full-inline", pairIndex: 1, cost: 0.01, inputTokens: 1_000 }),
       run({ mode: "full-inline", pairIndex: 2, cost: 0.01, inputTokens: 1_000 }),
@@ -276,18 +291,21 @@ describe("W18 hosted economics helpers", () => {
     expect(gate.failures.some((failure) => failure.includes("provider bukan openrouter"))).toBe(
       true,
     );
-    expect(gate.failures.some((failure) => failure.includes("routingProvider bukan Anthropic"))).toBe(
-      true,
-    );
-    expect(gate.failures.some((failure) => failure.includes("reservedUsd != reservation estimate"))).toBe(
-      true,
-    );
-    expect(gate.failures.some((failure) => failure.includes("settlement bukan settled"))).toBe(
-      true,
-    );
-  });
+      expect(
+        gate.failures.some((failure) => failure.includes("routingProvider bukan Anthropic")),
+      ).toBe(true);
+      expect(
+        gate.failures.some((failure) => failure.includes("reservedUsd != reservation estimate")),
+      ).toBe(true);
+      expect(gate.failures.some((failure) => failure.includes("settlement bukan settled"))).toBe(
+        true,
+      );
+    },
+  );
 
-  it("closes aggregate only with all five tasks, bounded spend, and lower automatic billed cost", () => {
+  it(
+    "closes aggregate only with all five tasks, bounded spend, and lower automatic billed cost",
+    () => {
     const tasks = Array.from({ length: W18_EXPECTED_TASKS }, (_, index) =>
       passingTask(`task-${index + 1}`),
     );
@@ -295,6 +313,7 @@ describe("W18 hosted economics helpers", () => {
     expect(aggregate.pass).toBe(true);
     expect(aggregate.measuredModelCalls).toBe(W18_EXPECTED_MODEL_CALLS);
     expect(aggregate.actualRunSpendUsd).toBeLessThan(1);
-    expect(aggregate.savedPct).toBeGreaterThan(0);
-  });
+      expect(aggregate.savedPct).toBeGreaterThan(0);
+    },
+  );
 });
