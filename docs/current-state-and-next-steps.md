@@ -124,7 +124,7 @@ F6-E06 is **CLOSED / REPO-SIDE PASS** through PR #157. Exact head `cd04be6385ffb
 
 F6-E07 is **CLOSED / REPO-SIDE PASS** through PR #160. Exact head `472819b3a7c875246ce76daee8212a7aed8fc8c9` passed Product Eval #311, MCP External #498, and Desktop Installer #41. CI #1072 initially hit an unrelated Phase 4 Temporal timeout; the failed verify job was rerun on the exact same reviewed head and passed without code or gate weakening. PR #160 merged at `9362419a9e2766750237e30792a50494d39c9b17`.
 
-F6-E08 is **ACTIVE**. The next bounded reproducibility gap is mutable container identity: Dockerfile and deployment compose images are exact-tagged but not digest-pinned. Scope: preserve readable version tags while binding governed build/runtime images to immutable digests, add deterministic drift review + tests + CI/release-security wiring, and keep runtime/deployment activation separate.
+F6-E08 is **IMPLEMENTED / IN REVIEW**. Dockerfile Node plus governed Postgres/Caddy/Temporal compose images now preserve readable tags and bind them to registry-resolved OCI SHA-256 digests. A deterministic digest review is wired into normal CI and release-security acceptance; production-ops acceptance requires the exact reviewed identities. The temporary registry resolver used in CI #1078 was removed after discovery. Closure now depends on exact-head CI/Product Eval and guarded merge.
 
 This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
 
@@ -163,4 +163,4 @@ F6-E06 verification source: `docs/verification/f6-e06-immutable-node-toolchain-2
 F6-E07 verification source: `docs/verification/f6-e07-pinned-inno-toolchain-2026-09-18.md`.
 
 
-F6-E08 active scope: immutable container/base image digest identity + continuous drift rejection.
+F6-E08 verification source: `docs/verification/f6-e08-container-image-digests-2026-09-18.md`.
