@@ -59,7 +59,7 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | F6-E05 | Fixed GitHub-hosted runner OS labels + gate | **CLOSED / REPO-SIDE PASS** | PR #155; CI #1045 + Product Eval #284 + MCP #475 PASS; runner-review and release-security steps green. |
 | F6-E06 | Immutable Node toolchain + drift gate | **CLOSED / REPO-SIDE PASS** | PR #157; CI #1055 + Product Eval #294 + MCP #483 PASS; Node toolchain + release-security steps green. |
 | F6-E07 | Pinned Inno Setup installer toolchain + drift gate | **CLOSED / REPO-SIDE PASS** | PR #160 merged; CI #1072 same-head rerun PASS; Product Eval #311 + MCP #498 + Desktop Installer #41 PASS. |
-| F6-E08 | Container image digest pinning + drift gate | **IMPLEMENTED / IN REVIEW** | Governed external images tag+digest pinned; permanent digest/release/production-ops gates implemented; exact-head gates pending. |
+| F6-E08 | Container image digest pinning + drift gate | **IMPLEMENTED / IN REVIEW** | Authoritative image lock + exact Node/Postgres/Caddy/Temporal tag+digest identities; CI/release/production-ops gates implemented; exact-head gates pending. |
 
 ## W18 current facts
 
