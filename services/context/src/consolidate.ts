@@ -54,6 +54,7 @@ function buildExtractionPrompt(episodes: readonly Episode[]): string {
     syncClass: ep.syncClass,
     sourceApp: ep.provenance.sourceApp,
     text: ep.rawText,
+    projectId: ep.projectId,
   }));
   return [
     "Extract durable user facts/preferences from the episodes below.",
@@ -158,7 +159,13 @@ export async function runConsolidation(
     }
 
     const samePredicate = deps.repo
-      .listFacts({ scopes: [source.scope], subject: candidate.subject, limit: 100 })
+      .listFacts({
+        scopes: [source.scope],
+        subject: candidate.subject,
+        projectId: source.projectId,
+        includeGlobal: source.projectId !== null,
+        limit: 100,
+      })
       .filter((f) => normalize(f.predicate) === normalize(candidate.predicate));
     const duplicate = samePredicate.find(
       (f) => normalize(f.object) === normalize(candidate.object),
@@ -188,6 +195,7 @@ export async function runConsolidation(
       },
       trust: "LOCAL_AGENT",
       scope: source.scope,
+      projectId: source.projectId,
     });
     try {
       deps.repo.promoteFromQuarantine(
@@ -204,6 +212,7 @@ export async function runConsolidation(
           tValid: candidate.tValid ?? source.ts,
           createdAt: options.now,
           scope: source.scope,
+          projectId: source.projectId,
           sensitivity: source.sensitivity,
           syncClass: source.syncClass,
           trust: "LOCAL_AGENT",

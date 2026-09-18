@@ -19,6 +19,7 @@ import {
   type EpisodeId,
   type MemoryFact,
   type MemoryFactId,
+  type ProjectId,
   type QuarantinedWrite,
   type Scope,
   type Sensitivity,
@@ -104,6 +105,8 @@ export interface FactLookupOptions {
 export interface ListFactsFilter extends FactLookupOptions {
   readonly scopes?: readonly Scope[] | undefined;
   readonly subject?: string | undefined;
+  readonly projectId?: ProjectId | null | undefined;
+  readonly includeGlobal?: boolean | undefined;
   readonly maxSensitivity?: Sensitivity | undefined;
   readonly hostedEligibleOnly?: boolean | undefined;
   readonly limit?: number | undefined;
@@ -111,6 +114,7 @@ export interface ListFactsFilter extends FactLookupOptions {
 export interface ListEpisodesFilter {
   readonly scopes?: readonly Scope[] | undefined;
   readonly sessionId?: string | undefined;
+  readonly projectId?: ProjectId | null | undefined;
   readonly since?: Timestamp | undefined;
   readonly onlyUnconsolidated?: boolean | undefined;
   readonly hostedEligibleOnly?: boolean | undefined;
@@ -119,6 +123,7 @@ export interface ListEpisodesFilter {
 }
 export interface CoreMemoryFilter {
   readonly scopes?: readonly Scope[] | undefined;
+  readonly projectId?: ProjectId | null | undefined;
   readonly maxSensitivity?: Sensitivity | undefined;
   readonly hostedEligibleOnly?: boolean | undefined;
 }
@@ -158,10 +163,10 @@ export class ContextRepository {
     this.raw
       .prepare(
         `INSERT INTO episodes (
-      id, ts, raw_text, source_app, session_id, tool_call_id, source_uri,
+      id, ts, raw_text, project_id, source_app, session_id, tool_call_id, source_uri,
       scope, sensitivity, sync_class, trust, summary, consolidated_at
     ) VALUES (
-      @id, @ts, @raw_text, @source_app, @session_id, @tool_call_id, @source_uri,
+      @id, @ts, @raw_text, @project_id, @source_app, @session_id, @tool_call_id, @source_uri,
       @scope, @sensitivity, @sync_class, @trust, @summary, @consolidated_at
     )`,
       )
@@ -169,6 +174,7 @@ export class ContextRepository {
         id: episode.id,
         ts: episode.ts,
         raw_text: episode.rawText,
+        project_id: episode.projectId,
         ...provenanceParams(episode.provenance),
         scope: episode.scope,
         sensitivity: episode.sensitivity,
@@ -194,6 +200,13 @@ export class ContextRepository {
     if (filter.sessionId !== undefined) {
       clauses.push("session_id = ?");
       params.push(filter.sessionId);
+    }
+    if (filter.projectId !== undefined) {
+      if (filter.projectId === null) clauses.push("project_id IS NULL");
+      else {
+        clauses.push("project_id = ?");
+        params.push(filter.projectId);
+      }
     }
     if (filter.since !== undefined) {
       clauses.push("ts >= ?");
@@ -222,10 +235,10 @@ export class ContextRepository {
     this.raw
       .prepare(
         `INSERT INTO quarantine (
-      id, proposed_text, proposed_at, source_app, session_id, tool_call_id, source_uri,
+      id, proposed_text, proposed_at, project_id, source_app, session_id, tool_call_id, source_uri,
       trust, scope, status, rejection_reason, reviewed_at, promoted_fact_id
     ) VALUES (
-      @id, @proposed_text, @proposed_at, @source_app, @session_id, @tool_call_id, @source_uri,
+      @id, @proposed_text, @proposed_at, @project_id, @source_app, @session_id, @tool_call_id, @source_uri,
       @trust, @scope, 'PENDING', NULL, NULL, NULL
     )`,
       )
@@ -233,6 +246,7 @@ export class ContextRepository {
         id: p.id,
         proposed_text: p.proposedText,
         proposed_at: p.proposedAt,
+        project_id: p.projectId,
         ...provenanceParams(p.provenance),
         trust: p.trust,
         scope: p.scope,
@@ -267,6 +281,11 @@ export class ContextRepository {
     const fact = MemoryFactSchema.parse(factInput);
     if (fact.scope !== proposal.scope)
       throw new ScopeEscalationError(proposal.scope, fact.scope);
+    if (fact.projectId !== proposal.projectId) {
+      throw new ContextError(
+        `Promosi karantina tidak boleh memindahkan Project: ${String(proposal.projectId)} -> ${String(fact.projectId)}.`,
+      );
+    }
     let old: MemoryFact | null = null;
     if (options.supersedes !== undefined) {
       old = this.getFact(options.supersedes, { includeInvalidated: true });
@@ -304,11 +323,11 @@ export class ContextRepository {
       .prepare(
         `INSERT INTO facts (
       id, subject, predicate, object, text, confidence, salience, source_episode_ids,
-      t_valid, t_invalid, superseded_by, created_at, scope, sensitivity, sync_class, trust,
+      t_valid, t_invalid, superseded_by, created_at, project_id, scope, sensitivity, sync_class, trust,
       source_app, session_id, tool_call_id, source_uri
     ) VALUES (
       @id, @subject, @predicate, @object, @text, @confidence, @salience, @source_episode_ids,
-      @t_valid, @t_invalid, @superseded_by, @created_at, @scope, @sensitivity, @sync_class, @trust,
+      @t_valid, @t_invalid, @superseded_by, @created_at, @project_id, @scope, @sensitivity, @sync_class, @trust,
       @source_app, @session_id, @tool_call_id, @source_uri
     )`,
       )
@@ -360,6 +379,17 @@ export class ContextRepository {
       clauses.push("subject = ?");
       params.push(filter.subject);
     }
+    if (Object.hasOwn(filter, "projectId")) {
+      if (filter.projectId === null || filter.projectId === undefined) {
+        clauses.push("project_id IS NULL");
+      } else if (filter.includeGlobal === true) {
+        clauses.push("(project_id IS NULL OR project_id = ?)");
+        params.push(filter.projectId);
+      } else {
+        clauses.push("project_id = ?");
+        params.push(filter.projectId);
+      }
+    }
     if (filter.maxSensitivity !== undefined) {
       const allowed = allowedSensitivities(filter.maxSensitivity);
       clauses.push(`sensitivity IN (${placeholders(allowed.length)})`);
@@ -384,6 +414,8 @@ export class ContextRepository {
     const replacement = MemoryFactSchema.parse(newFactInput);
     if (Date.parse(replacement.tValid) < Date.parse(old.tValid))
       throw new ContextError("t_valid pengganti mendahului fakta lama.");
+    if (replacement.projectId !== old.projectId)
+      throw new ContextError("Fakta pengganti harus berada di Project yang sama.");
     return this.raw.transaction(() => {
       this.insertFactRow(replacement);
       this.raw
@@ -450,6 +482,12 @@ export class ContextRepository {
   getCoreMemory(filter: CoreMemoryFilter = {}): CoreMemory {
     const clauses: string[] = [];
     const params: string[] = [];
+    if (filter.projectId === undefined || filter.projectId === null) {
+      clauses.push("project_id IS NULL");
+    } else {
+      clauses.push("(project_id IS NULL OR project_id=?)");
+      params.push(filter.projectId);
+    }
     if (filter.scopes !== undefined && filter.scopes.length > 0) {
       clauses.push(`scope IN (${placeholders(filter.scopes.length)})`);
       params.push(...filter.scopes);
@@ -463,13 +501,22 @@ export class ContextRepository {
       clauses.push("sync_class IN ('CLOUD_ALLOWED','PUBLIC')");
     const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
     const rows = this.raw
-      .prepare(`SELECT * FROM core_memory ${where} ORDER BY label ASC`)
+      .prepare(
+        `SELECT * FROM core_memory ${where}
+         ORDER BY label ASC, CASE WHEN project_id IS NULL THEN 1 ELSE 0 END ASC`,
+      )
       .all(...params) as CoreMemoryRow[];
-    return CoreMemorySchema.parse({ blocks: rows.map(rowToCoreBlock) });
+    const effective = new Map<string, CoreMemoryBlock>();
+    for (const row of rows) {
+      const block = rowToCoreBlock(row);
+      if (!effective.has(block.label)) effective.set(block.label, block);
+    }
+    return CoreMemorySchema.parse({ blocks: [...effective.values()] });
   }
-  getCoreMemoryBlock(label: string): CoreMemoryBlock | null {
-    const row = this.raw.prepare("SELECT * FROM core_memory WHERE label=?").get(label) as
-      CoreMemoryRow | undefined;
+  getCoreMemoryBlock(label: string, projectId: ProjectId | null = null): CoreMemoryBlock | null {
+    const row = this.raw
+      .prepare("SELECT * FROM core_memory WHERE label=? AND project_id IS ?")
+      .get(label, projectId) as CoreMemoryRow | undefined;
     return row === undefined ? null : rowToCoreBlock(row);
   }
   setCoreMemoryBlock(
@@ -483,7 +530,8 @@ export class ContextRepository {
       syncClass: input.syncClass ?? "LOCAL_ONLY",
       trust: options.trust,
     });
-    const existing = this.getCoreMemoryBlock(block.label);
+    const projectId = block.projectId ?? null;
+    const existing = this.getCoreMemoryBlock(block.label, projectId);
     if (!mayWriteCoreMemory(options.trust)) {
       if (options.trust !== "LOCAL_AGENT")
         throw new CoreMemoryWriteForbiddenError(
@@ -494,10 +542,12 @@ export class ContextRepository {
           `Blok "${block.label}" read-only — hanya pengguna yang boleh menulisnya.`,
         );
     }
-    const others = this.raw
-      .prepare("SELECT COALESCE(SUM(LENGTH(value)),0) AS n FROM core_memory WHERE label <> ?")
-      .get(block.label) as { n: number };
-    const total = others.n + block.value.length;
+    const effectiveBefore = this.getCoreMemory({ projectId }).blocks;
+    const total =
+      effectiveBefore
+        .filter((existingBlock) => existingBlock.label !== block.label)
+        .reduce((sum, existingBlock) => sum + existingBlock.value.length, 0) +
+      block.value.length;
     if (total > CORE_MEMORY_CHAR_LIMIT) throw new CoreMemoryLimitError(total);
     const scope = block.scope ?? "personal";
     const sensitivity = block.sensitivity ?? "INTERNAL";
@@ -505,13 +555,14 @@ export class ContextRepository {
     const trust = block.trust ?? options.trust;
     this.raw
       .prepare(
-        `INSERT INTO core_memory (label,description,value,read_only,updated_at,scope,sensitivity,sync_class,trust)
-      VALUES (@label,@description,@value,@read_only,@updated_at,@scope,@sensitivity,@sync_class,@trust)
-      ON CONFLICT(label) DO UPDATE SET description=excluded.description,value=excluded.value,read_only=excluded.read_only,
+        `INSERT INTO core_memory (label,project_id,description,value,read_only,updated_at,scope,sensitivity,sync_class,trust)
+      VALUES (@label,@project_id,@description,@value,@read_only,@updated_at,@scope,@sensitivity,@sync_class,@trust)
+      ON CONFLICT DO UPDATE SET description=excluded.description,value=excluded.value,read_only=excluded.read_only,
       updated_at=excluded.updated_at,scope=excluded.scope,sensitivity=excluded.sensitivity,sync_class=excluded.sync_class,trust=excluded.trust`,
       )
       .run({
         label: block.label,
+        project_id: projectId,
         description: block.description,
         value: block.value,
         read_only: block.readOnly ? 1 : 0,
@@ -521,14 +572,18 @@ export class ContextRepository {
         sync_class: syncClass,
         trust,
       });
-    return { ...block, scope, sensitivity, syncClass, trust };
+    return { ...block, projectId, scope, sensitivity, syncClass, trust };
   }
-  deleteCoreMemoryBlock(label: string, options: CoreMemoryWriteOptions): void {
-    const existing = this.getCoreMemoryBlock(label);
+  deleteCoreMemoryBlock(
+    label: string,
+    options: CoreMemoryWriteOptions,
+    projectId: ProjectId | null = null,
+  ): void {
+    const existing = this.getCoreMemoryBlock(label, projectId);
     if (existing === null) return;
     if (existing.readOnly && !mayWriteCoreMemory(options.trust))
       throw new CoreMemoryWriteForbiddenError(`Blok "${label}" read-only.`);
-    this.raw.prepare("DELETE FROM core_memory WHERE label=?").run(label);
+    this.raw.prepare("DELETE FROM core_memory WHERE label=? AND project_id IS ?").run(label, projectId);
   }
 
   putArtifactPointer(input: ArtifactPointerInput): ArtifactPointer {

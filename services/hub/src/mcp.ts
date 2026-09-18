@@ -63,12 +63,19 @@ function hostedEligible(syncClass: string): boolean {
 function assertMemoryVisible(
   item: {
     readonly scope: Scope;
+    readonly projectId?: string | null | undefined;
     readonly sensitivity: Sensitivity;
     readonly syncClass: string;
   },
   access: McpAccessContext,
 ): void {
   assertScopes([item.scope], access);
+  if (item.projectId !== null && item.projectId !== undefined && item.projectId !== access.projectId) {
+    throw new ForbiddenError("Item memori berada di Project lain.");
+  }
+  if ((access.projectId === undefined || access.projectId === null) && item.projectId !== null && item.projectId !== undefined) {
+    throw new ForbiddenError("MCP tanpa Project hanya boleh membaca memori global.");
+  }
   if (sensitivityRank(item.sensitivity) > sensitivityRank(access.maxSensitivity)) {
     throw new ForbiddenError("Item memori melewati sensitivity grant MCP.");
   }
@@ -236,8 +243,10 @@ export function registerMcpRoutes(
         scopes: body.scopes,
         k: body.k,
         maxSensitivity,
+        projectId: body.access.projectId ?? null,
         hostedEligibleOnly: body.access.delivery === "hosted",
         now,
+        projectId: body.access.projectId ?? null,
       },
     });
   });
@@ -297,6 +306,7 @@ export function registerMcpRoutes(
       body: {
         proposedText: body.text,
         proposedAt: now,
+        projectId: body.access.projectId ?? null,
         provenance: { sourceApp: body.access.sourceApp, toolCallId: body.access.requestId },
         trust: "HOSTED_AGENT",
         scope: body.scope,
@@ -331,7 +341,7 @@ export function registerMcpRoutes(
       body.scopes.map((scope) =>
         contextJson<{ episodes: unknown[] }>(
           options,
-          `/v1/episodes?scope=${encodeURIComponent(scope)}&limit=${String(body.limit)}&hostedEligible=${body.access.delivery === "hosted" ? "1" : "0"}`,
+          `/v1/episodes?scope=${encodeURIComponent(scope)}&projectId=${encodeURIComponent(body.access.projectId ?? "")}&limit=${String(body.limit)}&hostedEligible=${body.access.delivery === "hosted" ? "1" : "0"}`,
         ),
       ),
     );

@@ -1,7 +1,7 @@
 /** Shared MCP Fase 2 contracts. Defined once here; Hub and Connect import them. */
 import { z } from "zod";
 import { ArtifactPointerSchema } from "./memory.js";
-import { EpisodeIdSchema, MemoryFactIdSchema } from "./ids.js";
+import { EpisodeIdSchema, MemoryFactIdSchema, ProjectIdSchema } from "./ids.js";
 import { ScopeSchema, SensitivitySchema } from "./classification.js";
 
 export const MCP_PROTOCOL_VERSION = "2026-07-28" as const;
@@ -18,6 +18,7 @@ export type McpDelivery = z.infer<typeof McpDeliverySchema>;
 export const McpAccessContextSchema = z.object({
   principalId: z.string().min(1).max(256),
   sourceApp: z.string().min(1).max(64),
+  projectId: ProjectIdSchema.optional(),
   allowedScopes: z.array(ScopeSchema).min(1).max(64),
   maxSensitivity: SensitivitySchema,
   delivery: McpDeliverySchema,

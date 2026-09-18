@@ -7,6 +7,7 @@ import {
   sensitivityRank,
   type MemoryFact,
   type MemoryFactId,
+  type ProjectId,
   type RetrievalHit,
   type Scope,
   type Sensitivity,
@@ -23,6 +24,7 @@ export interface RetrievalOptions {
   readonly query: string;
   readonly scopes: readonly Scope[];
   readonly k?: number;
+  readonly projectId?: ProjectId | null | undefined;
   readonly maxSensitivity?: Sensitivity;
   readonly now: Timestamp;
   readonly queryEmbedding?: Float32Array;
@@ -67,6 +69,7 @@ export class ContextRetriever {
       options.scopes,
       maxSensitivity,
       options.hostedEligibleOnly ?? false,
+      options.projectId ?? null,
     );
     const allowedIds = new Set(allowedFacts.keys());
     const lexical = this.lexicalSearch(
@@ -75,6 +78,7 @@ export class ContextRetriever {
       options.scopes,
       maxSensitivity,
       options.hostedEligibleOnly ?? false,
+      options.projectId ?? null,
     );
     const vector = this.vectorSearch(options.queryEmbedding, candidateLimit, allowedIds);
     const fused = reciprocalRankFusion([lexical, vector]);
@@ -101,11 +105,14 @@ export class ContextRetriever {
     scopes: readonly Scope[],
     maxSensitivity: Sensitivity,
     hostedEligibleOnly: boolean,
+    projectId: ProjectId | null,
   ): Map<MemoryFactId, MemoryFact> {
     const facts = this.repo.listFacts({
       scopes,
       maxSensitivity,
       hostedEligibleOnly,
+      projectId,
+      includeGlobal: projectId !== null,
       limit: 100_000,
     });
     return new Map(facts.map((f) => [f.id, f]));
@@ -117,11 +124,15 @@ export class ContextRetriever {
     scopes: readonly Scope[],
     maxSensitivity: Sensitivity,
     hostedEligibleOnly: boolean,
+    projectId: ProjectId | null,
   ): RankedList {
     const match = toFtsQuery(query);
     if (match === null) return [];
     const allowed = allowedSensitivities(maxSensitivity);
     const egress = hostedEligibleOnly ? "AND f.sync_class IN ('CLOUD_ALLOWED','PUBLIC')" : "";
+    const projectClause =
+      projectId === null ? "AND f.project_id IS NULL" : "AND (f.project_id IS NULL OR f.project_id=?)";
+    const projectParams = projectId === null ? [] : [projectId];
     try {
       const rows = this.repo.db.raw
         .prepare(
@@ -134,11 +145,12 @@ export class ContextRetriever {
           AND f.scope IN (${placeholders(scopes.length)})
           AND f.sensitivity IN (${placeholders(allowed.length)})
           ${egress}
+          ${projectClause}
         ORDER BY bm25(facts_fts)
         LIMIT ?
       `,
         )
-        .all(match, ...scopes, ...allowed, limit) as { id: string }[];
+        .all(match, ...scopes, ...allowed, ...projectParams, limit) as { id: string }[];
       return rows.map((r) => r.id as MemoryFactId);
     } catch {
       return [];

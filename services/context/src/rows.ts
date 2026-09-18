@@ -40,6 +40,7 @@ export interface EpisodeRow extends ProvenanceColumns {
   id: string;
   ts: string;
   raw_text: string;
+  project_id: string | null;
   scope: string;
   sensitivity: string;
   sync_class: string;
@@ -52,6 +53,7 @@ export function rowToEpisode(row: EpisodeRow): Episode {
     id: row.id,
     ts: row.ts,
     rawText: row.raw_text,
+    projectId: row.project_id,
     provenance: provenanceObject(row),
     scope: row.scope,
     sensitivity: row.sensitivity,
@@ -75,6 +77,7 @@ export interface FactRow extends ProvenanceColumns {
   t_invalid: string | null;
   superseded_by: string | null;
   created_at: string;
+  project_id: string | null;
   scope: string;
   sensitivity: string;
   sync_class: string;
@@ -82,7 +85,7 @@ export interface FactRow extends ProvenanceColumns {
 }
 export const FACT_COLUMNS = `
   id, subject, predicate, object, text, confidence, salience, source_episode_ids,
-  t_valid, t_invalid, superseded_by, created_at,
+  t_valid, t_invalid, superseded_by, created_at, project_id,
   scope, sensitivity, sync_class, trust,
   source_app, session_id, tool_call_id, source_uri
 `;
@@ -100,6 +103,7 @@ export function rowToFact(row: FactRow): MemoryFact {
     tInvalid: row.t_invalid,
     supersededBy: row.superseded_by,
     createdAt: row.created_at,
+    projectId: row.project_id,
     scope: row.scope,
     sensitivity: row.sensitivity,
     syncClass: row.sync_class,
@@ -121,6 +125,7 @@ export function factParams(fact: MemoryFact): Record<string, BindValue> {
     t_invalid: fact.tInvalid,
     superseded_by: fact.supersededBy,
     created_at: fact.createdAt,
+    project_id: fact.projectId,
     scope: fact.scope,
     sensitivity: fact.sensitivity,
     sync_class: fact.syncClass,
@@ -133,6 +138,7 @@ export interface QuarantineRow extends ProvenanceColumns {
   id: string;
   proposed_text: string;
   proposed_at: string;
+  project_id: string | null;
   trust: string;
   scope: string;
   status: string;
@@ -145,6 +151,7 @@ export function rowToQuarantined(row: QuarantineRow): QuarantinedWrite {
     id: row.id,
     proposedText: row.proposed_text,
     proposedAt: row.proposed_at,
+    projectId: row.project_id,
     provenance: provenanceObject(row),
     trust: row.trust,
     scope: row.scope,
@@ -156,6 +163,8 @@ export function rowToQuarantined(row: QuarantineRow): QuarantinedWrite {
 
 export interface CoreMemoryRow {
   label: string;
+  project_id: string | null;
+ string;
   description: string;
   value: string;
   read_only: number;
@@ -168,6 +177,7 @@ export interface CoreMemoryRow {
 export function rowToCoreBlock(row: CoreMemoryRow): CoreMemoryBlock {
   return CoreMemoryBlockSchema.parse({
     label: row.label,
+    projectId: row.project_id,
     description: row.description,
     value: row.value,
     readOnly: row.read_only === 1,
