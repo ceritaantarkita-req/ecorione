@@ -17,8 +17,9 @@ W18 formal dispatch/routing/cap guard: MERGED / REPO-SIDE PASS
 W18 formal operator wrapper: MERGED / REPO-SIDE PASS
 W18 formal 20-call run: PASS / closureEligible=true / US$0.091716 formal spend
 W18 duplicate execution: RECONCILED; combined spend US$0.183312 < US$0.25
-W18 closure: WAITING ON SINGLE-ATTEMPT GUARD MERGE
-W20 final sync: BLOCKED ON W18 GUARD MERGE
+W18 single-attempt guard: MERGED / PASS (PR #142, CI #1012, Product Eval #251)
+W18 closure: CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT
+W20 final sync: CLOSED
 ```
 
 The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
@@ -39,9 +40,9 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | W15 | Agentic local-model eval | **DONE — VERIFIED LOCAL MODEL PASS^3** | Bounded eval harness only. |
 | W16 | Automatic semantic reference selector | **DONE — REPO SIDE** | `semantic-v1`, `maxRefs=3`. |
 | W17 | ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5×5×4 = 100 measured calls, 5/5 gates. |
-| W18 | Hosted economic validation | **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW** | Duplicate earlier 20-call batch identified; close after one-shot authorization guard merges. |
+| W18 | Hosted economic validation | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | Formal 20-call PASS; duplicate execution reconciled; one-shot guard merged. |
 | W19 | Release/security governance | **DONE — REPO SIDE** | CI history/naming/model-alias gates retained. |
-| W20 | Final current-state sync | **BLOCKED ON W18 GUARD MERGE** | Continue immediately after one-shot guard merge and W18 closure. |
+| W20 | Final current-state sync | **CLOSED** | Canonical handoff/tracker synchronized after W18 closure. |
 
 ## W18 current facts
 
@@ -64,11 +65,9 @@ Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920
 
 Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
 
-### Ledger reconciliation hold
+### Duplicate-execution incident closure
 
-The immediately preceding zero-spend preflight reported daily committed US$0 and monthly committed US$0.160104. The formal execution began with daily committed **US$0.091596** and monthly committed **US$0.251700**. The supplied transcript does not establish the provenance of that intervening **US$0.091596**.
-
-Therefore the formal harness result is **PASS**, but W18 overall remains **NOT CLOSED** until that earlier spend is reconciled from the local durable ledger. Do not rerun the paid formal benchmark. Preserve the ledger unchanged and commit only a sanitized reconciliation summary.
+The US$0.091596 delta is reconciled as an earlier complete W18-shaped 20-call batch. Combined with the later PASS run, duplicate-execution spend was US$0.183312, below the US$0.25 monetary ceiling. PR #142 closed the single-attempt governance gap with completed-PASS refusal plus an atomic gitignored authorization-consumption marker before hosted dispatch.
 
 Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
 
@@ -81,11 +80,10 @@ W17's local automatic-selector evidence remains separate: W17 proved no-oracle l
 ## Immediate next action
 
 ```text
-1. merge the fail-closed single-attempt authorization-consumption guard
-2. preserve the duplicate-execution reconciliation evidence
-3. close W18 after exact-head gates pass
-4. complete W20 final current-state sync
-5. do not rerun the paid W18 benchmark
+W18 = CLOSED
+W20 = CLOSED
+do not rerun the paid W18 benchmark
+future work = new evidence-driven scope only
 ```
 
 Do not reopen already-closed W03/W09/W10/W11/W16/W17 unless a new reproducible regression appears on newer product code.
