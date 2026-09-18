@@ -23,7 +23,7 @@ Per **2026-09-18**:
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
 - F6-E01 held-out selector eval dataset: **CLOSED / REPO-SIDE PASS**; 10 held-out cases, auto-discovered 26/50 governed eval inventory;
 - F6-E02 continuous dependency-policy CI gate: **CLOSED / REPO-SIDE PASS**;
-- F6-E03 continuous release-security acceptance CI gate: **ACTIVE NEW EXPLICIT SCOPE**;
+- F6-E03 continuous release-security acceptance CI gate: **IMPLEMENTED / IN REVIEW**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -128,10 +128,10 @@ F6-E01 = CLOSED / REPO-SIDE PASS
 F6-E02 = CLOSED / REPO-SIDE PASS
 
 F6-E03:
-- `scripts/release-security-acceptance.mjs` contains important release/security invariants
-- normal CI still does not execute that acceptance directly
-- add an explicit Release security acceptance step to normal CI
-- keep this deterministic and repo-side; no deployment/provider mutation
+- normal CI now executes `node scripts/release-security-acceptance.mjs`
+- release acceptance now asserts its own named CI step/command remains wired
+- deterministic repository governance only
+- no deployment/provider mutation
 - require exact-head CI with the new step PASS before merge
 ```
 
@@ -146,3 +146,8 @@ Held-out selector cases must cite real repository bug/task provenance. Determini
 ## F6-E02 claim boundary
 
 The continuous dependency gate enforces deterministic repository policy only. A PASS means normal CI ran the governed dependency/source policy and release acceptance still protects that wiring. It does not mean npm/registry vulnerability advisories were queried or are current.
+
+
+## F6-E03 claim boundary
+
+A PASS means the existing deterministic release-security acceptance ran continuously in normal CI and its CI wiring is also checked by manual/release invocation. It does not prove live vulnerability-feed freshness, production deployment correctness, or provider/model behavior.
