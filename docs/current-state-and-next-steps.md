@@ -12,6 +12,8 @@ ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/
 
 W18 is nevertheless **not yet formally closed** because the formal run began with US$0.091596 more durable committed spend than the immediately preceding zero-spend preflight. That intervening ledger delta must be reconciled before W18 closure. W20 remains blocked only on this reconciliation/closure step.
 
+The formal-PASS/reconciliation-hold state is now merged through PR #140 at `eba6cbf5b53ad9af4f61e4519ae1e3400f4fdf53`; exact reviewed head `7118e9e4887438ddbea3e56a787a9f4f910ec1b1` passed CI #1005 and Product Eval #244.
+
 Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains deferred by design. Fase 6+ remains evidence-driven/open-ended.
 
 ## Current status table
