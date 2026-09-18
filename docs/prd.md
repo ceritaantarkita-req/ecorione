@@ -1,5 +1,8 @@
 # ecorione — Product Requirements Document (PRD)
 
+> **DOCUMENT ROLE — 2026-09-18:** this PRD remains the product/architecture baseline and rationale. Phase/roadmap language below is historical design context, not a live task list. Current execution status lives in `docs/current-state-and-next-steps.md` and `docs/active-work-plan.md`.
+
+
 Status: **v2.0** — 2026-09-07. Revisi besar setelah riset teknis mendalam (`research.md`). 15 keputusan arsitektur (ADR-01…ADR-15) diterapkan; peta modul berubah dari 13 jadi 11; prioritas beberapa modul bergeser; sejumlah asumsi v1.0 terbukti salah dan dikoreksi.
 Pemilik: Amanda
 Dokumen pasangan: `research.md` (riset & due diligence — **sumber alasan untuk semua keputusan di sini**), `design.md` (identitas visual & UI/UX)

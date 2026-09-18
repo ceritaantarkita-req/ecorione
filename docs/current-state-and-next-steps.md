@@ -2,165 +2,86 @@
 
 Last updated: **2026-09-18**
 
-Status: **CURRENT / canonical handoff for humans and AI agents**
-
-Historical plans, audits, failed attempts, and older verification notes remain evidence snapshots. This file is the shortest current-state source and must not rewrite valid historical failures.
+Status: **CURRENT / canonical handoff**
 
 ## Current verdict
 
-ECORIONE's defined Batch 1–12 implementation roadmap remains closed. W03, W09/W10, W11, W16, and W17 remain closed at their documented boundaries. The formal W18 hosted benchmark has now completed successfully on synchronized clean `main`: 20 measured calls, zero failed tasks, US$0.091716 formal spend, and `closureEligible=true`.
+The defined Batch 1–12 platform roadmap is closed. The repository has a real local/self-host baseline with Ai, Hub, Connect, Context, Sync, Artifact, Sandbox, Space, Flow/Temporal, RnD, operations tooling, security gates, Windows runtime support, and a Windows installer.
 
-The US$0.091596 pre-run delta is reconciled as an earlier complete 20-entry settled W18-shaped batch. Together with the later PASS run, total durable spend was US$0.183312, below the documented US$0.25 monetary ceiling. The duplicate execution violated the single-attempt governance boundary, but the missing persistent authorization-consumption state was fixed and merged through PR #142 at `cff6e21edc8085bb895c6ed59c32b5e4aa134ee0`; exact reviewed head `1f0d87963857d4bb261579204e76bae970c496b0` passed CI #1012 and Product Eval #251. W18 is now CLOSED at its documented bounded evidence boundary, and W20 final current-state sync is CLOSED.
+The bounded validation work through W20 is closed at its documented claim boundaries. F6-E01 through F6-E07 are also closed repository-side. **F6-E08 is the only active repository-hardening scope.**
 
-The formal-PASS/reconciliation-hold state is now merged through PR #140 at `eba6cbf5b53ad9af4f61e4519ae1e3400f4fdf53`; exact reviewed head `7118e9e4887438ddbea3e56a787a9f4f910ec1b1` passed CI #1005 and Product Eval #244.
+Repository readiness does **not** mean a real VPS/Cloudflare target is currently activated. Production host activation remains deferred by operator. AutoClick remains deferred by design.
 
-Final W18/W20 closure documentation merged through PR #143 at `65142fe14901c87a8e499710081492d4b77e1357`; exact reviewed head `97890b269e19c9c9b8eaa8a89b4a17bcfdd09e11` passed CI #1014 and Product Eval #253.
+## Current status
 
-Final post-merge sync PR #144 merged at `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9` after CI #1016 and Product Eval #255 PASS. The operator then synchronized the Windows clone and verified clean `main...origin/main` at exactly the same SHA. This is the local/remote baseline for the next explicit scope.
+| Area | State |
+|---|---|
+| Batch 1–12 implementation roadmap | **CLOSED** |
+| Production/self-host repository baseline | **READY** |
+| W03 product/UX runtime validation | **DONE — REAL-LAPTOP VERIFIED** |
+| W09/W10 Windows engine/startup | **DONE — WINDOWS RUNTIME VERIFIED** |
+| W11 packaged installer lifecycle | **DONE — WINDOWS INSTALLER VERIFIED** |
+| W16 automatic selector | **DONE — REPO SIDE** |
+| W17 no-oracle local validation | **CLOSED / PASS** |
+| W18 hosted economics | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** |
+| W20 final current-state sync | **CLOSED** |
+| F6-E01 … F6-E07 | **CLOSED / REPO-SIDE PASS** |
+| F6-E08 container image digest pinning | **ACTIVE** |
+| Compute-host/VPS + Cloudflare activation | **DEFERRED BY OPERATOR** |
+| AutoClick | **DEFERRED BY DESIGN** |
 
-Compute-host/VPS + Cloudflare remains deferred by operator. AutoClick remains deferred by design. Fase 6+ remains evidence-driven/open-ended.
+Detailed dated evidence remains under `docs/verification/`. Do not copy the full historical chronology back into current-state documents.
 
-The next explicit non-deployment scope is **F6-E01 — bug/task-derived held-out ECX selector evaluation dataset + bounded eval governance**. It does not reopen W16–W20 and does not make a broad optimizer-generalization claim. The objective is to expand deterministic held-out selector coverage from real repository bugs/tasks, keep the repository-wide eval inventory within the permanent 50-case budget, and wire that evidence into Product Eval without provider calls.
+## What is real in the product
 
-## Current status table
+Current user-facing navigation is Ai, Space, Flow, Operations, and Settings. The underlying platform also contains Historical Ledger, memory/retrieval, Artifact, MCP, Sandbox, Sync, provider/runtime controls, approval/capability policy, spend governance, telemetry, and Temporal-backed durable workflow execution.
 
-| Area | Current state | Boundary |
-|---|---:|---|
-| Batch 1–12 repository roadmap | **12/12 CLOSED** | Defined implementation scope only. |
-| Production/self-host repository baseline | **READY** | Repository gates/tooling exist; real target-host activation remains operator-owned. |
-| Historical Ledger + ECX local evidence | **PASS / CLOSED** | Real chronology/hash chain and pointer-first handoff/hydration. |
-| Historical Comparative ECX oracle-control | **PASS WITH LIMITATIONS / CLOSED** | Local controlled benchmark; not automatic-selector or hosted-dollar proof. |
-| W03 UX/product validation | **DONE — REAL-LAPTOP VERIFIED** | Current detailed evidence remains in its verification docs. |
-| W09/W10 runtime startup + doctor | **DONE — WINDOWS RUNTIME VERIFIED** | Bounded Windows runtime evidence. |
-| W11 installer/launcher | **DONE — WINDOWS INSTALLER VERIFIED** | Clean Windows installer lifecycle passed. |
-| W16 automatic semantic ref selector | **DONE — REPO SIDE** | `semantic-v1`, bounded `maxRefs=3`; no oracle indexes required by automatic lane. |
-| W17 ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5 tasks × 5 repeats × 4 lanes = 100 measured calls; bounded local evidence. |
-| W18 hosted economic validation | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | 20-call formal PASS; duplicate earlier batch reconciled; combined US$0.183312 < US$0.25; one-shot guard merged via PR #142. |
-| W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
-| W20 final current-state sync | **CLOSED** | Canonical state synchronized after W18 closure; future work is separate evidence-driven scope. |
-| F6-E01 held-out selector eval dataset | **CLOSED / REPO-SIDE PASS** | 10 bug/task-derived held-out cases; auto-discovered 26/50 eval inventory; CI/Product Eval passed and merged. |
-| F6-E02 dependency policy CI gate | **CLOSED / REPO-SIDE PASS** | PR #149 merged after CI #1029 + Product Eval #268 PASS; dependency-policy step itself PASS. |
-| F6-E03 release-security acceptance CI gate | **IMPLEMENTED / IN REVIEW** | Normal CI now executes release-security acceptance; self-wiring assertion added; exact-head gates pending. |
+The currently discussed Projects / Work / Schedule / Brain product layer is **not implemented yet** and is **not part of F6-E08**.
 
-## W18 provider and experiment profile
+## Active scope — F6-E08
 
-Formal W18 is intentionally narrow:
+Problem: governed container/base images use readable exact version tags but are not yet bound to repository-reviewed immutable digests.
 
-```text
-provider gateway: OpenRouter
-pricing identity: claude-sonnet-4-5-20250929
-runtime model: anthropic/claude-sonnet-4.5
-OpenRouter routing: provider.only=["anthropic"]
-provider fallback: disabled
-lanes: full-inline, ecx-selective-auto
-tasks: 5
-repeats: 2
-measured calls: 20
-warm-up calls: 0
-cost authority: OpenRouter usage.cost
-```
+Scope:
 
-Automatic selection is `semantic-v1` with `maxRefs=3`. Fixture relevance indexes are evaluation-only; they are not supplied to the automatic lane.
+1. pin governed build/runtime image references with `@sha256:` identities while retaining readable tags where supported;
+2. add deterministic drift/policy review;
+3. add focused regression coverage;
+4. wire the review into normal CI and release-security acceptance;
+5. run the relevant exact-head CI/Product Eval/acceptance gates;
+6. merge only the reviewed head and synchronize canonical docs.
 
-## W18 attempt chronology
+Out of scope:
 
-- **Attempt 1 — failed after 8/20 calls.** Known provider-billed amount `$0.027000`. It exposed acceptance of unusable HTTP-success/zero-cost responses; later fixed fail-closed.
-- **Attempt 2 — failed on call 5.** Four settled calls cost `$0.019266`; the rejected fifth call left one conservative historical `uncertain` reservation of `$0.107157`. That reservation must not be rewritten.
-- **Attempt 3 — one-call diagnostic failed.** OpenRouter HTTP-success returned no usable completion, `finishReason=content_filter`, `routingProvider=Amazon Bedrock`, `inputTokens=2002`, `outputTokens=1`, authoritative `usage.cost=0`; reservation settled to `$0` and did not create another uncertain entry.
-- **Attempt 4 — one-call diagnostic PASS.** OpenRouter request was pinned Anthropic-only with fallback disabled. `procurement-award/full-inline` returned quality `1` (`3/3`), `inputTokens=2002`, `outputTokens=45`, billed `$0.006681`, durable settlement `settled`, no cache hit.
+- provider/model changes;
+- hosted benchmark reruns or new paid W18 calls;
+- VPS/Cloudflare mutation;
+- AutoClick;
+- Projects/Schedule/Brain implementation.
 
-Known settled provider actual across Attempts 1–4 is `$0.052947`. The durable committed amount after Attempt 4 is larger because it conservatively includes the historical Attempt 2 uncertain reservation.
+## Finish line for the existing baseline
 
-## Formal guard repository verification
+After F6-E08:
 
-PR #135 merged the remaining formal safety/audit guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`. Exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
+1. final repository gates green;
+2. canonical docs synchronized;
+3. optional final Windows/local smoke only if the changed surface justifies it;
+4. freeze/tag the clean baseline;
+5. then open the next product roadmap as a new explicit scope.
 
-The merged formal runner now requires Anthropic-only routing, records the sanitized selected routing provider, verifies the durable reservation against the formal conservative estimate, and blocks the next dispatch before provider execution if cumulative actual spend plus that next reservation would exceed the explicit W18 cap. This repository-side work made no hosted provider call, so it did not consume the single formal-run authorization.
+The next product roadmap should not be mixed into F6-E08.
 
-## W18 formal runtime result
+## Closed-evidence boundary
 
-The synchronized formal execution on `main` `f249d9c0681462253bff21ca30354892ca4ce60f` completed the full **5 tasks × 2 repeats × 2 lanes = 20 measured hosted calls** and the harness returned `aggregate.pass=true` plus `closureEligible=true`.
+W18 is closed. Do not rerun the paid benchmark merely to refresh documentation. Reopen only if a reproducible regression or a materially changed provider/model/runtime identity invalidates the existing evidence.
 
-```text
-full-inline billed cost = US$0.059106
-ecx-selective-auto billed cost = US$0.032610
-actual formal run spend = US$0.091716
-saved vs full-inline = US$0.026496
-savedPct = 44.827936250126896
-medianTaskSavedPct = 44.4913020558777
-medianTaskInputTokenReductionPct = 50.629874025194965
-failedTasks = 0
-```
+Historical audits and failed attempts must remain preserved, but they belong in evidence/archive, not in the current work queue.
 
-Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920047a27eb4e3db38cb53e63192af3ea7857617d8f125c7056bd6c162da`.
+## Documentation rule
 
-Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
+Start at [README.md](README.md), then use:
 
-### Duplicate-execution incident closure
-
-The US$0.091596 pre-run delta was reconciled from the local ledger as an earlier complete 20-entry settled W18-shaped batch. Combined with the later recorded PASS run, same-day duplicate-execution spend was US$0.183312, below the US$0.25 monetary ceiling.
-
-The duplicate run exposed missing persistent single-attempt consumption state. PR #142 fixed this fail-closed by refusing completed 20-call PASS evidence and atomically persisting a gitignored authorization-consumption marker before hosted dispatch. CI #1012 and Product Eval #251 passed, and the fix merged at `cff6e21edc8085bb895c6ed59c32b5e4aa134ee0`. Do not rerun the paid benchmark.
-
-Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
-
-## Claim boundary
-
-A formal W18 PASS supports only a bounded statement on the five synthetic extraction fixtures using the same pinned OpenRouter/Anthropic route. It does not establish universal workload savings, future prices, end-to-end network savings, production SLA/SLO, or public percentage-savings marketing claims.
-
-## Immediate next action
-
-F6-E01 is **CLOSED / REPO-SIDE PASS**. PR #146 merged the held-out selector suite after CI #1023, Product Eval #262, and MCP External #467 PASS. PR #147 then hardened the 50-case budget with automatic case-manifest discovery after CI #1025 and Product Eval #264 PASS.
-
-F6-E02 is **CLOSED / REPO-SIDE PASS**. PR #149 exact head `1cd4795b1a65baa1a2320713a3c8ffe520cfc98f` passed CI #1029 and Product Eval #268; the new Dependency policy review step itself passed and merged at `20aedfe94ee9f3db321dd3a66625bedd56a334a1`.
-
-F6-E03 is **CLOSED / REPO-SIDE PASS**. PR #151 exact head `fdd532e0b6f2fe550708b8389ecc1f47afe946f7` passed CI #1033 and Product Eval #272; the named Release security acceptance CI step itself was observed PASS. The merge landed at `b9e42445310921ef3c23cda2220631df49403e41`.
-
-F6-E04 is **CLOSED / REPO-SIDE PASS**. PR #153 exact head `e1818eaac40a8166fd2b677aa815670c1ca0d7b6` passed CI #1041, Product Eval #280, and MCP External #473; both the GitHub Actions pin review and Release security acceptance steps were observed PASS. Merged main: `4742a9caf43e67b01345d69f0ea05cbbb2f081f0`.
-
-F6-E05 is **CLOSED / REPO-SIDE PASS** through PR #155. Exact head `1fb568b1a3fa865f2bad556b06f9fb6e4e2d6da2` passed CI #1045, Product Eval #284, and MCP External #475; the runner-review and release-security steps were green. Merged main: `2e031d4d540632385279e3b6559d564afcae96d3`.
-
-F6-E06 is **CLOSED / REPO-SIDE PASS** through PR #157. Exact head `cd04be6385ffb360862e38e63dcd02d27c3a067d` passed CI #1055, Product Eval #294, and MCP External #483; Node toolchain review and release-security acceptance were green. Merged main: `f04350a7e05080dd16c1d7bc9710a8e8f5a73b54`.
-
-F6-E07 is **CLOSED / REPO-SIDE PASS** through PR #160. Exact head `472819b3a7c875246ce76daee8212a7aed8fc8c9` passed Product Eval #311, MCP External #498, and Desktop Installer #41. CI #1072 initially hit an unrelated Phase 4 Temporal timeout; the failed verify job was rerun on the exact same reviewed head and passed without code or gate weakening. PR #160 merged at `9362419a9e2766750237e30792a50494d39c9b17`.
-
-F6-E08 is **ACTIVE**. The next bounded reproducibility gap is mutable container identity: Dockerfile and deployment compose images are exact-tagged but not digest-pinned. Scope: preserve readable version tags while binding governed build/runtime images to immutable digests, add deterministic drift review + tests + CI/release-security wiring, and keep runtime/deployment activation separate.
-
-This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
-
-Canonical W18 verification sources:
-
-- `docs/verification/w18-hosted-economics-preflight-2026-09-17.md`
-- `docs/verification/w18-hosted-economics-attempt-1-2026-09-17.md`
-- `docs/verification/w18-hosted-economics-attempt-2-2026-09-17.md`
-- `docs/verification/w18-hosted-diagnostic-attempt-3-2026-09-17.md`
-- `docs/verification/w18-hosted-diagnostic-attempt-4-2026-09-17.md`
-- `docs/verification/w18-formal-run-readiness-2026-09-18.md`
-- `docs/verification/w18-formal-guard-merge-2026-09-18.md`
-- `docs/verification/w18-formal-operator-wrapper-2026-09-18.md`
-- `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`
-- `docs/verification/w18-duplicate-execution-reconciliation-2026-09-18.md`
-- `docs/verification/w18-final-closure-2026-09-18.md`
-- `docs/verification/w20-final-current-state-closure-2026-09-18.md`
-
-Historical audits dated before this handoff remain historical snapshots and are not current status sources.
-
-
-F6-E01 verification source: `docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md`.
-
-
-F6-E02 verification source: `docs/verification/f6-e02-dependency-policy-ci-gate-2026-09-18.md`.
-
-
-F6-E03 verification source: `docs/verification/f6-e03-release-security-acceptance-ci-gate-2026-09-18.md`.
-
-F6-E04 verification source: `docs/verification/f6-e04-immutable-github-actions-2026-09-18.md`.
-
-F6-E05 verification source: `docs/verification/f6-e05-fixed-runner-labels-2026-09-18.md`.
-
-F6-E06 verification source: `docs/verification/f6-e06-immutable-node-toolchain-2026-09-18.md`.
-
-F6-E07 verification source: `docs/verification/f6-e07-pinned-inno-toolchain-2026-09-18.md`.
-
-
-F6-E08 active scope: immutable container/base image digest identity + continuous drift rejection.
+- [active-work-plan.md](active-work-plan.md) for current execution;
+- [EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md) for compact closure state;
+- [fase6-hardening.md](fase6-hardening.md) for Fase 6+ hardening policy;
+- [verification/](verification/) only when exact evidence is needed.

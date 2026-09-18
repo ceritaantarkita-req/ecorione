@@ -1,5 +1,8 @@
 # ecorione — Cetak biru lengkap: Fase 0 sampai Fase 6+
 
+> **CURRENT STATUS NOTICE — 2026-09-18:** this is the original architecture/phase blueprint, not the current work queue. Fase 0–4 are implemented/closed at their documented boundaries, Fase 5 AutoClick is deferred by design, and Fase 6+ is evidence-driven hardening. Use `docs/current-state-and-next-steps.md` and `docs/active-work-plan.md` for current execution.
+
+
 Status: **v1.0** — 2026-09-08. Ini dokumen tunggal yang menjelaskan **seluruh** rencana
 build ecorione dari awal sampai konsep produk selesai — bukan cuma fase berikutnya.
 Ditulis supaya siapa pun (manusia atau AI lain — ChatGPT, dst) yang membuka repo ini

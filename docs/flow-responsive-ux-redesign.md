@@ -1,5 +1,8 @@
 # ECORIONE — Flow & Responsive UX Redesign
 
+> **CLOSED DESIGN CONTRACT:** retained because W03 verification cites this implementation contract. It is not active work; W03 is closed at its documented real-laptop boundary.
+
+
 Status: **APPROVED FOR IMPLEMENTATION**
 
 Date: **2026-09-15**
