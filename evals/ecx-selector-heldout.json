@@ -1,0 +1,342 @@
+{
+  "version": 1,
+  "suite": "ecorione-f6-e01-heldout-selector",
+  "split": "held-out",
+  "claimBoundary": "Deterministic semantic-v1 selector regression cases derived from real repository bugs/tasks. Expected relevance is evaluation-only and is never passed to selection. This suite does not measure model answer quality, hosted cost, production representativeness, or universal optimizer effectiveness.",
+  "cases": [
+    {
+      "id": "F6-E01-001",
+      "category": "routing",
+      "surface": "Settings / MCP",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-009"
+      },
+      "query": {
+        "intent": "workspace mcp review",
+        "task": "Select the current workspace-aware MCP state for ws_personal.",
+        "need": ["mcp", "workspace", "routing"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "legacy global MCP state. Archived unrelated server list without workspace routing.",
+          "relevant": false
+        },
+        {
+          "text": "CURRENT MCP workspace routing for ws_personal. Required workspace MCP server docs-local state ready.",
+          "relevant": true
+        },
+        {
+          "text": "generic settings theme preferences unrelated to MCP workspace state.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-002",
+      "category": "security",
+      "surface": "Owner proxy redirects",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-018"
+      },
+      "query": {
+        "intent": "security review",
+        "task": "Select the owner-boundary control for bearer redirects.",
+        "need": ["security", "redirect", "bearer"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "CURRENT SECURITY CONTROL. Owner redirect carrying bearer token is forbidden. redirect error is required.",
+          "relevant": true
+        },
+        {
+          "text": "legacy proxy note follows redirects for public assets; unrelated and non-authoritative.",
+          "relevant": false
+        },
+        {
+          "text": "generic UI navigation note about links and tabs.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-003",
+      "category": "security",
+      "surface": "Realtime voice",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-023"
+      },
+      "query": {
+        "intent": "voice security review",
+        "task": "Select the current realtime voice streaming control.",
+        "need": ["voice", "sse", "bearer", "no-store"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "CURRENT REALTIME VOICE CONTROL. SSE stream forwards bearer to Hub, requires no-store, and redirect fail-closed.",
+          "relevant": true
+        },
+        {
+          "text": "archived voice prototype used polling and generic cache behavior; unrelated.",
+          "relevant": false
+        },
+        {
+          "text": "generic audio UI note about microphone icons.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-004",
+      "category": "security",
+      "surface": "Local runtime URL policy",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/audit-2026-09-14.md",
+        "ref": "S1-3"
+      },
+      "query": {
+        "intent": "local runtime policy",
+        "task": "Select the rule for validating localBaseUrl against public hosts.",
+        "need": ["local runtime", "localBaseUrl", "public host", "policy"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "CURRENT LOCAL RUNTIME POLICY. localBaseUrl must stay loopback or private by default; public host is disallowed.",
+          "relevant": true
+        },
+        {
+          "text": "legacy public demo URL example for unrelated hosted routing.",
+          "relevant": false
+        },
+        {
+          "text": "generic runtime timeout settings.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-005",
+      "category": "identity",
+      "surface": "Local model identity",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/audit-2026-09-14.md",
+        "ref": "S2-4"
+      },
+      "query": {
+        "intent": "model identity verification",
+        "task": "Select the requirement for reproducible local model identity.",
+        "need": ["model", "identity", "digest", "mutable alias"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "CURRENT MODEL IDENTITY REQUIREMENT. Mutable local model alias is not reproducible without an immutable verified digest.",
+          "relevant": true
+        },
+        {
+          "text": "legacy model tag example qwen latest without provenance; non-authoritative.",
+          "relevant": false
+        },
+        {
+          "text": "generic model temperature configuration.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-006",
+      "category": "governance",
+      "surface": "W18 authorization",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/w18-duplicate-execution-reconciliation-2026-09-18.md",
+        "ref": "single-attempt"
+      },
+      "query": {
+        "intent": "hosted authorization governance",
+        "task": "Select the final single-attempt control that prevents W18 reruns.",
+        "need": ["authorization", "single attempt", "hosted dispatch", "marker"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "FINAL AUTHORIZATION CONTROL. Single-attempt marker is atomically consumed before hosted dispatch and completed PASS evidence blocks rerun.",
+          "relevant": true
+        },
+        {
+          "text": "historical monetary cap note only discusses USD headroom and does not consume attempt authorization.",
+          "relevant": false
+        },
+        {
+          "text": "generic provider routing note unrelated to authorization markers.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-007",
+      "category": "reliability",
+      "surface": "Operations",
+      "origin": {
+        "kind": "task",
+        "source": "docs/active-work-plan.md",
+        "ref": "W04"
+      },
+      "query": {
+        "intent": "operations diagnosis",
+        "task": "Identify the required service causing fleet degradation and the optional-service rule.",
+        "need": ["operations", "degraded", "required service", "optional"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 2
+      },
+      "descriptors": [
+        {
+          "text": "CURRENT OPERATIONS SNAPSHOT. Fleet degraded because required service hub is down.",
+          "relevant": true
+        },
+        {
+          "text": "CURRENT OPERATIONS CONTROL. Optional sync may be down but does not degrade the required fleet.",
+          "relevant": true
+        },
+        {
+          "text": "legacy incident note blames an optional service without checking required owners.",
+          "relevant": false
+        },
+        {
+          "text": "generic metrics dashboard description.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-008",
+      "category": "memory",
+      "surface": "Forget",
+      "origin": {
+        "kind": "bug",
+        "source": "docs/verification/frontend-static-defect-ledger-2026-09-12.md",
+        "ref": "STATIC-003"
+      },
+      "query": {
+        "intent": "memory control",
+        "task": "Select the authoritative forget path and invalidation behavior.",
+        "need": ["memory", "forget", "invalidation", "hub"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "CURRENT MEMORY CONTROL. Forget requests go to Hub POST memory forget and return invalidation evidence.",
+          "relevant": true
+        },
+        {
+          "text": "legacy client-only memory delete mock; non-authoritative and unrelated to Hub invalidation.",
+          "relevant": false
+        },
+        {
+          "text": "generic memory search description.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-009",
+      "category": "credentials",
+      "surface": "Provider Settings",
+      "origin": {
+        "kind": "task",
+        "source": "docs/active-work-plan.md",
+        "ref": "W06"
+      },
+      "query": {
+        "intent": "provider credential test",
+        "task": "Select the transient credential-test handling rule.",
+        "need": ["provider", "credential", "transient", "secret"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "CURRENT PROVIDER CREDENTIAL CONTROL. Transient credential test forwards the secret body unchanged to Connect and does not persist it in the browser path.",
+          "relevant": true
+        },
+        {
+          "text": "archived settings mock stores illustrative provider fields; unrelated and non-authoritative.",
+          "relevant": false
+        },
+        {
+          "text": "generic provider model list documentation.",
+          "relevant": false
+        }
+      ]
+    },
+    {
+      "id": "F6-E01-010",
+      "category": "routing",
+      "surface": "Ai chat",
+      "origin": {
+        "kind": "task",
+        "source": "docs/active-work-plan.md",
+        "ref": "W08"
+      },
+      "query": {
+        "intent": "chat routing",
+        "task": "Select the rule for explicit Local chat target routing.",
+        "need": ["chat", "local", "routing", "hub"]
+      },
+      "selection": {
+        "mode": "semantic-v1",
+        "maxRefs": 1
+      },
+      "descriptors": [
+        {
+          "text": "CURRENT CHAT ROUTING CONTROL. Explicit Local chat target is valid and forwarded to Hub unchanged.",
+          "relevant": true
+        },
+        {
+          "text": "legacy hosted-only routing note; archived and unrelated to Local chat.",
+          "relevant": false
+        },
+        {
+          "text": "generic chat theme preferences.",
+          "relevant": false
+        }
+      ]
+    }
+  ]
+}

@@ -21,7 +21,7 @@ Per **2026-09-18**:
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**;
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
-- F6-E01 held-out selector eval dataset: **ACTIVE NEW EXPLICIT SCOPE** from clean local/remote baseline `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9`;
+- F6-E01 held-out selector eval dataset: **IMPLEMENTED / IN REVIEW** from clean local/remote baseline `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9`; 10 held-out cases, 26/50 governed eval inventory;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -122,10 +122,11 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 
 ```text
 F6-E01:
-- add bug/task-derived held-out semantic-v1 selector manifest
-- keep oracle/relevant indexes evaluation-only
-- enforce total governed eval inventory <= 50 cases
-- wire deterministic suite into Product Eval
+- implementation complete on feature branch
+- 10 bug/task-derived held-out semantic-v1 cases
+- oracle/relevance remains evaluation-only
+- governed eval inventory = 26 / 50
+- Product Eval wiring complete
 - require exact-head CI + Product Eval before merge
 - no provider calls and no W18 rerun
 ```

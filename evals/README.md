@@ -16,6 +16,31 @@ Current W14 seed berisi 12 kasus lintas Settings/MCP, owner-boundary security, l
 
 Aturan penambahan kasus tetap sama: kalau sebuah kasus baru tidak bisa menunjuk bug/tugas nyata dan deterministic regression yang membuktikannya, kasus belum boleh masuk. Bila target file baru ditambahkan ke manifest, tambahkan file tersebut juga ke workflow Product Eval supaya regression-nya benar-benar dieksekusi.
 
+## F6-E01 — held-out ECX selector regression
+
+F6-E01 menambahkan `ecx-selector-heldout.json` sebagai dataset regresi deterministic untuk `semantic-v1`. Scope ini sengaja memakai **kasus yang belum menjadi fixture W17/W18**, tetapi tetap wajib berasal dari bug/tugas repository yang nyata.
+
+Current manifest berisi **10 kasus** lintas MCP workspace routing, owner redirect security, realtime voice, local-runtime URL policy, immutable model identity, W18 single-attempt authorization, Operations degraded/optional semantics, memory Forget, transient provider credentials, dan explicit Local chat routing.
+
+Aturan penting:
+
+- setiap case punya `origin.source` + `origin.ref` yang diverifikasi benar-benar ada;
+- `relevant` hanya label evaluation/oracle di manifest;
+- test menghapus label tersebut sebelum memanggil `selectEcxReferenceIndexes`;
+- selector hanya menerima intent/task/need, descriptor text, dan `maxRefs`;
+- semua expected relevant refs harus muncul di hasil selector dan hasil tidak boleh melewati budget;
+- tidak ada provider/model call dalam suite ini.
+
+`eval-inventory.test.ts` sekarang menghitung seluruh governed eval manifests: 12 W14 + 4 W15 + 10 F6-E01 = **26 kasus**, tetap di bawah hard ceiling permanen **50** dan seluruh ID harus unik lintas manifest.
+
+Jalankan langsung:
+
+```bash
+pnpm eval:selector:heldout
+```
+
+Claim boundary: PASS F6-E01 hanya membuktikan deterministic selector regression pada 10 kasus bug/task-derived ini. Ia tidak membuktikan kualitas jawaban model, hosted cost, representativeness workload produksi, atau universal optimizer effectiveness.
+
 ## W15 — agent/model eval
 
 W15 punya harness lokal executable yang terpisah dari product runtime:

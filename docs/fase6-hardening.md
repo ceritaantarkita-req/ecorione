@@ -34,7 +34,7 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - W18 hosted economics: **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT**
 - W20 final current-state sync: **CLOSED**
 - final local/remote baseline: `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9` with clean Windows `main...origin/main`
-- active next explicit scope: **F6-E01 — BUG/TASK-DERIVED HELD-OUT SELECTOR EVAL DATASET + EVAL-BUDGET GOVERNANCE**
+- active next explicit scope: **F6-E01 — IMPLEMENTED / IN REVIEW** — 10 bug/task-derived held-out selector cases + global 26/50 eval-budget governance
 - compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**
 - AutoClick: **DEFERRED BY DESIGN**
 - no implicit Batch 13
@@ -279,7 +279,7 @@ Current operator-approved order:
 5. immutable local model identity hardening — **DONE WITH LIMITATIONS / RUNTIME VERIFIED**;
 6. automatic selector + bounded no-oracle evidence — **DONE / W16–W17 CLOSED AT DOCUMENTED BOUNDARIES**;
 7. hosted billed-cost validation — **DONE / W18 CLOSED AT DOCUMENTED BOUNDARY**;
-8. **F6-E01 held-out bug/task-derived selector evaluation dataset + eval-budget governance — ACTIVE NEXT EXPLICIT SCOPE**;
+8. **F6-E01 held-out bug/task-derived selector evaluation dataset + eval-budget governance — IMPLEMENTED / IN REVIEW**;
 9. improve UX/Control Center/approval/error surfaces only from newly observed friction;
 10. integrate other ecosystem projects only through explicit APIs/contracts;
 11. keep dependency/security/model/pricing reviews current;
