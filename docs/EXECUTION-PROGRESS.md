@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-18**
 
-Status: **ACTIVE — canonical execution tracker**
+Status: **CURRENT — defined closure map complete; future work remains evidence-driven**
 
 Start from `docs/current-state-and-next-steps.md`, then this file. Historical Batch 1–12 chronology remains in `docs/archive/`; dated audits and failed-attempt records are evidence snapshots and must not be rewritten into current status.
 
@@ -31,9 +31,9 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W12–W15 | **CLOSED at documented boundaries** | Attachment path, immutable identity, product eval, bounded agentic local eval. |
 | W16 | **REPO SIDE DONE** | Automatic `semantic-v1` selector, `maxRefs=3`. |
 | W17 | **CLOSED — VERIFIED LOCAL MODEL PASS** | 100 measured calls, 5/5 task gates, no-oracle automatic lane. |
-| W18 | **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW** | Earlier duplicate 20-call batch reconciled; combined US$0.183312 < US$0.25; closure waits on single-attempt guard merge. |
+| W18 | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | Formal hosted economics passed; duplicate batch reconciled; one-shot guard merged via PR #142. |
 | W19 | **REPO SIDE DONE** | Release/security governance gates retained. |
-| W20 | **BLOCKED ON W18 GUARD MERGE** | Final current-state closure follows the one-shot guard merge and W18 closeout. |
+| W20 | **CLOSED** | Final canonical current-state synchronization completed. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
 | Fase 6+ | **OPEN-ENDED** | Evidence-driven only. |
@@ -78,9 +78,11 @@ Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored 
 
 The local durable ledger resolves the US$0.091596 delta as an earlier complete 20-entry settled W18-shaped batch. Its full-inline actual total was US$0.059046 and automatic ECX total US$0.032550. The later PASS batch cost US$0.091716. Combined durable spend was US$0.183312, below the US$0.25 monetary ceiling.
 
-The duplicated execution violated the one-attempt process boundary and exposed missing persistent authorization consumption in the wrapper. The repository fix now refuses completed formal PASS evidence and atomically consumes a gitignored one-shot marker before hosted dispatch.
+The duplicated execution violated the one-attempt process boundary and exposed missing persistent authorization consumption in the wrapper. PR #142 fixed this by refusing completed formal PASS evidence and atomically consuming a gitignored one-shot marker before hosted dispatch. Exact reviewed head `1f0d87963857d4bb261579204e76bae970c496b0` passed CI #1012 and Product Eval #251 and merged at `cff6e21edc8085bb895c6ed59c32b5e4aa134ee0`.
 
-Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
+Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`, `docs/verification/w18-duplicate-execution-reconciliation-2026-09-18.md`, and `docs/verification/w18-final-closure-2026-09-18.md`.
+
+W20 final closure: `docs/verification/w20-final-current-state-closure-2026-09-18.md`.
 
 ## Persistent evidence rules
 
