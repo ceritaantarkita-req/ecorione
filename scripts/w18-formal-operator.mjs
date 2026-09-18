@@ -32,8 +32,7 @@ export function findCompletedFormalEvidence(root = ROOT) {
   const candidates = readdirSync(evidenceDir)
     .filter(
       (name) =>
-        name.startsWith("w18-hosted-economics-") &&
-        name.endsWith(".summary.json"),
+        name.startsWith("w18-hosted-economics-") && name.endsWith(".summary.json"),
     )
     .sort()
     .reverse();
