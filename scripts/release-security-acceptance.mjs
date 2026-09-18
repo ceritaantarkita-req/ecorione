@@ -12,6 +12,8 @@ const required = [
   "scripts/self-host-rollback.sh",
   "scripts/secret-history-scan.mjs",
   "scripts/dependency-security-review.mjs",
+  ".github/workflows/ci.yml",
+  "package.json",
   "apps/ai/app/settings/page.tsx",
   "apps/ai/app/api/settings/[...path]/route.ts",
 ];
@@ -23,6 +25,8 @@ const proxy = readFileSync("apps/ai/lib/settings-proxy.ts", "utf8");
 const flow = readFileSync("services/flow/src/graph-activities.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
+const ci = readFileSync(".github/workflows/ci.yml", "utf8");
+const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 
 if (compose.includes("docker.sock"))
   findings.push("application baseline must not mount docker.sock");
@@ -39,6 +43,17 @@ if (!mcpTypes.includes("allowInsecureLoopback") || !mcpTypes.includes("credentia
 if (!mcpSdk.includes("ECORIONE_MCP_STDIO_ALLOWLIST"))
   findings.push("MCP stdio command allowlist missing");
 if (/image:\s+\S+:latest\b/.test(compose)) findings.push("latest Docker image is forbidden");
+if (
+  packageJson?.scripts?.["dependency:review"] !== "node scripts/dependency-security-review.mjs"
+) {
+  findings.push("dependency:review package script missing or changed");
+}
+if (
+  !ci.includes("name: Dependency policy review") ||
+  !ci.includes("run: pnpm run dependency:review")
+) {
+  findings.push("normal CI must execute dependency:review");
+}
 
 if (findings.length > 0) {
   console.error("release-security-acceptance: FAIL");

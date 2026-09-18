@@ -35,10 +35,10 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W19 | **REPO SIDE DONE** | Release/security governance gates retained. |
 | W20 | **CLOSED** | Final canonical current-state synchronization completed. |
 | F6-E01 | **CLOSED / REPO-SIDE PASS** | PR #146/#147 merged; 10 held-out cases; auto-discovered 26/50 eval inventory. |
-| F6-E02 | **ACTIVE — NEW EXPLICIT SCOPE** | Existing dependency policy script is not run in normal CI; continuous gate hardening next. |
+| F6-E02 | **IMPLEMENTED / IN REVIEW** | Normal CI runs dependency:review; release acceptance protects the wiring; exact-head gates pending. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E01** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E02** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -111,6 +111,6 @@ F6-E01 is closed after PR #146/#147 merged the 10-case held-out selector suite a
 
 ## F6-E02 active scope
 
-A current repository audit found a concrete continuous-gating gap: `package.json` exposes `pnpm dependency:review`, and release documentation treats deterministic dependency policy review as part of the release baseline, but normal `.github/workflows/ci.yml` does not invoke it. F6-E02 will make that policy a normal CI gate and make release acceptance assert the CI wiring remains present.
+The concrete continuous-gating gap is now implemented on the F6-E02 feature branch. Normal CI invokes `pnpm run dependency:review`, and release-security acceptance checks both the governed package script and the CI step/command so the gate cannot silently disappear.
 
-This scope does not claim live registry vulnerability/CVE freshness.
+Closure waits on exact-head CI/Product Eval and guarded merge. This scope does not claim live registry vulnerability/CVE freshness.

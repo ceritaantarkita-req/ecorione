@@ -35,7 +35,7 @@ Current canonical handoff: `docs/current-state-and-next-steps.md`.
 - W20 final current-state sync: **CLOSED**
 - final local/remote baseline: `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9` with clean Windows `main...origin/main`
 - F6-E01 held-out selector eval: **CLOSED / REPO-SIDE PASS** — PR #146/#147
-- active next explicit scope: **F6-E02 — CONTINUOUS DEPENDENCY-POLICY CI GATE**
+- F6-E02 continuous dependency-policy CI gate: **IMPLEMENTED / IN REVIEW**
 - compute-host/VPS + Cloudflare deployment: **DEFERRED BY OPERATOR DECISION**
 - AutoClick: **DEFERRED BY DESIGN**
 - no implicit Batch 13
@@ -281,7 +281,7 @@ Current operator-approved order:
 6. automatic selector + bounded no-oracle evidence — **DONE / W16–W17 CLOSED AT DOCUMENTED BOUNDARIES**;
 7. hosted billed-cost validation — **DONE / W18 CLOSED AT DOCUMENTED BOUNDARY**;
 8. **F6-E01 held-out bug/task-derived selector evaluation dataset + eval-budget governance — CLOSED / REPO-SIDE PASS**;
-9. **F6-E02 dependency-policy continuous CI gate — ACTIVE NEXT EXPLICIT SCOPE**;
+9. **F6-E02 dependency-policy continuous CI gate — IMPLEMENTED / IN REVIEW**;
 10. improve UX/Control Center/approval/error surfaces only from newly observed friction;
 11. integrate other ecosystem projects only through explicit APIs/contracts;
 12. keep dependency/security/model/pricing reviews current;
@@ -354,3 +354,10 @@ For observability specifically:
 - do not turn local USD 0 into hosted billed-cost evidence.
 
 Do not reopen Batch 12 merely because Fase 6+ continues. Create a new explicit scope instead.
+
+
+## F6-E02 implementation checkpoint
+
+Normal CI now runs `pnpm run dependency:review`. Release-security acceptance now asserts that both the governed package script and the named CI step/command remain present. This is deterministic repository policy enforcement only; it is not a live registry vulnerability/CVE freshness claim.
+
+Verification: `docs/verification/f6-e02-dependency-policy-ci-gate-2026-09-18.md`.

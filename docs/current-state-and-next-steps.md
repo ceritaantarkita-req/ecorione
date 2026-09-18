@@ -39,7 +39,7 @@ The next explicit non-deployment scope is **F6-E01 — bug/task-derived held-out
 | W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
 | W20 final current-state sync | **CLOSED** | Canonical state synchronized after W18 closure; future work is separate evidence-driven scope. |
 | F6-E01 held-out selector eval dataset | **CLOSED / REPO-SIDE PASS** | 10 bug/task-derived held-out cases; auto-discovered 26/50 eval inventory; CI/Product Eval passed and merged. |
-| F6-E02 dependency policy CI gate | **ACTIVE — NEW EXPLICIT SCOPE** | Existing `dependency:review` policy is not executed by normal CI; make it a continuous gate without claiming registry CVE freshness. |
+| F6-E02 dependency policy CI gate | **IMPLEMENTED / IN REVIEW** | Normal CI now executes `dependency:review`; release acceptance protects the package script + CI wiring; exact-head gates pending. |
 
 ## W18 provider and experiment profile
 
@@ -111,9 +111,11 @@ A formal W18 PASS supports only a bounded statement on the five synthetic extrac
 
 F6-E01 is **CLOSED / REPO-SIDE PASS**. PR #146 merged the held-out selector suite after CI #1023, Product Eval #262, and MCP External #467 PASS. PR #147 then hardened the 50-case budget with automatic case-manifest discovery after CI #1025 and Product Eval #264 PASS.
 
-The next explicit scope is **F6-E02 — dependency policy as a continuous CI gate**. The repository already has `pnpm dependency:review` and `scripts/dependency-security-review.mjs`, but normal `.github/workflows/ci.yml` does not execute it. F6-E02 will wire that deterministic policy into CI and add a release-acceptance assertion so the gate cannot silently disappear.
+F6-E02 is now **IMPLEMENTED / IN REVIEW**. Normal `.github/workflows/ci.yml` contains a named Dependency policy review step that runs `pnpm run dependency:review`. `scripts/release-security-acceptance.mjs` now fails if the governed package script changes/disappears or if normal CI loses that step.
 
-Claim boundary: this checks pinned dependency/source policy, Docker image tag policy, and lockfile presence. It is **not** a live registry vulnerability/CVE freshness claim. Do **not** rerun the paid W18 benchmark.
+Next gate: exact-head CI must pass with the new dependency-policy step itself green; Product Eval must also pass if triggered; then guarded merge + canonical closure sync.
+
+Claim boundary: this checks deterministic dependency/source policy, Docker image tag policy, and lockfile presence. It is **not** a live registry vulnerability/CVE freshness claim. Do **not** rerun the paid W18 benchmark.
 
 Canonical W18 verification sources:
 
@@ -134,3 +136,6 @@ Historical audits dated before this handoff remain historical snapshots and are 
 
 
 F6-E01 verification source: `docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md`.
+
+
+F6-E02 verification source: `docs/verification/f6-e02-dependency-policy-ci-gate-2026-09-18.md`.
