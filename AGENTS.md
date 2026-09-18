@@ -12,12 +12,12 @@ Per **2026-09-18**:
 - W11 installer: **DONE — WINDOWS INSTALLER VERIFIED**;
 - W16 automatic semantic selector: **DONE — REPO SIDE**;
 - W17 no-oracle validation: **DONE — VERIFIED LOCAL MODEL PASS**;
-- W18 hosted economic validation: **FORMAL RUNTIME PASS / CLOSURE HOLD** pending US$0.091596 pre-run ledger reconciliation;
+- W18 hosted economic validation: **FORMAL RUNTIME PASS / RECONCILED — GUARD FIX IN REVIEW**;
 - W18 one-call Anthropic-only diagnostic Attempt 4: **PASS**;
 - W18 formal dispatch/routing/cap guard: **MERGED TO `main`** via PR #135 at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact-head CI #994 + Product Eval #233 **PASS**;
 - W18 formal operator wrapper: **MERGED / REPO-SIDE PASS** via PR #138 at `05ddd248e90e26b9db2c785d533c55ec817db013`; exact head `c4b5b30f02716d66a8974903acb824f36ac1d12f`, CI #1001 + Product Eval #240 + MCP External #461 **PASS**;
 - W18 formal 20-call run: **EXECUTED / PASS** — 20/20 measured calls, US$0.091716 formal spend, `closureEligible=true`; do not rerun;
-- W20: **BLOCKED ON W18 RECONCILIATION**;
+- W20: **BLOCKED ON W18 GUARD MERGE**;
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**;
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
@@ -56,9 +56,9 @@ Therefore the formal harness result is **PASS**, but W18 overall remains **NOT C
 
 Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
 
-### Agent rule for reconciliation
+### Agent rule after duplicate-execution reconciliation
 
-Do not rerun W18. Inspect the local durable ledger and reconcile the US$0.091596 delta that appeared between the preceding zero-spend preflight and the formal-run start. Preserve raw/private ledger data locally and commit only sanitized provenance. W18 can be marked CLOSED only after this discrepancy is explained without rewriting historical entries.
+Do not rerun W18. The US$0.091596 delta is reconciled as an earlier complete 20-entry settled W18-shaped batch; combined two-run spend was US$0.183312, below the US$0.25 dollar ceiling. The duplicate run exposed missing single-attempt consumption state. W18 can be marked CLOSED only after the fail-closed one-shot guard passes exact-head repository gates and merges.
 
 ## W16/W17 claim boundary
 
@@ -122,12 +122,11 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 ## Immediate next work
 
 ```text
-1. inspect the local durable spend ledger
-2. reconcile the US$0.091596 pre-run delta
-3. commit sanitized reconciliation evidence
-4. close W18 if provenance is consistent
-5. complete W20 final current-state sync
-6. do not rerun the passing paid formal benchmark
+1. merge the single-attempt consumption guard after exact-head gates pass
+2. preserve duplicate-execution incident evidence
+3. close W18
+4. complete W20 final current-state sync
+5. do not rerun the passing paid formal benchmark
 ```
 
 The wrapper remains the required path for any future explicitly authorized hosted validation because it computes the UTC-day ceiling, injects ephemeral runtime overrides, and restores hosted mode off in `finally`.
