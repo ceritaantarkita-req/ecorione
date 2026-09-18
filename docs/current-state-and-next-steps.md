@@ -122,7 +122,9 @@ F6-E05 is **CLOSED / REPO-SIDE PASS** through PR #155. Exact head `1fb568b1a3fa8
 
 F6-E06 is **CLOSED / REPO-SIDE PASS** through PR #157. Exact head `cd04be6385ffb360862e38e63dcd02d27c3a067d` passed CI #1055, Product Eval #294, and MCP External #483; Node toolchain review and release-security acceptance were green. Merged main: `f04350a7e05080dd16c1d7bc9710a8e8f5a73b54`.
 
-F6-E07 is **IMPLEMENTED / IN REVIEW**. `.inno-setup-version` pins Inno Setup `6.7.1`; Desktop Installer installs Chocolatey `innosetup` with explicit `--version`; pull requests touching installer/toolchain inputs now execute the Desktop Installer workflow; normal CI and release-security acceptance enforce the installer-toolchain review. Closure depends on exact-head CI/Product Eval plus the real Desktop Installer Windows job.
+F6-E07 is **CLOSED / REPO-SIDE PASS** through PR #160. Exact head `472819b3a7c875246ce76daee8212a7aed8fc8c9` passed Product Eval #311, MCP External #498, and Desktop Installer #41. CI #1072 initially hit an unrelated Phase 4 Temporal timeout; the failed verify job was rerun on the exact same reviewed head and passed without code or gate weakening. PR #160 merged at `9362419a9e2766750237e30792a50494d39c9b17`.
+
+F6-E08 is **ACTIVE**. The next bounded reproducibility gap is mutable container identity: Dockerfile and deployment compose images are exact-tagged but not digest-pinned. Scope: preserve readable version tags while binding governed build/runtime images to immutable digests, add deterministic drift review + tests + CI/release-security wiring, and keep runtime/deployment activation separate.
 
 This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
 
@@ -159,3 +161,6 @@ F6-E05 verification source: `docs/verification/f6-e05-fixed-runner-labels-2026-0
 F6-E06 verification source: `docs/verification/f6-e06-immutable-node-toolchain-2026-09-18.md`.
 
 F6-E07 verification source: `docs/verification/f6-e07-pinned-inno-toolchain-2026-09-18.md`.
+
+
+F6-E08 active scope: immutable container/base image digest identity + continuous drift rejection.

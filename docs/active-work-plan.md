@@ -27,7 +27,8 @@ F6-E03 release-security acceptance CI gate: CLOSED / REPO-SIDE PASS
 F6-E04 immutable GitHub Actions pinning: CLOSED / REPO-SIDE PASS
 F6-E05 fixed runner OS labels: CLOSED / REPO-SIDE PASS
 F6-E06 immutable Node toolchain: CLOSED / REPO-SIDE PASS
-F6-E07 pinned Inno Setup toolchain: IMPLEMENTED / IN REVIEW
+F6-E07 pinned Inno Setup toolchain: CLOSED / REPO-SIDE PASS
+F6-E08 container image digest pinning: ACTIVE
 ```
 
 The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
@@ -57,7 +58,8 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | F6-E04 | Immutable GitHub Actions pinning + CI policy gate | **CLOSED / REPO-SIDE PASS** | PR #153; CI #1041 + Product Eval #280 + MCP #473 PASS; repo-wide scanner green. |
 | F6-E05 | Fixed GitHub-hosted runner OS labels + gate | **CLOSED / REPO-SIDE PASS** | PR #155; CI #1045 + Product Eval #284 + MCP #475 PASS; runner-review and release-security steps green. |
 | F6-E06 | Immutable Node toolchain + drift gate | **CLOSED / REPO-SIDE PASS** | PR #157; CI #1055 + Product Eval #294 + MCP #483 PASS; Node toolchain + release-security steps green. |
-| F6-E07 | Pinned Inno Setup installer toolchain + drift gate | **IMPLEMENTED / IN REVIEW** | `.inno-setup-version=6.7.1`; versioned Chocolatey install; CI/release review + PR-triggered Desktop Installer acceptance; exact-head gates pending. |
+| F6-E07 | Pinned Inno Setup installer toolchain + drift gate | **CLOSED / REPO-SIDE PASS** | PR #160 merged; CI #1072 same-head rerun PASS; Product Eval #311 + MCP #498 + Desktop Installer #41 PASS. |
+| F6-E08 | Container image digest pinning + drift gate | **ACTIVE** | Tag-pinned Node/Postgres/Caddy/Temporal refs remain mutable without repository digest identity. |
 
 ## W18 current facts
 
@@ -103,8 +105,9 @@ F6-E03 = CLOSED / REPO-SIDE PASS
 F6-E04 = CLOSED / REPO-SIDE PASS
 F6-E05 = CLOSED / REPO-SIDE PASS
 F6-E06 = CLOSED / REPO-SIDE PASS
-F6-E07 = IMPLEMENTED / IN REVIEW
-next = exact-head CI/Product Eval/Desktop Installer -> fix findings -> guarded merge -> closure
+F6-E07 = CLOSED / REPO-SIDE PASS
+F6-E08 = ACTIVE
+next = digest-pin governed container/base images + drift gate + tests -> exact-head CI/Product Eval/relevant acceptance -> guarded merge
 do not rerun the paid W18 benchmark
 ```
 
