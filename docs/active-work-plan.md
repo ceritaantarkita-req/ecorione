@@ -21,7 +21,8 @@ W18 single-attempt guard: MERGED / PASS (PR #142, CI #1012, Product Eval #251)
 W18 closure: CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT
 W20 final sync: CLOSED
 local Windows main sync: VERIFIED @ 943e46bf7cfd53063e8d8e4970d0c9aa7713dce9
-F6-E01 held-out selector eval dataset: IMPLEMENTED / IN REVIEW
+F6-E01 held-out selector eval dataset: CLOSED / REPO-SIDE PASS
+F6-E02 dependency policy CI gate: ACTIVE
 ```
 
 The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
@@ -45,7 +46,8 @@ The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4
 | W18 | Hosted economic validation | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | Formal 20-call PASS; duplicate execution reconciled; one-shot guard merged. |
 | W19 | Release/security governance | **DONE — REPO SIDE** | CI history/naming/model-alias gates retained. |
 | W20 | Final current-state sync | **CLOSED** | Canonical handoff/tracker synchronized after W18 closure. |
-| F6-E01 | Bug/task-derived held-out selector eval dataset + eval-budget governance | **IMPLEMENTED / IN REVIEW** | 10 held-out cases; global 26/50 eval budget; Product Eval wired; waiting exact-head gates. |
+| F6-E01 | Bug/task-derived held-out selector eval dataset + eval-budget governance | **CLOSED / REPO-SIDE PASS** | PR #146 + #147 merged; 10 cases; auto-discovered 26/50 inventory. |
+| F6-E02 | Continuous dependency-policy CI gate | **ACTIVE** | Wire existing deterministic `dependency:review` into normal CI and protect its presence through release acceptance. |
 
 ## W18 current facts
 
@@ -85,11 +87,10 @@ W17's local automatic-selector evidence remains separate: W17 proved no-oracle l
 ```text
 W18 = CLOSED
 W20 = CLOSED
-F6-E01 = IMPLEMENTED / IN REVIEW
-10 held-out selector cases
-global governed eval inventory = 26 / 50
-Product Eval wiring = DONE
-next = exact-head CI + Product Eval -> guarded merge -> closure
+F6-E01 = CLOSED / REPO-SIDE PASS
+F6-E02 = ACTIVE
+gap: dependency:review exists but normal CI does not execute it
+next: wire dependency policy into CI + protect gate presence in release acceptance
 do not rerun the paid W18 benchmark
 ```
 
