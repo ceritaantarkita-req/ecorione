@@ -14,6 +14,7 @@ W11 final Windows installer closure: PASS
 W17 formal local closure: PASS
 W18 one-call Anthropic-only diagnostic: PASS
 W18 formal dispatch/routing/cap guard: MERGED / REPO-SIDE PASS
+W18 formal operator wrapper: REPO-SIDE PREPARED / MERGE PENDING
 W18 formal 20-call run: NOT YET EXECUTED
 W20 final sync: BLOCKED ON W18
 ```
@@ -161,13 +162,16 @@ W17's local automatic-selector evidence remains separate: W17 proved no-oracle l
 ## Immediate next action
 
 ```text
-1. merge documentation sync
-2. synchronize operator laptop
-3. execute one authorized formal W18 attempt (max US$0.25)
-4. preserve evidence and ledger state
-5. if PASS: document/merge W18 closure
-6. continue W20 final current-state sync
-7. if FAIL: stop, diagnose, require fresh authorization before retry
+1. merge the W18 formal operator wrapper + docs
+2. synchronize operator laptop to the merged main
+3. run wrapper --preflight-only (zero spend)
+4. execute wrapper --execute-authorized-w18 exactly once (max US$0.25)
+5. preserve evidence and postflight ledger state
+6. if PASS: document/merge W18 closure
+7. continue W20 final current-state sync
+8. if FAIL: stop, diagnose, require fresh authorization before retry
 ```
+
+The wrapper keeps temporary spend/routing overrides out of `.env`, computes the current UTC-day ceiling at runtime, keeps hosted calls disabled during preflight, and restores hosted mode off in `finally`.
 
 Do not reopen already-closed W03/W09/W10/W11/W16/W17 unless a new reproducible regression appears on newer product code.
