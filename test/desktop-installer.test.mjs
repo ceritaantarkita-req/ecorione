@@ -37,10 +37,14 @@ describe("ECORIONE Windows installer specification", () => {
     expect(installer).toContain("OutputBaseFilename=ECORIONE-Setup-{#AppVersion}");
   });
 
-  it("builds installers only through an explicit manual release workflow", () => {
+  it("keeps manual release dispatch and bounds pull-request installer acceptance by path", () => {
     expect(workflow).toContain("workflow_dispatch:");
     expect(workflow).not.toMatch(/^\s+push:/m);
-    expect(workflow).not.toMatch(/^\s+pull_request:/m);
+    expect(workflow).toMatch(/^\s+pull_request:/m);
+    expect(workflow).toContain('- ".github/workflows/desktop-installer.yml"');
+    expect(workflow).toContain('- ".inno-setup-version"');
+    expect(workflow).toContain('- "desktop/**"');
+    expect(workflow).toContain("inputs.version || '0.1.0'");
     expect(workflow).toContain('node scripts/desktop-bundle.mjs --version "$ECORIONE_VERSION"');
     expect(workflow).not.toContain("desktop:bundle -- --version");
     expect(workflow).toContain(
