@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { reviewTrackedWorkflows } from "./github-actions-pin-review.mjs";
 import { reviewTrackedRunnerLabels } from "./github-actions-runner-review.mjs";
+import { reviewNodeToolchain } from "./node-toolchain-review.mjs";
 
 const required = [
   "docs/security-review.md",
@@ -16,6 +17,8 @@ const required = [
   "scripts/dependency-security-review.mjs",
   "scripts/github-actions-pin-review.mjs",
   "scripts/github-actions-runner-review.mjs",
+  "scripts/node-toolchain-review.mjs",
+  ".node-version",
   ".github/workflows/ci.yml",
   "package.json",
   "apps/ai/app/settings/page.tsx",
@@ -64,6 +67,11 @@ if (
   findings.push("actions:runner-review package script missing or changed");
 }
 if (
+  packageJson?.scripts?.["toolchain:node-review"] !== "node scripts/node-toolchain-review.mjs"
+) {
+  findings.push("toolchain:node-review package script missing or changed");
+}
+if (
   !ci.includes("name: Dependency policy review") ||
   !ci.includes("run: pnpm run dependency:review")
 ) {
@@ -82,6 +90,12 @@ if (
   findings.push("normal CI must execute actions:runner-review");
 }
 if (
+  !ci.includes("name: Node toolchain review") ||
+  !ci.includes("run: pnpm run toolchain:node-review")
+) {
+  findings.push("normal CI must execute toolchain:node-review");
+}
+if (
   !ci.includes("name: Release security acceptance") ||
   !ci.includes("run: node scripts/release-security-acceptance.mjs")
 ) {
@@ -96,6 +110,15 @@ for (const finding of actionPinReview.findings) {
 const runnerReview = reviewTrackedRunnerLabels();
 for (const finding of runnerReview.findings) {
   findings.push(`mutable GitHub runner label: ${finding}`);
+}
+
+try {
+  const nodeToolchainReview = reviewNodeToolchain();
+  for (const finding of nodeToolchainReview.findings) {
+    findings.push(`Node toolchain drift: ${finding}`);
+  }
+} catch (error) {
+  findings.push(`Node toolchain review failed: ${error instanceof Error ? error.message : String(error)}`);
 }
 
 if (findings.length > 0) {
