@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **IMPLEMENTED / IN REVIEW**
+Status: **CLOSED / REPO-SIDE PASS**
 
 ## Scope
 
@@ -54,3 +54,21 @@ F6-E06 closes only after:
 - canonical docs closure sync.
 
 No provider/model call, hosted spend, W18 rerun, or infrastructure mutation is part of this scope.
+
+
+## Closure evidence
+
+```text
+PR = #157
+exact reviewed head = cd04be6385ffb360862e38e63dcd02d27c3a067d
+CI #1055 = PASS
+Product Eval #294 = PASS
+MCP External HTTPS Acceptance #483 = PASS
+merged main = f04350a7e05080dd16c1d7bc9710a8e8f5a73b54
+```
+
+Exact-head CI showed **Node toolchain review** and **Release security acceptance** PASS. `actions/setup-node` resolved `.node-version` to Node `22.20.0`, the main test suite passed after correcting the scanner diagnostic-line fixture, and the MCP workflow passed under the same central Node pin. No provider/model call, hosted spend, W18 rerun, or infrastructure mutation was made.
+
+## Next scope
+
+F6-E07 addresses the remaining unpinned Windows installer compiler dependency: the Chocolatey `innosetup` package must be pinned and continuously governed, with actual Desktop Installer workflow acceptance retained as the closure boundary.
