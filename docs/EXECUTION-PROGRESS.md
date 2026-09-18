@@ -38,10 +38,10 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | F6-E02 | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
 | F6-E03 | **CLOSED / REPO-SIDE PASS** | PR #151 merged; CI #1033 + Product Eval #272 PASS; named Release security acceptance step PASS. |
 | F6-E04 | **CLOSED / REPO-SIDE PASS** | PR #153 merged; CI #1041 + Product Eval #280 + MCP #473 PASS; pin-review step PASS. |
-| F6-E05 | **ACTIVE** | Fixed GitHub-hosted runner OS labels + continuous latest-label rejection. |
+| F6-E05 | **IMPLEMENTED / IN REVIEW** | Fixed runner OS labels + continuous latest-label rejection implemented; exact-head gates pending. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E05** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E05 REVIEW** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -133,4 +133,4 @@ F6-E04 closed through PR #153. Exact reviewed head `e1818eaac40a8166fd2b677aa815
 
 ## F6-E05 active scope
 
-F6-E05 addresses mutable GitHub-hosted runner aliases such as `ubuntu-latest` and `windows-latest`. Replace them with supported fixed OS labels (`ubuntu-24.04`, `windows-2025`) and add a deterministic repo-wide workflow gate so future `*-latest` runner regressions fail closed. This remains repository-side and does not modify provider/runtime/deployment state.
+F6-E05 implementation pins current GitHub-hosted Linux jobs to `ubuntu-24.04` and the Desktop Installer Windows job to `windows-2025`. `scripts/github-actions-runner-review.mjs` scans tracked workflow YAML and rejects literal GitHub-hosted `*-latest` labels. Normal CI has a named runner-review step, release-security acceptance protects and executes the policy, and focused tests cover it. Closure waits on exact-head CI/Product Eval plus any workflow-specific acceptance triggered by the changed workflow files. This remains repository-side and does not modify provider/runtime/deployment state.
