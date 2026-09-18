@@ -93,7 +93,7 @@ export function assertW18RepositoryState(state) {
   }
 }
 
-function loadEnvironment(root = ROOT) {
+export function loadEnvironment(root = ROOT) {
   const envPath = resolve(root, ".env");
   if (!existsSync(envPath)) {
     throw new Error("W18 membutuhkan .env lokal yang dipakai runtime ECORIONE.");
