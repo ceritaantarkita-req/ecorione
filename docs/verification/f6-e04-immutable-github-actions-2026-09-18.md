@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **IMPLEMENTED / IN REVIEW**
+Status: **CLOSED / REPO-SIDE PASS**
 
 ## Scope
 
@@ -53,3 +53,21 @@ Closure requires:
 - all repository workflow refs accepted by the scanner;
 - guarded merge;
 - canonical docs closure sync.
+
+
+## Closure evidence
+
+```text
+PR = #153
+exact reviewed head = e1818eaac40a8166fd2b677aa815670c1ca0d7b6
+CI #1041 = PASS
+Product Eval #280 = PASS
+MCP External HTTPS Acceptance #473 = PASS
+merged main = 4742a9caf43e67b01345d69f0ea05cbbb2f081f0
+```
+
+The exact-head CI showed both **GitHub Actions pin review** and **Release security acceptance** PASS. The scanner initially found 10 mutable refs in Desktop Installer and MCP External Acceptance; those were fixed before the passing exact head. No provider/model call, hosted spend, or deployment mutation was made.
+
+## Next scope
+
+F6-E05 targets remaining mutable GitHub-hosted runner labels. GitHub currently supports fixed labels including `ubuntu-24.04` and `windows-2025`. The repo-side scope is to replace `ubuntu-latest` / `windows-latest` with fixed OS labels and continuously reject `*-latest` runner labels in tracked workflow YAML.
