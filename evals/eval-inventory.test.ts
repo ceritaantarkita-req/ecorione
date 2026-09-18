@@ -15,9 +15,15 @@ function loadManifest(path: string): CaseManifest {
 }
 
 const governedManifests = [
-  { path: "evals/product-regressions.json", manifest: loadManifest("evals/product-regressions.json") },
+  {
+    path: "evals/product-regressions.json",
+    manifest: loadManifest("evals/product-regressions.json"),
+  },
   { path: "evals/agentic-cases.json", manifest: loadManifest("evals/agentic-cases.json") },
-  { path: "evals/ecx-selector-heldout.json", manifest: loadManifest("evals/ecx-selector-heldout.json") },
+  {
+    path: "evals/ecx-selector-heldout.json",
+    manifest: loadManifest("evals/ecx-selector-heldout.json"),
+  },
 ];
 
 describe("repository eval inventory budget", () => {
