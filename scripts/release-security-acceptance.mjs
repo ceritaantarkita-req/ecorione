@@ -43,6 +43,17 @@ if (!mcpTypes.includes("allowInsecureLoopback") || !mcpTypes.includes("credentia
 if (!mcpSdk.includes("ECORIONE_MCP_STDIO_ALLOWLIST"))
   findings.push("MCP stdio command allowlist missing");
 if (/image:\s+\S+:latest\b/.test(compose)) findings.push("latest Docker image is forbidden");
+if (
+  packageJson?.scripts?.["dependency:review"] !== "node scripts/dependency-security-review.mjs"
+) {
+  findings.push("dependency:review package script missing or changed");
+}
+if (
+  !ci.includes("name: Dependency policy review") ||
+  !ci.includes("run: pnpm run dependency:review")
+) {
+  findings.push("normal CI must execute dependency:review");
+}
 
 if (findings.length > 0) {
   console.error("release-security-acceptance: FAIL");
