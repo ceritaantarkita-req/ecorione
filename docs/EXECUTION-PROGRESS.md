@@ -4,8 +4,6 @@ Last updated: **2026-09-19**
 
 Status: **CURRENT SUMMARY**
 
-Detailed historical execution records live under `docs/verification/` and `docs/archive/`.
-
 ## Closed baseline
 
 | Scope | State |
@@ -14,16 +12,15 @@ Detailed historical execution records live under `docs/verification/` and `docs/
 | W-series through W20 | **CLOSED at documented boundaries** |
 | F6-E01 through F6-E08 | **CLOSED / REPO-SIDE PASS** |
 | Production/self-host repository baseline | **READY** |
-| Windows runtime | **VERIFIED** |
-| Windows installer | **VERIFIED** |
+| Windows runtime + installer | **VERIFIED** |
 
 ## Product Evolution
 
 | Batch | State |
 |---|---:|
 | PE architecture/roadmap docs | **DOCUMENTED** |
-| PE-00 Architecture lock + migration contract | **ACTIVE / IN REVIEW** |
-| PE-01 Project foundation | **BLOCKED BY PE-00** |
+| PE-00 Architecture lock + migration contract | **CLOSED / PASS** |
+| PE-01 Project foundation | **ACTIVE** |
 | PE-02 Project Sources | **BLOCKED BY PE-01** |
 | PE-03 Trigger control plane | **BLOCKED BY PE-02** |
 | PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
@@ -32,14 +29,15 @@ Detailed historical execution records live under `docs/verification/` and `docs/
 | PE-07 Brain + Context + ECX | **BLOCKED BY PE-06** |
 | PE-08 Product closure | **BLOCKED BY PE-07** |
 
-## Deferred
+## Latest closure
 
-- real compute-host/VPS + Cloudflare activation — deferred by operator;
-- AutoClick/RPA — deferred by design;
-- paid W18 rerun — closed/not authorized for freshness.
+PE-00:
+```text
+PR #167
+exact head b27ffb569f2035d9deb710a734ca2ff2c161ab23
+CI #1120 PASS
+Product Eval #359 PASS
+main b7ebf5492aca463e55f9f30bc259b9a6028c62d7
+```
 
-## Current gate
-
-**PE-00 is the active gate.** It closes after accepted ADR/contracts plus exact-head CI and Product Eval.
-
-See `product-evolution-roadmap.md` for the batch contract and `product-evolution-agent-guide.md` for execution procedure.
+Current gate: **PE-01 acceptance contract**.

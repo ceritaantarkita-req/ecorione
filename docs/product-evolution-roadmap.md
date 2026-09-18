@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **ACTIVE — PE-00**
+Status: **ACTIVE — PE-01**
 
 This is the explicit roadmap that follows the closed Batch 1–12 / W / F6 baseline. It uses the prefix **PE (Product Evolution)** so it cannot be confused with old Batch numbers.
 
@@ -13,8 +13,8 @@ Agent execution protocol: [product-evolution-agent-guide.md](product-evolution-a
 
 | Batch | Goal | Starts after |
 |---|---|---|
-| PE-00 | Lock architecture contracts + migrations | operator activated 2026-09-19 |
-| PE-01 | Project foundation + project-aware Chat/Ledger/Context | PE-00 closed |
+| PE-00 | Lock architecture contracts + migrations | **CLOSED / PASS** |
+| PE-01 | Project foundation + project-aware Chat/Ledger/Context | **ACTIVE** |
 | PE-02 | Project Sources + owner bindings | PE-01 closed |
 | PE-03 | Trigger control plane + manual/time trigger | PE-02 closed |
 | PE-04 | Work UI + Schedule + unified Runs | PE-03 closed |
@@ -344,8 +344,8 @@ Project boundary
 As of **2026-09-19**:
 
 ```text
-PE-00  ACTIVE / IN REVIEW
-PE-01  BLOCKED BY PE-00
+PE-00  CLOSED / PASS
+PE-01  ACTIVE
 PE-02  BLOCKED BY PE-01
 PE-03  BLOCKED BY PE-02
 PE-04  BLOCKED BY PE-03

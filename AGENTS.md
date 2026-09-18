@@ -20,12 +20,13 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - original Batch 1–12 / W / F6 baseline: **CLOSED**;
 - Windows runtime + installer: **VERIFIED**;
 - Product Evolution architecture + PE-00..PE-08 roadmap: **DOCUMENTED**;
-- PE-00: **ACTIVE / ARCHITECTURE LOCK**;
-- PE-01..PE-08: **BLOCKED BY PRIOR PE BATCH**;
+- PE-00: **CLOSED / PASS**;
+- PE-01: **ACTIVE / PROJECT FOUNDATION**;
+- PE-02..PE-08: **BLOCKED BY PRIOR PE BATCH**;
 - production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
-Do not create Batch 13. PE-00 is active, but it is contracts/docs only; do not start PE-01 feature code until PE-00 closes.
+Do not create Batch 13. PE-01 is active; do not pull PE-02+ scope forward.
 
 ## Architecture invariants
 
@@ -63,7 +64,7 @@ Do not create Batch 13. PE-00 is active, but it is contracts/docs only; do not s
 
 ## Current active scope
 
-PE-00 is active. Only architecture/contract/migration planning changes are allowed in this batch. PE-01 feature code remains blocked until PE-00 closes.
+PE-01 is active. Implement Project foundation only, following ADR-35, the migration matrix, the PE-01 acceptance contract, and the agent guide.
 
 ## Git / closure discipline
 

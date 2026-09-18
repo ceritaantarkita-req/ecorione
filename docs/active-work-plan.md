@@ -2,52 +2,57 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-00 ACTIVE / ARCHITECTURE LOCK**
+Status: **PE-01 ACTIVE / PROJECT FOUNDATION**
 
 ## Active item
 
-**PE-00 — Architecture lock and migration contract**
+**PE-01 — Project foundation**
 
-This batch is docs/contracts only. No Project feature code, Trigger runtime, migration execution, new service, or new database is allowed in PE-00.
+PE-00 is CLOSED / PASS through PR #167. PE-01 now implements the accepted Project boundary vertically.
 
-## PE-00 deliverables
-
-- ADR-35 Project/Workspace + linkage/memory;
-- ADR-36 Trigger/Temporal + version/overlap/misfire policy;
-- ADR-37 Run read projection;
-- ADR-38 Brain projection/privacy;
-- [product-evolution-migration-matrix.md](product-evolution-migration-matrix.md);
-- [product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md);
-- current-state/roadmap/agent docs synchronized.
-
-## Locked PE-01 direction
+## PE-01 build order
 
 ```text
-Hub      -> Project metadata
-Ledger   -> project-aware sessions, no event rewrite
-Context  -> global + current-Project memory only
-Flow     -> project-aware graph metadata
-Ai       -> explicit Project selection/switch
-All      -> virtual
-Personal -> prj_personal
+1. shared Project schemas/contracts
+2. Hub Project metadata + default Personal
+3. project-aware Historical Ledger
+4. project-aware Chat normalization
+5. Context migration + retrieval isolation
+6. Flow graph project linkage
+7. Ai Projects + explicit Project Chat context
+8. migration/isolation/runtime tests
+9. exact-head CI + Product Eval + relevant product/runtime acceptance
+10. closure docs
 ```
 
-## External/runtime decision verified
+Required contracts:
 
-Temporal Schedule API semantics support Schedule creation, explicit catch-up/overlap policies, and IANA timezone. PE-03 will still compile/runtime-test against the pinned SDK `1.23.0`.
+- [adr/0035-project-context-boundary.md](adr/0035-project-context-boundary.md)
+- [product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)
+- [product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)
+- [product-evolution-agent-guide.md](product-evolution-agent-guide.md)
 
-## Closure gate
+## Non-negotiable boundaries
 
-PE-00 closes only after exact-head:
+- Workspace remains the authority/security boundary.
+- `prj_personal` is the real default Project; `All` is virtual.
+- Project A must never retrieve Project B memory.
+- Ledger events remain append-only and are not rewritten.
+- Project stores/links metadata; no Project service or duplicate owner data.
+- PE-02 Sources work is not pulled into PE-01.
+- Trigger/Schedule remains PE-03.
+- Run remains PE-04.
+- Brain remains PE-06.
+- VPS/Cloudflare, AutoClick, and paid W18 rerun remain out of scope.
 
-- normal CI PASS;
-- Product Eval PASS;
-- canonical docs synchronized.
+## PE-00 closure evidence
 
-After closure, PE-01 may be activated. Do not start PE-01 in this branch.
+```text
+PR #167
+head b27ffb569f2035d9deb710a734ca2ff2c161ab23
+CI #1120 PASS
+Product Eval #359 PASS
+merge b7ebf5492aca463e55f9f30bc259b9a6028c62d7
+```
 
-## Existing deferred decisions
-
-- VPS/Cloudflare activation — deferred;
-- AutoClick — deferred;
-- paid W18 rerun — not authorized.
+PE-01 closes only when the full acceptance contract is green on the reviewed head.
