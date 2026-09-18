@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { reviewTrackedWorkflows } from "./github-actions-pin-review.mjs";
 import { reviewTrackedRunnerLabels } from "./github-actions-runner-review.mjs";
 import { reviewNodeToolchain } from "./node-toolchain-review.mjs";
+import { reviewInstallerToolchain } from "./installer-toolchain-review.mjs";
 
 const required = [
   "docs/security-review.md",
@@ -19,6 +20,9 @@ const required = [
   "scripts/github-actions-runner-review.mjs",
   "scripts/node-toolchain-review.mjs",
   ".node-version",
+  "scripts/installer-toolchain-review.mjs",
+  ".inno-setup-version",
+  ".github/workflows/desktop-installer.yml",
   ".github/workflows/ci.yml",
   "package.json",
   "apps/ai/app/settings/page.tsx",
@@ -72,6 +76,12 @@ if (
   findings.push("toolchain:node-review package script missing or changed");
 }
 if (
+  packageJson?.scripts?.["toolchain:installer-review"] !==
+  "node scripts/installer-toolchain-review.mjs"
+) {
+  findings.push("toolchain:installer-review package script missing or changed");
+}
+if (
   !ci.includes("name: Dependency policy review") ||
   !ci.includes("run: pnpm run dependency:review")
 ) {
@@ -94,6 +104,12 @@ if (
   !ci.includes("run: pnpm run toolchain:node-review")
 ) {
   findings.push("normal CI must execute toolchain:node-review");
+}
+if (
+  !ci.includes("name: Installer toolchain review") ||
+  !ci.includes("run: pnpm run toolchain:installer-review")
+) {
+  findings.push("normal CI must execute toolchain:installer-review");
 }
 if (
   !ci.includes("name: Release security acceptance") ||
@@ -120,6 +136,17 @@ try {
 } catch (error) {
   findings.push(
     `Node toolchain review failed: ${error instanceof Error ? error.message : String(error)}`,
+  );
+}
+
+try {
+  const installerToolchainReview = reviewInstallerToolchain();
+  for (const finding of installerToolchainReview.findings) {
+    findings.push(`Installer toolchain drift: ${finding}`);
+  }
+} catch (error) {
+  findings.push(
+    `Installer toolchain review failed: ${error instanceof Error ? error.message : String(error)}`,
   );
 }
 
