@@ -6,6 +6,8 @@ Fase 6+ repository reproducibility gates now include immutable remote-action pin
 
 Node build-toolchain identity is centralized in `.node-version` and continuously checked against tracked `actions/setup-node` consumers plus the Dockerfile. Normal CI runs `pnpm run toolchain:node-review`; release-security acceptance protects and re-executes the same policy.
 
+Windows installer compiler identity is centralized in `.inno-setup-version`. Desktop Installer passes that exact version to Chocolatey, while `pnpm run toolchain:installer-review` and release-security acceptance reject unversioned install or compiler-major path drift.
+
 Status: **Batch 1–12 release baseline CLOSED / READY within documented self-host boundary**
 
 Current handoff: `docs/current-state-and-next-steps.md`.
