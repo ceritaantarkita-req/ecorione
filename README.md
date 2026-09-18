@@ -4,7 +4,7 @@
 
 ECORIONE menjaga kesinambungan lintas provider/model sambil mempertahankan local-first boundary, approval, audit trail, durable execution, MCP, dan spend control yang eksplisit.
 
-> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** · W20 **CLOSED** · F6-E01 held-out selector eval dataset **IMPLEMENTED / IN REVIEW** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
+> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** · W20 **CLOSED** · F6-E01 held-out selector eval dataset **CLOSED / REPO-SIDE PASS** · F6-E02 dependency-policy CI gate **ACTIVE** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
 
 Untuk manusia/agent baru: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`docs/active-work-plan.md`](docs/active-work-plan.md), [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md), dan [`AGENTS.md`](AGENTS.md). Audit bertanggal lama adalah historical snapshots, bukan current-state source.
 
@@ -198,9 +198,9 @@ Production activation remains deferred by operator. Tooling/runbooks stay availa
 ## Next execution order
 
 ```text
-1. F6-E01 implementation complete: 10 held-out cases + 26/50 global eval budget
-2. exact-head CI + Product Eval
-3. guarded merge + F6-E01 repo-side closure
+1. F6-E01 is CLOSED / REPO-SIDE PASS
+2. F6-E02: wire existing dependency:review into normal CI
+3. protect dependency-policy gate presence through release acceptance
 4. keep W18/W20 closed; do not rerun paid W18
 5. production activation remains separately deferred by operator
 ```

@@ -21,7 +21,8 @@ Per **2026-09-18**:
 - compute-host/VPS + Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**;
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
-- F6-E01 held-out selector eval dataset: **IMPLEMENTED / IN REVIEW** from clean local/remote baseline `943e46bf7cfd53063e8d8e4970d0c9aa7713dce9`; 10 held-out cases, 26/50 governed eval inventory;
+- F6-E01 held-out selector eval dataset: **CLOSED / REPO-SIDE PASS**; 10 held-out cases, auto-discovered 26/50 governed eval inventory;
+- F6-E02 continuous dependency-policy CI gate: **ACTIVE NEW EXPLICIT SCOPE**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -121,14 +122,15 @@ Historical Comparative ECX oracle-control evidence also remains historical; do n
 ## Immediate next work
 
 ```text
-F6-E01:
-- implementation complete on feature branch
-- 10 bug/task-derived held-out semantic-v1 cases
-- oracle/relevance remains evaluation-only
-- governed eval inventory = 26 / 50
-- Product Eval wiring complete
-- require exact-head CI + Product Eval before merge
-- no provider calls and no W18 rerun
+F6-E01 = CLOSED / REPO-SIDE PASS
+
+F6-E02:
+- `pnpm dependency:review` already exists
+- normal CI currently does not execute it
+- add an explicit dependency-policy review step to CI
+- make release-security acceptance assert the gate remains wired
+- deterministic policy only; do not claim live registry CVE freshness
+- require exact-head CI before merge
 ```
 
 The wrapper remains the required path for any future explicitly authorized hosted validation because it computes the UTC-day ceiling, injects ephemeral runtime overrides, and restores hosted mode off in `finally`.
