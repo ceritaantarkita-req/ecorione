@@ -19,13 +19,12 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - Batch 1–12: **CLOSED**.
 - Windows runtime + installer: **VERIFIED**.
 - W16/W17/W18/W20: **CLOSED at documented boundaries**.
-- F6-E01 through F6-E07: **CLOSED / REPO-SIDE PASS**.
-- **F6-E08 container image digest pinning: ACTIVE**.
+- F6-E01 through F6-E08: **CLOSED / REPO-SIDE PASS**.
 - production VPS/Cloudflare: **DEFERRED BY OPERATOR**.
 - AutoClick: **DEFERRED BY DESIGN**.
 - Projects / Work / Schedule / Brain: discussed future product evolution, **not active implementation scope yet**.
 
-Do not create an implicit Batch 13 or silently mix future product work into F6-E08.
+Do not create an implicit Batch 13 or silently open a new product roadmap. Future product work starts only from a new explicit scope.
 
 ## Architecture invariants
 
@@ -47,15 +46,14 @@ Do not create an implicit Batch 13 or silently mix future product work into F6-E
 
 ## Current active scope
 
-F6-E08 may change container/base-image identities and the deterministic review/gates around them.
+There is **no active item from the previous Batch/W/F6 plan**. The existing baseline is closed at the documented repository/runtime boundaries.
 
-F6-E08 must **not** change:
+Until a new scope is explicitly opened:
 
-- provider/model routing;
-- W18 benchmark protocol;
-- production deployment state;
-- application architecture unrelated to image reproducibility;
-- accepted owner boundaries.
+- do not start Projects / Work / Schedule / Brain implementation;
+- do not reopen W18 or other paid evidence for freshness;
+- do not mutate production deployment state;
+- preserve the accepted owner boundaries and release gates.
 
 ## Git / closure discipline
 

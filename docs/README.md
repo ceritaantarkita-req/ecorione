@@ -83,8 +83,8 @@ Other dated evidence documents in `docs/` support specific claims and may be ref
 
 ## Active vs future scope
 
-Current active scope: **F6-E08 container image digest pinning**.
+Current active scope from the previous implementation/hardening plan: **none**. F6-E08 is CLOSED / REPO-SIDE PASS.
 
 Production VPS/Cloudflare activation is **deferred by operator**. AutoClick is **deferred by design**.
 
-Projects / Work / Schedule / Brain are a discussed next product evolution. They are intentionally **not yet an active implementation scope**; open them only after the existing baseline is closed/frozen under a new explicit roadmap.
+Projects / Work / Schedule / Brain remain a discussed future product evolution. They are intentionally **not yet an active implementation scope**; a new scope/roadmap must be explicitly agreed before implementation.

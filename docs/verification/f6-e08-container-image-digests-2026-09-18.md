@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **IMPLEMENTED / IN REVIEW**
+Status: **CLOSED / REPO-SIDE PASS**
 
 ## Scope
 
@@ -37,6 +37,20 @@ Repository-built ECORIONE images are intentionally exempt from external-registry
 
 The selected digests were checked against the corresponding registry metadata before being committed. This is repository identity pinning, not a vulnerability or freshness claim.
 
-## Closure gate
+## Closure evidence
 
-F6-E08 closes only after exact-head CI, Product Eval, relevant acceptance, guarded merge, and canonical documentation sync. No hosted W18 calls or production infrastructure mutation are authorized by this scope.
+```text
+PR = #164
+exact reviewed head = 6c46944108cdc275aebc682bd132ec9dc69e14e4
+CI #1114 = PASS
+Product Eval #353 = PASS
+MCP External HTTPS Acceptance #528 = PASS
+Desktop Installer #70 = PASS
+merged main = cacffa6c59d6871ae1ab4e11ae17cd48847864c1
+```
+
+CI #1114 explicitly passed the new **Container image digest review** and **Release security acceptance** steps, alongside format/lint/typecheck/test, Phase 4 real-process acceptance, production operations acceptance, secret scans, dependency policy, Actions/runner pinning, Node/Inno toolchain reviews, and production build.
+
+Desktop Installer #70 passed both the Linux bundle job and real Windows installer job, including Setup compilation and installer SHA-256 generation.
+
+No hosted W18 call, provider/model mutation, VPS/Cloudflare mutation, or future Projects/Schedule/Brain implementation was part of this closure.

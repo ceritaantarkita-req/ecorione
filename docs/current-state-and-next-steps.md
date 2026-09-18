@@ -8,7 +8,7 @@ Status: **CURRENT / canonical handoff**
 
 The defined Batch 1–12 platform roadmap is closed. The repository has a real local/self-host baseline with Ai, Hub, Connect, Context, Sync, Artifact, Sandbox, Space, Flow/Temporal, RnD, operations tooling, security gates, Windows runtime support, and a Windows installer.
 
-The bounded validation work through W20 is closed at its documented claim boundaries. F6-E01 through F6-E07 are also closed repository-side. **F6-E08 is the only active repository-hardening scope.**
+The bounded validation work through W20 is closed at its documented claim boundaries. **F6-E01 through F6-E08 are CLOSED / REPO-SIDE PASS. There is no active item in the previous implementation/hardening plan.**
 
 Repository readiness does **not** mean a real VPS/Cloudflare target is currently activated. Production host activation remains deferred by operator. AutoClick remains deferred by design.
 
@@ -26,7 +26,7 @@ Repository readiness does **not** mean a real VPS/Cloudflare target is currently
 | W18 hosted economics | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** |
 | W20 final current-state sync | **CLOSED** |
 | F6-E01 … F6-E07 | **CLOSED / REPO-SIDE PASS** |
-| F6-E08 container image digest pinning | **IMPLEMENTED / IN REVIEW** |
+| F6-E08 container image digest pinning | **CLOSED / REPO-SIDE PASS** |
 | Compute-host/VPS + Cloudflare activation | **DEFERRED BY OPERATOR** |
 | AutoClick | **DEFERRED BY DESIGN** |
 
@@ -38,38 +38,33 @@ Current user-facing navigation is Ai, Space, Flow, Operations, and Settings. The
 
 The currently discussed Projects / Work / Schedule / Brain product layer is **not implemented yet** and is **not part of F6-E08**.
 
-## Active scope — F6-E08
+## F6-E08 closure
 
-Implementation is now present on the F6-E08 branch: external Node/Postgres/Temporal/Caddy references are readable-tag + immutable-digest pinned across Dockerfile, production Compose, local Temporal Compose, and desktop Compose. A deterministic review scans governed container definitions and is wired into normal CI + release-security acceptance.
+F6-E08 is **CLOSED / REPO-SIDE PASS**.
 
-Scope:
+Exact reviewed head `6c46944108cdc275aebc682bd132ec9dc69e14e4` passed:
 
-1. pin governed build/runtime image references with `@sha256:` identities while retaining readable tags where supported;
-2. add deterministic drift/policy review;
-3. add focused regression coverage;
-4. wire the review into normal CI and release-security acceptance;
-5. run the relevant exact-head CI/Product Eval/acceptance gates;
-6. merge only the reviewed head and synchronize canonical docs.
+- CI #1114;
+- Product Eval #353;
+- MCP External HTTPS Acceptance #528;
+- Desktop Installer #70, including Linux bundle and real Windows Setup compilation plus installer SHA-256 generation.
 
-Out of scope:
+PR #164 merged to `main` at `cacffa6c59d6871ae1ab4e11ae17cd48847864c1`.
 
-- provider/model changes;
-- hosted benchmark reruns or new paid W18 calls;
-- VPS/Cloudflare mutation;
-- AutoClick;
-- Projects/Schedule/Brain implementation.
+The implemented policy digest-pins governed external Node/Postgres/Temporal/Caddy references and continuously rejects mutable/tag-only drift through normal CI and release-security acceptance.
 
-## Finish line for the existing baseline
+## Existing baseline finish state
 
-After F6-E08:
+The previous implementation/hardening plan is now closed:
 
-1. final repository gates green;
-2. canonical docs synchronized;
-3. optional final Windows/local smoke only if the changed surface justifies it;
-4. freeze/tag the clean baseline;
-5. then open the next product roadmap as a new explicit scope.
+1. Batch 1–12 closed;
+2. W-series bounded validation closed through W20;
+3. F6-E01 through F6-E08 closed;
+4. canonical docs synchronized;
+5. production VPS/Cloudflare remains intentionally deferred;
+6. AutoClick remains intentionally deferred.
 
-The next product roadmap should not be mixed into F6-E08.
+No next product roadmap is active yet. Future concepts should be discussed and opened under a new explicit scope rather than extending F6 silently.
 
 ## Closed-evidence boundary
 

@@ -37,7 +37,7 @@ Detailed historical execution records live under `docs/verification/` and `docs/
 | F6-E05 | **CLOSED / REPO-SIDE PASS** |
 | F6-E06 | **CLOSED / REPO-SIDE PASS** |
 | F6-E07 | **CLOSED / REPO-SIDE PASS** |
-| F6-E08 | **IMPLEMENTED / IN REVIEW** |
+| F6-E08 | **CLOSED / REPO-SIDE PASS** |
 
 ## Deferred
 
@@ -47,6 +47,8 @@ Detailed historical execution records live under `docs/verification/` and `docs/
 
 ## Current gate
 
-F6-E08 implementation is present: governed external images are tag+digest pinned and the deterministic review is wired into CI/release-security. Closure awaits exact-head acceptance, guarded merge, and final docs sync.
+**No active gate from the previous implementation/hardening plan.**
+
+F6-E08 closed through PR #164 after CI #1114, Product Eval #353, MCP #528, and Desktop Installer #70 passed on exact head `6c46944108cdc275aebc682bd132ec9dc69e14e4`. Merge main: `cacffa6c59d6871ae1ab4e11ae17cd48847864c1`.
 
 For exact historical run IDs, costs, failure chronology, and closure evidence, use `docs/verification/` rather than expanding this summary again.
