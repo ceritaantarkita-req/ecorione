@@ -23,7 +23,8 @@ Per **2026-09-18**:
 - Fase 6+: **OPEN-ENDED / evidence-driven**;
 - F6-E01 held-out selector eval dataset: **CLOSED / REPO-SIDE PASS**; 10 held-out cases, auto-discovered 26/50 governed eval inventory;
 - F6-E02 continuous dependency-policy CI gate: **CLOSED / REPO-SIDE PASS**;
-- F6-E03 continuous release-security acceptance CI gate: **IMPLEMENTED / IN REVIEW**;
+- F6-E03 continuous release-security acceptance CI gate: **CLOSED / REPO-SIDE PASS**; PR #151, CI #1033, Product Eval #272;
+- F6-E04 immutable GitHub Actions pinning: **ACTIVE**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -127,12 +128,18 @@ F6-E01 = CLOSED / REPO-SIDE PASS
 
 F6-E02 = CLOSED / REPO-SIDE PASS
 
-F6-E03:
-- normal CI now executes `node scripts/release-security-acceptance.mjs`
-- release acceptance now asserts its own named CI step/command remains wired
-- deterministic repository governance only
-- no deployment/provider mutation
-- require exact-head CI with the new step PASS before merge
+F6-E03 = CLOSED / REPO-SIDE PASS
+- PR #151 merged at `b9e42445310921ef3c23cda2220631df49403e41`
+- exact head `fdd532e0b6f2fe550708b8389ecc1f47afe946f7`
+- CI #1033 PASS with named Release security acceptance step PASS
+- Product Eval #272 PASS
+
+F6-E04 = ACTIVE
+- replace mutable remote GitHub Action tags with immutable full commit SHAs
+- add a deterministic scanner across tracked workflow YAML files
+- wire the scanner into normal CI and release-security acceptance
+- add focused tests
+- no provider/deployment mutation
 ```
 
 The wrapper remains the required path for any future explicitly authorized hosted validation because it computes the UTC-day ceiling, injects ephemeral runtime overrides, and restores hosted mode off in `finally`.

@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **IMPLEMENTED / IN REVIEW**
+Status: **CLOSED / REPO-SIDE PASS**
 
 ## Scope
 
@@ -52,3 +52,20 @@ F6-E03 makes:
 ## Closure gate
 
 Closure requires exact-head CI PASS with the new **Release security acceptance** step itself green, Product Eval PASS if triggered, guarded merge, then canonical docs closure sync.
+
+
+## Closure evidence
+
+```text
+PR = #151
+exact reviewed head = fdd532e0b6f2fe550708b8389ecc1f47afe946f7
+CI #1033 = PASS
+Product Eval #272 = PASS
+merged main = b9e42445310921ef3c23cda2220631df49403e41
+```
+
+The exact-head CI verify job showed the named **Release security acceptance** step PASS, alongside Dependency policy review, Test, Phase 4 real-process acceptance, Production operations acceptance, Secret scan, and Production build. This closure made no provider call, no hosted spend, and no infrastructure mutation.
+
+## Next evidence-driven scope
+
+F6-E04 targets a separate repository supply-chain gap: GitHub Actions workflows still reference remote actions through mutable major-version tags such as `@v5` and `@v4`. F6-E04 will require immutable full commit-SHA references and a continuous gate that rejects mutable remote action refs.

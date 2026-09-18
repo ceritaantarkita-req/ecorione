@@ -36,10 +36,11 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | W20 | **CLOSED** | Final canonical current-state synchronization completed. |
 | F6-E01 | **CLOSED / REPO-SIDE PASS** | PR #146/#147 merged; 10 held-out cases; auto-discovered 26/50 eval inventory. |
 | F6-E02 | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
-| F6-E03 | **IMPLEMENTED / IN REVIEW** | Normal CI runs release-security acceptance; self-wiring assertion added; exact-head gates pending. |
+| F6-E03 | **CLOSED / REPO-SIDE PASS** | PR #151 merged; CI #1033 + Product Eval #272 PASS; named Release security acceptance step PASS. |
+| F6-E04 | **ACTIVE** | Immutable full-SHA remote GitHub Action refs + continuous scanner/gate. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E03** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E04** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -121,6 +122,10 @@ Closure waits on exact-head CI/Product Eval and guarded merge. This scope does n
 
 F6-E02 closed through PR #149. Exact reviewed head `1cd4795b1a65baa1a2320713a3c8ffe520cfc98f` passed CI #1029 and Product Eval #268; the new Dependency policy review step was observed PASS before merge. Merged main: `20aedfe94ee9f3db321dd3a66625bedd56a334a1`.
 
-## F6-E03 active scope
+## F6-E03 closure
 
-The F6-E03 branch now wires `scripts/release-security-acceptance.mjs` into the normal CI verify job and makes the acceptance assert that its own named CI step/command remains present. Closure waits on exact-head CI/Product Eval and guarded merge. This is repository-side only and does not modify production deployment or provider runtime.
+F6-E03 closed through PR #151. Exact reviewed head `fdd532e0b6f2fe550708b8389ecc1f47afe946f7` passed CI #1033 and Product Eval #272; the named **Release security acceptance** CI step itself was observed PASS. Merged main: `b9e42445310921ef3c23cda2220631df49403e41`.
+
+## F6-E04 active scope
+
+F6-E04 closes a repository supply-chain gap: remote GitHub Actions are still referenced by mutable major tags. The scope is to pin remote action invocations to immutable full commit SHAs, continuously scan all tracked workflow YAML for mutable refs, test that scanner deterministically, and make release-security acceptance protect the CI wiring. This scope is repository-only and does not change provider/runtime/deployment state.
