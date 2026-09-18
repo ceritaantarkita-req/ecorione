@@ -205,7 +205,7 @@ Production activation remains deferred by operator. Tooling/runbooks stay availa
 5. F6-E05 is CLOSED / REPO-SIDE PASS (PR #155, CI #1045, Product Eval #284, MCP #475)
 6. F6-E06 is CLOSED / REPO-SIDE PASS (PR #157, CI #1055, Product Eval #294, MCP #483)
 7. F6-E07 is CLOSED / REPO-SIDE PASS (PR #160, CI #1072 rerun, Product Eval #311, MCP #498, Desktop Installer #41)
-8. F6-E08 implementation complete: Node/Postgres/Caddy/Temporal tag+digest pins + permanent digest drift gate + production-ops/release-security wiring; next = exact-head CI/Product Eval -> guarded merge -> closure
+8. F6-E08 implementation complete: authoritative `deploy/container-image-lock.json` + Node/Postgres/Caddy/Temporal tag+digest pins + exact lock drift gate + production-ops/release-security wiring; next = exact-head CI/Product Eval -> guarded merge -> closure
 ```
 
 ## Lisensi
