@@ -73,6 +73,8 @@ permanent ceiling = 50
 
 The inventory test also requires globally unique case IDs across those manifests.
 
+After implementation merge review, the inventory guard was tightened before F6-E01 closure: it now auto-discovers every `evals/*.json` file that structurally contains `suite` + `cases[]`, rather than trusting a hardcoded manifest list. This prevents a future case manifest from bypassing the repository-wide 50-case ceiling merely because registration was forgotten.
+
 ## Provider/spend boundary
 
 F6-E01 is deterministic repository-side evaluation. It makes:
