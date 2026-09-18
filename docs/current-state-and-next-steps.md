@@ -116,7 +116,9 @@ F6-E02 is **CLOSED / REPO-SIDE PASS**. PR #149 exact head `1cd4795b1a65baa1a2320
 
 F6-E03 is **CLOSED / REPO-SIDE PASS**. PR #151 exact head `fdd532e0b6f2fe550708b8389ecc1f47afe946f7` passed CI #1033 and Product Eval #272; the named Release security acceptance CI step itself was observed PASS. The merge landed at `b9e42445310921ef3c23cda2220631df49403e41`.
 
-F6-E04 is **IMPLEMENTED / IN REVIEW**. The branch now pins known CI/Product Eval action refs to immutable full commit SHAs, adds a deterministic scanner across all tracked workflow YAML, wires a named GitHub Actions pin review into normal CI, makes release-security acceptance protect and execute the same policy, and adds focused tests. Exact-head CI is now the discovery gate for any remaining mutable action refs before closure.
+F6-E04 is **CLOSED / REPO-SIDE PASS**. PR #153 exact head `e1818eaac40a8166fd2b677aa815670c1ca0d7b6` passed CI #1041, Product Eval #280, and MCP External #473; both the GitHub Actions pin review and Release security acceptance steps were observed PASS. Merged main: `4742a9caf43e67b01345d69f0ea05cbbb2f081f0`.
+
+F6-E05 is **ACTIVE**. The next concrete repository-side reproducibility gap is mutable GitHub-hosted runner aliases. The scope is fixed supported OS labels plus a repo-wide gate that rejects `*-latest` runner labels.
 
 This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
 
@@ -147,3 +149,5 @@ F6-E02 verification source: `docs/verification/f6-e02-dependency-policy-ci-gate-
 F6-E03 verification source: `docs/verification/f6-e03-release-security-acceptance-ci-gate-2026-09-18.md`.
 
 F6-E04 verification source: `docs/verification/f6-e04-immutable-github-actions-2026-09-18.md`.
+
+F6-E05 active scope: fixed GitHub-hosted runner labels + continuous latest-label rejection.

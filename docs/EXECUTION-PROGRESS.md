@@ -37,10 +37,11 @@ Start from `docs/current-state-and-next-steps.md`, then this file. Historical Ba
 | F6-E01 | **CLOSED / REPO-SIDE PASS** | PR #146/#147 merged; 10 held-out cases; auto-discovered 26/50 eval inventory. |
 | F6-E02 | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
 | F6-E03 | **CLOSED / REPO-SIDE PASS** | PR #151 merged; CI #1033 + Product Eval #272 PASS; named Release security acceptance step PASS. |
-| F6-E04 | **IMPLEMENTED / IN REVIEW** | Repo-wide immutable remote-action scanner, CI/release gate, tests, and known action pins implemented; exact-head gates pending. |
+| F6-E04 | **CLOSED / REPO-SIDE PASS** | PR #153 merged; CI #1041 + Product Eval #280 + MCP #473 PASS; pin-review step PASS. |
+| F6-E05 | **ACTIVE** | Fixed GitHub-hosted runner OS labels + continuous latest-label rejection. |
 | Compute-host/VPS + Cloudflare | **DEFERRED BY OPERATOR** | Not a W18 blocker. |
 | AutoClick | **DEFERRED BY DESIGN** | No implicit activation. |
-| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E04** | Evidence-driven; no implicit Batch 13. |
+| Fase 6+ | **OPEN-ENDED / ACTIVE THROUGH F6-E05** | Evidence-driven; no implicit Batch 13. |
 
 ## W16/W17 transition retained
 
@@ -126,6 +127,10 @@ F6-E02 closed through PR #149. Exact reviewed head `1cd4795b1a65baa1a2320713a3c8
 
 F6-E03 closed through PR #151. Exact reviewed head `fdd532e0b6f2fe550708b8389ecc1f47afe946f7` passed CI #1033 and Product Eval #272; the named **Release security acceptance** CI step itself was observed PASS. Merged main: `b9e42445310921ef3c23cda2220631df49403e41`.
 
-## F6-E04 active scope
+## F6-E04 closure
 
-F6-E04 implementation now pins known CI/Product Eval remote actions to immutable full commit SHAs and adds `scripts/github-actions-pin-review.mjs`, which discovers all tracked workflow YAML and rejects mutable remote `uses:` refs. Normal CI has a named GitHub Actions pin review step; release-security acceptance protects the package/CI wiring and executes the same review; focused tests cover the policy. Exact-head CI is the repository-wide discovery gate for any remaining workflow refs. This scope is repository-only and does not change provider/runtime/deployment state.
+F6-E04 closed through PR #153. Exact reviewed head `e1818eaac40a8166fd2b677aa815670c1ca0d7b6` passed CI #1041, Product Eval #280, and MCP External #473; the named GitHub Actions pin review and Release security acceptance steps both passed. Merged main: `4742a9caf43e67b01345d69f0ea05cbbb2f081f0`.
+
+## F6-E05 active scope
+
+F6-E05 addresses mutable GitHub-hosted runner aliases such as `ubuntu-latest` and `windows-latest`. Replace them with supported fixed OS labels (`ubuntu-24.04`, `windows-2025`) and add a deterministic repo-wide workflow gate so future `*-latest` runner regressions fail closed. This remains repository-side and does not modify provider/runtime/deployment state.
