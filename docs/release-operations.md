@@ -4,6 +4,8 @@ Last updated: **2026-09-18**
 
 Fase 6+ repository reproducibility gates now include immutable remote-action pin review and fixed GitHub-hosted runner-label review. Normal CI runs `pnpm run actions:pin-review` and `pnpm run actions:runner-review`; release-security acceptance protects and re-executes both policies.
 
+Node build-toolchain identity is centralized in `.node-version` and continuously checked against tracked `actions/setup-node` consumers plus the Dockerfile. Normal CI runs `pnpm run toolchain:node-review`; release-security acceptance protects and re-executes the same policy.
+
 Status: **Batch 1–12 release baseline CLOSED / READY within documented self-host boundary**
 
 Current handoff: `docs/current-state-and-next-steps.md`.
