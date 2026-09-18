@@ -27,7 +27,8 @@ Per **2026-09-18**:
 - F6-E04 immutable GitHub Actions pinning: **CLOSED / REPO-SIDE PASS**; PR #153, CI #1041, Product Eval #280, MCP #473;
 - F6-E05 fixed GitHub-hosted runner OS labels: **CLOSED / REPO-SIDE PASS**; PR #155, CI #1045, Product Eval #284, MCP #475;
 - F6-E06 immutable Node toolchain: **CLOSED / REPO-SIDE PASS**; PR #157, CI #1055, Product Eval #294, MCP #483;
-- F6-E07 pinned Inno Setup toolchain: **IMPLEMENTED / IN REVIEW**;
+- F6-E07 pinned Inno Setup toolchain: **CLOSED / REPO-SIDE PASS**; PR #160, CI #1072 rerun, Product Eval #311, MCP #498, Desktop Installer #41;
+- F6-E08 container image digest pinning: **ACTIVE**;
 - no implicit Batch 13.
 
 Agent without chat history **must start with `docs/current-state-and-next-steps.md`**, then `docs/active-work-plan.md`, this file, and `docs/verification/w18-formal-run-readiness-2026-09-18.md` when working on W18.
@@ -195,5 +196,24 @@ F6-E07 = IMPLEMENTED / IN REVIEW
 - normal CI has named Installer toolchain review step
 - release-security acceptance protects and executes the same policy
 - next = exact-head CI/Product Eval/Desktop Installer -> fix findings -> guarded merge -> closure
+- no provider/deployment mutation
+```
+
+
+## F6-E07/E08 handoff
+
+```text
+F6-E07 = CLOSED / REPO-SIDE PASS
+- PR #160 merged at `9362419a9e2766750237e30792a50494d39c9b17`
+- exact head `472819b3a7c875246ce76daee8212a7aed8fc8c9`
+- CI #1072 initial run hit unrelated Phase 4 Temporal timeout; same-head rerun PASS without code/gate weakening
+- Product Eval #311 PASS
+- MCP External #498 PASS
+- Desktop Installer #41 PASS including real Windows compiler/install/build
+
+F6-E08 = ACTIVE
+- current Docker/container refs are exact-tagged but not digest-pinned
+- scope = digest-pin build/runtime container identities and add deterministic drift review
+- preserve readable version tags alongside digests where supported
 - no provider/deployment mutation
 ```
