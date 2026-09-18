@@ -17,15 +17,15 @@ function count(value, needle) {
 assert(!compose.includes("docker.sock"), "host Docker socket tidak boleh dimount");
 assert(count(compose, "\n    ports:\n") === 1, "hanya reverse proxy yang boleh publish ports");
 assert(
-  compose.includes("image: temporalio/auto-setup:1.29.7"),
-  "Temporal harus exact-pinned ke tag pull/run-verified",
+  compose.includes("image: temporalio/auto-setup:1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f"),
+  "Temporal harus exact tag+digest pinned",
 );
 assert(
   !compose.includes("temporalio/auto-setup:1.31.2"),
   "Temporal tag 1.31.2 yang tidak tersedia tidak boleh kembali",
 );
-assert(compose.includes("image: postgres:17.6-alpine"), "PostgreSQL harus exact-pinned");
-assert(compose.includes("image: caddy:2.11.4-alpine"), "Caddy harus exact-pinned");
+assert(compose.includes("image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94"), "PostgreSQL harus exact tag+digest pinned");
+assert(compose.includes("image: caddy:2.11.4-alpine@sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e"), "Caddy harus exact tag+digest pinned");
 assert(
   compose.includes("network_mode: service:sync"),
   "MCP harus berbagi namespace dengan Sync",
@@ -49,7 +49,7 @@ assert(caddy.includes("basic_auth"), "operator routes harus dilindungi auth reve
 assert(caddy.includes("X-Content-Type-Options"), "security headers Caddy hilang");
 assert(caddy.includes("reverse_proxy sync:17011"), "public MCP harus lewat Sync");
 assert(!caddy.includes("connect:17023"), "Connect tidak boleh diekspos reverse proxy");
-assert(dockerfile.includes("node:22.20.0-bookworm-slim"), "Node image harus exact-pinned");
+assert(dockerfile.includes("node:22.20.0-bookworm-slim@sha256:b21fe589dfbe5cc39365d0544b9be3f1f33f55f3c86c87a76ff65a02f8f5848e"), "Node image harus exact tag+digest pinned");
 
 const env = {
   ...process.env,
