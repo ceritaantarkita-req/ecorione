@@ -81,6 +81,8 @@ export type ChatResponse = z.infer<typeof ChatResponseSchema>;
 
 export const ForgetFactRequestSchema = z.object({
   factId: MemoryFactIdSchema,
+  workspaceId: WorkspaceIdSchema.optional(),
+  projectId: ProjectIdSchema.optional(),
   reason: z.string().min(1).max(256).default("Diminta pengguna lewat panel memori."),
 });
 export type ForgetFactRequest = z.infer<typeof ForgetFactRequestSchema>;
