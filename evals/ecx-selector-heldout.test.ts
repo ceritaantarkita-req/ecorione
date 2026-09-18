@@ -90,9 +90,10 @@ describe("F6-E01 held-out ECX selector eval", () => {
 
       const sourcePath = resolve(repoRoot, item.origin.source);
       expect(existsSync(sourcePath), `${item.id}: source ${item.origin.source}`).toBe(true);
-      expect(readFileSync(sourcePath, "utf8"), `${item.id}: provenance ${item.origin.ref}`).toContain(
-        item.origin.ref,
-      );
+      expect(
+        readFileSync(sourcePath, "utf8"),
+        `${item.id}: provenance ${item.origin.ref}`,
+      ).toContain(item.origin.ref);
     }
   });
 
