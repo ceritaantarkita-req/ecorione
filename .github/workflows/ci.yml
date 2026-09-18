@@ -57,6 +57,9 @@ jobs:
       - name: Dependency policy review
         run: pnpm run dependency:review
 
+      - name: Release security acceptance
+        run: node scripts/release-security-acceptance.mjs
+
       - name: Production build
         run: pnpm run build
 
