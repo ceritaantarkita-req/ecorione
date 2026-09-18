@@ -211,15 +211,14 @@ If any gate/provider/cost/accounting condition fails, stop. Do not rerun under t
 
 ## Immediate execution order
 
-1. merge the formal operator wrapper and its repository-side tests/docs;
-2. synchronize operator laptop to the resulting `main`;
-3. run `node .\\scripts\\w18-formal-operator.mjs --preflight-only`;
-4. run `node .\\scripts\\w18-formal-operator.mjs --execute-authorized-w18` exactly once;
-5. if PASS, commit sanitized closure verification and close W18;
-6. continue W20 final current-state sync;
-7. if FAIL, preserve evidence and diagnose before any new authorization.
+1. synchronize operator laptop to merged `main` `05ddd248e90e26b9db2c785d533c55ec817db013` or newer;
+2. run `node .\\scripts\\w18-formal-operator.mjs --preflight-only`;
+3. run `node .\\scripts\\w18-formal-operator.mjs --execute-authorized-w18` exactly once;
+4. if PASS, commit sanitized closure verification and close W18;
+5. continue W20 final current-state sync;
+6. if FAIL, preserve evidence and diagnose before any new authorization.
 
-The wrapper is repository-side preparation only until merged and executed from synchronized `main`; its implementation made no hosted provider call.
+The wrapper is now merged through PR #138 at `05ddd248e90e26b9db2c785d533c55ec817db013`; exact reviewed head `c4b5b30f02716d66a8974903acb824f36ac1d12f` passed CI #1001, Product Eval #240, and MCP External HTTPS Acceptance #461. Repository implementation/verification made no hosted provider call. Formal W18 remains open until the merged-main runtime evidence passes.
 
 ## Persistent evidence rules
 
