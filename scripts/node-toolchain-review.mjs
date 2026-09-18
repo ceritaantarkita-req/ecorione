@@ -10,7 +10,9 @@ const NODE_VERSION_FILE = ".node-version";
 export function readPinnedNodeVersion(readFile = readFileSync) {
   const version = readFile(NODE_VERSION_FILE, "utf8").trim();
   if (!EXACT_SEMVER.test(version)) {
-    throw new Error(`${NODE_VERSION_FILE} harus exact semver x.y.z, ditemukan: ${version || "<empty>"}`);
+    throw new Error(
+      `${NODE_VERSION_FILE} harus exact semver x.y.z, ditemukan: ${version || "<empty>"}`,
+    );
   }
   return version;
 }
