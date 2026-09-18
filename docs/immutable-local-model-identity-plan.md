@@ -1,5 +1,8 @@
 # Immutable Local Model Identity — Prepared Plan
 
+> **HISTORICAL W13 PLAN:** retained because implementation/source comments cite this plan. W13 is already closed with documented limitations; this file is not a current work queue.
+
+
 Status: **PENDING — DO NOT ACTIVATE UNTIL UX/PRODUCT VALIDATION CLOSES**  
 Date: **2026-09-12**
 

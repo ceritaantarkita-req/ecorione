@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Tiga puluh dua keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Tiga puluh empat keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 

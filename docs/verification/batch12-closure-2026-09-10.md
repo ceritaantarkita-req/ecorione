@@ -78,7 +78,7 @@ The first post-implementation-merge CI attempt hit one 60-second timeout in the 
 
 ## Historical audit reconciliation
 
-`docs/final-audit-2026-09-09.md` remains a historical snapshot and is intentionally not rewritten. Its then-open release blockers were addressed by later workstreams and Batch 12:
+`docs/archive/snapshots/final-audit-2026-09-09.md` remains a historical snapshot and is intentionally not rewritten. Its then-open release blockers were addressed by later workstreams and Batch 12:
 
 - production credential vault: closed through the Connect Vault workstream;
 - durable cumulative hosted spend budget: closed through its dedicated workstream;

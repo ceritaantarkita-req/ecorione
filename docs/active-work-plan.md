@@ -2,113 +2,43 @@
 
 Last updated: **2026-09-18**
 
-Status: **ACTIVE / canonical execution log**
+Status: **ACTIVE / current work only**
 
-Current code + current runtime evidence + this document are the source of truth for active work. Historical dated audits and failed attempts remain preserved as evidence snapshots.
+This document intentionally excludes closed W-series chronology and old benchmark details. Those remain in `docs/verification/`.
 
-## Current repository checkpoint
+## Active item
 
-```text
-main at documentation-sync start: fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a
-W11 final Windows installer closure: PASS
-W17 formal local closure: PASS
-W18 one-call Anthropic-only diagnostic: PASS
-W18 formal dispatch/routing/cap guard: MERGED / REPO-SIDE PASS
-W18 formal operator wrapper: MERGED / REPO-SIDE PASS
-W18 formal 20-call run: PASS / closureEligible=true / US$0.091716 formal spend
-W18 duplicate execution: RECONCILED; combined spend US$0.183312 < US$0.25
-W18 single-attempt guard: MERGED / PASS (PR #142, CI #1012, Product Eval #251)
-W18 closure: CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT
-W20 final sync: CLOSED
-local Windows main sync: VERIFIED @ 943e46bf7cfd53063e8d8e4970d0c9aa7713dce9
-F6-E01 held-out selector eval dataset: CLOSED / REPO-SIDE PASS
-F6-E02 dependency policy CI gate: CLOSED / REPO-SIDE PASS
-F6-E03 release-security acceptance CI gate: CLOSED / REPO-SIDE PASS
-F6-E04 immutable GitHub Actions pinning: CLOSED / REPO-SIDE PASS
-F6-E05 fixed runner OS labels: CLOSED / REPO-SIDE PASS
-F6-E06 immutable Node toolchain: CLOSED / REPO-SIDE PASS
-F6-E07 pinned Inno Setup toolchain: CLOSED / REPO-SIDE PASS
-F6-E08 container image digest pinning: ACTIVE
-```
-
-The successful W18 diagnostic source was `a4382135d2d2729546e517b1bc6337542664f4ee`; PR #134 added its sanitized verification record. PR #135 then merged the remaining formal dispatch/routing/cap safety guard into `main` at `fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a`; exact reviewed head `1b6f5d631429eda53be734266a5f47e527390739` passed CI #994 and Product Eval #233.
-
-## Work queue
-
-| ID | Pekerjaan | Status | Boundary |
+| ID | Work | Status | Boundary |
 |---|---|---:|---|
-| W01–W02 | Reconcile analysis + test discovery | **DONE** | Repository scope. |
-| W03 | UX/Product Validation | **DONE — REAL-LAPTOP VERIFIED** | Rendered/runtime evidence closed at documented boundary. |
-| W04–W08 | Runtime/provider/settings foundations | **DONE / REPO SIDE** | Existing limitations remain documented. |
-| W09 | One-command startup | **DONE — WINDOWS RUNTIME VERIFIED** | Real Windows harness. |
-| W10 | `ecorione doctor` | **DONE — WINDOWS RUNTIME VERIFIED** | Optional local generation canary remains diagnostic-only. |
-| W11 | Installer/Launcher | **DONE — WINDOWS INSTALLER VERIFIED** | Clean Windows packaged lifecycle PASS. |
-| W12 | Attachment path | **DONE — REPO SIDE** | File/foto → Artifact → Context pointer → hydration. |
-| W13 | Immutable local model identity | **DONE WITH LIMITATIONS — RUNTIME VERIFIED** | Reverify when model/runtime changes. |
-| W14 | Product eval foundation | **DONE — REPO SIDE** | Deterministic product regressions. |
-| W15 | Agentic local-model eval | **DONE — VERIFIED LOCAL MODEL PASS^3** | Bounded eval harness only. |
-| W16 | Automatic semantic reference selector | **DONE — REPO SIDE** | `semantic-v1`, `maxRefs=3`. |
-| W17 | ECX no-oracle validation | **DONE — VERIFIED LOCAL MODEL PASS** | 5×5×4 = 100 measured calls, 5/5 gates. |
-| W18 | Hosted economic validation | **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** | Formal 20-call PASS; duplicate execution reconciled; one-shot guard merged. |
-| W19 | Release/security governance | **DONE — REPO SIDE** | CI history/naming/model-alias gates retained. |
-| W20 | Final current-state sync | **CLOSED** | Canonical handoff/tracker synchronized after W18 closure. |
-| F6-E01 | Bug/task-derived held-out selector eval dataset + eval-budget governance | **CLOSED / REPO-SIDE PASS** | PR #146 + #147 merged; 10 cases; auto-discovered 26/50 inventory. |
-| F6-E02 | Continuous dependency-policy CI gate | **CLOSED / REPO-SIDE PASS** | PR #149 merged; CI #1029 + Product Eval #268 PASS; dependency-policy step PASS. |
-| F6-E03 | Continuous release-security acceptance CI gate | **CLOSED / REPO-SIDE PASS** | PR #151; CI #1033 + Product Eval #272 PASS; named CI step observed green. |
-| F6-E04 | Immutable GitHub Actions pinning + CI policy gate | **CLOSED / REPO-SIDE PASS** | PR #153; CI #1041 + Product Eval #280 + MCP #473 PASS; repo-wide scanner green. |
-| F6-E05 | Fixed GitHub-hosted runner OS labels + gate | **CLOSED / REPO-SIDE PASS** | PR #155; CI #1045 + Product Eval #284 + MCP #475 PASS; runner-review and release-security steps green. |
-| F6-E06 | Immutable Node toolchain + drift gate | **CLOSED / REPO-SIDE PASS** | PR #157; CI #1055 + Product Eval #294 + MCP #483 PASS; Node toolchain + release-security steps green. |
-| F6-E07 | Pinned Inno Setup installer toolchain + drift gate | **CLOSED / REPO-SIDE PASS** | PR #160 merged; CI #1072 same-head rerun PASS; Product Eval #311 + MCP #498 + Desktop Installer #41 PASS. |
-| F6-E08 | Container image digest pinning + drift gate | **ACTIVE** | Tag-pinned Node/Postgres/Caddy/Temporal refs remain mutable without repository digest identity. |
+| F6-E08 | Immutable container/base image digest pinning + drift gate | **ACTIVE** | Repository/release reproducibility only; no deployment or provider mutation. |
 
-## W18 current facts
+F6-E01 through F6-E07 are **CLOSED / REPO-SIDE PASS**.
 
-## W18 formal runtime result
+## F6-E08 objective
 
-The synchronized formal execution on `main` `f249d9c0681462253bff21ca30354892ca4ce60f` completed the full **5 tasks × 2 repeats × 2 lanes = 20 measured hosted calls** and the harness returned `aggregate.pass=true` plus `closureEligible=true`.
+Current Docker/build/deployment image references are version-tagged but still mutable at the registry level. F6-E08 closes that reproducibility gap without changing runtime architecture.
 
-```text
-full-inline billed cost = US$0.059106
-ecx-selective-auto billed cost = US$0.032610
-actual formal run spend = US$0.091716
-saved vs full-inline = US$0.026496
-savedPct = 44.827936250126896
-medianTaskSavedPct = 44.4913020558777
-medianTaskInputTokenReductionPct = 50.629874025194965
-failedTasks = 0
-```
+### Implementation checklist
 
-Raw local evidence remains gitignored. The recorded evidence SHA-256 is `cadb920047a27eb4e3db38cb53e63192af3ea7857617d8f125c7056bd6c162da`.
+1. inventory every governed `FROM` and Compose image reference;
+2. bind each governed image to a reviewed digest while preserving a readable version tag;
+3. add a deterministic repository review script that rejects governed tag-only identities;
+4. add focused tests for valid pins, missing digests, malformed digests, and policy drift;
+5. wire the review into normal CI;
+6. wire it into release-security acceptance;
+7. run relevant exact-head CI/Product Eval/acceptance;
+8. guarded merge;
+9. synchronize current docs and mark F6-E08 closed.
 
-Cleanup passed: `hostedCallsEnabled=false`, future-process kill switch restored to `1`, engine stopped, and the formal run's durable committed delta exactly matched US$0.091716.
+### Invariants
 
-### Duplicate-execution incident closure
+- no change to provider/model selection;
+- no hosted spend;
+- no W18 rerun;
+- no VPS/Cloudflare mutation;
+- no second scheduler/runtime;
+- no weakening existing security/release gates to obtain PASS.
 
-The US$0.091596 delta is reconciled as an earlier complete W18-shaped 20-call batch. Combined with the later PASS run, duplicate-execution spend was US$0.183312, below the US$0.25 monetary ceiling. PR #142 closed the single-attempt governance gap with completed-PASS refusal plus an atomic gitignored authorization-consumption marker before hosted dispatch.
+## After F6-E08
 
-Canonical verification: `docs/verification/w18-formal-hosted-economics-pass-reconcile-2026-09-18.md`.
-
-## Claim boundary
-
-A W18 PASS proves only a bounded hosted-cost comparison on the five synthetic extraction fixtures under the pinned OpenRouter/Anthropic route. It is not a universal savings claim and does not prove future provider pricing or end-to-end network savings.
-
-W17's local automatic-selector evidence remains separate: W17 proved no-oracle local quality/selector behavior; W18 is specifically the hosted billed-cost closure.
-
-## Immediate next action
-
-```text
-W18 = CLOSED
-W20 = CLOSED
-F6-E01 = CLOSED / REPO-SIDE PASS
-F6-E02 = CLOSED / REPO-SIDE PASS
-F6-E03 = CLOSED / REPO-SIDE PASS
-F6-E04 = CLOSED / REPO-SIDE PASS
-F6-E05 = CLOSED / REPO-SIDE PASS
-F6-E06 = CLOSED / REPO-SIDE PASS
-F6-E07 = CLOSED / REPO-SIDE PASS
-F6-E08 = ACTIVE
-next = digest-pin governed container/base images + drift gate + tests -> exact-head CI/Product Eval/relevant acceptance -> guarded merge
-do not rerun the paid W18 benchmark
-```
-
-Do not reopen already-closed W03/W09/W10/W11/W16/W17 unless a new reproducible regression appears on newer product code.
+Close/freeze the existing baseline first. Then, if the operator chooses, create a **new roadmap** for the next product layer. Projects / Work / Schedule / Brain belong to that later roadmap and must not be silently folded into Fase 6 hardening.
