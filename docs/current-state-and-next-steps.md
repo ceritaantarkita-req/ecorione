@@ -39,7 +39,8 @@ The next explicit non-deployment scope is **F6-E01 — bug/task-derived held-out
 | W19 release/security governance | **DONE — REPO SIDE** | Full-history secret scan/naming/model-alias gates retained; branch-protection gap remains separate. |
 | W20 final current-state sync | **CLOSED** | Canonical state synchronized after W18 closure; future work is separate evidence-driven scope. |
 | F6-E01 held-out selector eval dataset | **CLOSED / REPO-SIDE PASS** | 10 bug/task-derived held-out cases; auto-discovered 26/50 eval inventory; CI/Product Eval passed and merged. |
-| F6-E02 dependency policy CI gate | **IMPLEMENTED / IN REVIEW** | Normal CI now executes `dependency:review`; release acceptance protects the package script + CI wiring; exact-head gates pending. |
+| F6-E02 dependency policy CI gate | **CLOSED / REPO-SIDE PASS** | PR #149 merged after CI #1029 + Product Eval #268 PASS; dependency-policy step itself PASS. |
+| F6-E03 release-security acceptance CI gate | **ACTIVE — NEW EXPLICIT SCOPE** | Release-security acceptance exists but normal CI does not execute it directly. |
 
 ## W18 provider and experiment profile
 
@@ -111,11 +112,11 @@ A formal W18 PASS supports only a bounded statement on the five synthetic extrac
 
 F6-E01 is **CLOSED / REPO-SIDE PASS**. PR #146 merged the held-out selector suite after CI #1023, Product Eval #262, and MCP External #467 PASS. PR #147 then hardened the 50-case budget with automatic case-manifest discovery after CI #1025 and Product Eval #264 PASS.
 
-F6-E02 is now **IMPLEMENTED / IN REVIEW**. Normal `.github/workflows/ci.yml` contains a named Dependency policy review step that runs `pnpm run dependency:review`. `scripts/release-security-acceptance.mjs` now fails if the governed package script changes/disappears or if normal CI loses that step.
+F6-E02 is **CLOSED / REPO-SIDE PASS**. PR #149 exact head `1cd4795b1a65baa1a2320713a3c8ffe520cfc98f` passed CI #1029 and Product Eval #268; the new Dependency policy review step itself passed and merged at `20aedfe94ee9f3db321dd3a66625bedd56a334a1`.
 
-Next gate: exact-head CI must pass with the new dependency-policy step itself green; Product Eval must also pass if triggered; then guarded merge + canonical closure sync.
+The next concrete non-deployment gap is **F6-E03 — continuous release-security acceptance**. `scripts/release-security-acceptance.mjs` already protects multiple release/security invariants, including the F6-E02 dependency gate wiring, but normal CI does not execute that acceptance directly. F6-E03 will add the deterministic acceptance as a normal CI step.
 
-Claim boundary: this checks deterministic dependency/source policy, Docker image tag policy, and lockfile presence. It is **not** a live registry vulnerability/CVE freshness claim. Do **not** rerun the paid W18 benchmark.
+This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
 
 Canonical W18 verification sources:
 
