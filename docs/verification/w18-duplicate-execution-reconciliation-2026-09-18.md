@@ -2,7 +2,7 @@
 
 Date: **2026-09-18**
 
-Status: **RECONCILED / FIX IN REVIEW**
+Status: **RECONCILED / FIX MERGED / INCIDENT CLOSED**
 
 ## What the durable ledger proves
 
@@ -101,4 +101,16 @@ The later formal runtime evidence remains technically valid:
 - provider-billed cost remained below the documented dollar ceiling;
 - cleanup returned hosted mode off and stopped the engine.
 
-The duplicate-execution incident must remain visible as governance evidence. W18 should be marked CLOSED only after this single-attempt guard passes repository gates and is merged.
+The duplicate-execution incident remains visible as governance evidence.
+
+The single-attempt guard passed exact-head repository gates and merged:
+
+```text
+PR = #142
+exact reviewed head = 1f0d87963857d4bb261579204e76bae970c496b0
+CI #1012 = PASS
+Product Eval #251 = PASS
+merged main = cff6e21edc8085bb895c6ed59c32b5e4aa134ee0
+```
+
+No hosted provider call was made by the guard fix. The incident is closed; W18 may be closed at its documented bounded evidence boundary.
