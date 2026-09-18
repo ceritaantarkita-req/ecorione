@@ -120,7 +120,7 @@ F6-E04 is **CLOSED / REPO-SIDE PASS**. PR #153 exact head `e1818eaac40a8166fd2b6
 
 F6-E05 is **CLOSED / REPO-SIDE PASS** through PR #155. Exact head `1fb568b1a3fa865f2bad556b06f9fb6e4e2d6da2` passed CI #1045, Product Eval #284, and MCP External #475; the runner-review and release-security steps were green. Merged main: `2e031d4d540632385279e3b6559d564afcae96d3`.
 
-F6-E06 is **ACTIVE**. The next bounded reproducibility gap is mutable `node-version: 22` in tracked workflows. Scope: central exact Node version, align workflow/container use, add deterministic drift review, tests, and release-security wiring. Unpinned Chocolatey/Inno Setup remains explicitly outside E06.
+F6-E06 is **IMPLEMENTED / IN REVIEW**. `.node-version` pins Node `22.20.0`; all tracked `actions/setup-node` consumers use that central file; the Dockerfile must match it; a deterministic Node toolchain review is wired into normal CI and release-security acceptance; MCP acceptance is triggered by `.node-version` changes. Closure now depends on exact-head CI/Product Eval/MCP. Unpinned Chocolatey/Inno Setup remains explicitly outside E06.
 
 This remains repository-side governance only: no provider call, no hosted spend, no VPS/Cloudflare mutation. Branch-protection settings remain a separate external repository-governance gap. Do **not** rerun the paid W18 benchmark.
 
@@ -154,4 +154,4 @@ F6-E04 verification source: `docs/verification/f6-e04-immutable-github-actions-2
 
 F6-E05 verification source: `docs/verification/f6-e05-fixed-runner-labels-2026-09-18.md`.
 
-F6-E06 active scope: immutable Node toolchain + continuous cross-surface drift rejection.
+F6-E06 verification source: `docs/verification/f6-e06-immutable-node-toolchain-2026-09-18.md`.

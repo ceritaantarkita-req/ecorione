@@ -4,7 +4,7 @@
 
 ECORIONE menjaga kesinambungan lintas provider/model sambil mempertahankan local-first boundary, approval, audit trail, durable execution, MCP, dan spend control yang eksplisit.
 
-> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** · W20 **CLOSED** · F6-E01 held-out selector eval dataset **CLOSED / REPO-SIDE PASS** · F6-E02 dependency-policy CI gate **CLOSED / REPO-SIDE PASS** · F6-E03 release-security acceptance CI gate **CLOSED / REPO-SIDE PASS** · F6-E04 immutable GitHub Actions pinning **CLOSED / REPO-SIDE PASS** · F6-E05 fixed runner OS labels **CLOSED / REPO-SIDE PASS** · F6-E06 immutable Node toolchain **ACTIVE** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
+> **Current status — 2026-09-18:** production/self-host repository baseline **READY** · Batch 1–12 **CLOSED** · W03 **REAL-LAPTOP VERIFIED** · W09/W10 **WINDOWS RUNTIME VERIFIED** · W11 **WINDOWS INSTALLER VERIFIED** · W16 automatic selector **DONE — REPO SIDE** · W17 no-oracle local validation **CLOSED / PASS** · W18 hosted economics **CLOSED / PASS WITH DOCUMENTED DUPLICATE-EXECUTION INCIDENT** · W20 **CLOSED** · F6-E01 held-out selector eval dataset **CLOSED / REPO-SIDE PASS** · F6-E02 dependency-policy CI gate **CLOSED / REPO-SIDE PASS** · F6-E03 release-security acceptance CI gate **CLOSED / REPO-SIDE PASS** · F6-E04 immutable GitHub Actions pinning **CLOSED / REPO-SIDE PASS** · F6-E05 fixed runner OS labels **CLOSED / REPO-SIDE PASS** · F6-E06 immutable Node toolchain **IMPLEMENTED / IN REVIEW** · compute-host/VPS + Cloudflare **DEFERRED BY OPERATOR** · AutoClick **DEFERRED BY DESIGN**.
 
 Untuk manusia/agent baru: mulai dari [`docs/current-state-and-next-steps.md`](docs/current-state-and-next-steps.md), lalu [`docs/active-work-plan.md`](docs/active-work-plan.md), [`docs/EXECUTION-PROGRESS.md`](docs/EXECUTION-PROGRESS.md), dan [`AGENTS.md`](AGENTS.md). Audit bertanggal lama adalah historical snapshots, bukan current-state source.
 
@@ -203,7 +203,7 @@ Production activation remains deferred by operator. Tooling/runbooks stay availa
 3. F6-E03 is CLOSED / REPO-SIDE PASS (PR #151, CI #1033, Product Eval #272)
 4. F6-E04 is CLOSED / REPO-SIDE PASS (PR #153, CI #1041, Product Eval #280, MCP #473)
 5. F6-E05 is CLOSED / REPO-SIDE PASS (PR #155, CI #1045, Product Eval #284, MCP #475)
-6. F6-E06 is ACTIVE: pin Node runtime version centrally across workflows/container + continuous drift gate; unpinned Inno Setup remains a later separate toolchain gap
+6. F6-E06 implementation complete: `.node-version=22.20.0`, setup-node uses the central file, Docker consistency + CI/release drift gate + tests; next = exact-head CI/Product Eval/MCP -> guarded merge -> closure
 ```
 
 ## Lisensi
