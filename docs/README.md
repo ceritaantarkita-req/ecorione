@@ -40,10 +40,10 @@ The old Batch 1–12 / W / F6 baseline is closed. The next roadmap uses **PE** i
 As of 2026-09-19:
 
 - Product Evolution architecture: **DOCUMENTED**;
-- PE-00: **PLANNED / NOT ACTIVATED**;
+- PE-00: **ACTIVE / IN REVIEW**;
 - PE-01 through PE-08: **blocked by prior batch**.
 
-Creating the roadmap does not start implementation. PE-00 becomes active only after explicit operator instruction.
+PE-00 is now active as a docs/contracts batch. PE-01 feature implementation remains blocked until PE-00 closes.
 
 ## Architecture and product reference
 

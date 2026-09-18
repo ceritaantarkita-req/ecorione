@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Tiga puluh empat keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Tiga puluh delapan keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
@@ -40,6 +40,10 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [32](0032-production-operations-observability.md) | Production ops memakai owner-local metrics + trace propagation dan self-host deployment tanpa source-of-truth baru |
 | [33](0033-final-security-release-closure.md) | Readiness label produksi/self-host digerbangi hardening HTTP, secret scan, dan evidence repo |
 | [34](0034-browser-surface-trust-boundary.md) | Permukaan browser Ai memverifikasi same-origin di middleware dan memasang header keamanan |
+| [35](0035-project-context-boundary.md) | Project adalah context boundary di dalam Workspace; global + current-Project memory only |
+| [36](0036-trigger-temporal-schedule.md) | Trigger dimiliki Flow, Temporal tetap schedule/durability engine |
+| [37](0037-run-read-projection.md) | Run adalah read projection dengan operationId sebagai key v1 |
+| [38](0038-brain-derived-projection.md) | Brain adalah rebuildable authorized projection, bukan graph source-of-truth |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris

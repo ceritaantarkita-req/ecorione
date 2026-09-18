@@ -22,7 +22,7 @@ Detailed historical execution records live under `docs/verification/` and `docs/
 | Batch | State |
 |---|---:|
 | PE architecture/roadmap docs | **DOCUMENTED** |
-| PE-00 Architecture lock + migration contract | **PLANNED / NOT ACTIVATED** |
+| PE-00 Architecture lock + migration contract | **ACTIVE / IN REVIEW** |
 | PE-01 Project foundation | **BLOCKED BY PE-00** |
 | PE-02 Project Sources | **BLOCKED BY PE-01** |
 | PE-03 Trigger control plane | **BLOCKED BY PE-02** |
@@ -40,6 +40,6 @@ Detailed historical execution records live under `docs/verification/` and `docs/
 
 ## Current gate
 
-There is no active implementation gate. The next executable step is **PE-00**, but it begins only after explicit operator activation.
+**PE-00 is the active gate.** It closes after accepted ADR/contracts plus exact-head CI and Product Eval.
 
 See `product-evolution-roadmap.md` for the batch contract and `product-evolution-agent-guide.md` for execution procedure.
