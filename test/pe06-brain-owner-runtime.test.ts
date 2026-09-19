@@ -1,10 +1,10 @@
+import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   BrainQuerySchema,
   assertId,
   type BrainGraphResponse,
 } from "../packages/shared-schema/src/index.js";
-import type { FastifyInstance } from "fastify";
 import { openHubDatabase } from "../services/hub/src/db.js";
 import { buildHubServer } from "../services/hub/src/http.js";
 import { openRndDatabase } from "../services/rnd/src/db.js";
@@ -20,7 +20,11 @@ const WORKSPACE_ID = "ws_personal";
 const PERSONAL_PROJECT_ID = "prj_personal";
 const SOURCE_URL = "https://example.com/brain-runtime-source";
 
-type Closeable = FastifyInstance;
+type Closeable = {
+  listen(options: { host: string; port: number }): Promise<string>;
+  close(): Promise<void>;
+  server: { address(): AddressInfo | string | null };
+};
 
 const closeables: Closeable[] = [];
 const databases: Array<{ close(): void }> = [];
@@ -50,7 +54,7 @@ function temporal(): FlowTemporalClient & FlowGraphTemporalClient {
   };
 }
 
-async function listen(app: FastifyInstance): Promise<string> {
+async function listen(app: Closeable): Promise<string> {
   closeables.push(app);
   await app.listen({ host: "127.0.0.1", port: 0 });
   const address = app.server.address();
