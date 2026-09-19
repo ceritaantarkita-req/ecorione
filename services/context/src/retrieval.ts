@@ -181,7 +181,9 @@ export class ContextRetriever {
         LIMIT ?
       `,
         )
-        .all(match, ...scopes, ...allowed, ...projectParams, ...sourceParams, limit) as { id: string }[];
+        .all(match, ...scopes, ...allowed, ...projectParams, ...sourceParams, limit) as {
+        id: string;
+      }[];
       return rows.map((r) => r.id as MemoryFactId);
     } catch {
       return [];
