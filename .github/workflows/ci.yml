@@ -31,11 +31,30 @@ jobs:
 
       - name: PE-03 one-file formatter
         run: |
-          pnpm exec prettier --write "services/flow/src/graph-project-isolation.test.ts"
+          pnpm exec prettier --write \
+            "services/flow/src/graph-project-isolation.test.ts" \
+            "apps/ai/app/api/brain/route.test.ts" \
+            "apps/ai/app/api/brain/route.ts" \
+            "apps/ai/app/brain/Brain.module.css" \
+            "apps/ai/app/brain/page.tsx" \
+            "apps/ai/lib/brain-projection.ts" \
+            "test/pe06-brain-source-contract.test.ts"
           echo "----- PE03_ONE_FILE -----"
           base64 -w0 "services/flow/src/graph-project-isolation.test.ts"
           echo
           echo "----- PE03_ONE_FILE_END -----"
+          for file in \
+            "apps/ai/app/api/brain/route.test.ts" \
+            "apps/ai/app/api/brain/route.ts" \
+            "apps/ai/app/brain/Brain.module.css" \
+            "apps/ai/app/brain/page.tsx" \
+            "apps/ai/lib/brain-projection.ts" \
+            "test/pe06-brain-source-contract.test.ts"; do
+            echo "----- PE06_FORMATTED:${file} -----"
+            base64 -w0 "${file}"
+            echo
+            echo "----- PE06_FORMATTED_END:${file} -----"
+          done
 
       - name: Format
         run: pnpm run format:check
