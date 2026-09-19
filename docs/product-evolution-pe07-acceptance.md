@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **REQUIRED FOR PE-07 CLOSURE**
+Status: **CLOSURE CANDIDATE — IMPLEMENTATION GATES PASS**
 
 PE-07 connects the already-closed Brain V1 projection to the existing Context retrieval and ECX optimization path. The purpose is to test whether deterministic Project/Brain neighborhoods can reduce the candidate set before Context + ECX without weakening retrieval quality, provenance, authorization, or owner boundaries.
 
@@ -224,6 +224,32 @@ PE-07 does not authorize:
 - L4 autonomy;
 - production VPS/Cloudflare activation;
 - paid hosted evidence without explicit authorization.
+
+## Implementation evidence checkpoint
+
+Reviewed implementation head: `892726c20ac95dded26fdc3fd2000ad4bb56363d`.
+
+```text
+CI                              35447877629 / #1457 PASS
+Product Eval                    35447877612 / #696  PASS
+MCP External HTTPS Acceptance   35447877592 / #855  PASS
+```
+
+The closure-grade deterministic/no-model lane passed the predeclared gates:
+
+- 3 measured cases;
+- baseline candidates = 3 and narrowed candidates = 1 in every case;
+- median candidate reduction = **66.67%**;
+- strict reduction = **3/3 cases**;
+- required-reference retention = **100%**;
+- provenance retention = **100%**;
+- unauthorized references = **0**;
+- sibling-Project leaks = **0**;
+- restricted-data leaks = **0**.
+
+Evidence: [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md).
+
+PE-07 remains a closure candidate until this documentation head passes the same exact-head gates and PR #178 is merged.
 
 ## End-to-end closure proof
 
