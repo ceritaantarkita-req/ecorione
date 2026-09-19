@@ -207,7 +207,6 @@ export function buildFlowServer(
     const query = parseOrBadRequest(RunProjectionListQuerySchema, req.query);
     const runs = await listRunProjections(
       {
-        graphs,
         triggers,
         temporal,
         options: {
@@ -225,7 +224,6 @@ export function buildFlowServer(
     const { operationId } = parseOrBadRequest(RunProjectionParamsSchema, req.params);
     const run = await getRunProjection(
       {
-        graphs,
         triggers,
         temporal,
         options: {
