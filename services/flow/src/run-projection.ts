@@ -83,7 +83,10 @@ function terminalStatus(name: string): RunStatus | null {
   return null;
 }
 
-function evidenceFromTraces(operationId: string, traces: readonly TraceRecord[]): RunEvidence | null {
+function evidenceFromTraces(
+  operationId: string,
+  traces: readonly TraceRecord[],
+): RunEvidence | null {
   const lifecycle = traces
     .filter(
       (trace) =>
@@ -223,7 +226,9 @@ export async function listRunProjections(
   const operationIds = [
     ...new Set(
       traces
-        .filter((trace) => trace.name === "flow.graph.run.started" && trace.operationId !== null)
+        .filter(
+          (trace) => trace.name === "flow.graph.run.started" && trace.operationId !== null,
+        )
         .map((trace) => trace.operationId as string),
     ),
   ];
@@ -298,9 +303,12 @@ export async function getRunProjection(
         const state = await deps.temporal.graphState(evidence.runId as never);
         output = state.output;
         if (state.error !== null) errors.push(state.error);
-        if (state.status === "RUNNING" && state.nodes.some((node) =>
-          node.status === "WAITING_APPROVAL" || node.status === "WAITING_INPUT"
-        )) {
+        if (
+          state.status === "RUNNING" &&
+          state.nodes.some(
+            (node) => node.status === "WAITING_APPROVAL" || node.status === "WAITING_INPUT",
+          )
+        ) {
           currentStatus = "WAITING";
         }
       } catch {
