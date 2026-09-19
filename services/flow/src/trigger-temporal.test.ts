@@ -93,6 +93,7 @@ function graphActivities(): FlowGraphActivities {
     requestGraphApproval: vi.fn(async () => "unused"),
     executeGraphNode: vi.fn(async ({ input }) => input),
     recordGraphTrace: vi.fn(async () => undefined),
+    recordGraphRunTrace: vi.fn(async () => undefined),
     resolveSubflow: vi.fn(async () => {
       throw new Error("Subflow is not used.");
     }),
