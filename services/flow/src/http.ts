@@ -51,12 +51,15 @@ import {
   validateAndCompileFlowGraph,
 } from "./node-registry.js";
 import type { FlowGraphTemporalClient, FlowServerTemporalClient } from "./temporal-client.js";
+import { registerTriggerRoutes } from "./trigger-http.js";
+import { TriggerRepository } from "./trigger-repository.js";
 
 export interface BuildFlowServerOptions {
   readonly hubUrl: string;
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
   readonly graphRepository?: FlowGraphRepository | undefined;
+  readonly triggerRepository?: TriggerRepository | undefined;
 }
 
 const GraphListQuerySchema = z.object({
@@ -132,9 +135,17 @@ export function buildFlowServer(
 ): FastifyInstance {
   const app = createServer({ name: "flow", token: options.token, logger: options.logger });
   const metrics = observabilityFor(app);
-  const ownedDb = options.graphRepository === undefined ? openFlowDatabase(":memory:") : null;
+  const needsOwnedDb =
+    options.graphRepository === undefined || options.triggerRepository === undefined;
+  const ownedDb = needsOwnedDb ? openFlowDatabase(":memory:") : null;
   const graphs = options.graphRepository ?? new FlowGraphRepository(ownedDb!);
+  const triggers = options.triggerRepository ?? new TriggerRepository(ownedDb!);
   if (ownedDb !== null) app.addHook("onClose", async () => ownedDb.close());
+
+  registerTriggerRoutes(app, triggers, graphs, temporal, {
+    hubUrl: options.hubUrl,
+    token: options.token,
+  });
 
   app.post("/v1/flows", async (req, reply) => {
     const body = parseOrBadRequest(FlowStartRequestSchema, req.body);
