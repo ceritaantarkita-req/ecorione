@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-05 ACTIVE / EVENT + WEBHOOK AUTOMATION**
+Status: **CURRENT / PE-06 ACTIVE / BRAIN V1**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00 through PE-04 are CLOSED / PASS. PE-05 Event/Webhook automation is ACTIVE.**
+**PE-00 through PE-05 are CLOSED / PASS. PE-06 Brain V1 is ACTIVE.**
 
 ## Product Evolution status
 
@@ -19,8 +19,8 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-02 Project Sources | **CLOSED / PASS** |
 | PE-03 Trigger control plane | **CLOSED / PASS** |
 | PE-04 Work + Schedule + Runs | **CLOSED / PASS** |
-| PE-05 Event/Webhook automation | **ACTIVE** |
-| PE-06 Brain V1 | **BLOCKED BY PE-05** |
+| PE-05 Event/Webhook automation | **CLOSED / PASS** |
+| PE-06 Brain V1 | **ACTIVE** |
 | PE-07 Brain + Context + ECX | **BLOCKED BY PE-06** |
 | PE-08 Product closure | **BLOCKED BY PE-07** |
 
@@ -59,9 +59,13 @@ PE-03 closed on PR #172 exact head `74730e26321cac06c31243baeeafe29d5f4d75f0` an
 
 PE-04 closed on PR #173 after implementation head `c2cacbbcbee15f46ac4c5e9e43c955f5c952af43` and closure head `94936fa0704991d3536667bb8c947e9d751c813e` passed the required gates. It merged as `c08581a00a20dc6016c570a1fbb777d81e391699`. Work now exposes Project-scoped Schedule, Flow links, and an `operationId`-keyed Run read projection without a Task domain or second execution database. See [verification/pe-04-work-schedule-runs-closure-2026-09-19.md](verification/pe-04-work-schedule-runs-closure-2026-09-19.md).
 
-## Active: PE-05 Event + Webhook automation
+## PE-05 closed boundary
 
-PE-05 activates the existing `event | webhook` Trigger kinds under ADR-36. Flow remains Trigger/dispatch owner, Connect remains connector credential/secret owner, Hub remains authority/policy/approval/audit, and Temporal remains durable execution owner. Polling/LLM monitors and a second queue/scheduler are out of scope. Acceptance: [product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md).
+PE-05 closed on PR #174 after implementation head `b3fa55e689548b5a72c47b331682285eb8fb6eb2` and closure head `3d082f555a0c701eb9911d5caa71f7cf250f5710` passed the required gates. It merged as `84defe934bf6b7d0b8868bd04c8c113e70193fc6`. Non-time Trigger delivery now uses Connect-verified webhook ingress, Flow-owned normalization/routing/dedupe, existing Hub authority, Temporal execution, and operationId-keyed Run evidence without a polling daemon, second queue, or second execution authority. See [verification/pe-05-event-webhook-closure-2026-09-19.md](verification/pe-05-event-webhook-closure-2026-09-19.md).
+
+## Active: PE-06 Brain V1
+
+PE-06 builds the ADR-38 Brain as a Project-scoped, deterministic, authorized, rebuildable projection over existing owner APIs/contracts. Brain is not a graph database or source of truth. PE-07 Brain-to-Context/ECX optimization remains blocked. Acceptance: [product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md).
 
 ## Deferred
 
