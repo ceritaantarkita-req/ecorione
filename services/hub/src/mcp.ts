@@ -70,10 +70,18 @@ function assertMemoryVisible(
   access: McpAccessContext,
 ): void {
   assertScopes([item.scope], access);
-  if (item.projectId !== null && item.projectId !== undefined && item.projectId !== access.projectId) {
+  if (
+    item.projectId !== null &&
+    item.projectId !== undefined &&
+    item.projectId !== access.projectId
+  ) {
     throw new ForbiddenError("Item memori berada di Project lain.");
   }
-  if ((access.projectId === undefined || access.projectId === null) && item.projectId !== null && item.projectId !== undefined) {
+  if (
+    (access.projectId === undefined || access.projectId === null) &&
+    item.projectId !== null &&
+    item.projectId !== undefined
+  ) {
     throw new ForbiddenError("MCP tanpa Project hanya boleh membaca memori global.");
   }
   if (sensitivityRank(item.sensitivity) > sensitivityRank(access.maxSensitivity)) {
