@@ -255,6 +255,7 @@ describe("PE-02 Project Sources HTTP", () => {
     });
     expect(blocked.statusCode).toBe(409);
   });
+
   it("rejects cross-Workspace binding before owner lookup", async () => {
     const response = await app.inject({
       method: "POST",
@@ -269,9 +270,7 @@ describe("PE-02 Project Sources HTTP", () => {
 
     expect(response.statusCode).toBe(409);
     expect(
-      db.raw
-        .prepare("SELECT COUNT(*) AS count FROM project_source_bindings")
-        .get(),
+      db.raw.prepare("SELECT COUNT(*) AS count FROM project_source_bindings").get(),
     ).toEqual({ count: 0 });
   });
 
@@ -291,10 +290,7 @@ describe("PE-02 Project Sources HTTP", () => {
 
     expect(response.statusCode).toBe(404);
     expect(
-      db.raw
-        .prepare("SELECT COUNT(*) AS count FROM project_source_bindings")
-        .get(),
+      db.raw.prepare("SELECT COUNT(*) AS count FROM project_source_bindings").get(),
     ).toEqual({ count: 0 });
   });
-
 });
