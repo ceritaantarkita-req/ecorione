@@ -54,6 +54,19 @@ jobs:
             test/pe07-brain-context-ecx-source-contract.test.ts \
             test/pe06-brain-source-contract.test.ts \
             test/pe06-brain-owner-runtime.test.ts \
+            test/pe08-product-closure.test.ts \
+            services/hub/src/project-registry.test.ts \
+            services/hub/src/project-source-registry.test.ts \
+            services/context/src/project-context.test.ts \
+            services/flow/src/graph-project-isolation.test.ts \
+            services/flow/src/trigger-repository.test.ts \
+            services/context/src/backup.test.ts \
+            test/local-persistence-restart-evidence.test.mjs \
+            test/local-backup-restore-evidence.test.mjs \
+            test/local-ux-product-evidence.test.mjs \
+            test/pe04-work-source-contract.test.ts \
+            test/flow-responsive-source-contract.test.ts \
+            test/desktop-installer.test.mjs \
             apps/ai/app/api/projects/[id]/archive/route.test.ts \
             apps/ai/app/api/projects/history/route.test.ts \
             apps/ai/app/api/forget/route.test.ts \
