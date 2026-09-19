@@ -497,7 +497,9 @@ describe("PE-03/PE-05 Trigger HTTP", () => {
     const duplicate = await app.inject({
       method: "POST",
       url: `/v1/triggers/${triggerId}/event`,
-      payload: normalizedEvent(),
+      payload: normalizedEvent({
+        receivedAt: "2026-09-19T10:00:05.000Z",
+      }),
     });
     expect(duplicate.statusCode).toBe(200);
     expect(duplicate.json()).toMatchObject({
