@@ -3,11 +3,7 @@ import {
   TriggerFireResponseSchema,
   WebhookIngressDeliverySchema,
 } from "@ecorione/shared-schema";
-import {
-  HttpError,
-  httpJson,
-  parseOrBadRequest,
-} from "@ecorione/shared-server";
+import { HttpError, httpJson, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { ProviderCredentialReader } from "./credential-vault.js";
