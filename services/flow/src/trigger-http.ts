@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import {
+  NormalizedTriggerEventSchema,
   ProjectIdSchema,
   ProjectSchema,
   TriggerCreateRequestSchema,
@@ -14,6 +15,7 @@ import {
   type ActionRequest,
   type CompiledFlowGraphPlan,
   type PolicyVerdict,
+  type NormalizedTriggerEvent,
   type Project,
   type Timestamp,
   type TriggerDefinition,
@@ -37,6 +39,7 @@ import type {
   TriggerScheduleTemporalClient,
 } from "./temporal-client.js";
 import {
+  TriggerEventDedupeConflictError,
   TriggerKindConflictError,
   TriggerNotFoundError,
   TriggerProjectConflictError,
@@ -67,7 +70,7 @@ export class TriggerDisabledError extends Error {
   }
 }
 export class TriggerWrongKindError extends Error {
-  constructor(expected: "manual" | "time") {
+  constructor(expected: "manual" | "time" | "event" | "webhook") {
     super(`Trigger harus berjenis ${expected} untuk operasi ini.`);
     this.name = "TriggerWrongKindError";
   }
@@ -90,6 +93,7 @@ function triggerError(error: unknown): unknown {
     return new NotFoundError(error.message);
   if (
     error instanceof TriggerRevisionConflictError ||
+    error instanceof TriggerEventDedupeConflictError ||
     error instanceof TriggerWorkspaceConflictError ||
     error instanceof TriggerProjectConflictError ||
     error instanceof TriggerKindConflictError
@@ -245,6 +249,59 @@ function deterministicManualIds(
     workflowId: `wf_trigger_${digest}` as TriggerFireResponse["workflowId"],
     operationId: `op_trigger_${digest}` as TriggerFireResponse["operationId"],
   };
+}
+
+function deterministicEventIds(
+  triggerId: string,
+  dedupeKey: string,
+): {
+  workflowId: TriggerFireResponse["workflowId"];
+  operationId: TriggerFireResponse["operationId"];
+} {
+  const digest = createHash("sha256")
+    .update(`event:${triggerId}:${dedupeKey}`)
+    .digest("hex")
+    .slice(0, 24);
+  return {
+    workflowId: `wf_trigger_${digest}` as TriggerFireResponse["workflowId"],
+    operationId: `op_trigger_${digest}` as TriggerFireResponse["operationId"],
+  };
+}
+
+function triggerAcceptsEvent(trigger: TriggerDefinition, event: NormalizedTriggerEvent): boolean {
+  if (trigger.kind === "event") {
+    const config = trigger.configuration as { source: string; eventKind: string };
+    return config.source === event.source && config.eventKind === event.kind;
+  }
+  if (trigger.kind === "webhook") {
+    const config = trigger.configuration as {
+      adapter: "github";
+      eventKind: string;
+      repository: string;
+    };
+    return (
+      event.source === config.adapter &&
+      event.kind === config.eventKind &&
+      event.metadata.repository === config.repository
+    );
+  }
+  return false;
+}
+
+async function startGraphIdempotently(
+  temporal: FlowServerTemporalClient,
+  input: Parameters<FlowGraphTemporalClient["startGraph"]>[0],
+): Promise<void> {
+  try {
+    await requireGraphTemporal(temporal).startGraph(input);
+  } catch (error) {
+    try {
+      await temporal.describe(input.runId);
+      return;
+    } catch {
+      throw error;
+    }
+  }
 }
 
 async function reconcileTimeTrigger(
@@ -419,6 +476,87 @@ export function registerTriggerRoutes(
     const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
     try {
       return await setEnabled(id, req.body, false);
+    } catch (error) {
+      throw triggerError(error);
+    }
+  });
+
+  app.post<{ Params: { id: string } }>("/v1/triggers/:id/event", async (req, reply) => {
+    const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
+    const event = parseOrBadRequest(NormalizedTriggerEventSchema, req.body);
+    try {
+      const trigger = triggers.require(id);
+      if (trigger.workspaceId !== event.workspaceId) throw new TriggerWorkspaceConflictError();
+      if (trigger.projectId !== event.projectId) throw new TriggerProjectConflictError();
+      if (trigger.kind !== "event" && trigger.kind !== "webhook") {
+        throw new TriggerWrongKindError("event");
+      }
+      if (!trigger.enabled) throw new TriggerDisabledError();
+      if (!triggerAcceptsEvent(trigger, event)) {
+        throw new TriggerFlowMismatchError("Event tidak cocok dengan selector Trigger.");
+      }
+
+      await validateAuthority(options, trigger);
+      const plan = pinnedPlan(
+        graphs,
+        trigger.workspaceId,
+        trigger.projectId,
+        trigger.graphId,
+        trigger.graphVersion,
+      );
+      const eventDigest = stableKey(["normalized-event-v1", event]);
+      await evaluateTriggerPolicy(options, {
+        tool: `flow.trigger.${trigger.kind}.dispatch`,
+        actionClass: "EXECUTE",
+        triggerId: id,
+        workspaceId: trigger.workspaceId,
+        projectId: trigger.projectId,
+        autonomy: trigger.requestedAutonomy,
+        plan,
+        keyParts: [
+          trigger.kind,
+          id,
+          event.dedupeKey,
+          eventDigest,
+          trigger.graphId,
+          trigger.graphVersion,
+        ],
+      });
+
+      const ids = deterministicEventIds(id, event.dedupeKey);
+      const response = TriggerFireResponseSchema.parse({
+        triggerId: id,
+        graphId: trigger.graphId,
+        graphVersion: trigger.graphVersion,
+        workflowId: ids.workflowId,
+        operationId: ids.operationId,
+        deduplicated: false,
+      });
+      const reservation = triggers.reserveEventDelivery(
+        id,
+        event.dedupeKey,
+        event.eventId,
+        eventDigest,
+        response,
+        nowIso() as Timestamp,
+      );
+      if (reservation.state === "STARTED") {
+        return reply.code(200).send({ ...reservation.response, deduplicated: true });
+      }
+
+      await startGraphIdempotently(temporal, {
+        runId: ids.workflowId,
+        operationId: ids.operationId,
+        plan,
+        input: event.payload,
+        triggerId: trigger.id,
+        autonomy: trigger.requestedAutonomy,
+        depth: 0,
+      });
+      triggers.markEventDeliveryStarted(id, event.dedupeKey, eventDigest);
+      return reply
+        .code(reservation.deduplicated ? 200 : 202)
+        .send({ ...reservation.response, deduplicated: reservation.deduplicated });
     } catch (error) {
       throw triggerError(error);
     }
