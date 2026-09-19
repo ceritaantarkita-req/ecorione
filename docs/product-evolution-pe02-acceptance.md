@@ -89,7 +89,7 @@ Hub DB reopen preserves bindings. Binding loss/rebuild does not mutate canonical
 Reviewed implementation head:
 
 ```text
-PR #170
+PR #171
 head a6167df469cf491015b232aff8a192b32a25c569
 CI #1223 PASS
 Product Eval #462 PASS
@@ -113,6 +113,6 @@ attach/detach audit
 Ai Project Sources API/UI contracts
 ```
 
-The closure-doc head must pass the normal exact-head gates before PR #170 is merged.
+Draft PR #170 was superseded administratively by non-draft PR #171 without changing the reviewed implementation. The closure-doc head must pass the normal exact-head gates before PR #171 is merged.
 
-PE-03 must not begin until PR #170 is merged and post-merge main is clean.
+PE-03 must not begin until PR #171 is merged and post-merge main is clean.
