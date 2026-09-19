@@ -3,10 +3,7 @@ import {
   BrainGraphResponseSchema,
   BrainNeighborhoodQuerySchema,
 } from "@ecorione/shared-schema";
-import {
-  BrainNeighborhoodSeedError,
-  selectBrainNeighborhood,
-} from "./brain-projection";
+import { BrainNeighborhoodSeedError, selectBrainNeighborhood } from "./brain-projection";
 
 const graph = BrainGraphResponseSchema.parse({
   workspaceId: "ws_personal",
