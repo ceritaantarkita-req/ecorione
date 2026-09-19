@@ -13,10 +13,7 @@ import {
   type EcxHydrateResponse,
   type RetrievalHit,
 } from "@ecorione/shared-schema";
-import {
-  authorizeBrainProject,
-  queryBrainNeighborhood,
-} from "./brain-projection";
+import { authorizeBrainProject, queryBrainNeighborhood } from "./brain-projection";
 
 const DEFAULT_CONTEXT_URL = "http://127.0.0.1:17022";
 const DEFAULT_HUB_URL = "http://127.0.0.1:17024";
@@ -181,16 +178,13 @@ export async function runBrainContextEcx(
 
   const ecxStarted = performance.now();
   const hydrated = EcxHydrateResponseSchema.parse(
-    await postJson(
-      `${ownerBaseUrl("ECORIONE_HUB_URL", DEFAULT_HUB_URL)}/v1/exchange/hydrate`,
-      {
-        packet,
-        selection: { mode: "semantic-v1", maxRefs: input.maxRefs },
-        scope: input.scope,
-        maxSensitivity: input.maxSensitivity,
-        hostedEligible: input.hostedEligible,
-      },
-    ),
+    await postJson(`${ownerBaseUrl("ECORIONE_HUB_URL", DEFAULT_HUB_URL)}/v1/exchange/hydrate`, {
+      packet,
+      selection: { mode: "semantic-v1", maxRefs: input.maxRefs },
+      scope: input.scope,
+      maxSensitivity: input.maxSensitivity,
+      hostedEligible: input.hostedEligible,
+    }),
   );
   const ecxLatencyMs = performance.now() - ecxStarted;
 
