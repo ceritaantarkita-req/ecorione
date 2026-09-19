@@ -27,10 +27,14 @@ CREATE INDEX IF NOT EXISTS idx_flow_graph_versions_graph ON flow_graph_versions(
 CREATE INDEX IF NOT EXISTS idx_flow_graph_versions_digest ON flow_graph_versions(graph_id, digest, version DESC);
 `;
 
-interface TableInfoRow { readonly name: string }
+interface TableInfoRow {
+  readonly name: string;
+}
 
 function hasColumn(db: SqliteDatabase, table: string, column: string): boolean {
-  return (db.pragma(`table_info(${table})`) as TableInfoRow[]).some((row) => row.name === column);
+  return (db.pragma(`table_info(${table})`) as TableInfoRow[]).some(
+    (row) => row.name === column,
+  );
 }
 
 function migrateProjectFoundation(db: SqliteDatabase): void {
