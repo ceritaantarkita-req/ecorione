@@ -41,7 +41,7 @@ Product Eval #462 PASS
 MCP External HTTPS Acceptance #628 PASS
 ```
 
-Closure-doc exact-head gates are required before merge.
+PR #171 merged to `main` as `c734f00eaa791077c99557e6e89579534c43d651`; PE-02 is closed.
 
 ## Previous closures
 
@@ -49,4 +49,4 @@ PE-01: PR #169 / main `1d2b537de3ad07336adb9a97121309f04d61cc21`.
 
 PE-00: PR #167 / main `b7ebf5492aca463e55f9f30bc259b9a6028c62d7`.
 
-Current next gate after PE-02 merge: **PE-03 Trigger control plane**.
+Current active gate: **PE-03 Trigger control plane**, PR #172. PE-04 remains blocked until PE-03 exact-head CI/Product Eval/Temporal acceptance pass and the reviewed head merges.
