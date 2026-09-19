@@ -148,7 +148,46 @@ function manualPayload(enabled = true) {
   };
 }
 
-describe("PE-03 Trigger HTTP", () => {
+function eventPayload(enabled = true) {
+  return {
+    ...manualPayload(enabled),
+    name: "Event Trigger",
+    kind: "event",
+    configuration: { source: "github", eventKind: "push" },
+  };
+}
+
+function webhookPayload(hookId = "hook_ecorione_001", enabled = true) {
+  return {
+    ...manualPayload(enabled),
+    name: "Webhook Trigger",
+    kind: "webhook",
+    configuration: {
+      adapter: "generic",
+      hookId,
+      source: "github",
+      eventKind: "push",
+    },
+  };
+}
+
+function normalizedEvent(overrides: Record<string, unknown> = {}) {
+  return {
+    eventId: "evt_delivery001",
+    source: "github",
+    kind: "push",
+    occurredAt: "2026-09-19T10:00:00.000Z",
+    receivedAt: "2026-09-19T10:00:01.000Z",
+    workspaceId: "ws_personal",
+    projectId: "prj_personal",
+    dedupeKey: "github:delivery-001",
+    payload: { ref: "refs/heads/main" },
+    metadata: {},
+    ...overrides,
+  };
+}
+
+describe("PE-03/PE-05 Trigger HTTP", () => {
   it("fires one pinned manual Trigger exactly once for duplicate caller request", async () => {
     mockProject();
     mockPolicyAllow();
@@ -419,6 +458,180 @@ describe("PE-03 Trigger HTTP", () => {
     });
     expect(fired.statusCode).toBe(400);
     expect(temporalClient.startGraph).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it("dispatches one normalized event and deduplicates repeated delivery", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app, temporalClient } = build();
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: eventPayload(),
+    });
+    expect(created.statusCode).toBe(201);
+    const triggerId = (created.json() as { id: string }).id;
+
+    mockProject();
+    mockPolicyAllow();
+    const first = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent(),
+    });
+    expect(first.statusCode).toBe(202);
+    expect(first.json()).toMatchObject({ triggerId, deduplicated: false });
+    expect(temporalClient.startGraph).toHaveBeenCalledTimes(1);
+    expect(temporalClient.startGraph).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: { ref: "refs/heads/main" },
+        triggerId,
+        autonomy: "L2",
+      }),
+    );
+
+    mockProject();
+    mockPolicyAllow();
+    const duplicate = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent({
+        receivedAt: "2026-09-19T10:00:05.000Z",
+      }),
+    });
+    expect(duplicate.statusCode).toBe(200);
+    expect(duplicate.json()).toMatchObject({
+      workflowId: (first.json() as { workflowId: string }).workflowId,
+      operationId: (first.json() as { operationId: string }).operationId,
+      deduplicated: true,
+    });
+    expect(temporalClient.startGraph).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it("rejects conflicting reuse of an event dedupe key", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app, temporalClient } = build();
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: eventPayload(),
+    });
+    const triggerId = (created.json() as { id: string }).id;
+
+    mockProject();
+    mockPolicyAllow();
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: `/v1/triggers/${triggerId}/event`,
+          payload: normalizedEvent(),
+        })
+      ).statusCode,
+    ).toBe(202);
+
+    mockProject();
+    mockPolicyAllow();
+    const conflict = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent({
+        eventId: "evt_delivery002",
+        payload: { ref: "refs/heads/other" },
+      }),
+    });
+    expect(conflict.statusCode).toBe(409);
+    expect(temporalClient.startGraph).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it("fails closed for disabled or sibling-Project event delivery", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app, temporalClient } = build();
+    const disabled = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: eventPayload(false),
+    });
+    const triggerId = (disabled.json() as { id: string }).id;
+
+    const disabledResult = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent(),
+    });
+    expect(disabledResult.statusCode).toBe(400);
+
+    const wrongProject = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent({ projectId: "prj_other" }),
+    });
+    expect(wrongProject.statusCode).toBe(409);
+    expect(temporalClient.startGraph).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it("routes generic webhook delivery through the configured Trigger selector", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app, temporalClient } = build();
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: webhookPayload(),
+    });
+    expect(created.statusCode).toBe(201);
+    const triggerId = (created.json() as { id: string }).id;
+
+    mockProject();
+    mockPolicyAllow();
+    const delivered = await app.inject({
+      method: "POST",
+      url: "/v1/webhooks/hook_ecorione_001",
+      payload: {
+        deliveryId: "delivery-webhook-001",
+        occurredAt: "2026-09-19T10:10:00.000Z",
+        payload: { action: "opened" },
+        metadata: { sender: "integration-test" },
+      },
+    });
+    expect(delivered.statusCode).toBe(202);
+    expect(delivered.json()).toMatchObject({ triggerId, deduplicated: false });
+    expect(temporalClient.startGraph).toHaveBeenCalledWith(
+      expect.objectContaining({
+        triggerId,
+        input: { action: "opened" },
+      }),
+    );
+    await app.close();
+  });
+
+  it("rejects duplicate webhook hookId at the Flow owner boundary", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app } = build();
+
+    const first = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: webhookPayload(),
+    });
+    expect(first.statusCode).toBe(201);
+
+    mockProject();
+    mockPolicyAllow();
+    const second = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: { ...webhookPayload(), name: "Duplicate hook" },
+    });
+    expect(second.statusCode).toBe(409);
     await app.close();
   });
 

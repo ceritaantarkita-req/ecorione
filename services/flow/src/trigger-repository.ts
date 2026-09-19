@@ -18,7 +18,7 @@ interface TriggerRow {
   workspace_id: string;
   project_id: string;
   name: string;
-  kind: "manual" | "time";
+  kind: "manual" | "time" | "event" | "webhook";
   graph_id: string;
   graph_version: number;
   version_policy: "PINNED";
@@ -38,6 +38,25 @@ interface ManualFireRow {
   graph_id: string;
   graph_version: number;
   created_at: string;
+}
+
+interface EventDeliveryRow {
+  trigger_id: string;
+  dedupe_key: string;
+  event_id: string;
+  event_digest: string;
+  state: "PENDING" | "STARTED";
+  workflow_id: string;
+  operation_id: string;
+  graph_id: string;
+  graph_version: number;
+  created_at: string;
+}
+
+export interface EventDeliveryReservation {
+  readonly response: TriggerFireResponse;
+  readonly state: "PENDING" | "STARTED";
+  readonly deduplicated: boolean;
 }
 
 export class TriggerNotFoundError extends Error {
@@ -66,8 +85,22 @@ export class TriggerProjectConflictError extends Error {
 }
 export class TriggerKindConflictError extends Error {
   constructor() {
-    super("kind Trigger tidak boleh berubah pada PE-03.");
+    super("kind Trigger tidak boleh berubah.");
     this.name = "TriggerKindConflictError";
+  }
+}
+
+export class TriggerEventDedupeConflictError extends Error {
+  constructor() {
+    super("dedupeKey Trigger sudah dipakai oleh event yang berbeda.");
+    this.name = "TriggerEventDedupeConflictError";
+  }
+}
+
+export class TriggerWebhookHookConflictError extends Error {
+  constructor(hookId: string) {
+    super(`hookId webhook sudah dipakai Trigger lain: ${hookId}.`);
+    this.name = "TriggerWebhookHookConflictError";
   }
 }
 
@@ -95,7 +128,10 @@ function fromRow(row: TriggerRow): TriggerDefinition {
   });
 }
 
-function fireFromRow(row: ManualFireRow, deduplicated: boolean): TriggerFireResponse {
+function fireFromRow(
+  row: ManualFireRow | EventDeliveryRow,
+  deduplicated: boolean,
+): TriggerFireResponse {
   return TriggerFireResponseSchema.parse({
     triggerId: row.trigger_id,
     graphId: row.graph_id,
@@ -140,8 +176,30 @@ export class TriggerRepository {
     return trigger;
   }
 
+  findWebhookByHookId(hookId: string): TriggerDefinition | null {
+    const rows = this.db.raw
+      .prepare("SELECT * FROM triggers WHERE kind='webhook' ORDER BY id ASC")
+      .all() as TriggerRow[];
+    for (const row of rows) {
+      const trigger = fromRow(row);
+      if (
+        trigger.kind === "webhook" &&
+        (trigger.configuration as { hookId?: string }).hookId === hookId
+      ) {
+        return trigger;
+      }
+    }
+    return null;
+  }
+
   create(input: TriggerCreateRequest, now: Timestamp): TriggerDefinition {
     const id = makeId("trigger");
+    if (input.kind === "webhook") {
+      const hookId = (input.configuration as { hookId: string }).hookId;
+      if (this.findWebhookByHookId(hookId) !== null) {
+        throw new TriggerWebhookHookConflictError(hookId);
+      }
+    }
     const temporalScheduleId = input.kind === "time" ? scheduleId(id) : null;
     this.db.raw
       .prepare(
@@ -175,6 +233,13 @@ export class TriggerRepository {
     if (current.workspaceId !== input.workspaceId) throw new TriggerWorkspaceConflictError();
     if (current.projectId !== input.projectId) throw new TriggerProjectConflictError();
     if (current.kind !== input.kind) throw new TriggerKindConflictError();
+    if (input.kind === "webhook") {
+      const hookId = (input.configuration as { hookId: string }).hookId;
+      const existing = this.findWebhookByHookId(hookId);
+      if (existing !== null && existing.id !== id) {
+        throw new TriggerWebhookHookConflictError(hookId);
+      }
+    }
     if (current.revision !== input.expectedRevision) {
       throw new TriggerRevisionConflictError(input.expectedRevision, current.revision);
     }
@@ -264,5 +329,69 @@ export class TriggerRepository {
       .prepare("SELECT * FROM trigger_manual_fires WHERE trigger_id=? AND request_id=?")
       .get(triggerId, requestId) as ManualFireRow | undefined;
     return row === undefined ? response : fireFromRow(row, inserted.changes === 0);
+  }
+
+  reserveEventDelivery(
+    triggerId: TriggerId,
+    dedupeKey: string,
+    eventId: string,
+    eventDigest: string,
+    response: TriggerFireResponse,
+    now: Timestamp,
+  ): EventDeliveryReservation {
+    const inserted = this.db.raw
+      .prepare(
+        `INSERT OR IGNORE INTO trigger_event_deliveries (
+          trigger_id,dedupe_key,event_id,event_digest,state,workflow_id,operation_id,
+          graph_id,graph_version,created_at
+        ) VALUES (?,?,?,?,'PENDING',?,?,?,?,?)`,
+      )
+      .run(
+        triggerId,
+        dedupeKey,
+        eventId,
+        eventDigest,
+        response.workflowId,
+        response.operationId,
+        response.graphId,
+        response.graphVersion,
+        now,
+      );
+    const row = this.db.raw
+      .prepare("SELECT * FROM trigger_event_deliveries WHERE trigger_id=? AND dedupe_key=?")
+      .get(triggerId, dedupeKey) as EventDeliveryRow | undefined;
+    if (row === undefined) {
+      throw new Error("Event delivery reservation gagal dibaca kembali.");
+    }
+    if (row.event_digest !== eventDigest || row.event_id !== eventId) {
+      throw new TriggerEventDedupeConflictError();
+    }
+    const deduplicated = inserted.changes === 0;
+    return {
+      response: fireFromRow(row, deduplicated),
+      state: row.state,
+      deduplicated,
+    };
+  }
+
+  markEventDeliveryStarted(triggerId: TriggerId, dedupeKey: string, eventDigest: string): void {
+    const result = this.db.raw
+      .prepare(
+        `UPDATE trigger_event_deliveries
+         SET state='STARTED'
+         WHERE trigger_id=? AND dedupe_key=? AND event_digest=?`,
+      )
+      .run(triggerId, dedupeKey, eventDigest);
+    if (result.changes !== 1) {
+      const row = this.db.raw
+        .prepare("SELECT * FROM trigger_event_deliveries WHERE trigger_id=? AND dedupe_key=?")
+        .get(triggerId, dedupeKey) as EventDeliveryRow | undefined;
+      if (row === undefined || row.event_digest !== eventDigest) {
+        throw new TriggerEventDedupeConflictError();
+      }
+      if (row.state !== "STARTED") {
+        throw new Error("Event delivery tidak dapat ditandai STARTED.");
+      }
+    }
   }
 }

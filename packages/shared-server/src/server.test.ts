@@ -26,6 +26,19 @@ describe("createServer", () => {
     expect(wrong.statusCode).toBe(401);
   });
 
+  it("membolehkan hanya route template yang eksplisit memakai auth lokal", async () => {
+    const app = createServer({
+      name: "test-svc",
+      token: "internal-secret",
+      authExemptRoutes: ["/public/:id"],
+    });
+    app.post("/public/:id", async () => ({ ok: true }));
+    app.get("/protected", async () => ({ ok: true }));
+
+    expect((await app.inject({ method: "POST", url: "/public/demo" })).statusCode).toBe(200);
+    expect((await app.inject({ method: "GET", url: "/protected" })).statusCode).toBe(401);
+  });
+
   it("meloloskan request dengan token yang benar", async () => {
     const app = createServer({ name: "test-svc", token: "secret" });
     app.get("/protected", async () => ({ ok: true }));

@@ -24,6 +24,8 @@ export interface CreateServerOptions {
   readonly bodyLimit?: number | undefined;
   /** Bounded process-local defensive limiter. Set max=0 to disable explicitly. */
   readonly rateLimit?: RateLimitOptions | undefined;
+  /** Exact Fastify route templates that implement their own authentication. Default: none. */
+  readonly authExemptRoutes?: readonly string[] | undefined;
 }
 
 declare module "fastify" {
@@ -83,6 +85,7 @@ export function createServer(options: CreateServerOptions): FastifyInstance {
   });
   const metrics = new OperationalMetrics(options.name);
   const rateLimit = validateRateLimit(options.rateLimit ?? DEFAULT_RATE_LIMIT);
+  const authExemptRoutes = new Set(options.authExemptRoutes ?? []);
   const rateStates = new Map<string, RateState>();
   attachOperationalMetrics(app, metrics);
   app.decorateRequest("requestId", "");
@@ -146,6 +149,8 @@ export function createServer(options: CreateServerOptions): FastifyInstance {
 
   app.addHook("onRequest", async (req: FastifyRequest, reply: FastifyReply) => {
     if (req.url === "/healthz" || options.token === undefined) return;
+    const route = req.routeOptions.url;
+    if (typeof route === "string" && authExemptRoutes.has(route)) return;
     const authorization = req.headers.authorization;
     if (
       !bearerMatches(

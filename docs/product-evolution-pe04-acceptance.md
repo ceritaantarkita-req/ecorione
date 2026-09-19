@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **REQUIRED FOR PE-04 CLOSURE**
+Status: **CLOSED / SATISFIED — PR #173**
 
 PE-04 exposes existing Flow/Trigger/Temporal execution as the product-facing **Work** surface. It must not create a Task domain or a second execution database.
 

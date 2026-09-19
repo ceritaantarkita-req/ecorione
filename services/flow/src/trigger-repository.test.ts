@@ -5,9 +5,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import { openFlowDatabase } from "./db.js";
 import { FlowGraphRepository } from "./graph-repository.js";
 import {
+  TriggerEventDedupeConflictError,
   TriggerKindConflictError,
   TriggerRepository,
   TriggerRevisionConflictError,
+  TriggerWebhookHookConflictError,
 } from "./trigger-repository.js";
 
 const dirs: string[] = [];
@@ -60,7 +62,7 @@ function manualCreate() {
   } as const;
 }
 
-describe("PE-03 TriggerRepository", () => {
+describe("PE-03/PE-05 TriggerRepository", () => {
   it("persists definitions across reopen and assigns deterministic schedule identity", () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-trigger-"));
     dirs.push(dir);
@@ -150,6 +152,127 @@ describe("PE-03 TriggerRepository", () => {
       ).toThrow(TriggerKindConflictError);
     } finally {
       db.close();
+    }
+  });
+
+  it("persists webhook definitions and enforces unique hook identity", () => {
+    const db = openFlowDatabase(":memory:");
+    try {
+      new FlowGraphRepository(db).create(graph(), NOW);
+      const repo = new TriggerRepository(db);
+      const first = repo.create(
+        {
+          ...manualCreate(),
+          name: "Webhook",
+          kind: "webhook",
+          configuration: {
+            adapter: "generic",
+            hookId: "hook_ecorione_001",
+            source: "github",
+            eventKind: "push",
+          },
+        } as never,
+        NOW,
+      );
+      expect(first.kind).toBe("webhook");
+      expect(first.temporalScheduleId).toBeNull();
+      expect(repo.findWebhookByHookId("hook_ecorione_001")?.id).toBe(first.id);
+
+      expect(() =>
+        repo.create(
+          {
+            ...manualCreate(),
+            name: "Duplicate",
+            kind: "webhook",
+            configuration: {
+              adapter: "generic",
+              hookId: "hook_ecorione_001",
+              source: "github",
+              eventKind: "push",
+            },
+          } as never,
+          LATER,
+        ),
+      ).toThrow(TriggerWebhookHookConflictError);
+    } finally {
+      db.close();
+    }
+  });
+
+  it("keeps event delivery receipt restart-safe and rejects conflicting dedupe reuse", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-event-dedupe-"));
+    dirs.push(dir);
+    const path = join(dir, "flow.sqlite");
+
+    const firstDb = openFlowDatabase(path);
+    new FlowGraphRepository(firstDb).create(graph(), NOW);
+    const firstRepo = new TriggerRepository(firstDb);
+    const trigger = firstRepo.create(
+      {
+        ...manualCreate(),
+        name: "Event",
+        kind: "event",
+        configuration: { source: "github", eventKind: "push" },
+      } as never,
+      NOW,
+    );
+    const response = {
+      triggerId: trigger.id,
+      graphId: trigger.graphId,
+      graphVersion: 1,
+      workflowId: "wf_trigger_cccccccccccccccccccccccc",
+      operationId: "op_trigger_cccccccccccccccccccccccc",
+      deduplicated: false,
+    } as never;
+    const reserved = firstRepo.reserveEventDelivery(
+      trigger.id,
+      "github:delivery-001",
+      "evt_delivery001",
+      "a".repeat(64),
+      response,
+      NOW,
+    );
+    expect(reserved.state).toBe("PENDING");
+    expect(reserved.deduplicated).toBe(false);
+    firstDb.close();
+
+    const secondDb = openFlowDatabase(path);
+    try {
+      const secondRepo = new TriggerRepository(secondDb);
+      const recovered = secondRepo.reserveEventDelivery(
+        trigger.id,
+        "github:delivery-001",
+        "evt_delivery001",
+        "a".repeat(64),
+        response,
+        LATER,
+      );
+      expect(recovered.state).toBe("PENDING");
+      expect(recovered.deduplicated).toBe(true);
+
+      secondRepo.markEventDeliveryStarted(trigger.id, "github:delivery-001", "a".repeat(64));
+      const started = secondRepo.reserveEventDelivery(
+        trigger.id,
+        "github:delivery-001",
+        "evt_delivery001",
+        "a".repeat(64),
+        response,
+        LATER,
+      );
+      expect(started.state).toBe("STARTED");
+
+      expect(() =>
+        secondRepo.reserveEventDelivery(
+          trigger.id,
+          "github:delivery-001",
+          "evt_delivery002",
+          "b".repeat(64),
+          response,
+          LATER,
+        ),
+      ).toThrow(TriggerEventDedupeConflictError);
+    } finally {
+      secondDb.close();
     }
   });
 

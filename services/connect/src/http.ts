@@ -49,6 +49,7 @@ import {
 import { LocalModelDigestMismatchError } from "./providers/local-model-provenance.js";
 import type { LocalRuntimeId } from "./providers/local-runtime.js";
 import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
+import { registerConnectWebhookRoutes } from "./webhook-http.js";
 
 export const DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES = 32 * 1024 * 1024;
 
@@ -139,6 +140,9 @@ export interface BuildConnectServerOptions {
   readonly localMultimodalAdapter?: MultimodalAdapter | undefined;
   readonly hostedMultimodalAdapter?: MultimodalAdapter | undefined;
   readonly multimodalBodyLimitBytes?: number | undefined;
+  readonly flowUrl?: string | undefined;
+  /** Development-only fallback when the encrypted vault is not configured. */
+  readonly webhookRootSecret?: string | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -147,6 +151,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     token: options.token,
     logger: options.logger,
     bodyLimit: options.multimodalBodyLimitBytes ?? DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES,
+    authExemptRoutes: ["/v1/webhooks/:hookId"],
   });
   const metrics = observabilityFor(app);
   const cache = options.cache ?? new ExactMatchCache();
@@ -182,6 +187,12 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
   registerConnectControlRoutes(app, {
     runtimeSettings: options.runtimeSettings,
     credentialVault: options.credentialVaultAdmin,
+  });
+  registerConnectWebhookRoutes(app, {
+    flowUrl: options.flowUrl ?? "http://127.0.0.1:17028",
+    internalToken: options.token,
+    credentialVault: options.credentialVault,
+    developmentRootSecret: options.webhookRootSecret,
   });
 
   function recordCompletion(
