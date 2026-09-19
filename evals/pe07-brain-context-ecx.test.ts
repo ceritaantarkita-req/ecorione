@@ -321,7 +321,7 @@ describe("PE-07 deterministic Brain + Context + ECX comparative evidence", () =>
         unauthorizedReferenceCount: results.filter(
           (entry) => entry.siblingLeak || entry.restrictedLeak,
         ).length,
-        medianCandidateReductionPct,
+        medianCandidateReductionPct: medianReductionPct,
         strictReductionCases,
       },
       cases: results,
