@@ -162,9 +162,25 @@ describe("chat", () => {
   });
 
   it("authority deny stops hosted chat before Context or Connect egress", async () => {
-    const err = await chat(deps, chatRequest({ workspaceId: "ws_denied" as never }), NOW).catch(
-      (e: unknown) => e,
+    const deniedProject = deps.projects.create(
+      {
+        workspaceId: "ws_denied" as never,
+        name: "Denied",
+        description: "",
+        instruction: "",
+        memoryPolicy: "GLOBAL_PLUS_PROJECT",
+        autonomyCeiling: "L3",
+      },
+      NOW,
     );
+    const err = await chat(
+      deps,
+      chatRequest({
+        workspaceId: "ws_denied" as never,
+        projectId: deniedProject.id,
+      }),
+      NOW,
+    ).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(CapabilityAuthorityDeniedError);
     const denied = deps.repo
       .listAuditEvents({})
