@@ -194,3 +194,15 @@ export const TriggerFireResponseSchema = z
   })
   .strict();
 export type TriggerFireResponse = z.infer<typeof TriggerFireResponseSchema>;
+
+
+export const TriggerScheduleRuntimeSchema = z
+  .object({
+    triggerId: TriggerIdSchema,
+    scheduleId: z.string().min(1).max(256),
+    paused: z.boolean(),
+    nextActionTimes: z.array(TimestampSchema).max(20),
+    recentActionCount: z.number().int().nonnegative(),
+  })
+  .strict();
+export type TriggerScheduleRuntime = z.infer<typeof TriggerScheduleRuntimeSchema>;
