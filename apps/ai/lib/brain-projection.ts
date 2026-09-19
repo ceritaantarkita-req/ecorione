@@ -18,7 +18,7 @@ import {
   type RunListItem,
   type TriggerDefinition,
 } from "@ecorione/shared-schema";
-import { flowUrl, hubUrl, internalToken } from "./env";
+import { flowUrl, hubUrl, internalToken } from "./env.js";
 
 const FlowListResponseSchema = z.object({ graphs: z.array(FlowGraphSummarySchema) }).strict();
 const TriggerListResponseSchema = z
@@ -57,7 +57,6 @@ async function ownerJson(
     response = await fetch(url, {
       headers: requestHeaders(),
       redirect: "error",
-      cache: "no-store",
     });
   } catch {
     throw new BrainOwnerRequestError(owner, 502, `${owner} tidak dapat dihubungi.`);
