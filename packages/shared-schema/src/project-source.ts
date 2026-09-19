@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  ArtifactIdSchema,
-  ProjectIdSchema,
-  WorkspaceIdSchema,
-} from "./ids.js";
+import { ArtifactIdSchema, ProjectIdSchema, WorkspaceIdSchema } from "./ids.js";
 import { TimestampSchema } from "./memory.js";
 import { FlowGraphIdSchema } from "./nodes.js";
 import { SpacePageIdSchema } from "./space.js";
