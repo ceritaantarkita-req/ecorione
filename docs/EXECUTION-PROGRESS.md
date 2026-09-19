@@ -26,14 +26,14 @@ Status: **CURRENT SUMMARY**
 | PE-04 Work + Schedule + Runs | **CLOSED / PASS** |
 | PE-05 Event/Webhook automation | **CLOSED / PASS** |
 | PE-06 Brain V1 | **CLOSED / PASS** |
-| PE-07 Brain + Context + ECX | **ACTIVE** |
+| PE-07 Brain + Context + ECX | **ACTIVE — CLOSURE CANDIDATE** |
 | PE-08 Product closure | **BLOCKED BY PE-07** |
 
 ## Latest closure
 
 PE-06 closed on PR #176 implementation head `66c7909572a1410095916843f8f46a385ecb628b`, closure head `25508dd1cef5d8ebb8846448c7732ddde7866a59`, and merged as `d54ad62c303847b23634ba33aead4749f21bf1d0`.
 
-Current active gate: **PE-07 Brain + Context + ECX**.
+Current active gate: **PE-07 Brain + Context + ECX** on `pe/pe-07-brain-context-ecx-20260919` from main `ffa1531a12a1149d3dfceaea8f82e53619e938d4`. Reviewed implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d` passed CI #1457, Product Eval #696, and MCP #855. Closure-grade deterministic evidence reported 66.67% median candidate reduction, 100% required-reference/provenance retention, and zero unauthorized refs. Documentation closure-head gates are now required; PE-08 remains blocked.
 
 ```text
 PE-00  CLOSED / PASS

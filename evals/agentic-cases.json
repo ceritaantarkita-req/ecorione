@@ -10,7 +10,7 @@
       "category": "reliability",
       "origin": {
         "kind": "task",
-        "source": "docs/active-work-plan.md",
+        "source": "docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md",
         "ref": "W04"
       },
       "prompt": "The Operations screen says the fleet is degraded. Determine which required service is causing degradation. Do not blame an optional service without checking the snapshot.",

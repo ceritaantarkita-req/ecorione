@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
   BrainGraphResponseSchema,
+  BrainNeighborhoodResponseSchema,
   FlowGraphSummarySchema,
   ProjectSchema,
   ProjectSourceListResponseSchema,
@@ -9,6 +10,8 @@ import {
   TriggerDefinitionSchema,
   type BrainEdge,
   type BrainGraphResponse,
+  type BrainNeighborhoodQuery,
+  type BrainNeighborhoodResponse,
   type BrainNode,
   type BrainNodeType,
   type BrainQuery,
@@ -106,18 +109,26 @@ function exactProject<T extends { workspaceId: string; projectId: string }>(
   return rows.filter((row) => row.workspaceId === workspaceId && row.projectId === projectId);
 }
 
-async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot> {
-  // Authorization is deliberately first. No sibling owner is queried until Hub confirms
-  // that this Project belongs to the caller Workspace.
+export async function authorizeBrainProject(input: {
+  readonly workspaceId: string;
+  readonly projectId: string;
+}): Promise<Project> {
   const project = ProjectSchema.parse(
     await ownerJson(
       "HubProject",
-      `${brainHubUrl()}/v1/projects/${encodeURIComponent(query.projectId)}?workspaceId=${encodeURIComponent(query.workspaceId)}`,
+      `${brainHubUrl()}/v1/projects/${encodeURIComponent(input.projectId)}?workspaceId=${encodeURIComponent(input.workspaceId)}`,
     ),
   );
-  if (project.workspaceId !== query.workspaceId || project.id !== query.projectId) {
+  if (project.workspaceId !== input.workspaceId || project.id !== input.projectId) {
     throw new BrainOwnerRequestError("HubProject", 404, "Project tidak tersedia.");
   }
+  return project;
+}
+
+async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot> {
+  // Authorization is deliberately first. No sibling owner is queried until Hub confirms
+  // that this Project belongs to the caller Workspace.
+  const project = await authorizeBrainProject(query);
 
   const common = new URLSearchParams({
     workspaceId: query.workspaceId,
@@ -365,4 +376,115 @@ export function buildBrainGraph(
 
 export async function queryBrainGraph(query: BrainQuery): Promise<BrainGraphResponse> {
   return buildBrainGraph(query, await readOwnerSnapshot(query));
+}
+
+export class BrainNeighborhoodSeedError extends Error {
+  constructor(readonly seedNodeId: string) {
+    super(`Brain seed tidak tersedia di Project ini: ${seedNodeId}`);
+    this.name = "BrainNeighborhoodSeedError";
+  }
+}
+
+function sourceUriConstraint(nodes: readonly BrainNode[]): string[] {
+  return [
+    ...new Set(
+      nodes.flatMap((node) => {
+        if (
+          node.type !== "Source" ||
+          node.availability !== "AVAILABLE" ||
+          node.metadata.resourceType !== "url" ||
+          typeof node.metadata.resourceId !== "string"
+        ) {
+          return [];
+        }
+        return [node.metadata.resourceId];
+      }),
+    ),
+  ]
+    .sort((a, b) => a.localeCompare(b))
+    .slice(0, 32);
+}
+
+export function selectBrainNeighborhood(
+  graph: BrainGraphResponse,
+  query: BrainNeighborhoodQuery,
+): BrainNeighborhoodResponse {
+  if (graph.workspaceId !== query.workspaceId || graph.projectId !== query.projectId) {
+    throw new BrainOwnerRequestError("HubProject", 404, "Project tidak tersedia.");
+  }
+
+  const nodesById = new Map(graph.nodes.map((node) => [node.id, node]));
+  for (const seedNodeId of query.seedNodeIds) {
+    if (!nodesById.has(seedNodeId)) throw new BrainNeighborhoodSeedError(seedNodeId);
+  }
+
+  const allowedNodeTypes =
+    query.nodeTypes === undefined ? null : new Set<BrainNodeType>(query.nodeTypes);
+  const allowedEdgeTypes =
+    query.edgeTypes === undefined ? null : new Set<BrainEdge["type"]>(query.edgeTypes);
+  const seedSet = new Set(query.seedNodeIds);
+  const distance = new Map<string, number>(query.seedNodeIds.map((id) => [id, 0]));
+  let frontier = new Set(query.seedNodeIds);
+  const orderedEdges = [...graph.edges].sort((a, b) => a.id.localeCompare(b.id));
+
+  for (let hop = 0; hop < query.maxHops && frontier.size > 0; hop += 1) {
+    const next = new Set<string>();
+    for (const edge of orderedEdges) {
+      if (allowedEdgeTypes !== null && !allowedEdgeTypes.has(edge.type)) continue;
+      const pairs: Array<[string, string]> = [
+        [edge.sourceNodeId, edge.targetNodeId],
+        [edge.targetNodeId, edge.sourceNodeId],
+      ];
+      for (const [from, to] of pairs) {
+        if (!frontier.has(from) || distance.has(to)) continue;
+        const node = nodesById.get(to);
+        if (node === undefined) continue;
+        if (!seedSet.has(to) && allowedNodeTypes !== null && !allowedNodeTypes.has(node.type)) {
+          continue;
+        }
+        distance.set(to, hop + 1);
+        next.add(to);
+      }
+    }
+    frontier = next;
+  }
+
+  const reachable = [...distance.keys()]
+    .map((id) => nodesById.get(id))
+    .filter((node): node is BrainNode => node !== undefined)
+    .sort((a, b) => (distance.get(a.id) ?? 0) - (distance.get(b.id) ?? 0) || compareNode(a, b));
+  const nodes = reachable.slice(0, query.maxNodes);
+  const visible = new Set(nodes.map((node) => node.id));
+  const matchingEdges = orderedEdges.filter(
+    (edge) =>
+      visible.has(edge.sourceNodeId) &&
+      visible.has(edge.targetNodeId) &&
+      (allowedEdgeTypes === null || allowedEdgeTypes.has(edge.type)),
+  );
+  const edges = matchingEdges.slice(0, 256);
+
+  return BrainNeighborhoodResponseSchema.parse({
+    workspaceId: graph.workspaceId,
+    projectId: graph.projectId,
+    seedNodeIds: [...query.seedNodeIds].sort((a, b) => a.localeCompare(b)),
+    nodes,
+    edges,
+    contextConstraint: {
+      sourceUris: sourceUriConstraint(nodes),
+    },
+    truncated:
+      graph.truncated || reachable.length > nodes.length || matchingEdges.length > edges.length,
+  });
+}
+
+export async function queryBrainNeighborhood(
+  query: BrainNeighborhoodQuery,
+): Promise<BrainNeighborhoodResponse> {
+  const graph = await queryBrainGraph({
+    workspaceId: query.workspaceId,
+    projectId: query.projectId,
+    limit: 200,
+    runLimit: 100,
+  });
+  return selectBrainNeighborhood(graph, query);
 }

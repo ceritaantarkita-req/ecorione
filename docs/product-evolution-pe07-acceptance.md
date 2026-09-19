@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **REQUIRED FOR PE-07 CLOSURE**
+Status: **CLOSURE CANDIDATE — IMPLEMENTATION GATES PASS**
 
 PE-07 connects the already-closed Brain V1 projection to the existing Context retrieval and ECX optimization path. The purpose is to test whether deterministic Project/Brain neighborhoods can reduce the candidate set before Context + ECX without weakening retrieval quality, provenance, authorization, or owner boundaries.
 
@@ -142,6 +142,33 @@ No paid provider call is authorized by PE-07 merely because cost is a metric.
 
 Default evaluation should use deterministic non-model checks and/or the existing local runtime. Any hosted/provider billed-cost measurement requires separate explicit operator authorization for scope and budget.
 
+## Predeclared closure-grade thresholds
+
+Declared on **2026-09-19 before the first PE-07 closure-grade evidence run**. These gates must not be loosened in response to a failing result.
+
+Safety/retention gates:
+
+- required/authoritative reference retention: **100% per case**;
+- unauthorized sibling-Project or cross-Workspace references: **0**;
+- invalidated, over-sensitivity, disallowed syncClass, or otherwise Context-rejected facts admitted by Brain narrowing: **0**;
+- ECX-selected memory-fact refs outside the Context-authorized result set: **0**;
+- Brain failure/unknown seed fallback that widens to baseline automatically: **0**;
+- provenance retained for every selected Context fact: **100%**.
+
+Optimization gates:
+
+- narrowed candidate count must be **<= baseline authorized candidate count in every measured case**;
+- an `optimization-positive` conclusion requires a **median candidate-count reduction >= 25%** and strict reduction in **at least 2/3 measured cases**;
+- if the safety/retention gates pass but the optimization gate does not, PE-07 evidence must say **NO MEASURED BENEFIT / DO NOT ENABLE BRAIN NARROWING BY DEFAULT** rather than weakening the threshold.
+
+Measurement boundary for the first closure-grade lane:
+
+- deterministic local repository fixtures, no hosted/provider call;
+- model input tokens/model quality: **N/A unless a separately authorized local-model lane is added**;
+- provider billed cost: **N/A / not authorized**;
+- cache state: **N/A for the deterministic no-model lane**;
+- latency is reported as observed evidence, not used as a universal performance claim.
+
 ## Required implementation tests
 
 ```text
@@ -197,6 +224,32 @@ PE-07 does not authorize:
 - L4 autonomy;
 - production VPS/Cloudflare activation;
 - paid hosted evidence without explicit authorization.
+
+## Implementation evidence checkpoint
+
+Reviewed implementation head: `892726c20ac95dded26fdc3fd2000ad4bb56363d`.
+
+```text
+CI                              35447877629 / #1457 PASS
+Product Eval                    35447877612 / #696  PASS
+MCP External HTTPS Acceptance   35447877592 / #855  PASS
+```
+
+The closure-grade deterministic/no-model lane passed the predeclared gates:
+
+- 3 measured cases;
+- baseline candidates = 3 and narrowed candidates = 1 in every case;
+- median candidate reduction = **66.67%**;
+- strict reduction = **3/3 cases**;
+- required-reference retention = **100%**;
+- provenance retention = **100%**;
+- unauthorized references = **0**;
+- sibling-Project leaks = **0**;
+- restricted-data leaks = **0**.
+
+Evidence: [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md).
+
+PE-07 remains a closure candidate until this documentation head passes the same exact-head gates and PR #178 is merged.
 
 ## End-to-end closure proof
 

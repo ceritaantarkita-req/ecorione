@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-07 ACTIVE / BRAIN + CONTEXT + ECX**
+Status: **PE-07 ACTIVE / CLOSURE CANDIDATE**
 
 ## Latest closed item
 
@@ -28,7 +28,7 @@ Closure evidence: [verification/pe-06-brain-v1-closure-2026-09-19.md](verificati
 
 **PE-07 — Brain + Context + ECX**
 
-Docs/transition branch: `docs/pe-06-closure-pe-07-activation-20260919`. Implementation branch must be created from synchronized `main` after this transition is merged.
+Implementation branch: `pe/pe-07-brain-context-ecx-20260919`, created from synchronized `main` `ffa1531a12a1149d3dfceaea8f82e53619e938d4` after PR #177 merged.
 
 Architecture boundary: [adr/0038-brain-derived-projection.md](adr/0038-brain-derived-projection.md).  
 Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).
@@ -47,6 +47,34 @@ Current boundary:
 - oracle/reference-known lanes must stay labeled as oracle/upper-bound evidence;
 - no graph database, second retriever/vector owner, broad LLM extraction, or full Brain graph prompt dump;
 - no paid hosted/provider calls without explicit operator authorization.
+
+Implementation checkpoint:
+
+- bounded Brain neighborhood schema/query is implemented over the PE-06 derived graph;
+- URL Source nodes may emit an exact bounded `sourceUris` constraint;
+- Context applies that optional constraint only after its existing authorization/policy candidate set is built;
+- omitted constraint is the explicit baseline; an explicit empty constraint is fail-closed and returns zero candidates;
+- the PE-07 integration path sends only Context retrieval hits to ECX as `memoryFact` refs, then uses existing `semantic-v1` selection;
+- no model/provider call is part of authorization or the first deterministic evidence lane;
+- predeclared closure thresholds are frozen in the PE-07 acceptance contract before the first evidence run.
+
+
+Closure-candidate checkpoint:
+
+```text
+reviewed implementation head    892726c20ac95dded26fdc3fd2000ad4bb56363d
+CI                              35447877629 / #1457 PASS
+Product Eval                    35447877612 / #696  PASS
+MCP External HTTPS Acceptance   35447877592 / #855  PASS
+median candidate reduction      66.67%
+required-reference retention    100%
+provenance retention            100%
+unauthorized refs               0
+```
+
+Closure evidence: [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md).
+
+PE-07 is still ACTIVE until the documentation-only closure head passes exact-head gates and PR #178 merges.
 
 Dependency gate:
 
