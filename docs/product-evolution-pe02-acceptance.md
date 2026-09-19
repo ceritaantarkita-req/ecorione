@@ -2,11 +2,11 @@
 
 Last updated: **2026-09-19**
 
-Status: **REQUIRED FOR PE-02 CLOSURE**
+Status: **CLOSED / PASS**
 
-PE-02 adds Project Sources as references to existing owners. It must not copy owner content into Hub or create a new storage/service authority.
+PE-02 adds Project Sources as references to existing owners. Hub stores only binding metadata; canonical content remains owned by Artifact/Context, Space, Flow, or Connect.
 
-## Binding model
+## Delivered binding model
 
 Supported V1 resource types:
 
@@ -18,7 +18,7 @@ mcp-server
 url
 ```
 
-Every binding must carry:
+Every binding carries:
 
 ```text
 projectId
@@ -30,93 +30,89 @@ role
 createdAt
 ```
 
-Rules:
-
-1. one Project binding registry is Hub-owned;
-2. Project metadata/bindings only — owner content is never copied;
-3. `projectId + resourceType + resourceId + role` is unique/idempotent;
-4. detach removes only the binding, never the owner resource;
-5. archived Project cannot accept new bindings.
+The Hub-owned registry enforces idempotent identity by Project + Workspace + resource type/id + role. Detach removes only the binding.
 
 ## Owner validation
 
-Before creating a binding, Hub must validate the canonical owner:
+Verified before attach:
 
-- Artifact: metadata/content identity remains owned by Artifact/Context; nonexistent/revoked artifact fails.
-- Space page: page must exist in the same Workspace.
-- Flow graph: graph must exist in the same Workspace; cross-Workspace fails.
-- MCP server: server must be visible to the same Workspace through Connect.
-- URL: HTTPS reference only; no inline credentials, fragment, or copied remote content.
+- Artifact: Context authorization for the Artifact pointer must pass; denied/missing Artifact is not bound.
+- Space page: canonical page must resolve in the Project Workspace.
+- Flow graph: graph must be visible in the Project Workspace; explicit cross-Project reuse remains possible inside the same Workspace.
+- MCP server: Connect must expose the server to the Project Workspace.
+- URL: HTTPS only, with no inline username/password or fragment; remote content is not fetched/copied into Hub.
 
-Owner lookup failure must fail closed. Binding creation must never succeed on a guessed or stale owner identity.
+Owner lookup failure fails closed.
 
-## Cross-Workspace and cross-Project rules
+## Isolation and lifecycle
 
-1. a Project can bind only resources authorized in its Workspace;
-2. cross-Workspace Space/Flow/MCP binding is rejected;
-3. Artifact binding must pass existing scope/sensitivity authorization before it becomes usable;
-4. sharing one optional source across multiple Projects is explicit through multiple bindings;
-5. removing a source from Project A does not remove Project B binding or owner data.
+Verified:
+
+1. Project A/B lists are isolated;
+2. the same optional source may be shared explicitly through separate bindings;
+3. cross-Workspace binding is rejected before owner lookup;
+4. archived Project cannot accept new bindings;
+5. removing Project A binding leaves Project B binding and owner data intact;
+6. missing/revoked owner resources are shown as `UNAVAILABLE` without silently deleting the binding.
 
 ## Audit
 
-Attach and detach must create Hub audit events with:
+Attach/detach emit:
 
 ```text
 PROJECT_SOURCE_ATTACHED
 PROJECT_SOURCE_DETACHED
 ```
 
-Audit detail must include Project, Workspace, resource type/id, owner, and role. No secret payload or copied content is stored in the audit event.
-
-## Read behavior
-
-Project Sources API must:
-
-1. list bindings by Project;
-2. return owner references/metadata sufficient for UI navigation;
-3. fail cleanly when an owner resource was deleted/revoked after binding;
-4. never silently return sibling Project bindings;
-5. preserve the distinction between binding metadata and canonical owner data.
+Audit detail contains only Project/Workspace/resource/owner/role metadata and does not copy source content or credentials.
 
 ## UI
 
-Project detail adds a **Sources** surface that can:
+Project detail now includes **Sources** with:
 
-1. list attached sources;
-2. attach supported resource references;
-3. detach a binding;
-4. show owner/resource type and a clear unavailable state when canonical owner lookup fails;
-5. remain usable in the existing narrow viewport shell.
+- list;
+- attach;
+- detach;
+- supported type/role selection;
+- owner/type/resource identity;
+- unavailable state;
+- responsive narrow-layout behavior.
 
-No Trigger/Schedule, Run, or Brain UI is added in PE-02.
+No PE-03 Trigger/Schedule, PE-04 Run, or PE-06 Brain UI was pulled into this batch.
 
 ## Persistence / recovery
 
-1. Hub DB reopen preserves bindings;
-2. backup/restore semantics remain Hub metadata + owner data independently;
-3. rebuilding/losing Project bindings never damages Artifact/Space/Flow/Connect canonical data.
+Hub DB reopen preserves bindings. Binding loss/rebuild does not mutate canonical owner data because Hub contains references only.
 
-## Required tests
+## Closure evidence
 
-Minimum deterministic coverage:
+Reviewed implementation head:
 
 ```text
-binding repository create/list/dedupe/detach/reopen
-Project A/B negative isolation
-cross-workspace rejection
-archived Project rejection
-owner missing/revoked negative paths
-Artifact authorization negative path
-Space workspace validation
-Flow workspace validation
-MCP workspace visibility validation
-URL validation
-attach/detach audit events
-Ai Project Sources API/UI contracts
-normal CI
-Product Eval
-relevant MCP/runtime acceptance when Connect boundary changes
+PR #170
+head a6167df469cf491015b232aff8a192b32a25c569
+CI #1223 PASS
+Product Eval #462 PASS
+MCP External HTTPS Acceptance #628 PASS
 ```
 
-PE-03 must not begin until the exact reviewed PE-02 head is green and merged.
+Deterministic coverage includes:
+
+```text
+binding create/list/dedupe/detach/reopen
+Project A/B isolation
+cross-Workspace rejection
+archived Project rejection
+owner missing/revoked unavailable state
+Artifact authorization denial
+Space Workspace validation
+Flow Workspace validation
+MCP Workspace visibility
+URL validation
+attach/detach audit
+Ai Project Sources API/UI contracts
+```
+
+The closure-doc head must pass the normal exact-head gates before PR #170 is merged.
+
+PE-03 must not begin until PR #170 is merged and post-merge main is clean.
