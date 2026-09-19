@@ -29,7 +29,7 @@ The hardening adds deterministic line-ending policy, platform-independent deskto
 
 Evidence: [verification/windows-native-portability-closure-2026-09-20.md](verification/windows-native-portability-closure-2026-09-20.md).
 
-Clean-checkout reproducibility hardening also passed on PR #183 implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` with CI #1479 and Product Eval #718. CI no longer rewrites those three historical PE test files before `format:check`.
+Clean-checkout reproducibility hardening is also CLOSED / PASS on PR #183. The implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed CI #1479 + Product Eval #718; the final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 + Product Eval #721 and merged to `main` as `4980b3ceb149be58788467d2e11769de12977d5a`. CI no longer rewrites those three historical PE test files before `format:check`.
 
 ## Product Evolution status
 
