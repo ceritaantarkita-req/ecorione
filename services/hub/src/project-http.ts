@@ -18,10 +18,10 @@ import {
   DefaultProjectArchiveError,
   ProjectArchivedError,
   ProjectNotFoundError,
-  ProjectRegistry,
   ProjectRequiredError,
   ProjectWorkspaceConflictError,
 } from "./project-registry.js";
+import type { ProjectRegistry } from "./project-registry.js";
 
 const ListQuerySchema = z.object({
   workspaceId: WorkspaceIdSchema,
