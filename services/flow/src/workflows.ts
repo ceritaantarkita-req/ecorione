@@ -192,8 +192,11 @@ function nodeInput(
 export async function scheduledTriggerWorkflow(
   input: ScheduledTriggerWorkflowInput,
 ): Promise<FlowGraphExecutionResult> {
-  const occurrenceWorkflowId = workflowInfo().workflowId;
-  const suffix = scheduledOccurrenceSuffix(`${input.triggerId}:${occurrenceWorkflowId}`);
+  const info = workflowInfo();
+  const occurrenceWorkflowId = info.workflowId;
+  const suffix = scheduledOccurrenceSuffix(
+    `${input.triggerId}:${occurrenceWorkflowId}:${info.runId}`,
+  );
   const runId = `wf_${suffix}` as WorkflowId;
   const operationId = `op_${suffix}` as OperationId;
 
