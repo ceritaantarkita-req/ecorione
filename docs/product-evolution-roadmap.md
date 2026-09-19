@@ -20,8 +20,8 @@ Agent execution protocol: [product-evolution-agent-guide.md](product-evolution-a
 | PE-04 | Work UI + Schedule + unified Runs | **CLOSED / PASS** |
 | PE-05 | Event/Webhook automation under existing policy | **CLOSED / PASS** |
 | PE-06 | Brain V1 deterministic graph projection | **CLOSED / PASS** |
-| PE-07 | Brain -> Context -> ECX optimization + measurement | **ACTIVE** |
-| PE-08 | Product closure, migration/UX/regression/evidence | PE-07 closed |
+| PE-07 | Brain -> Context -> ECX optimization + measurement | **CLOSED / PASS** |
+| PE-08 | Product closure, migration/UX/regression/evidence | **ACTIVE** |
 
 Do not execute multiple PE batches in one PR. Do not skip a batch without updating this roadmap and recording why.
 
@@ -351,8 +351,8 @@ PE-03  CLOSED / PASS
 PE-04  CLOSED / PASS
 PE-05  CLOSED / PASS
 PE-06  CLOSED / PASS
-PE-07  ACTIVE
-PE-08  BLOCKED BY PE-07
+PE-07  CLOSED / PASS
+PE-08  ACTIVE — PRODUCT CLOSURE
 ```
 
-PE-06 is CLOSED / PASS. PE-07 is currently active; PE-08 remains blocked until PE-07 is CLOSED / PASS on the exact reviewed and merged head.
+PE-07 is CLOSED / PASS on PR #178 and merged main `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. PE-08 Product closure is the active final Product Evolution batch.
