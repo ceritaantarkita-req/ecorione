@@ -68,6 +68,7 @@ const triggerActivities = proxyActivities<TriggerActivities>({
 });
 
 const PE04_RUN_LIFECYCLE_PATCH = "pe04-run-lifecycle-v1";
+const PE04_TRIGGER_CORRELATION_PATCH = "pe04-trigger-correlation-v1";
 
 const runTraceActivities = proxyActivities<Pick<FlowGraphActivities, "recordGraphRunTrace">>({
   startToCloseTimeout: "30 seconds",
@@ -220,6 +221,7 @@ export async function scheduledTriggerWorkflow(
     operationId,
   });
 
+  const preserveTriggerCorrelation = patched(PE04_TRIGGER_CORRELATION_PATCH);
   return executeChild(graphExecutionWorkflow, {
     workflowId: runId,
     args: [
@@ -228,7 +230,7 @@ export async function scheduledTriggerWorkflow(
         operationId,
         plan: input.plan,
         input: input.input,
-        triggerId: input.triggerId,
+        ...(preserveTriggerCorrelation ? { triggerId: input.triggerId } : {}),
         autonomy: input.requestedAutonomy,
         depth: 0,
       },
@@ -406,7 +408,9 @@ export async function graphExecutionWorkflow(
               operationId: execution.operationId,
               plan,
               input: incoming.value,
-              triggerId: execution.triggerId,
+              ...(recordRunLifecycle
+                ? { triggerId: execution.triggerId ?? null }
+                : {}),
               autonomy: execution.autonomy,
               depth: execution.depth + 1,
             },
