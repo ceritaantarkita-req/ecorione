@@ -10,7 +10,7 @@ ALTER TABLE quarantine ADD COLUMN project_id TEXT;
 UPDATE episodes
 SET project_id='prj_personal'
 WHERE scope='personal'
-  AND source_app='ai'
+  AND (source_app='ai' OR source_app LIKE 'connect:%')
   AND session_id IS NOT NULL
   AND project_id IS NULL;
 
@@ -29,7 +29,7 @@ WHERE f.scope='personal'
 UPDATE quarantine
 SET project_id='prj_personal'
 WHERE scope='personal'
-  AND source_app='ai'
+  AND (source_app='ai' OR source_app LIKE 'connect:%')
   AND session_id IS NOT NULL
   AND project_id IS NULL;
 
