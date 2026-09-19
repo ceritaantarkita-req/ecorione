@@ -16,6 +16,7 @@ import {
   UpstreamError,
   type OrchestrateDeps,
 } from "./orchestrate.js";
+import { ProjectRegistry } from "./project-registry.js";
 import { HubRepository } from "./repository.js";
 
 const NOW = "2026-09-08T10:30:00.000Z" as Timestamp;
@@ -55,6 +56,7 @@ beforeEach(() => {
   deps = {
     repo: new HubRepository(db),
     history: new HistoryLedger(db),
+    projects: new ProjectRegistry(db),
     authority: new CapabilityRegistry(db),
     contextUrl: "http://context.local",
     connectUrl: "http://connect.local",
@@ -79,7 +81,7 @@ function chatRequest(overrides: Partial<ChatRequest> = {}): ChatRequest {
 function mockContextBeforeConnect(): void {
   contextPool
     .intercept({
-      path: "/v1/core-memory?scope=personal&maxSensitivity=INTERNAL&hostedEligible=1",
+      path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=1",
       method: "GET",
     })
     .reply(200, CORE_MEMORY);
@@ -88,7 +90,7 @@ function mockContextBeforeConnect(): void {
     .reply(200, { hits: [], diagnostics: {} });
   contextPool
     .intercept({
-      path: "/v1/episodes?sessionId=sess_abc&limit=6&hostedEligible=1",
+      path: "/v1/episodes?sessionId=sess_abc&projectId=prj_personal&limit=6&hostedEligible=1",
       method: "GET",
     })
     .reply(200, { episodes: [] });
@@ -173,7 +175,7 @@ describe("chat", () => {
   it("Context tidak bisa dihubungi → UpstreamError Context", async () => {
     contextPool
       .intercept({
-        path: "/v1/core-memory?scope=personal&maxSensitivity=INTERNAL&hostedEligible=1",
+        path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=1",
         method: "GET",
       })
       .replyWithError(new Error("down"));
