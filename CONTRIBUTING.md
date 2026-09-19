@@ -11,7 +11,7 @@ pnpm verify
 ```
 
 Butuh Node 22.20.0 (ikuti `.node-version`) dan pnpm 10.28.0. `pnpm verify` menjalankan format, lint, typecheck, test, dan
-secret scan — hal yang sama dengan CI. Checkout harus menghormati `.gitattributes`: text LF secara default, sedangkan `.cmd`/`.bat` CRLF.
+secret scan — hal yang sama dengan CI. Checkout harus menghormati `.gitattributes`: Git menyimpan text secara canonical LF; `.cmd`/`.bat` di-checkout sebagai CRLF. Untuk perubahan line-ending, gunakan `git add --renormalize` dan verifikasi `git ls-files --eol` agar index tetap `i/lf` dan working tree Windows `w/crlf`.
 
 ## Alur kerja
 
