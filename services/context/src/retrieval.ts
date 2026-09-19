@@ -75,7 +75,6 @@ export class ContextRetriever {
       maxSensitivity,
       options.hostedEligibleOnly ?? false,
       options.projectId ?? null,
-      options.candidateSourceUris,
     );
     const sourceConstraint =
       options.candidateSourceUris === undefined
@@ -98,6 +97,7 @@ export class ContextRetriever {
       maxSensitivity,
       options.hostedEligibleOnly ?? false,
       options.projectId ?? null,
+      options.candidateSourceUris,
     );
     const vector = this.vectorSearch(options.queryEmbedding, candidateLimit, allowedIds);
     const fused = reciprocalRankFusion([lexical, vector]);
