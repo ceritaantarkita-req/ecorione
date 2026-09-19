@@ -12,6 +12,7 @@ import {
   FlowGraphUpdateRequestSchema,
   FlowIdSchema,
   FlowNodeIdSchema,
+  OperationIdSchema,
   ProjectIdSchema,
   RunListResponseSchema,
   FlowStartRequestSchema,
