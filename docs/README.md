@@ -18,7 +18,7 @@ This file is the single navigation entry point for repository documentation. If 
 10. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — closed PE-05 Event/Webhook contract.
 11. **[product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md)** — closed PE-06 Brain V1 contract.
 12. **[product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md)** — closed PE-07 Brain + Context + ECX contract.
-13. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — active PE-08 Product closure contract.
+13. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — closed PE-08 Product closure contract.
 14. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
 15. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
 15. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
@@ -57,9 +57,9 @@ As of 2026-09-19:
 - PE-05: **CLOSED / PASS**;
 - PE-06: **CLOSED / PASS**;
 - PE-07: **CLOSED / PASS**;
-- PE-08: **ACTIVE / PRODUCT CLOSURE**.
+- PE-08: **CLOSED / PASS**.
 
-PE-07 Brain + Context + ECX is CLOSED / PASS. PE-08 Product closure is active; use [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md) as the closure contract.
+PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed; there is no active Product Evolution implementation queue.
 
 ## Architecture and product reference
 

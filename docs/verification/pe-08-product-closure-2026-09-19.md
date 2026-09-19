@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CLOSURE CANDIDATE / IMPLEMENTATION GATES PASS**
+Status: **CLOSED / PASS**
 
 PE-08 is the final Product Evolution closure batch. This record tracks the repository-side audit/evidence for PE-00 through PE-07 as one baseline. It does not authorize new product scope.
 
@@ -18,6 +18,10 @@ implementation head             33f9e891c3152a82304d5f1e31693604c855d94c
 CI                              35449548713 / #1469 PASS
 Product Eval                    35449548657 / #708 PASS
 dedicated MCP/Desktop workflow  not triggered by final implementation diff
+closure evidence head           5d1b1c80168a26ae38af33d862a6fa26b019802c
+closure-head CI                 35450417735 / #1473 PASS
+closure-head Product Eval       35450417734 / #712 PASS
+merge main                      b32d57022344ad08a59b6b7d163507c5530a7ca6
 ```
 
 ## Closure audit matrix
@@ -136,8 +140,17 @@ The explicit PE-08 integrated restore/rebuild test passed inside Product Eval. T
 
 No S0/S1 closure defect remained on the implementation head. The one implementation-cycle failure was formatting-only on the new PE-08 test; the canonical Prettier output was applied and the temporary formatter helper was removed before the reviewed implementation head.
 
-## Closure gate remaining
+## Closure
 
-This documentation change creates the closure-candidate head. That exact head must pass CI + Product Eval and every workflow triggered by its final diff. PR #180 must then merge before PE-08 can be marked CLOSED / PASS.
+Closure evidence head `5d1b1c80168a26ae38af33d862a6fa26b019802c` passed:
+
+```text
+CI                              35450417735 / #1473 PASS
+Product Eval                    35450417734 / #712  PASS
+```
+
+PR #180 was marked ready and merged to `main` as `b32d57022344ad08a59b6b7d163507c5530a7ca6`.
+
+PE-08 is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed at the documented boundaries. No Batch 13 is opened.
 
 Production VPS/Cloudflare, rendered local browser walkthrough, paid hosted evidence, AutoClick, L4 autonomy, and Brain persistence remain outside this repository closure claim.

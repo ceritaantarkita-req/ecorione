@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CANONICAL DESIGN / PE-08 ACTIVE**
+Status: **CANONICAL DESIGN / PE-00..PE-08 CLOSED**
 
 This document defines the next ECORIONE product model after the previous Batch 1–12 / W / F6 baseline closed. It is intentionally built on the architecture already present in the repository. It does **not** authorize a new service, scheduler, graph database, autonomous engine, paid provider run, or production deployment unless a later batch explicitly requires and approves it.
 

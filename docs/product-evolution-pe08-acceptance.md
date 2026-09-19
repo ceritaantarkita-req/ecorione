@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **REQUIRED FOR PE-08 CLOSURE**
+Status: **CLOSED / SATISFIED — PR #180**
 
 PE-08 is the Product Evolution closure batch. Its job is to prove that PE-00 through PE-07 form one clean, reproducible, isolated product baseline. PE-08 is not a feature-expansion batch.
 
@@ -183,6 +183,14 @@ PE-08 is CLOSED / PASS only when all are true:
 - current docs converge on one state;
 - production deployment remains separate unless explicitly activated.
 
+## Closure proof
+
+Reviewed implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed CI #1469 and Product Eval #708. Closure evidence head `5d1b1c80168a26ae38af33d862a6fa26b019802c` passed CI #1473 and Product Eval #712. PR #180 merged to `main` as `b32d57022344ad08a59b6b7d163507c5530a7ca6`.
+
+The closure matrix passed 36 files / 148 tests in Product Eval. Normal CI passed 191 files + 1 skipped and 991 tests + 2 skipped, plus Phase 4 process acceptance, production-ops, security/toolchain/container reviews, Windows installer specification/acceptance tests, and production build.
+
+The dedicated MCP External HTTPS Acceptance and Desktop Installer workflows were not triggered by the final PE-08 diff; no synthetic result is claimed.
+
 ## Claim boundary
 
-PE-08 closes the repository/product baseline at the tested boundaries. It does not prove universal model quality, universal optimizer savings, production-host readiness on an untested target host, or safety outside the documented policy/test surfaces.
+PE-08 closes the repository/product baseline at the tested boundaries. It does not prove universal model quality, universal optimizer savings, production-host readiness on an untested target host, rendered-browser UX beyond separately collected runtime evidence, or safety outside the documented policy/test surfaces.
