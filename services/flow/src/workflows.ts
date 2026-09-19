@@ -203,6 +203,7 @@ export async function scheduledTriggerWorkflow(
   await triggerActivities.authorizeScheduledTrigger({
     ...input,
     occurrenceWorkflowId,
+    occurrenceRunId: info.runId,
     operationId,
   });
 
