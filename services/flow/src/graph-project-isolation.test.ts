@@ -54,7 +54,8 @@ function executionFor(
   graphDocument: ReturnType<typeof graph>,
 ): FlowGraphExecutionInput {
   const validation = validateAndCompileFlowGraph(graphDocument, 1);
-  if (!validation.valid || validation.plan === null) throw new Error("Graph failed compilation.");
+  if (!validation.valid || validation.plan === null)
+    throw new Error("Graph failed compilation.");
   return {
     runId: "wf_projectisolation01" as never,
     operationId: "op_projectisolation01" as never,
