@@ -34,6 +34,8 @@ describe("PE-04 Work source contract", () => {
     expect(page).toContain("workspaceId: WORKSPACE_ID");
     expect(page).toContain("projectId: nextProjectId");
     expect(page).toContain("/api/flow/runs/");
+    expect(page).toContain("workspaceId: WORKSPACE_ID");
+    expect(page).toContain("projectId,");
     expect(page).toContain("Key = operationId");
   });
 
