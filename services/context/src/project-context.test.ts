@@ -97,10 +97,14 @@ describe("PE-01 Project context", () => {
 
       expect(repo.getCoreMemory().blocks.map((block) => block.value)).toEqual(["GLOBAL"]);
       expect(
-        repo.getCoreMemory({ projectId: "prj_alpha" as never }).blocks.map((block) => block.value),
+        repo
+          .getCoreMemory({ projectId: "prj_alpha" as never })
+          .blocks.map((block) => block.value),
       ).toEqual(["ALPHA"]);
       expect(
-        repo.getCoreMemory({ projectId: "prj_beta" as never }).blocks.map((block) => block.value),
+        repo
+          .getCoreMemory({ projectId: "prj_beta" as never })
+          .blocks.map((block) => block.value),
       ).toEqual(["BETA"]);
     } finally {
       db.close();
