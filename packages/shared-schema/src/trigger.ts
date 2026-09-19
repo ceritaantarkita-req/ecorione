@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { FlowGraphIdSchema } from "./nodes.js";
 import {
+  EventIdSchema,
   OperationIdSchema,
   ProjectIdSchema,
   TriggerIdSchema,
@@ -17,6 +18,10 @@ export type TriggerKind = z.infer<typeof TriggerKindSchema>;
 export const PE03_TRIGGER_KINDS = ["manual", "time"] as const;
 export const Pe03TriggerKindSchema = z.enum(PE03_TRIGGER_KINDS);
 export type Pe03TriggerKind = z.infer<typeof Pe03TriggerKindSchema>;
+
+export const PE05_TRIGGER_KINDS = ["manual", "time", "event", "webhook"] as const;
+export const Pe05TriggerKindSchema = z.enum(PE05_TRIGGER_KINDS);
+export type Pe05TriggerKind = z.infer<typeof Pe05TriggerKindSchema>;
 
 export const TriggerVersionPolicySchema = z.literal("PINNED");
 export type TriggerVersionPolicy = z.infer<typeof TriggerVersionPolicySchema>;
@@ -69,9 +74,46 @@ export type TimeTriggerConfiguration = z.infer<typeof TimeTriggerConfigurationSc
 
 export const ManualTriggerConfigurationSchema = z.object({}).strict();
 
+const EventSourceSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(96)
+  .regex(/^[a-z0-9][a-z0-9._-]*$/);
+const EventKindSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(128)
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/);
+
+export const EventTriggerConfigurationSchema = z
+  .object({
+    source: EventSourceSchema,
+    eventKind: EventKindSchema,
+  })
+  .strict();
+export type EventTriggerConfiguration = z.infer<typeof EventTriggerConfigurationSchema>;
+
+export const WebhookTriggerConfigurationSchema = z
+  .object({
+    adapter: z.literal("github"),
+    eventKind: EventKindSchema,
+    repository: z
+      .string()
+      .trim()
+      .min(3)
+      .max(256)
+      .regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
+  })
+  .strict();
+export type WebhookTriggerConfiguration = z.infer<typeof WebhookTriggerConfigurationSchema>;
+
 export const TriggerConfigurationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("manual"), configuration: ManualTriggerConfigurationSchema }),
   z.object({ kind: z.literal("time"), configuration: TimeTriggerConfigurationSchema }),
+  z.object({ kind: z.literal("event"), configuration: EventTriggerConfigurationSchema }),
+  z.object({ kind: z.literal("webhook"), configuration: WebhookTriggerConfigurationSchema }),
 ]);
 export type TriggerConfiguration = z.infer<typeof TriggerConfigurationSchema>;
 
@@ -103,6 +145,20 @@ export const TriggerCreateRequestSchema = z.discriminatedUnion("kind", [
       configuration: TimeTriggerConfigurationSchema,
     })
     .strict(),
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("event"),
+      configuration: EventTriggerConfigurationSchema,
+    })
+    .strict(),
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("webhook"),
+      configuration: WebhookTriggerConfigurationSchema,
+    })
+    .strict(),
 ]);
 export type TriggerCreateRequest = z.infer<typeof TriggerCreateRequestSchema>;
 
@@ -110,8 +166,13 @@ export const TriggerDefinitionSchema = z
   .object({
     id: TriggerIdSchema,
     ...TriggerBaseFields,
-    kind: Pe03TriggerKindSchema,
-    configuration: z.union([ManualTriggerConfigurationSchema, TimeTriggerConfigurationSchema]),
+    kind: Pe05TriggerKindSchema,
+    configuration: z.union([
+      ManualTriggerConfigurationSchema,
+      TimeTriggerConfigurationSchema,
+      EventTriggerConfigurationSchema,
+      WebhookTriggerConfigurationSchema,
+    ]),
     temporalScheduleId: z.string().min(1).max(256).nullable(),
     revision: z.number().int().min(1),
     createdAt: TimestampSchema,
@@ -128,13 +189,25 @@ export const TriggerDefinitionSchema = z
           message: "Manual Trigger tidak boleh memiliki Temporal schedule.",
         });
       }
-    } else {
+    } else if (value.kind === "time") {
       const parsed = TimeTriggerConfigurationSchema.safeParse(value.configuration);
       if (!parsed.success || value.temporalScheduleId === null) {
         ctx.addIssue({
           code: "custom",
           path: ["configuration"],
           message: "Time Trigger wajib memiliki konfigurasi dan Temporal schedule ID.",
+        });
+      }
+    } else {
+      const parsed =
+        value.kind === "event"
+          ? EventTriggerConfigurationSchema.safeParse(value.configuration)
+          : WebhookTriggerConfigurationSchema.safeParse(value.configuration);
+      if (!parsed.success || value.temporalScheduleId !== null) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["configuration"],
+          message: "Event/Webhook Trigger tidak boleh memiliki Temporal schedule.",
         });
       }
     }
@@ -155,6 +228,22 @@ export const TriggerUpdateRequestSchema = z.discriminatedUnion("kind", [
       ...TriggerBaseFields,
       kind: z.literal("time"),
       configuration: TimeTriggerConfigurationSchema,
+      expectedRevision: z.number().int().min(1),
+    })
+    .strict(),
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("event"),
+      configuration: EventTriggerConfigurationSchema,
+      expectedRevision: z.number().int().min(1),
+    })
+    .strict(),
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("webhook"),
+      configuration: WebhookTriggerConfigurationSchema,
       expectedRevision: z.number().int().min(1),
     })
     .strict(),
@@ -205,3 +294,66 @@ export const TriggerScheduleRuntimeSchema = z
   })
   .strict();
 export type TriggerScheduleRuntime = z.infer<typeof TriggerScheduleRuntimeSchema>;
+
+
+const MAX_TRIGGER_EVENT_PAYLOAD_BYTES = 64 * 1024;
+const MAX_TRIGGER_EVENT_METADATA_BYTES = 16 * 1024;
+
+function jsonBytes(value: unknown): number {
+  try {
+    return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+  } catch {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+
+const TriggerEventMetadataValueSchema = z.union([
+  z.string().max(4096),
+  z.number().finite(),
+  z.boolean(),
+  z.null(),
+]);
+
+export const NormalizedTriggerEventSchema = z
+  .object({
+    eventId: EventIdSchema,
+    source: EventSourceSchema,
+    kind: EventKindSchema,
+    occurredAt: TimestampSchema,
+    receivedAt: TimestampSchema,
+    workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema,
+    dedupeKey: z
+      .string()
+      .trim()
+      .min(1)
+      .max(256)
+      .regex(/^[A-Za-z0-9._:@/-]+$/),
+    payload: z.unknown(),
+    metadata: z.record(z.string().min(1).max(128), TriggerEventMetadataValueSchema).default({}),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (jsonBytes(value.payload) > MAX_TRIGGER_EVENT_PAYLOAD_BYTES) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["payload"],
+        message: "payload event melebihi batas 64 KiB.",
+      });
+    }
+    if (jsonBytes(value.metadata) > MAX_TRIGGER_EVENT_METADATA_BYTES) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["metadata"],
+        message: "metadata event melebihi batas 16 KiB.",
+      });
+    }
+  });
+export type NormalizedTriggerEvent = z.infer<typeof NormalizedTriggerEventSchema>;
+
+export const TriggerEventDispatchRequestSchema = z
+  .object({
+    event: NormalizedTriggerEventSchema,
+  })
+  .strict();
+export type TriggerEventDispatchRequest = z.infer<typeof TriggerEventDispatchRequestSchema>;
