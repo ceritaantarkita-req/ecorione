@@ -49,7 +49,8 @@ export interface GraphTraceActivityInput extends GraphNodeActivityContext {
 }
 export interface GraphRunTraceActivityInput {
   readonly execution: FlowGraphExecutionInput;
-  readonly name: "flow.graph.run.started" | "flow.graph.run.completed" | "flow.graph.run.failed";
+  readonly name:
+    "flow.graph.run.started" | "flow.graph.run.completed" | "flow.graph.run.failed";
   readonly attributes: Readonly<Record<string, string | number | boolean>>;
 }
 
