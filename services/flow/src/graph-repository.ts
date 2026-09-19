@@ -8,6 +8,7 @@ import {
   type FlowGraphSaveResult,
   type FlowGraphSummary,
   type FlowGraphVersionView,
+  type ProjectId,
   type Timestamp,
   type WorkspaceId,
 } from "@ecorione/shared-schema";
@@ -17,6 +18,7 @@ import { digestCanonical, validateAndCompileFlowGraph } from "./node-registry.js
 interface GraphRow {
   id: string;
   workspace_id: string;
+  project_id: string | null;
   name: string;
   scope: string;
   sensitivity: string;
@@ -50,10 +52,17 @@ export class FlowGraphWorkspaceConflictError extends Error {
     this.name = "FlowGraphWorkspaceConflictError";
   }
 }
+export class FlowGraphProjectConflictError extends Error {
+  constructor() {
+    super("projectId graph tidak boleh berubah setelah dibuat.");
+    this.name = "FlowGraphProjectConflictError";
+  }
+}
 function summary(row: GraphRow): FlowGraphSummary {
   return FlowGraphSummarySchema.parse({
     graphId: row.id,
     workspaceId: row.workspace_id,
+    projectId: row.project_id,
     name: row.name,
     scope: row.scope,
     sensitivity: row.sensitivity,
@@ -75,18 +84,24 @@ function version(row: VersionRow): FlowGraphVersionView {
 
 export class FlowGraphRepository {
   constructor(readonly db: FlowDatabase) {}
-  list(workspaceId?: WorkspaceId): FlowGraphSummary[] {
-    const rows = (
-      workspaceId === undefined
-        ? this.db.raw
-            .prepare("SELECT * FROM flow_graphs ORDER BY updated_at DESC, id ASC")
-            .all()
-        : this.db.raw
-            .prepare(
-              "SELECT * FROM flow_graphs WHERE workspace_id=? ORDER BY updated_at DESC, id ASC",
-            )
-            .all(workspaceId)
-    ) as GraphRow[];
+  list(workspaceId?: WorkspaceId, projectId?: ProjectId | null): FlowGraphSummary[] {
+    const clauses: string[] = [];
+    const params: string[] = [];
+    if (workspaceId !== undefined) {
+      clauses.push("workspace_id=?");
+      params.push(workspaceId);
+    }
+    if (projectId !== undefined) {
+      if (projectId === null) clauses.push("project_id IS NULL");
+      else {
+        clauses.push("project_id=?");
+        params.push(projectId);
+      }
+    }
+    const where = clauses.length === 0 ? "" : `WHERE ${clauses.join(" AND ")}`;
+    const rows = this.db.raw
+      .prepare(`SELECT * FROM flow_graphs ${where} ORDER BY updated_at DESC, id ASC`)
+      .all(...params) as GraphRow[];
     return rows.map(summary);
   }
   create(graphInput: FlowGraphDocument, now: Timestamp): FlowGraphSaveResult {
@@ -96,9 +111,18 @@ export class FlowGraphRepository {
     const tx = this.db.raw.transaction(() => {
       this.db.raw
         .prepare(
-          "INSERT INTO flow_graphs(id,workspace_id,name,scope,sensitivity,current_version,created_at,updated_at) VALUES(?,?,?,?,?,1,?,?)",
+          "INSERT INTO flow_graphs(id,workspace_id,project_id,name,scope,sensitivity,current_version,created_at,updated_at) VALUES(?,?,?,?,?,?,1,?,?)",
         )
-        .run(graph.id, graph.workspaceId, graph.name, graph.scope, graph.sensitivity, now, now);
+        .run(
+          graph.id,
+          graph.workspaceId,
+          graph.projectId,
+          graph.name,
+          graph.scope,
+          graph.sensitivity,
+          now,
+          now,
+        );
       this.db.raw
         .prepare(
           "INSERT INTO flow_graph_versions(graph_id,version,digest,graph_json,validation_json,created_at) VALUES(?,1,?,?,?,?)",
@@ -121,6 +145,7 @@ export class FlowGraphRepository {
       GraphRow | undefined;
     if (row === undefined) throw new FlowGraphNotFoundError(graph.id);
     if (row.workspace_id !== graph.workspaceId) throw new FlowGraphWorkspaceConflictError();
+    if (row.project_id !== graph.projectId) throw new FlowGraphProjectConflictError();
     if (row.current_version !== expectedVersion)
       throw new FlowGraphVersionConflictError(expectedVersion, row.current_version);
     const digest = digestCanonical(graph);
