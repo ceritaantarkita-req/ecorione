@@ -102,6 +102,15 @@ export default function ProjectsPage() {
     }
   }
 
+  function openProject(projectId: string): void {
+    try {
+      window.localStorage.setItem("ecorione.projectId", projectId);
+    } catch {
+      // Explicit query parameter remains sufficient when storage is unavailable.
+    }
+    window.location.assign(`/?project=${encodeURIComponent(projectId)}`);
+  }
+
   const selected = projects.find((project) => project.id === selectedId);
 
   return (
@@ -161,12 +170,13 @@ export default function ProjectsPage() {
                   <p>{selected.description || "Belum ada deskripsi."}</p>
                 </div>
                 <div className={styles.actions}>
-                  <Link
+                  <button
                     className="ecr-btn ecr-btn--primary"
-                    href={`/?project=${encodeURIComponent(selected.id)}`}
+                    type="button"
+                    onClick={() => openProject(selected.id)}
                   >
                     Buka Chat
-                  </Link>
+                  </button>
                   {selected.id !== PERSONAL_ID ? (
                     <button
                       className="ecr-btn ecr-btn--secondary"
