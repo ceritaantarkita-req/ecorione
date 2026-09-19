@@ -27,12 +27,12 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PE-04: **CLOSED / PASS**;
 - PE-05: **CLOSED / PASS**;
 - PE-06: **CLOSED / PASS**;
-- PE-07: **ACTIVE / BRAIN + CONTEXT + ECX**;
-- PE-08: **BLOCKED BY PE-07**;
+- PE-07: **CLOSED / PASS**;
+- PE-08: **ACTIVE / PRODUCT CLOSURE**;
 - production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
-Do not create Batch 13. PE-07 is active; do not pull PE-08 scope forward.
+Do not create Batch 13. PE-08 Product closure is active; do not pull new feature scope into closure.
 
 ## Architecture invariants
 
@@ -70,7 +70,7 @@ Do not create Batch 13. PE-07 is active; do not pull PE-08 scope forward.
 
 ## Current active scope
 
-PE-07 is active. Integrate the closed Brain V1 projection into the existing Context -> ECX path only for bounded candidate narrowing and measurement, following ADR-38, the PE-07 acceptance contract, and the agent guide. Context remains retrieval owner; ECX remains context-pack optimizer; Brain must not become a second retriever/ranker, graph database, canonical store, or prompt dump. Do not use paid hosted calls without explicit operator authorization, and do not pull PE-08 closure scope forward.
+PE-08 Product closure is active. Audit PE-00..PE-07 as one reproducible baseline following the PE-08 acceptance contract and roadmap. Prioritize migration/isolation/security, restart/persistence, backup/restore/rebuild, runtime/UX regression, documentation convergence, and exact-head evidence. Fix only reproducible closure blockers; do not hide new feature work inside PE-08. Production VPS/Cloudflare, AutoClick, L4 autonomy, graph persistence, and paid hosted evidence remain outside this scope unless separately authorized.
 
 ## Git / closure discipline
 
