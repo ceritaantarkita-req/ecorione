@@ -463,10 +463,8 @@ export class ContextRepository {
     if (row === undefined) throw new FactNotFoundError(id);
     if (row.t_invalid !== null) throw new FactAlreadyInvalidatedError(id);
     const fact = rowToFact(row);
-    if (fact.projectId !== projectId) {
-      throw new ContextError(
-        `Fakta ${id} berada di Project lain atau bukan memori global yang diizinkan.`,
-      );
+    if (fact.projectId !== null && fact.projectId !== projectId) {
+      throw new ContextError(`Fakta ${id} berada di Project lain.`);
     }
     if (Date.parse(now) < Date.parse(fact.tValid))
       throw new ContextError(
