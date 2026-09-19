@@ -39,6 +39,11 @@ const openrouterApiKey =
   credentialVault === undefined ? process.env.OPENROUTER_API_KEY || undefined : undefined;
 const openaiApiKey =
   credentialVault === undefined ? process.env.OPENAI_API_KEY || undefined : undefined;
+const webhookRootSecret =
+  credentialVault === undefined
+    ? process.env.ECORIONE_WEBHOOK_ROOT_SECRET || undefined
+    : undefined;
+const flowUrl = process.env.ECORIONE_FLOW_URL ?? "http://127.0.0.1:17028";
 
 function developmentHostedApiKey(provider = hostedProvider): string | undefined {
   switch (provider) {
@@ -177,6 +182,8 @@ const app = buildConnectServer({
   mcpManager,
   localMultimodalAdapter,
   hostedMultimodalAdapter,
+  flowUrl,
+  webhookRootSecret,
 });
 
 app
