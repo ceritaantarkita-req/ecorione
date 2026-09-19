@@ -17,7 +17,9 @@ Windows suite        191 files PASS + 1 skipped
 Windows tests        990 PASS + 3 skipped
 ```
 
-This is maintenance hardening, not PE-09 or Batch 13. The clean-checkout follow-up is CLOSED / PASS on PR #183: implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed CI #1479 + Product Eval #718; final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 + Product Eval #721 and merged as `4980b3ceb149be58788467d2e11769de12977d5a`.
+This is maintenance hardening, not PE-09 or Batch 13.
+
+Windows command-script EOL normalization is also CLOSED / PASS on PR #185. Exact head `600f459fbe2671e7e4297e60da725b005b6f9533` passed CI #1486, Product Eval #725, and Desktop Installer #76 and merged as `4194e89a2b0611897969eaca2cb9c2b4b360c774`. This was line-ending hygiene only; semantic diff was zero. The clean-checkout follow-up is CLOSED / PASS on PR #183: implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed CI #1479 + Product Eval #718; final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 + Product Eval #721 and merged as `4980b3ceb149be58788467d2e11769de12977d5a`.
 
 ## Latest Product Evolution closure
 
