@@ -20,6 +20,7 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - original Batch 1–12 / W / F6 baseline: **CLOSED**;
 - Windows runtime + installer: **VERIFIED**;
 - native Windows portability + repository EOL policy: **HARDENED / VERIFIED** (PR #182);
+- clean-checkout / CI format reproducibility: **CLOSED / PASS** (PR #183; CI #1482; Product Eval #721);
 - Product Evolution architecture + PE-00..PE-08 roadmap: **DOCUMENTED**;
 - PE-00: **CLOSED / PASS**;
 - PE-01: **CLOSED / PASS**;
