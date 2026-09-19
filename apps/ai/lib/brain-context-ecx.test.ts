@@ -71,7 +71,20 @@ function json(value: unknown, status = 200): Response {
   return Response.json(value, { status });
 }
 
-function packetFromPlan(body: Record<string, any>) {
+type JsonRecord = Record<string, unknown>;
+
+function jsonRecord(value: unknown): JsonRecord {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("expected JSON object");
+  }
+  return value as JsonRecord;
+}
+
+function requestBody(init?: RequestInit): JsonRecord | undefined {
+  return init?.body === undefined ? undefined : jsonRecord(JSON.parse(String(init.body)));
+}
+
+function packetFromPlan(body: JsonRecord) {
   return {
     version: 1,
     packetId: "evt_pe07packet01",
@@ -93,7 +106,7 @@ afterEach(() => {
 
 describe("PE-07 Brain -> Context -> ECX integration", () => {
   it("keeps baseline explicit and does not traverse Brain owners", async () => {
-    const calls: Array<{ url: string; body: any }> = [];
+    const calls: Array<{ url: string; body: JsonRecord | undefined }> = [];
     const alpha = fact("mem_pe07alpha", "PE07 alpha authoritative", SOURCE_URI);
     const global = fact("mem_pe07global", "PE07 global supporting");
 
@@ -101,13 +114,13 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
       "fetch",
       vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
         const url = String(input);
-        const body = init?.body === undefined ? undefined : JSON.parse(String(init.body));
+        const body = requestBody(init);
         calls.push({ url, body });
 
         if (url.includes("/v1/projects/") && !url.includes("/sources")) return json(project());
         if (url.endsWith("/v1/retrieve")) return json(retrievePayload([alpha, global], false));
         if (url.endsWith("/v1/exchange/plan")) {
-          const packet = packetFromPlan(body);
+          const packet = packetFromPlan(jsonRecord(body));
           return json({
             packets: [packet],
             metrics: {
@@ -118,7 +131,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
           });
         }
         if (url.endsWith("/v1/exchange/hydrate")) {
-          const packet = body.packet;
+          const packet = jsonRecord(body?.packet);
           return json({
             packetId: packet.packetId,
             hydratedBytes: 80,
@@ -164,7 +177,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
   });
 
   it("uses authorized Brain source neighborhood as a Context constraint before ECX", async () => {
-    const calls: Array<{ url: string; body: any }> = [];
+    const calls: Array<{ url: string; body: JsonRecord | undefined }> = [];
     const alpha = fact("mem_pe07alpha", "PE07 alpha authoritative", SOURCE_URI);
     const projectNodeId = "project:" + createHash("sha256").update(PROJECT_ID).digest("hex");
 
@@ -172,7 +185,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
       "fetch",
       vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
         const url = String(input);
-        const body = init?.body === undefined ? undefined : JSON.parse(String(init.body));
+        const body = requestBody(init);
         calls.push({ url, body });
 
         if (url.includes("/v1/projects/") && !url.includes("/sources")) return json(project());
@@ -205,7 +218,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
         }
         if (url.endsWith("/v1/exchange/plan")) {
           expect(body.refs).toEqual([{ kind: "memoryFact", factId: "mem_pe07alpha" }]);
-          const packet = packetFromPlan(body);
+          const packet = packetFromPlan(jsonRecord(body));
           return json({
             packets: [packet],
             metrics: {
@@ -216,7 +229,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
           });
         }
         if (url.endsWith("/v1/exchange/hydrate")) {
-          const packet = body.packet;
+          const packet = jsonRecord(body?.packet);
           expect(body.selection).toEqual({ mode: "semantic-v1", maxRefs: 4 });
           return json({
             packetId: packet.packetId,
