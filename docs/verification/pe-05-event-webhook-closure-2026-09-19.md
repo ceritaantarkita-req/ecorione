@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CLOSURE CANDIDATE / IMPLEMENTATION GATES PASS**
+Status: **CLOSED / PASS**
 
 ## Reviewed implementation
 
@@ -14,6 +14,12 @@ CI workflow run                 35439232165 PASS
 Product Eval workflow run       35439232138 PASS
 MCP External HTTPS workflow run 35439232130 PASS
 Desktop Installer workflow run  35439232123 PASS
+closure evidence head           3d082f555a0c701eb9911d5caa71f7cf250f5710
+closure-head CI                 35440554953 PASS
+closure-head Product Eval       35440554918 PASS
+closure-head MCP HTTPS          35440554867 PASS
+closure-head Desktop Installer  35440554959 PASS
+merge main                      84defe934bf6b7d0b8868bd04c8c113e70193fc6
 ```
 
 The reviewed implementation head passed the required exact-head repository gates before this closure record was added.
@@ -210,10 +216,10 @@ PE-05 does **not** introduce:
 - `condition` Trigger activation;
 - L4 autonomy.
 
-## Final merge gate
+## Closure
 
-This closure evidence is added after implementation head `b3fa55e689548b5a72c47b331682285eb8fb6eb2` passed all required gates.
+Implementation head `b3fa55e689548b5a72c47b331682285eb8fb6eb2` passed the full implementation gates. Documentation-only closure head `3d082f555a0c701eb9911d5caa71f7cf250f5710` then passed CI, Product Eval, MCP External HTTPS Acceptance, and Desktop Installer.
 
-The resulting documentation-only exact PR head must also pass CI, Product Eval, MCP External HTTPS Acceptance, and any automatically triggered release/installer regression before PR #174 is marked ready and merged.
+PR #174 was marked ready and merged to `main` as `84defe934bf6b7d0b8868bd04c8c113e70193fc6`.
 
-PE-06 remains blocked until PR #174 merges.
+PE-05 is CLOSED / PASS. PE-06 Brain V1 may proceed under ADR-38 and its explicit acceptance contract.
