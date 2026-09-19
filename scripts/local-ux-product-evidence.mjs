@@ -20,6 +20,8 @@ export const OWNER_HEALTH = [
 
 export const NAV_ROUTES = [
   ["Ai", "/"],
+  ["Projects", "/projects"],
+  ["Work", "/work"],
   ["Space", "/space"],
   ["Flow", "/flow"],
   ["Operations", "/ops"],
@@ -30,6 +32,8 @@ export function buildUiSurfaces(baseUrl) {
   const base = baseUrl.replace(/\/+$/, "");
   return [
     ["ai", `${base}/`, "ecorione — Ai"],
+    ["projects", `${base}/projects`, "Projects"],
+    ["work", `${base}/work`, "Work"],
     ["space", `${base}/space`, "Space"],
     ["flow", `${base}/flow`, "Visual workflow builder"],
     ["ops", `${base}/ops`, "Runtime health & telemetry"],
