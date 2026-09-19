@@ -44,6 +44,8 @@ PR #171 is merged and post-merge `main` passed CI #1234, Product Eval #473, and 
 
 Acceptance: [product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md).
 
+Implementation PR: **#172** (`pe/pe-03-trigger-control-plane-20260919`). Closure requires exact-head CI, Product Eval, and Temporal/Phase 4 runtime acceptance before merge.
+
 PE-03 boundary:
 
 - TriggerDefinition schema/storage;
