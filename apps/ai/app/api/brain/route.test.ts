@@ -255,7 +255,7 @@ describe("PE-06 Brain API", () => {
     );
     expect(response.status).toBe(404);
     expect(await response.json()).toMatchObject({
-      error: { code: "PROJECT_UNAVAILABLE" },
+      error: { type: "PROJECT_UNAVAILABLE" },
     });
   });
 
