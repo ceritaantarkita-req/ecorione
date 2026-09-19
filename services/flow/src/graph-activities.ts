@@ -249,6 +249,7 @@ export function createFlowGraphActivities(
             maxSensitivity: cfg.maxSensitivity ?? graph.sensitivity,
             now: nowIso(),
             hostedEligibleOnly: cfg.hostedEligibleOnly,
+            ...(graph.projectId === null ? {} : { projectId: graph.projectId }),
           },
         });
       } else if (node.kind === "artifact") {
@@ -436,6 +437,8 @@ export function createFlowGraphActivities(
         throw new Error(`Subflow ${cfg.graphId} tidak valid/compileable.`);
       if (version.validation.plan.graph.workspaceId !== execution.plan.graph.workspaceId)
         throw new Error("Subflow cross-workspace ditolak.");
+      if (version.validation.plan.graph.projectId !== execution.plan.graph.projectId)
+        throw new Error("Subflow cross-project ditolak sampai execution authorization tersedia.");
       return version.validation.plan;
     },
   };
