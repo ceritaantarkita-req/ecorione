@@ -5,7 +5,7 @@ import { jsonError } from "./proxy";
 export async function proxyToFlow(
   request: Request,
   path: string,
-  method: "GET" | "POST" | "PUT",
+  method: "GET" | "POST" | "PUT" | "PATCH",
 ): Promise<Response> {
   const normalized = normalizeOwnerProxyPath(path);
   if (normalized === null) return jsonError(400, "BAD_REQUEST", "Flow proxy path tidak valid.");
