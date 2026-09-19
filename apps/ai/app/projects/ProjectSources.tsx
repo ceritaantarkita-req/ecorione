@@ -125,9 +125,7 @@ export function ProjectSources(props: {
         <select
           className="ecr-input"
           value={resourceType}
-          onChange={(event) =>
-            setResourceType(event.target.value as ProjectSourceResourceType)
-          }
+          onChange={(event) => setResourceType(event.target.value as ProjectSourceResourceType)}
           aria-label="Tipe source"
         >
           {RESOURCE_TYPES.map((option) => (
@@ -198,9 +196,7 @@ export function ProjectSources(props: {
                   <small>
                     {source.binding.owner} · {source.binding.role}
                   </small>
-                  {source.unavailableReason !== null ? (
-                    <p>{source.unavailableReason}</p>
-                  ) : null}
+                  {source.unavailableReason !== null ? <p>{source.unavailableReason}</p> : null}
                 </div>
                 <button
                   className="ecr-btn ecr-btn--secondary"
