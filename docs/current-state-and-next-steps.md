@@ -69,7 +69,7 @@ PE-06 closed on PR #176 after implementation head `66c7909572a1410095916843f8f46
 
 ## Active: PE-07 Brain + Context + ECX
 
-PE-07 measures whether the closed Brain projection can safely narrow candidates before existing Context retrieval and ECX `semantic-v1` selection. Context remains retrieval owner, ECX remains context-pack optimizer, and Connect remains the model/provider boundary. The batch must preserve a no-Brain baseline, Project isolation, provenance, sensitivity/trust/invalidation rules, and predeclared quality/retention gates. Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).
+PE-07 measures whether the closed Brain projection can safely narrow candidates before existing Context retrieval and ECX `semantic-v1` selection. Implementation is active on `pe/pe-07-brain-context-ecx-20260919` from main `ffa1531a12a1149d3dfceaea8f82e53619e938d4`. The current design derives bounded URL-source constraints from an authorized Brain neighborhood, intersects them inside Context only after normal Project/sensitivity/syncClass/invalidation authorization, and passes only Context hits to ECX. Baseline omits the Brain constraint; an explicit empty constraint is fail-closed. The first evidence lane is deterministic/no-model/no-paid-provider, with thresholds frozen before the closure-grade run. Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).
 
 ## Deferred
 
