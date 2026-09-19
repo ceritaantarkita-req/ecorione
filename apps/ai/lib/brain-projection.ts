@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
   BrainGraphResponseSchema,
@@ -139,7 +140,8 @@ async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot>
 }
 
 function nodeId(type: BrainNodeType, canonicalId: string): string {
-  return `${type.toLowerCase()}:${encodeURIComponent(canonicalId)}`;
+  const digest = createHash("sha256").update(canonicalId).digest("hex");
+  return `${type.toLowerCase()}:${digest}`;
 }
 
 function sourceCanonical(view: ProjectSourceView): string {
