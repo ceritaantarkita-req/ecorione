@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-01 CLOSED / PE-02 NEXT**
+Status: **CURRENT / PE-02 ACTIVE**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00 and PE-01 are CLOSED / PASS. PE-02 Project Sources is next after PR #169 merge.**
+**PE-00 and PE-01 are CLOSED / PASS. PE-02 Project Sources is ACTIVE.**
 
 ## Product Evolution status
 
@@ -16,7 +16,7 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 |---|---:|
 | PE-00 Architecture lock | **CLOSED / PASS** |
 | PE-01 Project foundation | **CLOSED / PASS** |
-| PE-02 Project Sources | **NEXT** |
+| PE-02 Project Sources | **ACTIVE** |
 | PE-03 Trigger control plane | **BLOCKED BY PE-02** |
 | PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
@@ -51,7 +51,7 @@ MCP External HTTPS Acceptance #595 PASS
 
 The closure-doc head is revalidated before merge.
 
-## Next: PE-02 Project Sources
+## Active: PE-02 Project Sources
 
 PE-02 should bind existing owner data into Project context by reference, not copy it. It must not pull Trigger/Schedule, Run, or Brain work forward.
 
