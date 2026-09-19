@@ -20,8 +20,8 @@ Status: **CURRENT SUMMARY**
 |---|---:|
 | PE architecture/roadmap docs | **DOCUMENTED** |
 | PE-00 Architecture lock + migration contract | **CLOSED / PASS** |
-| PE-01 Project foundation | **ACTIVE** |
-| PE-02 Project Sources | **BLOCKED BY PE-01** |
+| PE-01 Project foundation | **CLOSED / PASS** |
+| PE-02 Project Sources | **NEXT** |
 | PE-03 Trigger control plane | **BLOCKED BY PE-02** |
 | PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
@@ -31,7 +31,22 @@ Status: **CURRENT SUMMARY**
 
 ## Latest closure
 
+PE-01:
+
+```text
+PR #169
+reviewed implementation head e039df3ee57a5fdcc62e33a3a1a48d9f0d3a7944
+CI #1189 PASS
+Product Eval #428 PASS
+MCP External HTTPS Acceptance #595 PASS
+```
+
+Closure-doc exact-head gates are required before merge; PR #169 is the canonical final evidence surface.
+
+## Previous closure
+
 PE-00:
+
 ```text
 PR #167
 exact head b27ffb569f2035d9deb710a734ca2ff2c161ab23
@@ -40,4 +55,4 @@ Product Eval #359 PASS
 main b7ebf5492aca463e55f9f30bc259b9a6028c62d7
 ```
 
-Current gate: **PE-01 acceptance contract**.
+Current next gate after PE-01 merge: **PE-02 Project Sources**.
