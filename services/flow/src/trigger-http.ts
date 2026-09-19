@@ -440,6 +440,7 @@ export function registerTriggerRoutes(
         operationId: ids.operationId,
         plan,
         input: body.input,
+        triggerId: trigger.id,
         autonomy: trigger.requestedAutonomy,
         depth: 0,
       });
