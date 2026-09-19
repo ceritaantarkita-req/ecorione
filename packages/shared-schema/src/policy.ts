@@ -95,6 +95,8 @@ export const AUDIT_EVENT_TYPES = [
   "CAPABILITY_AUTHORIZED",
   "CAPABILITY_DENIED",
   "CAPABILITY_DECLARATIONS_SYNCED",
+  "PROJECT_SOURCE_ATTACHED",
+  "PROJECT_SOURCE_DETACHED",
 ] as const;
 export type AuditEventType = (typeof AUDIT_EVENT_TYPES)[number];
 export const AuditEventTypeSchema = z.enum(AUDIT_EVENT_TYPES);

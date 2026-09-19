@@ -21,6 +21,8 @@ const contextUrl = process.env.ECORIONE_CONTEXT_URL ?? "http://127.0.0.1:17022";
 const connectUrl = process.env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
 const rndUrl = process.env.ECORIONE_RND_URL ?? "http://127.0.0.1:17021";
 const artifactUrl = process.env.ECORIONE_ARTIFACT_URL ?? "http://127.0.0.1:17025";
+const spaceUrl = process.env.ECORIONE_SPACE_URL ?? "http://127.0.0.1:17027";
+const flowUrl = process.env.ECORIONE_FLOW_URL ?? "http://127.0.0.1:17028";
 
 const db = openHubDatabase(dbPath);
 const app = buildHubServer(db, {
@@ -30,6 +32,8 @@ const app = buildHubServer(db, {
   connectUrl,
   rndUrl,
   artifactUrl,
+  spaceUrl,
+  flowUrl,
   internalToken: token,
 });
 registerHubMultimodal(app, db, { contextUrl, connectUrl, artifactUrl, internalToken: token });

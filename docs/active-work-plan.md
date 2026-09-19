@@ -2,76 +2,66 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-01 CLOSED / PE-02 NEXT**
+Status: **PE-02 CLOSED / PE-03 NEXT**
 
 ## Latest closed item
 
-**PE-01 — Project foundation**
+**PE-02 — Project Sources**
 
-PE-01 now provides the accepted Project context boundary vertically:
-
-```text
-Project metadata          → Hub
-Default Project           → prj_personal in ws_personal
-All                       → virtual aggregate only
-Chat / Ledger             → Project-aware
-Context                   → global + current Project, no sibling leakage
-Flow                      → immutable Project linkage
-Ai                        → Projects surface + explicit active Project
-```
-
-Required contracts:
-
-- [adr/0035-project-context-boundary.md](adr/0035-project-context-boundary.md)
-- [product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)
-- [product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)
-- [product-evolution-agent-guide.md](product-evolution-agent-guide.md)
-
-## PE-01 implementation evidence
+Delivered:
 
 ```text
-PR #169
-reviewed implementation head e039df3ee57a5fdcc62e33a3a1a48d9f0d3a7944
-CI #1189 PASS
-Product Eval #428 PASS
-MCP External HTTPS Acceptance #595 PASS
+Project Sources
+  -> Hub binding metadata only
+  -> Artifact/Context owner validation
+  -> Space owner validation
+  -> Flow owner validation
+  -> Connect MCP visibility validation
+  -> HTTPS URL references
+  -> attach/detach audit
+  -> Sources UI
 ```
 
-The closure-doc head is revalidated before merge; PR #169 remains the canonical exact-head evidence surface.
+No owner content is copied into Hub.
+
+## PE-02 implementation evidence
+
+```text
+PR #171
+reviewed implementation head a6167df469cf491015b232aff8a192b32a25c569
+CI #1223 PASS
+Product Eval #462 PASS
+MCP External HTTPS Acceptance #628 PASS
+```
+
+Acceptance: [product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md).
 
 ## Next item
 
-**PE-02 — Project Sources**
+**PE-03 — Trigger control plane**
 
-PE-02 may start only after PR #169 is merged and `main` is confirmed clean.
+PE-03 starts only after PR #171 is merged and post-merge `main` is green.
 
-PE-02 boundary:
+PE-03 boundary:
 
-- bind existing owners by reference, not copied content;
-- support Artifact / Space / Flow / connector-backed source relationships;
-- keep Workspace authority unchanged;
-- do not introduce Trigger/Schedule (PE-03), Runs (PE-04), or Brain (PE-06).
+- TriggerDefinition schema/storage;
+- manual + time triggers first;
+- Project + Flow linkage;
+- exact Flow version pin by default;
+- IANA timezone;
+- concurrency + misfire policy;
+- idempotency identity;
+- Hub authority evaluation;
+- Temporal schedule integration.
+
+Do not pull PE-04 Work/Schedule/Runs product UI beyond the minimum control surface required to validate PE-03.
 
 ## Non-negotiable boundaries
 
-- Workspace remains the authority/security boundary.
-- `prj_personal` is the real default Project; `All` is virtual.
-- Project A must never retrieve Project B memory.
-- Ledger events remain append-only and are not rewritten.
-- Project stores/links metadata; no Project service or duplicate owner data.
-- Trigger/Schedule remains PE-03.
-- Run remains PE-04.
-- Brain remains PE-06.
+- no second scheduler/retry database;
+- Temporal remains durability/timer/retry owner;
+- Trigger never grants authority;
+- no always-on LLM polling;
+- MAX_AUTONOMY_V1 stays L3;
+- Workspace remains the authority boundary;
 - VPS/Cloudflare, AutoClick, and paid W18 rerun remain out of scope.
-
-## Prior closure
-
-PE-00:
-
-```text
-PR #167
-head b27ffb569f2035d9deb710a734ca2ff2c161ab23
-CI #1120 PASS
-Product Eval #359 PASS
-merge b7ebf5492aca463e55f9f30bc259b9a6028c62d7
-```

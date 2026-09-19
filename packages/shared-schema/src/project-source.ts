@@ -1,0 +1,145 @@
+import { z } from "zod";
+import { ArtifactIdSchema, ProjectIdSchema, WorkspaceIdSchema } from "./ids.js";
+import { TimestampSchema } from "./memory.js";
+import { FlowGraphIdSchema } from "./nodes.js";
+import { SpacePageIdSchema } from "./space.js";
+
+export const PROJECT_SOURCE_RESOURCE_TYPES = [
+  "artifact",
+  "space-page",
+  "flow-graph",
+  "mcp-server",
+  "url",
+] as const;
+export const ProjectSourceResourceTypeSchema = z.enum(PROJECT_SOURCE_RESOURCE_TYPES);
+export type ProjectSourceResourceType = z.infer<typeof ProjectSourceResourceTypeSchema>;
+
+export const PROJECT_SOURCE_OWNERS = ["Artifact", "Space", "Flow", "Connect"] as const;
+export const ProjectSourceOwnerSchema = z.enum(PROJECT_SOURCE_OWNERS);
+export type ProjectSourceOwner = z.infer<typeof ProjectSourceOwnerSchema>;
+
+export const PROJECT_SOURCE_ROLES = ["source", "reference"] as const;
+export const ProjectSourceRoleSchema = z.enum(PROJECT_SOURCE_ROLES);
+export type ProjectSourceRole = z.infer<typeof ProjectSourceRoleSchema>;
+
+const McpServerRefSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .regex(/^[a-z0-9][a-z0-9._-]*$/);
+
+const HttpsUrlRefSchema = z
+  .string()
+  .url()
+  .max(2048)
+  .superRefine((value, ctx) => {
+    const url = new URL(value);
+    if (
+      url.protocol !== "https:" ||
+      url.username !== "" ||
+      url.password !== "" ||
+      url.hash !== ""
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "URL source wajib HTTPS tanpa inline credential atau fragment.",
+      });
+    }
+  });
+
+function resourceIdSchema(type: ProjectSourceResourceType): z.ZodType<string> {
+  switch (type) {
+    case "artifact":
+      return ArtifactIdSchema;
+    case "space-page":
+      return SpacePageIdSchema;
+    case "flow-graph":
+      return FlowGraphIdSchema;
+    case "mcp-server":
+      return McpServerRefSchema;
+    case "url":
+      return HttpsUrlRefSchema;
+  }
+}
+
+export function projectSourceOwner(type: ProjectSourceResourceType): ProjectSourceOwner {
+  switch (type) {
+    case "artifact":
+      return "Artifact";
+    case "space-page":
+      return "Space";
+    case "flow-graph":
+      return "Flow";
+    case "mcp-server":
+    case "url":
+      return "Connect";
+  }
+}
+
+export const ProjectSourceBindingSchema = z
+  .object({
+    projectId: ProjectIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    resourceType: ProjectSourceResourceTypeSchema,
+    resourceId: z.string().min(1).max(2048),
+    owner: ProjectSourceOwnerSchema,
+    role: ProjectSourceRoleSchema,
+    createdAt: TimestampSchema,
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    const parsed = resourceIdSchema(value.resourceType).safeParse(value.resourceId);
+    if (!parsed.success) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["resourceId"],
+        message: parsed.error.issues[0]?.message ?? "resourceId tidak valid.",
+      });
+    }
+    if (value.owner !== projectSourceOwner(value.resourceType)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["owner"],
+        message: "Owner tidak cocok dengan resourceType.",
+      });
+    }
+  });
+export type ProjectSourceBinding = z.infer<typeof ProjectSourceBindingSchema>;
+
+export const ProjectSourceAttachRequestSchema = z
+  .object({
+    workspaceId: WorkspaceIdSchema,
+    resourceType: ProjectSourceResourceTypeSchema,
+    resourceId: z.string().min(1).max(2048),
+    role: ProjectSourceRoleSchema.default("source"),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    const parsed = resourceIdSchema(value.resourceType).safeParse(value.resourceId);
+    if (!parsed.success) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["resourceId"],
+        message: parsed.error.issues[0]?.message ?? "resourceId tidak valid.",
+      });
+    }
+  });
+export type ProjectSourceAttachRequest = z.infer<typeof ProjectSourceAttachRequestSchema>;
+
+export const ProjectSourceDetachRequestSchema = ProjectSourceAttachRequestSchema;
+export type ProjectSourceDetachRequest = z.infer<typeof ProjectSourceDetachRequestSchema>;
+
+export const ProjectSourceAvailabilitySchema = z.enum(["AVAILABLE", "UNAVAILABLE"]);
+export const ProjectSourceViewSchema = z
+  .object({
+    binding: ProjectSourceBindingSchema,
+    availability: ProjectSourceAvailabilitySchema,
+    metadata: z.unknown().nullable(),
+    unavailableReason: z.string().max(1024).nullable(),
+  })
+  .strict();
+export type ProjectSourceView = z.infer<typeof ProjectSourceViewSchema>;
+
+export const ProjectSourceListResponseSchema = z
+  .object({ sources: z.array(ProjectSourceViewSchema) })
+  .strict();

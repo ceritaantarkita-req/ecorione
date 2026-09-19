@@ -42,6 +42,8 @@ import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
 import { registerNodeAuthorityRoutes } from "./node-authority.js";
 import { registerProjectRoutes } from "./project-http.js";
+import { registerProjectSourceRoutes } from "./project-source-http.js";
+import { ProjectSourceRegistry } from "./project-source-registry.js";
 import {
   ProjectRegistry,
   ProjectArchivedError,
@@ -128,6 +130,8 @@ export interface BuildHubServerOptions {
   readonly connectUrl: string;
   readonly rndUrl: string;
   readonly artifactUrl?: string | undefined;
+  readonly spaceUrl?: string | undefined;
+  readonly flowUrl?: string | undefined;
   readonly internalToken?: string | undefined;
 }
 
@@ -139,6 +143,7 @@ export function buildHubServer(
   const repo = new HubRepository(db);
   const history = new HistoryLedger(db);
   const projects = new ProjectRegistry(db);
+  const projectSources = new ProjectSourceRegistry(db);
   const authority = new CapabilityRegistry(db);
   const extensions = new ExtensionRegistry(db, authority);
   const deps: OrchestrateDeps = {
@@ -348,6 +353,13 @@ export function buildHubServer(
   );
 
   registerProjectRoutes(app, projects);
+  registerProjectSourceRoutes(app, projects, projectSources, repo, {
+    contextUrl: options.contextUrl,
+    spaceUrl: options.spaceUrl ?? "http://127.0.0.1:17027",
+    flowUrl: options.flowUrl ?? "http://127.0.0.1:17028",
+    connectUrl: options.connectUrl,
+    internalToken: options.internalToken,
+  });
   registerHistoryRoutes(app, history);
   registerExchangeRoutes(app, history, {
     contextUrl: options.contextUrl,

@@ -21,8 +21,8 @@ Status: **CURRENT SUMMARY**
 | PE architecture/roadmap docs | **DOCUMENTED** |
 | PE-00 Architecture lock + migration contract | **CLOSED / PASS** |
 | PE-01 Project foundation | **CLOSED / PASS** |
-| PE-02 Project Sources | **NEXT** |
-| PE-03 Trigger control plane | **BLOCKED BY PE-02** |
+| PE-02 Project Sources | **CLOSED / PASS** |
+| PE-03 Trigger control plane | **NEXT** |
 | PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
 | PE-06 Brain V1 | **BLOCKED BY PE-05** |
@@ -31,28 +31,22 @@ Status: **CURRENT SUMMARY**
 
 ## Latest closure
 
-PE-01:
+PE-02:
 
 ```text
-PR #169
-reviewed implementation head e039df3ee57a5fdcc62e33a3a1a48d9f0d3a7944
-CI #1189 PASS
-Product Eval #428 PASS
-MCP External HTTPS Acceptance #595 PASS
+PR #171
+reviewed implementation head a6167df469cf491015b232aff8a192b32a25c569
+CI #1223 PASS
+Product Eval #462 PASS
+MCP External HTTPS Acceptance #628 PASS
 ```
 
-Closure-doc exact-head gates are required before merge; PR #169 is the canonical final evidence surface.
+Closure-doc exact-head gates are required before merge.
 
-## Previous closure
+## Previous closures
 
-PE-00:
+PE-01: PR #169 / main `1d2b537de3ad07336adb9a97121309f04d61cc21`.
 
-```text
-PR #167
-exact head b27ffb569f2035d9deb710a734ca2ff2c161ab23
-CI #1120 PASS
-Product Eval #359 PASS
-main b7ebf5492aca463e55f9f30bc259b9a6028c62d7
-```
+PE-00: PR #167 / main `b7ebf5492aca463e55f9f30bc259b9a6028c62d7`.
 
-Current next gate after PE-01 merge: **PE-02 Project Sources**.
+Current next gate after PE-02 merge: **PE-03 Trigger control plane**.

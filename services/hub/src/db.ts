@@ -38,6 +38,19 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE INDEX IF NOT EXISTS idx_projects_workspace_archived
   ON projects(workspace_id, archived_at, updated_at DESC, id);
 
+CREATE TABLE IF NOT EXISTS project_source_bindings (
+  project_id TEXT NOT NULL REFERENCES projects(id),
+  workspace_id TEXT NOT NULL,
+  resource_type TEXT NOT NULL CHECK(resource_type IN ('artifact','space-page','flow-graph','mcp-server','url')),
+  resource_id TEXT NOT NULL,
+  owner TEXT NOT NULL CHECK(owner IN ('Artifact','Space','Flow','Connect')),
+  role TEXT NOT NULL CHECK(role IN ('source','reference')),
+  created_at TEXT NOT NULL,
+  PRIMARY KEY(project_id, resource_type, resource_id, role)
+);
+CREATE INDEX IF NOT EXISTS idx_project_source_bindings_project
+  ON project_source_bindings(workspace_id, project_id, created_at DESC, resource_type, resource_id);
+
 CREATE TABLE IF NOT EXISTS history_sessions (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,

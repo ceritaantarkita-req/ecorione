@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { HistorySession, Project } from "@ecorione/shared-schema";
+import { ProjectSources } from "./ProjectSources";
 import styles from "./Projects.module.css";
 
 const WORKSPACE_ID = "ws_personal";
@@ -199,6 +200,8 @@ export default function ProjectsPage() {
                 <span>Memory: {selected.memoryPolicy}</span>
                 <span>Autonomy ceiling: {selected.autonomyCeiling}</span>
               </div>
+
+              <ProjectSources projectId={selected.id} workspaceId={selected.workspaceId} />
 
               <section className={styles.recent}>
                 <h3>Recent conversations</h3>
