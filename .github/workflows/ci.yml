@@ -32,9 +32,12 @@ jobs:
       - name: PE-01 formatter diagnostic
         run: |
           pnpm exec prettier --write .
-          echo "----- PE01_FORMAT_DIFF_BEGIN -----"
-          git diff
-          echo "----- PE01_FORMAT_DIFF_END -----"
+          for file in $(git diff --name-only); do
+            echo "----- PE01_FORMAT_FILE:${file} -----"
+            base64 -w0 "${file}"
+            echo
+          done
+          echo "----- PE01_FORMAT_PAYLOAD_END -----"
 
       - name: Format
         run: pnpm run format:check
