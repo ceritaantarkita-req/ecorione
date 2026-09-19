@@ -42,7 +42,13 @@ import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
 import { registerNodeAuthorityRoutes } from "./node-authority.js";
 import { registerProjectRoutes } from "./project-http.js";
-import { ProjectRegistry, ProjectArchivedError, ProjectNotFoundError, ProjectRequiredError, ProjectWorkspaceConflictError } from "./project-registry.js";
+import {
+  ProjectRegistry,
+  ProjectArchivedError,
+  ProjectNotFoundError,
+  ProjectRequiredError,
+  ProjectWorkspaceConflictError,
+} from "./project-registry.js";
 import { registerVoiceRoutes } from "./voice-http.js";
 import { RealtimeVoiceRuntime } from "./voice-runtime.js";
 import { VoiceSessionStore } from "./voice-store.js";
