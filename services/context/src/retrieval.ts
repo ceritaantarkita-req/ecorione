@@ -30,12 +30,17 @@ export interface RetrievalOptions {
   readonly queryEmbedding?: Float32Array;
   /** Hosted request may only recall CLOUD_ALLOWED/PUBLIC data. */
   readonly hostedEligibleOnly?: boolean;
+  /** Optional Brain-derived exact provenance source URI constraint. Undefined is baseline; [] is fail-closed empty. */
+  readonly candidateSourceUris?: readonly string[];
 }
 export interface RetrievalDiagnostics {
   readonly lexicalCandidates: number;
   readonly vectorCandidates: number;
   readonly afterFilter: number;
   readonly returned: number;
+  readonly authorizedCandidates: number;
+  readonly narrowedCandidates: number;
+  readonly constraintApplied: boolean;
 }
 export interface RetrievalResult {
   readonly hits: RetrievalHit[];
@@ -65,12 +70,26 @@ export class ContextRetriever {
     const k = clampK(options.k);
     const maxSensitivity = options.maxSensitivity ?? "RESTRICTED";
     const candidateLimit = Math.max(MIN_CANDIDATES, k * CANDIDATE_MULTIPLIER);
-    const allowedFacts = this.allowedFacts(
+    const authorizedFacts = this.allowedFacts(
       options.scopes,
       maxSensitivity,
       options.hostedEligibleOnly ?? false,
       options.projectId ?? null,
+      options.candidateSourceUris,
     );
+    const sourceConstraint =
+      options.candidateSourceUris === undefined
+        ? undefined
+        : new Set(options.candidateSourceUris);
+    const allowedFacts =
+      sourceConstraint === undefined
+        ? authorizedFacts
+        : new Map(
+            [...authorizedFacts].filter(([, fact]) => {
+              const sourceUri = fact.provenance.sourceUri;
+              return sourceUri !== undefined && sourceConstraint.has(sourceUri);
+            }),
+          );
     const allowedIds = new Set(allowedFacts.keys());
     const lexical = this.lexicalSearch(
       options.query,
@@ -97,6 +116,9 @@ export class ContextRetriever {
         vectorCandidates: vector.length,
         afterFilter: hits.length,
         returned: Math.min(hits.length, k),
+        authorizedCandidates: authorizedFacts.size,
+        narrowedCandidates: allowedFacts.size,
+        constraintApplied: options.candidateSourceUris !== undefined,
       },
     };
   }
@@ -125,9 +147,10 @@ export class ContextRetriever {
     maxSensitivity: Sensitivity,
     hostedEligibleOnly: boolean,
     projectId: ProjectId | null,
+    candidateSourceUris: readonly string[] | undefined,
   ): RankedList {
     const match = toFtsQuery(query);
-    if (match === null) return [];
+    if (match === null || candidateSourceUris?.length === 0) return [];
     const allowed = allowedSensitivities(maxSensitivity);
     const egress = hostedEligibleOnly ? "AND f.sync_class IN ('CLOUD_ALLOWED','PUBLIC')" : "";
     const projectClause =
@@ -135,6 +158,11 @@ export class ContextRetriever {
         ? "AND f.project_id IS NULL AND f.project_state='GLOBAL'"
         : "AND ((f.project_id IS NULL AND f.project_state='GLOBAL') OR (f.project_id=? AND f.project_state='ASSIGNED'))";
     const projectParams = projectId === null ? [] : [projectId];
+    const sourceClause =
+      candidateSourceUris === undefined
+        ? ""
+        : `AND f.source_uri IN (${placeholders(candidateSourceUris.length)})`;
+    const sourceParams = candidateSourceUris ?? [];
     try {
       const rows = this.repo.db.raw
         .prepare(
@@ -148,11 +176,12 @@ export class ContextRetriever {
           AND f.sensitivity IN (${placeholders(allowed.length)})
           ${egress}
           ${projectClause}
+          ${sourceClause}
         ORDER BY bm25(facts_fts)
         LIMIT ?
       `,
         )
-        .all(match, ...scopes, ...allowed, ...projectParams, limit) as { id: string }[];
+        .all(match, ...scopes, ...allowed, ...projectParams, ...sourceParams, limit) as { id: string }[];
       return rows.map((r) => r.id as MemoryFactId);
     } catch {
       return [];
