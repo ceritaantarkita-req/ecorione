@@ -4,6 +4,7 @@ import {
   ArtifactIdSchema,
   EpisodeIdSchema,
   MemoryFactIdSchema,
+  ProjectIdSchema,
   SessionIdSchema,
 } from "./ids.js";
 import {
@@ -27,6 +28,7 @@ export const EpisodeSchema = z.object({
   id: EpisodeIdSchema,
   ts: TimestampSchema,
   rawText: z.string(),
+  projectId: ProjectIdSchema.nullable().default(null),
   provenance: ProvenanceSchema,
   scope: ScopeSchema,
   sensitivity: SensitivitySchema,
@@ -50,6 +52,7 @@ export const MemoryFactSchema = z.object({
   tInvalid: TimestampSchema.nullable().default(null),
   supersededBy: MemoryFactIdSchema.nullable().default(null),
   createdAt: TimestampSchema,
+  projectId: ProjectIdSchema.nullable().default(null),
   scope: ScopeSchema,
   sensitivity: SensitivitySchema,
   syncClass: SyncClassSchema,
@@ -71,6 +74,7 @@ export const QuarantinedWriteSchema = z.object({
   id: MemoryFactIdSchema,
   proposedText: z.string().min(1).max(4096),
   proposedAt: TimestampSchema,
+  projectId: ProjectIdSchema.nullable().default(null),
   provenance: ProvenanceSchema,
   trust: TrustSchema,
   scope: ScopeSchema,
@@ -93,6 +97,7 @@ export const CoreMemoryBlockSchema = z.object({
   value: z.string(),
   readOnly: z.boolean().default(false),
   updatedAt: TimestampSchema,
+  projectId: ProjectIdSchema.nullable().optional(),
   scope: ScopeSchema.optional(),
   sensitivity: SensitivitySchema.optional(),
   syncClass: SyncClassSchema.optional(),
@@ -130,6 +135,7 @@ export const RetrievalQuerySchema = z.object({
   query: z.string().min(1),
   k: z.number().int().min(1).max(MAX_RETRIEVAL_K).default(DEFAULT_RETRIEVAL_K),
   scopes: z.array(ScopeSchema).min(1),
+  projectId: ProjectIdSchema.nullable().optional(),
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
   liveOnly: z.boolean().default(true),
 });

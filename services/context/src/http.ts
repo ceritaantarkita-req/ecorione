@@ -3,6 +3,7 @@ import {
   assertId,
   InvalidIdError,
   makeId,
+  ProjectIdSchema,
   ScopeSchema,
   SensitivitySchema,
   SyncClassSchema,
@@ -62,6 +63,7 @@ const BoolQuery = z
 const AppendEpisodeBodySchema = z.object({
   ts: z.string().datetime({ offset: false }),
   rawText: z.string(),
+  projectId: ProjectIdSchema.nullable().optional(),
   provenance: z.object({
     sourceApp: z.string().min(1).max(64),
     sessionId: z.string().optional(),
@@ -75,6 +77,7 @@ const AppendEpisodeBodySchema = z.object({
 });
 const ListEpisodesQuerySchema = z.object({
   sessionId: z.string().optional(),
+  projectId: ProjectIdSchema.nullable().optional(),
   scope: ScopeSchema.optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
   hostedEligible: BoolQuery,
@@ -82,6 +85,7 @@ const ListEpisodesQuerySchema = z.object({
 const ProposeFactBodySchema = z.object({
   proposedText: z.string().min(1).max(4096),
   proposedAt: z.string().datetime({ offset: false }),
+  projectId: ProjectIdSchema.nullable().optional(),
   provenance: z.object({
     sourceApp: z.string().min(1).max(64),
     sessionId: z.string().optional(),
@@ -101,20 +105,26 @@ const PromoteFactBodySchema = z.object({
   salience: z.number().min(0).max(1),
   sourceEpisodeIds: z.array(z.string()).min(1),
   tValid: z.string().datetime({ offset: false }),
+  projectId: ProjectIdSchema.nullable().optional(),
   scope: ScopeSchema,
   sensitivity: SensitivitySchema,
   syncClass: SyncClassSchema,
 });
-const ForgetFactBodySchema = z.object({ now: z.string().datetime({ offset: false }) });
+const ForgetFactBodySchema = z.object({
+  now: z.string().datetime({ offset: false }),
+  projectId: ProjectIdSchema.nullable().optional(),
+});
 const RetrieveBodySchema = z.object({
   query: z.string().min(1),
   scopes: z.array(ScopeSchema).min(1),
+  projectId: ProjectIdSchema.nullable().optional(),
   k: z.number().int().min(1).max(20).default(8),
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
   now: z.string().datetime({ offset: false }),
   hostedEligibleOnly: z.boolean().default(false),
 });
 const CoreMemoryQuerySchema = z.object({
+  projectId: ProjectIdSchema.nullable().optional(),
   scope: ScopeSchema.optional(),
   maxSensitivity: SensitivitySchema.optional(),
   hostedEligible: BoolQuery,
@@ -124,6 +134,7 @@ const CoreMemoryBlockBodySchema = z.object({
   value: z.string(),
   readOnly: z.boolean().optional(),
   now: z.string().datetime({ offset: false }),
+  projectId: ProjectIdSchema.nullable().optional(),
   scope: ScopeSchema.optional(),
   sensitivity: SensitivitySchema.optional(),
   syncClass: SyncClassSchema.optional(),
@@ -133,6 +144,7 @@ const ListFactsQuerySchema = z.object({
     .string()
     .optional()
     .transform((s) => (s === undefined ? undefined : s.split(","))),
+  projectId: ProjectIdSchema.nullable().optional(),
   maxSensitivity: SensitivitySchema.optional(),
   limit: z.coerce.number().int().min(1).max(500).optional(),
 });
@@ -189,6 +201,7 @@ export function buildContextServer(
       episodes: repo.listEpisodes({
         scopes: q.scope === undefined ? undefined : [q.scope],
         sessionId: q.sessionId,
+        projectId: q.projectId ?? null,
         hostedEligibleOnly: q.hostedEligible,
         order: "desc",
         limit: q.limit,
@@ -233,6 +246,7 @@ export function buildContextServer(
             salience: body.salience,
             sourceEpisodeIds: body.sourceEpisodeIds,
             tValid: body.tValid,
+            projectId: body.projectId ?? null,
             createdAt: body.now,
             scope: body.scope,
             sensitivity: body.sensitivity,
@@ -255,7 +269,7 @@ export function buildContextServer(
   app.post<{ Params: { id: string } }>("/v1/facts/:id/forget", async (req) => {
     const body = parseOrBadRequest(ForgetFactBodySchema, req.body);
     try {
-      return repo.forgetFact(req.params.id as MemoryFactId, body.now);
+      return repo.forgetFact(req.params.id as MemoryFactId, body.now, body.projectId ?? null);
     } catch (err) {
       throw toHttpError(err);
     }
@@ -264,6 +278,7 @@ export function buildContextServer(
   app.get("/v1/core-memory", async (req) => {
     const q = parseOrBadRequest(CoreMemoryQuerySchema, req.query);
     return repo.getCoreMemory({
+      projectId: q.projectId ?? null,
       scopes: q.scope === undefined ? undefined : [q.scope],
       maxSensitivity: q.maxSensitivity,
       hostedEligibleOnly: q.hostedEligible,
@@ -279,6 +294,7 @@ export function buildContextServer(
           value: body.value,
           readOnly: body.readOnly ?? false,
           updatedAt: body.now,
+          projectId: body.projectId ?? null,
           scope: body.scope ?? "personal",
           sensitivity: body.sensitivity ?? "INTERNAL",
           syncClass: body.syncClass ?? "LOCAL_ONLY",

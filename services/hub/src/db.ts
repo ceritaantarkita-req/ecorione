@@ -23,6 +23,21 @@ CREATE TABLE IF NOT EXISTS idempotent_results (
 );
 CREATE INDEX IF NOT EXISTS idx_idempotent_results_operation ON idempotent_results(operation_id);
 
+CREATE TABLE IF NOT EXISTS projects (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  instruction TEXT NOT NULL DEFAULT '',
+  memory_policy TEXT NOT NULL DEFAULT 'GLOBAL_PLUS_PROJECT' CHECK(memory_policy='GLOBAL_PLUS_PROJECT'),
+  autonomy_ceiling TEXT NOT NULL DEFAULT 'L3' CHECK(autonomy_ceiling IN ('L0','L1','L2','L3')),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  archived_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_projects_workspace_archived
+  ON projects(workspace_id, archived_at, updated_at DESC, id);
+
 CREATE TABLE IF NOT EXISTS history_sessions (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,
@@ -209,6 +224,49 @@ CREATE TABLE IF NOT EXISTS authority_meta (
   value TEXT NOT NULL
 );
 `;
+
+interface TableInfoRow {
+  readonly name: string;
+}
+
+function hasColumn(db: SqliteDatabase, table: string, column: string): boolean {
+  return (db.pragma(`table_info(${table})`) as TableInfoRow[]).some(
+    (row) => row.name === column,
+  );
+}
+
+function migrateProjectFoundation(db: SqliteDatabase): void {
+  db.transaction(() => {
+    if (!hasColumn(db, "history_sessions", "workspace_id")) {
+      db.exec("ALTER TABLE history_sessions ADD COLUMN workspace_id TEXT");
+    }
+    if (!hasColumn(db, "history_sessions", "project_id")) {
+      db.exec("ALTER TABLE history_sessions ADD COLUMN project_id TEXT");
+    }
+    if (!hasColumn(db, "history_sessions", "title")) {
+      db.exec("ALTER TABLE history_sessions ADD COLUMN title TEXT");
+    }
+    if (!hasColumn(db, "history_sessions", "updated_at")) {
+      db.exec("ALTER TABLE history_sessions ADD COLUMN updated_at TEXT");
+    }
+
+    db.prepare(
+      `INSERT OR IGNORE INTO projects
+       (id,workspace_id,name,description,instruction,memory_policy,autonomy_ceiling,created_at,updated_at,archived_at)
+       VALUES ('prj_personal','ws_personal','Personal','','','GLOBAL_PLUS_PROJECT','L3',
+         strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now'),NULL)`,
+    ).run();
+
+    db.exec(`
+      UPDATE history_sessions
+      SET workspace_id='ws_personal', project_id='prj_personal'
+      WHERE scope='personal' AND workspace_id IS NULL AND project_id IS NULL;
+      UPDATE history_sessions SET updated_at=created_at WHERE updated_at IS NULL;
+      CREATE INDEX IF NOT EXISTS idx_history_sessions_project_created
+        ON history_sessions(workspace_id, project_id, created_at DESC, id);
+    `);
+  })();
+}
 export interface HubDatabase {
   readonly raw: SqliteDatabase;
   readonly path: string;
@@ -224,6 +282,7 @@ export function openHubDatabase(path: string = IN_MEMORY): HubDatabase {
     raw.pragma("busy_timeout = 5000");
   }
   raw.exec(SCHEMA);
+  migrateProjectFoundation(raw);
   return {
     raw,
     path,

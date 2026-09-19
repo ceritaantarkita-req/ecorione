@@ -9,16 +9,22 @@ import {
   type HistoryGrant,
   type HistoryRange,
   type HistorySession,
+  type ProjectId,
   type Scope,
   type Sensitivity,
   type SessionId,
   type SyncClass,
+  type WorkspaceId,
 } from "@ecorione/shared-schema";
 import type { HubDatabase } from "./db.js";
 
 interface SessionRow {
   id: string;
   created_at: string;
+  updated_at: string | null;
+  workspace_id: string | null;
+  project_id: string | null;
+  title: string | null;
   scope: string;
   sensitivity: string;
   sync_class: string;
@@ -113,6 +119,10 @@ function sessionFromRow(row: SessionRow): HistorySession {
   return HistorySessionSchema.parse({
     id: row.id,
     createdAt: row.created_at,
+    updatedAt: row.updated_at ?? row.created_at,
+    workspaceId: row.workspace_id,
+    projectId: row.project_id,
+    title: row.title,
     scope: row.scope,
     sensitivity: row.sensitivity,
     syncClass: row.sync_class,
@@ -168,6 +178,10 @@ function assertGrant(session: HistorySession, grant: HistoryGrant): void {
 export interface CreateHistorySessionInput {
   readonly id: SessionId;
   readonly createdAt: string;
+  readonly updatedAt?: string | undefined;
+  readonly workspaceId?: WorkspaceId | null | undefined;
+  readonly projectId?: ProjectId | null | undefined;
+  readonly title?: string | null | undefined;
   readonly scope: Scope;
   readonly sensitivity: Sensitivity;
   readonly syncClass: SyncClass;
@@ -193,26 +207,67 @@ export class HistoryLedger {
       }
       return existing;
     }
+    const workspaceId =
+      input.workspaceId ?? (input.scope === "personal" ? "ws_personal" : null);
+    const projectId =
+      input.projectId ??
+      (workspaceId === "ws_personal" && input.scope === "personal" ? "prj_personal" : null);
+    const updatedAt = input.updatedAt ?? input.createdAt;
     this.db.raw
       .prepare(
-        "INSERT INTO history_sessions(id,created_at,scope,sensitivity,sync_class,next_seq,head_hash) VALUES(?,?,?,?,?,0,NULL)",
+        "INSERT INTO history_sessions(id,created_at,updated_at,workspace_id,project_id,title,scope,sensitivity,sync_class,next_seq,head_hash) VALUES(?,?,?,?,?,?,?,?,?,0,NULL)",
       )
-      .run(input.id, input.createdAt, input.scope, input.sensitivity, input.syncClass);
-    return HistorySessionSchema.parse({ ...input, nextSeq: 0, headHash: null });
+      .run(
+        input.id,
+        input.createdAt,
+        updatedAt,
+        workspaceId,
+        projectId,
+        input.title ?? null,
+        input.scope,
+        input.sensitivity,
+        input.syncClass,
+      );
+    return HistorySessionSchema.parse({
+      ...input,
+      updatedAt,
+      workspaceId,
+      projectId,
+      title: input.title ?? null,
+      nextSeq: 0,
+      headHash: null,
+    });
   }
 
   ensureSession(input: CreateHistorySessionInput): HistorySession {
     const transaction = this.db.raw.transaction(() => {
       const existing = this.getSession(input.id);
       if (existing === null) return this.createSession(input);
-      if (existing.scope !== input.scope || existing.syncClass !== input.syncClass) {
+      const requestedWorkspace =
+        input.workspaceId ?? (input.scope === "personal" ? "ws_personal" : null);
+      const requestedProject =
+        input.projectId ??
+        (requestedWorkspace === "ws_personal" && input.scope === "personal"
+          ? "prj_personal"
+          : null);
+      if (
+        existing.scope !== input.scope ||
+        existing.syncClass !== input.syncClass ||
+        existing.workspaceId !== requestedWorkspace ||
+        existing.projectId !== requestedProject
+      ) {
         throw new HistorySessionConflictError(input.id);
       }
       if (sensitivityRank(input.sensitivity) > sensitivityRank(existing.sensitivity)) {
+        const updatedAt = input.updatedAt ?? input.createdAt;
         this.db.raw
-          .prepare("UPDATE history_sessions SET sensitivity=? WHERE id=?")
-          .run(input.sensitivity, input.id);
-        return HistorySessionSchema.parse({ ...existing, sensitivity: input.sensitivity });
+          .prepare("UPDATE history_sessions SET sensitivity=?,updated_at=? WHERE id=?")
+          .run(input.sensitivity, updatedAt, input.id);
+        return HistorySessionSchema.parse({
+          ...existing,
+          sensitivity: input.sensitivity,
+          updatedAt,
+        });
       }
       return existing;
     });
@@ -225,18 +280,29 @@ export class HistoryLedger {
     return row === undefined ? null : sessionFromRow(row);
   }
 
-  listSessions(scope?: Scope): HistorySession[] {
-    const rows = (
-      scope === undefined
-        ? this.db.raw
-            .prepare("SELECT * FROM history_sessions ORDER BY created_at DESC,id ASC")
-            .all()
-        : this.db.raw
-            .prepare(
-              "SELECT * FROM history_sessions WHERE scope=? ORDER BY created_at DESC,id ASC",
-            )
-            .all(scope)
-    ) as SessionRow[];
+  listSessions(
+    scope?: Scope,
+    projectId?: ProjectId,
+    workspaceId?: WorkspaceId,
+  ): HistorySession[] {
+    const clauses: string[] = [];
+    const params: string[] = [];
+    if (scope !== undefined) {
+      clauses.push("scope=?");
+      params.push(scope);
+    }
+    if (projectId !== undefined) {
+      clauses.push("project_id=?");
+      params.push(projectId);
+    }
+    if (workspaceId !== undefined) {
+      clauses.push("workspace_id=?");
+      params.push(workspaceId);
+    }
+    const where = clauses.length === 0 ? "" : `WHERE ${clauses.join(" AND ")}`;
+    const rows = this.db.raw
+      .prepare(`SELECT * FROM history_sessions ${where} ORDER BY created_at DESC,id ASC`)
+      .all(...params) as SessionRow[];
     return rows.map(sessionFromRow);
   }
 
@@ -290,8 +356,8 @@ export class HistoryLedger {
         event.hash,
       );
     this.db.raw
-      .prepare("UPDATE history_sessions SET next_seq=?,head_hash=? WHERE id=?")
-      .run(event.seq + 1, event.hash, sessionId);
+      .prepare("UPDATE history_sessions SET next_seq=?,head_hash=?,updated_at=? WHERE id=?")
+      .run(event.seq + 1, event.hash, draft.recordedAt, sessionId);
     return { event, deduplicated: false };
   }
 

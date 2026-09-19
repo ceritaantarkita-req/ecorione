@@ -60,8 +60,14 @@ describe("Flow graph HTTP integration", () => {
     agents.push(agent);
     agent.disableNetConnect();
     setGlobalDispatcher(agent);
-    agent
-      .get("http://hub.local")
+    const hub = agent.get("http://hub.local");
+    hub
+      .intercept({
+        path: "/v1/projects/prj_personal?workspaceId=ws_personal",
+        method: "GET",
+      })
+      .reply(200, { id: "prj_personal", workspaceId: "ws_personal", name: "Personal" });
+    hub
       .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
       .reply(200, { workspaceId: "ws_personal", declared: 17 });
 

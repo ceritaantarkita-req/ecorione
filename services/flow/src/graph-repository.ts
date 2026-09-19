@@ -8,6 +8,7 @@ import {
   type FlowGraphSaveResult,
   type FlowGraphSummary,
   type FlowGraphVersionView,
+  type ProjectId,
   type Timestamp,
   type WorkspaceId,
 } from "@ecorione/shared-schema";
@@ -17,6 +18,7 @@ import { digestCanonical, validateAndCompileFlowGraph } from "./node-registry.js
 interface GraphRow {
   id: string;
   workspace_id: string;
+  project_id: string | null;
   name: string;
   scope: string;
   sensitivity: string;
@@ -31,6 +33,7 @@ interface VersionRow {
   graph_json: string;
   validation_json: string;
   created_at: string;
+  project_id?: string | null;
 }
 export class FlowGraphNotFoundError extends Error {
   constructor(id: string) {
@@ -50,10 +53,17 @@ export class FlowGraphWorkspaceConflictError extends Error {
     this.name = "FlowGraphWorkspaceConflictError";
   }
 }
+export class FlowGraphProjectConflictError extends Error {
+  constructor() {
+    super("projectId graph tidak boleh berubah setelah dibuat.");
+    this.name = "FlowGraphProjectConflictError";
+  }
+}
 function summary(row: GraphRow): FlowGraphSummary {
   return FlowGraphSummarySchema.parse({
     graphId: row.id,
     workspaceId: row.workspace_id,
+    projectId: row.project_id,
     name: row.name,
     scope: row.scope,
     sensitivity: row.sensitivity,
@@ -63,11 +73,15 @@ function summary(row: GraphRow): FlowGraphSummary {
   });
 }
 function version(row: VersionRow): FlowGraphVersionView {
+  const graph = JSON.parse(row.graph_json) as Record<string, unknown>;
+  if (!Object.hasOwn(graph, "projectId") && row.project_id !== undefined) {
+    graph.projectId = row.project_id;
+  }
   return FlowGraphVersionViewSchema.parse({
     graphId: row.graph_id,
     version: row.version,
     digest: row.digest,
-    graph: JSON.parse(row.graph_json) as unknown,
+    graph,
     validation: JSON.parse(row.validation_json) as unknown,
     createdAt: row.created_at,
   });
@@ -75,18 +89,24 @@ function version(row: VersionRow): FlowGraphVersionView {
 
 export class FlowGraphRepository {
   constructor(readonly db: FlowDatabase) {}
-  list(workspaceId?: WorkspaceId): FlowGraphSummary[] {
-    const rows = (
-      workspaceId === undefined
-        ? this.db.raw
-            .prepare("SELECT * FROM flow_graphs ORDER BY updated_at DESC, id ASC")
-            .all()
-        : this.db.raw
-            .prepare(
-              "SELECT * FROM flow_graphs WHERE workspace_id=? ORDER BY updated_at DESC, id ASC",
-            )
-            .all(workspaceId)
-    ) as GraphRow[];
+  list(workspaceId?: WorkspaceId, projectId?: ProjectId | null): FlowGraphSummary[] {
+    const clauses: string[] = [];
+    const params: string[] = [];
+    if (workspaceId !== undefined) {
+      clauses.push("workspace_id=?");
+      params.push(workspaceId);
+    }
+    if (projectId !== undefined) {
+      if (projectId === null) clauses.push("project_id IS NULL");
+      else {
+        clauses.push("project_id=?");
+        params.push(projectId);
+      }
+    }
+    const where = clauses.length === 0 ? "" : `WHERE ${clauses.join(" AND ")}`;
+    const rows = this.db.raw
+      .prepare(`SELECT * FROM flow_graphs ${where} ORDER BY updated_at DESC, id ASC`)
+      .all(...params) as GraphRow[];
     return rows.map(summary);
   }
   create(graphInput: FlowGraphDocument, now: Timestamp): FlowGraphSaveResult {
@@ -96,9 +116,18 @@ export class FlowGraphRepository {
     const tx = this.db.raw.transaction(() => {
       this.db.raw
         .prepare(
-          "INSERT INTO flow_graphs(id,workspace_id,name,scope,sensitivity,current_version,created_at,updated_at) VALUES(?,?,?,?,?,1,?,?)",
+          "INSERT INTO flow_graphs(id,workspace_id,project_id,name,scope,sensitivity,current_version,created_at,updated_at) VALUES(?,?,?,?,?,?,1,?,?)",
         )
-        .run(graph.id, graph.workspaceId, graph.name, graph.scope, graph.sensitivity, now, now);
+        .run(
+          graph.id,
+          graph.workspaceId,
+          graph.projectId,
+          graph.name,
+          graph.scope,
+          graph.sensitivity,
+          now,
+          now,
+        );
       this.db.raw
         .prepare(
           "INSERT INTO flow_graph_versions(graph_id,version,digest,graph_json,validation_json,created_at) VALUES(?,1,?,?,?,?)",
@@ -121,11 +150,14 @@ export class FlowGraphRepository {
       GraphRow | undefined;
     if (row === undefined) throw new FlowGraphNotFoundError(graph.id);
     if (row.workspace_id !== graph.workspaceId) throw new FlowGraphWorkspaceConflictError();
+    if (row.project_id !== graph.projectId) throw new FlowGraphProjectConflictError();
     if (row.current_version !== expectedVersion)
       throw new FlowGraphVersionConflictError(expectedVersion, row.current_version);
     const digest = digestCanonical(graph);
     const current = this.db.raw
-      .prepare("SELECT * FROM flow_graph_versions WHERE graph_id=? AND version=?")
+      .prepare(
+        "SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? AND v.version=?",
+      )
       .get(graph.id, row.current_version) as VersionRow;
     if (current.digest === digest)
       return FlowGraphSaveResultSchema.parse({ version: version(current), deduplicated: true });
@@ -167,12 +199,14 @@ export class FlowGraphRepository {
     if (requestedVersion === undefined)
       row = this.db.raw
         .prepare(
-          "SELECT v.* FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id AND g.current_version=v.version WHERE v.graph_id=?",
+          "SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id AND g.current_version=v.version WHERE v.graph_id=?",
         )
         .get(graphId) as VersionRow | undefined;
     else
       row = this.db.raw
-        .prepare("SELECT * FROM flow_graph_versions WHERE graph_id=? AND version=?")
+        .prepare(
+          "SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? AND v.version=?",
+        )
         .get(graphId, requestedVersion) as VersionRow | undefined;
     if (row === undefined)
       throw new FlowGraphNotFoundError(
@@ -185,7 +219,9 @@ export class FlowGraphRepository {
     if (exists === undefined) throw new FlowGraphNotFoundError(graphId);
     return (
       this.db.raw
-        .prepare("SELECT * FROM flow_graph_versions WHERE graph_id=? ORDER BY version DESC")
+        .prepare(
+          "SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? ORDER BY v.version DESC",
+        )
         .all(graphId) as VersionRow[]
     ).map(version);
   }

@@ -41,6 +41,14 @@ import { HistoryLedger } from "./history-ledger.js";
 import type { HubDatabase } from "./db.js";
 import { registerMcpRoutes } from "./mcp.js";
 import { registerNodeAuthorityRoutes } from "./node-authority.js";
+import { registerProjectRoutes } from "./project-http.js";
+import {
+  ProjectRegistry,
+  ProjectArchivedError,
+  ProjectNotFoundError,
+  ProjectRequiredError,
+  ProjectWorkspaceConflictError,
+} from "./project-registry.js";
 import { registerVoiceRoutes } from "./voice-http.js";
 import { RealtimeVoiceRuntime } from "./voice-runtime.js";
 import { VoiceSessionStore } from "./voice-store.js";
@@ -65,6 +73,10 @@ function toHttpError(err: unknown): unknown {
   if (err instanceof CapabilityAuthorityDeniedError) {
     return new HttpError(403, "CAPABILITY_DENIED", err.message);
   }
+  if (err instanceof ProjectNotFoundError) return new NotFoundError(err.message);
+  if (err instanceof ProjectRequiredError) return new BadRequestError(err.message);
+  if (err instanceof ProjectWorkspaceConflictError || err instanceof ProjectArchivedError)
+    return new ConflictError(err.message);
   if (err instanceof ApprovalNotFoundError) return new NotFoundError(err.message);
   if (err instanceof ApprovalAlreadyDecidedError) return new ConflictError(err.message);
   if (err instanceof RespondNotAllowedError || err instanceof InvalidIdError)
@@ -126,11 +138,13 @@ export function buildHubServer(
   const app = createServer({ name: "hub", token: options.token, logger: options.logger });
   const repo = new HubRepository(db);
   const history = new HistoryLedger(db);
+  const projects = new ProjectRegistry(db);
   const authority = new CapabilityRegistry(db);
   const extensions = new ExtensionRegistry(db, authority);
   const deps: OrchestrateDeps = {
     repo,
     history,
+    projects,
     authority,
     contextUrl: options.contextUrl,
     connectUrl: options.connectUrl,
@@ -179,11 +193,20 @@ export function buildHubServer(
   app.post("/v1/memory/forget", async (req) => {
     const body = parseOrBadRequest(ForgetFactRequestSchema, req.body);
     const now = nowIso();
+    const resolvedProject = projects.resolve({
+      workspaceId: body.workspaceId,
+      projectId: body.projectId,
+    });
     const operationId = makeId("operation");
     const actionBase = {
       module: "Hub" as const,
       tool: "memory.forget",
-      args: { factId: body.factId, reason: body.reason },
+      args: {
+        factId: body.factId,
+        reason: body.reason,
+        workspaceId: resolvedProject.workspaceId,
+        projectId: resolvedProject.project.id,
+      },
     };
     const idempotencyKey = makeIdempotencyKey(actionBase);
     const actionRequest: ActionRequest = {
@@ -231,7 +254,11 @@ export function buildHubServer(
     try {
       fact = await httpJson<MemoryFact>(
         `${options.contextUrl}/v1/facts/${body.factId}/forget`,
-        { method: "POST", token: options.internalToken, body: { now } },
+        {
+          method: "POST",
+          token: options.internalToken,
+          body: { now, projectId: resolvedProject.project.id },
+        },
       );
     } catch (err) {
       throw forwardOrUpstreamError("Context", err);
@@ -320,6 +347,7 @@ export function buildHubServer(
     },
   );
 
+  registerProjectRoutes(app, projects);
   registerHistoryRoutes(app, history);
   registerExchangeRoutes(app, history, {
     contextUrl: options.contextUrl,

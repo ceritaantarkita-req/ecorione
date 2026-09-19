@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { FlowGraphDocumentSchema } from "@ecorione/shared-schema";
 import { openFlowDatabase } from "./db.js";
-import { FlowGraphRepository, FlowGraphVersionConflictError } from "./graph-repository.js";
+import {
+  FlowGraphProjectConflictError,
+  FlowGraphRepository,
+  FlowGraphVersionConflictError,
+} from "./graph-repository.js";
 
 function doc(name = "Graph") {
   return FlowGraphDocumentSchema.parse({
     id: "fg_repository01",
     workspaceId: "ws_personal",
+    projectId: "prj_personal",
     name,
     scope: "personal",
     sensitivity: "INTERNAL",
@@ -42,6 +47,19 @@ describe("FlowGraphRepository", () => {
       db.close();
     }
   });
+  it("does not allow a graph to move to another Project through version update", () => {
+    const db = openFlowDatabase(":memory:");
+    try {
+      const repo = new FlowGraphRepository(db);
+      repo.create(doc(), "2026-09-10T00:00:00.000Z");
+      expect(() =>
+        repo.save({ ...doc(), projectId: "prj_other" as never }, 1, "2026-09-10T00:00:01.000Z"),
+      ).toThrow(FlowGraphProjectConflictError);
+    } finally {
+      db.close();
+    }
+  });
+
   it("fails closed on stale expectedVersion", () => {
     const db = openFlowDatabase(":memory:");
     try {

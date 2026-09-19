@@ -1,7 +1,13 @@
 /** Typed append-only Historical Ledger contracts (ADR-18). */
 import { z } from "zod";
 import { ScopeSchema, SensitivitySchema, SyncClassSchema } from "./classification.js";
-import { EventIdSchema, OperationIdSchema, SessionIdSchema } from "./ids.js";
+import {
+  EventIdSchema,
+  OperationIdSchema,
+  ProjectIdSchema,
+  SessionIdSchema,
+  WorkspaceIdSchema,
+} from "./ids.js";
 
 export const HISTORY_EVENT_TYPES = [
   "user.message",
@@ -36,6 +42,10 @@ const TimestampSchema = z.string().datetime({ offset: false });
 export const HistorySessionSchema = z.object({
   id: SessionIdSchema,
   createdAt: TimestampSchema,
+  updatedAt: TimestampSchema.optional(),
+  workspaceId: WorkspaceIdSchema.nullable().default(null),
+  projectId: ProjectIdSchema.nullable().default(null),
+  title: z.string().max(256).nullable().default(null),
   scope: ScopeSchema,
   sensitivity: SensitivitySchema,
   syncClass: SyncClassSchema,
@@ -65,6 +75,9 @@ export type HistoryEvent = z.infer<typeof HistoryEventSchema>;
 
 export const HistoryCreateSessionRequestSchema = z.object({
   sessionId: SessionIdSchema,
+  workspaceId: WorkspaceIdSchema.optional(),
+  projectId: ProjectIdSchema.optional(),
+  title: z.string().max(256).optional(),
   scope: ScopeSchema,
   sensitivity: SensitivitySchema,
   syncClass: SyncClassSchema,

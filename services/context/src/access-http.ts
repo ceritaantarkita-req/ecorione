@@ -1,5 +1,6 @@
 import {
   MemoryFactIdSchema,
+  ProjectIdSchema,
   ScopeSchema,
   SensitivitySchema,
   maySendToHosted,
@@ -16,6 +17,7 @@ const BoolQuery = z
   .transform((value) => value === "1");
 const FactGrantQuerySchema = z.object({
   scope: ScopeSchema,
+  projectId: ProjectIdSchema.nullable().optional(),
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
   hostedEligible: BoolQuery,
 });
@@ -24,7 +26,7 @@ export function registerAccessRoutes(app: FastifyInstance, repo: ContextReposito
   app.get<{ Params: { id: string } }>("/v1/access/facts/:id", async (req) => {
     const id = parseOrBadRequest(MemoryFactIdSchema, req.params.id);
     const grant = parseOrBadRequest(FactGrantQuerySchema, req.query);
-    const fact = repo.getFact(id);
+    const fact = repo.getFactForProject(id, grant.projectId ?? null);
     if (
       fact === null ||
       fact.scope !== grant.scope ||

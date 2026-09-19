@@ -1,9 +1,11 @@
 import {
   HistoryAppendRequestSchema,
   HistoryCreateSessionRequestSchema,
+  ProjectIdSchema,
   ScopeSchema,
   SensitivitySchema,
   SessionIdSchema,
+  WorkspaceIdSchema,
   maySendToHosted,
   sensitivityRank,
   type HistoryGrant,
@@ -35,6 +37,8 @@ const BoolQuery = z
   .transform((value) => value === "1");
 const HistoryGrantQuerySchema = z.object({
   scope: ScopeSchema,
+  workspaceId: WorkspaceIdSchema.optional(),
+  projectId: ProjectIdSchema.optional(),
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
   hostedEligible: BoolQuery,
 });
@@ -73,6 +77,9 @@ export function registerHistoryRoutes(app: FastifyInstance, ledger: HistoryLedge
       const session = ledger.createSession({
         id: body.sessionId,
         createdAt: body.createdAt ?? nowIso(),
+        workspaceId: body.workspaceId,
+        projectId: body.projectId,
+        title: body.title,
         scope: body.scope,
         sensitivity: body.sensitivity,
         syncClass: body.syncClass,
@@ -85,12 +92,14 @@ export function registerHistoryRoutes(app: FastifyInstance, ledger: HistoryLedge
 
   app.get("/v1/history/sessions", async (req) => {
     const query = parseOrBadRequest(HistoryGrantQuerySchema, req.query);
-    const sessions = ledger.listSessions(query.scope).filter((session) => {
-      if (sensitivityRank(session.sensitivity) > sensitivityRank(query.maxSensitivity))
-        return false;
-      if (query.hostedEligible && !maySendToHosted(session.syncClass)) return false;
-      return true;
-    });
+    const sessions = ledger
+      .listSessions(query.scope, query.projectId, query.workspaceId)
+      .filter((session) => {
+        if (sensitivityRank(session.sensitivity) > sensitivityRank(query.maxSensitivity))
+          return false;
+        if (query.hostedEligible && !maySendToHosted(session.syncClass)) return false;
+        return true;
+      });
     return { sessions };
   });
 

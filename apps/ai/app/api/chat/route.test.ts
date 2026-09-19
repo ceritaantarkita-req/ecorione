@@ -55,6 +55,53 @@ describe("POST /api/chat", () => {
     expect((await res.json()) as { reply: string }).toMatchObject({ reply: "halo!" });
   });
 
+  it("explicit Workspace + Project diteruskan utuh ke Hub", async () => {
+    pool
+      .intercept({
+        path: "/v1/chat",
+        method: "POST",
+        body: JSON.stringify({
+          sessionId: "sess_project",
+          workspaceId: "ws_personal",
+          projectId: "prj_finance",
+          message: "cek budget",
+          target: "local",
+          scope: "personal",
+          maxSensitivity: "INTERNAL",
+          autonomy: "L1",
+        }),
+      })
+      .reply(200, {
+        operationId: "op_project",
+        sessionId: "sess_project",
+        reply: "ok",
+        memoryUsed: { coreMemoryBlocks: [], recalledFacts: [], episodicSummaries: [] },
+        cost: {
+          model: "gemma-test",
+          cacheHit: false,
+          actualUsd: 0,
+          naiveUsd: 0,
+          savedUsd: 0,
+          savedPct: 0,
+          routeReason: "local-consolidation",
+        },
+        policy: { outcome: "ALLOW", reason: "ok", ruleId: "read-always-allowed" },
+      });
+
+    const req = new Request("http://ai.local/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        sessionId: "sess_project",
+        workspaceId: "ws_personal",
+        projectId: "prj_finance",
+        message: "cek budget",
+        target: "local",
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
+
   it("target local adalah input valid dan tetap diteruskan ke Hub", async () => {
     pool
       .intercept({

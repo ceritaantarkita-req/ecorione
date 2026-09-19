@@ -1,4 +1,6 @@
 import {
+  DEFAULT_PROJECT_ID,
+  DEFAULT_WORKSPACE_ID,
   FlowDecisionRequestSchema,
   FlowGraphCreateRequestSchema,
   FlowGraphDecisionRequestSchema,
@@ -10,6 +12,7 @@ import {
   FlowGraphUpdateRequestSchema,
   FlowIdSchema,
   FlowNodeIdSchema,
+  ProjectIdSchema,
   FlowStartRequestSchema,
   FlowStartResponseSchema,
   FlowWorkflowInputSchema,
@@ -37,6 +40,7 @@ import { nowIso } from "./clock.js";
 import { openFlowDatabase } from "./db.js";
 import {
   FlowGraphNotFoundError,
+  FlowGraphProjectConflictError,
   FlowGraphRepository,
   FlowGraphVersionConflictError,
   FlowGraphWorkspaceConflictError,
@@ -55,7 +59,10 @@ export interface BuildFlowServerOptions {
   readonly graphRepository?: FlowGraphRepository | undefined;
 }
 
-const GraphListQuerySchema = z.object({ workspaceId: WorkspaceIdSchema.optional() });
+const GraphListQuerySchema = z.object({
+  workspaceId: WorkspaceIdSchema.optional(),
+  projectId: ProjectIdSchema.optional(),
+});
 const GraphVersionQuerySchema = z.object({
   version: z.coerce.number().int().min(1).optional(),
 });
@@ -67,7 +74,8 @@ function graphError(error: unknown): unknown {
   if (error instanceof FlowGraphNotFoundError) return new NotFoundError(error.message);
   if (
     error instanceof FlowGraphVersionConflictError ||
-    error instanceof FlowGraphWorkspaceConflictError
+    error instanceof FlowGraphWorkspaceConflictError ||
+    error instanceof FlowGraphProjectConflictError
   )
     return new ConflictError(error.message);
   return error;
@@ -90,6 +98,23 @@ function requireGraphTemporal(temporal: FlowServerTemporalClient): FlowGraphTemp
 function newGraphId(): string {
   return `fg_${makeId("workflow").slice("wf_".length)}`;
 }
+function normalizeProjectId(workspaceId: string, projectId: string | null): string {
+  if (projectId !== null) return projectId;
+  if (workspaceId === DEFAULT_WORKSPACE_ID) return DEFAULT_PROJECT_ID;
+  throw new BadRequestError(`Workspace ${workspaceId} membutuhkan projectId eksplisit.`);
+}
+
+async function requireProject(
+  options: BuildFlowServerOptions,
+  workspaceId: string,
+  projectId: string,
+): Promise<void> {
+  await httpJson(
+    `${options.hubUrl}/v1/projects/${encodeURIComponent(projectId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    { token: options.token },
+  );
+}
+
 async function syncNodeDeclarations(
   options: BuildFlowServerOptions,
   workspaceId: string,
@@ -160,7 +185,7 @@ export function buildFlowServer(
 
   app.get("/v1/graphs", async (req) => {
     const query = parseOrBadRequest(GraphListQuerySchema, req.query);
-    return { graphs: graphs.list(query.workspaceId) };
+    return { graphs: graphs.list(query.workspaceId, query.projectId) };
   });
 
   app.post("/v1/graphs/validate", async (req) => {
@@ -170,8 +195,10 @@ export function buildFlowServer(
 
   app.post("/v1/graphs", async (req, reply) => {
     const body = parseOrBadRequest(FlowGraphCreateRequestSchema, req.body);
+    const projectId = normalizeProjectId(body.workspaceId, body.projectId);
+    await requireProject(options, body.workspaceId, projectId);
     await syncNodeDeclarations(options, body.workspaceId);
-    const graph = FlowGraphDocumentSchema.parse({ id: newGraphId(), ...body });
+    const graph = FlowGraphDocumentSchema.parse({ id: newGraphId(), ...body, projectId });
     try {
       return reply.code(201).send(graphs.create(graph, nowIso() as Timestamp));
     } catch (error) {
@@ -192,9 +219,15 @@ export function buildFlowServer(
   app.put<{ Params: { id: string } }>("/v1/graphs/:id", async (req) => {
     const { id } = parseOrBadRequest(GraphParamsSchema, req.params);
     const body = parseOrBadRequest(FlowGraphUpdateRequestSchema, req.body);
+    const projectId = normalizeProjectId(body.workspaceId, body.projectId);
+    await requireProject(options, body.workspaceId, projectId);
     await syncNodeDeclarations(options, body.workspaceId);
     const { expectedVersion, ...fields } = body;
-    const graph: FlowGraphDocument = FlowGraphDocumentSchema.parse({ id, ...fields });
+    const graph: FlowGraphDocument = FlowGraphDocumentSchema.parse({
+      id,
+      ...fields,
+      projectId,
+    });
     try {
       return graphs.save(graph, expectedVersion, nowIso() as Timestamp);
     } catch (error) {

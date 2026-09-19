@@ -143,4 +143,74 @@ describe("Flow HTTP", () => {
     expect(res.statusCode).toBe(500);
     expect(temporal.signal).not.toHaveBeenCalled();
   });
+  it("requires an explicit Project outside the Personal Workspace", async () => {
+    const app = buildFlowServer(temporalStub(), { hubUrl: "http://hub.local" });
+    apps.push(app);
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/graphs",
+      payload: {
+        workspaceId: "ws_team",
+        name: "Team graph",
+        scope: "workspace:team",
+        sensitivity: "INTERNAL",
+        nodes: [
+          {
+            id: "node_trigger1",
+            kind: "trigger",
+            label: "Trigger",
+            position: { x: 0, y: 0 },
+            config: {},
+          },
+        ],
+        edges: [],
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("rejects a graph when Hub rejects its Project/Workspace binding", async () => {
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+    agent
+      .get("http://hub.local")
+      .intercept({
+        path: "/v1/projects/prj_foreign?workspaceId=ws_personal",
+        method: "GET",
+      })
+      .reply(409, {
+        error: {
+          type: "CONFLICT",
+          message: "Project prj_foreign tidak berada di Workspace ws_personal.",
+        },
+      });
+
+    const app = buildFlowServer(temporalStub(), { hubUrl: "http://hub.local" });
+    apps.push(app);
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/graphs",
+      payload: {
+        workspaceId: "ws_personal",
+        projectId: "prj_foreign",
+        name: "Foreign graph",
+        scope: "personal",
+        sensitivity: "INTERNAL",
+        nodes: [
+          {
+            id: "node_trigger1",
+            kind: "trigger",
+            label: "Trigger",
+            position: { x: 0, y: 0 },
+            config: {},
+          },
+        ],
+        edges: [],
+      },
+    });
+
+    expect(res.statusCode).toBeGreaterThanOrEqual(400);
+  });
 });

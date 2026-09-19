@@ -32,6 +32,46 @@ describe("Historical Ledger", () => {
     return { ledger, sessionId };
   }
 
+  it("defaults personal sessions to Personal Project and filters sessions by Project", () => {
+    db = openHubDatabase(":memory:");
+    const ledger = new HistoryLedger(db);
+    const personal = assertId("session", "sess_project_personal");
+    const other = assertId("session", "sess_project_other");
+
+    const created = ledger.createSession({
+      id: personal,
+      createdAt: NOW,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+    });
+    expect(created).toMatchObject({
+      workspaceId: "ws_personal",
+      projectId: "prj_personal",
+    });
+
+    ledger.createSession({
+      id: other,
+      createdAt: "2026-09-09T00:01:00.000Z",
+      workspaceId: "ws_personal" as never,
+      projectId: "prj_other" as never,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+    });
+
+    expect(
+      ledger
+        .listSessions("personal", "prj_personal" as never, "ws_personal" as never)
+        .map((session) => session.id),
+    ).toEqual([personal]);
+    expect(
+      ledger
+        .listSessions("personal", "prj_other" as never, "ws_personal" as never)
+        .map((session) => session.id),
+    ).toEqual([other]);
+  });
+
   it("appends contiguous events and returns suffix + watermark", () => {
     const { ledger, sessionId } = setup();
     ledger.append(sessionId, 0, {

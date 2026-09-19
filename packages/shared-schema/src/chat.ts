@@ -8,6 +8,7 @@ import { z } from "zod";
 import {
   MemoryFactIdSchema,
   OperationIdSchema,
+  ProjectIdSchema,
   SessionIdSchema,
   WorkspaceIdSchema,
 } from "./ids.js";
@@ -17,6 +18,7 @@ import { ScopeSchema, SensitivitySchema } from "./classification.js";
 export const ChatRequestSchema = z.object({
   sessionId: SessionIdSchema,
   workspaceId: WorkspaceIdSchema.optional(),
+  projectId: ProjectIdSchema.optional(),
   message: z.string().min(1).max(16_000),
   /** Explicit route selection. Omitted requests retain the historical hosted default. */
   target: z.enum(["hosted", "local"]).optional(),
@@ -79,6 +81,8 @@ export type ChatResponse = z.infer<typeof ChatResponseSchema>;
 
 export const ForgetFactRequestSchema = z.object({
   factId: MemoryFactIdSchema,
+  workspaceId: WorkspaceIdSchema.optional(),
+  projectId: ProjectIdSchema.optional(),
   reason: z.string().min(1).max(256).default("Diminta pengguna lewat panel memori."),
 });
 export type ForgetFactRequest = z.infer<typeof ForgetFactRequestSchema>;

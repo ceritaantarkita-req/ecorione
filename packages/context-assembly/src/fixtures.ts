@@ -86,6 +86,7 @@ export function fact(
     tInvalid: null,
     supersededBy: null,
     createdAt: T0,
+    projectId: null,
     scope: "personal",
     sensitivity: "INTERNAL",
     syncClass: "LOCAL_ONLY",
