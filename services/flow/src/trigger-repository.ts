@@ -169,6 +169,22 @@ export class TriggerRepository {
     return trigger;
   }
 
+  findWebhookByHookId(hookId: string): TriggerDefinition | null {
+    const rows = this.db.raw
+      .prepare("SELECT * FROM triggers WHERE kind='webhook' ORDER BY id ASC")
+      .all() as TriggerRow[];
+    for (const row of rows) {
+      const trigger = fromRow(row);
+      if (
+        trigger.kind === "webhook" &&
+        (trigger.configuration as { hookId?: string }).hookId === hookId
+      ) {
+        return trigger;
+      }
+    }
+    return null;
+  }
+
   create(input: TriggerCreateRequest, now: Timestamp): TriggerDefinition {
     const id = makeId("trigger");
     const temporalScheduleId = input.kind === "time" ? scheduleId(id) : null;
