@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **REQUIRED FOR PE-05 CLOSURE**
+Status: **CLOSED / SATISFIED — PR #174**
 
 PE-05 activates non-time Trigger delivery without creating a polling service, a second queue, or a second execution authority. Flow continues to own Trigger definitions and dispatch semantics; Temporal continues to own durable workflow execution; Hub remains authority/policy/approval/audit; Connect remains the owner of connector credentials and external integration secrets.
 

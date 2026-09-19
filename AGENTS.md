@@ -25,12 +25,13 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PE-02: **CLOSED / PASS**;
 - PE-03: **CLOSED / PASS**;
 - PE-04: **CLOSED / PASS**;
-- PE-05: **ACTIVE / EVENT + WEBHOOK AUTOMATION**;
-- PE-06..PE-08: **BLOCKED BY PRIOR PE BATCH**;
+- PE-05: **CLOSED / PASS**;
+- PE-06: **ACTIVE / BRAIN V1**;
+- PE-07..PE-08: **BLOCKED BY PRIOR PE BATCH**;
 - production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
-Do not create Batch 13. PE-05 is active; do not pull PE-06+ scope forward.
+Do not create Batch 13. PE-06 is active; do not pull PE-07+ scope forward.
 
 ## Architecture invariants
 
@@ -68,7 +69,7 @@ Do not create Batch 13. PE-05 is active; do not pull PE-06+ scope forward.
 
 ## Current active scope
 
-PE-05 is active. Implement event + webhook automation only, following ADR-36, the PE-05 acceptance contract, and the agent guide. Prefer verified event/webhook delivery over polling; do not create a queue/scheduler/autonomous service or bypass Hub authority.
+PE-06 is active. Implement Brain V1 only, following ADR-38, the PE-06 acceptance contract, and the agent guide. Brain must remain a deterministic, authorized, rebuildable projection over owner APIs/contracts; do not add a graph database, cross-service DB reads, canonical Brain storage, broad LLM extraction, or PE-07 Context/ECX optimization.
 
 ## Git / closure discipline
 

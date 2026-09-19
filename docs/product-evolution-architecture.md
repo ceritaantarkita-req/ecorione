@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CANONICAL DESIGN / PE-05 ACTIVE**
+Status: **CANONICAL DESIGN / PE-06 ACTIVE**
 
 This document defines the next ECORIONE product model after the previous Batch 1–12 / W / F6 baseline closed. It is intentionally built on the architecture already present in the repository. It does **not** authorize a new service, scheduler, graph database, autonomous engine, paid provider run, or production deployment unless a later batch explicitly requires and approves it.
 
@@ -504,4 +504,4 @@ PE-00 converted the following into accepted ADRs/contracts before feature implem
 7. Run projection source-of-truth mapping;
 8. Brain projection/privacy boundary.
 
-PE-00 through PE-04 are closed. PE-05 is the active bounded implementation batch under ADR-36 and the PE-05 acceptance contract; later PE scopes remain blocked by sequence.
+PE-00 through PE-05 are closed. PE-06 is the active bounded implementation batch under ADR-38 and the PE-06 acceptance contract; later PE scopes remain blocked by sequence.
