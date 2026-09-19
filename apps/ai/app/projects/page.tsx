@@ -201,10 +201,7 @@ export default function ProjectsPage() {
                 <span>Autonomy ceiling: {selected.autonomyCeiling}</span>
               </div>
 
-              <ProjectSources
-                projectId={selected.id}
-                workspaceId={selected.workspaceId}
-              />
+              <ProjectSources projectId={selected.id} workspaceId={selected.workspaceId} />
 
               <section className={styles.recent}>
                 <h3>Recent conversations</h3>
