@@ -90,6 +90,48 @@ merge main            4980b3ceb149be58788467d2e11769de12977d5a
 
 PR #183 is merged. Clean-checkout reproducibility is CLOSED / PASS.
 
+## Final fresh-clone EOL closure
+
+A second, clean Windows clone was used as the final reproducibility gate. It confirmed:
+
+```text
+Node                                v22.20.0
+pnpm                                10.28.0
+targeted Windows portability tests   18 PASS + 1 skipped
+pnpm verify normal suite             191 files PASS + 1 skipped
+pnpm verify tests                    990 PASS + 3 skipped
+secret scan                          PASS
+production build                     PASS
+production Bash syntax               5/5 PASS
+```
+
+The clean clone itself then exposed a repository-only EOL mismatch:
+
+```text
+before
+desktop/*.cmd  i/crlf  w/crlf  attr/text eol=crlf
+semantic diff exit = 0
+
+after git add --renormalize
+desktop/*.cmd  i/lf    w/crlf  attr/text eol=crlf
+cached semantic diff exit = 0
+```
+
+No command-script content changed. PR #185 only normalized the three Git blobs so Git stores canonical LF while Windows checkout remains CRLF.
+
+```text
+PR                    #185
+head                  600f459fbe2671e7e4297e60da725b005b6f9533
+CI                    #1486 PASS
+Product Eval          #725 PASS
+Desktop Installer     #76 PASS
+merge main            4194e89a2b0611897969eaca2cb9c2b4b360c774
+post-merge CI         #1487 PASS
+post-merge Product Eval #726 PASS
+```
+
+The native-Windows portability + clean-checkout + EOL reproducibility work is therefore CLOSED / PASS.
+
 ## Boundary
 
 Still deferred/outside this closure:
