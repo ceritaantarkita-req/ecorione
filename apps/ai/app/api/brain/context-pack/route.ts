@@ -1,4 +1,7 @@
-import { BrainOwnerRequestError, BrainNeighborhoodSeedError } from "../../../../lib/brain-projection";
+import {
+  BrainOwnerRequestError,
+  BrainNeighborhoodSeedError,
+} from "../../../../lib/brain-projection";
 import {
   BrainContextEcxRequestSchema,
   runBrainContextEcx,
