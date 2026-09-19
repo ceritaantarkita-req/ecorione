@@ -5,6 +5,9 @@ import { describe, expect, it } from "vitest";
 
 const execFileAsync = promisify(execFile);
 
+const productionSyntaxBash =
+  process.env.ECORIONE_BASH?.trim() || (process.platform === "win32" ? undefined : "bash");
+
 type Handler = (req: IncomingMessage, res: ServerResponse) => void;
 
 async function withServer<T>(
@@ -261,19 +264,24 @@ describe("production activation scripts", () => {
     );
   });
 
-  it("all production activation shell scripts are syntactically valid", async () => {
-    const scripts = [
-      "scripts/production-preflight.sh",
-      "scripts/cloudflare-tunnel-install.sh",
-      "scripts/cloudflare-origin-lockdown.sh",
-      "scripts/host-security-audit.sh",
-    ];
-    for (const script of scripts) {
-      const result = await execFileAsync("bash", ["-n", script], {
-        cwd: process.cwd(),
-        timeout: 5000,
-      });
-      expect(result.stderr).toBe("");
-    }
-  });
+  it.skipIf(productionSyntaxBash === undefined)(
+    "all production activation shell scripts are syntactically valid",
+    async () => {
+      if (productionSyntaxBash === undefined) return;
+
+      const scripts = [
+        "scripts/production-preflight.sh",
+        "scripts/cloudflare-tunnel-install.sh",
+        "scripts/cloudflare-origin-lockdown.sh",
+        "scripts/host-security-audit.sh",
+      ];
+      for (const script of scripts) {
+        const result = await execFileAsync(productionSyntaxBash, ["-n", script], {
+          cwd: process.cwd(),
+          timeout: 5000,
+        });
+        expect(result.stderr).toBe("");
+      }
+    },
+  );
 });

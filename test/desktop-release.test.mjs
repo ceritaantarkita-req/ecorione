@@ -7,7 +7,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   buildBundleLayout,
@@ -39,7 +39,9 @@ describe("ECORIONE desktop release bundle", () => {
     const layout = buildBundleLayout({ version: "0.1.0", outRoot: tempRoot() });
     expect(layout.bundleName).toBe("ECORIONE-0.1.0-windows-x64");
     expect(layout.imageTag).toBe("ecorione:desktop");
-    expect(layout.imageTar.endsWith("runtime/ecorione-image.tar")).toBe(true);
+    expect(relative(layout.bundleRoot, layout.imageTar).replaceAll("\\", "/")).toBe(
+      "runtime/ecorione-image.tar",
+    );
   });
 
   it("rejects unsafe version strings before they become filesystem paths or image metadata", () => {
