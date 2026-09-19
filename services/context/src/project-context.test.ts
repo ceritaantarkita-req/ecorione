@@ -60,6 +60,67 @@ describe("PE-01 Project context", () => {
     }
   });
 
+  it("intersects Project isolation with sensitivity and hosted egress filters", () => {
+    const db = openContextDatabase();
+    try {
+      const repo = new ContextRepository(db);
+      const retriever = new ContextRetriever(repo);
+      repo.insertFact(
+        factInput({
+          id: "mem_a_cloud",
+          text: "FILTER_TOKEN A cloud",
+          object: "A cloud",
+          projectId: "prj_alpha" as never,
+          sensitivity: "INTERNAL",
+          syncClass: "CLOUD_ALLOWED",
+        }),
+      );
+      repo.insertFact(
+        factInput({
+          id: "mem_a_local",
+          text: "FILTER_TOKEN A local",
+          object: "A local",
+          projectId: "prj_alpha" as never,
+          sensitivity: "PUBLIC",
+          syncClass: "LOCAL_ONLY",
+        }),
+      );
+      repo.insertFact(
+        factInput({
+          id: "mem_a_restricted",
+          text: "FILTER_TOKEN A restricted",
+          object: "A restricted",
+          projectId: "prj_alpha" as never,
+          sensitivity: "RESTRICTED",
+          syncClass: "CLOUD_ALLOWED",
+        }),
+      );
+      repo.insertFact(
+        factInput({
+          id: "mem_b_cloud",
+          text: "FILTER_TOKEN B cloud",
+          object: "B cloud",
+          projectId: "prj_beta" as never,
+          sensitivity: "INTERNAL",
+          syncClass: "CLOUD_ALLOWED",
+        }),
+      );
+
+      const { hits } = retriever.retrieve({
+        query: "FILTER_TOKEN",
+        scopes: ["personal"],
+        projectId: "prj_alpha" as never,
+        maxSensitivity: "INTERNAL",
+        hostedEligibleOnly: true,
+        now: NOW,
+      });
+
+      expect(hits.map((hit) => hit.fact.id)).toEqual(["mem_a_cloud"]);
+    } finally {
+      db.close();
+    }
+  });
+
   it("allows the same core-memory label globally and per Project with Project override", () => {
     const db = openContextDatabase();
     try {
