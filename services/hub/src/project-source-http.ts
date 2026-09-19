@@ -1,5 +1,4 @@
 import {
-  FlowGraphVersionViewSchema,
   ProjectIdSchema,
   ProjectSourceAttachRequestSchema,
   ProjectSourceBindingSchema,
@@ -87,20 +86,33 @@ async function resolveOwner(
         );
       }
       case "flow-graph": {
-        const raw = await httpJson(
-          `${options.flowUrl}/v1/graphs/${encodeURIComponent(binding.resourceId)}`,
+        const raw = await httpJson<{ graphs?: unknown[] }>(
+          `${options.flowUrl}/v1/graphs?workspaceId=${encodeURIComponent(binding.workspaceId)}`,
           { token },
         );
-        const view = FlowGraphVersionViewSchema.parse(raw);
-        if (view.graph.workspaceId !== binding.workspaceId) {
+        const graphs = Array.isArray(raw.graphs) ? raw.graphs : [];
+        const match = graphs.find(
+          (graph) =>
+            typeof graph === "object" &&
+            graph !== null &&
+            "graphId" in graph &&
+            (graph as { graphId?: unknown }).graphId === binding.resourceId,
+        );
+        if (match === undefined)
           throw new NotFoundError("Flow source tidak tersedia untuk Workspace Project.");
-        }
+        const graph = match as {
+          graphId?: unknown;
+          name?: unknown;
+          workspaceId?: unknown;
+          projectId?: unknown;
+          currentVersion?: unknown;
+        };
         return {
-          graphId: view.graphId,
-          version: view.version,
-          name: view.graph.name,
-          workspaceId: view.graph.workspaceId,
-          projectId: view.graph.projectId,
+          graphId: graph.graphId,
+          name: graph.name,
+          workspaceId: graph.workspaceId,
+          projectId: graph.projectId,
+          currentVersion: graph.currentVersion,
         };
       }
       case "mcp-server": {
