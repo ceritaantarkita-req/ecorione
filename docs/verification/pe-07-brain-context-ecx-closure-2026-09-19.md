@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CLOSURE CANDIDATE / IMPLEMENTATION PASS**
+Status: **CLOSED / PASS**
 
 ## Reviewed implementation
 
@@ -13,11 +13,11 @@ reviewed implementation head    892726c20ac95dded26fdc3fd2000ad4bb56363d
 CI workflow run                 35447877629 / #1457 PASS
 Product Eval workflow run       35447877612 / #696 PASS
 MCP External HTTPS workflow run 35447877592 / #855 PASS
-closure evidence head           pending
-closure-head CI                 pending
-closure-head Product Eval       pending
-closure-head MCP HTTPS          pending
-merge main                      pending
+closure evidence head           e443a6e9d10b24b7c1de7bcb315b038cf6425a45
+closure-head CI                 35448099910 / #1462 PASS
+closure-head Product Eval       35448099971 / #701 PASS
+closure-head MCP HTTPS          35448099995 / #860 PASS
+merge main                      15e31ed4b03f5be5bc6a7104fc14bb1dd0917743
 ```
 
 The reviewed implementation head passed the required exact-head repository gates before this closure record was added.
@@ -195,10 +195,16 @@ It does **not** establish universal token, latency, answer-quality, or hosted-co
 
 No hosted/provider billed call was authorized or executed for this PE-07 evidence.
 
-## Closure gate remaining
+## Closure
 
-PE-07 is not yet marked CLOSED in this record.
+Documentation closure head `e443a6e9d10b24b7c1de7bcb315b038cf6425a45` passed:
 
-This documentation change creates a new closure-evidence head. That exact closure head must itself pass CI, Product Eval, and MCP External HTTPS Acceptance. PR #178 must then be merged to `main`.
+```text
+CI                              35448099910 / #1462 PASS
+Product Eval                    35448099971 / #701  PASS
+MCP External HTTPS Acceptance   35448099995 / #860  PASS
+```
 
-PE-08 remains blocked until that happens.
+PR #178 was marked ready and merged to `main` as `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`.
+
+PE-07 is CLOSED / PASS. PE-08 Product closure may proceed as the next and final Product Evolution batch.
