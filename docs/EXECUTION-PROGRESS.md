@@ -21,7 +21,7 @@ Status: **CURRENT SUMMARY**
 | PE architecture/roadmap docs | **DOCUMENTED** |
 | PE-00 Architecture lock + migration contract | **CLOSED / PASS** |
 | PE-01 Project foundation | **CLOSED / PASS** |
-| PE-02 Project Sources | **NEXT** |
+| PE-02 Project Sources | **ACTIVE** |
 | PE-03 Trigger control plane | **BLOCKED BY PE-02** |
 | PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
@@ -55,4 +55,4 @@ Product Eval #359 PASS
 main b7ebf5492aca463e55f9f30bc259b9a6028c62d7
 ```
 
-Current next gate after PE-01 merge: **PE-02 Project Sources**.
+Current gate: **PE-02 Project Sources acceptance contract**.
