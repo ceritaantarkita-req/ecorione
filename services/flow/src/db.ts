@@ -48,6 +48,8 @@ CREATE INDEX IF NOT EXISTS idx_triggers_graph_version
   ON triggers(graph_id, graph_version, id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_triggers_temporal_schedule
   ON triggers(temporal_schedule_id) WHERE temporal_schedule_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_triggers_webhook_hook_id
+  ON triggers(json_extract(configuration_json,'$.hookId')) WHERE kind='webhook';
 CREATE TABLE IF NOT EXISTS trigger_manual_fires (
   trigger_id TEXT NOT NULL REFERENCES triggers(id) ON DELETE CASCADE,
   request_id TEXT NOT NULL,
@@ -153,6 +155,8 @@ function migratePe05TriggerKinds(db: SqliteDatabase): void {
           ON triggers(graph_id, graph_version, id);
         CREATE UNIQUE INDEX idx_triggers_temporal_schedule
           ON triggers(temporal_schedule_id) WHERE temporal_schedule_id IS NOT NULL;
+        CREATE UNIQUE INDEX idx_triggers_webhook_hook_id
+          ON triggers(json_extract(configuration_json,'$.hookId')) WHERE kind='webhook';
       `);
     })();
 
