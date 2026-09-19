@@ -13,10 +13,11 @@ This file is the single navigation entry point for repository documentation. If 
 5. **[product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)** — PE-01 ownership + migration contract.
 6. **[product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)** — required PE-01 closure behavior.
 7. **[product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md)** — required PE-02 source-binding closure behavior.
-8. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — active PE-03 Trigger closure contract.
-9. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
-10. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
-11. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
+8. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — closed PE-03 Trigger contract.
+9. **[product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md)** — active PE-04 Work/Schedule/Runs contract.
+10. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
+11. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
+12. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
 ## Source-of-truth precedence
 
@@ -47,10 +48,11 @@ As of 2026-09-19:
 - PE-00: **CLOSED / PASS**;
 - PE-01: **CLOSED / PASS**;
 - PE-02: **CLOSED / PASS**;
-- PE-03: **ACTIVE**;
-- PE-04 through PE-08: **blocked by prior batch**.
+- PE-03: **CLOSED / PASS**;
+- PE-04: **ACTIVE**;
+- PE-05 through PE-08: **blocked by prior batch**.
 
-PE-03 Trigger control plane is active. Use ADR-36 + [product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md) as the implementation/closure contract.
+PE-04 Work + Schedule + unified Runs is active. Use ADR-37 + [product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md) as the implementation/closure contract.
 
 ## Architecture and product reference
 
