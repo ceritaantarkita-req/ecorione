@@ -119,9 +119,12 @@ const AuditQuerySchema = z
     operationId: OperationIdSchema.optional(),
     operationPrefix: OperationIdSchema.optional(),
   })
-  .refine((value) => !(value.operationId !== undefined && value.operationPrefix !== undefined), {
-    message: "Gunakan operationId atau operationPrefix, bukan keduanya.",
-  });
+  .refine(
+    (value) => !(value.operationId !== undefined && value.operationPrefix !== undefined),
+    {
+      message: "Gunakan operationId atau operationPrefix, bukan keduanya.",
+    },
+  );
 const AuditWriteSchema = z.object({
   type: AuditEventTypeSchema,
   operationId: OperationIdSchema.nullable(),
