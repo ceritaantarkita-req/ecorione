@@ -2,45 +2,52 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-04 ACTIVE / WORK + SCHEDULE + RUNS**
+Status: **PE-05 ACTIVE / EVENT + WEBHOOK AUTOMATION**
 
 ## Latest closed item
 
-**PE-03 — Trigger control plane**
+**PE-04 — Work + Schedule + unified Runs**
 
 ```text
-PR #172
-exact reviewed head 74730e26321cac06c31243baeeafe29d5f4d75f0
-CI 35427251391 PASS
-Product Eval 35427251394 PASS
-MCP External HTTPS Acceptance 35427251392 PASS
-merge main c739c09014d8aa20ca8e1b83c5b6be39b4ee649c
+PR #173
+reviewed implementation head c2cacbbcbee15f46ac4c5e9e43c955f5c952af43
+closure evidence head 94936fa0704991d3536667bb8c947e9d751c813e
+CI 35435383786 PASS
+Product Eval 35435383936 PASS
+MCP External HTTPS Acceptance 35435383793 PASS
+closure-head CI 35435554011 PASS
+closure-head Product Eval 35435554018 PASS
+closure-head MCP External HTTPS Acceptance 35435554042 PASS
+merge main c08581a00a20dc6016c570a1fbb777d81e391699
 ```
 
-Acceptance: [product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md).  
-Closure evidence: [verification/pe-03-trigger-control-plane-closure-2026-09-19.md](verification/pe-03-trigger-control-plane-closure-2026-09-19.md).
+Acceptance: [product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md).  
+Closure evidence: [verification/pe-04-work-schedule-runs-closure-2026-09-19.md](verification/pe-04-work-schedule-runs-closure-2026-09-19.md).
 
 ## Active item
 
-**PE-04 — Work + Schedule + unified Runs**
+**PE-05 — Event + Webhook automation**
 
-Implementation: draft PR **#173** / `pe/pe-04-work-schedule-runs-20260919`.
+Branch: `pe/pe-05-event-webhook-automation-20260919`.
 
-Acceptance: [product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md).
+Acceptance: [product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md).
 
 Current boundary:
 
-- top-level Work surface with Schedule / Flows / Runs;
-- Schedule reads/writes PE-03 time Trigger definitions;
-- Temporal Schedule `describe()` is runtime truth for paused/upcoming occurrences;
-- Project-scoped Flow navigation + exact version deep links;
-- Run key = existing `operationId`;
-- Run list/detail are rebuilt from RnD lifecycle traces + Temporal/Flow state + Hub audit/approval;
-- Trigger identity is propagated into new graph executions;
-- workflow evolution uses Temporal patch marker `pe04-run-lifecycle-v1`;
-- no `runs` table, no second execution state machine, no Task domain.
+- activate existing `event | webhook` Trigger kinds only;
+- normalize non-time delivery before Flow dispatch;
+- explicit Workspace + Project routing;
+- exact pinned Flow version;
+- stable event/webhook dedupe identity;
+- disabled Trigger and duplicate delivery suppression;
+- verified/authenticated webhook ingress for a real integration path;
+- Hub policy/capability/approval remains binding;
+- Connect remains credential/secret owner;
+- Temporal remains durable Flow runtime;
+- failures surface through existing audit/trace/Run evidence;
+- no polling daemon, LLM monitor, second queue, second scheduler, or `condition` activation.
 
-PE-05 event/webhook activation remains blocked.
+PE-06 Brain V1 remains blocked.
 
 ## Non-negotiable boundaries
 
