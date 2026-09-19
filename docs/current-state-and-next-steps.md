@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-07 ACTIVE / BRAIN + CONTEXT + ECX**
+Status: **CURRENT / PE-07 ACTIVE / CLOSURE CANDIDATE**
 
 ## Current verdict
 
@@ -21,7 +21,7 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-04 Work + Schedule + Runs | **CLOSED / PASS** |
 | PE-05 Event/Webhook automation | **CLOSED / PASS** |
 | PE-06 Brain V1 | **CLOSED / PASS** |
-| PE-07 Brain + Context + ECX | **ACTIVE** |
+| PE-07 Brain + Context + ECX | **ACTIVE — CLOSURE CANDIDATE** |
 | PE-08 Product closure | **BLOCKED BY PE-07** |
 
 ## PE-02 delivered boundary
@@ -69,7 +69,7 @@ PE-06 closed on PR #176 after implementation head `66c7909572a1410095916843f8f46
 
 ## Active: PE-07 Brain + Context + ECX
 
-PE-07 measures whether the closed Brain projection can safely narrow candidates before existing Context retrieval and ECX `semantic-v1` selection. Implementation is active on `pe/pe-07-brain-context-ecx-20260919` from main `ffa1531a12a1149d3dfceaea8f82e53619e938d4`. The current design derives bounded URL-source constraints from an authorized Brain neighborhood, intersects them inside Context only after normal Project/sensitivity/syncClass/invalidation authorization, and passes only Context hits to ECX. Baseline omits the Brain constraint; an explicit empty constraint is fail-closed. The first evidence lane is deterministic/no-model/no-paid-provider, with thresholds frozen before the closure-grade run. Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).
+PE-07 measures whether the closed Brain projection can safely narrow candidates before existing Context retrieval and ECX `semantic-v1` selection. Implementation is active on `pe/pe-07-brain-context-ecx-20260919` from main `ffa1531a12a1149d3dfceaea8f82e53619e938d4`. The current design derives bounded URL-source constraints from an authorized Brain neighborhood, intersects them inside Context only after normal Project/sensitivity/syncClass/invalidation authorization, and passes only Context hits to ECX. Baseline omits the Brain constraint; an explicit empty constraint is fail-closed. The first evidence lane is deterministic/no-model/no-paid-provider, with thresholds frozen before the closure-grade run. Reviewed implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d` passed CI #1457, Product Eval #696, and MCP #855. The measured lane retained 100% of required references and provenance with zero unauthorized references while reducing candidates 3 -> 1 in all three fixtures (66.67% median reduction). PE-07 remains active until the documentation closure head passes and PR #178 merges. Closure evidence: [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md). Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).
 
 ## Deferred
 
