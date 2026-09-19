@@ -12,7 +12,7 @@ export const AI_PROVIDER_IDS = [
 ] as const;
 export type AiProviderId = (typeof AI_PROVIDER_IDS)[number];
 
-export const CREDENTIAL_PROVIDER_IDS = [...AI_PROVIDER_IDS, "mcp"] as const;
+export const CREDENTIAL_PROVIDER_IDS = [...AI_PROVIDER_IDS, "mcp", "webhook"] as const;
 export type CredentialProviderId = (typeof CREDENTIAL_PROVIDER_IDS)[number];
 export type CredentialPurpose = "messages" | "tokens";
 
@@ -59,10 +59,19 @@ export const PROVIDER_CATALOG: readonly ProviderCatalogEntry[] = [
     routingReady: false,
     connectionTestReady: false,
   },
+  {
+    id: "webhook",
+    displayName: "Webhook root secret",
+    category: "integration",
+    credentialPurpose: "tokens",
+    credentialReady: true,
+    routingReady: false,
+    connectionTestReady: false,
+  },
 ] as const;
 
 export function credentialPurposeForProvider(
   provider: CredentialProviderId,
 ): CredentialPurpose {
-  return provider === "mcp" ? "tokens" : "messages";
+  return provider === "mcp" || provider === "webhook" ? "tokens" : "messages";
 }
