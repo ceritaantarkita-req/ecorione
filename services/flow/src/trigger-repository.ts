@@ -130,8 +130,7 @@ export class TriggerRepository {
 
   get(id: TriggerId): TriggerDefinition | null {
     const row = this.db.raw.prepare("SELECT * FROM triggers WHERE id=?").get(id) as
-      | TriggerRow
-      | undefined;
+      TriggerRow | undefined;
     return row === undefined ? null : fromRow(row);
   }
 

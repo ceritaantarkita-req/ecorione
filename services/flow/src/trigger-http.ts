@@ -30,10 +30,7 @@ import {
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { nowIso } from "./clock.js";
-import {
-  FlowGraphNotFoundError,
-  type FlowGraphRepository,
-} from "./graph-repository.js";
+import { FlowGraphNotFoundError, type FlowGraphRepository } from "./graph-repository.js";
 import type {
   FlowGraphTemporalClient,
   FlowServerTemporalClient,
@@ -201,9 +198,7 @@ async function validateAuthority(
   return project;
 }
 
-function requireGraphTemporal(
-  temporal: FlowServerTemporalClient,
-): FlowGraphTemporalClient {
+function requireGraphTemporal(temporal: FlowServerTemporalClient): FlowGraphTemporalClient {
   if (temporal.startGraph === undefined) {
     throw new HttpError(
       503,
@@ -217,10 +212,7 @@ function requireGraphTemporal(
 function requireScheduleTemporal(
   temporal: FlowServerTemporalClient,
 ): TriggerScheduleTemporalClient {
-  if (
-    temporal.reconcileTimeTrigger === undefined ||
-    temporal.pauseTimeTrigger === undefined
-  ) {
+  if (temporal.reconcileTimeTrigger === undefined || temporal.pauseTimeTrigger === undefined) {
     throw new HttpError(
       503,
       "TRIGGER_SCHEDULE_RUNTIME_UNAVAILABLE",
@@ -230,7 +222,10 @@ function requireScheduleTemporal(
   return temporal as TriggerScheduleTemporalClient;
 }
 
-function deterministicManualIds(triggerId: string, requestId: string): {
+function deterministicManualIds(
+  triggerId: string,
+  requestId: string,
+): {
   workflowId: TriggerFireResponse["workflowId"];
   operationId: TriggerFireResponse["operationId"];
 } {
@@ -457,9 +452,7 @@ export function registerTriggerRoutes(
       });
       return reply
         .code(202)
-        .send(
-          triggers.recordManualFire(id, body.requestId, response, nowIso() as Timestamp),
-        );
+        .send(triggers.recordManualFire(id, body.requestId, response, nowIso() as Timestamp));
     } catch (error) {
       throw triggerError(error);
     }

@@ -39,15 +39,11 @@ export interface FlowGraphTemporalClient {
   graphState(runId: WorkflowId): Promise<FlowGraphRunState>;
 }
 export interface TriggerScheduleTemporalClient {
-  reconcileTimeTrigger(
-    trigger: TriggerDefinition,
-    plan: CompiledFlowGraphPlan,
-  ): Promise<void>;
+  reconcileTimeTrigger(trigger: TriggerDefinition, plan: CompiledFlowGraphPlan): Promise<void>;
   pauseTimeTrigger(scheduleId: string): Promise<void>;
 }
 export type FlowServerTemporalClient = FlowTemporalClient &
   Partial<FlowGraphTemporalClient & TriggerScheduleTemporalClient>;
-
 
 export function triggerScheduleOptions(
   trigger: TriggerDefinition,
@@ -86,9 +82,7 @@ export function triggerScheduleOptions(
     policies: {
       catchupWindow: cfg.catchupWindowMs,
       overlap:
-        cfg.overlap === "SKIP"
-          ? ScheduleOverlapPolicy.SKIP
-          : ScheduleOverlapPolicy.BUFFER_ONE,
+        cfg.overlap === "SKIP" ? ScheduleOverlapPolicy.SKIP : ScheduleOverlapPolicy.BUFFER_ONE,
     },
   };
 }

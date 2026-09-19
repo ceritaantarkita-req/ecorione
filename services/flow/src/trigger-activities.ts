@@ -1,9 +1,5 @@
 import { createHash } from "node:crypto";
-import {
-  ProjectSchema,
-  autonomyExceeds,
-  type PolicyVerdict,
-} from "@ecorione/shared-schema";
+import { ProjectSchema, autonomyExceeds, type PolicyVerdict } from "@ecorione/shared-schema";
 import { httpJson } from "@ecorione/shared-server";
 import type { ScheduledTriggerAuthorizationInput } from "./trigger-contract.js";
 

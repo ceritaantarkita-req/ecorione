@@ -145,12 +145,7 @@ describe("PE-03 Temporal Schedule runtime", () => {
 
       const initial = trigger();
       const compiled = plan();
-      await reconcileTimeTriggerSchedule(
-        env.client.schedule,
-        taskQueue,
-        initial,
-        compiled,
-      );
+      await reconcileTimeTriggerSchedule(env.client.schedule, taskQueue, initial, compiled);
 
       const handle = env.client.schedule.getHandle(initial.temporalScheduleId!);
       const created = await handle.describe();
@@ -162,7 +157,8 @@ describe("PE-03 Temporal Schedule runtime", () => {
       await handle.trigger(ScheduleOverlapPolicy.SKIP);
       await awaitLatestScheduleAction(env, initial.temporalScheduleId!, 1);
       expect(triggerActivities.authorizeScheduledTrigger).toHaveBeenCalledTimes(1);
-      const firstAuth = vi.mocked(triggerActivities.authorizeScheduledTrigger).mock.calls[0]?.[0];
+      const firstAuth = vi.mocked(triggerActivities.authorizeScheduledTrigger).mock
+        .calls[0]?.[0];
       expect(firstAuth?.occurrenceWorkflowId).toBeTruthy();
       expect(firstAuth?.occurrenceRunId).toBeTruthy();
 
@@ -206,7 +202,8 @@ describe("PE-03 Temporal Schedule runtime", () => {
       await handle.trigger(ScheduleOverlapPolicy.BUFFER_ONE);
       await awaitLatestScheduleAction(env, initial.temporalScheduleId!, 2);
       expect(triggerActivities.authorizeScheduledTrigger).toHaveBeenCalledTimes(2);
-      const secondAuth = vi.mocked(triggerActivities.authorizeScheduledTrigger).mock.calls[1]?.[0];
+      const secondAuth = vi.mocked(triggerActivities.authorizeScheduledTrigger).mock
+        .calls[1]?.[0];
       expect(secondAuth?.occurrenceRunId).not.toBe(firstAuth?.occurrenceRunId);
     } finally {
       if (workerOne !== null) workerOne.shutdown();

@@ -28,16 +28,20 @@ const MAX_CATCHUP_MS = 24 * 60 * 60 * 1000;
 export const DEFAULT_TRIGGER_CATCHUP_MS = 60_000;
 export const MAX_TRIGGER_CATCHUP_MS = MAX_CATCHUP_MS;
 
-export const IanaTimezoneSchema = z.string().min(1).max(128).superRefine((value, ctx) => {
-  try {
-    new Intl.DateTimeFormat("en-US", { timeZone: value }).format(new Date(0));
-  } catch {
-    ctx.addIssue({
-      code: "custom",
-      message: "timezone harus nama IANA yang valid.",
-    });
-  }
-});
+export const IanaTimezoneSchema = z
+  .string()
+  .min(1)
+  .max(128)
+  .superRefine((value, ctx) => {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: value }).format(new Date(0));
+    } catch {
+      ctx.addIssue({
+        code: "custom",
+        message: "timezone harus nama IANA yang valid.",
+      });
+    }
+  });
 
 const CronExpressionSchema = z
   .string()
@@ -107,10 +111,7 @@ export const TriggerDefinitionSchema = z
     id: TriggerIdSchema,
     ...TriggerBaseFields,
     kind: Pe03TriggerKindSchema,
-    configuration: z.union([
-      ManualTriggerConfigurationSchema,
-      TimeTriggerConfigurationSchema,
-    ]),
+    configuration: z.union([ManualTriggerConfigurationSchema, TimeTriggerConfigurationSchema]),
     temporalScheduleId: z.string().min(1).max(256).nullable(),
     revision: z.number().int().min(1),
     createdAt: TimestampSchema,

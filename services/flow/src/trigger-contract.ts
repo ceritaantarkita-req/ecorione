@@ -16,8 +16,7 @@ export interface ScheduledTriggerWorkflowInput {
   readonly input: unknown;
 }
 
-export interface ScheduledTriggerAuthorizationInput
-  extends ScheduledTriggerWorkflowInput {
+export interface ScheduledTriggerAuthorizationInput extends ScheduledTriggerWorkflowInput {
   readonly occurrenceWorkflowId: string;
   readonly occurrenceRunId: string;
   readonly operationId: OperationId;

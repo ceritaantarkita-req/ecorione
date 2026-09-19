@@ -95,9 +95,7 @@ describe("PE-03 TriggerRepository", () => {
         "ws_personal" as never,
         "prj_personal" as never,
       );
-      expect(reopened.map((item) => item.id).sort()).toEqual(
-        [manual.id, timed.id].sort(),
-      );
+      expect(reopened.map((item) => item.id).sort()).toEqual([manual.id, timed.id].sort());
     } finally {
       second.close();
     }

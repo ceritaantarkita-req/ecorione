@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  TriggerCreateRequestSchema,
-  TimeTriggerConfigurationSchema,
-} from "./trigger.js";
+import { TriggerCreateRequestSchema, TimeTriggerConfigurationSchema } from "./trigger.js";
 
 const base = {
   workspaceId: "ws_personal",

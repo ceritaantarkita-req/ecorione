@@ -42,7 +42,9 @@ function graph(versionName = "Trigger target") {
   } as never;
 }
 
-function temporal(): FlowTemporalClient & FlowGraphTemporalClient & TriggerScheduleTemporalClient {
+function temporal(): FlowTemporalClient &
+  FlowGraphTemporalClient &
+  TriggerScheduleTemporalClient {
   return {
     start: vi.fn(async () => undefined),
     signal: vi.fn(async () => undefined),
