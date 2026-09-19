@@ -4,6 +4,7 @@ import {
   defineQuery,
   defineSignal,
   executeChild,
+  patched,
   proxyActivities,
   setHandler,
   sleep,
@@ -65,6 +66,8 @@ const triggerActivities = proxyActivities<TriggerActivities>({
     maximumAttempts: 3,
   },
 });
+
+const PE04_RUN_LIFECYCLE_PATCH = "pe04-run-lifecycle-v1";
 
 const runTraceActivities = proxyActivities<Pick<FlowGraphActivities, "recordGraphRunTrace">>({
   startToCloseTimeout: "30 seconds",
@@ -241,11 +244,14 @@ export async function graphExecutionWorkflow(
       "Subflow depth melewati batas 8.",
       "FLOW_SUBFLOW_DEPTH",
     );
-  await runTraceActivities.recordGraphRunTrace({
-    execution,
-    name: "flow.graph.run.started",
-    attributes: { status: "RUNNING" },
-  });
+  const recordRunLifecycle = patched(PE04_RUN_LIFECYCLE_PATCH);
+  if (recordRunLifecycle) {
+    await runTraceActivities.recordGraphRunTrace({
+      execution,
+      name: "flow.graph.run.started",
+      attributes: { status: "RUNNING" },
+    });
+  }
   const decisions = new Map<string, FlowGraphNodeDecisionSignal>();
   const humanInputs = new Map<string, unknown>();
   const outputs = new Map<string, NodeOutput>();
@@ -465,11 +471,13 @@ export async function graphExecutionWorkflow(
         sinks.map((item) => [item.node.id, outputs.get(item.node.id)?.value ?? null]),
       );
     runStatus = "COMPLETED";
-    await runTraceActivities.recordGraphRunTrace({
-      execution,
-      name: "flow.graph.run.completed",
-      attributes: { status: "COMPLETED" },
-    });
+    if (recordRunLifecycle) {
+      await runTraceActivities.recordGraphRunTrace({
+        execution,
+        name: "flow.graph.run.completed",
+        attributes: { status: "COMPLETED" },
+      });
+    }
     return {
       runId: execution.runId,
       graphId: execution.plan.graph.id,
@@ -481,14 +489,16 @@ export async function graphExecutionWorkflow(
     runStatus = "FAILED";
     finalError =
       error instanceof Error ? error.message.slice(0, 2000) : String(error).slice(0, 2000);
-    try {
-      await runTraceActivities.recordGraphRunTrace({
-        execution,
-        name: "flow.graph.run.failed",
-        attributes: { status: "FAILED", error: finalError },
-      });
-    } catch {
-      /* preserve original workflow failure */
+    if (recordRunLifecycle) {
+      try {
+        await runTraceActivities.recordGraphRunTrace({
+          execution,
+          name: "flow.graph.run.failed",
+          attributes: { status: "FAILED", error: finalError },
+        });
+      } catch {
+        /* preserve original workflow failure */
+      }
     }
     throw error;
   }
