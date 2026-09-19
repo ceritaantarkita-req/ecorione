@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   ["Ai", "/", "ai"],
   ["Projects", "/projects", "projects"],
   ["Work", "/work", "work"],
+  ["Brain", "/brain", "brain"],
   ["Space", "/space", "space"],
   ["Flow", "/flow", "flow"],
   ["Operations", "/ops", "ops"],
@@ -74,6 +75,16 @@ function NavIcon({ icon }: { icon: NavIconKey }) {
         <svg {...shared}>
           <path d="M3.5 5.5h13v10h-13Z" />
           <path d="M7 5.5V4h6v1.5M6.2 9.2h7.6M10 9.2v3.6" />
+        </svg>
+      );
+    case "brain":
+      return (
+        <svg {...shared}>
+          <circle cx="4" cy="10" r="1.6" />
+          <circle cx="10" cy="4.2" r="1.6" />
+          <circle cx="16" cy="9" r="1.6" />
+          <circle cx="10.8" cy="15.7" r="1.6" />
+          <path d="M5.3 9 8.8 5.4M11.5 5.1l3.1 2.8M15 10.2l-3.1 4.2M9.3 14.4 5.3 11" />
         </svg>
       );
     case "space":
