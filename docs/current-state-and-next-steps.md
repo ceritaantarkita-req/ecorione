@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-02 CLOSED / PE-03 NEXT**
+Status: **CURRENT / PE-03 ACTIVE / TRIGGER CONTROL PLANE**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00, PE-01, and PE-02 are CLOSED / PASS. PE-03 Trigger control plane is next after PR #171 merge.**
+**PE-00, PE-01, and PE-02 are CLOSED / PASS. PE-03 Trigger control plane is ACTIVE.**
 
 ## Product Evolution status
 
@@ -17,7 +17,7 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-00 Architecture lock | **CLOSED / PASS** |
 | PE-01 Project foundation | **CLOSED / PASS** |
 | PE-02 Project Sources | **CLOSED / PASS** |
-| PE-03 Trigger control plane | **NEXT** |
+| PE-03 Trigger control plane | **ACTIVE** |
 | PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
 | PE-06 Brain V1 | **BLOCKED BY PE-05** |
