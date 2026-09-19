@@ -3,7 +3,7 @@ import { ContextRetriever } from "./retrieval.js";
 import { openContextDatabase } from "./db.js";
 import { loadMigrations, migrate } from "./migrate.js";
 import { ContextRepository } from "./repository.js";
-import { NOW, T0, episodeInput, factInput } from "./test-helpers.js";
+import { NOW, T0, factInput } from "./test-helpers.js";
 
 describe("PE-01 Project context", () => {
   it("retrieves global + current Project memory without sibling leakage", () => {
