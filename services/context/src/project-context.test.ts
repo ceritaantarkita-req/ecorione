@@ -131,6 +131,15 @@ describe("PE-01 Project context", () => {
       );
       repo.appendEpisode(
         episodeInput({
+          id: "epi_legacy_assistant",
+          provenance: {
+            sourceApp: "connect:gemma-test",
+            sessionId: "sess_legacy_ai" as never,
+          },
+        }),
+      );
+      repo.appendEpisode(
+        episodeInput({
           id: "epi_legacy_cli",
           provenance: {
             sourceApp: "cli",
@@ -159,6 +168,9 @@ describe("PE-01 Project context", () => {
       const ai = db.raw
         .prepare("SELECT project_id FROM episodes WHERE id='epi_legacy_ai'")
         .get() as { project_id: string | null };
+      const assistant = db.raw
+        .prepare("SELECT project_id FROM episodes WHERE id='epi_legacy_assistant'")
+        .get() as { project_id: string | null };
       const cli = db.raw
         .prepare("SELECT project_id FROM episodes WHERE id='epi_legacy_cli'")
         .get() as { project_id: string | null };
@@ -170,6 +182,7 @@ describe("PE-01 Project context", () => {
         .get() as { project_id: string | null };
 
       expect(ai.project_id).toBe("prj_personal");
+      expect(assistant.project_id).toBe("prj_personal");
       expect(cli.project_id).toBeNull();
       expect(fact.project_id).toBe("prj_personal");
       expect(core.project_id).toBeNull();
