@@ -16,9 +16,8 @@ describe("PE-04 Work source contract", () => {
     const [page, nav] = await Promise.all([source(pagePath), source(navPath)]);
     expect(nav).toContain('["Work", "/work", "work"]');
     expect(page).toContain('type WorkTab = "schedule" | "flows" | "runs"');
-    expect(page).toContain(">Schedule<");
-    expect(page).toContain(">Flows<");
-    expect(page).toContain(">Runs<");
+    expect(page).toContain('value === "schedule" ? "Schedule"');
+    expect(page).toContain('value === "flows" ? "Flows" : "Runs"');
   });
 
   it("reads Temporal schedule runtime instead of implementing browser scheduling", async () => {
