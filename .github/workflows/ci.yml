@@ -29,13 +29,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: PE-05 runtime acceptance formatter
+      - name: PE-03 one-file formatter
         run: |
-          pnpm exec prettier --write "test/pe05-webhook-temporal-runtime.test.ts"
-          echo "----- PE05_RUNTIME_FILE -----"
-          base64 -w0 "test/pe05-webhook-temporal-runtime.test.ts"
+          pnpm exec prettier --write "services/flow/src/graph-project-isolation.test.ts"
+          echo "----- PE03_ONE_FILE -----"
+          base64 -w0 "services/flow/src/graph-project-isolation.test.ts"
           echo
-          echo "----- PE05_RUNTIME_FILE_END -----"
+          echo "----- PE03_ONE_FILE_END -----"
 
       - name: Format
         run: pnpm run format:check
