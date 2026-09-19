@@ -17,7 +17,7 @@ Windows suite        191 files PASS + 1 skipped
 Windows tests        990 PASS + 3 skipped
 ```
 
-This is maintenance hardening, not PE-09 or Batch 13. The current follow-up removes the historical CI formatter mutation and commits canonical formatting so a clean checkout is the thing CI validates.
+This is maintenance hardening, not PE-09 or Batch 13. The clean-checkout follow-up is CLOSED / PASS on PR #183 implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb`: CI #1479 and Product Eval #718 passed after the historical CI formatter mutation was removed and canonical formatting was committed.
 
 ## Latest Product Evolution closure
 
