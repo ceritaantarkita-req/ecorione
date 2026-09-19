@@ -109,6 +109,7 @@ export interface ListFactsFilter extends FactLookupOptions {
   readonly includeGlobal?: boolean | undefined;
   readonly maxSensitivity?: Sensitivity | undefined;
   readonly hostedEligibleOnly?: boolean | undefined;
+  readonly excludeLegacyUnassigned?: boolean | undefined;
   readonly limit?: number | undefined;
 }
 export interface ListEpisodesFilter {
@@ -118,6 +119,7 @@ export interface ListEpisodesFilter {
   readonly since?: Timestamp | undefined;
   readonly onlyUnconsolidated?: boolean | undefined;
   readonly hostedEligibleOnly?: boolean | undefined;
+  readonly excludeLegacyUnassigned?: boolean | undefined;
   readonly order?: "asc" | "desc" | undefined;
   readonly limit?: number | undefined;
 }
@@ -221,6 +223,8 @@ export class ContextRepository {
     if (filter.onlyUnconsolidated === true) clauses.push("consolidated_at IS NULL");
     if (filter.hostedEligibleOnly === true)
       clauses.push("sync_class IN ('CLOUD_ALLOWED','PUBLIC')");
+    if (filter.excludeLegacyUnassigned === true)
+      clauses.push("project_state <> 'LEGACY_UNASSIGNED'");
     const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
     const direction = filter.order === "desc" ? "DESC" : "ASC";
     const rows = this.raw
@@ -425,6 +429,8 @@ export class ContextRepository {
     }
     if (filter.hostedEligibleOnly === true)
       clauses.push("sync_class IN ('CLOUD_ALLOWED','PUBLIC')");
+    if (filter.excludeLegacyUnassigned === true)
+      clauses.push("project_state <> 'LEGACY_UNASSIGNED'");
     const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
     return (
       this.raw
