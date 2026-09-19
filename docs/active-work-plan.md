@@ -40,7 +40,7 @@ Current boundary:
 - exact pinned Flow version;
 - stable event/webhook dedupe identity;
 - disabled Trigger and duplicate delivery suppression;
-- verified/authenticated webhook ingress for a real integration path;
+- Connect-verified generic webhook ingress with per-hook derived token;
 - Hub policy/capability/approval remains binding;
 - Connect remains credential/secret owner;
 - Temporal remains durable Flow runtime;
