@@ -172,6 +172,7 @@ function ensurePe05EventDeliveryTable(db: SqliteDatabase): void {
       dedupe_key TEXT NOT NULL,
       event_id TEXT NOT NULL,
       event_digest TEXT NOT NULL,
+      state TEXT NOT NULL CHECK(state IN ('PENDING','STARTED')),
       workflow_id TEXT NOT NULL,
       operation_id TEXT NOT NULL,
       graph_id TEXT NOT NULL,
