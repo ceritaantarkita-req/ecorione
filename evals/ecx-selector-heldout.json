@@ -16,7 +16,11 @@
       "query": {
         "intent": "workspace mcp review",
         "task": "Select the current workspace-aware MCP state for ws_personal.",
-        "need": ["mcp", "workspace", "routing"]
+        "need": [
+          "mcp",
+          "workspace",
+          "routing"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -49,7 +53,11 @@
       "query": {
         "intent": "security review",
         "task": "Select the owner-boundary control for bearer redirects.",
-        "need": ["security", "redirect", "bearer"]
+        "need": [
+          "security",
+          "redirect",
+          "bearer"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -82,7 +90,12 @@
       "query": {
         "intent": "voice security review",
         "task": "Select the current realtime voice streaming control.",
-        "need": ["voice", "sse", "bearer", "no-store"]
+        "need": [
+          "voice",
+          "sse",
+          "bearer",
+          "no-store"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -115,7 +128,12 @@
       "query": {
         "intent": "local runtime policy",
         "task": "Select the rule for validating localBaseUrl against public hosts.",
-        "need": ["local runtime", "localBaseUrl", "public host", "policy"]
+        "need": [
+          "local runtime",
+          "localBaseUrl",
+          "public host",
+          "policy"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -148,7 +166,12 @@
       "query": {
         "intent": "model identity verification",
         "task": "Select the requirement for reproducible local model identity.",
-        "need": ["model", "identity", "digest", "mutable alias"]
+        "need": [
+          "model",
+          "identity",
+          "digest",
+          "mutable alias"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -181,7 +204,12 @@
       "query": {
         "intent": "hosted authorization governance",
         "task": "Select the final single-attempt control that prevents W18 reruns.",
-        "need": ["authorization", "single attempt", "hosted dispatch", "marker"]
+        "need": [
+          "authorization",
+          "single attempt",
+          "hosted dispatch",
+          "marker"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -208,13 +236,18 @@
       "surface": "Operations",
       "origin": {
         "kind": "task",
-        "source": "docs/active-work-plan.md",
+        "source": "docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md",
         "ref": "W04"
       },
       "query": {
         "intent": "operations diagnosis",
         "task": "Identify the required service causing fleet degradation and the optional-service rule.",
-        "need": ["operations", "degraded", "required service", "optional"]
+        "need": [
+          "operations",
+          "degraded",
+          "required service",
+          "optional"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -251,7 +284,12 @@
       "query": {
         "intent": "memory control",
         "task": "Select the authoritative forget path and invalidation behavior.",
-        "need": ["memory", "forget", "invalidation", "hub"]
+        "need": [
+          "memory",
+          "forget",
+          "invalidation",
+          "hub"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -278,13 +316,18 @@
       "surface": "Provider Settings",
       "origin": {
         "kind": "task",
-        "source": "docs/active-work-plan.md",
+        "source": "docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md",
         "ref": "W06"
       },
       "query": {
         "intent": "provider credential test",
         "task": "Select the transient credential-test handling rule.",
-        "need": ["provider", "credential", "transient", "secret"]
+        "need": [
+          "provider",
+          "credential",
+          "transient",
+          "secret"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
@@ -311,13 +354,18 @@
       "surface": "Ai chat",
       "origin": {
         "kind": "task",
-        "source": "docs/active-work-plan.md",
+        "source": "docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md",
         "ref": "W08"
       },
       "query": {
         "intent": "chat routing",
         "task": "Select the rule for explicit Local chat target routing.",
-        "need": ["chat", "local", "routing", "hub"]
+        "need": [
+          "chat",
+          "local",
+          "routing",
+          "hub"
+        ]
       },
       "selection": {
         "mode": "semantic-v1",
