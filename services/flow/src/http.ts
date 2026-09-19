@@ -275,6 +275,7 @@ export function buildFlowServer(
       operationId,
       plan,
       input: body.input,
+      triggerId: null,
       depth: 0,
     });
     metrics.addCounter("ecorione_flow_runs_total", 1, { runtime: "graph" });
