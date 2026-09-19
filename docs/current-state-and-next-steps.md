@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-08 ACTIVE / PRODUCT CLOSURE**
+Status: **CURRENT / PE-08 ACTIVE / CLOSURE CANDIDATE**
 
 ## Current verdict
 
@@ -73,9 +73,11 @@ PE-07 closed on PR #178 after implementation head `892726c20ac95dded26fdc3fd2000
 
 ## Active: PE-08 Product closure
 
-PE-08 is the final Product Evolution closure batch. It audits the PE-00..PE-07 baseline for migration consistency, Project isolation/security, restart/persistence, backup/restore/rebuild behavior, relevant Windows/runtime/installer regressions, product UX/navigation/responsive regressions, documentation convergence, and exact-head evidence.
+PE-08 is the final Product Evolution closure batch. Work is active on `pe/pe-08-product-closure-20260919` from main `82026c8a1948336b2da4e00ee4832180f68452f7`. The closure matrix explicitly covers migration/reopen behavior, Project isolation, Source binding persistence, Context policy intersections, Flow/Trigger Project boundaries, owner backup/restore, derived Brain rebuild, UX/navigation/responsive source guards, and Windows installer specification. A new integrated DR test restores Hub + Context + Flow canonical state after deliberate post-backup mutation and rebuilds Brain from the restored owners instead of persisting Brain.
 
-PE-08 is not a feature expansion batch. Production VPS/Cloudflare, AutoClick, paid hosted evidence, L4 autonomy, graph persistence, and unrelated redesign remain outside scope.
+Reviewed implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed CI #1469 and Product Eval #708. Product Eval ran 36 files / 148 tests; normal CI ran 191 files PASS + 1 skipped and 991 tests PASS + 2 skipped, plus Phase 4 3/3, production-ops, security/toolchain/container reviews, and production build. PE-08 is now a closure candidate pending exact-head documentation gates and merge.
+
+PE-08 is not a feature expansion batch. Production VPS/Cloudflare, rendered local browser walkthrough, AutoClick, paid hosted evidence, L4 autonomy, graph persistence, and unrelated redesign remain outside scope.
 
 Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
 

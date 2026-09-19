@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-08 ACTIVE / PRODUCT CLOSURE**
+Status: **PE-08 ACTIVE / CLOSURE CANDIDATE**
 
 ## Latest closed item
 
@@ -32,7 +32,7 @@ Closure evidence: [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](v
 
 **PE-08 — Product closure**
 
-Transition branch: `docs/pe-07-closure-pe-08-activation-20260919`. The implementation/audit branch must be created from synchronized `main` only after this transition merges.
+Implementation/audit branch: `pe/pe-08-product-closure-20260919`, created from synchronized `main` `82026c8a1948336b2da4e00ee4832180f68452f7` after PR #179 merged.
 
 Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
 
@@ -48,6 +48,18 @@ Current closure scope:
 - converge current docs to one final state;
 - archive superseded planning snapshots only after current docs replace them;
 - close only on exact-head CI + Product Eval + every relevant acceptance gate.
+
+Implementation/audit checkpoint:
+
+- Product Eval now carries an explicit PE-08 closure matrix for Project migration/isolation, Project Source persistence, Context Project rules, Flow/Trigger isolation and restart-safe state, owner backup/restore, Brain rebuild, Product Evolution UX/navigation/responsive guards, and Windows installer specification;
+- `test/pe08-product-closure.test.ts` exercises real Hub + Context + Flow SQLite backup -> post-backup mutation -> restore -> reopen and then rebuilds Brain from restored canonical owner state;
+- Brain remains non-persistent; the test proves reconstruction rather than adding Brain backup state;
+- existing local runtime/browser inventory remains a separate runtime evidence boundary and must not be mislabeled from source-only tests;
+- no provider/model call, hosted spend, production deployment, L4 autonomy, AutoClick, or new feature domain is part of this closure work;
+- reviewed implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed CI #1469 and Product Eval #708;
+- Product Eval closure matrix: 36 files / 148 tests PASS;
+- normal CI suite: 191 files PASS + 1 skipped; 991 tests PASS + 2 skipped; Phase 4 3/3 PASS; production-ops, security/toolchain/container/build gates PASS;
+- closure-candidate documentation head is now required before merge.
 
 Dependency gate:
 

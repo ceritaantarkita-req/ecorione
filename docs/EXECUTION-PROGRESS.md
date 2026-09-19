@@ -27,13 +27,13 @@ Status: **CURRENT SUMMARY**
 | PE-05 Event/Webhook automation | **CLOSED / PASS** |
 | PE-06 Brain V1 | **CLOSED / PASS** |
 | PE-07 Brain + Context + ECX | **CLOSED / PASS** |
-| PE-08 Product closure | **ACTIVE** |
+| PE-08 Product closure | **ACTIVE — CLOSURE CANDIDATE** |
 
 ## Latest closure
 
 PE-07 closed on PR #178 implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d`, closure head `e443a6e9d10b24b7c1de7bcb315b038cf6425a45`, and merged as `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. Implementation and closure heads passed CI, Product Eval, and MCP acceptance. Bounded deterministic evidence reported 66.67% median candidate reduction, 100% required-reference/provenance retention, and zero unauthorized refs.
 
-Current active gate: **PE-08 Product closure** under [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
+Current active gate: **PE-08 Product closure candidate** on `pe/pe-08-product-closure-20260919`. Reviewed implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed CI #1469 and Product Eval #708; the closure matrix passed 36 files / 148 tests, and normal CI passed 191 files + 1 skipped / 991 tests + 2 skipped plus Phase 4, production-ops, security/toolchain/container, and production build gates. Exact closure-documentation head gates and merge remain.
 
 ```text
 PE-00  CLOSED / PASS
