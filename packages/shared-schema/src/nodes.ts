@@ -4,6 +4,7 @@ import { FlowExecutionNodeSchema } from "./flow.js";
 import {
   ArtifactIdSchema,
   OperationIdSchema,
+  ProjectIdSchema,
   WorkflowIdSchema,
   WorkspaceIdSchema,
 } from "./ids.js";
@@ -372,6 +373,7 @@ export const FlowGraphViewportSchema = z
 
 const GraphFields = {
   workspaceId: WorkspaceIdSchema,
+  projectId: ProjectIdSchema.nullable().default(null),
   name: z.string().min(1).max(160),
   scope: ScopeSchema,
   sensitivity: SensitivitySchema,
@@ -496,6 +498,7 @@ export const FlowGraphSummarySchema = z
   .object({
     graphId: FlowGraphIdSchema,
     workspaceId: WorkspaceIdSchema,
+    projectId: ProjectIdSchema.nullable(),
     name: z.string(),
     scope: ScopeSchema,
     sensitivity: SensitivitySchema,
