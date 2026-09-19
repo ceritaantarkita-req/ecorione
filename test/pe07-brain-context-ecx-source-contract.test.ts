@@ -29,8 +29,8 @@ describe("PE-07 Brain Context ECX source contract", () => {
     const semantic = integration.indexOf('mode: "semantic-v1"');
 
     expect(contextCall).toBeGreaterThan(-1);
-    expect(memoryRefs).toBeGreaterThan(contextCall);
-    expect(ecxPlan).toBeGreaterThan(memoryRefs);
+    expect(ecxPlan).toBeGreaterThan(contextCall);
+    expect(memoryRefs).toBeGreaterThan(ecxPlan);
     expect(semantic).toBeGreaterThan(ecxPlan);
     expect(integration).toContain("candidateSourceUris");
     expect(integration).not.toContain("/v1/complete");
