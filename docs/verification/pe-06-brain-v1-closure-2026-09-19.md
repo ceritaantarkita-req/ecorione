@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CLOSURE CANDIDATE / IMPLEMENTATION GATES PASS**
+Status: **CLOSED / PASS**
 
 ## Reviewed implementation
 
@@ -13,6 +13,11 @@ reviewed implementation head    66c7909572a1410095916843f8f46a385ecb628b
 CI workflow run                 35444095549 PASS
 Product Eval workflow run       35444095553 PASS
 MCP External HTTPS workflow run 35444095552 PASS
+closure evidence head           25508dd1cef5d8ebb8846448c7732ddde7866a59
+closure-head CI                 35444433296 PASS
+closure-head Product Eval       35444433240 PASS
+closure-head MCP HTTPS          35444433249 PASS
+merge main                      d54ad62c303847b23634ba33aead4749f21bf1d0
 ```
 
 The reviewed implementation head passed the required exact-head repository gates before this closure record was added.
@@ -268,10 +273,10 @@ PE-06 does **not** introduce:
 - paid provider evidence;
 - L4 autonomy.
 
-## Final merge gate
+## Closure
 
-This closure evidence is added after implementation head `66c7909572a1410095916843f8f46a385ecb628b` passed all required implementation gates.
+Implementation head `66c7909572a1410095916843f8f46a385ecb628b` passed the full implementation gates. Documentation-only closure head `25508dd1cef5d8ebb8846448c7732ddde7866a59` then passed CI, Product Eval, and MCP External HTTPS Acceptance.
 
-The resulting documentation-only exact PR head must also pass CI, Product Eval, MCP External HTTPS Acceptance, and any automatically triggered relevant acceptance before PR #176 is marked ready and merged.
+PR #176 was marked ready and merged to `main` as `d54ad62c303847b23634ba33aead4749f21bf1d0`.
 
-PE-07 remains blocked until PR #176 merges. After merge, current-state documentation may close PE-06 and explicitly activate PE-07 as a separate transition.
+PE-06 is CLOSED / PASS. PE-07 Brain + Context + ECX may proceed as the next bounded batch under the accepted ownership boundary: Brain narrows deterministic candidates, Context remains retrieval owner, ECX remains context-pack optimizer, and Connect remains the provider/model boundary.

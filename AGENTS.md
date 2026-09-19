@@ -26,13 +26,13 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PE-03: **CLOSED / PASS**;
 - PE-04: **CLOSED / PASS**;
 - PE-05: **CLOSED / PASS**;
-- PE-06: **ACTIVE / BRAIN V1**;
-- PE-07: **BLOCKED BY PE-06**;
+- PE-06: **CLOSED / PASS**;
+- PE-07: **ACTIVE / BRAIN + CONTEXT + ECX**;
 - PE-08: **BLOCKED BY PE-07**;
 - production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
-Do not create Batch 13. PE-06 is active; do not pull PE-07+ scope forward.
+Do not create Batch 13. PE-07 is active; do not pull PE-08 scope forward.
 
 ## Architecture invariants
 
@@ -70,7 +70,7 @@ Do not create Batch 13. PE-06 is active; do not pull PE-07+ scope forward.
 
 ## Current active scope
 
-PE-06 is active. Implement Brain V1 only, following ADR-38, the PE-06 acceptance contract, and the agent guide. Brain must remain a deterministic, authorized, rebuildable projection over owner APIs/contracts; do not add a graph database, cross-service DB reads, canonical Brain storage, broad LLM extraction, or PE-07 Context/ECX optimization.
+PE-07 is active. Integrate the closed Brain V1 projection into the existing Context -> ECX path only for bounded candidate narrowing and measurement, following ADR-38, the PE-07 acceptance contract, and the agent guide. Context remains retrieval owner; ECX remains context-pack optimizer; Brain must not become a second retriever/ranker, graph database, canonical store, or prompt dump. Do not use paid hosted calls without explicit operator authorization, and do not pull PE-08 closure scope forward.
 
 ## Git / closure discipline
 

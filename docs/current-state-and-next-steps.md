@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-06 ACTIVE / BRAIN V1**
+Status: **CURRENT / PE-07 ACTIVE / BRAIN + CONTEXT + ECX**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00 through PE-05 are CLOSED / PASS. PE-06 Brain V1 is ACTIVE.**
+**PE-00 through PE-06 are CLOSED / PASS. PE-07 Brain + Context + ECX is ACTIVE.**
 
 ## Product Evolution status
 
@@ -20,8 +20,8 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-03 Trigger control plane | **CLOSED / PASS** |
 | PE-04 Work + Schedule + Runs | **CLOSED / PASS** |
 | PE-05 Event/Webhook automation | **CLOSED / PASS** |
-| PE-06 Brain V1 | **ACTIVE** |
-| PE-07 Brain + Context + ECX | **BLOCKED BY PE-06** |
+| PE-06 Brain V1 | **CLOSED / PASS** |
+| PE-07 Brain + Context + ECX | **ACTIVE** |
 | PE-08 Product closure | **BLOCKED BY PE-07** |
 
 ## PE-02 delivered boundary
@@ -63,9 +63,13 @@ PE-04 closed on PR #173 after implementation head `c2cacbbcbee15f46ac4c5e9e43c95
 
 PE-05 closed on PR #174 after implementation head `b3fa55e689548b5a72c47b331682285eb8fb6eb2` and closure head `3d082f555a0c701eb9911d5caa71f7cf250f5710` passed the required gates. It merged as `84defe934bf6b7d0b8868bd04c8c113e70193fc6`. Non-time Trigger delivery now uses Connect-verified webhook ingress, Flow-owned normalization/routing/dedupe, existing Hub authority, Temporal execution, and operationId-keyed Run evidence without a polling daemon, second queue, or second execution authority. See [verification/pe-05-event-webhook-closure-2026-09-19.md](verification/pe-05-event-webhook-closure-2026-09-19.md).
 
-## Active: PE-06 Brain V1
+## PE-06 closed boundary
 
-PE-06 builds the ADR-38 Brain as a Project-scoped, deterministic, authorized, rebuildable projection over existing owner APIs/contracts. Brain is not a graph database or source of truth. PE-07 Brain-to-Context/ECX optimization remains blocked. Acceptance: [product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md).
+PE-06 closed on PR #176 after implementation head `66c7909572a1410095916843f8f46a385ecb628b` and closure head `25508dd1cef5d8ebb8846448c7732ddde7866a59` passed the required gates. It merged as `d54ad62c303847b23634ba33aead4749f21bf1d0`. Brain now exposes a Project-scoped deterministic projection over Project, Source, Flow, Trigger, and Run owner contracts with authorization-before-disclosure, sibling-Project isolation, rebuildability proof, and no graph database/canonical Brain store. See [verification/pe-06-brain-v1-closure-2026-09-19.md](verification/pe-06-brain-v1-closure-2026-09-19.md).
+
+## Active: PE-07 Brain + Context + ECX
+
+PE-07 measures whether the closed Brain projection can safely narrow candidates before existing Context retrieval and ECX `semantic-v1` selection. Context remains retrieval owner, ECX remains context-pack optimizer, and Connect remains the model/provider boundary. The batch must preserve a no-Brain baseline, Project isolation, provenance, sensitivity/trust/invalidation rules, and predeclared quality/retention gates. Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).
 
 ## Deferred
 
