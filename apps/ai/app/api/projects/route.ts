@@ -33,11 +33,11 @@ async function forward(url: string, init: RequestInit = {}): Promise<Response> {
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
-  const parsed = WorkspaceIdSchema.safeParse(url.searchParams.get("workspaceId") ?? DEFAULT_WORKSPACE_ID);
-  if (!parsed.success) return jsonError(400, "BAD_REQUEST", "workspaceId tidak valid.");
-  return forward(
-    `${hubUrl()}/v1/projects?workspaceId=${encodeURIComponent(parsed.data)}`,
+  const parsed = WorkspaceIdSchema.safeParse(
+    url.searchParams.get("workspaceId") ?? DEFAULT_WORKSPACE_ID,
   );
+  if (!parsed.success) return jsonError(400, "BAD_REQUEST", "workspaceId tidak valid.");
+  return forward(`${hubUrl()}/v1/projects?workspaceId=${encodeURIComponent(parsed.data)}`);
 }
 
 export async function POST(request: Request): Promise<Response> {
