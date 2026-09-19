@@ -51,7 +51,7 @@ function temporal(
       graphId: "fg_runalpha01",
       graphVersion: 1,
       traceOperationId: "op_runalpha001" as never,
-      status: status === "RUNNING" ? "RUNNING" : status,
+      status,
       nodes: [],
       output: { ok: true },
       error: status === "FAILED" ? "graph failed" : null,
