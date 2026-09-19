@@ -195,9 +195,7 @@ describe("PE-05 webhook -> Temporal runtime acceptance", () => {
           flowUrl,
           credentialVault: {
             get(provider, purpose) {
-              return provider === "webhook" && purpose === "tokens"
-                ? ROOT_SECRET
-                : undefined;
+              return provider === "webhook" && purpose === "tokens" ? ROOT_SECRET : undefined;
             },
           },
         });
