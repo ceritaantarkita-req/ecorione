@@ -155,7 +155,9 @@ export class FlowGraphRepository {
       throw new FlowGraphVersionConflictError(expectedVersion, row.current_version);
     const digest = digestCanonical(graph);
     const current = this.db.raw
-      .prepare("SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? AND v.version=?")
+      .prepare(
+        "SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? AND v.version=?",
+      )
       .get(graph.id, row.current_version) as VersionRow;
     if (current.digest === digest)
       return FlowGraphSaveResultSchema.parse({ version: version(current), deduplicated: true });
@@ -202,7 +204,9 @@ export class FlowGraphRepository {
         .get(graphId) as VersionRow | undefined;
     else
       row = this.db.raw
-        .prepare("SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? AND v.version=?")
+        .prepare(
+          "SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? AND v.version=?",
+        )
         .get(graphId, requestedVersion) as VersionRow | undefined;
     if (row === undefined)
       throw new FlowGraphNotFoundError(
