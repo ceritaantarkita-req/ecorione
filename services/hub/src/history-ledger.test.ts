@@ -61,14 +61,14 @@ describe("Historical Ledger", () => {
     });
 
     expect(
-      ledger.listSessions("personal", "prj_personal" as never, "ws_personal" as never).map(
-        (session) => session.id,
-      ),
+      ledger
+        .listSessions("personal", "prj_personal" as never, "ws_personal" as never)
+        .map((session) => session.id),
     ).toEqual([personal]);
     expect(
-      ledger.listSessions("personal", "prj_other" as never, "ws_personal" as never).map(
-        (session) => session.id,
-      ),
+      ledger
+        .listSessions("personal", "prj_other" as never, "ws_personal" as never)
+        .map((session) => session.id),
     ).toEqual([other]);
   });
 
