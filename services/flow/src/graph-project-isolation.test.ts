@@ -80,21 +80,19 @@ describe("PE-03 Flow Project isolation", () => {
     agent.disableNetConnect();
     setGlobalDispatcher(agent);
     const context = agent.get("http://context.local");
-    context
-      .intercept({ path: "/v1/retrieve", method: "POST" })
-      .reply(200, (options) => {
-        const body = JSON.parse(options.body as string) as Record<string, unknown>;
-        expect(body).toMatchObject({
-          query: "remember project",
-          scopes: ["personal"],
-          k: 8,
-          maxSensitivity: "INTERNAL",
-          hostedEligibleOnly: false,
-          projectId: "prj_alpha",
-        });
-        expect(typeof body.now).toBe("string");
-        return { hits: [], diagnostics: {} };
+    context.intercept({ path: "/v1/retrieve", method: "POST" }).reply(200, (options) => {
+      const body = JSON.parse(options.body as string) as Record<string, unknown>;
+      expect(body).toMatchObject({
+        query: "remember project",
+        scopes: ["personal"],
+        k: 8,
+        maxSensitivity: "INTERNAL",
+        hostedEligibleOnly: false,
+        projectId: "prj_alpha",
       });
+      expect(typeof body.now).toBe("string");
+      return { hits: [], diagnostics: {} };
+    });
     agent
       .get("http://hub.local")
       .intercept({ path: "/v1/authority/authorize", method: "POST" })
