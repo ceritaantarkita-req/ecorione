@@ -8,3 +8,6 @@ export * from "./http.js";
 export * from "./node-registry.js";
 export * from "./temporal-client.js";
 export * from "./worker.js";
+export * from "./trigger-contract.js";
+export * from "./trigger-http.js";
+export * from "./trigger-repository.js";
