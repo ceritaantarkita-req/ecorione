@@ -33,6 +33,7 @@ interface VersionRow {
   graph_json: string;
   validation_json: string;
   created_at: string;
+  project_id?: string | null;
 }
 export class FlowGraphNotFoundError extends Error {
   constructor(id: string) {
@@ -72,11 +73,15 @@ function summary(row: GraphRow): FlowGraphSummary {
   });
 }
 function version(row: VersionRow): FlowGraphVersionView {
+  const graph = JSON.parse(row.graph_json) as Record<string, unknown>;
+  if (!Object.hasOwn(graph, "projectId") && row.project_id !== undefined) {
+    graph.projectId = row.project_id;
+  }
   return FlowGraphVersionViewSchema.parse({
     graphId: row.graph_id,
     version: row.version,
     digest: row.digest,
-    graph: JSON.parse(row.graph_json) as unknown,
+    graph,
     validation: JSON.parse(row.validation_json) as unknown,
     createdAt: row.created_at,
   });
@@ -150,7 +155,7 @@ export class FlowGraphRepository {
       throw new FlowGraphVersionConflictError(expectedVersion, row.current_version);
     const digest = digestCanonical(graph);
     const current = this.db.raw
-      .prepare("SELECT * FROM flow_graph_versions WHERE graph_id=? AND version=?")
+      .prepare("SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? AND v.version=?")
       .get(graph.id, row.current_version) as VersionRow;
     if (current.digest === digest)
       return FlowGraphSaveResultSchema.parse({ version: version(current), deduplicated: true });
@@ -192,12 +197,12 @@ export class FlowGraphRepository {
     if (requestedVersion === undefined)
       row = this.db.raw
         .prepare(
-          "SELECT v.* FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id AND g.current_version=v.version WHERE v.graph_id=?",
+          "SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id AND g.current_version=v.version WHERE v.graph_id=?",
         )
         .get(graphId) as VersionRow | undefined;
     else
       row = this.db.raw
-        .prepare("SELECT * FROM flow_graph_versions WHERE graph_id=? AND version=?")
+        .prepare("SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? AND v.version=?")
         .get(graphId, requestedVersion) as VersionRow | undefined;
     if (row === undefined)
       throw new FlowGraphNotFoundError(
@@ -210,7 +215,9 @@ export class FlowGraphRepository {
     if (exists === undefined) throw new FlowGraphNotFoundError(graphId);
     return (
       this.db.raw
-        .prepare("SELECT * FROM flow_graph_versions WHERE graph_id=? ORDER BY version DESC")
+        .prepare(
+          "SELECT v.*,g.project_id FROM flow_graph_versions v JOIN flow_graphs g ON g.id=v.graph_id WHERE v.graph_id=? ORDER BY v.version DESC",
+        )
         .all(graphId) as VersionRow[]
     ).map(version);
   }
