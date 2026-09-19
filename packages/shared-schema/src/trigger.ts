@@ -97,14 +97,15 @@ export type EventTriggerConfiguration = z.infer<typeof EventTriggerConfiguration
 
 export const WebhookTriggerConfigurationSchema = z
   .object({
-    adapter: z.literal("github"),
-    eventKind: EventKindSchema,
-    repository: z
+    adapter: z.literal("generic"),
+    hookId: z
       .string()
       .trim()
-      .min(3)
-      .max(256)
-      .regex(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/),
+      .min(16)
+      .max(64)
+      .regex(/^[a-z0-9][a-z0-9_-]*$/),
+    source: EventSourceSchema,
+    eventKind: EventKindSchema,
   })
   .strict();
 export type WebhookTriggerConfiguration = z.infer<typeof WebhookTriggerConfigurationSchema>;
@@ -357,3 +358,35 @@ export const TriggerEventDispatchRequestSchema = z
   })
   .strict();
 export type TriggerEventDispatchRequest = z.infer<typeof TriggerEventDispatchRequestSchema>;
+
+
+export const WebhookIngressDeliverySchema = z
+  .object({
+    deliveryId: z
+      .string()
+      .trim()
+      .min(1)
+      .max(256)
+      .regex(/^[A-Za-z0-9._:@/-]+$/),
+    occurredAt: TimestampSchema.optional(),
+    payload: z.unknown(),
+    metadata: z.record(z.string().min(1).max(128), TriggerEventMetadataValueSchema).default({}),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (jsonBytes(value.payload) > MAX_TRIGGER_EVENT_PAYLOAD_BYTES) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["payload"],
+        message: "payload webhook melebihi batas 64 KiB.",
+      });
+    }
+    if (jsonBytes(value.metadata) > MAX_TRIGGER_EVENT_METADATA_BYTES) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["metadata"],
+        message: "metadata webhook melebihi batas 16 KiB.",
+      });
+    }
+  });
+export type WebhookIngressDelivery = z.infer<typeof WebhookIngressDeliverySchema>;
