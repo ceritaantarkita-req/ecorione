@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { assertId, type EcxPacket } from "@ecorione/shared-schema";
+import { assertId, type EcxPacket } from "../packages/shared-schema/src/index.js";
 import { describe, expect, it } from "vitest";
 import { selectEcxReferenceIndexes } from "../services/hub/src/exchange-selector.js";
 
