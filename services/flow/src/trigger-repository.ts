@@ -245,7 +245,7 @@ export class TriggerRepository {
     response: TriggerFireResponse,
     now: Timestamp,
   ): TriggerFireResponse {
-    this.db.raw
+    const inserted = this.db.raw
       .prepare(
         `INSERT OR IGNORE INTO trigger_manual_fires (
           trigger_id,request_id,workflow_id,operation_id,graph_id,graph_version,created_at
@@ -260,6 +260,9 @@ export class TriggerRepository {
         response.graphVersion,
         now,
       );
-    return this.getManualFire(triggerId, requestId) ?? response;
+    const row = this.db.raw
+      .prepare("SELECT * FROM trigger_manual_fires WHERE trigger_id=? AND request_id=?")
+      .get(triggerId, requestId) as ManualFireRow | undefined;
+    return row === undefined ? response : fireFromRow(row, inserted.changes === 0);
   }
 }
