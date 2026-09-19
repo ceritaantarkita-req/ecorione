@@ -34,16 +34,14 @@ jobs:
           pnpm exec prettier --write \
             "services/flow/src/graph-project-isolation.test.ts" \
             "apps/ai/lib/brain-projection.test.ts" \
-            "test/pe06-brain-owner-runtime.test.ts" \
-            "test/pe08-product-closure.test.ts"
+            "test/pe06-brain-owner-runtime.test.ts"
           echo "----- PE03_ONE_FILE -----"
           base64 -w0 "services/flow/src/graph-project-isolation.test.ts"
           echo
           echo "----- PE03_ONE_FILE_END -----"
           for file in \
             "apps/ai/lib/brain-projection.test.ts" \
-            "test/pe06-brain-owner-runtime.test.ts" \
-            "test/pe08-product-closure.test.ts"; do
+            "test/pe06-brain-owner-runtime.test.ts"; do
             echo "----- PE06_FORMATTED:${file} -----"
             base64 -w0 "${file}"
             echo
