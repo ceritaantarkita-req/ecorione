@@ -4,6 +4,7 @@ import {
   ScheduleNotFoundError,
   ScheduleOverlapPolicy,
   WorkflowClient,
+  type ScheduleOptions,
   type WorkflowExecutionStatusName,
 } from "@temporalio/client";
 import type {
@@ -47,6 +48,81 @@ export interface TriggerScheduleTemporalClient {
 export type FlowServerTemporalClient = FlowTemporalClient &
   Partial<FlowGraphTemporalClient & TriggerScheduleTemporalClient>;
 
+
+export function triggerScheduleOptions(
+  trigger: TriggerDefinition,
+  plan: CompiledFlowGraphPlan,
+  taskQueue: string,
+): ScheduleOptions {
+  if (trigger.kind !== "time" || trigger.temporalScheduleId === null) {
+    throw new Error("Trigger time membutuhkan Temporal schedule ID.");
+  }
+  const cfg = trigger.configuration as {
+    cronExpression: string;
+    timezone: string;
+    catchupWindowMs: number;
+    overlap: "SKIP" | "QUEUE_ONE";
+  };
+  const actionInput: ScheduledTriggerWorkflowInput = {
+    triggerId: trigger.id,
+    workspaceId: trigger.workspaceId,
+    projectId: trigger.projectId,
+    requestedAutonomy: trigger.requestedAutonomy,
+    plan,
+    input: null,
+  };
+  return {
+    scheduleId: trigger.temporalScheduleId,
+    action: {
+      type: "startWorkflow",
+      workflowType: TRIGGER_SCHEDULE_WORKFLOW_TYPE,
+      taskQueue,
+      args: [actionInput],
+    },
+    spec: {
+      cronExpressions: [cfg.cronExpression],
+      timezone: cfg.timezone,
+    },
+    policies: {
+      catchupWindow: cfg.catchupWindowMs,
+      overlap:
+        cfg.overlap === "SKIP"
+          ? ScheduleOverlapPolicy.SKIP
+          : ScheduleOverlapPolicy.BUFFER_ONE,
+    },
+  };
+}
+
+export async function reconcileTimeTriggerSchedule(
+  schedules: ScheduleClient,
+  taskQueue: string,
+  trigger: TriggerDefinition,
+  plan: CompiledFlowGraphPlan,
+): Promise<void> {
+  const options = triggerScheduleOptions(trigger, plan, taskQueue);
+  const handle = schedules.getHandle(options.scheduleId);
+  try {
+    await handle.describe();
+    await handle.update(() => ({
+      action: options.action,
+      spec: options.spec,
+      policies: options.policies,
+      state: {
+        paused: !trigger.enabled,
+        note: trigger.enabled
+          ? "ECORIONE Trigger enabled/reconciled"
+          : "ECORIONE Trigger disabled/reconciled",
+      },
+    }));
+  } catch (error) {
+    if (!(error instanceof ScheduleNotFoundError)) throw error;
+    await schedules.create({
+      ...options,
+      state: { paused: !trigger.enabled },
+    });
+  }
+}
+
 export interface TemporalClientOptions {
   readonly address: string;
   readonly namespace: string;
@@ -60,46 +136,6 @@ export async function createFlowTemporalClient(
   const client = new WorkflowClient({ connection, namespace: options.namespace });
   const schedules = new ScheduleClient({ connection, namespace: options.namespace });
   const taskQueue = options.taskQueue ?? FLOW_TASK_QUEUE;
-
-  function scheduleOptions(trigger: TriggerDefinition, plan: CompiledFlowGraphPlan) {
-    if (trigger.kind !== "time" || trigger.temporalScheduleId === null) {
-      throw new Error("Trigger time membutuhkan Temporal schedule ID.");
-    }
-    const cfg = trigger.configuration as {
-      cronExpression: string;
-      timezone: string;
-      catchupWindowMs: number;
-      overlap: "SKIP" | "QUEUE_ONE";
-    };
-    const actionInput: ScheduledTriggerWorkflowInput = {
-      triggerId: trigger.id,
-      workspaceId: trigger.workspaceId,
-      projectId: trigger.projectId,
-      requestedAutonomy: trigger.requestedAutonomy,
-      plan,
-      input: null,
-    };
-    return {
-      scheduleId: trigger.temporalScheduleId,
-      action: {
-        type: "startWorkflow" as const,
-        workflowType: TRIGGER_SCHEDULE_WORKFLOW_TYPE,
-        taskQueue,
-        args: [actionInput],
-      },
-      spec: {
-        cronExpressions: [cfg.cronExpression],
-        timezone: cfg.timezone,
-      },
-      policies: {
-        catchupWindow: cfg.catchupWindowMs,
-        overlap:
-          cfg.overlap === "SKIP"
-            ? ScheduleOverlapPolicy.SKIP
-            : ScheduleOverlapPolicy.BUFFER_ONE,
-      },
-    };
-  }
 
   return {
     async start(input): Promise<void> {
@@ -136,29 +172,7 @@ export async function createFlowTemporalClient(
       return client.getHandle(runId).query<FlowGraphRunState>("graphRunState");
     },
     async reconcileTimeTrigger(trigger, plan): Promise<void> {
-      const options = scheduleOptions(trigger, plan);
-      const handle = schedules.getHandle(options.scheduleId);
-      try {
-        await handle.describe();
-        await handle.update(() => ({
-          action: options.action,
-          spec: options.spec,
-          policies: options.policies,
-          state: {
-            paused: !trigger.enabled,
-            note: trigger.enabled
-              ? "ECORIONE Trigger enabled/reconciled"
-              : "ECORIONE Trigger disabled/reconciled",
-          },
-        }));
-      } catch (error) {
-        if (!(error instanceof ScheduleNotFoundError)) throw error;
-        await schedules.create({
-          ...options,
-          state: { paused: !trigger.enabled },
-        });
-        return;
-      }
+      await reconcileTimeTriggerSchedule(schedules, taskQueue, trigger, plan);
     },
     async pauseTimeTrigger(scheduleId): Promise<void> {
       await schedules.getHandle(scheduleId).pause("ECORIONE Trigger disabled");
