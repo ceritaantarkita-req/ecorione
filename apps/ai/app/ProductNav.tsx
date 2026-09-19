@@ -16,6 +16,7 @@ import {
 const NAV_ITEMS = [
   ["Ai", "/", "ai"],
   ["Projects", "/projects", "projects"],
+  ["Work", "/work", "work"],
   ["Space", "/space", "space"],
   ["Flow", "/flow", "flow"],
   ["Operations", "/ops", "ops"],
@@ -66,6 +67,13 @@ function NavIcon({ icon }: { icon: NavIconKey }) {
         <svg className="ecr-global-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 6.5h6l1.6 2H20v9H4z" />
           <path d="M4 6.5v11" />
+        </svg>
+      );
+    case "work":
+      return (
+        <svg {...shared}>
+          <path d="M3.5 5.5h13v10h-13Z" />
+          <path d="M7 5.5V4h6v1.5M6.2 9.2h7.6M10 9.2v3.6" />
         </svg>
       );
     case "space":
