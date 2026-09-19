@@ -2,33 +2,34 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-08 ACTIVE / CLOSURE CANDIDATE**
+Status: **PRODUCT EVOLUTION CLOSED / NO ACTIVE PE BATCH**
 
 ## Latest closed item
 
-**PE-07 — Brain + Context + ECX**
+**PE-08 — Product closure**
 
 ```text
-PR #178
-reviewed implementation head    892726c20ac95dded26fdc3fd2000ad4bb56363d
-implementation CI               35447877629 / #1457 PASS
-implementation Product Eval     35447877612 / #696 PASS
-implementation MCP HTTPS        35447877592 / #855 PASS
-closure evidence head           e443a6e9d10b24b7c1de7bcb315b038cf6425a45
-closure-head CI                 35448099910 / #1462 PASS
-closure-head Product Eval       35448099971 / #701 PASS
-closure-head MCP HTTPS          35448099995 / #860 PASS
-merge main                      15e31ed4b03f5be5bc6a7104fc14bb1dd0917743
-median candidate reduction      66.67%
-required-reference retention    100%
-provenance retention            100%
-unauthorized refs               0
+PR #180
+reviewed implementation head    33f9e891c3152a82304d5f1e31693604c855d94c
+implementation CI               35449548713 / #1469 PASS
+implementation Product Eval     35449548657 / #708 PASS
+closure evidence head           5d1b1c80168a26ae38af33d862a6fa26b019802c
+closure-head CI                 35450417735 / #1473 PASS
+closure-head Product Eval       35450417734 / #712 PASS
+merge main                      b32d57022344ad08a59b6b7d163507c5530a7ca6
+Product Eval matrix             36 files / 148 tests PASS
+normal CI                       191 files PASS + 1 skipped
+normal tests                    991 PASS + 2 skipped
 ```
 
-Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).  
-Closure evidence: [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md).
+Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).  
+Closure evidence: [verification/pe-08-product-closure-2026-09-19.md](verification/pe-08-product-closure-2026-09-19.md).
 
 ## Active item
+
+There is **no active Product Evolution batch**. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries. New product work requires an explicit new roadmap/decision; do not create Batch 13 implicitly.
+
+## Closed PE-08 boundary
 
 **PE-08 — Product closure**
 
@@ -65,7 +66,7 @@ Dependency gate:
 
 ```text
 PE-00..PE-07  CLOSED / PASS
-PE-08          ACTIVE — PRODUCT CLOSURE
+PE-08          CLOSED / PASS
 ```
 
 ## Non-negotiable boundaries
