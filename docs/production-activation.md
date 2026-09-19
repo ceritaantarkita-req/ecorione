@@ -1,13 +1,13 @@
 # ECORIONE — Production Activation Workstream
 
 Status: **DEFERRED BY OPERATOR DECISION / TOOLING READY**
-Date: 2026-09-12
+Date: 2026-09-20
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
 
 The operator has explicitly chosen **not to deploy to a VPS/compute host yet**. Do not treat that decision as a blocker or failure. Do not perform target-host, Cloudflare, firewall, domain, or hosted-provider mutations unless the operator explicitly resumes this workstream.
 
-Current active local work is documented in `docs/current-state-and-next-steps.md`. Local persistence/restart, isolated local backup/restore, bounded local observability, UX/product validation, immutable local-model identity, W16/W17 selector evidence, W18 hosted economics, and W20 final sync are closed at their documented boundaries. **F6-E01 held-out selector eval dataset + eval-budget governance is the active non-deployment scope.** Production activation remains deferred.
+Current active local work is documented in `docs/current-state-and-next-steps.md`. Local persistence/restart, isolated local backup/restore, bounded local observability, UX/product validation, immutable local-model identity, W16/W17 selector evidence, W18 hosted economics, F6 hardening, W20 final sync, and Product Evolution PE-00..PE-08 are closed at their documented boundaries. There is currently **no active non-deployment implementation batch**. Production activation remains deferred.
 
 ## Objective when resumed
 
@@ -54,11 +54,15 @@ local persistence/restart — CLOSED / PASS
   -> UX/product validation — CLOSED / REAL-LAPTOP VERIFIED
   -> immutable local model identity — DONE WITH LIMITATIONS / RUNTIME VERIFIED
   -> W16/W17/W18 optimizer evidence — CLOSED AT DOCUMENTED BOUNDARIES
-  -> F6-E01 held-out selector eval dataset — ACTIVE NON-DEPLOYMENT SCOPE
+  -> F6 hardening — CLOSED / REPO-SIDE PASS
+  -> Product Evolution PE-00..PE-08 — CLOSED / PASS
+  -> post-closure portability hardening — CLOSED / PASS (PR #182)
   -> production activation only when the operator explicitly chooses to resume it
 ```
 
 None of the closed local checkpoints should be mislabeled as VPS, Cloudflare, hosted-provider, remote-host durability, or off-host DR evidence.
+
+On native Windows, shell-syntax verification for these Linux production scripts must use an explicit real Bash executable (for example MSYS/Git Bash) through `ECORIONE_BASH`; do not rely on the Windows `bash.exe` launcher resolving to the intended runtime.
 
 ## Production tooling available when resumed
 
