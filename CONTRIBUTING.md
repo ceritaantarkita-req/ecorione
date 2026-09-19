@@ -10,8 +10,8 @@ pnpm install
 pnpm verify
 ```
 
-Butuh Node ≥22 dan pnpm 10. `pnpm verify` menjalankan format, lint, typecheck, test, dan
-secret scan — hal yang sama dengan CI.
+Butuh Node 22.20.0 (ikuti `.node-version`) dan pnpm 10.28.0. `pnpm verify` menjalankan format, lint, typecheck, test, dan
+secret scan — hal yang sama dengan CI. Checkout harus menghormati `.gitattributes`: text LF secara default, sedangkan `.cmd`/`.bat` CRLF.
 
 ## Alur kerja
 
