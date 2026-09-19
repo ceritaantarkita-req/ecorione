@@ -18,12 +18,32 @@ import {
   type RunListItem,
   type TriggerDefinition,
 } from "@ecorione/shared-schema";
-import { flowUrl, hubUrl, internalToken } from "./env.js";
 
 const FlowListResponseSchema = z.object({ graphs: z.array(FlowGraphSummarySchema) }).strict();
 const TriggerListResponseSchema = z
   .object({ triggers: z.array(TriggerDefinitionSchema) })
   .strict();
+
+const DEFAULT_HUB_URL = "http://127.0.0.1:17024";
+const DEFAULT_FLOW_URL = "http://127.0.0.1:17028";
+
+function ownerBaseUrl(name: "ECORIONE_HUB_URL" | "ECORIONE_FLOW_URL", fallback: string): string {
+  const value = process.env[name];
+  return value !== undefined && value.length > 0 ? value : fallback;
+}
+
+function brainHubUrl(): string {
+  return ownerBaseUrl("ECORIONE_HUB_URL", DEFAULT_HUB_URL);
+}
+
+function brainFlowUrl(): string {
+  return ownerBaseUrl("ECORIONE_FLOW_URL", DEFAULT_FLOW_URL);
+}
+
+function brainInternalToken(): string | undefined {
+  const value = process.env.ECORIONE_INTERNAL_TOKEN;
+  return value !== undefined && value.length > 0 ? value : undefined;
+}
 
 export class BrainOwnerRequestError extends Error {
   constructor(
@@ -44,7 +64,7 @@ type BrainOwnerSnapshot = {
 };
 
 function requestHeaders(): Record<string, string> {
-  const token = internalToken();
+  const token = brainInternalToken();
   return token === undefined ? {} : { authorization: `Bearer ${token}` };
 }
 
@@ -89,7 +109,7 @@ async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot>
   const project = ProjectSchema.parse(
     await ownerJson(
       "HubProject",
-      `${hubUrl()}/v1/projects/${encodeURIComponent(query.projectId)}?workspaceId=${encodeURIComponent(query.workspaceId)}`,
+      `${brainHubUrl()}/v1/projects/${encodeURIComponent(query.projectId)}?workspaceId=${encodeURIComponent(query.workspaceId)}`,
     ),
   );
   if (project.workspaceId !== query.workspaceId || project.id !== query.projectId) {
@@ -103,13 +123,13 @@ async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot>
   const [sourceRaw, graphRaw, triggerRaw, runRaw] = await Promise.all([
     ownerJson(
       "HubSources",
-      `${hubUrl()}/v1/projects/${encodeURIComponent(query.projectId)}/sources?workspaceId=${encodeURIComponent(query.workspaceId)}`,
+      `${brainHubUrl()}/v1/projects/${encodeURIComponent(query.projectId)}/sources?workspaceId=${encodeURIComponent(query.workspaceId)}`,
     ),
-    ownerJson("Flow", `${flowUrl()}/v1/graphs?${common.toString()}`),
-    ownerJson("Flow", `${flowUrl()}/v1/triggers?${common.toString()}`),
+    ownerJson("Flow", `${brainFlowUrl()}/v1/graphs?${common.toString()}`),
+    ownerJson("Flow", `${brainFlowUrl()}/v1/triggers?${common.toString()}`),
     ownerJson(
       "Flow",
-      `${flowUrl()}/v1/runs?${common.toString()}&limit=${String(query.runLimit)}`,
+      `${brainFlowUrl()}/v1/runs?${common.toString()}&limit=${String(query.runLimit)}`,
     ),
   ]);
 
