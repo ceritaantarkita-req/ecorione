@@ -36,6 +36,28 @@ function build() {
 }
 
 describe("PE-05 Connect webhook ingress", () => {
+  it("derives per-hook token only behind the normal internal bearer boundary", async () => {
+    const app = build();
+
+    const unauthorized = await app.inject({
+      method: "GET",
+      url: `/v1/settings/webhooks/${HOOK_ID}/token`,
+    });
+    expect(unauthorized.statusCode).toBe(401);
+
+    const authorized = await app.inject({
+      method: "GET",
+      url: `/v1/settings/webhooks/${HOOK_ID}/token`,
+      headers: { authorization: "Bearer internal-secret" },
+    });
+    expect(authorized.statusCode).toBe(200);
+    expect(authorized.json()).toEqual({
+      hookId: HOOK_ID,
+      token: deriveWebhookToken(ROOT_SECRET, HOOK_ID),
+    });
+    await app.close();
+  });
+
   it("rejects missing or wrong per-hook token before Flow", async () => {
     const app = build();
 
