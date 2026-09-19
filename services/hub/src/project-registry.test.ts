@@ -58,9 +58,9 @@ describe("PE-01 ProjectRegistry", () => {
         NOW,
       );
       expect(registry.list(DEFAULT_WORKSPACE_ID).map((p) => p.id)).toContain(created.id);
-      expect(() =>
-        registry.require(created.id, "ws_other" as never),
-      ).toThrow(ProjectWorkspaceConflictError);
+      expect(() => registry.require(created.id, "ws_other" as never)).toThrow(
+        ProjectWorkspaceConflictError,
+      );
 
       const archived = registry.archive(created.id, DEFAULT_WORKSPACE_ID, LATER);
       expect(archived.archivedAt).toBe(LATER);
@@ -74,13 +74,13 @@ describe("PE-01 ProjectRegistry", () => {
     const db = openHubDatabase();
     try {
       const registry = new ProjectRegistry(db);
-      expect(() =>
-        registry.archive(DEFAULT_PROJECT_ID, DEFAULT_WORKSPACE_ID, NOW),
-      ).toThrow(DefaultProjectArchiveError);
+      expect(() => registry.archive(DEFAULT_PROJECT_ID, DEFAULT_WORKSPACE_ID, NOW)).toThrow(
+        DefaultProjectArchiveError,
+      );
       expect(registry.resolve({}).project.id).toBe(DEFAULT_PROJECT_ID);
-      expect(() =>
-        registry.resolve({ workspaceId: "ws_other" as never }),
-      ).toThrow(ProjectRequiredError);
+      expect(() => registry.resolve({ workspaceId: "ws_other" as never })).toThrow(
+        ProjectRequiredError,
+      );
     } finally {
       db.close();
     }
