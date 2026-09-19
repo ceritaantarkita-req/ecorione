@@ -55,6 +55,14 @@ describe("PE-01 Project context", () => {
       expect(b.hits.map((hit) => hit.fact.id).sort()).toEqual(
         ["mem_global", "mem_project_b"].sort(),
       );
+
+      expect(repo.getFactForProject("mem_project_a" as never, "prj_alpha" as never)?.id).toBe(
+        "mem_project_a",
+      );
+      expect(repo.getFactForProject("mem_project_a" as never, "prj_beta" as never)).toBeNull();
+      expect(repo.getFactForProject("mem_global" as never, "prj_beta" as never)?.id).toBe(
+        "mem_global",
+      );
     } finally {
       db.close();
     }
@@ -340,6 +348,9 @@ describe("PE-01 Project context", () => {
         includeGlobal: true,
       });
       expect(visible.map((fact) => fact.id)).toEqual(["mem_legacy_ai"]);
+      expect(
+        repo.getFactForProject("mem_legacy_cli" as never, "prj_personal" as never),
+      ).toBeNull();
 
       const factStates = db.raw
         .prepare(
