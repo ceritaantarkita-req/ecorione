@@ -90,6 +90,35 @@ merge main            4980b3ceb149be58788467d2e11769de12977d5a
 
 PR #183 is merged. Clean-checkout reproducibility is CLOSED / PASS.
 
+## Final follow-up: Windows command-script index normalization
+
+A fresh native-Windows clone after PR #183 correctly passed the full verification/build path but still showed the three desktop `.cmd` files as modified. Diagnosis proved this was pure line-ending metadata/index state:
+
+```text
+before          i/crlf  w/crlf  attr/text eol=crlf
+semantic diff   0
+after           i/lf    w/crlf  attr/text eol=crlf
+```
+
+PR #185 renormalized only:
+
+- `desktop/Doctor-ECORIONE.cmd`
+- `desktop/Start-ECORIONE.cmd`
+- `desktop/Stop-ECORIONE.cmd`
+
+No semantic content changed.
+
+```text
+PR                    #185
+exact head            600f459fbe2671e7e4297e60da725b005b6f9533
+CI                    #1486 PASS
+Product Eval          #725 PASS
+Desktop Installer     #76 PASS
+merge main            4194e89a2b0611897969eaca2cb9c2b4b360c774
+```
+
+This closes the final known clean-clone Windows EOL normalization defect.
+
 ## Boundary
 
 Still deferred/outside this closure:
