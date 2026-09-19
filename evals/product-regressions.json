@@ -114,7 +114,7 @@
       "surface": "Provider Settings",
       "origin": {
         "kind": "task",
-        "source": "docs/active-work-plan.md",
+        "source": "docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md",
         "ref": "W06"
       },
       "target": {
@@ -129,7 +129,7 @@
       "surface": "Ai chat",
       "origin": {
         "kind": "task",
-        "source": "docs/active-work-plan.md",
+        "source": "docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md",
         "ref": "W08"
       },
       "target": {
@@ -159,7 +159,7 @@
       "surface": "Operations",
       "origin": {
         "kind": "task",
-        "source": "docs/active-work-plan.md",
+        "source": "docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md",
         "ref": "W04"
       },
       "target": {
@@ -174,7 +174,7 @@
       "surface": "Operations",
       "origin": {
         "kind": "task",
-        "source": "docs/active-work-plan.md",
+        "source": "docs/verification/f6-e01-heldout-selector-eval-2026-09-18.md",
         "ref": "W04"
       },
       "target": {
