@@ -3,7 +3,7 @@ import {
   BrainQuerySchema,
   assertId,
   type BrainGraphResponse,
-} from "@ecorione/shared-schema";
+} from "../packages/shared-schema/src/index.js";
 import type { FastifyInstance } from "fastify";
 import { openHubDatabase } from "../services/hub/src/db.js";
 import { buildHubServer } from "../services/hub/src/http.js";
