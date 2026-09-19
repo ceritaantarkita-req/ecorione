@@ -66,7 +66,10 @@ export function registerConnectWebhookRoutes(
     },
   );
 
-  app.post<{ Params: { hookId: string } }>("/v1/webhooks/:hookId", async (req) => {
+  app.post<{ Params: { hookId: string } }>(
+    "/v1/webhooks/:hookId",
+    { bodyLimit: 96 * 1024 },
+    async (req) => {
     const { hookId } = parseOrBadRequest(WebhookParamsSchema, req.params);
     const expected = deriveWebhookToken(rootSecret(), hookId);
     const actual = headerValue(req.headers["x-ecorione-webhook-token"]);
@@ -82,5 +85,6 @@ export function registerConnectWebhookRoutes(
         body: delivery,
       }),
     );
-  });
+    },
+  );
 }
