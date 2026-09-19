@@ -160,9 +160,7 @@ describe("PE-06 Brain API", () => {
       .reply(200, { runs: [run()] });
 
     const response = await GET(
-      new Request(
-        "http://ai.local/api/brain?workspaceId=ws_personal&projectId=prj_finance",
-      ),
+      new Request("http://ai.local/api/brain?workspaceId=ws_personal&projectId=prj_finance"),
     );
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
@@ -227,9 +225,7 @@ describe("PE-06 Brain API", () => {
       .reply(200, { runs: [run("prj_other")] });
 
     const response = await GET(
-      new Request(
-        "http://ai.local/api/brain?workspaceId=ws_personal&projectId=prj_finance",
-      ),
+      new Request("http://ai.local/api/brain?workspaceId=ws_personal&projectId=prj_finance"),
     );
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
