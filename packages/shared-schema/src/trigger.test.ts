@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { TriggerCreateRequestSchema, TimeTriggerConfigurationSchema } from "./trigger.js";
+import {
+  NormalizedTriggerEventSchema,
+  TriggerCreateRequestSchema,
+  TimeTriggerConfigurationSchema,
+} from "./trigger.js";
 
 const base = {
   workspaceId: "ws_personal",
@@ -12,8 +16,8 @@ const base = {
   enabled: true,
 };
 
-describe("PE-03 Trigger schema", () => {
-  it("activates only manual and time kinds in PE-03", () => {
+describe("PE-05 Trigger schema", () => {
+  it("keeps manual/time and activates event/webhook while condition stays reserved", () => {
     expect(
       TriggerCreateRequestSchema.safeParse({
         ...base,
@@ -31,15 +35,31 @@ describe("PE-03 Trigger schema", () => {
         },
       }).success,
     ).toBe(true);
-    for (const kind of ["event", "webhook", "condition"]) {
-      expect(
-        TriggerCreateRequestSchema.safeParse({
-          ...base,
-          kind,
-          configuration: {},
-        }).success,
-      ).toBe(false);
-    }
+    expect(
+      TriggerCreateRequestSchema.safeParse({
+        ...base,
+        kind: "event",
+        configuration: { source: "github", eventKind: "push" },
+      }).success,
+    ).toBe(true);
+    expect(
+      TriggerCreateRequestSchema.safeParse({
+        ...base,
+        kind: "webhook",
+        configuration: {
+          adapter: "github",
+          eventKind: "push",
+          repository: "ceritaantarkita-req/ecorione",
+        },
+      }).success,
+    ).toBe(true);
+    expect(
+      TriggerCreateRequestSchema.safeParse({
+        ...base,
+        kind: "condition",
+        configuration: {},
+      }).success,
+    ).toBe(false);
   });
 
   it("defaults catchup to 60 seconds and overlap to SKIP", () => {
@@ -71,6 +91,28 @@ describe("PE-03 Trigger schema", () => {
         kind: "manual",
         requestedAutonomy: "L4",
         configuration: {},
+      }).success,
+    ).toBe(false);
+  });
+
+  it("validates bounded normalized event envelopes", () => {
+    const valid = {
+      eventId: "evt_delivery001",
+      source: "github",
+      kind: "push",
+      occurredAt: "2026-09-19T10:00:00.000Z",
+      receivedAt: "2026-09-19T10:00:01.000Z",
+      workspaceId: "ws_personal",
+      projectId: "prj_personal",
+      dedupeKey: "github:delivery-001",
+      payload: { ref: "refs/heads/main" },
+      metadata: { repository: "ceritaantarkita-req/ecorione" },
+    };
+    expect(NormalizedTriggerEventSchema.safeParse(valid).success).toBe(true);
+    expect(
+      NormalizedTriggerEventSchema.safeParse({
+        ...valid,
+        payload: { oversized: "x".repeat(70 * 1024) },
       }).success,
     ).toBe(false);
   });
