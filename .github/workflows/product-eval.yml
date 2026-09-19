@@ -38,6 +38,7 @@ jobs:
             evals/product-regressions.test.ts \
             evals/eval-inventory.test.ts \
             evals/ecx-selector-heldout.test.ts \
+            evals/pe07-brain-context-ecx.test.ts \
             apps/ai/lib/settings-proxy.test.ts \
             apps/ai/lib/space-proxy.test.ts \
             apps/ai/lib/flow-proxy.test.ts \
