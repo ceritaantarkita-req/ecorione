@@ -355,4 +355,4 @@ PE-07  BLOCKED BY PE-06
 PE-08  BLOCKED BY PE-07
 ```
 
-Creating these docs does **not** activate PE-00. Implementation begins only after the operator explicitly says to start the new roadmap.
+PE-03 is currently active. PE-04 remains blocked until PE-03 is CLOSED / PASS on the exact reviewed and merged head.
