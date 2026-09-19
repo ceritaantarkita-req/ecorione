@@ -331,7 +331,6 @@ export class TriggerRepository {
     return row === undefined ? response : fireFromRow(row, inserted.changes === 0);
   }
 
-
   reserveEventDelivery(
     triggerId: TriggerId,
     dedupeKey: string,
@@ -375,11 +374,7 @@ export class TriggerRepository {
     };
   }
 
-  markEventDeliveryStarted(
-    triggerId: TriggerId,
-    dedupeKey: string,
-    eventDigest: string,
-  ): void {
+  markEventDeliveryStarted(triggerId: TriggerId, dedupeKey: string, eventDigest: string): void {
     const result = this.db.raw
       .prepare(
         `UPDATE trigger_event_deliveries
