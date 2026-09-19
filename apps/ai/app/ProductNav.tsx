@@ -15,6 +15,7 @@ import {
 
 const NAV_ITEMS = [
   ["Ai", "/", "ai"],
+  ["Projects", "/projects", "projects"],
   ["Space", "/space", "space"],
   ["Flow", "/flow", "flow"],
   ["Operations", "/ops", "ops"],
