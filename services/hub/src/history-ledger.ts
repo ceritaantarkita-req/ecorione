@@ -207,9 +207,11 @@ export class HistoryLedger {
       }
       return existing;
     }
-    const workspaceId = input.workspaceId ?? (input.scope === "personal" ? "ws_personal" : null);
+    const workspaceId =
+      input.workspaceId ?? (input.scope === "personal" ? "ws_personal" : null);
     const projectId =
-      input.projectId ?? (workspaceId === "ws_personal" && input.scope === "personal" ? "prj_personal" : null);
+      input.projectId ??
+      (workspaceId === "ws_personal" && input.scope === "personal" ? "prj_personal" : null);
     const updatedAt = input.updatedAt ?? input.createdAt;
     this.db.raw
       .prepare(
