@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **ACTIVE — PE-08 PRODUCT CLOSURE**
+Status: **CLOSED — PE-00..PE-08 PASS**
 
 This is the explicit roadmap that follows the closed Batch 1–12 / W / F6 baseline. It uses the prefix **PE (Product Evolution)** so it cannot be confused with old Batch numbers.
 
@@ -21,7 +21,7 @@ Agent execution protocol: [product-evolution-agent-guide.md](product-evolution-a
 | PE-05 | Event/Webhook automation under existing policy | **CLOSED / PASS** |
 | PE-06 | Brain V1 deterministic graph projection | **CLOSED / PASS** |
 | PE-07 | Brain -> Context -> ECX optimization + measurement | **CLOSED / PASS** |
-| PE-08 | Product closure, migration/UX/regression/evidence | **ACTIVE** |
+| PE-08 | Product closure, migration/UX/regression/evidence | **CLOSED / PASS** |
 
 Do not execute multiple PE batches in one PR. Do not skip a batch without updating this roadmap and recording why.
 
@@ -352,7 +352,7 @@ PE-04  CLOSED / PASS
 PE-05  CLOSED / PASS
 PE-06  CLOSED / PASS
 PE-07  CLOSED / PASS
-PE-08  ACTIVE — PRODUCT CLOSURE
+PE-08  CLOSED / PASS
 ```
 
-PE-07 is CLOSED / PASS on PR #178 and merged main `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. PE-08 Product closure is the active final Product Evolution batch.
+PE-08 is CLOSED / PASS on PR #180 and merged main `b32d57022344ad08a59b6b7d163507c5530a7ca6`. Product Evolution PE-00 through PE-08 is closed at the documented boundaries. No Batch 13 or new Product Evolution batch is opened implicitly.
