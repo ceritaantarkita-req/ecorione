@@ -19,6 +19,8 @@ Windows tests        990 PASS + 3 skipped
 
 This is maintenance hardening, not PE-09 or Batch 13. The clean-checkout follow-up is CLOSED / PASS on PR #183: implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed CI #1479 + Product Eval #718; final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 + Product Eval #721 and merged as `4980b3ceb149be58788467d2e11769de12977d5a`.
 
+The final fresh-clone Windows EOL follow-up is also CLOSED / PASS on PR #185. It normalized only the three `.cmd` Git blobs (semantic diff = 0), preserved CRLF checkout via `.gitattributes`, passed CI #1486 + Product Eval #725 + Desktop Installer #76, merged as `4194e89a2b0611897969eaca2cb9c2b4b360c774`, and post-merge main passed CI #1487 + Product Eval #726. No active implementation batch remains.
+
 ## Latest Product Evolution closure
 
 **PE-08 — Product closure**
