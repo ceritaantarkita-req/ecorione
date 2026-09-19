@@ -155,6 +155,14 @@ describe("PE-03 Temporal Schedule runtime", () => {
       await handle.trigger(ScheduleOverlapPolicy.SKIP);
       await awaitLatestScheduleAction(env, initial.temporalScheduleId!, 1);
       expect(triggerActivities.authorizeScheduledTrigger).toHaveBeenCalledTimes(1);
+      expect(graphs.recordGraphRunTrace).toHaveBeenCalledWith(
+        expect.objectContaining({
+          execution: expect.objectContaining({
+            triggerId: "trg_temporalschedule01",
+          }),
+          name: "flow.graph.run.started",
+        }),
+      );
       const firstAuth = vi.mocked(triggerActivities.authorizeScheduledTrigger).mock
         .calls[0]?.[0];
       expect(firstAuth?.occurrenceWorkflowId).toBeTruthy();
