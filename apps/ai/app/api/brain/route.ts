@@ -3,10 +3,7 @@ import {
   DEFAULT_WORKSPACE_ID,
   type BrainQuery,
 } from "@ecorione/shared-schema";
-import {
-  BrainOwnerRequestError,
-  queryBrainGraph,
-} from "../../../lib/brain-projection";
+import { BrainOwnerRequestError, queryBrainGraph } from "../../../lib/brain-projection";
 import { jsonError } from "../../../lib/proxy";
 
 function parseQuery(request: Request): BrainQuery | null {
