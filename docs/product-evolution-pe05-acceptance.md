@@ -83,7 +83,7 @@ A connector-specific adapter may be added only when a real integration is implem
 Webhook ingress must:
 
 1. authenticate/verify the delivery before dispatch when the source supports a verification mechanism;
-2. reject malformed, oversized, replayed, or scope-mismatched delivery;
+2. reject malformed, oversized, conflicting replay, or scope-mismatched delivery;
 3. never log or persist raw credentials/signing secrets;
 4. derive a stable dedupe identity before any side effect;
 5. fail closed when verification cannot be completed;
@@ -155,7 +155,7 @@ Provider transport retry remains provider/adapter behavior; Flow execution retry
 
 ## Minimum API boundary
 
-A generic internal normalized-event dispatch boundary may be added to Flow, plus a verified webhook adapter path for the real integration selected for acceptance.
+A generic internal normalized-event dispatch boundary may be added to Flow, plus a Connect-owned generic verified webhook adapter. Public webhook callers must not choose Workspace, Project, Flow, or autonomy; those are resolved from the configured Trigger.
 
 The API must not expose an unauthenticated route that can directly choose arbitrary Workspace, Project, Flow, or autonomy.
 
@@ -188,7 +188,7 @@ Product Eval
 
 ## End-to-end closure proof
 
-PE-05 cannot close on schemas/unit tests alone. At least one real non-time delivery path must be demonstrated end-to-end through:
+PE-05 cannot close on schemas/unit tests alone. At least one real-process non-time delivery path must be demonstrated end-to-end through:
 
 ```text
 verified event/webhook
