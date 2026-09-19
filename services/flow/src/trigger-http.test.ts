@@ -192,6 +192,7 @@ describe("PE-03 Trigger HTTP", () => {
       expect.objectContaining({
         plan: expect.objectContaining({ graphVersion: 1 }),
         input: { hello: "world" },
+        autonomy: "L2",
       }),
     );
 
