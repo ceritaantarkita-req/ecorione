@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **ACTIVE / IMPLEMENTATION EVIDENCE PENDING**
+Status: **CLOSURE CANDIDATE / IMPLEMENTATION GATES PASS**
 
 PE-08 is the final Product Evolution closure batch. This record tracks the repository-side audit/evidence for PE-00 through PE-07 as one baseline. It does not authorize new product scope.
 
@@ -14,10 +14,10 @@ Acceptance contract: [../product-evolution-pe08-acceptance.md](../product-evolut
 PE-07 -> PE-08 transition PR    #179
 transition merge main           82026c8a1948336b2da4e00ee4832180f68452f7
 PE-08 branch                    pe/pe-08-product-closure-20260919
-implementation head             pending
-CI                              pending
-Product Eval                    pending
-relevant acceptance             pending
+implementation head             33f9e891c3152a82304d5f1e31693604c855d94c
+CI                              35449548713 / #1469 PASS
+Product Eval                    35449548657 / #708 PASS
+dedicated MCP/Desktop workflow  not triggered by final implementation diff
 ```
 
 ## Closure audit matrix
@@ -109,18 +109,35 @@ If the dedicated Desktop Installer workflow is not triggered by the final PE-08 
 
 No hosted/provider call, paid benchmark, VPS/Cloudflare activation, DNS/tunnel mutation, AutoClick activation, or L4 autonomy is authorized for this closure.
 
-## Findings so far
+## Implementation evidence
 
-No S0/S1 defect is claimed closed before exact-head gates execute.
+Exact implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed the required repository gates:
 
-The first material gap found by the audit is evidence composition: previous Product Evolution tests existed across normal CI, but PE-08 needs one explicit closure matrix and one integrated owner restore -> Brain rebuild drill. Those are the current branch changes.
+```text
+CI                              35449548713 / #1469 PASS
+Product Eval                    35449548657 / #708  PASS
+normal suite                    191 files PASS + 1 skipped
+normal tests                    991 PASS + 2 skipped
+Phase 4 process acceptance      2 files / 3 tests PASS
+production-ops acceptance       PASS
+Product Eval closure matrix     36 files / 148 tests PASS
+secret scan                     PASS
+dependency security review      PASS
+GitHub Actions pin review       PASS
+GitHub runner review            PASS
+Node toolchain review           PASS (Node 22.20.0)
+installer toolchain review      PASS (Inno Setup 6.7.1)
+container image review          PASS
+release security acceptance     PASS
+production build                PASS
+```
 
-## Remaining before closure candidate
+The explicit PE-08 integrated restore/rebuild test passed inside Product Eval. The dedicated MCP External HTTPS Acceptance and Desktop Installer workflows were not triggered by this final implementation diff; PE-08 does not invent those workflow results. Installer specification and Windows desktop acceptance tests still ran in normal CI, including `test/windows-desktop-installer-acceptance.test.mjs` and `test/desktop-installer.test.mjs`.
 
-- exact PE-08 implementation head CI;
-- exact Product Eval with the full closure matrix;
-- relevant acceptance workflow(s) triggered by the final diff;
-- record real test totals and any reproducible defects/fixes;
-- documentation convergence;
-- closure-candidate exact-head gates;
-- merge reviewed head.
+No S0/S1 closure defect remained on the implementation head. The one implementation-cycle failure was formatting-only on the new PE-08 test; the canonical Prettier output was applied and the temporary formatter helper was removed before the reviewed implementation head.
+
+## Closure gate remaining
+
+This documentation change creates the closure-candidate head. That exact head must pass CI + Product Eval and every workflow triggered by its final diff. PR #180 must then merge before PE-08 can be marked CLOSED / PASS.
+
+Production VPS/Cloudflare, rendered local browser walkthrough, paid hosted evidence, AutoClick, L4 autonomy, and Brain persistence remain outside this repository closure claim.
