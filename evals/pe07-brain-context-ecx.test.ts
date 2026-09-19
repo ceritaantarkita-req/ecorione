@@ -26,8 +26,16 @@ const CASES = [
     requiredFactId: "mem_pe07routing_required",
     requiredText: "PE07_ROUTING current deployment control requires approved routing.",
     noise: [
-      ["mem_pe07routing_noise1", "https://alpha.example/archive", "PE07_ROUTING archived generic note."],
-      ["mem_pe07routing_noise2", "https://alpha.example/legacy", "PE07_ROUTING legacy unrelated note."],
+      [
+        "mem_pe07routing_noise1",
+        "https://alpha.example/archive",
+        "PE07_ROUTING archived generic note.",
+      ],
+      [
+        "mem_pe07routing_noise2",
+        "https://alpha.example/legacy",
+        "PE07_ROUTING legacy unrelated note.",
+      ],
     ],
   },
   {
@@ -38,8 +46,16 @@ const CASES = [
     requiredFactId: "mem_pe07backup_required",
     requiredText: "PE07_BACKUP restore verification requires the current checksum receipt.",
     noise: [
-      ["mem_pe07backup_noise1", "https://alpha.example/old-backup", "PE07_BACKUP older generic schedule."],
-      ["mem_pe07backup_noise2", "https://alpha.example/noise-backup", "PE07_BACKUP unrelated illustrative note."],
+      [
+        "mem_pe07backup_noise1",
+        "https://alpha.example/old-backup",
+        "PE07_BACKUP older generic schedule.",
+      ],
+      [
+        "mem_pe07backup_noise2",
+        "https://alpha.example/noise-backup",
+        "PE07_BACKUP unrelated illustrative note.",
+      ],
     ],
   },
   {
@@ -50,8 +66,16 @@ const CASES = [
     requiredFactId: "mem_pe07release_required",
     requiredText: "PE07_RELEASE final approval evidence is the signed release receipt.",
     noise: [
-      ["mem_pe07release_noise1", "https://alpha.example/retired-release", "PE07_RELEASE retired draft note."],
-      ["mem_pe07release_noise2", "https://alpha.example/generic-release", "PE07_RELEASE generic historical note."],
+      [
+        "mem_pe07release_noise1",
+        "https://alpha.example/retired-release",
+        "PE07_RELEASE retired draft note.",
+      ],
+      [
+        "mem_pe07release_noise2",
+        "https://alpha.example/generic-release",
+        "PE07_RELEASE generic historical note.",
+      ],
     ],
   },
 ] as const;
@@ -337,8 +361,8 @@ describe("PE-07 deterministic Brain + Context + ECX comparative evidence", () =>
     );
     expect(summary.aggregate.medianCandidateReductionPct).toBeGreaterThanOrEqual(25);
     expect(summary.aggregate.strictReductionCases).toBeGreaterThanOrEqual(2);
-    expect(results.every((entry) => entry.narrowedSelected.includes(entry.requiredFactId))).toBe(
-      true,
-    );
+    expect(
+      results.every((entry) => entry.narrowedSelected.includes(entry.requiredFactId)),
+    ).toBe(true);
   });
 });
