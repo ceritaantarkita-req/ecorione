@@ -4,11 +4,17 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { BrainQuerySchema, DEFAULT_WORKSPACE_ID } from "../packages/shared-schema/src/index.js";
 import { buildBrainGraph } from "../apps/ai/lib/brain-projection.js";
-import { backupContextDatabase, restoreContextDatabase } from "../services/context/src/backup.js";
+import {
+  backupContextDatabase,
+  restoreContextDatabase,
+} from "../services/context/src/backup.js";
 import { openContextDatabase, type ContextDatabase } from "../services/context/src/db.js";
 import { ContextRepository } from "../services/context/src/repository.js";
 import { factInput } from "../services/context/src/test-helpers.js";
-import { backupFlowGraphRegistry, restoreFlowGraphRegistry } from "../services/flow/src/backup.js";
+import {
+  backupFlowGraphRegistry,
+  restoreFlowGraphRegistry,
+} from "../services/flow/src/backup.js";
 import { openFlowDatabase, type FlowDatabase } from "../services/flow/src/db.js";
 import { FlowGraphRepository } from "../services/flow/src/graph-repository.js";
 import { TriggerRepository } from "../services/flow/src/trigger-repository.js";
@@ -193,7 +199,12 @@ describe("PE-08 Product Evolution restore and rebuild closure", () => {
       contextPath,
       LATER,
     );
-    const flowReceipt = restoreFlowGraphRegistry(backupRoot, flowBackup.backupId, flowPath, LATER);
+    const flowReceipt = restoreFlowGraphRegistry(
+      backupRoot,
+      flowBackup.backupId,
+      flowPath,
+      LATER,
+    );
 
     expect(hubReceipt.safetyBackupId).not.toBeNull();
     expect(contextReceipt.safetyBackupId).not.toBeNull();
@@ -230,12 +241,12 @@ describe("PE-08 Product Evolution restore and rebuild closure", () => {
     const restoredFlow = track(openFlowDatabase(flowPath));
     const restoredGraphs = new FlowGraphRepository(restoredFlow);
     const restoredTriggers = new TriggerRepository(restoredFlow);
-    expect(restoredGraphs.list(DEFAULT_WORKSPACE_ID, project.id).map((item) => item.graphId)).toEqual([
-      "fg_pe08closure01",
-    ]);
-    expect(restoredTriggers.list(DEFAULT_WORKSPACE_ID, project.id).map((item) => item.id)).toEqual([
-      trigger.id,
-    ]);
+    expect(
+      restoredGraphs.list(DEFAULT_WORKSPACE_ID, project.id).map((item) => item.graphId),
+    ).toEqual(["fg_pe08closure01"]);
+    expect(
+      restoredTriggers.list(DEFAULT_WORKSPACE_ID, project.id).map((item) => item.id),
+    ).toEqual([trigger.id]);
     expect(restoredTriggers.get(secondTrigger.id)).toBeNull();
 
     const query = BrainQuerySchema.parse({
@@ -272,8 +283,8 @@ describe("PE-08 Product Evolution restore and rebuild closure", () => {
           node.projectId === project.id,
       ),
     ).toBe(true);
-    expect(rebuilt.edges.every((edge) => edge.type === "BELONGS_TO" || edge.type === "USES")).toBe(
-      true,
-    );
+    expect(
+      rebuilt.edges.every((edge) => edge.type === "BELONGS_TO" || edge.type === "USES"),
+    ).toBe(true);
   });
 });
