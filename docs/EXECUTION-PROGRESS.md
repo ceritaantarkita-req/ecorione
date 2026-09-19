@@ -23,8 +23,8 @@ Status: **CURRENT SUMMARY**
 | PE-01 Project foundation | **CLOSED / PASS** |
 | PE-02 Project Sources | **CLOSED / PASS** |
 | PE-03 Trigger control plane | **CLOSED / PASS** |
-| PE-04 Work + Schedule + Runs | **ACTIVE** |
-| PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
+| PE-04 Work + Schedule + Runs | **CLOSED / PASS** |
+| PE-05 Event/Webhook automation | **ACTIVE** |
 | PE-06 Brain V1 | **BLOCKED BY PE-05** |
 | PE-07 Brain + Context + ECX | **BLOCKED BY PE-06** |
 | PE-08 Product closure | **BLOCKED BY PE-07** |
@@ -49,4 +49,6 @@ PE-01: PR #169 / main `1d2b537de3ad07336adb9a97121309f04d61cc21`.
 
 PE-00: PR #167 / main `b7ebf5492aca463e55f9f30bc259b9a6028c62d7`.
 
-PE-03 closed on PR #172 exact head `74730e26321cac06c31243baeeafe29d5f4d75f0` and merged as `c739c09014d8aa20ca8e1b83c5b6be39b4ee649c`. Current active gate: **PE-04 Work + Schedule + Runs**, draft PR #173.
+PE-03 closed on PR #172 exact head `74730e26321cac06c31243baeeafe29d5f4d75f0` and merged as `c739c09014d8aa20ca8e1b83c5b6be39b4ee649c`.
+
+PE-04 closed on PR #173 implementation head `c2cacbbcbee15f46ac4c5e9e43c955f5c952af43`, closure head `94936fa0704991d3536667bb8c947e9d751c813e`, and merged as `c08581a00a20dc6016c570a1fbb777d81e391699`. Current active gate: **PE-05 Event/Webhook automation**.
