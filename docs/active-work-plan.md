@@ -27,7 +27,7 @@ No owner content is copied into Hub.
 ## PE-02 implementation evidence
 
 ```text
-PR #170
+PR #171
 reviewed implementation head a6167df469cf491015b232aff8a192b32a25c569
 CI #1223 PASS
 Product Eval #462 PASS
@@ -40,7 +40,7 @@ Acceptance: [product-evolution-pe02-acceptance.md](product-evolution-pe02-accept
 
 **PE-03 — Trigger control plane**
 
-PE-03 starts only after PR #170 is merged and post-merge `main` is green.
+PE-03 starts only after PR #171 is merged and post-merge `main` is green.
 
 PE-03 boundary:
 
