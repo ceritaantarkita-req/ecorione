@@ -142,6 +142,10 @@ export function allowedSensitivities(max: Sensitivity): Sensitivity[] {
   return SENSITIVITY.filter((s) => sensitivityRank(s) <= sensitivityRank(max));
 }
 const DIRECT_L1_WRITE_TRUST: ReadonlySet<Trust> = new Set<Trust>(["USER", "LOCAL_AGENT"]);
+type ProjectState = "GLOBAL" | "ASSIGNED";
+function projectState(projectId: ProjectId | null | undefined): ProjectState {
+  return projectId === null || projectId === undefined ? "GLOBAL" : "ASSIGNED";
+}
 
 export class ContextRepository {
   private readonly raw: SqliteDatabase;
@@ -163,10 +167,10 @@ export class ContextRepository {
     this.raw
       .prepare(
         `INSERT INTO episodes (
-      id, ts, raw_text, project_id, source_app, session_id, tool_call_id, source_uri,
+      id, ts, raw_text, project_id, project_state, source_app, session_id, tool_call_id, source_uri,
       scope, sensitivity, sync_class, trust, summary, consolidated_at
     ) VALUES (
-      @id, @ts, @raw_text, @project_id, @source_app, @session_id, @tool_call_id, @source_uri,
+      @id, @ts, @raw_text, @project_id, @project_state, @source_app, @session_id, @tool_call_id, @source_uri,
       @scope, @sensitivity, @sync_class, @trust, @summary, @consolidated_at
     )`,
       )
@@ -175,6 +179,7 @@ export class ContextRepository {
         ts: episode.ts,
         raw_text: episode.rawText,
         project_id: episode.projectId,
+        project_state: projectState(episode.projectId),
         ...provenanceParams(episode.provenance),
         scope: episode.scope,
         sensitivity: episode.sensitivity,
@@ -202,9 +207,10 @@ export class ContextRepository {
       params.push(filter.sessionId);
     }
     if (filter.projectId !== undefined) {
-      if (filter.projectId === null) clauses.push("project_id IS NULL");
-      else {
-        clauses.push("project_id = ?");
+      if (filter.projectId === null) {
+        clauses.push("project_id IS NULL AND project_state='GLOBAL'");
+      } else {
+        clauses.push("project_id = ? AND project_state='ASSIGNED'");
         params.push(filter.projectId);
       }
     }
@@ -235,10 +241,10 @@ export class ContextRepository {
     this.raw
       .prepare(
         `INSERT INTO quarantine (
-      id, proposed_text, proposed_at, project_id, source_app, session_id, tool_call_id, source_uri,
+      id, proposed_text, proposed_at, project_id, project_state, source_app, session_id, tool_call_id, source_uri,
       trust, scope, status, rejection_reason, reviewed_at, promoted_fact_id
     ) VALUES (
-      @id, @proposed_text, @proposed_at, @project_id, @source_app, @session_id, @tool_call_id, @source_uri,
+      @id, @proposed_text, @proposed_at, @project_id, @project_state, @source_app, @session_id, @tool_call_id, @source_uri,
       @trust, @scope, 'PENDING', NULL, NULL, NULL
     )`,
       )
@@ -247,6 +253,7 @@ export class ContextRepository {
         proposed_text: p.proposedText,
         proposed_at: p.proposedAt,
         project_id: p.projectId,
+        project_state: projectState(p.projectId),
         ...provenanceParams(p.provenance),
         trust: p.trust,
         scope: p.scope,
@@ -254,14 +261,17 @@ export class ContextRepository {
     return p.id;
   }
   getQuarantined(id: MemoryFactId): QuarantinedWrite | null {
-    const row = this.raw.prepare("SELECT * FROM quarantine WHERE id = ?").get(id) as
-      QuarantineRow | undefined;
+    const row = this.raw
+      .prepare("SELECT * FROM quarantine WHERE id = ? AND project_state <> 'LEGACY_UNASSIGNED'")
+      .get(id) as QuarantineRow | undefined;
     return row === undefined ? null : rowToQuarantined(row);
   }
   listQuarantine(status: QuarantinedWrite["status"] = "PENDING"): QuarantinedWrite[] {
     return (
       this.raw
-        .prepare("SELECT * FROM quarantine WHERE status = ? ORDER BY proposed_at ASC, id ASC")
+        .prepare(
+          "SELECT * FROM quarantine WHERE status = ? AND project_state <> 'LEGACY_UNASSIGNED' ORDER BY proposed_at ASC, id ASC",
+        )
         .all(status) as QuarantineRow[]
     ).map(rowToQuarantined);
   }
@@ -323,15 +333,15 @@ export class ContextRepository {
       .prepare(
         `INSERT INTO facts (
       id, subject, predicate, object, text, confidence, salience, source_episode_ids,
-      t_valid, t_invalid, superseded_by, created_at, project_id, scope, sensitivity, sync_class, trust,
+      t_valid, t_invalid, superseded_by, created_at, project_id, project_state, scope, sensitivity, sync_class, trust,
       source_app, session_id, tool_call_id, source_uri
     ) VALUES (
       @id, @subject, @predicate, @object, @text, @confidence, @salience, @source_episode_ids,
-      @t_valid, @t_invalid, @superseded_by, @created_at, @project_id, @scope, @sensitivity, @sync_class, @trust,
+      @t_valid, @t_invalid, @superseded_by, @created_at, @project_id, @project_state, @scope, @sensitivity, @sync_class, @trust,
       @source_app, @session_id, @tool_call_id, @source_uri
     )`,
       )
-      .run(factParams(fact));
+      .run({ ...factParams(fact), project_state: projectState(fact.projectId) });
   }
   insertFact(input: InsertFactInput): MemoryFact {
     const fact = MemoryFactSchema.parse(input);
@@ -347,6 +357,22 @@ export class ContextRepository {
   }
   getFact(id: MemoryFactId, options: FactLookupOptions = {}): MemoryFact | null {
     const row = this.factRow(id, options.includeInvalidated ?? false);
+    return row === undefined ? null : rowToFact(row);
+  }
+  getFactForProject(
+    id: MemoryFactId,
+    projectId: ProjectId | null,
+    options: FactLookupOptions = {},
+  ): MemoryFact | null {
+    const live = (options.includeInvalidated ?? false) ? "" : "AND t_invalid IS NULL";
+    const projectClause =
+      projectId === null
+        ? "AND project_id IS NULL AND project_state='GLOBAL'"
+        : "AND ((project_id IS NULL AND project_state='GLOBAL') OR (project_id=? AND project_state='ASSIGNED'))";
+    const params = projectId === null ? [id] : [id, projectId];
+    const row = this.raw
+      .prepare(`SELECT ${FACT_COLUMNS} FROM facts WHERE id=? ${live} ${projectClause}`)
+      .get(...params) as FactRow | undefined;
     return row === undefined ? null : rowToFact(row);
   }
   getFactsByIds(
@@ -381,12 +407,14 @@ export class ContextRepository {
     }
     if (Object.hasOwn(filter, "projectId")) {
       if (filter.projectId === null || filter.projectId === undefined) {
-        clauses.push("project_id IS NULL");
+        clauses.push("project_id IS NULL AND project_state='GLOBAL'");
       } else if (filter.includeGlobal === true) {
-        clauses.push("(project_id IS NULL OR project_id = ?)");
+        clauses.push(
+          "((project_id IS NULL AND project_state='GLOBAL') OR (project_id = ? AND project_state='ASSIGNED'))",
+        );
         params.push(filter.projectId);
       } else {
-        clauses.push("project_id = ?");
+        clauses.push("project_id = ? AND project_state='ASSIGNED'");
         params.push(filter.projectId);
       }
     }
