@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   DEFAULT_PROJECT_ID,
   DEFAULT_WORKSPACE_ID,
+  ProjectIdSchema,
   type Timestamp,
 } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
@@ -65,6 +66,35 @@ describe("PE-01 ProjectRegistry", () => {
       const archived = registry.archive(created.id, DEFAULT_WORKSPACE_ID, LATER);
       expect(archived.archivedAt).toBe(LATER);
       expect(registry.list(DEFAULT_WORKSPACE_ID).map((p) => p.id)).not.toContain(created.id);
+    } finally {
+      db.close();
+    }
+  });
+
+  it("fails clearly for archived, missing, and virtual All Project identities", () => {
+    const db = openHubDatabase();
+    try {
+      const registry = new ProjectRegistry(db);
+      const created = registry.create(
+        {
+          workspaceId: DEFAULT_WORKSPACE_ID,
+          name: "Archive me",
+          description: "",
+          instruction: "",
+          memoryPolicy: "GLOBAL_PLUS_PROJECT",
+          autonomyCeiling: "L3",
+        },
+        NOW,
+      );
+      registry.archive(created.id, DEFAULT_WORKSPACE_ID, LATER);
+
+      expect(() => registry.require(created.id, DEFAULT_WORKSPACE_ID)).toThrow(
+        /sudah diarsipkan/,
+      );
+      expect(() =>
+        registry.require("prj_missing" as never, DEFAULT_WORKSPACE_ID),
+      ).toThrow(/tidak ditemukan/);
+      expect(ProjectIdSchema.safeParse("All").success).toBe(false);
     } finally {
       db.close();
     }
