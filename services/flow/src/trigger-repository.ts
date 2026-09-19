@@ -97,6 +97,13 @@ export class TriggerEventDedupeConflictError extends Error {
   }
 }
 
+export class TriggerWebhookHookConflictError extends Error {
+  constructor(hookId: string) {
+    super(`hookId webhook sudah dipakai Trigger lain: ${hookId}.`);
+    this.name = "TriggerWebhookHookConflictError";
+  }
+}
+
 function scheduleId(triggerId: string): string {
   return `ecorione-trigger-${triggerId}`;
 }
@@ -187,6 +194,12 @@ export class TriggerRepository {
 
   create(input: TriggerCreateRequest, now: Timestamp): TriggerDefinition {
     const id = makeId("trigger");
+    if (input.kind === "webhook") {
+      const hookId = (input.configuration as { hookId: string }).hookId;
+      if (this.findWebhookByHookId(hookId) !== null) {
+        throw new TriggerWebhookHookConflictError(hookId);
+      }
+    }
     const temporalScheduleId = input.kind === "time" ? scheduleId(id) : null;
     this.db.raw
       .prepare(
@@ -220,6 +233,13 @@ export class TriggerRepository {
     if (current.workspaceId !== input.workspaceId) throw new TriggerWorkspaceConflictError();
     if (current.projectId !== input.projectId) throw new TriggerProjectConflictError();
     if (current.kind !== input.kind) throw new TriggerKindConflictError();
+    if (input.kind === "webhook") {
+      const hookId = (input.configuration as { hookId: string }).hookId;
+      const existing = this.findWebhookByHookId(hookId);
+      if (existing !== null && existing.id !== id) {
+        throw new TriggerWebhookHookConflictError(hookId);
+      }
+    }
     if (current.revision !== input.expectedRevision) {
       throw new TriggerRevisionConflictError(input.expectedRevision, current.revision);
     }
