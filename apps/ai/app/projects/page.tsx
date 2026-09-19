@@ -132,7 +132,11 @@ export default function ProjectsPage() {
             aria-label="Nama Project baru"
             maxLength={160}
           />
-          <button className="ecr-btn ecr-btn--primary" type="submit" disabled={busy || !name.trim()}>
+          <button
+            className="ecr-btn ecr-btn--primary"
+            type="submit"
+            disabled={busy || !name.trim()}
+          >
             Buat
           </button>
         </form>
