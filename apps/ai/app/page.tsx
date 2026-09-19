@@ -22,6 +22,9 @@ import {
 import { makeSessionId } from "../lib/session";
 
 type ChatTarget = "local" | "hosted";
+const WORKSPACE_ID = "ws_personal";
+const PERSONAL_PROJECT_ID = "prj_personal";
+const PROJECT_STORAGE_KEY = "ecorione.projectId";
 type RuntimeSnapshot = {
   settings?: {
     hostedCallsEnabled?: boolean;
@@ -81,6 +84,8 @@ export default function ChatPage() {
     getServerHydrationSnapshot,
   );
   const [turns, setTurns] = useState<Turn[]>([]);
+  const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
+  const [projectReady, setProjectReady] = useState(false);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
@@ -106,6 +111,29 @@ export default function ChatPage() {
   const latestAssistant = [...turns]
     .reverse()
     .find((t): t is AssistantTurn => t.kind === "assistant");
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const fromQuery = new URLSearchParams(window.location.search).get("project");
+    let next = PERSONAL_PROJECT_ID;
+    if (fromQuery !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(fromQuery)) {
+      next = fromQuery;
+    } else {
+      try {
+        const stored = window.localStorage.getItem(PROJECT_STORAGE_KEY);
+        if (stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)) next = stored;
+      } catch {
+        // Storage can be unavailable in privacy-restricted contexts.
+      }
+    }
+    setProjectId(next);
+    try {
+      window.localStorage.setItem(PROJECT_STORAGE_KEY, next);
+    } catch {
+      // The explicit in-memory Project still works without persistence.
+    }
+    setProjectReady(true);
+  }, [hydrated]);
 
   useEffect(() => {
     let cancelled = false;
@@ -174,7 +202,14 @@ export default function ChatPage() {
 
   async function sendMessage(text: string): Promise<boolean> {
     const trimmed = text.trim();
-    if (!hydrated || trimmed.length === 0 || sending || sendInFlightRef.current) return false;
+    if (
+      !hydrated ||
+      !projectReady ||
+      trimmed.length === 0 ||
+      sending ||
+      sendInFlightRef.current
+    )
+      return false;
     if (target === "hosted" && hostedAvailable !== true) {
       setTurns((prev) => [
         ...prev,
@@ -194,7 +229,13 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId, message: trimmed, target }),
+        body: JSON.stringify({
+          sessionId,
+          workspaceId: WORKSPACE_ID,
+          projectId,
+          message: trimmed,
+          target,
+        }),
       });
       const body: unknown = await res.json().catch(() => undefined);
       if (!res.ok) {
@@ -242,7 +283,11 @@ export default function ChatPage() {
       const res = await fetch("/api/forget", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ factId }),
+        body: JSON.stringify({
+          factId,
+          workspaceId: WORKSPACE_ID,
+          projectId,
+        }),
       });
       const body: unknown = await res.json().catch(() => undefined);
       if (!res.ok) {
@@ -425,7 +470,7 @@ export default function ChatPage() {
           ? "Terkunci setelah pesan pertama."
           : "Hosted nonaktif — sesi ini Local-only.";
 
-  const canSend =
+  const canSend = projectReady &&
     hydrated &&
     !sending &&
     !preparingAttachments &&
