@@ -131,7 +131,9 @@ export class ContextRetriever {
     const allowed = allowedSensitivities(maxSensitivity);
     const egress = hostedEligibleOnly ? "AND f.sync_class IN ('CLOUD_ALLOWED','PUBLIC')" : "";
     const projectClause =
-      projectId === null ? "AND f.project_id IS NULL" : "AND (f.project_id IS NULL OR f.project_id=?)";
+      projectId === null
+        ? "AND f.project_id IS NULL"
+        : "AND (f.project_id IS NULL OR f.project_id=?)";
     const projectParams = projectId === null ? [] : [projectId];
     try {
       const rows = this.repo.db.raw
