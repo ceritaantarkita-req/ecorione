@@ -44,6 +44,9 @@ jobs:
             apps/ai/app/api/voice/stream/route.test.ts \
             services/connect/src/runtime-settings.test.ts \
             apps/ai/app/api/chat/route.test.ts \
+            apps/ai/app/api/projects/route.test.ts \
+            apps/ai/app/api/projects/[id]/archive/route.test.ts \
+            apps/ai/app/api/projects/history/route.test.ts \
             apps/ai/app/api/forget/route.test.ts \
             apps/ai/app/api/ops/route.test.ts \
             --maxWorkers=1 \
