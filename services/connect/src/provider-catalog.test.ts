@@ -33,7 +33,7 @@ describe("provider catalog", () => {
     }
   });
 
-  it("MCP tetap integration credential dan bukan AI routing provider", () => {
+  it("MCP dan webhook tetap integration credentials dan bukan AI routing providers", () => {
     const mcp = PROVIDER_CATALOG.find((entry) => entry.id === "mcp");
     expect(mcp).toMatchObject({
       category: "integration",
@@ -41,7 +41,15 @@ describe("provider catalog", () => {
       routingReady: false,
       connectionTestReady: false,
     });
+    const webhook = PROVIDER_CATALOG.find((entry) => entry.id === "webhook");
+    expect(webhook).toMatchObject({
+      category: "integration",
+      credentialPurpose: "tokens",
+      routingReady: false,
+      connectionTestReady: false,
+    });
     expect(credentialPurposeForProvider("mcp")).toBe("tokens");
+    expect(credentialPurposeForProvider("webhook")).toBe("tokens");
     expect(credentialPurposeForProvider("openai")).toBe("messages");
   });
 });
