@@ -47,11 +47,11 @@ describe("PE-01 Historical Ledger migration", () => {
       INSERT INTO history_sessions
         (id,created_at,scope,sensitivity,sync_class,next_seq,head_hash)
       VALUES
-        ('sess_legacy_project','2026-09-01T00:00:00.000Z','personal','INTERNAL','LOCAL_ONLY',1,'legacy-head');
+        ('sess_legacy_project','2026-09-01T00:00:00.000Z','personal','INTERNAL','LOCAL_ONLY',1,'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
       INSERT INTO history_events
         (id,session_id,seq,recorded_at,event_type,actor,operation_id,parent_event_id,payload_json,prev_hash,hash)
       VALUES
-        ('evt_legacy_project','sess_legacy_project',0,'2026-09-01T00:00:00.000Z','user.message','user',NULL,NULL,'{"text":"legacy"}',NULL,'legacy-hash');
+        ('evt_legacy_project','sess_legacy_project',0,'2026-09-01T00:00:00.000Z','user.message','user',NULL,NULL,'{"text":"legacy"}',NULL,'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
     `);
     legacy.close();
 
