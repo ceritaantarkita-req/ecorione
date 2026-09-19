@@ -643,7 +643,6 @@ export default function FlowCanvasPage() {
     setLoadId(graph);
     void runUiAction("Flow deep-link gagal", () => loadGraph(graph, parsedVersion));
     // The deep-link is an initial navigation contract; later URL changes are handled by navigation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function runGraph(): Promise<void> {
