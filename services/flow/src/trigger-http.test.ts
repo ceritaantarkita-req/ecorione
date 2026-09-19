@@ -216,6 +216,101 @@ describe("PE-03 Trigger HTTP", () => {
     await app.close();
   });
 
+  it("rejects manual dispatch when Hub policy denies before Temporal", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app, temporalClient } = build();
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: manualPayload(),
+    });
+    expect(created.statusCode).toBe(201);
+    const triggerId = (created.json() as { id: string }).id;
+
+    mockProject();
+    agent
+      .get("http://hub.local")
+      .intercept({ path: "/v1/actions/evaluate", method: "POST" })
+      .reply(200, { outcome: "DENY", reason: "blocked by test policy" });
+
+    const fired = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/fire`,
+      payload: {
+        workspaceId: "ws_personal",
+        projectId: "prj_personal",
+        requestId: "request-manual-denied-001",
+      },
+    });
+    expect(fired.statusCode).toBe(403);
+    expect(temporalClient.startGraph).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it("rejects a sibling-Project Flow target before policy or Temporal", async () => {
+    new FlowGraphRepository(db).create(
+      {
+        ...graph("Sibling target"),
+        id: "fg_triggerhttp02",
+        projectId: "prj_other",
+      } as never,
+      NOW,
+    );
+    mockProject();
+    const { app, temporalClient } = build();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: {
+        ...manualPayload(),
+        graphId: "fg_triggerhttp02",
+      },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(temporalClient.startGraph).not.toHaveBeenCalled();
+    expect(temporalClient.reconcileTimeTrigger).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it("rejects cross-Workspace and missing pinned Flow versions before policy or Temporal", async () => {
+    const { app, temporalClient } = build();
+
+    agent
+      .get("http://hub.local")
+      .intercept({
+        path: "/v1/projects/prj_personal?workspaceId=ws_other",
+        method: "GET",
+      })
+      .reply(200, { ...project(), workspaceId: "ws_other" });
+
+    const crossWorkspace = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: {
+        ...manualPayload(),
+        workspaceId: "ws_other",
+      },
+    });
+    expect(crossWorkspace.statusCode).toBe(400);
+
+    mockProject();
+    const missingVersion = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: {
+        ...manualPayload(),
+        graphVersion: 99,
+      },
+    });
+    expect(missingVersion.statusCode).toBe(404);
+    expect(temporalClient.startGraph).not.toHaveBeenCalled();
+    expect(temporalClient.reconcileTimeTrigger).not.toHaveBeenCalled();
+    await app.close();
+  });
+
   it("reconciles a time Trigger with explicit timezone/overlap/catchup configuration", async () => {
     mockProject();
     mockPolicyAllow();
