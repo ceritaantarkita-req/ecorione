@@ -17,6 +17,7 @@ import type {
   FlowWorkflowInput,
   OperationId,
   TriggerDefinition,
+  type TriggerScheduleRuntime,
   WorkflowId,
 } from "@ecorione/shared-schema";
 import type { ScheduledTriggerWorkflowInput } from "./trigger-contract.js";
@@ -41,6 +42,7 @@ export interface FlowGraphTemporalClient {
 export interface TriggerScheduleTemporalClient {
   reconcileTimeTrigger(trigger: TriggerDefinition, plan: CompiledFlowGraphPlan): Promise<void>;
   pauseTimeTrigger(scheduleId: string): Promise<void>;
+  describeTimeTrigger(trigger: TriggerDefinition): Promise<TriggerScheduleRuntime>;
 }
 export type FlowServerTemporalClient = FlowTemporalClient &
   Partial<FlowGraphTemporalClient & TriggerScheduleTemporalClient>;
@@ -117,6 +119,25 @@ export async function reconcileTimeTriggerSchedule(
   }
 }
 
+export async function describeTimeTriggerSchedule(
+  schedules: ScheduleClient,
+  trigger: TriggerDefinition,
+): Promise<TriggerScheduleRuntime> {
+  if (trigger.kind !== "time" || trigger.temporalScheduleId === null) {
+    throw new Error("Trigger time membutuhkan Temporal schedule ID.");
+  }
+  const description = await schedules.getHandle(trigger.temporalScheduleId).describe();
+  return {
+    triggerId: trigger.id,
+    scheduleId: trigger.temporalScheduleId,
+    paused: description.state.paused,
+    nextActionTimes: description.info.nextActionTimes
+      .slice(0, 20)
+      .map((value) => value.toISOString()),
+    recentActionCount: description.info.recentActions.length,
+  };
+}
+
 export interface TemporalClientOptions {
   readonly address: string;
   readonly namespace: string;
@@ -170,6 +191,9 @@ export async function createFlowTemporalClient(
     },
     async pauseTimeTrigger(scheduleId): Promise<void> {
       await schedules.getHandle(scheduleId).pause("ECORIONE Trigger disabled");
+    },
+    async describeTimeTrigger(trigger): Promise<TriggerScheduleRuntime> {
+      return describeTimeTriggerSchedule(schedules, trigger);
     },
   };
 }
