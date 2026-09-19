@@ -1,6 +1,6 @@
 # ECORIONE — Product Evolution Roadmap
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-20**
 
 Status: **CLOSED — PE-00..PE-08 PASS**
 
@@ -341,7 +341,7 @@ Project boundary
 
 ## Batch status
 
-As of **2026-09-19**:
+As of **2026-09-20**:
 
 ```text
 PE-00  CLOSED / PASS
@@ -355,4 +355,4 @@ PE-07  CLOSED / PASS
 PE-08  CLOSED / PASS
 ```
 
-PE-08 is CLOSED / PASS on PR #180 and merged main `b32d57022344ad08a59b6b7d163507c5530a7ca6`. Product Evolution PE-00 through PE-08 is closed at the documented boundaries. No Batch 13 or new Product Evolution batch is opened implicitly.
+PE-08 is CLOSED / PASS on PR #180 and merged main `b32d57022344ad08a59b6b7d163507c5530a7ca6`. Product Evolution PE-00 through PE-08 is closed at the documented boundaries. No Batch 13 or new Product Evolution batch is opened implicitly. Post-closure portability/CI cleanup (including PR #182) is maintenance and does not create a PE-09.
