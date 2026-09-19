@@ -21,6 +21,7 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - Windows runtime + installer: **VERIFIED**;
 - native Windows portability + repository EOL policy: **HARDENED / VERIFIED** (PR #182);
 - clean-checkout / CI format reproducibility: **CLOSED / PASS** (PR #183; CI #1482; Product Eval #721);
+- Windows `.cmd` index/worktree EOL reproducibility: **CLOSED / PASS** (PR #185; CI #1486; Product Eval #725; Desktop Installer #76; post-merge CI #1487 + Product Eval #726);
 - Product Evolution architecture + PE-00..PE-08 roadmap: **DOCUMENTED**;
 - PE-00: **CLOSED / PASS**;
 - PE-01: **CLOSED / PASS**;
