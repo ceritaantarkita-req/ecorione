@@ -9,6 +9,7 @@ import {
   TriggerIdSchema,
   TriggerStateChangeRequestSchema,
   TriggerUpdateRequestSchema,
+  WebhookIngressDeliverySchema,
   WorkspaceIdSchema,
   autonomyExceeds,
   makeId,
@@ -61,6 +62,13 @@ const TriggerListQuerySchema = z.object({
 const TriggerScheduleQuerySchema = z.object({
   workspaceId: WorkspaceIdSchema,
   projectId: ProjectIdSchema,
+});
+const WebhookParamsSchema = z.object({
+  hookId: z
+    .string()
+    .min(16)
+    .max(64)
+    .regex(/^[a-z0-9][a-z0-9_-]*$/),
 });
 
 export class TriggerDisabledError extends Error {
@@ -275,15 +283,12 @@ function triggerAcceptsEvent(trigger: TriggerDefinition, event: NormalizedTrigge
   }
   if (trigger.kind === "webhook") {
     const config = trigger.configuration as {
-      adapter: "github";
+      adapter: "generic";
+      hookId: string;
+      source: string;
       eventKind: string;
-      repository: string;
     };
-    return (
-      event.source === config.adapter &&
-      event.kind === config.eventKind &&
-      event.metadata.repository === config.repository
-    );
+    return event.source === config.source && event.kind === config.eventKind;
   }
   return false;
 }
@@ -481,82 +486,132 @@ export function registerTriggerRoutes(
     }
   });
 
+  async function dispatchNormalizedEvent(
+    trigger: TriggerDefinition,
+    event: NormalizedTriggerEvent,
+  ): Promise<{ readonly response: TriggerFireResponse; readonly statusCode: 200 | 202 }> {
+    if (trigger.workspaceId !== event.workspaceId) throw new TriggerWorkspaceConflictError();
+    if (trigger.projectId !== event.projectId) throw new TriggerProjectConflictError();
+    if (trigger.kind !== "event" && trigger.kind !== "webhook") {
+      throw new TriggerWrongKindError("event");
+    }
+    if (!trigger.enabled) throw new TriggerDisabledError();
+    if (!triggerAcceptsEvent(trigger, event)) {
+      throw new TriggerFlowMismatchError("Event tidak cocok dengan selector Trigger.");
+    }
+
+    await validateAuthority(options, trigger);
+    const plan = pinnedPlan(
+      graphs,
+      trigger.workspaceId,
+      trigger.projectId,
+      trigger.graphId,
+      trigger.graphVersion,
+    );
+    const eventDigest = stableKey(["normalized-event-v1", event]);
+    await evaluateTriggerPolicy(options, {
+      tool: `flow.trigger.${trigger.kind}.dispatch`,
+      actionClass: "EXECUTE",
+      triggerId: trigger.id,
+      workspaceId: trigger.workspaceId,
+      projectId: trigger.projectId,
+      autonomy: trigger.requestedAutonomy,
+      plan,
+      keyParts: [
+        trigger.kind,
+        trigger.id,
+        event.dedupeKey,
+        eventDigest,
+        trigger.graphId,
+        trigger.graphVersion,
+      ],
+    });
+
+    const ids = deterministicEventIds(trigger.id, event.dedupeKey);
+    const response = TriggerFireResponseSchema.parse({
+      triggerId: trigger.id,
+      graphId: trigger.graphId,
+      graphVersion: trigger.graphVersion,
+      workflowId: ids.workflowId,
+      operationId: ids.operationId,
+      deduplicated: false,
+    });
+    const reservation = triggers.reserveEventDelivery(
+      trigger.id,
+      event.dedupeKey,
+      event.eventId,
+      eventDigest,
+      response,
+      nowIso() as Timestamp,
+    );
+    if (reservation.state === "STARTED") {
+      return {
+        response: { ...reservation.response, deduplicated: true },
+        statusCode: 200,
+      };
+    }
+
+    await startGraphIdempotently(temporal, {
+      runId: ids.workflowId,
+      operationId: ids.operationId,
+      plan,
+      input: event.payload,
+      triggerId: trigger.id,
+      autonomy: trigger.requestedAutonomy,
+      depth: 0,
+    });
+    triggers.markEventDeliveryStarted(trigger.id, event.dedupeKey, eventDigest);
+    return {
+      response: {
+        ...reservation.response,
+        deduplicated: reservation.deduplicated,
+      },
+      statusCode: reservation.deduplicated ? 200 : 202,
+    };
+  }
+
   app.post<{ Params: { id: string } }>("/v1/triggers/:id/event", async (req, reply) => {
     const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
     const event = parseOrBadRequest(NormalizedTriggerEventSchema, req.body);
     try {
-      const trigger = triggers.require(id);
-      if (trigger.workspaceId !== event.workspaceId) throw new TriggerWorkspaceConflictError();
-      if (trigger.projectId !== event.projectId) throw new TriggerProjectConflictError();
-      if (trigger.kind !== "event" && trigger.kind !== "webhook") {
-        throw new TriggerWrongKindError("event");
-      }
-      if (!trigger.enabled) throw new TriggerDisabledError();
-      if (!triggerAcceptsEvent(trigger, event)) {
-        throw new TriggerFlowMismatchError("Event tidak cocok dengan selector Trigger.");
-      }
+      const result = await dispatchNormalizedEvent(triggers.require(id), event);
+      return reply.code(result.statusCode).send(result.response);
+    } catch (error) {
+      throw triggerError(error);
+    }
+  });
 
-      await validateAuthority(options, trigger);
-      const plan = pinnedPlan(
-        graphs,
-        trigger.workspaceId,
-        trigger.projectId,
-        trigger.graphId,
-        trigger.graphVersion,
-      );
-      const eventDigest = stableKey(["normalized-event-v1", event]);
-      await evaluateTriggerPolicy(options, {
-        tool: `flow.trigger.${trigger.kind}.dispatch`,
-        actionClass: "EXECUTE",
-        triggerId: id,
+  app.post<{ Params: { hookId: string } }>("/v1/webhooks/:hookId", async (req, reply) => {
+    const { hookId } = parseOrBadRequest(WebhookParamsSchema, req.params);
+    const body = parseOrBadRequest(WebhookIngressDeliverySchema, req.body);
+    try {
+      const trigger = triggers.findWebhookByHookId(hookId);
+      if (trigger === null) throw new NotFoundError("Webhook Trigger tidak ditemukan.");
+      const config = trigger.configuration as {
+        adapter: "generic";
+        hookId: string;
+        source: string;
+        eventKind: string;
+      };
+      const receivedAt = nowIso() as Timestamp;
+      const eventIdDigest = createHash("sha256")
+        .update(`${hookId}:${body.deliveryId}`)
+        .digest("hex")
+        .slice(0, 24);
+      const event = NormalizedTriggerEventSchema.parse({
+        eventId: `evt_webhook_${eventIdDigest}`,
+        source: config.source,
+        kind: config.eventKind,
+        occurredAt: body.occurredAt ?? receivedAt,
+        receivedAt,
         workspaceId: trigger.workspaceId,
         projectId: trigger.projectId,
-        autonomy: trigger.requestedAutonomy,
-        plan,
-        keyParts: [
-          trigger.kind,
-          id,
-          event.dedupeKey,
-          eventDigest,
-          trigger.graphId,
-          trigger.graphVersion,
-        ],
+        dedupeKey: `webhook:${hookId}:${body.deliveryId}`,
+        payload: body.payload,
+        metadata: { ...body.metadata, hookId },
       });
-
-      const ids = deterministicEventIds(id, event.dedupeKey);
-      const response = TriggerFireResponseSchema.parse({
-        triggerId: id,
-        graphId: trigger.graphId,
-        graphVersion: trigger.graphVersion,
-        workflowId: ids.workflowId,
-        operationId: ids.operationId,
-        deduplicated: false,
-      });
-      const reservation = triggers.reserveEventDelivery(
-        id,
-        event.dedupeKey,
-        event.eventId,
-        eventDigest,
-        response,
-        nowIso() as Timestamp,
-      );
-      if (reservation.state === "STARTED") {
-        return reply.code(200).send({ ...reservation.response, deduplicated: true });
-      }
-
-      await startGraphIdempotently(temporal, {
-        runId: ids.workflowId,
-        operationId: ids.operationId,
-        plan,
-        input: event.payload,
-        triggerId: trigger.id,
-        autonomy: trigger.requestedAutonomy,
-        depth: 0,
-      });
-      triggers.markEventDeliveryStarted(id, event.dedupeKey, eventDigest);
-      return reply
-        .code(reservation.deduplicated ? 200 : 202)
-        .send({ ...reservation.response, deduplicated: reservation.deduplicated });
+      const result = await dispatchNormalizedEvent(trigger, event);
+      return reply.code(result.statusCode).send(result.response);
     } catch (error) {
       throw triggerError(error);
     }
