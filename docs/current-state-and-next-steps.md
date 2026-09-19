@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-04 ACTIVE / WORK + SCHEDULE + RUNS**
+Status: **CURRENT / PE-05 ACTIVE / EVENT + WEBHOOK AUTOMATION**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00 through PE-03 are CLOSED / PASS. PE-04 Work + Schedule + Runs is ACTIVE.**
+**PE-00 through PE-04 are CLOSED / PASS. PE-05 Event/Webhook automation is ACTIVE.**
 
 ## Product Evolution status
 
@@ -18,8 +18,8 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-01 Project foundation | **CLOSED / PASS** |
 | PE-02 Project Sources | **CLOSED / PASS** |
 | PE-03 Trigger control plane | **CLOSED / PASS** |
-| PE-04 Work + Schedule + Runs | **ACTIVE** |
-| PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
+| PE-04 Work + Schedule + Runs | **CLOSED / PASS** |
+| PE-05 Event/Webhook automation | **ACTIVE** |
 | PE-06 Brain V1 | **BLOCKED BY PE-05** |
 | PE-07 Brain + Context + ECX | **BLOCKED BY PE-06** |
 | PE-08 Product closure | **BLOCKED BY PE-07** |
@@ -55,9 +55,13 @@ PR #171 is merged to `main` as `c734f00eaa791077c99557e6e89579534c43d651`; PE-02
 
 PE-03 closed on PR #172 exact head `74730e26321cac06c31243baeeafe29d5f4d75f0` and merged as `c739c09014d8aa20ca8e1b83c5b6be39b4ee649c`. Trigger metadata remains Flow-owned, Temporal remains schedule/runtime truth, and Hub remains authority/policy owner. See [verification/pe-03-trigger-control-plane-closure-2026-09-19.md](verification/pe-03-trigger-control-plane-closure-2026-09-19.md).
 
-## Active: PE-04 Work + Schedule + Runs
+## PE-04 closed boundary
 
-PE-04 is implemented on draft PR #173 / branch `pe/pe-04-work-schedule-runs-20260919`. It exposes Project-scoped Schedule, Flow links, and an `operationId`-keyed Run read projection without adding a Task domain or second execution database. Acceptance: [product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md).
+PE-04 closed on PR #173 after implementation head `c2cacbbcbee15f46ac4c5e9e43c955f5c952af43` and closure head `94936fa0704991d3536667bb8c947e9d751c813e` passed the required gates. It merged as `c08581a00a20dc6016c570a1fbb777d81e391699`. Work now exposes Project-scoped Schedule, Flow links, and an `operationId`-keyed Run read projection without a Task domain or second execution database. See [verification/pe-04-work-schedule-runs-closure-2026-09-19.md](verification/pe-04-work-schedule-runs-closure-2026-09-19.md).
+
+## Active: PE-05 Event + Webhook automation
+
+PE-05 activates the existing `event | webhook` Trigger kinds under ADR-36. Flow remains Trigger/dispatch owner, Connect remains connector credential/secret owner, Hub remains authority/policy/approval/audit, and Temporal remains durable execution owner. Polling/LLM monitors and a second queue/scheduler are out of scope. Acceptance: [product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md).
 
 ## Deferred
 
