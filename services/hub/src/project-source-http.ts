@@ -213,7 +213,7 @@ export function registerProjectSourceRoutes(
       role: body.role,
       createdAt: nowIso(),
     });
-    await resolveOwner(candidate, options);
+    const metadata = await resolveOwner(candidate, options);
 
     const result = sources.attach({
       projectId: id,
@@ -239,9 +239,14 @@ export function registerProjectSourceRoutes(
         now: candidate.createdAt as Timestamp,
       });
     }
-    return reply
-      .code(result.created ? 201 : 200)
-      .send(await viewBinding(result.binding, options));
+    return reply.code(result.created ? 201 : 200).send(
+      ProjectSourceViewSchema.parse({
+        binding: result.binding,
+        availability: "AVAILABLE",
+        metadata,
+        unavailableReason: null,
+      }),
+    );
   });
 
   app.delete<{ Params: { id: string } }>("/v1/projects/:id/sources", async (req, reply) => {
