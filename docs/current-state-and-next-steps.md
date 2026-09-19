@@ -73,7 +73,7 @@ PE-07 closed on PR #178 after implementation head `892726c20ac95dded26fdc3fd2000
 
 ## Active: PE-08 Product closure
 
-PE-08 is the final Product Evolution closure batch. It audits the PE-00..PE-07 baseline for migration consistency, Project isolation/security, restart/persistence, backup/restore/rebuild behavior, relevant Windows/runtime/installer regressions, product UX/navigation/responsive regressions, documentation convergence, and exact-head evidence.
+PE-08 is the final Product Evolution closure batch. Work is active on `pe/pe-08-product-closure-20260919` from main `82026c8a1948336b2da4e00ee4832180f68452f7`. The closure matrix explicitly covers migration/reopen behavior, Project isolation, Source binding persistence, Context policy intersections, Flow/Trigger Project boundaries, owner backup/restore, derived Brain rebuild, UX/navigation/responsive source guards, and Windows installer specification. A new integrated DR test restores Hub + Context + Flow canonical state after deliberate post-backup mutation and rebuilds Brain from the restored owners instead of persisting Brain.
 
 PE-08 is not a feature expansion batch. Production VPS/Cloudflare, AutoClick, paid hosted evidence, L4 autonomy, graph persistence, and unrelated redesign remain outside scope.
 
