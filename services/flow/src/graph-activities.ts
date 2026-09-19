@@ -111,7 +111,7 @@ export function createFlowGraphActivities(
             permissionIds: ["node.execute"] as PermissionId[],
             scope: execution.plan.graph.scope,
             sensitivity: execution.plan.graph.sensitivity,
-            autonomy: execution.autonomy,
+            autonomy: execution.autonomy ?? "L2",
           },
         }),
       );
@@ -145,7 +145,7 @@ export function createFlowGraphActivities(
           },
           scope: execution.plan.graph.scope,
           sensitivity: execution.plan.graph.sensitivity,
-          autonomy: execution.autonomy,
+          autonomy: execution.autonomy ?? "L2",
           idempotencyKey: approvalKey,
         },
       });
@@ -176,7 +176,7 @@ export function createFlowGraphActivities(
           },
           scope: execution.plan.graph.scope,
           sensitivity: execution.plan.graph.sensitivity,
-          autonomy: execution.autonomy,
+          autonomy: execution.autonomy ?? "L2",
           idempotencyKey: approvalKey,
         },
       });
@@ -209,7 +209,7 @@ export function createFlowGraphActivities(
                 : ["model.invoke", "execution.local"]) as PermissionId[],
               scope: graph.scope,
               sensitivity: graph.sensitivity,
-              autonomy: execution.autonomy,
+              autonomy: execution.autonomy ?? "L2",
             },
           }),
         );
@@ -274,7 +274,7 @@ export function createFlowGraphActivities(
               operationId,
               scope: graph.scope,
               sensitivity: graph.sensitivity,
-              autonomy: execution.autonomy,
+              autonomy: execution.autonomy ?? "L2",
               now: nowIso(),
               arguments: cfg.arguments,
             },
