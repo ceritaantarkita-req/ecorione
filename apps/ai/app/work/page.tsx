@@ -162,7 +162,9 @@ export default function WorkPage() {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<string | null>(null);
-  const [message, setMessage] = useState("Work membaca owner state langsung dari Flow, Temporal, Hub, dan RnD.");
+  const [message, setMessage] = useState(
+    "Work membaca owner state langsung dari Flow, Temporal, Hub, dan RnD.",
+  );
   const requestRef = useRef(0);
 
   const timeTriggers = useMemo(
@@ -269,7 +271,9 @@ export default function WorkPage() {
     setProjectId(chosen);
     void fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" })
       .then((response) => json<{ projects: Project[] }>(response))
-      .then((body) => setProjects(body.projects.filter((project) => project.archivedAt === null)))
+      .then((body) =>
+        setProjects(body.projects.filter((project) => project.archivedAt === null)),
+      )
       .catch(() => setProjects([]));
   }, []);
 
@@ -331,7 +335,9 @@ export default function WorkPage() {
         },
       };
       const target =
-        draft.id === null ? "/api/flow/triggers" : `/api/flow/triggers/${encodeURIComponent(draft.id)}`;
+        draft.id === null
+          ? "/api/flow/triggers"
+          : `/api/flow/triggers/${encodeURIComponent(draft.id)}`;
       const response = await fetch(target, {
         method: draft.id === null ? "POST" : "PATCH",
         headers: { "content-type": "application/json" },
@@ -345,7 +351,9 @@ export default function WorkPage() {
       setMessage(draft.id === null ? "Schedule dibuat." : "Schedule diperbarui.");
       await loadWork(projectId);
     } catch (reason) {
-      setMessage(`Schedule save gagal: ${reason instanceof Error ? reason.message : String(reason)}`);
+      setMessage(
+        `Schedule save gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
+      );
     } finally {
       setPending(null);
     }
@@ -371,7 +379,9 @@ export default function WorkPage() {
       setMessage(enabled ? "Schedule diaktifkan." : "Schedule dijeda.");
       await loadWork(projectId);
     } catch (reason) {
-      setMessage(`Schedule state gagal: ${reason instanceof Error ? reason.message : String(reason)}`);
+      setMessage(
+        `Schedule state gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
+      );
     } finally {
       setPending(null);
     }
@@ -387,7 +397,9 @@ export default function WorkPage() {
       setSelectedRun(run);
       setMessage(`Run ${operationId} dibaca dari owner projection.`);
     } catch (reason) {
-      setMessage(`Run detail gagal: ${reason instanceof Error ? reason.message : String(reason)}`);
+      setMessage(
+        `Run detail gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
+      );
     } finally {
       setPending(null);
     }
@@ -453,7 +465,9 @@ export default function WorkPage() {
             <div>
               <span className={styles.eyebrow}>Temporal-backed</span>
               <h2>Schedule</h2>
-              <p>Schedule hanyalah view/editor untuk time Trigger; Temporal tetap runtime truth.</p>
+              <p>
+                Schedule hanyalah view/editor untuk time Trigger; Temporal tetap runtime truth.
+              </p>
             </div>
             <button type="button" onClick={startCreate} disabled={graphs.length === 0}>
               New schedule
@@ -478,14 +492,18 @@ export default function WorkPage() {
             <form className={styles.editor} onSubmit={saveSchedule}>
               <div className={styles.editorTitle}>
                 <strong>{draft.id === null ? "New schedule" : "Edit schedule"}</strong>
-                <button type="button" onClick={cancelEdit}>Cancel</button>
+                <button type="button" onClick={cancelEdit}>
+                  Cancel
+                </button>
               </div>
               <label>
                 Name
                 <input
                   required
                   value={draft.name}
-                  onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, name: event.target.value }))
+                  }
                 />
               </label>
               <label>
@@ -582,7 +600,8 @@ export default function WorkPage() {
                   onChange={(event) =>
                     setDraft((current) => ({
                       ...current,
-                      requestedAutonomy: event.target.value as ScheduleDraft["requestedAutonomy"],
+                      requestedAutonomy: event.target
+                        .value as ScheduleDraft["requestedAutonomy"],
                     }))
                   }
                 >
@@ -632,11 +651,28 @@ export default function WorkPage() {
                       </span>
                     </div>
                     <dl className={styles.meta}>
-                      <div><dt>Cron</dt><dd>{config?.cronExpression ?? "—"}</dd></div>
-                      <div><dt>Timezone</dt><dd>{config?.timezone ?? "—"}</dd></div>
-                      <div><dt>Flow</dt><dd>{trigger.graphId} · v{trigger.graphVersion}</dd></div>
-                      <div><dt>Overlap</dt><dd>{config?.overlap ?? "—"}</dd></div>
-                      <div><dt>Runs</dt><dd>{relatedRuns}</dd></div>
+                      <div>
+                        <dt>Cron</dt>
+                        <dd>{config?.cronExpression ?? "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Timezone</dt>
+                        <dd>{config?.timezone ?? "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Flow</dt>
+                        <dd>
+                          {trigger.graphId} · v{trigger.graphVersion}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Overlap</dt>
+                        <dd>{config?.overlap ?? "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Runs</dt>
+                        <dd>{relatedRuns}</dd>
+                      </div>
                       <div>
                         <dt>Next</dt>
                         <dd>
@@ -647,7 +683,9 @@ export default function WorkPage() {
                       </div>
                     </dl>
                     <div className={styles.actions}>
-                      <button type="button" onClick={() => startEdit(trigger)}>Edit</button>
+                      <button type="button" onClick={() => startEdit(trigger)}>
+                        Edit
+                      </button>
                       <button
                         type="button"
                         disabled={pending !== null}
@@ -655,7 +693,9 @@ export default function WorkPage() {
                       >
                         {trigger.enabled ? "Disable" : "Enable"}
                       </button>
-                      <Link href={`/flow?graph=${encodeURIComponent(trigger.graphId)}&version=${String(trigger.graphVersion)}`}>
+                      <Link
+                        href={`/flow?graph=${encodeURIComponent(trigger.graphId)}&version=${String(trigger.graphVersion)}`}
+                      >
                         Open Flow
                       </Link>
                       <button
@@ -681,19 +721,25 @@ export default function WorkPage() {
             <div className={styles.timeline}>
               <div className={styles.timelineHead}>
                 <strong>{calendarMode.toUpperCase()}</strong>
-                <span>{visibleOccurrences.length} upcoming occurrence(s) exposed by Temporal</span>
+                <span>
+                  {visibleOccurrences.length} upcoming occurrence(s) exposed by Temporal
+                </span>
               </div>
               {visibleOccurrences.map((row) => (
                 <article key={`${row.trigger.id}-${row.when}`} className={styles.occurrence}>
                   <time dateTime={row.when}>{formatWhen(row.when, row.timezone)}</time>
                   <div>
                     <strong>{row.trigger.name}</strong>
-                    <span>{row.timezone} · {row.trigger.graphId} v{row.trigger.graphVersion}</span>
+                    <span>
+                      {row.timezone} · {row.trigger.graphId} v{row.trigger.graphVersion}
+                    </span>
                   </div>
                 </article>
               ))}
               {visibleOccurrences.length === 0 ? (
-                <div className={styles.empty}>Tidak ada occurrence Temporal pada window ini.</div>
+                <div className={styles.empty}>
+                  Tidak ada occurrence Temporal pada window ini.
+                </div>
               ) : null}
             </div>
           )}
@@ -708,22 +754,35 @@ export default function WorkPage() {
               <h2>Flows</h2>
               <p>Work menavigasi Flow; editor dan version truth tetap dimiliki Flow.</p>
             </div>
-            <Link className={styles.primaryLink} href="/flow">Open Flow editor</Link>
+            <Link className={styles.primaryLink} href="/flow">
+              Open Flow editor
+            </Link>
           </div>
           <div className={styles.tableWrap}>
             <table>
               <thead>
-                <tr><th>Name</th><th>Version</th><th>Sensitivity</th><th>Updated</th><th /></tr>
+                <tr>
+                  <th>Name</th>
+                  <th>Version</th>
+                  <th>Sensitivity</th>
+                  <th>Updated</th>
+                  <th />
+                </tr>
               </thead>
               <tbody>
                 {graphs.map((graph) => (
                   <tr key={graph.graphId}>
-                    <td><strong>{graph.name}</strong><code>{graph.graphId}</code></td>
+                    <td>
+                      <strong>{graph.name}</strong>
+                      <code>{graph.graphId}</code>
+                    </td>
                     <td>v{graph.currentVersion}</td>
                     <td>{graph.sensitivity}</td>
                     <td>{formatWhen(graph.updatedAt)}</td>
                     <td>
-                      <Link href={`/flow?graph=${encodeURIComponent(graph.graphId)}&version=${String(graph.currentVersion)}`}>
+                      <Link
+                        href={`/flow?graph=${encodeURIComponent(graph.graphId)}&version=${String(graph.currentVersion)}`}
+                      >
                         Open
                       </Link>
                     </td>
@@ -731,7 +790,9 @@ export default function WorkPage() {
                 ))}
               </tbody>
             </table>
-            {!loading && graphs.length === 0 ? <div className={styles.empty}>Belum ada Flow.</div> : null}
+            {!loading && graphs.length === 0 ? (
+              <div className={styles.empty}>Belum ada Flow.</div>
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -747,8 +808,12 @@ export default function WorkPage() {
           </div>
           {runTriggerFilter !== null ? (
             <div className={styles.filterBar}>
-              <span>Trigger filter: <code>{runTriggerFilter}</code></span>
-              <button type="button" onClick={() => setRunTriggerFilter(null)}>Clear filter</button>
+              <span>
+                Trigger filter: <code>{runTriggerFilter}</code>
+              </span>
+              <button type="button" onClick={() => setRunTriggerFilter(null)}>
+                Clear filter
+              </button>
             </div>
           ) : null}
           <div className={styles.runLayout}>
@@ -765,7 +830,9 @@ export default function WorkPage() {
                   onClick={() => void openRun(run.operationId)}
                 >
                   <span className={statusClass(run.status)}>{run.status}</span>
-                  <strong>{run.graphId} · v{run.graphVersion}</strong>
+                  <strong>
+                    {run.graphId} · v{run.graphVersion}
+                  </strong>
                   <code>{run.operationId}</code>
                   <small>{formatWhen(run.startedAt)}</small>
                 </button>
@@ -786,21 +853,51 @@ export default function WorkPage() {
                 <>
                   <div className={styles.cardHead}>
                     <div>
-                      <span className={statusClass(selectedRun.status)}>{selectedRun.status}</span>
-                      <h3>{selectedRun.graphId} · v{selectedRun.graphVersion}</h3>
+                      <span className={statusClass(selectedRun.status)}>
+                        {selectedRun.status}
+                      </span>
+                      <h3>
+                        {selectedRun.graphId} · v{selectedRun.graphVersion}
+                      </h3>
                       <code>{selectedRun.operationId}</code>
                     </div>
-                    <Link href={`/flow?graph=${encodeURIComponent(selectedRun.graphId)}&version=${String(selectedRun.graphVersion)}`}>
+                    <Link
+                      href={`/flow?graph=${encodeURIComponent(selectedRun.graphId)}&version=${String(selectedRun.graphVersion)}`}
+                    >
                       Flow
                     </Link>
                   </div>
                   <dl className={styles.meta}>
-                    <div><dt>Trigger</dt><dd>{selectedRun.triggerId ?? "Direct run"}</dd></div>
-                    <div><dt>Workflow</dt><dd>{selectedRun.temporalWorkflowId}</dd></div>
-                    <div><dt>Started</dt><dd>{formatWhen(selectedRun.startedAt)}</dd></div>
-                    <div><dt>Finished</dt><dd>{selectedRun.finishedAt ? formatWhen(selectedRun.finishedAt) : "—"}</dd></div>
-                    <div><dt>Actual cost</dt><dd>{selectedRun.cost === null ? "—" : `$${selectedRun.cost.totalActualUsd.toFixed(6)}`}</dd></div>
-                    <div><dt>Model calls</dt><dd>{selectedRun.cost?.callCount ?? "—"}</dd></div>
+                    <div>
+                      <dt>Trigger</dt>
+                      <dd>{selectedRun.triggerId ?? "Direct run"}</dd>
+                    </div>
+                    <div>
+                      <dt>Workflow</dt>
+                      <dd>{selectedRun.temporalWorkflowId}</dd>
+                    </div>
+                    <div>
+                      <dt>Started</dt>
+                      <dd>{formatWhen(selectedRun.startedAt)}</dd>
+                    </div>
+                    <div>
+                      <dt>Finished</dt>
+                      <dd>
+                        {selectedRun.finishedAt ? formatWhen(selectedRun.finishedAt) : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Actual cost</dt>
+                      <dd>
+                        {selectedRun.cost === null
+                          ? "—"
+                          : `$${selectedRun.cost.totalActualUsd.toFixed(6)}`}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Model calls</dt>
+                      <dd>{selectedRun.cost?.callCount ?? "—"}</dd>
+                    </div>
                   </dl>
 
                   <div className={styles.availability}>
@@ -834,7 +931,9 @@ export default function WorkPage() {
                       {selectedRun.actions.map((action) => (
                         <article key={action.id}>
                           <strong>{action.type}</strong>
-                          <span>{action.module} · {formatWhen(action.ts)}</span>
+                          <span>
+                            {action.module} · {formatWhen(action.ts)}
+                          </span>
                           <code>{action.operationId ?? "no operation"}</code>
                         </article>
                       ))}
@@ -842,7 +941,9 @@ export default function WorkPage() {
                   </details>
                   {selectedRun.errors.length > 0 ? (
                     <div className={styles.errors}>
-                      {selectedRun.errors.map((error) => <p key={error}>{error}</p>)}
+                      {selectedRun.errors.map((error) => (
+                        <p key={error}>{error}</p>
+                      ))}
                     </div>
                   ) : null}
                 </>
