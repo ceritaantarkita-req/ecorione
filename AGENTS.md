@@ -28,11 +28,11 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PE-05: **CLOSED / PASS**;
 - PE-06: **CLOSED / PASS**;
 - PE-07: **CLOSED / PASS**;
-- PE-08: **ACTIVE / PRODUCT CLOSURE**;
+- PE-08: **CLOSED / PASS**;
 - production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
-Do not create Batch 13. PE-08 Product closure is active; do not pull new feature scope into closure.
+Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any new product scope requires an explicit roadmap/decision.
 
 ## Architecture invariants
 
@@ -70,7 +70,7 @@ Do not create Batch 13. PE-08 Product closure is active; do not pull new feature
 
 ## Current active scope
 
-PE-08 Product closure is active. Audit PE-00..PE-07 as one reproducible baseline following the PE-08 acceptance contract and roadmap. Prioritize migration/isolation/security, restart/persistence, backup/restore/rebuild, runtime/UX regression, documentation convergence, and exact-head evidence. Fix only reproducible closure blockers; do not hide new feature work inside PE-08. Production VPS/Cloudflare, AutoClick, L4 autonomy, graph persistence, and paid hosted evidence remain outside this scope unless separately authorized.
+There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries. Preserve the closed architecture invariants and do not reopen Product Evolution, create Batch 13, activate production VPS/Cloudflare, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
 
 ## Git / closure discipline
 
