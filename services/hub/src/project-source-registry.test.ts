@@ -16,7 +16,7 @@ afterEach(() => {
 function createProject(projects: ProjectRegistry, name: string) {
   return projects.create(
     {
-      workspaceId: "ws_personal",
+      workspaceId: "ws_personal" as never,
       name,
       description: "",
       instruction: "",
