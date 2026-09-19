@@ -114,7 +114,14 @@ const DecideBodySchema = z.object({
   note: z.string().max(1024).optional(),
 });
 const ApprovalLookupQuerySchema = z.object({ idempotencyKey: z.string().min(1).max(512) });
-const AuditQuerySchema = z.object({ operationId: z.string().min(1).optional() });
+const AuditQuerySchema = z
+  .object({
+    operationId: OperationIdSchema.optional(),
+    operationPrefix: OperationIdSchema.optional(),
+  })
+  .refine((value) => !(value.operationId !== undefined && value.operationPrefix !== undefined), {
+    message: "Gunakan operationId atau operationPrefix, bukan keduanya.",
+  });
 const AuditWriteSchema = z.object({
   type: AuditEventTypeSchema,
   operationId: OperationIdSchema.nullable(),
@@ -384,7 +391,12 @@ export function buildHubServer(
 
   app.get("/v1/audit", async (req) => {
     const q = parseOrBadRequest(AuditQuerySchema, req.query);
-    return { events: repo.listAuditEvents({ operationId: q.operationId }) };
+    return {
+      events: repo.listAuditEvents({
+        operationId: q.operationId,
+        operationPrefix: q.operationPrefix,
+      }),
+    };
   });
   return app;
 }
