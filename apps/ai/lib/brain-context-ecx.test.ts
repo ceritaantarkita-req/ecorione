@@ -166,8 +166,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
   it("uses authorized Brain source neighborhood as a Context constraint before ECX", async () => {
     const calls: Array<{ url: string; body: any }> = [];
     const alpha = fact("mem_pe07alpha", "PE07 alpha authoritative", SOURCE_URI);
-    const projectNodeId =
-      "project:" + createHash("sha256").update(PROJECT_ID).digest("hex");
+    const projectNodeId = "project:" + createHash("sha256").update(PROJECT_ID).digest("hex");
 
     vi.stubGlobal(
       "fetch",
@@ -265,7 +264,8 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
         const url = String(input);
         calls.push(url);
         if (url.includes("/v1/projects/") && !url.includes("/sources")) return json(project());
-        if (url.includes("/v1/projects/") && url.includes("/sources")) return json({ sources: [] });
+        if (url.includes("/v1/projects/") && url.includes("/sources"))
+          return json({ sources: [] });
         if (url.includes("/v1/graphs?")) return json({ graphs: [] });
         if (url.includes("/v1/triggers?")) return json({ triggers: [] });
         if (url.includes("/v1/runs?")) return json({ runs: [] });
