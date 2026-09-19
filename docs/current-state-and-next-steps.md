@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-08 ACTIVE / CLOSURE CANDIDATE**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED**
 
 ## Current verdict
 
-The original Batch/W/F6 baseline remains closed. Product Evolution is active.
+The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
-**PE-00 through PE-07 are CLOSED / PASS. PE-08 Product closure is ACTIVE.**
+**PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
 ## Product Evolution status
 
@@ -22,7 +22,7 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-05 Event/Webhook automation | **CLOSED / PASS** |
 | PE-06 Brain V1 | **CLOSED / PASS** |
 | PE-07 Brain + Context + ECX | **CLOSED / PASS** |
-| PE-08 Product closure | **ACTIVE** |
+| PE-08 Product closure | **CLOSED / PASS** |
 
 ## PE-02 delivered boundary
 
@@ -71,11 +71,11 @@ PE-06 closed on PR #176 after implementation head `66c7909572a1410095916843f8f46
 
 PE-07 closed on PR #178 after implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d` and closure head `e443a6e9d10b24b7c1de7bcb315b038cf6425a45` passed the required CI, Product Eval, and MCP gates. It merged as `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. The bounded deterministic evidence measured 66.67% median candidate reduction across three fixtures while retaining 100% of required references/provenance and admitting zero unauthorized refs. See [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md).
 
-## Active: PE-08 Product closure
+## PE-08 closed boundary
 
 PE-08 is the final Product Evolution closure batch. Work is active on `pe/pe-08-product-closure-20260919` from main `82026c8a1948336b2da4e00ee4832180f68452f7`. The closure matrix explicitly covers migration/reopen behavior, Project isolation, Source binding persistence, Context policy intersections, Flow/Trigger Project boundaries, owner backup/restore, derived Brain rebuild, UX/navigation/responsive source guards, and Windows installer specification. A new integrated DR test restores Hub + Context + Flow canonical state after deliberate post-backup mutation and rebuilds Brain from the restored owners instead of persisting Brain.
 
-Reviewed implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed CI #1469 and Product Eval #708. Product Eval ran 36 files / 148 tests; normal CI ran 191 files PASS + 1 skipped and 991 tests PASS + 2 skipped, plus Phase 4 3/3, production-ops, security/toolchain/container reviews, and production build. PE-08 is now a closure candidate pending exact-head documentation gates and merge.
+Reviewed implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed CI #1469 and Product Eval #708. Closure head `5d1b1c80168a26ae38af33d862a6fa26b019802c` passed CI #1473 and Product Eval #712. PR #180 merged as `b32d57022344ad08a59b6b7d163507c5530a7ca6`. Product Eval ran 36 files / 148 tests; normal CI ran 191 files PASS + 1 skipped and 991 tests PASS + 2 skipped, plus Phase 4 3/3, production-ops, security/toolchain/container reviews, Windows installer specification/acceptance tests, and production build.
 
 PE-08 is not a feature expansion batch. Production VPS/Cloudflare, rendered local browser walkthrough, AutoClick, paid hosted evidence, L4 autonomy, graph persistence, and unrelated redesign remain outside scope.
 
