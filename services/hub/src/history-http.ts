@@ -95,9 +95,9 @@ export function registerHistoryRoutes(app: FastifyInstance, ledger: HistoryLedge
     const sessions = ledger
       .listSessions(query.scope, query.projectId, query.workspaceId)
       .filter((session) => {
-      if (sensitivityRank(session.sensitivity) > sensitivityRank(query.maxSensitivity))
-        return false;
-      if (query.hostedEligible && !maySendToHosted(session.syncClass)) return false;
+        if (sensitivityRank(session.sensitivity) > sensitivityRank(query.maxSensitivity))
+          return false;
+        if (query.hostedEligible && !maySendToHosted(session.syncClass)) return false;
         return true;
       });
     return { sessions };
