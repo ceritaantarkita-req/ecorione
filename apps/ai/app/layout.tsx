@@ -35,7 +35,7 @@ const appFontTokens = {
 export const metadata: Metadata = {
   title: "ecorione — Ai",
   description:
-    "Workspace local-first ecorione untuk Ai, Space, Flow, Operations, dan pengaturan runtime.",
+    "Workspace local-first ecorione untuk Ai, Projects, Work, Brain, Space, Flow, Operations, dan pengaturan runtime.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
