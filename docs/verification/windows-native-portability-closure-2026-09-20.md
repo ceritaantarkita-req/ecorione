@@ -78,6 +78,18 @@ Production build      PASS
 
 This follow-up is repository hygiene and reproducibility hardening only; it does not change ECORIONE product scope.
 
+Final closure evidence:
+
+```text
+PR                    #183
+final closure head    451c3b45366ca42004d6c5af53f59c475e911e6f
+CI                    35458911349 / #1482 PASS
+Product Eval          35458911469 / #721 PASS
+merge main            4980b3ceb149be58788467d2e11769de12977d5a
+```
+
+PR #183 is merged. Clean-checkout reproducibility is CLOSED / PASS.
+
 ## Boundary
 
 Still deferred/outside this closure:

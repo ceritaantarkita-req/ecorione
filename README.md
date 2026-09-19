@@ -69,7 +69,7 @@ PE-08 Product closure
 
 Read [docs/product-evolution-architecture.md](docs/product-evolution-architecture.md), [docs/product-evolution-roadmap.md](docs/product-evolution-roadmap.md), and [docs/product-evolution-agent-guide.md](docs/product-evolution-agent-guide.md).
 
-PE-08 Product closure is CLOSED / PASS on PR #180. Product Evolution PE-00 through PE-08 is complete at the documented boundaries; no Batch 13 is opened. Native Windows portability hardening was merged through PR #182 after Windows-local verification plus CI #1477 and Product Eval #716 passed.
+PE-08 Product closure is CLOSED / PASS on PR #180. Product Evolution PE-00 through PE-08 is complete at the documented boundaries; no Batch 13 is opened. Native Windows portability hardening was merged through PR #182 after Windows-local verification plus CI #1477 and Product Eval #716 passed. Clean-checkout reproducibility then closed on PR #183: canonical formatting is committed and CI now validates source without a pre-format mutation; exact closure head passed CI #1482 and Product Eval #721.
 
 ## Local development
 

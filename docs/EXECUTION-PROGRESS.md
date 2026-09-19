@@ -36,6 +36,8 @@ PR #182 (`108781b5d53034462393f06d5e9cb36e9c5d5cf5`) hardened native Windows exe
 
 This maintenance closure does not open PE-09 or Batch 13.
 
+Clean-checkout reproducibility then closed on PR #183. Final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 and Product Eval #721 and merged as `4980b3ceb149be58788467d2e11769de12977d5a`. The normal CI path now performs read-only `format:check` against committed canonical formatting; it no longer rewrites source first.
+
 ## Latest Product Evolution closure
 
 PE-07 closed on PR #178 implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d`, closure head `e443a6e9d10b24b7c1de7bcb315b038cf6425a45`, and merged as `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. Implementation and closure heads passed CI, Product Eval, and MCP acceptance. Bounded deterministic evidence reported 66.67% median candidate reduction, 100% required-reference/provenance retention, and zero unauthorized refs.
