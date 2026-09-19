@@ -55,7 +55,9 @@ jobs:
             "apps/ai/lib/brain-projection.ts" \
             "evals/pe07-brain-context-ecx.test.ts" \
             "packages/shared-schema/src/brain.ts" \
-            "services/context/src/retrieval.ts"
+            "services/context/src/retrieval.ts" \
+            "evals/agentic-cases.json" \
+            "evals/ecx-selector-heldout.json"
           for file in \
             "apps/ai/app/api/brain/context-pack/route.ts" \
             "apps/ai/lib/brain-context-ecx.test.ts" \
@@ -64,7 +66,9 @@ jobs:
             "apps/ai/lib/brain-projection.ts" \
             "evals/pe07-brain-context-ecx.test.ts" \
             "packages/shared-schema/src/brain.ts" \
-            "services/context/src/retrieval.ts"; do
+            "services/context/src/retrieval.ts" \
+            "evals/agentic-cases.json" \
+            "evals/ecx-selector-heldout.json"; do
             echo "----- PE07_FORMATTED:${file} -----"
             base64 -w0 "${file}"
             echo
