@@ -29,13 +29,25 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: PE-03 one-file formatter
+      - name: PE-04 formatter capture
         run: |
-          pnpm exec prettier --write "services/flow/src/graph-project-isolation.test.ts"
-          echo "----- PE03_ONE_FILE -----"
-          base64 -w0 "services/flow/src/graph-project-isolation.test.ts"
-          echo
-          echo "----- PE03_ONE_FILE_END -----"
+          files=(
+            "apps/ai/app/work/page.tsx"
+            "apps/ai/app/work/Work.module.css"
+            "packages/shared-schema/src/trigger.ts"
+            "services/flow/src/graph-activities.ts"
+            "services/flow/src/run-projection.ts"
+            "services/flow/src/workflows.ts"
+            "services/hub/src/http.ts"
+            "services/hub/src/repository.ts"
+          )
+          pnpm exec prettier --write "${files[@]}"
+          for file in "${files[@]}"; do
+            echo "----- PE04_FORMATTED:${file} -----"
+            base64 -w0 "${file}"
+            echo
+            echo "----- PE04_FORMATTED_END -----"
+          done
 
       - name: Format
         run: pnpm run format:check
