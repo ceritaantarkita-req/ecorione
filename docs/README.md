@@ -17,9 +17,10 @@ This file is the single navigation entry point for repository documentation. If 
 9. **[product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md)** — closed PE-04 Work/Schedule/Runs contract.
 10. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — closed PE-05 Event/Webhook contract.
 11. **[product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md)** — closed PE-06 Brain V1 contract.
-12. **[product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md)** — active PE-07 Brain + Context + ECX contract.
-13. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
-14. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
+12. **[product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md)** — closed PE-07 Brain + Context + ECX contract.
+13. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — active PE-08 Product closure contract.
+14. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
+15. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
 15. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
 ## Source-of-truth precedence
@@ -55,10 +56,10 @@ As of 2026-09-19:
 - PE-04: **CLOSED / PASS**;
 - PE-05: **CLOSED / PASS**;
 - PE-06: **CLOSED / PASS**;
-- PE-07: **ACTIVE**;
-- PE-08: **BLOCKED BY PE-07**.
+- PE-07: **CLOSED / PASS**;
+- PE-08: **ACTIVE / PRODUCT CLOSURE**.
 
-PE-07 Brain + Context + ECX is active. Use ADR-38 + [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md) as the implementation/closure contract.
+PE-07 Brain + Context + ECX is CLOSED / PASS. PE-08 Product closure is active; use [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md) as the closure contract.
 
 ## Architecture and product reference
 
