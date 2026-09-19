@@ -391,9 +391,14 @@ export default function WorkPage() {
     if (pending !== null) return;
     setPending(operationId);
     try {
-      const run = await fetch(`/api/flow/runs/${encodeURIComponent(operationId)}`, {
-        cache: "no-store",
-      }).then((response) => json<RunProjection>(response));
+      const query = new URLSearchParams({
+        workspaceId: WORKSPACE_ID,
+        projectId,
+      });
+      const run = await fetch(
+        `/api/flow/runs/${encodeURIComponent(operationId)}?${query}`,
+        { cache: "no-store" },
+      ).then((response) => json<RunProjection>(response));
       setSelectedRun(run);
       setMessage(`Run ${operationId} dibaca dari owner projection.`);
     } catch (reason) {
