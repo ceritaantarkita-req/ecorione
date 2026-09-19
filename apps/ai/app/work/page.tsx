@@ -395,10 +395,9 @@ export default function WorkPage() {
         workspaceId: WORKSPACE_ID,
         projectId,
       });
-      const run = await fetch(
-        `/api/flow/runs/${encodeURIComponent(operationId)}?${query}`,
-        { cache: "no-store" },
-      ).then((response) => json<RunProjection>(response));
+      const run = await fetch(`/api/flow/runs/${encodeURIComponent(operationId)}?${query}`, {
+        cache: "no-store",
+      }).then((response) => json<RunProjection>(response));
       setSelectedRun(run);
       setMessage(`Run ${operationId} dibaca dari owner projection.`);
     } catch (reason) {
