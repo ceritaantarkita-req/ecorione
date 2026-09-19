@@ -47,6 +47,29 @@ jobs:
             echo
             echo "----- PE06_FORMATTED_END:${file} -----"
           done
+          pnpm exec prettier --write \
+            "apps/ai/app/api/brain/context-pack/route.ts" \
+            "apps/ai/lib/brain-context-ecx.test.ts" \
+            "apps/ai/lib/brain-context-ecx.ts" \
+            "apps/ai/lib/brain-neighborhood.test.ts" \
+            "apps/ai/lib/brain-projection.ts" \
+            "evals/pe07-brain-context-ecx.test.ts" \
+            "packages/shared-schema/src/brain.ts" \
+            "services/context/src/retrieval.ts"
+          for file in \
+            "apps/ai/app/api/brain/context-pack/route.ts" \
+            "apps/ai/lib/brain-context-ecx.test.ts" \
+            "apps/ai/lib/brain-context-ecx.ts" \
+            "apps/ai/lib/brain-neighborhood.test.ts" \
+            "apps/ai/lib/brain-projection.ts" \
+            "evals/pe07-brain-context-ecx.test.ts" \
+            "packages/shared-schema/src/brain.ts" \
+            "services/context/src/retrieval.ts"; do
+            echo "----- PE07_FORMATTED:${file} -----"
+            base64 -w0 "${file}"
+            echo
+            echo "----- PE07_FORMATTED_END:${file} -----"
+          done
 
       - name: Format
         run: pnpm run format:check
