@@ -195,7 +195,6 @@ export const TriggerFireResponseSchema = z
   .strict();
 export type TriggerFireResponse = z.infer<typeof TriggerFireResponseSchema>;
 
-
 export const TriggerScheduleRuntimeSchema = z
   .object({
     triggerId: TriggerIdSchema,
