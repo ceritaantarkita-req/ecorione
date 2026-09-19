@@ -411,6 +411,36 @@
 
 .tableWrap a { color: var(--accent); }
 
+.filterBar {
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--surface);
+  padding: 8px 10px;
+  color: var(--text-muted);
+  font: 9px var(--font-mono);
+}
+
+.filterBar code {
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.filterBar button {
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  padding: 5px 8px;
+  cursor: pointer;
+  font: 8px var(--font-mono);
+}
+
 .runLayout {
   min-width: 0;
   display: grid;
@@ -576,6 +606,8 @@
 
   .occurrence { grid-template-columns: minmax(0, 1fr); }
 
+  .filterBar { align-items: stretch; flex-direction: column; }
+  .filterBar button { width: 100%; }
   .runLayout { grid-template-columns: minmax(0, 1fr); }
 
   .runList { max-height: 42dvh; }
