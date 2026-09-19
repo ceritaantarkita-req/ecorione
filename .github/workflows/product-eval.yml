@@ -46,6 +46,7 @@ jobs:
             apps/ai/app/api/chat/route.test.ts \
             apps/ai/app/api/projects/route.test.ts \
             apps/ai/app/api/brain/route.test.ts \
+            apps/ai/lib/brain-projection.test.ts \
             test/pe06-brain-source-contract.test.ts \
             test/pe06-brain-owner-runtime.test.ts \
             apps/ai/app/api/projects/[id]/archive/route.test.ts \
