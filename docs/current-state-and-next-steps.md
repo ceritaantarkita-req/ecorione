@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-07 ACTIVE / CLOSURE CANDIDATE**
+Status: **CURRENT / PE-08 ACTIVE / PRODUCT CLOSURE**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00 through PE-06 are CLOSED / PASS. PE-07 Brain + Context + ECX is ACTIVE.**
+**PE-00 through PE-07 are CLOSED / PASS. PE-08 Product closure is ACTIVE.**
 
 ## Product Evolution status
 
@@ -21,8 +21,8 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-04 Work + Schedule + Runs | **CLOSED / PASS** |
 | PE-05 Event/Webhook automation | **CLOSED / PASS** |
 | PE-06 Brain V1 | **CLOSED / PASS** |
-| PE-07 Brain + Context + ECX | **ACTIVE — CLOSURE CANDIDATE** |
-| PE-08 Product closure | **BLOCKED BY PE-07** |
+| PE-07 Brain + Context + ECX | **CLOSED / PASS** |
+| PE-08 Product closure | **ACTIVE** |
 
 ## PE-02 delivered boundary
 
@@ -67,9 +67,17 @@ PE-05 closed on PR #174 after implementation head `b3fa55e689548b5a72c47b3316822
 
 PE-06 closed on PR #176 after implementation head `66c7909572a1410095916843f8f46a385ecb628b` and closure head `25508dd1cef5d8ebb8846448c7732ddde7866a59` passed the required gates. It merged as `d54ad62c303847b23634ba33aead4749f21bf1d0`. Brain now exposes a Project-scoped deterministic projection over Project, Source, Flow, Trigger, and Run owner contracts with authorization-before-disclosure, sibling-Project isolation, rebuildability proof, and no graph database/canonical Brain store. See [verification/pe-06-brain-v1-closure-2026-09-19.md](verification/pe-06-brain-v1-closure-2026-09-19.md).
 
-## Active: PE-07 Brain + Context + ECX
+## PE-07 closed boundary
 
-PE-07 measures whether the closed Brain projection can safely narrow candidates before existing Context retrieval and ECX `semantic-v1` selection. Implementation is active on `pe/pe-07-brain-context-ecx-20260919` from main `ffa1531a12a1149d3dfceaea8f82e53619e938d4`. The current design derives bounded URL-source constraints from an authorized Brain neighborhood, intersects them inside Context only after normal Project/sensitivity/syncClass/invalidation authorization, and passes only Context hits to ECX. Baseline omits the Brain constraint; an explicit empty constraint is fail-closed. The first evidence lane is deterministic/no-model/no-paid-provider, with thresholds frozen before the closure-grade run. Reviewed implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d` passed CI #1457, Product Eval #696, and MCP #855. The measured lane retained 100% of required references and provenance with zero unauthorized references while reducing candidates 3 -> 1 in all three fixtures (66.67% median reduction). PE-07 remains active until the documentation closure head passes and PR #178 merges. Closure evidence: [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md). Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).
+PE-07 closed on PR #178 after implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d` and closure head `e443a6e9d10b24b7c1de7bcb315b038cf6425a45` passed the required CI, Product Eval, and MCP gates. It merged as `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. The bounded deterministic evidence measured 66.67% median candidate reduction across three fixtures while retaining 100% of required references/provenance and admitting zero unauthorized refs. See [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md).
+
+## Active: PE-08 Product closure
+
+PE-08 is the final Product Evolution closure batch. It audits the PE-00..PE-07 baseline for migration consistency, Project isolation/security, restart/persistence, backup/restore/rebuild behavior, relevant Windows/runtime/installer regressions, product UX/navigation/responsive regressions, documentation convergence, and exact-head evidence.
+
+PE-08 is not a feature expansion batch. Production VPS/Cloudflare, AutoClick, paid hosted evidence, L4 autonomy, graph persistence, and unrelated redesign remain outside scope.
+
+Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
 
 ## Deferred
 
