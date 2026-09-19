@@ -52,7 +52,11 @@ function mapProjectError(error: unknown): unknown {
 }
 
 function ownerUnavailable(owner: string, error: unknown): never {
-  if (error instanceof RemoteServiceError && error.statusCode >= 400 && error.statusCode < 500) {
+  if (
+    error instanceof RemoteServiceError &&
+    error.statusCode >= 400 &&
+    error.statusCode < 500
+  ) {
     throw new NotFoundError(`${owner} source tidak tersedia atau tidak diizinkan.`);
   }
   throw new BadGatewayError(`${owner} source owner tidak dapat diverifikasi.`);
@@ -223,9 +227,9 @@ export function registerProjectSourceRoutes(
         now: candidate.createdAt as Timestamp,
       });
     }
-    return reply.code(result.created ? 201 : 200).send(
-      await viewBinding(result.binding, options),
-    );
+    return reply
+      .code(result.created ? 201 : 200)
+      .send(await viewBinding(result.binding, options));
   });
 
   app.delete<{ Params: { id: string } }>("/v1/projects/:id/sources", async (req, reply) => {
