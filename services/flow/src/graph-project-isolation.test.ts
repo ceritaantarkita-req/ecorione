@@ -1,9 +1,6 @@
 import { MockAgent, setGlobalDispatcher } from "undici";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  FlowGraphDocumentSchema,
-  type FlowGraphExecutionInput,
-} from "@ecorione/shared-schema";
+import { FlowGraphDocumentSchema, type FlowGraphExecutionInput } from "@ecorione/shared-schema";
 import { createFlowGraphActivities } from "./graph-activities.js";
 import { validateAndCompileFlowGraph } from "./node-registry.js";
 
@@ -24,11 +21,7 @@ function node(id: string, kind: string, config: Record<string, unknown> = {}) {
   };
 }
 
-function graph(
-  projectId: string,
-  id: string,
-  extraNode: ReturnType<typeof node>,
-) {
+function graph(projectId: string, id: string, extraNode: ReturnType<typeof node>) {
   return FlowGraphDocumentSchema.parse({
     id,
     workspaceId: "ws_personal",
@@ -50,9 +43,7 @@ function graph(
   });
 }
 
-function executionFor(
-  graphDocument: ReturnType<typeof graph>,
-): FlowGraphExecutionInput {
+function executionFor(graphDocument: ReturnType<typeof graph>): FlowGraphExecutionInput {
   const validation = validateAndCompileFlowGraph(graphDocument, 1);
   if (!validation.valid || validation.plan === null)
     throw new Error("Graph failed compilation.");
@@ -122,15 +113,11 @@ describe("PE-03 Flow Project isolation", () => {
         node("node_memory001", "memory", { query: "remember project" }),
       ),
     );
-    const compiled = execution.plan.nodes.find(
-      (item) => item.node.id === "node_memory001",
-    );
+    const compiled = execution.plan.nodes.find((item) => item.node.id === "node_memory001");
     if (compiled === undefined) throw new Error("Memory node missing.");
 
     const runtime = activities();
-    await expect(
-      runtime.authorizeGraphNode({ execution, compiled }),
-    ).resolves.toBeUndefined();
+    await expect(runtime.authorizeGraphNode({ execution, compiled })).resolves.toBeUndefined();
     await expect(
       runtime.executeGraphNode({ execution, compiled, input: null }),
     ).resolves.toEqual({ hits: [], diagnostics: {} });
@@ -170,13 +157,11 @@ describe("PE-03 Flow Project isolation", () => {
         }),
       ),
     );
-    const compiled = execution.plan.nodes.find(
-      (item) => item.node.id === "node_subflow01",
-    );
+    const compiled = execution.plan.nodes.find((item) => item.node.id === "node_subflow01");
     if (compiled === undefined) throw new Error("Subflow node missing.");
 
-    await expect(
-      activities().resolveSubflow({ execution, compiled }),
-    ).rejects.toThrow("Subflow cross-project ditolak");
+    await expect(activities().resolveSubflow({ execution, compiled })).rejects.toThrow(
+      "Subflow cross-project ditolak",
+    );
   });
 });
