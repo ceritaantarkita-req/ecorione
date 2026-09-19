@@ -59,7 +59,7 @@ As of 2026-09-19:
 - PE-07: **CLOSED / PASS**;
 - PE-08: **CLOSED / PASS**.
 
-PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed; there is no active Product Evolution implementation queue. Post-closure native-Windows portability hardening is merged via PR #182. Clean-checkout/CI reproducibility is CLOSED / PASS via PR #183 (CI #1482, Product Eval #721, merge `4980b3ceb149be58788467d2e11769de12977d5a`). These are repository hardening, not a new PE batch.
+PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed; there is no active Product Evolution implementation queue. Post-closure native-Windows portability hardening is merged via PR #182. Clean-checkout/CI reproducibility is CLOSED / PASS via PR #183 (CI #1482, Product Eval #721, merge `4980b3ceb149be58788467d2e11769de12977d5a`). Windows `.cmd` canonical-index normalization is also CLOSED / PASS via PR #185 (CI #1486, Product Eval #725, Desktop Installer #76, merge `4194e89a2b0611897969eaca2cb9c2b4b360c774`). These are repository hardening, not a new PE batch.
 
 ## Architecture and product reference
 
