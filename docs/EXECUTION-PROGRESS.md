@@ -1,6 +1,6 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-20**
 
 Status: **CURRENT SUMMARY**
 
@@ -13,6 +13,7 @@ Status: **CURRENT SUMMARY**
 | F6-E01 through F6-E08 | **CLOSED / REPO-SIDE PASS** |
 | Production/self-host repository baseline | **READY** |
 | Windows runtime + installer | **VERIFIED** |
+| Native Windows portability / EOL policy | **CLOSED / PASS (PR #182)** |
 
 ## Product Evolution
 
@@ -29,7 +30,13 @@ Status: **CURRENT SUMMARY**
 | PE-07 Brain + Context + ECX | **CLOSED / PASS** |
 | PE-08 Product closure | **CLOSED / PASS** |
 
-## Latest closure
+## Latest maintenance closure
+
+PR #182 (`108781b5d53034462393f06d5e9cb36e9c5d5cf5`) hardened native Windows execution and merged as `3461951414f72c8f183527e3d28eec20dd383d45` after CI #1477 and Product Eval #716 passed. Local Windows validation passed Prettier, lint, typecheck, secret scan, production build, the production Bash syntax gate through explicit MSYS Bash, and the full 191-file / 990-test normal suite with zero failures.
+
+This maintenance closure does not open PE-09 or Batch 13.
+
+## Latest Product Evolution closure
 
 PE-07 closed on PR #178 implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d`, closure head `e443a6e9d10b24b7c1de7bcb315b038cf6425a45`, and merged as `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. Implementation and closure heads passed CI, Product Eval, and MCP acceptance. Bounded deterministic evidence reported 66.67% median candidate reduction, 100% required-reference/provenance retention, and zero unauthorized refs.
 

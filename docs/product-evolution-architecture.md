@@ -1,6 +1,6 @@
 # ECORIONE — Product Evolution Architecture
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-20**
 
 Status: **CANONICAL DESIGN / PE-00..PE-08 CLOSED**
 
@@ -504,4 +504,4 @@ PE-00 converted the following into accepted ADRs/contracts before feature implem
 7. Run projection source-of-truth mapping;
 8. Brain projection/privacy boundary.
 
-PE-00 through PE-06 are closed. PE-07 is the active bounded implementation batch under ADR-38 and the PE-07 acceptance contract; PE-08 remains blocked by sequence.
+PE-00 through PE-08 are CLOSED / PASS at their documented boundaries. No PE batch is active. Reopening Product Evolution requires an explicit new roadmap/decision; portability, CI, documentation, and release hardening do not implicitly create PE-09 or Batch 13.

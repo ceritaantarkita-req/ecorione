@@ -1,6 +1,6 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-20**
 
 Status: **CURRENT / PRODUCT EVOLUTION CLOSED**
 
@@ -9,6 +9,27 @@ Status: **CURRENT / PRODUCT EVOLUTION CLOSED**
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## Post-closure repository hardening
+
+Native Windows portability was repaired and merged through PR #182:
+
+```text
+PR                              #182
+reviewed head                   108781b5d53034462393f06d5e9cb36e9c5d5cf5
+PR CI                           #1477 PASS
+PR Product Eval                 #716 PASS
+merge main                      3461951414f72c8f183527e3d28eec20dd383d45
+Windows local normal suite      191 files PASS + 1 skipped
+Windows local tests             990 PASS + 3 skipped
+Windows production-shell check  5/5 PASS with explicit MSYS Bash
+```
+
+The hardening adds deterministic line-ending policy, platform-independent desktop path assertions, Node-native Tier-0 `pwd`/`ls`/`cat`, and an explicit `ECORIONE_BASH` override for Bash syntax validation on Windows. This does not reopen Product Evolution or change owner/security architecture.
+
+Evidence: [verification/windows-native-portability-closure-2026-09-20.md](verification/windows-native-portability-closure-2026-09-20.md).
+
+Clean-checkout reproducibility hardening also passed on PR #183 implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` with CI #1479 and Product Eval #718. CI no longer rewrites those three historical PE test files before `format:check`.
 
 ## Product Evolution status
 

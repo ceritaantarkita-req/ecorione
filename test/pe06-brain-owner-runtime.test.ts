@@ -215,10 +215,7 @@ describe("PE-06 Brain real-owner runtime acceptance", () => {
       `Flow:${personalFlow.version.graphId}`,
     ]);
     expect(nodeIds(first)).not.toContain(`Flow:${siblingFlow.version.graphId}`);
-    expect(first.edges.map((edge) => edge.type)).toEqual([
-      "BELONGS_TO",
-      "BELONGS_TO",
-    ]);
+    expect(first.edges.map((edge) => edge.type)).toEqual(["BELONGS_TO", "BELONGS_TO"]);
 
     const projectNode = first.nodes.find((node) => node.type === "Project");
     const sourceNode = first.nodes.find((node) => node.type === "Source");

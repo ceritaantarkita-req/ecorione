@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-20**
 
 This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
 
@@ -21,7 +21,7 @@ This file is the single navigation entry point for repository documentation. If 
 13. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — closed PE-08 Product closure contract.
 14. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
 15. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
-15. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
+16. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
 ## Source-of-truth precedence
 
@@ -59,7 +59,7 @@ As of 2026-09-19:
 - PE-07: **CLOSED / PASS**;
 - PE-08: **CLOSED / PASS**.
 
-PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed; there is no active Product Evolution implementation queue.
+PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed; there is no active Product Evolution implementation queue. Post-closure native-Windows portability hardening is merged via PR #182; clean-checkout/CI reproducibility is maintained as repository hardening, not a new PE batch.
 
 ## Architecture and product reference
 

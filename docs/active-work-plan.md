@@ -1,10 +1,25 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / NO ACTIVE PE BATCH**
+Status: **PRODUCT EVOLUTION CLOSED / REPOSITORY HARDENING ONLY / NO ACTIVE PE BATCH**
 
-## Latest closed item
+## Latest repository-hardening closure
+
+**Native Windows portability — PR #182**
+
+```text
+head                 108781b5d53034462393f06d5e9cb36e9c5d5cf5
+CI                   #1477 PASS
+Product Eval         #716 PASS
+merge main           3461951414f72c8f183527e3d28eec20dd383d45
+Windows suite        191 files PASS + 1 skipped
+Windows tests        990 PASS + 3 skipped
+```
+
+This is maintenance hardening, not PE-09 or Batch 13. The clean-checkout follow-up is CLOSED / PASS on PR #183 implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb`: CI #1479 and Product Eval #718 passed after the historical CI formatter mutation was removed and canonical formatting was committed.
+
+## Latest Product Evolution closure
 
 **PE-08 — Product closure**
 

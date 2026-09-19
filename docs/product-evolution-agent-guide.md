@@ -1,6 +1,6 @@
 # ECORIONE — Product Evolution Agent Guide
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-20**
 
 Status: **MANDATORY EXECUTION GUIDE FOR PE WORK**
 
@@ -18,6 +18,8 @@ Read first:
 ## The rule
 
 **One PE batch at a time. One bounded branch/PR at a time. No hidden redesign.**
+
+PE-00 through PE-08 are currently CLOSED / PASS. This guide remains the procedure if a future PE scope is explicitly opened; maintenance hardening must not be mislabeled as a new PE batch.
 
 ## Standard batch procedure
 

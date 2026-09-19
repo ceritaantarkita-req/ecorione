@@ -15,3 +15,5 @@ Use [../current-state-and-next-steps.md](../current-state-and-next-steps.md) for
 Do not “clean up” a historical failure by rewriting its original result. If later work fixes the issue, record that in a later verification file and in the current-state docs.
 
 W18 paid evidence is closed; do not rerun it merely to produce a newer dated record.
+
+Latest maintenance evidence: [windows-native-portability-closure-2026-09-20.md](windows-native-portability-closure-2026-09-20.md).

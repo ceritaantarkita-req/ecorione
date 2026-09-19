@@ -101,9 +101,7 @@ describe("PE-06 Brain deterministic projection", () => {
       expect(ids).toEqual([...ids].sort((left, right) => left.localeCompare(right)));
     }
     expect(first.edges.map((edge) => edge.id)).toEqual(
-      [...first.edges.map((edge) => edge.id)].sort((left, right) =>
-        left.localeCompare(right),
-      ),
+      [...first.edges.map((edge) => edge.id)].sort((left, right) => left.localeCompare(right)),
     );
   });
 
