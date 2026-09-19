@@ -8,7 +8,7 @@ Status: **CURRENT / PE-02 CLOSED / PE-03 NEXT**
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00, PE-01, and PE-02 are CLOSED / PASS. PE-03 Trigger control plane is next after PR #170 merge.**
+**PE-00, PE-01, and PE-02 are CLOSED / PASS. PE-03 Trigger control plane is next after PR #171 merge.**
 
 ## Product Evolution status
 
@@ -42,7 +42,7 @@ Acceptance: [product-evolution-pe02-acceptance.md](product-evolution-pe02-accept
 ## PE-02 reviewed evidence
 
 ```text
-PR #170
+PR #171
 implementation head a6167df469cf491015b232aff8a192b32a25c569
 CI #1223 PASS
 Product Eval #462 PASS
