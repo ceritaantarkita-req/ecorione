@@ -137,7 +137,9 @@ export default function BrainPage() {
       if (seq !== requestRef.current) return;
       setGraph(null);
       setSelectedId(null);
-      setMessage(`Brain load gagal: ${reason instanceof Error ? reason.message : String(reason)}`);
+      setMessage(
+        `Brain load gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
+      );
     } finally {
       if (seq === requestRef.current) setLoading(false);
     }
@@ -196,7 +198,10 @@ export default function BrainPage() {
     () => (graph?.nodes ?? []).filter((node) => enabledNodeTypes.has(node.type)),
     [enabledNodeTypes, graph],
   );
-  const visibleIds = useMemo(() => new Set(visibleNodes.map((node) => node.id)), [visibleNodes]);
+  const visibleIds = useMemo(
+    () => new Set(visibleNodes.map((node) => node.id)),
+    [visibleNodes],
+  );
   const visibleEdges = useMemo(
     () =>
       (graph?.edges ?? []).filter(
@@ -212,8 +217,7 @@ export default function BrainPage() {
     () => new Map((graph?.nodes ?? []).map((node) => [node.id, node])),
     [graph],
   );
-  const selectedNode =
-    selectedId === null ? null : (nodesById.get(selectedId) ?? null);
+  const selectedNode = selectedId === null ? null : (nodesById.get(selectedId) ?? null);
   const selectedRelations = useMemo(
     () =>
       selectedId === null
