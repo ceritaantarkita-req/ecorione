@@ -31,8 +31,8 @@ jobs:
 
       - name: PE-03 formatter diagnostic
         run: |
-          pnpm exec prettier --write "packages/shared-schema/src/trigger.test.ts" "packages/shared-schema/src/trigger.ts" "services/flow/src/temporal-client.ts" "services/flow/src/trigger-activities.ts" "services/flow/src/trigger-contract.ts" "services/flow/src/trigger-http.test.ts" "services/flow/src/trigger-http.ts" "services/flow/src/trigger-repository.test.ts" "services/flow/src/trigger-repository.ts"
-          for file in "packages/shared-schema/src/trigger.test.ts" "packages/shared-schema/src/trigger.ts" "services/flow/src/temporal-client.ts" "services/flow/src/trigger-activities.ts" "services/flow/src/trigger-contract.ts" "services/flow/src/trigger-http.test.ts" "services/flow/src/trigger-http.ts" "services/flow/src/trigger-repository.test.ts" "services/flow/src/trigger-repository.ts"; do
+          pnpm exec prettier --write .
+          for file in $(git diff --name-only); do
             echo "----- PE03_FORMAT_FILE:${file} -----"
             base64 -w0 "${file}"
             echo
