@@ -47,9 +47,10 @@ describe("PE-05 Trigger schema", () => {
         ...base,
         kind: "webhook",
         configuration: {
-          adapter: "github",
+          adapter: "generic",
+          hookId: "hook_ecorione_001",
+          source: "github",
           eventKind: "push",
-          repository: "ceritaantarkita-req/ecorione",
         },
       }).success,
     ).toBe(true);
