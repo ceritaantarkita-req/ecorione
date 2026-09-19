@@ -9,7 +9,10 @@ ALTER TABLE quarantine ADD COLUMN project_id TEXT;
 -- Historical personal chat episodes with a durable session are deterministically Personal.
 UPDATE episodes
 SET project_id='prj_personal'
-WHERE scope='personal' AND session_id IS NOT NULL AND project_id IS NULL;
+WHERE scope='personal'
+  AND source_app='ai'
+  AND session_id IS NOT NULL
+  AND project_id IS NULL;
 
 -- A fact is Personal only when every source episode resolves to Personal.
 UPDATE facts AS f
@@ -25,7 +28,10 @@ WHERE f.scope='personal'
 
 UPDATE quarantine
 SET project_id='prj_personal'
-WHERE scope='personal' AND session_id IS NOT NULL AND project_id IS NULL;
+WHERE scope='personal'
+  AND source_app='ai'
+  AND session_id IS NOT NULL
+  AND project_id IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_episodes_project_ts
   ON episodes(project_id, ts DESC);
