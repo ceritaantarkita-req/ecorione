@@ -144,6 +144,12 @@ export async function createFlowTemporalClient(
           action: options.action,
           spec: options.spec,
           policies: options.policies,
+          state: {
+            paused: !trigger.enabled,
+            note: trigger.enabled
+              ? "ECORIONE Trigger enabled/reconciled"
+              : "ECORIONE Trigger disabled/reconciled",
+          },
         }));
       } catch (error) {
         if (!(error instanceof ScheduleNotFoundError)) throw error;
@@ -153,8 +159,6 @@ export async function createFlowTemporalClient(
         });
         return;
       }
-      if (trigger.enabled) await handle.unpause("ECORIONE Trigger enabled/reconciled");
-      else await handle.pause("ECORIONE Trigger disabled/reconciled");
     },
     async pauseTimeTrigger(scheduleId): Promise<void> {
       await schedules.getHandle(scheduleId).pause("ECORIONE Trigger disabled");
