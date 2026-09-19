@@ -31,7 +31,7 @@ export interface RetrievalOptions {
   /** Hosted request may only recall CLOUD_ALLOWED/PUBLIC data. */
   readonly hostedEligibleOnly?: boolean;
   /** Optional Brain-derived exact provenance source URI constraint. Undefined is baseline; [] is fail-closed empty. */
-  readonly candidateSourceUris?: readonly string[];
+  readonly candidateSourceUris?: readonly string[] | undefined;
 }
 export interface RetrievalDiagnostics {
   readonly lexicalCandidates: number;
