@@ -49,11 +49,11 @@ Product Eval #462 PASS
 MCP External HTTPS Acceptance #628 PASS
 ```
 
-The closure-doc head is revalidated before merge.
+PR #171 is merged to `main` as `c734f00eaa791077c99557e6e89579534c43d651`; PE-02 remains CLOSED / PASS.
 
-## Next: PE-03 Trigger control plane
+## Active: PE-03 Trigger control plane
 
-PE-03 introduces the generalized Trigger control plane using existing Flow + Temporal + Hub authority. It must not create a second scheduler or autonomous polling subsystem.
+PE-03 introduces the generalized Trigger control plane using existing Flow + Temporal + Hub authority. Active implementation is PR #172 on `pe/pe-03-trigger-control-plane-20260919`. It must not create a second scheduler or autonomous polling subsystem, and PE-04 remains blocked until the exact reviewed PE-03 head passes its closure gates and merges.
 
 ## Deferred
 
