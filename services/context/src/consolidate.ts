@@ -110,6 +110,7 @@ export async function runConsolidation(
 ): Promise<ConsolidateResult> {
   const episodes = deps.repo.listEpisodes({
     onlyUnconsolidated: true,
+    excludeLegacyUnassigned: true,
     limit: options.limit ?? DEFAULT_BATCH_LIMIT,
     order: "asc",
   });
