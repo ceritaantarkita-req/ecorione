@@ -15,10 +15,11 @@ This file is the single navigation entry point for repository documentation. If 
 7. **[product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md)** — required PE-02 source-binding closure behavior.
 8. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — closed PE-03 Trigger contract.
 9. **[product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md)** — closed PE-04 Work/Schedule/Runs contract.
-10. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — active PE-05 Event/Webhook contract.
-11. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
-12. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
-13. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
+10. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — closed PE-05 Event/Webhook contract.
+11. **[product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md)** — active PE-06 Brain V1 contract.
+12. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
+13. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
+14. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
 ## Source-of-truth precedence
 
@@ -51,10 +52,11 @@ As of 2026-09-19:
 - PE-02: **CLOSED / PASS**;
 - PE-03: **CLOSED / PASS**;
 - PE-04: **CLOSED / PASS**;
-- PE-05: **ACTIVE**;
-- PE-06 through PE-08: **blocked by prior batch**.
+- PE-05: **CLOSED / PASS**;
+- PE-06: **ACTIVE**;
+- PE-07 through PE-08: **blocked by prior batch**.
 
-PE-05 Event/Webhook automation is active. Use ADR-36 + [product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md) as the implementation/closure contract.
+PE-06 Brain V1 is active. Use ADR-38 + [product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md) as the implementation/closure contract.
 
 ## Architecture and product reference
 
