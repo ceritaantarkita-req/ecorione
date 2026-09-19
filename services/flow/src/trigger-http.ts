@@ -440,6 +440,7 @@ export function registerTriggerRoutes(
         operationId: ids.operationId,
         plan,
         input: body.input,
+        autonomy: trigger.requestedAutonomy,
         depth: 0,
       });
       const response = TriggerFireResponseSchema.parse({
