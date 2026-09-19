@@ -12,9 +12,11 @@ This file is the single navigation entry point for repository documentation. If 
 4. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — PE-00 through PE-08 batch plan.
 5. **[product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)** — PE-01 ownership + migration contract.
 6. **[product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)** — required PE-01 closure behavior.
-7. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
-8. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
-9. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
+7. **[product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md)** — required PE-02 source-binding closure behavior.
+8. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — active PE-03 Trigger closure contract.
+9. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
+10. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
+11. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
 ## Source-of-truth precedence
 
@@ -43,10 +45,12 @@ As of 2026-09-19:
 
 - Product Evolution architecture: **DOCUMENTED**;
 - PE-00: **CLOSED / PASS**;
-- PE-01: **ACTIVE**;
-- PE-02 through PE-08: **blocked by prior batch**.
+- PE-01: **CLOSED / PASS**;
+- PE-02: **CLOSED / PASS**;
+- PE-03: **ACTIVE**;
+- PE-04 through PE-08: **blocked by prior batch**.
 
-PE-01 Project foundation is now active. Use ADR-35 + migration matrix + PE-01 acceptance as the implementation contract.
+PE-03 Trigger control plane is active. Use ADR-36 + [product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md) as the implementation/closure contract.
 
 ## Architecture and product reference
 
