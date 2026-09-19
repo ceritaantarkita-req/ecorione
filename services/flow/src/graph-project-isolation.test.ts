@@ -81,27 +81,38 @@ function activities() {
 }
 
 describe("PE-03 Flow Project isolation", () => {
-  it("sends graph Project and effective autonomy to a Memory node retrieval", async () => {
+  it("sends graph Project to Memory retrieval and effective autonomy to Hub authority", async () => {
     const agent = new MockAgent();
     agents.push(agent);
     agent.disableNetConnect();
     setGlobalDispatcher(agent);
-    agent
-      .get("http://context.local")
-      .intercept({
-        path: "/v1/retrieve",
-        method: "POST",
-        body: JSON.stringify({
+    const context = agent.get("http://context.local");
+    context
+      .intercept({ path: "/v1/retrieve", method: "POST" })
+      .reply(200, (options) => {
+        const body = JSON.parse(options.body as string) as Record<string, unknown>;
+        expect(body).toMatchObject({
           query: "remember project",
           scopes: ["personal"],
           k: 8,
           maxSensitivity: "INTERNAL",
-          now: expect.anything(),
           hostedEligibleOnly: false,
           projectId: "prj_alpha",
-        }),
-      })
-      .reply(200, { hits: [], diagnostics: {} });
+        });
+        expect(typeof body.now).toBe("string");
+        return { hits: [], diagnostics: {} };
+      });
+    agent
+      .get("http://hub.local")
+      .intercept({ path: "/v1/authority/authorize", method: "POST" })
+      .reply(200, (options) => {
+        const body = JSON.parse(options.body as string) as Record<string, unknown>;
+        expect(body).toMatchObject({
+          workspaceId: "ws_personal",
+          autonomy: "L1",
+        });
+        return { outcome: "ALLOW", reason: "test" };
+      });
 
     const execution = executionFor(
       graph(
@@ -115,8 +126,12 @@ describe("PE-03 Flow Project isolation", () => {
     );
     if (compiled === undefined) throw new Error("Memory node missing.");
 
+    const runtime = activities();
     await expect(
-      activities().executeGraphNode({ execution, compiled, input: null }),
+      runtime.authorizeGraphNode({ execution, compiled }),
+    ).resolves.toBeUndefined();
+    await expect(
+      runtime.executeGraphNode({ execution, compiled, input: null }),
     ).resolves.toEqual({ hits: [], diagnostics: {} });
   });
 
