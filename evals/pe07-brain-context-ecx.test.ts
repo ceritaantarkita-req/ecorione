@@ -5,7 +5,7 @@ import {
   BrainNeighborhoodQuerySchema,
   EcxPacketSchema,
   type MemoryFact,
-} from "@ecorione/shared-schema";
+} from "../packages/shared-schema/src/index.js";
 import { selectBrainNeighborhood } from "../apps/ai/lib/brain-projection.js";
 import { openContextDatabase, type ContextDatabase } from "../services/context/src/db.js";
 import { ContextRepository } from "../services/context/src/repository.js";
