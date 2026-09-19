@@ -33,7 +33,7 @@ Status: **CURRENT SUMMARY**
 
 PE-06 closed on PR #176 implementation head `66c7909572a1410095916843f8f46a385ecb628b`, closure head `25508dd1cef5d8ebb8846448c7732ddde7866a59`, and merged as `d54ad62c303847b23634ba33aead4749f21bf1d0`.
 
-Current active gate: **PE-07 Brain + Context + ECX**.
+Current active gate: **PE-07 Brain + Context + ECX** on `pe/pe-07-brain-context-ecx-20260919` from main `ffa1531a12a1149d3dfceaea8f82e53619e938d4`. Bounded Brain neighborhood, Context-side source constraint, ECX handoff, security regressions, and deterministic comparative evidence are being implemented; PE-08 remains blocked.
 
 ```text
 PE-00  CLOSED / PASS
