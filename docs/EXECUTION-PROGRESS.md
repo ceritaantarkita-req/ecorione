@@ -33,7 +33,7 @@ Status: **CURRENT SUMMARY**
 
 PE-07 closed on PR #178 implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d`, closure head `e443a6e9d10b24b7c1de7bcb315b038cf6425a45`, and merged as `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. Implementation and closure heads passed CI, Product Eval, and MCP acceptance. Bounded deterministic evidence reported 66.67% median candidate reduction, 100% required-reference/provenance retention, and zero unauthorized refs.
 
-Current active gate: **PE-08 Product closure** under [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
+Current active gate: **PE-08 Product closure** on `pe/pe-08-product-closure-20260919` from main `82026c8a1948336b2da4e00ee4832180f68452f7`. The explicit closure matrix now includes Product Evolution migration/isolation, restart-safe owner state, Hub/Context/Flow backup-restore plus Brain rebuild, UX/navigation/responsive guards, and installer specification under [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
 
 ```text
 PE-00  CLOSED / PASS
