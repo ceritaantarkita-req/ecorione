@@ -172,80 +172,202 @@ describe("PE-01 Project context", () => {
     }
   });
 
-  it("migrates only deterministic historical Ai chat rows to Personal and is reopen-safe", () => {
+  it("migrates deterministic legacy rows, quarantines ambiguity, and is reopen-safe", () => {
     const db = openContextDatabase({ runMigrations: false });
     try {
       const all = loadMigrations();
       migrate(
         db.raw,
-        all.filter((migration) => migration.version <= 2),
+        all.filter((migration) => migration.version <= 4),
       );
-      const repo = new ContextRepository(db);
-      repo.appendEpisode(
-        episodeInput({
-          id: "epi_legacy_ai",
-          provenance: {
-            sourceApp: "ai",
-            sessionId: "sess_legacy_ai" as never,
-          },
-        }),
+
+      const insertEpisode = db.raw.prepare(
+        `INSERT INTO episodes (
+          id,ts,raw_text,source_app,session_id,tool_call_id,source_uri,
+          scope,sensitivity,sync_class,trust,summary,consolidated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       );
-      repo.appendEpisode(
-        episodeInput({
-          id: "epi_legacy_assistant",
-          provenance: {
-            sourceApp: "connect:gemma-test",
-            sessionId: "sess_legacy_ai" as never,
-          },
-        }),
+      insertEpisode.run(
+        "epi_legacy_ai",
+        T0,
+        "legacy user",
+        "ai",
+        "sess_legacy_ai",
+        null,
+        null,
+        "personal",
+        "INTERNAL",
+        "LOCAL_ONLY",
+        "USER",
+        null,
+        null,
       );
-      repo.appendEpisode(
-        episodeInput({
-          id: "epi_legacy_cli",
-          provenance: {
-            sourceApp: "cli",
-            sessionId: "sess_legacy_cli" as never,
-          },
-        }),
+      insertEpisode.run(
+        "epi_legacy_assistant",
+        T0,
+        "legacy assistant",
+        "connect:gemma-test",
+        "sess_legacy_ai",
+        null,
+        null,
+        "personal",
+        "INTERNAL",
+        "LOCAL_ONLY",
+        "LOCAL_AGENT",
+        null,
+        null,
       );
-      repo.insertFact(
-        factInput({
-          id: "mem_legacy_ai",
-          sourceEpisodeIds: ["epi_legacy_ai" as never],
-        }),
+      insertEpisode.run(
+        "epi_legacy_cli",
+        T0,
+        "legacy ambiguous",
+        "cli",
+        "sess_legacy_cli",
+        null,
+        null,
+        "personal",
+        "INTERNAL",
+        "LOCAL_ONLY",
+        "USER",
+        null,
+        null,
       );
-      repo.setCoreMemoryBlock(
+
+      const insertFact = db.raw.prepare(
+        `INSERT INTO facts (
+          id,subject,predicate,object,text,confidence,salience,source_episode_ids,
+          t_valid,t_invalid,superseded_by,created_at,scope,sensitivity,sync_class,trust,
+          source_app,session_id,tool_call_id,source_uri
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      );
+      insertFact.run(
+        "mem_legacy_ai",
+        "legacy",
+        "kind",
+        "personal",
+        "MIGRATION_TOKEN deterministic",
+        1,
+        0.5,
+        JSON.stringify(["epi_legacy_ai"]),
+        T0,
+        null,
+        null,
+        T0,
+        "personal",
+        "INTERNAL",
+        "LOCAL_ONLY",
+        "USER",
+        "context:legacy",
+        "sess_legacy_ai",
+        null,
+        null,
+      );
+      insertFact.run(
+        "mem_legacy_cli",
+        "legacy",
+        "kind",
+        "ambiguous",
+        "MIGRATION_TOKEN ambiguous",
+        1,
+        0.5,
+        JSON.stringify(["epi_legacy_cli"]),
+        T0,
+        null,
+        null,
+        T0,
+        "personal",
+        "INTERNAL",
+        "LOCAL_ONLY",
+        "USER",
+        "context:legacy",
+        "sess_legacy_cli",
+        null,
+        null,
+      );
+      db.raw
+        .prepare(
+          `INSERT INTO core_memory
+            (label,description,value,read_only,updated_at,scope,sensitivity,sync_class,trust)
+           VALUES (?,?,?,?,?,?,?,?,?)`,
+        )
+        .run(
+          "legacy-global",
+          "legacy",
+          "global stays global",
+          0,
+          T0,
+          "personal",
+          "INTERNAL",
+          "LOCAL_ONLY",
+          "USER",
+        );
+
+      expect(migrate(db.raw, all).applied).toEqual([5]);
+
+      const states = db.raw
+        .prepare(
+          `SELECT id,project_id,project_state FROM episodes
+           WHERE id IN ('epi_legacy_ai','epi_legacy_assistant','epi_legacy_cli')
+           ORDER BY id ASC`,
+        )
+        .all() as Array<{
+        id: string;
+        project_id: string | null;
+        project_state: string;
+      }>;
+      expect(states).toEqual([
         {
-          label: "legacy-global",
-          description: "legacy",
-          value: "global stays global",
-          updatedAt: T0,
+          id: "epi_legacy_ai",
+          project_id: "prj_personal",
+          project_state: "ASSIGNED",
         },
-        { trust: "USER" },
-      );
+        {
+          id: "epi_legacy_assistant",
+          project_id: "prj_personal",
+          project_state: "ASSIGNED",
+        },
+        {
+          id: "epi_legacy_cli",
+          project_id: null,
+          project_state: "LEGACY_UNASSIGNED",
+        },
+      ]);
 
-      expect(migrate(db.raw, all).applied).toContain(3);
+      const repo = new ContextRepository(db);
+      const visible = repo.listFacts({
+        scopes: ["personal"],
+        projectId: "prj_personal" as never,
+        includeGlobal: true,
+      });
+      expect(visible.map((fact) => fact.id)).toEqual(["mem_legacy_ai"]);
 
-      const ai = db.raw
-        .prepare("SELECT project_id FROM episodes WHERE id='epi_legacy_ai'")
-        .get() as { project_id: string | null };
-      const assistant = db.raw
-        .prepare("SELECT project_id FROM episodes WHERE id='epi_legacy_assistant'")
-        .get() as { project_id: string | null };
-      const cli = db.raw
-        .prepare("SELECT project_id FROM episodes WHERE id='epi_legacy_cli'")
-        .get() as { project_id: string | null };
-      const fact = db.raw
-        .prepare("SELECT project_id FROM facts WHERE id='mem_legacy_ai'")
-        .get() as { project_id: string | null };
+      const factStates = db.raw
+        .prepare(
+          `SELECT id,project_id,project_state FROM facts
+           WHERE id IN ('mem_legacy_ai','mem_legacy_cli')
+           ORDER BY id ASC`,
+        )
+        .all() as Array<{
+        id: string;
+        project_id: string | null;
+        project_state: string;
+      }>;
+      expect(factStates).toEqual([
+        {
+          id: "mem_legacy_ai",
+          project_id: "prj_personal",
+          project_state: "ASSIGNED",
+        },
+        {
+          id: "mem_legacy_cli",
+          project_id: null,
+          project_state: "LEGACY_UNASSIGNED",
+        },
+      ]);
+
       const core = db.raw
         .prepare("SELECT project_id FROM core_memory WHERE label='legacy-global'")
         .get() as { project_id: string | null };
-
-      expect(ai.project_id).toBe("prj_personal");
-      expect(assistant.project_id).toBe("prj_personal");
-      expect(cli.project_id).toBeNull();
-      expect(fact.project_id).toBe("prj_personal");
       expect(core.project_id).toBeNull();
       expect(migrate(db.raw, all).applied).toEqual([]);
     } finally {
