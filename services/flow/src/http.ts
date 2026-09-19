@@ -98,17 +98,17 @@ function requireGraphTemporal(temporal: FlowServerTemporalClient): FlowGraphTemp
 function newGraphId(): string {
   return `fg_${makeId("workflow").slice("wf_".length)}`;
 }
-function normalizeProjectId(workspaceId: string, projectId: string | null): string | null {
+function normalizeProjectId(workspaceId: string, projectId: string | null): string {
   if (projectId !== null) return projectId;
-  return workspaceId === DEFAULT_WORKSPACE_ID ? DEFAULT_PROJECT_ID : null;
+  if (workspaceId === DEFAULT_WORKSPACE_ID) return DEFAULT_PROJECT_ID;
+  throw new BadRequestError(`Workspace ${workspaceId} membutuhkan projectId eksplisit.`);
 }
 
 async function requireProject(
   options: BuildFlowServerOptions,
   workspaceId: string,
-  projectId: string | null,
+  projectId: string,
 ): Promise<void> {
-  if (projectId === null) return;
   await httpJson(
     `${options.hubUrl}/v1/projects/${encodeURIComponent(projectId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
     { token: options.token },
