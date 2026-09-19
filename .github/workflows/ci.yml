@@ -29,16 +29,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: PE-01 formatter diagnostic
-        run: |
-          pnpm exec prettier --write .
-          for file in $(git diff --name-only); do
-            echo "----- PE01_FORMAT_FILE:${file} -----"
-            base64 -w0 "${file}"
-            echo
-          done
-          echo "----- PE01_FORMAT_PAYLOAD_END -----"
-
       - name: Format
         run: pnpm run format:check
 
