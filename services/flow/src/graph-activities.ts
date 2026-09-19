@@ -438,7 +438,9 @@ export function createFlowGraphActivities(
       if (version.validation.plan.graph.workspaceId !== execution.plan.graph.workspaceId)
         throw new Error("Subflow cross-workspace ditolak.");
       if (version.validation.plan.graph.projectId !== execution.plan.graph.projectId)
-        throw new Error("Subflow cross-project ditolak sampai execution authorization tersedia.");
+        throw new Error(
+          "Subflow cross-project ditolak sampai execution authorization tersedia.",
+        );
       return version.validation.plan;
     },
   };
