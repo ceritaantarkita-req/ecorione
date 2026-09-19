@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-01 CLOSED / PE-02 NEXT**
+Status: **PE-02 ACTIVE / PROJECT SOURCES**
 
 ## Latest closed item
 
@@ -39,13 +39,13 @@ MCP External HTTPS Acceptance #595 PASS
 
 The closure-doc head is revalidated before merge; PR #169 remains the canonical exact-head evidence surface.
 
-## Next item
+## Active item
 
 **PE-02 — Project Sources**
 
-PE-02 may start only after PR #169 is merged and `main` is confirmed clean.
+PR #169 is merged and post-merge `main` passed CI #1193, Product Eval #432, and MCP External HTTPS Acceptance #599.
 
-PE-02 boundary:
+PE-02 implementation boundary:
 
 - bind existing owners by reference, not copied content;
 - support Artifact / Space / Flow / connector-backed source relationships;
