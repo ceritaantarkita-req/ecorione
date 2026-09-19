@@ -53,11 +53,7 @@ describe("FlowGraphRepository", () => {
       const repo = new FlowGraphRepository(db);
       repo.create(doc(), "2026-09-10T00:00:00.000Z");
       expect(() =>
-        repo.save(
-          { ...doc(), projectId: "prj_other" as never },
-          1,
-          "2026-09-10T00:00:01.000Z",
-        ),
+        repo.save({ ...doc(), projectId: "prj_other" as never }, 1, "2026-09-10T00:00:01.000Z"),
       ).toThrow(FlowGraphProjectConflictError);
     } finally {
       db.close();
