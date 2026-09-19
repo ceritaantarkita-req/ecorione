@@ -60,6 +60,13 @@ function NavIcon({ icon }: { icon: NavIconKey }) {
           <path d="M3.5 5.5c0-1.1.9-2 2-2h9c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2H8.4l-3.4 2.9v-2.9h-1.5c-1.1 0-2-.9-2-2Z" />
         </svg>
       );
+    case "projects":
+      return (
+        <svg className="ecr-global-nav__icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 6.5h6l1.6 2H20v9H4z" />
+          <path d="M4 6.5v11" />
+        </svg>
+      );
     case "space":
       return (
         <svg {...shared}>
