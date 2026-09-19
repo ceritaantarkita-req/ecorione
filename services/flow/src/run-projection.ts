@@ -280,6 +280,7 @@ export async function listRunProjections(
 export async function getRunProjection(
   deps: RunProjectionDependencies,
   operationId: OperationId,
+  expected?: { readonly workspaceId: string; readonly projectId: string },
 ): Promise<RunProjection | null> {
   let traces: TraceRecord[];
   try {
@@ -289,6 +290,12 @@ export async function getRunProjection(
   }
   const evidence = evidenceFromTraces(operationId, traces);
   if (evidence === null) return null;
+  if (
+    expected !== undefined &&
+    (evidence.workspaceId !== expected.workspaceId || evidence.projectId !== expected.projectId)
+  ) {
+    return null;
+  }
 
   let temporalAvailable = false;
   let currentStatus: RunStatus | null = null;
