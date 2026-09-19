@@ -109,18 +109,26 @@ function exactProject<T extends { workspaceId: string; projectId: string }>(
   return rows.filter((row) => row.workspaceId === workspaceId && row.projectId === projectId);
 }
 
-async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot> {
-  // Authorization is deliberately first. No sibling owner is queried until Hub confirms
-  // that this Project belongs to the caller Workspace.
+export async function authorizeBrainProject(input: {
+  readonly workspaceId: string;
+  readonly projectId: string;
+}): Promise<Project> {
   const project = ProjectSchema.parse(
     await ownerJson(
       "HubProject",
-      `${brainHubUrl()}/v1/projects/${encodeURIComponent(query.projectId)}?workspaceId=${encodeURIComponent(query.workspaceId)}`,
+      `${brainHubUrl()}/v1/projects/${encodeURIComponent(input.projectId)}?workspaceId=${encodeURIComponent(input.workspaceId)}`,
     ),
   );
-  if (project.workspaceId !== query.workspaceId || project.id !== query.projectId) {
+  if (project.workspaceId !== input.workspaceId || project.id !== input.projectId) {
     throw new BrainOwnerRequestError("HubProject", 404, "Project tidak tersedia.");
   }
+  return project;
+}
+
+async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot> {
+  // Authorization is deliberately first. No sibling owner is queried until Hub confirms
+  // that this Project belongs to the caller Workspace.
+  const project = await authorizeBrainProject(query);
 
   const common = new URLSearchParams({
     workspaceId: query.workspaceId,
