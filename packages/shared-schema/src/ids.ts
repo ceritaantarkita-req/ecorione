@@ -11,6 +11,7 @@ import { z } from "zod";
 export const ID_PREFIXES = {
   workspace: "ws",
   project: "prj",
+  trigger: "trg",
   artifact: "art",
   operation: "op",
   device: "dev",
@@ -40,6 +41,7 @@ export type Branded<T, B extends string> = T & { readonly __brand: B };
 
 export type WorkspaceId = Branded<string, "ws">;
 export type ProjectId = Branded<string, "prj">;
+export type TriggerId = Branded<string, "trg">;
 export type ArtifactId = Branded<string, "art">;
 export type OperationId = Branded<string, "op">;
 export type DeviceId = Branded<string, "dev">;
@@ -54,6 +56,7 @@ export type SessionId = Branded<string, "sess">;
 export interface IdTypeMap {
   workspace: WorkspaceId;
   project: ProjectId;
+  trigger: TriggerId;
   artifact: ArtifactId;
   operation: OperationId;
   device: DeviceId;
@@ -135,6 +138,7 @@ function idSchema<K extends IdKind>(kind: K) {
 
 export const WorkspaceIdSchema = idSchema("workspace");
 export const ProjectIdSchema = idSchema("project");
+export const TriggerIdSchema = idSchema("trigger");
 export const ArtifactIdSchema = idSchema("artifact");
 export const OperationIdSchema = idSchema("operation");
 export const DeviceIdSchema = idSchema("device");
