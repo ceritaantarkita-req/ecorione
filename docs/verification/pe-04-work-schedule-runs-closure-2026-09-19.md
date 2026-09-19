@@ -1,6 +1,6 @@
 # PE-04 Work + Schedule + Runs closure — 2026-09-19
 
-Status: **CLOSURE CANDIDATE / IMPLEMENTATION GATES PASS**
+Status: **CLOSED / PASS**
 
 PE-04 implements the product-facing Work surface over existing Trigger, Flow, Temporal, Hub, and RnD owners without creating a Task domain or a second execution database.
 
@@ -9,9 +9,14 @@ PE-04 implements the product-facing Work surface over existing Trigger, Flow, Te
 ```text
 PR                              #173
 reviewed implementation head    c2cacbbcbee15f46ac4c5e9e43c955f5c952af43
+closure evidence head           94936fa0704991d3536667bb8c947e9d751c813e
 CI workflow run                 35435383786 PASS
 Product Eval workflow run       35435383936 PASS
 MCP External HTTPS workflow run 35435383793 PASS
+closure-head CI                 35435554011 PASS
+closure-head Product Eval       35435554018 PASS
+closure-head MCP HTTPS          35435554042 PASS
+merge main                      c08581a00a20dc6016c570a1fbb777d81e391699
 ```
 
 The CI run passed format, lint, typecheck, full tests, Phase 4 real-process Temporal acceptance, production-operations acceptance, security/release checks, and production build.
@@ -66,8 +71,8 @@ PE-04 does not:
 - change VPS/Cloudflare deployment state;
 - reopen AutoClick or paid W18 evidence.
 
-## Final merge gate
+## Closure
 
-This closure evidence is added after the implementation head passed all required gates. The resulting doc-only exact PR head must also pass CI, Product Eval, and MCP External HTTPS acceptance before PR #173 is marked ready and merged.
+The implementation head and the closure-evidence head both passed the required gates. PR #173 was then marked ready and merged to `main` as `c08581a00a20dc6016c570a1fbb777d81e391699`.
 
-PE-05 remains blocked until PR #173 merges.
+PE-04 is CLOSED / PASS. PE-05 may proceed under its explicit acceptance contract.
