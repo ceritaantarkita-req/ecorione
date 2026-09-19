@@ -37,9 +37,7 @@ describe("/api/projects/:id/sources", () => {
       .reply(200, { sources: [] });
 
     const res = await GET(
-      new Request(
-        "http://ai.local/api/projects/prj_finance/sources?workspaceId=ws_personal",
-      ),
+      new Request("http://ai.local/api/projects/prj_finance/sources?workspaceId=ws_personal"),
       { params: Promise.resolve({ id: "prj_finance" }) },
     );
     expect(res.status).toBe(200);
