@@ -95,20 +95,34 @@ function evidenceFromTraces(operationId: string, traces: readonly TraceRecord[])
     .sort((left, right) => left.recordedAt.localeCompare(right.recordedAt));
   const started = lifecycle.find((trace) => trace.name === "flow.graph.run.started");
   if (started === undefined) return null;
-  const latestTerminal = [...lifecycle].reverse().find((trace) => terminalStatus(trace.name) !== null);
-  return {
-    operationId: OperationIdSchema.parse(operationId),
-    workspaceId: WorkspaceIdSchema.parse(stringAttribute(started.attributes, "workspaceId")),
-    projectId: ProjectIdSchema.parse(stringAttribute(started.attributes, "projectId")),
-    triggerId: stringAttribute(started.attributes, "triggerId", false),
-    graphId: stringAttribute(started.attributes, "graphId")!,
-    graphVersion: numberAttribute(started.attributes, "graphVersion"),
-    runId: stringAttribute(started.attributes, "runId")!,
-    startedAt: started.recordedAt,
-    finishedAt: latestTerminal?.recordedAt ?? null,
-    terminalStatus: latestTerminal === undefined ? null : terminalStatus(latestTerminal.name),
-    traces,
-  };
+  try {
+    const latestTerminal = [...lifecycle]
+      .reverse()
+      .find((trace) => terminalStatus(trace.name) !== null);
+    const workspaceId = stringAttribute(started.attributes, "workspaceId");
+    const projectId = stringAttribute(started.attributes, "projectId");
+    const graphId = stringAttribute(started.attributes, "graphId");
+    const runId = stringAttribute(started.attributes, "runId");
+    if (workspaceId === null || projectId === null || graphId === null || runId === null) {
+      return null;
+    }
+    return {
+      operationId: OperationIdSchema.parse(operationId),
+      workspaceId: WorkspaceIdSchema.parse(workspaceId),
+      projectId: ProjectIdSchema.parse(projectId),
+      triggerId: stringAttribute(started.attributes, "triggerId", false),
+      graphId,
+      graphVersion: numberAttribute(started.attributes, "graphVersion"),
+      runId,
+      startedAt: started.recordedAt,
+      finishedAt: latestTerminal?.recordedAt ?? null,
+      terminalStatus: latestTerminal === undefined ? null : terminalStatus(latestTerminal.name),
+      traces,
+    };
+  } catch {
+    // Legacy/incomplete evidence is not silently reclassified into a Project Run.
+    return null;
+  }
 }
 
 function temporalStatus(status: string | undefined): RunStatus | null {
