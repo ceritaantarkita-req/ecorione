@@ -148,7 +148,6 @@ function manualPayload(enabled = true) {
   };
 }
 
-
 function eventPayload(enabled = true) {
   return {
     ...manualPayload(enabled),
