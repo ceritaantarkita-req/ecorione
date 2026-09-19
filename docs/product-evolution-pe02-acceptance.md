@@ -113,6 +113,6 @@ attach/detach audit
 Ai Project Sources API/UI contracts
 ```
 
-Draft PR #170 was superseded administratively by non-draft PR #171 without changing the reviewed implementation. The closure-doc head must pass the normal exact-head gates before PR #171 is merged.
+Draft PR #170 was superseded administratively by non-draft PR #171 without changing the reviewed implementation. PR #171 is merged as `c734f00eaa791077c99557e6e89579534c43d651`; the final reviewed PR head and exact-head gates were rechecked in [verification/pe-00-02-recheck-2026-09-19.md](verification/pe-00-02-recheck-2026-09-19.md).
 
-PE-03 must not begin until PR #171 is merged and post-merge main is clean.
+PE-02 remains **CLOSED / PASS**. PE-03 is now active from that merged base.
