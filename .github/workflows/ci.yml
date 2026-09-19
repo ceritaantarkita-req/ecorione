@@ -29,13 +29,33 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: PE-03 one-file formatter
+      - name: PE-05 formatter capture
         run: |
-          pnpm exec prettier --write "services/flow/src/graph-project-isolation.test.ts"
-          echo "----- PE03_ONE_FILE -----"
-          base64 -w0 "services/flow/src/graph-project-isolation.test.ts"
-          echo
-          echo "----- PE03_ONE_FILE_END -----"
+          files=(
+            "packages/shared-schema/src/trigger.test.ts"
+            "packages/shared-schema/src/trigger.ts"
+            "packages/shared-server/src/server.test.ts"
+            "packages/shared-server/src/server.ts"
+            "services/connect/src/http.ts"
+            "services/connect/src/main.ts"
+            "services/connect/src/provider-catalog.test.ts"
+            "services/connect/src/provider-catalog.ts"
+            "services/connect/src/webhook-http.test.ts"
+            "services/connect/src/webhook-http.ts"
+            "services/flow/src/db.ts"
+            "services/flow/src/pe05-trigger-migration.test.ts"
+            "services/flow/src/trigger-http.test.ts"
+            "services/flow/src/trigger-http.ts"
+            "services/flow/src/trigger-repository.test.ts"
+            "services/flow/src/trigger-repository.ts"
+          )
+          pnpm exec prettier --write "${files[@]}"
+          for file in "${files[@]}"; do
+            echo "----- PE05_FORMATTED:${file} -----"
+            base64 -w0 "${file}"
+            echo
+            echo "----- PE05_FORMATTED_END -----"
+          done
 
       - name: Format
         run: pnpm run format:check
