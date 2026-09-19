@@ -52,7 +52,17 @@ export function loadMigrations(dir: string = migrationsDir()): Migration[] {
     });
   }
 
-  return migrations.sort((a, b) => a.version - b.version);
+  migrations.sort((a, b) => a.version - b.version || a.name.localeCompare(b.name));
+  for (let index = 1; index < migrations.length; index += 1) {
+    const previous = migrations[index - 1];
+    const current = migrations[index];
+    if (previous !== undefined && current !== undefined && previous.version === current.version) {
+      throw new Error(
+        `Duplicate Context migration version ${String(current.version)}: ${previous.name}, ${current.name}`,
+      );
+    }
+  }
+  return migrations;
 }
 
 export interface MigrateResult {
