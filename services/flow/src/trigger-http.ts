@@ -45,6 +45,7 @@ import {
   TriggerNotFoundError,
   TriggerProjectConflictError,
   TriggerRevisionConflictError,
+  TriggerWebhookHookConflictError,
   TriggerWorkspaceConflictError,
   type TriggerRepository,
 } from "./trigger-repository.js";
@@ -102,6 +103,7 @@ function triggerError(error: unknown): unknown {
   if (
     error instanceof TriggerRevisionConflictError ||
     error instanceof TriggerEventDedupeConflictError ||
+    error instanceof TriggerWebhookHookConflictError ||
     error instanceof TriggerWorkspaceConflictError ||
     error instanceof TriggerProjectConflictError ||
     error instanceof TriggerKindConflictError
