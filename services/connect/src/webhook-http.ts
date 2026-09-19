@@ -49,33 +49,42 @@ export function registerConnectWebhookRoutes(
   app: FastifyInstance,
   options: ConnectWebhookOptions,
 ): void {
-  app.post<{ Params: { hookId: string } }>("/v1/webhooks/:hookId", async (req) => {
-    const { hookId } = parseOrBadRequest(WebhookParamsSchema, req.params);
-    const delivery = parseOrBadRequest(WebhookIngressDeliverySchema, req.body);
-    const rootSecret =
+  const rootSecret = (): string => {
+    const secret =
       options.credentialVault?.get("webhook", "tokens") ?? options.developmentRootSecret;
-    if (rootSecret === undefined || rootSecret.length < 16) {
+    if (secret === undefined || secret.length < 16) {
       throw new HttpError(
         503,
         "WEBHOOK_SECRET_NOT_CONFIGURED",
         "Webhook root secret belum dikonfigurasi di Connect Vault.",
       );
     }
-    const expected = deriveWebhookToken(rootSecret, hookId);
+    return secret;
+  };
+
+  app.get<{ Params: { hookId: string } }>(
+    "/v1/settings/webhooks/:hookId/token",
+    async (req) => {
+      const { hookId } = parseOrBadRequest(WebhookParamsSchema, req.params);
+      return { hookId, token: deriveWebhookToken(rootSecret(), hookId) };
+    },
+  );
+
+  app.post<{ Params: { hookId: string } }>("/v1/webhooks/:hookId", async (req) => {
+    const { hookId } = parseOrBadRequest(WebhookParamsSchema, req.params);
+    const expected = deriveWebhookToken(rootSecret(), hookId);
     const actual = headerValue(req.headers["x-ecorione-webhook-token"]);
     if (!tokenMatches(actual, expected)) {
       throw new HttpError(401, "WEBHOOK_UNAUTHORIZED", "Token webhook tidak valid.");
     }
+    const delivery = parseOrBadRequest(WebhookIngressDeliverySchema, req.body);
 
     return TriggerFireResponseSchema.parse(
-      await httpJson(
-        `${options.flowUrl}/v1/webhooks/${encodeURIComponent(hookId)}`,
-        {
-          method: "POST",
-          token: options.internalToken,
-          body: delivery,
-        },
-      ),
+      await httpJson(`${options.flowUrl}/v1/webhooks/${encodeURIComponent(hookId)}`, {
+        method: "POST",
+        token: options.internalToken,
+        body: delivery,
+      }),
     );
   });
 }
