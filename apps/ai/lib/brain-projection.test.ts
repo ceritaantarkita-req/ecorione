@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   BrainQuerySchema,
+  ProjectIdSchema,
+  WorkspaceIdSchema,
   type FlowGraphSummary,
   type Project,
   type ProjectSourceView,
@@ -8,8 +10,8 @@ import {
 import { buildBrainGraph } from "./brain-projection";
 
 const NOW = "2026-09-19T12:00:00.000Z";
-const PROJECT_ID = "prj_finance";
-const WORKSPACE_ID = "ws_personal";
+const PROJECT_ID = ProjectIdSchema.parse("prj_finance");
+const WORKSPACE_ID = WorkspaceIdSchema.parse("ws_personal");
 
 const project: Project = {
   id: PROJECT_ID,
