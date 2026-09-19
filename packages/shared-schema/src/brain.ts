@@ -30,9 +30,9 @@ const BrainMetadataValueSchema = z.union([
 
 export const BrainNodeSchema = z
   .object({
-    id: z.string().min(1).max(4096),
+    id: z.string().min(1).max(128),
     type: BrainNodeTypeSchema,
-    canonicalId: z.string().min(1).max(2048),
+    canonicalId: z.string().min(1).max(4096),
     owner: BrainOwnerSchema,
     label: z.string().min(1).max(512),
     workspaceId: WorkspaceIdSchema,
@@ -46,10 +46,10 @@ export type BrainNode = z.infer<typeof BrainNodeSchema>;
 
 export const BrainEdgeSchema = z
   .object({
-    id: z.string().min(1).max(8192),
+    id: z.string().min(1).max(512),
     type: BrainEdgeTypeSchema,
-    sourceNodeId: z.string().min(1).max(4096),
-    targetNodeId: z.string().min(1).max(4096),
+    sourceNodeId: z.string().min(1).max(128),
+    targetNodeId: z.string().min(1).max(128),
   })
   .strict();
 export type BrainEdge = z.infer<typeof BrainEdgeSchema>;
