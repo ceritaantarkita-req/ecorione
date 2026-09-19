@@ -17,7 +17,7 @@ import type {
   FlowWorkflowInput,
   OperationId,
   TriggerDefinition,
-  type TriggerScheduleRuntime,
+  TriggerScheduleRuntime,
   WorkflowId,
 } from "@ecorione/shared-schema";
 import type { ScheduledTriggerWorkflowInput } from "./trigger-contract.js";
