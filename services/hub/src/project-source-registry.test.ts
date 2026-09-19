@@ -92,7 +92,9 @@ describe("PE-02 ProjectSourceRegistry", () => {
 
     const second = openHubDatabase(path);
     try {
-      expect(new ProjectSourceRegistry(second).list(project.id, project.workspaceId)).toMatchObject([
+      expect(
+        new ProjectSourceRegistry(second).list(project.id, project.workspaceId),
+      ).toMatchObject([
         {
           projectId: project.id,
           resourceType: "url",
