@@ -7,8 +7,7 @@ import {
   type StablePrefix,
 } from "@ecorione/context-assembly";
 import {
-  assertId,
-  makeId,
+    makeId,
   type ActionRequest,
   type CapabilityId,
   type PermissionId,
