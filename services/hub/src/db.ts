@@ -225,10 +225,14 @@ CREATE TABLE IF NOT EXISTS authority_meta (
 );
 `;
 
-interface TableInfoRow { readonly name: string }
+interface TableInfoRow {
+  readonly name: string;
+}
 
 function hasColumn(db: SqliteDatabase, table: string, column: string): boolean {
-  return (db.pragma(`table_info(${table})`) as TableInfoRow[]).some((row) => row.name === column);
+  return (db.pragma(`table_info(${table})`) as TableInfoRow[]).some(
+    (row) => row.name === column,
+  );
 }
 
 function migrateProjectFoundation(db: SqliteDatabase): void {
