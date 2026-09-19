@@ -100,7 +100,7 @@ export async function reconcileTimeTriggerSchedule(
     await handle.update(() => ({
       action: options.action,
       spec: options.spec,
-      policies: options.policies,
+      ...(options.policies === undefined ? {} : { policies: options.policies }),
       state: {
         paused: !trigger.enabled,
         note: trigger.enabled
