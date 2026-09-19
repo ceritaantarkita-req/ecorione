@@ -22,6 +22,7 @@ function idempotencyKey(input: ScheduledTriggerAuthorizationInput): string {
       [
         input.triggerId,
         input.occurrenceWorkflowId,
+        input.occurrenceRunId,
         input.plan.graph.id,
         String(input.plan.graphVersion),
       ].join(":"),
@@ -62,6 +63,7 @@ export function createTriggerActivities(config: TriggerActivityConfig): TriggerA
           args: {
             triggerId: input.triggerId,
             occurrenceWorkflowId: input.occurrenceWorkflowId,
+            occurrenceRunId: input.occurrenceRunId,
             graphId: input.plan.graph.id,
             graphVersion: input.plan.graphVersion,
           },
