@@ -163,7 +163,11 @@ export class HubRepository {
               OR substr(operation_id,1,length(?) + 1)=? || '-'
            ORDER BY ts ASC, rowid ASC`,
         )
-        .all(filter.operationPrefix, filter.operationPrefix, filter.operationPrefix) as AuditEventRow[];
+        .all(
+          filter.operationPrefix,
+          filter.operationPrefix,
+          filter.operationPrefix,
+        ) as AuditEventRow[];
     } else {
       rows = this.db.raw
         .prepare("SELECT * FROM audit_events ORDER BY ts ASC, rowid ASC")
