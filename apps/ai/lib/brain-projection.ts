@@ -81,9 +81,7 @@ function exactProject<T extends { workspaceId: string; projectId: string }>(
   workspaceId: string,
   projectId: string,
 ): T[] {
-  return rows.filter(
-    (row) => row.workspaceId === workspaceId && row.projectId === projectId,
-  );
+  return rows.filter((row) => row.workspaceId === workspaceId && row.projectId === projectId);
 }
 
 async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot> {
@@ -122,8 +120,7 @@ async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot>
       view.binding.projectId === query.projectId,
   );
   const graphs = FlowListResponseSchema.parse(graphRaw).graphs.filter(
-    (graph) =>
-      graph.workspaceId === query.workspaceId && graph.projectId === query.projectId,
+    (graph) => graph.workspaceId === query.workspaceId && graph.projectId === query.projectId,
   );
   const triggers = exactProject(
     TriggerListResponseSchema.parse(triggerRaw).triggers,
@@ -177,7 +174,10 @@ function compareNode(a: BrainNode, b: BrainNode): number {
   return TYPE_ORDER[a.type] - TYPE_ORDER[b.type] || a.id.localeCompare(b.id);
 }
 
-export function buildBrainGraph(query: BrainQuery, snapshot: BrainOwnerSnapshot): BrainGraphResponse {
+export function buildBrainGraph(
+  query: BrainQuery,
+  snapshot: BrainOwnerSnapshot,
+): BrainGraphResponse {
   const nodes = new Map<string, BrainNode>();
   const edges = new Map<string, BrainEdge>();
   const projectNodeId = nodeId("Project", snapshot.project.id);
@@ -219,7 +219,9 @@ export function buildBrainGraph(query: BrainQuery, snapshot: BrainOwnerSnapshot)
         resourceId: view.binding.resourceId,
         role: view.binding.role,
         unavailableReason:
-          view.availability === "UNAVAILABLE" ? (view.unavailableReason ?? "unavailable") : null,
+          view.availability === "UNAVAILABLE"
+            ? (view.unavailableReason ?? "unavailable")
+            : null,
       },
     });
     addEdge(edges, "BELONGS_TO", id, projectNodeId);
@@ -287,7 +289,9 @@ export function buildBrainGraph(query: BrainQuery, snapshot: BrainOwnerSnapshot)
     }
   }
 
-  for (const run of [...snapshot.runs].sort((a, b) => a.operationId.localeCompare(b.operationId))) {
+  for (const run of [...snapshot.runs].sort((a, b) =>
+    a.operationId.localeCompare(b.operationId),
+  )) {
     const id = nodeId("Run", run.operationId);
     nodes.set(id, {
       id,
@@ -322,9 +326,7 @@ export function buildBrainGraph(query: BrainQuery, snapshot: BrainOwnerSnapshot)
   const visibleIds = new Set(visibleNodes.map((node) => node.id));
   const edgeLimit = Math.min(500, query.limit * 4);
   const visibleEdges = allEdges
-    .filter(
-      (edge) => visibleIds.has(edge.sourceNodeId) && visibleIds.has(edge.targetNodeId),
-    )
+    .filter((edge) => visibleIds.has(edge.sourceNodeId) && visibleIds.has(edge.targetNodeId))
     .slice(0, edgeLimit);
 
   return BrainGraphResponseSchema.parse({
