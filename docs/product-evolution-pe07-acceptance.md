@@ -142,6 +142,33 @@ No paid provider call is authorized by PE-07 merely because cost is a metric.
 
 Default evaluation should use deterministic non-model checks and/or the existing local runtime. Any hosted/provider billed-cost measurement requires separate explicit operator authorization for scope and budget.
 
+## Predeclared closure-grade thresholds
+
+Declared on **2026-09-19 before the first PE-07 closure-grade evidence run**. These gates must not be loosened in response to a failing result.
+
+Safety/retention gates:
+
+- required/authoritative reference retention: **100% per case**;
+- unauthorized sibling-Project or cross-Workspace references: **0**;
+- invalidated, over-sensitivity, disallowed syncClass, or otherwise Context-rejected facts admitted by Brain narrowing: **0**;
+- ECX-selected memory-fact refs outside the Context-authorized result set: **0**;
+- Brain failure/unknown seed fallback that widens to baseline automatically: **0**;
+- provenance retained for every selected Context fact: **100%**.
+
+Optimization gates:
+
+- narrowed candidate count must be **<= baseline authorized candidate count in every measured case**;
+- an `optimization-positive` conclusion requires a **median candidate-count reduction >= 25%** and strict reduction in **at least 2/3 measured cases**;
+- if the safety/retention gates pass but the optimization gate does not, PE-07 evidence must say **NO MEASURED BENEFIT / DO NOT ENABLE BRAIN NARROWING BY DEFAULT** rather than weakening the threshold.
+
+Measurement boundary for the first closure-grade lane:
+
+- deterministic local repository fixtures, no hosted/provider call;
+- model input tokens/model quality: **N/A unless a separately authorized local-model lane is added**;
+- provider billed cost: **N/A / not authorized**;
+- cache state: **N/A for the deterministic no-model lane**;
+- latency is reported as observed evidence, not used as a universal performance claim.
+
 ## Required implementation tests
 
 ```text
