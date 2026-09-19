@@ -40,9 +40,9 @@ import {
   TriggerKindConflictError,
   TriggerNotFoundError,
   TriggerProjectConflictError,
-  TriggerRepository,
   TriggerRevisionConflictError,
   TriggerWorkspaceConflictError,
+  type TriggerRepository,
 } from "./trigger-repository.js";
 
 export interface TriggerHttpOptions {
