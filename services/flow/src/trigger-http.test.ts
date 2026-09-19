@@ -250,9 +250,10 @@ describe("PE-03 Trigger HTTP", () => {
   });
 
   it("rejects a sibling-Project Flow target before policy or Temporal", async () => {
+    const siblingGraph = graph("Sibling target") as unknown as Record<string, unknown>;
     new FlowGraphRepository(db).create(
       {
-        ...graph("Sibling target"),
+        ...siblingGraph,
         id: "fg_triggerhttp02",
         projectId: "prj_other",
       } as never,
