@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **REQUIRED FOR PE-06 CLOSURE**
+Status: **CLOSED / SATISFIED — PR #176**
 
 PE-06 introduces Brain V1 as a Project-scoped, authorized, rebuildable relationship projection over existing canonical owner data. ADR-38 is binding.
 
