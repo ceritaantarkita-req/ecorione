@@ -2,27 +2,22 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-01 ACTIVE / PROJECT FOUNDATION**
+Status: **PE-01 CLOSED / PE-02 NEXT**
 
-## Active item
+## Latest closed item
 
 **PE-01 — Project foundation**
 
-PE-00 is CLOSED / PASS through PR #167. PE-01 now implements the accepted Project boundary vertically.
-
-## PE-01 build order
+PE-01 now provides the accepted Project context boundary vertically:
 
 ```text
-1. shared Project schemas/contracts
-2. Hub Project metadata + default Personal
-3. project-aware Historical Ledger
-4. project-aware Chat normalization
-5. Context migration + retrieval isolation
-6. Flow graph project linkage
-7. Ai Projects + explicit Project Chat context
-8. migration/isolation/runtime tests
-9. exact-head CI + Product Eval + relevant product/runtime acceptance
-10. closure docs
+Project metadata          → Hub
+Default Project           → prj_personal in ws_personal
+All                       → virtual aggregate only
+Chat / Ledger             → Project-aware
+Context                   → global + current Project, no sibling leakage
+Flow                      → immutable Project linkage
+Ai                        → Projects surface + explicit active Project
 ```
 
 Required contracts:
@@ -32,6 +27,31 @@ Required contracts:
 - [product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)
 - [product-evolution-agent-guide.md](product-evolution-agent-guide.md)
 
+## PE-01 implementation evidence
+
+```text
+PR #169
+reviewed implementation head e039df3ee57a5fdcc62e33a3a1a48d9f0d3a7944
+CI #1189 PASS
+Product Eval #428 PASS
+MCP External HTTPS Acceptance #595 PASS
+```
+
+The closure-doc head is revalidated before merge; PR #169 remains the canonical exact-head evidence surface.
+
+## Next item
+
+**PE-02 — Project Sources**
+
+PE-02 may start only after PR #169 is merged and `main` is confirmed clean.
+
+PE-02 boundary:
+
+- bind existing owners by reference, not copied content;
+- support Artifact / Space / Flow / connector-backed source relationships;
+- keep Workspace authority unchanged;
+- do not introduce Trigger/Schedule (PE-03), Runs (PE-04), or Brain (PE-06).
+
 ## Non-negotiable boundaries
 
 - Workspace remains the authority/security boundary.
@@ -39,13 +59,14 @@ Required contracts:
 - Project A must never retrieve Project B memory.
 - Ledger events remain append-only and are not rewritten.
 - Project stores/links metadata; no Project service or duplicate owner data.
-- PE-02 Sources work is not pulled into PE-01.
 - Trigger/Schedule remains PE-03.
 - Run remains PE-04.
 - Brain remains PE-06.
 - VPS/Cloudflare, AutoClick, and paid W18 rerun remain out of scope.
 
-## PE-00 closure evidence
+## Prior closure
+
+PE-00:
 
 ```text
 PR #167
@@ -54,5 +75,3 @@ CI #1120 PASS
 Product Eval #359 PASS
 merge b7ebf5492aca463e55f9f30bc259b9a6028c62d7
 ```
-
-PE-01 closes only when the full acceptance contract is green on the reviewed head.
