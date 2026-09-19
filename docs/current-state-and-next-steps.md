@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-02 CLOSED / PE-03 NEXT**
+Status: **CURRENT / PE-03 ACTIVE / TRIGGER CONTROL PLANE**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00, PE-01, and PE-02 are CLOSED / PASS. PE-03 Trigger control plane is next after PR #171 merge.**
+**PE-00, PE-01, and PE-02 are CLOSED / PASS. PE-03 Trigger control plane is ACTIVE.**
 
 ## Product Evolution status
 
@@ -17,7 +17,7 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-00 Architecture lock | **CLOSED / PASS** |
 | PE-01 Project foundation | **CLOSED / PASS** |
 | PE-02 Project Sources | **CLOSED / PASS** |
-| PE-03 Trigger control plane | **NEXT** |
+| PE-03 Trigger control plane | **ACTIVE** |
 | PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
 | PE-06 Brain V1 | **BLOCKED BY PE-05** |
@@ -49,11 +49,11 @@ Product Eval #462 PASS
 MCP External HTTPS Acceptance #628 PASS
 ```
 
-The closure-doc head is revalidated before merge.
+PR #171 is merged to `main` as `c734f00eaa791077c99557e6e89579534c43d651`; PE-02 remains CLOSED / PASS.
 
-## Next: PE-03 Trigger control plane
+## Active: PE-03 Trigger control plane
 
-PE-03 introduces the generalized Trigger control plane using existing Flow + Temporal + Hub authority. It must not create a second scheduler or autonomous polling subsystem.
+PE-03 introduces the generalized Trigger control plane using existing Flow + Temporal + Hub authority. Active implementation is PR #172 on `pe/pe-03-trigger-control-plane-20260919`. It must not create a second scheduler or autonomous polling subsystem, and PE-04 remains blocked until the exact reviewed PE-03 head passes its closure gates and merges.
 
 ## Deferred
 

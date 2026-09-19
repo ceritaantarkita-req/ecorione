@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **CANONICAL DESIGN / PE-00 ACTIVE / FEATURE CODE NOT STARTED**
+Status: **CANONICAL DESIGN / PE-03 ACTIVE**
 
 This document defines the next ECORIONE product model after the previous Batch 1–12 / W / F6 baseline closed. It is intentionally built on the architecture already present in the repository. It does **not** authorize a new service, scheduler, graph database, autonomous engine, paid provider run, or production deployment unless a later batch explicitly requires and approves it.
 
@@ -251,7 +251,7 @@ condition
 
 Do not add `AI Decision` as an external trigger class in V1. AI decisioning can exist inside a Flow/Condition node under existing policy; introducing an AI-owned trigger loop would risk hidden polling and unclear authority.
 
-Proposed TriggerDefinition:
+PE-03 V1 TriggerDefinition:
 
 ```text
 TriggerDefinition
@@ -261,13 +261,13 @@ TriggerDefinition
 - name
 - kind
 - graphId
-- graphVersionPolicy
+- graphVersion
+- versionPolicy = PINNED
 - requestedAutonomy
 - enabled
-- timezone
 - configuration
-- concurrencyPolicy
-- misfirePolicy
+- temporalScheduleId
+- revision
 - createdAt
 - updatedAt
 ```
@@ -276,7 +276,7 @@ Rules:
 
 - use an IANA timezone such as `Asia/Jakarta`, not only a UTC offset;
 - default scheduled triggers to an **exact pinned Flow version** for reproducibility;
-- `follow latest` may exist only as an explicit audited policy;
+- `FOLLOW_LATEST` is not accepted in PE-03; exact pinned Flow version is required;
 - define overlap behavior (`skip`, `queue`, or `forbid`);
 - define missed-schedule behavior (`skip` or bounded catch-up);
 - every side effect still uses stable idempotency identity;
@@ -292,7 +292,7 @@ Trigger
   -> execution
 ```
 
-Temporal remains the durability/timer/retry/signal/recovery engine per the existing Flow decision. Before implementing time schedules, verify the exact Temporal TypeScript 1.23 schedule API/semantics against official Temporal documentation and record the chosen contract in the new ADR.
+Temporal remains the durability/timer/retry/signal/recovery engine per ADR-36. PE-03 must compile and runtime-test the exact pinned Temporal TypeScript `1.23.0` Schedule API; repository metadata may mirror Trigger configuration but must not become a second schedule runtime truth.
 
 ## 9. Autonomy
 
@@ -357,7 +357,7 @@ Existing truth is already distributed across:
 - Historical Ledger;
 - operation/workflow identities.
 
-V1 should build a **unified read model/projection** from those owners. PE-00 must decide the stable product Run key and source mapping before persistence. Rebuildable caching is allowed later; competing execution authority is not.
+V1 should build a **unified read model/projection** from those owners. ADR-37 locks the stable product Run key to existing `operationId` and the owner-source mapping. Rebuildable caching is allowed later; competing execution authority is not.
 
 ## 11. Brain
 
@@ -491,9 +491,9 @@ Until explicitly reopened, do not:
 - introduce a Task domain without evidence;
 - mix sibling Project memory automatically.
 
-## 15. Architecture decisions required before feature code
+## 15. Locked architecture decisions from PE-00
 
-PE-00 must convert the following into accepted ADRs/contracts before PE-01 code:
+PE-00 converted the following into accepted ADRs/contracts before feature implementation:
 
 1. Workspace vs Project ownership + migration;
 2. direct `projectId` vs optional Project bindings;
@@ -504,4 +504,4 @@ PE-00 must convert the following into accepted ADRs/contracts before PE-01 code:
 7. Run projection source-of-truth mapping;
 8. Brain projection/privacy boundary.
 
-Until PE-00 closes, this document is the design baseline but **feature implementation must not start**.
+PE-00 is closed. PE-03 is the active bounded implementation batch under ADR-36 and the PE-03 acceptance contract; later PE scopes remain blocked by sequence.

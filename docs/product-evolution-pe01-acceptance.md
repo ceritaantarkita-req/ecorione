@@ -87,6 +87,6 @@ test suite: 902 tests evaluated on the preceding regression run; PE-01 regressio
 
 Focused evidence includes Project registry/reopen tests, Context Project A/B isolation + filter tests, Context migration tests, Ledger migration/integrity coverage, Flow Project migration/linkage tests, Hub/Chat compatibility tests, and Ai Project API tests.
 
-The closure-doc head must also pass the normal exact-head gates before PR #169 is merged.
+PR #169 is merged as `1d2b537de3ad07336adb9a97121309f04d61cc21`. The final reviewed PR head and exact-head gates were rechecked in [verification/pe-00-02-recheck-2026-09-19.md](verification/pe-00-02-recheck-2026-09-19.md).
 
-PE-02 must not begin before that final exact-head revalidation is green.
+PE-01 remains **CLOSED / PASS**; PE-02 subsequently closed and PE-03 is now the active batch.

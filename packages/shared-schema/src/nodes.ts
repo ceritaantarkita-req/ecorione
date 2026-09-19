@@ -9,7 +9,7 @@ import {
   WorkspaceIdSchema,
 } from "./ids.js";
 import { TimestampSchema } from "./memory.js";
-import { ActionClassSchema } from "./policy.js";
+import { ActionClassSchema, AutonomyLevelSchema } from "./policy.js";
 
 export const FLOW_NODE_KINDS = [
   "trigger",
@@ -586,6 +586,7 @@ export const FlowGraphExecutionInputSchema = z
     operationId: OperationIdSchema,
     plan: CompiledFlowGraphPlanSchema,
     input: z.unknown(),
+    autonomy: AutonomyLevelSchema.optional(),
     depth: z.number().int().min(0).max(8).default(0),
   })
   .strict();

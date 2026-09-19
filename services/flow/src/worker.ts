@@ -3,6 +3,7 @@ import { NativeConnection, Worker } from "@temporalio/worker";
 import { createFlowActivities } from "./activities.js";
 import { createFlowGraphActivities, type FlowGraphActivityConfig } from "./graph-activities.js";
 import { FLOW_TASK_QUEUE } from "./temporal-client.js";
+import { createTriggerActivities } from "./trigger-activities.js";
 
 export interface FlowWorkerOptions extends FlowGraphActivityConfig {
   readonly temporalAddress: string;
@@ -20,7 +21,11 @@ export async function createFlowWorker(options: FlowWorkerOptions): Promise<Work
     namespace: options.temporalNamespace,
     taskQueue: options.taskQueue ?? FLOW_TASK_QUEUE,
     workflowsPath: workflowsPath(),
-    activities: { ...createFlowActivities(options), ...createFlowGraphActivities(options) },
+    activities: {
+      ...createFlowActivities(options),
+      ...createFlowGraphActivities(options),
+      ...createTriggerActivities(options),
+    },
     stickyQueueScheduleToStartTimeout: "1 second",
   });
 }

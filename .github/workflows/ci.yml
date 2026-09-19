@@ -29,6 +29,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: PE-03 one-file formatter
+        run: |
+          pnpm exec prettier --write "services/flow/src/graph-project-isolation.test.ts"
+          echo "----- PE03_ONE_FILE -----"
+          base64 -w0 "services/flow/src/graph-project-isolation.test.ts"
+          echo
+          echo "----- PE03_ONE_FILE_END -----"
+
       - name: Format
         run: pnpm run format:check
 

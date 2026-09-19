@@ -7,6 +7,7 @@ import {
   proxyActivities,
   setHandler,
   sleep,
+  workflowInfo,
 } from "@temporalio/workflow";
 import {
   ApprovalNodeConfigSchema,
@@ -32,6 +33,11 @@ import {
   transformGraphValue,
 } from "./graph-control.js";
 import type { FlowGraphActivities } from "./graph-activities.js";
+import type { TriggerActivities } from "./trigger-activities.js";
+import {
+  scheduledOccurrenceSuffix,
+  type ScheduledTriggerWorkflowInput,
+} from "./trigger-contract.js";
 
 const activities = proxyActivities<FlowActivities>({
   startToCloseTimeout: "2 minutes",
@@ -49,6 +55,16 @@ export const graphNodeDecisionSignal =
   defineSignal<[FlowGraphNodeDecisionSignal]>("graphNodeDecision");
 export const graphNodeInputSignal = defineSignal<[FlowGraphNodeInputSignal]>("graphNodeInput");
 export const graphRunStateQuery = defineQuery<FlowGraphRunState>("graphRunState");
+
+const triggerActivities = proxyActivities<TriggerActivities>({
+  startToCloseTimeout: "30 seconds",
+  retry: {
+    initialInterval: "1 second",
+    backoffCoefficient: 2,
+    maximumInterval: "10 seconds",
+    maximumAttempts: 3,
+  },
+});
 
 export function transformInput(value: string): string {
   return value.trim().replace(/\s+/g, " ");
@@ -171,6 +187,39 @@ function nodeInput(
     active.push({ sourceNodeId: edge.sourceNodeId, value: output.value });
   }
   return { active: active.length > 0, value: graphInputFromEdges(active) };
+}
+
+export async function scheduledTriggerWorkflow(
+  input: ScheduledTriggerWorkflowInput,
+): Promise<FlowGraphExecutionResult> {
+  const info = workflowInfo();
+  const occurrenceWorkflowId = info.workflowId;
+  const suffix = scheduledOccurrenceSuffix(
+    `${input.triggerId}:${occurrenceWorkflowId}:${info.runId}`,
+  );
+  const runId = `wf_${suffix}` as WorkflowId;
+  const operationId = `op_${suffix}` as OperationId;
+
+  await triggerActivities.authorizeScheduledTrigger({
+    ...input,
+    occurrenceWorkflowId,
+    occurrenceRunId: info.runId,
+    operationId,
+  });
+
+  return executeChild(graphExecutionWorkflow, {
+    workflowId: runId,
+    args: [
+      {
+        runId,
+        operationId,
+        plan: input.plan,
+        input: input.input,
+        autonomy: input.requestedAutonomy,
+        depth: 0,
+      },
+    ],
+  });
 }
 
 export async function graphExecutionWorkflow(
@@ -335,6 +384,7 @@ export async function graphExecutionWorkflow(
               operationId: execution.operationId,
               plan,
               input: incoming.value,
+              autonomy: execution.autonomy,
               depth: execution.depth + 1,
             },
           ],

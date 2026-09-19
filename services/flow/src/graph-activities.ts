@@ -111,7 +111,7 @@ export function createFlowGraphActivities(
             permissionIds: ["node.execute"] as PermissionId[],
             scope: execution.plan.graph.scope,
             sensitivity: execution.plan.graph.sensitivity,
-            autonomy: "L2",
+            autonomy: execution.autonomy ?? "L2",
           },
         }),
       );
@@ -145,7 +145,7 @@ export function createFlowGraphActivities(
           },
           scope: execution.plan.graph.scope,
           sensitivity: execution.plan.graph.sensitivity,
-          autonomy: "L2",
+          autonomy: execution.autonomy ?? "L2",
           idempotencyKey: approvalKey,
         },
       });
@@ -176,7 +176,7 @@ export function createFlowGraphActivities(
           },
           scope: execution.plan.graph.scope,
           sensitivity: execution.plan.graph.sensitivity,
-          autonomy: "L2",
+          autonomy: execution.autonomy ?? "L2",
           idempotencyKey: approvalKey,
         },
       });
@@ -209,7 +209,7 @@ export function createFlowGraphActivities(
                 : ["model.invoke", "execution.local"]) as PermissionId[],
               scope: graph.scope,
               sensitivity: graph.sensitivity,
-              autonomy: "L2",
+              autonomy: execution.autonomy ?? "L2",
             },
           }),
         );
@@ -249,6 +249,7 @@ export function createFlowGraphActivities(
             maxSensitivity: cfg.maxSensitivity ?? graph.sensitivity,
             now: nowIso(),
             hostedEligibleOnly: cfg.hostedEligibleOnly,
+            ...(graph.projectId === null ? {} : { projectId: graph.projectId }),
           },
         });
       } else if (node.kind === "artifact") {
@@ -274,7 +275,7 @@ export function createFlowGraphActivities(
               operationId,
               scope: graph.scope,
               sensitivity: graph.sensitivity,
-              autonomy: "L2",
+              autonomy: execution.autonomy ?? "L2",
               now: nowIso(),
               arguments: cfg.arguments,
             },
@@ -436,6 +437,10 @@ export function createFlowGraphActivities(
         throw new Error(`Subflow ${cfg.graphId} tidak valid/compileable.`);
       if (version.validation.plan.graph.workspaceId !== execution.plan.graph.workspaceId)
         throw new Error("Subflow cross-workspace ditolak.");
+      if (version.validation.plan.graph.projectId !== execution.plan.graph.projectId)
+        throw new Error(
+          "Subflow cross-project ditolak sampai execution authorization tersedia.",
+        );
       return version.validation.plan;
     },
   };

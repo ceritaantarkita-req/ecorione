@@ -4,6 +4,8 @@ import { openFlowDatabase } from "./db.js";
 import { FlowGraphRepository } from "./graph-repository.js";
 import { buildFlowServer } from "./http.js";
 import { createFlowTemporalClient } from "./temporal-client.js";
+import { reconcilePersistedTimeTriggers } from "./trigger-http.js";
+import { TriggerRepository } from "./trigger-repository.js";
 
 const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 const port = Number(process.env.ECORIONE_FLOW_PORT ?? "17028");
@@ -21,11 +23,15 @@ const temporal = await createFlowTemporalClient({
   address: temporalAddress,
   namespace: temporalNamespace,
 });
+const graphRepository = new FlowGraphRepository(db);
+const triggerRepository = new TriggerRepository(db);
+await reconcilePersistedTimeTriggers(triggerRepository, graphRepository, temporal);
 const app = buildFlowServer(temporal, {
   hubUrl,
   token,
   logger: true,
-  graphRepository: new FlowGraphRepository(db),
+  graphRepository,
+  triggerRepository,
 });
 app.addHook("onClose", async () => db.close());
 app

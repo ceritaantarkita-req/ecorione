@@ -1,6 +1,10 @@
 import {
   Connection,
+  ScheduleClient,
+  ScheduleNotFoundError,
+  ScheduleOverlapPolicy,
   WorkflowClient,
+  type ScheduleOptions,
   type WorkflowExecutionStatusName,
 } from "@temporalio/client";
 import type {
@@ -9,14 +13,18 @@ import type {
   FlowGraphNodeDecisionSignal,
   FlowGraphNodeInputSignal,
   FlowGraphRunState,
+  CompiledFlowGraphPlan,
   FlowWorkflowInput,
   OperationId,
+  TriggerDefinition,
   WorkflowId,
 } from "@ecorione/shared-schema";
+import type { ScheduledTriggerWorkflowInput } from "./trigger-contract.js";
 
 export const FLOW_TASK_QUEUE = "ecorione-flow-v1";
 export const FLOW_WORKFLOW_TYPE = "operationWorkflow";
 export const FLOW_GRAPH_WORKFLOW_TYPE = "graphExecutionWorkflow";
+export const TRIGGER_SCHEDULE_WORKFLOW_TYPE = "scheduledTriggerWorkflow";
 
 export interface FlowTemporalClient {
   start(input: FlowWorkflowInput): Promise<void>;
@@ -30,7 +38,84 @@ export interface FlowGraphTemporalClient {
   signalGraphInput(runId: WorkflowId, signal: FlowGraphNodeInputSignal): Promise<void>;
   graphState(runId: WorkflowId): Promise<FlowGraphRunState>;
 }
-export type FlowServerTemporalClient = FlowTemporalClient & Partial<FlowGraphTemporalClient>;
+export interface TriggerScheduleTemporalClient {
+  reconcileTimeTrigger(trigger: TriggerDefinition, plan: CompiledFlowGraphPlan): Promise<void>;
+  pauseTimeTrigger(scheduleId: string): Promise<void>;
+}
+export type FlowServerTemporalClient = FlowTemporalClient &
+  Partial<FlowGraphTemporalClient & TriggerScheduleTemporalClient>;
+
+export function triggerScheduleOptions(
+  trigger: TriggerDefinition,
+  plan: CompiledFlowGraphPlan,
+  taskQueue: string,
+): ScheduleOptions {
+  if (trigger.kind !== "time" || trigger.temporalScheduleId === null) {
+    throw new Error("Trigger time membutuhkan Temporal schedule ID.");
+  }
+  const cfg = trigger.configuration as {
+    cronExpression: string;
+    timezone: string;
+    catchupWindowMs: number;
+    overlap: "SKIP" | "QUEUE_ONE";
+  };
+  const actionInput: ScheduledTriggerWorkflowInput = {
+    triggerId: trigger.id,
+    workspaceId: trigger.workspaceId,
+    projectId: trigger.projectId,
+    requestedAutonomy: trigger.requestedAutonomy,
+    plan,
+    input: null,
+  };
+  return {
+    scheduleId: trigger.temporalScheduleId,
+    action: {
+      type: "startWorkflow",
+      workflowType: TRIGGER_SCHEDULE_WORKFLOW_TYPE,
+      taskQueue,
+      args: [actionInput],
+    },
+    spec: {
+      cronExpressions: [cfg.cronExpression],
+      timezone: cfg.timezone,
+    },
+    policies: {
+      catchupWindow: cfg.catchupWindowMs,
+      overlap:
+        cfg.overlap === "SKIP" ? ScheduleOverlapPolicy.SKIP : ScheduleOverlapPolicy.BUFFER_ONE,
+    },
+  };
+}
+
+export async function reconcileTimeTriggerSchedule(
+  schedules: ScheduleClient,
+  taskQueue: string,
+  trigger: TriggerDefinition,
+  plan: CompiledFlowGraphPlan,
+): Promise<void> {
+  const options = triggerScheduleOptions(trigger, plan, taskQueue);
+  const handle = schedules.getHandle(options.scheduleId);
+  try {
+    await handle.describe();
+    await handle.update(() => ({
+      action: options.action,
+      spec: options.spec,
+      ...(options.policies === undefined ? {} : { policies: options.policies }),
+      state: {
+        paused: !trigger.enabled,
+        note: trigger.enabled
+          ? "ECORIONE Trigger enabled/reconciled"
+          : "ECORIONE Trigger disabled/reconciled",
+      },
+    }));
+  } catch (error) {
+    if (!(error instanceof ScheduleNotFoundError)) throw error;
+    await schedules.create({
+      ...options,
+      state: { paused: !trigger.enabled },
+    });
+  }
+}
 
 export interface TemporalClientOptions {
   readonly address: string;
@@ -40,10 +125,12 @@ export interface TemporalClientOptions {
 
 export async function createFlowTemporalClient(
   options: TemporalClientOptions,
-): Promise<FlowTemporalClient & FlowGraphTemporalClient> {
+): Promise<FlowTemporalClient & FlowGraphTemporalClient & TriggerScheduleTemporalClient> {
   const connection = await Connection.connect({ address: options.address });
   const client = new WorkflowClient({ connection, namespace: options.namespace });
+  const schedules = new ScheduleClient({ connection, namespace: options.namespace });
   const taskQueue = options.taskQueue ?? FLOW_TASK_QUEUE;
+
   return {
     async start(input): Promise<void> {
       await client.start(FLOW_WORKFLOW_TYPE, {
@@ -77,6 +164,12 @@ export async function createFlowTemporalClient(
     },
     async graphState(runId): Promise<FlowGraphRunState> {
       return client.getHandle(runId).query<FlowGraphRunState>("graphRunState");
+    },
+    async reconcileTimeTrigger(trigger, plan): Promise<void> {
+      await reconcileTimeTriggerSchedule(schedules, taskQueue, trigger, plan);
+    },
+    async pauseTimeTrigger(scheduleId): Promise<void> {
+      await schedules.getHandle(scheduleId).pause("ECORIONE Trigger disabled");
     },
   };
 }

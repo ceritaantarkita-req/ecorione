@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-02 CLOSED / PE-03 NEXT**
+Status: **PE-03 ACTIVE / TRIGGER CONTROL PLANE**
 
 ## Latest closed item
 
@@ -36,11 +36,15 @@ MCP External HTTPS Acceptance #628 PASS
 
 Acceptance: [product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md).
 
-## Next item
+## Active item
 
 **PE-03 — Trigger control plane**
 
-PE-03 starts only after PR #171 is merged and post-merge `main` is green.
+PR #171 is merged and post-merge `main` passed CI #1234, Product Eval #473, and MCP External HTTPS Acceptance #639.
+
+Acceptance: [product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md).
+
+Implementation PR: **#172** (`pe/pe-03-trigger-control-plane-20260919`). Closure requires exact-head CI, Product Eval, and Temporal/Phase 4 runtime acceptance before merge.
 
 PE-03 boundary:
 
