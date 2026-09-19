@@ -91,9 +91,9 @@ describe("PE-01 ProjectRegistry", () => {
       expect(() => registry.require(created.id, DEFAULT_WORKSPACE_ID)).toThrow(
         /sudah diarsipkan/,
       );
-      expect(() =>
-        registry.require("prj_missing" as never, DEFAULT_WORKSPACE_ID),
-      ).toThrow(/tidak ditemukan/);
+      expect(() => registry.require("prj_missing" as never, DEFAULT_WORKSPACE_ID)).toThrow(
+        /tidak ditemukan/,
+      );
       expect(ProjectIdSchema.safeParse("All").success).toBe(false);
     } finally {
       db.close();
