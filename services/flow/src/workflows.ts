@@ -66,6 +66,16 @@ const triggerActivities = proxyActivities<TriggerActivities>({
   },
 });
 
+const runTraceActivities = proxyActivities<Pick<FlowGraphActivities, "recordGraphRunTrace">>({
+  startToCloseTimeout: "30 seconds",
+  retry: {
+    initialInterval: "1 second",
+    backoffCoefficient: 2,
+    maximumInterval: "10 seconds",
+    maximumAttempts: 3,
+  },
+});
+
 export function transformInput(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
@@ -231,6 +241,11 @@ export async function graphExecutionWorkflow(
       "Subflow depth melewati batas 8.",
       "FLOW_SUBFLOW_DEPTH",
     );
+  await runTraceActivities.recordGraphRunTrace({
+    execution,
+    name: "flow.graph.run.started",
+    attributes: { status: "RUNNING" },
+  });
   const decisions = new Map<string, FlowGraphNodeDecisionSignal>();
   const humanInputs = new Map<string, unknown>();
   const outputs = new Map<string, NodeOutput>();
@@ -450,6 +465,11 @@ export async function graphExecutionWorkflow(
         sinks.map((item) => [item.node.id, outputs.get(item.node.id)?.value ?? null]),
       );
     runStatus = "COMPLETED";
+    await runTraceActivities.recordGraphRunTrace({
+      execution,
+      name: "flow.graph.run.completed",
+      attributes: { status: "COMPLETED" },
+    });
     return {
       runId: execution.runId,
       graphId: execution.plan.graph.id,
@@ -461,6 +481,15 @@ export async function graphExecutionWorkflow(
     runStatus = "FAILED";
     finalError =
       error instanceof Error ? error.message.slice(0, 2000) : String(error).slice(0, 2000);
+    try {
+      await runTraceActivities.recordGraphRunTrace({
+        execution,
+        name: "flow.graph.run.failed",
+        attributes: { status: "FAILED", error: finalError },
+      });
+    } catch {
+      /* preserve original workflow failure */
+    }
     throw error;
   }
 }
