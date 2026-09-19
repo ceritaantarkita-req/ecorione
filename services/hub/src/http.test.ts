@@ -55,7 +55,7 @@ afterEach(async () => {
 function mockHappyPathContextAndConnect(): void {
   contextPool
     .intercept({
-      path: "/v1/core-memory?scope=personal&maxSensitivity=INTERNAL&hostedEligible=1",
+      path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=1",
       method: "GET",
     })
     .reply(200, { blocks: [] });
@@ -64,7 +64,7 @@ function mockHappyPathContextAndConnect(): void {
     .reply(200, { hits: [], diagnostics: {} });
   contextPool
     .intercept({
-      path: "/v1/episodes?sessionId=sess_abc&limit=6&hostedEligible=1",
+      path: "/v1/episodes?sessionId=sess_abc&projectId=prj_personal&limit=6&hostedEligible=1",
       method: "GET",
     })
     .reply(200, { episodes: [] });
@@ -108,7 +108,7 @@ describe("POST /v1/chat", () => {
   it("Context down → 502", async () => {
     contextPool
       .intercept({
-        path: "/v1/core-memory?scope=personal&maxSensitivity=INTERNAL&hostedEligible=1",
+        path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=1",
         method: "GET",
       })
       .replyWithError(new Error("down"));
