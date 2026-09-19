@@ -13,7 +13,7 @@ Status: **CURRENT SUMMARY**
 | F6-E01 through F6-E08 | **CLOSED / REPO-SIDE PASS** |
 | Production/self-host repository baseline | **READY** |
 | Windows runtime + installer | **VERIFIED** |
-| Native Windows portability / EOL policy | **CLOSED / PASS (PR #182)** |
+| Native Windows portability / EOL policy | **CLOSED / PASS (PR #182 + PR #185)** |
 
 ## Product Evolution
 
@@ -37,6 +37,8 @@ PR #182 (`108781b5d53034462393f06d5e9cb36e9c5d5cf5`) hardened native Windows exe
 This maintenance closure does not open PE-09 or Batch 13.
 
 Clean-checkout reproducibility then closed on PR #183. Final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 and Product Eval #721 and merged as `4980b3ceb149be58788467d2e11769de12977d5a`. The normal CI path now performs read-only `format:check` against committed canonical formatting; it no longer rewrites source first.
+
+A clean Windows re-clone then proved the runtime/test/build path but surfaced false dirty status on the three `.cmd` files because their Git blobs were still CRLF. PR #185 closed that last EOL reproducibility gap with semantic diff zero: canonical index is LF, Windows working tree remains CRLF via `.gitattributes`. Head `600f459fbe2671e7e4297e60da725b005b6f9533` passed CI #1486, Product Eval #725, and Desktop Installer #76; merge `4194e89a2b0611897969eaca2cb9c2b4b360c774` then passed main CI #1487 and Product Eval #726.
 
 ## Latest Product Evolution closure
 
