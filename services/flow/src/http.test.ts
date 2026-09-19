@@ -17,51 +17,6 @@ function temporalStub(overrides: Partial<FlowTemporalClient> = {}): FlowTemporal
 const apps: Array<ReturnType<typeof buildFlowServer>> = [];
 afterEach(async () => {
   for (const app of apps.splice(0)) await app.close();
-  it("rejects a graph before persistence when Hub rejects its Project/Workspace binding", async () => {
-    const agent = new MockAgent();
-    agent.disableNetConnect();
-    setGlobalDispatcher(agent);
-    agent
-      .get("http://hub.local")
-      .intercept({
-        path: "/v1/projects/prj_foreign?workspaceId=ws_personal",
-        method: "GET",
-      })
-      .reply(409, {
-        error: {
-          type: "CONFLICT",
-          message: "Project prj_foreign tidak berada di Workspace ws_personal.",
-        },
-      });
-
-    const app = buildFlowServer(temporalStub(), { hubUrl: "http://hub.local" });
-    apps.push(app);
-    const res = await app.inject({
-      method: "POST",
-      url: "/v1/graphs",
-      payload: {
-        workspaceId: "ws_personal",
-        projectId: "prj_foreign",
-        name: "Foreign graph",
-        scope: "personal",
-        sensitivity: "INTERNAL",
-        nodes: [
-          {
-            id: "node_trigger1",
-            kind: "trigger",
-            label: "Trigger",
-            position: { x: 0, y: 0 },
-            config: {},
-          },
-        ],
-        edges: [],
-      },
-    });
-
-    expect(res.statusCode).toBeGreaterThanOrEqual(400);
-    expect(res.statusCode).toBeLessThan(600);
-  });
-
 });
 
 const startPayload = {
@@ -188,4 +143,48 @@ describe("Flow HTTP", () => {
     expect(res.statusCode).toBe(500);
     expect(temporal.signal).not.toHaveBeenCalled();
   });
+  it("rejects a graph when Hub rejects its Project/Workspace binding", async () => {
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+    agent
+      .get("http://hub.local")
+      .intercept({
+        path: "/v1/projects/prj_foreign?workspaceId=ws_personal",
+        method: "GET",
+      })
+      .reply(409, {
+        error: {
+          type: "CONFLICT",
+          message: "Project prj_foreign tidak berada di Workspace ws_personal.",
+        },
+      });
+
+    const app = buildFlowServer(temporalStub(), { hubUrl: "http://hub.local" });
+    apps.push(app);
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/graphs",
+      payload: {
+        workspaceId: "ws_personal",
+        projectId: "prj_foreign",
+        name: "Foreign graph",
+        scope: "personal",
+        sensitivity: "INTERNAL",
+        nodes: [
+          {
+            id: "node_trigger1",
+            kind: "trigger",
+            label: "Trigger",
+            position: { x: 0, y: 0 },
+            config: {},
+          },
+        ],
+        edges: [],
+      },
+    });
+
+    expect(res.statusCode).toBeGreaterThanOrEqual(400);
+  });
+
 });
