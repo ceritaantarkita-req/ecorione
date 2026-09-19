@@ -210,7 +210,11 @@
   min-width: 760px;
   height: min(68dvh, 640px);
   background:
-    radial-gradient(circle at center, color-mix(in srgb, var(--accent) 5%, transparent), transparent 52%),
+    radial-gradient(
+      circle at center,
+      color-mix(in srgb, var(--accent) 5%, transparent),
+      transparent 52%
+    ),
     linear-gradient(var(--border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
   background-size:
