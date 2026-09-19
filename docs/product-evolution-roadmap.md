@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **ACTIVE — PE-07**
+Status: **ACTIVE — PE-08 PRODUCT CLOSURE**
 
 This is the explicit roadmap that follows the closed Batch 1–12 / W / F6 baseline. It uses the prefix **PE (Product Evolution)** so it cannot be confused with old Batch numbers.
 
