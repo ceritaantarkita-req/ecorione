@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { FlowGraphIdSchema } from "./nodes.js";
 import {
+  OperationIdSchema,
   ProjectIdSchema,
   TriggerIdSchema,
+  WorkflowIdSchema,
   WorkspaceIdSchema,
 } from "./ids.js";
 import { AutonomyLevelSchema } from "./policy.js";
@@ -82,20 +84,22 @@ const TriggerBaseFields = {
   enabled: z.boolean().default(true),
 } as const;
 
-const TriggerKindFields = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal("manual"),
-    configuration: ManualTriggerConfigurationSchema.default({}),
-  }),
-  z.object({
-    kind: z.literal("time"),
-    configuration: TimeTriggerConfigurationSchema,
-  }),
+export const TriggerCreateRequestSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("manual"),
+      configuration: ManualTriggerConfigurationSchema.default({}),
+    })
+    .strict(),
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("time"),
+      configuration: TimeTriggerConfigurationSchema,
+    })
+    .strict(),
 ]);
-
-export const TriggerCreateRequestSchema = z
-  .object(TriggerBaseFields)
-  .and(TriggerKindFields);
 export type TriggerCreateRequest = z.infer<typeof TriggerCreateRequestSchema>;
 
 export const TriggerDefinitionSchema = z
@@ -136,9 +140,24 @@ export const TriggerDefinitionSchema = z
   });
 export type TriggerDefinition = z.infer<typeof TriggerDefinitionSchema>;
 
-export const TriggerUpdateRequestSchema = TriggerCreateRequestSchema.extend({
-  expectedRevision: z.number().int().min(1),
-});
+export const TriggerUpdateRequestSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("manual"),
+      configuration: ManualTriggerConfigurationSchema.default({}),
+      expectedRevision: z.number().int().min(1),
+    })
+    .strict(),
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("time"),
+      configuration: TimeTriggerConfigurationSchema,
+      expectedRevision: z.number().int().min(1),
+    })
+    .strict(),
+]);
 export type TriggerUpdateRequest = z.infer<typeof TriggerUpdateRequestSchema>;
 
 export const TriggerStateChangeRequestSchema = z
@@ -168,8 +187,8 @@ export const TriggerFireResponseSchema = z
     triggerId: TriggerIdSchema,
     graphId: FlowGraphIdSchema,
     graphVersion: z.number().int().min(1),
-    workflowId: z.string().min(1),
-    operationId: z.string().min(1),
+    workflowId: WorkflowIdSchema,
+    operationId: OperationIdSchema,
     deduplicated: z.boolean(),
   })
   .strict();
