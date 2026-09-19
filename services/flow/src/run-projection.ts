@@ -13,7 +13,6 @@ import {
   type RunStatus,
 } from "@ecorione/shared-schema";
 import { httpJson } from "@ecorione/shared-server";
-import type { FlowGraphRepository } from "./graph-repository.js";
 import type { FlowServerTemporalClient } from "./temporal-client.js";
 import type { TriggerRepository } from "./trigger-repository.js";
 
@@ -40,7 +39,6 @@ export interface RunProjectionOptions {
 }
 
 export interface RunProjectionDependencies {
-  readonly graphs: FlowGraphRepository;
   readonly triggers: TriggerRepository;
   readonly temporal: FlowServerTemporalClient;
   readonly options: RunProjectionOptions;
