@@ -61,7 +61,20 @@ CI #1477 passed naming, full-history secret scan, format, lint, typecheck, norma
 
 ## Follow-up: clean-checkout reproducibility
 
-The historical CI-only formatter mutation for three Product Evolution tests is being removed in the follow-up clean-checkout hardening change. The canonical Prettier output is committed instead, so CI validates the checkout it receives rather than silently rewriting source before `format:check`.
+The historical CI-only formatter mutation for three Product Evolution tests was removed in PR #183. The canonical Prettier output is committed instead, so CI validates the checkout it receives rather than silently rewriting source before `format:check`.
+
+The implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed:
+
+```text
+CI                    35458711773 / #1479 PASS
+Product Eval          35458711775 / #718 PASS
+Format step           PASS without pre-format source mutation
+Normal test step      PASS
+Phase 4 acceptance    PASS
+Production ops        PASS
+Security/toolchain    PASS
+Production build      PASS
+```
 
 This follow-up is repository hygiene and reproducibility hardening only; it does not change ECORIONE product scope.
 
