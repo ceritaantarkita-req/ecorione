@@ -22,7 +22,7 @@ Status: **CURRENT SUMMARY**
 | PE-00 Architecture lock + migration contract | **CLOSED / PASS** |
 | PE-01 Project foundation | **CLOSED / PASS** |
 | PE-02 Project Sources | **CLOSED / PASS** |
-| PE-03 Trigger control plane | **NEXT** |
+| PE-03 Trigger control plane | **ACTIVE** |
 | PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
 | PE-06 Brain V1 | **BLOCKED BY PE-05** |
