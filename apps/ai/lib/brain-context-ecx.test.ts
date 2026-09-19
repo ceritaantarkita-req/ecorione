@@ -84,6 +84,18 @@ function requestBody(init?: RequestInit): JsonRecord | undefined {
   return init?.body === undefined ? undefined : jsonRecord(JSON.parse(String(init.body)));
 }
 
+function requiredBody(body: JsonRecord | undefined): JsonRecord {
+  if (body === undefined) throw new Error("expected request body");
+  return body;
+}
+
+function firstRef(packet: JsonRecord): unknown {
+  if (!Array.isArray(packet.refs) || packet.refs.length === 0) {
+    throw new Error("expected packet refs");
+  }
+  return packet.refs[0];
+}
+
 function packetFromPlan(body: JsonRecord) {
   return {
     version: 1,
@@ -131,14 +143,15 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
           });
         }
         if (url.endsWith("/v1/exchange/hydrate")) {
-          const packet = jsonRecord(body?.packet);
+          const request = requiredBody(body);
+          const packet = jsonRecord(request.packet);
           return json({
             packetId: packet.packetId,
             hydratedBytes: 80,
             items: [
               {
                 index: 0,
-                ref: packet.refs[0],
+                ref: firstRef(packet),
                 mediaType: "application/json",
                 contentBase64: Buffer.from(JSON.stringify(alpha), "utf8").toString("base64"),
                 sizeBytes: 80,
@@ -167,10 +180,10 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
     expect(calls.some((call) => call.url.includes("/sources"))).toBe(false);
 
     const contextCall = calls.find((call) => call.url.endsWith("/v1/retrieve"));
-    expect(contextCall?.body.candidateSourceUris).toBeUndefined();
+    expect(contextCall?.body?.candidateSourceUris).toBeUndefined();
 
     const planCall = calls.find((call) => call.url.endsWith("/v1/exchange/plan"));
-    expect(planCall?.body.refs).toEqual([
+    expect(planCall?.body?.refs).toEqual([
       { kind: "memoryFact", factId: "mem_pe07alpha" },
       { kind: "memoryFact", factId: "mem_pe07global" },
     ]);
@@ -213,12 +226,14 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
         if (url.includes("/v1/triggers?")) return json({ triggers: [] });
         if (url.includes("/v1/runs?")) return json({ runs: [] });
         if (url.endsWith("/v1/retrieve")) {
-          expect(body.candidateSourceUris).toEqual([SOURCE_URI]);
+          const request = requiredBody(body);
+          expect(request.candidateSourceUris).toEqual([SOURCE_URI]);
           return json(retrievePayload([alpha], true));
         }
         if (url.endsWith("/v1/exchange/plan")) {
-          expect(body.refs).toEqual([{ kind: "memoryFact", factId: "mem_pe07alpha" }]);
-          const packet = packetFromPlan(jsonRecord(body));
+          const request = requiredBody(body);
+          expect(request.refs).toEqual([{ kind: "memoryFact", factId: "mem_pe07alpha" }]);
+          const packet = packetFromPlan(request);
           return json({
             packets: [packet],
             metrics: {
@@ -229,15 +244,16 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
           });
         }
         if (url.endsWith("/v1/exchange/hydrate")) {
-          const packet = jsonRecord(body?.packet);
-          expect(body.selection).toEqual({ mode: "semantic-v1", maxRefs: 4 });
+          const request = requiredBody(body);
+          const packet = jsonRecord(request.packet);
+          expect(request.selection).toEqual({ mode: "semantic-v1", maxRefs: 4 });
           return json({
             packetId: packet.packetId,
             hydratedBytes: 80,
             items: [
               {
                 index: 0,
-                ref: packet.refs[0],
+                ref: firstRef(packet),
                 mediaType: "application/json",
                 contentBase64: Buffer.from(JSON.stringify(alpha), "utf8").toString("base64"),
                 sizeBytes: 80,
