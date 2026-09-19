@@ -424,11 +424,7 @@ export class ContextRepository {
       return { invalidated: supersede(old, replacement), replacement };
     })();
   }
-  forgetFact(
-    id: MemoryFactId,
-    now: Timestamp,
-    projectId: ProjectId | null = null,
-  ): MemoryFact {
+  forgetFact(id: MemoryFactId, now: Timestamp, projectId: ProjectId | null = null): MemoryFact {
     const row = this.factRow(id, true);
     if (row === undefined) throw new FactNotFoundError(id);
     if (row.t_invalid !== null) throw new FactAlreadyInvalidatedError(id);
@@ -522,7 +518,10 @@ export class ContextRepository {
     }
     return CoreMemorySchema.parse({ blocks: [...effective.values()] });
   }
-  getCoreMemoryBlock(label: string, projectId: ProjectId | null = null): CoreMemoryBlock | null {
+  getCoreMemoryBlock(
+    label: string,
+    projectId: ProjectId | null = null,
+  ): CoreMemoryBlock | null {
     const row = this.raw
       .prepare("SELECT * FROM core_memory WHERE label=? AND project_id IS ?")
       .get(label, projectId) as CoreMemoryRow | undefined;
@@ -592,7 +591,9 @@ export class ContextRepository {
     if (existing === null) return;
     if (existing.readOnly && !mayWriteCoreMemory(options.trust))
       throw new CoreMemoryWriteForbiddenError(`Blok "${label}" read-only.`);
-    this.raw.prepare("DELETE FROM core_memory WHERE label=? AND project_id IS ?").run(label, projectId);
+    this.raw
+      .prepare("DELETE FROM core_memory WHERE label=? AND project_id IS ?")
+      .run(label, projectId);
   }
 
   putArtifactPointer(input: ArtifactPointerInput): ArtifactPointer {
