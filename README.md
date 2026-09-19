@@ -4,7 +4,7 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-> **Current status — 2026-09-19:** the original Batch 1–12 / W / F6 baseline is **CLOSED**. Product Evolution is active: **PE-00 through PE-06 are CLOSED / PASS; PE-07 Brain + Context + ECX is ACTIVE; PE-08 is BLOCKED BY PE-07**. Production host/Cloudflare remains deferred by operator; AutoClick remains deferred by design.
+> **Current status — 2026-09-19:** the original Batch 1–12 / W / F6 baseline is **CLOSED**. Product Evolution is active: **PE-00 through PE-07 are CLOSED / PASS; PE-08 Product closure is ACTIVE**. Production host/Cloudflare remains deferred by operator; AutoClick remains deferred by design.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -69,7 +69,7 @@ PE-08 Product closure
 
 Read [docs/product-evolution-architecture.md](docs/product-evolution-architecture.md), [docs/product-evolution-roadmap.md](docs/product-evolution-roadmap.md), and [docs/product-evolution-agent-guide.md](docs/product-evolution-agent-guide.md).
 
-PE-06 Brain V1 is CLOSED / PASS. PE-07 Brain + Context + ECX is the active implementation batch; PE-08 remains blocked until PE-07 closes.
+PE-07 Brain + Context + ECX is CLOSED / PASS. PE-08 Product closure is the active final Product Evolution batch.
 
 ## Local development
 
