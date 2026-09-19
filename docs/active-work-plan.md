@@ -30,7 +30,7 @@ Closure evidence: [verification/pe-05-event-webhook-closure-2026-09-19.md](verif
 
 **PE-06 — Brain V1**
 
-Docs/transition branch: `docs/pe-05-closure-pe-06-activation-20260919`. Implementation branch must be created from synchronized `main` when PE-06 coding begins.
+Implementation branch: `pe/pe-06-brain-v1-20260919`, created from synchronized `main` (`ace7ca9f5450c390e104b75e6a2559879b339fa0`).
 
 Architecture decision: [adr/0038-brain-derived-projection.md](adr/0038-brain-derived-projection.md).  
 Acceptance: [product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md).
@@ -50,7 +50,15 @@ Current boundary:
 - Context retrieval and ECX behavior remain unchanged in PE-06;
 - PE-07 Brain -> Context -> ECX optimization remains blocked.
 
-PE-07 remains blocked until PE-06 closes.
+Dependency gate:
+
+```text
+PE-06  ACTIVE — Brain V1
+PE-07  BLOCKED BY PE-06
+PE-08  BLOCKED BY PE-07
+```
+
+PE-07 remains blocked until PE-06 closes; PE-08 remains blocked until PE-07 closes.
 
 ## Non-negotiable boundaries
 

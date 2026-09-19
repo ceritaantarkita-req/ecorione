@@ -27,7 +27,8 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PE-04: **CLOSED / PASS**;
 - PE-05: **CLOSED / PASS**;
 - PE-06: **ACTIVE / BRAIN V1**;
-- PE-07..PE-08: **BLOCKED BY PRIOR PE BATCH**;
+- PE-07: **BLOCKED BY PE-06**;
+- PE-08: **BLOCKED BY PE-07**;
 - production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
