@@ -50,9 +50,7 @@ describe("PE-02 ProjectSourceRegistry", () => {
       expect(sources.list(b.id, b.workspaceId)).toEqual([]);
 
       sources.attach({ ...input, projectId: b.id });
-      expect(
-        sources.countForResource("ws_personal" as never, "url", input.resourceId),
-      ).toBe(2);
+      expect(sources.countForResource("ws_personal" as never, "url", input.resourceId)).toBe(2);
 
       expect(
         sources.detach({
@@ -65,9 +63,7 @@ describe("PE-02 ProjectSourceRegistry", () => {
       ).not.toBeNull();
       expect(sources.list(a.id, a.workspaceId)).toEqual([]);
       expect(sources.list(b.id, b.workspaceId)).toHaveLength(1);
-      expect(
-        sources.countForResource("ws_personal" as never, "url", input.resourceId),
-      ).toBe(1);
+      expect(sources.countForResource("ws_personal" as never, "url", input.resourceId)).toBe(1);
     } finally {
       db.close();
     }
