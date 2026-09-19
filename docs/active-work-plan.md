@@ -28,7 +28,7 @@ Closure evidence: [verification/pe-06-brain-v1-closure-2026-09-19.md](verificati
 
 **PE-07 — Brain + Context + ECX**
 
-Docs/transition branch: `docs/pe-06-closure-pe-07-activation-20260919`. Implementation branch must be created from synchronized `main` after this transition is merged.
+Implementation branch: `pe/pe-07-brain-context-ecx-20260919`, created from synchronized `main` `ffa1531a12a1149d3dfceaea8f82e53619e938d4` after PR #177 merged.
 
 Architecture boundary: [adr/0038-brain-derived-projection.md](adr/0038-brain-derived-projection.md).  
 Acceptance: [product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md).
@@ -47,6 +47,16 @@ Current boundary:
 - oracle/reference-known lanes must stay labeled as oracle/upper-bound evidence;
 - no graph database, second retriever/vector owner, broad LLM extraction, or full Brain graph prompt dump;
 - no paid hosted/provider calls without explicit operator authorization.
+
+Implementation checkpoint:
+
+- bounded Brain neighborhood schema/query is implemented over the PE-06 derived graph;
+- URL Source nodes may emit an exact bounded `sourceUris` constraint;
+- Context applies that optional constraint only after its existing authorization/policy candidate set is built;
+- omitted constraint is the explicit baseline; an explicit empty constraint is fail-closed and returns zero candidates;
+- the PE-07 integration path sends only Context retrieval hits to ECX as `memoryFact` refs, then uses existing `semantic-v1` selection;
+- no model/provider call is part of authorization or the first deterministic evidence lane;
+- predeclared closure thresholds are frozen in the PE-07 acceptance contract before the first evidence run.
 
 Dependency gate:
 
