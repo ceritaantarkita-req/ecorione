@@ -230,7 +230,7 @@ export async function scheduledTriggerWorkflow(
         operationId,
         plan: input.plan,
         input: input.input,
-        ...(preserveTriggerCorrelation ? { triggerId: input.triggerId } : {}),
+        triggerId: preserveTriggerCorrelation ? input.triggerId : null,
         autonomy: input.requestedAutonomy,
         depth: 0,
       },
@@ -408,9 +408,7 @@ export async function graphExecutionWorkflow(
               operationId: execution.operationId,
               plan,
               input: incoming.value,
-              ...(recordRunLifecycle
-                ? { triggerId: execution.triggerId ?? null }
-                : {}),
+              triggerId: recordRunLifecycle ? (execution.triggerId ?? null) : null,
               autonomy: execution.autonomy,
               depth: execution.depth + 1,
             },
