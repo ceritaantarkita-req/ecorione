@@ -10,10 +10,7 @@ import { Worker } from "@temporalio/worker";
 import { describe, expect, it, vi } from "vitest";
 import type { FlowGraphActivities } from "./graph-activities.js";
 import { validateAndCompileFlowGraph } from "./node-registry.js";
-import {
-  reconcileTimeTriggerSchedule,
-  type TriggerScheduleTemporalClient,
-} from "./temporal-client.js";
+import { reconcileTimeTriggerSchedule } from "./temporal-client.js";
 import type { TriggerActivities } from "./trigger-activities.js";
 
 async function waitUntil(
