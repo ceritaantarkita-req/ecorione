@@ -2,63 +2,45 @@
 
 Last updated: **2026-09-19**
 
-Status: **PE-03 ACTIVE / TRIGGER CONTROL PLANE**
+Status: **PE-04 ACTIVE / WORK + SCHEDULE + RUNS**
 
 ## Latest closed item
 
-**PE-02 — Project Sources**
-
-Delivered:
+**PE-03 — Trigger control plane**
 
 ```text
-Project Sources
-  -> Hub binding metadata only
-  -> Artifact/Context owner validation
-  -> Space owner validation
-  -> Flow owner validation
-  -> Connect MCP visibility validation
-  -> HTTPS URL references
-  -> attach/detach audit
-  -> Sources UI
+PR #172
+exact reviewed head 74730e26321cac06c31243baeeafe29d5f4d75f0
+CI 35427251391 PASS
+Product Eval 35427251394 PASS
+MCP External HTTPS Acceptance 35427251392 PASS
+merge main c739c09014d8aa20ca8e1b83c5b6be39b4ee649c
 ```
 
-No owner content is copied into Hub.
-
-## PE-02 implementation evidence
-
-```text
-PR #171
-reviewed implementation head a6167df469cf491015b232aff8a192b32a25c569
-CI #1223 PASS
-Product Eval #462 PASS
-MCP External HTTPS Acceptance #628 PASS
-```
-
-Acceptance: [product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md).
+Acceptance: [product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md).  
+Closure evidence: [verification/pe-03-trigger-control-plane-closure-2026-09-19.md](verification/pe-03-trigger-control-plane-closure-2026-09-19.md).
 
 ## Active item
 
-**PE-03 — Trigger control plane**
+**PE-04 — Work + Schedule + unified Runs**
 
-PR #171 is merged and post-merge `main` passed CI #1234, Product Eval #473, and MCP External HTTPS Acceptance #639.
+Implementation: draft PR **#173** / `pe/pe-04-work-schedule-runs-20260919`.
 
-Acceptance: [product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md).
+Acceptance: [product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md).
 
-Implementation PR: **#172** (`pe/pe-03-trigger-control-plane-20260919`). Closure requires exact-head CI, Product Eval, and Temporal/Phase 4 runtime acceptance before merge.
+Current boundary:
 
-PE-03 boundary:
+- top-level Work surface with Schedule / Flows / Runs;
+- Schedule reads/writes PE-03 time Trigger definitions;
+- Temporal Schedule `describe()` is runtime truth for paused/upcoming occurrences;
+- Project-scoped Flow navigation + exact version deep links;
+- Run key = existing `operationId`;
+- Run list/detail are rebuilt from RnD lifecycle traces + Temporal/Flow state + Hub audit/approval;
+- Trigger identity is propagated into new graph executions;
+- workflow evolution uses Temporal patch marker `pe04-run-lifecycle-v1`;
+- no `runs` table, no second execution state machine, no Task domain.
 
-- TriggerDefinition schema/storage;
-- manual + time triggers first;
-- Project + Flow linkage;
-- exact Flow version pin by default;
-- IANA timezone;
-- concurrency + misfire policy;
-- idempotency identity;
-- Hub authority evaluation;
-- Temporal schedule integration.
-
-Do not pull PE-04 Work/Schedule/Runs product UI beyond the minimum control surface required to validate PE-03.
+PE-05 event/webhook activation remains blocked.
 
 ## Non-negotiable boundaries
 

@@ -47,6 +47,12 @@ export interface GraphTraceActivityInput extends GraphNodeActivityContext {
   readonly name: string;
   readonly attributes: Readonly<Record<string, string | number | boolean>>;
 }
+export interface GraphRunTraceActivityInput {
+  readonly execution: FlowGraphExecutionInput;
+  readonly name:
+    "flow.graph.run.started" | "flow.graph.run.completed" | "flow.graph.run.failed";
+  readonly attributes: Readonly<Record<string, string | number | boolean>>;
+}
 
 export interface FlowGraphActivities {
   authorizeGraphNode(input: GraphNodeActivityContext): Promise<void>;
@@ -62,6 +68,7 @@ export interface FlowGraphActivities {
   ): Promise<string>;
   executeGraphNode(input: GraphExecuteActivityInput): Promise<unknown>;
   recordGraphTrace(input: GraphTraceActivityInput): Promise<void>;
+  recordGraphRunTrace(input: GraphRunTraceActivityInput): Promise<void>;
   resolveSubflow(input: GraphNodeActivityContext): Promise<CompiledFlowGraphPlan>;
 }
 
@@ -414,11 +421,39 @@ export function createFlowGraphActivities(
           operationId: execution.operationId,
           recordedAt: nowIso(),
           attributes: {
+            workspaceId: execution.plan.graph.workspaceId,
+            ...(execution.plan.graph.projectId === null
+              ? {}
+              : { projectId: execution.plan.graph.projectId }),
             graphId: execution.plan.graph.id,
             graphVersion: execution.plan.graphVersion,
             runId: execution.runId,
+            ...(execution.triggerId === null ? {} : { triggerId: execution.triggerId }),
             nodeId: compiled.node.id,
             nodeOperationId: operationId,
+            ...attributes,
+          },
+        },
+      });
+    },
+
+    async recordGraphRunTrace({ execution, name, attributes }): Promise<void> {
+      await httpJson(`${config.rndUrl}/v1/traces`, {
+        method: "POST",
+        token: config.token,
+        body: {
+          name,
+          operationId: execution.operationId,
+          recordedAt: nowIso(),
+          attributes: {
+            workspaceId: execution.plan.graph.workspaceId,
+            ...(execution.plan.graph.projectId === null
+              ? {}
+              : { projectId: execution.plan.graph.projectId }),
+            graphId: execution.plan.graph.id,
+            graphVersion: execution.plan.graphVersion,
+            runId: execution.runId,
+            ...(execution.triggerId === null ? {} : { triggerId: execution.triggerId }),
             ...attributes,
           },
         },

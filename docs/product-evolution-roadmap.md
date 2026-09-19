@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **ACTIVE — PE-03**
+Status: **ACTIVE — PE-04**
 
 This is the explicit roadmap that follows the closed Batch 1–12 / W / F6 baseline. It uses the prefix **PE (Product Evolution)** so it cannot be confused with old Batch numbers.
 
@@ -16,8 +16,8 @@ Agent execution protocol: [product-evolution-agent-guide.md](product-evolution-a
 | PE-00 | Lock architecture contracts + migrations | **CLOSED / PASS** |
 | PE-01 | Project foundation + project-aware Chat/Ledger/Context | **CLOSED / PASS** |
 | PE-02 | Project Sources + owner bindings | **CLOSED / PASS** |
-| PE-03 | Trigger control plane + manual/time trigger | **ACTIVE** |
-| PE-04 | Work UI + Schedule + unified Runs | PE-03 closed |
+| PE-03 | Trigger control plane + manual/time trigger | **CLOSED / PASS** |
+| PE-04 | Work UI + Schedule + unified Runs | **ACTIVE** |
 | PE-05 | Event/Webhook automation under existing policy | PE-04 closed |
 | PE-06 | Brain V1 deterministic graph projection | PE-05 closed |
 | PE-07 | Brain -> Context -> ECX optimization + measurement | PE-06 closed |
@@ -347,12 +347,12 @@ As of **2026-09-19**:
 PE-00  CLOSED / PASS
 PE-01  CLOSED / PASS
 PE-02  CLOSED / PASS
-PE-03  ACTIVE
-PE-04  BLOCKED BY PE-03
+PE-03  CLOSED / PASS
+PE-04  ACTIVE
 PE-05  BLOCKED BY PE-04
 PE-06  BLOCKED BY PE-05
 PE-07  BLOCKED BY PE-06
 PE-08  BLOCKED BY PE-07
 ```
 
-PE-03 is currently active. PE-04 remains blocked until PE-03 is CLOSED / PASS on the exact reviewed and merged head.
+PE-03 is CLOSED / PASS. PE-04 is currently active; PE-05 remains blocked until PE-04 is CLOSED / PASS on the exact reviewed and merged head.

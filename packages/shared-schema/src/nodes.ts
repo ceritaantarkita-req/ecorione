@@ -5,6 +5,7 @@ import {
   ArtifactIdSchema,
   OperationIdSchema,
   ProjectIdSchema,
+  TriggerIdSchema,
   WorkflowIdSchema,
   WorkspaceIdSchema,
 } from "./ids.js";
@@ -586,6 +587,7 @@ export const FlowGraphExecutionInputSchema = z
     operationId: OperationIdSchema,
     plan: CompiledFlowGraphPlanSchema,
     input: z.unknown(),
+    triggerId: TriggerIdSchema.nullable().default(null),
     autonomy: AutonomyLevelSchema.optional(),
     depth: z.number().int().min(0).max(8).default(0),
   })

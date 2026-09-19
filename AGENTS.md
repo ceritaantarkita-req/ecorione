@@ -23,12 +23,13 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PE-00: **CLOSED / PASS**;
 - PE-01: **CLOSED / PASS**;
 - PE-02: **CLOSED / PASS**;
-- PE-03: **ACTIVE / TRIGGER CONTROL PLANE**;
-- PE-04..PE-08: **BLOCKED BY PRIOR PE BATCH**;
+- PE-03: **CLOSED / PASS**;
+- PE-04: **ACTIVE / WORK + SCHEDULE + RUNS**;
+- PE-05..PE-08: **BLOCKED BY PRIOR PE BATCH**;
 - production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
-Do not create Batch 13. PE-03 is active; do not pull PE-04+ scope forward.
+Do not create Batch 13. PE-04 is active; do not pull PE-05+ scope forward.
 
 ## Architecture invariants
 
@@ -66,7 +67,7 @@ Do not create Batch 13. PE-03 is active; do not pull PE-04+ scope forward.
 
 ## Current active scope
 
-PE-03 is active. Implement Trigger control plane only, following ADR-36, the PE-03 acceptance contract, and the agent guide. PE-04 Work/Schedule/Runs product UI remains blocked except for the minimum control surface needed to verify PE-03.
+PE-04 is active. Implement Work + Schedule + unified Runs only, following ADR-37, the PE-04 acceptance contract, and the agent guide. Run remains a rebuildable read projection keyed by operationId; do not create a runs table or Task domain.
 
 ## Git / closure discipline
 

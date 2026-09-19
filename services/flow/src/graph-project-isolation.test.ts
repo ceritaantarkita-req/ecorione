@@ -52,6 +52,7 @@ function executionFor(graphDocument: ReturnType<typeof graph>): FlowGraphExecuti
     operationId: "op_projectisolation01" as never,
     plan: validation.plan,
     input: null,
+    triggerId: null,
     autonomy: "L1",
     depth: 0,
   };

@@ -82,6 +82,29 @@ describe("audit log", () => {
     expect(repo.listAuditEvents({ operationId: "op_a" })).toHaveLength(1);
   });
 
+  it("operationPrefix mengembalikan root + child operation tanpa sibling collision", () => {
+    for (const operationId of [
+      "op_runroot01",
+      "op_runroot01-node_approval1",
+      "op_runroot010",
+      "op_other01",
+    ]) {
+      repo.recordAuditEvent({
+        type: "ACTION_REQUESTED",
+        operationId: operationId as never,
+        module: "Hub",
+        detail: {},
+        now: T0,
+      });
+    }
+
+    expect(
+      repo
+        .listAuditEvents({ operationPrefix: "op_runroot01" })
+        .map((event) => event.operationId),
+    ).toEqual(["op_runroot01", "op_runroot01-node_approval1"]);
+  });
+
   it("detail JSON round-trip apa adanya (arbitrary payload)", () => {
     repo.recordAuditEvent({
       type: "MODEL_CALLED",

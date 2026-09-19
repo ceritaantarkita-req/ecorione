@@ -144,17 +144,35 @@ export class HubRepository {
       ruleId: input.ruleId ?? null,
     };
   }
-  listAuditEvents(filter: { readonly operationId?: string | undefined } = {}): AuditEvent[] {
-    const rows =
-      filter.operationId === undefined
-        ? (this.db.raw
-            .prepare("SELECT * FROM audit_events ORDER BY ts ASC, rowid ASC")
-            .all() as AuditEventRow[])
-        : (this.db.raw
-            .prepare(
-              "SELECT * FROM audit_events WHERE operation_id=? ORDER BY ts ASC, rowid ASC",
-            )
-            .all(filter.operationId) as AuditEventRow[]);
+  listAuditEvents(
+    filter: {
+      readonly operationId?: string | undefined;
+      readonly operationPrefix?: string | undefined;
+    } = {},
+  ): AuditEvent[] {
+    let rows: AuditEventRow[];
+    if (filter.operationId !== undefined) {
+      rows = this.db.raw
+        .prepare("SELECT * FROM audit_events WHERE operation_id=? ORDER BY ts ASC, rowid ASC")
+        .all(filter.operationId) as AuditEventRow[];
+    } else if (filter.operationPrefix !== undefined) {
+      rows = this.db.raw
+        .prepare(
+          `SELECT * FROM audit_events
+           WHERE operation_id=?
+              OR substr(operation_id,1,length(?) + 1)=? || '-'
+           ORDER BY ts ASC, rowid ASC`,
+        )
+        .all(
+          filter.operationPrefix,
+          filter.operationPrefix,
+          filter.operationPrefix,
+        ) as AuditEventRow[];
+    } else {
+      rows = this.db.raw
+        .prepare("SELECT * FROM audit_events ORDER BY ts ASC, rowid ASC")
+        .all() as AuditEventRow[];
+    }
     return rows.map(rowToAuditEvent);
   }
 

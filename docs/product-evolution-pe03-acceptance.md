@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-19**
 
-Status: **REQUIRED FOR PE-03 CLOSURE**
+Status: **CLOSED / PASS**
 
 PE-03 adds the Trigger control plane without creating another scheduler, retry engine, or autonomous polling service. Flow owns Trigger metadata; Temporal owns time-schedule runtime truth; Hub remains authority/policy owner.
 
@@ -191,4 +191,4 @@ Product Eval
 Phase 4 / Temporal runtime acceptance
 ```
 
-PE-04 must not begin until the exact reviewed PE-03 head is green and merged.
+PE-03 closed on PR #172 exact head `74730e26321cac06c31243baeeafe29d5f4d75f0` and merged as `c739c09014d8aa20ca8e1b83c5b6be39b4ee649c`. See [verification/pe-03-trigger-control-plane-closure-2026-09-19.md](verification/pe-03-trigger-control-plane-closure-2026-09-19.md). PE-04 is now active.

@@ -12,7 +12,9 @@ import {
   FlowGraphUpdateRequestSchema,
   FlowIdSchema,
   FlowNodeIdSchema,
+  OperationIdSchema,
   ProjectIdSchema,
+  RunListResponseSchema,
   FlowStartRequestSchema,
   FlowStartResponseSchema,
   FlowWorkflowInputSchema,
@@ -53,9 +55,11 @@ import {
 import type { FlowGraphTemporalClient, FlowServerTemporalClient } from "./temporal-client.js";
 import { registerTriggerRoutes } from "./trigger-http.js";
 import { TriggerRepository } from "./trigger-repository.js";
+import { getRunProjection, listRunProjections } from "./run-projection.js";
 
 export interface BuildFlowServerOptions {
   readonly hubUrl: string;
+  readonly rndUrl?: string | undefined;
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
   readonly graphRepository?: FlowGraphRepository | undefined;
@@ -71,6 +75,16 @@ const GraphVersionQuerySchema = z.object({
 });
 const GraphParamsSchema = z.object({ id: FlowGraphIdSchema });
 const RunParamsSchema = z.object({ id: FlowIdSchema });
+const RunProjectionParamsSchema = z.object({ operationId: OperationIdSchema });
+const RunProjectionScopeQuerySchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  projectId: ProjectIdSchema,
+});
+const RunProjectionListQuerySchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  projectId: ProjectIdSchema,
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
 const NodeRunParamsSchema = z.object({ id: FlowIdSchema, nodeId: FlowNodeIdSchema });
 
 function graphError(error: unknown): unknown {
@@ -194,6 +208,43 @@ export function buildFlowServer(
 
   app.get("/v1/nodes", async () => ({ nodes: listCoreNodeDefinitions() }));
 
+  app.get("/v1/runs", async (req) => {
+    const query = parseOrBadRequest(RunProjectionListQuerySchema, req.query);
+    const runs = await listRunProjections(
+      {
+        triggers,
+        temporal,
+        options: {
+          hubUrl: options.hubUrl,
+          rndUrl: options.rndUrl ?? "http://127.0.0.1:17021",
+          token: options.token,
+        },
+      },
+      query,
+    );
+    return RunListResponseSchema.parse({ runs });
+  });
+
+  app.get<{ Params: { operationId: string } }>("/v1/runs/:operationId", async (req) => {
+    const { operationId } = parseOrBadRequest(RunProjectionParamsSchema, req.params);
+    const scope = parseOrBadRequest(RunProjectionScopeQuerySchema, req.query);
+    const run = await getRunProjection(
+      {
+        triggers,
+        temporal,
+        options: {
+          hubUrl: options.hubUrl,
+          rndUrl: options.rndUrl ?? "http://127.0.0.1:17021",
+          token: options.token,
+        },
+      },
+      operationId,
+      scope,
+    );
+    if (run === null) throw new NotFoundError(`Run tidak ditemukan: ${operationId}`);
+    return run;
+  });
+
   app.get("/v1/graphs", async (req) => {
     const query = parseOrBadRequest(GraphListQuerySchema, req.query);
     return { graphs: graphs.list(query.workspaceId, query.projectId) };
@@ -275,6 +326,7 @@ export function buildFlowServer(
       operationId,
       plan,
       input: body.input,
+      triggerId: null,
       depth: 0,
     });
     metrics.addCounter("ecorione_flow_runs_total", 1, { runtime: "graph" });

@@ -633,6 +633,18 @@ export default function FlowCanvasPage() {
     setVersions(body.versions);
   }
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const graph = params.get("graph");
+    if (graph === null || !/^fg_[a-z0-9][a-z0-9_-]+$/.test(graph)) return;
+    const rawVersion = params.get("version");
+    const parsedVersion =
+      rawVersion !== null && /^[1-9][0-9]*$/.test(rawVersion) ? Number(rawVersion) : undefined;
+    setLoadId(graph);
+    void runUiAction("Flow deep-link gagal", () => loadGraph(graph, parsedVersion));
+    // The deep-link is an initial navigation contract; later URL changes are handled by navigation.
+  }, []);
+
   async function runGraph(): Promise<void> {
     if (runInFlightRef.current || runStarting) return;
     if (graphId === null) {

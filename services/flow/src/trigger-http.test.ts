@@ -65,6 +65,13 @@ function temporal(): FlowTemporalClient &
     })),
     reconcileTimeTrigger: vi.fn(async () => undefined),
     pauseTimeTrigger: vi.fn(async () => undefined),
+    describeTimeTrigger: vi.fn(async (trigger) => ({
+      triggerId: trigger.id,
+      scheduleId: trigger.temporalScheduleId!,
+      paused: !trigger.enabled,
+      nextActionTimes: ["2026-09-20T01:00:00.000Z"],
+      recentActionCount: 2,
+    })),
   };
 }
 
@@ -344,6 +351,49 @@ describe("PE-03 Trigger HTTP", () => {
       },
     });
     expect(temporalClient.reconcileTimeTrigger).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it("reads Temporal schedule runtime for the same Project only", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app } = build();
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: {
+        ...manualPayload(),
+        name: "Runtime schedule",
+        kind: "time",
+        configuration: {
+          cronExpression: "0 8 * * *",
+          timezone: "Asia/Jakarta",
+          catchupWindowMs: 60_000,
+          overlap: "SKIP",
+        },
+      },
+    });
+    expect(created.statusCode).toBe(201);
+    const triggerId = (created.json() as { id: string }).id;
+
+    const runtime = await app.inject({
+      method: "GET",
+      url: `/v1/triggers/${triggerId}/schedule?workspaceId=ws_personal&projectId=prj_personal`,
+    });
+    expect(runtime.statusCode).toBe(200);
+    expect(runtime.json()).toMatchObject({
+      triggerId,
+      paused: false,
+      nextActionTimes: ["2026-09-20T01:00:00.000Z"],
+      recentActionCount: 2,
+    });
+
+    const wrongProject = await app.inject({
+      method: "GET",
+      url: `/v1/triggers/${triggerId}/schedule?workspaceId=ws_personal&projectId=prj_other`,
+    });
+    expect(wrongProject.statusCode).toBe(409);
     await app.close();
   });
 

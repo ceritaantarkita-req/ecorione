@@ -73,6 +73,24 @@ describe("proxyToFlow", () => {
     expect(encoded.status).toBe(400);
   });
 
+  it("meneruskan PATCH Schedule ke Flow", async () => {
+    pool
+      .intercept({
+        path: "/v1/triggers/trg_schedule001",
+        method: "PATCH",
+        body: JSON.stringify({ expectedRevision: 2 }),
+      })
+      .reply(200, { revision: 3 });
+
+    const response = await proxyToFlow(
+      request("PATCH", JSON.stringify({ expectedRevision: 2 })),
+      "/v1/triggers/trg_schedule001",
+      "PATCH",
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ revision: 3 });
+  });
+
   it("body mutasi yang bukan JSON valid → 400", async () => {
     const response = await proxyToFlow(
       request("POST", "bukan json {{{"),

@@ -4,7 +4,7 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-> **Current status — 2026-09-19:** the original Batch 1–12 / W / F6 baseline is **CLOSED**. Product Evolution is active: **PE-00, PE-01, and PE-02 are CLOSED / PASS; PE-03 Trigger control plane is ACTIVE; PE-04+ remains blocked by the prior PE batch**. Production host/Cloudflare remains deferred by operator; AutoClick remains deferred by design.
+> **Current status — 2026-09-19:** the original Batch 1–12 / W / F6 baseline is **CLOSED**. Product Evolution is active: **PE-00 through PE-03 are CLOSED / PASS; PE-04 Work + Schedule + Runs is ACTIVE; PE-05+ remains blocked by the prior PE batch**. Production host/Cloudflare remains deferred by operator; AutoClick remains deferred by design.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -12,7 +12,7 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 
 | Area | Current baseline |
 |---|---|
-| Ai | Chat UI, Local/Hosted routing, attachments, voice, Space, Flow, Ops, Settings |
+| Ai | Chat UI, Local/Hosted routing, attachments, voice, Projects, Work, Space, Flow, Ops, Settings |
 | Hub | Policy, approval, capability authority, audit, orchestration, Historical Ledger, ECX |
 | Connect | Local/hosted providers, Vault, spend budget, runtime settings, inbound/outbound MCP |
 | Context | L0 episodic source, semantic facts, core memory, retrieval and provenance |
@@ -69,7 +69,7 @@ PE-08 Product closure
 
 Read [docs/product-evolution-architecture.md](docs/product-evolution-architecture.md), [docs/product-evolution-roadmap.md](docs/product-evolution-roadmap.md), and [docs/product-evolution-agent-guide.md](docs/product-evolution-agent-guide.md).
 
-PE-03 Trigger control plane is the active implementation batch. PE-04+ remains blocked until PE-03 closes.
+PE-04 Work + Schedule + unified Runs is the active implementation batch. PE-05+ remains blocked until PE-04 closes.
 
 ## Local development
 

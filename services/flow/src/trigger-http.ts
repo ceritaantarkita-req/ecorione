@@ -55,6 +55,10 @@ const TriggerListQuerySchema = z.object({
   workspaceId: WorkspaceIdSchema.optional(),
   projectId: ProjectIdSchema.optional(),
 });
+const TriggerScheduleQuerySchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  projectId: ProjectIdSchema,
+});
 
 export class TriggerDisabledError extends Error {
   constructor() {
@@ -212,7 +216,11 @@ function requireGraphTemporal(temporal: FlowServerTemporalClient): FlowGraphTemp
 function requireScheduleTemporal(
   temporal: FlowServerTemporalClient,
 ): TriggerScheduleTemporalClient {
-  if (temporal.reconcileTimeTrigger === undefined || temporal.pauseTimeTrigger === undefined) {
+  if (
+    temporal.reconcileTimeTrigger === undefined ||
+    temporal.pauseTimeTrigger === undefined ||
+    temporal.describeTimeTrigger === undefined
+  ) {
     throw new HttpError(
       503,
       "TRIGGER_SCHEDULE_RUNTIME_UNAVAILABLE",
@@ -282,6 +290,20 @@ export function registerTriggerRoutes(
     const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
     try {
       return triggers.require(id);
+    } catch (error) {
+      throw triggerError(error);
+    }
+  });
+
+  app.get<{ Params: { id: string } }>("/v1/triggers/:id/schedule", async (req) => {
+    const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
+    const query = parseOrBadRequest(TriggerScheduleQuerySchema, req.query);
+    try {
+      const trigger = triggers.require(id);
+      if (trigger.workspaceId !== query.workspaceId) throw new TriggerWorkspaceConflictError();
+      if (trigger.projectId !== query.projectId) throw new TriggerProjectConflictError();
+      if (trigger.kind !== "time") throw new TriggerWrongKindError("time");
+      return await requireScheduleTemporal(temporal).describeTimeTrigger(trigger);
     } catch (error) {
       throw triggerError(error);
     }
@@ -440,6 +462,7 @@ export function registerTriggerRoutes(
         operationId: ids.operationId,
         plan,
         input: body.input,
+        triggerId: trigger.id,
         autonomy: trigger.requestedAutonomy,
         depth: 0,
       });

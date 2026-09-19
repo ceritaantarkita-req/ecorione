@@ -15,6 +15,7 @@ export * from "./chat.js";
 export * from "./project.js";
 export * from "./project-source.js";
 export * from "./trigger.js";
+export * from "./run.js";
 export * from "./mcp.js";
 export * from "./sync.js";
 export * from "./sandbox.js";

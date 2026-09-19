@@ -70,6 +70,7 @@ function activities(): FlowGraphActivities {
     requestGraphApproval: vi.fn(async () => "Approve graph?"),
     executeGraphNode: vi.fn(async ({ input }) => input),
     recordGraphTrace: vi.fn(async () => undefined),
+    recordGraphRunTrace: vi.fn(async () => undefined),
     resolveSubflow: vi.fn(async () => {
       throw new Error("Subflow is not used in this acceptance graph.");
     }),
@@ -117,6 +118,16 @@ describe("Temporal graphExecutionWorkflow", () => {
       expect(graphActivities.requestGraphApproval).toHaveBeenCalledTimes(1);
       expect(graphActivities.executeGraphNode).not.toHaveBeenCalled();
       expect(graphActivities.authorizeGraphNode).toHaveBeenCalledTimes(5);
+      expect(graphActivities.recordGraphRunTrace).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          execution: expect.objectContaining({ triggerId: null }),
+          name: "flow.graph.run.started",
+        }),
+      );
+      expect(graphActivities.recordGraphRunTrace).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "flow.graph.run.completed" }),
+      );
     } finally {
       await env.teardown();
     }

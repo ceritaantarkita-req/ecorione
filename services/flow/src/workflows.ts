@@ -4,6 +4,7 @@ import {
   defineQuery,
   defineSignal,
   executeChild,
+  patched,
   proxyActivities,
   setHandler,
   sleep,
@@ -57,6 +58,19 @@ export const graphNodeInputSignal = defineSignal<[FlowGraphNodeInputSignal]>("gr
 export const graphRunStateQuery = defineQuery<FlowGraphRunState>("graphRunState");
 
 const triggerActivities = proxyActivities<TriggerActivities>({
+  startToCloseTimeout: "30 seconds",
+  retry: {
+    initialInterval: "1 second",
+    backoffCoefficient: 2,
+    maximumInterval: "10 seconds",
+    maximumAttempts: 3,
+  },
+});
+
+const PE04_RUN_LIFECYCLE_PATCH = "pe04-run-lifecycle-v1";
+const PE04_TRIGGER_CORRELATION_PATCH = "pe04-trigger-correlation-v1";
+
+const runTraceActivities = proxyActivities<Pick<FlowGraphActivities, "recordGraphRunTrace">>({
   startToCloseTimeout: "30 seconds",
   retry: {
     initialInterval: "1 second",
@@ -207,6 +221,7 @@ export async function scheduledTriggerWorkflow(
     operationId,
   });
 
+  const preserveTriggerCorrelation = patched(PE04_TRIGGER_CORRELATION_PATCH);
   return executeChild(graphExecutionWorkflow, {
     workflowId: runId,
     args: [
@@ -215,6 +230,7 @@ export async function scheduledTriggerWorkflow(
         operationId,
         plan: input.plan,
         input: input.input,
+        triggerId: preserveTriggerCorrelation ? input.triggerId : null,
         autonomy: input.requestedAutonomy,
         depth: 0,
       },
@@ -230,6 +246,14 @@ export async function graphExecutionWorkflow(
       "Subflow depth melewati batas 8.",
       "FLOW_SUBFLOW_DEPTH",
     );
+  const recordRunLifecycle = patched(PE04_RUN_LIFECYCLE_PATCH);
+  if (recordRunLifecycle) {
+    await runTraceActivities.recordGraphRunTrace({
+      execution,
+      name: "flow.graph.run.started",
+      attributes: { status: "RUNNING" },
+    });
+  }
   const decisions = new Map<string, FlowGraphNodeDecisionSignal>();
   const humanInputs = new Map<string, unknown>();
   const outputs = new Map<string, NodeOutput>();
@@ -384,6 +408,7 @@ export async function graphExecutionWorkflow(
               operationId: execution.operationId,
               plan,
               input: incoming.value,
+              triggerId: recordRunLifecycle ? (execution.triggerId ?? null) : null,
               autonomy: execution.autonomy,
               depth: execution.depth + 1,
             },
@@ -448,6 +473,13 @@ export async function graphExecutionWorkflow(
         sinks.map((item) => [item.node.id, outputs.get(item.node.id)?.value ?? null]),
       );
     runStatus = "COMPLETED";
+    if (recordRunLifecycle) {
+      await runTraceActivities.recordGraphRunTrace({
+        execution,
+        name: "flow.graph.run.completed",
+        attributes: { status: "COMPLETED" },
+      });
+    }
     return {
       runId: execution.runId,
       graphId: execution.plan.graph.id,
@@ -459,6 +491,17 @@ export async function graphExecutionWorkflow(
     runStatus = "FAILED";
     finalError =
       error instanceof Error ? error.message.slice(0, 2000) : String(error).slice(0, 2000);
+    if (recordRunLifecycle) {
+      try {
+        await runTraceActivities.recordGraphRunTrace({
+          execution,
+          name: "flow.graph.run.failed",
+          attributes: { status: "FAILED", error: finalError },
+        });
+      } catch {
+        /* preserve original workflow failure */
+      }
+    }
     throw error;
   }
 }
