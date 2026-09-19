@@ -50,6 +50,7 @@ jobs:
             apps/ai/lib/brain-neighborhood.test.ts \
             apps/ai/lib/brain-context-ecx.test.ts \
             services/context/src/pe07-brain-constraint.test.ts \
+            test/pe07-brain-context-ecx-source-contract.test.ts \
             test/pe06-brain-source-contract.test.ts \
             test/pe06-brain-owner-runtime.test.ts \
             apps/ai/app/api/projects/[id]/archive/route.test.ts \
