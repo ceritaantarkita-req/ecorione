@@ -103,7 +103,11 @@ describe("PE-03 Flow Project isolation", () => {
           workspaceId: "ws_personal",
           autonomy: "L1",
         });
-        return { outcome: "ALLOW", reason: "test" };
+        return {
+          outcome: "ALLOW",
+          reason: "test",
+          grantedPermissionIds: ["node.execute"],
+        };
       });
 
     const execution = executionFor(
