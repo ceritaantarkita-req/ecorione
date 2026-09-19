@@ -31,6 +31,8 @@ Evidence: [verification/windows-native-portability-closure-2026-09-20.md](verifi
 
 Clean-checkout reproducibility hardening is also CLOSED / PASS on PR #183. The implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed CI #1479 + Product Eval #718; the final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 + Product Eval #721 and merged to `main` as `4980b3ceb149be58788467d2e11769de12977d5a`. CI no longer rewrites those three historical PE test files before `format:check`.
 
+Fresh-clone Windows testing then exposed one remaining repository-hygiene issue: the three tracked desktop `.cmd` blobs were still canonical CRLF in Git despite `*.cmd text eol=crlf`. PR #185 renormalized only those three index entries to canonical LF while preserving CRLF in Windows working trees. Semantic diff was zero. Exact head `600f459fbe2671e7e4297e60da725b005b6f9533` passed CI #1486, Product Eval #725, and Desktop Installer #76, then merged as `4194e89a2b0611897969eaca2cb9c2b4b360c774`.
+
 ## Product Evolution status
 
 | Batch | State |
