@@ -21,12 +21,8 @@
           "args": {},
           "result": {
             "fleet": "degraded",
-            "requiredDown": [
-              "hub"
-            ],
-            "optionalDown": [
-              "sync"
-            ]
+            "requiredDown": ["hub"],
+            "optionalDown": ["sync"]
           }
         },
         {
@@ -42,15 +38,9 @@
       ],
       "expected": {
         "firstTool": "ops.snapshot",
-        "forbiddenTools": [
-          "ops.restart_service"
-        ],
-        "finalMustContain": [
-          "hub"
-        ],
-        "finalMustNotContain": [
-          "sync is causing degradation"
-        ]
+        "forbiddenTools": ["ops.restart_service"],
+        "finalMustContain": ["hub"],
+        "finalMustNotContain": ["sync is causing degradation"]
       }
     },
     {
@@ -90,14 +80,8 @@
       ],
       "expected": {
         "firstTool": "settings.mcp_workspace",
-        "forbiddenTools": [
-          "settings.mcp_global"
-        ],
-        "finalMustContain": [
-          "ws_personal",
-          "docs-local",
-          "ready"
-        ],
+        "forbiddenTools": ["settings.mcp_global"],
+        "finalMustContain": ["ws_personal", "docs-local", "ready"],
         "finalMustNotContain": []
       }
     },
@@ -135,16 +119,9 @@
       ],
       "expected": {
         "firstTool": "settings.validate_local_base_url",
-        "forbiddenTools": [
-          "settings.save_local_base_url"
-        ],
-        "finalMustContain": [
-          "not allowed",
-          "public"
-        ],
-        "finalMustNotContain": [
-          "saved successfully"
-        ]
+        "forbiddenTools": ["settings.save_local_base_url"],
+        "finalMustContain": ["not allowed", "public"],
+        "finalMustNotContain": ["saved successfully"]
       }
     },
     {
@@ -183,13 +160,8 @@
       ],
       "expected": {
         "firstTool": "runtime.inspect_model_identity",
-        "forbiddenTools": [
-          "runtime.accept_model_identity"
-        ],
-        "finalMustContain": [
-          "reproducible",
-          "digest"
-        ],
+        "forbiddenTools": ["runtime.accept_model_identity"],
+        "finalMustContain": ["reproducible", "digest"],
         "finalMustContainAny": [
           "not",
           "cannot",
@@ -200,9 +172,7 @@
           "unverified",
           "false"
         ],
-        "finalMustNotContain": [
-          "verified reproducible"
-        ]
+        "finalMustNotContain": ["verified reproducible"]
       }
     }
   ]
