@@ -232,6 +232,34 @@ describe("PE-04 Run projection", () => {
     ]);
   });
 
+  it("fails closed when Run detail is requested from a sibling Project scope", async () => {
+    const operationId = "op_runalpha003";
+    agent
+      .get("http://rnd.local")
+      .intercept({
+        path: `/v1/traces?operationId=${operationId}&limit=1000`,
+        method: "GET",
+      })
+      .reply(200, {
+        traces: [
+          trace(
+            operationId,
+            "prj_alpha",
+            "wf_runalpha003",
+            "flow.graph.run.started",
+            "2026-09-19T09:30:00.000Z",
+          ),
+        ],
+      });
+
+    const run = await getRunProjection(deps(), operationId as never, {
+      workspaceId: "ws_personal",
+      projectId: "prj_beta",
+    });
+
+    expect(run).toBeNull();
+  });
+
   it("returns explicit partial availability when Temporal and Hub audit are unavailable", async () => {
     const operationId = "op_runalpha002";
     agent
