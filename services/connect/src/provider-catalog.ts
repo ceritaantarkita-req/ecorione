@@ -61,7 +61,7 @@ export const PROVIDER_CATALOG: readonly ProviderCatalogEntry[] = [
   },
   {
     id: "webhook",
-    displayName: "Webhook root secret",
+    displayName: "Webhook signing root",
     category: "integration",
     credentialPurpose: "tokens",
     credentialReady: true,
