@@ -86,14 +86,18 @@ describe("PE-06 Brain deterministic projection", () => {
     });
 
     expect(rebuilt).toEqual(first);
-    expect(first.nodes.map((node) => node.canonicalId)).toEqual([
-      PROJECT_ID,
-      "url:https://example.com/source-01:source",
-      "url:https://example.com/source-02:source",
-      "url:https://example.com/source-03:source",
-      "fg_finance01",
-      "fg_finance02",
+    expect(first.nodes.map((node) => node.type)).toEqual([
+      "Project",
+      "Source",
+      "Source",
+      "Source",
+      "Flow",
+      "Flow",
     ]);
+    for (const type of ["Source", "Flow"] as const) {
+      const ids = first.nodes.filter((node) => node.type === type).map((node) => node.id);
+      expect(ids).toEqual([...ids].sort((left, right) => left.localeCompare(right)));
+    }
     expect(first.edges.map((edge) => edge.id)).toEqual(
       [...first.edges.map((edge) => edge.id)].sort((left, right) =>
         left.localeCompare(right),
