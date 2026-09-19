@@ -278,7 +278,10 @@ function deterministicEventIds(
   };
 }
 
-function triggerAcceptsEvent(trigger: TriggerDefinition, event: NormalizedTriggerEvent): boolean {
+function triggerAcceptsEvent(
+  trigger: TriggerDefinition,
+  event: NormalizedTriggerEvent,
+): boolean {
   if (trigger.kind === "event") {
     const config = trigger.configuration as { source: string; eventKind: string };
     return config.source === event.source && config.eventKind === event.kind;
