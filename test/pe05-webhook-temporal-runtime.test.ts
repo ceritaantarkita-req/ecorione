@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { describe, expect, it } from "vitest";
-import { createServer } from "@ecorione/shared-server";
+import { createServer } from "../packages/shared-server/src/index.js";
 import { buildConnectServer } from "../services/connect/src/http.js";
 import { deriveWebhookToken } from "../services/connect/src/webhook-http.js";
 import { openFlowDatabase } from "../services/flow/src/db.js";
