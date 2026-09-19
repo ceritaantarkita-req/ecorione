@@ -427,7 +427,13 @@ export default function WorkPage() {
             key={value}
             className={tab === value ? styles.tabActive : undefined}
             aria-pressed={tab === value}
-            onClick={() => setTab(value)}
+            onClick={() => {
+              if (value === "runs") {
+                setRunTriggerFilter(null);
+                setSelectedRun(null);
+              }
+              setTab(value);
+            }}
           >
             {value === "schedule" ? "Schedule" : value === "flows" ? "Flows" : "Runs"}
           </button>
