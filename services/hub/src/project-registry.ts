@@ -88,8 +88,7 @@ export class ProjectRegistry {
 
   get(id: ProjectId): Project | null {
     const row = this.db.raw.prepare("SELECT * FROM projects WHERE id=?").get(id) as
-      | ProjectRow
-      | undefined;
+      ProjectRow | undefined;
     return row === undefined ? null : rowToProject(row);
   }
 
