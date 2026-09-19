@@ -255,4 +255,46 @@ describe("PE-02 Project Sources HTTP", () => {
     });
     expect(blocked.statusCode).toBe(409);
   });
+  it("rejects cross-Workspace binding before owner lookup", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources",
+      payload: {
+        workspaceId: "ws_other",
+        resourceType: "url",
+        resourceId: "https://example.com/cross-workspace",
+        role: "source",
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(
+      db.raw
+        .prepare("SELECT COUNT(*) AS count FROM project_source_bindings")
+        .get(),
+    ).toEqual({ count: 0 });
+  });
+
+  it("rejects Artifact binding when Context authorization denies access", async () => {
+    context
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(403, { error: { type: "FORBIDDEN", message: "not authorized" } });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources",
+      payload: sourceBody("artifact", ARTIFACT_ID),
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(
+      db.raw
+        .prepare("SELECT COUNT(*) AS count FROM project_source_bindings")
+        .get(),
+    ).toEqual({ count: 0 });
+  });
+
 });
