@@ -62,7 +62,7 @@ export function registerProjectRoutes(app: FastifyInstance, projects: ProjectReg
       req.query,
     ).workspaceId;
     try {
-      return projects.require(id, workspaceId, true);
+      return projects.require(id, workspaceId);
     } catch (error) {
       throw projectError(error);
     }
