@@ -1,6 +1,6 @@
 /** Sandbox executor: Tier 0 guard, Tier 1.5 WASM, Tier 1 Docker hardening. */
 import { spawn } from "node:child_process";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import {
   assertId,
@@ -67,11 +67,32 @@ function tokenize(command: string): string[] {
   return tokens;
 }
 
+function assertTier0ExistingPath(workspace: string, requested: string): string {
+  const root = realpathSync(workspace);
+  const target = realpathSync(resolve(workspace, requested));
+  const rel = relative(root, target);
+  if (
+    rel === ".." ||
+    rel.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) ||
+    isAbsolute(rel)
+  ) {
+    throw new SandboxBoundaryError("Path Tier 0 berada di luar workspace.");
+  }
+  return target;
+}
+
 function assertSafeHostCommand(tokens: readonly string[]): void {
   const [exe, sub, ...rest] = tokens;
   if (exe === "pwd" && tokens.length === 1) return;
-  if (exe === "ls") return;
-  if (exe === "cat" && rest.length === 0 && sub !== undefined && !sub.startsWith("/")) return;
+  if (
+    exe === "ls" &&
+    (tokens.length === 1 || (tokens.length === 2 && sub !== undefined && !sub.startsWith("-")))
+  ) {
+    return;
+  }
+  if (exe === "cat" && tokens.length === 2 && sub !== undefined && !sub.startsWith("-")) {
+    return;
+  }
   if (
     exe === "git" &&
     sub !== undefined &&
@@ -83,7 +104,7 @@ function assertSafeHostCommand(tokens: readonly string[]): void {
     return;
   }
   throw new SandboxBoundaryError(
-    "Tier 0 host hanya mengizinkan pwd, ls, cat path-relatif, dan git status/diff/log/show.",
+    "Tier 0 host hanya mengizinkan pwd, ls [path-relatif], cat path-relatif, dan git status/diff/log/show.",
   );
 }
 
@@ -134,6 +155,63 @@ export function buildDockerPlan(
       command,
     ],
   };
+}
+
+function tier0FsError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function runTier0HostCommand(
+  tokens: readonly string[],
+  workspace: string,
+): { exitCode: number; stdout: string; stderr: string } | null {
+  const [exe, arg] = tokens;
+
+  if (exe === "pwd") {
+    return { exitCode: 0, stdout: `${workspace}\n`, stderr: "" };
+  }
+
+  if (exe === "ls") {
+    try {
+      const target = assertTier0ExistingPath(workspace, arg ?? ".");
+      if (!statSync(target).isDirectory()) {
+        return { exitCode: 1, stdout: "", stderr: "ls: target is not a directory\n" };
+      }
+      const entries = readdirSync(target, { withFileTypes: true })
+        .map((entry) => entry.name)
+        .sort((left, right) => left.localeCompare(right));
+      const stdout = entries.length === 0 ? "" : `${entries.join("\n")}\n`;
+      return { exitCode: 0, stdout: stdout.slice(0, MAX_OUTPUT_BYTES), stderr: "" };
+    } catch (error) {
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: `ls: ${tier0FsError(error)}\n`.slice(0, MAX_OUTPUT_BYTES),
+      };
+    }
+  }
+
+  if (exe === "cat" && arg !== undefined) {
+    try {
+      const target = assertTier0ExistingPath(workspace, arg);
+      if (!statSync(target).isFile()) {
+        return { exitCode: 1, stdout: "", stderr: "cat: target is not a regular file\n" };
+      }
+      return {
+        exitCode: 0,
+        stdout: readFileSync(target, "utf8").slice(0, MAX_OUTPUT_BYTES),
+        stderr: "",
+      };
+    } catch (error) {
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: `cat: ${tier0FsError(error)}\n`.slice(0, MAX_OUTPUT_BYTES),
+      };
+    }
+  }
+
+  return null;
 }
 
 async function runProcess(
@@ -268,9 +346,14 @@ export class SandboxExecutor {
         throw new SandboxBoundaryError("tier0 membutuhkan command.");
       const tokens = tokenize(request.command);
       assertSafeHostCommand(tokens);
-      const [exe, ...args] = tokens;
-      if (exe === undefined) throw new SandboxBoundaryError("Command kosong.");
-      result = await runProcess(exe, args, workspace);
+      const builtin = runTier0HostCommand(tokens, workspace);
+      if (builtin !== null) {
+        result = builtin;
+      } else {
+        const [exe, ...args] = tokens;
+        if (exe === undefined) throw new SandboxBoundaryError("Command kosong.");
+        result = await runProcess(exe, args, workspace);
+      }
     } else if (request.tier === "tier1.5") {
       result = runWasm(request);
     } else {
