@@ -27,6 +27,8 @@ interface SourceRow {
   readonly id: string;
   readonly ts: string;
   readonly raw_text: string;
+  readonly project_id: string | null;
+  readonly project_state: "GLOBAL" | "ASSIGNED" | "LEGACY_UNASSIGNED";
   readonly source_app: string;
   readonly session_id: string | null;
   readonly tool_call_id: string | null;
@@ -39,6 +41,10 @@ interface SourceRow {
 
 interface EpisodeProjectionRow {
   readonly id: string;
+  readonly summary: string | null;
+  readonly consolidated_at: string | null;
+}
+interface RebuildEpisodeRow extends SourceRow {
   readonly summary: string | null;
   readonly consolidated_at: string | null;
 }
@@ -164,9 +170,9 @@ function normalizeWhitespace(value: string): string {
 }
 
 function canonicalFactKey(
-  fact: Pick<MemoryFact, "scope" | "subject" | "predicate" | "object">,
+  fact: Pick<MemoryFact, "projectId" | "scope" | "subject" | "predicate" | "object">,
 ): string {
-  return [fact.scope, fact.subject, fact.predicate, fact.object]
+  return [fact.projectId ?? "__global__", fact.scope, fact.subject, fact.predicate, fact.object]
     .map((value) => normalizeWhitespace(value).toLocaleLowerCase("en-US"))
     .join("\u001f");
 }
@@ -180,7 +186,7 @@ function canonicalActions(actions: readonly MaintenanceAction[]): MaintenanceAct
 function sourceRows(raw: SqliteDatabase): SourceRow[] {
   return raw
     .prepare(
-      `SELECT id,ts,raw_text,source_app,session_id,tool_call_id,source_uri,
+      `SELECT id,ts,raw_text,project_id,project_state,source_app,session_id,tool_call_id,source_uri,
               scope,sensitivity,sync_class,trust
        FROM episodes ORDER BY id ASC`,
     )
@@ -560,7 +566,11 @@ export class ContextMaintenanceEngine {
 
   private normalizeDerivedFacts(): number {
     const raw = this.repo.db.raw;
-    const facts = this.repo.listFacts({ includeInvalidated: true, limit: MAX_INTERNAL_ROWS });
+    const facts = this.repo.listFacts({
+      includeInvalidated: true,
+      excludeLegacyUnassigned: true,
+      limit: MAX_INTERNAL_ROWS,
+    });
     let changed = 0;
     raw.transaction(() => {
       const update = raw.prepare(
@@ -592,7 +602,11 @@ export class ContextMaintenanceEngine {
   private dedupeDerivedFacts(now: Timestamp): { groups: number; invalidated: number } {
     const raw = this.repo.db.raw;
     const live = this.repo
-      .listFacts({ includeInvalidated: false, limit: MAX_INTERNAL_ROWS })
+      .listFacts({
+        includeInvalidated: false,
+        excludeLegacyUnassigned: true,
+        limit: MAX_INTERNAL_ROWS,
+      })
       .filter((fact) => fact.trust === "LOCAL_AGENT");
     const groups = new Map<string, MemoryFact[]>();
     for (const fact of live) {
@@ -649,13 +663,38 @@ export class ContextMaintenanceEngine {
     const stagingDb = openContextDatabase({ path: ":memory:" });
     try {
       const stagingRepo = new ContextRepository(stagingDb);
-      const sourceEpisodes = this.repo.listEpisodes({ order: "asc", limit: MAX_INTERNAL_ROWS });
+      const sourceEpisodes = this.repo.db.raw
+        .prepare(
+          `SELECT id,ts,raw_text,project_id,project_state,source_app,session_id,tool_call_id,source_uri,
+                  scope,sensitivity,sync_class,trust,summary,consolidated_at
+           FROM episodes ORDER BY ts ASC,id ASC LIMIT ?`,
+        )
+        .all(MAX_INTERNAL_ROWS) as RebuildEpisodeRow[];
+      const insertEpisode = stagingDb.raw.prepare(
+        `INSERT INTO episodes (
+          id,ts,raw_text,project_id,project_state,source_app,session_id,tool_call_id,source_uri,
+          scope,sensitivity,sync_class,trust,summary,consolidated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      );
       for (const episode of sourceEpisodes) {
-        stagingRepo.appendEpisode({
-          ...episode,
-          summary: null,
-          consolidatedAt: null,
-        });
+        const unresolved = episode.project_state === "LEGACY_UNASSIGNED";
+        insertEpisode.run(
+          episode.id,
+          episode.ts,
+          episode.raw_text,
+          episode.project_id,
+          episode.project_state,
+          episode.source_app,
+          episode.session_id,
+          episode.tool_call_id,
+          episode.source_uri,
+          episode.scope,
+          episode.sensitivity,
+          episode.sync_class,
+          episode.trust,
+          unresolved ? episode.summary : null,
+          unresolved ? episode.consolidated_at : null,
+        );
       }
       let processed = 0;
       let promoted = 0;
