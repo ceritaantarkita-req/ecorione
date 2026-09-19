@@ -29,6 +29,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: PE-01 formatter diagnostic
+        run: |
+          pnpm exec prettier --write "apps/ai/app/api/projects/route.ts" "apps/ai/app/page.tsx" "apps/ai/app/projects/page.tsx" "services/context/src/project-context.test.ts" "services/context/src/repository.ts" "services/context/src/retrieval.ts" "services/flow/src/db.ts" "services/flow/src/graph-repository.test.ts" "services/hub/src/db.ts" "services/hub/src/history-http.ts" "services/hub/src/history-ledger.ts" "services/hub/src/http.ts" "services/hub/src/mcp.ts" "services/hub/src/project-registry.test.ts" "services/hub/src/project-registry.ts"
+          echo "----- PE01_FORMAT_DIFF_BEGIN -----"
+          git diff -- "apps/ai/app/api/projects/route.ts" "apps/ai/app/page.tsx" "apps/ai/app/projects/page.tsx" "services/context/src/project-context.test.ts" "services/context/src/repository.ts" "services/context/src/retrieval.ts" "services/flow/src/db.ts" "services/flow/src/graph-repository.test.ts" "services/hub/src/db.ts" "services/hub/src/history-http.ts" "services/hub/src/history-ledger.ts" "services/hub/src/http.ts" "services/hub/src/mcp.ts" "services/hub/src/project-registry.test.ts" "services/hub/src/project-registry.ts"
+          echo "----- PE01_FORMAT_DIFF_END -----"
+
       - name: Format
         run: pnpm run format:check
 
