@@ -76,6 +76,10 @@ const GraphVersionQuerySchema = z.object({
 const GraphParamsSchema = z.object({ id: FlowGraphIdSchema });
 const RunParamsSchema = z.object({ id: FlowIdSchema });
 const RunProjectionParamsSchema = z.object({ operationId: OperationIdSchema });
+const RunProjectionScopeQuerySchema = z.object({
+  workspaceId: WorkspaceIdSchema,
+  projectId: ProjectIdSchema,
+});
 const RunProjectionListQuerySchema = z.object({
   workspaceId: WorkspaceIdSchema,
   projectId: ProjectIdSchema,
@@ -223,6 +227,7 @@ export function buildFlowServer(
 
   app.get<{ Params: { operationId: string } }>("/v1/runs/:operationId", async (req) => {
     const { operationId } = parseOrBadRequest(RunProjectionParamsSchema, req.params);
+    const scope = parseOrBadRequest(RunProjectionScopeQuerySchema, req.query);
     const run = await getRunProjection(
       {
         triggers,
@@ -234,6 +239,7 @@ export function buildFlowServer(
         },
       },
       operationId,
+      scope,
     );
     if (run === null) throw new NotFoundError(`Run tidak ditemukan: ${operationId}`);
     return run;
