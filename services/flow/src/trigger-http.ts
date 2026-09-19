@@ -579,13 +579,13 @@ export function registerTriggerRoutes(
     "/v1/triggers/:id/event",
     { bodyLimit: 96 * 1024 },
     async (req, reply) => {
-    const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
-    const event = parseOrBadRequest(NormalizedTriggerEventSchema, req.body);
-    try {
-      const result = await dispatchNormalizedEvent(triggers.require(id), event);
-      return reply.code(result.statusCode).send(result.response);
-    } catch (error) {
-      throw triggerError(error);
+      const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
+      const event = parseOrBadRequest(NormalizedTriggerEventSchema, req.body);
+      try {
+        const result = await dispatchNormalizedEvent(triggers.require(id), event);
+        return reply.code(result.statusCode).send(result.response);
+      } catch (error) {
+        throw triggerError(error);
       }
     },
   );
@@ -594,38 +594,38 @@ export function registerTriggerRoutes(
     "/v1/webhooks/:hookId",
     { bodyLimit: 96 * 1024 },
     async (req, reply) => {
-    const { hookId } = parseOrBadRequest(WebhookParamsSchema, req.params);
-    const body = parseOrBadRequest(WebhookIngressDeliverySchema, req.body);
-    try {
-      const trigger = triggers.findWebhookByHookId(hookId);
-      if (trigger === null) throw new NotFoundError("Webhook Trigger tidak ditemukan.");
-      const config = trigger.configuration as {
-        adapter: "generic";
-        hookId: string;
-        source: string;
-        eventKind: string;
-      };
-      const receivedAt = nowIso() as Timestamp;
-      const eventIdDigest = createHash("sha256")
-        .update(`${hookId}:${body.deliveryId}`)
-        .digest("hex")
-        .slice(0, 24);
-      const event = NormalizedTriggerEventSchema.parse({
-        eventId: `evt_webhook_${eventIdDigest}`,
-        source: config.source,
-        kind: config.eventKind,
-        occurredAt: body.occurredAt ?? receivedAt,
-        receivedAt,
-        workspaceId: trigger.workspaceId,
-        projectId: trigger.projectId,
-        dedupeKey: `webhook:${hookId}:${body.deliveryId}`,
-        payload: body.payload,
-        metadata: { ...body.metadata, hookId },
-      });
-      const result = await dispatchNormalizedEvent(trigger, event);
-      return reply.code(result.statusCode).send(result.response);
-    } catch (error) {
-      throw triggerError(error);
+      const { hookId } = parseOrBadRequest(WebhookParamsSchema, req.params);
+      const body = parseOrBadRequest(WebhookIngressDeliverySchema, req.body);
+      try {
+        const trigger = triggers.findWebhookByHookId(hookId);
+        if (trigger === null) throw new NotFoundError("Webhook Trigger tidak ditemukan.");
+        const config = trigger.configuration as {
+          adapter: "generic";
+          hookId: string;
+          source: string;
+          eventKind: string;
+        };
+        const receivedAt = nowIso() as Timestamp;
+        const eventIdDigest = createHash("sha256")
+          .update(`${hookId}:${body.deliveryId}`)
+          .digest("hex")
+          .slice(0, 24);
+        const event = NormalizedTriggerEventSchema.parse({
+          eventId: `evt_webhook_${eventIdDigest}`,
+          source: config.source,
+          kind: config.eventKind,
+          occurredAt: body.occurredAt ?? receivedAt,
+          receivedAt,
+          workspaceId: trigger.workspaceId,
+          projectId: trigger.projectId,
+          dedupeKey: `webhook:${hookId}:${body.deliveryId}`,
+          payload: body.payload,
+          metadata: { ...body.metadata, hookId },
+        });
+        const result = await dispatchNormalizedEvent(trigger, event);
+        return reply.code(result.statusCode).send(result.response);
+      } catch (error) {
+        throw triggerError(error);
       }
     },
   );
