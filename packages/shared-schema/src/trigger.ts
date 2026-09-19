@@ -296,7 +296,6 @@ export const TriggerScheduleRuntimeSchema = z
   .strict();
 export type TriggerScheduleRuntime = z.infer<typeof TriggerScheduleRuntimeSchema>;
 
-
 const MAX_TRIGGER_EVENT_PAYLOAD_BYTES = 64 * 1024;
 const MAX_TRIGGER_EVENT_METADATA_BYTES = 16 * 1024;
 
@@ -358,7 +357,6 @@ export const TriggerEventDispatchRequestSchema = z
   })
   .strict();
 export type TriggerEventDispatchRequest = z.infer<typeof TriggerEventDispatchRequestSchema>;
-
 
 export const WebhookIngressDeliverySchema = z
   .object({
