@@ -2,13 +2,13 @@
 
 Last updated: **2026-09-19**
 
-Status: **CURRENT / PE-03 ACTIVE / TRIGGER CONTROL PLANE**
+Status: **CURRENT / PE-04 ACTIVE / WORK + SCHEDULE + RUNS**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 
-**PE-00, PE-01, and PE-02 are CLOSED / PASS. PE-03 Trigger control plane is ACTIVE.**
+**PE-00 through PE-03 are CLOSED / PASS. PE-04 Work + Schedule + Runs is ACTIVE.**
 
 ## Product Evolution status
 
@@ -17,8 +17,8 @@ The original Batch/W/F6 baseline remains closed. Product Evolution is active.
 | PE-00 Architecture lock | **CLOSED / PASS** |
 | PE-01 Project foundation | **CLOSED / PASS** |
 | PE-02 Project Sources | **CLOSED / PASS** |
-| PE-03 Trigger control plane | **ACTIVE** |
-| PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
+| PE-03 Trigger control plane | **CLOSED / PASS** |
+| PE-04 Work + Schedule + Runs | **ACTIVE** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
 | PE-06 Brain V1 | **BLOCKED BY PE-05** |
 | PE-07 Brain + Context + ECX | **BLOCKED BY PE-06** |
@@ -51,9 +51,13 @@ MCP External HTTPS Acceptance #628 PASS
 
 PR #171 is merged to `main` as `c734f00eaa791077c99557e6e89579534c43d651`; PE-02 remains CLOSED / PASS.
 
-## Active: PE-03 Trigger control plane
+## PE-03 closed boundary
 
-PE-03 introduces the generalized Trigger control plane using existing Flow + Temporal + Hub authority. Active implementation is PR #172 on `pe/pe-03-trigger-control-plane-20260919`. It must not create a second scheduler or autonomous polling subsystem, and PE-04 remains blocked until the exact reviewed PE-03 head passes its closure gates and merges.
+PE-03 closed on PR #172 exact head `74730e26321cac06c31243baeeafe29d5f4d75f0` and merged as `c739c09014d8aa20ca8e1b83c5b6be39b4ee649c`. Trigger metadata remains Flow-owned, Temporal remains schedule/runtime truth, and Hub remains authority/policy owner. See [verification/pe-03-trigger-control-plane-closure-2026-09-19.md](verification/pe-03-trigger-control-plane-closure-2026-09-19.md).
+
+## Active: PE-04 Work + Schedule + Runs
+
+PE-04 is implemented on draft PR #173 / branch `pe/pe-04-work-schedule-runs-20260919`. It exposes Project-scoped Schedule, Flow links, and an `operationId`-keyed Run read projection without adding a Task domain or second execution database. Acceptance: [product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md).
 
 ## Deferred
 
