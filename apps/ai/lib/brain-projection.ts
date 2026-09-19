@@ -378,7 +378,6 @@ export async function queryBrainGraph(query: BrainQuery): Promise<BrainGraphResp
   return buildBrainGraph(query, await readOwnerSnapshot(query));
 }
 
-
 export class BrainNeighborhoodSeedError extends Error {
   constructor(readonly seedNodeId: string) {
     super(`Brain seed tidak tersedia di Project ini: ${seedNodeId}`);
@@ -440,11 +439,7 @@ export function selectBrainNeighborhood(
         if (!frontier.has(from) || distance.has(to)) continue;
         const node = nodesById.get(to);
         if (node === undefined) continue;
-        if (
-          !seedSet.has(to) &&
-          allowedNodeTypes !== null &&
-          !allowedNodeTypes.has(node.type)
-        ) {
+        if (!seedSet.has(to) && allowedNodeTypes !== null && !allowedNodeTypes.has(node.type)) {
           continue;
         }
         distance.set(to, hop + 1);
@@ -457,11 +452,7 @@ export function selectBrainNeighborhood(
   const reachable = [...distance.keys()]
     .map((id) => nodesById.get(id))
     .filter((node): node is BrainNode => node !== undefined)
-    .sort(
-      (a, b) =>
-        (distance.get(a.id) ?? 0) - (distance.get(b.id) ?? 0) ||
-        compareNode(a, b),
-    );
+    .sort((a, b) => (distance.get(a.id) ?? 0) - (distance.get(b.id) ?? 0) || compareNode(a, b));
   const nodes = reachable.slice(0, query.maxNodes);
   const visible = new Set(nodes.map((node) => node.id));
   const matchingEdges = orderedEdges.filter(
@@ -482,9 +473,7 @@ export function selectBrainNeighborhood(
       sourceUris: sourceUriConstraint(nodes),
     },
     truncated:
-      graph.truncated ||
-      reachable.length > nodes.length ||
-      matchingEdges.length > edges.length,
+      graph.truncated || reachable.length > nodes.length || matchingEdges.length > edges.length,
   });
 }
 
