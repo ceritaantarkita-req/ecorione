@@ -513,7 +513,20 @@ export function registerTriggerRoutes(
       trigger.graphId,
       trigger.graphVersion,
     );
-    const eventDigest = stableKey(["normalized-event-v1", event]);
+    const eventDigest = stableKey([
+      "normalized-event-v1",
+      {
+        eventId: event.eventId,
+        source: event.source,
+        kind: event.kind,
+        occurredAt: event.occurredAt,
+        workspaceId: event.workspaceId,
+        projectId: event.projectId,
+        dedupeKey: event.dedupeKey,
+        payload: event.payload,
+        metadata: event.metadata,
+      },
+    ]);
     await evaluateTriggerPolicy(options, {
       tool: `flow.trigger.${trigger.kind}.dispatch`,
       actionClass: "EXECUTE",
