@@ -15,10 +15,11 @@ Before changing the repo:
 
 Dated audits and `docs/verification/` are evidence, not current work queues.
 
-## Current state — 2026-09-19
+## Current state — 2026-09-20
 
 - original Batch 1–12 / W / F6 baseline: **CLOSED**;
 - Windows runtime + installer: **VERIFIED**;
+- native Windows portability + repository EOL policy: **HARDENED / VERIFIED** (PR #182);
 - Product Evolution architecture + PE-00..PE-08 roadmap: **DOCUMENTED**;
 - PE-00: **CLOSED / PASS**;
 - PE-01: **CLOSED / PASS**;
@@ -83,6 +84,7 @@ There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PAS
 - never weaken a gate to manufacture PASS;
 - merge only the reviewed head;
 - synchronize current docs after material state changes;
+- preserve `.gitattributes`: text LF by default, `.cmd`/`.bat` CRLF;
 - do not start the next PE batch until the current one is CLOSED.
 
 ## Evidence discipline
