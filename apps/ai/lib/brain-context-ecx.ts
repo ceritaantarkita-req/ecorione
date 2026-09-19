@@ -127,8 +127,6 @@ function memoryRefs(hits: readonly RetrievalHit[]) {
 export async function runBrainContextEcx(
   input: BrainContextEcxRequest,
 ): Promise<BrainContextEcxResult> {
-  await authorizeBrainProject(input);
-
   const neighborhood =
     input.mode === "brain-narrowed"
       ? await queryBrainNeighborhood({
@@ -138,7 +136,7 @@ export async function runBrainContextEcx(
           maxHops: input.maxHops,
           maxNodes: input.maxNodes,
         })
-      : null;
+      : (await authorizeBrainProject(input), null);
 
   const retrievalStarted = performance.now();
   const retrieval = RetrieveResponseSchema.parse(
