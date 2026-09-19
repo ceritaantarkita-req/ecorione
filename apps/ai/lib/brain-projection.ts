@@ -27,7 +27,10 @@ const TriggerListResponseSchema = z
 const DEFAULT_HUB_URL = "http://127.0.0.1:17024";
 const DEFAULT_FLOW_URL = "http://127.0.0.1:17028";
 
-function ownerBaseUrl(name: "ECORIONE_HUB_URL" | "ECORIONE_FLOW_URL", fallback: string): string {
+function ownerBaseUrl(
+  name: "ECORIONE_HUB_URL" | "ECORIONE_FLOW_URL",
+  fallback: string,
+): string {
   const value = process.env[name];
   return value !== undefined && value.length > 0 ? value : fallback;
 }
