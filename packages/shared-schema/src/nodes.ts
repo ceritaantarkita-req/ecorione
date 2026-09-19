@@ -586,7 +586,7 @@ export const FlowGraphExecutionInputSchema = z
     operationId: OperationIdSchema,
     plan: CompiledFlowGraphPlanSchema,
     input: z.unknown(),
-    autonomy: AutonomyLevelSchema.default("L2"),
+    autonomy: AutonomyLevelSchema.optional(),
     depth: z.number().int().min(0).max(8).default(0),
   })
   .strict();
