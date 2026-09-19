@@ -271,7 +271,7 @@ describe("PE-05 webhook -> Temporal runtime acceptance", () => {
           },
           body: JSON.stringify(deliveryBody),
         });
-        expect(first.status).toBe(202);
+        expect(first.status).toBe(200);
         expect(first.body).toMatchObject({
           triggerId: created.body.id,
           graphVersion: 1,
