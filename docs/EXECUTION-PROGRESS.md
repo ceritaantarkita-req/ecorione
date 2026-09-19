@@ -22,8 +22,8 @@ Status: **CURRENT SUMMARY**
 | PE-00 Architecture lock + migration contract | **CLOSED / PASS** |
 | PE-01 Project foundation | **CLOSED / PASS** |
 | PE-02 Project Sources | **CLOSED / PASS** |
-| PE-03 Trigger control plane | **ACTIVE** |
-| PE-04 Work + Schedule + Runs | **BLOCKED BY PE-03** |
+| PE-03 Trigger control plane | **CLOSED / PASS** |
+| PE-04 Work + Schedule + Runs | **ACTIVE** |
 | PE-05 Event/Webhook automation | **BLOCKED BY PE-04** |
 | PE-06 Brain V1 | **BLOCKED BY PE-05** |
 | PE-07 Brain + Context + ECX | **BLOCKED BY PE-06** |
@@ -49,4 +49,4 @@ PE-01: PR #169 / main `1d2b537de3ad07336adb9a97121309f04d61cc21`.
 
 PE-00: PR #167 / main `b7ebf5492aca463e55f9f30bc259b9a6028c62d7`.
 
-Current active gate: **PE-03 Trigger control plane**, PR #172. PE-04 remains blocked until PE-03 exact-head CI/Product Eval/Temporal acceptance pass and the reviewed head merges.
+PE-03 closed on PR #172 exact head `74730e26321cac06c31243baeeafe29d5f4d75f0` and merged as `c739c09014d8aa20ca8e1b83c5b6be39b4ee649c`. Current active gate: **PE-04 Work + Schedule + Runs**, draft PR #173.
