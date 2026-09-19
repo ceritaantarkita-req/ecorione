@@ -77,7 +77,6 @@ export const BrainQuerySchema = z
   .strict();
 export type BrainQuery = z.infer<typeof BrainQuerySchema>;
 
-
 export const BrainContextConstraintSchema = z
   .object({
     sourceUris: z.array(z.string().url().max(2048)).max(32),
