@@ -575,7 +575,10 @@ export function registerTriggerRoutes(
     };
   }
 
-  app.post<{ Params: { id: string } }>("/v1/triggers/:id/event", async (req, reply) => {
+  app.post<{ Params: { id: string } }>(
+    "/v1/triggers/:id/event",
+    { bodyLimit: 96 * 1024 },
+    async (req, reply) => {
     const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
     const event = parseOrBadRequest(NormalizedTriggerEventSchema, req.body);
     try {
@@ -583,10 +586,14 @@ export function registerTriggerRoutes(
       return reply.code(result.statusCode).send(result.response);
     } catch (error) {
       throw triggerError(error);
-    }
-  });
+      }
+    },
+  );
 
-  app.post<{ Params: { hookId: string } }>("/v1/webhooks/:hookId", async (req, reply) => {
+  app.post<{ Params: { hookId: string } }>(
+    "/v1/webhooks/:hookId",
+    { bodyLimit: 96 * 1024 },
+    async (req, reply) => {
     const { hookId } = parseOrBadRequest(WebhookParamsSchema, req.params);
     const body = parseOrBadRequest(WebhookIngressDeliverySchema, req.body);
     try {
@@ -619,8 +626,9 @@ export function registerTriggerRoutes(
       return reply.code(result.statusCode).send(result.response);
     } catch (error) {
       throw triggerError(error);
-    }
-  });
+      }
+    },
+  );
 
   app.post<{ Params: { id: string } }>("/v1/triggers/:id/fire", async (req, reply) => {
     const { id } = parseOrBadRequest(TriggerParamsSchema, req.params);
