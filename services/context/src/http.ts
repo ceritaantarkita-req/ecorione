@@ -122,6 +122,7 @@ const RetrieveBodySchema = z.object({
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
   now: z.string().datetime({ offset: false }),
   hostedEligibleOnly: z.boolean().default(false),
+  candidateSourceUris: z.array(z.string().url().max(2048)).max(32).optional(),
 });
 const CoreMemoryQuerySchema = z.object({
   projectId: ProjectIdSchema.nullable().optional(),
