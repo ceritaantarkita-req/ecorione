@@ -470,7 +470,8 @@ export default function ChatPage() {
           ? "Terkunci setelah pesan pertama."
           : "Hosted nonaktif — sesi ini Local-only.";
 
-  const canSend = projectReady &&
+  const canSend =
+    projectReady &&
     hydrated &&
     !sending &&
     !preparingAttachments &&
