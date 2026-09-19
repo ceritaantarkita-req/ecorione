@@ -12,7 +12,7 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 
 | Area | Current baseline |
 |---|---|
-| Ai | Chat UI, Local/Hosted routing, attachments, voice, Projects, Work, Space, Flow, Ops, Settings |
+| Ai | Chat UI, Local/Hosted routing, attachments, voice, Projects, Work, Brain, Space, Flow, Ops, Settings |
 | Hub | Policy, approval, capability authority, audit, orchestration, Historical Ledger, ECX |
 | Connect | Local/hosted providers, Vault, spend budget, runtime settings, inbound/outbound MCP |
 | Context | L0 episodic source, semantic facts, core memory, retrieval and provenance |
