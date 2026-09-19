@@ -157,6 +157,7 @@ export default function WorkPage() {
   const [runs, setRuns] = useState<RunListItem[]>([]);
   const [runtimes, setRuntimes] = useState<Record<string, TriggerScheduleRuntime | null>>({});
   const [selectedRun, setSelectedRun] = useState<RunProjection | null>(null);
+  const [runTriggerFilter, setRunTriggerFilter] = useState<string | null>(null);
   const [draft, setDraft] = useState<ScheduleDraft>(EMPTY_DRAFT);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -185,6 +186,14 @@ export default function WorkPage() {
     }
     return rows.sort((a, b) => a.when.localeCompare(b.when));
   }, [runtimes, timeTriggers]);
+
+  const visibleRuns = useMemo(
+    () =>
+      runTriggerFilter === null
+        ? runs
+        : runs.filter((run) => run.triggerId === runTriggerFilter),
+    [runTriggerFilter, runs],
+  );
 
   const visibleOccurrences = useMemo(() => {
     if (calendarMode === "list") return occurrences;
@@ -219,6 +228,7 @@ export default function WorkPage() {
       setGraphs(graphBody.graphs);
       setRuns(runBody.runs);
       setSelectedRun(null);
+      setRunTriggerFilter(null);
 
       const time = triggerBody.triggers.filter((trigger) => trigger.kind === "time");
       const runtimeEntries = await Promise.all(
@@ -645,6 +655,8 @@ export default function WorkPage() {
                       <button
                         type="button"
                         onClick={() => {
+                          setRunTriggerFilter(trigger.id);
+                          setSelectedRun(null);
                           setTab("runs");
                           setMessage(`Runs linked to ${trigger.name}: ${String(relatedRuns)}`);
                         }}
@@ -727,9 +739,15 @@ export default function WorkPage() {
               <p>Key = operationId. Tidak ada execution database kedua.</p>
             </div>
           </div>
+          {runTriggerFilter !== null ? (
+            <div className={styles.filterBar}>
+              <span>Trigger filter: <code>{runTriggerFilter}</code></span>
+              <button type="button" onClick={() => setRunTriggerFilter(null)}>Clear filter</button>
+            </div>
+          ) : null}
           <div className={styles.runLayout}>
             <div className={styles.runList}>
-              {runs.map((run) => (
+              {visibleRuns.map((run) => (
                 <button
                   type="button"
                   key={run.operationId}
@@ -746,8 +764,12 @@ export default function WorkPage() {
                   <small>{formatWhen(run.startedAt)}</small>
                 </button>
               ))}
-              {!loading && runs.length === 0 ? (
-                <div className={styles.empty}>Belum ada Run lifecycle evidence di Project ini.</div>
+              {!loading && visibleRuns.length === 0 ? (
+                <div className={styles.empty}>
+                  {runTriggerFilter === null
+                    ? "Belum ada Run lifecycle evidence di Project ini."
+                    : "Belum ada Run untuk Trigger ini pada projection saat ini."}
+                </div>
               ) : null}
             </div>
 
