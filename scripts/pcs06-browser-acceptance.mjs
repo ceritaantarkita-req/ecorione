@@ -642,9 +642,9 @@ function badConsoleMessage(type, text) {
 
 async function assertNoPageOverflow(page, label) {
   const metrics = await page.evaluate(() => ({
-    innerWidth: window.innerWidth,
-    htmlScrollWidth: document.documentElement.scrollWidth,
-    bodyScrollWidth: document.body.scrollWidth,
+    innerWidth: globalThis.innerWidth,
+    htmlScrollWidth: globalThis.document.documentElement.scrollWidth,
+    bodyScrollWidth: globalThis.document.body.scrollWidth,
   }));
   if (
     metrics.htmlScrollWidth > metrics.innerWidth + 1 ||
@@ -727,11 +727,11 @@ async function runDesktopJourney() {
       throw new Error("desktop-ai: active session was not restored");
 
     await page.getByRole("button", { name: "Gunakan tema terang" }).click();
-    if ((await page.evaluate(() => document.documentElement.dataset.theme)) !== "light") {
+    if ((await page.evaluate(() => globalThis.document.documentElement.dataset.theme)) !== "light") {
       throw new Error("desktop-theme: light theme was not applied");
     }
     await page.getByRole("button", { name: "Gunakan tema gelap" }).click();
-    if ((await page.evaluate(() => document.documentElement.dataset.theme)) !== "dark") {
+    if ((await page.evaluate(() => globalThis.document.documentElement.dataset.theme)) !== "dark") {
       throw new Error("desktop-theme: dark theme was not restored");
     }
 
@@ -884,7 +884,7 @@ async function runNarrowCoverage() {
     await svg.waitFor();
     const overflowX = await svg.evaluate((element) => {
       const wrap = element.parentElement?.parentElement;
-      return wrap ? getComputedStyle(wrap).overflowX : null;
+      return wrap ? globalThis.getComputedStyle(wrap).overflowX : null;
     });
     if (overflowX !== "auto" && overflowX !== "scroll") {
       throw new Error(
