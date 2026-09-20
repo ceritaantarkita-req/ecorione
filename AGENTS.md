@@ -32,7 +32,9 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PE-06: **CLOSED / PASS**;
 - PE-07: **CLOSED / PASS**;
 - PE-08: **CLOSED / PASS**;
-- production VPS/Cloudflare: **DEFERRED BY OPERATOR**;
+- PCS-00 post-closure baseline lock: **ACTIVE**, starting from `main` `93c5312d73289305d3e16ff79c5457a5010d0b19`;
+- SumoPod remote development/staging: **APPROVED UNDER PCS-07..PCS-09**;
+- public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
 Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any new product scope requires an explicit roadmap/decision.
@@ -73,12 +75,14 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 
 ## Current active scope
 
-There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries. Preserve the closed architecture invariants and do not reopen Product Evolution, create Batch 13, activate production VPS/Cloudflare, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
+There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
+
+**PCS-00 Baseline lock is ACTIVE.** Use `docs/post-closure-product-staging-roadmap.md` and `docs/verification/pcs-00-baseline-lock-2026-09-20.md` for the current queue. Preserve the closed architecture invariants. Do not reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
 
 ## Git / closure discipline
 
 - start from synchronized reviewed `main`;
-- one PE batch at a time;
+- one active implementation/closure batch at a time;
 - use a short-lived explicit branch;
 - keep scope bounded;
 - add deterministic tests for behavioral/policy changes;
