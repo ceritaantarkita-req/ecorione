@@ -134,7 +134,9 @@ describe("GET /api/projects/history/[sessionId]", () => {
         path: `/v1/history/sessions/sess_replay?${grant}`,
         method: "GET",
       })
-      .reply(404, { error: { code: "NOT_FOUND", message: "History session/range tidak tersedia." } });
+      .reply(404, {
+        error: { code: "NOT_FOUND", message: "History session/range tidak tersedia." },
+      });
 
     const res = await GET(
       new Request(
