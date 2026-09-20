@@ -22,6 +22,7 @@ export interface ErrorChatTurn {
 }
 
 export type ChatTurn = UserChatTurn | AssistantChatTurn | ErrorChatTurn;
+export type ChatTarget = "local" | "hosted";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
@@ -66,6 +67,16 @@ function replayCost(event: HistoryEvent | undefined): ChatCost | undefined {
     savedPct: naiveUsd > 0 ? (savedUsd / naiveUsd) * 100 : 0,
     routeReason,
   };
+}
+
+export function historyChatTarget(events: readonly HistoryEvent[]): ChatTarget | undefined {
+  for (const event of events) {
+    if (event.eventType !== "user.message") continue;
+    const payload = asRecord(event.payload);
+    const target = payload?.target;
+    if (target === "local" || target === "hosted") return target;
+  }
+  return undefined;
 }
 
 /**
