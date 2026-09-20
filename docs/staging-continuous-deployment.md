@@ -91,13 +91,35 @@ The root orchestrator independently verifies that the requested SHA equals the f
 
 Bootstrap is intentionally a manual operator action because it creates an OS account, forced-command SSH boundary, root-owned config, and one narrow sudo rule.
 
-From a reviewed checkout on the VPS:
+Do not move the currently running staging checkout merely to install the CD control scripts. After this PCS-08 implementation is merged and its exact merge SHA is reviewed, fetch `main` while leaving `HEAD` on the known-good PCS-07 revision, export the three CD scripts from that exact reviewed commit into one temporary directory, and run the bootstrap from there. The bootstrap resolves its sibling scripts relative to its own location.
+
+Example shape:
 
 ```bash
-sudo bash scripts/staging-cd-host-bootstrap.sh \
+cd /srv/ecorione-staging
+git fetch origin main --prune
+
+EXPECTED_PCS08_SHA=<reviewed-merge-sha>
+test "$(git rev-parse refs/remotes/origin/main)" = "$EXPECTED_PCS08_SHA"
+
+BOOTSTRAP_DIR="$(mktemp -d)"
+for file in \
+  staging-cd-host-bootstrap.sh \
+  staging-cd-forced-command.sh \
+  staging-cd-root-deploy.sh
+do
+  git show "$EXPECTED_PCS08_SHA:scripts/$file" > "$BOOTSTRAP_DIR/$file"
+  chmod 0700 "$BOOTSTRAP_DIR/$file"
+done
+
+sudo bash "$BOOTSTRAP_DIR/staging-cd-host-bootstrap.sh" \
   --public-key-file /path/to/dedicated-staging-deploy.pub \
   --public-base-url https://ecorione.inmydraft.com
+
+rm -rf "$BOOTSTRAP_DIR"
 ```
+
+This preserves the current known-good source checkout until the first governed CD deployment itself performs the exact-SHA transition.
 
 Defaults match the currently proven staging topology:
 
