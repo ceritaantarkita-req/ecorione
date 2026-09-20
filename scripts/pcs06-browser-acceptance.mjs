@@ -346,7 +346,11 @@ async function installApiMocks(context) {
       return json(route, { sessions: [updatedSession()] });
     }
     if (path === `/api/projects/history/${historySession.id}` && method === "GET") {
-      return json(route, { session: updatedSession(), range: historyRange(), truncated: false });
+      return json(route, {
+        session: updatedSession(),
+        range: historyRange(),
+        truncated: false,
+      });
     }
     if (path === "/api/projects/prj_personal/sources" && method === "GET") {
       return json(route, { sources: [] });
@@ -400,7 +404,11 @@ async function installApiMocks(context) {
           savedPct: 0,
           routeReason: "pcs06-browser-stub",
         },
-        policy: { outcome: "ALLOW", reason: "PCS-06 deterministic browser stub.", ruleId: "pcs06" },
+        policy: {
+          outcome: "ALLOW",
+          reason: "PCS-06 deterministic browser stub.",
+          ruleId: "pcs06",
+        },
       });
     }
 
@@ -441,7 +449,12 @@ async function installApiMocks(context) {
       const provider = decodeURIComponent(path.split("/").at(-1));
       credentials = [
         ...credentials.filter((item) => item.provider !== provider),
-        { provider, purpose: provider === "anthropic" ? "messages" : "tokens", generation: 1, updatedAt: now },
+        {
+          provider,
+          purpose: provider === "anthropic" ? "messages" : "tokens",
+          generation: 1,
+          updatedAt: now,
+        },
       ];
       return json(route, { provider, generation: 1, updatedAt: now });
     }
@@ -453,8 +466,12 @@ async function installApiMocks(context) {
       return json(route, {
         pass: true,
         latencyMs: 9.5,
-        provider: body.target === "local" ? "openai-compatible" : runtime.settings.hostedProvider,
-        model: body.target === "local" ? runtime.settings.localModelTag : runtime.settings.hostedModel,
+        provider:
+          body.target === "local" ? "openai-compatible" : runtime.settings.hostedProvider,
+        model:
+          body.target === "local"
+            ? runtime.settings.localModelTag
+            : runtime.settings.hostedModel,
         modelIdentity: "pcs06-stub",
         modelIdentityPinned: false,
         modelIdentityProvenance: "unverified",
@@ -606,7 +623,12 @@ async function installApiMocks(context) {
 
     return json(
       route,
-      { error: { type: "PCS06_UNMOCKED_API", message: `Unmocked PCS-06 API: ${method} ${path}` } },
+      {
+        error: {
+          type: "PCS06_UNMOCKED_API",
+          message: `Unmocked PCS-06 API: ${method} ${path}`,
+        },
+      },
       503,
     );
   });
@@ -679,8 +701,11 @@ async function runDesktopJourney() {
     await goto(page, `/?project=prj_personal&session=${historySession.id}`, "desktop-ai");
     await page.getByText("Earlier hosted reply", { exact: true }).waitFor();
     await page.getByRole("combobox", { name: "Model" }).selectOption("hosted");
-    const localOption = page.getByRole("combobox", { name: "Model" }).locator('option[value="local"]');
-    if (!(await localOption.isDisabled())) throw new Error("desktop-ai: Local unavailable option must be disabled");
+    const localOption = page
+      .getByRole("combobox", { name: "Model" })
+      .locator('option[value="local"]');
+    if (!(await localOption.isDisabled()))
+      throw new Error("desktop-ai: Local unavailable option must be disabled");
     await page.getByRole("textbox", { name: "Pesan" }).fill("PCS06 browser continuity");
     await page.getByRole("button", { name: "Kirim pesan" }).click();
     await page.getByText("PCS06_HOSTED_OK", { exact: true }).waitFor();
@@ -693,7 +718,8 @@ async function runDesktopJourney() {
     await page.getByRole("link", { name: "Ai", exact: true }).click();
     await page.getByText("PCS06_HOSTED_OK", { exact: true }).waitFor();
     const sessionTag = page.locator(`[title="${historySession.id}"]`);
-    if ((await sessionTag.count()) === 0) throw new Error("desktop-ai: active session was not restored");
+    if ((await sessionTag.count()) === 0)
+      throw new Error("desktop-ai: active session was not restored");
 
     await page.getByRole("button", { name: "Gunakan tema terang" }).click();
     if ((await page.evaluate(() => document.documentElement.dataset.theme)) !== "light") {
@@ -720,7 +746,9 @@ async function runDesktopJourney() {
     await page.getByText("PCS-06 Notes", { exact: true }).waitFor();
 
     await goto(page, "/ops", "desktop-ops");
-    await page.getByRole("heading", { name: "Runtime health & telemetry", exact: true }).waitFor();
+    await page
+      .getByRole("heading", { name: "Runtime health & telemetry", exact: true })
+      .waitFor();
     await page.getByText("Healthy", { exact: true }).waitFor();
 
     await goto(page, "/settings", "desktop-settings");
@@ -757,13 +785,16 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await page.getByText(/Tersimpan sebagai v1/).waitFor();
     const runButton = page.getByRole("button", { name: "Run", exact: true });
-    if (!(await runButton.isDisabled())) throw new Error("desktop-flow: Run must be blocked before authority readiness");
+    if (!(await runButton.isDisabled()))
+      throw new Error("desktop-flow: Run must be blocked before authority readiness");
     await page.getByRole("button", { name: "Prepare authority", exact: true }).click();
     await page.getByText("Approval required", { exact: true }).waitFor();
-    if (!(await runButton.isDisabled())) throw new Error("desktop-flow: Run must remain blocked while approval is pending");
+    if (!(await runButton.isDisabled()))
+      throw new Error("desktop-flow: Run must remain blocked while approval is pending");
     await page.getByRole("button", { name: "Approve", exact: true }).click();
     await page.getByText("Execution authority ready", { exact: true }).waitFor();
-    if (await runButton.isDisabled()) throw new Error("desktop-flow: Run must unlock after exact authority becomes ready");
+    if (await runButton.isDisabled())
+      throw new Error("desktop-flow: Run must unlock after exact authority becomes ready");
     await runButton.click();
     await page.getByText("COMPLETED", { exact: true }).waitFor();
     await page.getByText("SUCCEEDED", { exact: true }).waitFor();
@@ -797,12 +828,39 @@ async function runNarrowRoute(path, label, assertion) {
 async function runNarrowCoverage() {
   const cases = [
     ["/", "narrow-ai", (page) => page.getByRole("textbox", { name: "Pesan" }).waitFor()],
-    ["/projects", "narrow-projects", (page) => page.getByRole("heading", { name: "Projects", exact: true }).waitFor()],
-    ["/work", "narrow-work", (page) => page.getByRole("heading", { name: "Work", exact: true }).waitFor()],
-    ["/brain", "narrow-brain", (page) => page.getByRole("heading", { name: "Brain", exact: true }).waitFor()],
-    ["/space", "narrow-space", (page) => page.getByRole("heading", { name: "Space", exact: true }).waitFor()],
-    ["/ops", "narrow-ops", (page) => page.getByRole("heading", { name: "Runtime health & telemetry", exact: true }).waitFor()],
-    ["/settings", "narrow-settings", (page) => page.getByRole("heading", { name: "AI & Connections", exact: true }).waitFor()],
+    [
+      "/projects",
+      "narrow-projects",
+      (page) => page.getByRole("heading", { name: "Projects", exact: true }).waitFor(),
+    ],
+    [
+      "/work",
+      "narrow-work",
+      (page) => page.getByRole("heading", { name: "Work", exact: true }).waitFor(),
+    ],
+    [
+      "/brain",
+      "narrow-brain",
+      (page) => page.getByRole("heading", { name: "Brain", exact: true }).waitFor(),
+    ],
+    [
+      "/space",
+      "narrow-space",
+      (page) => page.getByRole("heading", { name: "Space", exact: true }).waitFor(),
+    ],
+    [
+      "/ops",
+      "narrow-ops",
+      (page) =>
+        page
+          .getByRole("heading", { name: "Runtime health & telemetry", exact: true })
+          .waitFor(),
+    ],
+    [
+      "/settings",
+      "narrow-settings",
+      (page) => page.getByRole("heading", { name: "AI & Connections", exact: true }).waitFor(),
+    ],
   ];
   for (const [path, label, assertion] of cases) {
     await runNarrowRoute(path, label, assertion);
@@ -824,7 +882,9 @@ async function runNarrowCoverage() {
       return wrap ? getComputedStyle(wrap).overflowX : null;
     });
     if (overflowX !== "auto" && overflowX !== "scroll") {
-      throw new Error(`narrow-flow-canvas: expected contained horizontal overflow, got ${overflowX}`);
+      throw new Error(
+        `narrow-flow-canvas: expected contained horizontal overflow, got ${overflowX}`,
+      );
     }
     await assertNoPageOverflow(page, "narrow-flow-canvas");
     await page.screenshot({ path: `${outDir}/narrow-flow-canvas.png`, fullPage: true });
@@ -849,7 +909,9 @@ try {
 await browser.close();
 
 if (externalRequests.size > 0) {
-  failures.push(`External network request(s) observed: ${JSON.stringify([...externalRequests])}`);
+  failures.push(
+    `External network request(s) observed: ${JSON.stringify([...externalRequests])}`,
+  );
 }
 if (failures.length > 0) {
   console.error("PCS-06 integrated browser acceptance FAILED");

@@ -53,15 +53,9 @@ describe("PCS-06 integrated browser acceptance contract", () => {
     expect(workflow).toContain("/tmp/pcs06-playwright");
     expect(workflow).toContain('"playwright": "1.55.0"');
     expect(workflow).toContain("PCS06_ARTIFACT_DIR");
-    expect(workflow).toContain(
-      "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
-    );
-    expect(workflow).toContain(
-      "pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320",
-    );
-    expect(workflow).toContain(
-      "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444",
-    );
+    expect(workflow).toContain("actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09");
+    expect(workflow).toContain("pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320");
+    expect(workflow).toContain("actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444");
     expect(workflow).toContain(
       "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
     );
