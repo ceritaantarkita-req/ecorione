@@ -99,6 +99,7 @@ export default function ChatPage() {
   const [historyFeedback, setHistoryFeedback] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
+  const [defaultTarget, setDefaultTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [preparingAttachments, setPreparingAttachments] = useState(false);
@@ -113,6 +114,7 @@ export default function ChatPage() {
   const [manualOpen, setManualOpen] = useState(false);
   const [manualDraft, setManualDraft] = useState("");
   const sendInFlightRef = useRef(false);
+  const routeLockedRef = useRef(false);
   const forgetInFlightRef = useRef<string | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
   const attachMenuRef = useRef<HTMLDivElement | null>(null);
@@ -126,28 +128,182 @@ export default function ChatPage() {
         turn.kind === "assistant" && turn.memoryUsed !== undefined,
     );
 
+  const loadHistorySessions = useCallback(async (activeProjectId: string) => {
+    const res = await fetch(
+      `/api/projects/history?workspaceId=${WORKSPACE_ID}&projectId=${encodeURIComponent(activeProjectId)}`,
+      { cache: "no-store" },
+    );
+    const body: unknown = await res.json().catch(() => undefined);
+    if (!res.ok) {
+      throw new Error(extractErrorMessage(body) ?? "Gagal memuat riwayat percakapan.");
+    }
+    return (body as SessionList).sessions;
+  }, []);
+
   useEffect(() => {
     if (!hydrated) return;
-    const fromQuery = new URLSearchParams(window.location.search).get("project");
-    let next = PERSONAL_PROJECT_ID;
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get("project");
+    let nextProject = PERSONAL_PROJECT_ID;
     if (fromQuery !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(fromQuery)) {
-      next = fromQuery;
+      nextProject = fromQuery;
     } else {
       try {
         const stored = window.localStorage.getItem(PROJECT_STORAGE_KEY);
-        if (stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)) next = stored;
+        if (stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)) nextProject = stored;
       } catch {
         // Storage can be unavailable in privacy-restricted contexts.
       }
     }
-    setProjectId(next);
+
+    const requested = params.get("session");
+    const explicitSession = isClientSessionId(requested) ? requested : null;
+    let storedSession: string | null = null;
     try {
-      window.localStorage.setItem(PROJECT_STORAGE_KEY, next);
+      const candidate = window.localStorage.getItem(projectSessionStorageKey(nextProject));
+      if (isClientSessionId(candidate)) storedSession = candidate;
     } catch {
-      // The explicit in-memory Project still works without persistence.
+      // In-memory continuity remains available for this page load.
+    }
+    const nextSession = explicitSession ?? storedSession ?? makeSessionId();
+
+    setProjectId(nextProject);
+    setRequestedSessionId(explicitSession);
+    setSessionId(nextSession);
+    setTurns([]);
+    setHistorySessions([]);
+    setHistoryListReady(false);
+    setHistoryTruncated(false);
+    setHistoryFeedback(null);
+    setSessionReady(false);
+    routeLockedRef.current = false;
+
+    try {
+      window.localStorage.setItem(PROJECT_STORAGE_KEY, nextProject);
+      if (explicitSession === null) {
+        window.localStorage.setItem(projectSessionStorageKey(nextProject), nextSession);
+      }
+    } catch {
+      // The explicit in-memory Project/session still works without persistence.
     }
     setProjectReady(true);
   }, [hydrated]);
+
+  useEffect(() => {
+    if (!projectReady) return;
+    let cancelled = false;
+    setHistoryListReady(false);
+    void loadHistorySessions(projectId)
+      .then((sessions) => {
+        if (cancelled) return;
+        setHistorySessions(sessions);
+        setHistoryListReady(true);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setHistorySessions([]);
+        setHistoryListReady(true);
+        setHistoryFeedback(
+          error instanceof Error ? error.message : "Gagal memuat riwayat percakapan.",
+        );
+        if (requestedSessionId === null) setSessionReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadHistorySessions, projectId, projectReady, requestedSessionId]);
+
+  useEffect(() => {
+    if (!projectReady || !historyListReady) return;
+    const known = historySessions.some((session) => session.id === sessionId);
+
+    if (requestedSessionId === sessionId && !known) {
+      const nextSession = makeSessionId();
+      setRequestedSessionId(null);
+      setSessionId(nextSession);
+      setTurns([]);
+      setHistoryTruncated(false);
+      setHistoryFeedback("Percakapan tidak tersedia di Project ini. Sesi baru dibuat.");
+      setSessionReady(true);
+      routeLockedRef.current = false;
+      setTarget(defaultTarget);
+      try {
+        window.localStorage.setItem(projectSessionStorageKey(projectId), nextSession);
+      } catch {
+        // In-memory session remains usable.
+      }
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set("project", projectId);
+      nextUrl.searchParams.delete("session");
+      window.history.replaceState(null, "", nextUrl);
+      return;
+    }
+
+    if (!known) {
+      setTurns([]);
+      setHistoryTruncated(false);
+      setSessionReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    setHistoryLoading(true);
+    setSessionReady(false);
+    setHistoryFeedback(null);
+    void fetch(
+      `/api/projects/history/${encodeURIComponent(sessionId)}?workspaceId=${WORKSPACE_ID}&projectId=${encodeURIComponent(projectId)}`,
+      { cache: "no-store" },
+    )
+      .then(async (res) => {
+        const body: unknown = await res.json().catch(() => undefined);
+        if (!res.ok) {
+          throw new Error(extractErrorMessage(body) ?? "Gagal membuka percakapan.");
+        }
+        return body as ConversationReplay;
+      })
+      .then((replay) => {
+        if (cancelled) return;
+        if (
+          replay.session.id !== sessionId ||
+          replay.session.workspaceId !== WORKSPACE_ID ||
+          replay.session.projectId !== projectId
+        ) {
+          throw new Error("Binding percakapan tidak cocok dengan Project aktif.");
+        }
+        const restoredTarget =
+          historyChatTarget(replay.range.events) ??
+          (replay.session.syncClass === "CLOUD_ALLOWED" ? "hosted" : "local");
+        routeLockedRef.current = true;
+        setTarget(restoredTarget);
+        setTurns(historyEventsToTurns(replay.range.events));
+        setHistoryTruncated(replay.truncated);
+        setSessionReady(true);
+        try {
+          window.localStorage.setItem(projectSessionStorageKey(projectId), sessionId);
+        } catch {
+          // In-memory replay remains usable.
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setHistoryFeedback(error instanceof Error ? error.message : "Gagal membuka percakapan.");
+        setSessionReady(false);
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    defaultTarget,
+    historyListReady,
+    historySessions,
+    projectId,
+    projectReady,
+    requestedSessionId,
+    sessionId,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -174,16 +330,18 @@ export default function ChatPage() {
         const hostedReady =
           runtimeSnapshot.settings?.hostedCallsEnabled === true && hasHostedCredential;
         setHostedAvailable(hostedReady);
-        setTarget(
+        const nextDefault =
           runtimeSnapshot.settings?.defaultChatTarget === "hosted" && hostedReady
             ? "hosted"
-            : "local",
-        );
+            : "local";
+        setDefaultTarget(nextDefault);
+        if (!routeLockedRef.current) setTarget(nextDefault);
       })
       .catch(() => {
         if (!cancelled) {
           setHostedAvailable(false);
-          setTarget("local");
+          setDefaultTarget("local");
+          if (!routeLockedRef.current) setTarget("local");
         }
       });
     return () => {
