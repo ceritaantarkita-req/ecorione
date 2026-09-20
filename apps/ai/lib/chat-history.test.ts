@@ -1,12 +1,20 @@
-import type { HistoryEvent } from "@ecorione/shared-schema";
+import { assertId, type HistoryEvent } from "@ecorione/shared-schema";
 import { describe, expect, it } from "vitest";
 import { historyChatTarget, historyEventsToTurns } from "./chat-history";
 
+const SESSION_ID = assertId("session", "sess_history");
+const OPERATION_ID = assertId("operation", "op_history");
+const USER_EVENT_ID = assertId("event", "evt_user");
+const MODEL_EVENT_ID = assertId("event", "evt_model");
+const ASSISTANT_EVENT_ID = assertId("event", "evt_assistant");
+const TOOL_EVENT_ID = assertId("event", "evt_tool");
+const BAD_EVENT_ID = assertId("event", "evt_bad");
+
 const BASE = {
-  sessionId: "sess_history",
+  sessionId: SESSION_ID,
   recordedAt: "2026-09-20T00:00:00.000Z",
   actor: "hub",
-  operationId: "op_history",
+  operationId: OPERATION_ID,
   prevHash: null,
   hash: "a".repeat(64),
 } as const;
@@ -16,8 +24,8 @@ describe("historyEventsToTurns", () => {
     const events: HistoryEvent[] = [
       {
         ...BASE,
-        id: "evt_user" as never,
-        sessionId: "sess_history" as never,
+        id: USER_EVENT_ID,
+        sessionId: SESSION_ID,
         seq: 0,
         eventType: "user.message",
         actor: "user",
@@ -26,11 +34,11 @@ describe("historyEventsToTurns", () => {
       },
       {
         ...BASE,
-        id: "evt_model" as never,
-        sessionId: "sess_history" as never,
+        id: MODEL_EVENT_ID,
+        sessionId: SESSION_ID,
         seq: 1,
         eventType: "model.called",
-        parentEventId: "evt_user" as never,
+        parentEventId: USER_EVENT_ID,
         payload: {
           responseModel: "local-test-model-v1",
           cacheHit: true,
@@ -43,12 +51,12 @@ describe("historyEventsToTurns", () => {
       },
       {
         ...BASE,
-        id: "evt_assistant" as never,
-        sessionId: "sess_history" as never,
+        id: ASSISTANT_EVENT_ID,
+        sessionId: SESSION_ID,
         seq: 2,
         eventType: "agent.message",
         actor: "assistant",
-        parentEventId: "evt_model" as never,
+        parentEventId: MODEL_EVENT_ID,
         payload: { text: "hi" },
         prevHash: "b".repeat(64),
         hash: "c".repeat(64),
@@ -80,8 +88,8 @@ describe("historyEventsToTurns", () => {
     const events: HistoryEvent[] = [
       {
         ...BASE,
-        id: "evt_tool" as never,
-        sessionId: "sess_history" as never,
+        id: TOOL_EVENT_ID,
+        sessionId: SESSION_ID,
         seq: 0,
         eventType: "tool.call",
         parentEventId: null,
@@ -89,8 +97,8 @@ describe("historyEventsToTurns", () => {
       },
       {
         ...BASE,
-        id: "evt_bad" as never,
-        sessionId: "sess_history" as never,
+        id: BAD_EVENT_ID,
+        sessionId: SESSION_ID,
         seq: 1,
         eventType: "agent.message",
         parentEventId: null,
