@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -9,7 +10,13 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
+import type {
+  ChatCost,
+  ChatResponse,
+  HistoryRange,
+  HistorySession,
+  MemoryUsed,
+} from "@ecorione/shared-schema";
 import {
   MAX_COMPOSER_ATTACHMENTS,
   attachmentCanBeRemoved,
@@ -19,9 +26,18 @@ import {
   uploadPendingChatAttachments,
   type ChatAttachment,
 } from "../lib/chat-attachments";
-import { makeSessionId } from "../lib/session";
-
-type ChatTarget = "local" | "hosted";
+import {
+  historyChatTarget,
+  historyEventsToTurns,
+  type AssistantChatTurn,
+  type ChatTarget,
+  type ChatTurn,
+} from "../lib/chat-history";
+import {
+  isClientSessionId,
+  makeSessionId,
+  projectSessionStorageKey,
+} from "../lib/session";
 const WORKSPACE_ID = "ws_personal";
 const PERSONAL_PROJECT_ID = "prj_personal";
 const PROJECT_STORAGE_KEY = "ecorione.projectId";
@@ -35,25 +51,13 @@ type RuntimeSnapshot = {
 type CredentialSnapshot = {
   credentials?: Array<{ provider: string }>;
 };
-interface UserTurn {
-  kind: "user";
-  id: string;
-  text: string;
-}
-interface AssistantTurn {
-  kind: "assistant";
-  id: string;
-  operationId: string;
-  reply: string;
-  cost: ChatCost;
-  memoryUsed: MemoryUsed;
-}
-interface ErrorTurn {
-  kind: "error";
-  id: string;
-  message: string;
-}
-type Turn = UserTurn | AssistantTurn | ErrorTurn;
+type ConversationReplay = {
+  readonly session: HistorySession;
+  readonly range: HistoryRange;
+  readonly truncated: boolean;
+};
+type SessionList = { readonly sessions: HistorySession[] };
+
 let turnCounter = 0;
 function nextTurnId(): string {
   turnCounter += 1;
@@ -77,15 +81,22 @@ const getClientHydrationSnapshot = (): boolean => true;
 const getServerHydrationSnapshot = (): boolean => false;
 
 export default function ChatPage() {
-  const [sessionId] = useState<string>(() => makeSessionId());
+  const [sessionId, setSessionId] = useState<string>(() => makeSessionId());
   const hydrated = useSyncExternalStore(
     subscribeHydration,
     getClientHydrationSnapshot,
     getServerHydrationSnapshot,
   );
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
   const [projectReady, setProjectReady] = useState(false);
+  const [requestedSessionId, setRequestedSessionId] = useState<string | null>(null);
+  const [historySessions, setHistorySessions] = useState<HistorySession[]>([]);
+  const [historyListReady, setHistoryListReady] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyTruncated, setHistoryTruncated] = useState(false);
+  const [historyFeedback, setHistoryFeedback] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
@@ -108,9 +119,12 @@ export default function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
-  const latestAssistant = [...turns]
+  const latestAssistantWithMemory = [...turns]
     .reverse()
-    .find((t): t is AssistantTurn => t.kind === "assistant");
+    .find(
+      (turn): turn is AssistantChatTurn & { memoryUsed: MemoryUsed } =>
+        turn.kind === "assistant" && turn.memoryUsed !== undefined,
+    );
 
   useEffect(() => {
     if (!hydrated) return;
