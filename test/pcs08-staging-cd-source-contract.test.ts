@@ -60,6 +60,7 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("current_tag=");
     expect(rootDeploy).toContain("previous_sha=");
     expect(rootDeploy).toContain("previous_tag=");
+    expect(rootDeploy).toContain("staging deploy already recorded");
   });
 
   it("requires preflight, runtime health, public smoke, ops health, and exact-host evidence", () => {
