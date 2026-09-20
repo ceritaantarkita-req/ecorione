@@ -9,6 +9,8 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
   const upgrade = readFileSync("scripts/self-host-upgrade.sh", "utf8");
   const rollback = readFileSync("scripts/self-host-rollback.sh", "utf8");
   const hostEvidence = readFileSync("scripts/staging-host-evidence.mjs", "utf8");
+  const sumopodOverlay = readFileSync("deploy/compose.sumopod.yml", "utf8");
+  const sumopodCaddy = readFileSync("deploy/Caddyfile.sumopod", "utf8");
   const packageJson = readFileSync("package.json", "utf8");
 
   it("keeps deployment env files out of Git", () => {
@@ -35,13 +37,28 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
     }
   });
 
-  it("keeps staging lifecycle on the reviewed self-host compose topology", () => {
+  it("keeps staging lifecycle on the reviewed base topology plus an explicit reviewed overlay", () => {
     for (const script of [preflight, install, upgrade, rollback]) {
       expect(script).toContain("deploy/compose.yml");
+      expect(script).toContain("ECORIONE_COMPOSE_OVERLAY");
+      expect(script).toContain('COMPOSE_ARGS+=(-f "$COMPOSE_OVERLAY")');
     }
     expect(install).not.toContain("docker.sock");
     expect(upgrade).not.toContain("docker.sock");
     expect(rollback).not.toContain("docker.sock");
+  });
+
+  it("adapts SumoPod staging to the pre-existing Traefik edge without host port takeover", () => {
+    expect(sumopodOverlay).toContain("ports: !reset []");
+    expect(sumopodOverlay).toContain("ECORIONE_EDGE_NETWORK");
+    expect(sumopodOverlay).toContain("external: true");
+    expect(sumopodOverlay).toContain('traefik.enable: "true"');
+    expect(sumopodOverlay).toContain("loadbalancer.server.port: \"8080\"");
+    expect(sumopodOverlay).not.toContain("/var/run/docker.sock");
+    expect(sumopodCaddy).toContain(":8080");
+    expect(sumopodCaddy).toContain("reverse_proxy ai:3000");
+    expect(sumopodCaddy).toContain("reverse_proxy sync:17011");
+    expect(sumopodCaddy).toContain("basic_auth");
   });
 
   it("fails closed on unsafe mutable deployment env files", () => {
@@ -58,6 +75,8 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
     expect(hostEvidence).toContain("ECORIONE_EXPECTED_SHA");
     expect(hostEvidence).toContain("ECORIONE_DEPLOY_ENV is required");
     expect(hostEvidence).toContain("ECORIONE_COMPOSE_PROJECT is required");
+    expect(hostEvidence).toContain("ECORIONE_COMPOSE_OVERLAY");
+    expect(hostEvidence).toContain("ECORIONE_EDGE_NETWORK");
     expect(hostEvidence).toContain("40-character reviewed Git commit");
     expect(hostEvidence).not.toContain("ECORIONE_PRODUCTION_ENV");
     expect(hostEvidence).toContain("cleanWorktree");
