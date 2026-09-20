@@ -42,6 +42,13 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
     expect(rollback).not.toContain("docker.sock");
   });
 
+  it("fails closed on unsafe mutable deployment env files", () => {
+    for (const script of [install, upgrade, rollback]) {
+      expect(script).toContain('must not be a symlink');
+      expect(script).toContain('must be mode 600');
+    }
+  });
+
   it("keeps apply mutation explicit", () => {
     expect(install).toContain('"--apply"');
     expect(upgrade).toContain('"--apply"');
