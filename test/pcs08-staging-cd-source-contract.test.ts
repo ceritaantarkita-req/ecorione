@@ -42,6 +42,7 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
       'exec sudo -n /usr/local/sbin/ecorione-staging-deploy "${BASH_REMATCH[1]}"',
     );
     expect(forcedCommand).not.toContain("eval ");
+    expect(rootDeploy).toContain('[[ "$#" -eq 1 ]]');
   });
 
   it("does not use a blind polling git pull loop", () => {
