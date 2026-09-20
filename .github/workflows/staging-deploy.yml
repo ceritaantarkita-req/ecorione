@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows: ["CI", "Product Eval"]
     types: [completed]
+  workflow_dispatch:
 
 permissions:
   actions: read
@@ -16,9 +17,10 @@ concurrency:
 jobs:
   gate:
     if: >-
-      github.event.workflow_run.event == 'push' &&
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main' &&
-      github.event.workflow_run.conclusion == 'success'
+      github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -30,7 +32,7 @@ jobs:
         id: gates
         env:
           GH_TOKEN: ${{ github.token }}
-          TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+          TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
 
@@ -63,7 +65,7 @@ jobs:
 
   deploy:
     needs: gate
-    if: needs.gate.outputs.ready == 'true'
+    if: needs.gate.outputs.ready == 'true' && vars.ECORIONE_STAGING_CD_ENABLED == '1'
     runs-on: ubuntu-24.04
     environment: staging
     timeout-minutes: 45
