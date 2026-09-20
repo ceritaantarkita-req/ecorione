@@ -142,9 +142,9 @@ Normal format/lint/typecheck/tests/secret scan/build remain required.
 
 ### PCS-07 — SumoPod remote staging deployment
 
-State: **ACTIVE / APPROVED — REPOSITORY PREP IN PROGRESS; REAL HOST EVIDENCE PENDING**.
+State: **ACTIVE / APPROVED — REPOSITORY PREPARATION PASS; REAL HOST EVIDENCE PENDING**.
 
-The operator approved an operator-owned SumoPod Ubuntu VPS as the first remote staging host. Repository-side staging isolation/runbook work is tracked in [sumopod-staging.md](sumopod-staging.md); PCS-07 cannot close until the actual host is validated and deployed.
+The operator approved an operator-owned SumoPod Ubuntu VPS as the first remote staging host. Repository preparation passed through PR #203 + PR #204 and is recorded in [verification/pcs-07-repository-preparation-2026-09-20.md](verification/pcs-07-repository-preparation-2026-09-20.md). The live-host procedure is [sumopod-staging.md](sumopod-staging.md); PCS-07 cannot close until the actual host is validated and deployed.
 
 ```text
 GitHub main
