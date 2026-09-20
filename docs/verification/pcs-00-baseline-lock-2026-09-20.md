@@ -2,7 +2,7 @@
 
 Date: **2026-09-20**
 
-Status: **CANDIDATE / AWAITING EXACT-HEAD GATES**
+Status: **CLOSED / PASS**
 
 ## Purpose
 
@@ -84,4 +84,14 @@ PCS-00 can close only when:
 5. current status docs point to this baseline;
 6. this PCS-00 exact head passes CI + Product Eval.
 
-Until item 6 passes, status remains **CANDIDATE**.
+## Closure evidence
+
+```text
+PCS-00 PR                 #189
+exact reviewed head       f58311ae30beef877f0c38962bcf4b1aefe91917
+CI                        #1492 PASS
+Product Eval              #731 PASS
+merge main                12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764
+```
+
+All PCS-00 acceptance items passed. The next implementation scope is PCS-01 Chat continuity/history.

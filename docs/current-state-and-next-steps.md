@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00 BASELINE LOCK ACTIVE**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00 CLOSED / PCS-01 NEXT**
 
 ## Current verdict
 
@@ -29,11 +29,13 @@ The next scope is documented in [post-closure-product-staging-roadmap.md](post-c
 
 Production public cutover remains a separate gate. Remote staging approval must not be mislabeled as production evidence.
 
-## PCS-00 baseline lock — ACTIVE
+## PCS-00 baseline lock — CLOSED / PASS
 
 PCS-00 starts from synchronized reviewed `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19`, the merge of PR #188. Its reviewed roadmap head `c4088bd04298d42809b7b012b353d2e977e7a931` passed CI #1490 and Product Eval #729.
 
-The baseline preserves the closed owner/security architecture and makes exact-head verification mandatory for subsequent PCS product changes. PCS-00 is not CLOSED until the PCS-00 branch head itself passes CI + Product Eval. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
+The baseline preserves the closed owner/security architecture and makes exact-head verification mandatory for subsequent PCS product changes. PR #189 exact head `f58311ae30beef877f0c38962bcf4b1aefe91917` passed CI #1492 + Product Eval #731 and merged as `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`. PCS-00 is **CLOSED / PASS**. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
+
+The next scope is **PCS-01 Chat continuity/history**.
 
 ## Post-closure repository hardening
 

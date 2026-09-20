@@ -36,8 +36,8 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 
 | Scope | State |
 |---|---:|
-| PCS-00 Baseline lock | **ACTIVE / EXACT-HEAD GATES REQUIRED** |
-| PCS-01 Chat continuity/history | **PLANNED** |
+| PCS-00 Baseline lock | **CLOSED / PASS** |
+| PCS-01 Chat continuity/history | **NEXT** |
 | PCS-02 Provider onboarding + hosted model choice | **PLANNED** |
 | PCS-03 Local AI resilience/runtime discovery | **PLANNED** |
 | PCS-04 Visual + information-architecture cleanup | **PLANNED** |
@@ -48,7 +48,7 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 | PCS-09 Staging persistence/security/backup/observability | **PLANNED** |
 | PCS-10 Closure/docs | **PLANNED** |
 
-PCS-00 locks `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19` as the post-closure starting point. The roadmap head `c4088bd04298d42809b7b012b353d2e977e7a931` already passed CI #1490 + Product Eval #729. PCS-00 remains ACTIVE until its own exact head passes CI + Product Eval. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
+PCS-00 locked `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19` as the post-closure starting point. PR #189 exact head `f58311ae30beef877f0c38962bcf4b1aefe91917` passed CI #1492 + Product Eval #731 and merged as `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`. PCS-00 is **CLOSED / PASS**; PCS-01 is next. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional/not yet selected for staging. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
