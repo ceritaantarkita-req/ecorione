@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00 CLOSED / PCS-01 NEXT**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-01 CLOSED / PCS-02 NEXT**
 
 ## Current verdict
 
@@ -35,7 +35,15 @@ PCS-00 starts from synchronized reviewed `main` commit `93c5312d73289305d3e16ff7
 
 The baseline preserves the closed owner/security architecture and makes exact-head verification mandatory for subsequent PCS product changes. PR #189 exact head `f58311ae30beef877f0c38962bcf4b1aefe91917` passed CI #1492 + Product Eval #731 and merged as `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`. PCS-00 is **CLOSED / PASS**. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
 
-The next scope is **PCS-01 Chat continuity/history**.
+## PCS-01 chat continuity/history — CLOSED / PASS
+
+PR #191 exact head `9445b30c659628e1d551191219d0b7cd5ccf2f7c` passed CI #1505 + Product Eval #744 and merged as `ee363c055944b27b549a2f061105eea35fa25f9e`.
+
+Ai now preserves active sessions per Project, reopens exact canonical Historical Ledger conversations, exposes explicit New chat/history navigation, and enforces Workspace + Project binding on single-session History reads. No parallel history database was added. Integrated live-browser regression remains explicitly scheduled for PCS-06.
+
+Evidence: [verification/pcs-01-chat-continuity-2026-09-20.md](verification/pcs-01-chat-continuity-2026-09-20.md).
+
+The next scope is **PCS-02 AI provider onboarding + hosted model choice**.
 
 ## Post-closure repository hardening
 
