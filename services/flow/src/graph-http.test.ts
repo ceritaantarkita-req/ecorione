@@ -73,13 +73,11 @@ describe("Flow graph HTTP integration", () => {
     hub
       .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
       .reply(200, { workspaceId: "ws_personal", declared: 17 });
-    hub
-      .intercept({ path: "/v1/authority/authorize", method: "POST" })
-      .reply(200, {
-        outcome: "ALLOW",
-        reason: "PCS-05 preflight grant is active.",
-        grantedPermissionIds: ["node.execute"],
-      });
+    hub.intercept({ path: "/v1/authority/authorize", method: "POST" }).reply(200, {
+      outcome: "ALLOW",
+      reason: "PCS-05 preflight grant is active.",
+      grantedPermissionIds: ["node.execute"],
+    });
 
     const temporalClient = temporal();
     const app = buildFlowServer(temporalClient, { hubUrl: "http://hub.local" });
@@ -164,36 +162,32 @@ describe("Flow graph HTTP integration", () => {
       payload: graphPayload,
     });
     expect(created.statusCode).toBe(201);
-    const graphId = (created.json() as { version: { graphId: string; version: number } }).version
-      .graphId;
+    const graphId = (created.json() as { version: { graphId: string; version: number } })
+      .version.graphId;
 
     let requestedGrantOperationId = "";
     hub
       .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
       .reply(200, { workspaceId: "ws_personal", declared: 17 });
-    hub
-      .intercept({ path: "/v1/authority/authorize", method: "POST" })
-      .reply(200, {
-        outcome: "DENY",
-        reason: "Missing standing grant.",
-        grantedPermissionIds: [],
-      });
-    hub
-      .intercept({ path: "/v1/authority/grants", method: "POST" })
-      .reply(409, (opts) => {
-        const body = JSON.parse(String(opts.body)) as { operationId: string };
-        requestedGrantOperationId = body.operationId;
-        return {
-          error: {
-            type: "AUTHORITY_APPROVAL_REQUIRED",
-            message: "Approval required.",
-            detail: {
-              operationId: body.operationId,
-              prompt: "Approve node.execute for Trigger.",
-            },
+    hub.intercept({ path: "/v1/authority/authorize", method: "POST" }).reply(200, {
+      outcome: "DENY",
+      reason: "Missing standing grant.",
+      grantedPermissionIds: [],
+    });
+    hub.intercept({ path: "/v1/authority/grants", method: "POST" }).reply(409, (opts) => {
+      const body = JSON.parse(String(opts.body)) as { operationId: string };
+      requestedGrantOperationId = body.operationId;
+      return {
+        error: {
+          type: "AUTHORITY_APPROVAL_REQUIRED",
+          message: "Approval required.",
+          detail: {
+            operationId: body.operationId,
+            prompt: "Approve node.execute for Trigger.",
           },
-        };
-      });
+        },
+      };
+    });
 
     const prepared = await app.inject({
       method: "POST",
@@ -224,13 +218,11 @@ describe("Flow graph HTTP integration", () => {
     hub
       .intercept({ path: "/v1/authority/grants", method: "POST" })
       .reply(201, { deduplicated: false });
-    hub
-      .intercept({ path: "/v1/authority/authorize", method: "POST" })
-      .reply(200, {
-        outcome: "ALLOW",
-        reason: "Standing grant active.",
-        grantedPermissionIds: ["node.execute"],
-      });
+    hub.intercept({ path: "/v1/authority/authorize", method: "POST" }).reply(200, {
+      outcome: "ALLOW",
+      reason: "Standing grant active.",
+      grantedPermissionIds: ["node.execute"],
+    });
 
     const decided = await app.inject({
       method: "POST",
@@ -251,13 +243,11 @@ describe("Flow graph HTTP integration", () => {
     hub
       .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
       .reply(200, { workspaceId: "ws_personal", declared: 17 });
-    hub
-      .intercept({ path: "/v1/authority/authorize", method: "POST" })
-      .reply(200, {
-        outcome: "ALLOW",
-        reason: "Standing grant active.",
-        grantedPermissionIds: ["node.execute"],
-      });
+    hub.intercept({ path: "/v1/authority/authorize", method: "POST" }).reply(200, {
+      outcome: "ALLOW",
+      reason: "Standing grant active.",
+      grantedPermissionIds: ["node.execute"],
+    });
 
     const started = await app.inject({
       method: "POST",
@@ -286,13 +276,11 @@ describe("Flow graph HTTP integration", () => {
     hub
       .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
       .reply(200, { workspaceId: "ws_personal", declared: 17 });
-    hub
-      .intercept({ path: "/v1/authority/authorize", method: "POST" })
-      .reply(200, {
-        outcome: "DENY",
-        reason: "Missing standing grant.",
-        grantedPermissionIds: [],
-      });
+    hub.intercept({ path: "/v1/authority/authorize", method: "POST" }).reply(200, {
+      outcome: "DENY",
+      reason: "Missing standing grant.",
+      grantedPermissionIds: [],
+    });
 
     const temporalClient = temporal();
     const app = buildFlowServer(temporalClient, { hubUrl: "http://hub.local" });

@@ -259,7 +259,10 @@ async function authorizeNodeDefinition(
 async function prepareGraphAuthority(
   options: BuildFlowServerOptions,
   plan: CompiledFlowGraphPlan,
-): Promise<{ readonly ready: boolean; readonly requirements: readonly GraphAuthorityRequirement[] }> {
+): Promise<{
+  readonly ready: boolean;
+  readonly requirements: readonly GraphAuthorityRequirement[];
+}> {
   await syncNodeDeclarations(options, plan.graph.workspaceId);
   const byDefinition = new Map<string, string[]>();
   for (const compiled of plan.nodes) {
@@ -344,11 +347,14 @@ async function decideGraphAuthority(
     throw new BadRequestError("operationId tidak cocok dengan authority requirement graph.");
   }
 
-  await httpJson(`${options.hubUrl}/v1/approvals/${encodeURIComponent(input.operationId)}/decide`, {
-    method: "POST",
-    token: options.token,
-    body: { decision: input.decision },
-  });
+  await httpJson(
+    `${options.hubUrl}/v1/approvals/${encodeURIComponent(input.operationId)}/decide`,
+    {
+      method: "POST",
+      token: options.token,
+      body: { decision: input.decision },
+    },
+  );
   if (input.decision === "REJECT") {
     return { definitionId: input.definitionId, status: "REJECTED" };
   }

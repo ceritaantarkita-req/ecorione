@@ -694,9 +694,10 @@ export default function FlowCanvasPage() {
           body: JSON.stringify({ version }),
         },
       );
-      const body = (await response.json().catch(() => null)) as
-        | { ready?: boolean; requirements?: GraphAuthorityRequirement[] }
-        | null;
+      const body = (await response.json().catch(() => null)) as {
+        ready?: boolean;
+        requirements?: GraphAuthorityRequirement[];
+      } | null;
       if (!response.ok || body?.ready === undefined || body.requirements === undefined) {
         setMessage(errorMessage(body, `Authority check gagal (${response.status}).`));
         return null;
@@ -1190,7 +1191,9 @@ export default function FlowCanvasPage() {
         <section className={styles.authorityPanel} aria-label="Flow execution authority">
           <div className={styles.authorityHeader}>
             <div>
-              <strong>{authority.ready ? "Execution authority ready" : "Approval required"}</strong>
+              <strong>
+                {authority.ready ? "Execution authority ready" : "Approval required"}
+              </strong>
               <span>Graph v{authority.graphVersion} · exact node.execute grants</span>
             </div>
             <button
