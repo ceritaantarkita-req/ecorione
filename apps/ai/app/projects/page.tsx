@@ -211,7 +211,9 @@ export default function ProjectsPage() {
                   <ul>
                     {sessions.slice(0, 12).map((session) => (
                       <li key={session.id}>
-                        <Link href={`/?project=${encodeURIComponent(selected.id)}`}>
+                        <Link
+                          href={`/?project=${encodeURIComponent(selected.id)}&session=${encodeURIComponent(session.id)}`}
+                        >
                           <span>{session.title ?? session.id}</span>
                           <small>{session.updatedAt ?? session.createdAt}</small>
                         </Link>
