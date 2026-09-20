@@ -1089,7 +1089,7 @@ function SendIcon() {
   );
 }
 
-function TurnView({ turn }: { turn: Turn }) {
+function TurnView({ turn }: { turn: ChatTurn }) {
   if (turn.kind === "user")
     return (
       <div className="ai-turn ai-turn--user">
@@ -1105,7 +1105,7 @@ function TurnView({ turn }: { turn: Turn }) {
   return (
     <div className="ai-turn ai-turn--assistant">
       <div className="ai-bubble">{turn.reply}</div>
-      <RoutingLine cost={turn.cost} />
+      {turn.cost === undefined ? null : <RoutingLine cost={turn.cost} />}
     </div>
   );
 }
