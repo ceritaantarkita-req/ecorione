@@ -700,12 +700,17 @@ async function runDesktopJourney() {
   try {
     await goto(page, `/?project=prj_personal&session=${historySession.id}`, "desktop-ai");
     await page.getByText("Earlier hosted reply", { exact: true }).waitFor();
-    await page.getByRole("combobox", { name: "Model" }).selectOption("hosted");
-    const localOption = page
-      .getByRole("combobox", { name: "Model" })
-      .locator('option[value="local"]');
-    if (!(await localOption.isDisabled()))
+    const modelSelect = page.getByRole("combobox", { name: "Model" });
+    if ((await modelSelect.inputValue()) !== "hosted") {
+      throw new Error("desktop-ai: replayed hosted conversation did not restore Hosted route");
+    }
+    if (!(await modelSelect.isDisabled())) {
+      throw new Error("desktop-ai: route selector must stay locked after replayed turns");
+    }
+    const localOption = modelSelect.locator('option[value="local"]');
+    if (!(await localOption.isDisabled())) {
       throw new Error("desktop-ai: Local unavailable option must be disabled");
+    }
     await page.getByRole("textbox", { name: "Pesan" }).fill("PCS06 browser continuity");
     await page.getByRole("button", { name: "Kirim pesan" }).click();
     await page.getByText("PCS06_HOSTED_OK", { exact: true }).waitFor();
