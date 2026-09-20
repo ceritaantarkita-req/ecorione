@@ -73,11 +73,26 @@ describe("Connect Control Center boundary", () => {
           displayName: "Claude / Anthropic",
           routingReady: true,
           connectionTestReady: true,
+          hostedModels: expect.arrayContaining([
+            expect.objectContaining({
+              id: "claude-sonnet-4-5-20250929",
+              displayName: "Claude Sonnet 4.5",
+            }),
+          ]),
+        }),
+        expect.objectContaining({
+          id: "openrouter",
+          routingReady: true,
+          hostedModels: [
+            expect.objectContaining({ id: "claude-sonnet-4-5-20250929" }),
+            expect.objectContaining({ id: "claude-opus-4-1-20250805" }),
+          ],
         }),
         expect.objectContaining({
           id: "kimi",
           routingReady: false,
           connectionTestReady: false,
+          hostedModels: [],
         }),
       ]),
     );
