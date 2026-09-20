@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PCS-07 ACTIVE / REPOSITORY PREPARATION PASS / REAL HOST EVIDENCE PENDING**
+Status: **PCS-07 CLOSURE CANDIDATE / ACTUAL HOST DEPLOYMENT PASS / FINAL GOVERNED BROWSER JOURNEY PENDING**
 
 This runbook covers the first operator-owned SumoPod Ubuntu staging deployment. It does **not** authorize or claim production cutover.
 
@@ -329,6 +329,6 @@ Runtime rollback does not imply data rollback. Owner data restore remains a sepa
 
 ## Current evidence status
 
-Repository-side preparation is verified through PR #203 + PR #204. Evidence: [verification/pcs-07-repository-preparation-2026-09-20.md](verification/pcs-07-repository-preparation-2026-09-20.md).
+Repository preparation and actual-host deployment evidence are now available. The live staging runtime was deployed from reviewed main `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`; exact-host inventory, service/volume isolation, HTTPS reachability, operator protection, authenticated `/api/ops` health, and MCP auth-challenge reachability passed. Evidence: [verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md](verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md).
 
-Actual SumoPod deployment evidence remains **PENDING** until the real host is accessed and the read-only Phase A-C checks are captured, followed by the bounded staging deployment/evidence steps. Do not mark PCS-07 CLOSED from repository CI alone.
+Do not mark PCS-07 CLOSED yet: the final required evidence is one real rendered-browser governed product journey that does not require a paid provider call. Use the staging Flow surface to Save a minimal graph, Prepare authority, explicitly Approve `node.execute`, Run, and observe completion.
