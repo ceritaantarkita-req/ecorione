@@ -2,7 +2,7 @@
 
 Date: **2026-09-20**
 
-Status: **ACTUAL HOST DEPLOYMENT PASS / FINAL GOVERNED BROWSER JOURNEY PENDING**
+Status: **CLOSED / PASS**
 
 PCS-07 covers the first operator-owned SumoPod Ubuntu **staging** deployment. It does not promote this host to production and does not close PCS-09 persistence/security/backup/observability work.
 
@@ -171,31 +171,55 @@ PCS-07 evidence does **not** prove:
 
 The staging config intentionally kept hosted-cost execution disabled during this checkpoint. Provider credentials were not required for PCS-07.
 
-## Remaining closure gate
+## Final real-browser governed journey
 
-The repository PCS-07 contract still requires:
+The final PCS-07 browser requirement passed on the real staging hostname.
 
-1. rendered Ai/browser reachability through the chosen staging access path; and
-2. one basic governed product journey that does not require a paid provider call.
-
-The recommended final proof is the real staging Flow surface:
+Observed sequence:
 
 ```text
-open /flow
- -> save a minimal Trigger graph
- -> Prepare authority
- -> explicit Approve for node.execute
+Flow / v2 saved
+ -> Trigger-only graph
+ -> execution authority ready
+ -> core/trigger/v1 standing node.execute grant = Granted
  -> Run
- -> observe completed state
+ -> Trigger = SUCCEEDED
+ -> run = COMPLETED
 ```
 
-A Trigger-only graph is sufficient and exercises the existing Hub approval / standing-grant / Temporal execution boundary without any hosted provider request.
+The earlier graph revision also demonstrated the explicit approval path for missing `node.execute` grants: the browser surfaced approval requirements, the operator explicitly approved them, and the Flow surface moved to **Execution authority ready**. The final Trigger-only revision then completed without a hosted-provider call.
 
-Until that actual browser journey is observed, this document remains a **closure candidate**, not the final PCS-07 CLOSED / PASS record.
+This proves the required bounded product journey across the real staging path:
 
-## Next scope after closure
+```text
+browser
+ -> Ai Flow surface
+ -> Flow owner
+ -> Hub authority / standing grant
+ -> Temporal execution
+ -> completed run
+```
 
-After the final browser/governed journey passes, PCS-07 may be marked CLOSED / PASS and PCS-08 becomes active:
+No paid provider request was required for this final acceptance.
+
+## PCS-07 closure
+
+PCS-07 is **CLOSED / PASS** at its intended boundary:
+
+- actual reviewed-source SumoPod staging deployment;
+- isolated staging services and persistent owner volumes;
+- browser reachability over public HTTPS;
+- operator surfaces protected;
+- authenticated operations health;
+- valid public MCP OAuth challenge boundary;
+- sanitized exact-host evidence;
+- one real rendered-browser governed Flow journey completed without paid provider use.
+
+The explicit non-claims above remain assigned to later staging-hardening/production gates.
+
+## Next scope
+
+PCS-08 is now the active next scope:
 
 ```text
 reviewed PR
