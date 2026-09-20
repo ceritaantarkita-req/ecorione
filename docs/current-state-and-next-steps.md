@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-01 CLOSED / PCS-02 NEXT**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-02 CLOSED / PCS-03 NEXT**
 
 ## Current verdict
 
@@ -43,7 +43,15 @@ Ai now preserves active sessions per Project, reopens exact canonical Historical
 
 Evidence: [verification/pcs-01-chat-continuity-2026-09-20.md](verification/pcs-01-chat-continuity-2026-09-20.md).
 
-The next scope is **PCS-02 AI provider onboarding + hosted model choice**.
+## PCS-02 provider onboarding + hosted model choice — CLOSED / PASS
+
+PR #193 exact head `45dbe9365b23dfa3398a4726a26f9a245bd09e9d` passed CI #1516 + Product Eval #755 and merged as `0fba6842f4c39f2742eb6d518e63c90d1a4883db`.
+
+Settings now provides provider cards, transient key testing before encrypted save, automatic route activation, verified hosted model selection, and an explicit Governed / Recommended choice. Technical runtime/Vault/MCP controls remain behind Advanced settings. Connect remains the sole provider credential/runtime/model authority; RESTRICTED routing can still override user model choice according to policy.
+
+Evidence: [verification/pcs-02-provider-onboarding-2026-09-20.md](verification/pcs-02-provider-onboarding-2026-09-20.md).
+
+The next scope is **PCS-03 Local AI resilience/runtime discovery**.
 
 ## Post-closure repository hardening
 

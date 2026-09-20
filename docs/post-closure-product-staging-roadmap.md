@@ -60,6 +60,8 @@ Acceptance: a user can send a message, visit another ECORIONE page, return to Ai
 
 ### PCS-02 — AI provider onboarding and model choice
 
+State: **CLOSED / PASS**. PR #193 exact head `45dbe9365b23dfa3398a4726a26f9a245bd09e9d` passed CI #1516 + Product Eval #755 and merged as `0fba6842f4c39f2742eb6d518e63c90d1a4883db`. Evidence: [verification/pcs-02-provider-onboarding-2026-09-20.md](verification/pcs-02-provider-onboarding-2026-09-20.md).
+
 Primary setup should become approximately:
 
 ```text
