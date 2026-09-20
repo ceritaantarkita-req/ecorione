@@ -40,7 +40,7 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PCS-05 Flow runtime defect closure: **CLOSED / PASS** (PR #199; CI #1537; Product Eval #776; merge `f58923b8261104c8aec331f506a68f8cf5fe5e7e`);
 - PCS-06 Integrated browser/regression acceptance: **CLOSED / PASS** (PR #201; CI #1553; Product Eval #792; Browser Acceptance #13; merge `0a8f7619567500acaec0758c400d529367baf0e5`);
 - PCS-07 SumoPod remote staging deployment: **CLOSED / PASS**;
-- PCS-08 GitHub -> staging continuous deployment: **ACTIVE / REPOSITORY IMPLEMENTATION CANDIDATE**;
+- PCS-08 GitHub -> staging continuous deployment: **ACTIVE / REPOSITORY IMPLEMENTATION MERGED** (PR #210; CI #1613; Product Eval #852; merge `652588e00dca5a04c8b39081fb6574a3db508ba1`);
 - SumoPod remote development/staging: **APPROVED UNDER PCS-07..PCS-09**;
 - public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
 - AutoClick: **DEFERRED BY DESIGN**.

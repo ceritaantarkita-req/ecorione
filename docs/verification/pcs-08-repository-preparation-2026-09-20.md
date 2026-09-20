@@ -2,15 +2,17 @@
 
 Date: **2026-09-20**
 
-Status: **IMPLEMENTATION CANDIDATE / CI + REAL HOST EVIDENCE PENDING**
+Status: **REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE PENDING**
 
 ## Scope
 
 PCS-08 begins after PCS-07 CLOSED / PASS. It introduces a bounded GitHub-to-SumoPod staging deployment path while preserving GitHub `main` as source of truth and the existing isolated `ecorione-staging` runtime.
 
-## Implementation candidate
+## Repository implementation
 
-The branch adds:
+PR #210 exact reviewed head `4a5fa9d9d776eae3895a8e0b8e6b73013e3f476f` passed CI #1613 + Product Eval #852 and merged to `main` as `652588e00dca5a04c8b39081fb6574a3db508ba1`.
+
+The merged implementation adds:
 
 - `.github/workflows/staging-deploy.yml` — workflow-run gate over CI + Product Eval for exact current `main`, plus manual dispatch for the first controlled activation;
 - `scripts/staging-cd-forced-command.sh` — exact-SHA SSH forced-command gate;
@@ -23,9 +25,9 @@ The normal production shell syntax acceptance and release-security file inventor
 
 ## Security boundary
 
-The candidate is inert by default until repository variable `ECORIONE_STAGING_CD_ENABLED=1` is explicitly configured. This prevents the implementation merge itself from attempting an unprovisioned deployment.
+The merged workflow is inert by default until repository variable `ECORIONE_STAGING_CD_ENABLED=1` is explicitly configured. This prevents the implementation merge itself from attempting an unprovisioned deployment.
 
-The candidate deliberately avoids:
+The merged implementation deliberately avoids:
 
 - personal/operator SSH keys in GitHub;
 - adding the deploy account to the Docker group;
@@ -47,13 +49,11 @@ This is runtime rollback only; owner data rollback remains separate.
 
 Before PCS-08 can close:
 
-1. branch CI + Product Eval must pass on exact head;
-2. implementation must merge to `main`;
-3. dedicated host deploy account / forced-command boundary must be provisioned from the reviewed scripts;
-4. GitHub `staging` Environment secrets must be configured;
-5. a real merged `main` SHA must auto-deploy after both main gates pass;
-6. release receipt, public smoke, ops health, and exact-host evidence must match;
-7. a controlled real rollback exercise must pass;
-8. intended current `main` must be restored after the rollback exercise.
+1. dedicated host deploy account / forced-command boundary must be provisioned from the merged reviewed scripts;
+2. GitHub `staging` Environment secrets must be configured;
+3. a real current `main` SHA must deploy through the GitHub workflow after both main gates pass;
+4. release receipt, public smoke, ops health, and exact-host evidence must match;
+5. a controlled real rollback exercise must pass;
+6. intended current `main` must be restored after the rollback exercise.
 
 No source-only result is sufficient to claim those remote boundaries.
