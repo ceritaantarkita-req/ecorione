@@ -247,13 +247,6 @@ export async function graphExecutionWorkflow(
       "FLOW_SUBFLOW_DEPTH",
     );
   const recordRunLifecycle = patched(PE04_RUN_LIFECYCLE_PATCH);
-  if (recordRunLifecycle) {
-    await runTraceActivities.recordGraphRunTrace({
-      execution,
-      name: "flow.graph.run.started",
-      attributes: { status: "RUNNING" },
-    });
-  }
   const decisions = new Map<string, FlowGraphNodeDecisionSignal>();
   const humanInputs = new Map<string, unknown>();
   const outputs = new Map<string, NodeOutput>();
@@ -293,6 +286,17 @@ export async function graphExecutionWorkflow(
   setHandler(graphNodeInputSignal, (signal) => {
     humanInputs.set(signal.nodeId, signal.value);
   });
+
+  // Query/signal handlers must exist before the first await. Temporal clients may
+  // query immediately after startGraph() returns; delaying registration until after
+  // a lifecycle activity creates a real "query handler not registered" race.
+  if (recordRunLifecycle) {
+    await runTraceActivities.recordGraphRunTrace({
+      execution,
+      name: "flow.graph.run.started",
+      attributes: { status: "RUNNING" },
+    });
+  }
 
   const byId = new Map(execution.plan.nodes.map((item) => [item.node.id, item]));
 
