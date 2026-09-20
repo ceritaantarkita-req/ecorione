@@ -46,7 +46,9 @@ jobs:
             services/connect/src/runtime-settings.test.ts \
             services/connect/src/hosted-model-catalog.test.ts \
             services/connect/src/operations.test.ts \
+            services/connect/src/local-runtime-discovery.test.ts \
             test/pcs02-provider-onboarding-source-contract.test.ts \
+            test/pcs03-local-runtime-source-contract.test.ts \
             apps/ai/app/api/chat/route.test.ts \
             apps/ai/app/api/projects/route.test.ts \
             apps/ai/app/api/brain/route.test.ts \
