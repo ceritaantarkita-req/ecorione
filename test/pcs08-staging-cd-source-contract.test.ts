@@ -66,7 +66,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("staging deploy already recorded and revalidated");
     expect(rootDeploy).toContain("validate_deployed_revision");
     expect(rootDeploy).toContain("staging release state must be root-owned");
-    expect(rootDeploy).toContain(\n      "Recorded staging deployment failed health/evidence revalidation",\n    );
+    expect(rootDeploy).toContain(
+      "Recorded staging deployment failed health/evidence revalidation",
+    );
   });
 
   it("requires preflight, runtime health, public smoke, ops health, and exact-host evidence", () => {
