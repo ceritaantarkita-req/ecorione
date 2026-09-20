@@ -15,7 +15,7 @@ The branch adds:
 - `.github/workflows/staging-deploy.yml` — workflow-run gate over CI + Product Eval for exact current `main`, plus manual dispatch for the first controlled activation;
 - `scripts/staging-cd-forced-command.sh` — exact-SHA SSH forced-command gate;
 - `scripts/staging-cd-root-deploy.sh` — serialized exact-revision host deploy / smoke / evidence / rollback orchestration;
-- `scripts/staging-cd-host-bootstrap.sh` — idempotent dedicated deploy-user + sudo boundary provisioning;
+- `scripts/staging-cd-host-bootstrap.sh` — idempotent dedicated deploy-user + sudo boundary provisioning; it installs sibling reviewed control scripts relative to its own location so bootstrap can be exported from an exact commit without moving the live known-good checkout;
 - `test/pcs08-staging-cd-source-contract.test.ts` — deterministic deployment-policy source contract;
 - `docs/staging-continuous-deployment.md` — operator and security runbook.
 
