@@ -64,7 +64,7 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
 
   it("keeps bcrypt-style operator hashes literal in Compose env files", () => {
     expect(productionEnvExample).toContain(
-      "ECORIONE_OPS_PASSWORD_HASH=\'CHANGE_ME_CADDY_PASSWORD_HASH\'",
+      "ECORIONE_OPS_PASSWORD_HASH='CHANGE_ME_CADDY_PASSWORD_HASH'",
     );
   });
 
