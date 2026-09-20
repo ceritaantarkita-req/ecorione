@@ -29,7 +29,7 @@ import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { GOVERNED_HOSTED_MODEL, type HostedModelPreference } from "./hosted-model-catalog.js";
 import { discoverLocalRuntime } from "./local-runtime-discovery.js";
-import type { LocalModelDigest } from "./local-model-identity.js";
+import { LocalModelDigestSchema, type LocalModelDigest } from "./local-model-identity.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
 import {
   DEFAULT_HOSTED_PROVIDER,
@@ -41,6 +41,7 @@ import type {
   RuntimeSettings,
   RuntimeSettingsAdmin,
 } from "./runtime-settings.js";
+import { LocalBaseUrlSchema } from "./runtime-settings.js";
 import { MutableLocalModelTagError } from "./runtime-settings.js";
 import {
   CostKillSwitchError,
@@ -49,7 +50,7 @@ import {
   SpendBudgetNotConfiguredError,
 } from "./providers/errors.js";
 import { LocalModelDigestMismatchError } from "./providers/local-model-provenance.js";
-import type { LocalRuntimeId } from "./providers/local-runtime.js";
+import { LocalRuntimeIdSchema, type LocalRuntimeId } from "./providers/local-runtime.js";
 import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 import { registerConnectWebhookRoutes } from "./webhook-http.js";
 
@@ -116,6 +117,14 @@ const ProviderCanaryBodySchema = z
 
 const CredentialTestParamsSchema = z.object({ provider: HostedProviderIdSchema });
 const CredentialTestBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
+const LocalRuntimeDiscoveryBodySchema = z
+  .object({
+    localRuntime: LocalRuntimeIdSchema.default("openai-compatible"),
+    localBaseUrl: LocalBaseUrlSchema,
+    localModelTag: z.string().min(1).max(256),
+    localModelDigest: LocalModelDigestSchema.nullable().optional(),
+  })
+  .strict();
 
 export interface BuildConnectServerOptions {
   readonly token?: string | undefined;
@@ -200,18 +209,36 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     developmentRootSecret: options.webhookRootSecret,
   });
 
-  app.get("/v1/settings/local-runtime/status", async () => {
-    const runtime = currentRuntime();
-    const result = await discoverLocalRuntime({
-      runtime: runtime.localRuntime,
-      baseUrl: runtime.localBaseUrl,
-      modelTag: runtime.localModelTag,
-    });
+  const recordLocalDiscovery = (result: Awaited<ReturnType<typeof discoverLocalRuntime>>) => {
     metrics.addCounter("ecorione_local_runtime_discovery_total", 1, {
       runtime: result.runtime,
       state: result.state,
     });
     return result;
+  };
+
+  app.get("/v1/settings/local-runtime/status", async () => {
+    const runtime = currentRuntime();
+    return recordLocalDiscovery(
+      await discoverLocalRuntime({
+        runtime: runtime.localRuntime,
+        baseUrl: runtime.localBaseUrl,
+        modelTag: runtime.localModelTag,
+        declaredDigest: runtime.localModelDigest ?? null,
+      }),
+    );
+  });
+
+  app.post("/v1/settings/local-runtime/status", async (req) => {
+    const candidate = parseOrBadRequest(LocalRuntimeDiscoveryBodySchema, req.body);
+    return recordLocalDiscovery(
+      await discoverLocalRuntime({
+        runtime: candidate.localRuntime,
+        baseUrl: candidate.localBaseUrl,
+        modelTag: candidate.localModelTag,
+        declaredDigest: candidate.localModelDigest ?? null,
+      }),
+    );
   });
 
   function recordCompletion(
