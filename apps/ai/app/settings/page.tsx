@@ -107,16 +107,14 @@ export default function SettingsPage() {
 
   const refresh = useCallback(async () => {
     try {
-      const [runtimeResult, providerResult, credentialResult, localResult] = await Promise.all([
+      const [runtimeResult, providerResult, credentialResult] = await Promise.all([
         json<RuntimeSnapshot>("/api/settings/settings/runtime"),
         json<{ providers: ProviderCatalogEntry[] }>("/api/settings/settings/providers"),
         json<{ credentials: Credential[] }>("/api/settings/settings/credentials"),
-        json<LocalRuntimeStatus>("/api/settings/settings/local-runtime/status"),
       ]);
       setRuntime(runtimeResult);
       setProviders(providerResult.providers);
       setCredentials(credentialResult.credentials);
-      setLocalStatus(localResult);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -159,7 +157,20 @@ export default function SettingsPage() {
     }
   }, [workspaceId]);
 
-  useEffect(() => void refresh(), [refresh]);
+  useEffect(() => {
+    void refresh();
+    void refreshLocalStatus().catch(() => {
+      setLocalStatus({
+        runtime: "openai-compatible",
+        state: "unreachable",
+        reachable: false,
+        ready: false,
+        configuredModel: "",
+        models: [],
+        message: "Local AI · Not connected.",
+      });
+    });
+  }, [refresh, refreshLocalStatus]);
 
   const mutableLocalModel =
     runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());
