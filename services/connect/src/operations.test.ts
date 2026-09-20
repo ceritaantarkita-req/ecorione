@@ -9,6 +9,53 @@ afterEach(async () => {
 });
 
 describe("Connect operations telemetry", () => {
+  it("discovers configured local model without running an inference canary", async () => {
+    let seenUrl = "";
+    let seenMethod = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        seenUrl = String(input);
+        seenMethod = init?.method ?? "GET";
+        return new Response(
+          JSON.stringify({
+            data: [
+              { id: "local-test-pinned" },
+              { id: "another-local-model" },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }),
+    );
+
+    const connect = buildConnectServer({
+      token: "ops-token",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "local-test-pinned",
+      hostedCallsEnabled: false,
+      hostedSpendUnlimited: true,
+    });
+    closeables.push(connect);
+
+    const status = await connect.inject({
+      method: "GET",
+      url: "/v1/settings/local-runtime/status",
+      headers: { authorization: "Bearer ops-token" },
+    });
+
+    expect(status.statusCode).toBe(200);
+    expect(status.json()).toMatchObject({
+      state: "connected",
+      reachable: true,
+      ready: true,
+      configuredModel: "local-test-pinned",
+      models: ["local-test-pinned", "another-local-model"],
+    });
+    expect(seenUrl).toBe("http://127.0.0.1:11434/v1/models");
+    expect(seenMethod).toBe("GET");
+  });
+
   it("menjalankan local provider canary fresh tanpa exact-cache reuse", async () => {
     let providerCalls = 0;
     const local = createServer({ name: "fake-local" });
