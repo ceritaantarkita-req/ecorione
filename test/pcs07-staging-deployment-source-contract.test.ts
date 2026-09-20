@@ -11,6 +11,7 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
   const hostEvidence = readFileSync("scripts/staging-host-evidence.mjs", "utf8");
   const sumopodOverlay = readFileSync("deploy/compose.sumopod.yml", "utf8");
   const sumopodCaddy = readFileSync("deploy/Caddyfile.sumopod", "utf8");
+  const productionEnvExample = readFileSync("deploy/production.env.example", "utf8");
   const packageJson = readFileSync("package.json", "utf8");
 
   it("keeps deployment env files out of Git", () => {
@@ -59,6 +60,12 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
     expect(sumopodCaddy).toContain("reverse_proxy ai:3000");
     expect(sumopodCaddy).toContain("reverse_proxy sync:17011");
     expect(sumopodCaddy).toContain("basic_auth");
+  });
+
+  it("keeps bcrypt-style operator hashes literal in Compose env files", () => {
+    expect(productionEnvExample).toContain(
+      "ECORIONE_OPS_PASSWORD_HASH='CHANGE_ME_CADDY_PASSWORD_HASH'",
+    );
   });
 
   it("fails closed on unsafe mutable deployment env files", () => {
