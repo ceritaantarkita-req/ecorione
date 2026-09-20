@@ -8,6 +8,9 @@ ENV_FILE="${ECORIONE_DEPLOY_ENV:-${ECORIONE_PRODUCTION_ENV:-deploy/production.en
 COMPOSE_PROJECT="${ECORIONE_COMPOSE_PROJECT:-ecorione}"
 COMPOSE_ARGS=(-p "$COMPOSE_PROJECT" --env-file "$ENV_FILE" -f deploy/compose.yml)
 [[ -f "$ENV_FILE" ]] || { echo "Missing $ENV_FILE" >&2; exit 1; }
+[[ ! -L "$ENV_FILE" ]] || { echo "Refusing deploy: $ENV_FILE must not be a symlink" >&2; exit 1; }
+mode="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || true)"
+[[ -z "$mode" || "$mode" == "600" ]] || { echo "Refusing deploy: $ENV_FILE must be mode 600; current mode is $mode" >&2; exit 1; }
 mkdir -p data/release-receipts
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 printf '%s
