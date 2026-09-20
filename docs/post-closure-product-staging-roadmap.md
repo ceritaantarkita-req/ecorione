@@ -38,6 +38,8 @@ The visual direction is calm, premium, and high-readability: dark charcoal rathe
 
 ### PCS-00 — Baseline lock
 
+State: **ACTIVE / exact-head gates required**. Locked starting commit: `93c5312d73289305d3e16ff79c5457a5010d0b19`. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
+
 - start from synchronized clean `main`;
 - preserve the closed architecture/owner boundaries;
 - record the exact starting commit;
