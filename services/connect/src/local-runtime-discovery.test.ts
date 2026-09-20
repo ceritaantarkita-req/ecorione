@@ -11,22 +11,18 @@ const input = {
 describe("local runtime discovery", () => {
   it("uses the OpenAI-compatible models endpoint", () => {
     expect(localModelsUrl(input.baseUrl)).toBe("http://127.0.0.1:11434/v1/models");
-    expect(localModelsUrl("http://localhost:1234/v1/")).toBe(
-      "http://localhost:1234/v1/models",
-    );
+    expect(localModelsUrl("http://localhost:1234/v1/")).toBe("http://localhost:1234/v1/models");
   });
 
   it("reports connected only when the configured model is advertised", async () => {
-    const fetcher = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          data: [
-            { id: "qwen3:8b-instruct-q4_K_M" },
-            { id: "another-model" },
-          ],
-        }),
-        { status: 200, headers: { "content-type": "application/json" } },
-      ),
+    const fetcher = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            data: [{ id: "qwen3:8b-instruct-q4_K_M" }, { id: "another-model" }],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
     );
 
     const result = await discoverLocalRuntime(input, { fetcher });
@@ -48,10 +44,10 @@ describe("local runtime discovery", () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);
       if (url.endsWith("/v1/models")) {
-        return new Response(
-          JSON.stringify({ data: [{ id: "qwen3:8b-instruct-q4_K_M" }] }),
-          { status: 200, headers: { "content-type": "application/json" } },
-        );
+        return new Response(JSON.stringify({ data: [{ id: "qwen3:8b-instruct-q4_K_M" }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
       }
       if (url.endsWith("/api/tags")) {
         return new Response(
@@ -85,10 +81,10 @@ describe("local runtime discovery", () => {
     const fetcher = vi.fn(async (request: string | URL | Request) => {
       const url = String(request);
       if (url.endsWith("/v1/models")) {
-        return new Response(
-          JSON.stringify({ data: [{ id: "qwen3:8b-instruct-q4_K_M" }] }),
-          { status: 200, headers: { "content-type": "application/json" } },
-        );
+        return new Response(JSON.stringify({ data: [{ id: "qwen3:8b-instruct-q4_K_M" }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
       }
       return new Response(
         JSON.stringify({

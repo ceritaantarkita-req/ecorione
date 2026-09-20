@@ -19,10 +19,7 @@ describe("Connect operations telemetry", () => {
         seenMethod = init?.method ?? "GET";
         return new Response(
           JSON.stringify({
-            data: [
-              { id: "local-test-pinned" },
-              { id: "another-local-model" },
-            ],
+            data: [{ id: "local-test-pinned" }, { id: "another-local-model" }],
           }),
           { status: 200, headers: { "content-type": "application/json" } },
         );

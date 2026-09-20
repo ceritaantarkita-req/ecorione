@@ -23,7 +23,7 @@ describe("PCS-03 Local AI resilience source contract", () => {
 
   it("blocks known-unavailable Local chat instead of silently falling back to Hosted", () => {
     expect(chat).toContain('target === "local" && localRuntimeStatus?.ready !== true');
-    expect(chat).toContain('disabled={localRuntimeStatus?.ready !== true}');
+    expect(chat).toContain("disabled={localRuntimeStatus?.ready !== true}");
     expect(chat).toContain("Local AI belum terhubung");
     expect(chat).not.toContain('setTarget("hosted")');
   });

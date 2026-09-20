@@ -45,12 +45,7 @@ type ProviderCatalogEntry = {
 type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "error";
 type LocalRuntimeStatus = {
   runtime: "openai-compatible";
-  state:
-    | "connected"
-    | "model-missing"
-    | "identity-mismatch"
-    | "unreachable"
-    | "unsupported";
+  state: "connected" | "model-missing" | "identity-mismatch" | "unreachable" | "unsupported";
   reachable: boolean;
   ready: boolean;
   configuredModel: string;
@@ -129,7 +124,9 @@ export default function SettingsPage() {
   }, []);
 
   const refreshLocalStatus = useCallback(async () => {
-    const result = await json<LocalRuntimeStatus>("/api/settings/settings/local-runtime/status");
+    const result = await json<LocalRuntimeStatus>(
+      "/api/settings/settings/local-runtime/status",
+    );
     setLocalStatus(result);
     return result;
   }, []);
@@ -841,8 +838,8 @@ export default function SettingsPage() {
               </a>
             </div>
             <p className={styles.muted}>
-              Discovery checks the OpenAI-compatible model catalog without running inference.
-              If the runtime also exposes verifiable model identity, ECORIONE can pin the digest
+              Discovery checks the OpenAI-compatible model catalog without running inference. If
+              the runtime also exposes verifiable model identity, ECORIONE can pin the digest
               automatically. An explicit canary remains separate.
             </p>
           </div>

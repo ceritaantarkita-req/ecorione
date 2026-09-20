@@ -7,11 +7,7 @@ import {
 import type { LocalRuntimeId } from "./providers/local-runtime.js";
 
 export type LocalRuntimeDiscoveryState =
-  | "connected"
-  | "model-missing"
-  | "identity-mismatch"
-  | "unreachable"
-  | "unsupported";
+  "connected" | "model-missing" | "identity-mismatch" | "unreachable" | "unsupported";
 
 export interface LocalRuntimeDiscoveryInput {
   readonly runtime: LocalRuntimeId;
@@ -136,10 +132,7 @@ export async function discoverLocalRuntime(
     };
   }
 
-  const provenanceFetch = async (
-    url: string,
-    init?: { signal?: AbortSignal | undefined },
-  ) => {
+  const provenanceFetch = async (url: string, init?: { signal?: AbortSignal | undefined }) => {
     const response = await fetcher(url, { signal: init?.signal });
     return {
       ok: response.ok,
@@ -180,7 +173,8 @@ export async function discoverLocalRuntime(
         modelDigest: error.observed,
         identityProvenance: "unverified",
         identitySource: "runtime-observation",
-        message: "Local AI reachable, but the configured model digest does not match the runtime.",
+        message:
+          "Local AI reachable, but the configured model digest does not match the runtime.",
       };
     }
     throw error;

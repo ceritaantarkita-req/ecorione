@@ -70,17 +70,15 @@ describe("proxyToConnectSettings", () => {
   });
 
   it("meneruskan status Local AI tanpa membuka path Connect lain", async () => {
-    pool
-      .intercept({ path: "/v1/settings/local-runtime/status", method: "GET" })
-      .reply(200, {
-        runtime: "openai-compatible",
-        state: "unreachable",
-        reachable: false,
-        ready: false,
-        configuredModel: "local-model",
-        models: [],
-        message: "Local AI · Not connected.",
-      });
+    pool.intercept({ path: "/v1/settings/local-runtime/status", method: "GET" }).reply(200, {
+      runtime: "openai-compatible",
+      state: "unreachable",
+      reachable: false,
+      ready: false,
+      configuredModel: "local-model",
+      models: [],
+      message: "Local AI · Not connected.",
+    });
 
     const response = await proxyToConnectSettings(
       request("GET"),
