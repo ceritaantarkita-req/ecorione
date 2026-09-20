@@ -56,6 +56,10 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
       '"staging:host-evidence": "node scripts/staging-host-evidence.mjs"',
     );
     expect(hostEvidence).toContain("ECORIONE_EXPECTED_SHA");
+    expect(hostEvidence).toContain("ECORIONE_DEPLOY_ENV is required");
+    expect(hostEvidence).toContain("ECORIONE_COMPOSE_PROJECT is required");
+    expect(hostEvidence).toContain("40-character reviewed Git commit");
+    expect(hostEvidence).not.toContain("ECORIONE_PRODUCTION_ENV");
     expect(hostEvidence).toContain("cleanWorktree");
     expect(hostEvidence).toContain("configuredServices");
     expect(hostEvidence).toContain("runningServices");
