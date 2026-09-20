@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-06 CLOSED / PCS-07 ACTIVE**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-06 CLOSED / PCS-07 CLOSURE CANDIDATE**
 
 ## Latest repository-hardening closure
 
@@ -60,7 +60,7 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-06 Integrated browser/regression acceptance is CLOSED / PASS.** PR #201 exact head `0dfdda92e0bef800ca9a7563223b7423aa9b1299` passed CI #1553 + Product Eval #792 + PCS-06 Integrated Browser Acceptance #13 and merged as `0a8f7619567500acaec0758c400d529367baf0e5`. The production Next.js UI is now covered by deterministic Chromium journeys across Ai, Projects, Work, Brain, Space, Flow, Operations, and Settings, including conversation continuity, Local-unavailable state, provider/model UX, responsive/theme behavior, and Flow authority-to-run acceptance. The browser gate blocks external HTTP(S) requests and therefore does not claim live provider quality/latency. Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
 
-**PCS-07 SumoPod remote staging deployment is ACTIVE / APPROVED.** Repository-side preparation is now PASS through PR #203 + PR #204: staging env/project isolation, `deploy/*.env` secret hygiene, fail-closed lifecycle checks, the read-only-first SumoPod runbook, and `pnpm staging:host-evidence` are merged and verified. Actual SumoPod host validation/deployment/browser evidence remains pending and must be collected on the real host before PCS-07 can close. Evidence: [verification/pcs-07-repository-preparation-2026-09-20.md](verification/pcs-07-repository-preparation-2026-09-20.md). Runbook: [sumopod-staging.md](sumopod-staging.md).
+**PCS-07 SumoPod remote staging deployment is a CLOSURE CANDIDATE.** The actual SumoPod host now passes reviewed-source deployment, isolated Compose/volume inventory, public HTTPS reachability, protected operator surfaces, authenticated `/api/ops` health, sanitized exact-host evidence, and a valid unauthenticated MCP OAuth challenge. The live runtime remains the reviewed deployment SHA `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`; PR #208 corrected only the public smoke verifier and merged as `59430c4b72a704d1fd6c6176d12b13fa27ddf674` after CI #1581 + Product Eval #820. One final real-browser governed Flow journey remains before CLOSED / PASS. Evidence: [verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md](verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md). Runbook: [sumopod-staging.md](sumopod-staging.md).
 
 Current execution order:
 
