@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-06 CLOSED / PCS-07 NEXT**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-06 CLOSED / PCS-07 ACTIVE**
 
 ## Current verdict
 
@@ -83,7 +83,11 @@ The production Next.js UI is now exercised in Chromium across Ai, Projects, Work
 
 Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
 
-The next scope is **PCS-07 SumoPod remote staging deployment**.
+## PCS-07 SumoPod remote staging deployment — ACTIVE
+
+Repository-side staging preparation now supports an isolated host env via `ECORIONE_DEPLOY_ENV`, an isolated Compose namespace via `ECORIONE_COMPOSE_PROJECT`, and ignores `deploy/*.env` so host secrets are not normal Git candidates. The active read-only-first procedure is [sumopod-staging.md](sumopod-staging.md).
+
+Actual SumoPod host audit, deployment, Compose/runtime health, and browser reachability evidence remain **PENDING**. Repository CI alone must not close PCS-07 or be mislabeled as remote-host evidence.
 
 ## Post-closure repository hardening
 
