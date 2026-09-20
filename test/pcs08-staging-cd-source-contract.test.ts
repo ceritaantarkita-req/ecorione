@@ -61,36 +61,43 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("previous_tag=");
   });
 
-  it("requires preflight, runtime health, public smoke, ops health, and exact-host evidence", () => {
-    expect(rootDeploy).toContain("scripts/production-preflight.sh");
-    expect(rootDeploy).toContain("scripts/self-host-upgrade.sh");
-    expect(rootDeploy).toContain("wait_for_services");
-    expect(rootDeploy).toContain("scripts/production-public-smoke.mjs");
-    expect(rootDeploy).toContain("scripts/production-ops-snapshot.mjs");
-    expect(rootDeploy).toContain("scripts/staging-host-evidence.mjs");
-    expect(rootDeploy).toContain('ECORIONE_EXPECTED_SHA="$TARGET_SHA"');
-  });
+  it(
+    "requires preflight, runtime health, public smoke, ops health, and exact-host evidence",
+    () => {
+      expect(rootDeploy).toContain("scripts/production-preflight.sh");
+      expect(rootDeploy).toContain("scripts/self-host-upgrade.sh");
+      expect(rootDeploy).toContain("wait_for_services");
+      expect(rootDeploy).toContain("scripts/production-public-smoke.mjs");
+      expect(rootDeploy).toContain("scripts/production-ops-snapshot.mjs");
+      expect(rootDeploy).toContain("scripts/staging-host-evidence.mjs");
+      expect(rootDeploy).toContain('ECORIONE_EXPECTED_SHA="$TARGET_SHA"');
+    },
+  );
 
-  it("fails the release and attempts known-good rollback when a post-deploy gate fails", () => {
-    expect(rootDeploy).toContain("rollback()");
-    expect(rootDeploy).toContain("scripts/self-host-rollback.sh");
-    expect(rootDeploy).toContain('owner_git checkout --detach "$PREVIOUS_SHA"');
-    expect(rootDeploy).toContain("Rollback verified at basic public boundary");
-    expect(rootDeploy).toContain(
-      "ROLLBACK FAILED; operator intervention required",
-    );
-  });
+  it(
+    "fails the release and attempts known-good rollback when a post-deploy gate fails",
+    () => {
+      expect(rootDeploy).toContain("rollback()");
+      expect(rootDeploy).toContain("scripts/self-host-rollback.sh");
+      expect(rootDeploy).toContain('owner_git checkout --detach "$PREVIOUS_SHA"');
+      expect(rootDeploy).toContain("Rollback verified at basic public boundary");
+      expect(rootDeploy).toContain("ROLLBACK FAILED; operator intervention required");
+    },
+  );
 
-  it("bootstraps a dedicated forced-command SSH user without Docker-group membership", () => {
-    expect(bootstrap).toContain("DEPLOY_USER=ecorione-deploy");
-    expect(bootstrap).toContain(
-      'restrict,command="/usr/local/sbin/ecorione-staging-deploy-gate"',
-    );
-    expect(bootstrap).toContain("/etc/sudoers.d/ecorione-staging-deploy");
-    expect(bootstrap).toContain("visudo -cf");
-    expect(bootstrap).toContain(
-      "No Docker-group membership was added to the deploy user.",
-    );
-    expect(bootstrap).not.toContain("usermod -aG docker");
-  });
+  it(
+    "bootstraps a dedicated forced-command SSH user without Docker-group membership",
+    () => {
+      expect(bootstrap).toContain("DEPLOY_USER=ecorione-deploy");
+      expect(bootstrap).toContain(
+        'restrict,command="/usr/local/sbin/ecorione-staging-deploy-gate"',
+      );
+      expect(bootstrap).toContain("/etc/sudoers.d/ecorione-staging-deploy");
+      expect(bootstrap).toContain("visudo -cf");
+      expect(bootstrap).toContain(
+        "No Docker-group membership was added to the deploy user.",
+      );
+      expect(bootstrap).not.toContain("usermod -aG docker");
+    },
+  );
 });
