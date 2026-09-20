@@ -781,7 +781,10 @@ async function runDesktopJourney() {
     if ((await defaultSelects.nth(1).inputValue()) !== "governed") {
       throw new Error("desktop-settings: governed model selection was not retained");
     }
-    const selectedModelLabel = await defaultSelects.nth(1).locator("option:checked").textContent();
+    const selectedModelLabel = await defaultSelects
+      .nth(1)
+      .locator("option:checked")
+      .textContent();
     if (selectedModelLabel?.trim() !== "Governed / Recommended") {
       throw new Error(
         `desktop-settings: expected Governed / Recommended, got ${selectedModelLabel ?? "null"}`,
