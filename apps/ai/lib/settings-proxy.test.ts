@@ -69,6 +69,32 @@ describe("proxyToConnectSettings", () => {
     });
   });
 
+  it("meneruskan status Local AI tanpa membuka path Connect lain", async () => {
+    pool
+      .intercept({ path: "/v1/settings/local-runtime/status", method: "GET" })
+      .reply(200, {
+        runtime: "openai-compatible",
+        state: "unreachable",
+        reachable: false,
+        ready: false,
+        configuredModel: "local-model",
+        models: [],
+        message: "Local AI · Not connected.",
+      });
+
+    const response = await proxyToConnectSettings(
+      request("GET"),
+      "/v1/settings/local-runtime/status",
+      "GET",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      state: "unreachable",
+      ready: false,
+    });
+  });
+
   it("meneruskan GET MCP workspace query valid yang didukung Connect", async () => {
     let sawAuth: string | undefined;
     pool
