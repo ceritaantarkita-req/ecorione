@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const deployEnv = process.env.ECORIONE_DEPLOY_ENV?.trim();
 const composeProject = process.env.ECORIONE_COMPOSE_PROJECT?.trim();
+const composeOverlay = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || null;
+const edgeNetwork = process.env.ECORIONE_EDGE_NETWORK?.trim() || null;
 const expectedSha = process.env.ECORIONE_EXPECTED_SHA?.trim();
 const outputPath = process.env.ECORIONE_STAGING_EVIDENCE_OUT?.trim() || null;
 
@@ -24,6 +26,7 @@ if (!expectedSha || !/^[0-9a-f]{40}$/.test(expectedSha)) {
 }
 
 const envPath = resolve(ROOT, deployEnv);
+const overlayPath = composeOverlay === null ? null : resolve(ROOT, composeOverlay);
 
 function command(commandName, args, options = {}) {
   const result = spawnSync(commandName, args, {
@@ -55,6 +58,19 @@ function relativeDeploymentPath(path) {
   const value = relative(ROOT, path);
   if (value.startsWith("..")) return "<outside-repository>";
   return value.replaceAll("\\", "/");
+}
+
+if (overlayPath !== null) {
+  if (!existsSync(overlayPath)) {
+    throw new Error("Selected Compose overlay is missing.");
+  }
+  const overlayStat = lstatSync(overlayPath);
+  if (overlayStat.isSymbolicLink()) {
+    throw new Error("Selected Compose overlay must not be a symlink.");
+  }
+  if (relative(ROOT, overlayPath).startsWith("..")) {
+    throw new Error("Selected Compose overlay must stay inside the reviewed repository.");
+  }
 }
 
 if (!existsSync(envPath)) {
@@ -108,6 +124,14 @@ const composeArgs = [
   "-f",
   "deploy/compose.yml",
 ];
+if (overlayPath !== null) {
+  composeArgs.push("-f", overlayPath);
+}
+if (edgeNetwork !== null) {
+  command("docker", ["network", "inspect", edgeNetwork], {
+    label: "Docker edge network inventory",
+  });
+}
 
 command("docker", [...composeArgs, "config", "--quiet"], {
   label: "docker compose config",
@@ -170,6 +194,8 @@ const evidence = {
       label: "Docker Compose version",
     }),
     composeProject,
+    composeOverlay: overlayPath === null ? null : relativeDeploymentPath(overlayPath),
+    edgeNetwork,
     configuredServices,
     runningServices,
     nonRunningServices,
