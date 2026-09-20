@@ -144,7 +144,7 @@
   border-radius: 999px;
   padding: 5px 8px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 9.5px;
 }
 
 .activeBadge {
@@ -196,7 +196,7 @@
 .eyebrow {
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 9.5px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
