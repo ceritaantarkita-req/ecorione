@@ -148,9 +148,7 @@ export default function SettingsPage() {
     (provider): provider is ProviderCatalogEntry & { id: HostedProviderId } =>
       provider.category === "ai" &&
       provider.routingReady &&
-      (provider.id === "anthropic" ||
-        provider.id === "openrouter" ||
-        provider.id === "openai"),
+      (provider.id === "anthropic" || provider.id === "openrouter" || provider.id === "openai"),
   );
   const credentialProviderOptions = providers.filter((provider) => provider.credentialReady);
   const activeHostedProvider =
@@ -174,8 +172,7 @@ export default function SettingsPage() {
       provider,
       credential,
       active:
-        runtime?.settings.hostedProvider === provider.id &&
-        runtime.settings.hostedCallsEnabled,
+        runtime?.settings.hostedProvider === provider.id && runtime.settings.hostedCallsEnabled,
       health: providerHealth({
         hasCredential: credential !== null,
         routingReady: provider.routingReady,
@@ -391,9 +388,7 @@ export default function SettingsPage() {
         });
         setRuntime(activated);
         setHostedHealth(
-          activated.settings.hostedCallsEnabled
-            ? { provider, status: "connected" }
-            : null,
+          activated.settings.hostedCallsEnabled ? { provider, status: "connected" } : null,
         );
         setConnectProviderId(null);
         setStatus(
@@ -519,8 +514,8 @@ export default function SettingsPage() {
         <div>
           <h1>AI & Connections</h1>
           <p>
-            Hubungkan provider, pilih model default, lalu gunakan Ai tanpa perlu mengatur
-            vault atau runtime secara manual.
+            Hubungkan provider, pilih model default, lalu gunakan Ai tanpa perlu mengatur vault
+            atau runtime secara manual.
           </p>
         </div>
       </header>
@@ -554,7 +549,11 @@ export default function SettingsPage() {
                   </span>
                 </div>
                 <span className={active ? styles.activeBadge : styles.statusBadge}>
-                  {active ? "Active" : health.status === "connected" ? "Connected" : "Available"}
+                  {active
+                    ? "Active"
+                    : health.status === "connected"
+                      ? "Connected"
+                      : "Available"}
                 </span>
               </div>
               <p className={styles.providerStatus}>{health.label}</p>
@@ -757,8 +756,9 @@ export default function SettingsPage() {
               <strong>
                 {runtime.settings.hostedModel === "governed"
                   ? "Governed / Recommended"
-                  : activeHostedModels.find((model) => model.id === runtime.settings.hostedModel)
-                      ?.displayName ?? runtime.settings.hostedModel}
+                  : (activeHostedModels.find(
+                      (model) => model.id === runtime.settings.hostedModel,
+                    )?.displayName ?? runtime.settings.hostedModel)}
               </strong>
               <span>
                 {runtime.settings.hostedModel === "governed"
@@ -883,18 +883,20 @@ export default function SettingsPage() {
                 </label>
                 {mutableLocalModel ? (
                   <p className={`${styles.warning} ${styles.wide}`}>
-                    Local model memakai alias mutable <code>{runtime.settings.localModelTag}</code>.
-                    Cocok untuk rehearsal, belum immutable production identity.
+                    Local model memakai alias mutable{" "}
+                    <code>{runtime.settings.localModelTag}</code>. Cocok untuk rehearsal, belum
+                    immutable production identity.
                   </p>
                 ) : null}
                 {runtime.settings.localModelDigest === null ? (
                   <p className={`${styles.warning} ${styles.wide}`}>
-                    Local model identity belum dipin dengan SHA-256. Exact-cache lokal dan durable
-                    evidence tidak dianggap reproducible.
+                    Local model identity belum dipin dengan SHA-256. Exact-cache lokal dan
+                    durable evidence tidak dianggap reproducible.
                   </p>
                 ) : (
                   <p className={`${styles.muted} ${styles.wide}`}>
-                    Local model identity dipin ke <code>{runtime.settings.localModelDigest}</code>.
+                    Local model identity dipin ke{" "}
+                    <code>{runtime.settings.localModelDigest}</code>.
                   </p>
                 )}
                 <p className={`${styles.muted} ${styles.wide}`}>

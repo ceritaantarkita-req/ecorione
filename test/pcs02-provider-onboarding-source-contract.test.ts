@@ -15,7 +15,7 @@ describe("PCS-02 provider onboarding source contract", () => {
   });
 
   it("keeps technical runtime and vault controls under the Advanced surface", () => {
-    const advancedIndex = settings.indexOf('<details className={styles.advanced}');
+    const advancedIndex = settings.indexOf("<details className={styles.advanced}");
     expect(advancedIndex).toBeGreaterThan(0);
     expect(settings.indexOf("Local model SHA-256")).toBeGreaterThan(advancedIndex);
     expect(settings.indexOf("<h2>Credential vault</h2>")).toBeGreaterThan(advancedIndex);

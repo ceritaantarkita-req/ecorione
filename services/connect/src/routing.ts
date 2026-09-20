@@ -21,10 +21,7 @@ export interface RouteDecision {
   /** Pinned pricing identity, not necessarily the provider runtime slug. */
   readonly model: PinnedModelId;
   readonly routeReason:
-    | "local-consolidation"
-    | "sensitivity-restricted"
-    | "default-hosted"
-    | "selected-hosted";
+    "local-consolidation" | "sensitivity-restricted" | "default-hosted" | "selected-hosted";
 }
 
 /**
@@ -61,9 +58,7 @@ export function route(req: RouteRequest): RouteDecision {
   const provider = req.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
   const preference = req.hostedModel ?? GOVERNED_HOSTED_MODEL;
   if (!hostedModelSupported(provider, preference)) {
-    throw new Error(
-      `Model ${preference} belum diverifikasi untuk provider ${provider}.`,
-    );
+    throw new Error(`Model ${preference} belum diverifikasi untuk provider ${provider}.`);
   }
   if (req.sensitivity === "RESTRICTED") {
     return {

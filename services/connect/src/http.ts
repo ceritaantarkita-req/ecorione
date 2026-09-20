@@ -27,10 +27,7 @@ import {
 import { registerConnectControlRoutes } from "./control-http.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
-import {
-  GOVERNED_HOSTED_MODEL,
-  type HostedModelPreference,
-} from "./hosted-model-catalog.js";
+import { GOVERNED_HOSTED_MODEL, type HostedModelPreference } from "./hosted-model-catalog.js";
 import type { LocalModelDigest } from "./local-model-identity.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
 import {

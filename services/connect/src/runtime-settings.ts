@@ -93,14 +93,16 @@ const RuntimeSettingsObjectSchema = z
   })
   .strict();
 
-export const RuntimeSettingsSchema = RuntimeSettingsObjectSchema.superRefine((settings, ctx) => {
-  if (hostedModelSupported(settings.hostedProvider, settings.hostedModel)) return;
-  ctx.addIssue({
-    code: "custom",
-    path: ["hostedModel"],
-    message: `Model ${settings.hostedModel} belum diverifikasi untuk provider ${settings.hostedProvider}.`,
-  });
-});
+export const RuntimeSettingsSchema = RuntimeSettingsObjectSchema.superRefine(
+  (settings, ctx) => {
+    if (hostedModelSupported(settings.hostedProvider, settings.hostedModel)) return;
+    ctx.addIssue({
+      code: "custom",
+      path: ["hostedModel"],
+      message: `Model ${settings.hostedModel} belum diverifikasi untuk provider ${settings.hostedProvider}.`,
+    });
+  },
+);
 
 type ParsedRuntimeSettings = z.infer<typeof RuntimeSettingsSchema>;
 export type RuntimeSettings = Omit<ParsedRuntimeSettings, "localModelDigest"> & {

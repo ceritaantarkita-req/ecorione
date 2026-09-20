@@ -187,15 +187,16 @@ describe("Connect operations telemetry", () => {
   it("menguji key sebelum durable hosted route diaktifkan saat operator gate terbuka", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            model: "gpt-5.6-terra",
-            choices: [{ message: { content: "ECORIONE_CREDENTIAL_OK" } }],
-            usage: { prompt_tokens: 4, completion_tokens: 2 },
-          }),
-          { status: 200, headers: { "content-type": "application/json" } },
-        ),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              model: "gpt-5.6-terra",
+              choices: [{ message: { content: "ECORIONE_CREDENTIAL_OK" } }],
+              usage: { prompt_tokens: 4, completion_tokens: 2 },
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          ),
       ),
     );
 

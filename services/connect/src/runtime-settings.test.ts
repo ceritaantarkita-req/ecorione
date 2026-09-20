@@ -63,9 +63,9 @@ describe("FileRuntimeSettings", () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
     const store = new FileRuntimeSettings(join(dir, "settings.json"), defaults);
 
-    expect(
-      store.update({ hostedModel: "claude-opus-4-1-20250805" }).settings.hostedModel,
-    ).toBe("claude-opus-4-1-20250805");
+    expect(store.update({ hostedModel: "claude-opus-4-1-20250805" }).settings.hostedModel).toBe(
+      "claude-opus-4-1-20250805",
+    );
 
     const switched = store.update({ hostedProvider: "openai" });
     expect(switched.settings).toMatchObject({
@@ -73,12 +73,12 @@ describe("FileRuntimeSettings", () => {
       hostedModel: "governed",
     });
 
-    expect(() =>
-      store.update({ hostedModel: "claude-sonnet-4-5-20250929" }),
-    ).toThrow(/belum diverifikasi/u);
-    expect(
-      store.update({ hostedModel: "gpt-5.6-sol" }).settings.hostedModel,
-    ).toBe("gpt-5.6-sol");
+    expect(() => store.update({ hostedModel: "claude-sonnet-4-5-20250929" })).toThrow(
+      /belum diverifikasi/u,
+    );
+    expect(store.update({ hostedModel: "gpt-5.6-sol" }).settings.hostedModel).toBe(
+      "gpt-5.6-sol",
+    );
   });
 
   it("menolak credential/fragment dan protocol non-http pada local runtime URL", () => {
