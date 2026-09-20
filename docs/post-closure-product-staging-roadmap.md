@@ -142,9 +142,9 @@ Normal format/lint/typecheck/tests/secret scan/build remain required.
 
 ### PCS-07 — SumoPod remote staging deployment
 
-State: **ACTIVE / APPROVED — REPOSITORY PREPARATION PASS; REAL HOST EVIDENCE PENDING**.
+State: **CLOSURE CANDIDATE — ACTUAL HOST DEPLOYMENT PASS; FINAL GOVERNED BROWSER JOURNEY PENDING**.
 
-The operator approved an operator-owned SumoPod Ubuntu VPS as the first remote staging host. Repository preparation passed through PR #203 + PR #204 and is recorded in [verification/pcs-07-repository-preparation-2026-09-20.md](verification/pcs-07-repository-preparation-2026-09-20.md). The live-host procedure is [sumopod-staging.md](sumopod-staging.md); PCS-07 cannot close until the actual host is validated and deployed.
+The operator-approved SumoPod Ubuntu VPS is now running the first remote staging deployment. The live runtime was deployed from exact reviewed main `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`; actual-host inventory, isolated services/volumes, HTTPS reachability, operator protection, `/api/ops` health, and MCP auth-challenge reachability pass at the documented boundary. PR #208 corrected the public-smoke verifier after the real host exposed a malformed MCP smoke request; it merged as `59430c4b72a704d1fd6c6176d12b13fa27ddf674` after CI #1581 + Product Eval #820. Evidence: [verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md](verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md). PCS-07 still requires one real rendered-browser governed Flow journey without paid provider use before CLOSED / PASS.
 
 ```text
 GitHub main
