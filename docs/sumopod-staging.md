@@ -153,17 +153,48 @@ Do not expose individual RnD, Context, Connect, Hub, Artifact, Sandbox, Space, F
 
 ## Phase E — minimum PCS-07 staging evidence
 
-Capture sanitized evidence for:
+After the stack is running, capture the repository-provided sanitized host/runtime inventory against the exact reviewed revision:
 
-- deployed Git commit;
-- host OS/kernel and Docker/Compose versions;
-- preflight result;
-- host-audit result and reviewed warnings;
-- Compose service state;
-- persistent volume inventory by name only;
+```bash
+ECORIONE_DEPLOY_ENV=deploy/staging.env \
+ECORIONE_COMPOSE_PROJECT=ecorione-staging \
+ECORIONE_EXPECTED_SHA=<reviewed-main-sha> \
+pnpm staging:host-evidence
+```
+
+Optionally write the sanitized JSON to a mode-0600 host file:
+
+```bash
+ECORIONE_DEPLOY_ENV=deploy/staging.env \
+ECORIONE_COMPOSE_PROJECT=ecorione-staging \
+ECORIONE_EXPECTED_SHA=<reviewed-main-sha> \
+ECORIONE_STAGING_EVIDENCE_OUT=data/pcs07-host-evidence.json \
+pnpm staging:host-evidence
+```
+
+The collector records only:
+
+- exact deployed Git commit, branch/detached state, and clean-worktree status;
+- host OS/kernel/architecture and available disk;
+- Docker server + Compose versions;
+- selected Compose project;
+- configured/running/non-running service names;
+- staging project volume names;
+- deployment-env relative path plus safe mode/symlink/placeholder state.
+
+It fails if the Git tree is dirty, `ECORIONE_EXPECTED_SHA` does not match, the env is unsafe, any configured service is not running, or no project volumes exist.
+
+The collector intentionally does **not** capture IP addresses, env values, credentials/tokens, private keys, Vault contents, provider responses, prompts, user data, or database content. Review even sanitized output before committing it.
+
+Separately capture/review:
+
+- production preflight result;
+- host-audit result and every warning;
 - Ai/browser reachability through the chosen staging access path;
 - `/ops` health at the chosen authenticated/access boundary;
 - one basic governed product journey that does not require a paid provider call.
+
+The host-evidence collector does not replace those checks and does not prove HTTPS/public-edge security, provider quality, persistence across restart, backup/restore, off-host DR, or durable observability.
 
 Do not commit raw env, tokens, IPs, passwords, private keys, Vault contents, or user data.
 
