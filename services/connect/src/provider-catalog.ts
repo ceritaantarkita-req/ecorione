@@ -1,4 +1,5 @@
-import { HOSTED_PROVIDER_IDS } from "./provider-types.js";
+import { hostedModelCatalog, type HostedModelCatalogEntry } from "./hosted-model-catalog.js";
+import { HOSTED_PROVIDER_IDS, type HostedProviderId } from "./provider-types.js";
 
 export const AI_PROVIDER_IDS = [
   "anthropic",
@@ -24,6 +25,7 @@ export interface ProviderCatalogEntry {
   readonly credentialReady: boolean;
   readonly routingReady: boolean;
   readonly connectionTestReady: boolean;
+  readonly hostedModels: readonly HostedModelCatalogEntry[];
 }
 
 const ROUTING_READY = new Set<string>(HOSTED_PROVIDER_IDS);
@@ -38,6 +40,7 @@ function aiProvider(id: AiProviderId, displayName: string): ProviderCatalogEntry
     credentialReady: true,
     routingReady,
     connectionTestReady: routingReady,
+    hostedModels: routingReady ? hostedModelCatalog(id as HostedProviderId) : [],
   };
 }
 
@@ -58,6 +61,7 @@ export const PROVIDER_CATALOG: readonly ProviderCatalogEntry[] = [
     credentialReady: true,
     routingReady: false,
     connectionTestReady: false,
+    hostedModels: [],
   },
   {
     id: "webhook",
@@ -67,6 +71,7 @@ export const PROVIDER_CATALOG: readonly ProviderCatalogEntry[] = [
     credentialReady: true,
     routingReady: false,
     connectionTestReady: false,
+    hostedModels: [],
   },
 ] as const;
 
