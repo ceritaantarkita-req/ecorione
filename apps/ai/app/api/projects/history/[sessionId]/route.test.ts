@@ -85,7 +85,7 @@ describe("GET /api/projects/history/[sessionId]", () => {
             operationId: "op_replay",
             parentEventId: "evt_replay_user",
             payload: {
-              responseModel: "gemma4:latest",
+              responseModel: "local-test-model-v1",
               cacheHit: false,
               actualUsd: 0,
               naiveUsd: 0,
