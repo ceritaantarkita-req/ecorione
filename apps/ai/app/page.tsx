@@ -41,6 +41,7 @@ type RuntimeSnapshot = {
   settings?: {
     hostedCallsEnabled?: boolean;
     hostedProvider?: "anthropic" | "openrouter" | "openai";
+    hostedModel?: string;
     defaultChatTarget?: ChatTarget;
   };
 };
@@ -78,6 +79,37 @@ function formatPct(value: number): string {
   return `${value.toFixed(0)}%`;
 }
 
+function hostedProviderLabel(provider: RuntimeSnapshot["settings"]["hostedProvider"]): string {
+  switch (provider) {
+    case "anthropic":
+      return "Anthropic";
+    case "openrouter":
+      return "OpenRouter";
+    case "openai":
+      return "OpenAI";
+    default:
+      return "Hosted";
+  }
+}
+
+function hostedModelLabel(model: string | undefined): string {
+  switch (model) {
+    case undefined:
+    case "governed":
+      return "Recommended";
+    case "claude-sonnet-4-5-20250929":
+      return "Claude Sonnet 4.5";
+    case "claude-opus-4-1-20250805":
+      return "Claude Opus 4.1";
+    case "gpt-5.6-terra":
+      return "GPT-5.6 Terra";
+    case "gpt-5.6-sol":
+      return "GPT-5.6 Sol";
+    default:
+      return model;
+  }
+}
+
 const subscribeHydration = (): (() => void) => () => undefined;
 const getClientHydrationSnapshot = (): boolean => true;
 const getServerHydrationSnapshot = (): boolean => false;
@@ -103,6 +135,7 @@ export default function ChatPage() {
   const [target, setTarget] = useState<ChatTarget>("local");
   const [defaultTarget, setDefaultTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
+  const [hostedRouteLabel, setHostedRouteLabel] = useState("Hosted");
   const [localRuntimeStatus, setLocalRuntimeStatus] = useState<LocalRuntimeStatus | null>(null);
   const [sending, setSending] = useState(false);
   const [preparingAttachments, setPreparingAttachments] = useState(false);
@@ -344,6 +377,11 @@ export default function ChatPage() {
         const hostedReady =
           runtimeSnapshot.settings?.hostedCallsEnabled === true && hasHostedCredential;
         setHostedAvailable(hostedReady);
+        setHostedRouteLabel(
+          `Hosted · ${hostedProviderLabel(hostedProvider)} · ${hostedModelLabel(
+            runtimeSnapshot.settings?.hostedModel,
+          )}`,
+        );
         setLocalRuntimeStatus(localStatus);
         const nextDefault =
           runtimeSnapshot.settings?.defaultChatTarget === "hosted" && hostedReady
@@ -355,6 +393,7 @@ export default function ChatPage() {
       .catch(() => {
         if (!cancelled) {
           setHostedAvailable(false);
+          setHostedRouteLabel("Hosted · Not connected");
           setLocalRuntimeStatus({
             ready: false,
             state: "unreachable",
@@ -994,10 +1033,12 @@ export default function ChatPage() {
                   }
                 >
                   <option value="local" disabled={localRuntimeStatus?.ready !== true}>
-                    {localRuntimeStatus?.ready === true ? "Local" : "Local (tidak terhubung)"}
+                    {localRuntimeStatus?.ready === true
+                      ? `Local · ${localRuntimeStatus.configuredModel}`
+                      : "Local · Not connected"}
                   </option>
                   <option value="hosted" disabled={hostedAvailable !== true}>
-                    {hostedAvailable === true ? "Hosted" : "Hosted (nonaktif)"}
+                    {hostedAvailable === true ? hostedRouteLabel : "Hosted · Not connected"}
                   </option>
                 </select>
                 <ChevronIcon />
