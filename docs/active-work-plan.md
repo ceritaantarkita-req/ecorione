@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-00 CLOSED / PCS-01 NEXT**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-01 CLOSED / PCS-02 NEXT**
 
 ## Latest repository-hardening closure
 
@@ -48,7 +48,9 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-00 Baseline lock is CLOSED / PASS.** PR #189 exact head `f58311ae30beef877f0c38962bcf4b1aefe91917` passed CI #1492 + Product Eval #731 and merged as `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
 
-**PCS-01 Chat continuity/history is NEXT.** It must reuse the Hub Historical Ledger as canonical history rather than introducing a parallel chat-history store.
+**PCS-01 Chat continuity/history is CLOSED / PASS.** PR #191 exact head `9445b30c659628e1d551191219d0b7cd5ccf2f7c` passed CI #1505 + Product Eval #744 and merged as `ee363c055944b27b549a2f061105eea35fa25f9e`. Historical Ledger remains canonical history; no parallel chat-history store was introduced. Evidence: [verification/pcs-01-chat-continuity-2026-09-20.md](verification/pcs-01-chat-continuity-2026-09-20.md).
+
+**PCS-02 AI provider onboarding + hosted model choice is NEXT.** Reuse the existing Connect Vault/provider/runtime authority and simplify the normal user flow rather than creating a second provider configuration plane.
 
 Current execution order:
 
