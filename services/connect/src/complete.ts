@@ -14,6 +14,7 @@ import {
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import type { ProviderCredentialReader } from "./credential-vault.js";
+import type { HostedModelPreference } from "./hosted-model-catalog.js";
 import {
   localModelIdentity,
   type LocalIdentityProvenance,
@@ -41,8 +42,9 @@ type SpendBudgetController = Pick<FileSpendBudget, "reserve" | "settle" | "markU
 export interface CompleteDeps {
   /** Production source. If configured, all raw provider env fallbacks are ignored. */
   readonly credentialVault?: ProviderCredentialReader | undefined;
-  /** Hosted provider is process configuration, never chosen by model output. */
+  /** Hosted provider/model are Connect-owned runtime configuration, never model output. */
   readonly hostedProvider?: HostedProviderId | undefined;
+  readonly hostedModel?: HostedModelPreference | undefined;
   /** Development-only compatibility fallbacks when no vault is configured. */
   readonly anthropicApiKey: string | undefined;
   readonly openrouterApiKey?: string | undefined;
@@ -141,6 +143,7 @@ export async function complete(
     target: input.target,
     sensitivity: input.sensitivity,
     hostedProvider,
+    hostedModel: deps.hostedModel,
   });
 
   if (decision.routeReason !== "local-consolidation") {

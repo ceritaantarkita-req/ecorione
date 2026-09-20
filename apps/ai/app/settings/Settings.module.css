@@ -82,6 +82,239 @@
   word-break: break-word;
 }
 
+.sectionHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.sectionHeading h2 {
+  margin-bottom: 6px;
+}
+
+.providerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.providerCard {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+}
+
+.providerCardTop,
+.connectPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.providerCardTop strong {
+  display: block;
+  font-size: 14px;
+}
+
+.providerMeta {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+}
+
+.providerStatus {
+  min-height: 36px;
+  margin: 16px 0;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.activeBadge,
+.statusBadge {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.activeBadge {
+  border-color: color-mix(in srgb, var(--accent) 72%, var(--border));
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.statusBadge {
+  color: var(--text-muted);
+}
+
+.linkButton {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+.linkButton:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.connectPanel {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface-1));
+}
+
+.connectPanelHeader {
+  margin-bottom: 16px;
+}
+
+.connectPanelHeader h3 {
+  margin: 3px 0 0;
+  font-size: 18px;
+}
+
+.eyebrow {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.connectField,
+.defaultModelPanel label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.connectField input {
+  width: 100%;
+}
+
+.connectSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.step,
+.stepDone,
+.stepMuted {
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.step {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.stepDone {
+  border: 1px solid color-mix(in srgb, var(--accent) 58%, var(--border));
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.stepMuted {
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  opacity: 0.72;
+}
+
+.defaultModelPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 14px;
+  align-items: end;
+}
+
+.defaultModelPanel select {
+  width: 100%;
+}
+
+.defaultModelSummary {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 4px;
+  padding: 13px 14px;
+  border-left: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--surface-2) 85%, transparent);
+}
+
+.defaultModelSummary strong {
+  font-size: 12px;
+}
+
+.defaultModelSummary span {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.defaultModelPanel > button {
+  justify-self: start;
+}
+
+.advanced {
+  margin-top: 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-1) 75%, transparent);
+}
+
+.advanced > summary {
+  cursor: pointer;
+  padding: 16px 18px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.advancedBody {
+  border-top: 1px solid var(--border);
+}
+
+.advancedSection {
+  padding: 24px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.advancedSection:last-child {
+  border-bottom: 0;
+}
+
+.advancedSection h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
 .formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -333,6 +566,43 @@
   .section h2 {
     margin-bottom: 14px;
     font-size: 18px;
+  }
+
+  .providerGrid,
+  .defaultModelPanel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .providerCard,
+  .connectPanel {
+    padding: 14px;
+  }
+
+  .providerCardTop,
+  .connectPanelHeader {
+    align-items: flex-start;
+  }
+
+  .defaultModelSummary {
+    grid-column: auto;
+  }
+
+  .defaultModelPanel > button,
+  .linkButton {
+    width: 100%;
+  }
+
+  .connectSteps {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .advanced {
+    margin-top: 14px;
+  }
+
+  .advancedSection {
+    padding: 16px;
   }
 
   .formGrid {

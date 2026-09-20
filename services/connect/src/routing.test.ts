@@ -35,6 +35,45 @@ describe("route", () => {
     });
   });
 
+  it("menghormati model verified pilihan user untuk hosted non-RESTRICTED", () => {
+    expect(
+      route({
+        target: "hosted",
+        sensitivity: "INTERNAL",
+        hostedProvider: "openrouter",
+        hostedModel: "claude-opus-4-1-20250805",
+      }),
+    ).toEqual({
+      model: "claude-opus-4-1-20250805",
+      routeReason: "selected-hosted",
+    });
+  });
+
+  it("RESTRICTED tetap memakai governed high-quality model meski user memilih model standar", () => {
+    expect(
+      route({
+        target: "hosted",
+        sensitivity: "RESTRICTED",
+        hostedProvider: "openai",
+        hostedModel: "gpt-5.6-terra",
+      }),
+    ).toEqual({
+      model: "gpt-5.6-sol",
+      routeReason: "sensitivity-restricted",
+    });
+  });
+
+  it("menolak pasangan provider/model yang belum diverifikasi", () => {
+    expect(() =>
+      route({
+        target: "hosted",
+        sensitivity: "INTERNAL",
+        hostedProvider: "openrouter",
+        hostedModel: "gpt-5.6-terra",
+      }),
+    ).toThrow(/belum diverifikasi/u);
+  });
+
   it("OpenAI mapping deterministik: Terra normal, Sol RESTRICTED", () => {
     expect(
       route({ target: "hosted", sensitivity: "PUBLIC", hostedProvider: "openai" }),

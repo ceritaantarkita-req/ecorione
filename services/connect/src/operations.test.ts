@@ -184,6 +184,69 @@ describe("Connect operations telemetry", () => {
     expect(metadata.json()).toEqual({ available: false, credentials: [] });
   });
 
+  it("menguji key sebelum durable hosted route diaktifkan saat operator gate terbuka", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              model: "gpt-5.6-terra",
+              choices: [{ message: { content: "ECORIONE_CREDENTIAL_OK" } }],
+              usage: { prompt_tokens: 4, completion_tokens: 2 },
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          ),
+      ),
+    );
+
+    const runtimeSettings = {
+      get: () => ({
+        revision: 0,
+        settings: {
+          hostedProvider: "openai" as const,
+          hostedModel: "governed" as const,
+          localRuntime: "openai-compatible" as const,
+          localBaseUrl: "http://127.0.0.1:1/v1",
+          localModelTag: "unused",
+          localModelDigest: null,
+          hostedCallsEnabled: false,
+          defaultChatTarget: "local" as const,
+        },
+      }),
+      update: () => {
+        throw new Error("not used");
+      },
+    };
+
+    const connect = buildConnectServer({
+      token: "ops-token",
+      runtimeSettings,
+      hostedProvider: "openai",
+      localBaseUrl: "http://127.0.0.1:1/v1",
+      localModelTag: "unused",
+      hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
+    });
+    closeables.push(connect);
+
+    const probe = await connect.inject({
+      method: "POST",
+      url: "/v1/settings/credentials/openai/test",
+      headers: { authorization: "Bearer ops-token" },
+      payload: { secret: "transient-secret" },
+    });
+
+    expect(probe.statusCode).toBe(200);
+    expect(probe.json()).toMatchObject({
+      pass: true,
+      persisted: false,
+      provider: "openai",
+      model: "gpt-5.6-terra",
+    });
+    expect(runtimeSettings.get().settings.hostedCallsEnabled).toBe(false);
+  });
+
   it("menolak transient credential test untuk provider yang belum routing-ready", async () => {
     const connect = buildConnectServer({
       token: "ops-token",

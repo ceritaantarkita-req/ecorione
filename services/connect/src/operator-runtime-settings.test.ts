@@ -11,6 +11,7 @@ function inMemoryRuntime(hostedCallsEnabled: boolean): RuntimeSettingsAdmin {
     revision: 0,
     settings: {
       hostedProvider: "anthropic",
+      hostedModel: "governed",
       localRuntime: "openai-compatible",
       localBaseUrl: "http://127.0.0.1:11434/v1",
       localModelTag: "local-model",
@@ -29,6 +30,7 @@ function inMemoryRuntime(hostedCallsEnabled: boolean): RuntimeSettingsAdmin {
         revision: snapshot.revision + 1,
         settings: {
           hostedProvider: patch.hostedProvider ?? prior.hostedProvider,
+          hostedModel: patch.hostedModel ?? prior.hostedModel,
           localRuntime: patch.localRuntime ?? prior.localRuntime,
           localBaseUrl: patch.localBaseUrl ?? prior.localBaseUrl,
           localModelTag: patch.localModelTag ?? prior.localModelTag,

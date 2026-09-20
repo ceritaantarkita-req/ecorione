@@ -1,6 +1,11 @@
 /** Deterministic routing — ADR-02 + ADR-14. */
 import type { Sensitivity } from "@ecorione/shared-schema";
 import type { PinnedModelId } from "@ecorione/shared-telemetry";
+import {
+  GOVERNED_HOSTED_MODEL,
+  hostedModelSupported,
+  type HostedModelPreference,
+} from "./hosted-model-catalog.js";
 import { DEFAULT_HOSTED_PROVIDER, type HostedProviderId } from "./provider-types.js";
 
 export type RouteTarget = "hosted" | "local";
@@ -9,12 +14,14 @@ export interface RouteRequest {
   readonly target: RouteTarget;
   readonly sensitivity: Sensitivity;
   readonly hostedProvider?: HostedProviderId | undefined;
+  readonly hostedModel?: HostedModelPreference | undefined;
 }
 
 export interface RouteDecision {
   /** Pinned pricing identity, not necessarily the provider runtime slug. */
   readonly model: PinnedModelId;
-  readonly routeReason: "local-consolidation" | "sensitivity-restricted" | "default-hosted";
+  readonly routeReason:
+    "local-consolidation" | "sensitivity-restricted" | "default-hosted" | "selected-hosted";
 }
 
 /**
@@ -49,11 +56,18 @@ export function route(req: RouteRequest): RouteDecision {
     return { model: LOCAL_PINNED_MODEL, routeReason: "local-consolidation" };
   }
   const provider = req.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
+  const preference = req.hostedModel ?? GOVERNED_HOSTED_MODEL;
+  if (!hostedModelSupported(provider, preference)) {
+    throw new Error(`Model ${preference} belum diverifikasi untuk provider ${provider}.`);
+  }
   if (req.sensitivity === "RESTRICTED") {
     return {
       model: hostedModel(provider, req.sensitivity),
       routeReason: "sensitivity-restricted",
     };
+  }
+  if (preference !== GOVERNED_HOSTED_MODEL) {
+    return { model: preference, routeReason: "selected-hosted" };
   }
   return { model: hostedModel(provider, req.sensitivity), routeReason: "default-hosted" };
 }
