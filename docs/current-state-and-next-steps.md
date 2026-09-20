@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / POST-CLOSURE PRODUCT + REMOTE STAGING SCOPE APPROVED**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00 BASELINE LOCK ACTIVE**
 
 ## Current verdict
 
@@ -28,6 +28,12 @@ The next scope is documented in [post-closure-product-staging-roadmap.md](post-c
 - staging persistence, HTTPS/auth, backup, and observability before any production-promotion decision.
 
 Production public cutover remains a separate gate. Remote staging approval must not be mislabeled as production evidence.
+
+## PCS-00 baseline lock — ACTIVE
+
+PCS-00 starts from synchronized reviewed `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19`, the merge of PR #188. Its reviewed roadmap head `c4088bd04298d42809b7b012b353d2e977e7a931` passed CI #1490 and Product Eval #729.
+
+The baseline preserves the closed owner/security architecture and makes exact-head verification mandatory for subsequent PCS product changes. PCS-00 is not CLOSED until the PCS-00 branch head itself passes CI + Product Eval. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
 
 ## Post-closure repository hardening
 
