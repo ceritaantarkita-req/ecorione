@@ -48,6 +48,18 @@ const HistoryRangeQuerySchema = HistoryGrantQuerySchema.extend({
   limit: z.coerce.number().int().min(1).max(500).default(100),
 });
 
+function assertHistoryBinding(
+  session: { readonly workspaceId: string | null; readonly projectId: string | null },
+  query: { readonly workspaceId?: string | undefined; readonly projectId?: string | undefined },
+): void {
+  if (query.workspaceId !== undefined && session.workspaceId !== query.workspaceId) {
+    throw new HistoryAccessDeniedError();
+  }
+  if (query.projectId !== undefined && session.projectId !== query.projectId) {
+    throw new HistoryAccessDeniedError();
+  }
+}
+
 function mapHistoryError(error: unknown): unknown {
   if (
     error instanceof HistorySessionNotFoundError ||
@@ -117,6 +129,7 @@ export function registerHistoryRoutes(app: FastifyInstance, ledger: HistoryLedge
     try {
       const session = ledger.getSession(sessionId);
       if (session === null) throw new HistorySessionNotFoundError(sessionId);
+      assertHistoryBinding(session, query);
       const grant: HistoryGrant = {
         scope: query.scope,
         maxSensitivity: query.maxSensitivity,
@@ -147,6 +160,9 @@ export function registerHistoryRoutes(app: FastifyInstance, ledger: HistoryLedge
     const sessionId = parseOrBadRequest(SessionIdSchema, req.params.id);
     const query = parseOrBadRequest(HistoryRangeQuerySchema, req.query);
     try {
+      const session = ledger.getSession(sessionId);
+      if (session === null) throw new HistorySessionNotFoundError(sessionId);
+      assertHistoryBinding(session, query);
       return ledger.readRange({
         sessionId,
         afterSeq: query.afterSeq,
