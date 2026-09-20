@@ -778,7 +778,15 @@ async function runDesktopJourney() {
     await defaultSelects.nth(1).selectOption("governed");
     await defaultSection.getByRole("button", { name: "Save default", exact: true }).click();
     await page.getByText("Default hosted provider/model saved.", { exact: true }).waitFor();
-    await page.getByText("Governed / Recommended", { exact: true }).first().waitFor();
+    if ((await defaultSelects.nth(1).inputValue()) !== "governed") {
+      throw new Error("desktop-settings: governed model selection was not retained");
+    }
+    const selectedModelLabel = await defaultSelects.nth(1).locator("option:checked").textContent();
+    if (selectedModelLabel?.trim() !== "Governed / Recommended") {
+      throw new Error(
+        `desktop-settings: expected Governed / Recommended, got ${selectedModelLabel ?? "null"}`,
+      );
+    }
 
     await page.getByText("Advanced settings", { exact: true }).click();
     await page.getByRole("heading", { name: "Runtime", exact: true }).waitFor();
