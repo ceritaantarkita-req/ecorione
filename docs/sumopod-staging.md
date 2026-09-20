@@ -85,6 +85,93 @@ On the currently audited host, the existing Traefik network is `inmydraft-demos_
 
 The lifecycle scripts and sanitized evidence collector honor `ECORIONE_COMPOSE_OVERLAY`. When `ECORIONE_EDGE_NETWORK` is set, preflight/install/upgrade/rollback also fail closed if that Docker network does not exist.
 
+Keep `ECORIONE_OPS_PASSWORD_HASH` single-quoted in the deployment env file. Caddy bcrypt hashes contain `# ECORIONE — SumoPod Remote Staging Runbook
+
+Last updated: **2026-09-20**
+
+Status: **PCS-07 ACTIVE / REPOSITORY PREPARATION PASS / REAL HOST EVIDENCE PENDING**
+
+This runbook covers the first operator-owned SumoPod Ubuntu staging deployment. It does **not** authorize or claim production cutover.
+
+## Boundary
+
+The target operating model is:
+
+```text
+reviewed GitHub main
+        |
+        v
+operator-owned SumoPod Ubuntu host
+        |
+        v
+ECORIONE self-host Compose project: ecorione-staging
+        |
+        v
+persistent owner volumes + Temporal
+```
+
+GitHub `main` remains source of truth. Do not make arbitrary live-VPS source edits and then treat the host as canonical development state.
+
+PCS-07 proves only initial remote staging deployment and basic runtime reachability. HTTPS/public-edge hardening, restart persistence evidence, backup/restore, and durable observability remain PCS-09 unless explicitly pulled forward as a blocker.
+
+## Secret and host rules
+
+Never commit or record in repository docs:
+
+- VPS password or private SSH key;
+- public/private host IP when it is operator-sensitive;
+- provider API keys;
+- Connect Vault master key;
+- internal service tokens;
+- Temporal database password;
+- OAuth/MCP handle secrets;
+- deployment tokens.
+
+Provider credentials belong in Connect Vault after the runtime is available. Deployment secrets stay in the mode-0600 host env file or another approved host-side secret mechanism.
+
+The repository now ignores `deploy/*.env`.
+
+## Staging isolation
+
+Use a staging-specific env file and Compose project name:
+
+```bash
+export ECORIONE_DEPLOY_ENV=deploy/staging.env
+export ECORIONE_COMPOSE_PROJECT=ecorione-staging
+export ECORIONE_COMPOSE_OVERLAY=deploy/compose.sumopod.yml
+export ECORIONE_EDGE_NETWORK=inmydraft-demos_web
+export ECORIONE_TRAEFIK_CERTRESOLVER=letsencrypt
+```
+
+The historical `ECORIONE_PRODUCTION_ENV` variable remains supported for compatibility, but new staging work should use `ECORIONE_DEPLOY_ENV`.
+
+All lifecycle scripts use the same variables:
+
+- `scripts/production-preflight.sh`;
+- `scripts/host-security-audit.sh`;
+- `scripts/self-host-install.sh`;
+- `scripts/self-host-upgrade.sh`;
+- `scripts/self-host-rollback.sh`.
+
+This keeps staging volumes/network/container names isolated from a future production Compose project on the same host.
+
+### Existing SumoPod Traefik edge
+
+The audited SumoPod host already has an operator-owned Traefik instance bound to public ports 80/443. ECORIONE staging must not compete for those host ports.
+
+The reviewed `deploy/compose.sumopod.yml` overlay therefore:
+
+- resets the baseline Caddy host port publications;
+- keeps Caddy as ECORIONE's internal routing/policy boundary on port 8080;
+- attaches only that Caddy service to the existing Traefik edge network;
+- lets Traefik terminate public TLS and route the ECORIONE hostname to internal Caddy;
+- preserves the existing Caddy basic-auth boundary for `/ops`, `/api/ops`, `/settings`, and `/api/settings`;
+- does not mount the Docker socket into any ECORIONE container.
+
+On the currently audited host, the existing Traefik network is `inmydraft-demos_web`. Re-verify the network name with `docker inspect traefik` before using this value on a rebuilt or different host.
+
+ characters, and unquoted values can be interpreted by Docker Compose as variable interpolation.
+
 ## Phase A — verify reviewed source
 
 On SumoPod, clone or synchronize the reviewed repository. Do not deploy a dirty working tree.
