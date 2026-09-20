@@ -42,6 +42,78 @@ describe("local runtime discovery", () => {
     );
   });
 
+  it("resolves an Ollama digest without making Ollama mandatory", async () => {
+    const digest = `sha256:${"a".repeat(64)}`;
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/v1/models")) {
+        return new Response(
+          JSON.stringify({ data: [{ id: "qwen3:8b-instruct-q4_K_M" }] }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      if (url.endsWith("/api/tags")) {
+        return new Response(
+          JSON.stringify({
+            models: [
+              {
+                name: "qwen3:8b-instruct-q4_K_M",
+                model: "qwen3:8b-instruct-q4_K_M",
+                digest,
+              },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    });
+
+    const result = await discoverLocalRuntime(input, { fetcher });
+    expect(result).toMatchObject({
+      state: "connected",
+      ready: true,
+      modelDigest: digest,
+      identityProvenance: "resolved",
+    });
+  });
+
+  it("reports a declared digest mismatch as not ready", async () => {
+    const observed = `sha256:${"a".repeat(64)}`;
+    const declared = `sha256:${"b".repeat(64)}` as const;
+    const fetcher = vi.fn(async (request: string | URL | Request) => {
+      const url = String(request);
+      if (url.endsWith("/v1/models")) {
+        return new Response(
+          JSON.stringify({ data: [{ id: "qwen3:8b-instruct-q4_K_M" }] }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          models: [
+            {
+              name: "qwen3:8b-instruct-q4_K_M",
+              digest: observed,
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+
+    const result = await discoverLocalRuntime(
+      { ...input, declaredDigest: declared },
+      { fetcher },
+    );
+    expect(result).toMatchObject({
+      state: "identity-mismatch",
+      reachable: true,
+      ready: false,
+      modelDigest: observed,
+    });
+  });
+
   it("distinguishes reachable endpoint from missing configured model", async () => {
     const result = await discoverLocalRuntime(input, {
       fetcher: async () =>
