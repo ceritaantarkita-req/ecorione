@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-01 CLOSED / PCS-02 NEXT**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-02 CLOSED / PCS-03 NEXT**
 
 ## Latest repository-hardening closure
 
@@ -50,7 +50,9 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-01 Chat continuity/history is CLOSED / PASS.** PR #191 exact head `9445b30c659628e1d551191219d0b7cd5ccf2f7c` passed CI #1505 + Product Eval #744 and merged as `ee363c055944b27b549a2f061105eea35fa25f9e`. Historical Ledger remains canonical history; no parallel chat-history store was introduced. Evidence: [verification/pcs-01-chat-continuity-2026-09-20.md](verification/pcs-01-chat-continuity-2026-09-20.md).
 
-**PCS-02 AI provider onboarding + hosted model choice is NEXT.** Reuse the existing Connect Vault/provider/runtime authority and simplify the normal user flow rather than creating a second provider configuration plane.
+**PCS-02 AI provider onboarding + hosted model choice is CLOSED / PASS.** PR #193 exact head `45dbe9365b23dfa3398a4726a26f9a245bd09e9d` passed CI #1516 + Product Eval #755 and merged as `0fba6842f4c39f2742eb6d518e63c90d1a4883db`. Connect remains the provider credential/runtime/model authority. Evidence: [verification/pcs-02-provider-onboarding-2026-09-20.md](verification/pcs-02-provider-onboarding-2026-09-20.md).
+
+**PCS-03 Local AI resilience/runtime discovery is NEXT.** Preserve the OpenAI-compatible abstraction, treat no local runtime as a supported state, and do not silently fall back between Local and Hosted.
 
 Current execution order:
 
