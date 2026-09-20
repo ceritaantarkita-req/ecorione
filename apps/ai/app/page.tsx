@@ -202,11 +202,11 @@ export default function ChatPage() {
       .catch((error: unknown) => {
         if (cancelled) return;
         setHistorySessions([]);
-        setHistoryListReady(true);
+        setHistoryListReady(false);
+        setSessionReady(false);
         setHistoryFeedback(
           error instanceof Error ? error.message : "Gagal memuat riwayat percakapan.",
         );
-        if (requestedSessionId === null) setSessionReady(true);
       });
     return () => {
       cancelled = true;
@@ -436,9 +436,6 @@ export default function ChatPage() {
           memoryUsed: chat.memoryUsed,
         },
       ]);
-      void loadHistorySessions(projectId)
-        .then((sessions) => setHistorySessions(sessions))
-        .catch(() => undefined);
       return true;
     } catch {
       setTurns((prev) => [
