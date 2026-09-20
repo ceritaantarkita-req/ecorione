@@ -813,7 +813,7 @@ async function runDesktopJourney() {
       throw new Error("desktop-flow: Run must unlock after exact authority becomes ready");
     await runButton.click();
     await page.getByText("COMPLETED", { exact: true }).waitFor();
-    await page.getByText("SUCCEEDED", { exact: true }).waitFor();
+    await page.getByText("SUCCEEDED", { exact: true }).first().waitFor();
     if (!graphRunStarted) throw new Error("desktop-flow: mocked graph run was not started");
     await page.screenshot({ path: `${outDir}/desktop-flow.png`, fullPage: true });
 
