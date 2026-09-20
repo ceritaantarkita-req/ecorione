@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PCS-07 ACTIVE / REPOSITORY-SIDE STAGING PREPARATION**
+Status: **PCS-07 ACTIVE / REPOSITORY PREPARATION PASS / REAL HOST EVIDENCE PENDING**
 
 This runbook covers the first operator-owned SumoPod Ubuntu staging deployment. It does **not** authorize or claim production cutover.
 
@@ -222,6 +222,6 @@ Runtime rollback does not imply data rollback. Owner data restore remains a sepa
 
 ## Current evidence status
 
-Repository-side preparation can be verified in CI.
+Repository-side preparation is verified through PR #203 + PR #204. Evidence: [verification/pcs-07-repository-preparation-2026-09-20.md](verification/pcs-07-repository-preparation-2026-09-20.md).
 
-Actual SumoPod deployment evidence remains **PENDING** until the real host is accessed and the read-only Phase A-C checks are captured. Do not mark PCS-07 CLOSED from repository CI alone.
+Actual SumoPod deployment evidence remains **PENDING** until the real host is accessed and the read-only Phase A-C checks are captured, followed by the bounded staging deployment/evidence steps. Do not mark PCS-07 CLOSED from repository CI alone.
