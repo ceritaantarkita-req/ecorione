@@ -4,6 +4,7 @@ import {
   FlowGraphExecutionInputSchema,
   assertId,
   type FlowGraphExecutionInput,
+  type FlowGraphRunState,
 } from "@ecorione/shared-schema";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
@@ -77,7 +78,83 @@ function activities(): FlowGraphActivities {
   };
 }
 
+function immediateExecution(): FlowGraphExecutionInput {
+  const graph = FlowGraphDocumentSchema.parse({
+    id: "fg_queryready001",
+    workspaceId: "ws_personal",
+    name: "Immediate query readiness",
+    scope: "personal",
+    sensitivity: "INTERNAL",
+    maxParallelism: 1,
+    nodes: [node("node_trigger1", "trigger")],
+    edges: [],
+  });
+  const validation = validateAndCompileFlowGraph(graph, 1);
+  if (!validation.valid || validation.plan === null) {
+    throw new Error("Immediate query graph failed compilation.");
+  }
+  return FlowGraphExecutionInputSchema.parse({
+    runId: assertId("workflow", "wf_queryready001"),
+    operationId: assertId("operation", "op_queryready001"),
+    plan: validation.plan,
+    input: { start: true },
+    depth: 0,
+  });
+}
+
 describe("Temporal graphExecutionWorkflow", () => {
+  it("registers graphRunState before the first lifecycle activity resolves", async () => {
+    const env = await TestWorkflowEnvironment.createTimeSkipping();
+    let releaseStarted: (() => void) | undefined;
+    const startedGate = new Promise<void>((resolve) => {
+      releaseStarted = resolve;
+    });
+    try {
+      const graphActivities = activities();
+      graphActivities.recordGraphRunTrace = vi.fn(async ({ name }) => {
+        if (name === "flow.graph.run.started") await startedGate;
+      });
+      const taskQueue = "flow-graph-query-ready-test";
+      const worker = await Worker.create({
+        connection: env.nativeConnection,
+        taskQueue,
+        workflowsPath: fileURLToPath(new URL("./workflows.ts", import.meta.url)),
+        activities: graphActivities,
+      });
+      const input = immediateExecution();
+
+      const result = await worker.runUntil(async () => {
+        const handle = await env.client.workflow.start("graphExecutionWorkflow", {
+          workflowId: input.runId,
+          taskQueue,
+          args: [input],
+        });
+
+        const initial = await handle.query<FlowGraphRunState>("graphRunState");
+        expect(initial).toMatchObject({
+          runId: input.runId,
+          graphId: input.plan.graph.id,
+          status: "RUNNING",
+        });
+        expect(initial.nodes).toEqual([
+          expect.objectContaining({ nodeId: "node_trigger1", status: "PENDING" }),
+        ]);
+
+        releaseStarted?.();
+        return handle.result();
+      });
+
+      expect(result).toMatchObject({
+        runId: input.runId,
+        graphId: input.plan.graph.id,
+        output: { start: true },
+      });
+    } finally {
+      releaseStarted?.();
+      await env.teardown();
+    }
+  }, 30_000);
+
   it("survives a durable timer, consumes human input, routes a branch, and resumes approval", async () => {
     const env = await TestWorkflowEnvironment.createTimeSkipping();
     try {
