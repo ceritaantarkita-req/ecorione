@@ -2,7 +2,7 @@
 
 Date: **2026-09-20**
 
-Status: **REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE PENDING**
+Status: **REPOSITORY IMPLEMENTATION MERGED / HOST BOOTSTRAP PASS / GITHUB ENV + REAL CD EVIDENCE PENDING**
 
 ## Scope
 
@@ -10,7 +10,7 @@ PCS-08 begins after PCS-07 CLOSED / PASS. It introduces a bounded GitHub-to-Sumo
 
 ## Repository implementation
 
-PR #210 exact reviewed head `4a5fa9d9d776eae3895a8e0b8e6b73013e3f476f` passed CI #1613 + Product Eval #852 and merged to `main` as `652588e00dca5a04c8b39081fb6574a3db508ba1`.
+PR #210 exact reviewed head `4a5fa9d9d776eae3895a8e0b8e6b73013e3f476f` passed CI #1613 + Product Eval #852 and merged to `main` as `652588e00dca5a04c8b39081fb6574a3db508ba1`. Pre-activation duplicate-deploy hardening then passed PR #212 exact head `60b920412a8dcc08c912da60d68e9fe1416baec8` with CI #1622 + Product Eval #861 and merged as `74c76fa2685333db3a59b04d0ca34554f8e9fcf0`. Push `main` at that exact merge SHA passed CI #1623 + Product Eval #862. The resulting Staging Deploy gate runs #19 and #20 completed successfully while the deploy job remained skipped because the activation variable was still disabled.
 
 The merged implementation adds:
 
@@ -45,15 +45,62 @@ The deploy orchestrator retains previous source/image identity and attempts runt
 
 This is runtime rollback only; owner data rollback remains separate.
 
+## Real host bootstrap evidence
+
+On 2026-09-21 the actual SumoPod host was bootstrapped from reviewed exact `main` commit `74c76fa2685333db3a59b04d0ca34554f8e9fcf0` without moving the live staging checkout.
+
+Observed before bootstrap:
+
+```text
+origin/main  74c76fa2685333db3a59b04d0ca34554f8e9fcf0
+live HEAD    99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+```
+
+Observed after bootstrap:
+
+```text
+PASS staging CD host bootstrap
+deploy user                  ecorione-deploy
+deploy user Docker group     absent
+sudoers validation           parsed OK
+deploy gate owner/mode       root:root 755
+root deploy owner/mode       root:root 755
+host CD config owner/mode    root:root 644
+sudoers owner/mode           root:root 440
+live checkout                unchanged at 99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+public home                  HTTP 200 / TLS verify 0
+unauthenticated /ops         HTTP 401
+```
+
+The dedicated Ed25519 public key was present on the host and installed into the forced-command deploy account. No private deployment key was copied to the VPS by this bootstrap.
+
+The dedicated deploy key was then tested directly from the operator workstation:
+
+```text
+interactive/no-command SSH     denied
+PTY allocation                 denied
+arbitrary command "whoami"     denied
+forced-command exit code       126
+```
+
+Both requests returned the expected boundary message:
+
+```text
+Denied: this key may only deploy one exact 40-character reviewed SHA.
+```
+
+This proves the dedicated SSH key cannot be used for an interactive shell or an arbitrary remote command at the tested boundary. The only accepted command shape remains the forced `deploy <40-character-sha>` path.
+
+This establishes the host-side least-privilege boundary but does not yet prove the GitHub secret/environment path or a real CD mutation.
+
 ## Pending evidence
 
 Before PCS-08 can close:
 
-1. dedicated host deploy account / forced-command boundary must be provisioned from the merged reviewed scripts;
-2. GitHub `staging` Environment secrets must be configured;
-3. a real current `main` SHA must deploy through the GitHub workflow after both main gates pass;
-4. release receipt, public smoke, ops health, and exact-host evidence must match;
-5. a controlled real rollback exercise must pass;
-6. intended current `main` must be restored after the rollback exercise.
+1. GitHub `staging` Environment secrets must be configured;
+2. a real current `main` SHA must deploy through the GitHub workflow after both main gates pass;
+3. release receipt, public smoke, ops health, and exact-host evidence must match;
+4. a controlled real rollback exercise must pass;
+5. intended current `main` must be restored after the rollback exercise.
 
 No source-only result is sufficient to claim those remote boundaries.
