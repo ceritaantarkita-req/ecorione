@@ -130,25 +130,34 @@ wait_for_services() {
   return 1
 }
 
-basic_public_check() {
-  local code
-  code="$(
-    curl -fsS -o /dev/null -w '%{http_code}' \
-      "$ECORIONE_STAGING_PUBLIC_BASE_URL/" || true
-  )"
-  [[ "$code" =~ ^[23][0-9]{2}$ ]] || {
-    echo "Rollback home check failed: HTTP $code" >&2
-    return 1
-  }
+wait_for_public_boundary() {
+  local attempt home_code ops_code
 
-  code="$(
-    curl -sS -o /dev/null -w '%{http_code}' \
-      "$ECORIONE_STAGING_PUBLIC_BASE_URL/ops" || true
-  )"
-  [[ "$code" == "401" ]] || {
-    echo "Rollback /ops protection check failed: HTTP $code" >&2
-    return 1
-  }
+  for attempt in $(seq 1 60); do
+    home_code="$(
+      curl -sS -o /dev/null -w '%{http_code}' \
+        "$ECORIONE_STAGING_PUBLIC_BASE_URL/" || true
+    )"
+    ops_code="$(
+      curl -sS -o /dev/null -w '%{http_code}' \
+        "$ECORIONE_STAGING_PUBLIC_BASE_URL/ops" || true
+    )"
+
+    if [[ "$home_code" =~ ^[23][0-9]{2}$ && "$ops_code" == "401" ]]; then
+      echo "Public boundary ready on attempt $attempt: home=$home_code ops=$ops_code"
+      return 0
+    fi
+
+    echo "Waiting for public boundary attempt $attempt/60: home=$home_code ops=$ops_code"
+    sleep 3
+  done
+
+  echo "Timed out waiting for public boundary readiness" >&2
+  return 1
+}
+
+basic_public_check() {
+  wait_for_public_boundary
 }
 
 validate_deployed_revision() {
@@ -157,6 +166,7 @@ validate_deployed_revision() {
   local ops_user ops_pass
 
   wait_for_services "$image_tag" || return 1
+  wait_for_public_boundary || return 1
 
   owner_run_with_tag "$image_tag" env \
     ECORIONE_PUBLIC_BASE_URL="$ECORIONE_STAGING_PUBLIC_BASE_URL" \
