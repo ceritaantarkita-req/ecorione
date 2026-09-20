@@ -85,7 +85,7 @@ Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verific
 
 ## PCS-07 SumoPod remote staging deployment — ACTIVE
 
-Repository-side staging preparation now supports an isolated host env via `ECORIONE_DEPLOY_ENV`, an isolated Compose namespace via `ECORIONE_COMPOSE_PROJECT`, and ignores `deploy/*.env` so host secrets are not normal Git candidates. The active read-only-first procedure is [sumopod-staging.md](sumopod-staging.md).
+Repository-side staging preparation is **PASS** through PR #203 + PR #204. The repo now supports an isolated host env via `ECORIONE_DEPLOY_ENV`, an isolated Compose namespace via `ECORIONE_COMPOSE_PROJECT`, ignores `deploy/*.env`, hardens lifecycle env-file checks, and provides `pnpm staging:host-evidence` for sanitized exact-revision/service/volume inventory. Evidence: [verification/pcs-07-repository-preparation-2026-09-20.md](verification/pcs-07-repository-preparation-2026-09-20.md). The active read-only-first procedure is [sumopod-staging.md](sumopod-staging.md).
 
 Actual SumoPod host audit, deployment, Compose/runtime health, and browser reachability evidence remain **PENDING**. Repository CI alone must not close PCS-07 or be mislabeled as remote-host evidence.
 
