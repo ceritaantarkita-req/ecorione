@@ -33,11 +33,7 @@ import {
   type ChatTarget,
   type ChatTurn,
 } from "../lib/chat-history";
-import {
-  isClientSessionId,
-  makeSessionId,
-  projectSessionStorageKey,
-} from "../lib/session";
+import { isClientSessionId, makeSessionId, projectSessionStorageKey } from "../lib/session";
 const WORKSPACE_ID = "ws_personal";
 const PERSONAL_PROJECT_ID = "prj_personal";
 const PROJECT_STORAGE_KEY = "ecorione.projectId";
@@ -730,7 +726,9 @@ export default function ChatPage() {
               <span>Riwayat</span>
               <select
                 aria-label="Riwayat percakapan"
-                value={historySessions.some((session) => session.id === sessionId) ? sessionId : ""}
+                value={
+                  historySessions.some((session) => session.id === sessionId) ? sessionId : ""
+                }
                 onChange={(event) =>
                   event.target.value.length === 0
                     ? startNewChat()
@@ -845,7 +843,13 @@ export default function ChatPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={!hydrated || !sessionReady || historyLoading || sending || preparingAttachments}
+              disabled={
+                !hydrated ||
+                !sessionReady ||
+                historyLoading ||
+                sending ||
+                preparingAttachments
+              }
             />
 
             <div className="ai-composer__toolbar">
