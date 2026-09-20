@@ -30,6 +30,26 @@ Status: **CURRENT SUMMARY**
 | PE-07 Brain + Context + ECX | **CLOSED / PASS** |
 | PE-08 Product closure | **CLOSED / PASS** |
 
+## Next post-closure scope
+
+The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser validation. It is not PE-09 and not Batch 13.
+
+| Scope | State |
+|---|---:|
+| PCS-00 Baseline lock | **NEXT** |
+| PCS-01 Chat continuity/history | **PLANNED** |
+| PCS-02 Provider onboarding + hosted model choice | **PLANNED** |
+| PCS-03 Local AI resilience/runtime discovery | **PLANNED** |
+| PCS-04 Visual + information-architecture cleanup | **PLANNED** |
+| PCS-05 Flow runtime defect closure | **PLANNED** |
+| PCS-06 Integrated browser/regression acceptance | **PLANNED** |
+| PCS-07 SumoPod remote staging | **APPROVED / PLANNED** |
+| PCS-08 GitHub -> staging continuous deployment | **PLANNED** |
+| PCS-09 Staging persistence/security/backup/observability | **PLANNED** |
+| PCS-10 Closure/docs | **PLANNED** |
+
+Public production cutover remains deferred. Cloudflare Tunnel remains optional/not yet selected for staging. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
+
 ## Latest maintenance closure
 
 PR #182 (`108781b5d53034462393f06d5e9cb36e9c5d5cf5`) hardened native Windows execution and merged as `3461951414f72c8f183527e3d28eec20dd383d45` after CI #1477 and Product Eval #716 passed. Local Windows validation passed Prettier, lint, typecheck, secret scan, production build, the production Bash syntax gate through explicit MSYS Bash, and the full 191-file / 990-test normal suite with zero failures.
