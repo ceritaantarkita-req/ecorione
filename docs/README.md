@@ -7,21 +7,22 @@ This file is the single navigation entry point for repository documentation. If 
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — current state and next scope.
-2. **[active-work-plan.md](active-work-plan.md)** — only work that is actually active.
-3. **[product-evolution-architecture.md](product-evolution-architecture.md)** — next product model and ownership rules.
-4. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — PE-00 through PE-08 batch plan.
-5. **[product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)** — PE-01 ownership + migration contract.
-6. **[product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)** — required PE-01 closure behavior.
-7. **[product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md)** — required PE-02 source-binding closure behavior.
-8. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — closed PE-03 Trigger contract.
-9. **[product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md)** — closed PE-04 Work/Schedule/Runs contract.
-10. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — closed PE-05 Event/Webhook contract.
-11. **[product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md)** — closed PE-06 Brain V1 contract.
-12. **[product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md)** — closed PE-07 Brain + Context + ECX contract.
-13. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — closed PE-08 Product closure contract.
-14. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
-15. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
-16. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
+2. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — operator-approved product/UX + SumoPod staging roadmap.
+4. **[active-work-plan.md](active-work-plan.md)** — only work that is actually active.
+4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — next product model and ownership rules.
+5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — PE-00 through PE-08 batch plan.
+6. **[product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)** — PE-01 ownership + migration contract.
+7. **[product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)** — required PE-01 closure behavior.
+8. **[product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md)** — required PE-02 source-binding closure behavior.
+9. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — closed PE-03 Trigger contract.
+10. **[product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md)** — closed PE-04 Work/Schedule/Runs contract.
+11. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — closed PE-05 Event/Webhook contract.
+12. **[product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md)** — closed PE-06 Brain V1 contract.
+13. **[product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md)** — closed PE-07 Brain + Context + ECX contract.
+14. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — closed PE-08 Product closure contract.
+15. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
+16. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
+17. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
 ## Source-of-truth precedence
 
@@ -59,7 +60,11 @@ As of 2026-09-19:
 - PE-07: **CLOSED / PASS**;
 - PE-08: **CLOSED / PASS**.
 
-PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed; there is no active Product Evolution implementation queue. Post-closure native-Windows portability hardening is merged via PR #182. Clean-checkout/CI reproducibility is CLOSED / PASS via PR #183. Fresh-clone Windows EOL reproducibility is CLOSED / PASS via PR #185 (CI #1486, Product Eval #725, Desktop Installer #76; post-merge CI #1487 + Product Eval #726). These are repository hardening, not a new PE batch.
+PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed; there is no active Product Evolution implementation queue.
+
+### Post-closure Product + Remote Staging
+
+The operator has approved the next separate roadmap, **PCS-00..PCS-10**, covering Ai conversation continuity, provider/model onboarding, local-runtime resilience, visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, GitHub-to-staging delivery, and staging hardening. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md). This does not reopen PE and does not imply production is live. Post-closure native-Windows portability hardening is merged via PR #182. Clean-checkout/CI reproducibility is CLOSED / PASS via PR #183. Fresh-clone Windows EOL reproducibility is CLOSED / PASS via PR #185 (CI #1486, Product Eval #725, Desktop Installer #76; post-merge CI #1487 + Product Eval #726). These are repository hardening, not a new PE batch.
 
 ## Architecture and product reference
 
@@ -110,8 +115,10 @@ Use the owner-specific runbook when touching its subsystem:
 
 [archive/](archive/) contains superseded audits/plans/snapshots. Do not use it to choose current work.
 
-## Deferred scopes
+## Current next/deferred scopes
 
-- production VPS/Cloudflare activation — deferred by operator;
-- AutoClick — deferred by design;
+- SumoPod remote development/staging — **approved next scope** under PCS-07..PCS-09.
+- public production cutover — deferred until staging evidence and explicit operator promotion decision.
+- Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
+- AutoClick — deferred by design.
 - paid W18 rerun — closed/not authorized for freshness.
