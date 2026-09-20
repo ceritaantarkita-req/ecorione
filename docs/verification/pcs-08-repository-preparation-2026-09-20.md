@@ -12,7 +12,7 @@ PCS-08 begins after PCS-07 CLOSED / PASS. It introduces a bounded GitHub-to-Sumo
 
 The branch adds:
 
-- `.github/workflows/staging-deploy.yml` — workflow-run gate over CI + Product Eval for exact current `main`;
+- `.github/workflows/staging-deploy.yml` — workflow-run gate over CI + Product Eval for exact current `main`, plus manual dispatch for the first controlled activation;
 - `scripts/staging-cd-forced-command.sh` — exact-SHA SSH forced-command gate;
 - `scripts/staging-cd-root-deploy.sh` — serialized exact-revision host deploy / smoke / evidence / rollback orchestration;
 - `scripts/staging-cd-host-bootstrap.sh` — idempotent dedicated deploy-user + sudo boundary provisioning;
@@ -22,6 +22,8 @@ The branch adds:
 The normal production shell syntax acceptance and release-security file inventory include the new deployment scripts, and Product Eval includes the PCS-08 source contract.
 
 ## Security boundary
+
+The candidate is inert by default until repository variable `ECORIONE_STAGING_CD_ENABLED=1` is explicitly configured. This prevents the implementation merge itself from attempting an unprovisioned deployment.
 
 The candidate deliberately avoids:
 
