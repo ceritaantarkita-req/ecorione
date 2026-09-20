@@ -1,6 +1,6 @@
 import type { HistoryEvent } from "@ecorione/shared-schema";
 import { describe, expect, it } from "vitest";
-import { historyEventsToTurns } from "./chat-history";
+import { historyChatTarget, historyEventsToTurns } from "./chat-history";
 
 const BASE = {
   sessionId: "sess_history",
@@ -55,6 +55,7 @@ describe("historyEventsToTurns", () => {
       },
     ];
 
+    expect(historyChatTarget(events)).toBe("local");
     expect(historyEventsToTurns(events)).toEqual([
       { kind: "user", id: "evt_user", text: "hello" },
       {
