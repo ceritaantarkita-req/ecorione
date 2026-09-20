@@ -121,6 +121,15 @@ REMOTE_MAIN="$(owner_git rev-parse refs/remotes/origin/main)"
   exit 1
 }
 
+if [[ -f "$STATE_FILE" && ! -L "$STATE_FILE" ]]; then
+  RECORDED_SHA="$(sed -n 's/^current_sha=//p' "$STATE_FILE")"
+  CURRENT_HEAD="$(owner_git rev-parse HEAD)"
+  if [[ "$RECORDED_SHA" == "$TARGET_SHA" && "$CURRENT_HEAD" == "$TARGET_SHA" ]]; then
+    echo "PASS PCS-08 staging deploy already recorded for sha=$TARGET_SHA"
+    exit 0
+  fi
+fi
+
 PREVIOUS_SHA="$(owner_git rev-parse HEAD)"
 PREVIOUS_IMAGE="$(docker ps   --filter label=com.docker.compose.project=ecorione-staging   --filter label=com.docker.compose.service=ai   --format '{{.Image}}' | head -n 1)"
 PREVIOUS_TAG="${PREVIOUS_IMAGE#ecorione:}"
