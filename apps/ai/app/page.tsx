@@ -211,7 +211,7 @@ export default function ChatPage() {
     return () => {
       cancelled = true;
     };
-  }, [loadHistorySessions, projectId, projectReady, requestedSessionId]);
+  }, [loadHistorySessions, projectId, projectReady]);
 
   useEffect(() => {
     if (!projectReady || !historyListReady) return;
