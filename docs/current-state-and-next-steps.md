@@ -91,7 +91,9 @@ The final real-browser governed staging journey also passed: the browser exposed
 
 ## PCS-08 GitHub -> staging continuous deployment — ACTIVE
 
-The next scope is a least-privilege GitHub-to-SumoPod staging deployment path: required gates -> merge `main` -> deploy exact reviewed revision -> health/smoke -> healthy marker or rollback. No blind polling `git pull` loop is allowed, and host-side secrets remain outside tracked repository files.
+The active implementation candidate provides a least-privilege GitHub-to-SumoPod path: exact current `main` must have successful CI + Product Eval push runs, then a protected `staging` Environment may invoke a dedicated SSH key whose server-side forced command accepts only `deploy <40-char SHA>`. The host independently verifies that SHA against freshly fetched `origin/main`, serializes deploys, runs preflight, deploys a unique immutable staging image tag, requires all configured services running, public HTTPS smoke, authenticated `/api/ops`, and exact-host evidence, then records current/previous SHA + image tag. A failed post-deploy gate attempts runtime rollback and still leaves the GitHub deployment failed.
+
+The deploy account is not added to the Docker group, the workflow uses strict known-host verification rather than `ssh-keyscan`, and there is no blind polling `git pull` loop. Repository runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). Repository-preparation evidence: [verification/pcs-08-repository-preparation-2026-09-20.md](verification/pcs-08-repository-preparation-2026-09-20.md). PCS-08 remains ACTIVE until the real GitHub Environment/host boundary performs an automatic exact-main deployment and a controlled rollback exercise.
 
 ## Post-closure repository hardening
 
