@@ -14,7 +14,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(workflow).toContain("github.event.workflow_run.head_branch == 'main'");
     expect(workflow).toContain("github.event.workflow_run.conclusion == 'success'");
     expect(workflow).toContain("commits/main");
-    expect(workflow).toContain('"repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_file}/runs"');
+    expect(workflow).toContain(
+      '"repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_file}/runs"',
+    );
     expect(workflow).toContain("gate_success ci.yml");
     expect(workflow).toContain("gate_success product-eval.yml");
     expect(workflow).toContain('select(.conclusion == "success")');
@@ -74,7 +76,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("scripts/self-host-rollback.sh");
     expect(rootDeploy).toContain('owner_git checkout --detach "$PREVIOUS_SHA"');
     expect(rootDeploy).toContain("Rollback verified at basic public boundary");
-    expect(rootDeploy).toContain("ROLLBACK FAILED; operator intervention required");
+    expect(rootDeploy).toContain(
+      "ROLLBACK FAILED; operator intervention required",
+    );
   });
 
   it("bootstraps a dedicated forced-command SSH user without Docker-group membership", () => {
@@ -84,7 +88,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     );
     expect(bootstrap).toContain("/etc/sudoers.d/ecorione-staging-deploy");
     expect(bootstrap).toContain("visudo -cf");
-    expect(bootstrap).toContain("No Docker-group membership was added to the deploy user.");
+    expect(bootstrap).toContain(
+      "No Docker-group membership was added to the deploy user.",
+    );
     expect(bootstrap).not.toContain("usermod -aG docker");
   });
 });
