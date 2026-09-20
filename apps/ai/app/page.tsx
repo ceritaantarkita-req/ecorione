@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -9,7 +10,13 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
-import type { ChatCost, ChatResponse, MemoryUsed } from "@ecorione/shared-schema";
+import type {
+  ChatCost,
+  ChatResponse,
+  HistoryRange,
+  HistorySession,
+  MemoryUsed,
+} from "@ecorione/shared-schema";
 import {
   MAX_COMPOSER_ATTACHMENTS,
   attachmentCanBeRemoved,
@@ -19,9 +26,14 @@ import {
   uploadPendingChatAttachments,
   type ChatAttachment,
 } from "../lib/chat-attachments";
-import { makeSessionId } from "../lib/session";
-
-type ChatTarget = "local" | "hosted";
+import {
+  historyChatTarget,
+  historyEventsToTurns,
+  type AssistantChatTurn,
+  type ChatTarget,
+  type ChatTurn,
+} from "../lib/chat-history";
+import { isClientSessionId, makeSessionId, projectSessionStorageKey } from "../lib/session";
 const WORKSPACE_ID = "ws_personal";
 const PERSONAL_PROJECT_ID = "prj_personal";
 const PROJECT_STORAGE_KEY = "ecorione.projectId";
@@ -35,25 +47,13 @@ type RuntimeSnapshot = {
 type CredentialSnapshot = {
   credentials?: Array<{ provider: string }>;
 };
-interface UserTurn {
-  kind: "user";
-  id: string;
-  text: string;
-}
-interface AssistantTurn {
-  kind: "assistant";
-  id: string;
-  operationId: string;
-  reply: string;
-  cost: ChatCost;
-  memoryUsed: MemoryUsed;
-}
-interface ErrorTurn {
-  kind: "error";
-  id: string;
-  message: string;
-}
-type Turn = UserTurn | AssistantTurn | ErrorTurn;
+type ConversationReplay = {
+  readonly session: HistorySession;
+  readonly range: HistoryRange;
+  readonly truncated: boolean;
+};
+type SessionList = { readonly sessions: HistorySession[] };
+
 let turnCounter = 0;
 function nextTurnId(): string {
   turnCounter += 1;
@@ -77,17 +77,25 @@ const getClientHydrationSnapshot = (): boolean => true;
 const getServerHydrationSnapshot = (): boolean => false;
 
 export default function ChatPage() {
-  const [sessionId] = useState<string>(() => makeSessionId());
+  const [sessionId, setSessionId] = useState<string>(() => makeSessionId());
   const hydrated = useSyncExternalStore(
     subscribeHydration,
     getClientHydrationSnapshot,
     getServerHydrationSnapshot,
   );
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
   const [projectReady, setProjectReady] = useState(false);
+  const [requestedSessionId, setRequestedSessionId] = useState<string | null>(null);
+  const [historySessions, setHistorySessions] = useState<HistorySession[]>([]);
+  const [historyListReady, setHistoryListReady] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyTruncated, setHistoryTruncated] = useState(false);
+  const [historyFeedback, setHistoryFeedback] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
+  const [defaultTarget, setDefaultTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
   const [sending, setSending] = useState(false);
   const [preparingAttachments, setPreparingAttachments] = useState(false);
@@ -102,38 +110,198 @@ export default function ChatPage() {
   const [manualOpen, setManualOpen] = useState(false);
   const [manualDraft, setManualDraft] = useState("");
   const sendInFlightRef = useRef(false);
+  const routeLockedRef = useRef(false);
   const forgetInFlightRef = useRef<string | null>(null);
   const threadEndRef = useRef<HTMLDivElement | null>(null);
   const attachMenuRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
-  const latestAssistant = [...turns]
+  const latestAssistantWithMemory = [...turns]
     .reverse()
-    .find((t): t is AssistantTurn => t.kind === "assistant");
+    .find(
+      (turn): turn is AssistantChatTurn & { memoryUsed: MemoryUsed } =>
+        turn.kind === "assistant" && turn.memoryUsed !== undefined,
+    );
+
+  const loadHistorySessions = useCallback(async (activeProjectId: string) => {
+    const res = await fetch(
+      `/api/projects/history?workspaceId=${WORKSPACE_ID}&projectId=${encodeURIComponent(activeProjectId)}`,
+      { cache: "no-store" },
+    );
+    const body: unknown = await res.json().catch(() => undefined);
+    if (!res.ok) {
+      throw new Error(extractErrorMessage(body) ?? "Gagal memuat riwayat percakapan.");
+    }
+    return (body as SessionList).sessions;
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    const fromQuery = new URLSearchParams(window.location.search).get("project");
-    let next = PERSONAL_PROJECT_ID;
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get("project");
+    let nextProject = PERSONAL_PROJECT_ID;
     if (fromQuery !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(fromQuery)) {
-      next = fromQuery;
+      nextProject = fromQuery;
     } else {
       try {
         const stored = window.localStorage.getItem(PROJECT_STORAGE_KEY);
-        if (stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)) next = stored;
+        if (stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)) nextProject = stored;
       } catch {
         // Storage can be unavailable in privacy-restricted contexts.
       }
     }
-    setProjectId(next);
+
+    const requested = params.get("session");
+    const explicitSession = isClientSessionId(requested) ? requested : null;
+    let storedSession: string | null = null;
     try {
-      window.localStorage.setItem(PROJECT_STORAGE_KEY, next);
+      const candidate = window.localStorage.getItem(projectSessionStorageKey(nextProject));
+      if (isClientSessionId(candidate)) storedSession = candidate;
     } catch {
-      // The explicit in-memory Project still works without persistence.
+      // In-memory continuity remains available for this page load.
+    }
+    const nextSession = explicitSession ?? storedSession ?? makeSessionId();
+
+    setProjectId(nextProject);
+    setRequestedSessionId(explicitSession);
+    setSessionId(nextSession);
+    setTurns([]);
+    setHistorySessions([]);
+    setHistoryListReady(false);
+    setHistoryTruncated(false);
+    setHistoryFeedback(null);
+    setSessionReady(false);
+    routeLockedRef.current = false;
+
+    try {
+      window.localStorage.setItem(PROJECT_STORAGE_KEY, nextProject);
+      if (explicitSession === null) {
+        window.localStorage.setItem(projectSessionStorageKey(nextProject), nextSession);
+      }
+    } catch {
+      // The explicit in-memory Project/session still works without persistence.
     }
     setProjectReady(true);
   }, [hydrated]);
+
+  useEffect(() => {
+    if (!projectReady) return;
+    let cancelled = false;
+    setHistoryListReady(false);
+    void loadHistorySessions(projectId)
+      .then((sessions) => {
+        if (cancelled) return;
+        setHistorySessions(sessions);
+        setHistoryListReady(true);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setHistorySessions([]);
+        setHistoryListReady(false);
+        setSessionReady(false);
+        setHistoryFeedback(
+          error instanceof Error ? error.message : "Gagal memuat riwayat percakapan.",
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadHistorySessions, projectId, projectReady]);
+
+  useEffect(() => {
+    if (!projectReady || !historyListReady) return;
+    const known = historySessions.some((session) => session.id === sessionId);
+
+    if (requestedSessionId === sessionId && !known) {
+      const nextSession = makeSessionId();
+      setRequestedSessionId(null);
+      setSessionId(nextSession);
+      setTurns([]);
+      setHistoryTruncated(false);
+      setHistoryFeedback("Percakapan tidak tersedia di Project ini. Sesi baru dibuat.");
+      setSessionReady(true);
+      routeLockedRef.current = false;
+      setTarget(defaultTarget);
+      try {
+        window.localStorage.setItem(projectSessionStorageKey(projectId), nextSession);
+      } catch {
+        // In-memory session remains usable.
+      }
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set("project", projectId);
+      nextUrl.searchParams.delete("session");
+      window.history.replaceState(null, "", nextUrl);
+      return;
+    }
+
+    if (!known) {
+      setTurns([]);
+      setHistoryTruncated(false);
+      setSessionReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    setHistoryLoading(true);
+    setSessionReady(false);
+    setHistoryFeedback(null);
+    void fetch(
+      `/api/projects/history/${encodeURIComponent(sessionId)}?workspaceId=${WORKSPACE_ID}&projectId=${encodeURIComponent(projectId)}`,
+      { cache: "no-store" },
+    )
+      .then(async (res) => {
+        const body: unknown = await res.json().catch(() => undefined);
+        if (!res.ok) {
+          throw new Error(extractErrorMessage(body) ?? "Gagal membuka percakapan.");
+        }
+        return body as ConversationReplay;
+      })
+      .then((replay) => {
+        if (cancelled) return;
+        if (
+          replay.session.id !== sessionId ||
+          replay.session.workspaceId !== WORKSPACE_ID ||
+          replay.session.projectId !== projectId
+        ) {
+          throw new Error("Binding percakapan tidak cocok dengan Project aktif.");
+        }
+        const restoredTarget =
+          historyChatTarget(replay.range.events) ??
+          (replay.session.syncClass === "CLOUD_ALLOWED" ? "hosted" : "local");
+        routeLockedRef.current = true;
+        setTarget(restoredTarget);
+        setTurns(historyEventsToTurns(replay.range.events));
+        setHistoryTruncated(replay.truncated);
+        setSessionReady(true);
+        try {
+          window.localStorage.setItem(projectSessionStorageKey(projectId), sessionId);
+        } catch {
+          // In-memory replay remains usable.
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setHistoryFeedback(
+          error instanceof Error ? error.message : "Gagal membuka percakapan.",
+        );
+        setSessionReady(false);
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    defaultTarget,
+    historyListReady,
+    historySessions,
+    projectId,
+    projectReady,
+    requestedSessionId,
+    sessionId,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -160,16 +328,18 @@ export default function ChatPage() {
         const hostedReady =
           runtimeSnapshot.settings?.hostedCallsEnabled === true && hasHostedCredential;
         setHostedAvailable(hostedReady);
-        setTarget(
+        const nextDefault =
           runtimeSnapshot.settings?.defaultChatTarget === "hosted" && hostedReady
             ? "hosted"
-            : "local",
-        );
+            : "local";
+        setDefaultTarget(nextDefault);
+        if (!routeLockedRef.current) setTarget(nextDefault);
       })
       .catch(() => {
         if (!cancelled) {
           setHostedAvailable(false);
-          setTarget("local");
+          setDefaultTarget("local");
+          if (!routeLockedRef.current) setTarget("local");
         }
       });
     return () => {
@@ -205,6 +375,7 @@ export default function ChatPage() {
     if (
       !hydrated ||
       !projectReady ||
+      !sessionReady ||
       trimmed.length === 0 ||
       sending ||
       sendInFlightRef.current
@@ -222,6 +393,8 @@ export default function ChatPage() {
       return false;
     }
     sendInFlightRef.current = true;
+    routeLockedRef.current = true;
+    setHistoryFeedback(null);
     setTurns((prev) => [...prev, { kind: "user", id: nextTurnId(), text: trimmed }]);
     setDraft("");
     setSending(true);
@@ -306,7 +479,7 @@ export default function ChatPage() {
       setMemoryFeedback({ kind: "success", message: "Fakta berhasil dilupakan." });
       setTurns((prev) =>
         prev.map((t) =>
-          t.kind === "assistant"
+          t.kind === "assistant" && t.memoryUsed !== undefined
             ? {
                 ...t,
                 memoryUsed: {
@@ -403,7 +576,14 @@ export default function ChatPage() {
   }
 
   function submitDraft(): void {
-    if (preparingAttachments || sending || !attachmentsReadyForSend(attachments)) return;
+    if (
+      !sessionReady ||
+      historyLoading ||
+      preparingAttachments ||
+      sending ||
+      !attachmentsReadyForSend(attachments)
+    )
+      return;
     const finalText = buildAttachmentAwareMessage(draft, attachments);
     if (finalText.length === 0) return;
     const submitted = attachments;
@@ -461,6 +641,62 @@ export default function ChatPage() {
     }
   }
 
+  function startNewChat(): void {
+    if (sending || preparingAttachments) return;
+    const nextSession = makeSessionId();
+    setRequestedSessionId(null);
+    setSessionId(nextSession);
+    setSessionReady(true);
+    setTurns([]);
+    setAttachments([]);
+    setDraft("");
+    setHistoryTruncated(false);
+    setHistoryFeedback(null);
+    setMemoryFeedback(null);
+    routeLockedRef.current = false;
+    setTarget(defaultTarget);
+    try {
+      window.localStorage.setItem(projectSessionStorageKey(projectId), nextSession);
+    } catch {
+      // In-memory session remains usable.
+    }
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("project", projectId);
+    nextUrl.searchParams.delete("session");
+    window.history.replaceState(null, "", nextUrl);
+  }
+
+  function openConversation(nextSession: string): void {
+    if (
+      sending ||
+      preparingAttachments ||
+      nextSession === sessionId ||
+      !historySessions.some((session) => session.id === nextSession)
+    ) {
+      return;
+    }
+    setRequestedSessionId(nextSession);
+    setSessionId(nextSession);
+    setSessionReady(false);
+    setTurns([]);
+    setAttachments([]);
+    setDraft("");
+    setHistoryTruncated(false);
+    setHistoryFeedback(null);
+    setMemoryFeedback(null);
+    routeLockedRef.current = false;
+    setTarget(defaultTarget);
+    try {
+      window.localStorage.setItem(projectSessionStorageKey(projectId), nextSession);
+    } catch {
+      // The selected in-memory session remains usable.
+    }
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("project", projectId);
+    nextUrl.searchParams.set("session", nextSession);
+    window.history.replaceState(null, "", nextUrl);
+  }
+
   const routeHint =
     turns.length > 0
       ? "Terkunci untuk sesi ini."
@@ -472,7 +708,9 @@ export default function ChatPage() {
 
   const canSend =
     projectReady &&
+    sessionReady &&
     hydrated &&
+    !historyLoading &&
     !sending &&
     !preparingAttachments &&
     attachmentsReadyForSend(attachments) &&
@@ -485,8 +723,51 @@ export default function ChatPage() {
       </span>
       <main className={`ai-main${panelCollapsed ? " ai-main--panel-collapsed" : ""}`}>
         <section className="ai-conversation" aria-label="Percakapan">
+          <div className="ai-chat-nav" aria-label="Navigasi percakapan">
+            <label className="ai-chat-nav__history">
+              <span>Riwayat</span>
+              <select
+                aria-label="Riwayat percakapan"
+                value={
+                  historySessions.some((session) => session.id === sessionId) ? sessionId : ""
+                }
+                onChange={(event) =>
+                  event.target.value.length === 0
+                    ? startNewChat()
+                    : openConversation(event.target.value)
+                }
+                disabled={historyLoading || sending || preparingAttachments}
+              >
+                <option value="">Percakapan baru</option>
+                {historySessions.slice(0, 20).map((session) => (
+                  <option key={session.id} value={session.id}>
+                    {session.title ?? session.id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="ecr-btn ecr-btn--secondary ai-chat-nav__new"
+              onClick={startNewChat}
+              disabled={sending || preparingAttachments}
+            >
+              + Percakapan baru
+            </button>
+          </div>
+          {historyFeedback !== null ? (
+            <p className="ai-history-feedback" role="status">
+              {historyFeedback}
+            </p>
+          ) : null}
+          {historyTruncated ? (
+            <p className="ai-history-feedback">
+              Menampilkan 500 event terbaru dari percakapan ini.
+            </p>
+          ) : null}
           <div className="ai-thread" aria-live="polite">
-            {turns.length === 0 ? (
+            {historyLoading ? <p className="ai-history-loading">Memuat percakapan…</p> : null}
+            {!historyLoading && turns.length === 0 ? (
               <p className="ai-empty">Ketik pesan untuk mulai.</p>
             ) : (
               turns.map((turn) => <TurnView key={turn.id} turn={turn} />)
@@ -564,7 +845,9 @@ export default function ChatPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={!hydrated || sending || preparingAttachments}
+              disabled={
+                !hydrated || !sessionReady || historyLoading || sending || preparingAttachments
+              }
             />
 
             <div className="ai-composer__toolbar">
@@ -654,6 +937,8 @@ export default function ChatPage() {
                   onChange={(e) => setTarget(e.target.value as ChatTarget)}
                   disabled={
                     !hydrated ||
+                    !sessionReady ||
+                    historyLoading ||
                     sending ||
                     preparingAttachments ||
                     turns.length > 0 ||
@@ -704,11 +989,15 @@ export default function ChatPage() {
                 {memoryFeedback.message}
               </p>
             ) : null}
-            {latestAssistant === undefined ? (
-              <p className="ai-panel__empty">Belum ada balasan.</p>
+            {latestAssistantWithMemory === undefined ? (
+              <p className="ai-panel__empty">
+                {turns.length > 0
+                  ? "Detail memori belum tersedia untuk turn ini."
+                  : "Belum ada balasan."}
+              </p>
             ) : (
               <MemoryPanel
-                memoryUsed={latestAssistant.memoryUsed}
+                memoryUsed={latestAssistantWithMemory.memoryUsed}
                 onForget={forgetFact}
                 forgettingId={forgettingId}
               />
@@ -812,7 +1101,7 @@ function SendIcon() {
   );
 }
 
-function TurnView({ turn }: { turn: Turn }) {
+function TurnView({ turn }: { turn: ChatTurn }) {
   if (turn.kind === "user")
     return (
       <div className="ai-turn ai-turn--user">
@@ -828,7 +1117,7 @@ function TurnView({ turn }: { turn: Turn }) {
   return (
     <div className="ai-turn ai-turn--assistant">
       <div className="ai-bubble">{turn.reply}</div>
-      <RoutingLine cost={turn.cost} />
+      {turn.cost === undefined ? null : <RoutingLine cost={turn.cost} />}
     </div>
   );
 }

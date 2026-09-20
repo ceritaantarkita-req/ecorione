@@ -18,3 +18,13 @@ export function makeSessionId(
 ): string {
   return `${SESSION_PREFIX}${random()}`;
 }
+
+const SESSION_ID_PATTERN = /^sess_[a-z0-9][a-z0-9_-]*$/;
+
+export function isClientSessionId(value: string | null | undefined): value is string {
+  return typeof value === "string" && SESSION_ID_PATTERN.test(value);
+}
+
+export function projectSessionStorageKey(projectId: string): string {
+  return `ecorione.session.${projectId}`;
+}
