@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-TARGET_SHA="${1:-}"
+[[ "$#" -eq 1 ]] || {
+  echo "Usage: $0 <40-character-main-sha>" >&2
+  exit 2
+}
+TARGET_SHA="$1"
 [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || {
   echo "Usage: $0 <40-character-main-sha>" >&2
   exit 2
