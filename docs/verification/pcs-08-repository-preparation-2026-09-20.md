@@ -74,6 +74,23 @@ unauthenticated /ops         HTTP 401
 
 The dedicated Ed25519 public key was present on the host and installed into the forced-command deploy account. No private deployment key was copied to the VPS by this bootstrap.
 
+The dedicated deploy key was then tested directly from the operator workstation:
+
+```text
+interactive/no-command SSH     denied
+PTY allocation                 denied
+arbitrary command "whoami"     denied
+forced-command exit code       126
+```
+
+Both requests returned the expected boundary message:
+
+```text
+Denied: this key may only deploy one exact 40-character reviewed SHA.
+```
+
+This proves the dedicated SSH key cannot be used for an interactive shell or an arbitrary remote command at the tested boundary. The only accepted command shape remains the forced `deploy <40-character-sha>` path.
+
 This establishes the host-side least-privilege boundary but does not yet prove the GitHub secret/environment path or a real CD mutation.
 
 ## Pending evidence
@@ -81,10 +98,9 @@ This establishes the host-side least-privilege boundary but does not yet prove t
 Before PCS-08 can close:
 
 1. GitHub `staging` Environment secrets must be configured;
-2. the dedicated key must be proven fail-closed for shell/arbitrary commands;
-3. a real current `main` SHA must deploy through the GitHub workflow after both main gates pass;
-4. release receipt, public smoke, ops health, and exact-host evidence must match;
-5. a controlled real rollback exercise must pass;
-6. intended current `main` must be restored after the rollback exercise.
+2. a real current `main` SHA must deploy through the GitHub workflow after both main gates pass;
+3. release receipt, public smoke, ops health, and exact-host evidence must match;
+4. a controlled real rollback exercise must pass;
+5. intended current `main` must be restored after the rollback exercise.
 
 No source-only result is sufficient to claim those remote boundaries.
