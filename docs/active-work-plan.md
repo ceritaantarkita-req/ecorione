@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-03 CLOSED / PCS-04 NEXT**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-04 CLOSED / PCS-05 NEXT**
 
 ## Latest repository-hardening closure
 
@@ -54,7 +54,9 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-03 Local AI resilience/runtime discovery is CLOSED / PASS.** PR #195 exact head `5be1c68f7b345d5e7d433a9eed302000ffe552a1` passed CI #1525 + Product Eval #764 and merged as `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`. Connect remains the local-runtime owner; OpenAI-compatible remains the abstraction; no local runtime is a supported explicit state; no silent Local/Hosted fallback was introduced. Evidence: [verification/pcs-03-local-ai-resilience-2026-09-20.md](verification/pcs-03-local-ai-resilience-2026-09-20.md).
 
-**PCS-04 Product visual + information-architecture cleanup is NEXT.** Improve hierarchy/readability and primary-vs-advanced UX across the product without changing backend ownership or reopening closed architecture decisions.
+**PCS-04 Product visual + information-architecture cleanup is CLOSED / PASS.** PR #197 exact head `ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5` passed CI #1529 + Product Eval #768 and merged as `8a328ae0c0abeb039866ac40068a9053c4796659`. Core/Workspace/Advanced navigation, shared control readability, primary page hierarchy, and explicit Ai route labels were updated without backend ownership changes. Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
+
+**PCS-05 Flow runtime defect closure is NEXT.** Reproduce and close the real-browser Flow query/authority failures while preserving Temporal durability and Hub authorization-before-execution semantics.
 
 Current execution order:
 
