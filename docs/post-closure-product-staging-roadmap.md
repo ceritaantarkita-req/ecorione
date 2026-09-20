@@ -49,6 +49,8 @@ Acceptance: the baseline remains reproducible and no closed PE owner/security ru
 
 ### PCS-01 — Chat continuity and history
 
+State: **CLOSED / PASS**. PR #191 exact head `9445b30c659628e1d551191219d0b7cd5ccf2f7c` passed CI #1505 + Product Eval #744 and merged as `ee363c055944b27b549a2f061105eea35fa25f9e`. Evidence: [verification/pcs-01-chat-continuity-2026-09-20.md](verification/pcs-01-chat-continuity-2026-09-20.md).
+
 - preserve an active `sessionId` across navigation;
 - load existing Hub history into the chat UI;
 - add explicit **New chat** and conversation/history navigation;
