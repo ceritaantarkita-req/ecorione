@@ -62,7 +62,7 @@
 }
 
 .actions button {
-  min-height: 34px;
+  min-height: var(--control-height);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 0 12px;
