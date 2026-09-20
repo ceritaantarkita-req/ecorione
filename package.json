@@ -64,6 +64,7 @@
     "production:ops-snapshot": "node scripts/production-ops-snapshot.mjs",
     "production:data-evidence": "node scripts/production-data-evidence.mjs",
     "production:host-audit": "bash scripts/host-security-audit.sh",
+    "staging:host-evidence": "node scripts/staging-host-evidence.mjs",
     "cloudflare:tunnel:install": "bash scripts/cloudflare-tunnel-install.sh",
     "cloudflare:origin:lockdown": "bash scripts/cloudflare-origin-lockdown.sh"
   },

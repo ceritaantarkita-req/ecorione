@@ -8,6 +8,8 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
   const install = readFileSync("scripts/self-host-install.sh", "utf8");
   const upgrade = readFileSync("scripts/self-host-upgrade.sh", "utf8");
   const rollback = readFileSync("scripts/self-host-rollback.sh", "utf8");
+  const hostEvidence = readFileSync("scripts/staging-host-evidence.mjs", "utf8");
+  const packageJson = readFileSync("package.json", "utf8");
 
   it("keeps deployment env files out of Git", () => {
     expect(gitignore).toContain("deploy/*.env");
@@ -47,6 +49,31 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
       expect(script).toContain("must not be a symlink");
       expect(script).toContain("must be mode 600");
     }
+  });
+
+  it("collects only sanitized host/runtime evidence", () => {
+    expect(packageJson).toContain(
+      '"staging:host-evidence": "node scripts/staging-host-evidence.mjs"',
+    );
+    expect(hostEvidence).toContain("ECORIONE_EXPECTED_SHA");
+    expect(hostEvidence).toContain("ECORIONE_DEPLOY_ENV is required");
+    expect(hostEvidence).toContain("ECORIONE_COMPOSE_PROJECT is required");
+    expect(hostEvidence).toContain("40-character reviewed Git commit");
+    expect(hostEvidence).not.toContain("ECORIONE_PRODUCTION_ENV");
+    expect(hostEvidence).toContain("cleanWorktree");
+    expect(hostEvidence).toContain("configuredServices");
+    expect(hostEvidence).toContain("runningServices");
+    expect(hostEvidence).toContain("projectVolumes");
+    expect(hostEvidence).toContain("no IP address, env value, credential, token");
+    expect(hostEvidence).not.toContain("ECORIONE_INTERNAL_TOKEN");
+    expect(hostEvidence).not.toContain("ECORIONE_CONNECT_VAULT_MASTER_KEY");
+    expect(hostEvidence).not.toContain("ECORIONE_OPS_PASSWORD");
+  });
+
+  it("fails host evidence when staging is incomplete", () => {
+    expect(hostEvidence).toContain("nonRunningServices.length > 0");
+    expect(hostEvidence).toContain("projectVolumes.length === 0");
+    expect(hostEvidence).toContain("HEAD does not match ECORIONE_EXPECTED_SHA");
   });
 
   it("keeps apply mutation explicit", () => {
