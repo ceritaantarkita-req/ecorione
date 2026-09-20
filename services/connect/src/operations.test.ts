@@ -10,19 +10,21 @@ afterEach(async () => {
 
 describe("Connect operations telemetry", () => {
   it("discovers configured local model without running an inference canary", async () => {
-    let seenUrl = "";
-    let seenMethod = "";
+    const seen: Array<{ url: string; method: string }> = [];
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-        seenUrl = String(input);
-        seenMethod = init?.method ?? "GET";
-        return new Response(
-          JSON.stringify({
-            data: [{ id: "local-test-pinned" }, { id: "another-local-model" }],
-          }),
-          { status: 200, headers: { "content-type": "application/json" } },
-        );
+        const url = String(input);
+        seen.push({ url, method: init?.method ?? "GET" });
+        if (url.endsWith("/v1/models")) {
+          return new Response(
+            JSON.stringify({
+              data: [{ id: "local-test-pinned" }, { id: "another-local-model" }],
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        return new Response("not supported", { status: 404 });
       }),
     );
 
@@ -49,8 +51,11 @@ describe("Connect operations telemetry", () => {
       configuredModel: "local-test-pinned",
       models: ["local-test-pinned", "another-local-model"],
     });
-    expect(seenUrl).toBe("http://127.0.0.1:11434/v1/models");
-    expect(seenMethod).toBe("GET");
+    expect(seen).toContainEqual({
+      url: "http://127.0.0.1:11434/v1/models",
+      method: "GET",
+    });
+    expect(seen.some((request) => request.url.endsWith("/chat/completions"))).toBe(false);
   });
 
   it("discovers a transient local candidate without persisting runtime settings", async () => {
