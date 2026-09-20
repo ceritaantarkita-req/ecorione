@@ -23,10 +23,8 @@ export interface HostedModelCatalogEntry {
   readonly providerRuntime: string;
 }
 
-const VERIFIED_HOSTED_MODELS: Readonly<
-  Record<HostedProviderId, readonly HostedModelCatalogEntry[]>
-> = Object.freeze({
-  anthropic: Object.freeze([
+const VERIFIED_HOSTED_MODELS = {
+  anthropic: [
     {
       id: "claude-sonnet-4-5-20250929",
       displayName: "Claude Sonnet 4.5",
@@ -37,8 +35,8 @@ const VERIFIED_HOSTED_MODELS: Readonly<
       displayName: "Claude Opus 4.1",
       providerRuntime: "claude-opus-4-1-20250805",
     },
-  ]),
-  openrouter: Object.freeze([
+  ],
+  openrouter: [
     {
       id: "claude-sonnet-4-5-20250929",
       displayName: "Claude Sonnet 4.5",
@@ -49,8 +47,8 @@ const VERIFIED_HOSTED_MODELS: Readonly<
       displayName: "Claude Opus 4.1",
       providerRuntime: "anthropic/claude-opus-4.1",
     },
-  ]),
-  openai: Object.freeze([
+  ],
+  openai: [
     {
       id: "gpt-5.6-terra",
       displayName: "GPT-5.6 Terra",
@@ -61,8 +59,10 @@ const VERIFIED_HOSTED_MODELS: Readonly<
       displayName: "GPT-5.6 Sol",
       providerRuntime: "gpt-5.6-sol",
     },
-  ]),
-});
+  ],
+} as const satisfies Readonly<
+  Record<HostedProviderId, readonly HostedModelCatalogEntry[]>
+>;
 
 export function hostedModelCatalog(
   provider: HostedProviderId,
