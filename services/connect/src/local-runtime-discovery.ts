@@ -133,7 +133,10 @@ export async function discoverLocalRuntime(
   }
 
   const provenanceFetch = async (url: string, init?: { signal?: AbortSignal | undefined }) => {
-    const response = await fetcher(url, { signal: init?.signal });
+    const response = await fetcher(
+      url,
+      init?.signal === undefined ? undefined : { signal: init.signal },
+    );
     return {
       ok: response.ok,
       status: response.status,
