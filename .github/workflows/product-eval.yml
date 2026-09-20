@@ -65,7 +65,10 @@ jobs:
             services/hub/src/project-source-registry.test.ts \
             services/context/src/project-context.test.ts \
             services/flow/src/graph-project-isolation.test.ts \
+            services/flow/src/graph-http.test.ts \
+            services/flow/src/graph-workflows.test.ts \
             services/flow/src/trigger-repository.test.ts \
+            test/pcs05-flow-runtime-source-contract.test.ts \
             services/context/src/backup.test.ts \
             test/local-persistence-restart-evidence.test.mjs \
             test/local-backup-restore-evidence.test.mjs \
