@@ -69,6 +69,10 @@ jobs:
             test/desktop-installer.test.mjs \
             apps/ai/app/api/projects/[id]/archive/route.test.ts \
             apps/ai/app/api/projects/history/route.test.ts \
+            apps/ai/app/api/projects/history/[sessionId]/route.test.ts \
+            apps/ai/lib/chat-history.test.ts \
+            apps/ai/lib/session.test.ts \
+            services/hub/src/history-http.test.ts \
             apps/ai/app/api/forget/route.test.ts \
             apps/ai/app/api/ops/route.test.ts \
             --maxWorkers=1 \
