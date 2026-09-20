@@ -282,7 +282,9 @@ export default function ChatPage() {
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        setHistoryFeedback(error instanceof Error ? error.message : "Gagal membuka percakapan.");
+        setHistoryFeedback(
+          error instanceof Error ? error.message : "Gagal membuka percakapan.",
+        );
         setSessionReady(false);
       })
       .finally(() => {
@@ -844,11 +846,7 @@ export default function ChatPage() {
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={
-                !hydrated ||
-                !sessionReady ||
-                historyLoading ||
-                sending ||
-                preparingAttachments
+                !hydrated || !sessionReady || historyLoading || sending || preparingAttachments
               }
             />
 
