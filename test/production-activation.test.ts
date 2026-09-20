@@ -296,6 +296,9 @@ describe("production activation scripts", () => {
         "scripts/self-host-install.sh",
         "scripts/self-host-upgrade.sh",
         "scripts/self-host-rollback.sh",
+        "scripts/staging-cd-forced-command.sh",
+        "scripts/staging-cd-root-deploy.sh",
+        "scripts/staging-cd-host-bootstrap.sh",
       ];
       for (const script of scripts) {
         const result = await execFileAsync(productionSyntaxBash, ["-n", script], {
