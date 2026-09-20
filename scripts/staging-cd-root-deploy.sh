@@ -98,7 +98,7 @@ wait_for_services() {
 basic_public_check() {
   local code
   code="$(curl -fsS -o /dev/null -w '%{http_code}' "$ECORIONE_STAGING_PUBLIC_BASE_URL/" || true)"
-  [[ "$code" =~ ^2|3 ]] || { echo "Rollback home check failed: HTTP $code" >&2; return 1; }
+  [[ "$code" =~ ^[23][0-9]{2}$ ]] || { echo "Rollback home check failed: HTTP $code" >&2; return 1; }
   code="$(curl -sS -o /dev/null -w '%{http_code}' "$ECORIONE_STAGING_PUBLIC_BASE_URL/ops" || true)"
   [[ "$code" == "401" ]] || { echo "Rollback /ops protection check failed: HTTP $code" >&2; return 1; }
 }
@@ -132,13 +132,13 @@ rollback() {
   local reason="$1"
   echo "Deployment failed: $reason" >&2
   echo "Attempting runtime rollback to $PREVIOUS_SHA ($PREVIOUS_TAG)" >&2
+  local rollback_status=0
   set +e
-  owner_git checkout --detach "$PREVIOUS_SHA"
-  owner_run_with_tag "$PREVIOUS_TAG" bash scripts/self-host-rollback.sh --apply "$PREVIOUS_TAG"
-  wait_for_services "$PREVIOUS_TAG"
-  basic_public_check
-  set_env_image_tag "$PREVIOUS_TAG"
-  local rollback_status=$?
+  owner_git checkout --detach "$PREVIOUS_SHA" || rollback_status=1
+  owner_run_with_tag "$PREVIOUS_TAG" bash scripts/self-host-rollback.sh --apply "$PREVIOUS_TAG" || rollback_status=1
+  wait_for_services "$PREVIOUS_TAG" || rollback_status=1
+  basic_public_check || rollback_status=1
+  set_env_image_tag "$PREVIOUS_TAG" || rollback_status=1
   set -e
   if [[ "$rollback_status" -ne 0 ]]; then
     echo "ROLLBACK FAILED; operator intervention required" >&2
