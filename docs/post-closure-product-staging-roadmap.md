@@ -104,6 +104,8 @@ Acceptance: absence of Ollama or any other local runtime is a normal supported s
 
 ### PCS-04 — Product visual and information-architecture cleanup
 
+State: **CLOSED / PASS**. PR #197 exact head `ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5` passed CI #1529 + Product Eval #768 and merged as `8a328ae0c0abeb039866ac40068a9053c4796659`. Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
+
 Apply one coherent system across Ai, Projects, Work, Brain, Space, Flow, Operations, and Settings:
 
 - improve typography scale and contrast;
