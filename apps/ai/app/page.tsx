@@ -377,6 +377,7 @@ export default function ChatPage() {
     if (
       !hydrated ||
       !projectReady ||
+      !sessionReady ||
       trimmed.length === 0 ||
       sending ||
       sendInFlightRef.current
@@ -394,6 +395,8 @@ export default function ChatPage() {
       return false;
     }
     sendInFlightRef.current = true;
+    routeLockedRef.current = true;
+    setHistoryFeedback(null);
     setTurns((prev) => [...prev, { kind: "user", id: nextTurnId(), text: trimmed }]);
     setDraft("");
     setSending(true);
@@ -433,6 +436,9 @@ export default function ChatPage() {
           memoryUsed: chat.memoryUsed,
         },
       ]);
+      void loadHistorySessions(projectId)
+        .then((sessions) => setHistorySessions(sessions))
+        .catch(() => undefined);
       return true;
     } catch {
       setTurns((prev) => [
@@ -633,6 +639,62 @@ export default function ChatPage() {
     }
   }
 
+  function startNewChat(): void {
+    if (sending || preparingAttachments) return;
+    const nextSession = makeSessionId();
+    setRequestedSessionId(null);
+    setSessionId(nextSession);
+    setSessionReady(true);
+    setTurns([]);
+    setAttachments([]);
+    setDraft("");
+    setHistoryTruncated(false);
+    setHistoryFeedback(null);
+    setMemoryFeedback(null);
+    routeLockedRef.current = false;
+    setTarget(defaultTarget);
+    try {
+      window.localStorage.setItem(projectSessionStorageKey(projectId), nextSession);
+    } catch {
+      // In-memory session remains usable.
+    }
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("project", projectId);
+    nextUrl.searchParams.delete("session");
+    window.history.replaceState(null, "", nextUrl);
+  }
+
+  function openConversation(nextSession: string): void {
+    if (
+      sending ||
+      preparingAttachments ||
+      nextSession === sessionId ||
+      !historySessions.some((session) => session.id === nextSession)
+    ) {
+      return;
+    }
+    setRequestedSessionId(nextSession);
+    setSessionId(nextSession);
+    setSessionReady(false);
+    setTurns([]);
+    setAttachments([]);
+    setDraft("");
+    setHistoryTruncated(false);
+    setHistoryFeedback(null);
+    setMemoryFeedback(null);
+    routeLockedRef.current = false;
+    setTarget(defaultTarget);
+    try {
+      window.localStorage.setItem(projectSessionStorageKey(projectId), nextSession);
+    } catch {
+      // The selected in-memory session remains usable.
+    }
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("project", projectId);
+    nextUrl.searchParams.set("session", nextSession);
+    window.history.replaceState(null, "", nextUrl);
+  }
+
   const routeHint =
     turns.length > 0
       ? "Terkunci untuk sesi ini."
@@ -644,7 +706,9 @@ export default function ChatPage() {
 
   const canSend =
     projectReady &&
+    sessionReady &&
     hydrated &&
+    !historyLoading &&
     !sending &&
     !preparingAttachments &&
     attachmentsReadyForSend(attachments) &&
@@ -657,7 +721,44 @@ export default function ChatPage() {
       </span>
       <main className={`ai-main${panelCollapsed ? " ai-main--panel-collapsed" : ""}`}>
         <section className="ai-conversation" aria-label="Percakapan">
+          <div className="ai-chat-nav" aria-label="Navigasi percakapan">
+            <label className="ai-chat-nav__history">
+              <span>Riwayat</span>
+              <select
+                aria-label="Riwayat percakapan"
+                value={historySessions.some((session) => session.id === sessionId) ? sessionId : ""}
+                onChange={(event) => openConversation(event.target.value)}
+                disabled={historyLoading || sending || preparingAttachments}
+              >
+                <option value="">Percakapan baru</option>
+                {historySessions.slice(0, 20).map((session) => (
+                  <option key={session.id} value={session.id}>
+                    {session.title ?? session.id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="ecr-btn ecr-btn--secondary ai-chat-nav__new"
+              onClick={startNewChat}
+              disabled={sending || preparingAttachments}
+            >
+              + Percakapan baru
+            </button>
+          </div>
+          {historyFeedback !== null ? (
+            <p className="ai-history-feedback" role="status">
+              {historyFeedback}
+            </p>
+          ) : null}
+          {historyTruncated ? (
+            <p className="ai-history-feedback">
+              Menampilkan 500 event terbaru dari percakapan ini.
+            </p>
+          ) : null}
           <div className="ai-thread" aria-live="polite">
+            {historyLoading ? <p className="ai-history-loading">Memuat percakapan…</p> : null}
             {turns.length === 0 ? (
               <p className="ai-empty">Ketik pesan untuk mulai.</p>
             ) : (
@@ -736,7 +837,7 @@ export default function ChatPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={!hydrated || sending || preparingAttachments}
+              disabled={!hydrated || !sessionReady || historyLoading || sending || preparingAttachments}
             />
 
             <div className="ai-composer__toolbar">
@@ -876,11 +977,15 @@ export default function ChatPage() {
                 {memoryFeedback.message}
               </p>
             ) : null}
-            {latestAssistant === undefined ? (
-              <p className="ai-panel__empty">Belum ada balasan.</p>
+            {latestAssistantWithMemory === undefined ? (
+              <p className="ai-panel__empty">
+                {turns.length > 0
+                  ? "Detail memori turn lama tidak disimpan di replay."
+                  : "Belum ada balasan."}
+              </p>
             ) : (
               <MemoryPanel
-                memoryUsed={latestAssistant.memoryUsed}
+                memoryUsed={latestAssistantWithMemory.memoryUsed}
                 onForget={forgetFact}
                 forgettingId={forgettingId}
               />
