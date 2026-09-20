@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / POST-CLOSURE PRODUCT + REMOTE STAGING NEXT SCOPE APPROVED**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-00 BASELINE LOCK ACTIVE**
 
 ## Latest repository-hardening closure
 
@@ -44,7 +44,9 @@ Closure evidence: [verification/pe-08-product-closure-2026-09-19.md](verificatio
 
 ## Active next scope
 
-There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSED / PASS. The operator has now explicitly approved the separate post-closure roadmap [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md); it must not be renamed PE-09 or Batch 13.
+There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSED / PASS. The operator has explicitly approved the separate post-closure roadmap [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md); it must not be renamed PE-09 or Batch 13.
+
+**PCS-00 Baseline lock is ACTIVE.** It starts from exact `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19`. The roadmap head `c4088bd04298d42809b7b012b353d2e977e7a931` passed CI #1490 + Product Eval #729. Closure requires the PCS-00 exact head itself to pass CI + Product Eval before PCS-01 begins. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
 
 Current execution order:
 
