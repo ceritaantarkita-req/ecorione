@@ -134,13 +134,15 @@ Acceptance: a minimal authorized graph can validate, save, run, expose its state
 
 ### PCS-06 — Integrated browser/regression acceptance
 
-State: **NEXT**.
+State: **CLOSED / PASS**. PR #201 exact head `0dfdda92e0bef800ca9a7563223b7423aa9b1299` passed CI #1553 + Product Eval #792 + PCS-06 Integrated Browser Acceptance #13 and merged as `0a8f7619567500acaec0758c400d529367baf0e5`. Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
 
-Verify the changed product as a user, not only through source tests: Ai hosted chat, local-unavailable state, provider onboarding, model selection/governed route, persistent conversation/history, Projects, Work/Schedule/Runs, Brain, Space, Flow, Operations, Settings basic/advanced, and supported responsive/theme behavior.
+Verified the changed product as a user through deterministic rendered-browser acceptance: Ai hosted chat, local-unavailable state, provider onboarding, model selection/governed route, persistent conversation/history, Projects, Work/Schedule/Runs, Brain, Space, Flow, Operations, Settings basic/advanced, and supported responsive/theme behavior.
 
 Normal format/lint/typecheck/tests/secret scan/build remain required.
 
 ### PCS-07 — SumoPod remote staging deployment
+
+State: **NEXT / APPROVED**.
 
 The operator approved an operator-owned SumoPod Ubuntu VPS as the first remote staging host.
 
