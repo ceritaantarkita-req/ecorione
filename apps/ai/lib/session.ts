@@ -19,7 +19,6 @@ export function makeSessionId(
   return `${SESSION_PREFIX}${random()}`;
 }
 
-
 const SESSION_ID_PATTERN = /^sess_[a-z0-9][a-z0-9_-]*$/;
 
 export function isClientSessionId(value: string | null | undefined): value is string {
