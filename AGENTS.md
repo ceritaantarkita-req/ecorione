@@ -37,6 +37,7 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PCS-02 provider onboarding + hosted model choice: **CLOSED / PASS** (PR #193; CI #1516; Product Eval #755; merge `0fba6842f4c39f2742eb6d518e63c90d1a4883db`);
 - PCS-03 Local AI resilience/runtime discovery: **CLOSED / PASS** (PR #195; CI #1525; Product Eval #764; merge `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`);
 - PCS-04 Product visual + information-architecture cleanup: **CLOSED / PASS** (PR #197; CI #1529; Product Eval #768; merge `8a328ae0c0abeb039866ac40068a9053c4796659`);
+- PCS-05 Flow runtime defect closure: **CLOSED / PASS** (PR #199; CI #1537; Product Eval #776; merge `f58923b8261104c8aec331f506a68f8cf5fe5e7e`);
 - SumoPod remote development/staging: **APPROVED UNDER PCS-07..PCS-09**;
 - public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
 - AutoClick: **DEFERRED BY DESIGN**.
@@ -81,7 +82,7 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 
 There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
 
-**PCS-00 through PCS-04 are CLOSED / PASS; PCS-05 Flow runtime defect closure is NEXT.** Use `docs/post-closure-product-staging-roadmap.md` for the current queue and the PCS verification documents for closure evidence. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
+**PCS-00 through PCS-05 are CLOSED / PASS; PCS-06 Integrated browser/regression acceptance is NEXT.** Use `docs/post-closure-product-staging-roadmap.md` for the current queue and the PCS verification documents for closure evidence. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
 
 ## Git / closure discipline
 

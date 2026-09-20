@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-04 CLOSED / PCS-05 NEXT**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-05 CLOSED / PCS-06 NEXT**
 
 ## Latest repository-hardening closure
 
@@ -56,7 +56,9 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-04 Product visual + information-architecture cleanup is CLOSED / PASS.** PR #197 exact head `ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5` passed CI #1529 + Product Eval #768 and merged as `8a328ae0c0abeb039866ac40068a9053c4796659`. Core/Workspace/Advanced navigation, shared control readability, primary page hierarchy, and explicit Ai route labels were updated without backend ownership changes. Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
 
-**PCS-05 Flow runtime defect closure is NEXT.** Reproduce and close the real-browser Flow query/authority failures while preserving Temporal durability and Hub authorization-before-execution semantics.
+**PCS-05 Flow runtime defect closure is CLOSED / PASS.** PR #199 exact head `d7eb37e8b5e97da07895fcd050621e563a47359b` passed CI #1537 + Product Eval #776 and merged as `f58923b8261104c8aec331f506a68f8cf5fe5e7e`. Graph-state query handlers are registered before the first awaited workflow activity; exact `node.execute` authority is preflighted before Temporal start; the UI exposes explicit governed authority preparation through Hub approval; and runtime node authorization remains fail-closed. Evidence: [verification/pcs-05-flow-runtime-closure-2026-09-20.md](verification/pcs-05-flow-runtime-closure-2026-09-20.md).
+
+**PCS-06 Integrated browser/regression acceptance is NEXT.** Verify the changed product through rendered/browser-level user flows and normal regression gates before any remote staging work.
 
 Current execution order:
 

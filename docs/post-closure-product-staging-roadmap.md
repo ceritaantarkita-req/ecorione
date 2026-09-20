@@ -121,7 +121,9 @@ The redesign should improve hierarchy before decorative styling. It must not cha
 
 ### PCS-05 — Flow runtime defect closure
 
-Close the real-browser Flow failures observed on 2026-09-20, including:
+State: **CLOSED / PASS**. PR #199 exact head `d7eb37e8b5e97da07895fcd050621e563a47359b` passed CI #1537 + Product Eval #776 and merged as `f58923b8261104c8aec331f506a68f8cf5fe5e7e`. Evidence: [verification/pcs-05-flow-runtime-closure-2026-09-20.md](verification/pcs-05-flow-runtime-closure-2026-09-20.md).
+
+Closed the real-browser Flow failures observed on 2026-09-20, including:
 
 - `graphRunState` query timing/registration behavior;
 - incomplete authority grant for executable graph nodes;
@@ -131,6 +133,8 @@ Close the real-browser Flow failures observed on 2026-09-20, including:
 Acceptance: a minimal authorized graph can validate, save, run, expose its state, and complete end-to-end without the observed 500/authority failure; negative authorization paths remain fail-closed.
 
 ### PCS-06 — Integrated browser/regression acceptance
+
+State: **NEXT**.
 
 Verify the changed product as a user, not only through source tests: Ai hosted chat, local-unavailable state, provider onboarding, model selection/governed route, persistent conversation/history, Projects, Work/Schedule/Runs, Brain, Space, Flow, Operations, Settings basic/advanced, and supported responsive/theme behavior.
 

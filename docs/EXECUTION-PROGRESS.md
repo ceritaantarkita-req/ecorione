@@ -41,8 +41,8 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 | PCS-02 Provider onboarding + hosted model choice | **CLOSED / PASS** |
 | PCS-03 Local AI resilience/runtime discovery | **CLOSED / PASS** |
 | PCS-04 Visual + information-architecture cleanup | **CLOSED / PASS** |
-| PCS-05 Flow runtime defect closure | **NEXT** |
-| PCS-06 Integrated browser/regression acceptance | **PLANNED** |
+| PCS-05 Flow runtime defect closure | **CLOSED / PASS** |
+| PCS-06 Integrated browser/regression acceptance | **NEXT** |
 | PCS-07 SumoPod remote staging | **APPROVED / PLANNED** |
 | PCS-08 GitHub -> staging continuous deployment | **PLANNED** |
 | PCS-09 Staging persistence/security/backup/observability | **PLANNED** |
@@ -56,7 +56,9 @@ PCS-02 closed on PR #193 exact head `45dbe9365b23dfa3398a4726a26f9a245bd09e9d`, 
 
 PCS-03 closed on PR #195 exact head `5be1c68f7b345d5e7d433a9eed302000ffe552a1`, which passed CI #1525 + Product Eval #764 and merged as `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`. Local AI now exposes explicit runtime/model readiness, probes candidate settings before persistence, preserves OpenAI-compatible as the abstraction, keeps Ollama optional, and blocks known-unavailable Local chat without silent Hosted fallback. Evidence: [verification/pcs-03-local-ai-resilience-2026-09-20.md](verification/pcs-03-local-ai-resilience-2026-09-20.md).
 
-PCS-04 closed on PR #197 exact head `ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5`, which passed CI #1529 + Product Eval #768 and merged as `8a328ae0c0abeb039866ac40068a9053c4796659`. Navigation now separates Core/Workspace/Advanced surfaces, common controls/readability are more consistent, primary page hierarchy is simplified, and Ai exposes explicit provider/model route state. PCS-05 is next. Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
+PCS-04 closed on PR #197 exact head `ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5`, which passed CI #1529 + Product Eval #768 and merged as `8a328ae0c0abeb039866ac40068a9053c4796659`. Navigation now separates Core/Workspace/Advanced surfaces, common controls/readability are more consistent, primary page hierarchy is simplified, and Ai exposes explicit provider/model route state. Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
+
+PCS-05 closed on PR #199 exact head `d7eb37e8b5e97da07895fcd050621e563a47359b`, which passed CI #1537 + Product Eval #776 and merged as `f58923b8261104c8aec331f506a68f8cf5fe5e7e`. Flow now registers graph-state handlers before its first awaited activity, preflights exact node authority before Temporal start, exposes governed authority preparation through Hub approval, and keeps runtime node re-authorization fail-closed. PCS-06 is next. Evidence: [verification/pcs-05-flow-runtime-closure-2026-09-20.md](verification/pcs-05-flow-runtime-closure-2026-09-20.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional/not yet selected for staging. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
