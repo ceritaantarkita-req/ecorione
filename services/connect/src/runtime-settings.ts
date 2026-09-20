@@ -79,13 +79,14 @@ export class MutableLocalModelTagError extends Error {
 
 export const ChatTargetPreferenceSchema = z.enum(["local", "hosted"]);
 export type ChatTargetPreference = z.infer<typeof ChatTargetPreferenceSchema>;
+export const LocalBaseUrlSchema = z.string().min(1).max(2048).superRefine(safeBaseUrl);
 
 const RuntimeSettingsObjectSchema = z
   .object({
     hostedProvider: HostedProviderIdSchema,
     hostedModel: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
     localRuntime: LocalRuntimeIdSchema,
-    localBaseUrl: z.string().min(1).max(2048).superRefine(safeBaseUrl),
+    localBaseUrl: LocalBaseUrlSchema,
     localModelTag: z.string().min(1).max(256),
     localModelDigest: LocalModelDigestSchema.nullable().default(null),
     hostedCallsEnabled: z.boolean(),

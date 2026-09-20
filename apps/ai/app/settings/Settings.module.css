@@ -201,6 +201,13 @@
   letter-spacing: 0.08em;
 }
 
+.localSetupGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
 .connectField,
 .defaultModelPanel label {
   display: grid;
@@ -569,7 +576,8 @@
   }
 
   .providerGrid,
-  .defaultModelPanel {
+  .defaultModelPanel,
+  .localSetupGrid {
     grid-template-columns: minmax(0, 1fr);
   }
 

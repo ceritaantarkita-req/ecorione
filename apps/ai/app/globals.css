@@ -475,6 +475,16 @@ hr {
   backdrop-filter: blur(14px);
 }
 
+.ai-route-status {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-left: 1px solid var(--warning);
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .ai-composer__field {
   width: 100%;
   min-height: 48px;

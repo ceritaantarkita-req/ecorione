@@ -43,6 +43,18 @@ type ProviderCatalogEntry = {
   hostedModels: HostedModelCatalogEntry[];
 };
 type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "error";
+type LocalRuntimeStatus = {
+  runtime: "openai-compatible";
+  state: "connected" | "model-missing" | "identity-mismatch" | "unreachable" | "unsupported";
+  reachable: boolean;
+  ready: boolean;
+  configuredModel: string;
+  models: string[];
+  modelDigest: string | null;
+  identityProvenance: "verified" | "resolved" | "declared-unverified" | "unverified";
+  identitySource: string;
+  message: string;
+};
 type McpServer = {
   id: string;
   displayName: string;
@@ -70,6 +82,8 @@ export default function SettingsPage() {
   const [secretProvider, setSecretProvider] = useState("anthropic");
   const [credentialTest, setCredentialTest] = useState<CredentialTestStamp | null>(null);
   const [connectProviderId, setConnectProviderId] = useState<HostedProviderId | null>(null);
+  const [localStatus, setLocalStatus] = useState<LocalRuntimeStatus | null>(null);
+  const [localSetupOpen, setLocalSetupOpen] = useState(false);
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("");
   const [hostedHealth, setHostedHealth] = useState<{
@@ -109,6 +123,14 @@ export default function SettingsPage() {
     }
   }, []);
 
+  const refreshLocalStatus = useCallback(async () => {
+    const result = await json<LocalRuntimeStatus>(
+      "/api/settings/settings/local-runtime/status",
+    );
+    setLocalStatus(result);
+    return result;
+  }, []);
+
   const refreshCredentials = useCallback(async () => {
     const result = await json<{ credentials: Credential[] }>(
       "/api/settings/settings/credentials",
@@ -140,7 +162,23 @@ export default function SettingsPage() {
     }
   }, [workspaceId]);
 
-  useEffect(() => void refresh(), [refresh]);
+  useEffect(() => {
+    void refresh();
+    void refreshLocalStatus().catch(() => {
+      setLocalStatus({
+        runtime: "openai-compatible",
+        state: "unreachable",
+        reachable: false,
+        ready: false,
+        configuredModel: "",
+        models: [],
+        modelDigest: null,
+        identityProvenance: "unverified",
+        identitySource: "none",
+        message: "Local AI · Not connected.",
+      });
+    });
+  }, [refresh, refreshLocalStatus]);
 
   const mutableLocalModel =
     runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());
@@ -487,6 +525,71 @@ export default function SettingsPage() {
     }
   }
 
+  async function saveLocalSetup(): Promise<void> {
+    if (runtime === null || !beginAction("local-setup")) return;
+    setStatus("Checking Local AI configuration before saving…");
+    try {
+      const discovered = await json<LocalRuntimeStatus>(
+        "/api/settings/settings/local-runtime/status",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            localRuntime: "openai-compatible",
+            localBaseUrl: runtime.settings.localBaseUrl,
+            localModelTag: runtime.settings.localModelTag,
+          }),
+        },
+      );
+      setLocalStatus(discovered);
+
+      if (!discovered.ready) {
+        setStatus(discovered.message);
+        return;
+      }
+      if (mutableLocalModel && discovered.modelDigest === null) {
+        setStatus(
+          "Runtime terhubung, tetapi tag model mutable belum punya digest terverifikasi. Pilih model ID immutable atau gunakan Advanced identity settings.",
+        );
+        return;
+      }
+
+      const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          localRuntime: "openai-compatible",
+          localBaseUrl: runtime.settings.localBaseUrl,
+          localModelTag: runtime.settings.localModelTag,
+          localModelDigest: discovered.modelDigest,
+        }),
+      });
+      setRuntime(result);
+      setStatus(
+        discovered.modelDigest === null
+          ? discovered.message
+          : `${discovered.message} Identity pinned automatically.`,
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
+  async function checkLocalStatus(): Promise<void> {
+    if (!beginAction("local-discovery")) return;
+    setStatus("Checking Local AI…");
+    try {
+      const discovered = await refreshLocalStatus();
+      setStatus(discovered.message);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
   async function saveMcpServer() {
     if (!beginAction("mcp")) return;
     setStatus("Validating and saving MCP server…");
@@ -604,16 +707,143 @@ export default function SettingsPage() {
                 <strong>Local AI</strong>
                 <span className={styles.providerMeta}>OpenAI-compatible runtime</span>
               </div>
-              <span className={styles.statusBadge}>Optional</span>
+              <span className={localStatus?.ready ? styles.activeBadge : styles.statusBadge}>
+                {localStatus === null
+                  ? "Checking…"
+                  : localStatus.state === "connected"
+                    ? "Connected"
+                    : localStatus.state === "unreachable"
+                      ? "Not connected"
+                      : localStatus.state === "model-missing"
+                        ? "Model missing"
+                        : localStatus.state === "identity-mismatch"
+                          ? "Identity mismatch"
+                          : "Reachable"}
+              </span>
             </div>
             <p className={styles.providerStatus}>
-              Local runtime tetap opsional. Tidak ada fallback diam-diam dari hosted ke local.
+              {localStatus?.message ??
+                "Checking the configured local endpoint without running inference…"}
             </p>
-            <a className={styles.linkButton} href="#advanced-settings">
-              Advanced setup
-            </a>
+            <div className={styles.actions}>
+              <button
+                type="button"
+                disabled={pendingAction !== null || runtime === null}
+                onClick={() => setLocalSetupOpen(true)}
+              >
+                {localStatus?.ready ? "Manage" : "Set up"}
+              </button>
+              <button
+                type="button"
+                className={styles.secondary}
+                disabled={pendingAction !== null}
+                onClick={() => void checkLocalStatus()}
+              >
+                {pendingAction === "local-discovery" ? "Checking…" : "Check again"}
+              </button>
+              {localStatus?.state === "connected" || localStatus?.state === "unsupported" ? (
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  disabled={pendingAction !== null}
+                  onClick={() => void runCanary("local")}
+                >
+                  {pendingAction === "canary-local" ? "Testing…" : "Test local runtime"}
+                </button>
+              ) : null}
+            </div>
           </article>
         </div>
+
+        {localSetupOpen && runtime !== null ? (
+          <div className={styles.connectPanel}>
+            <div className={styles.connectPanelHeader}>
+              <div>
+                <span className={styles.eyebrow}>Local AI setup</span>
+                <h3>OpenAI-compatible runtime</h3>
+              </div>
+              <button
+                type="button"
+                className={styles.secondary}
+                disabled={pendingAction !== null}
+                onClick={() => setLocalSetupOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <p className={styles.muted}>
+              Ollama, LM Studio, llama.cpp, vLLM, atau runtime lain boleh dipakai selama
+              menyediakan API OpenAI-compatible. ECORIONE tidak mewajibkan Ollama.
+            </p>
+            <div className={styles.localSetupGrid}>
+              <label className={styles.connectField}>
+                Endpoint
+                <input
+                  value={runtime.settings.localBaseUrl}
+                  disabled={pendingAction !== null}
+                  placeholder="http://127.0.0.1:11434/v1"
+                  onChange={(event) => {
+                    setLocalStatus(null);
+                    setRuntime({
+                      ...runtime,
+                      settings: {
+                        ...runtime.settings,
+                        localBaseUrl: event.target.value,
+                        localModelDigest: null,
+                      },
+                    });
+                  }}
+                />
+              </label>
+              <label className={styles.connectField}>
+                Model
+                <input
+                  list="local-model-options"
+                  value={runtime.settings.localModelTag}
+                  disabled={pendingAction !== null}
+                  placeholder="model-id"
+                  onChange={(event) => {
+                    setLocalStatus(null);
+                    setRuntime({
+                      ...runtime,
+                      settings: {
+                        ...runtime.settings,
+                        localModelTag: event.target.value,
+                        localModelDigest: null,
+                      },
+                    });
+                  }}
+                />
+                <datalist id="local-model-options">
+                  {(localStatus?.models ?? []).map((model) => (
+                    <option key={model} value={model} />
+                  ))}
+                </datalist>
+              </label>
+            </div>
+            <div className={styles.actions}>
+              <button
+                type="button"
+                disabled={
+                  pendingAction !== null ||
+                  runtime.settings.localBaseUrl.trim().length === 0 ||
+                  runtime.settings.localModelTag.trim().length === 0
+                }
+                onClick={() => void saveLocalSetup()}
+              >
+                {pendingAction === "local-setup" ? "Saving & checking…" : "Save & check"}
+              </button>
+              <a className={styles.linkButton} href="#advanced-settings">
+                Advanced identity settings
+              </a>
+            </div>
+            <p className={styles.muted}>
+              Discovery checks the OpenAI-compatible model catalog without running inference. If
+              the runtime also exposes verifiable model identity, ECORIONE can pin the digest
+              automatically. An explicit canary remains separate.
+            </p>
+          </div>
+        ) : null}
 
         {connectProvider !== null ? (
           <div className={styles.connectPanel}>
