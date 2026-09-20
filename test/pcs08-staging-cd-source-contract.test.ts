@@ -75,6 +75,10 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("scripts/production-preflight.sh");
     expect(rootDeploy).toContain("scripts/self-host-upgrade.sh");
     expect(rootDeploy).toContain("wait_for_services");
+    expect(rootDeploy).toContain("wait_for_public_boundary");
+    expect(rootDeploy).toContain("Public boundary ready on attempt");
+    expect(rootDeploy).toContain("Timed out waiting for public boundary readiness");
+    expect(rootDeploy).toContain("sleep 3");
     expect(rootDeploy).toContain("scripts/production-public-smoke.mjs");
     expect(rootDeploy).toContain("scripts/production-ops-snapshot.mjs");
     expect(rootDeploy).toContain("scripts/staging-host-evidence.mjs");
@@ -86,6 +90,7 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("rollback()");
     expect(rootDeploy).toContain("scripts/self-host-rollback.sh");
     expect(rootDeploy).toContain('owner_git checkout --detach "$PREVIOUS_SHA"');
+    expect(rootDeploy).toContain("basic_public_check");
     expect(rootDeploy).toContain("Rollback verified at basic public boundary");
     expect(rootDeploy).toContain("ROLLBACK FAILED; operator intervention required");
   });
