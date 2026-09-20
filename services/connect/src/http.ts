@@ -27,6 +27,10 @@ import {
 import { registerConnectControlRoutes } from "./control-http.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
+import {
+  GOVERNED_HOSTED_MODEL,
+  type HostedModelPreference,
+} from "./hosted-model-catalog.js";
 import type { LocalModelDigest } from "./local-model-identity.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
 import {
@@ -122,6 +126,7 @@ export interface BuildConnectServerOptions {
   readonly credentialVaultAdmin?: CredentialVaultAdmin | undefined;
   readonly runtimeSettings?: RuntimeSettingsAdmin | undefined;
   readonly hostedProvider?: HostedProviderId | undefined;
+  readonly hostedModel?: HostedModelPreference | undefined;
   /** Development-only fallbacks when no credential vault is configured. */
   readonly anthropicApiKey?: string | undefined;
   readonly openrouterApiKey?: string | undefined;
@@ -157,6 +162,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
   const cache = options.cache ?? new ExactMatchCache();
   const defaults: RuntimeSettings = {
     hostedProvider: options.hostedProvider ?? DEFAULT_HOSTED_PROVIDER,
+    hostedModel: options.hostedModel ?? GOVERNED_HOSTED_MODEL,
     localRuntime: options.localRuntime ?? "openai-compatible",
     localBaseUrl: options.localBaseUrl,
     localModelTag: options.localModelTag,
@@ -169,6 +175,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
   const currentDeps = (runtime = currentRuntime()): CompleteDeps => ({
     credentialVault: options.credentialVault,
     hostedProvider: runtime.hostedProvider,
+    hostedModel: runtime.hostedModel,
     anthropicApiKey: options.anthropicApiKey,
     openrouterApiKey: options.openrouterApiKey,
     openaiApiKey: options.openaiApiKey,
@@ -272,7 +279,11 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       try {
         const result = await complete(
           {
-            ...currentDeps({ ...runtime, hostedProvider: provider }),
+            ...currentDeps({
+              ...runtime,
+              hostedProvider: provider,
+              hostedModel: GOVERNED_HOSTED_MODEL,
+            }),
             credentialVault: transientCredential,
             cache: new ExactMatchCache(),
           },
