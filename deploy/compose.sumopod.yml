@@ -13,7 +13,7 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "${ECORIONE_EDGE_NETWORK:?set ECORIONE_EDGE_NETWORK}"
       traefik.http.routers.ecorione-staging.entrypoints: "websecure"
-      traefik.http.routers.ecorione-staging.rule: "Host(\`${ECORIONE_DOMAIN:?set ECORIONE_DOMAIN}\`)"
+      traefik.http.routers.ecorione-staging.rule: "Host(`${ECORIONE_DOMAIN:?set ECORIONE_DOMAIN}`)"
       traefik.http.routers.ecorione-staging.tls: "true"
       traefik.http.routers.ecorione-staging.tls.certresolver: "${ECORIONE_TRAEFIK_CERTRESOLVER:-letsencrypt}"
       traefik.http.services.ecorione-staging.loadbalancer.server.port: "8080"
