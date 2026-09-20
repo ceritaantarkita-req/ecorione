@@ -34,6 +34,7 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PE-08: **CLOSED / PASS**;
 - PCS-00 post-closure baseline lock: **CLOSED / PASS** (PR #189; CI #1492; Product Eval #731; merge `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`);
 - PCS-01 chat continuity/history: **CLOSED / PASS** (PR #191; CI #1505; Product Eval #744; merge `ee363c055944b27b549a2f061105eea35fa25f9e`);
+- PCS-02 provider onboarding + hosted model choice: **CLOSED / PASS** (PR #193; CI #1516; Product Eval #755; merge `0fba6842f4c39f2742eb6d518e63c90d1a4883db`);
 - SumoPod remote development/staging: **APPROVED UNDER PCS-07..PCS-09**;
 - public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
 - AutoClick: **DEFERRED BY DESIGN**.
@@ -78,7 +79,7 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 
 There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
 
-**PCS-00 and PCS-01 are CLOSED / PASS; PCS-02 AI provider onboarding + hosted model choice is NEXT.** Use `docs/post-closure-product-staging-roadmap.md` for the current queue and the PCS verification documents for closure evidence. Preserve the closed architecture invariants and keep Connect as the provider credential/runtime owner. Do not reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
+**PCS-00 through PCS-02 are CLOSED / PASS; PCS-03 Local AI resilience/runtime discovery is NEXT.** Use `docs/post-closure-product-staging-roadmap.md` for the current queue and the PCS verification documents for closure evidence. Preserve the closed architecture invariants, keep Connect as the provider/runtime owner, preserve the OpenAI-compatible local abstraction, and do not add silent Local/Hosted fallback. Do not reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
 
 ## Git / closure discipline
 
