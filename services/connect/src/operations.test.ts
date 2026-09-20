@@ -98,12 +98,16 @@ describe("Connect operations telemetry", () => {
       configuredModel: "candidate-model",
     });
 
-    const runtime = await connect.inject({
+    const saved = await connect.inject({
       method: "GET",
-      url: "/v1/settings/runtime",
+      url: "/v1/settings/local-runtime/status",
       headers: { authorization: "Bearer ops-token" },
     });
-    expect(runtime.statusCode).toBe(503);
+    expect(saved.statusCode).toBe(200);
+    expect(saved.json()).toMatchObject({
+      state: "model-missing",
+      configuredModel: "saved-model",
+    });
   });
 
   it("rejects public local discovery targets before network access", async () => {
