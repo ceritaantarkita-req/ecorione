@@ -1,4 +1,5 @@
 import {
+  CapabilityAuthorizationResultSchema,
   DEFAULT_PROJECT_ID,
   DEFAULT_WORKSPACE_ID,
   FlowDecisionRequestSchema,
@@ -21,9 +22,11 @@ import {
   WorkspaceIdSchema,
   assertId,
   makeId,
+  type CompiledFlowGraphPlan,
   type FlowApprovalSignal,
   type FlowGraphDocument,
   type OperationId,
+  type PermissionId,
   type Timestamp,
 } from "@ecorione/shared-schema";
 import {
@@ -141,6 +144,44 @@ async function syncNodeDeclarations(
     token: options.token,
     body: { workspaceId, definitions: listCoreNodeDefinitions() },
   });
+}
+
+async function authorizeGraphPlanBeforeStart(
+  options: BuildFlowServerOptions,
+  plan: CompiledFlowGraphPlan,
+  operationId: OperationId,
+): Promise<void> {
+  for (const compiled of plan.nodes) {
+    const nodeOperationId = assertId("operation", `${operationId}-${compiled.node.id}`);
+    const result = CapabilityAuthorizationResultSchema.parse(
+      await httpJson(`${options.hubUrl}/v1/authority/authorize`, {
+        method: "POST",
+        token: options.token,
+        body: {
+          operationId: nodeOperationId,
+          workspaceId: plan.graph.workspaceId,
+          subject: { kind: "node", id: compiled.definitionId },
+          capabilityId: "node.execute",
+          permissionIds: ["node.execute"] as PermissionId[],
+          scope: plan.graph.scope,
+          sensitivity: plan.graph.sensitivity,
+          autonomy: "L2",
+        },
+      }),
+    );
+    if (result.outcome === "DENY") {
+      throw new HttpError(
+        403,
+        "FLOW_NODE_AUTHORITY_DENIED",
+        `Flow belum memiliki node.execute untuk ${compiled.definitionId}: ${result.reason}`,
+        {
+          nodeId: compiled.node.id,
+          definitionId: compiled.definitionId,
+          reason: result.reason,
+        },
+      );
+    }
+  }
 }
 
 export function buildFlowServer(
@@ -321,6 +362,8 @@ export function buildFlowServer(
     const graphTemporal = requireGraphTemporal(temporal);
     const runId = makeId("workflow");
     const operationId = makeId("operation");
+    await syncNodeDeclarations(options, plan.graph.workspaceId);
+    await authorizeGraphPlanBeforeStart(options, plan, operationId);
     await graphTemporal.startGraph({
       runId,
       operationId,
