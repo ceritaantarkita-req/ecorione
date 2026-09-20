@@ -2,7 +2,7 @@
 
 Date: **2026-09-20**
 
-Status: **REPOSITORY IMPLEMENTATION MERGED / HOST BOOTSTRAP PASS / GITHUB ENV + REAL CD EVIDENCE PENDING**
+Status: **REPOSITORY + HOST BOUNDARY PASS / FIRST GOVERNED DEPLOY EXERCISED / RETRY PENDING**
 
 ## Scope
 
@@ -91,16 +91,50 @@ Denied: this key may only deploy one exact 40-character reviewed SHA.
 
 This proves the dedicated SSH key cannot be used for an interactive shell or an arbitrary remote command at the tested boundary. The only accepted command shape remains the forced `deploy <40-character-sha>` path.
 
-This establishes the host-side least-privilege boundary but does not yet prove the GitHub secret/environment path or a real CD mutation.
+## GitHub environment + first governed deployment evidence
+
+The protected GitHub `staging` Environment was configured with the dedicated deploy identity, trusted known-host entry, host, and deploy user. The repository activation variable was deliberately held at `0` until the exact current `main` revision had passed its required gates.
+
+The first controlled deployment targeted exact `main`:
+
+```text
+target SHA                    38d1bc057827ddd702d603d49bc0cad629d90c5f
+workflow run                  35529468459
+gate                          PASS
+least-privilege SSH identity  PASS
+exact reviewed deploy step    FAIL after runtime mutation
+```
+
+The target image `ecorione:staging-38d1bc057827` built successfully and the staging services were recreated. The failure occurred in post-deploy public smoke because the public home returned HTTP 502 about two seconds after all Compose services had merely reached Docker `running` state.
+
+The orchestrator then checked out the prior known-good source revision `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae` and recreated the prior `staging-99523b0` runtime. Its immediate one-shot rollback HTTP check also observed transient 502 and therefore reported rollback verification failure.
+
+Independent host verification after the run proved the runtime had in fact recovered:
+
+```text
+HEAD                         99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+active ai image              ecorione:staging-99523b0
+configured/running services  15 / 15
+public home                  HTTP 200 / TLS verify 0
+unauthenticated /ops         HTTP 401
+```
+
+The operator workflow returned `ECORIONE_STAGING_CD_ENABLED` to `0` after the failed governed run.
+
+This failure therefore produced useful real rollback evidence while exposing a bounded edge-readiness race in both deployment and rollback verification. It is not counted as a successful PCS-08 release.
+
+PR #214 exact head `bd130417484edcedfd1632207d53744cc5024db1` added a bounded public-edge readiness wait without weakening the subsequent full smoke/ops/exact-host gates. It passed CI #1628 + Product Eval #867 and merged as `0b50a426ca2b14202eba769297af6c15a579b09f`. Push `main` then passed CI #1629 + Product Eval #868. Staging Deploy workflow-run gates #32/#33 passed while deployment remained skipped because activation was still disabled.
+
+The host-installed root deploy control must be refreshed from exact reviewed merge `0b50a426ca2b14202eba769297af6c15a579b09f` before the next controlled deployment attempt.
 
 ## Pending evidence
 
 Before PCS-08 can close:
 
-1. GitHub `staging` Environment secrets must be configured;
-2. a real current `main` SHA must deploy through the GitHub workflow after both main gates pass;
+1. refresh the host-installed root deploy control from reviewed merge `0b50a426ca2b14202eba769297af6c15a579b09f`;
+2. a real current `main` SHA must deploy successfully through the GitHub workflow after both main gates pass;
 3. release receipt, public smoke, ops health, and exact-host evidence must match;
-4. a controlled real rollback exercise must pass;
+4. controlled rollback evidence must be completed against the readiness-aware verifier;
 5. intended current `main` must be restored after the rollback exercise.
 
 No source-only result is sufficient to claim those remote boundaries.
