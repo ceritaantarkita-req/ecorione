@@ -45,11 +45,19 @@ type ProviderCatalogEntry = {
 type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "error";
 type LocalRuntimeStatus = {
   runtime: "openai-compatible";
-  state: "connected" | "model-missing" | "unreachable" | "unsupported";
+  state:
+    | "connected"
+    | "model-missing"
+    | "identity-mismatch"
+    | "unreachable"
+    | "unsupported";
   reachable: boolean;
   ready: boolean;
   configuredModel: string;
   models: string[];
+  modelDigest: string | null;
+  identityProvenance: "verified" | "resolved" | "declared-unverified" | "unverified";
+  identitySource: string;
   message: string;
 };
 type McpServer = {
@@ -167,6 +175,9 @@ export default function SettingsPage() {
         ready: false,
         configuredModel: "",
         models: [],
+        modelDigest: null,
+        identityProvenance: "unverified",
+        identitySource: "none",
         message: "Local AI · Not connected.",
       });
     });
@@ -519,8 +530,33 @@ export default function SettingsPage() {
 
   async function saveLocalSetup(): Promise<void> {
     if (runtime === null || !beginAction("local-setup")) return;
-    setStatus("Saving Local AI settings and checking runtime…");
+    setStatus("Checking Local AI configuration before saving…");
     try {
+      const discovered = await json<LocalRuntimeStatus>(
+        "/api/settings/settings/local-runtime/status",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            localRuntime: "openai-compatible",
+            localBaseUrl: runtime.settings.localBaseUrl,
+            localModelTag: runtime.settings.localModelTag,
+          }),
+        },
+      );
+      setLocalStatus(discovered);
+
+      if (!discovered.ready) {
+        setStatus(discovered.message);
+        return;
+      }
+      if (mutableLocalModel && discovered.modelDigest === null) {
+        setStatus(
+          "Runtime terhubung, tetapi tag model mutable belum punya digest terverifikasi. Pilih model ID immutable atau gunakan Advanced identity settings.",
+        );
+        return;
+      }
+
       const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
         method: "PUT",
         headers: { "content-type": "application/json" },
@@ -528,11 +564,15 @@ export default function SettingsPage() {
           localRuntime: "openai-compatible",
           localBaseUrl: runtime.settings.localBaseUrl,
           localModelTag: runtime.settings.localModelTag,
+          localModelDigest: discovered.modelDigest,
         }),
       });
       setRuntime(result);
-      const discovered = await refreshLocalStatus();
-      setStatus(discovered.message);
+      setStatus(
+        discovered.modelDigest === null
+          ? discovered.message
+          : `${discovered.message} Identity pinned automatically.`,
+      );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     } finally {
@@ -679,7 +719,9 @@ export default function SettingsPage() {
                       ? "Not connected"
                       : localStatus.state === "model-missing"
                         ? "Model missing"
-                        : "Reachable"}
+                        : localStatus.state === "identity-mismatch"
+                          ? "Identity mismatch"
+                          : "Reachable"}
               </span>
             </div>
             <p className={styles.providerStatus}>
@@ -799,8 +841,9 @@ export default function SettingsPage() {
               </a>
             </div>
             <p className={styles.muted}>
-              Discovery uses <code>/v1/models</code> and does not run inference. An explicit
-              canary is available after the endpoint is reachable.
+              Discovery checks the OpenAI-compatible model catalog without running inference.
+              If the runtime also exposes verifiable model identity, ECORIONE can pin the digest
+              automatically. An explicit canary remains separate.
             </p>
           </div>
         ) : null}
