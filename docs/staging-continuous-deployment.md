@@ -46,6 +46,8 @@ The gate job:
 - verifies successful `push/main` runs for **both** `ci.yml` and `product-eval.yml` on that exact SHA;
 - skips stale revisions rather than deploying them.
 
+The deploy job is deliberately inert until the repository variable `ECORIONE_STAGING_CD_ENABLED` is explicitly set to `1`. This lets the implementation merge before host credentials are provisioned without producing a failed or accidental deployment. After the host and secrets are ready, enable the variable and manually dispatch **Staging Deploy** once; later eligible `main` pushes deploy automatically.
+
 The deploy job uses the protected GitHub Environment named `staging`. Configure these environment secrets:
 
 ```text
@@ -57,7 +59,7 @@ STAGING_SSH_USER
 
 Do not use an operator's normal SSH private key. Generate a dedicated Ed25519 deployment key with no passphrase because the private key is consumed non-interactively by GitHub Actions.
 
-The workflow requires strict host-key checking and never uses `ssh-keyscan` at deployment time.
+The workflow requires strict host-key checking and never uses `ssh-keyscan` at deployment time. `workflow_dispatch` is supported so the operator can perform the first controlled deployment immediately after enabling the repository variable and configuring the protected environment.
 
 ## SumoPod least-privilege boundary
 
