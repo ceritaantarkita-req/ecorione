@@ -78,7 +78,7 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("scripts/production-public-smoke.mjs");
     expect(rootDeploy).toContain("scripts/production-ops-snapshot.mjs");
     expect(rootDeploy).toContain("scripts/staging-host-evidence.mjs");
-    expect(rootDeploy).toContain('ECORIONE_EXPECTED_SHA="$TARGET_SHA"');
+    expect(rootDeploy).toContain('ECORIONE_EXPECTED_SHA="$expected_sha"');
     expect(rootDeploy).toContain('validate_deployed_revision "$TARGET_TAG" "$TARGET_SHA"');
   });
 
