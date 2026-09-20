@@ -1,8 +1,15 @@
+import type { LocalModelDigest } from "./local-model-identity.js";
+import {
+  LocalModelDigestMismatchError,
+  resolveLocalModelProvenance,
+  type LocalModelProvenanceStatus,
+} from "./providers/local-model-provenance.js";
 import type { LocalRuntimeId } from "./providers/local-runtime.js";
 
 export type LocalRuntimeDiscoveryState =
   | "connected"
   | "model-missing"
+  | "identity-mismatch"
   | "unreachable"
   | "unsupported";
 
@@ -10,6 +17,7 @@ export interface LocalRuntimeDiscoveryInput {
   readonly runtime: LocalRuntimeId;
   readonly baseUrl: string;
   readonly modelTag: string;
+  readonly declaredDigest?: LocalModelDigest | null | undefined;
 }
 
 export interface LocalRuntimeDiscoveryResult {
@@ -19,6 +27,9 @@ export interface LocalRuntimeDiscoveryResult {
   readonly ready: boolean;
   readonly configuredModel: string;
   readonly models: readonly string[];
+  readonly modelDigest: LocalModelDigest | null;
+  readonly identityProvenance: LocalModelProvenanceStatus;
+  readonly identitySource: string;
   readonly message: string;
 }
 
@@ -64,6 +75,9 @@ export async function discoverLocalRuntime(
       ready: false,
       configuredModel: input.modelTag,
       models: [],
+      modelDigest: input.declaredDigest ?? null,
+      identityProvenance: input.declaredDigest == null ? "unverified" : "declared-unverified",
+      identitySource: input.declaredDigest == null ? "none" : "operator-declaration",
       message: "Local AI · Not connected. Start or configure an OpenAI-compatible runtime.",
     };
   }
@@ -76,6 +90,9 @@ export async function discoverLocalRuntime(
       ready: false,
       configuredModel: input.modelTag,
       models: [],
+      modelDigest: input.declaredDigest ?? null,
+      identityProvenance: input.declaredDigest == null ? "unverified" : "declared-unverified",
+      identitySource: input.declaredDigest == null ? "none" : "operator-declaration",
       message:
         "Local endpoint is reachable, but model discovery is unavailable. Use Test local runtime to verify it.",
     };
@@ -96,6 +113,9 @@ export async function discoverLocalRuntime(
       ready: false,
       configuredModel: input.modelTag,
       models: [],
+      modelDigest: input.declaredDigest ?? null,
+      identityProvenance: input.declaredDigest == null ? "unverified" : "declared-unverified",
+      identitySource: input.declaredDigest == null ? "none" : "operator-declaration",
       message:
         "Local endpoint is reachable, but it did not return an OpenAI-compatible model catalog.",
     };
@@ -109,17 +129,60 @@ export async function discoverLocalRuntime(
       ready: false,
       configuredModel: input.modelTag,
       models,
+      modelDigest: input.declaredDigest ?? null,
+      identityProvenance: input.declaredDigest == null ? "unverified" : "declared-unverified",
+      identitySource: input.declaredDigest == null ? "none" : "operator-declaration",
       message: `Local endpoint is connected, but model ${input.modelTag} is not available.`,
     };
   }
 
-  return {
-    runtime: input.runtime,
-    state: "connected",
-    reachable: true,
-    ready: true,
-    configuredModel: input.modelTag,
-    models,
-    message: `Local AI · Connected · ${input.modelTag}.`,
+  const provenanceFetch = async (
+    url: string,
+    init?: { signal?: AbortSignal | undefined },
+  ) => {
+    const response = await fetcher(url, { signal: init?.signal });
+    return {
+      ok: response.ok,
+      status: response.status,
+      json: () => response.json(),
+    };
   };
+
+  try {
+    const provenance = await resolveLocalModelProvenance({
+      baseUrl: input.baseUrl,
+      modelTag: input.modelTag,
+      declaredDigest: input.declaredDigest ?? null,
+      fetchImpl: provenanceFetch,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    return {
+      runtime: input.runtime,
+      state: "connected",
+      reachable: true,
+      ready: true,
+      configuredModel: input.modelTag,
+      models,
+      modelDigest: provenance.digest,
+      identityProvenance: provenance.status,
+      identitySource: provenance.source,
+      message: `Local AI · Connected · ${input.modelTag}.`,
+    };
+  } catch (error) {
+    if (error instanceof LocalModelDigestMismatchError) {
+      return {
+        runtime: input.runtime,
+        state: "identity-mismatch",
+        reachable: true,
+        ready: false,
+        configuredModel: input.modelTag,
+        models,
+        modelDigest: error.observed,
+        identityProvenance: "unverified",
+        identitySource: "runtime-observation",
+        message: "Local AI reachable, but the configured model digest does not match the runtime.",
+      };
+    }
+    throw error;
+  }
 }
