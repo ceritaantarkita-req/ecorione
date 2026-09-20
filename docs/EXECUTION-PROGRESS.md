@@ -42,8 +42,8 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 | PCS-03 Local AI resilience/runtime discovery | **CLOSED / PASS** |
 | PCS-04 Visual + information-architecture cleanup | **CLOSED / PASS** |
 | PCS-05 Flow runtime defect closure | **CLOSED / PASS** |
-| PCS-06 Integrated browser/regression acceptance | **NEXT** |
-| PCS-07 SumoPod remote staging | **APPROVED / PLANNED** |
+| PCS-06 Integrated browser/regression acceptance | **CLOSED / PASS** |
+| PCS-07 SumoPod remote staging | **NEXT / APPROVED** |
 | PCS-08 GitHub -> staging continuous deployment | **PLANNED** |
 | PCS-09 Staging persistence/security/backup/observability | **PLANNED** |
 | PCS-10 Closure/docs | **PLANNED** |
@@ -58,7 +58,9 @@ PCS-03 closed on PR #195 exact head `5be1c68f7b345d5e7d433a9eed302000ffe552a1`, 
 
 PCS-04 closed on PR #197 exact head `ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5`, which passed CI #1529 + Product Eval #768 and merged as `8a328ae0c0abeb039866ac40068a9053c4796659`. Navigation now separates Core/Workspace/Advanced surfaces, common controls/readability are more consistent, primary page hierarchy is simplified, and Ai exposes explicit provider/model route state. Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
 
-PCS-05 closed on PR #199 exact head `d7eb37e8b5e97da07895fcd050621e563a47359b`, which passed CI #1537 + Product Eval #776 and merged as `f58923b8261104c8aec331f506a68f8cf5fe5e7e`. Flow now registers graph-state handlers before its first awaited activity, preflights exact node authority before Temporal start, exposes governed authority preparation through Hub approval, and keeps runtime node re-authorization fail-closed. PCS-06 is next. Evidence: [verification/pcs-05-flow-runtime-closure-2026-09-20.md](verification/pcs-05-flow-runtime-closure-2026-09-20.md).
+PCS-05 closed on PR #199 exact head `d7eb37e8b5e97da07895fcd050621e563a47359b`, which passed CI #1537 + Product Eval #776 and merged as `f58923b8261104c8aec331f506a68f8cf5fe5e7e`. Flow now registers graph-state handlers before its first awaited activity, preflights exact node authority before Temporal start, exposes governed authority preparation through Hub approval, and keeps runtime node re-authorization fail-closed. Evidence: [verification/pcs-05-flow-runtime-closure-2026-09-20.md](verification/pcs-05-flow-runtime-closure-2026-09-20.md).
+
+PCS-06 closed on PR #201 exact head `0dfdda92e0bef800ca9a7563223b7423aa9b1299`, which passed CI #1553 + Product Eval #792 + PCS-06 Integrated Browser Acceptance #13 and merged as `0a8f7619567500acaec0758c400d529367baf0e5`. Production Next.js UI was exercised in Chromium across the approved desktop and narrow product surfaces with deterministic same-origin API fixtures, no external provider requests, console/page-error checks, overflow checks, and Flow authority-to-run acceptance. PCS-07 SumoPod remote staging is next. Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional/not yet selected for staging. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
