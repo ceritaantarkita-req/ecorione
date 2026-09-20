@@ -748,7 +748,7 @@ async function runDesktopJourney() {
 
     await goto(page, "/space", "desktop-space");
     await page.getByRole("heading", { name: "Space", exact: true }).waitFor();
-    await page.getByText("PCS-06 Notes", { exact: true }).waitFor();
+    await page.getByRole("heading", { name: "PCS-06 Notes", exact: true }).waitFor();
 
     await goto(page, "/ops", "desktop-ops");
     await page
