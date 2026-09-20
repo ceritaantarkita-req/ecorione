@@ -15,6 +15,7 @@ const required = [
   "scripts/self-host-install.sh",
   "scripts/self-host-upgrade.sh",
   "scripts/self-host-rollback.sh",
+  "scripts/staging-host-evidence.mjs",
   "scripts/secret-history-scan.mjs",
   "scripts/dependency-security-review.mjs",
   "scripts/github-actions-pin-review.mjs",
@@ -87,6 +88,12 @@ if (
   packageJson?.scripts?.["images:digest-review"] !== "node scripts/container-image-review.mjs"
 ) {
   findings.push("images:digest-review package script missing or changed");
+}
+if (
+  packageJson?.scripts?.["staging:host-evidence"] !==
+  "node scripts/staging-host-evidence.mjs"
+) {
+  findings.push("staging:host-evidence package script missing or changed");
 }
 if (
   !ci.includes("name: Dependency policy review") ||
