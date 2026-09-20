@@ -82,6 +82,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
 
   it("bootstraps a dedicated forced-command SSH user without Docker-group membership", () => {
     expect(bootstrap).toContain("DEPLOY_USER=ecorione-deploy");
+    expect(bootstrap).toContain('SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"');
+    expect(bootstrap).toContain('"$SCRIPT_DIR/staging-cd-forced-command.sh"');
+    expect(bootstrap).toContain('"$SCRIPT_DIR/staging-cd-root-deploy.sh"');
     expect(bootstrap).toContain(
       'restrict,command="/usr/local/sbin/ecorione-staging-deploy-gate"',
     );
