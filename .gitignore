@@ -25,6 +25,7 @@ data/
 *.key
 credentials.json
 secrets.json
+deploy/*.env
 
 # telemetry & trace lokal
 traces/
