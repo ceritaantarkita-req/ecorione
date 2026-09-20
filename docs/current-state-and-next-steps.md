@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-04 CLOSED / PCS-05 NEXT**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-05 CLOSED / PCS-06 NEXT**
 
 ## Current verdict
 
@@ -67,7 +67,15 @@ The product navigation now distinguishes Core, Workspace, and Advanced surfaces;
 
 Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
 
-The next scope is **PCS-05 Flow runtime defect closure**.
+## PCS-05 Flow runtime defect closure — CLOSED / PASS
+
+PR #199 exact head `d7eb37e8b5e97da07895fcd050621e563a47359b` passed CI #1537 + Product Eval #776 and merged as `f58923b8261104c8aec331f506a68f8cf5fe5e7e`.
+
+Flow now registers graph-state query/signal handlers before its first awaited lifecycle activity, preflights exact `node.execute` standing authority before Temporal start, and exposes an explicit version-bound **Prepare authority** flow backed by the existing Hub `POLICY_ADMIN` durable approval path. Missing authority fails before Temporal start with an actionable error, while runtime execution still re-authorizes each node and therefore remains fail-closed after grant revocation. No auto-grant or second execution/authority plane was introduced.
+
+Evidence: [verification/pcs-05-flow-runtime-closure-2026-09-20.md](verification/pcs-05-flow-runtime-closure-2026-09-20.md).
+
+The next scope is **PCS-06 Integrated browser/regression acceptance**.
 
 ## Post-closure repository hardening
 
