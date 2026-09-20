@@ -164,6 +164,27 @@ export default function SettingsPage() {
     connectProviderId === null
       ? null
       : (hostedProviderOptions.find((provider) => provider.id === connectProviderId) ?? null);
+  const providerViews = hostedProviderOptions.map((provider) => {
+    const credential = credentials.find((item) => item.provider === provider.id) ?? null;
+    const canaryStatus =
+      hostedHealth !== null && hostedHealth.provider === provider.id
+        ? hostedHealth.status
+        : undefined;
+    return {
+      provider,
+      credential,
+      active:
+        runtime?.settings.hostedProvider === provider.id &&
+        runtime.settings.hostedCallsEnabled,
+      health: providerHealth({
+        hasCredential: credential !== null,
+        routingReady: provider.routingReady,
+        isCurrentHostedProvider: runtime?.settings.hostedProvider === provider.id,
+        hostedCallsEnabled: runtime?.settings.hostedCallsEnabled ?? false,
+        canaryStatus,
+      }),
+    };
+  });
   const selectedCredential =
     credentials.find((item) => item.provider === secretProvider) ?? null;
   const selectedProviderOption =
