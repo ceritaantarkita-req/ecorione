@@ -32,7 +32,7 @@ describe("historyEventsToTurns", () => {
         eventType: "model.called",
         parentEventId: "evt_user" as never,
         payload: {
-          responseModel: "gemma4:latest",
+          responseModel: "local-test-model-v1",
           cacheHit: true,
           actualUsd: 0.25,
           naiveUsd: 1,
@@ -64,7 +64,7 @@ describe("historyEventsToTurns", () => {
         operationId: "op_history",
         reply: "hi",
         cost: {
-          model: "gemma4:latest",
+          model: "local-test-model-v1",
           cacheHit: true,
           actualUsd: 0.25,
           naiveUsd: 1,
