@@ -22,6 +22,8 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 [[ ! -L "$ENV_FILE" ]] || { echo "Refusing deploy: $ENV_FILE must not be a symlink" >&2; exit 1; }
+mode="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || true)"
+[[ -z "$mode" || "$mode" == "600" ]] || { echo "Refusing deploy: $ENV_FILE must be mode 600; current mode is $mode" >&2; exit 1; }
 if grep -q 'CHANGE_ME' "$ENV_FILE"; then
   echo "Refusing deploy: CHANGE_ME remains in $ENV_FILE" >&2
   exit 1
