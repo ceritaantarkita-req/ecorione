@@ -18,7 +18,10 @@ describe("FileRuntimeSettings", () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
     const path = join(dir, "settings.json");
     const store = new FileRuntimeSettings(path, defaults);
-    expect(store.get()).toMatchObject({ revision: 0, settings: defaults });
+    expect(store.get()).toMatchObject({
+      revision: 0,
+      settings: { ...defaults, hostedModel: "governed" },
+    });
     const next = store.update({
       hostedProvider: "openai",
       localModelTag: "model-b",
@@ -52,8 +55,30 @@ describe("FileRuntimeSettings", () => {
     const store = new FileRuntimeSettings(path, defaults);
     expect(store.get()).toMatchObject({
       revision: 7,
-      settings: { defaultChatTarget: "local" },
+      settings: { defaultChatTarget: "local", hostedModel: "governed" },
     });
+  });
+
+  it("menyimpan model hosted verified dan reset ke governed ketika provider berubah", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
+    const store = new FileRuntimeSettings(join(dir, "settings.json"), defaults);
+
+    expect(
+      store.update({ hostedModel: "claude-opus-4-1-20250805" }).settings.hostedModel,
+    ).toBe("claude-opus-4-1-20250805");
+
+    const switched = store.update({ hostedProvider: "openai" });
+    expect(switched.settings).toMatchObject({
+      hostedProvider: "openai",
+      hostedModel: "governed",
+    });
+
+    expect(() =>
+      store.update({ hostedModel: "claude-sonnet-4-5-20250929" }),
+    ).toThrow(/belum diverifikasi/u);
+    expect(
+      store.update({ hostedModel: "gpt-5.6-sol" }).settings.hostedModel,
+    ).toBe("gpt-5.6-sol");
   });
 
   it("menolak credential/fragment dan protocol non-http pada local runtime URL", () => {
