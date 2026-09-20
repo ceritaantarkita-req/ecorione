@@ -60,9 +60,7 @@ const VERIFIED_HOSTED_MODELS = {
       providerRuntime: "gpt-5.6-sol",
     },
   ],
-} as const satisfies Readonly<
-  Record<HostedProviderId, readonly HostedModelCatalogEntry[]>
->;
+} as const satisfies Readonly<Record<HostedProviderId, readonly HostedModelCatalogEntry[]>>;
 
 export function hostedModelCatalog(
   provider: HostedProviderId,
