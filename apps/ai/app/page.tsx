@@ -578,7 +578,14 @@ export default function ChatPage() {
   }
 
   function submitDraft(): void {
-    if (preparingAttachments || sending || !attachmentsReadyForSend(attachments)) return;
+    if (
+      !sessionReady ||
+      historyLoading ||
+      preparingAttachments ||
+      sending ||
+      !attachmentsReadyForSend(attachments)
+    )
+      return;
     const finalText = buildAttachmentAwareMessage(draft, attachments);
     if (finalText.length === 0) return;
     const submitted = attachments;
@@ -724,7 +731,11 @@ export default function ChatPage() {
               <select
                 aria-label="Riwayat percakapan"
                 value={historySessions.some((session) => session.id === sessionId) ? sessionId : ""}
-                onChange={(event) => openConversation(event.target.value)}
+                onChange={(event) =>
+                  event.target.value.length === 0
+                    ? startNewChat()
+                    : openConversation(event.target.value)
+                }
                 disabled={historyLoading || sending || preparingAttachments}
               >
                 <option value="">Percakapan baru</option>
@@ -756,7 +767,7 @@ export default function ChatPage() {
           ) : null}
           <div className="ai-thread" aria-live="polite">
             {historyLoading ? <p className="ai-history-loading">Memuat percakapan…</p> : null}
-            {turns.length === 0 ? (
+            {!historyLoading && turns.length === 0 ? (
               <p className="ai-empty">Ketik pesan untuk mulai.</p>
             ) : (
               turns.map((turn) => <TurnView key={turn.id} turn={turn} />)
@@ -924,6 +935,8 @@ export default function ChatPage() {
                   onChange={(e) => setTarget(e.target.value as ChatTarget)}
                   disabled={
                     !hydrated ||
+                    !sessionReady ||
+                    historyLoading ||
                     sending ||
                     preparingAttachments ||
                     turns.length > 0 ||
@@ -977,7 +990,7 @@ export default function ChatPage() {
             {latestAssistantWithMemory === undefined ? (
               <p className="ai-panel__empty">
                 {turns.length > 0
-                  ? "Detail memori turn lama tidak disimpan di replay."
+                  ? "Detail memori belum tersedia untuk turn ini."
                   : "Belum ada balasan."}
               </p>
             ) : (
