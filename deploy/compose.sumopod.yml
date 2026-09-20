@@ -1,0 +1,24 @@
+services:
+  caddy:
+    # SumoPod already has an operator-owned Traefik edge on :80/:443.
+    # Keep Caddy as ECORIONE's internal policy/routing boundary, but never bind
+    # host edge ports from this staging project.
+    ports: !reset []
+    volumes:
+      - ./Caddyfile.sumopod:/etc/caddy/Caddyfile:ro
+    networks:
+      - internal
+      - edge
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "${ECORIONE_EDGE_NETWORK:?set ECORIONE_EDGE_NETWORK}"
+      traefik.http.routers.ecorione-staging.entrypoints: "websecure"
+      traefik.http.routers.ecorione-staging.rule: "Host(\`${ECORIONE_DOMAIN:?set ECORIONE_DOMAIN}\`)"
+      traefik.http.routers.ecorione-staging.tls: "true"
+      traefik.http.routers.ecorione-staging.tls.certresolver: "${ECORIONE_TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      traefik.http.services.ecorione-staging.loadbalancer.server.port: "8080"
+
+networks:
+  edge:
+    external: true
+    name: "${ECORIONE_EDGE_NETWORK:?set ECORIONE_EDGE_NETWORK}"
