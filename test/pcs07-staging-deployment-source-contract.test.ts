@@ -15,22 +15,19 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
     expect(gitignore).not.toContain("!deploy/staging.env");
   });
 
-  it(
-    "supports an isolated staging env while preserving the historical production env fallback",
-    () => {
-      for (const script of [preflight, hostAudit, install, upgrade, rollback]) {
-        expect(script).toContain("ECORIONE_DEPLOY_ENV");
-        expect(script).toContain("ECORIONE_PRODUCTION_ENV");
-        expect(script).toContain("deploy/production.env");
-      }
-      expect(install).toContain("ECORIONE_DEPLOY_ENV_TEMPLATE");
-      expect(install).toContain("deploy/production.env.example");
-    },
-  );
+  it("supports an isolated staging env while preserving the historical production env fallback", () => {
+    for (const script of [preflight, hostAudit, install, upgrade, rollback]) {
+      expect(script).toContain("ECORIONE_DEPLOY_ENV");
+      expect(script).toContain("ECORIONE_PRODUCTION_ENV");
+      expect(script).toContain("deploy/production.env");
+    }
+    expect(install).toContain("ECORIONE_DEPLOY_ENV_TEMPLATE");
+    expect(install).toContain("deploy/production.env.example");
+  });
 
   it("supports an isolated Compose project for staging lifecycle commands", () => {
     for (const script of [preflight, install, upgrade, rollback]) {
-      expect(script).toContain('ECORIONE_COMPOSE_PROJECT');
+      expect(script).toContain("ECORIONE_COMPOSE_PROJECT");
       expect(script).toContain('COMPOSE_ARGS=(-p "$COMPOSE_PROJECT"');
       expect(script).toContain('docker compose "${COMPOSE_ARGS[@]}"');
     }
@@ -47,8 +44,8 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
 
   it("fails closed on unsafe mutable deployment env files", () => {
     for (const script of [install, upgrade, rollback]) {
-      expect(script).toContain('must not be a symlink');
-      expect(script).toContain('must be mode 600');
+      expect(script).toContain("must not be a symlink");
+      expect(script).toContain("must be mode 600");
     }
   });
 
