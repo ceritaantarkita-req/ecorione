@@ -479,7 +479,7 @@ export default function ChatPage() {
       setMemoryFeedback({ kind: "success", message: "Fakta berhasil dilupakan." });
       setTurns((prev) =>
         prev.map((t) =>
-          t.kind === "assistant"
+          t.kind === "assistant" && t.memoryUsed !== undefined
             ? {
                 ...t,
                 memoryUsed: {
