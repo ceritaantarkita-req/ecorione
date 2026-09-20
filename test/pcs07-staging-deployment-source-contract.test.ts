@@ -48,21 +48,18 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
     expect(rollback).not.toContain("docker.sock");
   });
 
-  it(
-    "adapts SumoPod staging to the pre-existing Traefik edge without host port takeover",
-    () => {
-      expect(sumopodOverlay).toContain("ports: !reset []");
-      expect(sumopodOverlay).toContain("ECORIONE_EDGE_NETWORK");
-      expect(sumopodOverlay).toContain("external: true");
-      expect(sumopodOverlay).toContain('traefik.enable: "true"');
-      expect(sumopodOverlay).toContain('loadbalancer.server.port: "8080"');
-      expect(sumopodOverlay).not.toContain("/var/run/docker.sock");
-      expect(sumopodCaddy).toContain(":8080");
-      expect(sumopodCaddy).toContain("reverse_proxy ai:3000");
-      expect(sumopodCaddy).toContain("reverse_proxy sync:17011");
-      expect(sumopodCaddy).toContain("basic_auth");
-    },
-  );
+  it("adapts SumoPod staging to the existing Traefik edge", () => {
+    expect(sumopodOverlay).toContain("ports: !reset []");
+    expect(sumopodOverlay).toContain("ECORIONE_EDGE_NETWORK");
+    expect(sumopodOverlay).toContain("external: true");
+    expect(sumopodOverlay).toContain('traefik.enable: "true"');
+    expect(sumopodOverlay).toContain('loadbalancer.server.port: "8080"');
+    expect(sumopodOverlay).not.toContain("/var/run/docker.sock");
+    expect(sumopodCaddy).toContain(":8080");
+    expect(sumopodCaddy).toContain("reverse_proxy ai:3000");
+    expect(sumopodCaddy).toContain("reverse_proxy sync:17011");
+    expect(sumopodCaddy).toContain("basic_auth");
+  });
 
   it("fails closed on unsafe mutable deployment env files", () => {
     for (const script of [install, upgrade, rollback]) {
