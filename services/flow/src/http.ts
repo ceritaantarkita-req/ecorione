@@ -1,5 +1,7 @@
+import { createHash } from "node:crypto";
 import {
   CapabilityAuthorizationResultSchema,
+  CapabilityGrantRequestSchema,
   DEFAULT_PROJECT_ID,
   DEFAULT_WORKSPACE_ID,
   FlowDecisionRequestSchema,
@@ -34,6 +36,7 @@ import {
   ConflictError,
   HttpError,
   NotFoundError,
+  RemoteServiceError,
   createServer,
   httpJson,
   observabilityFor,
@@ -89,6 +92,19 @@ const RunProjectionListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 const NodeRunParamsSchema = z.object({ id: FlowIdSchema, nodeId: FlowNodeIdSchema });
+const GraphAuthorityRequestSchema = z
+  .object({
+    version: z.number().int().min(1).optional(),
+  })
+  .strict();
+const GraphAuthorityDecisionSchema = z
+  .object({
+    version: z.number().int().min(1).optional(),
+    definitionId: z.string().min(1).max(192),
+    operationId: OperationIdSchema,
+    decision: z.enum(["APPROVE", "REJECT"]),
+  })
+  .strict();
 
 function graphError(error: unknown): unknown {
   if (error instanceof FlowGraphNotFoundError) return new NotFoundError(error.message);
@@ -144,6 +160,222 @@ async function syncNodeDeclarations(
     token: options.token,
     body: { workspaceId, definitions: listCoreNodeDefinitions() },
   });
+}
+
+interface GraphAuthorityRequirement {
+  readonly definitionId: string;
+  readonly nodeIds: readonly string[];
+  readonly status: "GRANTED" | "APPROVAL_REQUIRED";
+  readonly operationId: OperationId | null;
+  readonly prompt: string | null;
+}
+
+function authorityDigest(plan: CompiledFlowGraphPlan, definitionId: string): string {
+  return createHash("sha256")
+    .update(
+      [
+        plan.graph.workspaceId,
+        definitionId,
+        plan.graph.scope,
+        plan.graph.sensitivity,
+        "L2",
+        "node.execute",
+      ].join("|"),
+    )
+    .digest("hex")
+    .slice(0, 24);
+}
+
+function nodeGrantRequest(plan: CompiledFlowGraphPlan, definitionId: string) {
+  const digest = authorityDigest(plan, definitionId);
+  return CapabilityGrantRequestSchema.parse({
+    operationId: assertId("operation", `op_nodegrant_${digest}`),
+    workspaceId: plan.graph.workspaceId,
+    subject: { kind: "node", id: definitionId },
+    capabilityId: "node.execute",
+    permissionIds: ["node.execute"],
+    scope: plan.graph.scope,
+    maxSensitivity: plan.graph.sensitivity,
+    autonomy: "L2",
+    reason: `Allow Flow node ${definitionId} inside workspace ${plan.graph.workspaceId}.`,
+    idempotencyKey: `flow-node-execute-${digest}`,
+  });
+}
+
+function remoteErrorEnvelope(error: RemoteServiceError): {
+  type: string;
+  message: string;
+  detail: Record<string, unknown>;
+} {
+  const body = error.body;
+  if (body !== null && typeof body === "object" && "error" in body) {
+    const raw = (body as { error?: unknown }).error;
+    if (raw !== null && typeof raw === "object") {
+      const value = raw as { type?: unknown; message?: unknown; detail?: unknown };
+      return {
+        type: typeof value.type === "string" ? value.type : "UPSTREAM_REJECTED",
+        message:
+          typeof value.message === "string"
+            ? value.message
+            : `Hub authority request gagal dengan status ${String(error.statusCode)}.`,
+        detail:
+          value.detail !== null && typeof value.detail === "object"
+            ? (value.detail as Record<string, unknown>)
+            : {},
+      };
+    }
+  }
+  return {
+    type: "UPSTREAM_REJECTED",
+    message: `Hub authority request gagal dengan status ${String(error.statusCode)}.`,
+    detail: {},
+  };
+}
+
+async function authorizeNodeDefinition(
+  options: BuildFlowServerOptions,
+  plan: CompiledFlowGraphPlan,
+  definitionId: string,
+): Promise<ReturnType<typeof CapabilityAuthorizationResultSchema.parse>> {
+  const digest = authorityDigest(plan, definitionId);
+  return CapabilityAuthorizationResultSchema.parse(
+    await httpJson(`${options.hubUrl}/v1/authority/authorize`, {
+      method: "POST",
+      token: options.token,
+      body: {
+        operationId: assertId("operation", `op_nodecheck_${digest}`),
+        workspaceId: plan.graph.workspaceId,
+        subject: { kind: "node", id: definitionId },
+        capabilityId: "node.execute",
+        permissionIds: ["node.execute"] as PermissionId[],
+        scope: plan.graph.scope,
+        sensitivity: plan.graph.sensitivity,
+        autonomy: "L2",
+      },
+    }),
+  );
+}
+
+async function prepareGraphAuthority(
+  options: BuildFlowServerOptions,
+  plan: CompiledFlowGraphPlan,
+): Promise<{ readonly ready: boolean; readonly requirements: readonly GraphAuthorityRequirement[] }> {
+  await syncNodeDeclarations(options, plan.graph.workspaceId);
+  const byDefinition = new Map<string, string[]>();
+  for (const compiled of plan.nodes) {
+    const nodeIds = byDefinition.get(compiled.definitionId) ?? [];
+    nodeIds.push(compiled.node.id);
+    byDefinition.set(compiled.definitionId, nodeIds);
+  }
+
+  const requirements: GraphAuthorityRequirement[] = [];
+  for (const [definitionId, nodeIds] of byDefinition) {
+    const authorization = await authorizeNodeDefinition(options, plan, definitionId);
+    if (authorization.outcome === "ALLOW") {
+      requirements.push({
+        definitionId,
+        nodeIds,
+        status: "GRANTED",
+        operationId: null,
+        prompt: null,
+      });
+      continue;
+    }
+
+    const grant = nodeGrantRequest(plan, definitionId);
+    try {
+      await httpJson(`${options.hubUrl}/v1/authority/grants`, {
+        method: "POST",
+        token: options.token,
+        body: grant,
+      });
+      requirements.push({
+        definitionId,
+        nodeIds,
+        status: "GRANTED",
+        operationId: null,
+        prompt: null,
+      });
+    } catch (error) {
+      if (error instanceof RemoteServiceError && error.statusCode === 409) {
+        const envelope = remoteErrorEnvelope(error);
+        if (envelope.type === "AUTHORITY_APPROVAL_REQUIRED") {
+          const operationId =
+            typeof envelope.detail.operationId === "string"
+              ? OperationIdSchema.parse(envelope.detail.operationId)
+              : grant.operationId;
+          const prompt =
+            typeof envelope.detail.prompt === "string"
+              ? envelope.detail.prompt
+              : "Approve node execution authority.";
+          requirements.push({
+            definitionId,
+            nodeIds,
+            status: "APPROVAL_REQUIRED",
+            operationId,
+            prompt,
+          });
+          continue;
+        }
+      }
+      if (error instanceof RemoteServiceError) {
+        const envelope = remoteErrorEnvelope(error);
+        throw new HttpError(error.statusCode, envelope.type, envelope.message, envelope.detail);
+      }
+      throw error;
+    }
+  }
+  return {
+    ready: requirements.every((item) => item.status === "GRANTED"),
+    requirements,
+  };
+}
+
+async function decideGraphAuthority(
+  options: BuildFlowServerOptions,
+  plan: CompiledFlowGraphPlan,
+  input: z.infer<typeof GraphAuthorityDecisionSchema>,
+): Promise<{ readonly definitionId: string; readonly status: "GRANTED" | "REJECTED" }> {
+  if (!plan.nodes.some((item) => item.definitionId === input.definitionId)) {
+    throw new BadRequestError("definitionId tidak termasuk graph/version yang dituju.");
+  }
+  const grant = nodeGrantRequest(plan, input.definitionId);
+  if (input.operationId !== grant.operationId) {
+    throw new BadRequestError("operationId tidak cocok dengan authority requirement graph.");
+  }
+
+  await httpJson(`${options.hubUrl}/v1/approvals/${encodeURIComponent(input.operationId)}/decide`, {
+    method: "POST",
+    token: options.token,
+    body: { decision: input.decision },
+  });
+  if (input.decision === "REJECT") {
+    return { definitionId: input.definitionId, status: "REJECTED" };
+  }
+
+  try {
+    await httpJson(`${options.hubUrl}/v1/authority/grants`, {
+      method: "POST",
+      token: options.token,
+      body: grant,
+    });
+  } catch (error) {
+    if (error instanceof RemoteServiceError) {
+      const envelope = remoteErrorEnvelope(error);
+      throw new HttpError(error.statusCode, envelope.type, envelope.message, envelope.detail);
+    }
+    throw error;
+  }
+
+  const verified = await authorizeNodeDefinition(options, plan, input.definitionId);
+  if (verified.outcome !== "ALLOW") {
+    throw new HttpError(
+      409,
+      "FLOW_NODE_AUTHORITY_NOT_ACTIVE",
+      `Approval selesai tetapi grant ${input.definitionId} belum aktif: ${verified.reason}`,
+    );
+  }
+  return { definitionId: input.definitionId, status: "GRANTED" };
 }
 
 async function authorizeGraphPlanBeforeStart(
@@ -345,6 +577,36 @@ export function buildFlowServer(
     } catch (error) {
       throw graphError(error);
     }
+  });
+
+  app.post<{ Params: { id: string } }>("/v1/graphs/:id/authority/prepare", async (req) => {
+    const { id } = parseOrBadRequest(GraphParamsSchema, req.params);
+    const body = parseOrBadRequest(GraphAuthorityRequestSchema, req.body);
+    let graphVersion;
+    try {
+      graphVersion = graphs.get(id, body.version);
+    } catch (error) {
+      throw graphError(error);
+    }
+    if (!graphVersion.validation.valid || graphVersion.validation.plan === null) {
+      throw new BadRequestError("Graph version tidak valid dan tidak dapat diberi authority.");
+    }
+    return prepareGraphAuthority(options, graphVersion.validation.plan);
+  });
+
+  app.post<{ Params: { id: string } }>("/v1/graphs/:id/authority/decide", async (req) => {
+    const { id } = parseOrBadRequest(GraphParamsSchema, req.params);
+    const body = parseOrBadRequest(GraphAuthorityDecisionSchema, req.body);
+    let graphVersion;
+    try {
+      graphVersion = graphs.get(id, body.version);
+    } catch (error) {
+      throw graphError(error);
+    }
+    if (!graphVersion.validation.valid || graphVersion.validation.plan === null) {
+      throw new BadRequestError("Graph version tidak valid dan tidak dapat diberi authority.");
+    }
+    return decideGraphAuthority(options, graphVersion.validation.plan, body);
   });
 
   app.post<{ Params: { id: string } }>("/v1/graphs/:id/runs", async (req, reply) => {
