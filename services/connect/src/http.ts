@@ -28,6 +28,7 @@ import { registerConnectControlRoutes } from "./control-http.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { GOVERNED_HOSTED_MODEL, type HostedModelPreference } from "./hosted-model-catalog.js";
+import { discoverLocalRuntime } from "./local-runtime-discovery.js";
 import type { LocalModelDigest } from "./local-model-identity.js";
 import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
 import {
@@ -197,6 +198,20 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     internalToken: options.token,
     credentialVault: options.credentialVault,
     developmentRootSecret: options.webhookRootSecret,
+  });
+
+  app.get("/v1/settings/local-runtime/status", async () => {
+    const runtime = currentRuntime();
+    const result = await discoverLocalRuntime({
+      runtime: runtime.localRuntime,
+      baseUrl: runtime.localBaseUrl,
+      modelTag: runtime.localModelTag,
+    });
+    metrics.addCounter("ecorione_local_runtime_discovery_total", 1, {
+      runtime: result.runtime,
+      state: result.state,
+    });
+    return result;
   });
 
   function recordCompletion(
