@@ -388,7 +388,7 @@
   width: auto;
   max-width: 100%;
   min-width: 0;
-  min-height: 36px;
+  min-height: var(--control-height);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-2);
@@ -428,7 +428,7 @@
 
 .page button {
   max-width: 100%;
-  min-height: 36px;
+  min-height: var(--control-height);
   border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
   padding: 0 14px;
