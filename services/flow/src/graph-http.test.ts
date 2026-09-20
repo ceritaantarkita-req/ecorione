@@ -172,7 +172,7 @@ describe("Flow graph HTTP integration", () => {
     hub.intercept({ path: "/v1/authority/authorize", method: "POST" }).reply(200, {
       outcome: "DENY",
       reason: "Missing standing grant.",
-      grantedPermissionIds: [],
+      missingPermissionIds: ["node.execute"],
     });
     hub.intercept({ path: "/v1/authority/grants", method: "POST" }).reply(409, (opts) => {
       const body = JSON.parse(String(opts.body)) as { operationId: string };
@@ -279,7 +279,7 @@ describe("Flow graph HTTP integration", () => {
     hub.intercept({ path: "/v1/authority/authorize", method: "POST" }).reply(200, {
       outcome: "DENY",
       reason: "Missing standing grant.",
-      grantedPermissionIds: [],
+      missingPermissionIds: ["node.execute"],
     });
 
     const temporalClient = temporal();
