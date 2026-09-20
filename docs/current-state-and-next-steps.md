@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-03 CLOSED / PCS-04 NEXT**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-04 CLOSED / PCS-05 NEXT**
 
 ## Current verdict
 
@@ -59,7 +59,15 @@ Connect now exposes explicit Local runtime/model readiness, transient candidate 
 
 Evidence: [verification/pcs-03-local-ai-resilience-2026-09-20.md](verification/pcs-03-local-ai-resilience-2026-09-20.md).
 
-The next scope is **PCS-04 Product visual + information-architecture cleanup**.
+## PCS-04 Product visual + information-architecture cleanup — CLOSED / PASS
+
+PR #197 exact head `ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5` passed CI #1529 + Product Eval #768 and merged as `8a328ae0c0abeb039866ac40068a9053c4796659`.
+
+The product navigation now distinguishes Core, Workspace, and Advanced surfaces; shared control/native-select behavior is more consistent; Projects/Work/Brain use a clearer hierarchy; advanced surfaces have improved technical-text readability; and Ai exposes concrete route/provider/model state instead of only abstract Local/Hosted labels. Backend ownership and routing semantics were unchanged.
+
+Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
+
+The next scope is **PCS-05 Flow runtime defect closure**.
 
 ## Post-closure repository hardening
 
