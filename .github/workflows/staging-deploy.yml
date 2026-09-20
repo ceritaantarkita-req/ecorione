@@ -1,0 +1,100 @@
+name: Staging Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI", "Product Eval"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: staging-deploy-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      ready: ${{ steps.gates.outputs.ready }}
+      sha: ${{ steps.gates.outputs.sha }}
+
+    steps:
+      - name: Require current main and both green gates
+        id: gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          current_main="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq '.sha')"
+          if [[ "$TARGET_SHA" != "$current_main" ]]; then
+            echo "Skipping stale SHA $TARGET_SHA; current main is $current_main"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          gate_success() {
+            local workflow_file="$1"
+            gh api --method GET               "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_file}/runs"               -f branch=main               -f event=push               -f head_sha="$TARGET_SHA"               -f status=completed               --jq '[.workflow_runs[] | select(.conclusion == "success")] | length'
+          }
+
+          ci_success="$(gate_success ci.yml)"
+          product_success="$(gate_success product-eval.yml)"
+
+          if [[ "$ci_success" -lt 1 || "$product_success" -lt 1 ]]; then
+            echo "Peer gate not green yet for $TARGET_SHA (CI=$ci_success ProductEval=$product_success)"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Both required main gates are green for $TARGET_SHA"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: gate
+    if: needs.gate.outputs.ready == 'true' && vars.ECORIONE_STAGING_CD_ENABLED == '1'
+    runs-on: ubuntu-24.04
+    environment: staging
+    timeout-minutes: 45
+
+    steps:
+      - name: Install least-privilege SSH identity
+        env:
+          STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          STAGING_SSH_KNOWN_HOSTS: ${{ secrets.STAGING_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ -n "$STAGING_SSH_PRIVATE_KEY" ]] || { echo "::error::STAGING_SSH_PRIVATE_KEY is missing"; exit 1; }
+          [[ -n "$STAGING_SSH_KNOWN_HOSTS" ]] || { echo "::error::STAGING_SSH_KNOWN_HOSTS is missing"; exit 1; }
+
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$STAGING_SSH_PRIVATE_KEY" > "$HOME/.ssh/staging_deploy"
+          chmod 0600 "$HOME/.ssh/staging_deploy"
+          printf '%s\n' "$STAGING_SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+
+      - name: Deploy exact reviewed main SHA
+        env:
+          TARGET_SHA: ${{ needs.gate.outputs.sha }}
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+        run: |
+          set -euo pipefail
+          [[ "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::invalid target SHA"; exit 1; }
+          [[ -n "$STAGING_SSH_HOST" ]] || { echo "::error::STAGING_SSH_HOST is missing"; exit 1; }
+          [[ -n "$STAGING_SSH_USER" ]] || { echo "::error::STAGING_SSH_USER is missing"; exit 1; }
+
+          ssh             -F /dev/null             -i "$HOME/.ssh/staging_deploy"             -o BatchMode=yes             -o IdentitiesOnly=yes             -o StrictHostKeyChecking=yes             -o UserKnownHostsFile="$HOME/.ssh/known_hosts"             -o ConnectTimeout=15             "$STAGING_SSH_USER@$STAGING_SSH_HOST"             "deploy $TARGET_SHA"

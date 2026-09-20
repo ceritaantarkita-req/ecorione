@@ -176,7 +176,7 @@ The production compose/runbooks are reusable infrastructure, but staging evidenc
 
 ### PCS-08 — GitHub-to-staging continuous deployment
 
-State: **ACTIVE**.
+State: **ACTIVE — REPOSITORY IMPLEMENTATION CANDIDATE / REAL CD EVIDENCE PENDING**. Runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). Repository-preparation evidence: [verification/pcs-08-repository-preparation-2026-09-20.md](verification/pcs-08-repository-preparation-2026-09-20.md).
 
 Target workflow:
 
