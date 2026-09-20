@@ -43,8 +43,8 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 | PCS-04 Visual + information-architecture cleanup | **CLOSED / PASS** |
 | PCS-05 Flow runtime defect closure | **CLOSED / PASS** |
 | PCS-06 Integrated browser/regression acceptance | **CLOSED / PASS** |
-| PCS-07 SumoPod remote staging | **ACTIVE / APPROVED — HOST EVIDENCE PENDING** |
-| PCS-08 GitHub -> staging continuous deployment | **PLANNED** |
+| PCS-07 SumoPod remote staging | **CLOSURE CANDIDATE — FINAL GOVERNED BROWSER JOURNEY PENDING** |
+| PCS-08 GitHub -> staging continuous deployment | **PLANNED / NEXT AFTER PCS-07 CLOSURE** |
 | PCS-09 Staging persistence/security/backup/observability | **PLANNED** |
 | PCS-10 Closure/docs | **PLANNED** |
 
@@ -62,7 +62,7 @@ PCS-05 closed on PR #199 exact head `d7eb37e8b5e97da07895fcd050621e563a47359b`, 
 
 PCS-06 closed on PR #201 exact head `0dfdda92e0bef800ca9a7563223b7423aa9b1299`, which passed CI #1553 + Product Eval #792 + PCS-06 Integrated Browser Acceptance #13 and merged as `0a8f7619567500acaec0758c400d529367baf0e5`. Production Next.js UI was exercised in Chromium across the approved desktop and narrow product surfaces with deterministic same-origin API fixtures, no external provider requests, console/page-error checks, overflow checks, and Flow authority-to-run acceptance. Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
 
-PCS-07 repository preparation passed through PR #203 exact head `78f13902f30ab83f92e3c858eadf9fd800ead7de` (CI #1561 + Product Eval #800; merge `5862d461760b57a21c2622ee5a234da27b6245ce`) and PR #204 exact head `8eabc24c7df44e2cad36c2c53902ef71a8dd2138` (CI #1570 + Product Eval #809 + Desktop Installer #84 + MCP External HTTPS #869; merge `b1e003f8267cbab4c7e97bd23f81183ca18ed0ba`). Staging env/project isolation, host-only secret hygiene, fail-closed lifecycle checks, and sanitized host evidence tooling are repository-ready. Actual SumoPod host audit/deployment/browser evidence remains pending, so PCS-07 is still ACTIVE. Evidence: [verification/pcs-07-repository-preparation-2026-09-20.md](verification/pcs-07-repository-preparation-2026-09-20.md).
+PCS-07 actual-host deployment now passes on the reviewed SumoPod staging boundary. The live runtime was deployed from exact reviewed main `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`; all configured services are running under the isolated `ecorione-staging` Compose project; sanitized host evidence matched the expected SHA with a clean worktree and mode-0600 env. Public HTTPS home returned 200; `/ops` and `/settings` remain protected; authenticated `/api/ops` reported a healthy required fleet; MCP metadata returned 200 and a valid unauthenticated MCP request returned the expected 401 Bearer challenge. PR #208 fixed only the malformed public-smoke verifier and merged as `59430c4b72a704d1fd6c6176d12b13fa27ddf674` after CI #1581 + Product Eval #820. The only remaining PCS-07 gate is one real rendered-browser governed Flow journey without a paid provider call. Evidence: [verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md](verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional/not yet selected for staging. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
