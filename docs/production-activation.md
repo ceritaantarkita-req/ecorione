@@ -12,6 +12,7 @@ Current next work is documented in `docs/current-state-and-next-steps.md` and `d
 ## Objective when resumed
 
 Take the repository-verified production/self-host baseline from the already-closed local evidence boundary into a real compute-host deployment, then optionally put Cloudflare Free + a named Tunnel in front of it, validate real providers/traffic, and gather production-only evidence.
+
 ## Remote staging objective now approved
 
 Before any production promotion, establish an operator-owned SumoPod staging environment that can be used from a browser while the operator laptop is offline.
@@ -90,7 +91,7 @@ None of the closed local checkpoints should be mislabeled as VPS, Cloudflare, ho
 
 On native Windows, shell-syntax verification for these Linux production scripts must use an explicit real Bash executable (for example MSYS/Git Bash) through `ECORIONE_BASH`; do not rely on the Windows `bash.exe` launcher resolving to the intended runtime.
 
-## Production tooling available when resumed
+## Self-host / production tooling available
 
 | Command | Purpose | Mutation |
 |---|---|---|
