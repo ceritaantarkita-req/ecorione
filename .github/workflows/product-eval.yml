@@ -49,6 +49,7 @@ jobs:
             services/connect/src/local-runtime-discovery.test.ts \
             test/pcs02-provider-onboarding-source-contract.test.ts \
             test/pcs03-local-runtime-source-contract.test.ts \
+            test/pcs04-visual-ia-source-contract.test.ts \
             apps/ai/app/api/chat/route.test.ts \
             apps/ai/app/api/projects/route.test.ts \
             apps/ai/app/api/brain/route.test.ts \

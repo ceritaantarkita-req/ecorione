@@ -13,20 +13,33 @@ import {
   type ThemeChoice,
 } from "@ecorione/shared-ui";
 
-const NAV_ITEMS = [
-  ["Ai", "/", "ai"],
-  ["Projects", "/projects", "projects"],
-  ["Work", "/work", "work"],
-  ["Brain", "/brain", "brain"],
-  ["Space", "/space", "space"],
-  ["Flow", "/flow", "flow"],
-  ["Operations", "/ops", "ops"],
-  ["Settings", "/settings", "settings"],
+const NAV_GROUPS = [
+  {
+    label: "Core",
+    items: [
+      ["Ai", "/", "ai"],
+      ["Projects", "/projects", "projects"],
+      ["Work", "/work", "work"],
+      ["Brain", "/brain", "brain"],
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [["Space", "/space", "space"]],
+  },
+  {
+    label: "Advanced",
+    items: [
+      ["Flow", "/flow", "flow"],
+      ["Operations", "/ops", "ops"],
+      ["Settings", "/settings", "settings"],
+    ],
+  },
 ] as const;
 
 const MOBILE_BREAKPOINT_QUERY = "(max-width: 780px)";
 
-type NavIconKey = (typeof NAV_ITEMS)[number][2];
+type NavIconKey = (typeof NAV_GROUPS)[number]["items"][number][2];
 
 function isActivePath(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -284,21 +297,28 @@ export default function ProductNav() {
         </div>
 
         <div className="ecr-global-nav__links" aria-label="Area produk">
-          {NAV_ITEMS.map(([label, href, icon]) => {
-            const active = isActivePath(pathname, href);
-            return (
-              <Link
-                className={`ecr-global-nav__link${active ? " ecr-global-nav__link--active" : ""}`}
-                href={href}
-                key={href}
-                aria-current={active ? "page" : undefined}
-                title={visuallyCollapsed ? label : undefined}
-              >
-                <NavIcon icon={icon} />
-                <span className="ecr-global-nav__label">{label}</span>
-              </Link>
-            );
-          })}
+          {NAV_GROUPS.map((group) => (
+            <div className="ecr-global-nav__group" key={group.label}>
+              <span className="ecr-global-nav__group-label">{group.label}</span>
+              <div className="ecr-global-nav__group-links">
+                {group.items.map(([label, href, icon]) => {
+                  const active = isActivePath(pathname, href);
+                  return (
+                    <Link
+                      className={`ecr-global-nav__link${active ? " ecr-global-nav__link--active" : ""}`}
+                      href={href}
+                      key={href}
+                      aria-current={active ? "page" : undefined}
+                      title={visuallyCollapsed ? label : undefined}
+                    >
+                      <NavIcon icon={icon} />
+                      <span className="ecr-global-nav__label">{label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="ecr-theme-switch" role="group" aria-label="Tema tampilan">

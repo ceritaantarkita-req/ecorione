@@ -233,11 +233,11 @@ export default function BrainPage() {
     <main className={styles.shell}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>ECORIONE · PE-06 · derived projection</span>
+          <span className={styles.eyebrow}>Explore connections</span>
           <h1>Brain</h1>
           <p>
-            Connected view dari relationship yang sudah dibuktikan owner data. Brain tidak
-            membuat fakta baru dan tidak menggantikan Context atau ECX.
+            Lihat hubungan antar sumber, memori, dan aktivitas Project tanpa mengubah data
+            sumbernya.
           </p>
         </div>
         <label className={styles.projectPicker}>

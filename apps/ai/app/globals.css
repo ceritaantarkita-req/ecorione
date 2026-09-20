@@ -4,6 +4,7 @@
  * tetap satu sistem dan tidak mengulang hex per halaman.
  */
 :root {
+  color-scheme: dark;
   --bg: #0b0b0c;
   --surface: #151517;
   --surface-2: #1c1c1f;
@@ -48,12 +49,17 @@
    */
   --app-nav-height: 0px;
   --content-max: 1240px;
+  --content-readable: 760px;
+  --control-height: 36px;
+  --control-height-sm: 32px;
+  --page-gutter: 28px;
   --ecr-sidebar-width: 236px;
   --ecr-sidebar-width-collapsed: 60px;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
+    color-scheme: light;
     --bg: #ffffff;
     --surface: #ffffff;
     --surface-2: #f6f5f0;
@@ -72,6 +78,7 @@
 }
 
 :root[data-theme="light"] {
+  color-scheme: light;
   --bg: #ffffff;
   --surface: #ffffff;
   --surface-2: #f6f5f0;
@@ -115,6 +122,37 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+select {
+  color: var(--text);
+  background-color: var(--surface-2);
+}
+
+select option,
+select optgroup {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 82%, transparent);
+  opacity: 1;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  color: color-mix(in srgb, var(--text) 62%, var(--text-muted));
+  background: color-mix(in srgb, var(--surface-2) 78%, var(--bg));
 }
 
 button,
@@ -172,7 +210,7 @@ hr {
 
 /* Shared fittings --------------------------------------------------------- */
 .ecr-btn {
-  min-height: 34px;
+  min-height: var(--control-height);
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
@@ -244,7 +282,7 @@ hr {
 }
 
 .ecr-input {
-  min-height: 34px;
+  min-height: var(--control-height);
   padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -609,15 +647,19 @@ hr {
 
 .ai-model-select select {
   appearance: none;
-  min-height: 28px;
-  padding: 0 22px 0 10px;
+  max-width: min(420px, 48vw);
+  min-height: var(--control-height-sm);
+  padding: 0 24px 0 11px;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: transparent;
+  background: var(--surface);
   color: var(--text);
   font-family: var(--font-body);
   font-size: 11.5px;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: pointer;
 }
 

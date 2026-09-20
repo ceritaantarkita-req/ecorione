@@ -118,7 +118,7 @@ export default function ProjectsPage() {
     <main className={styles.shell}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Context boundaries</p>
+          <p className={styles.eyebrow}>Organize context</p>
           <h1>Projects</h1>
           <p className={styles.lead}>
             Pisahkan percakapan, memori, dan kerja tanpa membuat Workspace baru.

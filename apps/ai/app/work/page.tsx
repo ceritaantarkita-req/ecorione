@@ -415,9 +415,9 @@ export default function WorkPage() {
     <main className={styles.shell}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>ECORIONE · governed execution</span>
+          <span className={styles.eyebrow}>Plan and run</span>
           <h1>Work</h1>
-          <p>Rencana, Flow, dan execution evidence dalam satu Project boundary.</p>
+          <p>Atur jadwal, Flow, dan hasil eksekusi untuk Project aktif.</p>
         </div>
         <label className={styles.projectPicker}>
           <span>Project</span>

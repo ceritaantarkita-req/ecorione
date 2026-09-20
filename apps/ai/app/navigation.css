@@ -114,8 +114,32 @@ html[data-sidebar="collapsed"] .ecr-global-nav {
 .ecr-global-nav__links {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 14px;
   min-width: 0;
+}
+
+.ecr-global-nav__group {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.ecr-global-nav__group-label {
+  padding: 0 10px;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--text-muted) 82%, transparent);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ecr-global-nav__group-links {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
 }
 
 .ecr-global-nav__link {
@@ -238,7 +262,8 @@ html[data-sidebar="collapsed"] .ecr-global-nav {
 
 /* Collapsed (desktop): sembunyikan label teks, sisakan ikon rata tengah + tooltip lewat `title`. */
 html[data-sidebar="collapsed"] .ecr-global-nav__label,
-html[data-sidebar="collapsed"] .ecr-global-nav__brand-label {
+html[data-sidebar="collapsed"] .ecr-global-nav__brand-label,
+html[data-sidebar="collapsed"] .ecr-global-nav__group-label {
   display: none;
 }
 
@@ -266,7 +291,8 @@ html[data-sidebar="collapsed"] .ecr-theme-switch__item {
   }
 
   .ecr-global-nav__label,
-  .ecr-global-nav__brand-label {
+  .ecr-global-nav__brand-label,
+  .ecr-global-nav__group-label {
     display: none;
   }
 
@@ -298,6 +324,10 @@ html[data-sidebar="collapsed"] .ecr-theme-switch__item {
   html[data-mobile-nav="open"] .ecr-global-nav__label,
   html[data-mobile-nav="open"] .ecr-global-nav__brand-label {
     display: inline;
+  }
+
+  html[data-mobile-nav="open"] .ecr-global-nav__group-label {
+    display: block;
   }
 
   html[data-mobile-nav="open"] .ecr-global-nav__brand-row {
