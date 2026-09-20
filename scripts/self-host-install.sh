@@ -10,7 +10,17 @@ docker compose version >/dev/null
 ENV_FILE="${ECORIONE_DEPLOY_ENV:-${ECORIONE_PRODUCTION_ENV:-deploy/production.env}}"
 ENV_TEMPLATE="${ECORIONE_DEPLOY_ENV_TEMPLATE:-deploy/production.env.example}"
 COMPOSE_PROJECT="${ECORIONE_COMPOSE_PROJECT:-ecorione}"
+COMPOSE_OVERLAY="${ECORIONE_COMPOSE_OVERLAY:-}"
+EDGE_NETWORK="${ECORIONE_EDGE_NETWORK:-}"
 COMPOSE_ARGS=(-p "$COMPOSE_PROJECT" --env-file "$ENV_FILE" -f deploy/compose.yml)
+if [[ -n "$COMPOSE_OVERLAY" ]]; then
+  [[ -f "$COMPOSE_OVERLAY" ]] || { echo "Missing Compose overlay $COMPOSE_OVERLAY" >&2; exit 1; }
+  [[ ! -L "$COMPOSE_OVERLAY" ]] || { echo "Refusing deploy: Compose overlay $COMPOSE_OVERLAY must not be a symlink" >&2; exit 1; }
+  COMPOSE_ARGS+=(-f "$COMPOSE_OVERLAY")
+fi
+if [[ -n "$EDGE_NETWORK" ]]; then
+  docker network inspect "$EDGE_NETWORK" >/dev/null 2>&1 || { echo "Required Docker edge network $EDGE_NETWORK does not exist" >&2; exit 1; }
+fi
 
 if [[ ! -f "$ENV_FILE" ]]; then
   [[ -f "$ENV_TEMPLATE" ]] || { echo "Missing env template $ENV_TEMPLATE" >&2; exit 1; }
@@ -32,7 +42,7 @@ fi
 docker compose "${COMPOSE_ARGS[@]}" config >/dev/null
 
 if [[ "${1:-}" != "--apply" ]]; then
-  echo "Configuration valid for project=$COMPOSE_PROJECT env=$ENV_FILE. Re-run with --apply to build and start."
+  echo "Configuration valid for project=$COMPOSE_PROJECT env=$ENV_FILE overlay=${COMPOSE_OVERLAY:-none}. Re-run with --apply to build and start."
   exit 0
 fi
 

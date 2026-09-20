@@ -5,7 +5,14 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 ENV_FILE="${ECORIONE_DEPLOY_ENV:-${ECORIONE_PRODUCTION_ENV:-deploy/production.env}}"
 COMPOSE_PROJECT="${ECORIONE_COMPOSE_PROJECT:-ecorione}"
+COMPOSE_OVERLAY="${ECORIONE_COMPOSE_OVERLAY:-}"
+EDGE_NETWORK="${ECORIONE_EDGE_NETWORK:-}"
 COMPOSE_ARGS=(-p "$COMPOSE_PROJECT" --env-file "$ENV_FILE" -f deploy/compose.yml)
+if [[ -n "$COMPOSE_OVERLAY" ]]; then
+  [[ -f "$COMPOSE_OVERLAY" ]] || { echo "ERROR: Compose overlay $COMPOSE_OVERLAY is missing" >&2; exit 1; }
+  [[ ! -L "$COMPOSE_OVERLAY" ]] || { echo "ERROR: Compose overlay $COMPOSE_OVERLAY must not be a symlink" >&2; exit 1; }
+  COMPOSE_ARGS+=(-f "$COMPOSE_OVERLAY")
+fi
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "[preflight] $*"; }
@@ -27,7 +34,12 @@ if command -v stat >/dev/null 2>&1; then
   fi
 fi
 
-info "validating self-host Compose project=$COMPOSE_PROJECT env=$ENV_FILE"
+if [[ -n "$EDGE_NETWORK" ]]; then
+  docker network inspect "$EDGE_NETWORK" >/dev/null 2>&1 || fail "required Docker edge network $EDGE_NETWORK does not exist"
+  info "validated existing Docker edge network=$EDGE_NETWORK"
+fi
+
+info "validating self-host Compose project=$COMPOSE_PROJECT env=$ENV_FILE overlay=${COMPOSE_OVERLAY:-none}"
 docker compose "${COMPOSE_ARGS[@]}" config --quiet
 
 if command -v pnpm >/dev/null 2>&1; then

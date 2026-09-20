@@ -51,6 +51,9 @@ Use a staging-specific env file and Compose project name:
 ```bash
 export ECORIONE_DEPLOY_ENV=deploy/staging.env
 export ECORIONE_COMPOSE_PROJECT=ecorione-staging
+export ECORIONE_COMPOSE_OVERLAY=deploy/compose.sumopod.yml
+export ECORIONE_EDGE_NETWORK=inmydraft-demos_web
+export ECORIONE_TRAEFIK_CERTRESOLVER=letsencrypt
 ```
 
 The historical `ECORIONE_PRODUCTION_ENV` variable remains supported for compatibility, but new staging work should use `ECORIONE_DEPLOY_ENV`.
@@ -64,6 +67,23 @@ All lifecycle scripts use the same variables:
 - `scripts/self-host-rollback.sh`.
 
 This keeps staging volumes/network/container names isolated from a future production Compose project on the same host.
+
+### Existing SumoPod Traefik edge
+
+The audited SumoPod host already has an operator-owned Traefik instance bound to public ports 80/443. ECORIONE staging must not compete for those host ports.
+
+The reviewed `deploy/compose.sumopod.yml` overlay therefore:
+
+- resets the baseline Caddy host port publications;
+- keeps Caddy as ECORIONE's internal routing/policy boundary on port 8080;
+- attaches only that Caddy service to the existing Traefik edge network;
+- lets Traefik terminate public TLS and route the ECORIONE hostname to internal Caddy;
+- preserves the existing Caddy basic-auth boundary for `/ops`, `/api/ops`, `/settings`, and `/api/settings`;
+- does not mount the Docker socket into any ECORIONE container.
+
+On the currently audited host, the existing Traefik network is `inmydraft-demos_web`. Re-verify the network name with `docker inspect traefik` before using this value on a rebuilt or different host.
+
+The lifecycle scripts and sanitized evidence collector honor `ECORIONE_COMPOSE_OVERLAY`. When `ECORIONE_EDGE_NETWORK` is set, preflight/install/upgrade/rollback also fail closed if that Docker network does not exist.
 
 ## Phase A — verify reviewed source
 
@@ -125,7 +145,7 @@ Stop before deployment if:
 - the env file is missing, a symlink, contains placeholders, or is not mode 600;
 - Compose validation fails;
 - disk is below the preflight floor;
-- port 80/443 ownership conflicts with an unexplained workload;
+- port 80/443 ownership conflicts with an unexplained workload, or the existing edge is not the reviewed Traefik deployment;
 - host firewall/SSH posture is not understood;
 - system time is not trustworthy.
 
@@ -149,7 +169,7 @@ docker compose \
   ps
 ```
 
-Do not expose individual RnD, Context, Connect, Hub, Artifact, Sandbox, Space, Flow, Sync, Temporal, or MCP-internal ports to the public Internet.
+Do not expose individual RnD, Context, Connect, Hub, Artifact, Sandbox, Space, Flow, Sync, Temporal, or MCP-internal ports to the public Internet. On this shared SumoPod host, public 80/443 remain owned exclusively by the existing Traefik edge; ECORIONE Caddy stays internal on port 8080.
 
 ## Phase E — minimum PCS-07 staging evidence
 
