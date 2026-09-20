@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { LocalModelDigest } from "./local-model-identity.js";
 import { discoverLocalRuntime, localModelsUrl } from "./local-runtime-discovery.js";
 
 const input = {
@@ -80,7 +81,7 @@ describe("local runtime discovery", () => {
 
   it("reports a declared digest mismatch as not ready", async () => {
     const observed = `sha256:${"a".repeat(64)}`;
-    const declared = `sha256:${"b".repeat(64)}` as const;
+    const declared = `sha256:${"b".repeat(64)}` as LocalModelDigest;
     const fetcher = vi.fn(async (request: string | URL | Request) => {
       const url = String(request);
       if (url.endsWith("/v1/models")) {
