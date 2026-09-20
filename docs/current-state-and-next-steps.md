@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-05 CLOSED / PCS-06 NEXT**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-06 CLOSED / PCS-07 NEXT**
 
 ## Current verdict
 
@@ -75,7 +75,15 @@ Flow now registers graph-state query/signal handlers before its first awaited li
 
 Evidence: [verification/pcs-05-flow-runtime-closure-2026-09-20.md](verification/pcs-05-flow-runtime-closure-2026-09-20.md).
 
-The next scope is **PCS-06 Integrated browser/regression acceptance**.
+## PCS-06 Integrated browser/regression acceptance — CLOSED / PASS
+
+PR #201 exact head `0dfdda92e0bef800ca9a7563223b7423aa9b1299` passed CI #1553 + Product Eval #792 + PCS-06 Integrated Browser Acceptance #13 and merged as `0a8f7619567500acaec0758c400d529367baf0e5`.
+
+The production Next.js UI is now exercised in Chromium across Ai, Projects, Work, Brain, Space, Flow, Operations, and Settings. The acceptance covers canonical conversation replay/continuity, explicit Local-unavailable state, provider onboarding/model selection, theme and narrow layout behavior, console/page-error and page-overflow checks, and Flow Save -> governed authority preparation -> explicit approval -> Run -> completed state. API/provider responses are deterministic same-origin fixtures and external HTTP(S) requests fail the gate, so this evidence does not claim live provider quality, latency, or staging behavior.
+
+Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
+
+The next scope is **PCS-07 SumoPod remote staging deployment**.
 
 ## Post-closure repository hardening
 
