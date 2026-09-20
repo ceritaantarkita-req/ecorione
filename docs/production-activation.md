@@ -1,17 +1,42 @@
 # ECORIONE — Production Activation Workstream
 
-Status: **DEFERRED BY OPERATOR DECISION / TOOLING READY**
+Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING APPROVED**
 Date: 2026-09-20
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
 
-The operator has explicitly chosen **not to deploy to a VPS/compute host yet**. Do not treat that decision as a blocker or failure. Do not perform target-host, Cloudflare, firewall, domain, or hosted-provider mutations unless the operator explicitly resumes this workstream.
+On 2026-09-20 the operator explicitly approved deployment to an operator-owned **SumoPod VPS as remote development/staging** so ECORIONE can run independently of the operator laptop. This does **not** authorize a public production cutover. Production promotion, final public edge/domain posture, and production-only claims remain separate gates.
 
-Current active local work is documented in `docs/current-state-and-next-steps.md`. Local persistence/restart, isolated local backup/restore, bounded local observability, UX/product validation, immutable local-model identity, W16/W17 selector evidence, W18 hosted economics, F6 hardening, W20 final sync, and Product Evolution PE-00..PE-08 are closed at their documented boundaries. There is currently **no active non-deployment implementation batch**. Production activation remains deferred.
+Current next work is documented in `docs/current-state-and-next-steps.md` and `docs/post-closure-product-staging-roadmap.md`. Local persistence/restart, isolated local backup/restore, bounded local observability, prior UX/product validation, immutable local-model identity, W16/W17 selector evidence, W18 hosted economics, F6 hardening, W20 final sync, and Product Evolution PE-00..PE-08 remain closed at their documented boundaries. The new PCS roadmap adds product-experience work plus remote staging without relabeling staging as production.
 
 ## Objective when resumed
 
 Take the repository-verified production/self-host baseline from the already-closed local evidence boundary into a real compute-host deployment, then optionally put Cloudflare Free + a named Tunnel in front of it, validate real providers/traffic, and gather production-only evidence.
+## Remote staging objective now approved
+
+Before any production promotion, establish an operator-owned SumoPod staging environment that can be used from a browser while the operator laptop is offline.
+
+Staging rules:
+
+- GitHub `main` remains the source of truth; live-VPS edits are not the development authority;
+- use existing self-host Compose/owner-volume boundaries rather than inventing a second runtime topology;
+- hosted AI (initially OpenRouter where configured) may be used without any local Ollama dependency;
+- local inference remains optional and OpenAI-compatible;
+- no provider key, VPS password, public/private IP, vault master key, or deployment token is committed to Git;
+- internal service ports remain private; expose only the intended authenticated web edge;
+- validate restart persistence, backup, observability, and rollback on the actual VPS;
+- staging evidence cannot be cited as production evidence.
+
+The intended delivery path is:
+
+```text
+feature branch / PR
+ -> CI and required gates
+ -> merge main
+ -> deploy exact reviewed revision to SumoPod staging
+ -> health/smoke check
+ -> healthy or rollback
+```
 
 ## Completed prerequisites
 
@@ -43,7 +68,7 @@ Sanitized local evidence:
 - `docs/verification/local-backup-restore-closure-2026-09-11.md`;
 - `docs/verification/local-observability-closure-2026-09-12.md`.
 
-## Why production activation remains deferred
+## Why public production activation remains deferred
 
 The operator-approved local-first sequence is now:
 
@@ -57,7 +82,8 @@ local persistence/restart — CLOSED / PASS
   -> F6 hardening — CLOSED / REPO-SIDE PASS
   -> Product Evolution PE-00..PE-08 — CLOSED / PASS
   -> post-closure portability hardening — CLOSED / PASS (PR #182)
-  -> production activation only when the operator explicitly chooses to resume it
+  -> PCS product/UX work + SumoPod remote staging — OPERATOR APPROVED
+  -> public production promotion only after staging evidence + explicit operator decision
 ```
 
 None of the closed local checkpoints should be mislabeled as VPS, Cloudflare, hosted-provider, remote-host durability, or off-host DR evidence.
@@ -94,8 +120,8 @@ Production secrets are never command-line examples in this document. Provider se
 | 4 | Isolated local backup/restore evidence | **DONE / PASS WITH LIMITATIONS** | Existing owner state restored into isolated targets; Temporal/PostgreSQL logical restore verified; absent Sync/Connect source state not claimed |
 | 5 | Local observability baseline | **DONE / BOUNDED LOCAL PASS** | 8 owner reads/lane, 5 ECX, 5 uncached local-model samples, 0 workload errors, 5/5 trace coverage |
 | 6 | UX/product validation | **DONE / REAL-LAPTOP VERIFIED** | Closed in W03 at its documented runtime boundary |
-| 7 | Deploy to real compute host/VPS | **DEFERRED BY OPERATOR** | No host action until explicit resume |
-| 8 | Install Cloudflare Free + named Tunnel | **DEFERRED WITH #7** | Tooling ready; account/host evidence pending |
+| 7 | Deploy to real compute host/VPS | **APPROVED FOR REMOTE STAGING** | SumoPod staging under PCS-07; do not call it production |
+| 8 | Install Cloudflare Free + named Tunnel | **OPTIONAL / NOT YET SELECTED FOR STAGING** | Decide after staging hostname/edge review |
 | 9 | Domain/DNS/HTTPS/Caddy/MCP public routing | **DEFERRED WITH #7** | Requires real target hostname/host |
 | 10 | Origin firewall lockdown | **DEFERRED WITH #7** | Never apply before successful public smoke + SSH/tunnel preconditions |
 | 11 | Production E2E edge smoke | **PENDING FUTURE DEPLOYMENT** | `pnpm production:smoke` on actual public edge |
@@ -105,7 +131,7 @@ Production secrets are never command-line examples in this document. Provider se
 
 ## Resume procedure
 
-When the operator explicitly resumes production deployment, start from synchronized clean `main` and do **read-only checks first**:
+For the approved SumoPod staging deployment, and later again before any production promotion, start from synchronized clean `main` and do **read-only checks first**:
 
 ```bash
 # On the chosen compute host, after cloning/synchronizing the repo:
