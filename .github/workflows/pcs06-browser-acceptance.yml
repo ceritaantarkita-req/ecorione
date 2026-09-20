@@ -1,0 +1,81 @@
+name: PCS-06 Integrated Browser Acceptance
+
+on:
+  pull_request:
+    paths:
+      - "apps/ai/**"
+      - "packages/shared-ui/**"
+      - "services/flow/**"
+      - "scripts/pcs06-browser-acceptance.mjs"
+      - ".github/workflows/pcs06-browser-acceptance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rendered-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: ".node-version"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install ephemeral Chromium QA runtime
+        run: |
+          rm -rf /tmp/pcs06-playwright
+          mkdir -p /tmp/pcs06-playwright
+          cp scripts/pcs06-browser-acceptance.mjs /tmp/pcs06-playwright/acceptance.mjs
+          cat > /tmp/pcs06-playwright/package.json <<'EOF'
+          {
+            "name": "pcs06-browser",
+            "private": true,
+            "type": "module",
+            "dependencies": {
+              "playwright": "1.55.0"
+            }
+          }
+          EOF
+          pnpm --dir /tmp/pcs06-playwright install --frozen-lockfile=false
+          pnpm --dir /tmp/pcs06-playwright exec playwright install --with-deps chromium
+
+      - name: Build product UI
+        run: pnpm run build
+
+      - name: Start production Ai UI
+        run: |
+          nohup pnpm --filter @ecorione/ai start > /tmp/pcs06-ai.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3000/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/pcs06-ai.log
+          exit 1
+
+      - name: Run integrated rendered browser acceptance
+        env:
+          PCS06_BASE_URL: http://127.0.0.1:3000
+          PCS06_ARTIFACT_DIR: ${{ github.workspace }}/artifacts/pcs06-browser
+        run: node /tmp/pcs06-playwright/acceptance.mjs
+
+      - name: Upload PCS-06 browser evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pcs06-integrated-browser-evidence
+          path: |
+            artifacts/pcs06-browser/*.png
+            /tmp/pcs06-ai.log
+          if-no-files-found: warn
+          retention-days: 7
