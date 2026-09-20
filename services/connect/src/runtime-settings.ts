@@ -10,6 +10,12 @@ import { dirname } from "node:path";
 import { isMutableModelAlias } from "@ecorione/shared-telemetry";
 import { z } from "zod";
 import { isLocalReachableHost, localBaseUrlPublicAllowed } from "./local-base-url.js";
+import {
+  GOVERNED_HOSTED_MODEL,
+  HostedModelPreferenceSchema,
+  hostedModelSupported,
+  type HostedModelPreference,
+} from "./hosted-model-catalog.js";
 import { LocalModelDigestSchema, type LocalModelDigest } from "./local-model-identity.js";
 import { HostedProviderIdSchema, type HostedProviderId } from "./provider-types.js";
 import { LocalRuntimeIdSchema, type LocalRuntimeId } from "./providers/local-runtime.js";
@@ -74,9 +80,10 @@ export class MutableLocalModelTagError extends Error {
 export const ChatTargetPreferenceSchema = z.enum(["local", "hosted"]);
 export type ChatTargetPreference = z.infer<typeof ChatTargetPreferenceSchema>;
 
-export const RuntimeSettingsSchema = z
+const RuntimeSettingsObjectSchema = z
   .object({
     hostedProvider: HostedProviderIdSchema,
+    hostedModel: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
     localRuntime: LocalRuntimeIdSchema,
     localBaseUrl: z.string().min(1).max(2048).superRefine(safeBaseUrl),
     localModelTag: z.string().min(1).max(256),
@@ -85,12 +92,22 @@ export const RuntimeSettingsSchema = z
     defaultChatTarget: ChatTargetPreferenceSchema.default("local"),
   })
   .strict();
+
+export const RuntimeSettingsSchema = RuntimeSettingsObjectSchema.superRefine((settings, ctx) => {
+  if (hostedModelSupported(settings.hostedProvider, settings.hostedModel)) return;
+  ctx.addIssue({
+    code: "custom",
+    path: ["hostedModel"],
+    message: `Model ${settings.hostedModel} belum diverifikasi untuk provider ${settings.hostedProvider}.`,
+  });
+});
+
 type ParsedRuntimeSettings = z.infer<typeof RuntimeSettingsSchema>;
 export type RuntimeSettings = Omit<ParsedRuntimeSettings, "localModelDigest"> & {
   readonly localModelDigest?: LocalModelDigest | null | undefined;
 };
 
-export const RuntimeSettingsPatchSchema = RuntimeSettingsSchema.partial().strict();
+export const RuntimeSettingsPatchSchema = RuntimeSettingsObjectSchema.partial().strict();
 export type RuntimeSettingsPatch = z.infer<typeof RuntimeSettingsPatchSchema>;
 
 export interface RuntimeSettingsSnapshot {
@@ -125,6 +142,7 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
     private readonly path: string,
     defaults: {
       hostedProvider: HostedProviderId;
+      hostedModel?: HostedModelPreference | undefined;
       localRuntime: LocalRuntimeId;
       localBaseUrl: string;
       localModelTag: string;
@@ -166,6 +184,11 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
     const settings = RuntimeSettingsSchema.parse({
       ...prior.settings,
       ...normalized,
+      ...(normalized.hostedProvider !== undefined &&
+      normalized.hostedProvider !== prior.settings.hostedProvider &&
+      normalized.hostedModel === undefined
+        ? { hostedModel: GOVERNED_HOSTED_MODEL }
+        : {}),
       ...(identityBoundaryChanged && normalized.localModelDigest === undefined
         ? { localModelDigest: null }
         : {}),
