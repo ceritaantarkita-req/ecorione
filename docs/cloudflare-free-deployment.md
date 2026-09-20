@@ -1,17 +1,17 @@
 # ECORIONE — Cloudflare Free Deployment Guide
 
 Last reviewed against Cloudflare documentation: **2026-09-10**  
-Current project status reconciled: **2026-09-11**
+Current project status reconciled: **2026-09-20**
 
-Status: **FUTURE DEPLOYMENT OPTION / DEFERRED BY OPERATOR DECISION**
+Status: **OPTIONAL PUBLIC EDGE / NOT YET SELECTED FOR SUMOPOD STAGING**
 
-This file remains the deployment guide for a future Cloudflare Free + Tunnel rollout. It is **not the active next checkpoint**. Local persistence/restart is now **CLOSED / PASS** for the tested laptop boundary; the operator-approved active next checkpoint is **isolated local backup/restore**, followed by observability, product validation, and local model-identity hardening before deciding whether to deploy to a VPS/compute host.
+This file remains the deployment guide for a future Cloudflare Free + Tunnel rollout. The operator has now approved an operator-owned SumoPod VPS for **remote development/staging**, but has **not yet selected Cloudflare Tunnel as the staging/public edge**. Staging may proceed through the self-host runbook first; Cloudflare remains a separate optional edge decision.
 
-The local Comparative ECX checkpoint is **CLOSED / PASS WITH LIMITATIONS**. Neither that result nor the local persistence/restart PASS changes this deployment deferral or constitutes Cloudflare/VPS evidence.
+The closed local checkpoints do not constitute remote-host or Cloudflare evidence. The approved SumoPod staging deployment must generate its own persistence/security/backup/observability evidence, and that staging evidence still does not constitute public production evidence.
 
-Do not execute Cloudflare account, DNS, Tunnel, firewall, or target-host mutation from the current local workstream. Resume this guide only after an explicit operator decision. Current state: `docs/current-state-and-next-steps.md`.
+Do not execute Cloudflare account, DNS, Tunnel, or origin-lockdown mutation merely because SumoPod staging is approved. Use this guide only after an explicit edge/hostname decision. Current state: `docs/current-state-and-next-steps.md`; staging roadmap: `docs/post-closure-product-staging-roadmap.md`.
 
-## 1. Architecture decision when deployment resumes
+## 1. Architecture decision if Cloudflare is selected
 
 If the operator later chooses Cloudflare Free for the public edge, the recommended topology remains:
 
@@ -53,7 +53,7 @@ Do not interpret “Cloudflare Free deployment” as “zero infrastructure cost
 
 ## 3. Prerequisites before any future mutation
 
-When this workstream is explicitly resumed:
+When Cloudflare/public-edge work is explicitly selected:
 
 1. start from reviewed synchronized `main`;
 2. inventory chosen target host before installing anything;
@@ -67,7 +67,7 @@ When this workstream is explicitly resumed:
 
 Laptop/local evidence cannot satisfy target-host prerequisites. This includes local Comparative ECX, local persistence/restart, and local backup/restore results.
 
-## 4. Recommended rollout when resumed
+## 4. Recommended rollout if Cloudflare is selected
 
 The safest sequence remains staged rather than changing application, DNS, TLS, Tunnel, and firewall state simultaneously.
 
@@ -235,13 +235,14 @@ Cloudflare edge rollback and ECORIONE application/data rollback are separate ope
 
 ECORIONE already has production Compose/Caddy, release tooling, observability, provider canaries, guarded Tunnel/origin scripts, and real public HTTPS MCP acceptance. A persistent named Cloudflare production tunnel remains an operator deployment action.
 
-Current state on 2026-09-11:
+Current state on 2026-09-20:
 
 - local runtime and Historical Ledger + ECX traffic/integrity evidence: **CLOSED**;
 - local Comparative ECX evidence: **CLOSED / PASS WITH LIMITATIONS**;
 - local persistence/restart evidence: **CLOSED / PASS**;
-- isolated local backup/restore evidence: **ACTIVE NEXT CHECKPOINT**;
-- VPS/compute-host deployment: **DEFERRED BY OPERATOR**;
-- Cloudflare named Tunnel/public cutover: **DEFERRED WITH DEPLOYMENT**.
+- isolated local backup/restore evidence: **CLOSED / PASS WITH DOCUMENTED LIMITATIONS**;
+- SumoPod VPS remote development/staging: **APPROVED NEXT SCOPE** under PCS-07..PCS-09;
+- Cloudflare named Tunnel/public edge: **OPTIONAL / NOT YET SELECTED**;
+- public production cutover: **DEFERRED PENDING STAGING EVIDENCE + EXPLICIT OPERATOR PROMOTION**.
 
 If Cloudflare provisioning is automated further later, it must remain a new explicit operations scope with least-privilege credentials, deterministic hostname/config validation, rollback, no personal production credentials in CI, and no weakening of Hub/Connect authorization boundaries.

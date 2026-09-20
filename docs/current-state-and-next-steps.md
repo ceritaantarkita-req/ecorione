@@ -2,13 +2,32 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / POST-CLOSURE PRODUCT + REMOTE STAGING SCOPE APPROVED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## Operator decision — 2026-09-20
+
+The operator approved a new post-closure scope after real browser use on a clean local checkout. This does not reopen PE-00..PE-08 and is not Batch 13.
+
+The next scope is documented in [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md) and covers:
+
+- persistent Ai conversation/session history across navigation;
+- simpler provider/API-key onboarding with technical controls moved behind Advanced surfaces;
+- OpenRouter user-facing model selection plus a governed/recommended pinned route;
+- local AI reachability detection with Ollama remaining optional rather than required;
+- product-wide visual/information-architecture cleanup;
+- closure of observed Flow runtime/query/authority failures;
+- integrated real-browser regression;
+- operator-owned SumoPod deployment as **remote development/staging**;
+- GitHub `main` as source of truth with verified GitHub-to-staging deployment, health checks, and rollback;
+- staging persistence, HTTPS/auth, backup, and observability before any production-promotion decision.
+
+Production public cutover remains a separate gate. Remote staging approval must not be mislabeled as production evidence.
 
 ## Post-closure repository hardening
 
@@ -104,8 +123,10 @@ PE-08 is not a feature expansion batch. Production VPS/Cloudflare, rendered loca
 
 Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
 
-## Deferred
+## Current next scope and deferred boundaries
 
-- VPS/Cloudflare activation — deferred by operator;
-- AutoClick — deferred by design;
+- Post-closure product/UX + SumoPod remote staging — **APPROVED / NEXT SCOPE**; see `post-closure-product-staging-roadmap.md`.
+- Public production cutover — still deferred until staging, remote persistence, security, backup, observability, and operator acceptance are proven.
+- Cloudflare named Tunnel/public-edge choice — optional/pending operator hostname/edge decision.
+- AutoClick — deferred by design.
 - paid W18 rerun — closed/not authorized.

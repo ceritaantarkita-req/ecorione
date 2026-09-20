@@ -1,6 +1,6 @@
 # ecorione — Design Document (Visual & UI/UX)
 
-Status: **APPROVED v1.1** — 2026-09-07. Identitas visual (warna, tipografi, komponen) tidak berubah dari v1.0 yang sudah disetujui; v1.1 hanya menyelaraskan **denah kawasan** dengan `prd.md` v2.0 hasil riset teknis (13 kavling → 11; lihat §4 "Revisi C").
+Status: **APPROVED v1.2** — 2026-09-20. v1.2 mempertahankan identitas visual inti (dark premium, gold restrained, Fraunces/Manrope/IBM Plex Mono) dan menambahkan arahan product-UI pasca real-browser review: hierarki lebih kuat, keterbacaan lebih tinggi, Simple/Advanced separation, state yang eksplisit, dan konsistensi lintas Ai/Projects/Work/Brain/Space/Flow/Operations/Settings.
 
 Riwayat: DRAFT v0.1 (hangat, terracotta/sage — ditolak, kurang premium/netral) → DRAFT v0.2 (gelap mewah, gold+graphite — arah disetujui tapi struktur halaman masih generik/"AI slop") → DRAFT v0.3 (nama modul tidak lagi bernama "InMyX", lihat `prd.md` §18; bentuk halaman diganti konsep dokumen perencanaan distrik) → DRAFT v0.4 (toggle pratinjau tema disederhanakan jadi Terang/Gelap saja, opsi "Sistem" dihapus; neutral terang awal → broken white) → DRAFT v0.5 (dasar mode terang `--bg` diputihkan penuh jadi `#FFFFFF`, sebelumnya broken-white `#FAF9F6` masih dirasa kurang putih) → **APPROVED v1.0** (disetujui, siap jadi basis Fase 0).
 Pasangan dokumen: `prd.md` (produk + arsitektur teknis), dokumen ini (identitas visual & UI/UX)
@@ -135,3 +135,32 @@ Dark tetap identitas utama, light didukung penuh sebagai varian "quiet luxury" �
 - Terapkan penamaan baru (Ai, Hub, Connect, dst) secara konsisten begitu masuk fase implementasi kode (nama folder, package, dan string UI).
 - Uji kontras aksesibilitas gold-on-dark untuk teks kecil sebelum dipakai di komponen produksi.
 - Turunkan token warna (§2) jadi `packages/shared-ui` (CSS custom properties) begitu Fase 0 dimulai — lihat `prd.md` §10, §22.
+
+---
+
+## 11. Post-Closure Product UI Addendum — 2026-09-20
+
+Real browser use after PE-08 showed that the approved visual identity is still valid, but the implemented product surfaces need a stronger product hierarchy. The next UI work follows the post-closure roadmap and uses these rules:
+
+1. **Simple in front, governed underneath.** Normal users see provider connection, model choice, chat/history, project/work context, and clear status. Vault, SHA-256 identity, raw base URLs, spend controls, MCP JSON, and other operator internals move behind Advanced surfaces.
+2. **Readability before decoration.** Dark remains the primary identity, but contrast between background, panels, controls, disabled states, warnings, and secondary text must be visibly stronger. Native controls must not become unreadable on Windows/Chrome.
+3. **Hierarchy before whitespace.** Large empty areas are only acceptable when intentional. Primary task content should have a bounded readable width, stable alignment, and clear section rhythm.
+4. **Primary vs advanced navigation.** Ai, Projects, Work, and Brain are primary product surfaces. Flow, Operations, and Settings may expose advanced/operator depth without making the whole product feel like a developer console.
+5. **State must be explicit.** Examples: `OpenRouter · Connected`, `Local AI · Not connected`, `Hosted · OpenRouter · Claude Sonnet 4.5`, `Flow run · Failed — authority denied`. Do not make users infer state from disabled controls or raw HTTP errors.
+6. **Provider/model controls are product controls.** The chat selector should show the active route/provider/model clearly. OpenRouter should expose verified model choices when supported; governed/recommended routing remains available for pinned/evidence-sensitive use.
+7. **Session continuity is part of UX.** Leaving Ai and returning must not visually reset the conversation. Active chat/history/new-chat affordances are required.
+8. **Consistent component scale.** Buttons, inputs, selects, tabs, cards, tables, empty states, and inspector panels use consistent height, type size, spacing, focus, hover, disabled, success, warning, and error treatment.
+9. **Technical language is progressive disclosure.** User-facing copy should prefer task language; operator/internal terms remain available where they add real control.
+10. **No backend ownership shortcut.** UI simplification must not bypass Hub authority, Connect Vault/provider ownership, Context ownership, Temporal durability, or other accepted architecture.
+
+### Immediate visual targets
+
+- fix dark-mode dropdown/option readability;
+- increase small-text readability in Settings, Work, Flow, and Operations;
+- reduce near-black-on-black ambiguity between page, panel, and input surfaces;
+- make primary actions and status indicators easier to scan;
+- simplify Settings into Basic and Advanced sections;
+- make Ai composer/provider/model state understandable without knowing `local` vs `hosted` internals;
+- keep the current restrained premium identity rather than replacing it with a colorful dashboard aesthetic.
+
+This addendum is the visual baseline for PCS-04 and related PCS-01..PCS-03 product surfaces. It does not by itself claim that the implemented UI has already been updated.

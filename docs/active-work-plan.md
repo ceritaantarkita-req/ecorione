@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / REPOSITORY HARDENING ONLY / NO ACTIVE PE BATCH**
+Status: **PRODUCT EVOLUTION CLOSED / POST-CLOSURE PRODUCT + REMOTE STAGING NEXT SCOPE APPROVED**
 
 ## Latest repository-hardening closure
 
@@ -19,7 +19,7 @@ Windows tests        990 PASS + 3 skipped
 
 This is maintenance hardening, not PE-09 or Batch 13. The clean-checkout follow-up is CLOSED / PASS on PR #183: implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed CI #1479 + Product Eval #718; final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 + Product Eval #721 and merged as `4980b3ceb149be58788467d2e11769de12977d5a`.
 
-The final fresh-clone Windows EOL follow-up is also CLOSED / PASS on PR #185. It normalized only the three `.cmd` Git blobs (semantic diff = 0), preserved CRLF checkout via `.gitattributes`, passed CI #1486 + Product Eval #725 + Desktop Installer #76, merged as `4194e89a2b0611897969eaca2cb9c2b4b360c774`, and post-merge main passed CI #1487 + Product Eval #726. No active implementation batch remains.
+The final fresh-clone Windows EOL follow-up is also CLOSED / PASS on PR #185. It normalized only the three `.cmd` Git blobs (semantic diff = 0), preserved CRLF checkout via `.gitattributes`, passed CI #1486 + Product Eval #725 + Desktop Installer #76, merged as `4194e89a2b0611897969eaca2cb9c2b4b360c774`, and post-merge main passed CI #1487 + Product Eval #726. No PE or repository-hardening implementation batch remains; the separately approved PCS roadmap is the next scope.
 
 ## Latest Product Evolution closure
 
@@ -42,9 +42,27 @@ normal tests                    991 PASS + 2 skipped
 Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).  
 Closure evidence: [verification/pe-08-product-closure-2026-09-19.md](verification/pe-08-product-closure-2026-09-19.md).
 
-## Active item
+## Active next scope
 
-There is **no active Product Evolution batch**. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries. New product work requires an explicit new roadmap/decision; do not create Batch 13 implicitly.
+There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSED / PASS. The operator has now explicitly approved the separate post-closure roadmap [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md); it must not be renamed PE-09 or Batch 13.
+
+Current execution order:
+
+```text
+PCS-00 baseline lock
+ -> PCS-01 chat continuity/history
+ -> PCS-02 provider onboarding + hosted model choice
+ -> PCS-03 local AI resilience/runtime discovery
+ -> PCS-04 visual + information-architecture cleanup
+ -> PCS-05 Flow runtime defect closure
+ -> PCS-06 integrated browser/regression acceptance
+ -> PCS-07 SumoPod remote staging
+ -> PCS-08 GitHub -> staging continuous deployment
+ -> PCS-09 staging persistence/security/backup/observability
+ -> PCS-10 closure/docs
+```
+
+The SumoPod target is a **remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source.
 
 ## Closed PE-08 boundary
 
@@ -98,5 +116,5 @@ PE-08          CLOSED / PASS
 - Brain remains rebuildable/derived, not canonical persistence;
 - MAX_AUTONOMY_V1 stays L3;
 - no paid hosted evidence without explicit authorization;
-- production VPS/Cloudflare remains deferred by operator;
+- public production cutover remains deferred; operator-owned SumoPod remote staging is approved under PCS-07..PCS-09;
 - AutoClick remains deferred by design.
