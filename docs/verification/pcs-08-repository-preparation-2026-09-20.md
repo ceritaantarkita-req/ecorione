@@ -2,7 +2,7 @@
 
 Date: **2026-09-20**
 
-Status: **REPOSITORY + HOST BOUNDARY PASS / FIRST GOVERNED DEPLOY EXERCISED / RETRY PENDING**
+Status: **REPOSITORY + HOST BOUNDARY PASS / GOVERNED DEPLOY PASS / ROLLBACK CLOSURE PENDING**
 
 ## Scope
 
@@ -125,16 +125,43 @@ This failure therefore produced useful real rollback evidence while exposing a b
 
 PR #214 exact head `bd130417484edcedfd1632207d53744cc5024db1` added a bounded public-edge readiness wait without weakening the subsequent full smoke/ops/exact-host gates. It passed CI #1628 + Product Eval #867 and merged as `0b50a426ca2b14202eba769297af6c15a579b09f`. Push `main` then passed CI #1629 + Product Eval #868. Staging Deploy workflow-run gates #32/#33 passed while deployment remained skipped because activation was still disabled.
 
-The host-installed root deploy control must be refreshed from exact reviewed merge `0b50a426ca2b14202eba769297af6c15a579b09f` before the next controlled deployment attempt.
+The host-installed root deploy control was refreshed from exact reviewed merge `0b50a426ca2b14202eba769297af6c15a579b09f` without moving the known-good live checkout. The installed file byte-matched the reviewed Git blob, passed `bash -n`, and the readiness-wait markers were present. The live runtime remained healthy at the prior revision before retry.
+
+The second controlled deployment then passed end-to-end:
+
+```text
+workflow run                  35531374454
+target SHA                    0b50a426ca2b14202eba769297af6c15a579b09f
+gate                          PASS
+least-privilege SSH identity  PASS
+target image                  ecorione:staging-0b50a426ca2b
+public readiness              attempt 4 PASS (home 200, /ops 401)
+public smoke                  PASS
+authenticated /api/ops        healthy=true, 0 unhealthy required services
+exact-host evidence           expectedShaMatched=true
+configured/running services   15 / 15
+worktree                      clean / DETACHED
+deployment env                mode 600 / no placeholders
+release result                PASS
+```
+
+The readiness fix behaved as intended: attempts 1–3 observed home HTTP 502 while `/ops` was already 401, then attempt 4 observed home 200 and `/ops` 401. Only after that bounded readiness gate passed did the full public smoke, authenticated operations snapshot, and exact-host evidence run.
+
+The workflow ended with:
+
+```text
+PASS PCS-08 staging deploy sha=0b50a426ca2b14202eba769297af6c15a579b09f tag=staging-0b50a426ca2b
+```
+
+This is the first successful real GitHub -> SumoPod exact-main deployment through the PCS-08 path.
 
 ## Pending evidence
 
 Before PCS-08 can close:
 
-1. refresh the host-installed root deploy control from reviewed merge `0b50a426ca2b14202eba769297af6c15a579b09f`;
-2. a real current `main` SHA must deploy successfully through the GitHub workflow after both main gates pass;
-3. release receipt, public smoke, ops health, and exact-host evidence must match;
-4. controlled rollback evidence must be completed against the readiness-aware verifier;
-5. intended current `main` must be restored after the rollback exercise.
+1. verify the host release receipt matches `0b50a426ca2b14202eba769297af6c15a579b09f` / `staging-0b50a426ca2b`;
+2. complete a deliberate controlled rollback exercise against the readiness-aware verifier;
+3. restore the intended current `main` revision after the rollback exercise;
+4. record final PCS-08 closure evidence.
 
 No source-only result is sufficient to claim those remote boundaries.
