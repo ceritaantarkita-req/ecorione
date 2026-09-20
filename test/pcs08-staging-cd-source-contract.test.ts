@@ -21,6 +21,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(workflow).toContain("gate_success product-eval.yml");
     expect(workflow).toContain('select(.conclusion == "success")');
     expect(workflow).toContain("Skipping stale SHA");
+    expect(workflow).toContain(
+      "group: staging-deploy-${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}",
+    );
   });
 
   it("keeps staging SSH material in the protected staging environment", () => {
@@ -60,7 +63,10 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("current_tag=");
     expect(rootDeploy).toContain("previous_sha=");
     expect(rootDeploy).toContain("previous_tag=");
-    expect(rootDeploy).toContain("staging deploy already recorded");
+    expect(rootDeploy).toContain("staging deploy already recorded and revalidated");
+    expect(rootDeploy).toContain("validate_deployed_revision");
+    expect(rootDeploy).toContain("staging release state must be root-owned");
+    expect(rootDeploy).toContain("Recorded staging deployment failed health/evidence revalidation");
   });
 
   it("requires preflight, runtime health, public smoke, ops health, and exact-host evidence", () => {
@@ -71,6 +77,7 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("scripts/production-ops-snapshot.mjs");
     expect(rootDeploy).toContain("scripts/staging-host-evidence.mjs");
     expect(rootDeploy).toContain('ECORIONE_EXPECTED_SHA="$TARGET_SHA"');
+    expect(rootDeploy).toContain('validate_deployed_revision "$TARGET_TAG" "$TARGET_SHA"');
   });
 
   it("fails the release and attempts known-good rollback when a post-deploy gate fails", () => {
