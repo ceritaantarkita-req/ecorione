@@ -5,15 +5,25 @@ import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const envPath = resolve(
-  ROOT,
-  process.env.ECORIONE_DEPLOY_ENV ??
-    process.env.ECORIONE_PRODUCTION_ENV ??
-    "deploy/production.env",
-);
-const composeProject = process.env.ECORIONE_COMPOSE_PROJECT ?? "ecorione";
-const expectedSha = process.env.ECORIONE_EXPECTED_SHA?.trim() || null;
+const deployEnv = process.env.ECORIONE_DEPLOY_ENV?.trim();
+const composeProject = process.env.ECORIONE_COMPOSE_PROJECT?.trim();
+const expectedSha = process.env.ECORIONE_EXPECTED_SHA?.trim();
 const outputPath = process.env.ECORIONE_STAGING_EVIDENCE_OUT?.trim() || null;
+
+if (!deployEnv) {
+  throw new Error("ECORIONE_DEPLOY_ENV is required for staging evidence.");
+}
+if (!composeProject) {
+  throw new Error("ECORIONE_COMPOSE_PROJECT is required for staging evidence.");
+}
+if (!/^[a-z0-9][a-z0-9_-]*$/.test(composeProject)) {
+  throw new Error("ECORIONE_COMPOSE_PROJECT has an invalid Compose project name.");
+}
+if (!expectedSha || !/^[0-9a-f]{40}$/.test(expectedSha)) {
+  throw new Error("ECORIONE_EXPECTED_SHA must be the exact 40-character reviewed Git commit.");
+}
+
+const envPath = resolve(ROOT, deployEnv);
 
 function command(commandName, args, options = {}) {
   const result = spawnSync(commandName, args, {
@@ -83,7 +93,7 @@ if (!cleanWorktree) {
     "Git worktree is not clean; staging evidence must use reviewed source without host edits.",
   );
 }
-if (expectedSha !== null && headSha !== expectedSha) {
+if (headSha !== expectedSha) {
   throw new Error(
     "HEAD does not match ECORIONE_EXPECTED_SHA; refusing to label this host as reviewed staging.",
   );
@@ -142,7 +152,7 @@ const evidence = {
   source: {
     headSha,
     expectedSha,
-    expectedShaMatched: expectedSha === null ? null : headSha === expectedSha,
+    expectedShaMatched: headSha === expectedSha,
     branch,
     cleanWorktree,
   },
