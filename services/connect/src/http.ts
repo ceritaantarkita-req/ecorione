@@ -36,12 +36,12 @@ import {
   HostedProviderIdSchema,
   type HostedProviderId,
 } from "./provider-types.js";
-import type {
-  ChatTargetPreference,
-  RuntimeSettings,
-  RuntimeSettingsAdmin,
+import {
+  LocalBaseUrlSchema,
+  type ChatTargetPreference,
+  type RuntimeSettings,
+  type RuntimeSettingsAdmin,
 } from "./runtime-settings.js";
-import { LocalBaseUrlSchema } from "./runtime-settings.js";
 import { MutableLocalModelTagError } from "./runtime-settings.js";
 import {
   CostKillSwitchError,
