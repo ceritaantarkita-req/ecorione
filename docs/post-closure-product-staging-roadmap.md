@@ -90,6 +90,8 @@ Acceptance: an ordinary user can connect a supported hosted provider without edi
 
 ### PCS-03 — Local AI resilience and runtime discovery
 
+State: **CLOSED / PASS**. PR #195 exact head `5be1c68f7b345d5e7d433a9eed302000ffe552a1` passed CI #1525 + Product Eval #764 and merged as `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`. Evidence: [verification/pcs-03-local-ai-resilience-2026-09-20.md](verification/pcs-03-local-ai-resilience-2026-09-20.md).
+
 - preserve `openai-compatible` as the local-runtime abstraction;
 - do not make Ollama mandatory;
 - detect whether the configured local endpoint/model is reachable;
