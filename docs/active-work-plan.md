@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-02 CLOSED / PCS-03 NEXT**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-03 CLOSED / PCS-04 NEXT**
 
 ## Latest repository-hardening closure
 
@@ -52,7 +52,9 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-02 AI provider onboarding + hosted model choice is CLOSED / PASS.** PR #193 exact head `45dbe9365b23dfa3398a4726a26f9a245bd09e9d` passed CI #1516 + Product Eval #755 and merged as `0fba6842f4c39f2742eb6d518e63c90d1a4883db`. Connect remains the provider credential/runtime/model authority. Evidence: [verification/pcs-02-provider-onboarding-2026-09-20.md](verification/pcs-02-provider-onboarding-2026-09-20.md).
 
-**PCS-03 Local AI resilience/runtime discovery is NEXT.** Preserve the OpenAI-compatible abstraction, treat no local runtime as a supported state, and do not silently fall back between Local and Hosted.
+**PCS-03 Local AI resilience/runtime discovery is CLOSED / PASS.** PR #195 exact head `5be1c68f7b345d5e7d433a9eed302000ffe552a1` passed CI #1525 + Product Eval #764 and merged as `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`. Connect remains the local-runtime owner; OpenAI-compatible remains the abstraction; no local runtime is a supported explicit state; no silent Local/Hosted fallback was introduced. Evidence: [verification/pcs-03-local-ai-resilience-2026-09-20.md](verification/pcs-03-local-ai-resilience-2026-09-20.md).
+
+**PCS-04 Product visual + information-architecture cleanup is NEXT.** Improve hierarchy/readability and primary-vs-advanced UX across the product without changing backend ownership or reopening closed architecture decisions.
 
 Current execution order:
 
