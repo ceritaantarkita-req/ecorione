@@ -136,7 +136,7 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-height: 34px;
+  min-height: var(--control-height);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-2);
@@ -181,7 +181,7 @@
 .button,
 .buttonPrimary,
 .buttonDanger {
-  min-height: 34px;
+  min-height: var(--control-height);
   padding: 0 11px;
 }
 
