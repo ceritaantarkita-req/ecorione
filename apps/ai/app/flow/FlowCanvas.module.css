@@ -772,6 +772,56 @@
   display: none;
 }
 
+.authorityPanel {
+  min-width: 0;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: 9px;
+  background: color-mix(in srgb, var(--surface) 82%, var(--bg));
+}
+
+.authorityHeader,
+.authorityRequirement {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.authorityHeader > div,
+.authorityRequirement > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.authorityHeader strong {
+  font-size: 11.5px;
+}
+
+.authorityHeader span,
+.authorityRequirement span {
+  color: var(--text-muted);
+  font: 8.5px var(--font-mono);
+  line-height: 1.45;
+}
+
+.authorityRequirement {
+  padding: 9px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.authorityRequirement code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 9px;
+}
+
 .runPanel {
   min-width: 0;
   min-height: 190px;
@@ -900,7 +950,7 @@
   .topActions {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .topActions > * {
@@ -927,6 +977,20 @@
   .loadField > span {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .authorityPanel {
+    padding: 10px 14px;
+  }
+
+  .authorityHeader,
+  .authorityRequirement {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .authorityHeader > button {
+    width: 100%;
   }
 
   .mobileModeSwitch {
