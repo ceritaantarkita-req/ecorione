@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-02 CLOSED / PCS-03 NEXT**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-03 CLOSED / PCS-04 NEXT**
 
 ## Current verdict
 
@@ -51,7 +51,15 @@ Settings now provides provider cards, transient key testing before encrypted sav
 
 Evidence: [verification/pcs-02-provider-onboarding-2026-09-20.md](verification/pcs-02-provider-onboarding-2026-09-20.md).
 
-The next scope is **PCS-03 Local AI resilience/runtime discovery**.
+## PCS-03 Local AI resilience/runtime discovery — CLOSED / PASS
+
+PR #195 exact head `5be1c68f7b345d5e7d433a9eed302000ffe552a1` passed CI #1525 + Product Eval #764 and merged as `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`.
+
+Connect now exposes explicit Local runtime/model readiness, transient candidate discovery before persistence, optional runtime-backed digest resolution, and fail-closed identity mismatch handling. Settings treats no local runtime as a supported state and keeps Ollama optional. Ai blocks a Local route already known to be unavailable rather than sending a predictable 502, and does not silently fall back to Hosted.
+
+Evidence: [verification/pcs-03-local-ai-resilience-2026-09-20.md](verification/pcs-03-local-ai-resilience-2026-09-20.md).
+
+The next scope is **PCS-04 Product visual + information-architecture cleanup**.
 
 ## Post-closure repository hardening
 
