@@ -39,8 +39,8 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 | PCS-00 Baseline lock | **CLOSED / PASS** |
 | PCS-01 Chat continuity/history | **CLOSED / PASS** |
 | PCS-02 Provider onboarding + hosted model choice | **CLOSED / PASS** |
-| PCS-03 Local AI resilience/runtime discovery | **NEXT** |
-| PCS-04 Visual + information-architecture cleanup | **PLANNED** |
+| PCS-03 Local AI resilience/runtime discovery | **CLOSED / PASS** |
+| PCS-04 Visual + information-architecture cleanup | **NEXT** |
 | PCS-05 Flow runtime defect closure | **PLANNED** |
 | PCS-06 Integrated browser/regression acceptance | **PLANNED** |
 | PCS-07 SumoPod remote staging | **APPROVED / PLANNED** |
@@ -52,7 +52,9 @@ PCS-00 locked `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19` as the po
 
 PCS-01 closed on PR #191 exact head `9445b30c659628e1d551191219d0b7cd5ccf2f7c`, which passed CI #1505 + Product Eval #744 and merged as `ee363c055944b27b549a2f061105eea35fa25f9e`. Chat continuity now reuses Historical Ledger canonical replay, preserves active session per Project, exposes explicit New chat/history navigation, and enforces Project-bound History reads. Evidence: [verification/pcs-01-chat-continuity-2026-09-20.md](verification/pcs-01-chat-continuity-2026-09-20.md).
 
-PCS-02 closed on PR #193 exact head `45dbe9365b23dfa3398a4726a26f9a245bd09e9d`, which passed CI #1516 + Product Eval #755 and merged as `0fba6842f4c39f2742eb6d518e63c90d1a4883db`. Settings now exposes a simple provider connect flow and verified hosted model choice while keeping Connect Vault/runtime governance authoritative. PCS-03 is next. Evidence: [verification/pcs-02-provider-onboarding-2026-09-20.md](verification/pcs-02-provider-onboarding-2026-09-20.md).
+PCS-02 closed on PR #193 exact head `45dbe9365b23dfa3398a4726a26f9a245bd09e9d`, which passed CI #1516 + Product Eval #755 and merged as `0fba6842f4c39f2742eb6d518e63c90d1a4883db`. Settings now exposes a simple provider connect flow and verified hosted model choice while keeping Connect Vault/runtime governance authoritative. Evidence: [verification/pcs-02-provider-onboarding-2026-09-20.md](verification/pcs-02-provider-onboarding-2026-09-20.md).
+
+PCS-03 closed on PR #195 exact head `5be1c68f7b345d5e7d433a9eed302000ffe552a1`, which passed CI #1525 + Product Eval #764 and merged as `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`. Local AI now exposes explicit runtime/model readiness, probes candidate settings before persistence, preserves OpenAI-compatible as the abstraction, keeps Ollama optional, and blocks known-unavailable Local chat without silent Hosted fallback. PCS-04 is next. Evidence: [verification/pcs-03-local-ai-resilience-2026-09-20.md](verification/pcs-03-local-ai-resilience-2026-09-20.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional/not yet selected for staging. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
