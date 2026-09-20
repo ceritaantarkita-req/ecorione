@@ -8,19 +8,19 @@ This file is the single navigation entry point for repository documentation. If 
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — current state and next scope.
 2. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — operator-approved product/UX + SumoPod staging roadmap.
-4. **[active-work-plan.md](active-work-plan.md)** — only work that is actually active.
-4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — next product model and ownership rules.
-5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — PE-00 through PE-08 batch plan.
+3. **[active-work-plan.md](active-work-plan.md)** — only work that is actually active.
+4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — closed PE product model and ownership rules.
+5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — closed PE-00 through PE-08 batch plan.
 6. **[product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)** — PE-01 ownership + migration contract.
-7. **[product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)** — required PE-01 closure behavior.
-8. **[product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md)** — required PE-02 source-binding closure behavior.
-9. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — closed PE-03 Trigger contract.
-10. **[product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md)** — closed PE-04 Work/Schedule/Runs contract.
-11. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — closed PE-05 Event/Webhook contract.
-12. **[product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md)** — closed PE-06 Brain V1 contract.
-13. **[product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md)** — closed PE-07 Brain + Context + ECX contract.
-14. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — closed PE-08 Product closure contract.
-15. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — exact procedure for humans/agents implementing PE work.
+7. **[product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)** — closed PE-01 acceptance.
+8. **[product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md)** — closed PE-02 acceptance.
+9. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — closed PE-03 acceptance.
+10. **[product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md)** — closed PE-04 acceptance.
+11. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — closed PE-05 acceptance.
+12. **[product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md)** — closed PE-06 acceptance.
+13. **[product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md)** — closed PE-07 acceptance.
+14. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — closed PE-08 acceptance.
+15. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — procedure/reference for historical PE work.
 16. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
 17. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
 
@@ -31,6 +31,7 @@ When wording conflicts:
 ```text
 current code + tests
   > current-state-and-next-steps.md
+  > post-closure-product-staging-roadmap.md
   > active-work-plan.md
   > accepted ADRs
   > product-evolution-architecture.md
