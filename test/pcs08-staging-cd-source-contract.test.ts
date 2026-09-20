@@ -13,8 +13,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(workflow).toContain("github.event.workflow_run.head_branch == 'main'");
     expect(workflow).toContain("github.event.workflow_run.conclusion == 'success'");
     expect(workflow).toContain("commits/main");
-    expect(workflow).toContain("actions/workflows/ci.yml/runs");
-    expect(workflow).toContain("actions/workflows/product-eval.yml/runs");
+    expect(workflow).toContain('"repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_file}/runs"');
+    expect(workflow).toContain("gate_success ci.yml");
+    expect(workflow).toContain("gate_success product-eval.yml");
     expect(workflow).toContain('select(.conclusion == "success")');
     expect(workflow).toContain("Skipping stale SHA");
   });
@@ -43,7 +44,7 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(workflow).not.toContain("git pull");
     expect(forcedCommand).not.toContain("git pull");
     expect(rootDeploy).not.toContain("git pull");
-    expect(rootDeploy).toContain("git fetch origin main --prune");
+    expect(rootDeploy).toContain("owner_git fetch origin main --prune");
     expect(rootDeploy).toContain('[[ "$TARGET_SHA" == "$REMOTE_MAIN" ]]');
   });
 
