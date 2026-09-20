@@ -118,7 +118,7 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current next/deferred scopes
 
-- SumoPod remote development/staging — **approved next scope** under PCS-07..PCS-09.
+- SumoPod remote development/staging — **PCS-07 CLOSED / PASS; PCS-08 ACTIVE; PCS-09 PLANNED**.
 - public production cutover — deferred until staging evidence and explicit operator promotion decision.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
 - AutoClick — deferred by design.

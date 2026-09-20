@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-06 CLOSED / PCS-07 ACTIVE**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-07 CLOSED / PCS-08 ACTIVE**
 
 ## Current verdict
 
@@ -83,11 +83,15 @@ The production Next.js UI is now exercised in Chromium across Ai, Projects, Work
 
 Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
 
-## PCS-07 SumoPod remote staging deployment — ACTIVE
+## PCS-07 SumoPod remote staging deployment — CLOSED / PASS
 
-Repository-side staging preparation is **PASS** through PR #203 + PR #204. The repo now supports an isolated host env via `ECORIONE_DEPLOY_ENV`, an isolated Compose namespace via `ECORIONE_COMPOSE_PROJECT`, ignores `deploy/*.env`, hardens lifecycle env-file checks, and provides `pnpm staging:host-evidence` for sanitized exact-revision/service/volume inventory. Evidence: [verification/pcs-07-repository-preparation-2026-09-20.md](verification/pcs-07-repository-preparation-2026-09-20.md). The active read-only-first procedure is [sumopod-staging.md](sumopod-staging.md).
+The actual SumoPod staging host is deployed and healthy at reviewed SHA `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`. All configured staging services are running in the isolated `ecorione-staging` Compose project; sanitized host evidence matched the expected SHA with a clean worktree and mode-0600 deployment env. Public HTTPS home returned 200, `/ops` and `/settings` remain 401 without operator credentials, authenticated `/api/ops` reported `healthy: true` with no unhealthy required services, MCP protected-resource metadata returned 200, and a valid unauthenticated MCP request returned the expected 401 Bearer challenge. PR #208 then corrected the malformed public-smoke verifier and merged as `59430c4b72a704d1fd6c6176d12b13fa27ddf674` after CI #1581 + Product Eval #820.
 
-Actual SumoPod host audit, deployment, Compose/runtime health, and browser reachability evidence remain **PENDING**. Repository CI alone must not close PCS-07 or be mislabeled as remote-host evidence.
+The final real-browser governed staging journey also passed: the browser exposed the Flow authority requirements, explicit approvals moved the graph to Execution authority ready, and the final Trigger-only v2 revision ran with `core/trigger/v1` granted, Trigger `SUCCEEDED`, and run `COMPLETED` without a paid provider call. PCS-07 is therefore CLOSED / PASS at the staging-deployment boundary. Evidence: [verification/pcs-07-sumopod-host-closure-2026-09-20.md](verification/pcs-07-sumopod-host-closure-2026-09-20.md).
+
+## PCS-08 GitHub -> staging continuous deployment — ACTIVE
+
+The next scope is a least-privilege GitHub-to-SumoPod staging deployment path: required gates -> merge `main` -> deploy exact reviewed revision -> health/smoke -> healthy marker or rollback. No blind polling `git pull` loop is allowed, and host-side secrets remain outside tracked repository files.
 
 ## Post-closure repository hardening
 

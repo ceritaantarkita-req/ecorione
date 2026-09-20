@@ -17,7 +17,7 @@ Take the repository-verified production/self-host baseline from the already-clos
 
 Before any production promotion, establish an operator-owned SumoPod staging environment that can be used from a browser while the operator laptop is offline.
 
-The active PCS-07 procedure is [sumopod-staging.md](sumopod-staging.md). Use that runbook for staging-specific env/project isolation and evidence boundaries.
+The closed PCS-07 staging procedure and evidence boundary are documented in [sumopod-staging.md](sumopod-staging.md). PCS-08 now owns GitHub-to-staging continuous deployment.
 
 Staging rules:
 

@@ -39,6 +39,7 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PCS-04 Product visual + information-architecture cleanup: **CLOSED / PASS** (PR #197; CI #1529; Product Eval #768; merge `8a328ae0c0abeb039866ac40068a9053c4796659`);
 - PCS-05 Flow runtime defect closure: **CLOSED / PASS** (PR #199; CI #1537; Product Eval #776; merge `f58923b8261104c8aec331f506a68f8cf5fe5e7e`);
 - PCS-06 Integrated browser/regression acceptance: **CLOSED / PASS** (PR #201; CI #1553; Product Eval #792; Browser Acceptance #13; merge `0a8f7619567500acaec0758c400d529367baf0e5`);
+- PCS-07 SumoPod remote staging deployment: **CLOSED / PASS**;
 - SumoPod remote development/staging: **APPROVED UNDER PCS-07..PCS-09**;
 - public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
 - AutoClick: **DEFERRED BY DESIGN**.
@@ -83,7 +84,7 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 
 There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
 
-**PCS-00 through PCS-06 are CLOSED / PASS; PCS-07 SumoPod remote staging deployment is ACTIVE / APPROVED.** Repository-side staging preparation may proceed, but PCS-07 cannot close without actual SumoPod host evidence. Use `docs/sumopod-staging.md` and `docs/post-closure-product-staging-roadmap.md`; GitHub `main` remains source of truth; validate the actual remote host before mutation; treat SumoPod evidence as staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
+**PCS-00 through PCS-06 are CLOSED / PASS; PCS-07 is a CLOSURE CANDIDATE.** Actual SumoPod deployment, isolated service/volume inventory, public HTTPS reachability, protected operator surfaces, authenticated `/api/ops` health, sanitized exact-host evidence, and a valid MCP unauthenticated Bearer challenge pass at the documented staging boundary. PCS-07 must not be marked CLOSED until one real rendered-browser governed Flow journey (Save -> Prepare authority -> explicit Approve -> Run -> completed) passes without a paid provider call. Use `docs/sumopod-staging.md` and `docs/verification/pcs-07-sumopod-host-closure-2026-09-20.md`. GitHub `main` remains source of truth; treat SumoPod evidence as staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
 
 ## Git / closure discipline
 
