@@ -283,6 +283,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
               ...runtime,
               hostedProvider: provider,
               hostedModel: GOVERNED_HOSTED_MODEL,
+              hostedCallsEnabled: options.hostedCallsEnabled ?? runtime.hostedCallsEnabled,
             }),
             credentialVault: transientCredential,
             cache: new ExactMatchCache(),
