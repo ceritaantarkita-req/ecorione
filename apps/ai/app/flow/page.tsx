@@ -21,6 +21,18 @@ type NodeRunState = FlowGraphRunState["nodes"][number];
 type BuilderTab = "nodes" | "configure";
 type MobileMode = "stack" | "canvas";
 type EdgeDragPayload = { sourceNodeId: string; sourcePort: string };
+type GraphAuthorityRequirement = {
+  definitionId: string;
+  nodeIds: string[];
+  status: "GRANTED" | "APPROVAL_REQUIRED";
+  operationId: string | null;
+  prompt: string | null;
+};
+type GraphAuthorityState = {
+  ready: boolean;
+  graphVersion: number;
+  requirements: GraphAuthorityRequirement[];
+};
 
 function defaultConfig(kind: FlowNodeKind): Record<string, unknown> {
   switch (kind) {
@@ -73,6 +85,21 @@ function newNodeId(kind: FlowNodeKind): string {
 
 function newEdgeId(): string {
   return `edge_${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`;
+}
+
+function errorType(body: unknown): string | null {
+  if (body !== null && typeof body === "object" && "error" in body) {
+    const error = (body as { error?: unknown }).error;
+    if (
+      error !== null &&
+      typeof error === "object" &&
+      "type" in error &&
+      typeof (error as { type?: unknown }).type === "string"
+    ) {
+      return (error as { type: string }).type;
+    }
+  }
+  return null;
 }
 
 function errorMessage(body: unknown, fallback: string): string {
@@ -169,6 +196,9 @@ export default function FlowCanvasPage() {
   const [busy, setBusy] = useState(false);
   const [validating, setValidating] = useState(false);
   const [runStarting, setRunStarting] = useState(false);
+  const [authority, setAuthority] = useState<GraphAuthorityState | null>(null);
+  const [authorityBusy, setAuthorityBusy] = useState(false);
+  const [pendingAuthorityAction, setPendingAuthorityAction] = useState<string | null>(null);
   const [pendingNodeAction, setPendingNodeAction] = useState<string | null>(null);
   const [message, setMessage] = useState("Draft lokal");
   const [runInput, setRunInput] = useState('{"hello":"world"}');
@@ -209,6 +239,7 @@ export default function FlowCanvasPage() {
     draftRevisionRef.current += 1;
     setDirty(true);
     setValidation(null);
+    setAuthority(null);
   }
 
   function beginBusy(): boolean {
@@ -545,6 +576,7 @@ export default function FlowCanvasPage() {
       setGraphId(body.version.graphId);
       setLoadId(body.version.graphId);
       setVersion(body.version.version);
+      setAuthority(null);
       if (revision === draftRevisionRef.current) {
         setNodes(body.version.graph.nodes);
         setEdges(body.version.graph.edges);
@@ -590,6 +622,7 @@ export default function FlowCanvasPage() {
       setGraphId(body.graphId);
       setLoadId(body.graphId);
       setVersion(body.version);
+      setAuthority(null);
       setName(body.graph.name);
       setScope(body.graph.scope);
       setSensitivity(body.graph.sensitivity);
@@ -645,6 +678,90 @@ export default function FlowCanvasPage() {
     // The deep-link is an initial navigation contract; later URL changes are handled by navigation.
   }, []);
 
+  async function prepareAuthority(): Promise<GraphAuthorityState | null> {
+    if (graphId === null || version === null || dirty || authorityBusy) {
+      setMessage("Simpan graph/version terbaru sebelum menyiapkan authority.");
+      return null;
+    }
+    setAuthorityBusy(true);
+    setMessage("Checking Flow node authority…");
+    try {
+      const response = await fetch(
+        `/api/flow/graphs/${encodeURIComponent(graphId)}/authority/prepare`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ version }),
+        },
+      );
+      const body = (await response.json().catch(() => null)) as
+        | { ready?: boolean; requirements?: GraphAuthorityRequirement[] }
+        | null;
+      if (!response.ok || body?.ready === undefined || body.requirements === undefined) {
+        setMessage(errorMessage(body, `Authority check gagal (${response.status}).`));
+        return null;
+      }
+      const next: GraphAuthorityState = {
+        ready: body.ready,
+        graphVersion: version,
+        requirements: body.requirements,
+      };
+      setAuthority(next);
+      setMessage(
+        body.ready
+          ? "Flow authority siap untuk graph version ini."
+          : "Flow membutuhkan approval node.execute sebelum Run.",
+      );
+      return next;
+    } finally {
+      setAuthorityBusy(false);
+    }
+  }
+
+  async function decideAuthority(
+    requirement: GraphAuthorityRequirement,
+    decision: "APPROVE" | "REJECT",
+  ): Promise<void> {
+    if (
+      graphId === null ||
+      version === null ||
+      requirement.operationId === null ||
+      pendingAuthorityAction !== null
+    ) {
+      return;
+    }
+    const actionKey = `${requirement.definitionId}:${decision}`;
+    setPendingAuthorityAction(actionKey);
+    try {
+      const response = await fetch(
+        `/api/flow/graphs/${encodeURIComponent(graphId)}/authority/decide`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            version,
+            definitionId: requirement.definitionId,
+            operationId: requirement.operationId,
+            decision,
+          }),
+        },
+      );
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        setMessage(errorMessage(body, `Authority decision gagal (${response.status}).`));
+        return;
+      }
+      if (decision === "REJECT") {
+        setAuthority(null);
+        setMessage(`Authority ${requirement.definitionId} ditolak. Run tetap diblokir.`);
+        return;
+      }
+      await prepareAuthority();
+    } finally {
+      setPendingAuthorityAction(null);
+    }
+  }
+
   async function runGraph(): Promise<void> {
     if (runInFlightRef.current || runStarting) return;
     if (graphId === null) {
@@ -653,6 +770,14 @@ export default function FlowCanvasPage() {
     }
     if (dirty) {
       setMessage("Ada perubahan yang belum disimpan. Save dulu sebelum Run.");
+      return;
+    }
+    if (version === null) {
+      setMessage("Graph version belum tersedia. Save dulu sebelum Run.");
+      return;
+    }
+    if (authority?.graphVersion !== version || authority.ready !== true) {
+      setMessage("Flow authority belum siap. Jalankan Prepare authority sebelum Run.");
       return;
     }
     runInFlightRef.current = true;
@@ -670,7 +795,15 @@ export default function FlowCanvasPage() {
         traceOperationId?: string;
       } | null;
       if (!response.ok || body?.runId === undefined) {
-        setMessage(errorMessage(body, `Run gagal (${response.status}).`));
+        const type = errorType(body);
+        if (type === "FLOW_NODE_AUTHORITY_DENIED") {
+          setAuthority(null);
+          setMessage(
+            `Run diblokir oleh node authority: ${errorMessage(body, "standing grant tidak aktif")}. Jalankan Prepare authority lagi.`,
+          );
+        } else {
+          setMessage(errorMessage(body, `Run gagal (${response.status}).`));
+        }
         return;
       }
       setRunId(body.runId);
@@ -957,9 +1090,42 @@ export default function FlowCanvasPage() {
           </button>
           <button
             className="ecr-btn ecr-btn--secondary"
+            onClick={() => void runUiAction("Authority gagal", prepareAuthority)}
+            disabled={
+              busy ||
+              validating ||
+              authorityBusy ||
+              graphId === null ||
+              version === null ||
+              dirty
+            }
+          >
+            {authorityBusy
+              ? "Checking authority…"
+              : authority?.graphVersion === version && authority.ready
+                ? "Authority ready"
+                : "Prepare authority"}
+          </button>
+          <button
+            className="ecr-btn ecr-btn--secondary"
             onClick={() => void runUiAction("Run gagal", runGraph)}
-            disabled={busy || validating || runStarting || graphId === null || dirty}
-            title={dirty ? "Save perubahan terbaru sebelum Run" : undefined}
+            disabled={
+              busy ||
+              validating ||
+              runStarting ||
+              graphId === null ||
+              dirty ||
+              version === null ||
+              authority?.graphVersion !== version ||
+              authority.ready !== true
+            }
+            title={
+              dirty
+                ? "Save perubahan terbaru sebelum Run"
+                : authority?.graphVersion !== version || authority.ready !== true
+                  ? "Prepare authority untuk graph version ini sebelum Run"
+                  : undefined
+            }
           >
             {runStarting ? "Starting…" : "Run"}
           </button>
@@ -1019,6 +1185,64 @@ export default function FlowCanvasPage() {
           </label>
         </div>
       </details>
+
+      {authority !== null ? (
+        <section className={styles.authorityPanel} aria-label="Flow execution authority">
+          <div className={styles.authorityHeader}>
+            <div>
+              <strong>{authority.ready ? "Execution authority ready" : "Approval required"}</strong>
+              <span>Graph v{authority.graphVersion} · exact node.execute grants</span>
+            </div>
+            <button
+              className="ecr-btn ecr-btn--secondary"
+              disabled={authorityBusy || pendingAuthorityAction !== null}
+              onClick={() => void runUiAction("Authority refresh gagal", prepareAuthority)}
+            >
+              Refresh
+            </button>
+          </div>
+          {authority.requirements.map((requirement) => (
+            <div className={styles.authorityRequirement} key={requirement.definitionId}>
+              <div>
+                <code>{requirement.definitionId}</code>
+                <span>
+                  {requirement.nodeIds.length} node(s) ·{" "}
+                  {requirement.status === "GRANTED" ? "Granted" : requirement.prompt}
+                </span>
+              </div>
+              {requirement.status === "APPROVAL_REQUIRED" &&
+              requirement.operationId !== null ? (
+                <div className={styles.inlineActions}>
+                  <button
+                    className="ecr-btn ecr-btn--primary"
+                    disabled={pendingAuthorityAction !== null}
+                    onClick={() =>
+                      void runUiAction("Authority approval gagal", () =>
+                        decideAuthority(requirement, "APPROVE"),
+                      )
+                    }
+                  >
+                    {pendingAuthorityAction === `${requirement.definitionId}:APPROVE`
+                      ? "Approving…"
+                      : "Approve"}
+                  </button>
+                  <button
+                    className="ecr-btn ecr-btn--secondary"
+                    disabled={pendingAuthorityAction !== null}
+                    onClick={() =>
+                      void runUiAction("Authority rejection gagal", () =>
+                        decideAuthority(requirement, "REJECT"),
+                      )
+                    }
+                  >
+                    Reject
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       <div className={styles.mobileModeSwitch} aria-label="Flow mobile view">
         <button
