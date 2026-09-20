@@ -27,8 +27,8 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
       );
       expect(workflow).toContain("commits/main");
       expect(workflow).toContain(
-      '"repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_file}/runs"',
-    );
+        '"repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_file}/runs"',
+      );
       expect(workflow).toContain("gate_success ci.yml");
       expect(workflow).toContain("gate_success product-eval.yml");
       expect(workflow).toContain('select(.conclusion == "success")');
