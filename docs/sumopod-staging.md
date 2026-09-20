@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PCS-07 CLOSURE CANDIDATE / ACTUAL HOST DEPLOYMENT PASS / FINAL GOVERNED BROWSER JOURNEY PENDING**
+Status: **PCS-07 CLOSED / PASS**
 
 This runbook covers the first operator-owned SumoPod Ubuntu staging deployment. It does **not** authorize or claim production cutover.
 
@@ -331,4 +331,4 @@ Runtime rollback does not imply data rollback. Owner data restore remains a sepa
 
 Repository preparation and actual-host deployment evidence are now available. The live staging runtime was deployed from reviewed main `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`; exact-host inventory, service/volume isolation, HTTPS reachability, operator protection, authenticated `/api/ops` health, and MCP auth-challenge reachability passed. Evidence: [verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md](verification/pcs-07-sumopod-host-closure-candidate-2026-09-20.md).
 
-Do not mark PCS-07 CLOSED yet: the final required evidence is one real rendered-browser governed product journey that does not require a paid provider call. Use the staging Flow surface to Save a minimal graph, Prepare authority, explicitly Approve `node.execute`, Run, and observe completion.
+The final required real rendered-browser governed product journey passed on the staging Flow surface. After explicit authority preparation/approval, the final Trigger-only v2 graph showed `core/trigger/v1` Granted, Trigger `SUCCEEDED`, and run `COMPLETED` without a paid provider call. PCS-07 is CLOSED / PASS. PCS-08 owns the next GitHub-to-staging continuous deployment work.
