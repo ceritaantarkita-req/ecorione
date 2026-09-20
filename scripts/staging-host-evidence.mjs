@@ -1,12 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import {
-  existsSync,
-  lstatSync,
-  readFileSync,
-  statfsSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, lstatSync, readFileSync, statfsSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,7 +25,9 @@ function command(commandName, args, options = {}) {
 
   if (result.error !== undefined || result.status !== 0) {
     if (options.allowFailure === true) return null;
-    throw new Error(`${options.label ?? commandName} failed; inspect the host directly before continuing.`);
+    throw new Error(
+      `${options.label ?? commandName} failed; inspect the host directly before continuing.`,
+    );
   }
   return result.stdout.trim();
 }
@@ -52,7 +48,9 @@ function relativeDeploymentPath(path) {
 }
 
 if (!existsSync(envPath)) {
-  throw new Error("Selected deployment env is missing. Prepare the host-only env before evidence capture.");
+  throw new Error(
+    "Selected deployment env is missing. Prepare the host-only env before evidence capture.",
+  );
 }
 
 const envStat = lstatSync(envPath);
@@ -61,7 +59,9 @@ if (envStat.isSymbolicLink()) {
 }
 const envMode = envStat.mode & 0o777;
 if (envMode !== 0o600) {
-  throw new Error(`Selected deployment env must be mode 600; current mode is ${envMode.toString(8)}.`);
+  throw new Error(
+    `Selected deployment env must be mode 600; current mode is ${envMode.toString(8)}.`,
+  );
 }
 if (readFileSync(envPath, "utf8").includes("CHANGE_ME")) {
   throw new Error("Selected deployment env still contains CHANGE_ME placeholders.");
@@ -79,10 +79,14 @@ const worktreeStatus = command("git", ["status", "--porcelain"], {
 const cleanWorktree = worktreeStatus.length === 0;
 
 if (!cleanWorktree) {
-  throw new Error("Git worktree is not clean; staging evidence must use reviewed source without host edits.");
+  throw new Error(
+    "Git worktree is not clean; staging evidence must use reviewed source without host edits.",
+  );
 }
 if (expectedSha !== null && headSha !== expectedSha) {
-  throw new Error("HEAD does not match ECORIONE_EXPECTED_SHA; refusing to label this host as reviewed staging.");
+  throw new Error(
+    "HEAD does not match ECORIONE_EXPECTED_SHA; refusing to label this host as reviewed staging.",
+  );
 }
 
 const composeArgs = [
@@ -120,9 +124,7 @@ const allVolumes = splitLines(
 );
 const projectVolumes = allVolumes.filter((name) => name.startsWith(`${composeProject}_`));
 
-const osRelease = existsSync("/etc/os-release")
-  ? readFileSync("/etc/os-release", "utf8")
-  : "";
+const osRelease = existsSync("/etc/os-release") ? readFileSync("/etc/os-release", "utf8") : "";
 const prettyName =
   osRelease
     .split(/\r?\n/)
@@ -151,11 +153,9 @@ const evidence = {
     availableDiskGiB: Number(availableGiB.toFixed(2)),
   },
   runtime: {
-    dockerServerVersion: command(
-      "docker",
-      ["version", "--format", "{{.Server.Version}}"],
-      { label: "Docker server version" },
-    ),
+    dockerServerVersion: command("docker", ["version", "--format", "{{.Server.Version}}"], {
+      label: "Docker server version",
+    }),
     dockerComposeVersion: command("docker", ["compose", "version", "--short"], {
       label: "Docker Compose version",
     }),

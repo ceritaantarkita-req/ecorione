@@ -52,7 +52,9 @@ describe("PCS-07 SumoPod staging deployment contract", () => {
   });
 
   it("collects only sanitized host/runtime evidence", () => {
-    expect(packageJson).toContain('"staging:host-evidence": "node scripts/staging-host-evidence.mjs"');
+    expect(packageJson).toContain(
+      '"staging:host-evidence": "node scripts/staging-host-evidence.mjs"',
+    );
     expect(hostEvidence).toContain("ECORIONE_EXPECTED_SHA");
     expect(hostEvidence).toContain("cleanWorktree");
     expect(hostEvidence).toContain("configuredServices");

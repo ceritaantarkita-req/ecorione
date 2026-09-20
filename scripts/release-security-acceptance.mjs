@@ -90,8 +90,7 @@ if (
   findings.push("images:digest-review package script missing or changed");
 }
 if (
-  packageJson?.scripts?.["staging:host-evidence"] !==
-  "node scripts/staging-host-evidence.mjs"
+  packageJson?.scripts?.["staging:host-evidence"] !== "node scripts/staging-host-evidence.mjs"
 ) {
   findings.push("staging:host-evidence package script missing or changed");
 }
