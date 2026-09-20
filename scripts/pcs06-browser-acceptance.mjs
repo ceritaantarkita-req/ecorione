@@ -727,11 +727,15 @@ async function runDesktopJourney() {
       throw new Error("desktop-ai: active session was not restored");
 
     await page.getByRole("button", { name: "Gunakan tema terang" }).click();
-    if ((await page.evaluate(() => globalThis.document.documentElement.dataset.theme)) !== "light") {
+    if (
+      (await page.evaluate(() => globalThis.document.documentElement.dataset.theme)) !== "light"
+    ) {
       throw new Error("desktop-theme: light theme was not applied");
     }
     await page.getByRole("button", { name: "Gunakan tema gelap" }).click();
-    if ((await page.evaluate(() => globalThis.document.documentElement.dataset.theme)) !== "dark") {
+    if (
+      (await page.evaluate(() => globalThis.document.documentElement.dataset.theme)) !== "dark"
+    ) {
       throw new Error("desktop-theme: dark theme was not restored");
     }
 
