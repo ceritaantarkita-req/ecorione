@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 
+const MCP_PROTOCOL_VERSION = "2026-07-28";
+
 const rawBase = process.env.ECORIONE_PUBLIC_BASE_URL;
 if (!rawBase) {
   throw new Error(
@@ -90,12 +92,25 @@ pass("MCP protected-resource metadata", "HTTP 200");
 
 const unauthenticated = await request("/mcp", {
   method: "POST",
-  headers: { "content-type": "application/json" },
+  headers: {
+    "content-type": "application/json",
+    "mcp-protocol-version": MCP_PROTOCOL_VERSION,
+    "mcp-method": "tools/list",
+  },
   body: JSON.stringify({
     jsonrpc: "2.0",
     id: "production-smoke",
     method: "tools/list",
-    params: {},
+    params: {
+      _meta: {
+        "io.modelcontextprotocol/protocolVersion": MCP_PROTOCOL_VERSION,
+        "io.modelcontextprotocol/clientInfo": {
+          name: "ecorione-production-smoke",
+          version: "1.0.0",
+        },
+        "io.modelcontextprotocol/clientCapabilities": {},
+      },
+    },
   }),
 });
 assert.equal(

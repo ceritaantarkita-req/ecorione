@@ -76,10 +76,29 @@ describe("production activation scripts", () => {
           return;
         }
         if (req.url === "/mcp" && req.method === "POST") {
-          res.writeHead(401, {
-            "www-authenticate": `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource/mcp", scope="memory:read", error="invalid_token"`,
+          let raw = "";
+          req.setEncoding("utf8");
+          req.on("data", (chunk) => {
+            raw += chunk;
           });
-          res.end();
+          req.on("end", () => {
+            const body = JSON.parse(raw) as {
+              method?: string;
+              params?: {
+                _meta?: Record<string, unknown>;
+              };
+            };
+            expect(req.headers["mcp-protocol-version"]).toBe("2026-07-28");
+            expect(req.headers["mcp-method"]).toBe("tools/list");
+            expect(body.method).toBe("tools/list");
+            expect(body.params?._meta?.["io.modelcontextprotocol/protocolVersion"]).toBe(
+              "2026-07-28",
+            );
+            res.writeHead(401, {
+              "www-authenticate": `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource/mcp", scope="memory:read", error="invalid_token"`,
+            });
+            res.end();
+          });
           return;
         }
         res.writeHead(404);
