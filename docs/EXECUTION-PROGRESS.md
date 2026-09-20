@@ -37,8 +37,8 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 | Scope | State |
 |---|---:|
 | PCS-00 Baseline lock | **CLOSED / PASS** |
-| PCS-01 Chat continuity/history | **NEXT** |
-| PCS-02 Provider onboarding + hosted model choice | **PLANNED** |
+| PCS-01 Chat continuity/history | **CLOSED / PASS** |
+| PCS-02 Provider onboarding + hosted model choice | **NEXT** |
 | PCS-03 Local AI resilience/runtime discovery | **PLANNED** |
 | PCS-04 Visual + information-architecture cleanup | **PLANNED** |
 | PCS-05 Flow runtime defect closure | **PLANNED** |
@@ -48,7 +48,9 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 | PCS-09 Staging persistence/security/backup/observability | **PLANNED** |
 | PCS-10 Closure/docs | **PLANNED** |
 
-PCS-00 locked `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19` as the post-closure starting point. PR #189 exact head `f58311ae30beef877f0c38962bcf4b1aefe91917` passed CI #1492 + Product Eval #731 and merged as `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`. PCS-00 is **CLOSED / PASS**; PCS-01 is next. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
+PCS-00 locked `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19` as the post-closure starting point. PR #189 exact head `f58311ae30beef877f0c38962bcf4b1aefe91917` passed CI #1492 + Product Eval #731 and merged as `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
+
+PCS-01 closed on PR #191 exact head `9445b30c659628e1d551191219d0b7cd5ccf2f7c`, which passed CI #1505 + Product Eval #744 and merged as `ee363c055944b27b549a2f061105eea35fa25f9e`. Chat continuity now reuses Historical Ledger canonical replay, preserves active session per Project, exposes explicit New chat/history navigation, and enforces Project-bound History reads. PCS-02 is next. Evidence: [verification/pcs-01-chat-continuity-2026-09-20.md](verification/pcs-01-chat-continuity-2026-09-20.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional/not yet selected for staging. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
