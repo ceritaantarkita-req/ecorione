@@ -70,6 +70,16 @@ describe("Flow graph HTTP integration", () => {
     hub
       .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
       .reply(200, { workspaceId: "ws_personal", declared: 17 });
+    hub
+      .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
+      .reply(200, { workspaceId: "ws_personal", declared: 17 });
+    hub
+      .intercept({ path: "/v1/authority/authorize", method: "POST" })
+      .reply(200, {
+        outcome: "ALLOW",
+        reason: "PCS-05 preflight grant is active.",
+        grantedPermissionIds: ["node.execute"],
+      });
 
     const temporalClient = temporal();
     const app = buildFlowServer(temporalClient, { hubUrl: "http://hub.local" });
@@ -125,5 +135,63 @@ describe("Flow graph HTTP integration", () => {
         plan: expect.objectContaining({ planDigest: run.planDigest }),
       }),
     );
+  });
+
+  it("fails closed before Temporal start when a graph node lacks standing authority", async () => {
+    const agent = new MockAgent();
+    agents.push(agent);
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+    const hub = agent.get("http://hub.local");
+    hub
+      .intercept({
+        path: "/v1/projects/prj_personal?workspaceId=ws_personal",
+        method: "GET",
+      })
+      .reply(200, { id: "prj_personal", workspaceId: "ws_personal", name: "Personal" });
+    hub
+      .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
+      .reply(200, { workspaceId: "ws_personal", declared: 17 });
+    hub
+      .intercept({ path: "/v1/authority/nodes/sync", method: "POST" })
+      .reply(200, { workspaceId: "ws_personal", declared: 17 });
+    hub
+      .intercept({ path: "/v1/authority/authorize", method: "POST" })
+      .reply(200, {
+        outcome: "DENY",
+        reason: "Missing standing grant.",
+        grantedPermissionIds: [],
+      });
+
+    const temporalClient = temporal();
+    const app = buildFlowServer(temporalClient, { hubUrl: "http://hub.local" });
+    apps.push(app);
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/graphs",
+      payload: graphPayload,
+    });
+    expect(created.statusCode).toBe(201);
+    const graphId = (created.json() as { version: { graphId: string } }).version.graphId;
+
+    const started = await app.inject({
+      method: "POST",
+      url: `/v1/graphs/${graphId}/runs`,
+      payload: { input: { hello: "world" } },
+    });
+
+    expect(started.statusCode).toBe(403);
+    expect(started.json()).toMatchObject({
+      error: {
+        type: "FLOW_NODE_AUTHORITY_DENIED",
+        detail: {
+          nodeId: "node_trigger1",
+          definitionId: "core/trigger/v1",
+          reason: "Missing standing grant.",
+        },
+      },
+    });
+    expect(temporalClient.startGraph).not.toHaveBeenCalled();
   });
 });
