@@ -57,7 +57,7 @@ else
   warn "docker is not installed"
 fi
 
-ENV_FILE="${ECORIONE_PRODUCTION_ENV:-deploy/production.env}"
+ENV_FILE="${ECORIONE_DEPLOY_ENV:-${ECORIONE_PRODUCTION_ENV:-deploy/production.env}}"
 if [[ -e "$ENV_FILE" ]]; then
   [[ ! -L "$ENV_FILE" ]] || warn "$ENV_FILE is a symlink"
   mode="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || true)"

@@ -14,7 +14,16 @@ Current handoff: `docs/current-state-and-next-steps.md`.
 
 ## Install
 
-1. Run `scripts/self-host-install.sh`; first run creates mode-0600 `deploy/production.env` and exits.
+By default the lifecycle scripts use `deploy/production.env` and Compose project `ecorione`. A non-production self-host target may override both without changing the reviewed topology:
+
+```bash
+export ECORIONE_DEPLOY_ENV=deploy/staging.env
+export ECORIONE_COMPOSE_PROJECT=ecorione-staging
+```
+
+`ECORIONE_PRODUCTION_ENV` remains a compatibility fallback. See `docs/sumopod-staging.md` for the approved PCS-07 staging procedure.
+
+1. Run `scripts/self-host-install.sh`; first run creates the selected mode-0600 deployment env from `deploy/production.env.example` and exits.
 2. Replace every `CHANGE_ME`; keep hosted provider API secrets in Connect Vault rather than deployment env plaintext.
 3. Validate OAuth issuer/resource/JWKS/origins and operator credentials.
 4. Run `scripts/self-host-install.sh --apply`.

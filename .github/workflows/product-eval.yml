@@ -70,6 +70,7 @@ jobs:
             services/flow/src/trigger-repository.test.ts \
             test/pcs05-flow-runtime-source-contract.test.ts \
             test/pcs06-browser-acceptance-source-contract.test.ts \
+            test/pcs07-staging-deployment-source-contract.test.ts \
             services/context/src/backup.test.ts \
             test/local-persistence-restart-evidence.test.mjs \
             test/local-backup-restore-evidence.test.mjs \

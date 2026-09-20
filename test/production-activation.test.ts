@@ -274,6 +274,9 @@ describe("production activation scripts", () => {
         "scripts/cloudflare-tunnel-install.sh",
         "scripts/cloudflare-origin-lockdown.sh",
         "scripts/host-security-audit.sh",
+        "scripts/self-host-install.sh",
+        "scripts/self-host-upgrade.sh",
+        "scripts/self-host-rollback.sh",
       ];
       for (const script of scripts) {
         const result = await execFileAsync(productionSyntaxBash, ["-n", script], {

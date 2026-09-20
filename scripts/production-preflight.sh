@@ -3,7 +3,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-ENV_FILE="${ECORIONE_PRODUCTION_ENV:-deploy/production.env}"
+ENV_FILE="${ECORIONE_DEPLOY_ENV:-${ECORIONE_PRODUCTION_ENV:-deploy/production.env}}"
+COMPOSE_PROJECT="${ECORIONE_COMPOSE_PROJECT:-ecorione}"
+COMPOSE_ARGS=(-p "$COMPOSE_PROJECT" --env-file "$ENV_FILE" -f deploy/compose.yml)
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "[preflight] $*"; }
@@ -25,8 +27,8 @@ if command -v stat >/dev/null 2>&1; then
   fi
 fi
 
-info "validating production Compose"
-docker compose --env-file "$ENV_FILE" -f deploy/compose.yml config --quiet
+info "validating self-host Compose project=$COMPOSE_PROJECT env=$ENV_FILE"
+docker compose "${COMPOSE_ARGS[@]}" config --quiet
 
 if command -v pnpm >/dev/null 2>&1; then
   info "running repository production-operations acceptance"

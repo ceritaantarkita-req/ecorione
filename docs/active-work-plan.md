@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-06 CLOSED / PCS-07 NEXT**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-06 CLOSED / PCS-07 ACTIVE**
 
 ## Latest repository-hardening closure
 
@@ -60,7 +60,7 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-06 Integrated browser/regression acceptance is CLOSED / PASS.** PR #201 exact head `0dfdda92e0bef800ca9a7563223b7423aa9b1299` passed CI #1553 + Product Eval #792 + PCS-06 Integrated Browser Acceptance #13 and merged as `0a8f7619567500acaec0758c400d529367baf0e5`. The production Next.js UI is now covered by deterministic Chromium journeys across Ai, Projects, Work, Brain, Space, Flow, Operations, and Settings, including conversation continuity, Local-unavailable state, provider/model UX, responsive/theme behavior, and Flow authority-to-run acceptance. The browser gate blocks external HTTP(S) requests and therefore does not claim live provider quality/latency. Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
 
-**PCS-07 SumoPod remote staging deployment is NEXT / APPROVED.** Validate the actual operator-owned Ubuntu host before mutation, deploy only a reviewed `main` revision, preserve GitHub as source of truth, keep credentials host-side, and treat all remote evidence as staging rather than production.
+**PCS-07 SumoPod remote staging deployment is ACTIVE / APPROVED.** Repository-side staging preparation now isolates the deployment env and Compose project (`ECORIONE_DEPLOY_ENV`, `ECORIONE_COMPOSE_PROJECT`), ignores `deploy/*.env`, and documents a read-only-first SumoPod runbook. Actual SumoPod host validation/deployment evidence remains pending and must be collected on the real host before PCS-07 can close. See [sumopod-staging.md](sumopod-staging.md).
 
 Current execution order:
 

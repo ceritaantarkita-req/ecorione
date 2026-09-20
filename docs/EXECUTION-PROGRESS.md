@@ -43,7 +43,7 @@ The operator approved a separate **PCS-00..PCS-10** roadmap after real-browser v
 | PCS-04 Visual + information-architecture cleanup | **CLOSED / PASS** |
 | PCS-05 Flow runtime defect closure | **CLOSED / PASS** |
 | PCS-06 Integrated browser/regression acceptance | **CLOSED / PASS** |
-| PCS-07 SumoPod remote staging | **NEXT / APPROVED** |
+| PCS-07 SumoPod remote staging | **ACTIVE / APPROVED — HOST EVIDENCE PENDING** |
 | PCS-08 GitHub -> staging continuous deployment | **PLANNED** |
 | PCS-09 Staging persistence/security/backup/observability | **PLANNED** |
 | PCS-10 Closure/docs | **PLANNED** |
