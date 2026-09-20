@@ -7,10 +7,22 @@ import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-he
 import styles from "./Settings.module.css";
 
 type HostedProviderId = "anthropic" | "openrouter" | "openai";
+type HostedModelPreference =
+  | "governed"
+  | "claude-sonnet-4-5-20250929"
+  | "claude-opus-4-1-20250805"
+  | "gpt-5.6-terra"
+  | "gpt-5.6-sol";
+type HostedModelCatalogEntry = {
+  id: Exclude<HostedModelPreference, "governed">;
+  displayName: string;
+  providerRuntime: string;
+};
 type RuntimeSnapshot = {
   revision: number;
   settings: {
     hostedProvider: HostedProviderId;
+    hostedModel: HostedModelPreference;
     localRuntime: "openai-compatible";
     localBaseUrl: string;
     localModelTag: string;
@@ -28,6 +40,7 @@ type ProviderCatalogEntry = {
   credentialReady: boolean;
   routingReady: boolean;
   connectionTestReady: boolean;
+  hostedModels: HostedModelCatalogEntry[];
 };
 type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "error";
 type McpServer = {
@@ -56,6 +69,7 @@ export default function SettingsPage() {
   const [secretRevision, setSecretRevision] = useState(0);
   const [secretProvider, setSecretProvider] = useState("anthropic");
   const [credentialTest, setCredentialTest] = useState<CredentialTestStamp | null>(null);
+  const [connectProviderId, setConnectProviderId] = useState<HostedProviderId | null>(null);
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("");
   const [hostedHealth, setHostedHealth] = useState<{
@@ -131,9 +145,25 @@ export default function SettingsPage() {
   const mutableLocalModel =
     runtime !== null && /(^|[:@])latest$/i.test(runtime.settings.localModelTag.trim());
   const hostedProviderOptions = providers.filter(
-    (provider) => provider.category === "ai" && provider.routingReady,
+    (provider): provider is ProviderCatalogEntry & { id: HostedProviderId } =>
+      provider.category === "ai" &&
+      provider.routingReady &&
+      (provider.id === "anthropic" ||
+        provider.id === "openrouter" ||
+        provider.id === "openai"),
   );
   const credentialProviderOptions = providers.filter((provider) => provider.credentialReady);
+  const activeHostedProvider =
+    runtime === null
+      ? null
+      : (hostedProviderOptions.find(
+          (provider) => provider.id === runtime.settings.hostedProvider,
+        ) ?? null);
+  const activeHostedModels = activeHostedProvider?.hostedModels ?? [];
+  const connectProvider =
+    connectProviderId === null
+      ? null
+      : (hostedProviderOptions.find((provider) => provider.id === connectProviderId) ?? null);
   const selectedCredential =
     credentials.find((item) => item.provider === secretProvider) ?? null;
   const selectedProviderOption =
@@ -233,6 +263,73 @@ export default function SettingsPage() {
     }
   }
 
+  function beginProviderConnect(provider: HostedProviderId): void {
+    if (pendingAction !== null) return;
+    setConnectProviderId(provider);
+    setSecretProvider(provider);
+    setSecret("");
+    setSecretRevision((current) => current + 1);
+    setCredentialTest(null);
+    setHostedHealth(null);
+    setStatus("");
+  }
+
+  async function activateStoredProvider(provider: HostedProviderId): Promise<void> {
+    if (runtime === null || !beginAction("activate-provider")) return;
+    setStatus(`Activating ${provider}…`);
+    try {
+      const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          hostedProvider: provider,
+          hostedModel: "governed",
+          hostedCallsEnabled: true,
+          defaultChatTarget: "hosted",
+        }),
+      });
+      setRuntime(result);
+      setHostedHealth(null);
+      setStatus(
+        result.settings.hostedCallsEnabled
+          ? "Provider aktif. Jalankan test provider bila ingin memverifikasi koneksi saat ini."
+          : "Provider tersimpan, tetapi hosted tetap OFF karena operator gate sedang tertutup.",
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
+  async function saveDefaultProviderModel(): Promise<void> {
+    if (runtime === null || !beginAction("default-provider-model")) return;
+    setStatus("Saving default provider/model…");
+    try {
+      const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          hostedProvider: runtime.settings.hostedProvider,
+          hostedModel: runtime.settings.hostedModel,
+          hostedCallsEnabled: true,
+          defaultChatTarget: "hosted",
+        }),
+      });
+      setRuntime(result);
+      setHostedHealth(null);
+      setStatus(
+        result.settings.hostedCallsEnabled
+          ? "Default hosted provider/model saved."
+          : "Default saved, tetapi hosted tetap OFF karena operator gate sedang tertutup.",
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
   async function saveCredential() {
     if (selectedProviderOption === null || !selectedProviderOption.credentialReady) {
       setStatus("Provider credential metadata belum tersedia.");
@@ -259,7 +356,33 @@ export default function SettingsPage() {
       setCredentialTest(null);
       setHostedHealth((current) => (current?.provider === secretProvider ? null : current));
       await refreshCredentials();
-      setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
+      if (selectedProviderOption.routingReady && runtime !== null) {
+        const provider = secretProvider as HostedProviderId;
+        const activated = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            hostedProvider: provider,
+            hostedModel: "governed",
+            hostedCallsEnabled: true,
+            defaultChatTarget: "hosted",
+          }),
+        });
+        setRuntime(activated);
+        setHostedHealth(
+          activated.settings.hostedCallsEnabled
+            ? { provider, status: "connected" }
+            : null,
+        );
+        setConnectProviderId(null);
+        setStatus(
+          activated.settings.hostedCallsEnabled
+            ? "API key terverifikasi, terenkripsi di Connect Vault, dan provider sudah aktif."
+            : "API key terverifikasi dan tersimpan, tetapi hosted tetap OFF karena operator gate.",
+        );
+      } else {
+        setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     } finally {
