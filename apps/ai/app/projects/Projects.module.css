@@ -1,7 +1,7 @@
 .shell {
-  width: min(100%, 1180px);
+  width: min(100%, var(--content-max));
   margin: 0 auto;
-  padding: 34px 30px 56px;
+  padding: 32px var(--page-gutter) 64px;
 }
 
 .header {
@@ -16,13 +16,19 @@
   margin: 0 0 6px;
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.header h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
 .lead {
-  max-width: 620px;
+  max-width: var(--content-readable);
   margin: 8px 0 0;
   color: var(--text-muted);
   font-size: 13px;
