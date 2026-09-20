@@ -79,7 +79,9 @@ function formatPct(value: number): string {
   return `${value.toFixed(0)}%`;
 }
 
-function hostedProviderLabel(provider: RuntimeSnapshot["settings"]["hostedProvider"]): string {
+function hostedProviderLabel(
+  provider: "anthropic" | "openrouter" | "openai" | undefined,
+): string {
   switch (provider) {
     case "anthropic":
       return "Anthropic";
