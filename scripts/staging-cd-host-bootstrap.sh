@@ -3,6 +3,8 @@ set -euo pipefail
 
 [[ "${EUID}" -eq 0 ]] || { echo "Run with sudo/root." >&2; exit 1; }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 DEPLOY_USER=ecorione-deploy
 REPO=/srv/ecorione-staging
 REPO_OWNER=ubuntu
@@ -48,8 +50,10 @@ PUBLIC_KEY="$(tr -d '\r\n' < "$PUBLIC_KEY_FILE")"
   exit 2
 }
 
-install -o root -g root -m 0755 scripts/staging-cd-forced-command.sh   /usr/local/sbin/ecorione-staging-deploy-gate
-install -o root -g root -m 0755 scripts/staging-cd-root-deploy.sh   /usr/local/sbin/ecorione-staging-deploy
+install -o root -g root -m 0755 "$SCRIPT_DIR/staging-cd-forced-command.sh" \
+  /usr/local/sbin/ecorione-staging-deploy-gate
+install -o root -g root -m 0755 "$SCRIPT_DIR/staging-cd-root-deploy.sh" \
+  /usr/local/sbin/ecorione-staging-deploy
 
 if ! id "$DEPLOY_USER" >/dev/null 2>&1; then
   useradd --create-home --shell /bin/bash "$DEPLOY_USER"
