@@ -43,6 +43,13 @@ const TOKEN_BUDGET = 8000;
 const EPISODE_LIMIT = 6;
 const ARTIFACT_LIMIT = 5;
 const EPISODE_TEXT_CHAR_LIMIT = 300;
+const SESSION_TITLE_CHAR_LIMIT = 96;
+
+function chatSessionTitle(message: string): string {
+  const normalized = message.trim().replace(/\s+/g, " ");
+  if (normalized.length <= SESSION_TITLE_CHAR_LIMIT) return normalized;
+  return `${normalized.slice(0, SESSION_TITLE_CHAR_LIMIT - 1)}…`;
+}
 
 export class UpstreamError extends Error {
   readonly service: string;
@@ -223,6 +230,7 @@ export async function chat(
     scope: req.scope,
     sensitivity: req.maxSensitivity,
     syncClass,
+    title: chatSessionTitle(req.message),
   });
   const userHistoryEvent = deps.history.appendNext(req.sessionId, {
     id: makeId("event"),
