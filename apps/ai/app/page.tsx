@@ -47,6 +47,12 @@ type RuntimeSnapshot = {
 type CredentialSnapshot = {
   credentials?: Array<{ provider: string }>;
 };
+type LocalRuntimeStatus = {
+  ready: boolean;
+  state: "connected" | "model-missing" | "unreachable" | "unsupported";
+  configuredModel: string;
+  message: string;
+};
 type ConversationReplay = {
   readonly session: HistorySession;
   readonly range: HistoryRange;
@@ -97,6 +103,7 @@ export default function ChatPage() {
   const [target, setTarget] = useState<ChatTarget>("local");
   const [defaultTarget, setDefaultTarget] = useState<ChatTarget>("local");
   const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
+  const [localRuntimeStatus, setLocalRuntimeStatus] = useState<LocalRuntimeStatus | null>(null);
   const [sending, setSending] = useState(false);
   const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
@@ -308,16 +315,25 @@ export default function ChatPage() {
     void Promise.all([
       fetch("/api/settings/settings/runtime", { cache: "no-store" }),
       fetch("/api/settings/settings/credentials", { cache: "no-store" }),
+      fetch("/api/settings/settings/local-runtime/status", { cache: "no-store" }),
     ])
-      .then(async ([runtimeResponse, credentialResponse]) => {
+      .then(async ([runtimeResponse, credentialResponse, localResponse]) => {
         if (!runtimeResponse.ok) throw new Error(`HTTP ${String(runtimeResponse.status)}`);
         const runtimeSnapshot = (await runtimeResponse.json()) as RuntimeSnapshot;
         const credentialSnapshot = credentialResponse.ok
           ? ((await credentialResponse.json()) as CredentialSnapshot)
           : { credentials: [] };
-        return { runtimeSnapshot, credentialSnapshot };
+        const localStatus = localResponse.ok
+          ? ((await localResponse.json()) as LocalRuntimeStatus)
+          : {
+              ready: false,
+              state: "unreachable" as const,
+              configuredModel: "",
+              message: "Local AI · Not connected.",
+            };
+        return { runtimeSnapshot, credentialSnapshot, localStatus };
       })
-      .then(({ runtimeSnapshot, credentialSnapshot }) => {
+      .then(({ runtimeSnapshot, credentialSnapshot, localStatus }) => {
         if (cancelled) return;
         const hostedProvider = runtimeSnapshot.settings?.hostedProvider;
         const hasHostedCredential =
@@ -328,6 +344,7 @@ export default function ChatPage() {
         const hostedReady =
           runtimeSnapshot.settings?.hostedCallsEnabled === true && hasHostedCredential;
         setHostedAvailable(hostedReady);
+        setLocalRuntimeStatus(localStatus);
         const nextDefault =
           runtimeSnapshot.settings?.defaultChatTarget === "hosted" && hostedReady
             ? "hosted"
@@ -338,6 +355,12 @@ export default function ChatPage() {
       .catch(() => {
         if (!cancelled) {
           setHostedAvailable(false);
+          setLocalRuntimeStatus({
+            ready: false,
+            state: "unreachable",
+            configuredModel: "",
+            message: "Local AI · Not connected.",
+          });
           setDefaultTarget("local");
           if (!routeLockedRef.current) setTarget("local");
         }
@@ -381,13 +404,25 @@ export default function ChatPage() {
       sendInFlightRef.current
     )
       return false;
+    if (target === "local" && localRuntimeStatus?.ready !== true) {
+      setTurns((prev) => [
+        ...prev,
+        {
+          kind: "error",
+          id: nextTurnId(),
+          message:
+            "Local AI belum terhubung. Buka Settings → AI & Connections untuk menyiapkan runtime lokal.",
+        },
+      ]);
+      return false;
+    }
     if (target === "hosted" && hostedAvailable !== true) {
       setTurns((prev) => [
         ...prev,
         {
           kind: "error",
           id: nextTurnId(),
-          message: "Hosted sedang nonaktif. Pakai Local untuk sesi ini.",
+          message: "Hosted sedang nonaktif. Aktifkan provider hosted di Settings.",
         },
       ]);
       return false;
@@ -697,19 +732,24 @@ export default function ChatPage() {
     window.history.replaceState(null, "", nextUrl);
   }
 
+  const routeReady =
+    target === "local" ? localRuntimeStatus?.ready === true : hostedAvailable === true;
   const routeHint =
     turns.length > 0
       ? "Terkunci untuk sesi ini."
       : attachments.length > 0
         ? "Terkunci selama lampiran dipakai di sesi ini."
-        : hostedAvailable === true
-          ? "Terkunci setelah pesan pertama."
-          : "Hosted nonaktif — sesi ini Local-only.";
+        : target === "local" && localRuntimeStatus?.ready !== true
+          ? "Local AI belum terhubung. Setup tersedia di Settings."
+          : target === "hosted" && hostedAvailable !== true
+            ? "Hosted belum aktif. Hubungkan provider di Settings."
+            : "Terkunci setelah pesan pertama.";
 
   const canSend =
     projectReady &&
     sessionReady &&
     hydrated &&
+    routeReady &&
     !historyLoading &&
     !sending &&
     !preparingAttachments &&
@@ -837,6 +877,14 @@ export default function ChatPage() {
               </div>
             ) : null}
 
+            {!routeReady ? (
+              <p className="ai-route-status" role="status">
+                {target === "local"
+                  ? (localRuntimeStatus?.message ?? "Local AI · Checking connection…")
+                  : "Hosted AI belum aktif. Hubungkan provider di Settings → AI & Connections."}
+              </p>
+            ) : null}
+
             <textarea
               className="ai-composer__field"
               placeholder="Tulis pesan…"
@@ -945,7 +993,9 @@ export default function ChatPage() {
                     attachments.length > 0
                   }
                 >
-                  <option value="local">Local</option>
+                  <option value="local" disabled={localRuntimeStatus?.ready !== true}>
+                    {localRuntimeStatus?.ready === true ? "Local" : "Local (tidak terhubung)"}
+                  </option>
                   <option value="hosted" disabled={hostedAvailable !== true}>
                     {hostedAvailable === true ? "Hosted" : "Hosted (nonaktif)"}
                   </option>
