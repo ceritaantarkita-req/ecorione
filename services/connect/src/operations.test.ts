@@ -56,6 +56,84 @@ describe("Connect operations telemetry", () => {
     expect(seenMethod).toBe("GET");
   });
 
+  it("discovers a transient local candidate without persisting runtime settings", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request) => {
+        const url = String(input);
+        if (url.endsWith("/v1/models")) {
+          return new Response(JSON.stringify({ data: [{ id: "candidate-model" }] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return new Response("not supported", { status: 404 });
+      }),
+    );
+
+    const connect = buildConnectServer({
+      token: "ops-token",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "saved-model",
+      hostedCallsEnabled: false,
+      hostedSpendUnlimited: true,
+    });
+    closeables.push(connect);
+
+    const status = await connect.inject({
+      method: "POST",
+      url: "/v1/settings/local-runtime/status",
+      headers: { authorization: "Bearer ops-token" },
+      payload: {
+        localRuntime: "openai-compatible",
+        localBaseUrl: "http://127.0.0.1:1234/v1",
+        localModelTag: "candidate-model",
+      },
+    });
+
+    expect(status.statusCode).toBe(200);
+    expect(status.json()).toMatchObject({
+      state: "connected",
+      ready: true,
+      configuredModel: "candidate-model",
+    });
+
+    const runtime = await connect.inject({
+      method: "GET",
+      url: "/v1/settings/runtime",
+      headers: { authorization: "Bearer ops-token" },
+    });
+    expect(runtime.statusCode).toBe(503);
+  });
+
+  it("rejects public local discovery targets before network access", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+
+    const connect = buildConnectServer({
+      token: "ops-token",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "saved-model",
+      hostedCallsEnabled: false,
+      hostedSpendUnlimited: true,
+    });
+    closeables.push(connect);
+
+    const status = await connect.inject({
+      method: "POST",
+      url: "/v1/settings/local-runtime/status",
+      headers: { authorization: "Bearer ops-token" },
+      payload: {
+        localRuntime: "openai-compatible",
+        localBaseUrl: "https://example.com/v1",
+        localModelTag: "candidate-model",
+      },
+    });
+
+    expect(status.statusCode).toBe(400);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("menjalankan local provider canary fresh tanpa exact-cache reuse", async () => {
     let providerCalls = 0;
     const local = createServer({ name: "fake-local" });
