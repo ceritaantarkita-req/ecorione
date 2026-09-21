@@ -209,10 +209,42 @@ No unrelated container was found with restart policy `no` or another policy that
 
 This check reduces the shared-host reboot risk but does not prove every unrelated application will become functionally healthy after restart. ECORIONE PCS-09 post-reboot evidence remains scoped to ECORIONE; unrelated services are preserved but are not promoted into ECORIONE acceptance claims.
 
+## Controlled VPS reboot persistence PASS
+
+The operator approved and executed a full VPS reboot after the pre-reboot safety checks. SSH disconnected as expected and a fresh post-reboot public-key session reconnected successfully.
+
+The PCS-09 post phase then PASSed:
+
+```text
+baselineBootId  38133aa8-fcd7-41b5-8729-4c6dabb0206a
+postBootId      c523f1d5-9ec5-4cf5-b560-9ec06a4be637
+headSha         0f332c73dc7b363bffecdeecae921d805d5ae131
+currentTag      staging-0f332c73dc7b
+serviceCount    15
+volumesPreserved=true
+connectFingerprintsPreserved=true
+PASS PCS-09 VPS reboot persistence evidence
+```
+
+Post-reboot verification also PASSed:
+
+- public home HTTP 200;
+- unauthenticated `/ops` HTTP 401;
+- unauthenticated `/settings` HTTP 401;
+- MCP protected-resource metadata HTTP 200;
+- MCP unauthenticated challenge HTTP 401 with resource metadata;
+- authenticated Ops snapshot `healthy=true`, 9 required services, no unhealthy services;
+- exact-host source SHA matched;
+- clean worktree;
+- 15/15 configured services running;
+- all 12 project volumes present;
+- deployment env mode 600 with no placeholders;
+- available disk approximately 16.0 GiB.
+
+The changed Linux `boot_id` proves this was a real host reboot rather than a container-only restart. The claim remains intentionally limited to controlled VPS reboot persistence; it does not prove backup/restore, off-host DR, or total host-loss recovery.
+
 ## Pending PCS-09 evidence
 
-1. operator-approved full VPS reboot;
-2. PCS-09 post-reboot persistence verification;
-3. same-host verified backup and isolated restore evidence;
-4. staging Operations + host resource evidence;
-5. sanitized final closure.
+1. same-host verified backup and isolated restore evidence;
+2. staging Operations + host resource evidence;
+3. sanitized final closure.
