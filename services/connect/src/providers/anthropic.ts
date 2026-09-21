@@ -131,6 +131,7 @@ export async function callAnthropic(
         "anthropic-version": ANTHROPIC_VERSION,
       },
       body: JSON.stringify(body),
+      redirect: "error",
       ...(signal === undefined ? {} : { signal }),
     });
   } catch (err) {
