@@ -1,9 +1,5 @@
 import { once } from "node:events";
-import {
-  createServer as createHttpServer,
-  type RequestListener,
-  type Server,
-} from "node:http";
+import { createServer as createHttpServer, type RequestListener, type Server } from "node:http";
 import { afterEach, describe, expect, it } from "vitest";
 import { decryptFromPeer, encryptForPeer, generateDeviceKeyPair } from "./crypto.js";
 import { openSyncDatabase, type SyncDatabase } from "./db.js";
