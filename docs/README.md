@@ -133,6 +133,12 @@ A bounded maintenance pass after PE/PCS closure fixed concrete correctness/secur
 
 The repository boundary and the remote staging runtime boundary remain distinct: maintenance merges do not by themselves prove a newer SumoPod deployment. See [verification/post-closure-maintenance-checkpoint-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2026-09-21.md).
 
+## Follow-up post-closure maintenance checkpoint — 2026-09-21
+
+A second bounded maintenance slice is closed through PR #237. It covers Sync public-MCP failure bounding/sanitization, serialized Connect credential-vault mutations, serialized Sandbox idempotency races, and timeout-bounded default JWKS retrieval.
+
+This is still maintenance rather than a new roadmap. Repository source advancement is not evidence that SumoPod staging was redeployed. See [verification/post-closure-maintenance-checkpoint-2-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2-2026-09-21.md).
+
 ## Repository-wide documentation reconciliation — 2026-09-21
 
 The repository contains 192 Markdown/MDX documents. Current/canonical documents are reconciled to the closed PE/PCS state and verified staging boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.
