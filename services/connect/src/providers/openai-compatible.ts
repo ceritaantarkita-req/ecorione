@@ -212,6 +212,7 @@ export async function callOpenAiCompatibleHosted(
         ...input.extraHeaders,
       },
       body: JSON.stringify(buildOpenAiCompatibleRequestBody(input)),
+      redirect: "error",
       ...(signal === undefined ? {} : { signal }),
     });
   } catch (error) {
