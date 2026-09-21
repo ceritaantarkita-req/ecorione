@@ -194,12 +194,39 @@ TAG=staging-99523b0
 
 No data rollback was performed or claimed.
 
+## Restored intended current revision
+
+The intended current GitHub `main` revision was then restored through the same governed CD path, not by manual runtime mutation.
+
+```text
+workflow run                  35553612685
+target SHA                    0b50a426ca2b14202eba769297af6c15a579b09f
+gate                          PASS
+least-privilege SSH identity  PASS
+public readiness              attempt 5 PASS (home 200, /ops 401)
+public smoke                  PASS
+authenticated /api/ops        healthy=true, 0 unhealthy required services
+exact-host evidence           expectedShaMatched=true
+configured/running services   15 / 15
+worktree                      clean / DETACHED
+deployment env                mode 600 / no placeholders
+restore result                PASS
+```
+
+The workflow ended with:
+
+```text
+PASS PCS-08 staging deploy sha=0b50a426ca2b14202eba769297af6c15a579b09f tag=staging-0b50a426ca2b
+```
+
+The controlled rollback exercise is therefore followed by successful restoration of the intended exact-main source/runtime through the governed GitHub-to-staging path.
+
 ## Pending evidence
 
 Before PCS-08 can close:
 
-1. restore intended current `main` `0b50a426ca2b14202eba769297af6c15a579b09f` through the governed GitHub CD path;
-2. verify the restored release receipt, exact source/image identity, service fleet, public boundary, ops health, and exact-host evidence;
-3. record final PCS-08 closure evidence.
+1. freeze automatic CD before merging docs-only closure changes;
+2. verify the final restored host release receipt, exact source/image identity, service fleet, and public boundary;
+3. record final PCS-08 closure and merge the docs-only evidence PR with automatic CD still disabled.
 
 No source-only result is sufficient to claim those remote boundaries.
