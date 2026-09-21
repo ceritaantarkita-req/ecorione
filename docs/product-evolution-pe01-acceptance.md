@@ -89,4 +89,4 @@ Focused evidence includes Project registry/reopen tests, Context Project A/B iso
 
 PR #169 is merged as `1d2b537de3ad07336adb9a97121309f04d61cc21`. The final reviewed PR head and exact-head gates were rechecked in [verification/pe-00-02-recheck-2026-09-19.md](verification/pe-00-02-recheck-2026-09-19.md).
 
-PE-01 remains **CLOSED / PASS**; PE-02 subsequently closed and PE-03 is now the active batch.
+PE-01 remains **CLOSED / PASS**. PE-02 through PE-08 and the follow-on PCS-00..PCS-10 roadmap subsequently closed; no Product Evolution batch is active.
