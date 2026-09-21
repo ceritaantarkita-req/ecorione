@@ -155,6 +155,7 @@ export interface BuildConnectServerOptions {
   readonly flowUrl?: string | undefined;
   /** Development-only fallback when the encrypted vault is not configured. */
   readonly webhookRootSecret?: string | undefined;
+  readonly webhookForwardTimeoutMs?: number | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -207,6 +208,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     internalToken: options.token,
     credentialVault: options.credentialVault,
     developmentRootSecret: options.webhookRootSecret,
+    forwardTimeoutMs: options.webhookForwardTimeoutMs,
   });
 
   const recordLocalDiscovery = (result: Awaited<ReturnType<typeof discoverLocalRuntime>>) => {
