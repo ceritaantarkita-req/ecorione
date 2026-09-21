@@ -70,6 +70,21 @@ PCS-09 repository implementation merged through PR #216. Exact head `0bf1414859d
 
 Latest-main staging convergence then CLOSED / PASS at the runtime boundary. After repository checkpoint PR #248 merged as `52046db35e403babdda934881773c46bf2c57b68`, governed Staging Deploy #293 / run `35627920447` deployed that exact current `main` SHA as `staging-52046db35e40`. Gate + deploy passed; public home reached 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, authenticated Ops reported a healthy fleet with no unhealthy services, MCP metadata/challenge checks passed, sanitized host evidence matched exact SHA, and final PCS-08 deployment validation passed. The reviewed orchestrator writes its release receipt before the final PASS. The current proven staging application identity is therefore `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40`. Full PCS-09 reboot/backup acceptance was not rerun on this SHA. Evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
+## Active infrastructure work
+
+| Scope | State |
+|---|---:|
+| Off-host Backup & DR repository foundation | **ACTIVE / CHECKPOINT 1** |
+| Real independent off-host copy | **PENDING RUNTIME EVIDENCE** |
+| Clean-host isolated restore of real staging backup | **PENDING RUNTIME EVIDENCE** |
+| Total-host-loss application recovery | **NOT YET PROVEN** |
+| Production promotion | **DEFERRED / SEPARATE GATE** |
+
+The active DR workstream adds encrypted portable backup packaging, strict independent SSH transfer with checksum verification, clean-host bundle verification, optional isolated Docker-volume restore verification, and an operator runbook. It does not relabel historical PCS-09 same-host evidence as off-host recovery and does not open PE-09, PCS-11, or Batch 13.
+
+Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
+Checkpoint evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).
+
 Public production cutover remains deferred. Cloudflare Tunnel remains optional and is not part of the currently verified staging edge. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
 ## Latest maintenance closure
