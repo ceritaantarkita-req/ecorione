@@ -83,10 +83,14 @@ flock -n 9 || {
 }
 
 TMP_LOG="$(mktemp)"
+CANARY_TMP="$RECEIPT_ROOT/canary-pre-$(date -u +%Y%m%dT%H%M%SZ)-${CURRENT_SHA:0:12}-$.json"
 cleanup() {
   rm -f "$TMP_LOG"
 }
 trap cleanup EXIT
+
+echo "Creating semantic owner-data canary before the cold backup..."
+ECORIONE_COMPOSE_PROJECT="${ECORIONE_COMPOSE_PROJECT:-ecorione-staging}"   node scripts/staging-offhost-dr-canary.mjs --phase baseline --state "$CANARY_TMP"
 
 echo "Creating a fresh coordinated current-revision cold backup..."
 sudo -E bash scripts/staging-pcs09-backup.sh --apply | tee "$TMP_LOG"
@@ -148,6 +152,10 @@ BUNDLE_SHA256="$(sha256sum "$BUNDLE" | cut -d' ' -f1)"
 METADATA_SHA256="$(sha256sum "$METADATA" | cut -d' ' -f1)"
 STEM="$(basename "${BUNDLE%.ecdr}")"
 EXPORT_MANIFEST="$EXPORT_DIR/$STEM.receipt.env"
+CANARY_STATE="$EXPORT_DIR/$STEM.canary.json"
+mv "$CANARY_TMP" "$CANARY_STATE"
+chmod 0600 "$CANARY_STATE"
+CANARY_SHA256="$(sha256sum "$CANARY_STATE" | cut -d' ' -f1)"
 
 cat >"$EXPORT_MANIFEST" <<EOF
 schema_version=1
@@ -159,6 +167,8 @@ bundle_filename=$(basename "$BUNDLE")
 metadata_filename=$(basename "$METADATA")
 bundle_sha256=$BUNDLE_SHA256
 metadata_sha256=$METADATA_SHA256
+canary_filename=$(basename "$CANARY_STATE")
+canary_sha256=$CANARY_SHA256
 failure_domain_ack=1
 transfer_intent=1
 claim_boundary=portable encrypted DR generation manifest; off-host transfer and later retrieval must be independently verified
@@ -182,6 +192,8 @@ metadata_filename=$(basename "$METADATA")
 export_manifest_filename=$(basename "$EXPORT_MANIFEST")
 bundle_sha256=$BUNDLE_SHA256
 metadata_sha256=$METADATA_SHA256
+canary_filename=$(basename "$CANARY_STATE")
+canary_sha256=$CANARY_SHA256
 failure_domain_ack=1
 transfer_verified=1
 claim_boundary=fresh current-revision cold backup encrypted and checksum-verified on acknowledged independent target; clean-host retrieval and recovery still required
@@ -197,5 +209,7 @@ echo "source_sha=$CURRENT_SHA"
 echo "source_tag=$CURRENT_TAG"
 echo "bundle_sha256=$BUNDLE_SHA256"
 echo "metadata_sha256=$METADATA_SHA256"
+echo "canary_sha256=$CANARY_SHA256"
 echo "export_manifest=$(basename "$EXPORT_MANIFEST")"
+echo "canary_state=$(basename "$CANARY_STATE")"
 echo "IMPORTANT: transfer proof is not total-host-loss recovery; retrieve from the independent target and run clean-host recovery next."
