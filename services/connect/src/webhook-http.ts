@@ -55,7 +55,11 @@ export function registerConnectWebhookRoutes(
   options: ConnectWebhookOptions,
 ): void {
   const forwardTimeoutMs = options.forwardTimeoutMs ?? DEFAULT_WEBHOOK_FORWARD_TIMEOUT_MS;
-  if (!Number.isInteger(forwardTimeoutMs) || forwardTimeoutMs < 1 || forwardTimeoutMs > 60_000) {
+  if (
+    !Number.isInteger(forwardTimeoutMs) ||
+    forwardTimeoutMs < 1 ||
+    forwardTimeoutMs > 60_000
+  ) {
     throw new Error("Webhook Flow forward timeout harus integer 1..60000 ms.");
   }
 
@@ -94,12 +98,15 @@ export function registerConnectWebhookRoutes(
 
       let forwarded: unknown;
       try {
-        forwarded = await httpJson(`${options.flowUrl}/v1/webhooks/${encodeURIComponent(hookId)}`, {
-          method: "POST",
-          token: options.internalToken,
-          body: delivery,
-          signal: AbortSignal.timeout(forwardTimeoutMs),
-        });
+        forwarded = await httpJson(
+          `${options.flowUrl}/v1/webhooks/${encodeURIComponent(hookId)}`,
+          {
+            method: "POST",
+            token: options.internalToken,
+            body: delivery,
+            signal: AbortSignal.timeout(forwardTimeoutMs),
+          },
+        );
       } catch (error) {
         if (error instanceof RemoteServiceError) throw error;
         throw new BadGatewayError("Flow webhook ingress tidak tersedia.");
