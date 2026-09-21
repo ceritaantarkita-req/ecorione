@@ -62,6 +62,8 @@ Node syntax checks passed for both Node entrypoints and Bash syntax validation p
 
 PR #250 initial exact head `7696da4f612d8ef383646bfa70b44def61692950` then exposed a valid repository gate failure: CI #1760 stopped at the read-only Prettier format check and identified only the two new Node scripts plus the new source-contract test. The gate was not weakened. Those three files were rewritten by the repository's exact locked Prettier toolchain, and the temporary formatting helper removed itself from the final tree before final exact-head gates were rerun.
 
+A later exact-head CI #1763 progressed through format, lint, and typecheck and then ran the normal test suite. It reported 1092 passed, 2 skipped, and one failed test: the new DR source-contract test looked for the literal text `archive SHA-256 mismatch`, while the implementation correctly constructs the message as `${archive} SHA-256 mismatch`. The implementation's archive hashing path was unchanged. The test was corrected to assert the actual `await sha256File(archivePath)` integrity path plus the `SHA-256 mismatch` failure boundary; the suite was not weakened or skipped.
+
 This is implementation evidence only. It is **not** SumoPod runtime evidence and does not prove a real off-host copy or replacement-host recovery.
 
 ## Remaining real-host gates
