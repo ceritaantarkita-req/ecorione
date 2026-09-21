@@ -10,11 +10,11 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
-## Operator decision — 2026-09-20
+## Historical operator decision that opened PCS — 2026-09-20
 
-The operator approved a new post-closure scope after real browser use on a clean local checkout. This does not reopen PE-00..PE-08 and is not Batch 13.
+The operator approved a post-closure scope after real browser use on a clean local checkout. That scope is now fully closed through PCS-10; this section preserves what was authorized and does not describe an active queue. It did not reopen PE-00..PE-08 and was not Batch 13.
 
-The next scope is documented in [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md) and covers:
+The now-closed scope is documented in [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md) and covered:
 
 - persistent Ai conversation/session history across navigation;
 - simpler provider/API-key onboarding with technical controls moved behind Advanced surfaces;
@@ -207,10 +207,11 @@ PE-08 is not a feature expansion batch. Production VPS/Cloudflare, rendered loca
 
 Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
 
-## Current next scope and deferred boundaries
+## Current work state and deferred boundaries
 
-- Post-closure product/UX + SumoPod remote staging — **APPROVED / NEXT SCOPE**; see `post-closure-product-staging-roadmap.md`.
-- Public production cutover — still deferred until staging, remote persistence, security, backup, observability, and operator acceptance are proven.
+- Active implementation scope — **NONE**. PCS-00..PCS-10 and PE-00..PE-08 are closed; new work requires an explicit operator decision.
+- Post-closure product/UX + SumoPod remote staging — **CLOSED / PASS**; see `post-closure-product-staging-roadmap.md`.
+- Public production cutover — **DEFERRED / SEPARATE EXPLICIT GATE**. Staging, remote persistence, security, same-host backup verification, observability, and operator acceptance are already proven at the documented staging boundary; they do not automatically authorize production.
 - Cloudflare named Tunnel/public-edge choice — optional/pending operator hostname/edge decision.
 - AutoClick — deferred by design.
 - paid W18 rerun — closed/not authorized.
