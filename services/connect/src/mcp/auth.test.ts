@@ -127,6 +127,27 @@ describe("MCP OAuth resource server", () => {
     expect(fetches).toBe(2);
   });
 
+  it("malformed JWT schema diklasifikasikan sebagai 401 invalid_token", async () => {
+    const cfg = config();
+    const parts = jwt().split(".");
+    const invalidHeader = Buffer.from(
+      JSON.stringify({ alg: "HS256", kid: "k1", typ: "JWT" }),
+    ).toString("base64url");
+
+    await expect(
+      authenticateBearer(
+        `Bearer ${invalidHeader}.${parts[1]!}.${parts[2]!}`,
+        cfg,
+        new JwksCache(cfg),
+        NOW_MS,
+      ),
+    ).rejects.toMatchObject({
+      name: "McpAuthError",
+      statusCode: 401,
+      code: "invalid_token",
+    });
+  });
+
   it("menolak token dengan audience lain (anti token passthrough)", async () => {
     const cfg = config();
     await expect(
