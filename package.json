@@ -81,7 +81,8 @@
     "staging:dr:restore": "node scripts/staging-offhost-dr-restore.mjs",
     "staging:dr:acceptance": "node scripts/staging-offhost-dr-acceptance.mjs",
     "staging:dr:reboot": "node scripts/staging-offhost-dr-reboot-evidence.mjs",
-    "staging:dr:start": "bash scripts/staging-offhost-dr-start.sh"
+    "staging:dr:start": "bash scripts/staging-offhost-dr-start.sh",
+    "staging:dr:canary": "node scripts/staging-offhost-dr-canary.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
