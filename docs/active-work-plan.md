@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-21**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / NO ACTIVE IMPLEMENTATION QUEUE**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / LATEST-MAIN STAGING CONVERGENCE ACTIVE**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -14,7 +14,17 @@ This maintenance does not open PE-09, PCS-11, Batch 13, a new F6 item, productio
 
 Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
 
-There is still **NO ACTIVE IMPLEMENTATION QUEUE** after this checkpoint.
+The maintenance queue remains closed. A separate bounded **Latest-main staging convergence** operational scope is now active.
+
+## Latest-main staging convergence — ACTIVE
+
+The operator explicitly resumed work on 2026-09-21 with one bounded operational goal: deploy the latest reviewed GitHub `main` onto the already-proven SumoPod staging environment through the existing governed PCS-08 path, then verify and document the exact runtime revision.
+
+Current target source revision is `de8d5d510d07ce06ece21368e4305148a2b587c9`. Exact-main CI #1750 and Product Eval #989 passed. Staging Deploy #277 and #278 both passed their gate job but skipped the deploy job, so there is **no newer runtime claim yet**. The proven staging revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
+
+Closure requires a successful governed deploy plus public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and documentation convergence. This scope is not PE-09, PCS-11, Batch 13, production promotion, public-edge activation, or paid-provider evidence.
+
+Evidence/checkpoint: [verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md).
 
 ## Latest repository-hardening closure
 
@@ -98,7 +108,7 @@ PCS-00 baseline lock
 
 The SumoPod target is a **verified remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source. The current proven staging application revision is `0f332c73dc7b363bffecdeecae921d805d5ae131`; later documentation merges intentionally did not redeploy it.
 
-**Current work queue: none.** Any new feature, hardening item, production-promotion path, or infrastructure change requires a new explicit scope; nothing is implicitly opened by closure of PCS-10.
+**Current work queue:** one bounded operational scope is active: Latest-main staging convergence. No new feature, PE, PCS, Batch, production-promotion, or public-edge scope is implicitly opened.
 
 ## Follow-up maintenance checkpoint — 2026-09-21
 
