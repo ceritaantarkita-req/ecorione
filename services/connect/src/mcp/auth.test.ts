@@ -1,5 +1,6 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { getGlobalDispatcher, MockAgent, setGlobalDispatcher } from "undici";
 import {
   JwksCache,
   McpAuthError,
@@ -63,6 +64,31 @@ describe("MCP OAuth resource server", () => {
     expect(principal.memoryScopes).toEqual(["personal"]);
     expect(principal.maxSensitivity).toBe("INTERNAL");
     expect(() => requireOAuthScope(principal, "memory:read")).not.toThrow();
+  });
+
+  it("JWKS redirect ditolak sebagai trust-root escape", async () => {
+    const originalDispatcher = getGlobalDispatcher();
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+
+    try {
+      const pool = agent.get("https://auth.example");
+      let redirectedTargetHit = false;
+      pool
+        .intercept({ path: "/jwks", method: "GET" })
+        .reply(302, "", { headers: { location: "/redirected" } });
+      pool.intercept({ path: "/redirected", method: "GET" }).reply(200, () => {
+        redirectedTargetHit = true;
+        return { keys: [PUBLIC_JWK] };
+      });
+
+      const cfg: McpAuthConfig = { ...config(), fetchJson: undefined };
+      await expect(new JwksCache(cfg).keys(NOW_MS)).rejects.toThrow();
+      expect(redirectedTargetHit).toBe(false);
+    } finally {
+      setGlobalDispatcher(originalDispatcher);
+    }
   });
 
   it("menolak token dengan audience lain (anti token passthrough)", async () => {
