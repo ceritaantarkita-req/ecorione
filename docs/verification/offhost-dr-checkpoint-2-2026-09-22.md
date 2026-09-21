@@ -149,4 +149,14 @@ sudo -E bash scripts/staging-offhost-dr-export.sh --apply \
 
 After the source host is treated as unavailable, the recovery host must use the retained export manifest with `staging-offhost-dr-fetch.sh`, then the retrieval receipt with `staging-offhost-dr-restore.mjs`.
 
+## Repository gate history
+
+PR #251 initial exact head `1d2104da9e331ea49e56d90f10533702464366f9` reached CI #1767. Naming passed, while the read-only Prettier format gate correctly failed on exactly three new/changed files:
+
+- `scripts/staging-offhost-dr-reboot-evidence.mjs`;
+- `scripts/staging-offhost-dr-restore.mjs`;
+- `test/offhost-dr-source-contract.test.ts`.
+
+No gate was weakened. Those files were rewritten by the repository's exact locked Prettier toolchain. The temporary formatter workflow then removed itself from the final tree; formatting commit head was `d49a4fe53e0dc1655f9605b3cb65b33080d1bc68`.
+
 Repository implementation can close only after exact-head CI/Product Eval and relevant acceptance gates pass. Real-host DR remains a separate evidence boundary.
