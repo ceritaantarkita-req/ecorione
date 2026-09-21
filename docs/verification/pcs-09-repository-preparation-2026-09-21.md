@@ -149,10 +149,38 @@ SUDO PASS
 
 The original pre-hardening session was intentionally kept open until this proof succeeded. The fresh-session result closes the SSH lockout-safety gate and the PCS-09 key-only operator-access hardening boundary.
 
+## Strict host inventory PASS
+
+The strict PCS-09 inventory then ran on the hardened real host at `2026-09-21T05:34:35.690Z` and returned:
+
+```text
+blockers=[]
+closureReady=true
+PASS PCS-09 staging inventory
+```
+
+Strict evidence confirmed:
+
+- exact source SHA `0f332c73dc7b363bffecdeecae921d805d5ae131`;
+- clean worktree;
+- deployment env mode 600;
+- 15/15 configured services running;
+- every staging container uses `restart=unless-stopped`;
+- no ECORIONE staging container publishes host ports;
+- Docker enabled at boot;
+- UFW active;
+- effective SSH: root login disabled, password auth disabled, keyboard-interactive disabled, public-key auth enabled;
+- unattended-upgrades enabled;
+- available disk 16.02 GiB;
+- available memory 4304.4 MiB;
+- public home HTTP 200;
+- unauthenticated `/ops` HTTP 401.
+
+The two Connect warnings remain informational because runtime settings and Vault ciphertext are absent in this staging state; PCS-09 makes no persistence claim for absent files.
+
 ## Pending PCS-09 evidence
 
-1. strict inventory PASS;
-2. actual VPS reboot persistence evidence;
-3. same-host verified backup and isolated restore evidence;
-4. staging Operations + host resource evidence;
-5. sanitized final closure.
+1. actual VPS reboot persistence evidence;
+2. same-host verified backup and isolated restore evidence;
+3. staging Operations + host resource evidence;
+4. sanitized final closure.
