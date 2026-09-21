@@ -101,7 +101,7 @@ PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + 
 
 The merged repository now contains a sanitized real-host inventory, actual VPS reboot persistence verifier, guarded key-only SSH hardening helper, same-host cold-volume backup with isolated restore-content verification, deterministic source-contract coverage, and an operator runbook. No VPS hardening/reboot/backup mutation has been performed yet.
 
-Next PCS-09 evidence: intentionally deploy exact reviewed `main` to staging through PCS-08 CD, run the non-strict host inventory, then close SSH hardening, strict inventory, reboot persistence, verified backup, and staging observability evidence in order.
+Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was deployed through governed run #35563423107 and passed public smoke, authenticated Ops, exact-host evidence, and 15/15 service checks. The first real PCS-09 non-strict host inventory then passed runtime/network/disk/memory/boot checks and identified exactly two hardening blockers: SSH password authentication still enabled and root login still permitted. Connect runtime/Vault/budget durable files are absent in this staging state, so no persistence claim is made for absent data. Next: guarded SSH hardening + second fresh key-login proof, then strict inventory.
 
 ## Post-closure repository hardening
 
