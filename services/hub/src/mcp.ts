@@ -204,7 +204,7 @@ async function artifactContent(
     headers.authorization = `Bearer ${options.internalToken}`;
   let response: Response;
   try {
-    response = await fetch(url, { headers });
+    response = await fetch(url, { headers, redirect: "error" });
   } catch (error) {
     throw new RemoteServiceError(
       url,
