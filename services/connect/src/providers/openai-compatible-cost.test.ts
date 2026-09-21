@@ -18,6 +18,40 @@ beforeEach(() => {
 afterEach(() => setGlobalDispatcher(originalDispatcher));
 
 describe("OpenAI-compatible billed-cost authority", () => {
+  it("rejects provider redirects before forwarding the API key", async () => {
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+    const pool = agent.get("https://openrouter.ai");
+    let redirectedTargetHit = false;
+    pool
+      .intercept({ path: "/api/v1/chat/completions", method: "POST" })
+      .reply(302, "", { headers: { location: "/redirected" } });
+    pool.intercept({ path: "/redirected", method: "POST" }).reply(200, () => {
+      redirectedTargetHit = true;
+      return {
+        model: "anthropic/claude-sonnet-4.5",
+        choices: [{ message: { content: "should-not-run" } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1, cost: 0.001 },
+      };
+    });
+
+    await expect(
+      callOpenAiCompatibleHosted({
+        endpoint: "https://openrouter.ai/api/v1/chat/completions",
+        providerName: "OpenRouter",
+        apiKey: "redirect-secret",
+        runtimeModel: "anthropic/claude-sonnet-4.5",
+        costModel: "claude-sonnet-4-5-20250929",
+        prefix,
+        dynamicText: "fixture",
+        userMessage: "reply",
+        maxTokensField: "max_tokens",
+      }),
+    ).rejects.toMatchObject({ name: "ProviderError", kind: "unreachable" });
+    expect(redirectedTargetHit).toBe(false);
+  });
+
   it("fails closed when OpenRouter omits usage.cost", async () => {
     const agent = new MockAgent();
     agent.disableNetConnect();
