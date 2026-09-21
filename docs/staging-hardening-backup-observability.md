@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-21**
 
-Status: **ACTIVE / REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE NEXT**
+Status: **REAL HOST ACCEPTANCE PASS / CLOSURE GATES PENDING**
 
 PCS-09 starts after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS. It hardens and proves the real remote staging host. It does not promote ECORIONE to production. The host currently has Node.js but no pnpm; operator evidence commands therefore invoke reviewed Node/Bash entrypoints directly.
 
@@ -96,7 +96,11 @@ Root-only manifests are stored under /var/lib/ecorione-staging/backups. Deployme
 
 The existing governed Operations surface already exposes required owner health, HTTP errors and latency, model-call/token/cost counters, MCP calls, Flow runs, ECX counters, recent distributed traces, and owner-process RSS/heap.
 
-PCS-09 verifies those signals on the actual staging runtime. Host-level disk/memory/container inventory remains operator-only. ECORIONE will not mount the Docker socket or broad host filesystem into the AI web application simply to display host metrics.
+PCS-09 verifies those signals on the actual staging runtime. Final real-host evidence reported all nine Operations entries healthy, eight trace groups, live HTTP request counters/request-duration histograms across the eight metrics-enabled owner services, and per-owner RSS. The final strict host inventory separately reported 15/15 running services, 15.99 GiB available disk, 4261 MiB available memory, and zero blockers.
+
+Specialized model/token/cost, MCP, Flow, and ECX metrics remain part of the governed instrumentation path, but PCS-09 does not claim non-zero values for every specialized counter in the final post-reboot/post-backup snapshot. In particular, no paid provider call is introduced solely to manufacture evidence while the staging cost-kill boundary remains in force.
+
+Host-level disk/memory/container inventory remains operator-only. ECORIONE will not mount the Docker socket or broad host filesystem into the AI web application simply to display host metrics.
 
 Long-term telemetry retention remains an external-scraper responsibility until a durable collector is explicitly deployed and verified.
 
