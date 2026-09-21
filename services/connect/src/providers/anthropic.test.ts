@@ -153,6 +153,28 @@ describe("callAnthropic", () => {
     ).rejects.toBeInstanceOf(ProviderError);
   });
 
+  it("redirect Anthropic ditolak fail-closed", async () => {
+    let redirectedTargetHit = false;
+    pool
+      .intercept({ path: "/v1/messages", method: "POST" })
+      .reply(302, "", { headers: { location: "/redirected" } });
+    pool.intercept({ path: "/redirected", method: "POST" }).reply(200, () => {
+      redirectedTargetHit = true;
+      return { content: [{ type: "text", text: "should-not-run" }] };
+    });
+
+    await expect(
+      callAnthropic({
+        apiKey: "sk-test",
+        model: "claude-sonnet-4-5-20250929",
+        prefix: prefix(),
+        dynamicText: "",
+        userMessage: "halo",
+      }),
+    ).rejects.toMatchObject({ name: "ProviderError", kind: "unreachable" });
+    expect(redirectedTargetHit).toBe(false);
+  });
+
   it("kegagalan jaringan → ProviderError unreachable", async () => {
     pool.intercept({ path: "/v1/messages", method: "POST" }).replyWithError(new Error("boom"));
 
