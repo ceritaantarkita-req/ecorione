@@ -2,7 +2,7 @@
 
 Date: **2026-09-21**
 
-Status: **CLOSURE CANDIDATE — PR #219 / DOCS CONVERGED / REPOSITORY GATES PENDING**
+Status: **CLOSED / PASS WHEN MERGED TO `main`**
 
 ## Starting boundary
 
@@ -65,4 +65,4 @@ PCS-10 does not:
 - claim production SLA/SLO or production cutover;
 - authorize PCS-11, PE-09, Batch 13, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence.
 
-PR #219 CI/Product Eval and merge are the remaining PCS-10 closure gates.
+PR #219 is the PCS-10 closure PR. This document becomes canonical only through required green repository gates and merge to `main`; PCS-10 performs no staging-runtime mutation.
