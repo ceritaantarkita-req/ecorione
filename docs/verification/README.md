@@ -16,4 +16,4 @@ Do not “clean up” a historical failure by rewriting its original result. If 
 
 W18 paid evidence is closed; do not rerun it merely to produce a newer dated record.
 
-Latest roadmap closure evidence: [pcs-10-documentation-convergence-2026-09-21.md](pcs-10-documentation-convergence-2026-09-21.md). Real-host staging evidence is recorded in [pcs-09-repository-preparation-2026-09-21.md](pcs-09-repository-preparation-2026-09-21.md). Native-Windows portability closure remains in [windows-native-portability-closure-2026-09-20.md](windows-native-portability-closure-2026-09-20.md).
+Latest repository-wide documentation audit: [repository-documentation-reconciliation-2026-09-21.md](repository-documentation-reconciliation-2026-09-21.md). Latest roadmap closure evidence: [pcs-10-documentation-convergence-2026-09-21.md](pcs-10-documentation-convergence-2026-09-21.md). Real-host staging evidence is recorded in [pcs-09-repository-preparation-2026-09-21.md](pcs-09-repository-preparation-2026-09-21.md). Native-Windows portability closure remains in [windows-native-portability-closure-2026-09-20.md](windows-native-portability-closure-2026-09-20.md).
