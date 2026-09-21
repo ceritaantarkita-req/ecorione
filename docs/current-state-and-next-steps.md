@@ -1,8 +1,8 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-21**
+Last updated: **2026-09-22**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / LATEST-MAIN STAGING CONVERGENCE ACTIVE / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / LATEST-MAIN STAGING CONVERGENCE CLOSED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -10,13 +10,19 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
-## Active bounded operational scope — latest-main staging convergence
+## Latest-main staging convergence closure — 2026-09-22
 
-On 2026-09-21 the operator explicitly resumed work to converge current reviewed GitHub `main` onto SumoPod staging. This is an operational convergence scope only; it does not reopen Product Evolution or PCS and does not authorize production promotion.
+The bounded latest-main staging-convergence scope is CLOSED / PASS at the runtime boundary.
 
-The latest documentation checkpoint merged as `7e2130094fc9e3ea85dd9b0a3a5236a88c41a2c8`. Authoritative post-merge CI #1755 and Product Eval #994 passed; duplicate CI #1754 and Product Eval #993 were cancelled by GitHub concurrency, not by test failure. Staging Deploy #288 passed the exact-current-main gate but skipped the deploy job because governed CD activation remains disabled. Repository evidence is green, but the remote runtime is not yet proven newer than `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
+Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as `staging-52046db35e40`. Both workflow jobs passed. Public smoke, authenticated Operations health, MCP protection checks, sanitized exact-host identity, and final PCS-08 deploy validation passed. The host evidence reported `headSha == expectedSha`, `healthy: true`, and no unhealthy owner services.
 
-The scope closes only after a governed staging deploy passes public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and canonical documentation convergence. Latest evidence: [verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md).
+The current proven SumoPod staging application revision is now `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40`. The prior `0f332c73...` runtime remains valid historical PCS-09 evidence but is no longer the current application identity.
+
+The reviewed deploy orchestrator writes the non-secret release receipt only after public/Ops/exact-host validation succeeds and emits its final PASS after that write, so the successful run proves the receipt path completed for the deployed SHA/tag.
+
+This convergence did not rerun the full VPS reboot or same-host cold-backup acceptance on the new SHA. Off-host DR, production promotion, public-edge activation, paid-provider evidence, and long-term external telemetry retention remain separate deferred boundaries.
+
+Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 
@@ -295,7 +301,7 @@ Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](ver
 
 ## Current work state and deferred boundaries
 
-- Active operational scope — **LATEST-MAIN STAGING CONVERGENCE**. PE-00..PE-08 and PCS-00..PCS-10 remain closed; no new product implementation batch is open.
+- Active implementation/operational scope — **NONE**. Latest-main staging convergence, PE-00..PE-08, and PCS-00..PCS-10 are closed at their documented boundaries.
 - Post-closure product/UX + SumoPod remote staging — **CLOSED / PASS**; see `post-closure-product-staging-roadmap.md`.
 - Public production cutover — **DEFERRED / SEPARATE EXPLICIT GATE**. Staging, remote persistence, security, same-host backup verification, observability, and operator acceptance are already proven at the documented staging boundary; they do not automatically authorize production.
 - Cloudflare named Tunnel/public-edge choice — optional/pending operator hostname/edge decision.
