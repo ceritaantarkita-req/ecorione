@@ -21,6 +21,7 @@ const JwtPayloadSchema = z.object({
   ecorione_max_sensitivity: SensitivitySchema.optional(),
 });
 const JwksSchema = z.object({ keys: z.array(z.record(z.string(), z.unknown())).min(1) });
+const DEFAULT_JWKS_FETCH_TIMEOUT_MS = 10_000;
 
 export interface McpAuthConfig {
   readonly issuer: string;
@@ -91,10 +92,11 @@ function normalizeIssuer(value: string): string {
   return value.endsWith("/") ? value.slice(0, -1) : value;
 }
 
-function defaultFetchJson(url: string): Promise<unknown> {
+function defaultFetchJson(url: string, timeoutMs: number): Promise<unknown> {
   return fetch(url, {
     headers: { accept: "application/json" },
     redirect: "error",
+    signal: AbortSignal.timeout(timeoutMs),
   }).then(async (response) => {
     if (!response.ok) throw new Error(`JWKS endpoint membalas ${String(response.status)}.`);
     return response.json() as Promise<unknown>;
@@ -113,11 +115,15 @@ export class JwksCache {
     private readonly config: McpAuthConfig,
     private readonly ttlMs: number = 5 * 60 * 1000,
     private readonly unknownKidRefreshCooldownMs: number = 30 * 1000,
+    private readonly fetchTimeoutMs: number = DEFAULT_JWKS_FETCH_TIMEOUT_MS,
   ) {}
 
   private async load(nowMs: number): Promise<readonly Record<string, unknown>[]> {
     try {
-      const raw = await (this.config.fetchJson ?? defaultFetchJson)(this.config.jwksUrl);
+      const raw =
+        this.config.fetchJson === undefined
+          ? await defaultFetchJson(this.config.jwksUrl, this.fetchTimeoutMs)
+          : await this.config.fetchJson(this.config.jwksUrl);
       const parsed = JwksSchema.parse(raw);
       this.cached = { expiresAtMs: nowMs + this.ttlMs, keys: parsed.keys };
       this.lastUnknownKidRefreshFailed = false;
