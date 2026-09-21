@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   AI_CREDENTIAL_PROVIDERS,
+  CredentialVaultBusyError,
   CredentialVaultFormatError,
   CredentialVaultIntegrityError,
   FileCredentialVault,
@@ -107,6 +108,20 @@ describe("FileCredentialVault", () => {
     writeFileSync(path, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
 
     expect(() => vault.get("anthropic", "messages")).toThrow(CredentialVaultIntegrityError);
+  });
+
+  it("menolak mutation saat lock lintas-proses aktif tanpa mengubah credential", () => {
+    const path = vaultPath();
+    const vault = new FileCredentialVault(path, master(9));
+    vault.set("anthropic", "messages", "stable-secret", NOW);
+    writeFileSync(`${path}.lock`, "locked\n", { encoding: "utf8", mode: 0o600 });
+
+    expect(() =>
+      vault.set("anthropic", "messages", "racing-secret", "2026-09-09T09:20:00.000Z"),
+    ).toThrow(CredentialVaultBusyError);
+    expect(() => vault.remove("anthropic", "messages")).toThrow(CredentialVaultBusyError);
+    expect(() => vault.rotateMasterKey(master(10))).toThrow(CredentialVaultBusyError);
+    expect(vault.get("anthropic", "messages")).toBe("stable-secret");
   });
 
   it("vault malformed dan master key invalid ditolak eksplisit", () => {
