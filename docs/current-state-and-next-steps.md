@@ -225,6 +225,23 @@ This is maintenance, not PE-09, PCS-11, Batch 13, or a production-promotion scop
 
 Evidence: [verification/post-closure-maintenance-checkpoint-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2026-09-21.md).
 
+## Follow-up post-closure maintenance checkpoint — 2026-09-21
+
+A second bounded maintenance slice continued from the earlier PR #232 checkpoint and is now closed through PR #237 at the repository boundary. The implementation checkpoint immediately before this documentation convergence is `443ed254f7b4c5c3880387872e882e954602452b`.
+
+Closed follow-up maintenance includes:
+
+- PR #234: Sync public MCP bridge failures are timeout-bounded, redirect-fail-closed, malformed upstream JSON maps to explicit `502`, and internal network diagnostics are not leaked;
+- PR #235: Connect credential-vault mutations are serialized with an exclusive filesystem lock and contention is exposed as retryable `503 CREDENTIAL_VAULT_BUSY`;
+- PR #236: Sandbox execution with the same idempotency key is serialized before authority/effect execution, with active contention exposed as `409 SANDBOX_EXECUTION_BUSY`;
+- PR #237: default MCP JWKS retrieval is timeout-bounded while preserving redirect fail-closed behavior and `502` dependency-failure semantics.
+
+This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
+
+Repository source state and remote runtime state remain separate evidence boundaries. The repository `main` may advance without proving that SumoPod staging was redeployed. The previously proven staging application revision therefore remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless later deployment evidence proves a newer runtime.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-2-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2-2026-09-21.md).
+
 ## Current work state and deferred boundaries
 
 - Active implementation scope — **NONE**. PCS-00..PCS-10 and PE-00..PE-08 are closed; new work requires an explicit operator decision.
