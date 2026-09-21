@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "@ecorione/shared-server";
@@ -17,10 +17,11 @@ function fixture() {
     localModelTag: "local-model",
     hostedCallsEnabled: true,
   });
-  const vault = new FileCredentialVault(join(dir, "vault.json"), randomBytes(32));
+  const vaultPath = join(dir, "vault.json");
+  const vault = new FileCredentialVault(vaultPath, randomBytes(32));
   const app = createServer({ name: "connect-test", token: "internal-secret" });
   registerConnectControlRoutes(app, { runtimeSettings: runtime, credentialVault: vault });
-  return { app, runtime, vault };
+  return { app, runtime, vault, vaultPath };
 }
 
 const auth = { authorization: "Bearer internal-secret" };
@@ -96,6 +97,25 @@ describe("Connect Control Center boundary", () => {
         }),
       ]),
     );
+  });
+
+  it("mengklasifikasikan contention credential vault sebagai 503 yang retryable", async () => {
+    const { app, vaultPath } = fixture();
+    writeFileSync(`${vaultPath}.lock`, "locked\n", "utf8");
+
+    const response = await app.inject({
+      method: "PUT",
+      url: "/v1/settings/credentials/openai",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { secret: "provider-secret" },
+    });
+
+    expect(response.statusCode).toBe(503);
+    expect(response.json().error).toMatchObject({
+      type: "CREDENTIAL_VAULT_BUSY",
+      message: "Credential vault sedang dipakai; coba lagi.",
+    });
+    expect(response.body).not.toContain(vaultPath);
   });
 
   it("menerima plaintext credential sekali, menyimpan terenkripsi, dan tidak meng-echo secret", async () => {
