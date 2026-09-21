@@ -124,6 +124,18 @@ The latest proven SumoPod staging application revision remains `0f332c73dc7b363b
 
 Evidence: [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
 
+## Maintenance checkpoint 4 — 2026-09-21
+
+Bounded repository maintenance is now **CLOSED through PR #242** at the source boundary. The latest implementation checkpoint before this docs-only convergence is `47cbeaa8760debbfde87cff7cb7a828037a2829b`.
+
+This slice bounded the Ai server-side Flow owner proxy to 10 seconds by default while preserving redirect fail-closed behavior and sanitized `502 UPSTREAM_UNAVAILABLE` transport semantics. PR #242 exact head `db8a8f6068a40e47187a2142e6801e975e749276` passed CI #1743, Product Eval #982, and PCS-06 Integrated Browser Acceptance #18 before merge.
+
+**Current implementation queue remains none.** This checkpoint does not authorize production promotion, Cloudflare/public-edge activation, hosted spend, a new PE/PCS/Batch/F6 scope, or any staging-runtime claim beyond existing evidence.
+
+The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
+
 ## Closed PE-08 boundary
 
 **PE-08 — Product closure**
