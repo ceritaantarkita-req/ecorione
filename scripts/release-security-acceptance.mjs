@@ -115,6 +115,13 @@ if (
     "MCP auth error semantics must distinguish invalid tokens from JWKS dependency failures",
   );
 }
+if (
+  !multimodalAdapter.includes("isLocalReachableHost") ||
+  !multimodalAdapter.includes("localBaseUrlPublicAllowed") ||
+  !multimodalAdapter.includes('this.route === "local"')
+) {
+  findings.push("local multimodal endpoint scope validation missing");
+}
 if (!mcpTypes.includes("allowInsecureLoopback") || !mcpTypes.includes("credentialRef"))
   findings.push("MCP transport credential/HTTPS schema missing");
 if (!mcpSdk.includes("ECORIONE_MCP_STDIO_ALLOWLIST"))
