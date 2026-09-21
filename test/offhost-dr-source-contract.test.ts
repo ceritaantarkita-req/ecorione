@@ -115,5 +115,4 @@ describe("off-host DR source contract", () => {
     expect(reboot).toContain("staging-host-evidence.mjs");
     expect(reboot).toContain("totalHostLossRecoveryCandidate: true");
   });
-
 });

@@ -290,7 +290,9 @@ function restoreProjectVolumes(dir, manifest) {
         label: `inspect ${row.volume}`,
       }) !== null
     ) {
-      throw new Error(`Refusing real-volume restore: target volume already exists: ${row.volume}`);
+      throw new Error(
+        `Refusing real-volume restore: target volume already exists: ${row.volume}`,
+      );
     }
     return { ...row, logical };
   });
@@ -411,7 +413,9 @@ async function main() {
     throw new Error("Encrypted bundle/retrieval identity or integrity mismatch");
   }
 
-  console.log("Running isolated clean-host restore verification before real-volume mutation...");
+  console.log(
+    "Running isolated clean-host restore verification before real-volume mutation...",
+  );
   run(
     process.execPath,
     [
@@ -452,14 +456,7 @@ async function main() {
     validateOuterTar(plainTar);
     run(
       "tar",
-      [
-        "-xf",
-        plainTar,
-        "--no-same-owner",
-        "--no-same-permissions",
-        "-C",
-        extractDir,
-      ],
+      ["-xf", plainTar, "--no-same-owner", "--no-same-permissions", "-C", extractDir],
       { label: "outer bundle extraction" },
     );
     rmSync(plainTar, { force: true });

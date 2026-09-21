@@ -217,8 +217,14 @@ async function main() {
       volumes,
       aiImage,
       connect: {
-        runtimeSettings: fingerprint(connectContainer, "/app/data/connect-runtime-settings.json"),
-        vaultCiphertext: fingerprint(connectContainer, "/app/data/connect-credentials.vault.json"),
+        runtimeSettings: fingerprint(
+          connectContainer,
+          "/app/data/connect-runtime-settings.json",
+        ),
+        vaultCiphertext: fingerprint(
+          connectContainer,
+          "/app/data/connect-credentials.vault.json",
+        ),
         spendBudget: fingerprint(connectContainer, "/app/data/connect-spend-budget.json"),
       },
       publicBoundary: {
@@ -229,7 +235,8 @@ async function main() {
   }
 
   function assertHealthy(state) {
-    if (state.headSha !== acceptance.sourceSha) fail("HEAD does not match recovered source SHA");
+    if (state.headSha !== acceptance.sourceSha)
+      fail("HEAD does not match recovered source SHA");
     if (!state.cleanTrackedWorktree) fail("tracked recovery checkout is dirty");
     if (state.aiImage !== `ecorione:${acceptance.sourceTag}`) {
       fail("AI image tag changed from recovered source tag");
@@ -292,8 +299,10 @@ async function main() {
     fail("Linux boot_id did not change; no full replacement-host reboot is proven");
   }
   if (baseline.headSha !== current.headSha) fail("source SHA changed across reboot");
-  if (baseline.aiImage !== current.aiImage) fail("recovered application image changed across reboot");
-  if (!same(baseline.volumes, current.volumes)) fail("project volume inventory changed across reboot");
+  if (baseline.aiImage !== current.aiImage)
+    fail("recovered application image changed across reboot");
+  if (!same(baseline.volumes, current.volumes))
+    fail("project volume inventory changed across reboot");
   if (!same(baseline.connect, current.connect)) {
     fail("Connect durable-file fingerprints changed across reboot");
   }
