@@ -50,12 +50,31 @@ export class McpAuthError extends Error {
   }
 }
 
+export class McpAuthDependencyError extends Error {
+  readonly statusCode = 502;
+
+  constructor(
+    message = "JWKS authorization server tidak tersedia atau mengembalikan data tidak valid.",
+  ) {
+    super(message);
+    this.name = "McpAuthDependencyError";
+  }
+}
+
 function decodeJson(segment: string): unknown {
   try {
     return JSON.parse(Buffer.from(segment, "base64url").toString("utf8")) as unknown;
   } catch {
     throw new McpAuthError(401, "invalid_token", "JWT tidak dapat didekode.");
   }
+}
+
+function parseJwtPart<T>(schema: z.ZodType<T>, value: unknown, label: string): T {
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    throw new McpAuthError(401, "invalid_token", `JWT ${label} tidak valid.`);
+  }
+  return parsed.data;
 }
 
 function splitScopes(value: string | string[] | undefined): Set<string> {
@@ -96,10 +115,15 @@ export class JwksCache {
   ) {}
 
   private async load(nowMs: number): Promise<readonly Record<string, unknown>[]> {
-    const raw = await (this.config.fetchJson ?? defaultFetchJson)(this.config.jwksUrl);
-    const parsed = JwksSchema.parse(raw);
-    this.cached = { expiresAtMs: nowMs + this.ttlMs, keys: parsed.keys };
-    return parsed.keys;
+    try {
+      const raw = await (this.config.fetchJson ?? defaultFetchJson)(this.config.jwksUrl);
+      const parsed = JwksSchema.parse(raw);
+      this.cached = { expiresAtMs: nowMs + this.ttlMs, keys: parsed.keys };
+      return parsed.keys;
+    } catch (error) {
+      if (error instanceof McpAuthDependencyError) throw error;
+      throw new McpAuthDependencyError();
+    }
   }
 
   async keys(nowMs: number): Promise<readonly Record<string, unknown>[]> {
@@ -174,8 +198,8 @@ export async function authenticateBearer(
   const segments = token.split(".");
   if (segments.length !== 3)
     throw new McpAuthError(401, "invalid_token", "Access token harus JWT tiga segmen.");
-  const header = JwtHeaderSchema.parse(decodeJson(segments[0]!));
-  const payload = JwtPayloadSchema.parse(decodeJson(segments[1]!));
+  const header = parseJwtPart(JwtHeaderSchema, decodeJson(segments[0]!), "header");
+  const payload = parseJwtPart(JwtPayloadSchema, decodeJson(segments[1]!), "payload");
 
   if (normalizeIssuer(payload.iss) !== normalizeIssuer(config.issuer)) {
     throw new McpAuthError(

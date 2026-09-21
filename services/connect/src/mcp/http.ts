@@ -4,6 +4,7 @@ import { createServer } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import {
   JwksCache,
+  McpAuthDependencyError,
   McpAuthError,
   authenticateBearer,
   protectedResourceMetadata,
@@ -113,6 +114,13 @@ export function buildMcpHttpServer(options: BuildMcpHttpServerOptions): FastifyI
           .code(error.statusCode)
           .send(
             errorResponse(requestId(req.body), new McpProtocolError(-32001, error.message)),
+          );
+      }
+      if (error instanceof McpAuthDependencyError) {
+        return await reply
+          .code(error.statusCode)
+          .send(
+            errorResponse(requestId(req.body), new McpProtocolError(-32603, error.message)),
           );
       }
       const status = error instanceof McpProtocolError && error.code === -32020 ? 400 : 400;
