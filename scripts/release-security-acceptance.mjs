@@ -58,6 +58,11 @@ const openAiCompatibleProvider = readFileSync(
   "utf8",
 );
 const multimodalAdapter = readFileSync("services/connect/src/multimodal.ts", "utf8");
+const localProvider = readFileSync("services/connect/src/providers/local.ts", "utf8");
+const localProvenance = readFileSync(
+  "services/connect/src/providers/local-model-provenance.ts",
+  "utf8",
+);
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
@@ -83,6 +88,8 @@ for (const [boundary, source] of [
   ["Anthropic provider fetch", anthropicProvider],
   ["OpenAI-compatible provider fetch", openAiCompatibleProvider],
   ["Connect multimodal adapter fetch", multimodalAdapter],
+  ["Local completion fetch", localProvider],
+  ["Local provenance fetch", localProvenance],
 ]) {
   if (!source.includes('redirect: "error"')) {
     findings.push(`${boundary} must fail closed on redirects`);
