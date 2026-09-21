@@ -47,6 +47,20 @@ function headers(method: string, name?: string) {
   };
 }
 
+function syntacticallyValidBearer(): string {
+  const header = Buffer.from(JSON.stringify({ alg: "RS256", kid: "k1" })).toString("base64url");
+  const payload = Buffer.from(
+    JSON.stringify({
+      iss: "https://auth.example",
+      sub: "user-1",
+      aud: RESOURCE,
+      exp: 4_102_444_800,
+      scope: "memory:read",
+    }),
+  ).toString("base64url");
+  return `Bearer ${header}.${payload}.c2ln`;
+}
+
 describe("Connect MCP HTTP", () => {
   it("401 mengiklankan protected resource metadata dan read scope", async () => {
     const server = app();
@@ -89,6 +103,43 @@ describe("Connect MCP HTTP", () => {
       resource: RESOURCE,
       authorization_servers: ["https://auth.example"],
     });
+    await server.close();
+  });
+
+  it("JWKS dependency failure dibalas 502 tanpa bearer challenge atau detail upstream mentah", async () => {
+    const server = buildMcpHttpServer({
+      hubUrl: "http://127.0.0.1:17024",
+      handleKey: randomBytes(32),
+      auth: {
+        ...mcpAuthConfig({
+          issuer: "https://auth.example",
+          resource: RESOURCE,
+          jwksUrl: "https://auth.example/jwks",
+          allowedOrigins: [ORIGIN],
+          defaultMemoryScopes: ["personal"],
+          defaultMaxSensitivity: "INTERNAL",
+        }),
+        fetchJson: async () => {
+          throw new Error("private upstream diagnostic");
+        },
+      },
+    });
+    const response = await server.inject({
+      method: "POST",
+      url: "/mcp",
+      headers: {
+        ...headers("server/discover"),
+        authorization: syntacticallyValidBearer(),
+      },
+      payload: body(),
+    });
+
+    expect(response.statusCode).toBe(502);
+    expect(response.headers["www-authenticate"]).toBeUndefined();
+    expect(response.json()).toMatchObject({
+      error: { code: -32603 },
+    });
+    expect(response.body).not.toContain("private upstream diagnostic");
     await server.close();
   });
 
