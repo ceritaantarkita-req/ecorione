@@ -18,7 +18,8 @@ describe("off-host DR source contract", () => {
     expect(bundle).toContain("modulusLength");
     expect(bundle).toContain("< 3072");
     expect(bundle).toContain("SHA256SUMS");
-    expect(bundle).toContain("archive SHA-256 mismatch");
+    expect(bundle).toContain("await sha256File(archivePath)");
+    expect(bundle).toContain("SHA-256 mismatch");
     expect(bundle).toContain("cipher.setAAD(aad)");
     expect(bundle).toContain("Private DR key is intentionally not used on the source host");
     expect(bundle).not.toContain("createPrivateKey");
