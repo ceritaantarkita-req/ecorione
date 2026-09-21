@@ -97,6 +97,13 @@ for (const [boundary, source] of [
     findings.push(`${boundary} must fail closed on redirects`);
   }
 }
+if (
+  !mcpAuth.includes("keyForKid") ||
+  !mcpAuth.includes("unknownKidRefreshCooldownMs") ||
+  !mcpAuth.includes("lastUnknownKidRefreshAtMs")
+) {
+  findings.push("MCP JWKS rotation refresh must remain bounded");
+}
 if (!mcpTypes.includes("allowInsecureLoopback") || !mcpTypes.includes("credentialRef"))
   findings.push("MCP transport credential/HTTPS schema missing");
 if (!mcpSdk.includes("ECORIONE_MCP_STDIO_ALLOWLIST"))
