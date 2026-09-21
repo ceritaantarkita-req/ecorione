@@ -1,13 +1,13 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-21**
+Last updated: **2026-09-22**
 
 This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
 
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current state and explicit deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; latest-main staging convergence is the only active bounded operational scope.
+2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; no implementation or operational convergence scope is active.
 3. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — CLOSED PCS-00..PCS-10 product/UX + SumoPod staging roadmap.
 4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — closed PE product model and ownership rules.
 5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — closed PE-00 through PE-08 batch plan.
@@ -120,8 +120,8 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current operating/deferred boundaries
 
-- active operational scope — **LATEST-MAIN STAGING CONVERGENCE**; no new product implementation batch is open.
-- SumoPod remote development/staging — **PCS-07..PCS-09 CLOSED / PASS; staging verified** at application revision `0f332c73dc7b363bffecdeecae921d805d5ae131`.
+- active implementation/operational scope — **NONE**; latest-main staging convergence is CLOSED / PASS at the runtime boundary.
+- SumoPod remote development/staging — **VERIFIED** at application revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` through governed Staging Deploy #293.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
 - AutoClick — deferred by design.
@@ -161,11 +161,11 @@ PR #244 exact implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` pas
 
 This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
 
-## Latest-main staging convergence — active
+## Latest-main staging convergence — CLOSED / PASS
 
-A bounded operational convergence scope remains active to move the latest reviewed GitHub `main` onto the proven SumoPod staging environment through the existing PCS-08 deployment path. The latest docs checkpoint merged as `7e2130094fc9e3ea85dd9b0a3a5236a88c41a2c8`; authoritative post-merge CI #1755 and Product Eval #994 passed. Staging Deploy #288 passed its exact-current-main gate but skipped deployment because governed CD activation remains disabled, so the proven runtime claim remains `0f332c73dc7b...` until a successful deploy and runtime verification exist.
+The bounded latest-main staging-convergence scope is CLOSED / PASS at the runtime boundary. Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as `staging-52046db35e40`. Public smoke, authenticated Ops health, MCP protection checks, exact-host SHA evidence, and final PCS-08 deploy validation all passed. Earlier checkpoint files remain preserved as historical evidence.
 
-Latest checkpoint: [verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md).
+Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
 ## Repository-wide documentation reconciliation — 2026-09-21
 
