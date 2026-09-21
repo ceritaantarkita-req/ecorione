@@ -4,6 +4,18 @@ Last updated: **2026-09-21**
 
 Status: **PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / NO ACTIVE IMPLEMENTATION QUEUE**
 
+## Latest post-closure maintenance checkpoint
+
+Bounded maintenance audit work through **PR #232 is CLOSED at the repository boundary**. It repaired concrete W18 cleanup state preservation, redirect boundaries, MCP JWKS rotation/error semantics, and Local multimodal endpoint privacy without opening PE-09, PCS-11, Batch 13, a new F6 item, or a paid W-series run.
+
+Implementation checkpoint before this documentation convergence: `1618b45e3c0837a84e17d258182cd73cad3f0591`.
+
+The maintenance pass does not claim that SumoPod staging has been redeployed to that SHA. The existing proven staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` until newer real-host deployment evidence exists.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2026-09-21.md).
+
+There is still **NO ACTIVE IMPLEMENTATION QUEUE** after this checkpoint.
+
 ## Latest repository-hardening closure
 
 **Native Windows portability — PR #182**
