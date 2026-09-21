@@ -14,6 +14,11 @@ fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+REPO_OWNER="$(stat -c '%U' "$ROOT")"
+
+git_as_owner() {
+  sudo -u "$REPO_OWNER" git -C "$ROOT" "$@"
+}
 
 ENV_FILE="${ECORIONE_DEPLOY_ENV:-deploy/staging.env}"
 PROJECT="${ECORIONE_COMPOSE_PROJECT:-ecorione-staging}"
@@ -57,11 +62,11 @@ if [[ ! "$CURRENT_TAG" =~ ^staging-[0-9a-f]{12}$ ]]; then
   echo "Invalid current_tag in release receipt." >&2
   exit 1
 fi
-if [[ "$(git rev-parse HEAD)" != "$CURRENT_SHA" ]]; then
+if [[ "$(git_as_owner rev-parse HEAD)" != "$CURRENT_SHA" ]]; then
   echo "HEAD does not match release receipt." >&2
   exit 1
 fi
-if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+if [[ -n "$(git_as_owner status --porcelain --untracked-files=no)" ]]; then
   echo "Tracked worktree is dirty." >&2
   exit 1
 fi
