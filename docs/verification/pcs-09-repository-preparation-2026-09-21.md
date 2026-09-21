@@ -194,11 +194,25 @@ Connect runtime settings, Vault ciphertext, and spend-budget fingerprints remain
 
 The baseline PASS proves the before-state only. PCS-09 does not claim reboot persistence until a real VPS reboot changes Linux `boot_id` and the post phase verifies release/source identity, service fleet, volume inventory, present Connect fingerprints, public smoke, authenticated Ops, and exact-host evidence.
 
+## Shared-host pre-reboot safety check
+
+Before the disruptive reboot, the operator enumerated every Docker container on the shared SumoPod host.
+
+Observed boundary:
+
+- all 15 ECORIONE staging containers were running;
+- existing Traefik, Mainlagi, InMyDraft, ECORION, InMyCitizen, InMySocial, InMyLearning, and InMyCompany containers were also running;
+- every listed container used `restart=unless-stopped`;
+- Docker service state was `enabled` and `active`.
+
+No unrelated container was found with restart policy `no` or another policy that would predictably strand it after a normal host reboot.
+
+This check reduces the shared-host reboot risk but does not prove every unrelated application will become functionally healthy after restart. ECORIONE PCS-09 post-reboot evidence remains scoped to ECORIONE; unrelated services are preserved but are not promoted into ECORIONE acceptance claims.
+
 ## Pending PCS-09 evidence
 
-1. host-wide pre-reboot restart-policy inventory for unrelated shared-VPS workloads;
-2. operator-approved full VPS reboot;
-3. PCS-09 post-reboot persistence verification;
-4. same-host verified backup and isolated restore evidence;
-5. staging Operations + host resource evidence;
-6. sanitized final closure.
+1. operator-approved full VPS reboot;
+2. PCS-09 post-reboot persistence verification;
+3. same-host verified backup and isolated restore evidence;
+4. staging Operations + host resource evidence;
+5. sanitized final closure.
