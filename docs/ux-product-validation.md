@@ -1,15 +1,15 @@
 # ECORIONE — Local UX / Product Validation
 
-Status: **STATIC HARDENING COMPLETE / RUNTIME WALKTHROUGH PENDING**  
-Date: **2026-09-12**
+Status: **HISTORICAL UX CHECKPOINT / RENDERED WALKTHROUGH CLOSED / LATER PCS-04 + PCS-06 CLOSED**  
+Original checkpoint date: **2026-09-12** · Reconciled: **2026-09-21**
 
-This is the active checkpoint after local observability closure. It validates real user journeys on the already-closed local technical baseline. It is not a new Batch 13 and it does not reopen Historical Ledger, ECX, persistence, backup/restore, or observability closure.
+This document preserves the UX checkpoint that followed local observability closure. It is no longer an active queue: the rendered W03 walkthrough closed on 2026-09-15 (`verification/w03-responsive-flow-implementation-2026-09-15.md`), PCS-04 later closed product visual/information-architecture cleanup, and PCS-06 closed integrated rendered-browser regression. It is not a new Batch 13 and it does not reopen Historical Ledger, ECX, persistence, backup/restore, or observability closure.
 
 The code-side frontend hardening sequence is merged through PR #62, with owner-boundary follow-ups in PR #63 and PR #65. PR #63 fixed a real Settings MCP workspace-query mismatch and hardened the generic Ai → owner proxy paths/redirect behavior; PR #65 closes the remaining dedicated realtime voice SSE direct-Hub redirect gap. These changes do not alter the runtime/browser claim boundary. Canonical evidence is `docs/verification/frontend-static-hardening-2026-09-12.md`, `docs/verification/frontend-static-audit-final-2026-09-12.md`, `docs/verification/frontend-static-proxy-followup-2026-09-12.md`, and the severity/disposition ledger `docs/verification/frontend-static-defect-ledger-2026-09-12.md`.
 
 PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` is the latest **code-bearing** repository-side UX/static baseline. Documentation-only merges may advance `main` after that point. Therefore runtime evidence must always execute from synchronized **current `origin/main`**, require `HEAD == origin/main`, and verify that the synchronized commit contains PR #65 in ancestry; do not checkout the older code-bearing SHA merely to run evidence.
 
-The remaining gate is the real local rendered inventory/walkthrough described below. `docs/ux-runtime-walkthrough-checklist.md` is the exact operator procedure; static review does not substitute for it.
+The real local rendered inventory/walkthrough described below was the remaining gate at the time. It subsequently passed under W03; `docs/ux-runtime-walkthrough-checklist.md` now records the completed result and remains the reusable regression procedure.
 
 ## Objective
 
@@ -138,11 +138,11 @@ The checkpoint can be marked **CLOSED / PASS WITH LIMITATIONS** only when all of
 - hosted calls remain effectively disabled throughout the checkpoint;
 - sanitized closure evidence is committed without private raw screenshots/logs.
 
-As of PR #65, the repository-side static implementation includes the generic owner-proxy hardening plus the dedicated voice-stream redirect boundary. PR #65 / `f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca` remains the latest code-bearing baseline even when documentation-only merges advance `main`. The local inventory and rendered browser bullets remain pending and must not be inferred from CI; runtime evidence must use synchronized current `origin/main` with PR #65 in ancestry.
+At the time of this checkpoint, PR #65 was the latest code-bearing static baseline. The later W03 real-laptop closure supplied the previously pending rendered evidence, and PCS-04/PCS-06 supplied later product/IA and deterministic browser-regression closure. Historical PR #65 ancestry requirements below are retained only to explain how that checkpoint was executed.
 
 ## Claim boundary
 
-A future PASS proves only representative local product/UX behavior on the tested laptop, browser, viewport(s), state, and local model configuration. It does not prove:
+The resulting PASS remains bounded to representative local product/UX behavior on the tested laptop, browser, viewport(s), state, and local model configuration. It does not prove:
 
 - production SLA/SLO;
 - all browsers/devices/viewports;
@@ -155,4 +155,4 @@ A future PASS proves only representative local product/UX behavior on the tested
 - VPS/Cloudflare behavior;
 - off-host DR.
 
-Immutable local model identity hardening remains the next planned checkpoint after UX/product validation closes.
+Immutable local-model identity and later agentic/eval work subsequently progressed under the W-series and are closed at their documented boundaries. This file no longer assigns a next checkpoint.
