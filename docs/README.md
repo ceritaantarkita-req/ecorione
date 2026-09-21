@@ -127,6 +127,12 @@ Use the owner-specific runbook when touching its subsystem:
 - AutoClick — deferred by design.
 - paid W18 rerun — closed/not authorized for freshness.
 
+## Post-closure maintenance checkpoint — 2026-09-21
+
+A bounded maintenance pass after PE/PCS closure fixed concrete correctness/security/privacy defects through PR #232 without opening a new roadmap. It covers W18 cleanup state preservation, fail-closed redirect boundaries, JWKS trust/rotation/error semantics, and Local multimodal endpoint privacy.
+
+The repository boundary and the remote staging runtime boundary remain distinct: maintenance merges do not by themselves prove a newer SumoPod deployment. See [verification/post-closure-maintenance-checkpoint-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2026-09-21.md).
+
 ## Repository-wide documentation reconciliation — 2026-09-21
 
 The repository contains 192 Markdown/MDX documents. Current/canonical documents are reconciled to the closed PE/PCS state and verified staging boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.
