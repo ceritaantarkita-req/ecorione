@@ -2,7 +2,7 @@
 
 Date: **2026-09-21**
 
-Status: **REPOSITORY IMPLEMENTATION MERGED / REAL HOST BASELINE CAPTURED / HARDENING PENDING**
+Status: **REAL HOST ACCEPTANCE COMPLETE / CLOSURE GATES PENDING**
 
 ## Starting boundary
 
@@ -279,7 +279,55 @@ The backup intentionally excludes deployment env, operator credentials, SSH priv
 
 Claim boundary remains explicit: this backup is on the same VPS failure domain and therefore is **not off-host disaster recovery**.
 
-## Pending PCS-09 evidence
+## Final staging Operations + host resource evidence
 
-1. staging Operations + host resource evidence;
-2. sanitized final closure.
+A credentialed Operations snapshot was captured at `2026-09-21T05:51:51.458Z` to a local mode-0600 evidence file. The terminal output was reduced to sanitized operational metadata.
+
+Observed real-host Operations state:
+
+```text
+healthy=true
+serviceCount=9
+unhealthyServices=[]
+traceGroups=8
+counterNames=[ecorione_http_requests_total]
+histogramNames=[ecorione_http_request_duration_ms]
+PASS production-ops-snapshot
+```
+
+All eight required owner services (`rnd`, `context`, `connect`, `hub`, `artifact`, `sandbox`, `space`, `flow`) were healthy and each exposed one HTTP counter, one request-duration histogram, a recent request span, and process RSS. Optional `sync` was also healthy.
+
+Observed owner RSS values were approximately 72.5–101.1 MiB. The final strict host inventory at `2026-09-21T05:51:53.482Z` additionally confirmed:
+
+```text
+availableDiskGiB=15.99
+availableMemoryMiB=4261
+configuredServices=15
+runningServices=15
+blockers=[]
+closureReady=true
+home=200
+ops=401
+PASS PCS-09 staging inventory
+```
+
+The governed Operations implementation contains specialized model/token/cost, MCP, Flow, and ECX metric instrumentation, but this final post-reboot/post-backup snapshot does **not** claim non-zero live model/cost/Flow measurements. No paid-provider workload was introduced merely to manufacture telemetry evidence, the staging cost kill switch remains authoritative, and long-term telemetry retention remains outside the PCS-09 claim boundary.
+
+Connect runtime settings, Vault ciphertext, and spend-budget files remained absent. Their absence is preserved as a warning rather than converted into false persistence evidence.
+
+## PCS-09 acceptance verdict
+
+All PCS-09 real-host acceptance gates are now satisfied at their documented boundaries:
+
+- governed exact-SHA staging deployment;
+- HTTPS/public protection and authenticated Operations health;
+- key-only SSH hardening with fresh-session lockout proof;
+- strict host inventory with zero blockers;
+- real VPS reboot persistence with changed Linux boot ID;
+- exact source/image/service/volume preservation after reboot;
+- verified same-host cold backup with isolated per-volume restore-content verification;
+- final governed Operations and host resource evidence.
+
+Remaining non-claims are intentional: no off-host disaster recovery, no total-VPS-loss recovery, no point-in-time recovery, no production SLA/SLO, no public production promotion, no long-term telemetry retention, and no persistence claim for absent Connect files.
+
+This branch is therefore a **PCS-09 closure candidate**. Repository CI/Product Eval and merge of the closure-evidence PR remain the final repository gates before PCS-09 can be marked CLOSED / PASS and PCS-10 documentation convergence begins.
