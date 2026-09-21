@@ -200,9 +200,9 @@ Requirements:
 
 ### PCS-09 — Staging access, persistence, backup, and observability
 
-State: **ACTIVE — REPOSITORY PREPARATION**.
+State: **ACTIVE — REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE NEXT**.
 
-Repository preparation starts with a sanitized actual-host inventory that checks service/restart posture, accidental published ports, Docker boot enablement, UFW, effective SSH authentication settings, disk/memory availability, public boundary status, and hashes/sizes only for present Connect durable files. No deployment-env values or Vault plaintext are collected.
+PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 also passed. The repository now contains the sanitized actual-host inventory, VPS-reboot verifier, guarded SSH-hardening helper, and same-host verified backup tooling. Automatic staging deployment remains disabled until the next controlled host-evidence step.
 
 - establish HTTPS and operator authentication;
 - verify restart persistence on the actual VPS;

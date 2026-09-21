@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-21**
 
-Status: **ACTIVE / REPOSITORY PREPARATION**
+Status: **ACTIVE / REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE NEXT**
 
 PCS-09 starts after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS. It hardens and proves the real remote staging host. It does not promote ECORIONE to production.
 
@@ -86,7 +86,7 @@ Same-host backup is not off-host disaster recovery. A future off-host copy to a 
 
 Repository backup command:
 
-    sudo -E pnpm staging:pcs09:backup
+    sudo -E bash scripts/staging-pcs09-backup.sh --apply
 
 The helper refuses a mismatched release receipt or dirty tracked worktree, estimates free-space headroom before stopping anything, stops only the ECORIONE staging Compose project, snapshots every project volume while cold, restores each archive into a temporary Docker volume, compares deterministic file-content fingerprints and counts, removes temporary verification volumes, and guarantees a staging restart attempt through an EXIT trap.
 
