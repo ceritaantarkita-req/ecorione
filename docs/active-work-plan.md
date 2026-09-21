@@ -19,7 +19,7 @@ Windows tests        990 PASS + 3 skipped
 
 This is maintenance hardening, not PE-09 or Batch 13. The clean-checkout follow-up is CLOSED / PASS on PR #183: implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed CI #1479 + Product Eval #718; final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 + Product Eval #721 and merged as `4980b3ceb149be58788467d2e11769de12977d5a`.
 
-The final fresh-clone Windows EOL follow-up is also CLOSED / PASS on PR #185. It normalized only the three `.cmd` Git blobs (semantic diff = 0), preserved CRLF checkout via `.gitattributes`, passed CI #1486 + Product Eval #725 + Desktop Installer #76, merged as `4194e89a2b0611897969eaca2cb9c2b4b360c774`, and post-merge main passed CI #1487 + Product Eval #726. No PE or repository-hardening implementation batch remains; the separately approved PCS roadmap is the next scope.
+The final fresh-clone Windows EOL follow-up is also CLOSED / PASS on PR #185. It normalized only the three `.cmd` Git blobs (semantic diff = 0), preserved CRLF checkout via `.gitattributes`, passed CI #1486 + Product Eval #725 + Desktop Installer #76, merged as `4194e89a2b0611897969eaca2cb9c2b4b360c774`, and post-merge main passed CI #1487 + Product Eval #726. No PE or repository-hardening implementation batch remains. The separately approved PCS-00..PCS-10 roadmap subsequently completed and is now CLOSED / PASS.
 
 ## Latest Product Evolution closure
 
@@ -44,7 +44,7 @@ Closure evidence: [verification/pe-08-product-closure-2026-09-19.md](verificatio
 
 ## Post-closure roadmap status
 
-There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSED / PASS. The operator has explicitly approved the separate post-closure roadmap [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md); it must not be renamed PE-09 or Batch 13.
+There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSED / PASS. The separate post-closure roadmap [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md) is also CLOSED / PASS through PCS-10; it must not be renamed PE-09, PCS-11, or Batch 13.
 
 **PCS-00 Baseline lock is CLOSED / PASS.** PR #189 exact head `f58311ae30beef877f0c38962bcf4b1aefe91917` passed CI #1492 + Product Eval #731 and merged as `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
 
@@ -66,9 +66,9 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-09 staging persistence/security/backup/observability is CLOSED / PASS.** Exact reviewed runtime `0f332c73dc7b363bffecdeecae921d805d5ae131` passed key-only SSH hardening with fresh-session proof, strict host inventory with zero blockers, real full-VPS reboot persistence, 12-volume same-host cold backup with isolated restore-content verification, and final credentialed Operations + host-resource evidence. Closure PR #218 head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918 passed. Off-host DR and production promotion remain non-claims. Evidence: [verification/pcs-09-repository-preparation-2026-09-21.md](verification/pcs-09-repository-preparation-2026-09-21.md).
 
-**PCS-10 closure/documentation convergence is CLOSED / PASS when this converged state is on `main`.** Current-state, active-work, staging, security/backup, documentation-map, repository-rule, Cloudflare, and decision documents now agree on the verified staging boundary. No PCS implementation scope remains active.
+**PCS-10 closure/documentation convergence is CLOSED / PASS.** PR #219 exact head `c84f76face60d203592d8bc6e1a51acccfec5004` passed CI #1684 + Product Eval #923 and merged as `6058aa0ff294218147a91ee0fc7b77f32d1be80d`. Post-merge bookkeeping PR #220 passed CI #1686 + Product Eval #925 and merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07`. Current-state, active-work, staging, security/backup, documentation-map, repository-rule, Cloudflare, and decision documents agree on the verified staging boundary. No PCS implementation scope remains active.
 
-Current execution order:
+Completed PCS execution sequence:
 
 ```text
 PCS-00 baseline lock
@@ -85,6 +85,8 @@ PCS-00 baseline lock
 ```
 
 The SumoPod target is a **verified remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source. The current proven staging application revision is `0f332c73dc7b363bffecdeecae921d805d5ae131`; later documentation merges intentionally did not redeploy it.
+
+**Current work queue: none.** Any new feature, hardening item, production-promotion path, or infrastructure change requires a new explicit scope; nothing is implicitly opened by closure of PCS-10.
 
 ## Closed PE-08 boundary
 
