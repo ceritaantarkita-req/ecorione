@@ -69,6 +69,7 @@ const mcpHttp = readFileSync("services/connect/src/mcp/http.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
 const sandboxClients = readFileSync("services/sandbox/src/clients.ts", "utf8");
+const sandboxReceiptStore = readFileSync("services/sandbox/src/receipt-store.ts", "utf8");
 const connectWebhook = readFileSync("services/connect/src/webhook-http.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
@@ -129,6 +130,12 @@ if (
   !sandboxClients.includes("signal: signal()")
 ) {
   findings.push("Sandbox control-plane HTTP must remain timeout-bounded");
+}
+if (
+  !sandboxReceiptStore.includes("cleanupFailedLockAcquisition") ||
+  !sandboxReceiptStore.includes("writeLockMetadata")
+) {
+  findings.push("Sandbox receipt lock acquisition failure must clean stale lock state");
 }
 if (
   !connectWebhook.includes("AbortSignal.timeout") ||
