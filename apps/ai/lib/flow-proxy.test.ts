@@ -106,6 +106,19 @@ describe("proxyToFlow", () => {
     expect(response.status).toBe(502);
   });
 
+  it("timeout Flow → 502 UPSTREAM_UNAVAILABLE tanpa menunggu tanpa batas", async () => {
+    pool
+      .intercept({ path: "/v1/nodes", method: "GET" })
+      .reply(200, { nodes: [] })
+      .delay(250);
+
+    const response = await proxyToFlow(request("GET"), "/v1/nodes", "GET", 25);
+    expect(response.status).toBe(502);
+    expect(((await response.json()) as { error: { type: string } }).error.type).toBe(
+      "UPSTREAM_UNAVAILABLE",
+    );
+  });
+
   it("redirect owner tidak diikuti sambil membawa bearer token", async () => {
     pool
       .intercept({ path: "/v1/nodes", method: "GET" })
