@@ -66,6 +66,14 @@ Checkpoint 2 adds:
   - never uses Docker prune;
   - writes a root-only restore receipt after all restored volumes pass.
 
+- `scripts/staging-offhost-dr-start.sh`
+  - requires the restore receipt to prove independent retrieval;
+  - requires exact recovered Git SHA and clean tracked worktree;
+  - refuses any pre-existing Compose project container;
+  - requires every restored volume to exist;
+  - starts the exact recorded image tag through the reviewed Compose topology;
+  - on failed startup removes attempted containers/network without deleting recovered volumes.
+
 - `scripts/staging-offhost-dr-acceptance.mjs`
   - refuses any restore receipt without `retrievedFromIndependentTarget=true`;
   - requires exact Git HEAD == recovered source SHA and a clean tracked worktree;
