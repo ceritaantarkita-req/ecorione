@@ -6,7 +6,10 @@ const ROOT = resolve(import.meta.dirname, "..");
 
 describe("PCS-09 staging hardening source contract", () => {
   it("captures sanitized host/runtime/security facts without reading secret values", () => {
-    const source = readFileSync(resolve(ROOT, "scripts/staging-pcs09-inventory.mjs"), "utf8");
+    const source = readFileSync(
+      resolve(ROOT, "scripts/staging-pcs09-inventory.mjs"),
+      "utf8",
+    );
     expect(source).toContain("restartPolicy");
     expect(source).toContain("unless-stopped");
     expect(source).toContain("publishedPorts");
@@ -25,10 +28,15 @@ describe("PCS-09 staging hardening source contract", () => {
   });
 
   it("requires a real VPS reboot and preserves present Connect durable files", () => {
-    const source = readFileSync(resolve(ROOT, "scripts/staging-pcs09-restart-evidence.mjs"), "utf8");
+    const source = readFileSync(
+      resolve(ROOT, "scripts/staging-pcs09-restart-evidence.mjs"),
+      "utf8",
+    );
     expect(source).toContain("/proc/sys/kernel/random/boot_id");
     expect(source).toContain("Linux boot_id did not change");
-    expect(source).toContain("Connect durable-file fingerprints changed across reboot");
+    expect(source).toContain(
+      "Connect durable-file fingerprints changed across reboot",
+    );
     expect(source).toContain("production-public-smoke.mjs");
     expect(source).toContain("production-ops-snapshot.mjs");
     expect(source).toContain("staging-host-evidence.mjs");
@@ -36,7 +44,10 @@ describe("PCS-09 staging hardening source contract", () => {
   });
 
   it("hardens SSH without disabling operator public-key authentication", () => {
-    const source = readFileSync(resolve(ROOT, "scripts/staging-ssh-hardening.sh"), "utf8");
+    const source = readFileSync(
+      resolve(ROOT, "scripts/staging-ssh-hardening.sh"),
+      "utf8",
+    );
     expect(source).toContain("00-ecorione-staging-hardening.conf");
     expect(source).toContain("PubkeyAuthentication yes");
     expect(source).toContain("PasswordAuthentication no");
@@ -48,8 +59,11 @@ describe("PCS-09 staging hardening source contract", () => {
   });
 
   it("uses a cold same-host backup with isolated verification and guaranteed restart cleanup", () => {
-    const source = readFileSync(resolve(ROOT, "scripts/staging-pcs09-backup.sh"), "utf8");
-    expect(source).toContain('--apply');
+    const source = readFileSync(
+      resolve(ROOT, "scripts/staging-pcs09-backup.sh"),
+      "utf8",
+    );
+    expect(source).toContain("--apply");
     expect(source).toContain("Release receipt must be root-owned");
     expect(source).toContain("compose stop");
     expect(source).toContain("trap cleanup EXIT");
