@@ -8,9 +8,14 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DEPLOY_ENV = process.env.ECORIONE_DEPLOY_ENV?.trim() || "deploy/staging.env";
 const PROJECT = process.env.ECORIONE_COMPOSE_PROJECT?.trim() || "ecorione-staging";
-const OVERLAY = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "deploy/compose.sumopod.yml";
-const EDGE_NETWORK = process.env.ECORIONE_EDGE_NETWORK?.trim() || "inmydraft-demos_web";
-const PUBLIC_BASE_URL = process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "https://ecorione.inmydraft.com";
+const OVERLAY =
+  process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "deploy/compose.sumopod.yml";
+const EDGE_NETWORK =
+  process.env.ECORIONE_EDGE_NETWORK?.trim() ||
+  "inmydraft-demos_web"; // naming-gate:allow — existing SumoPod network
+const PUBLIC_BASE_URL =
+  process.env.ECORIONE_PUBLIC_BASE_URL?.trim() ||
+  "https://ecorione.inmydraft.com"; // naming-gate:allow — existing staging hostname
 const EXPECTED_SHA = process.env.ECORIONE_EXPECTED_SHA?.trim() || "";
 const strict = process.argv.slice(2).includes("--strict");
 
@@ -43,10 +48,15 @@ function lines(value) {
 
 function composeArgs() {
   return [
-    "compose", "-p", PROJECT,
-    "--env-file", DEPLOY_ENV,
-    "-f", "deploy/compose.yml",
-    "-f", OVERLAY,
+    "compose",
+    "-p",
+    PROJECT,
+    "--env-file",
+    DEPLOY_ENV,
+    "-f",
+    "deploy/compose.yml",
+    "-f",
+    OVERLAY,
   ];
 }
 
@@ -67,10 +77,26 @@ function sshEffective(text) {
 
 function connectFingerprint(container, path) {
   if (!container) return { present: false };
-  const present = run("docker", ["exec", container, "sh", "-lc", "test -f " + JSON.stringify(path)], true);
+  const present = run(
+    "docker",
+    ["exec", container, "sh", "-lc", "test -f " + JSON.stringify(path)],
+    true,
+  );
   if (present === null) return { present: false };
-  const size = run("docker", ["exec", container, "sh", "-lc", "stat -c %s " + JSON.stringify(path)]);
-  const sha = run("docker", ["exec", container, "sh", "-lc", "sha256sum " + JSON.stringify(path) + " | awk '{print $1}'"]);
+  const size = run("docker", [
+    "exec",
+    container,
+    "sh",
+    "-lc",
+    "stat -c %s " + JSON.stringify(path),
+  ]);
+  const sha = run("docker", [
+    "exec",
+    container,
+    "sh",
+    "-lc",
+    "sha256sum " + JSON.stringify(path) + " | awk '{print $1}'",
+  ]);
   return { present: true, sizeBytes: Number(size), sha256: sha };
 }
 
@@ -105,15 +131,23 @@ async function main() {
 
   const headSha = run("git", ["rev-parse", "HEAD"]);
   const cleanWorktree = run("git", ["status", "--porcelain"]) === "";
-  const configured = lines(run("docker", composeArgs().concat(["config", "--services"])));
-  const running = lines(run("docker", composeArgs().concat(["ps", "--status", "running", "--services"])));
+  const configured = lines(
+    run("docker", composeArgs().concat(["config", "--services"])),
+  );
+  const running = lines(
+    run("docker", composeArgs().concat(["ps", "--status", "running", "--services"])),
+  );
   const nonRunning = configured.filter((name) => !running.includes(name));
 
-  const containerNames = lines(run("docker", [
-    "ps",
-    "--filter", "label=com.docker.compose.project=" + PROJECT,
-    "--format", "{{.Names}}",
-  ]));
+  const containerNames = lines(
+    run("docker", [
+      "ps",
+      "--filter",
+      "label=com.docker.compose.project=" + PROJECT,
+      "--format",
+      "{{.Names}}",
+    ]),
+  );
 
   const containers = containerNames.map((name) => ({
     name,
@@ -122,11 +156,16 @@ async function main() {
     publishedPorts: lines(run("docker", ["port", name], true) || ""),
   }));
 
-  const volumes = lines(run("docker", [
-    "volume", "ls",
-    "--filter", "label=com.docker.compose.project=" + PROJECT,
-    "--format", "{{.Name}}",
-  ]));
+  const volumes = lines(
+    run("docker", [
+      "volume",
+      "ls",
+      "--filter",
+      "label=com.docker.compose.project=" + PROJECT,
+      "--format",
+      "{{.Name}}",
+    ]),
+  );
 
   const dockerEnabled = run("systemctl", ["is-enabled", "docker"], true) === "enabled";
   const ufw = run("sudo", ["-n", "ufw", "status", "verbose"], true) || "";
@@ -161,10 +200,12 @@ async function main() {
   const blockers = [];
   const warnings = [];
 
-  if (EXPECTED_SHA && headSha !== EXPECTED_SHA) blockers.push("HEAD does not match expected SHA");
+  if (EXPECTED_SHA && headSha !== EXPECTED_SHA)
+    blockers.push("HEAD does not match expected SHA");
   if (!cleanWorktree) blockers.push("tracked worktree is dirty");
   if (nonRunning.length) blockers.push("one or more configured services are not running");
-  if (configured.length !== containerNames.length) blockers.push("container count differs from configured services");
+  if (configured.length !== containerNames.length)
+    blockers.push("container count differs from configured services");
   if (containers.some((item) => item.restartPolicy !== "unless-stopped")) {
     blockers.push("one or more containers do not use restart=unless-stopped");
   }
@@ -173,14 +214,18 @@ async function main() {
   }
   if (!dockerEnabled) blockers.push("Docker is not enabled at boot");
   if (!ufwActive) blockers.push("UFW is not active");
-  if (sshd.passwordAuthentication !== "no") blockers.push("SSH password authentication is not disabled");
-  if (!["no", "prohibit-password", "without-password"].includes(sshd.permitRootLogin || "")) {
+  if (sshd.passwordAuthentication !== "no")
+    blockers.push("SSH password authentication is not disabled");
+  if (
+    !["no", "prohibit-password", "without-password"].includes(sshd.permitRootLogin || "")
+  ) {
     blockers.push("SSH root login is not restricted");
   }
   if (sshd.kbdInteractiveAuthentication !== "no") {
     blockers.push("SSH keyboard-interactive authentication is not disabled");
   }
-  if (sshd.pubkeyAuthentication !== "yes") blockers.push("SSH public-key authentication is not enabled");
+  if (sshd.pubkeyAuthentication !== "yes")
+    blockers.push("SSH public-key authentication is not enabled");
   if (availableDiskGiB < 10) blockers.push("available disk is below 10 GiB");
   if (availableMemoryMiB < 512) blockers.push("available memory is below 512 MiB");
   if (!(home >= 200 && home < 400)) blockers.push("public home is not 2xx/3xx");
@@ -228,7 +273,11 @@ async function main() {
     process.exitCode = 2;
     return;
   }
-  console.log(blockers.length === 0 ? "PASS PCS-09 staging inventory" : "PCS-09 baseline captured with hardening blockers");
+  console.log(
+    blockers.length === 0
+      ? "PASS PCS-09 staging inventory"
+      : "PCS-09 baseline captured with hardening blockers",
+  );
 }
 
 main().catch((error) => {
