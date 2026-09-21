@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / LATEST-MAIN STAGING CONVERGENCE CLOSED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINT 1 REPOSITORY FOUNDATION / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -20,9 +20,20 @@ The current proven SumoPod staging application revision is now `52046db35e403bab
 
 The reviewed deploy orchestrator writes the non-secret release receipt only after public/Ops/exact-host validation succeeds and emits its final PASS after that write, so the successful run proves the receipt path completed for the deployed SHA/tag.
 
-This convergence did not rerun the full VPS reboot or same-host cold-backup acceptance on the new SHA. Off-host DR, production promotion, public-edge activation, paid-provider evidence, and long-term external telemetry retention remain separate deferred boundaries.
+This convergence did not rerun the full VPS reboot or same-host cold-backup acceptance on the new SHA. Off-host DR is now the explicitly active infrastructure workstream but is not yet proven; production promotion, public-edge activation, paid-provider evidence, and long-term external telemetry retention remain separate deferred boundaries.
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
+
+## Off-host Backup & DR — ACTIVE / CHECKPOINT 1
+
+The operator explicitly opened off-host DR after latest-main staging convergence closed. The repository foundation now provides authenticated encryption of verified PCS-09 backups, strict checksum-verified transfer to an acknowledged independent SSH failure domain, clean-host decrypt/integrity verification, and optional isolated Docker-volume restore verification.
+
+The source host needs only an RSA-3072+ public key. The private DR key stays out-of-band and is required only for recovery. The portable payload uses AES-256-GCM with the data key wrapped by RSA-OAEP/SHA-256.
+
+This checkpoint does **not** claim a real off-host copy or total-host-loss recovery. Those claims require a fresh backup of the current staging revision, transfer outside SumoPod, independent retrieval, clean-host `--verify-docker`, exact-source application reconstruction with separately recovered secrets, restart/persistence proof, and final sanitized recovery evidence.
+
+Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
+Checkpoint evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 
