@@ -118,6 +118,25 @@ describe("resolveLocalModelProvenance", () => {
     expect(result.status).toBe("unverified");
   });
 
+  it("meminta provenance dengan redirect fail-closed", async () => {
+    let redirectMode: "error" | "follow" | "manual" | undefined;
+    const result = await resolveLocalModelProvenance({
+      baseUrl: "http://127.0.0.1:11434/v1",
+      modelTag: "qwen3:8b",
+      declaredDigest: null,
+      fetchImpl: (_url, init) => {
+        redirectMode = init?.redirect;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ models: [{ name: "qwen3:8b", digest: DIGEST_A }] }),
+        });
+      },
+    });
+    expect(redirectMode).toBe("error");
+    expect(result).toMatchObject({ status: "resolved", digest: DIGEST_A });
+  });
+
   it("tidak menganggap respons non-OK sebagai provenance", async () => {
     const result = await resolveLocalModelProvenance({
       baseUrl: "http://127.0.0.1:11434/v1",
