@@ -45,6 +45,7 @@ const compose = readFileSync("deploy/compose.yml", "utf8");
 const caddy = readFileSync("deploy/Caddyfile", "utf8");
 const server = readFileSync("packages/shared-server/src/server.ts", "utf8");
 const proxy = readFileSync("apps/ai/lib/settings-proxy.ts", "utf8");
+const aiFlowProxy = readFileSync("apps/ai/lib/flow-proxy.ts", "utf8");
 const flow = readFileSync("services/flow/src/graph-activities.ts", "utf8");
 const sharedClient = readFileSync("packages/shared-server/src/client.ts", "utf8");
 const hubMcp = readFileSync("services/hub/src/mcp.ts", "utf8");
@@ -114,6 +115,13 @@ if (
   !mcpAuth.includes("DEFAULT_JWKS_FETCH_TIMEOUT_MS")
 ) {
   findings.push("MCP JWKS fetch must remain timeout-bounded");
+}
+if (
+  !aiFlowProxy.includes("AbortSignal.timeout") ||
+  !aiFlowProxy.includes("DEFAULT_FLOW_PROXY_TIMEOUT_MS") ||
+  !aiFlowProxy.includes("UPSTREAM_UNAVAILABLE")
+) {
+  findings.push("Ai -> Flow proxy must remain timeout-bounded");
 }
 if (
   !sandboxClients.includes("AbortSignal.timeout") ||
