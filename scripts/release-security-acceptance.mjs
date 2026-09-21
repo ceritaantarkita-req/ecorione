@@ -63,6 +63,7 @@ const localProvenance = readFileSync(
   "services/connect/src/providers/local-model-provenance.ts",
   "utf8",
 );
+const mcpAuth = readFileSync("services/connect/src/mcp/auth.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
@@ -90,6 +91,7 @@ for (const [boundary, source] of [
   ["Connect multimodal adapter fetch", multimodalAdapter],
   ["Local completion fetch", localProvider],
   ["Local provenance fetch", localProvenance],
+  ["MCP JWKS fetch", mcpAuth],
 ]) {
   if (!source.includes('redirect: "error"')) {
     findings.push(`${boundary} must fail closed on redirects`);
