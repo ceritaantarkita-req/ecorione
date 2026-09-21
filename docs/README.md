@@ -130,3 +130,5 @@ Use the owner-specific runbook when touching its subsystem:
 ## Repository-wide documentation reconciliation — 2026-09-21
 
 The repository contains 192 Markdown/MDX documents. Current/canonical documents are reconciled to the closed PE/PCS state and verified staging boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.
+
+Audit record: [verification/repository-documentation-reconciliation-2026-09-21.md](verification/repository-documentation-reconciliation-2026-09-21.md).
