@@ -7,23 +7,17 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const STATE_PATH = resolve(
-  process.env.ECORIONE_PCS09_RESTART_STATE ||
-    ".ecorione/evidence/pcs09-vps-restart-state.json",
+  process.env.ECORIONE_PCS09_RESTART_STATE || ".ecorione/evidence/pcs09-vps-restart-state.json",
 );
 const DEPLOY_ENV = process.env.ECORIONE_DEPLOY_ENV?.trim() || "deploy/staging.env";
 const PROJECT = process.env.ECORIONE_COMPOSE_PROJECT?.trim() || "ecorione-staging";
-const OVERLAY =
-  process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "deploy/compose.sumopod.yml";
-const EDGE_NETWORK =
-  process.env.ECORIONE_EDGE_NETWORK?.trim() ||
-  "inmydraft-demos_web"; // naming-gate:allow — existing SumoPod network
+const OVERLAY = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "deploy/compose.sumopod.yml";
+const EDGE_NETWORK = process.env.ECORIONE_EDGE_NETWORK?.trim() || "inmydraft-demos_web"; // naming-gate:allow — existing SumoPod network
 const PUBLIC_BASE_URL =
-  process.env.ECORIONE_PUBLIC_BASE_URL?.trim() ||
-  "https://ecorione.inmydraft.com"; // naming-gate:allow — existing staging hostname
+  process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "https://ecorione.inmydraft.com"; // naming-gate:allow — existing staging hostname
 const EXPECTED_SHA = process.env.ECORIONE_EXPECTED_SHA?.trim() || "";
 const OPS_FILE =
-  process.env.ECORIONE_OPS_CREDENTIAL_FILE?.trim() ||
-  "/home/ubuntu/ecorione-staging-ops.txt";
+  process.env.ECORIONE_OPS_CREDENTIAL_FILE?.trim() || "/home/ubuntu/ecorione-staging-ops.txt";
 
 function die(message) {
   throw new Error("PCS-09 VPS restart evidence: " + message);
@@ -49,7 +43,11 @@ function run(name, args, options = {}) {
 
 function lines(value) {
   if (!value) return [];
-  return value.split(/\r?\n/u).map((item) => item.trim()).filter(Boolean).sort();
+  return value
+    .split(/\r?\n/u)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .sort();
 }
 
 function parseArgs(argv) {
@@ -89,24 +87,16 @@ function receipt() {
 function fingerprint(container, path) {
   if (!container) return { present: false };
   if (
-    run(
-      "docker",
-      ["exec", container, "sh", "-lc", "test -f " + JSON.stringify(path)],
-      { allowFailure: true },
-    ) === null
+    run("docker", ["exec", container, "sh", "-lc", "test -f " + JSON.stringify(path)], {
+      allowFailure: true,
+    }) === null
   ) {
     return { present: false };
   }
   return {
     present: true,
     sizeBytes: Number(
-      run("docker", [
-        "exec",
-        container,
-        "sh",
-        "-lc",
-        "stat -c %s " + JSON.stringify(path),
-      ]),
+      run("docker", ["exec", container, "sh", "-lc", "stat -c %s " + JSON.stringify(path)]),
     ),
     sha256: run("docker", [
       "exec",
@@ -137,9 +127,7 @@ async function publicBoundary() {
 
 async function snapshot() {
   run("docker", composeArgs().concat(["config", "--quiet"]));
-  const configured = lines(
-    run("docker", composeArgs().concat(["config", "--services"])),
-  );
+  const configured = lines(run("docker", composeArgs().concat(["config", "--services"])));
   const running = lines(
     run("docker", composeArgs().concat(["ps", "--status", "running", "--services"])),
   );
@@ -169,7 +157,12 @@ async function snapshot() {
   const containers = names.map((name) => ({
     name,
     image: run("docker", ["inspect", "--format", "{{.Config.Image}}", name]),
-    restartPolicy: run("docker", ["inspect", "--format", "{{.HostConfig.RestartPolicy.Name}}", name]),
+    restartPolicy: run("docker", [
+      "inspect",
+      "--format",
+      "{{.HostConfig.RestartPolicy.Name}}",
+      name,
+    ]),
     startedAt: run("docker", ["inspect", "--format", "{{.State.StartedAt}}", name]),
   }));
   return {
@@ -186,7 +179,10 @@ async function snapshot() {
     containers,
     connect: {
       runtimeSettings: fingerprint(connectContainer, "/app/data/connect-runtime-settings.json"),
-      vaultCiphertext: fingerprint(connectContainer, "/app/data/connect-credentials.vault.json"),
+      vaultCiphertext: fingerprint(
+        connectContainer,
+        "/app/data/connect-credentials.vault.json",
+      ),
       spendBudget: fingerprint(connectContainer, "/app/data/connect-spend-budget.json"),
     },
     publicBoundary: await publicBoundary(),
