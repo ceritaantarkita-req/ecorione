@@ -27,11 +27,35 @@ export interface SandboxReceiptLease {
   release(): void;
 }
 
+export interface SandboxReceiptStoreOptions {
+  readonly writeLockMetadata?: (fd: number, metadata: string) => void;
+}
+
+function cleanupFailedLockAcquisition(fd: number, lockPath: string): void {
+  try {
+    closeSync(fd);
+  } catch {
+    // Best effort: still attempt unlink so a close failure does not skip stale-lock cleanup.
+  }
+  try {
+    unlinkSync(lockPath);
+  } catch {
+    // Preserve the original acquisition failure; later retries still fail closed if cleanup failed.
+  }
+}
+
 export class SandboxReceiptStore {
   readonly root: string;
-  constructor(root: string) {
+  private readonly writeLockMetadata: (fd: number, metadata: string) => void;
+
+  constructor(root: string, options: SandboxReceiptStoreOptions = {}) {
     this.root = resolve(root);
     mkdirSync(this.root, { recursive: true });
+    this.writeLockMetadata =
+      options.writeLockMetadata ??
+      ((fd, metadata) => {
+        writeFileSync(fd, metadata, "utf8");
+      });
   }
 
   private pathForKey(key: string): string {
@@ -55,7 +79,14 @@ export class SandboxReceiptStore {
       }
       throw error;
     }
-    writeFileSync(fd, `${String(process.pid)}\n`, "utf8");
+
+    try {
+      this.writeLockMetadata(fd, `${String(process.pid)}\n`);
+    } catch (error) {
+      cleanupFailedLockAcquisition(fd, lockPath);
+      throw error;
+    }
+
     let released = false;
     return {
       release() {
