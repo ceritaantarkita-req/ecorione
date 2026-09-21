@@ -40,9 +40,7 @@ const required = [
   "apps/ai/app/settings/page.tsx",
   "apps/ai/app/api/settings/[...path]/route.ts",
 ];
-const findings = required
-  .filter((path) => !existsSync(path))
-  .map((path) => `missing ${path}`);
+const findings = required.filter((path) => !existsSync(path)).map((path) => `missing ${path}`);
 const compose = readFileSync("deploy/compose.yml", "utf8");
 const caddy = readFileSync("deploy/Caddyfile", "utf8");
 const server = readFileSync("packages/shared-server/src/server.ts", "utf8");
@@ -107,12 +105,10 @@ if (
 }
 const pcs09Scripts = {
   "staging:pcs09:inventory": "node scripts/staging-pcs09-inventory.mjs",
-  "staging:pcs09:inventory:strict":
-    "node scripts/staging-pcs09-inventory.mjs --strict",
+  "staging:pcs09:inventory:strict": "node scripts/staging-pcs09-inventory.mjs --strict",
   "staging:pcs09:restart:baseline":
     "node scripts/staging-pcs09-restart-evidence.mjs --phase baseline",
-  "staging:pcs09:restart:post":
-    "node scripts/staging-pcs09-restart-evidence.mjs --phase post",
+  "staging:pcs09:restart:post": "node scripts/staging-pcs09-restart-evidence.mjs --phase post",
   "staging:pcs09:ssh:check": "bash scripts/staging-ssh-hardening.sh --check",
   "staging:pcs09:backup": "bash scripts/staging-pcs09-backup.sh --apply",
 };
