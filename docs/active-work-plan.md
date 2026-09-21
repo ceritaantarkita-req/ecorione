@@ -119,7 +119,7 @@ Implementation/audit checkpoint:
 - reviewed implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed CI #1469 and Product Eval #708;
 - Product Eval closure matrix: 36 files / 148 tests PASS;
 - normal CI suite: 191 files PASS + 1 skipped; 991 tests PASS + 2 skipped; Phase 4 3/3 PASS; production-ops, security/toolchain/container/build gates PASS;
-- closure-candidate documentation head is now required before merge.
+- the closure-candidate documentation head was required before merge and PE-08 subsequently closed on PR #180.
 
 Dependency gate:
 
