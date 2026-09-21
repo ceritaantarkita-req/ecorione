@@ -43,7 +43,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     if (!argv[i].startsWith("--") || i + 1 >= argv.length) {
       fail(
-        "Usage: staging-offhost-dr-restore.mjs --bundle <file> --metadata <json> --private-key <pem>",
+        "Usage: staging-offhost-dr-restore.mjs --bundle <file> --metadata <json> --private-key <pem> --retrieval-receipt <env>",
       );
     }
     out[argv[i].slice(2)] = argv[++i];
@@ -361,30 +361,54 @@ async function main() {
   }
 
   const args = parseArgs(process.argv.slice(2));
-  if (!args.bundle || !args.metadata || !args["private-key"]) {
+  if (!args.bundle || !args.metadata || !args["private-key"] || !args["retrieval-receipt"]) {
     fail(
-      "Usage: staging-offhost-dr-restore.mjs --bundle <file> --metadata <json> --private-key <pem>",
+      "Usage: staging-offhost-dr-restore.mjs --bundle <file> --metadata <json> --private-key <pem> --retrieval-receipt <env>",
     );
   }
 
   const bundlePath = resolve(args.bundle);
   const metadataPath = resolve(args.metadata);
   const privateKeyPath = resolve(args["private-key"]);
+  const retrievalReceiptPath = resolve(args["retrieval-receipt"]);
   for (const [path, label] of [
     [bundlePath, "bundle"],
     [metadataPath, "metadata"],
     [privateKeyPath, "DR private key"],
+    [retrievalReceiptPath, "retrieval receipt"],
   ]) {
     assertRegular(path, label);
   }
 
+  const retrieval = {};
+  for (const raw of readFileSync(retrievalReceiptPath, "utf8").split(/\r?\n/)) {
+    if (!raw) continue;
+    const at = raw.indexOf("=");
+    if (at > 0) retrieval[raw.slice(0, at)] = raw.slice(at + 1);
+  }
+  if (
+    retrieval.schema_version !== "1" ||
+    retrieval.failure_domain_ack !== "1" ||
+    retrieval.retrieval_verified !== "1" ||
+    !HASH_RE.test(retrieval.bundle_sha256 ?? "") ||
+    !HASH_RE.test(retrieval.metadata_sha256 ?? "")
+  ) {
+    throw new Error("Invalid off-host retrieval receipt");
+  }
+
   const metadata = parseMetadata(metadataPath);
+  const actualBundleSha = await sha256File(bundlePath);
+  const actualMetadataSha = await sha256File(metadataPath);
   if (
     basename(bundlePath) !== metadata.bundleFilename ||
     statSync(bundlePath).size !== metadata.ciphertextBytes ||
-    (await sha256File(bundlePath)) !== metadata.ciphertextSha256
+    actualBundleSha !== metadata.ciphertextSha256 ||
+    retrieval.bundle_filename !== basename(bundlePath) ||
+    retrieval.metadata_filename !== basename(metadataPath) ||
+    retrieval.bundle_sha256 !== actualBundleSha ||
+    retrieval.metadata_sha256 !== actualMetadataSha
   ) {
-    throw new Error("Encrypted bundle identity/integrity mismatch");
+    throw new Error("Encrypted bundle/retrieval identity or integrity mismatch");
   }
 
   console.log("Running isolated clean-host restore verification before real-volume mutation...");
@@ -467,6 +491,8 @@ async function main() {
       sourceTag: manifest.sourceTag,
       composeProject: manifest.composeProject,
       bundleFilename: basename(bundlePath),
+      retrievalReceiptFilename: basename(retrievalReceiptPath),
+      retrievedFromIndependentTarget: true,
       ciphertextSha256: metadata.ciphertextSha256,
       restoredVolumes: restored.map((row) => ({
         name: row.volume,
