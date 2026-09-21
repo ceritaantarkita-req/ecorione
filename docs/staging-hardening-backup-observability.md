@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-21**
 
-Status: **REAL HOST ACCEPTANCE PASS / CLOSURE GATES PENDING**
+Status: **PCS-09 CLOSED / PASS**
 
 PCS-09 starts after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS. It hardens and proves the real remote staging host. It does not promote ECORIONE to production. The host currently has Node.js but no pnpm; operator evidence commands therefore invoke reviewed Node/Bash entrypoints directly.
 
@@ -103,6 +103,12 @@ Specialized model/token/cost, MCP, Flow, and ECX metrics remain part of the gove
 Host-level disk/memory/container inventory remains operator-only. ECORIONE will not mount the Docker socket or broad host filesystem into the AI web application simply to display host metrics.
 
 Long-term telemetry retention remains an external-scraper responsibility until a durable collector is explicitly deployed and verified.
+
+## Closure evidence
+
+PCS-09 closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`. Merged-main CI #1679 + Product Eval #918 passed. Automatic Staging Deploy #135/#136 passed their gates and skipped deploy because activation remained disabled.
+
+The actual staging runtime therefore remains the independently proven exact revision `0f332c73dc7b363bffecdeecae921d805d5ae131`.
 
 ## Explicit non-claims
 
