@@ -14,9 +14,9 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 On 2026-09-21 the operator explicitly resumed work to converge current reviewed GitHub `main` onto SumoPod staging. This is an operational convergence scope only; it does not reopen Product Evolution or PCS and does not authorize production promotion.
 
-The scope-opening PR #246 merged as `e38d9d8cd5af44b51068100428a321179b1bdcdf` after exact-head CI #1751 + Product Eval #990 passed. Post-merge `main` then passed CI #1752 + Product Eval #991. Staging Deploy #282 passed the exact-current-main gate but skipped the deploy job because the governed CD activation remains disabled. Repository evidence is green, but the remote runtime is not yet proven newer than `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
+The latest documentation checkpoint merged as `7e2130094fc9e3ea85dd9b0a3a5236a88c41a2c8`. Authoritative post-merge CI #1755 and Product Eval #994 passed; duplicate CI #1754 and Product Eval #993 were cancelled by GitHub concurrency, not by test failure. Staging Deploy #288 passed the exact-current-main gate but skipped the deploy job because governed CD activation remains disabled. Repository evidence is green, but the remote runtime is not yet proven newer than `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
 
-The scope closes only after a governed staging deploy passes public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and canonical documentation convergence. Latest evidence: [verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md).
+The scope closes only after a governed staging deploy passes public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and canonical documentation convergence. Latest evidence: [verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 
