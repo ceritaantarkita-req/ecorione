@@ -145,6 +145,14 @@ A third bounded maintenance slice is closed through PR #240. It covers timeout-b
 
 This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
 
+## Fourth post-closure maintenance checkpoint — 2026-09-21
+
+A fourth bounded maintenance slice is closed through PR #242. It bounds the Ai server-side Flow owner proxy to 10 seconds by default while preserving redirect fail-closed behavior and sanitized `502 UPSTREAM_UNAVAILABLE` transport semantics.
+
+PR #242 exact implementation head `db8a8f6068a40e47187a2142e6801e975e749276` passed CI #1743, Product Eval #982, and PCS-06 Integrated Browser Acceptance #18 before merge as `47cbeaa8760debbfde87cff7cb7a828037a2829b`.
+
+This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
+
 ## Repository-wide documentation reconciliation — 2026-09-21
 
 The repository contains 192 Markdown/MDX documents. Current/canonical documents are reconciled to the closed PE/PCS state and verified staging boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.
