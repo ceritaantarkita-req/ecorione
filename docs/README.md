@@ -161,11 +161,11 @@ PR #244 exact implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` pas
 
 This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
 
-## Latest-main staging convergence checkpoint 1 — 2026-09-21
+## Latest-main staging convergence — active
 
-A bounded operational convergence scope remains active to move the latest reviewed GitHub `main` onto the proven SumoPod staging environment through the existing PCS-08 deployment path. Scope-opening PR #246 merged as `e38d9d8cd5af44b51068100428a321179b1bdcdf`; post-merge CI #1752 and Product Eval #991 passed. Staging Deploy #282 passed its exact-main gate but skipped deployment because governed CD activation remains disabled, so the proven runtime claim remains `0f332c73dc7b...` until a successful deploy and runtime verification exist.
+A bounded operational convergence scope remains active to move the latest reviewed GitHub `main` onto the proven SumoPod staging environment through the existing PCS-08 deployment path. The latest docs checkpoint merged as `7e2130094fc9e3ea85dd9b0a3a5236a88c41a2c8`; authoritative post-merge CI #1755 and Product Eval #994 passed. Staging Deploy #288 passed its exact-current-main gate but skipped deployment because governed CD activation remains disabled, so the proven runtime claim remains `0f332c73dc7b...` until a successful deploy and runtime verification exist.
 
-Latest checkpoint: [verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md).
+Latest checkpoint: [verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md).
 
 ## Repository-wide documentation reconciliation — 2026-09-21
 
