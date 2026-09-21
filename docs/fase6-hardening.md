@@ -1,8 +1,8 @@
 # Fase 6+ — Evidence-driven hardening
 
-**Status:** ACTIVE / OPEN-ENDED  
+**Status:** FRAMEWORK OPEN / NO ACTIVE F6 ITEM  
 **Current item:** none — F6-E01 through F6-E08 CLOSED  
-**Last reconciled:** 2026-09-18
+**Last reconciled:** 2026-09-21
 
 Fase 6+ is not a permanent “feature phase” and should never become an excuse to keep old workstreams open. Each item is a bounded evidence-driven hardening scope. Closed items stay closed unless new evidence invalidates them.
 
@@ -60,7 +60,7 @@ Do not rebuild these as new subsystems merely because older planning documents s
 
 ## Deferred scopes
 
-- compute-host/VPS + Cloudflare activation — deferred by operator;
+- public production promotion / optional Cloudflare edge activation — deferred pending a separate explicit operator decision; remote SumoPod staging is already verified;
 - AutoClick — deferred by design until a concrete non-API use case passes review.
 
 ## Evidence rules
@@ -80,4 +80,4 @@ Paid W18 evidence is closed and must not be rerun just to refresh documentation.
 
 ## Future product evolution
 
-Projects / Work / Schedule / Brain are not F6 hardening. They remain discussion material until a new product roadmap is explicitly agreed with architecture decisions and migration boundaries.
+Projects / Work / Schedule / Brain were implemented under Product Evolution PE-00..PE-08, which is CLOSED / PASS. The follow-on PCS-00..PCS-10 roadmap is also CLOSED / PASS. Neither roadmap implicitly opens a new F6 item; future hardening still requires a bounded explicit scope backed by new evidence.
