@@ -2,7 +2,7 @@
 
 Date: **2026-09-21**
 
-Status: **CLOSED / PASS WHEN MERGED TO `main`**
+Status: **CLOSED / PASS**
 
 ## Starting boundary
 
@@ -65,4 +65,18 @@ PCS-10 does not:
 - claim production SLA/SLO or production cutover;
 - authorize PCS-11, PE-09, Batch 13, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence.
 
-PR #219 is the PCS-10 closure PR. This document becomes canonical only through required green repository gates and merge to `main`; PCS-10 performs no staging-runtime mutation.
+## Repository closure evidence
+
+PCS-10 repository closure completed through PR #219:
+
+```text
+PR                         #219
+exact closure head         c84f76face60d203592d8bc6e1a51acccfec5004
+PR CI                      #1684 PASS
+PR Product Eval            #923 PASS
+merge main                 6058aa0ff294218147a91ee0fc7b77f32d1be80d
+```
+
+The closure changes are now on `main`. The PR was documentation-only and did not authorize a staging redeploy, production promotion, Cloudflare activation, off-host DR claim, or a new PCS/PE/Batch implementation scope.
+
+PR #219 is the PCS-10 closure PR.
