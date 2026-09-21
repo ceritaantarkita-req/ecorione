@@ -7,15 +7,23 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const STATE_PATH = resolve(
-  process.env.ECORIONE_PCS09_RESTART_STATE || ".ecorione/evidence/pcs09-vps-restart-state.json",
+  process.env.ECORIONE_PCS09_RESTART_STATE ||
+    ".ecorione/evidence/pcs09-vps-restart-state.json",
 );
 const DEPLOY_ENV = process.env.ECORIONE_DEPLOY_ENV?.trim() || "deploy/staging.env";
 const PROJECT = process.env.ECORIONE_COMPOSE_PROJECT?.trim() || "ecorione-staging";
-const OVERLAY = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "deploy/compose.sumopod.yml";
-const EDGE_NETWORK = process.env.ECORIONE_EDGE_NETWORK?.trim() || "inmydraft-demos_web";
-const PUBLIC_BASE_URL = process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "https://ecorione.inmydraft.com";
+const OVERLAY =
+  process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "deploy/compose.sumopod.yml";
+const EDGE_NETWORK =
+  process.env.ECORIONE_EDGE_NETWORK?.trim() ||
+  "inmydraft-demos_web"; // naming-gate:allow — existing SumoPod network
+const PUBLIC_BASE_URL =
+  process.env.ECORIONE_PUBLIC_BASE_URL?.trim() ||
+  "https://ecorione.inmydraft.com"; // naming-gate:allow — existing staging hostname
 const EXPECTED_SHA = process.env.ECORIONE_EXPECTED_SHA?.trim() || "";
-const OPS_FILE = process.env.ECORIONE_OPS_CREDENTIAL_FILE?.trim() || "/home/ubuntu/ecorione-staging-ops.txt";
+const OPS_FILE =
+  process.env.ECORIONE_OPS_CREDENTIAL_FILE?.trim() ||
+  "/home/ubuntu/ecorione-staging-ops.txt";
 
 function die(message) {
   throw new Error("PCS-09 VPS restart evidence: " + message);
@@ -55,10 +63,15 @@ function parseArgs(argv) {
 
 function composeArgs() {
   return [
-    "compose", "-p", PROJECT,
-    "--env-file", DEPLOY_ENV,
-    "-f", "deploy/compose.yml",
-    "-f", OVERLAY,
+    "compose",
+    "-p",
+    PROJECT,
+    "--env-file",
+    DEPLOY_ENV,
+    "-f",
+    "deploy/compose.yml",
+    "-f",
+    OVERLAY,
   ];
 }
 
@@ -75,13 +88,33 @@ function receipt() {
 
 function fingerprint(container, path) {
   if (!container) return { present: false };
-  if (run("docker", ["exec", container, "sh", "-lc", "test -f " + JSON.stringify(path)], { allowFailure: true }) === null) {
+  if (
+    run(
+      "docker",
+      ["exec", container, "sh", "-lc", "test -f " + JSON.stringify(path)],
+      { allowFailure: true },
+    ) === null
+  ) {
     return { present: false };
   }
   return {
     present: true,
-    sizeBytes: Number(run("docker", ["exec", container, "sh", "-lc", "stat -c %s " + JSON.stringify(path)])),
-    sha256: run("docker", ["exec", container, "sh", "-lc", "sha256sum " + JSON.stringify(path) + " | awk '{print $1}'"]),
+    sizeBytes: Number(
+      run("docker", [
+        "exec",
+        container,
+        "sh",
+        "-lc",
+        "stat -c %s " + JSON.stringify(path),
+      ]),
+    ),
+    sha256: run("docker", [
+      "exec",
+      container,
+      "sh",
+      "-lc",
+      "sha256sum " + JSON.stringify(path) + " | awk '{print $1}'",
+    ]),
   };
 }
 
@@ -104,18 +137,35 @@ async function publicBoundary() {
 
 async function snapshot() {
   run("docker", composeArgs().concat(["config", "--quiet"]));
-  const configured = lines(run("docker", composeArgs().concat(["config", "--services"])));
-  const running = lines(run("docker", composeArgs().concat(["ps", "--status", "running", "--services"])));
-  const names = lines(run("docker", [
-    "ps", "--filter", "label=com.docker.compose.project=" + PROJECT, "--format", "{{.Names}}",
-  ]));
+  const configured = lines(
+    run("docker", composeArgs().concat(["config", "--services"])),
+  );
+  const running = lines(
+    run("docker", composeArgs().concat(["ps", "--status", "running", "--services"])),
+  );
+  const names = lines(
+    run("docker", [
+      "ps",
+      "--filter",
+      "label=com.docker.compose.project=" + PROJECT,
+      "--format",
+      "{{.Names}}",
+    ]),
+  );
   const connectContainer =
     names.find((name) => name === PROJECT + "-connect-1") ||
     names.find((name) => name.includes("-connect-")) ||
     null;
-  const volumes = lines(run("docker", [
-    "volume", "ls", "--filter", "label=com.docker.compose.project=" + PROJECT, "--format", "{{.Name}}",
-  ]));
+  const volumes = lines(
+    run("docker", [
+      "volume",
+      "ls",
+      "--filter",
+      "label=com.docker.compose.project=" + PROJECT,
+      "--format",
+      "{{.Name}}",
+    ]),
+  );
   const containers = names.map((name) => ({
     name,
     image: run("docker", ["inspect", "--format", "{{.Config.Image}}", name]),
@@ -125,7 +175,8 @@ async function snapshot() {
   return {
     capturedAt: new Date().toISOString(),
     bootId: readFileSync("/proc/sys/kernel/random/boot_id", "utf8").trim(),
-    dockerActive: run("systemctl", ["is-active", "docker"], { allowFailure: true }) === "active",
+    dockerActive:
+      run("systemctl", ["is-active", "docker"], { allowFailure: true }) === "active",
     headSha: run("git", ["rev-parse", "HEAD"]),
     cleanWorktree: run("git", ["status", "--porcelain"]) === "",
     receipt: receipt(),
@@ -147,9 +198,12 @@ function assertHealthy(state) {
   if (state.headSha !== EXPECTED_SHA) die("HEAD does not match expected SHA");
   if (!state.cleanWorktree) die("tracked worktree is dirty");
   if (state.receipt.current_sha !== EXPECTED_SHA) die("release receipt current_sha mismatch");
-  if (state.configuredServices.length !== state.runningServices.length) die("not all configured services are running");
-  if (state.containers.some((item) => item.restartPolicy !== "unless-stopped")) die("restart policy mismatch");
-  if (!(state.publicBoundary.home >= 200 && state.publicBoundary.home < 400)) die("public home is unhealthy");
+  if (state.configuredServices.length !== state.runningServices.length)
+    die("not all configured services are running");
+  if (state.containers.some((item) => item.restartPolicy !== "unless-stopped"))
+    die("restart policy mismatch");
+  if (!(state.publicBoundary.home >= 200 && state.publicBoundary.home < 400))
+    die("public home is unhealthy");
   if (state.publicBoundary.ops !== 401) die("protected /ops is unhealthy");
 }
 
@@ -199,36 +253,54 @@ function same(a, b) {
 
 async function main() {
   const phase = parseArgs(process.argv.slice(2));
-  if (!/^[0-9a-f]{40}$/u.test(EXPECTED_SHA)) die("ECORIONE_EXPECTED_SHA must be exact 40-char SHA");
+  if (!/^[0-9a-f]{40}$/u.test(EXPECTED_SHA))
+    die("ECORIONE_EXPECTED_SHA must be exact 40-char SHA");
 
   const current = await snapshot();
   assertHealthy(current);
 
   if (phase === "baseline") {
     mkdirSync(dirname(STATE_PATH), { recursive: true, mode: 0o700 });
-    writeFileSync(STATE_PATH, JSON.stringify({ schemaVersion: 1, phase, ...current }, null, 2) + "\n", { mode: 0o600 });
+    writeFileSync(
+      STATE_PATH,
+      JSON.stringify({ schemaVersion: 1, phase, ...current }, null, 2) + "\n",
+      { mode: 0o600 },
+    );
     chmodSync(STATE_PATH, 0o600);
-    console.log(JSON.stringify({
-      statePath: STATE_PATH,
-      bootId: current.bootId,
-      headSha: current.headSha,
-      currentTag: current.receipt.current_tag,
-      serviceCount: current.runningServices.length,
-      connect: current.connect,
-    }, null, 2));
-    console.log("PASS PCS-09 reboot baseline captured; an operator-approved full VPS reboot is required before post verification");
+    console.log(
+      JSON.stringify(
+        {
+          statePath: STATE_PATH,
+          bootId: current.bootId,
+          headSha: current.headSha,
+          currentTag: current.receipt.current_tag,
+          serviceCount: current.runningServices.length,
+          connect: current.connect,
+        },
+        null,
+        2,
+      ),
+    );
+    console.log(
+      "PASS PCS-09 reboot baseline captured; an operator-approved full VPS reboot is required before post verification",
+    );
     return;
   }
 
   if (!existsSync(STATE_PATH)) die("restart baseline state is missing");
   const baseline = JSON.parse(readFileSync(STATE_PATH, "utf8"));
   if (baseline.phase !== "baseline") die("restart baseline phase is invalid");
-  if (baseline.bootId === current.bootId) die("Linux boot_id did not change; no real VPS reboot is proven");
+  if (baseline.bootId === current.bootId)
+    die("Linux boot_id did not change; no real VPS reboot is proven");
   if (baseline.headSha !== current.headSha) die("source SHA changed across reboot");
-  if (baseline.receipt.current_sha !== current.receipt.current_sha) die("release SHA changed across reboot");
-  if (baseline.receipt.current_tag !== current.receipt.current_tag) die("release image tag changed across reboot");
-  if (!same(baseline.volumes, current.volumes)) die("Docker volume inventory changed across reboot");
-  if (!same(baseline.connect, current.connect)) die("Connect durable-file fingerprints changed across reboot");
+  if (baseline.receipt.current_sha !== current.receipt.current_sha)
+    die("release SHA changed across reboot");
+  if (baseline.receipt.current_tag !== current.receipt.current_tag)
+    die("release image tag changed across reboot");
+  if (!same(baseline.volumes, current.volumes))
+    die("Docker volume inventory changed across reboot");
+  if (!same(baseline.connect, current.connect))
+    die("Connect durable-file fingerprints changed across reboot");
 
   postValidation();
 
