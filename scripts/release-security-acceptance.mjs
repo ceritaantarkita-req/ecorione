@@ -19,6 +19,11 @@ const required = [
   "scripts/staging-cd-forced-command.sh",
   "scripts/staging-cd-root-deploy.sh",
   "scripts/staging-cd-host-bootstrap.sh",
+  "scripts/staging-pcs09-inventory.mjs",
+  "scripts/staging-pcs09-restart-evidence.mjs",
+  "scripts/staging-ssh-hardening.sh",
+  "scripts/staging-pcs09-backup.sh",
+  "docs/staging-hardening-backup-observability.md",
   "scripts/secret-history-scan.mjs",
   "scripts/dependency-security-review.mjs",
   "scripts/github-actions-pin-review.mjs",
@@ -97,6 +102,21 @@ if (
   packageJson?.scripts?.["staging:host-evidence"] !== "node scripts/staging-host-evidence.mjs"
 ) {
   findings.push("staging:host-evidence package script missing or changed");
+}
+const pcs09Scripts = {
+  "staging:pcs09:inventory": "node scripts/staging-pcs09-inventory.mjs",
+  "staging:pcs09:inventory:strict": "node scripts/staging-pcs09-inventory.mjs --strict",
+  "staging:pcs09:restart:baseline":
+    "node scripts/staging-pcs09-restart-evidence.mjs --phase baseline",
+  "staging:pcs09:restart:post":
+    "node scripts/staging-pcs09-restart-evidence.mjs --phase post",
+  "staging:pcs09:ssh:check": "bash scripts/staging-ssh-hardening.sh --check",
+  "staging:pcs09:backup": "bash scripts/staging-pcs09-backup.sh --apply",
+};
+for (const [name, expected] of Object.entries(pcs09Scripts)) {
+  if (packageJson?.scripts?.[name] !== expected) {
+    findings.push(`${name} package script missing or changed`);
+  }
 }
 if (
   !ci.includes("name: Dependency policy review") ||
