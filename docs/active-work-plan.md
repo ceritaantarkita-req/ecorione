@@ -112,6 +112,18 @@ The latest proven SumoPod staging application revision remains `0f332c73dc7b363b
 
 Evidence: [verification/post-closure-maintenance-checkpoint-2-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2-2026-09-21.md).
 
+## Maintenance checkpoint 3 — 2026-09-21
+
+Bounded repository maintenance is now **CLOSED through PR #240** at the source boundary. The latest implementation checkpoint before this docs-only convergence is `eb4ac86da19bc006009e1a2260f14c119e7997e5`.
+
+This slice bounded Sandbox control-plane owner calls and Connect webhook forwarding to Flow. Exact-head CI/Product Eval passed for both merged implementation PRs.
+
+**Current implementation queue remains none.** This checkpoint does not authorize production promotion, Cloudflare/public-edge activation, hosted spend, a new PE/PCS/Batch/F6 scope, or any staging-runtime claim beyond existing evidence.
+
+The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
+
 ## Closed PE-08 boundary
 
 **PE-08 — Product closure**
