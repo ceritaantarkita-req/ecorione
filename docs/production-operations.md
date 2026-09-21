@@ -1,10 +1,12 @@
 # Production / Self-host Operations
 
-Last updated: **2026-09-10**
+Last updated: **2026-09-21**
 
-Status: **production/self-host baseline READY; real environment validation remains operator work**
+Status: **production/self-host baseline READY / SumoPod remote staging VERIFIED / public production NOT ACTIVATED**
 
 Batch 11 delivered the production operations baseline and Batch 12 closed the planned release/security roadmap. This document describes the current self-host operating model. It is not a claim that repository code replaces host hardening, secret management discipline, durable external monitoring, off-host backup policy, OAuth infrastructure, or incident response.
+
+The same reviewed self-host topology has now been exercised on the real SumoPod **staging** host through PCS-07..PCS-09, including HTTPS/operator protection, exact-source runtime checks, key-only SSH hardening, full-VPS reboot persistence, same-host verified volume backup/isolated restore, and governed Operations health. Those results validate remote staging only; public production, off-host DR, point-in-time recovery, and long-term telemetry retention remain separate boundaries.
 
 Current handoff: `docs/current-state-and-next-steps.md`.
 
@@ -114,7 +116,7 @@ Optional controls include expected text, prompt, minimum output length, and maxi
 
 A hosted canary uses the same provider/Vault/spend/cost path as production calls. CI proves the mechanism with deterministic local-compatible infrastructure; **it does not prove real hosted-provider quality or latency**.
 
-Next production scope should record real:
+If public production is explicitly authorized, production-specific evidence should record real:
 
 - provider/model identity;
 - latency;
