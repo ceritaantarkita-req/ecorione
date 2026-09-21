@@ -1,11 +1,31 @@
 /** Durable file-backed Sandbox receipts keyed by idempotency key hash. */
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import {
+  closeSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { join, resolve } from "node:path";
 import {
   SandboxExecutionReceiptSchema,
   type SandboxExecutionReceipt,
 } from "@ecorione/shared-schema";
+
+export class SandboxReceiptBusyError extends Error {
+  constructor() {
+    super("Sandbox idempotency key sedang diproses.");
+    this.name = "SandboxReceiptBusyError";
+  }
+}
+
+export interface SandboxReceiptLease {
+  release(): void;
+}
 
 export class SandboxReceiptStore {
   readonly root: string;
@@ -17,6 +37,34 @@ export class SandboxReceiptStore {
   private pathForKey(key: string): string {
     const digest = createHash("sha256").update(key).digest("hex");
     return join(this.root, `${digest}.json`);
+  }
+
+  acquire(key: string): SandboxReceiptLease {
+    const lockPath = `${this.pathForKey(key)}.lock`;
+    let fd: number;
+    try {
+      fd = openSync(lockPath, "wx", 0o600);
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: unknown }).code === "EEXIST"
+      ) {
+        throw new SandboxReceiptBusyError();
+      }
+      throw error;
+    }
+    writeFileSync(fd, `${String(process.pid)}\n`, "utf8");
+    let released = false;
+    return {
+      release() {
+        if (released) return;
+        released = true;
+        closeSync(fd);
+        unlinkSync(lockPath);
+      },
+    };
   }
 
   get(key: string): SandboxExecutionReceipt | null {
