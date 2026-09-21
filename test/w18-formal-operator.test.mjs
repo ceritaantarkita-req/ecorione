@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   assertFormalAuthorizationUnused,
   assertFormalBudgetReadiness,
+  buildFormalCleanupRuntimePatch,
   buildFormalRuntimeEnv,
   computeFormalDailyCeiling,
   consumeFormalAuthorization,
@@ -114,6 +115,25 @@ describe("W18 formal operator wrapper", () => {
       ECORIONE_W18_ALLOW_SPEND: "YES",
       ECORIONE_W18_MAX_SPEND_USD: W18_FORMAL_AUTHORIZED_MAX_USD.toFixed(2),
       ECORIONE_ENGINE_NO_OPEN: "1",
+    });
+  });
+
+  it("restores the prior hosted provider/model pair while keeping hosted calls disabled", () => {
+    expect(
+      buildFormalCleanupRuntimePatch({
+        hostedProvider: "openai",
+        hostedModel: "gpt-5.6-sol",
+        hostedCallsEnabled: true,
+        defaultChatTarget: "hosted",
+      }),
+    ).toEqual({
+      hostedProvider: "openai",
+      hostedModel: "gpt-5.6-sol",
+      hostedCallsEnabled: false,
+    });
+
+    expect(buildFormalCleanupRuntimePatch(null)).toEqual({
+      hostedCallsEnabled: false,
     });
   });
 });
