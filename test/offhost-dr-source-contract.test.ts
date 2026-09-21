@@ -78,6 +78,8 @@ describe("off-host DR source contract", () => {
     expect(restore).toContain("ECORIONE_DR_RESTORE_ACK");
     expect(restore).toContain("--retrieval-receipt");
     expect(restore).toContain("retrieval.retrieval_verified");
+    expect(restore).toContain("retrieval receipt must be mode 600");
+    expect(restore).toContain("Object.create(null)");
     expect(restore).toContain("Compose project containers already exist");
     expect(restore).toContain("target volume already exists");
     expect(restore).toContain("com.docker.compose.project");
@@ -105,6 +107,7 @@ describe("off-host DR source contract", () => {
     expect(acceptance).toContain("production-public-smoke.mjs");
     expect(acceptance).toContain("production-ops-snapshot.mjs");
     expect(acceptance).toContain("staging-host-evidence.mjs");
+    expect(acceptance).toContain("ECORIONE_COMPOSE_OVERLAY = overlayRaw");
     expect(acceptance).toContain("deploy-state.env");
 
     expect(reboot).toContain("/proc/sys/kernel/random/boot_id");
