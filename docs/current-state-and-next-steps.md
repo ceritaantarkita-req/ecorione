@@ -242,6 +242,21 @@ Repository source state and remote runtime state remain separate evidence bounda
 
 Evidence: [verification/post-closure-maintenance-checkpoint-2-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2-2026-09-21.md).
 
+## Post-closure maintenance checkpoint 3 — 2026-09-21
+
+A third bounded maintenance slice is now closed through PR #240 at the repository boundary. The implementation checkpoint immediately before this documentation convergence is `eb4ac86da19bc006009e1a2260f14c119e7997e5`.
+
+Closed maintenance in this slice includes:
+
+- PR #239: Sandbox Hub/RnD control-plane calls are timeout-bounded, preventing a stalled owner service from holding an idempotency lease indefinitely;
+- PR #240: verified Connect webhook forwarding to Flow is timeout-bounded; transport/timeout failures map to sanitized `502 UPSTREAM_UNAVAILABLE`, and retry with the same provider-stable `deliveryId` remains compatible with Flow dedupe.
+
+This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
+
+Repository source state and remote runtime state remain separate evidence boundaries. The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless a later explicit deployment record proves a newer runtime.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
+
 ## Current work state and deferred boundaries
 
 - Active implementation scope — **NONE**. PCS-00..PCS-10 and PE-00..PE-08 are closed; new work requires an explicit operator decision.
