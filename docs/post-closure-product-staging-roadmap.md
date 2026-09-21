@@ -200,9 +200,9 @@ Requirements:
 
 ### PCS-09 — Staging access, persistence, backup, and observability
 
-State: **ACTIVE — REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE NEXT**.
+State: **CLOSURE CANDIDATE — REAL HOST ACCEPTANCE COMPLETE / REPOSITORY CLOSURE GATES PENDING**.
 
-PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 also passed. The repository now contains the sanitized actual-host inventory, VPS-reboot verifier, guarded SSH-hardening helper, and same-host verified backup tooling. Automatic staging deployment remains disabled until the next controlled host-evidence step.
+PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 also passed. Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was then governed-deployed to SumoPod. Real-host evidence now passes key-only SSH hardening, strict inventory, full-VPS reboot persistence, 12-volume same-host cold backup with isolated content verification, and final Operations/host-resource checks. Off-host DR and production promotion remain explicit non-claims.
 
 - establish HTTPS and operator authentication;
 - verify restart persistence on the actual VPS;

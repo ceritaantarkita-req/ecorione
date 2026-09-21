@@ -2,7 +2,7 @@
 
 Date: **2026-09-21**
 
-Status: **REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE PENDING**
+Status: **REAL HOST ACCEPTANCE COMPLETE / CLOSURE GATES PENDING**
 
 ## Starting boundary
 
@@ -49,13 +49,285 @@ The exact merged `main` revision then passed:
 
 Automatic Staging Deploy workflow-run gates #106 and #107 completed successfully while the deployment job remained skipped because the repository activation variable stayed disabled. Therefore the PCS-09 repository merge did not mutate the proven staging runtime.
 
-## Pending PCS-09 evidence
+## Governed PCS-09 staging deployment
 
-1. governed deployment of exact reviewed PCS-09 `main` to staging;
-2. real non-strict host inventory;
-3. key-only SSH hardening with fresh-session proof;
-4. strict inventory PASS;
-5. actual VPS reboot persistence evidence;
-6. same-host verified backup and isolated restore evidence;
-7. staging Operations + host resource evidence;
-8. sanitized final closure.
+Controlled Staging Deploy run `35563423107` PASSed against exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131`.
+
+Observed from the governed deploy path:
+
+- gate PASS;
+- dedicated least-privilege SSH identity PASS;
+- image `ecorione:staging-0f332c73dc7b` built and applied;
+- public edge became ready on attempt 4 after three transient home HTTP 502 responses;
+- full public smoke PASS;
+- authenticated Ops snapshot `healthy=true`, no unhealthy required services;
+- exact-host evidence matched the target SHA;
+- 15/15 configured services running;
+- clean detached worktree;
+- activation returned to `0` after the controlled deployment.
+
+## Real-host baseline inventory
+
+The first non-strict PCS-09 inventory ran on the actual SumoPod staging host at `2026-09-21T05:26:26.560Z`.
+
+PASS / healthy observations:
+
+- exact source SHA `0f332c73dc7b363bffecdeecae921d805d5ae131`;
+- clean worktree;
+- deployment env mode 600;
+- 15 configured / 15 running services;
+- every ECORIONE staging container uses `restart=unless-stopped`;
+- no ECORIONE staging container publishes a host port;
+- Docker is enabled at boot;
+- UFW active;
+- unattended-upgrades enabled;
+- available disk 16.02 GiB;
+- available memory 4331.6 MiB;
+- public home HTTP 200;
+- unauthenticated `/ops` HTTP 401.
+
+Expected hardening blockers:
+
+```text
+SSH password authentication is not disabled
+SSH root login is not restricted
+```
+
+Effective SSH baseline:
+
+```text
+PermitRootLogin yes
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+```
+
+Connect durable runtime settings, Vault ciphertext, and spend-budget files were absent in this staging state. The inventory records absence only; it does not fabricate persistence evidence for data that does not exist.
+
+The failed first operator command using `pnpm staging:pcs09:inventory` also proved the host does not have pnpm installed. The actual inventory was therefore run directly with Node. Host-side runbook commands are updated accordingly rather than installing another package manager merely for evidence collection.
+
+## SSH hardening apply evidence
+
+The guarded SSH hardening helper was executed from an already-working operator key-authenticated session while that session remained open.
+
+Effective settings before apply:
+
+```text
+permitrootlogin yes
+pubkeyauthentication yes
+passwordauthentication yes
+kbdinteractiveauthentication no
+permitemptypasswords no
+```
+
+The apply step returned:
+
+```text
+PASS PCS-09 SSH hardening applied.
+IMPORTANT: keep this session open and prove a NEW operator public-key SSH session before closing it.
+```
+
+Effective settings immediately after reload:
+
+```text
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication no
+kbdinteractiveauthentication no
+permitemptypasswords no
+```
+
+A second fresh Windows PowerShell SSH session then connected successfully as `ubuntu` using the existing operator key after the hardened daemon settings were active. Inside that fresh session:
+
+```text
+whoami
+ubuntu
+
+sudo -n true
+SUDO PASS
+```
+
+The original pre-hardening session was intentionally kept open until this proof succeeded. The fresh-session result closes the SSH lockout-safety gate and the PCS-09 key-only operator-access hardening boundary.
+
+## Strict host inventory PASS
+
+The strict PCS-09 inventory then ran on the hardened real host at `2026-09-21T05:34:35.690Z` and returned:
+
+```text
+blockers=[]
+closureReady=true
+PASS PCS-09 staging inventory
+```
+
+Strict evidence confirmed:
+
+- exact source SHA `0f332c73dc7b363bffecdeecae921d805d5ae131`;
+- clean worktree;
+- deployment env mode 600;
+- 15/15 configured services running;
+- every staging container uses `restart=unless-stopped`;
+- no ECORIONE staging container publishes host ports;
+- Docker enabled at boot;
+- UFW active;
+- effective SSH: root login disabled, password auth disabled, keyboard-interactive disabled, public-key auth enabled;
+- unattended-upgrades enabled;
+- available disk 16.02 GiB;
+- available memory 4304.4 MiB;
+- public home HTTP 200;
+- unauthenticated `/ops` HTTP 401.
+
+The two Connect warnings remain informational because runtime settings and Vault ciphertext are absent in this staging state; PCS-09 makes no persistence claim for absent files.
+
+## VPS reboot baseline captured
+
+The pre-reboot PCS-09 persistence baseline was captured from the real staging host:
+
+```text
+statePath     /srv/ecorione-staging/.ecorione/evidence/pcs09-vps-restart-state.json
+bootId        38133aa8-fcd7-41b5-8729-4c6dabb0206a
+headSha       0f332c73dc7b363bffecdeecae921d805d5ae131
+currentTag    staging-0f332c73dc7b
+serviceCount  15
+```
+
+Connect runtime settings, Vault ciphertext, and spend-budget fingerprints remained `present=false`, consistent with the earlier host inventories.
+
+The baseline PASS proves the before-state only. PCS-09 does not claim reboot persistence until a real VPS reboot changes Linux `boot_id` and the post phase verifies release/source identity, service fleet, volume inventory, present Connect fingerprints, public smoke, authenticated Ops, and exact-host evidence.
+
+## Shared-host pre-reboot safety check
+
+Before the disruptive reboot, the operator enumerated every Docker container on the shared SumoPod host.
+
+Observed boundary:
+
+- all 15 ECORIONE staging containers were running;
+- existing Traefik, Mainlagi, InMyDraft, ECORION, InMyCitizen, InMySocial, InMyLearning, and InMyCompany containers were also running;
+- every listed container used `restart=unless-stopped`;
+- Docker service state was `enabled` and `active`.
+
+No unrelated container was found with restart policy `no` or another policy that would predictably strand it after a normal host reboot.
+
+This check reduces the shared-host reboot risk but does not prove every unrelated application will become functionally healthy after restart. ECORIONE PCS-09 post-reboot evidence remains scoped to ECORIONE; unrelated services are preserved but are not promoted into ECORIONE acceptance claims.
+
+## Controlled VPS reboot persistence PASS
+
+The operator approved and executed a full VPS reboot after the pre-reboot safety checks. SSH disconnected as expected and a fresh post-reboot public-key session reconnected successfully.
+
+The PCS-09 post phase then PASSed:
+
+```text
+baselineBootId  38133aa8-fcd7-41b5-8729-4c6dabb0206a
+postBootId      c523f1d5-9ec5-4cf5-b560-9ec06a4be637
+headSha         0f332c73dc7b363bffecdeecae921d805d5ae131
+currentTag      staging-0f332c73dc7b
+serviceCount    15
+volumesPreserved=true
+connectFingerprintsPreserved=true
+PASS PCS-09 VPS reboot persistence evidence
+```
+
+Post-reboot verification also PASSed:
+
+- public home HTTP 200;
+- unauthenticated `/ops` HTTP 401;
+- unauthenticated `/settings` HTTP 401;
+- MCP protected-resource metadata HTTP 200;
+- MCP unauthenticated challenge HTTP 401 with resource metadata;
+- authenticated Ops snapshot `healthy=true`, 9 required services, no unhealthy services;
+- exact-host source SHA matched;
+- clean worktree;
+- 15/15 configured services running;
+- all 12 project volumes present;
+- deployment env mode 600 with no placeholders;
+- available disk approximately 16.0 GiB.
+
+The changed Linux `boot_id` proves this was a real host reboot rather than a container-only restart. The claim remains intentionally limited to controlled VPS reboot persistence; it does not prove backup/restore, off-host DR, or total host-loss recovery.
+
+## Same-host cold backup + isolated restore verification PASS
+
+The reviewed PCS-09 backup script was executed as root with the controlled staging environment exported. It stopped only the ECORIONE staging Compose project, backed up each project volume, restored each archive into an isolated temporary Docker volume, compared deterministic content fingerprints and file counts, removed each verification volume, and restarted the staging project.
+
+All 12 project volumes PASSed isolated verification:
+
+```text
+ecorione-staging_artifact_data
+ecorione-staging_caddy_config
+ecorione-staging_caddy_data
+ecorione-staging_connect_data
+ecorione-staging_context_data
+ecorione-staging_flow_data
+ecorione-staging_hub_data
+ecorione-staging_rnd_data
+ecorione-staging_sandbox_data
+ecorione-staging_space_data
+ecorione-staging_sync_data
+ecorione-staging_temporal_db
+```
+
+Recovery after the backup window PASSed on public-boundary attempt 3 with home HTTP 200 and unauthenticated `/ops` HTTP 401.
+
+Backup evidence:
+
+```text
+backup_dir=/var/lib/ecorione-staging/backups/backup-20260921T054802Z-0f332c73dc7b
+source_sha=0f332c73dc7b363bffecdeecae921d805d5ae131
+source_tag=staging-0f332c73dc7b
+PASS PCS-09 same-host cold backup + isolated content verification
+```
+
+The backup intentionally excludes deployment env, operator credentials, SSH private keys, and the Connect Vault master key.
+
+Claim boundary remains explicit: this backup is on the same VPS failure domain and therefore is **not off-host disaster recovery**.
+
+## Final staging Operations + host resource evidence
+
+A credentialed Operations snapshot was captured at `2026-09-21T05:51:51.458Z` to a local mode-0600 evidence file. The terminal output was reduced to sanitized operational metadata.
+
+Observed real-host Operations state:
+
+```text
+healthy=true
+serviceCount=9
+unhealthyServices=[]
+traceGroups=8
+counterNames=[ecorione_http_requests_total]
+histogramNames=[ecorione_http_request_duration_ms]
+PASS production-ops-snapshot
+```
+
+All eight required owner services (`rnd`, `context`, `connect`, `hub`, `artifact`, `sandbox`, `space`, `flow`) were healthy and each exposed one HTTP counter, one request-duration histogram, a recent request span, and process RSS. Optional `sync` was also healthy.
+
+Observed owner RSS values were approximately 72.5–101.1 MiB. The final strict host inventory at `2026-09-21T05:51:53.482Z` additionally confirmed:
+
+```text
+availableDiskGiB=15.99
+availableMemoryMiB=4261
+configuredServices=15
+runningServices=15
+blockers=[]
+closureReady=true
+home=200
+ops=401
+PASS PCS-09 staging inventory
+```
+
+The governed Operations implementation contains specialized model/token/cost, MCP, Flow, and ECX metric instrumentation, but this final post-reboot/post-backup snapshot does **not** claim non-zero live model/cost/Flow measurements. No paid-provider workload was introduced merely to manufacture telemetry evidence, the staging cost kill switch remains authoritative, and long-term telemetry retention remains outside the PCS-09 claim boundary.
+
+Connect runtime settings, Vault ciphertext, and spend-budget files remained absent. Their absence is preserved as a warning rather than converted into false persistence evidence.
+
+## PCS-09 acceptance verdict
+
+All PCS-09 real-host acceptance gates are now satisfied at their documented boundaries:
+
+- governed exact-SHA staging deployment;
+- HTTPS/public protection and authenticated Operations health;
+- key-only SSH hardening with fresh-session lockout proof;
+- strict host inventory with zero blockers;
+- real VPS reboot persistence with changed Linux boot ID;
+- exact source/image/service/volume preservation after reboot;
+- verified same-host cold backup with isolated per-volume restore-content verification;
+- final governed Operations and host resource evidence.
+
+Remaining non-claims are intentional: no off-host disaster recovery, no total-VPS-loss recovery, no point-in-time recovery, no production SLA/SLO, no public production promotion, no long-term telemetry retention, and no persistence claim for absent Connect files.
+
+This branch is therefore a **PCS-09 closure candidate**. Repository CI/Product Eval and merge of the closure-evidence PR remain the final repository gates before PCS-09 can be marked CLOSED / PASS and PCS-10 documentation convergence begins.
