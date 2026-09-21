@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
+import { getGlobalDispatcher, MockAgent, setGlobalDispatcher } from "undici";
 import { MultimodalInferRequestSchema } from "@ecorione/shared-schema";
-import { inferMultimodal, type MultimodalAdapter } from "./multimodal.js";
+import {
+  HttpMultimodalAdapter,
+  inferMultimodal,
+  type MultimodalAdapter,
+} from "./multimodal.js";
 import { CostKillSwitchError, ProviderError } from "./providers/errors.js";
 
 const NOW = "2026-09-10T00:00:00.000Z" as const;
@@ -41,6 +46,50 @@ function output(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+describe("HttpMultimodalAdapter redirect boundary", () => {
+  it("rejects hosted redirect before forwarding bearer credentials", async () => {
+    const originalDispatcher = getGlobalDispatcher();
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+
+    try {
+      const pool = agent.get("https://multimodal.example");
+      let redirectedTargetHit = false;
+      pool
+        .intercept({
+          path: "/infer",
+          method: "POST",
+          headers: { authorization: "Bearer hosted-secret" },
+        })
+        .reply(302, "", { headers: { location: "/redirected" } });
+      pool.intercept({ path: "/redirected", method: "POST" }).reply(200, () => {
+        redirectedTargetHit = true;
+        return output({ actualUsd: 0.01, naiveUsd: 0.01 });
+      });
+
+      const hosted = new HttpMultimodalAdapter({
+        route: "hosted",
+        endpoint: "https://multimodal.example/infer",
+        reservationUsd: 0.25,
+        authorizationBearer: () => "hosted-secret",
+      });
+
+      await expect(
+        hosted.infer(
+          request({
+            syncClass: "CLOUD_ALLOWED",
+            route: { preferred: "hosted", allowHostedFallback: false },
+          }),
+        ),
+      ).rejects.toBeInstanceOf(ProviderError);
+      expect(redirectedTargetHit).toBe(false);
+    } finally {
+      setGlobalDispatcher(originalDispatcher);
+    }
+  });
+});
 
 describe("native multimodal routing", () => {
   it("uses local first and preserves page/confidence metadata", async () => {

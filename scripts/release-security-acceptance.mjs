@@ -57,6 +57,7 @@ const openAiCompatibleProvider = readFileSync(
   "services/connect/src/providers/openai-compatible.ts",
   "utf8",
 );
+const multimodalAdapter = readFileSync("services/connect/src/multimodal.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
@@ -81,6 +82,7 @@ for (const [boundary, source] of [
   ["Sync Connect MCP fetch", syncHttp],
   ["Anthropic provider fetch", anthropicProvider],
   ["OpenAI-compatible provider fetch", openAiCompatibleProvider],
+  ["Connect multimodal adapter fetch", multimodalAdapter],
 ]) {
   if (!source.includes('redirect: "error"')) {
     findings.push(`${boundary} must fail closed on redirects`);
