@@ -88,8 +88,16 @@ describe("off-host DR source contract", () => {
   });
 
   it("gates recovered application identity and changed-boot-id persistence", () => {
+    const start = source("scripts/staging-offhost-dr-start.sh");
     const acceptance = source("scripts/staging-offhost-dr-acceptance.mjs");
     const reboot = source("scripts/staging-offhost-dr-reboot-evidence.mjs");
+
+    expect(start).toContain("retrievedFromIndependentTarget");
+    expect(start).toContain("Git HEAD does not match recovered source SHA");
+    expect(start).toContain("Compose project containers already exist");
+    expect(start).toContain("ECORIONE_IMAGE_TAG");
+    expect(start).toContain("down >/dev/null 2>&1 || true");
+    expect(start).not.toContain("down -v");
 
     expect(acceptance).toContain("retrievedFromIndependentTarget !== true");
     expect(acceptance).toContain("Git HEAD does not match restored source SHA");
