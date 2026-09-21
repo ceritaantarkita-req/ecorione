@@ -72,7 +72,10 @@
     "staging:pcs09:restart:baseline": "node scripts/staging-pcs09-restart-evidence.mjs --phase baseline",
     "staging:pcs09:restart:post": "node scripts/staging-pcs09-restart-evidence.mjs --phase post",
     "staging:pcs09:ssh:check": "bash scripts/staging-ssh-hardening.sh --check",
-    "staging:pcs09:backup": "bash scripts/staging-pcs09-backup.sh --apply"
+    "staging:pcs09:backup": "bash scripts/staging-pcs09-backup.sh --apply",
+    "staging:dr:bundle": "node scripts/staging-offhost-dr-bundle.mjs",
+    "staging:dr:verify": "node scripts/staging-offhost-dr-verify.mjs",
+    "staging:dr:transfer": "bash scripts/staging-offhost-dr-transfer.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
