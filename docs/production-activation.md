@@ -1,7 +1,7 @@
 # ECORIONE — Production Activation Workstream
 
 Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING VERIFIED**
-Date: 2026-09-20
+Date: 2026-09-21
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
 
@@ -11,7 +11,7 @@ Current state is documented in `docs/current-state-and-next-steps.md` and `docs/
 
 ## Objective when resumed
 
-Take the repository-verified production/self-host baseline from the already-closed local evidence boundary into a real compute-host deployment, then optionally put Cloudflare Free + a named Tunnel in front of it, validate real providers/traffic, and gather production-only evidence.
+Promote the already-verified self-host/staging topology to a production configuration only after a new explicit operator decision, then validate production-specific hostname/edge, credentials/providers, traffic, recovery, retention, and operational evidence. The existing SumoPod staging deployment is real compute-host evidence but is intentionally not relabeled as production.
 
 ## Remote staging objective — verified
 
