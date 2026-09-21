@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / LATEST-MAIN STAGING CONVERGENCE CLOSED / NO ACTIVE IMPLEMENTATION QUEUE**
+Status: **OFF-HOST DR ACTIVE / CHECKPOINT 1 REPOSITORY FOUNDATION / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -28,7 +28,18 @@ This convergence did not rerun the destructive/full-host PCS-09 reboot or same-h
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
-**Current work queue: none.** Any new product, hardening, DR, production-promotion, or infrastructure scope requires a new explicit operator decision.
+## Off-host Backup & DR — ACTIVE
+
+The operator explicitly opened **Off-host Backup & DR** as the next infrastructure scope on 2026-09-22. This is a separate operational workstream, not PE-09, PCS-11, Batch 13, production promotion, public-edge activation, or a feature batch.
+
+Checkpoint 1 establishes the repository-side recovery foundation: a verified PCS-09 backup can be converted into an authenticated encrypted portable bundle, copied to an explicitly acknowledged independent SSH failure domain with remote checksum verification, then decrypted and restored into isolated temporary Docker volumes on a clean host for deterministic content verification. The DR private key is intentionally kept out of the source-host bundle/transfer path.
+
+Real-host status remains bounded: no current-revision SumoPod backup has yet been accepted as an off-host copy, and no clean replacement host has recovered the real staging state. Total-host-loss recovery therefore remains a non-claim.
+
+Next gates are: fresh cold backup of current staging revision -> encrypted bundle -> independent off-host transfer -> clean-host `--verify-docker` -> full replacement-host application recovery with separately recovered secrets -> restart/persistence + health/exact-source acceptance -> sanitized closure evidence.
+
+Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
+Checkpoint evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).
 
 ## Latest repository-hardening closure
 
