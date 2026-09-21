@@ -144,14 +144,33 @@ META_TAG="$(
   exit 1
 }
 
-echo "Transferring encrypted DR artifacts to the acknowledged independent failure domain..."
-sudo -E bash scripts/staging-offhost-dr-transfer.sh --apply "$BUNDLE" "$METADATA"
-
 BUNDLE_SHA256="$(sha256sum "$BUNDLE" | cut -d' ' -f1)"
 METADATA_SHA256="$(sha256sum "$METADATA" | cut -d' ' -f1)"
+STEM="$(basename "${BUNDLE%.ecdr}")"
+EXPORT_MANIFEST="$EXPORT_DIR/$STEM.receipt.env"
+
+cat >"$EXPORT_MANIFEST" <<EOF
+schema_version=1
+created_at=$(date -u +%FT%TZ)
+source_sha=$CURRENT_SHA
+source_tag=$CURRENT_TAG
+backup_run_id=$(basename "$BACKUP_DIR")
+bundle_filename=$(basename "$BUNDLE")
+metadata_filename=$(basename "$METADATA")
+bundle_sha256=$BUNDLE_SHA256
+metadata_sha256=$METADATA_SHA256
+failure_domain_ack=1
+transfer_intent=1
+claim_boundary=portable encrypted DR generation manifest; off-host transfer and later retrieval must be independently verified
+EOF
+chmod 0600 "$EXPORT_MANIFEST"
+
+echo "Transferring encrypted DR artifacts and export manifest to the acknowledged independent failure domain..."
+sudo -E bash scripts/staging-offhost-dr-transfer.sh --apply \
+  "$BUNDLE" "$METADATA" "$EXPORT_MANIFEST"
+
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 RECEIPT="$RECEIPT_ROOT/export-$STAMP-${CURRENT_SHA:0:12}.env"
-
 cat >"$RECEIPT" <<EOF
 schema_version=1
 created_at=$(date -u +%FT%TZ)
@@ -160,6 +179,7 @@ source_tag=$CURRENT_TAG
 backup_run_id=$(basename "$BACKUP_DIR")
 bundle_filename=$(basename "$BUNDLE")
 metadata_filename=$(basename "$METADATA")
+export_manifest_filename=$(basename "$EXPORT_MANIFEST")
 bundle_sha256=$BUNDLE_SHA256
 metadata_sha256=$METADATA_SHA256
 failure_domain_ack=1
@@ -176,5 +196,5 @@ echo "receipt=$RECEIPT"
 echo "source_sha=$CURRENT_SHA"
 echo "source_tag=$CURRENT_TAG"
 echo "bundle_sha256=$BUNDLE_SHA256"
-echo "metadata_sha256=$METADATA_SHA256"
+echo "metadata_sha256=$METADATA_SHA256"\necho "export_manifest=$(basename "$EXPORT_MANIFEST")"
 echo "IMPORTANT: transfer proof is not total-host-loss recovery; retrieve from the independent target and run clean-host recovery next."
