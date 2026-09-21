@@ -195,6 +195,18 @@ export function buildFormalRuntimeEnv(
   };
 }
 
+export function buildFormalCleanupRuntimePatch(originalRuntime) {
+  const patch = { hostedCallsEnabled: false };
+  if (
+    typeof originalRuntime?.hostedProvider === "string" &&
+    typeof originalRuntime?.hostedModel === "string"
+  ) {
+    patch.hostedProvider = originalRuntime.hostedProvider;
+    patch.hostedModel = originalRuntime.hostedModel;
+  }
+  return patch;
+}
+
 function parseArgs(argv) {
   const execute = argv.includes("--execute-authorized-w18");
   const unknown = argv.filter(
@@ -374,12 +386,7 @@ export async function runFormalOperator(argv = process.argv.slice(2)) {
       if (token) {
         await requestJson(`${connectUrl}/v1/settings/runtime`, {
           token,
-          body: {
-            hostedCallsEnabled: false,
-            ...(originalRuntime?.hostedProvider
-              ? { hostedProvider: originalRuntime.hostedProvider }
-              : {}),
-          },
+          body: buildFormalCleanupRuntimePatch(originalRuntime),
           timeoutMs: 5_000,
         });
       }
