@@ -1,8 +1,8 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-21**
+Last updated: **2026-09-22**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / LATEST-MAIN STAGING CONVERGENCE ACTIVE**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / LATEST-MAIN STAGING CONVERGENCE CLOSED / NO ACTIVE IMPLEMENTATION QUEUE**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -10,21 +10,25 @@ Bounded maintenance is now **CLOSED through PR #244 at the repository boundary**
 
 Implementation checkpoint before this documentation convergence: `3114354ab44894ef80e75b9983fceac64babc2e0`. PR #244 exact implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` passed CI #1747 and Product Eval #986.
 
-This maintenance does not open PE-09, PCS-11, Batch 13, a new F6 item, production promotion, Cloudflare/public-edge activation, or paid-provider evidence. It also does not claim that SumoPod staging has been redeployed. The existing proven staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until newer real-host deployment evidence exists.
+This maintenance did not open PE-09, PCS-11, Batch 13, a new F6 item, production promotion, Cloudflare/public-edge activation, or paid-provider evidence. At that maintenance checkpoint the proven staging runtime was still `0f332c73dc7b...`; the later explicit latest-main staging-convergence scope superseded that runtime claim with the governed deployment recorded below.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
 
-The maintenance queue remains closed. A separate bounded **Latest-main staging convergence** operational scope is now active.
+The maintenance queue remains closed. The later bounded **Latest-main staging convergence** operational scope is also CLOSED / PASS at the runtime boundary.
 
-## Latest-main staging convergence — ACTIVE / CD ACTIVATION REQUIRED
+## Latest-main staging convergence — CLOSED / PASS
 
-The operator explicitly resumed work on 2026-09-21 with one bounded operational goal: deploy the latest reviewed GitHub `main` onto the already-proven SumoPod staging environment through the existing governed PCS-08 path, then verify and document the exact runtime revision.
+The bounded operational convergence scope is CLOSED / PASS at the SumoPod staging runtime boundary.
 
-The latest documentation checkpoint merged as `7e2130094fc9e3ea85dd9b0a3a5236a88c41a2c8`. Its surviving authoritative post-merge runs are CI #1755 PASS and Product Eval #994 PASS; earlier duplicate runs CI #1754 and Product Eval #993 were cancelled by GitHub concurrency rather than failing. Staging Deploy #288 passed its exact-current-main gate but skipped the deploy job, so governed staging CD activation remains disabled. There is **no newer runtime claim yet**; the proven staging revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
+Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as image `staging-52046db35e40`. The gate and deploy jobs both passed. Public home reached HTTP 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, MCP metadata/challenge checks passed, authenticated Ops reported `healthy: true` with no unhealthy services, sanitized exact-host evidence matched the target SHA, and the final PCS-08 deploy assertion passed.
 
-Closure requires a successful governed deploy plus public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and documentation convergence. This scope is not PE-09, PCS-11, Batch 13, production promotion, public-edge activation, or paid-provider evidence.
+The current proven staging application revision is therefore `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40`. The previous `0f332c73...` runtime remains historical PCS-09 evidence only.
 
-Latest evidence/checkpoint: [verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md). Checkpoints 1–2 remain preserved as earlier scope records.
+This convergence did not rerun the destructive/full-host PCS-09 reboot or same-host cold-backup acceptance against the new SHA, and it does not authorize production promotion, public-edge activation, hosted spend, PE-09, PCS-11, Batch 13, or a new F6 scope.
+
+Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
+
+**Current work queue: none.** Any new product, hardening, DR, production-promotion, or infrastructure scope requires a new explicit operator decision.
 
 ## Latest repository-hardening closure
 
@@ -108,7 +112,7 @@ PCS-00 baseline lock
 
 The SumoPod target is a **verified remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source. The current proven staging application revision is `0f332c73dc7b363bffecdeecae921d805d5ae131`; later documentation merges intentionally did not redeploy it.
 
-**Current work queue:** one bounded operational scope is active: Latest-main staging convergence. No new feature, PE, PCS, Batch, production-promotion, or public-edge scope is implicitly opened.
+**Current work queue: none.** Latest-main staging convergence is CLOSED / PASS. No new feature, PE, PCS, Batch, production-promotion, or public-edge scope is implicitly opened.
 
 ## Follow-up maintenance checkpoint — 2026-09-21
 

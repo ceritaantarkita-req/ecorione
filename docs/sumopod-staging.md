@@ -1,6 +1,6 @@
 # ECORIONE — SumoPod Remote Staging Runbook
 
-Last updated: **2026-09-21**
+Last updated: **2026-09-22**
 
 Status: **REMOTE STAGING VERIFIED / PCS-07..PCS-09 CLOSED / PASS / NOT PRODUCTION**
 
@@ -249,6 +249,8 @@ PCS-07 initial host evidence is CLOSED / PASS: [verification/pcs-07-sumopod-host
 
 PCS-08 governed continuous deployment is CLOSED / PASS, including exact-current-main gating, least-privilege forced-command SSH deployment, health/evidence gates, and exercised runtime rollback/restore.
 
-PCS-09 staging hardening is CLOSED / PASS. The current proven application runtime is exact reviewed revision `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b`. Real-host evidence includes key-only SSH hardening with fresh-session proof, strict zero-blocker inventory, a real full-VPS reboot with source/image/service/volume preservation, a verified same-host cold backup for all 12 project volumes with isolated restore-content checks, and final credentialed Operations + host-resource evidence. Evidence: [verification/pcs-09-repository-preparation-2026-09-21.md](verification/pcs-09-repository-preparation-2026-09-21.md).
+PCS-09 staging hardening is CLOSED / PASS. Its historical runtime evidence was captured on exact reviewed revision `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b`, including key-only SSH hardening, strict zero-blocker inventory, a real full-VPS reboot, verified same-host cold backup for all 12 project volumes, and final credentialed Operations + host-resource evidence. Evidence: [verification/pcs-09-repository-preparation-2026-09-21.md](verification/pcs-09-repository-preparation-2026-09-21.md).
 
-Later documentation-only merges intentionally left automatic staging deployment disabled, so they did not replace that proven runtime. Public production promotion remains a separate explicit decision.
+Latest-main staging convergence subsequently deployed exact reviewed revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` through governed Staging Deploy #293. Public smoke, authenticated Ops health, MCP protection checks, and sanitized exact-host evidence passed. This is now the current proven application runtime. The full PCS-09 reboot/backup acceptance was not repeated for the new SHA. Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
+
+Public production promotion remains a separate explicit decision.
