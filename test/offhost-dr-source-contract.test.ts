@@ -89,6 +89,31 @@ describe("off-host DR source contract", () => {
     expect(restore).not.toContain("docker system prune");
   });
 
+  it("uses owner APIs for a semantic DR canary and carries it through retrieval", () => {
+    const inner = source("scripts/staging-offhost-dr-canary-inner.mjs");
+    const wrapper = source("scripts/staging-offhost-dr-canary.mjs");
+    const exportScript = source("scripts/staging-offhost-dr-export.sh");
+    const fetch = source("scripts/staging-offhost-dr-fetch.sh");
+    const restore = source("scripts/staging-offhost-dr-restore.mjs");
+
+    expect(inner).toContain("/v1/history/sessions");
+    expect(inner).toContain("/v1/history/verify");
+    expect(inner).toContain("/v1/episodes");
+    expect(inner).toContain("/v1/artifacts");
+    expect(inner).toContain("LOCAL_ONLY");
+    expect(inner).toContain("offhost-dr-recovery-canary");
+    expect(inner).not.toContain("sqlite");
+    expect(wrapper).toContain("com.docker.compose.service=hub");
+    expect(wrapper).toContain("staging-offhost-dr-canary-inner.mjs");
+    expect(exportScript).toContain("--phase baseline");
+    expect(exportScript).toContain("canary_filename=");
+    expect(exportScript).toContain("canary_sha256=");
+    expect(fetch).toContain("canary_filename");
+    expect(fetch).toContain("Retrieved semantic canary checksum mismatch");
+    expect(restore).toContain("--canary-state");
+    expect(restore).toContain("semanticCanarySha256");
+  });
+
   it("gates recovered application identity and changed-boot-id persistence", () => {
     const start = source("scripts/staging-offhost-dr-start.sh");
     const acceptance = source("scripts/staging-offhost-dr-acceptance.mjs");
@@ -104,6 +129,8 @@ describe("off-host DR source contract", () => {
     expect(acceptance).toContain("retrievedFromIndependentTarget !== true");
     expect(acceptance).toContain("Git HEAD does not match restored source SHA");
     expect(acceptance).toContain("AI image tag does not match restored source tag");
+    expect(acceptance).toContain("staging-offhost-dr-canary.mjs");
+    expect(acceptance).toContain("semanticCanaryAccepted: true");
     expect(acceptance).toContain("production-public-smoke.mjs");
     expect(acceptance).toContain("production-ops-snapshot.mjs");
     expect(acceptance).toContain("staging-host-evidence.mjs");
@@ -113,6 +140,8 @@ describe("off-host DR source contract", () => {
     expect(reboot).toContain("/proc/sys/kernel/random/boot_id");
     expect(reboot).toContain("Linux boot_id did not change");
     expect(reboot).toContain("Connect durable-file fingerprints changed across reboot");
+    expect(reboot).toContain("staging-offhost-dr-canary.mjs");
+    expect(reboot).toContain("semanticCanaryVerifiedAfterReboot: true");
     expect(reboot).toContain("production-public-smoke.mjs");
     expect(reboot).toContain("production-ops-snapshot.mjs");
     expect(reboot).toContain("staging-host-evidence.mjs");
