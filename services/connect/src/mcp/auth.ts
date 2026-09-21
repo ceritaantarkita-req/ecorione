@@ -73,7 +73,10 @@ function normalizeIssuer(value: string): string {
 }
 
 function defaultFetchJson(url: string): Promise<unknown> {
-  return fetch(url, { headers: { accept: "application/json" } }).then(async (response) => {
+  return fetch(url, {
+    headers: { accept: "application/json" },
+    redirect: "error",
+  }).then(async (response) => {
     if (!response.ok) throw new Error(`JWKS endpoint membalas ${String(response.status)}.`);
     return response.json() as Promise<unknown>;
   });
