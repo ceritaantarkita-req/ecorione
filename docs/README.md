@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-20**
+Last updated: **2026-09-21**
 
 This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
 
@@ -65,7 +65,7 @@ PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is
 
 ### Post-closure Product + Remote Staging
 
-The operator has approved the next separate roadmap, **PCS-00..PCS-10**, covering Ai conversation continuity, provider/model onboarding, local-runtime resilience, visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, GitHub-to-staging delivery, and staging hardening. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md). This does not reopen PE and does not imply production is live. Post-closure native-Windows portability hardening is merged via PR #182. Clean-checkout/CI reproducibility is CLOSED / PASS via PR #183. Fresh-clone Windows EOL reproducibility is CLOSED / PASS via PR #185 (CI #1486, Product Eval #725, Desktop Installer #76; post-merge CI #1487 + Product Eval #726). These are repository hardening, not a new PE batch.
+The operator-approved separate roadmap, **PCS-00..PCS-10**, covers Ai conversation continuity, provider/model onboarding, local-runtime resilience, visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, GitHub-to-staging delivery, staging hardening, and documentation convergence. PCS-00 through PCS-10 are now closed at their documented boundaries. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md). This does not reopen PE and does not imply production is live. Post-closure native-Windows portability hardening is merged via PR #182. Clean-checkout/CI reproducibility is CLOSED / PASS via PR #183. Fresh-clone Windows EOL reproducibility is CLOSED / PASS via PR #185 (CI #1486, Product Eval #725, Desktop Installer #76; post-merge CI #1487 + Product Eval #726). These are repository hardening, not a new PE batch.
 
 ## Architecture and product reference
 
@@ -118,8 +118,8 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current next/deferred scopes
 
-- SumoPod remote development/staging — **PCS-07 CLOSED / PASS; PCS-08 ACTIVE; PCS-09 PLANNED**.
-- public production cutover — deferred until staging evidence and explicit operator promotion decision.
+- SumoPod remote development/staging — **PCS-07..PCS-09 CLOSED / PASS; staging verified**.
+- public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
 - AutoClick — deferred by design.
 - paid W18 rerun — closed/not authorized for freshness.
