@@ -1,6 +1,6 @@
 # ECORIONE — PCS-09 Staging Hardening, Persistence, Backup & Observability
 
-Last updated: **2026-09-21**
+Last updated: **2026-09-22**
 
 Status: **PCS-09 CLOSED / PASS**
 
@@ -108,7 +108,7 @@ Long-term telemetry retention remains an external-scraper responsibility until a
 
 PCS-09 closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`. Merged-main CI #1679 + Product Eval #918 passed. Automatic Staging Deploy #135/#136 passed their gates and skipped deploy because activation remained disabled.
 
-The actual staging runtime therefore remains the independently proven exact revision `0f332c73dc7b363bffecdeecae921d805d5ae131`.
+The PCS-09 closure runtime was the independently proven exact revision `0f332c73dc7b363bffecdeecae921d805d5ae131`. A later bounded latest-main staging-convergence deployment superseded the current application identity to `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` through Staging Deploy #293. That later convergence passed public/Ops/exact-host deployment gates but did not rerun this document's full reboot or cold-backup acceptance sequence.
 
 ## Explicit non-claims
 
