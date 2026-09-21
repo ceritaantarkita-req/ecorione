@@ -1,23 +1,23 @@
 # ECORIONE — Production Activation Workstream
 
-Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING APPROVED**
+Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING VERIFIED**
 Date: 2026-09-20
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
 
 On 2026-09-20 the operator explicitly approved deployment to an operator-owned **SumoPod VPS as remote development/staging** so ECORIONE can run independently of the operator laptop. This does **not** authorize a public production cutover. Production promotion, final public edge/domain posture, and production-only claims remain separate gates.
 
-Current next work is documented in `docs/current-state-and-next-steps.md` and `docs/post-closure-product-staging-roadmap.md`. Local persistence/restart, isolated local backup/restore, bounded local observability, prior UX/product validation, immutable local-model identity, W16/W17 selector evidence, W18 hosted economics, F6 hardening, W20 final sync, and Product Evolution PE-00..PE-08 remain closed at their documented boundaries. The new PCS roadmap adds product-experience work plus remote staging without relabeling staging as production.
+Current state is documented in `docs/current-state-and-next-steps.md` and `docs/post-closure-product-staging-roadmap.md`. Local persistence/restart, isolated local backup/restore, bounded local observability, prior UX/product validation, immutable local-model identity, W16/W17 selector evidence, W18 hosted economics, F6 hardening, W20 final sync, Product Evolution PE-00..PE-08, and PCS-00..PCS-10 are closed at their documented boundaries. Verified remote staging is still not production.
 
 ## Objective when resumed
 
 Take the repository-verified production/self-host baseline from the already-closed local evidence boundary into a real compute-host deployment, then optionally put Cloudflare Free + a named Tunnel in front of it, validate real providers/traffic, and gather production-only evidence.
 
-## Remote staging objective now approved
+## Remote staging objective — verified
 
-Before any production promotion, establish an operator-owned SumoPod staging environment that can be used from a browser while the operator laptop is offline.
+An operator-owned SumoPod staging environment is now established and verified for browser use while the operator laptop is offline. Production promotion remains a separate explicit gate.
 
-The closed PCS-07 staging procedure and evidence boundary are documented in [sumopod-staging.md](sumopod-staging.md). PCS-08 now owns GitHub-to-staging continuous deployment.
+PCS-07 initial staging, PCS-08 governed GitHub-to-staging continuous deployment, and PCS-09 staging hardening/persistence/backup/observability are all CLOSED / PASS. Procedures and evidence are documented in [sumopod-staging.md](sumopod-staging.md), [staging-continuous-deployment.md](staging-continuous-deployment.md), and [staging-hardening-backup-observability.md](staging-hardening-backup-observability.md).
 
 Staging rules:
 
@@ -85,8 +85,8 @@ local persistence/restart — CLOSED / PASS
   -> F6 hardening — CLOSED / REPO-SIDE PASS
   -> Product Evolution PE-00..PE-08 — CLOSED / PASS
   -> post-closure portability hardening — CLOSED / PASS (PR #182)
-  -> PCS product/UX work + SumoPod remote staging — OPERATOR APPROVED
-  -> public production promotion only after staging evidence + explicit operator decision
+  -> PCS product/UX work + SumoPod remote staging — CLOSED / VERIFIED
+  -> public production promotion only after a new explicit operator decision
 ```
 
 None of the closed local checkpoints should be mislabeled as VPS, Cloudflare, hosted-provider, remote-host durability, or off-host DR evidence.
@@ -123,10 +123,10 @@ Production secrets are never command-line examples in this document. Provider se
 | 4 | Isolated local backup/restore evidence | **DONE / PASS WITH LIMITATIONS** | Existing owner state restored into isolated targets; Temporal/PostgreSQL logical restore verified; absent Sync/Connect source state not claimed |
 | 5 | Local observability baseline | **DONE / BOUNDED LOCAL PASS** | 8 owner reads/lane, 5 ECX, 5 uncached local-model samples, 0 workload errors, 5/5 trace coverage |
 | 6 | UX/product validation | **DONE / REAL-LAPTOP VERIFIED** | Closed in W03 at its documented runtime boundary |
-| 7 | Deploy to real compute host/VPS | **APPROVED FOR REMOTE STAGING** | SumoPod staging under PCS-07; do not call it production |
+| 7 | Deploy to real compute host/VPS | **VERIFIED FOR REMOTE STAGING** | PCS-07..PCS-09 CLOSED / PASS; do not call it production |
 | 8 | Install Cloudflare Free + named Tunnel | **OPTIONAL / NOT YET SELECTED FOR STAGING** | Decide after staging hostname/edge review |
-| 9 | Domain/DNS/HTTPS/Caddy/MCP public routing | **DEFERRED WITH #7** | Requires real target hostname/host |
-| 10 | Origin firewall lockdown | **DEFERRED WITH #7** | Never apply before successful public smoke + SSH/tunnel preconditions |
+| 9 | Production domain/DNS/HTTPS/public routing | **DEFERRED FOR PRODUCTION** | Staging HTTPS/routing is proven; production hostname/edge remains a separate decision |
+| 10 | Production origin firewall/edge lockdown | **DEFERRED FOR PRODUCTION** | Never change shared-host edge/firewall without explicit production plan and lockout-safe verification |
 | 11 | Production E2E edge smoke | **PENDING FUTURE DEPLOYMENT** | `pnpm production:smoke` on actual public edge |
 | 12 | Hosted provider credentials/canaries | **OPTIONAL / OPERATOR CREDENTIALS REQUIRED** | Never required for current local work |
 | 13 | Durable production observability | **PENDING FUTURE DEPLOYMENT** | Local observability baseline does not replace production retention/alerting evidence |

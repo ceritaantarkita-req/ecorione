@@ -200,9 +200,9 @@ Requirements:
 
 ### PCS-09 — Staging access, persistence, backup, and observability
 
-State: **CLOSURE CANDIDATE — REAL HOST ACCEPTANCE COMPLETE / REPOSITORY CLOSURE GATES PENDING**.
+State: **CLOSED / PASS**.
 
-PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 also passed. Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was then governed-deployed to SumoPod. Real-host evidence now passes key-only SSH hardening, strict inventory, full-VPS reboot persistence, 12-volume same-host cold backup with isolated content verification, and final Operations/host-resource checks. Off-host DR and production promotion remain explicit non-claims.
+PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 also passed. Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was then governed-deployed to SumoPod. Real-host evidence now passes key-only SSH hardening, strict inventory, full-VPS reboot persistence, 12-volume same-host cold backup with isolated content verification, and final Operations/host-resource checks. Off-host DR and production promotion remain explicit non-claims. Closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918 passed. Staging Deploy #135/#136 gate PASSed with deploy skipped, preserving the proven runtime.
 
 - establish HTTPS and operator authentication;
 - verify restart persistence on the actual VPS;
@@ -216,11 +216,11 @@ Cloudflare Tunnel remains an optional edge choice until the operator selects the
 
 ### PCS-10 — Closure and documentation convergence
 
-- update current-state, active-work, runbooks, deployment/recovery, and user setup docs;
-- remove stale statements that staging is still deferred;
-- preserve the distinction between staging and production;
-- record exact merged heads and acceptance evidence;
-- only then decide whether to promote the staging topology toward production.
+State: **CLOSED / PASS**.
+
+PCS-10 converges current-state, active-work, runbooks, deployment/recovery, documentation navigation, repository rules, and decision records onto the verified PCS-09 staging boundary. Stale statements that staging is deferred or that PCS-08/PCS-09 remain active are removed, while the staging-versus-production distinction and explicit non-claims remain intact.
+
+No production promotion is implied. The next decision, if any, must explicitly authorize a new scope or production-promotion path; there is no implicit PCS-11, PE-09, or Batch 13.
 
 ## Target operating model
 
