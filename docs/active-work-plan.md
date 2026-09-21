@@ -20,11 +20,11 @@ The maintenance queue remains closed. A separate bounded **Latest-main staging c
 
 The operator explicitly resumed work on 2026-09-21 with one bounded operational goal: deploy the latest reviewed GitHub `main` onto the already-proven SumoPod staging environment through the existing governed PCS-08 path, then verify and document the exact runtime revision.
 
-The scope-opening docs merged as `e38d9d8cd5af44b51068100428a321179b1bdcdf` after PR #246 exact-head CI #1751 + Product Eval #990 passed. That merged `main` then passed CI #1752 + Product Eval #991. Staging Deploy #282 passed its exact-current-main gate but skipped the deploy job, proving that governed staging CD activation remains disabled. There is **no newer runtime claim yet**; the proven staging revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
+The latest documentation checkpoint merged as `7e2130094fc9e3ea85dd9b0a3a5236a88c41a2c8`. Its surviving authoritative post-merge runs are CI #1755 PASS and Product Eval #994 PASS; earlier duplicate runs CI #1754 and Product Eval #993 were cancelled by GitHub concurrency rather than failing. Staging Deploy #288 passed its exact-current-main gate but skipped the deploy job, so governed staging CD activation remains disabled. There is **no newer runtime claim yet**; the proven staging revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
 
 Closure requires a successful governed deploy plus public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and documentation convergence. This scope is not PE-09, PCS-11, Batch 13, production promotion, public-edge activation, or paid-provider evidence.
 
-Latest evidence/checkpoint: [verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md). Checkpoint 1 remains preserved as the scope-opening record.
+Latest evidence/checkpoint: [verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-3-2026-09-21.md). Checkpoints 1–2 remain preserved as earlier scope records.
 
 ## Latest repository-hardening closure
 
