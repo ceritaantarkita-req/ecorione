@@ -82,6 +82,9 @@ The reviewed `deploy/compose.sumopod.yml` overlay therefore:
 - does not mount the Docker socket into any ECORIONE container.
 
 On the currently audited host, the existing Traefik network is `inmydraft-demos_web`. Re-verify the network name with `docker inspect traefik` before using this value on a rebuilt or different host.
+
+The lifecycle scripts and sanitized evidence collector honor `ECORIONE_COMPOSE_OVERLAY`. When `ECORIONE_EDGE_NETWORK` is set, preflight/install/upgrade/rollback also fail closed if that Docker network does not exist.
+
 Keep `ECORIONE_OPS_PASSWORD_HASH` single-quoted in the deployment env file. Caddy bcrypt hashes contain `$` characters, and unquoted values can be interpreted by Docker Compose as variable interpolation.
 
 ## Phase A — verify reviewed source
