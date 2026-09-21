@@ -110,7 +110,9 @@ if (
   !mcpAuth.includes("parseJwtPart") ||
   !mcpHttp.includes("error instanceof McpAuthDependencyError")
 ) {
-  findings.push("MCP auth error semantics must distinguish invalid tokens from JWKS dependency failures");
+  findings.push(
+    "MCP auth error semantics must distinguish invalid tokens from JWKS dependency failures",
+  );
 }
 if (!mcpTypes.includes("allowInsecureLoopback") || !mcpTypes.includes("credentialRef"))
   findings.push("MCP transport credential/HTTPS schema missing");
