@@ -122,6 +122,14 @@ Real-volume recovery is deliberately destructive only to a **clean replacement n
 - secrets/configuration are never packed into the ordinary DR bundle;
 - the source-host DR private key remains absent by design.
 
+## Runtime activation prerequisite
+
+The current proven SumoPod application runtime is still `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40`. Checkpoint-2 scripts are newer repository source and must not be injected manually into that older checkout.
+
+Before the first real checkpoint-2 export, the exact reviewed checkpoint-2 merge must be deployed through the existing PCS-08 governed staging path and must pass its normal public/Ops/exact-host/release-receipt gates. Automatic staging deployment must then be frozen again before documentation closure proceeds.
+
+This deployment is a prerequisite to DR runtime evidence, not production promotion.
+
 ## Current non-claims
 
 No real-host checkpoint-2 mutation has been performed by this repository work.
