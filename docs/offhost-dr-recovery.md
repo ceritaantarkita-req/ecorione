@@ -94,12 +94,13 @@ The orchestrator:
 1. locks concurrent DR export;
 2. reads the root-owned staging release receipt;
 3. requires exact clean Git identity;
-4. creates a fresh PCS-09 cold backup;
-5. requires backup SHA/tag to match the current release;
-6. builds the encrypted bundle;
-7. writes an export manifest with filenames/hashes;
-8. transfers bundle + metadata + export manifest to the independent target;
-9. writes a source-side transfer receipt only after checksum-verified transfer passes.
+4. creates a small LOCAL_ONLY semantic canary through owner APIs: one Historical Ledger event, one Context episode, and one Artifact;
+5. verifies that canary immediately, then creates a fresh PCS-09 cold backup;
+6. requires backup SHA/tag to match the current release;
+7. builds the encrypted bundle;
+8. writes an export manifest with bundle/metadata/canary filenames and hashes;
+9. transfers bundle + metadata + canary + export manifest to the independent target;
+10. writes a source-side transfer receipt only after checksum-verified transfer passes.
 
 The older manual sequence remains useful for diagnosis, but the orchestrator is now the preferred path.
 
@@ -230,7 +231,7 @@ sudo -E bash scripts/staging-offhost-dr-fetch.sh --apply \
   ecorione-dr-<timestamp>-<sha12>.receipt.env
 ```
 
-The fetch helper downloads the retained export manifest first, derives the exact encrypted artifact filenames/hashes from it, fetches those artifacts, verifies hashes, and writes:
+The fetch helper downloads the retained export manifest first, derives the exact encrypted artifact and semantic-canary filenames/hashes from it, fetches the bundle + metadata + canary, verifies all hashes, and writes:
 
 ```text
 ecorione-dr-<timestamp>-<sha12>.retrieval.env
@@ -251,7 +252,8 @@ sudo -E node scripts/staging-offhost-dr-restore.mjs \
   --bundle /secure/recovery/<bundle>.ecdr \
   --metadata /secure/recovery/<bundle>.json \
   --private-key /secure/recovery/ecorione-dr-private.pem \
-  --retrieval-receipt /secure/recovery/<bundle>.retrieval.env
+  --retrieval-receipt /secure/recovery/<bundle>.retrieval.env \
+  --canary-state /secure/recovery/<bundle>.canary.json
 ```
 
 Before real-volume mutation the restore tool reruns the isolated Docker verifier. It then refuses any existing project container or target volume, creates the exact recorded Compose volumes with Compose labels, restores every archive, verifies tree fingerprint + file count, and removes only newly created volumes if the attempt fails.
@@ -285,17 +287,19 @@ export ECORIONE_PUBLIC_BASE_URL=https://ecorione.inmydraft.com
 export ECORIONE_OPS_CREDENTIAL_FILE=/secure/recovery/ecorione-staging-ops.txt
 
 sudo -E node scripts/staging-offhost-dr-acceptance.mjs \
-  --restore-receipt /var/lib/ecorione-dr/<restore-receipt>.json
+  --restore-receipt /var/lib/ecorione-dr/<restore-receipt>.json \
+  --canary-state /secure/recovery/<bundle>.canary.json
 ```
 
-The acceptance gate requires exact Git SHA, clean tracked worktree, all configured services, exact Ai image tag, restored volume presence, public smoke, authenticated Operations, and sanitized exact-host evidence. Only after those pass does it write the recovered release receipt and a pre-reboot recovery acceptance receipt.
+The acceptance gate requires exact Git SHA, clean tracked worktree, all configured services, exact Ai image tag, restored volume presence, a successful semantic-canary read through Historical Ledger + Context + Artifact owner APIs, public smoke, authenticated Operations, and sanitized exact-host evidence. Only after those pass does it write the recovered release receipt and a pre-reboot recovery acceptance receipt.
 
 Capture the reboot baseline:
 
 ```bash
 sudo -E node scripts/staging-offhost-dr-reboot-evidence.mjs \
   --phase baseline \
-  --acceptance-receipt /var/lib/ecorione-dr/recovery-acceptance.json
+  --acceptance-receipt /var/lib/ecorione-dr/recovery-acceptance.json \
+  --canary-state /secure/recovery/<bundle>.canary.json
 ```
 
 Perform one operator-controlled full replacement-host reboot, then rerun:
@@ -303,10 +307,11 @@ Perform one operator-controlled full replacement-host reboot, then rerun:
 ```bash
 sudo -E node scripts/staging-offhost-dr-reboot-evidence.mjs \
   --phase post \
-  --acceptance-receipt /var/lib/ecorione-dr/recovery-acceptance.json
+  --acceptance-receipt /var/lib/ecorione-dr/recovery-acceptance.json \
+  --canary-state /secure/recovery/<bundle>.canary.json
 ```
 
-The post phase requires a changed Linux boot ID plus preserved exact source/image, project-volume inventory, Connect durable-file fingerprints, public boundary, authenticated Operations, and exact-host evidence.
+The post phase requires a changed Linux boot ID plus preserved exact source/image, project-volume inventory, Connect durable-file fingerprints, a second successful semantic-canary read, public boundary, authenticated Operations, and exact-host evidence.
 
 ## H. Total-host-loss application recovery drill
 
