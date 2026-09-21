@@ -119,6 +119,8 @@ ECORIONE_MULTIMODAL_HOSTED_RESERVATION_USD=1
 
 The local adapter needs no provider credential. The hosted HTTP adapter always obtains the selected hosted provider's `messages` credential from Connect's credential reader; production credentials therefore stay rotatable in the existing vault.
 
+A `local` HTTP adapter is a privacy boundary, not just a routing label. Its endpoint must use HTTP/HTTPS, must not embed credentials or a fragment, and must resolve syntactically to loopback/private/local host space. The same explicit operator opt-out used by local model inference, `ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC=1`, is required before a public hostname can be accepted as a local multimodal endpoint.
+
 Connect posts the normalized inference request to the configured adapter endpoint. Analyze requests contain:
 
 ```json
