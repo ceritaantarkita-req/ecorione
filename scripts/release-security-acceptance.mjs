@@ -52,6 +52,11 @@ const hubExchange = readFileSync("services/hub/src/exchange-http.ts", "utf8");
 const hubMultimodal = readFileSync("services/hub/src/multimodal-http.ts", "utf8");
 const brainContextEcx = readFileSync("apps/ai/lib/brain-context-ecx.ts", "utf8");
 const syncHttp = readFileSync("services/sync/src/http.ts", "utf8");
+const anthropicProvider = readFileSync("services/connect/src/providers/anthropic.ts", "utf8");
+const openAiCompatibleProvider = readFileSync(
+  "services/connect/src/providers/openai-compatible.ts",
+  "utf8",
+);
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
@@ -74,6 +79,8 @@ for (const [boundary, source] of [
   ["Hub multimodal Artifact fetch", hubMultimodal],
   ["Ai Brain owner fetch", brainContextEcx],
   ["Sync Connect MCP fetch", syncHttp],
+  ["Anthropic provider fetch", anthropicProvider],
+  ["OpenAI-compatible provider fetch", openAiCompatibleProvider],
 ]) {
   if (!source.includes('redirect: "error"')) {
     findings.push(`${boundary} must fail closed on redirects`);
