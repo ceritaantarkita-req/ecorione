@@ -23,12 +23,20 @@ function fail(message) {
 function parseArgs(argv) {
   const phaseAt = argv.indexOf("--phase");
   const receiptAt = argv.indexOf("--acceptance-receipt");
+  const canaryAt = argv.indexOf("--canary-state");
   const phase = phaseAt >= 0 ? argv[phaseAt + 1] : "";
   const acceptanceReceipt = receiptAt >= 0 ? argv[receiptAt + 1] : "";
-  if (!["baseline", "post"].includes(phase) || !acceptanceReceipt) {
-    fail("use --phase baseline|post --acceptance-receipt <recovery-acceptance.json>");
+  const canaryState = canaryAt >= 0 ? argv[canaryAt + 1] : "";
+  if (!["baseline", "post"].includes(phase) || !acceptanceReceipt || !canaryState) {
+    fail(
+      "use --phase baseline|post --acceptance-receipt <recovery-acceptance.json> --canary-state <semantic-canary.json>",
+    );
   }
-  return { phase, acceptanceReceipt: resolve(acceptanceReceipt) };
+  return {
+    phase,
+    acceptanceReceipt: resolve(acceptanceReceipt),
+    canaryState: resolve(canaryState),
+  };
 }
 
 function run(name, args, options = {}) {
@@ -125,13 +133,17 @@ async function main() {
     fail("run as root");
   }
 
-  const { phase, acceptanceReceipt } = parseArgs(process.argv.slice(2));
+  const { phase, acceptanceReceipt, canaryState } = parseArgs(process.argv.slice(2));
   assertMode600(acceptanceReceipt, "acceptance receipt");
+  assertMode600(canaryState, "semantic canary state");
   const acceptance = JSON.parse(readFileSync(acceptanceReceipt, "utf8"));
   if (
     acceptance.schemaVersion !== 1 ||
     acceptance.preRebootAccepted !== true ||
     acceptance.retrievedFromIndependentTarget !== true ||
+    acceptance.semanticCanaryAccepted !== true ||
+    typeof acceptance.semanticCanaryStateFilename !== "string" ||
+    !/^[0-9a-f]{64}$/.test(acceptance.semanticCanarySha256 ?? "") ||
     !SHA_RE.test(acceptance.sourceSha ?? "") ||
     !TAG_RE.test(acceptance.sourceTag ?? "") ||
     !PROJECT_RE.test(acceptance.composeProject ?? "")
@@ -150,6 +162,15 @@ async function main() {
 
   if (!publicBaseUrl) fail("ECORIONE_PUBLIC_BASE_URL is required");
   if (!opsFileRaw) fail("ECORIONE_OPS_CREDENTIAL_FILE is required");
+  if (acceptance.semanticCanaryStateFilename !== canaryState.split(/[\\/]/u).at(-1)) {
+    fail("semantic canary filename does not match acceptance receipt");
+  }
+  const canarySha256 = run("sha256sum", [canaryState], {
+    label: "semantic canary checksum",
+  }).split(/\s+/u)[0];
+  if (canarySha256 !== acceptance.semanticCanarySha256) {
+    fail("semantic canary checksum does not match acceptance receipt");
+  }
   assertMode600(deployEnv, "deployment env");
   assertMode600(opsFile, "operator credential file");
   if (overlay !== null && (!existsSync(overlay) || lstatSync(overlay).isSymbolicLink())) {
@@ -256,6 +277,28 @@ async function main() {
 
   const current = await snapshot();
   assertHealthy(current);
+
+  const semanticCanary = run(
+    process.execPath,
+    [
+      "scripts/staging-offhost-dr-canary.mjs",
+      "--phase",
+      "post",
+      "--state",
+      canaryState,
+    ],
+    {
+      env: {
+        ...process.env,
+        ECORIONE_COMPOSE_PROJECT: acceptance.composeProject,
+      },
+      label:
+        phase === "baseline"
+          ? "pre-reboot semantic owner-data DR canary"
+          : "post-reboot semantic owner-data DR canary",
+    },
+  );
+  if (semanticCanary) console.log(semanticCanary);
 
   const stateRoot = resolve(
     process.env.ECORIONE_DR_RECOVERY_STATE_ROOT || "/var/lib/ecorione-dr",
@@ -371,6 +414,7 @@ async function main() {
     postRebootAcceptedAt: verifiedAt,
     baselineBootId: baseline.bootId,
     postBootId: current.bootId,
+    semanticCanaryVerifiedAfterReboot: true,
     totalHostLossRecoveryCandidate: true,
     claimBoundary:
       "Independent off-host retrieval, clean-host data restore, exact application recovery and changed-boot-id persistence verified; sanitized closure evidence is still required before project-level CLOSED/PASS.",
