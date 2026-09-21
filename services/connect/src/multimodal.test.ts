@@ -47,6 +47,56 @@ function output(overrides: Record<string, unknown> = {}) {
   };
 }
 
+describe("HttpMultimodalAdapter local endpoint boundary", () => {
+  it("accepts loopback/private local endpoints", () => {
+    expect(
+      () =>
+        new HttpMultimodalAdapter({
+          route: "local",
+          endpoint: "http://127.0.0.1:17099/infer",
+        }),
+    ).not.toThrow();
+    expect(
+      () =>
+        new HttpMultimodalAdapter({
+          route: "local",
+          endpoint: "http://multimodal.internal/infer",
+        }),
+    ).not.toThrow();
+  });
+
+  it("rejects public, credential-bearing, and non-HTTP local endpoints", () => {
+    const prior = process.env.ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC;
+    delete process.env.ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC;
+    try {
+      expect(
+        () =>
+          new HttpMultimodalAdapter({
+            route: "local",
+            endpoint: "https://public.example/infer",
+          }),
+      ).toThrow(/loopback\/private/u);
+      expect(
+        () =>
+          new HttpMultimodalAdapter({
+            route: "local",
+            endpoint: "http://user:secret@127.0.0.1/infer",
+          }),
+      ).toThrow(/credential/u);
+      expect(
+        () =>
+          new HttpMultimodalAdapter({
+            route: "local",
+            endpoint: "file:///tmp/infer",
+          }),
+      ).toThrow(/HTTP\/HTTPS/u);
+    } finally {
+      if (prior === undefined) delete process.env.ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC;
+      else process.env.ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC = prior;
+    }
+  });
+});
+
 describe("HttpMultimodalAdapter redirect boundary", () => {
   it("rejects hosted redirect before forwarding bearer credentials", async () => {
     const originalDispatcher = getGlobalDispatcher();
