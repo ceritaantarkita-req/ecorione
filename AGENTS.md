@@ -15,7 +15,7 @@ Before changing the repo:
 
 Dated audits and `docs/verification/` are evidence, not current work queues.
 
-## Current state — 2026-09-21
+## Current state — 2026-09-22
 
 - original Batch 1–12 / W / F6 baseline: **CLOSED**;
 - Windows runtime + installer: **VERIFIED**;
@@ -45,6 +45,7 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PCS-10 closure/documentation convergence: **CLOSED / PASS** (PR #219 head `c84f76face60d203592d8bc6e1a51acccfec5004`; CI #1684; Product Eval #923; merge `6058aa0ff294218147a91ee0fc7b77f32d1be80d`; post-merge bookkeeping PR #220 merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07` after CI #1686 + Product Eval #925);
 - SumoPod remote development/staging: **VERIFIED / NOT PRODUCTION**;
 - public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
+- off-host Backup & DR: **ACTIVE / CHECKPOINT 1 REPOSITORY FOUNDATION**; real independent copy and total-host-loss recovery remain unproven;
 - AutoClick: **DEFERRED BY DESIGN**.
 
 Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any new product scope requires an explicit roadmap/decision.
@@ -87,7 +88,11 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 
 There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
 
-**PCS-00 through PCS-10 are CLOSED / PASS at documented boundaries.** For staging maintenance use `docs/staging-continuous-deployment.md`, `docs/sumopod-staging.md`, and `docs/staging-hardening-backup-observability.md`. Deploy only exact reviewed `main` through the least-privilege governed CD path; preserve host/GitHub secret isolation, fail releases when health/smoke/evidence fails, and retain the tested runtime rollback path. GitHub `main` remains source of truth; SumoPod evidence is staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not create PCS-11, reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
+**PCS-00 through PCS-10 are CLOSED / PASS at documented boundaries.**
+
+**Off-host Backup & DR is the only active operational scope.** It is explicitly authorized as a separate infrastructure workstream and is not PCS-11, PE-09, Batch 13, production promotion, or a feature batch. Checkpoint 1 is repository foundation only: encrypted portable packaging of verified PCS-09 backups, strict independent SSH transfer, clean-host verification/isolated restore tooling, tests, runbook, and documentation. Do not claim real off-host protection or total-host-loss recovery until the runtime gates in `docs/offhost-dr-recovery.md` pass on an independent failure domain.
+
+For staging maintenance use `docs/staging-continuous-deployment.md`, `docs/sumopod-staging.md`, `docs/staging-hardening-backup-observability.md`, and `docs/offhost-dr-recovery.md`. Deploy only exact reviewed `main` through the least-privilege governed CD path; preserve host/GitHub secret isolation, fail releases when health/smoke/evidence fails, and retain the tested runtime rollback path. GitHub `main` remains source of truth; SumoPod evidence is staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not create PCS-11, reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
 
 ## Git / closure discipline
 

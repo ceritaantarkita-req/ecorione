@@ -82,7 +82,9 @@ The post phase refuses to pass unless Linux boot_id changed, all configured serv
 
 PCS-09 will create and verify a same-host staging backup before any disaster-recovery claim. The backup must not copy the Connect Vault master key, operator credentials, SSH private keys, or deployment-env secrets into Git or ordinary backup manifests.
 
-Same-host backup is not off-host disaster recovery. A future off-host copy to a separate failure domain is required before total-VPS-loss recovery can be claimed.
+Same-host backup is not off-host disaster recovery. A separate off-host copy to a distinct failure domain is required before total-VPS-loss recovery can be claimed.
+
+That separate workstream is now explicitly active at repository checkpoint 1. See [offhost-dr-recovery.md](offhost-dr-recovery.md). The repository now contains encrypted portable bundle, strict independent SSH transfer, and clean-host restore-verification tooling, but no real current-revision off-host copy or total-host-loss recovery is claimed until the runtime gates in that runbook pass.
 
 Repository backup command:
 
