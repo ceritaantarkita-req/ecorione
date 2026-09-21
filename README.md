@@ -4,7 +4,7 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-> **Current status — 2026-09-21:** the original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, and post-closure **PCS-00..PCS-10** are **CLOSED / PASS** at their documented boundaries. SumoPod remote staging is verified and GitHub `main` remains source of truth. Public production promotion/Cloudflare remains a separate explicit operator decision; AutoClick remains deferred by design.
+> **Current status — 2026-09-22:** the original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, and post-closure **PCS-00..PCS-10** are **CLOSED / PASS** at their documented boundaries. SumoPod remote staging is verified and GitHub `main` remains source of truth. Public production promotion/Cloudflare remains a separate explicit operator decision; AutoClick remains deferred by design.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -71,7 +71,7 @@ Read [docs/product-evolution-architecture.md](docs/product-evolution-architectur
 
 PE-08 Product closure is CLOSED / PASS on PR #180. Product Evolution PE-00 through PE-08 is complete at the documented boundaries; no Batch 13 is opened. Native Windows portability hardening was merged through PR #182 after Windows-local verification plus CI #1477 and Product Eval #716 passed. Clean-checkout reproducibility then closed on PR #183: canonical formatting is committed and CI now validates source without a pre-format mutation; exact closure head passed CI #1482 and Product Eval #721. Fresh-clone Windows EOL closure then completed on PR #185: the three `.cmd` blobs were renormalized to canonical LF in Git while `.gitattributes` preserves CRLF in Windows working trees; PR CI #1486, Product Eval #725, Desktop Installer #76, and post-merge main CI #1487 / Product Eval #726 all passed.
 
-The follow-on PCS-00..PCS-10 roadmap is also CLOSED / PASS. It delivered persistent Project chat/history, provider/model onboarding, Local runtime resilience, product visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, governed GitHub-to-staging CD, real-host hardening/reboot/backup/observability evidence, and final documentation convergence. The proven staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131`; later documentation-only merges intentionally did not redeploy it.
+The follow-on PCS-00..PCS-10 roadmap is also CLOSED / PASS. It delivered persistent Project chat/history, provider/model onboarding, Local runtime resilience, product visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, governed GitHub-to-staging CD, real-host hardening/reboot/backup/observability evidence, and final documentation convergence. The later bounded latest-main staging-convergence scope is also CLOSED / PASS at the runtime boundary: governed Staging Deploy #293 moved SumoPod staging to exact reviewed revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` and passed public smoke, authenticated Ops health, and exact-host evidence.
 
 ## Local development
 
