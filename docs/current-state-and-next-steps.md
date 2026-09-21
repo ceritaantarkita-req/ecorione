@@ -109,7 +109,7 @@ PCS-10 converges the current-state, active-work, staging, hardening/backup, docu
 
 No runtime, provider, DNS, firewall, or production-promotion mutation is authorized by PCS-10. ECORIONE has a verified remote staging topology; **public production cutover remains a separate explicit operator decision**.
 
-There is no active PCS implementation queue after PCS-10. Future work requires a new explicit scope/decision rather than silently creating PCS-11, PE-09, or Batch 13.
+There is no active PCS implementation queue after PCS-10. Future work requires a new explicit scope/decision rather than silently creating PCS-11, PE-09, or Batch 13. Evidence: [verification/pcs-10-documentation-convergence-2026-09-21.md](verification/pcs-10-documentation-convergence-2026-09-21.md).
 
 ## Post-closure repository hardening
 
