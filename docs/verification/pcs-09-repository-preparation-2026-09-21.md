@@ -2,7 +2,7 @@
 
 Date: **2026-09-21**
 
-Status: **REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE PENDING**
+Status: **REPOSITORY IMPLEMENTATION MERGED / REAL HOST BASELINE CAPTURED / HARDENING PENDING**
 
 ## Starting boundary
 
@@ -49,13 +49,69 @@ The exact merged `main` revision then passed:
 
 Automatic Staging Deploy workflow-run gates #106 and #107 completed successfully while the deployment job remained skipped because the repository activation variable stayed disabled. Therefore the PCS-09 repository merge did not mutate the proven staging runtime.
 
+## Governed PCS-09 staging deployment
+
+Controlled Staging Deploy run `35563423107` PASSed against exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131`.
+
+Observed from the governed deploy path:
+
+- gate PASS;
+- dedicated least-privilege SSH identity PASS;
+- image `ecorione:staging-0f332c73dc7b` built and applied;
+- public edge became ready on attempt 4 after three transient home HTTP 502 responses;
+- full public smoke PASS;
+- authenticated Ops snapshot `healthy=true`, no unhealthy required services;
+- exact-host evidence matched the target SHA;
+- 15/15 configured services running;
+- clean detached worktree;
+- activation returned to `0` after the controlled deployment.
+
+## Real-host baseline inventory
+
+The first non-strict PCS-09 inventory ran on the actual SumoPod staging host at `2026-09-21T05:26:26.560Z`.
+
+PASS / healthy observations:
+
+- exact source SHA `0f332c73dc7b363bffecdeecae921d805d5ae131`;
+- clean worktree;
+- deployment env mode 600;
+- 15 configured / 15 running services;
+- every ECORIONE staging container uses `restart=unless-stopped`;
+- no ECORIONE staging container publishes a host port;
+- Docker is enabled at boot;
+- UFW active;
+- unattended-upgrades enabled;
+- available disk 16.02 GiB;
+- available memory 4331.6 MiB;
+- public home HTTP 200;
+- unauthenticated `/ops` HTTP 401.
+
+Expected hardening blockers:
+
+```text
+SSH password authentication is not disabled
+SSH root login is not restricted
+```
+
+Effective SSH baseline:
+
+```text
+PermitRootLogin yes
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+```
+
+Connect durable runtime settings, Vault ciphertext, and spend-budget files were absent in this staging state. The inventory records absence only; it does not fabricate persistence evidence for data that does not exist.
+
+The failed first operator command using `pnpm staging:pcs09:inventory` also proved the host does not have pnpm installed. The actual inventory was therefore run directly with Node. Host-side runbook commands are updated accordingly rather than installing another package manager merely for evidence collection.
+
 ## Pending PCS-09 evidence
 
-1. governed deployment of exact reviewed PCS-09 `main` to staging;
-2. real non-strict host inventory;
-3. key-only SSH hardening with fresh-session proof;
-4. strict inventory PASS;
-5. actual VPS reboot persistence evidence;
-6. same-host verified backup and isolated restore evidence;
-7. staging Operations + host resource evidence;
-8. sanitized final closure.
+1. guarded SSH hardening with the existing operator session kept open;
+2. prove a second fresh operator public-key SSH login before closing the old session;
+3. strict inventory PASS;
+4. actual VPS reboot persistence evidence;
+5. same-host verified backup and isolated restore evidence;
+6. staging Operations + host resource evidence;
+7. sanitized final closure.
