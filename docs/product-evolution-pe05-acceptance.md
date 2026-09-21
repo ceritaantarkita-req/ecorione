@@ -1,6 +1,6 @@
 # PE-05 acceptance contract
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-21**
 
 Status: **CLOSED / SATISFIED — PR #174**
 
@@ -200,4 +200,4 @@ verified event/webhook
 -> operationId-keyed Run evidence
 ```
 
-PE-06 must not begin until the exact reviewed PE-05 head is green and merged.
+Historical sequencing gate: PE-06 could not begin until the exact reviewed PE-05 head was green and merged. That gate was satisfied; PE-06 through PE-08 and PCS-00..PCS-10 subsequently closed.

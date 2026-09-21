@@ -1,6 +1,6 @@
 # PE-06 acceptance contract
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-21**
 
 Status: **CLOSED / SATISFIED — PR #176**
 
@@ -203,4 +203,4 @@ authorized Project query
 -> same owner data remains canonical
 ```
 
-PE-07 must not begin until the exact reviewed PE-06 head is green and merged.
+Historical sequencing gate: PE-07 could not begin until the exact reviewed PE-06 head was green and merged. That gate was satisfied; PE-07, PE-08, and PCS-00..PCS-10 subsequently closed.

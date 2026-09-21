@@ -185,15 +185,15 @@ This does **not** prove:
 - arbitrary disk/database corruption recovery;
 - durability of intentionally process-local metrics/caches.
 
-## Next checkpoint
+## Historical next checkpoint
 
 ```text
 local persistence/restart — CLOSED / PASS
-  -> isolated local backup/restore — ACTIVE NEXT CHECKPOINT
+  -> isolated local backup/restore — next checkpoint at the time; later CLOSED / PASS
   -> local observability baseline
   -> UX/product validation
   -> immutable local model identity hardening
-  -> VPS/Cloudflare only when explicitly resumed
+  -> VPS/Cloudflare only when explicitly resumed (later resumed as SumoPod staging; public production remains separate)
 ```
 
 Canonical handoff: `docs/current-state-and-next-steps.md`.

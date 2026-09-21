@@ -1,17 +1,17 @@
 # ECORIONE — Post-Closure Product + Remote Staging Roadmap
 
-Last updated: **2026-09-20**
+Last updated: **2026-09-21**
 
-Status: **OPERATOR APPROVED / IMPLEMENTATION NOT YET CLOSED**
+Status: **CLOSED / PASS — PCS-00..PCS-10**
 
-This roadmap is the explicit next scope after Product Evolution PE-00..PE-08 and repository portability/reproducibility hardening. It is **not PE-09, not Batch 13, and not a claim that production is live**.
+This roadmap records the completed post-Product-Evolution scope after PE-00..PE-08 and repository portability/reproducibility hardening. PCS-00..PCS-10 are CLOSED / PASS. It is **not PE-09, not Batch 13, and not a claim that production is live**.
 
 The operator approved two connected goals:
 
 1. make ECORIONE materially easier and cleaner to use from a normal browser; and
 2. move the primary runtime from an operator laptop to an operator-owned SumoPod VPS used as **remote development/staging**, with GitHub remaining the source of truth.
 
-## Current browser findings that motivate this roadmap
+## Historical browser findings that motivated this roadmap
 
 Real local browser use on 2026-09-20 confirmed that the core stack can start and that the hosted OpenRouter path can answer successfully, but it also exposed product gaps that are now explicit work:
 
@@ -24,7 +24,7 @@ Real local browser use on 2026-09-20 confirmed that the core stack can start and
 - visual hierarchy, spacing, typography, control sizing, empty states, disabled states, and advanced/basic separation are not yet product-grade;
 - one real Flow execution exposed a query-state error and an incomplete node-authority grant path that must be closed before Flow is treated as end-user ready.
 
-These observations do not invalidate the closed PE baseline; they define a new post-closure product scope.
+These observations did not invalidate the closed PE baseline; they defined the now-completed post-closure product scope.
 
 ## Product direction
 
@@ -34,7 +34,7 @@ Normal users should see provider connection, model choice, chat/history, project
 
 The visual direction is calm, premium, and high-readability: dark charcoal rather than near-black-on-black, stronger hierarchy, larger readable type, restrained warm accent, consistent panels/controls, and fewer developer-facing labels in primary flows.
 
-## Planned workstreams
+## Completed workstreams
 
 ### PCS-00 — Baseline lock
 
@@ -220,6 +220,8 @@ State: **CLOSED / PASS**.
 
 PCS-10 converges current-state, active-work, runbooks, deployment/recovery, documentation navigation, repository rules, and decision records onto the verified PCS-09 staging boundary. Stale statements that staging is deferred or that PCS-08/PCS-09 remain active are removed, while the staging-versus-production distinction and explicit non-claims remain intact.
 
+Closure PR #219 exact head `c84f76face60d203592d8bc6e1a51acccfec5004` passed CI #1684 + Product Eval #923 and merged as `6058aa0ff294218147a91ee0fc7b77f32d1be80d`. Post-merge bookkeeping PR #220 passed CI #1686 + Product Eval #925 and merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07`.
+
 No production promotion is implied. The next decision, if any, must explicitly authorize a new scope or production-promotion path; there is no implicit PCS-11, PE-09, or Batch 13.
 
 ## Target operating model
@@ -261,7 +263,7 @@ The operator laptop becomes a client and optional local-development machine, **n
 - Public production cutover is not implied by remote staging.
 - AutoClick and L4 autonomy remain outside this roadmap unless separately authorized.
 
-## Current sequencing
+## Completed sequencing
 
 ```text
 PCS-00 baseline lock

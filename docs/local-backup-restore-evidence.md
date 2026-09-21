@@ -219,6 +219,6 @@ It does not prove:
 
 Production DR still requires verified backups copied to a different failure domain and separate out-of-band protection of the Connect Vault master key.
 
-## Next checkpoint
+## Historical next checkpoint
 
-The next operator-approved local checkpoint is **local observability baseline**. Compute-host/VPS + Cloudflare remains deferred until explicitly resumed by the operator.
+At closure time, the next operator-approved local checkpoint was the **local observability baseline**. That checkpoint and subsequent UX/model-identity work later closed at their documented boundaries; SumoPod compute-host staging was also later verified through PCS-07..PCS-09. Public production/Cloudflare and off-host DR remain separate explicit boundaries.

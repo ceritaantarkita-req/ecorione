@@ -235,7 +235,7 @@ Cloudflare edge rollback and ECORIONE application/data rollback are separate ope
 
 ECORIONE already has production Compose/Caddy, release tooling, observability, provider canaries, guarded Tunnel/origin scripts, and real public HTTPS MCP acceptance. A persistent named Cloudflare production tunnel remains an operator deployment action.
 
-Current state on 2026-09-20:
+Current state on 2026-09-21:
 
 - local runtime and Historical Ledger + ECX traffic/integrity evidence: **CLOSED**;
 - local Comparative ECX evidence: **CLOSED / PASS WITH LIMITATIONS**;

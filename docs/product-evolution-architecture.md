@@ -1,10 +1,10 @@
 # ECORIONE — Product Evolution Architecture
 
-Last updated: **2026-09-20**
+Last updated: **2026-09-21**
 
 Status: **CANONICAL DESIGN / PE-00..PE-08 CLOSED**
 
-This document defines the next ECORIONE product model after the previous Batch 1–12 / W / F6 baseline closed. It is intentionally built on the architecture already present in the repository. It does **not** authorize a new service, scheduler, graph database, autonomous engine, paid provider run, or production deployment unless a later batch explicitly requires and approves it.
+This document defines the ECORIONE product model implemented through the now-closed Product Evolution PE-00..PE-08 roadmap after the previous Batch 1–12 / W / F6 baseline closed. It is intentionally built on the architecture already present in the repository. It does **not** authorize a new service, scheduler, graph database, autonomous engine, paid provider run, or production deployment unless a later batch explicitly requires and approves it.
 
 Implementation batches live in [product-evolution-roadmap.md](product-evolution-roadmap.md). Agent execution rules live in [product-evolution-agent-guide.md](product-evolution-agent-guide.md).
 
@@ -504,4 +504,4 @@ PE-00 converted the following into accepted ADRs/contracts before feature implem
 7. Run projection source-of-truth mapping;
 8. Brain projection/privacy boundary.
 
-PE-00 through PE-08 are CLOSED / PASS at their documented boundaries. No PE batch is active. Reopening Product Evolution requires an explicit new roadmap/decision; portability, CI, documentation, and release hardening do not implicitly create PE-09 or Batch 13.
+PE-00 through PE-08 are CLOSED / PASS at their documented boundaries. No PE batch is active. Reopening Product Evolution requires an explicit new roadmap/decision; portability, CI, documentation, and release hardening do not implicitly create PE-09 or Batch 13. The follow-on PCS-00..PCS-10 roadmap is also CLOSED / PASS and does not alter these owner/authority invariants.

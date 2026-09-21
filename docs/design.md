@@ -1,6 +1,6 @@
 # ecorione — Design Document (Visual & UI/UX)
 
-Status: **APPROVED v1.2** — 2026-09-20. v1.2 mempertahankan identitas visual inti (dark premium, gold restrained, Fraunces/Manrope/IBM Plex Mono) dan menambahkan arahan product-UI pasca real-browser review: hierarki lebih kuat, keterbacaan lebih tinggi, Simple/Advanced separation, state yang eksplisit, dan konsistensi lintas Ai/Projects/Work/Brain/Space/Flow/Operations/Settings.
+Status: **APPROVED v1.2 / IMPLEMENTED AT PCS-04 BOUNDARY** — reconciled 2026-09-21. v1.2 mempertahankan identitas visual inti (dark premium, gold restrained, Fraunces/Manrope/IBM Plex Mono) dan menambahkan arahan product-UI pasca real-browser review: hierarki lebih kuat, keterbacaan lebih tinggi, Simple/Advanced separation, state yang eksplisit, dan konsistensi lintas Ai/Projects/Work/Brain/Space/Flow/Operations/Settings. PCS-04 closed the corresponding visual/IA implementation on PR #197; PCS-06 later passed integrated rendered-browser acceptance.
 
 Riwayat: DRAFT v0.1 (hangat, terracotta/sage — ditolak, kurang premium/netral) → DRAFT v0.2 (gelap mewah, gold+graphite — arah disetujui tapi struktur halaman masih generik/"AI slop") → DRAFT v0.3 (nama modul tidak lagi bernama "InMyX", lihat `prd.md` §18; bentuk halaman diganti konsep dokumen perencanaan distrik) → DRAFT v0.4 (toggle pratinjau tema disederhanakan jadi Terang/Gelap saja, opsi "Sistem" dihapus; neutral terang awal → broken white) → DRAFT v0.5 (dasar mode terang `--bg` diputihkan penuh jadi `#FFFFFF`, sebelumnya broken-white `#FAF9F6` masih dirasa kurang putih) → **APPROVED v1.0** (disetujui, siap jadi basis Fase 0).
 Pasangan dokumen: `prd.md` (produk + arsitektur teknis), dokumen ini (identitas visual & UI/UX)
@@ -163,4 +163,4 @@ Real browser use after PE-08 showed that the approved visual identity is still v
 - make Ai composer/provider/model state understandable without knowing `local` vs `hosted` internals;
 - keep the current restrained premium identity rather than replacing it with a colorful dashboard aesthetic.
 
-This addendum is the visual baseline for PCS-04 and related PCS-01..PCS-03 product surfaces. It does not by itself claim that the implemented UI has already been updated.
+This addendum was the visual baseline for PCS-04 and related PCS-01..PCS-03 product surfaces. That implementation is now CLOSED / PASS at the documented PCS boundaries, with integrated rendered-browser regression closed under PCS-06. Any new visual redesign requires a new explicit scope rather than reopening this addendum.

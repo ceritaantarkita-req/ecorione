@@ -42,7 +42,7 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PCS-07 SumoPod remote staging deployment: **CLOSED / PASS**;
 - PCS-08 GitHub -> staging continuous deployment: **CLOSED / PASS** (implementation PR #210; closure PR #215; closure merge `f0aa9ca97518e3b7e57fc6bc7a58e0ed7761ba05`);
 - PCS-09 staging persistence/security/backup/observability: **CLOSED / PASS** (closure PR #218 head `ece59440d742f59252046562cf3ba86e7911b46f`; CI #1678; Product Eval #917; merge `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918);
-- PCS-10 closure/documentation convergence: **CLOSED / PASS** when this converged state is on `main`;
+- PCS-10 closure/documentation convergence: **CLOSED / PASS** (PR #219 head `c84f76face60d203592d8bc6e1a51acccfec5004`; CI #1684; Product Eval #923; merge `6058aa0ff294218147a91ee0fc7b77f32d1be80d`; post-merge bookkeeping PR #220 merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07` after CI #1686 + Product Eval #925);
 - SumoPod remote development/staging: **VERIFIED / NOT PRODUCTION**;
 - public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
 - AutoClick: **DEFERRED BY DESIGN**.

@@ -3,11 +3,13 @@
 > **CLOSED DESIGN CONTRACT:** retained because W03 verification cites this implementation contract. It is not active work; W03 is closed at its documented real-laptop boundary.
 
 
-Status: **APPROVED FOR IMPLEMENTATION**
+Status: **IMPLEMENTED / W03 CLOSED / RETAINED DESIGN CONTRACT**
 
-Date: **2026-09-15**
+Original design date: **2026-09-15** · Reconciled: **2026-09-21**
 
 Source: real-laptop W03 rendered walkthrough on synchronized current main plus direct operator feedback after a second-person usability check.
+
+Closure: the redesign was implemented and the fresh rendered W03 walkthrough passed at the documented real-laptop boundary; see `verification/w03-responsive-flow-implementation-2026-09-15.md`. Later PCS-04 visual/IA closure and PCS-06 integrated browser acceptance do not reopen this design contract.
 
 ## 1. Why this exists
 
@@ -172,7 +174,7 @@ Run remains disabled for unsaved drafts and current stale-validation safeguards 
 
 ## 10. W03 acceptance additions
 
-W03 cannot close until the redesigned current main is rechecked with:
+W03 closure required—and subsequently passed—the redesigned current-main recheck with:
 
 1. Ai, Space, Operations, Settings, and Flow at 390–430px with no accidental page-level horizontal trap;
 2. Settings Runtime actions all reachable at narrow width;
@@ -195,7 +197,7 @@ W03 cannot close until the redesigned current main is rechecked with:
 - no claim that normal Ai chat becomes an autonomous agent;
 - no removal of raw JSON configuration for advanced/debug use.
 
-## 12. Implementation order
+## 12. Historical implementation order
 
 1. responsive app-shell and surface cleanup;
 2. Flow builder shell: collapsible left panel + simplified toolbar;

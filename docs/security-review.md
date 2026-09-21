@@ -1,8 +1,8 @@
 # ECORIONE Security Review Baseline
 
-Last updated: **2026-09-10**
+Last updated: **2026-09-21**
 
-Status: **Batch 12 security/release baseline CLOSED; Fase 6+ security remains evidence-driven**
+Status: **repository security baseline CLOSED / SumoPod staging hardening VERIFIED / future security remains evidence-driven**
 
 Batch 12 closes a production/self-host **baseline**, not an assertion that future vulnerabilities are impossible. Final closure evidence is in `docs/verification/batch12-closure-2026-09-10.md`; current operational priorities are in `docs/current-state-and-next-steps.md`.
 
@@ -68,4 +68,4 @@ DNS/URL validation reduces SSRF surface but does not replace egress firewall/DNS
 
 ## Current progress boundary
 
-The planned platform/production roadmap is **12/12 batches CLOSED (100% of that defined roadmap)**. Security/release code and repository evidence are closed for that scope. Real VPS deployment, Cloudflare cutover, real provider validation, durable external observability, and ongoing host/account security are the next operational scopes and must produce their own evidence.
+The planned platform/production roadmap is **12/12 batches CLOSED (100% of that defined roadmap)**. Security/release code and repository evidence are closed for that scope. Real SumoPod staging deployment and host hardening are now verified through PCS-07..PCS-09, including key-only SSH and a zero-blocker strict inventory. Remaining operational boundaries are public production promotion, optional Cloudflare/public-edge activation, off-host backup/DR, durable external telemetry/alert retention, real-provider production validation, OS patch lifecycle, and ongoing host/account security.

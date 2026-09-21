@@ -1,6 +1,6 @@
 # PE-08 acceptance contract
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-21**
 
 Status: **CLOSED / SATISFIED — PR #180**
 
@@ -194,3 +194,5 @@ The dedicated MCP External HTTPS Acceptance and Desktop Installer workflows were
 ## Claim boundary
 
 PE-08 closes the repository/product baseline at the tested boundaries. It does not prove universal model quality, universal optimizer savings, production-host readiness on an untested target host, rendered-browser UX beyond separately collected runtime evidence, or safety outside the documented policy/test surfaces.
+
+Later PCS-07..PCS-09 work separately verified a real SumoPod **staging** host, governed GitHub-to-staging delivery, reboot persistence, SSH hardening, same-host backup verification, and staging observability. That later evidence does not retroactively change this PE-08 claim boundary and does not constitute public production or off-host DR.
