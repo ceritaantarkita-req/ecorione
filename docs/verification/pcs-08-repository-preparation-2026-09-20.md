@@ -2,7 +2,7 @@
 
 Date: **2026-09-20**
 
-Status: **REPOSITORY IMPLEMENTATION MERGED / HOST BOOTSTRAP PASS / GITHUB ENV + REAL CD EVIDENCE PENDING**
+Status: **CLOSED / PASS**
 
 ## Scope
 
@@ -91,16 +91,176 @@ Denied: this key may only deploy one exact 40-character reviewed SHA.
 
 This proves the dedicated SSH key cannot be used for an interactive shell or an arbitrary remote command at the tested boundary. The only accepted command shape remains the forced `deploy <40-character-sha>` path.
 
-This establishes the host-side least-privilege boundary but does not yet prove the GitHub secret/environment path or a real CD mutation.
+## GitHub environment + first governed deployment evidence
 
-## Pending evidence
+The protected GitHub `staging` Environment was configured with the dedicated deploy identity, trusted known-host entry, host, and deploy user. The repository activation variable was deliberately held at `0` until the exact current `main` revision had passed its required gates.
 
-Before PCS-08 can close:
+The first controlled deployment targeted exact `main`:
 
-1. GitHub `staging` Environment secrets must be configured;
-2. a real current `main` SHA must deploy through the GitHub workflow after both main gates pass;
-3. release receipt, public smoke, ops health, and exact-host evidence must match;
-4. a controlled real rollback exercise must pass;
-5. intended current `main` must be restored after the rollback exercise.
+```text
+target SHA                    38d1bc057827ddd702d603d49bc0cad629d90c5f
+workflow run                  35529468459
+gate                          PASS
+least-privilege SSH identity  PASS
+exact reviewed deploy step    FAIL after runtime mutation
+```
 
-No source-only result is sufficient to claim those remote boundaries.
+The target image `ecorione:staging-38d1bc057827` built successfully and the staging services were recreated. The failure occurred in post-deploy public smoke because the public home returned HTTP 502 about two seconds after all Compose services had merely reached Docker `running` state.
+
+The orchestrator then checked out the prior known-good source revision `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae` and recreated the prior `staging-99523b0` runtime. Its immediate one-shot rollback HTTP check also observed transient 502 and therefore reported rollback verification failure.
+
+Independent host verification after the run proved the runtime had in fact recovered:
+
+```text
+HEAD                         99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+active ai image              ecorione:staging-99523b0
+configured/running services  15 / 15
+public home                  HTTP 200 / TLS verify 0
+unauthenticated /ops         HTTP 401
+```
+
+The operator workflow returned `ECORIONE_STAGING_CD_ENABLED` to `0` after the failed governed run.
+
+This failure therefore produced useful real rollback evidence while exposing a bounded edge-readiness race in both deployment and rollback verification. It is not counted as a successful PCS-08 release.
+
+PR #214 exact head `bd130417484edcedfd1632207d53744cc5024db1` added a bounded public-edge readiness wait without weakening the subsequent full smoke/ops/exact-host gates. It passed CI #1628 + Product Eval #867 and merged as `0b50a426ca2b14202eba769297af6c15a579b09f`. Push `main` then passed CI #1629 + Product Eval #868. Staging Deploy workflow-run gates #32/#33 passed while deployment remained skipped because activation was still disabled.
+
+The host-installed root deploy control was refreshed from exact reviewed merge `0b50a426ca2b14202eba769297af6c15a579b09f` without moving the known-good live checkout. The installed file byte-matched the reviewed Git blob, passed `bash -n`, and the readiness-wait markers were present. The live runtime remained healthy at the prior revision before retry.
+
+The second controlled deployment then passed end-to-end:
+
+```text
+workflow run                  35531374454
+target SHA                    0b50a426ca2b14202eba769297af6c15a579b09f
+gate                          PASS
+least-privilege SSH identity  PASS
+target image                  ecorione:staging-0b50a426ca2b
+public readiness              attempt 4 PASS (home 200, /ops 401)
+public smoke                  PASS
+authenticated /api/ops        healthy=true, 0 unhealthy required services
+exact-host evidence           expectedShaMatched=true
+configured/running services   15 / 15
+worktree                      clean / DETACHED
+deployment env                mode 600 / no placeholders
+release result                PASS
+```
+
+The readiness fix behaved as intended: attempts 1–3 observed home HTTP 502 while `/ops` was already 401, then attempt 4 observed home 200 and `/ops` 401. Only after that bounded readiness gate passed did the full public smoke, authenticated operations snapshot, and exact-host evidence run.
+
+The workflow ended with:
+
+```text
+PASS PCS-08 staging deploy sha=0b50a426ca2b14202eba769297af6c15a579b09f tag=staging-0b50a426ca2b
+```
+
+This is the first successful real GitHub -> SumoPod exact-main deployment through the PCS-08 path.
+
+## Controlled rollback exercise
+
+With automatic CD frozen at `0`, the operator performed a deliberate runtime rollback from:
+
+```text
+current SHA   0b50a426ca2b14202eba769297af6c15a579b09f
+current tag   staging-0b50a426ca2b
+previous SHA  99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+previous tag  staging-99523b0
+```
+
+The precheck matched the release receipt and active runtime. The rollback then checked out the previous source revision detached and applied the prior immutable image tag.
+
+Readiness-aware public verification observed transient home HTTP 502 for attempts 1-4 while `/ops` was already 401, then passed on attempt 5 with home 200 + `/ops` 401. All 15 configured services were running and the active AI image matched `ecorione:staging-99523b0`.
+
+The historical `99523b0...` checkout contains the pre-PR-208 MCP smoke request shape, which returns HTTP 400 because the request is malformed. To verify the rolled-back runtime rather than the obsolete verifier, the reviewed current `production-public-smoke.mjs` from exact main `0b50a426...` was exported to a temporary file and executed without changing the rollback checkout/runtime. That reviewed verifier passed home, protected `/ops` + `/settings`, MCP protected-resource metadata, and the valid unauthenticated MCP 401 challenge.
+
+The remaining rollback gates also passed:
+
+```text
+authenticated /api/ops       healthy=true, 0 unhealthy required services
+exact-host evidence          expectedShaMatched=true
+configured/running services  15 / 15
+worktree                     clean / DETACHED
+public home                  HTTP 200 / TLS verify 0
+unauthenticated /ops         HTTP 401
+rollback result              PASS
+```
+
+The exercise ended with:
+
+```text
+PASS PCS-08 CONTROLLED ROLLBACK EXERCISE
+SHA=99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+TAG=staging-99523b0
+```
+
+No data rollback was performed or claimed.
+
+## Restored intended current revision
+
+The intended current GitHub `main` revision was then restored through the same governed CD path, not by manual runtime mutation.
+
+```text
+workflow run                  35553612685
+target SHA                    0b50a426ca2b14202eba769297af6c15a579b09f
+gate                          PASS
+least-privilege SSH identity  PASS
+public readiness              attempt 5 PASS (home 200, /ops 401)
+public smoke                  PASS
+authenticated /api/ops        healthy=true, 0 unhealthy required services
+exact-host evidence           expectedShaMatched=true
+configured/running services   15 / 15
+worktree                      clean / DETACHED
+deployment env                mode 600 / no placeholders
+restore result                PASS
+```
+
+The workflow ended with:
+
+```text
+PASS PCS-08 staging deploy sha=0b50a426ca2b14202eba769297af6c15a579b09f tag=staging-0b50a426ca2b
+```
+
+The controlled rollback exercise is therefore followed by successful restoration of the intended exact-main source/runtime through the governed GitHub-to-staging path.
+
+## Final restored-host verification
+
+Automatic CD was frozen back to `ECORIONE_STAGING_CD_ENABLED=0` before closure documentation was merged.
+
+The final independent host verification after governed restoration observed:
+
+```text
+release current_sha           0b50a426ca2b14202eba769297af6c15a579b09f
+release current_tag           staging-0b50a426ca2b
+release previous_sha          99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+release previous_tag          staging-99523b0
+HEAD                          0b50a426ca2b14202eba769297af6c15a579b09f
+active AI image               ecorione:staging-0b50a426ca2b
+configured/running services   15 / 15
+public home                   HTTP 200 / TLS verify 0
+unauthenticated /ops          HTTP 401
+expectedShaMatched            true
+clean worktree                true
+non-running services          none
+deployment env                mode 600 / no placeholders
+host evidence                 PASS
+```
+
+The final host evidence was captured at `2026-09-21T02:59:30.689Z`. No host secret, provider key, operator password, private key, database content, prompt, or user data is included in this closure evidence.
+
+## Closure verdict
+
+PCS-08 is **CLOSED / PASS** at the GitHub-to-SumoPod staging continuous-deployment boundary.
+
+The closure proves:
+
+- exact-current-`main` CI + Product Eval gating;
+- protected GitHub staging deployment identity and strict known-host verification;
+- forced-command deploy key that denies interactive/arbitrary SSH use;
+- host-side independent exact-`origin/main` verification;
+- serialized exact-SHA deployment with immutable staging image identity;
+- bounded public-edge readiness before full public/ops/exact-host validation;
+- a successful real GitHub -> SumoPod deployment;
+- a deliberate successful runtime rollback to the prior source/image;
+- successful governed restoration to the intended reviewed revision;
+- final release receipt and host/runtime/public evidence matching the restored revision.
+
+Runtime rollback is not owner-data rollback. Restart persistence, owner backup/restore, SSH hardening, and durable observability remain PCS-09 boundaries. Public production cutover remains separate.
