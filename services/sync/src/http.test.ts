@@ -1,3 +1,5 @@
+import { once } from "node:events";
+import { createServer as createHttpServer, type RequestListener, type Server } from "node:http";
 import { afterEach, describe, expect, it } from "vitest";
 import { decryptFromPeer, encryptForPeer, generateDeviceKeyPair } from "./crypto.js";
 import { openSyncDatabase, type SyncDatabase } from "./db.js";
@@ -6,10 +8,44 @@ import { buildSyncServer } from "./http.js";
 const NOW = "2026-09-09T00:00:00.000Z";
 const OWNER = "owner-token-for-sync-tests-123456789";
 let db: SyncDatabase | undefined;
-afterEach(() => {
+const upstreamServers: Server[] = [];
+
+afterEach(async () => {
   db?.close();
   db = undefined;
+  await Promise.all(
+    upstreamServers.splice(0).map(
+      (server) =>
+        new Promise<void>((resolve, reject) => {
+          server.close((error) => {
+            if (error === undefined) resolve();
+            else reject(error);
+          });
+        }),
+    ),
+  );
 });
+
+async function startUpstream(listener: RequestListener): Promise<string> {
+  const server = createHttpServer(listener);
+  upstreamServers.push(server);
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const address = server.address();
+  if (address === null || typeof address === "string") {
+    throw new Error("upstream test server tidak mendapat TCP address");
+  }
+  return `http://127.0.0.1:${String(address.port)}`;
+}
+
+function setupMcpBridge(connectMcpUrl: string) {
+  db = openSyncDatabase(":memory:");
+  return buildSyncServer(db, {
+    ownerToken: OWNER,
+    connectMcpUrl,
+    clock: () => NOW,
+  });
+}
 
 async function setupPair() {
   db = openSyncDatabase(":memory:");
@@ -136,6 +172,68 @@ describe("Sync device relay", () => {
       headers: { authorization: `Bearer ${second.token}` },
     });
     expect((JSON.parse(empty.body) as { messages: unknown[] }).messages).toHaveLength(0);
+    await app.close();
+  });
+});
+
+describe("Sync MCP bridge", () => {
+  it("memetakan JSON upstream malformed menjadi 502 eksplisit", async () => {
+    const upstream = await startUpstream((_req, res) => {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end("{");
+    });
+    const app = setupMcpBridge(upstream);
+
+    const response = await app.inject({ method: "GET", url: "/mcp" });
+
+    expect(response.statusCode).toBe(502);
+    expect(response.json().error).toMatchObject({
+      type: "UPSTREAM_UNAVAILABLE",
+      message: "Connect MCP mengembalikan JSON tidak valid.",
+    });
+    await app.close();
+  });
+
+  it("tidak membocorkan diagnostic jaringan internal saat Connect MCP gagal", async () => {
+    const upstream = await startUpstream((req) => {
+      req.socket.destroy(new Error("private-upstream-diagnostic"));
+    });
+    const app = setupMcpBridge(upstream);
+
+    const response = await app.inject({ method: "GET", url: "/mcp" });
+
+    expect(response.statusCode).toBe(502);
+    expect(response.json().error).toMatchObject({
+      type: "UPSTREAM_UNAVAILABLE",
+      message: "Connect MCP tidak bisa dijangkau.",
+    });
+    expect(response.body).not.toContain("private-upstream-diagnostic");
+    expect(response.body).not.toContain(upstream);
+    await app.close();
+  });
+
+  it("menolak redirect Connect MCP tanpa mengikuti target", async () => {
+    let followed = false;
+    const upstream = await startUpstream((req, res) => {
+      if (req.url === "/mcp") {
+        res.writeHead(302, { location: "/redirect-target" });
+        res.end();
+        return;
+      }
+      followed = true;
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end('{"ok":true}');
+    });
+    const app = setupMcpBridge(upstream);
+
+    const response = await app.inject({ method: "GET", url: "/mcp" });
+
+    expect(response.statusCode).toBe(502);
+    expect(response.json().error).toMatchObject({
+      type: "UPSTREAM_UNAVAILABLE",
+      message: "Connect MCP tidak bisa dijangkau.",
+    });
+    expect(followed).toBe(false);
     await app.close();
   });
 });

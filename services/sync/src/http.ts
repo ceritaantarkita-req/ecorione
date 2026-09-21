@@ -43,6 +43,8 @@ const RelayPostSchema = z.object({
   ciphertext: z.string().min(1).max(4_000_000),
 });
 
+const CONNECT_MCP_FORWARD_TIMEOUT_MS = 15_000;
+
 interface DeviceRow {
   id: string;
   name: string;
@@ -290,24 +292,25 @@ export function buildSyncServer(
         headers: requestHeaders(req),
         ...(req.method === "POST" ? { body: JSON.stringify(req.body ?? {}) } : {}),
         redirect: "error",
+        signal: AbortSignal.timeout(CONNECT_MCP_FORWARD_TIMEOUT_MS),
       });
-    } catch (error) {
-      throw new BadGatewayError(
-        `Connect MCP tidak bisa dijangkau: ${error instanceof Error ? error.message : String(error)}`,
-      );
+    } catch {
+      throw new BadGatewayError("Connect MCP tidak bisa dijangkau.");
     }
     const contentType = response.headers.get("content-type");
     const wwwAuthenticate = response.headers.get("www-authenticate");
+    const text = await response.text();
+    let payload: unknown = text;
+    if (contentType?.includes("application/json") === true && text.length > 0) {
+      try {
+        payload = JSON.parse(text) as unknown;
+      } catch {
+        throw new BadGatewayError("Connect MCP mengembalikan JSON tidak valid.");
+      }
+    }
     if (contentType !== null) reply.header("content-type", contentType);
     if (wwwAuthenticate !== null) reply.header("www-authenticate", wwwAuthenticate);
-    const text = await response.text();
-    return await reply
-      .code(response.status)
-      .send(
-        contentType?.includes("application/json") === true && text.length > 0
-          ? JSON.parse(text)
-          : text,
-      );
+    return await reply.code(response.status).send(payload);
   }
 
   app.get("/.well-known/oauth-protected-resource", async (req, reply) =>
