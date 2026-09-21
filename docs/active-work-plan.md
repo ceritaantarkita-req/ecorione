@@ -1,8 +1,8 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-20**
+Last updated: **2026-09-21**
 
-Status: **PRODUCT EVOLUTION CLOSED / PCS-07 CLOSED / PCS-08 ACTIVE**
+Status: **PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / NO ACTIVE IMPLEMENTATION QUEUE**
 
 ## Latest repository-hardening closure
 
@@ -42,7 +42,7 @@ normal tests                    991 PASS + 2 skipped
 Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).  
 Closure evidence: [verification/pe-08-product-closure-2026-09-19.md](verification/pe-08-product-closure-2026-09-19.md).
 
-## Active next scope
+## Post-closure roadmap status
 
 There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSED / PASS. The operator has explicitly approved the separate post-closure roadmap [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md); it must not be renamed PE-09 or Batch 13.
 
@@ -62,7 +62,11 @@ There is **no active Product Evolution batch**. PE-00 through PE-08 remain CLOSE
 
 **PCS-07 SumoPod remote staging deployment is CLOSED / PASS.** The actual SumoPod host passes reviewed-source deployment, isolated Compose/volume inventory, public HTTPS reachability, protected operator surfaces, authenticated `/api/ops` health, sanitized exact-host evidence, a valid unauthenticated MCP OAuth challenge, and the final real-browser governed Flow journey. In the final Trigger-only v2 graph, execution authority was ready, `core/trigger/v1` was granted, Trigger reached `SUCCEEDED`, and the run reached `COMPLETED` without a paid provider call. The live runtime remains the reviewed deployment SHA `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`; PR #208 corrected only the public smoke verifier and merged as `59430c4b72a704d1fd6c6176d12b13fa27ddf674` after CI #1581 + Product Eval #820. Evidence: [verification/pcs-07-sumopod-host-closure-2026-09-20.md](verification/pcs-07-sumopod-host-closure-2026-09-20.md).
 
-**PCS-08 GitHub -> staging continuous deployment is ACTIVE.** PR #210 exact head `4a5fa9d9d776eae3895a8e0b8e6b73013e3f476f` passed CI #1613 + Product Eval #852 and merged as `652588e00dca5a04c8b39081fb6574a3db508ba1`. The merged repository implementation adds exact-current-main gate convergence across CI + Product Eval, a protected `staging` GitHub Environment, strict host-key SSH, a dedicated forced-command deploy user, exact `origin/main` verification on SumoPod, serialized deploys, public/ops/exact-host post-deploy gates, non-secret release receipts, and runtime rollback to the prior checkout/image tag on failure. No blind polling `git pull` loop or Docker-group membership is introduced for the deploy account. Runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). Repository evidence: [verification/pcs-08-repository-preparation-2026-09-20.md](verification/pcs-08-repository-preparation-2026-09-20.md). Real host + GitHub secret/environment evidence remains required before PCS-08 can close.
+**PCS-08 GitHub -> staging continuous deployment is CLOSED / PASS.** PR #210 introduced the reviewed CD boundary; closure PR #215 merged as `f0aa9ca97518e3b7e57fc6bc7a58e0ed7761ba05` after the governed deploy/rollback/restore evidence completed. Exact-current-main gating, protected staging environment secrets, forced-command deploy access, serialized exact-revision deploys, post-deploy public/Ops/exact-host checks, release receipts, and tested runtime rollback are proven. Runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). Evidence: [verification/pcs-08-repository-preparation-2026-09-20.md](verification/pcs-08-repository-preparation-2026-09-20.md).
+
+**PCS-09 staging persistence/security/backup/observability is CLOSED / PASS.** Exact reviewed runtime `0f332c73dc7b363bffecdeecae921d805d5ae131` passed key-only SSH hardening with fresh-session proof, strict host inventory with zero blockers, real full-VPS reboot persistence, 12-volume same-host cold backup with isolated restore-content verification, and final credentialed Operations + host-resource evidence. Closure PR #218 head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918 passed. Off-host DR and production promotion remain non-claims. Evidence: [verification/pcs-09-repository-preparation-2026-09-21.md](verification/pcs-09-repository-preparation-2026-09-21.md).
+
+**PCS-10 closure/documentation convergence is CLOSED / PASS when this converged state is on `main`.** Current-state, active-work, staging, security/backup, documentation-map, repository-rule, Cloudflare, and decision documents now agree on the verified staging boundary. No PCS implementation scope remains active.
 
 Current execution order:
 
@@ -80,7 +84,7 @@ PCS-00 baseline lock
  -> PCS-10 closure/docs
 ```
 
-The SumoPod target is a **remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source.
+The SumoPod target is a **verified remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source. The current proven staging application revision is `0f332c73dc7b363bffecdeecae921d805d5ae131`; later documentation merges intentionally did not redeploy it.
 
 ## Closed PE-08 boundary
 
@@ -134,5 +138,5 @@ PE-08          CLOSED / PASS
 - Brain remains rebuildable/derived, not canonical persistence;
 - MAX_AUTONOMY_V1 stays L3;
 - no paid hosted evidence without explicit authorization;
-- public production cutover remains deferred; operator-owned SumoPod remote staging is approved under PCS-07..PCS-09;
+- public production cutover remains deferred as a separate explicit operator decision; operator-owned SumoPod remote staging is verified through PCS-07..PCS-09;
 - AutoClick remains deferred by design.
