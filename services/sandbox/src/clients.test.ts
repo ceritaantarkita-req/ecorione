@@ -21,7 +21,8 @@ describe("Sandbox control-plane HTTP bounds", () => {
 
   it("membatasi waktu tunggu Hub authority/evaluate", async () => {
     const hub = agent.get("http://hub.local");
-    hub.intercept({ path: "/v1/authority/authorize", method: "POST" })
+    hub
+      .intercept({ path: "/v1/authority/authorize", method: "POST" })
       .reply(200, {
         outcome: "ALLOW",
         reason: "ok",
@@ -51,7 +52,8 @@ describe("Sandbox control-plane HTTP bounds", () => {
 
   it("membatasi waktu tunggu RnD trace", async () => {
     const rnd = agent.get("http://rnd.local");
-    rnd.intercept({ path: "/v1/traces", method: "POST" })
+    rnd
+      .intercept({ path: "/v1/traces", method: "POST" })
       .reply(200, { id: "trace-1" })
       .delay(250);
 
