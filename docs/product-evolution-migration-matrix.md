@@ -1,8 +1,10 @@
 # PE-00 — Project migration and ownership matrix
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-21**
 
-Status: **ACCEPTED CONTRACT FOR PE-01**
+Status: **ACCEPTED CONTRACT / IMPLEMENTED UNDER CLOSED PE-01**
+
+This matrix is retained as the migration/ownership contract that PE-01 implemented. It is not a pending migration plan.
 
 ## Constants
 
