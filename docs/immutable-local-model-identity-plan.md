@@ -3,16 +3,22 @@
 > **HISTORICAL W13 PLAN:** retained because implementation/source comments cite this plan. W13 is already closed with documented limitations; this file is not a current work queue.
 
 
-Status: **PENDING — DO NOT ACTIVATE UNTIL UX/PRODUCT VALIDATION CLOSES**  
-Date: **2026-09-12**
+Status: **HISTORICAL W13 PLAN / IMPLEMENTED BOUNDARY CLOSED WITH DOCUMENTED LIMITATIONS**  
+Plan date: **2026-09-12** · Reconciled: **2026-09-21**
 
 The local rehearsal/benchmark/observability evidence reports `gemma4:latest`. That is valid historical runtime evidence but a mutable alias, not an immutable production identity.
+
+## Current repository outcome
+
+The current Connect implementation now models local identity separately from the requested tag, carries digest/provenance state, supports runtime-backed provenance checks, keeps declared-but-unverified identity unpinned, rejects mutable model aliases on runtime-setting mutation unless an immutable digest accompanies them, and bypasses exact local cache identity when the model is not verified. See `services/connect/src/local-model-identity.ts`, `services/connect/src/providers/local-model-provenance.ts`, `services/connect/src/runtime-settings.ts`, and ADR-14. Historical evidence containing `gemma4:latest` remains unchanged because it records the runtime identity observed at that time.
+
+The numbered section below is the original prepared plan retained for provenance; it is not an active work queue.
 
 ## Goal
 
 Make durable model identity claims depend on a pinned immutable identity while preserving historical evidence exactly as recorded.
 
-## Planned implementation
+## Historical planned implementation
 
 1. Define a Connect-owned local model identity record containing runtime, requested alias, immutable resolved identity/digest, resolution timestamp, and source.
 2. Resolve the local runtime identity at startup/preflight through the existing local provider boundary; never infer a digest from the alias string.
