@@ -60,6 +60,8 @@ restore_boundary=encrypted bundle + embedded backup integrity verified; Docker r
 
 Node syntax checks passed for both Node entrypoints and Bash syntax validation passed for the transfer helper.
 
+PR #250 initial exact head `7696da4f612d8ef383646bfa70b44def61692950` then exposed a valid repository gate failure: CI #1760 stopped at the read-only Prettier format check and identified only the two new Node scripts plus the new source-contract test. The gate was not weakened. Those three files were rewritten by the repository's exact locked Prettier toolchain, and the temporary formatting helper removed itself from the final tree before final exact-head gates were rerun.
+
 This is implementation evidence only. It is **not** SumoPod runtime evidence and does not prove a real off-host copy or replacement-host recovery.
 
 ## Remaining real-host gates
