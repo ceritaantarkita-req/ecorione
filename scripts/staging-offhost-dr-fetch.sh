@@ -114,6 +114,8 @@ BUNDLE_NAME="$(read_field bundle_filename)"
 META_NAME="$(read_field metadata_filename)"
 BUNDLE_SHA="$(read_field bundle_sha256)"
 META_SHA="$(read_field metadata_sha256)"
+CANARY_NAME="$(read_field canary_filename)"
+CANARY_SHA="$(read_field canary_sha256)"
 
 [[ "$BUNDLE_NAME" =~ ^ecorione-dr-[A-Za-z0-9_.-]+\.ecdr$ ]] || {
   echo "Invalid bundle filename in export manifest." >&2
@@ -123,8 +125,12 @@ META_SHA="$(read_field metadata_sha256)"
   echo "Invalid metadata filename in export manifest." >&2
   exit 1
 }
-[[ "$BUNDLE_SHA" =~ ^[0-9a-f]{64}$ && "$META_SHA" =~ ^[0-9a-f]{64}$ ]] || {
+[[ "$BUNDLE_SHA" =~ ^[0-9a-f]{64}$ && "$META_SHA" =~ ^[0-9a-f]{64}$ && "$CANARY_SHA" =~ ^[0-9a-f]{64}$ ]] || {
   echo "Invalid artifact hashes in export manifest." >&2
+  exit 1
+}
+[[ "$CANARY_NAME" =~ ^ecorione-dr-[A-Za-z0-9_.-]+\.canary\.json$ ]] || {
+  echo "Invalid canary filename in export manifest." >&2
   exit 1
 }
 [[ "${BUNDLE_NAME%.ecdr}" == "${META_NAME%.json}" ]] || {
@@ -135,11 +141,17 @@ META_SHA="$(read_field metadata_sha256)"
   echo "Export manifest stem does not match bundle." >&2
   exit 1
 }
+[[ "$CANARY_NAME" == "${BUNDLE_NAME%.ecdr}.canary.json" ]] || {
+  echo "Semantic canary stem does not match bundle." >&2
+  exit 1
+}
 
 BUNDLE_PATH="$(fetch_one "$BUNDLE_NAME")"
 META_PATH="$(fetch_one "$META_NAME")"
+CANARY_PATH="$(fetch_one "$CANARY_NAME")"
 ACTUAL_BUNDLE_SHA="$(sha256sum "$BUNDLE_PATH" | cut -d' ' -f1)"
 ACTUAL_META_SHA="$(sha256sum "$META_PATH" | cut -d' ' -f1)"
+ACTUAL_CANARY_SHA="$(sha256sum "$CANARY_PATH" | cut -d' ' -f1)"
 
 [[ "$ACTUAL_BUNDLE_SHA" == "$BUNDLE_SHA" ]] || {
   echo "Retrieved bundle checksum mismatch." >&2
@@ -147,6 +159,10 @@ ACTUAL_META_SHA="$(sha256sum "$META_PATH" | cut -d' ' -f1)"
 }
 [[ "$ACTUAL_META_SHA" == "$META_SHA" ]] || {
   echo "Retrieved metadata checksum mismatch." >&2
+  exit 1
+}
+[[ "$ACTUAL_CANARY_SHA" == "$CANARY_SHA" ]] || {
+  echo "Retrieved semantic canary checksum mismatch." >&2
   exit 1
 }
 
@@ -163,8 +179,10 @@ retrieved_at=$(date -u +%FT%TZ)
 export_manifest_filename=$MANIFEST_NAME
 bundle_filename=$BUNDLE_NAME
 metadata_filename=$META_NAME
+canary_filename=$CANARY_NAME
 bundle_sha256=$BUNDLE_SHA
 metadata_sha256=$META_SHA
+canary_sha256=$CANARY_SHA
 failure_domain_ack=1
 retrieval_verified=1
 claim_boundary=artifacts independently fetched from acknowledged off-host SSH target and matched retained export-manifest hashes
@@ -174,6 +192,8 @@ chmod 0600 "$RETRIEVAL_RECEIPT"
 echo "PASS ECORIONE DR artifacts retrieved from independent off-host target"
 echo "bundle=$BUNDLE_PATH"
 echo "metadata=$META_PATH"
+echo "canary_state=$CANARY_PATH"
 echo "retrieval_receipt=$RETRIEVAL_RECEIPT"
 echo "bundle_sha256=$BUNDLE_SHA"
 echo "metadata_sha256=$META_SHA"
+echo "canary_sha256=$CANARY_SHA"
