@@ -101,7 +101,8 @@ for (const [boundary, source] of [
 if (
   !mcpAuth.includes("keyForKid") ||
   !mcpAuth.includes("unknownKidRefreshCooldownMs") ||
-  !mcpAuth.includes("lastUnknownKidRefreshAtMs")
+  !mcpAuth.includes("lastUnknownKidRefreshAtMs") ||
+  !mcpAuth.includes("lastUnknownKidRefreshFailed")
 ) {
   findings.push("MCP JWKS rotation refresh must remain bounded");
 }
