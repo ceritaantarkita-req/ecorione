@@ -214,7 +214,7 @@ async function main() {
     ECORIONE_EXPECTED_SHA: restore.sourceSha,
   };
   if (overlay !== null) {
-    hostEvidenceEnv.ECORIONE_COMPOSE_OVERLAY = resolve(overlay).slice(ROOT.length + 1);
+    hostEvidenceEnv.ECORIONE_COMPOSE_OVERLAY = overlayRaw;
   } else {
     delete hostEvidenceEnv.ECORIONE_COMPOSE_OVERLAY;
   }
