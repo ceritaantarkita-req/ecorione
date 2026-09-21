@@ -77,6 +77,7 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
         method: "POST",
         headers,
         body: JSON.stringify(input),
+        redirect: "error",
         ...(signal === undefined ? {} : { signal }),
       });
     } catch (error) {
