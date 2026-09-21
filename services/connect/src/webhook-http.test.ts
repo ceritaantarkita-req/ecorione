@@ -21,12 +21,13 @@ afterEach(async () => {
   await agent.close();
 });
 
-function build() {
+function build(webhookForwardTimeoutMs?: number) {
   return buildConnectServer({
     token: "internal-secret",
     localBaseUrl: "http://local-model.invalid/v1",
     localModelTag: "qwen3:8b-instruct-q4_K_M",
     flowUrl: "http://flow.local",
+    ...(webhookForwardTimeoutMs === undefined ? {} : { webhookForwardTimeoutMs }),
     credentialVault: {
       get(provider, purpose) {
         return provider === "webhook" && purpose === "tokens" ? ROOT_SECRET : undefined;
@@ -75,6 +76,40 @@ describe("PE-05 Connect webhook ingress", () => {
       payload: { deliveryId: "delivery-001", payload: { ok: true } },
     });
     expect(wrong.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it("membatasi waktu tunggu Flow dan memetakan timeout sebagai 502 tanpa diagnostic internal", async () => {
+    agent
+      .get("http://flow.local")
+      .intercept({
+        path: `/v1/webhooks/${HOOK_ID}`,
+        method: "POST",
+      })
+      .reply(200, {
+        triggerId: "trg_webhook001",
+        graphId: "fg_webhook001",
+        graphVersion: 1,
+        workflowId: "wf_webhook001",
+        operationId: "op_webhook001",
+        deduplicated: false,
+      })
+      .delay(250);
+
+    const app = build(25);
+    const response = await app.inject({
+      method: "POST",
+      url: `/v1/webhooks/${HOOK_ID}`,
+      headers: { "x-ecorione-webhook-token": deriveWebhookToken(ROOT_SECRET, HOOK_ID) },
+      payload: { deliveryId: "delivery-timeout-001", payload: { ok: true } },
+    });
+
+    expect(response.statusCode).toBe(502);
+    expect(response.json().error).toMatchObject({
+      type: "UPSTREAM_UNAVAILABLE",
+      message: "Flow webhook ingress tidak tersedia.",
+    });
+    expect(response.body).not.toContain("flow.local");
     await app.close();
   });
 

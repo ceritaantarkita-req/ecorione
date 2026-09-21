@@ -68,6 +68,7 @@ const mcpHttp = readFileSync("services/connect/src/mcp/http.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
 const sandboxClients = readFileSync("services/sandbox/src/clients.ts", "utf8");
+const connectWebhook = readFileSync("services/connect/src/webhook-http.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 
@@ -120,6 +121,13 @@ if (
   !sandboxClients.includes("signal: signal()")
 ) {
   findings.push("Sandbox control-plane HTTP must remain timeout-bounded");
+}
+if (
+  !connectWebhook.includes("AbortSignal.timeout") ||
+  !connectWebhook.includes("DEFAULT_WEBHOOK_FORWARD_TIMEOUT_MS") ||
+  !connectWebhook.includes("BadGatewayError")
+) {
+  findings.push("Connect webhook -> Flow forwarding must remain timeout-bounded");
 }
 if (
   !mcpAuth.includes("McpAuthDependencyError") ||
