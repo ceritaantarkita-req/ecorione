@@ -64,6 +64,7 @@ const localProvenance = readFileSync(
   "utf8",
 );
 const mcpAuth = readFileSync("services/connect/src/mcp/auth.ts", "utf8");
+const mcpHttp = readFileSync("services/connect/src/mcp/http.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
@@ -103,6 +104,13 @@ if (
   !mcpAuth.includes("lastUnknownKidRefreshAtMs")
 ) {
   findings.push("MCP JWKS rotation refresh must remain bounded");
+}
+if (
+  !mcpAuth.includes("McpAuthDependencyError") ||
+  !mcpAuth.includes("parseJwtPart") ||
+  !mcpHttp.includes("error instanceof McpAuthDependencyError")
+) {
+  findings.push("MCP auth error semantics must distinguish invalid tokens from JWKS dependency failures");
 }
 if (!mcpTypes.includes("allowInsecureLoopback") || !mcpTypes.includes("credentialRef"))
   findings.push("MCP transport credential/HTTPS schema missing");
