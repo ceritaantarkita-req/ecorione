@@ -264,4 +264,4 @@ authorized Project question
 -> comparative baseline vs narrowed metrics
 ```
 
-The exact reviewed PE-07 head must pass CI, Product Eval, and every relevant acceptance gate before PE-08 may begin.
+Historical sequencing gate: the exact reviewed PE-07 head had to pass CI, Product Eval, and every relevant acceptance gate before PE-08 could begin. That gate was satisfied; PE-08 and PCS-00..PCS-10 subsequently closed.
