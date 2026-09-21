@@ -15,7 +15,7 @@ Before changing the repo:
 
 Dated audits and `docs/verification/` are evidence, not current work queues.
 
-## Current state — 2026-09-20
+## Current state — 2026-09-21
 
 - original Batch 1–12 / W / F6 baseline: **CLOSED**;
 - Windows runtime + installer: **VERIFIED**;
@@ -40,8 +40,10 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PCS-05 Flow runtime defect closure: **CLOSED / PASS** (PR #199; CI #1537; Product Eval #776; merge `f58923b8261104c8aec331f506a68f8cf5fe5e7e`);
 - PCS-06 Integrated browser/regression acceptance: **CLOSED / PASS** (PR #201; CI #1553; Product Eval #792; Browser Acceptance #13; merge `0a8f7619567500acaec0758c400d529367baf0e5`);
 - PCS-07 SumoPod remote staging deployment: **CLOSED / PASS**;
-- PCS-08 GitHub -> staging continuous deployment: **ACTIVE / REPOSITORY IMPLEMENTATION MERGED** (PR #210; CI #1613; Product Eval #852; merge `652588e00dca5a04c8b39081fb6574a3db508ba1`);
-- SumoPod remote development/staging: **APPROVED UNDER PCS-07..PCS-09**;
+- PCS-08 GitHub -> staging continuous deployment: **CLOSED / PASS** (implementation PR #210; closure PR #215; closure merge `f0aa9ca97518e3b7e57fc6bc7a58e0ed7761ba05`);
+- PCS-09 staging persistence/security/backup/observability: **CLOSED / PASS** (closure PR #218 head `ece59440d742f59252046562cf3ba86e7911b46f`; CI #1678; Product Eval #917; merge `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918);
+- PCS-10 closure/documentation convergence: **CLOSED / PASS** when this converged state is on `main`;
+- SumoPod remote development/staging: **VERIFIED / NOT PRODUCTION**;
 - public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
 - AutoClick: **DEFERRED BY DESIGN**.
 
@@ -85,7 +87,7 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 
 There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
 
-**PCS-00 through PCS-07 are CLOSED / PASS; PCS-08 GitHub-to-staging continuous deployment is ACTIVE.** Use `docs/staging-continuous-deployment.md` and `docs/verification/pcs-08-repository-preparation-2026-09-20.md`. The PCS-08 implementation must deploy only exact current `main` after required gates, use a least-privilege forced-command SSH boundary, preserve host/GitHub secret isolation, fail the release when health/smoke/evidence fails, and retain a tested runtime rollback path. No blind polling `git pull` loop and no deploy-user Docker-group membership. GitHub `main` remains source of truth; treat SumoPod evidence as staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
+**PCS-00 through PCS-10 are CLOSED / PASS at documented boundaries.** For staging maintenance use `docs/staging-continuous-deployment.md`, `docs/sumopod-staging.md`, and `docs/staging-hardening-backup-observability.md`. Deploy only exact reviewed `main` through the least-privilege governed CD path; preserve host/GitHub secret isolation, fail releases when health/smoke/evidence fails, and retain the tested runtime rollback path. GitHub `main` remains source of truth; SumoPod evidence is staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not create PCS-11, reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
 
 ## Git / closure discipline
 
