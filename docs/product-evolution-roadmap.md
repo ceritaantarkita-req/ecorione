@@ -1,8 +1,10 @@
 # ECORIONE — Product Evolution Roadmap
 
-Last updated: **2026-09-20**
+Last updated: **2026-09-21**
 
 Status: **CLOSED — PE-00..PE-08 PASS**
+
+The follow-on PCS-00..PCS-10 roadmap is also CLOSED / PASS. This file remains the historical/canonical record of Product Evolution; current operating state is in `current-state-and-next-steps.md`.
 
 This is the explicit roadmap that follows the closed Batch 1–12 / W / F6 baseline. It uses the prefix **PE (Product Evolution)** so it cannot be confused with old Batch numbers.
 
