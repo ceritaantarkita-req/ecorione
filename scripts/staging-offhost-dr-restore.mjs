@@ -43,7 +43,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     if (!argv[i].startsWith("--") || i + 1 >= argv.length) {
       fail(
-        "Usage: staging-offhost-dr-restore.mjs --bundle <file> --metadata <json> --private-key <pem> --retrieval-receipt <env>",
+        "Usage: staging-offhost-dr-restore.mjs --bundle <file> --metadata <json> --private-key <pem> --retrieval-receipt <env> --canary-state <json>",
       );
     }
     out[argv[i].slice(2)] = argv[++i];
@@ -363,7 +363,13 @@ async function main() {
   }
 
   const args = parseArgs(process.argv.slice(2));
-  if (!args.bundle || !args.metadata || !args["private-key"] || !args["retrieval-receipt"]) {
+  if (
+    !args.bundle ||
+    !args.metadata ||
+    !args["private-key"] ||
+    !args["retrieval-receipt"] ||
+    !args["canary-state"]
+  ) {
     fail(
       "Usage: staging-offhost-dr-restore.mjs --bundle <file> --metadata <json> --private-key <pem> --retrieval-receipt <env>",
     );
@@ -373,16 +379,21 @@ async function main() {
   const metadataPath = resolve(args.metadata);
   const privateKeyPath = resolve(args["private-key"]);
   const retrievalReceiptPath = resolve(args["retrieval-receipt"]);
+  const canaryStatePath = resolve(args["canary-state"]);
   for (const [path, label] of [
     [bundlePath, "bundle"],
     [metadataPath, "metadata"],
     [privateKeyPath, "DR private key"],
     [retrievalReceiptPath, "retrieval receipt"],
+    [canaryStatePath, "semantic canary state"],
   ]) {
     assertRegular(path, label);
   }
   if ((lstatSync(retrievalReceiptPath).mode & 0o777) !== 0o600) {
     throw new Error("retrieval receipt must be mode 600");
+  }
+  if ((lstatSync(canaryStatePath).mode & 0o777) !== 0o600) {
+    throw new Error("semantic canary state must be mode 600");
   }
 
   const retrieval = Object.create(null);
@@ -396,7 +407,8 @@ async function main() {
     retrieval.failure_domain_ack !== "1" ||
     retrieval.retrieval_verified !== "1" ||
     !HASH_RE.test(retrieval.bundle_sha256 ?? "") ||
-    !HASH_RE.test(retrieval.metadata_sha256 ?? "")
+    !HASH_RE.test(retrieval.metadata_sha256 ?? "") ||
+    !HASH_RE.test(retrieval.canary_sha256 ?? "")
   ) {
     throw new Error("Invalid off-host retrieval receipt");
   }
@@ -404,6 +416,7 @@ async function main() {
   const metadata = parseMetadata(metadataPath);
   const actualBundleSha = await sha256File(bundlePath);
   const actualMetadataSha = await sha256File(metadataPath);
+  const actualCanarySha = await sha256File(canaryStatePath);
   if (
     basename(bundlePath) !== metadata.bundleFilename ||
     statSync(bundlePath).size !== metadata.ciphertextBytes ||
@@ -411,7 +424,9 @@ async function main() {
     retrieval.bundle_filename !== basename(bundlePath) ||
     retrieval.metadata_filename !== basename(metadataPath) ||
     retrieval.bundle_sha256 !== actualBundleSha ||
-    retrieval.metadata_sha256 !== actualMetadataSha
+    retrieval.metadata_sha256 !== actualMetadataSha ||
+    retrieval.canary_filename !== basename(canaryStatePath) ||
+    retrieval.canary_sha256 !== actualCanarySha
   ) {
     throw new Error("Encrypted bundle/retrieval identity or integrity mismatch");
   }
@@ -493,6 +508,8 @@ async function main() {
       bundleFilename: basename(bundlePath),
       retrievalReceiptFilename: basename(retrievalReceiptPath),
       retrievedFromIndependentTarget: true,
+      semanticCanaryStateFilename: basename(canaryStatePath),
+      semanticCanarySha256: actualCanarySha,
       ciphertextSha256: metadata.ciphertextSha256,
       restoredVolumes: restored.map((row) => ({
         name: row.volume,
