@@ -53,7 +53,10 @@ export class LocalModelDigestMismatchError extends Error {
 
 export type FetchLike = (
   url: string,
-  init?: { signal?: AbortSignal | undefined },
+  init?: {
+    signal?: AbortSignal | undefined;
+    redirect?: "error" | "follow" | "manual" | undefined;
+  },
 ) => Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }>;
 
 export interface LocalProvenanceInput {
@@ -123,7 +126,10 @@ async function observeDigest(
   const doFetch = input.fetchImpl ?? (globalThis.fetch as unknown as FetchLike);
   let response: Awaited<ReturnType<FetchLike>>;
   try {
-    response = await doFetch(`${base}/api/tags`, { signal: input.signal });
+    response = await doFetch(`${base}/api/tags`, {
+      signal: input.signal,
+      redirect: "error",
+    });
   } catch {
     return { detail: "Runtime lokal tidak mengekspos provenance API yang bisa dihubungi." };
   }
