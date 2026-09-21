@@ -84,6 +84,14 @@ PCS-09 will create and verify a same-host staging backup before any disaster-rec
 
 Same-host backup is not off-host disaster recovery. A future off-host copy to a separate failure domain is required before total-VPS-loss recovery can be claimed.
 
+Repository backup command:
+
+    sudo -E pnpm staging:pcs09:backup
+
+The helper refuses a mismatched release receipt or dirty tracked worktree, estimates free-space headroom before stopping anything, stops only the ECORIONE staging Compose project, snapshots every project volume while cold, restores each archive into a temporary Docker volume, compares deterministic file-content fingerprints and counts, removes temporary verification volumes, and guarantees a staging restart attempt through an EXIT trap.
+
+Root-only manifests are stored under /var/lib/ecorione-staging/backups. Deployment env, operator credentials, SSH private keys, and the Connect Vault master key are intentionally excluded.
+
 ## Observability boundary
 
 The existing governed Operations surface already exposes required owner health, HTTP errors and latency, model-call/token/cost counters, MCP calls, Flow runs, ECX counters, recent distributed traces, and owner-process RSS/heap.
