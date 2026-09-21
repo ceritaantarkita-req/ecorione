@@ -7,7 +7,7 @@ This file is the single navigation entry point for repository documentation. If 
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current state and explicit deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; no implementation or operational convergence scope is active.
+2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; Off-host Backup & DR is the only active operational scope.
 3. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — CLOSED PCS-00..PCS-10 product/UX + SumoPod staging roadmap.
 4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — closed PE product model and ownership rules.
 5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — closed PE-00 through PE-08 batch plan.
@@ -104,6 +104,7 @@ Use the owner-specific runbook when touching its subsystem:
 - [extension-operations.md](extension-operations.md)
 - [data-rebuild-operations.md](data-rebuild-operations.md)
 - [data-governance-dr-operations.md](data-governance-dr-operations.md)
+- [offhost-dr-recovery.md](offhost-dr-recovery.md) — active SumoPod off-host backup and total-host-loss recovery workstream.
 - [multimodal-operations.md](multimodal-operations.md)
 - [voice-operations.md](voice-operations.md)
 - [webhook-operations.md](webhook-operations.md)
@@ -120,7 +121,7 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current operating/deferred boundaries
 
-- active implementation/operational scope — **NONE**; latest-main staging convergence is CLOSED / PASS at the runtime boundary.
+- active operational scope — **Off-host Backup & DR / CHECKPOINT 1 REPOSITORY FOUNDATION**; real independent copy and total-host-loss application recovery remain pending runtime evidence.
 - SumoPod remote development/staging — **VERIFIED** at application revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` through governed Staging Deploy #293.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
