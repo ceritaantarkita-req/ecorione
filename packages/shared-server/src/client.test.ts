@@ -65,6 +65,22 @@ describe("httpJson", () => {
     } satisfies Partial<RemoteServiceError>);
   });
 
+  it("menolak redirect internal alih-alih mengikuti sambil membawa bearer token", async () => {
+    const pool = mockAgentFor("http://svc.local");
+    pool
+      .intercept({
+        path: "/v1/redirect",
+        method: "GET",
+        headers: { authorization: "Bearer tok-redirect" },
+      })
+      .reply(302, "", { headers: { location: "/v1/final" } });
+    pool.intercept({ path: "/v1/final", method: "GET" }).reply(200, { ok: true });
+
+    await expect(
+      httpJson("http://svc.local/v1/redirect", { token: "tok-redirect" }),
+    ).rejects.toThrow();
+  });
+
   it("menangani respons body kosong (mis. 204) tanpa melempar saat parsing JSON", async () => {
     const pool = mockAgentFor("http://svc.local");
     pool.intercept({ path: "/v1/empty", method: "DELETE" }).reply(204, "");
