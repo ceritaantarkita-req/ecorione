@@ -178,9 +178,27 @@ Strict evidence confirmed:
 
 The two Connect warnings remain informational because runtime settings and Vault ciphertext are absent in this staging state; PCS-09 makes no persistence claim for absent files.
 
+## VPS reboot baseline captured
+
+The pre-reboot PCS-09 persistence baseline was captured from the real staging host:
+
+```text
+statePath     /srv/ecorione-staging/.ecorione/evidence/pcs09-vps-restart-state.json
+bootId        38133aa8-fcd7-41b5-8729-4c6dabb0206a
+headSha       0f332c73dc7b363bffecdeecae921d805d5ae131
+currentTag    staging-0f332c73dc7b
+serviceCount  15
+```
+
+Connect runtime settings, Vault ciphertext, and spend-budget fingerprints remained `present=false`, consistent with the earlier host inventories.
+
+The baseline PASS proves the before-state only. PCS-09 does not claim reboot persistence until a real VPS reboot changes Linux `boot_id` and the post phase verifies release/source identity, service fleet, volume inventory, present Connect fingerprints, public smoke, authenticated Ops, and exact-host evidence.
+
 ## Pending PCS-09 evidence
 
-1. actual VPS reboot persistence evidence;
-2. same-host verified backup and isolated restore evidence;
-3. staging Operations + host resource evidence;
-4. sanitized final closure.
+1. host-wide pre-reboot restart-policy inventory for unrelated shared-VPS workloads;
+2. operator-approved full VPS reboot;
+3. PCS-09 post-reboot persistence verification;
+4. same-host verified backup and isolated restore evidence;
+5. staging Operations + host resource evidence;
+6. sanitized final closure.
