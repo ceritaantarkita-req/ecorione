@@ -109,6 +109,32 @@ describe("MCP OAuth resource server", () => {
     expect(fetches).toBe(2);
   });
 
+  it("keeps JWKS refresh outages as dependency failures during cooldown", async () => {
+    let fetches = 0;
+    const cfg: McpAuthConfig = {
+      ...config(),
+      fetchJson: async () => {
+        fetches += 1;
+        if (fetches === 1) return { keys: [PUBLIC_JWK] };
+        throw new Error("authorization server unavailable");
+      },
+    };
+    const cache = new JwksCache(cfg, 5 * 60 * 1000, 30 * 1000);
+
+    expect((await cache.keyForKid("k1", NOW_MS))?.kid).toBe("k1");
+    await expect(cache.keyForKid("rotated-kid", NOW_MS + 1_000)).rejects.toMatchObject({
+      name: "McpAuthDependencyError",
+      statusCode: 502,
+    });
+    expect(fetches).toBe(2);
+
+    await expect(cache.keyForKid("another-kid", NOW_MS + 2_000)).rejects.toMatchObject({
+      name: "McpAuthDependencyError",
+      statusCode: 502,
+    });
+    expect(fetches).toBe(2);
+  });
+
   it("throttles repeated unknown-kid refreshes inside the cooldown", async () => {
     let fetches = 0;
     const cfg: McpAuthConfig = {
