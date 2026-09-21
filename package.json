@@ -71,7 +71,8 @@
     "staging:pcs09:inventory:strict": "node scripts/staging-pcs09-inventory.mjs --strict",
     "staging:pcs09:restart:baseline": "node scripts/staging-pcs09-restart-evidence.mjs --phase baseline",
     "staging:pcs09:restart:post": "node scripts/staging-pcs09-restart-evidence.mjs --phase post",
-    "staging:pcs09:ssh:check": "bash scripts/staging-ssh-hardening.sh --check"
+    "staging:pcs09:ssh:check": "bash scripts/staging-ssh-hardening.sh --check",
+    "staging:pcs09:backup": "bash scripts/staging-pcs09-backup.sh --apply"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
