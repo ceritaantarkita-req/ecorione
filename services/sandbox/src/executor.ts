@@ -293,6 +293,17 @@ export class SandboxExecutor {
   ) {}
 
   async execute(request: SandboxExecutionRequest): Promise<SandboxExecutionReceipt> {
+    const lease = this.receipts.acquire(request.idempotencyKey);
+    try {
+      return await this.executeLocked(request);
+    } finally {
+      lease.release();
+    }
+  }
+
+  private async executeLocked(
+    request: SandboxExecutionRequest,
+  ): Promise<SandboxExecutionReceipt> {
     const prior = this.receipts.get(request.idempotencyKey);
     if (prior !== null) return prior;
     const workspace = assertWorkspace(this.workspaceRoot, request.workspace);
