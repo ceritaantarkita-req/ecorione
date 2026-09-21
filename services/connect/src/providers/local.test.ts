@@ -235,6 +235,32 @@ describe("callLocal", () => {
     ).rejects.toBeInstanceOf(ProviderError);
   });
 
+  it("redirect runtime lokal ditolak sebelum prompt diteruskan", async () => {
+    let redirectedTargetHit = false;
+    pool
+      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .reply(302, "", { headers: { location: "/redirected" } });
+    pool.intercept({ path: "/redirected", method: "POST" }).reply(200, () => {
+      redirectedTargetHit = true;
+      return { choices: [{ message: { content: "should-not-run" } }] };
+    });
+
+    await expect(
+      callLocal({
+        baseUrl: "http://127.0.0.1:11434/v1",
+        modelTag: "qwen3:8b-instruct-q4_K_M",
+        prefix: prefix(),
+        dynamicText: "<untrusted_memory>private</untrusted_memory>",
+        userMessage: "jangan keluar dari local runtime",
+      }),
+    ).rejects.toMatchObject({
+      name: "ProviderError",
+      provider: "local",
+      kind: "unreachable",
+    });
+    expect(redirectedTargetHit).toBe(false);
+  });
+
   it("kegagalan jaringan (server lokal tidak jalan) → ProviderError unreachable", async () => {
     pool
       .intercept({ path: "/v1/chat/completions", method: "POST" })
