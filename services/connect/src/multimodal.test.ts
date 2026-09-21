@@ -76,11 +76,14 @@ describe("HttpMultimodalAdapter local endpoint boundary", () => {
             endpoint: "https://public.example/infer",
           }),
       ).toThrow(/loopback\/private/u);
+      const credentialUrl = new URL("http://127.0.0.1/infer");
+      credentialUrl.username = "fixture-user";
+      credentialUrl.password = "fixture-password";
       expect(
         () =>
           new HttpMultimodalAdapter({
             route: "local",
-            endpoint: "http://user:secret@127.0.0.1/infer",
+            endpoint: credentialUrl.toString(),
           }),
       ).toThrow(/credential/u);
       expect(
