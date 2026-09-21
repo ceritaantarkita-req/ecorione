@@ -107,6 +107,7 @@ export async function callLocal(
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
+      redirect: "error",
       ...(signal === undefined ? {} : { signal }),
     });
   } catch (err) {
