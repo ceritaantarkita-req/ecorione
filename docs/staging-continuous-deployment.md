@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-20**
 
-Status: **PCS-08 ACTIVE / REPOSITORY IMPLEMENTATION CANDIDATE**
+Status: **PCS-08 CLOSED / PASS**
 
 PCS-08 automates deployment of the current reviewed GitHub `main` revision to the already-proven SumoPod staging runtime. It does not promote staging to production and does not replace PCS-09 persistence/security/backup/observability work.
 
@@ -205,11 +205,11 @@ deployed_at
 
 The target source checkout remains detached at the exact deployed SHA.
 
-## PCS-08 closure evidence still required
+## PCS-08 closure evidence
 
-Repository CI can prove syntax, source contracts, workflow policy, and security-review integration. PCS-08 cannot close from source-only evidence.
+Repository CI proves syntax, source contracts, workflow policy, and security-review integration. PCS-08 closure also required real GitHub-to-SumoPod evidence.
 
-Closure requires the real GitHub-to-SumoPod path to prove:
+The real GitHub-to-SumoPod path proved:
 
 - dedicated forced-command deploy user installed;
 - protected GitHub staging environment configured;
@@ -218,4 +218,4 @@ Closure requires the real GitHub-to-SumoPod path to prove:
 - release receipt matches the deployed revision;
 - a real rollback exercise is successful and followed by restoration of the intended current revision.
 
-Until that evidence exists, PCS-08 remains ACTIVE.
+That evidence is recorded in the PCS-08 verification note; PCS-08 is CLOSED / PASS. Runtime persistence, backup/restore, SSH hardening, and durable observability remain PCS-09.

@@ -176,7 +176,7 @@ The production compose/runbooks are reusable infrastructure, but staging evidenc
 
 ### PCS-08 — GitHub-to-staging continuous deployment
 
-State: **ACTIVE — REPOSITORY IMPLEMENTATION MERGED / REAL CD EVIDENCE PENDING**. PR #210 exact head `4a5fa9d9d776eae3895a8e0b8e6b73013e3f476f` passed CI #1613 + Product Eval #852 and merged as `652588e00dca5a04c8b39081fb6574a3db508ba1`. Runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). Repository-preparation evidence: [verification/pcs-08-repository-preparation-2026-09-20.md](verification/pcs-08-repository-preparation-2026-09-20.md).
+State: **CLOSED / PASS**. PR #210 exact head `4a5fa9d9d776eae3895a8e0b8e6b73013e3f476f` passed CI #1613 + Product Eval #852 and merged as `652588e00dca5a04c8b39081fb6574a3db508ba1`. Runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). Repository-preparation evidence: [verification/pcs-08-repository-preparation-2026-09-20.md](verification/pcs-08-repository-preparation-2026-09-20.md).
 
 Target workflow:
 
@@ -199,6 +199,10 @@ Requirements:
 - rollback to the previous known-good revision must be documented and tested.
 
 ### PCS-09 — Staging access, persistence, backup, and observability
+
+State: **ACTIVE — REPOSITORY PREPARATION**.
+
+Repository preparation starts with a sanitized actual-host inventory that checks service/restart posture, accidental published ports, Docker boot enablement, UFW, effective SSH authentication settings, disk/memory availability, public boundary status, and hashes/sizes only for present Connect durable files. No deployment-env values or Vault plaintext are collected.
 
 - establish HTTPS and operator authentication;
 - verify restart persistence on the actual VPS;
