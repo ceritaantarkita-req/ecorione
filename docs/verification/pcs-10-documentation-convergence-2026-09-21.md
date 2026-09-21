@@ -2,7 +2,7 @@
 
 Date: **2026-09-21**
 
-Status: **CLOSURE CANDIDATE — DOCS CONVERGED / REPOSITORY GATES PENDING**
+Status: **CLOSURE CANDIDATE — PR #219 / DOCS CONVERGED / REPOSITORY GATES PENDING**
 
 ## Starting boundary
 
@@ -65,4 +65,4 @@ PCS-10 does not:
 - claim production SLA/SLO or production cutover;
 - authorize PCS-11, PE-09, Batch 13, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence.
 
-Repository CI/Product Eval and merge of the PCS-10 documentation PR are the remaining closure gates.
+PR #219 CI/Product Eval and merge are the remaining PCS-10 closure gates.
