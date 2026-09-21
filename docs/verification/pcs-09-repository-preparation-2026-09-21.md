@@ -243,8 +243,43 @@ Post-reboot verification also PASSed:
 
 The changed Linux `boot_id` proves this was a real host reboot rather than a container-only restart. The claim remains intentionally limited to controlled VPS reboot persistence; it does not prove backup/restore, off-host DR, or total host-loss recovery.
 
+## Same-host cold backup + isolated restore verification PASS
+
+The reviewed PCS-09 backup script was executed as root with the controlled staging environment exported. It stopped only the ECORIONE staging Compose project, backed up each project volume, restored each archive into an isolated temporary Docker volume, compared deterministic content fingerprints and file counts, removed each verification volume, and restarted the staging project.
+
+All 12 project volumes PASSed isolated verification:
+
+```text
+ecorione-staging_artifact_data
+ecorione-staging_caddy_config
+ecorione-staging_caddy_data
+ecorione-staging_connect_data
+ecorione-staging_context_data
+ecorione-staging_flow_data
+ecorione-staging_hub_data
+ecorione-staging_rnd_data
+ecorione-staging_sandbox_data
+ecorione-staging_space_data
+ecorione-staging_sync_data
+ecorione-staging_temporal_db
+```
+
+Recovery after the backup window PASSed on public-boundary attempt 3 with home HTTP 200 and unauthenticated `/ops` HTTP 401.
+
+Backup evidence:
+
+```text
+backup_dir=/var/lib/ecorione-staging/backups/backup-20260921T054802Z-0f332c73dc7b
+source_sha=0f332c73dc7b363bffecdeecae921d805d5ae131
+source_tag=staging-0f332c73dc7b
+PASS PCS-09 same-host cold backup + isolated content verification
+```
+
+The backup intentionally excludes deployment env, operator credentials, SSH private keys, and the Connect Vault master key.
+
+Claim boundary remains explicit: this backup is on the same VPS failure domain and therefore is **not off-host disaster recovery**.
+
 ## Pending PCS-09 evidence
 
-1. same-host verified backup and isolated restore evidence;
-2. staging Operations + host resource evidence;
-3. sanitized final closure.
+1. staging Operations + host resource evidence;
+2. sanitized final closure.
