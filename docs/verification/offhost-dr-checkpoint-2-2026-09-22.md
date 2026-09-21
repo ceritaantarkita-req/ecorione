@@ -29,6 +29,13 @@ This workstream is still not PE-09, PCS-11, Batch 13, production promotion, or a
 
 Checkpoint 2 adds:
 
+- `scripts/staging-offhost-dr-canary-inner.mjs` + `scripts/staging-offhost-dr-canary.mjs`
+  - create one LOCAL_ONLY Historical Ledger event, one Context episode, and one Artifact through owner APIs before backup;
+  - read all three immediately and record stable identities/hashes in a mode-0600 canary state;
+  - never read owner databases directly;
+  - post mode re-reads the same canonical identities and refuses any Ledger hash/payload/head, Context content/digest, or Artifact size/digest drift;
+  - the host wrapper executes the owner-API canary from the running Hub container so internal service ports and the internal token remain inside the staging network boundary.
+
 - `scripts/staging-offhost-dr-export.sh`
   - serializes DR export with `flock`;
   - requires the current root-owned staging release receipt;
@@ -36,8 +43,9 @@ Checkpoint 2 adds:
   - runs the existing PCS-09 cold backup first;
   - refuses backup SHA/tag drift;
   - creates the encrypted DR bundle;
-  - writes a non-secret export manifest containing filenames and hashes;
-  - transfers bundle, metadata, and export manifest to the acknowledged independent target;
+  - creates and verifies the semantic owner-data canary before the cold backup;
+  - writes a non-secret export manifest containing bundle, metadata, and canary filenames/hashes;
+  - transfers bundle, metadata, semantic-canary state, and export manifest to the acknowledged independent target;
   - writes a root-only source-side transfer receipt only after remote checksum verification passes.
 
 - `scripts/staging-offhost-dr-transfer.sh`
@@ -48,14 +56,14 @@ Checkpoint 2 adds:
 - `scripts/staging-offhost-dr-fetch.sh`
   - runs on the recovery/replacement host;
   - retrieves the export manifest from the acknowledged independent SSH target first;
-  - derives the exact bundle/metadata filenames and expected hashes from that retained manifest;
-  - retrieves both encrypted artifacts from the remote failure domain;
-  - verifies local SHA-256 values;
+  - derives the exact bundle/metadata/canary filenames and expected hashes from that retained manifest;
+  - retrieves all three retained artifacts from the remote failure domain;
+  - verifies local SHA-256 values including the canary state;
   - writes a mode-0600 retrieval receipt with `retrieval_verified=1`.
 
 - `scripts/staging-offhost-dr-restore.mjs`
   - requires `ECORIONE_DR_RESTORE_ACK=1`;
-  - requires a valid independent retrieval receipt before mutation;
+  - requires a valid independent retrieval receipt and its exact mode-0600 semantic-canary state before mutation;
   - runs the checkpoint-1 isolated `--verify-docker` path before any real-volume mutation;
   - refuses recovery when Compose project containers already exist;
   - refuses any target volume that already exists;
@@ -80,6 +88,7 @@ Checkpoint 2 adds:
   - requires all configured services running;
   - requires the Ai container image tag to match the recorded recovery tag;
   - requires all restored volumes to exist;
+  - re-reads the retained semantic canary through Historical Ledger, Context, and Artifact owner APIs;
   - runs public smoke, authenticated Operations, and sanitized exact-host evidence;
   - writes the recovered release identity only after those gates pass;
   - writes a pre-reboot recovery acceptance receipt.
@@ -88,6 +97,7 @@ Checkpoint 2 adds:
   - captures a replacement-host recovery baseline;
   - requires a later Linux `boot_id` change;
   - requires exact source/image identity, configured/running services, project volume inventory, and Connect durable-file fingerprints to remain stable;
+  - re-reads the same semantic canary after the changed-boot-id reboot;
   - re-runs public smoke, authenticated Operations, and exact-host evidence after reboot;
   - updates the acceptance receipt to a total-host-loss recovery **candidate** only after post-reboot PASS.
 
@@ -108,6 +118,8 @@ reboot persistence proof
 ```
 
 A bundle copied directly from the source host to a recovery host cannot satisfy the repository's real-volume restore path. The restore gate now requires the retrieval receipt produced by `staging-offhost-dr-fetch.sh`.
+
+The semantic canary is also part of the retained generation. Restore/acceptance cannot substitute a new local canary: the canary filename/hash must match the retrieval receipt derived from the off-host export manifest. This adds semantic owner-data proof on top of archive/tree fingerprints.
 
 This closes the repository-side provenance gap between "an encrypted backup was uploaded somewhere" and "the replacement host actually fetched the retained generation from the declared independent target."
 
