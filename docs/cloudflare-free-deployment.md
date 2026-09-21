@@ -1,13 +1,13 @@
 # ECORIONE — Cloudflare Free Deployment Guide
 
 Last reviewed against Cloudflare documentation: **2026-09-10**  
-Current project status reconciled: **2026-09-20**
+Current project status reconciled: **2026-09-21**
 
 Status: **OPTIONAL PUBLIC EDGE / NOT YET SELECTED FOR SUMOPOD STAGING**
 
 This file remains the deployment guide for a future Cloudflare Free + Tunnel rollout. The operator has now approved an operator-owned SumoPod VPS for **remote development/staging**, but has **not yet selected Cloudflare Tunnel as the staging/public edge**. Staging may proceed through the self-host runbook first; Cloudflare remains a separate optional edge decision.
 
-The closed local checkpoints do not constitute remote-host or Cloudflare evidence. The approved SumoPod staging deployment must generate its own persistence/security/backup/observability evidence, and that staging evidence still does not constitute public production evidence.
+The closed local checkpoints do not constitute Cloudflare evidence. SumoPod remote staging has now completed its own persistence/security/backup/observability acceptance through PCS-09, but that verified staging evidence still does not constitute public production or Cloudflare-Tunnel evidence.
 
 Do not execute Cloudflare account, DNS, Tunnel, or origin-lockdown mutation merely because SumoPod staging is approved. Use this guide only after an explicit edge/hostname decision. Current state: `docs/current-state-and-next-steps.md`; staging roadmap: `docs/post-closure-product-staging-roadmap.md`.
 
@@ -241,8 +241,8 @@ Current state on 2026-09-20:
 - local Comparative ECX evidence: **CLOSED / PASS WITH LIMITATIONS**;
 - local persistence/restart evidence: **CLOSED / PASS**;
 - isolated local backup/restore evidence: **CLOSED / PASS WITH DOCUMENTED LIMITATIONS**;
-- SumoPod VPS remote development/staging: **APPROVED NEXT SCOPE** under PCS-07..PCS-09;
+- SumoPod VPS remote development/staging: **VERIFIED / PCS-07..PCS-09 CLOSED / PASS**;
 - Cloudflare named Tunnel/public edge: **OPTIONAL / NOT YET SELECTED**;
-- public production cutover: **DEFERRED PENDING STAGING EVIDENCE + EXPLICIT OPERATOR PROMOTION**.
+- public production cutover: **DEFERRED PENDING EXPLICIT OPERATOR PROMOTION**; staging evidence is complete.
 
 If Cloudflare provisioning is automated further later, it must remain a new explicit operations scope with least-privilege credentials, deterministic hostname/config validation, rollback, no personal production credentials in CI, and no weakening of Hub/Connect authorization boundaries.
