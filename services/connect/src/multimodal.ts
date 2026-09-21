@@ -7,6 +7,7 @@ import {
 } from "@ecorione/shared-schema";
 import type { z } from "zod";
 import type { HostedProviderId } from "./provider-types.js";
+import { isLocalReachableHost, localBaseUrlPublicAllowed } from "./local-base-url.js";
 import {
   CostKillSwitchError,
   MissingCredentialError,
@@ -18,6 +19,27 @@ import type { FileSpendBudget, SpendEntry } from "./spend-budget.js";
 type SpendBudgetController = Pick<FileSpendBudget, "reserve" | "settle" | "markUncertain">;
 const AdapterOutputSchema = MultimodalAdapterResultSchema.omit({ routeUsed: true });
 type AdapterOutput = z.infer<typeof AdapterOutputSchema>;
+
+function assertLocalMultimodalEndpoint(endpoint: string): void {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    throw new Error("Multimodal local endpoint harus URL valid.");
+  }
+  if (!new Set(["http:", "https:"]).has(url.protocol)) {
+    throw new Error("Multimodal local endpoint hanya boleh HTTP/HTTPS.");
+  }
+  if (url.username !== "" || url.password !== "" || url.hash !== "") {
+    throw new Error("Multimodal local endpoint tidak boleh memuat credential atau fragment.");
+  }
+  if (!isLocalReachableHost(url.hostname) && !localBaseUrlPublicAllowed()) {
+    throw new Error(
+      `Multimodal local endpoint ${JSON.stringify(url.hostname)} di luar jangkauan loopback/private. ` +
+        "Set ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC=1 hanya jika endpoint publik memang disengaja.",
+    );
+  }
+}
 
 export interface MultimodalAdapter {
   readonly route: "local" | "hosted";
@@ -40,6 +62,7 @@ export class HttpMultimodalAdapter implements MultimodalAdapter {
 
   constructor(options: HttpMultimodalAdapterOptions) {
     this.route = options.route;
+    if (this.route === "local") assertLocalMultimodalEndpoint(options.endpoint);
     this.endpoint = options.endpoint;
     this.reservationUsd = options.reservationUsd ?? (this.route === "hosted" ? 1 : 0);
     const validReservation =
