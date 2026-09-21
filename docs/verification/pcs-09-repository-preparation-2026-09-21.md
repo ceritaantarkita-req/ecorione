@@ -12,7 +12,7 @@ PCS-09 begins from that controlled boundary and must not silently convert stagin
 
 ## Repository preparation
 
-This branch adds a sanitized actual-host inventory script plus deterministic source-contract coverage and wires the inventory into package scripts and Product Eval.
+This branch adds a sanitized actual-host inventory, an actual-VPS reboot baseline/post verifier, a guarded SSH hardening helper, a coordinated same-host cold volume backup with isolated content verification, deterministic source-contract coverage, package scripts, Product Eval coverage, and the PCS-09 operator runbook.
 
 The inventory checks:
 
@@ -24,7 +24,14 @@ The inventory checks:
 - UFW and effective SSH authentication posture;
 - host disk and memory availability;
 - public home and protected /ops behavior;
-- size/SHA-256 fingerprints only for present Connect durable files.
+- size/SHA-256 fingerprints only for present Connect durable files;
+- real Linux boot-id change across reboot evidence;
+- exact release SHA/tag and Docker volume preservation across reboot;
+- present Connect durable-file fingerprint preservation across reboot;
+- SSH key-only/root-login hardening with sshd syntax/effective-setting checks;
+- same-host cold backup of every staging Compose volume;
+- isolated temporary-volume content verification for each backup archive;
+- guaranteed staging restart attempt after the backup window.
 
 ## Expected first-host result
 
