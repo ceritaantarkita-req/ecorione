@@ -107,6 +107,7 @@ export class JwksCache {
     readonly keys: readonly Record<string, unknown>[];
   } | null = null;
   private lastUnknownKidRefreshAtMs: number | null = null;
+  private lastUnknownKidRefreshFailed = false;
 
   constructor(
     private readonly config: McpAuthConfig,
@@ -119,6 +120,7 @@ export class JwksCache {
       const raw = await (this.config.fetchJson ?? defaultFetchJson)(this.config.jwksUrl);
       const parsed = JwksSchema.parse(raw);
       this.cached = { expiresAtMs: nowMs + this.ttlMs, keys: parsed.keys };
+      this.lastUnknownKidRefreshFailed = false;
       return parsed.keys;
     } catch (error) {
       if (error instanceof McpAuthDependencyError) throw error;
@@ -141,12 +143,18 @@ export class JwksCache {
       this.lastUnknownKidRefreshAtMs !== null &&
       nowMs - this.lastUnknownKidRefreshAtMs < this.unknownKidRefreshCooldownMs
     ) {
+      if (this.lastUnknownKidRefreshFailed) throw new McpAuthDependencyError();
       return undefined;
     }
 
     this.lastUnknownKidRefreshAtMs = nowMs;
-    const refreshed = await this.load(nowMs);
-    return refreshed.find((candidate) => candidate.kid === kid);
+    try {
+      const refreshed = await this.load(nowMs);
+      return refreshed.find((candidate) => candidate.kid === kid);
+    } catch (error) {
+      this.lastUnknownKidRefreshFailed = true;
+      throw error;
+    }
   }
 }
 
