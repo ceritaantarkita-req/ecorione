@@ -9,7 +9,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SandboxControlPlane } from "./clients.js";
 import { buildDockerPlan, SandboxBoundaryError, SandboxExecutor } from "./executor.js";
-import { SandboxReceiptStore } from "./receipt-store.js";
+import { SandboxReceiptBusyError, SandboxReceiptStore } from "./receipt-store.js";
 
 const roots: string[] = [];
 afterEach(() => {
@@ -34,7 +34,13 @@ function setup(
     trace: vi.fn(async () => undefined),
   };
   const receipts = new SandboxReceiptStore(join(root, "receipts"));
-  return { root, workspace, control, executor: new SandboxExecutor(root, control, receipts) };
+  return {
+    root,
+    workspace,
+    control,
+    receipts,
+    executor: new SandboxExecutor(root, control, receipts),
+  };
 }
 
 describe("Sandbox boundaries", () => {
@@ -117,6 +123,35 @@ describe("Sandbox boundaries", () => {
         sensitivity: "INTERNAL",
       }),
     ).rejects.toThrow(SandboxBoundaryError);
+  });
+
+  it("menolak execution konkuren dengan idempotency key sama sebelum authority/effect", async () => {
+    const { workspace, control, receipts, executor } = setup();
+    const request = {
+      operationId: assertId("operation", "op_sbxrace000001"),
+      tier: "tier0" as const,
+      workspace,
+      command: "pwd",
+      wasmBase64: null,
+      wasmExport: "run",
+      wasmArgs: [],
+      irreversible: false,
+      idempotencyKey: "sandbox-race-key",
+      scope: "personal" as const,
+      sensitivity: "INTERNAL" as const,
+    };
+    const lease = receipts.acquire(request.idempotencyKey);
+    try {
+      await expect(executor.execute(request)).rejects.toThrow(SandboxReceiptBusyError);
+      expect(control.authorize).not.toHaveBeenCalled();
+      expect(control.evaluate).not.toHaveBeenCalled();
+    } finally {
+      lease.release();
+    }
+
+    await expect(executor.execute(request)).resolves.toMatchObject({
+      operationId: request.operationId,
+    });
   });
 
   it("returns durable idempotent receipt without authorizing/evaluating twice", async () => {
