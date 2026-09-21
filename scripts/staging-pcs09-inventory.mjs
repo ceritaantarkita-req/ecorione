@@ -8,14 +8,10 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DEPLOY_ENV = process.env.ECORIONE_DEPLOY_ENV?.trim() || "deploy/staging.env";
 const PROJECT = process.env.ECORIONE_COMPOSE_PROJECT?.trim() || "ecorione-staging";
-const OVERLAY =
-  process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "deploy/compose.sumopod.yml";
-const EDGE_NETWORK =
-  process.env.ECORIONE_EDGE_NETWORK?.trim() ||
-  "inmydraft-demos_web"; // naming-gate:allow — existing SumoPod network
+const OVERLAY = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "deploy/compose.sumopod.yml";
+const EDGE_NETWORK = process.env.ECORIONE_EDGE_NETWORK?.trim() || "inmydraft-demos_web"; // naming-gate:allow — existing SumoPod network
 const PUBLIC_BASE_URL =
-  process.env.ECORIONE_PUBLIC_BASE_URL?.trim() ||
-  "https://ecorione.inmydraft.com"; // naming-gate:allow — existing staging hostname
+  process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "https://ecorione.inmydraft.com"; // naming-gate:allow — existing staging hostname
 const EXPECTED_SHA = process.env.ECORIONE_EXPECTED_SHA?.trim() || "";
 const strict = process.argv.slice(2).includes("--strict");
 
@@ -43,7 +39,11 @@ function run(name, args, allowFailure = false) {
 
 function lines(value) {
   if (!value) return [];
-  return value.split(/\r?\n/u).map((item) => item.trim()).filter(Boolean).sort();
+  return value
+    .split(/\r?\n/u)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .sort();
 }
 
 function composeArgs() {
@@ -119,7 +119,8 @@ async function main() {
   if (envStat.isSymbolicLink()) die("deployment env must not be a symlink");
   const envMode = envStat.mode & 0o777;
   if (envMode !== 0o600) die("deployment env must be mode 600");
-  if (readFileSync(envPath, "utf8").includes("CHANGE_ME")) die("deployment env contains CHANGE_ME");
+  if (readFileSync(envPath, "utf8").includes("CHANGE_ME"))
+    die("deployment env contains CHANGE_ME");
 
   const overlayPath = resolve(ROOT, OVERLAY);
   if (!existsSync(overlayPath) || lstatSync(overlayPath).isSymbolicLink()) {
@@ -131,9 +132,7 @@ async function main() {
 
   const headSha = run("git", ["rev-parse", "HEAD"]);
   const cleanWorktree = run("git", ["status", "--porcelain"]) === "";
-  const configured = lines(
-    run("docker", composeArgs().concat(["config", "--services"])),
-  );
+  const configured = lines(run("docker", composeArgs().concat(["config", "--services"])));
   const running = lines(
     run("docker", composeArgs().concat(["ps", "--status", "running", "--services"])),
   );
@@ -152,7 +151,12 @@ async function main() {
   const containers = containerNames.map((name) => ({
     name,
     image: run("docker", ["inspect", "--format", "{{.Config.Image}}", name]),
-    restartPolicy: run("docker", ["inspect", "--format", "{{.HostConfig.RestartPolicy.Name}}", name]),
+    restartPolicy: run("docker", [
+      "inspect",
+      "--format",
+      "{{.HostConfig.RestartPolicy.Name}}",
+      name,
+    ]),
     publishedPorts: lines(run("docker", ["port", name], true) || ""),
   }));
 
@@ -170,10 +174,7 @@ async function main() {
   const dockerEnabled = run("systemctl", ["is-enabled", "docker"], true) === "enabled";
   const ufw = run("sudo", ["-n", "ufw", "status", "verbose"], true) || "";
   const ufwActive = /^Status:\s+active$/mu.test(ufw);
-  const sshdRaw =
-    run("sudo", ["-n", "sshd", "-T"], true) ||
-    run("sshd", ["-T"], true) ||
-    "";
+  const sshdRaw = run("sudo", ["-n", "sshd", "-T"], true) || run("sshd", ["-T"], true) || "";
   const sshd = sshEffective(sshdRaw);
   const unattendedUpgradesEnabled =
     run("systemctl", ["is-enabled", "unattended-upgrades.service"], true) === "enabled";
@@ -190,8 +191,14 @@ async function main() {
     null;
 
   const connect = {
-    runtimeSettings: connectFingerprint(connectContainer, "/app/data/connect-runtime-settings.json"),
-    vaultCiphertext: connectFingerprint(connectContainer, "/app/data/connect-credentials.vault.json"),
+    runtimeSettings: connectFingerprint(
+      connectContainer,
+      "/app/data/connect-runtime-settings.json",
+    ),
+    vaultCiphertext: connectFingerprint(
+      connectContainer,
+      "/app/data/connect-credentials.vault.json",
+    ),
     spendBudget: connectFingerprint(connectContainer, "/app/data/connect-spend-budget.json"),
   };
 
@@ -216,9 +223,7 @@ async function main() {
   if (!ufwActive) blockers.push("UFW is not active");
   if (sshd.passwordAuthentication !== "no")
     blockers.push("SSH password authentication is not disabled");
-  if (
-    !["no", "prohibit-password", "without-password"].includes(sshd.permitRootLogin || "")
-  ) {
+  if (!["no", "prohibit-password", "without-password"].includes(sshd.permitRootLogin || "")) {
     blockers.push("SSH root login is not restricted");
   }
   if (sshd.kbdInteractiveAuthentication !== "no") {
@@ -231,8 +236,10 @@ async function main() {
   if (!(home >= 200 && home < 400)) blockers.push("public home is not 2xx/3xx");
   if (ops !== 401) blockers.push("unauthenticated /ops is not 401");
   if (!unattendedUpgradesEnabled) warnings.push("unattended-upgrades is not enabled");
-  if (!connect.runtimeSettings.present) warnings.push("Connect runtime settings file is absent");
-  if (!connect.vaultCiphertext.present) warnings.push("Connect Vault ciphertext file is absent");
+  if (!connect.runtimeSettings.present)
+    warnings.push("Connect runtime settings file is absent");
+  if (!connect.vaultCiphertext.present)
+    warnings.push("Connect Vault ciphertext file is absent");
 
   const result = {
     schemaVersion: 1,
