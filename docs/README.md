@@ -6,9 +6,9 @@ This file is the single navigation entry point for repository documentation. If 
 
 ## Read these first
 
-1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — current state and next scope.
-2. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — operator-approved product/UX + SumoPod staging roadmap.
-3. **[active-work-plan.md](active-work-plan.md)** — only work that is actually active.
+1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current state and explicit deferred boundaries.
+2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; currently no implementation scope is active.
+3. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — CLOSED PCS-00..PCS-10 product/UX + SumoPod staging roadmap.
 4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — closed PE product model and ownership rules.
 5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — closed PE-00 through PE-08 batch plan.
 6. **[product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)** — PE-01 ownership + migration contract.
@@ -31,12 +31,12 @@ When wording conflicts:
 ```text
 current code + tests
   > current-state-and-next-steps.md
-  > post-closure-product-staging-roadmap.md
   > active-work-plan.md
   > accepted ADRs
+  > owner runbooks
+  > closed post-closure-product-staging-roadmap.md
   > product-evolution-architecture.md
   > product-evolution-roadmap.md
-  > owner runbooks
   > EXECUTION-PROGRESS.md
   > dated verification/evidence
   > archive
@@ -46,7 +46,7 @@ Accepted ADRs override roadmap prose when they address the same architectural de
 
 ## Product Evolution
 
-The old Batch 1–12 / W / F6 baseline is closed. The next roadmap uses **PE** identifiers so it cannot be confused with Batch 13.
+The old Batch 1–12 / W / F6 baseline is closed. The completed Product Evolution roadmap used **PE** identifiers so it could not be confused with Batch 13.
 
 As of 2026-09-19:
 
@@ -66,6 +66,8 @@ PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is
 ### Post-closure Product + Remote Staging
 
 The operator-approved separate roadmap, **PCS-00..PCS-10**, covers Ai conversation continuity, provider/model onboarding, local-runtime resilience, visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, GitHub-to-staging delivery, staging hardening, and documentation convergence. PCS-00 through PCS-10 are now closed at their documented boundaries. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md). This does not reopen PE and does not imply production is live. Post-closure native-Windows portability hardening is merged via PR #182. Clean-checkout/CI reproducibility is CLOSED / PASS via PR #183. Fresh-clone Windows EOL reproducibility is CLOSED / PASS via PR #185 (CI #1486, Product Eval #725, Desktop Installer #76; post-merge CI #1487 + Product Eval #726). These are repository hardening, not a new PE batch. PCS-10 documentation convergence evidence: [verification/pcs-10-documentation-convergence-2026-09-21.md](verification/pcs-10-documentation-convergence-2026-09-21.md).
+
+PCS-10 closure PR #219 passed CI #1684 + Product Eval #923 and merged as `6058aa0ff294218147a91ee0fc7b77f32d1be80d`. Post-merge documentation bookkeeping PR #220 then passed CI #1686 + Product Eval #925 and merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07`.
 
 ## Architecture and product reference
 
@@ -116,10 +118,15 @@ Use the owner-specific runbook when touching its subsystem:
 
 [archive/](archive/) contains superseded audits/plans/snapshots. Do not use it to choose current work.
 
-## Current next/deferred scopes
+## Current operating/deferred boundaries
 
-- SumoPod remote development/staging — **PCS-07..PCS-09 CLOSED / PASS; staging verified**.
+- active implementation queue — **NONE**; new product/operations work requires an explicit scope/decision.
+- SumoPod remote development/staging — **PCS-07..PCS-09 CLOSED / PASS; staging verified** at application revision `0f332c73dc7b363bffecdeecae921d805d5ae131`.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
 - AutoClick — deferred by design.
 - paid W18 rerun — closed/not authorized for freshness.
+
+## Repository-wide documentation reconciliation — 2026-09-21
+
+The repository contains 192 Markdown/MDX documents. Current/canonical documents are reconciled to the closed PE/PCS state and verified staging boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.
