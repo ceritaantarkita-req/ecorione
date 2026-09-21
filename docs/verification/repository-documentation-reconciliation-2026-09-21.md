@@ -1,6 +1,6 @@
 # Repository documentation reconciliation — 2026-09-21
 
-Status: **BRANCH AUDIT COMPLETE / PR VERIFICATION REQUIRED**
+Status: **AUDIT COMPLETE / PR #221 IS THE EXACT-HEAD MERGE AUTHORITY**
 
 Baseline `main`: `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07`  
 Working branch: `docs/repository-state-sync-20260921`
@@ -47,9 +47,9 @@ The branch updates current navigation/state, active-work and execution trackers,
 
 The audit intentionally does **not** mass-edit all dated verification files or archive snapshots. Their historical wording is provenance; current authority is defined by `docs/README.md` precedence.
 
-## Verification before merge
+## Merge gate
 
-Required:
+PR #221 is the authoritative record for exact-head verification and merge outcome. Required before merge:
 
 - branch remains based on current `main` with no unreviewed divergence;
 - changed files are documentation-only;
@@ -57,4 +57,4 @@ Required:
 - exact PR head must pass repository CI and Product Eval required by branch protection;
 - any documentation/link/repository policy failure must be fixed rather than bypassed.
 
-This record becomes **CLOSED / PASS** only after the exact PR head is green and merged to `main`.
+This file records the completed documentation audit; it intentionally does not duplicate GitHub's mutable check/merge state. PR #221 records whether the exact head passed required checks and merged to `main`, so no follow-up edit is required solely to rewrite this audit status.
