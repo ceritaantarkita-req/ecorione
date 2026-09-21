@@ -137,13 +137,22 @@ kbdinteractiveauthentication no
 permitemptypasswords no
 ```
 
-This closes the configuration-side password/root-login blockers, but PCS-09 does not yet claim SSH hardening PASS until a second fresh operator public-key session succeeds.
+A second fresh Windows PowerShell SSH session then connected successfully as `ubuntu` using the existing operator key after the hardened daemon settings were active. Inside that fresh session:
+
+```text
+whoami
+ubuntu
+
+sudo -n true
+SUDO PASS
+```
+
+The original pre-hardening session was intentionally kept open until this proof succeeded. The fresh-session result closes the SSH lockout-safety gate and the PCS-09 key-only operator-access hardening boundary.
 
 ## Pending PCS-09 evidence
 
-1. prove a second fresh operator public-key SSH login before closing the old session;
-2. strict inventory PASS;
-3. actual VPS reboot persistence evidence;
-4. same-host verified backup and isolated restore evidence;
-5. staging Operations + host resource evidence;
-6. sanitized final closure.
+1. strict inventory PASS;
+2. actual VPS reboot persistence evidence;
+3. same-host verified backup and isolated restore evidence;
+4. staging Operations + host resource evidence;
+5. sanitized final closure.
