@@ -47,7 +47,7 @@ The exact merged `main` revision then passed:
 - Product Eval #904;
 - MCP External HTTPS Acceptance #894.
 
-Automatic Staging Deploy workflow-run gates #106 and #107 completed successfully while the deployment job remained skipped because the repository activation variable stayed disabled. Therefore this documentation merge did not mutate the proven staging runtime.
+Automatic Staging Deploy workflow-run gates #106 and #107 completed successfully while the deployment job remained skipped because the repository activation variable stayed disabled. Therefore the PCS-09 repository merge did not mutate the proven staging runtime.
 
 ## Pending PCS-09 evidence
 
