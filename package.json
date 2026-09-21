@@ -75,7 +75,12 @@
     "staging:pcs09:backup": "bash scripts/staging-pcs09-backup.sh --apply",
     "staging:dr:bundle": "node scripts/staging-offhost-dr-bundle.mjs",
     "staging:dr:verify": "node scripts/staging-offhost-dr-verify.mjs",
-    "staging:dr:transfer": "bash scripts/staging-offhost-dr-transfer.sh"
+    "staging:dr:transfer": "bash scripts/staging-offhost-dr-transfer.sh",
+    "staging:dr:export": "bash scripts/staging-offhost-dr-export.sh",
+    "staging:dr:fetch": "bash scripts/staging-offhost-dr-fetch.sh",
+    "staging:dr:restore": "node scripts/staging-offhost-dr-restore.mjs",
+    "staging:dr:acceptance": "node scripts/staging-offhost-dr-acceptance.mjs",
+    "staging:dr:reboot": "node scripts/staging-offhost-dr-reboot-evidence.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
