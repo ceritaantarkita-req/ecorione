@@ -1,8 +1,8 @@
 # ECORIONE — SumoPod Remote Staging Runbook
 
-Last updated: **2026-09-20**
+Last updated: **2026-09-21**
 
-Status: **PCS-07 CLOSED / PASS**
+Status: **REMOTE STAGING VERIFIED / PCS-07..PCS-09 CLOSED / PASS / NOT PRODUCTION**
 
 This runbook covers the first operator-owned SumoPod Ubuntu staging deployment. It does **not** authorize or claim production cutover.
 
@@ -25,7 +25,7 @@ persistent owner volumes + Temporal
 
 GitHub `main` remains source of truth. Do not make arbitrary live-VPS source edits and then treat the host as canonical development state.
 
-PCS-07 proves only initial remote staging deployment and basic runtime reachability. HTTPS/public-edge hardening, restart persistence evidence, backup/restore, and durable observability remain PCS-09 unless explicitly pulled forward as a blocker.
+PCS-07 proved the initial remote staging deployment and basic runtime reachability. PCS-08 later closed governed GitHub-to-staging continuous deployment, and PCS-09 closed HTTPS/operator protection, key-only SSH hardening, restart persistence, same-host verified backup/restore evidence, and staging observability. Those later closures do not promote staging to production.
 
 ## Secret and host rules
 
@@ -83,13 +83,11 @@ The reviewed `deploy/compose.sumopod.yml` overlay therefore:
 
 On the currently audited host, the existing Traefik network is `inmydraft-demos_web`. Re-verify the network name with `docker inspect traefik` before using this value on a rebuilt or different host.
 
-The lifecycle scripts and sanitized evidence collector honor `ECORIONE_COMPOSE_OVERLAY`. When `ECORIONE_EDGE_NETWORK` is set, preflight/install/upgrade/rollback also fail closed if that Docker network does not exist.
-
 Keep `ECORIONE_OPS_PASSWORD_HASH` single-quoted in the deployment env file. Caddy bcrypt hashes contain `# ECORIONE — SumoPod Remote Staging Runbook
 
-Last updated: **2026-09-20**
+Last updated: **2026-09-21**
 
-Status: **PCS-07 ACTIVE / REPOSITORY PREPARATION PASS / REAL HOST EVIDENCE PENDING**
+Status: **REMOTE STAGING VERIFIED / PCS-07..PCS-09 CLOSED / PASS / NOT PRODUCTION**
 
 This runbook covers the first operator-owned SumoPod Ubuntu staging deployment. It does **not** authorize or claim production cutover.
 
@@ -112,7 +110,7 @@ persistent owner volumes + Temporal
 
 GitHub `main` remains source of truth. Do not make arbitrary live-VPS source edits and then treat the host as canonical development state.
 
-PCS-07 proves only initial remote staging deployment and basic runtime reachability. HTTPS/public-edge hardening, restart persistence evidence, backup/restore, and durable observability remain PCS-09 unless explicitly pulled forward as a blocker.
+PCS-07 proved the initial remote staging deployment and basic runtime reachability. PCS-08 later closed governed GitHub-to-staging continuous deployment, and PCS-09 closed HTTPS/operator protection, key-only SSH hardening, restart persistence, same-host verified backup/restore evidence, and staging observability. Those later closures do not promote staging to production.
 
 ## Secret and host rules
 
@@ -217,10 +215,11 @@ Run:
 ```bash
 ECORIONE_DEPLOY_ENV=deploy/staging.env \
 ECORIONE_COMPOSE_PROJECT=ecorione-staging \
-pnpm production:preflight
+ECORIONE_COMPOSE_OVERLAY=deploy/compose.sumopod.yml \
+bash scripts/production-preflight.sh
 
 ECORIONE_DEPLOY_ENV=deploy/staging.env \
-pnpm production:host-audit
+bash scripts/host-security-audit.sh
 ```
 
 Review all host-audit warnings. Do not call warnings PASS merely because strict mode was not requested.
@@ -266,7 +265,7 @@ After the stack is running, capture the repository-provided sanitized host/runti
 ECORIONE_DEPLOY_ENV=deploy/staging.env \
 ECORIONE_COMPOSE_PROJECT=ecorione-staging \
 ECORIONE_EXPECTED_SHA=<reviewed-main-sha> \
-pnpm staging:host-evidence
+node scripts/staging-host-evidence.mjs
 ```
 
 Optionally write the sanitized JSON to a mode-0600 host file:
@@ -276,7 +275,7 @@ ECORIONE_DEPLOY_ENV=deploy/staging.env \
 ECORIONE_COMPOSE_PROJECT=ecorione-staging \
 ECORIONE_EXPECTED_SHA=<reviewed-main-sha> \
 ECORIONE_STAGING_EVIDENCE_OUT=data/pcs07-host-evidence.json \
-pnpm staging:host-evidence
+node scripts/staging-host-evidence.mjs
 ```
 
 The collector records only:
@@ -315,7 +314,7 @@ ECORIONE_COMPOSE_PROJECT=ecorione-staging \
 scripts/self-host-upgrade.sh --apply <reviewed-tag>
 ```
 
-PCS-08 will define GitHub-to-staging continuous deployment. PCS-07 must not implement a blind polling `git pull` loop.
+PCS-08 closed GitHub-to-staging continuous deployment. Routine staging upgrades should use the governed workflow in [staging-continuous-deployment.md](staging-continuous-deployment.md); do not replace it with a blind polling `git pull` loop.
 
 ## Runtime rollback
 
@@ -329,6 +328,10 @@ Runtime rollback does not imply data rollback. Owner data restore remains a sepa
 
 ## Current evidence status
 
-Repository preparation and actual-host deployment evidence are now available. The live staging runtime was deployed from reviewed main `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`; exact-host inventory, service/volume isolation, HTTPS reachability, operator protection, authenticated `/api/ops` health, and MCP auth-challenge reachability passed. Evidence: [verification/pcs-07-sumopod-host-closure-2026-09-20.md](verification/pcs-07-sumopod-host-closure-2026-09-20.md).
+PCS-07 initial host evidence is CLOSED / PASS: [verification/pcs-07-sumopod-host-closure-2026-09-20.md](verification/pcs-07-sumopod-host-closure-2026-09-20.md).
 
-The final required real rendered-browser governed product journey passed on the staging Flow surface. After explicit authority preparation/approval, the final Trigger-only v2 graph showed `core/trigger/v1` Granted, Trigger `SUCCEEDED`, and run `COMPLETED` without a paid provider call. PCS-07 is CLOSED / PASS. PCS-08 owns the next GitHub-to-staging continuous deployment work.
+PCS-08 governed continuous deployment is CLOSED / PASS, including exact-current-main gating, least-privilege forced-command SSH deployment, health/evidence gates, and exercised runtime rollback/restore.
+
+PCS-09 staging hardening is CLOSED / PASS. The current proven application runtime is exact reviewed revision `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b`. Real-host evidence includes key-only SSH hardening with fresh-session proof, strict zero-blocker inventory, a real full-VPS reboot with source/image/service/volume preservation, a verified same-host cold backup for all 12 project volumes with isolated restore-content checks, and final credentialed Operations + host-resource evidence. Evidence: [verification/pcs-09-repository-preparation-2026-09-21.md](verification/pcs-09-repository-preparation-2026-09-21.md).
+
+Later documentation-only merges intentionally left automatic staging deployment disabled, so they did not replace that proven runtime. Public production promotion remains a separate explicit decision.
