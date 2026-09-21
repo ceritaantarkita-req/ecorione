@@ -23,4 +23,27 @@ describe("PCS-09 staging hardening source contract", () => {
     expect(source).not.toContain("docker system prune");
     expect(source).not.toContain("docker volume prune");
   });
+
+  it("requires a real VPS reboot and preserves present Connect durable files", () => {
+    const source = readFileSync(resolve(ROOT, "scripts/staging-pcs09-restart-evidence.mjs"), "utf8");
+    expect(source).toContain("/proc/sys/kernel/random/boot_id");
+    expect(source).toContain("Linux boot_id did not change");
+    expect(source).toContain("Connect durable-file fingerprints changed across reboot");
+    expect(source).toContain("production-public-smoke.mjs");
+    expect(source).toContain("production-ops-snapshot.mjs");
+    expect(source).toContain("staging-host-evidence.mjs");
+    expect(source).toContain("PASS PCS-09 VPS reboot persistence evidence");
+  });
+
+  it("hardens SSH without disabling operator public-key authentication", () => {
+    const source = readFileSync(resolve(ROOT, "scripts/staging-ssh-hardening.sh"), "utf8");
+    expect(source).toContain("00-ecorione-staging-hardening.conf");
+    expect(source).toContain("PubkeyAuthentication yes");
+    expect(source).toContain("PasswordAuthentication no");
+    expect(source).toContain("KbdInteractiveAuthentication no");
+    expect(source).toContain("PermitRootLogin no");
+    expect(source).toContain("sshd -t");
+    expect(source).toContain("keep this session open");
+    expect(source).not.toContain("ufw reset");
+  });
 });
