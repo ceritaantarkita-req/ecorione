@@ -5,7 +5,7 @@ Date: 2026-09-11
 
 This workstream measures whether the current ECORIONE pointer-first exchange can reduce transported/model context without hiding quality loss. The local checkpoint is now closed on the corrected merged runtime revision, with the claim boundary below kept explicit.
 
-Real compute-host/VPS and Cloudflare deployment remain **operator-deferred** and were not prerequisites for this evidence work.
+At this checkpoint, real compute-host/VPS and Cloudflare deployment were **operator-deferred** and were not prerequisites for the comparative evidence. SumoPod remote staging was later verified through PCS-07..PCS-09; public production/Cloudflare remains a separate explicit decision.
 
 ## Closure summary
 
@@ -248,9 +248,9 @@ Do **not** insert an extra `--` between `pnpm evidence:comparative` and the scri
 
 Raw evidence remains local/gitignored. Commit only sanitized verified summaries.
 
-## Next evidence-driven decision
+## Historical next-decision sequence
 
-The Comparative ECX local checkpoint is no longer the active blocker. The next operator-approved sequence is:
+The Comparative ECX local checkpoint is no longer an active blocker. The sequence below records what was approved next at the time; those local checkpoints and the later staging roadmap have since closed at their documented boundaries:
 
 ```text
 local persistence/restart drill
@@ -258,7 +258,7 @@ local persistence/restart drill
   -> local observability baseline
   -> UX/product validation
   -> immutable local model identity hardening
-  -> compute-host/VPS deployment only when the operator explicitly resumes it
+  -> compute-host/VPS deployment only when the operator explicitly resumes it (later resumed as SumoPod staging under PCS-07..PCS-09)
 ```
 
 Automatic reference selection is **not** automatically next. If a selector is proposed later, it must be a separate explicit scope and be evaluated against the oracle lane and full-inline baseline on held-out workloads.
