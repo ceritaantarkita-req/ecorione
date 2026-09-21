@@ -7,7 +7,7 @@ This file is the single navigation entry point for repository documentation. If 
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current state and explicit deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; currently no implementation scope is active.
+2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; latest-main staging convergence is the only active bounded operational scope.
 3. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — CLOSED PCS-00..PCS-10 product/UX + SumoPod staging roadmap.
 4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — closed PE product model and ownership rules.
 5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — closed PE-00 through PE-08 batch plan.
@@ -120,7 +120,7 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current operating/deferred boundaries
 
-- active implementation queue — **NONE**; new product/operations work requires an explicit scope/decision.
+- active operational scope — **LATEST-MAIN STAGING CONVERGENCE**; no new product implementation batch is open.
 - SumoPod remote development/staging — **PCS-07..PCS-09 CLOSED / PASS; staging verified** at application revision `0f332c73dc7b363bffecdeecae921d805d5ae131`.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
@@ -160,6 +160,12 @@ A fifth bounded maintenance slice is closed through PR #244. It repairs Sandbox 
 PR #244 exact implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` passed CI #1747 and Product Eval #986 before merge as `3114354ab44894ef80e75b9983fceac64babc2e0`.
 
 This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
+
+## Latest-main staging convergence checkpoint 1 — 2026-09-21
+
+A bounded operational convergence scope is now active to move the latest reviewed GitHub `main` onto the proven SumoPod staging environment through the existing PCS-08 deployment path. Target `main` `de8d5d510d07ce06ece21368e4305148a2b587c9` passed CI #1750 and Product Eval #989; Staging Deploy #277/#278 passed their gate jobs but skipped deployment, so the proven runtime claim remains `0f332c73dc7b...` until a successful deploy and runtime verification exist.
+
+Checkpoint: [verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md).
 
 ## Repository-wide documentation reconciliation — 2026-09-21
 
