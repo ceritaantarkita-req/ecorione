@@ -1,6 +1,6 @@
 # Webhook operations
 
-Last updated: **2026-09-19**
+Last updated: **2026-09-21**
 
 Status: **PE-05 OPERATIONAL CONTRACT**
 
@@ -115,6 +115,7 @@ Body:
 - normalized payload is capped at 64 KiB;
 - metadata is capped at 16 KiB;
 - missing/wrong token is rejected before forwarding to Flow;
+- verified Connect -> Flow forwarding is timeout-bounded to 10 seconds by default; transport/timeout failure returns a sanitized `502 UPSTREAM_UNAVAILABLE`;
 - disabled Trigger does not dispatch;
 - Workspace/Project is derived from the Trigger for public webhook delivery, not accepted from the caller;
 - exact pinned Flow version is validated before execution;
@@ -123,6 +124,8 @@ Body:
 - no polling daemon, second queue, second scheduler, or always-on LLM monitor is introduced.
 
 ## Retry / recovery
+
+If Connect returns `502 UPSTREAM_UNAVAILABLE` because Flow forwarding timed out, retry the provider delivery with the **same** stable `deliveryId`. The first attempt may have reached Flow before the response path failed; reusing the same identity lets Flow dedupe resolve both attempts to one logical dispatch.
 
 Flow reserves a bounded dedupe receipt as `PENDING` before Temporal start, then marks it `STARTED` after the deterministic workflow identity exists. A process restart between those steps can safely resume against the same workflow identity instead of creating another logical execution.
 
