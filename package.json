@@ -68,7 +68,10 @@
     "cloudflare:tunnel:install": "bash scripts/cloudflare-tunnel-install.sh",
     "cloudflare:origin:lockdown": "bash scripts/cloudflare-origin-lockdown.sh",
     "staging:pcs09:inventory": "node scripts/staging-pcs09-inventory.mjs",
-    "staging:pcs09:inventory:strict": "node scripts/staging-pcs09-inventory.mjs --strict"
+    "staging:pcs09:inventory:strict": "node scripts/staging-pcs09-inventory.mjs --strict",
+    "staging:pcs09:restart:baseline": "node scripts/staging-pcs09-restart-evidence.mjs --phase baseline",
+    "staging:pcs09:restart:post": "node scripts/staging-pcs09-restart-evidence.mjs --phase post",
+    "staging:pcs09:ssh:check": "bash scripts/staging-ssh-hardening.sh --check"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
