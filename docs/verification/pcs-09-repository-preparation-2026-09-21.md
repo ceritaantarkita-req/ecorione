@@ -106,12 +106,44 @@ Connect durable runtime settings, Vault ciphertext, and spend-budget files were 
 
 The failed first operator command using `pnpm staging:pcs09:inventory` also proved the host does not have pnpm installed. The actual inventory was therefore run directly with Node. Host-side runbook commands are updated accordingly rather than installing another package manager merely for evidence collection.
 
+## SSH hardening apply evidence
+
+The guarded SSH hardening helper was executed from an already-working operator key-authenticated session while that session remained open.
+
+Effective settings before apply:
+
+```text
+permitrootlogin yes
+pubkeyauthentication yes
+passwordauthentication yes
+kbdinteractiveauthentication no
+permitemptypasswords no
+```
+
+The apply step returned:
+
+```text
+PASS PCS-09 SSH hardening applied.
+IMPORTANT: keep this session open and prove a NEW operator public-key SSH session before closing it.
+```
+
+Effective settings immediately after reload:
+
+```text
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication no
+kbdinteractiveauthentication no
+permitemptypasswords no
+```
+
+This closes the configuration-side password/root-login blockers, but PCS-09 does not yet claim SSH hardening PASS until a second fresh operator public-key session succeeds.
+
 ## Pending PCS-09 evidence
 
-1. guarded SSH hardening with the existing operator session kept open;
-2. prove a second fresh operator public-key SSH login before closing the old session;
-3. strict inventory PASS;
-4. actual VPS reboot persistence evidence;
-5. same-host verified backup and isolated restore evidence;
-6. staging Operations + host resource evidence;
-7. sanitized final closure.
+1. prove a second fresh operator public-key SSH login before closing the old session;
+2. strict inventory PASS;
+3. actual VPS reboot persistence evidence;
+4. same-host verified backup and isolated restore evidence;
+5. staging Operations + host resource evidence;
+6. sanitized final closure.
