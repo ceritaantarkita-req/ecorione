@@ -1,10 +1,10 @@
 # ECORIONE — Product Evolution Agent Guide
 
-Last updated: **2026-09-20**
+Last updated: **2026-09-21**
 
-Status: **MANDATORY EXECUTION GUIDE FOR PE WORK**
+Status: **HISTORICAL / REUSABLE EXECUTION GUIDE — NO ACTIVE PE BATCH**
 
-Use this guide when a human or agent is told to implement the Product Evolution roadmap.
+Use this guide only if a human explicitly opens a new Product Evolution scope. PE-00..PE-08 and the follow-on PCS-00..PCS-10 roadmap are closed; this file is not an instruction to start PE-09.
 
 Read first:
 
