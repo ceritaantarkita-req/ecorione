@@ -4,7 +4,7 @@ Last updated: **2026-09-20**
 
 Status: **PCS-08 CLOSED / PASS**
 
-PCS-08 automates deployment of the current reviewed GitHub `main` revision to the already-proven SumoPod staging runtime. It does not promote staging to production and does not replace PCS-09 persistence/security/backup/observability work.
+PCS-08 automates deployment of the current reviewed GitHub `main` revision to the proven SumoPod staging runtime. PCS-09 has since CLOSED / PASS the staging persistence/security/backup/observability boundary. Neither closure promotes staging to production.
 
 ## Deployment model
 
@@ -189,7 +189,7 @@ It then requires every configured service to be running and performs a basic pub
 
 A rollback does **not** convert the failed GitHub deployment into success. The GitHub job remains failed.
 
-Runtime rollback is not data rollback. Schema/data recovery remains a separate evidence boundary and is retained for PCS-09.
+Runtime rollback is not data rollback. PCS-09 separately proved same-host cold backup plus isolated restore-content verification; off-host DR, point-in-time recovery, and total-host-loss recovery remain separate non-claims.
 
 ## Release identity
 
@@ -218,4 +218,4 @@ The real GitHub-to-SumoPod path proved:
 - release receipt matches the deployed revision;
 - a real rollback exercise is successful and followed by restoration of the intended current revision.
 
-That evidence is recorded in the PCS-08 verification note; PCS-08 is CLOSED / PASS. Runtime persistence, backup/restore, SSH hardening, and durable observability remain PCS-09.
+That evidence is recorded in the PCS-08 verification note; PCS-08 is CLOSED / PASS. PCS-09 subsequently CLOSED / PASS restart persistence, SSH hardening, same-host verified backup/restore evidence, and actual-staging observability. See [staging-hardening-backup-observability.md](staging-hardening-backup-observability.md).
