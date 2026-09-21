@@ -50,6 +50,16 @@ The first inventory is expected to expose existing host hardening gaps rather th
 
 No firewall or SSH mutation is performed by the inventory script. SSH hardening and any OS package maintenance remain separate, explicitly controlled steps.
 
+Repository SSH helper:
+
+    pnpm staging:pcs09:ssh:check
+
+Apply only while an existing working key-authenticated operator session remains open:
+
+    sudo bash scripts/staging-ssh-hardening.sh --apply
+
+The helper validates sshd syntax and effective settings before reload. After apply, a second fresh operator SSH connection must succeed before the original session is closed.
+
 Pending Ubuntu security updates are not mixed into the same transaction as SSH hardening, reboot persistence, or backup evidence. Backup and restart recovery should be proven first, then OS maintenance can be scheduled with its own before/after health verification.
 
 ## Restart persistence boundary
@@ -57,6 +67,16 @@ Pending Ubuntu security updates are not mixed into the same transaction as SSH h
 PCS-09 requires an actual VPS reboot proof, not merely a process restart. The evidence must show the Linux boot identifier changed while the intended ECORIONE source/image, project volumes, service fleet, and present Connect durable-state fingerprints remain stable.
 
 A VPS reboot is disruptive to other workloads sharing the host and therefore requires operator approval at execution time.
+
+Baseline command shape:
+
+    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> pnpm staging:pcs09:restart:baseline
+
+After an approved full VPS reboot and reconnect:
+
+    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> pnpm staging:pcs09:restart:post
+
+The post phase refuses to pass unless Linux boot_id changed, all configured services are running, the release SHA/tag and volume inventory are preserved, present Connect durable-file fingerprints are unchanged, and public smoke + authenticated Ops + exact-host evidence all pass.
 
 ## Backup boundary
 
