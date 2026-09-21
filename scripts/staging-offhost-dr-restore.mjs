@@ -381,8 +381,11 @@ async function main() {
   ]) {
     assertRegular(path, label);
   }
+  if ((lstatSync(retrievalReceiptPath).mode & 0o777) !== 0o600) {
+    throw new Error("retrieval receipt must be mode 600");
+  }
 
-  const retrieval = {};
+  const retrieval = Object.create(null);
   for (const raw of readFileSync(retrievalReceiptPath, "utf8").split(/\r?\n/)) {
     if (!raw) continue;
     const at = raw.indexOf("=");
