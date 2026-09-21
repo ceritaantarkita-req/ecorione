@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-21**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-08 CLOSED**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-08 CLOSED / PCS-09 ACTIVE**
 
 ## Current verdict
 
