@@ -1,6 +1,6 @@
 # ecorione — Product Requirements Document (PRD)
 
-> **DOCUMENT ROLE — 2026-09-18:** this PRD remains the product/architecture baseline and rationale. Phase/roadmap language below is historical design context, not a live task list. Current execution status lives in `docs/current-state-and-next-steps.md` and `docs/active-work-plan.md`.
+> **DOCUMENT ROLE — 2026-09-21:** this PRD remains the product/architecture baseline and rationale. Phase/roadmap language below is historical design context, not a live task list. The original Batch/W/F6 baseline, PE-00..PE-08, and PCS-00..PCS-10 are closed at their documented boundaries; SumoPod staging is verified and public production remains a separate explicit gate. Current execution status lives in `docs/current-state-and-next-steps.md` and `docs/active-work-plan.md`.
 
 
 Status: **v2.0** — 2026-09-07. Revisi besar setelah riset teknis mendalam (`research.md`). 15 keputusan arsitektur (ADR-01…ADR-15) diterapkan; peta modul berubah dari 13 jadi 11; prioritas beberapa modul bergeser; sejumlah asumsi v1.0 terbukti salah dan dikoreksi.
@@ -9,7 +9,7 @@ Dokumen pasangan: `research.md` (riset & due diligence — **sumber alasan untuk
 Repo sumber (referensi, read-only, **tidak pernah diubah**): `C:\Users\Amand\.gemini\antigravity\scratch\ideagentics\inmy`
 Repo baru: `C:\Users\Amand\.gemini\antigravity\scratch\ideagentics\ecorione` → dipublikasikan sebagai 1 repo GitHub publik baru (lisensi **MIT**)
 
-> **CURRENT IMPLEMENTATION NOTE — 2026-09-10:** PRD ini tetap requirement/product-architecture source, bukan tracker implementasi. Planned platform/production Batch 1–12 sudah CLOSED dan production/self-host baseline sudah READY sesuai evidence. Current status + next scope ada di `current-state-and-next-steps.md` dan `EXECUTION-PROGRESS.md`. Tidak ada Batch 13 implisit; AutoClick tetap deferred by design dan Fase 6+ tetap evidence-driven/open-ended.
+> **CURRENT IMPLEMENTATION NOTE — 2026-09-21:** PRD ini tetap requirement/product-architecture source, bukan tracker implementasi. Planned platform/production Batch 1–12, Product Evolution PE-00..PE-08, dan PCS-00..PCS-10 sudah CLOSED / PASS pada boundary masing-masing. SumoPod remote staging sudah VERIFIED; public production promotion tetap keputusan eksplisit terpisah. Tidak ada active implementation queue, Batch 13/PE-09/PCS-11 implisit, atau AutoClick activation. Fase 6+ tetap framework evidence-driven tanpa item aktif. Current state ada di `current-state-and-next-steps.md` dan `EXECUTION-PROGRESS.md`.
 
 **Riwayat:** DRAFT v0.1–v0.2 (scope & arsitektur awal) → DRAFT v0.3 (drop prefix "InMy", jadi satu sistem) → APPROVED v1.0 → **v2.0** (riset teknis; koreksi asumsi).
 
