@@ -3,6 +3,7 @@ import { SandboxExecutionRequestSchema } from "@ecorione/shared-schema";
 import {
   BadRequestError,
   ConflictError,
+  HttpError,
   createServer,
   parseOrBadRequest,
 } from "@ecorione/shared-server";
@@ -12,6 +13,7 @@ import {
   SandboxBoundaryError,
   type SandboxExecutor,
 } from "./executor.js";
+import { SandboxReceiptBusyError } from "./receipt-store.js";
 
 export interface BuildSandboxServerOptions {
   readonly token?: string | undefined;
@@ -29,6 +31,13 @@ export function buildSandboxServer(
       return await reply.code(201).send(await executor.execute(body));
     } catch (err) {
       if (err instanceof SandboxApprovalRequiredError) throw new ConflictError(err.message);
+      if (err instanceof SandboxReceiptBusyError) {
+        throw new HttpError(
+          409,
+          "SANDBOX_EXECUTION_BUSY",
+          "Sandbox execution dengan idempotency key ini sedang berjalan.",
+        );
+      }
       if (err instanceof SandboxBoundaryError) throw new BadRequestError(err.message);
       throw err;
     }
