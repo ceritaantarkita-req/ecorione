@@ -1,0 +1,77 @@
+# ECORIONE — PCS-09 Staging Hardening, Persistence, Backup & Observability
+
+Last updated: **2026-09-21**
+
+Status: **ACTIVE / REPOSITORY PREPARATION**
+
+PCS-09 starts after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS. It hardens and proves the real remote staging host. It does not promote ECORIONE to production.
+
+## Evidence order
+
+1. Merge and verify the read-only PCS-09 staging inventory.
+2. Deploy the reviewed PCS-09 tooling to staging through the existing governed CD path.
+3. Capture a non-strict actual-host inventory before mutation.
+4. Harden SSH only after a working operator public-key session is proven; keep the existing session open until a second fresh key-only login succeeds.
+5. Re-run strict inventory and close remaining security blockers.
+6. Capture reboot baseline evidence, then perform an operator-approved VPS reboot because unrelated SumoPod workloads share this host.
+7. Verify all ECORIONE services, exact source/image identity, Docker volumes, and present Connect durable-file fingerprints after reboot.
+8. Create a coordinated same-host cold backup of ECORIONE staging owner volumes and verify restoration into isolated temporary targets.
+9. Verify the governed Operations surface plus host disk/memory/service evidence.
+10. Only after those real-host gates pass, prepare sanitized PCS-09 closure evidence.
+
+## Read-only staging inventory
+
+The repository command is:
+
+    pnpm staging:pcs09:inventory
+
+Strict closure mode is:
+
+    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> pnpm staging:pcs09:inventory:strict
+
+The inventory records only sanitized operational metadata:
+
+- exact Git HEAD and clean-worktree state;
+- configured versus running Compose services;
+- Docker restart policy and accidental published host ports;
+- staging Docker-volume inventory;
+- Docker service enabled-at-boot state;
+- UFW active state;
+- effective SSH root/password/keyboard-interactive/public-key settings;
+- available disk and memory;
+- public home status and protected /ops status;
+- size and SHA-256 only for present Connect runtime-settings, Vault-ciphertext, and spend-budget files.
+
+It does not print deployment-env values, credential plaintext, Vault plaintext, private keys, provider responses, prompts, user data, or database contents.
+
+## Security posture
+
+The first inventory is expected to expose existing host hardening gaps rather than hide them. Earlier PCS evidence already observed that SSH root/password authentication remained enabled. PCS-09 must close those findings without risking lockout.
+
+No firewall or SSH mutation is performed by the inventory script. SSH hardening and any OS package maintenance remain separate, explicitly controlled steps.
+
+Pending Ubuntu security updates are not mixed into the same transaction as SSH hardening, reboot persistence, or backup evidence. Backup and restart recovery should be proven first, then OS maintenance can be scheduled with its own before/after health verification.
+
+## Restart persistence boundary
+
+PCS-09 requires an actual VPS reboot proof, not merely a process restart. The evidence must show the Linux boot identifier changed while the intended ECORIONE source/image, project volumes, service fleet, and present Connect durable-state fingerprints remain stable.
+
+A VPS reboot is disruptive to other workloads sharing the host and therefore requires operator approval at execution time.
+
+## Backup boundary
+
+PCS-09 will create and verify a same-host staging backup before any disaster-recovery claim. The backup must not copy the Connect Vault master key, operator credentials, SSH private keys, or deployment-env secrets into Git or ordinary backup manifests.
+
+Same-host backup is not off-host disaster recovery. A future off-host copy to a separate failure domain is required before total-VPS-loss recovery can be claimed.
+
+## Observability boundary
+
+The existing governed Operations surface already exposes required owner health, HTTP errors and latency, model-call/token/cost counters, MCP calls, Flow runs, ECX counters, recent distributed traces, and owner-process RSS/heap.
+
+PCS-09 verifies those signals on the actual staging runtime. Host-level disk/memory/container inventory remains operator-only. ECORIONE will not mount the Docker socket or broad host filesystem into the AI web application simply to display host metrics.
+
+Long-term telemetry retention remains an external-scraper responsibility until a durable collector is explicitly deployed and verified.
+
+## Explicit non-claims
+
+PCS-09 does not by itself prove off-host disaster recovery, point-in-time recovery, total VPS loss recovery, recovery of an out-of-band Vault master key, production SLA/SLO, public production cutover, or long-term telemetry retention.
