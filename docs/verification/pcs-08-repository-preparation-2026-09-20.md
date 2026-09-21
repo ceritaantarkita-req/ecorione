@@ -2,7 +2,7 @@
 
 Date: **2026-09-20**
 
-Status: **REPOSITORY + HOST BOUNDARY PASS / GOVERNED DEPLOY PASS / ROLLBACK CLOSURE PENDING**
+Status: **CLOSED / PASS**
 
 ## Scope
 
@@ -221,12 +221,46 @@ PASS PCS-08 staging deploy sha=0b50a426ca2b14202eba769297af6c15a579b09f tag=stag
 
 The controlled rollback exercise is therefore followed by successful restoration of the intended exact-main source/runtime through the governed GitHub-to-staging path.
 
-## Pending evidence
+## Final restored-host verification
 
-Before PCS-08 can close:
+Automatic CD was frozen back to `ECORIONE_STAGING_CD_ENABLED=0` before closure documentation was merged.
 
-1. freeze automatic CD before merging docs-only closure changes;
-2. verify the final restored host release receipt, exact source/image identity, service fleet, and public boundary;
-3. record final PCS-08 closure and merge the docs-only evidence PR with automatic CD still disabled.
+The final independent host verification after governed restoration observed:
 
-No source-only result is sufficient to claim those remote boundaries.
+```text
+release current_sha           0b50a426ca2b14202eba769297af6c15a579b09f
+release current_tag           staging-0b50a426ca2b
+release previous_sha          99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+release previous_tag          staging-99523b0
+HEAD                          0b50a426ca2b14202eba769297af6c15a579b09f
+active AI image               ecorione:staging-0b50a426ca2b
+configured/running services   15 / 15
+public home                   HTTP 200 / TLS verify 0
+unauthenticated /ops          HTTP 401
+expectedShaMatched            true
+clean worktree                true
+non-running services          none
+deployment env                mode 600 / no placeholders
+host evidence                 PASS
+```
+
+The final host evidence was captured at `2026-09-21T02:59:30.689Z`. No host secret, provider key, operator password, private key, database content, prompt, or user data is included in this closure evidence.
+
+## Closure verdict
+
+PCS-08 is **CLOSED / PASS** at the GitHub-to-SumoPod staging continuous-deployment boundary.
+
+The closure proves:
+
+- exact-current-`main` CI + Product Eval gating;
+- protected GitHub staging deployment identity and strict known-host verification;
+- forced-command deploy key that denies interactive/arbitrary SSH use;
+- host-side independent exact-`origin/main` verification;
+- serialized exact-SHA deployment with immutable staging image identity;
+- bounded public-edge readiness before full public/ops/exact-host validation;
+- a successful real GitHub -> SumoPod deployment;
+- a deliberate successful runtime rollback to the prior source/image;
+- successful governed restoration to the intended reviewed revision;
+- final release receipt and host/runtime/public evidence matching the restored revision.
+
+Runtime rollback is not owner-data rollback. Restart persistence, owner backup/restore, SSH hardening, and durable observability remain PCS-09 boundaries. Public production cutover remains separate.
