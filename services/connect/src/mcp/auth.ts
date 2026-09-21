@@ -87,18 +87,42 @@ export class JwksCache {
     readonly expiresAtMs: number;
     readonly keys: readonly Record<string, unknown>[];
   } | null = null;
+  private lastUnknownKidRefreshAtMs: number | null = null;
 
   constructor(
     private readonly config: McpAuthConfig,
     private readonly ttlMs: number = 5 * 60 * 1000,
+    private readonly unknownKidRefreshCooldownMs: number = 30 * 1000,
   ) {}
 
-  async keys(nowMs: number): Promise<readonly Record<string, unknown>[]> {
-    if (this.cached !== null && this.cached.expiresAtMs > nowMs) return this.cached.keys;
+  private async load(nowMs: number): Promise<readonly Record<string, unknown>[]> {
     const raw = await (this.config.fetchJson ?? defaultFetchJson)(this.config.jwksUrl);
     const parsed = JwksSchema.parse(raw);
     this.cached = { expiresAtMs: nowMs + this.ttlMs, keys: parsed.keys };
     return parsed.keys;
+  }
+
+  async keys(nowMs: number): Promise<readonly Record<string, unknown>[]> {
+    if (this.cached !== null && this.cached.expiresAtMs > nowMs) return this.cached.keys;
+    return this.load(nowMs);
+  }
+
+  async keyForKid(kid: string, nowMs: number): Promise<Record<string, unknown> | undefined> {
+    const hadFreshCache = this.cached !== null && this.cached.expiresAtMs > nowMs;
+    const keys = await this.keys(nowMs);
+    const current = keys.find((candidate) => candidate.kid === kid);
+    if (current !== undefined || !hadFreshCache) return current;
+
+    if (
+      this.lastUnknownKidRefreshAtMs !== null &&
+      nowMs - this.lastUnknownKidRefreshAtMs < this.unknownKidRefreshCooldownMs
+    ) {
+      return undefined;
+    }
+
+    this.lastUnknownKidRefreshAtMs = nowMs;
+    const refreshed = await this.load(nowMs);
+    return refreshed.find((candidate) => candidate.kid === kid);
   }
 }
 
@@ -176,8 +200,7 @@ export async function authenticateBearer(
     );
   }
 
-  const keys = await jwks.keys(nowMs);
-  const jwk = keys.find((candidate) => candidate.kid === header.kid);
+  const jwk = await jwks.keyForKid(header.kid, nowMs);
   if (jwk === undefined)
     throw new McpAuthError(401, "invalid_token", "JWK untuk kid token tidak ditemukan.");
   const signingInput = `${segments[0]!}.${segments[1]!}`;
