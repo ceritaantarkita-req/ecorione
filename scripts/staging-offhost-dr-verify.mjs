@@ -69,10 +69,7 @@ function sha256File(path) {
 }
 
 function decodeB64(value, label) {
-  if (
-    typeof value !== "string" ||
-    !/^[A-Za-z0-9+/]+={0,2}$/.test(value)
-  ) {
+  if (typeof value !== "string" || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
     throw new Error(`Invalid ${label}`);
   }
   return Buffer.from(value, "base64");
@@ -109,19 +106,10 @@ function parseManifest(dir) {
   const rows = [];
   const seenVolumes = new Set();
   const seenArchives = new Set();
-  for (const line of readFileSync(join(dir, "manifest.tsv"), "utf8").split(
-    /\r?\n/,
-  )) {
+  for (const line of readFileSync(join(dir, "manifest.tsv"), "utf8").split(/\r?\n/)) {
     if (!line) continue;
-    const [
-      volume,
-      archive,
-      bytesRaw,
-      archiveSha,
-      treeSha,
-      filesRaw,
-      ...extra
-    ] = line.split("\t");
+    const [volume, archive, bytesRaw, archiveSha, treeSha, filesRaw, ...extra] =
+      line.split("\t");
     if (
       extra.length ||
       !SAFE_NAME_RE.test(volume ?? "") ||
@@ -186,9 +174,7 @@ async function decryptBundle(bundlePath, metadata, privateKey, outputPath) {
 function runTar(args, cwd) {
   const result = spawnSync("tar", args, { cwd, encoding: "utf8" });
   if (result.status !== 0) {
-    throw new Error(
-      `tar failed: ${(result.stderr || result.stdout).trim()}`,
-    );
+    throw new Error(`tar failed: ${(result.stderr || result.stdout).trim()}`);
   }
   return result.stdout;
 }
@@ -199,18 +185,13 @@ async function verifyExtracted(dir, metadata) {
   }
 
   const sums = new Map();
-  for (const line of readFileSync(join(dir, "SHA256SUMS"), "utf8")
-    .trim()
-    .split(/\r?\n/)) {
+  for (const line of readFileSync(join(dir, "SHA256SUMS"), "utf8").trim().split(/\r?\n/)) {
     const match = /^([0-9a-f]{64})\s+(.+)$/.exec(line);
     if (!match) throw new Error("Invalid SHA256SUMS line");
     sums.set(basename(match[2]), match[1]);
   }
   for (const name of ["manifest.tsv", "manifest.meta"]) {
-    if (
-      !sums.has(name) ||
-      (await sha256File(join(dir, name))) !== sums.get(name)
-    ) {
+    if (!sums.has(name) || (await sha256File(join(dir, name))) !== sums.get(name)) {
       throw new Error(`${name} checksum mismatch`);
     }
   }
@@ -227,10 +208,7 @@ async function verifyExtracted(dir, metadata) {
   for (const row of manifest.rows) {
     const path = join(dir, row.archive);
     assertRegular(path, row.archive);
-    if (
-      statSync(path).size !== row.bytes ||
-      (await sha256File(path)) !== row.archiveSha
-    ) {
+    if (statSync(path).size !== row.bytes || (await sha256File(path)) !== row.archiveSha) {
       throw new Error(`${row.archive} integrity mismatch`);
     }
   }
@@ -240,9 +218,7 @@ async function verifyExtracted(dir, metadata) {
 function runDocker(args) {
   const result = spawnSync("docker", args, { encoding: "utf8" });
   if (result.status !== 0) {
-    throw new Error(
-      `docker ${args[0]} failed: ${(result.stderr || result.stdout).trim()}`,
-    );
+    throw new Error(`docker ${args[0]} failed: ${(result.stderr || result.stdout).trim()}`);
   }
   return result.stdout.trim();
 }
@@ -305,16 +281,12 @@ function verifyDockerRestore(dir, manifest) {
       const tree = fingerprintVolume(volume);
       const files = fileCountVolume(volume);
       if (tree !== row.treeSha || files !== row.files) {
-        throw new Error(
-          `Docker restore content mismatch for ${row.volume}`,
-        );
+        throw new Error(`Docker restore content mismatch for ${row.volume}`);
       }
 
       runDocker(["volume", "rm", "-f", volume]);
       created.pop();
-      console.log(
-        `PASS isolated clean-host restore verification: ${row.volume}`,
-      );
+      console.log(`PASS isolated clean-host restore verification: ${row.volume}`);
     }
   } finally {
     for (const volume of created.reverse()) {
@@ -373,8 +345,7 @@ async function main() {
   }
 
   const workRoot = resolve(
-    process.env.ECORIONE_DR_WORK_ROOT ||
-      join(tmpdir(), "ecorione-dr-restore"),
+    process.env.ECORIONE_DR_WORK_ROOT || join(tmpdir(), "ecorione-dr-restore"),
   );
   mkdirSync(workRoot, { recursive: true, mode: 0o700 });
   const extractDir = mkdtempSync(join(workRoot, "verify-"));
@@ -398,14 +369,7 @@ async function main() {
     }
 
     runTar(
-      [
-        "-xf",
-        plainTar,
-        "--no-same-owner",
-        "--no-same-permissions",
-        "-C",
-        extractDir,
-      ],
+      ["-xf", plainTar, "--no-same-owner", "--no-same-permissions", "-C", extractDir],
       process.cwd(),
     );
     rmSync(plainTar, { force: true });
@@ -413,9 +377,7 @@ async function main() {
     const manifest = await verifyExtracted(extractDir, metadata);
     if (args.docker) verifyDockerRestore(extractDir, manifest);
 
-    console.log(
-      "PASS ECORIONE off-host DR bundle integrity verification",
-    );
+    console.log("PASS ECORIONE off-host DR bundle integrity verification");
     console.log(`source_sha=${manifest.sourceSha}`);
     console.log(`source_tag=${manifest.sourceTag}`);
     console.log(`volumes=${manifest.rows.length}`);

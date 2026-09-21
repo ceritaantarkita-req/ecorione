@@ -20,9 +20,7 @@ describe("off-host DR source contract", () => {
     expect(bundle).toContain("SHA256SUMS");
     expect(bundle).toContain("archive SHA-256 mismatch");
     expect(bundle).toContain("cipher.setAAD(aad)");
-    expect(bundle).toContain(
-      "Private DR key is intentionally not used on the source host",
-    );
+    expect(bundle).toContain("Private DR key is intentionally not used on the source host");
     expect(bundle).not.toContain("createPrivateKey");
     expect(bundle).not.toContain("privateDecrypt");
   });
@@ -51,9 +49,7 @@ describe("off-host DR source contract", () => {
     expect(transfer).toContain("ClearAllForwardings=yes");
     expect(transfer).toContain("sha256sum");
     expect(transfer).toContain(".part-$$");
-    expect(transfer).toContain(
-      "Private DR decryption key is intentionally not transferred",
-    );
+    expect(transfer).toContain("Private DR decryption key is intentionally not transferred");
     expect(transfer).not.toContain("ssh-keyscan");
     expect(transfer).not.toContain("eval ");
   });

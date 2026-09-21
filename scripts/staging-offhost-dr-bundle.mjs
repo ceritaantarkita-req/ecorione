@@ -125,20 +125,9 @@ async function inspectBackup(backupDir) {
   const seenArchives = new Set();
   for (const line of readFileSync(manifestPath, "utf8").split(/\r?\n/)) {
     if (!line) continue;
-    const [
-      volume,
-      archive,
-      bytesRaw,
-      archiveSha,
-      treeSha,
-      filesRaw,
-      ...extra
-    ] = line.split("\t");
-    if (
-      extra.length ||
-      !SAFE_NAME_RE.test(volume ?? "") ||
-      !ARCHIVE_RE.test(archive ?? "")
-    ) {
+    const [volume, archive, bytesRaw, archiveSha, treeSha, filesRaw, ...extra] =
+      line.split("\t");
+    if (extra.length || !SAFE_NAME_RE.test(volume ?? "") || !ARCHIVE_RE.test(archive ?? "")) {
       throw new Error("Invalid manifest.tsv row");
     }
     if (seenVolumes.has(volume) || seenArchives.has(archive)) {
@@ -318,9 +307,7 @@ async function main() {
   console.log(`metadata=${metadataPath}`);
   console.log(`source_sha=${backup.sourceSha}`);
   console.log(`source_tag=${backup.sourceTag}`);
-  console.log(
-    "Private DR key is intentionally not used on the source host.",
-  );
+  console.log("Private DR key is intentionally not used on the source host.");
 }
 
 main().catch((error) => {
