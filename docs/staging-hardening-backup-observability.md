@@ -4,7 +4,7 @@ Last updated: **2026-09-21**
 
 Status: **ACTIVE / REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE NEXT**
 
-PCS-09 starts after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS. It hardens and proves the real remote staging host. It does not promote ECORIONE to production.
+PCS-09 starts after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS. It hardens and proves the real remote staging host. It does not promote ECORIONE to production. The host currently has Node.js but no pnpm; operator evidence commands therefore invoke reviewed Node/Bash entrypoints directly.
 
 ## Evidence order
 
@@ -23,11 +23,11 @@ PCS-09 starts after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS
 
 The repository command is:
 
-    pnpm staging:pcs09:inventory
+    node scripts/staging-pcs09-inventory.mjs
 
 Strict closure mode is:
 
-    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> pnpm staging:pcs09:inventory:strict
+    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> node scripts/staging-pcs09-inventory.mjs --strict
 
 The inventory records only sanitized operational metadata:
 
@@ -52,7 +52,7 @@ No firewall or SSH mutation is performed by the inventory script. SSH hardening 
 
 Repository SSH helper:
 
-    pnpm staging:pcs09:ssh:check
+    bash scripts/staging-ssh-hardening.sh --check
 
 Apply only while an existing working key-authenticated operator session remains open:
 
@@ -70,11 +70,11 @@ A VPS reboot is disruptive to other workloads sharing the host and therefore req
 
 Baseline command shape:
 
-    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> pnpm staging:pcs09:restart:baseline
+    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> node scripts/staging-pcs09-restart-evidence.mjs --phase baseline
 
 After an approved full VPS reboot and reconnect:
 
-    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> pnpm staging:pcs09:restart:post
+    ECORIONE_EXPECTED_SHA=<exact-deployed-sha> node scripts/staging-pcs09-restart-evidence.mjs --phase post
 
 The post phase refuses to pass unless Linux boot_id changed, all configured services are running, the release SHA/tag and volume inventory are preserved, present Connect durable-file fingerprints are unchanged, and public smoke + authenticated Ops + exact-host evidence all pass.
 
