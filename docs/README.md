@@ -153,6 +153,14 @@ PR #242 exact implementation head `db8a8f6068a40e47187a2142e6801e975e749276` pas
 
 This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
 
+## Fifth post-closure maintenance checkpoint — 2026-09-21
+
+A fifth bounded maintenance slice is closed through PR #244. It repairs Sandbox receipt-lock acquisition cleanup so a metadata-write failure after exclusive lock creation cannot leave a stale lock that permanently blocks the same idempotency key.
+
+PR #244 exact implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` passed CI #1747 and Product Eval #986 before merge as `3114354ab44894ef80e75b9983fceac64babc2e0`.
+
+This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
+
 ## Repository-wide documentation reconciliation — 2026-09-21
 
 The repository contains 192 Markdown/MDX documents. Current/canonical documents are reconciled to the closed PE/PCS state and verified staging boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.

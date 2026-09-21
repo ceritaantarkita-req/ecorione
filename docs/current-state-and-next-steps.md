@@ -271,6 +271,20 @@ Repository source state and remote runtime state remain separate evidence bounda
 
 Evidence: [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
 
+## Post-closure maintenance checkpoint 5 — 2026-09-21
+
+A fifth bounded maintenance slice is now closed through PR #244 at the repository boundary. The implementation checkpoint immediately before this documentation convergence is `3114354ab44894ef80e75b9983fceac64babc2e0`.
+
+PR #244 repairs Sandbox receipt-lock acquisition failure cleanup. When exclusive lock creation succeeds but metadata initialization fails before a lease is returned, the just-created descriptor and lock file are cleaned before the original error is rethrown. This prevents a pre-effect infrastructure failure from turning the same idempotency key into a persistent false-busy state.
+
+The authoritative implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` passed CI #1747 and Product Eval #986. Successful lease semantics, receipt format, authority/effect ordering, and idempotency behavior are otherwise unchanged.
+
+This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
+
+Repository source state and remote runtime state remain separate evidence boundaries. The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless a later explicit deployment record proves a newer runtime.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
+
 ## Current work state and deferred boundaries
 
 - Active implementation scope — **NONE**. PCS-00..PCS-10 and PE-00..PE-08 are closed; new work requires an explicit operator decision.

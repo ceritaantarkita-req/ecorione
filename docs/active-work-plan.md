@@ -6,13 +6,13 @@ Status: **PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / NO ACTIVE IMPLEMENT
 
 ## Latest post-closure maintenance checkpoint
 
-Bounded maintenance is now **CLOSED through PR #242 at the repository boundary**. The latest slice bounds the Ai server-side Flow owner proxy to 10 seconds by default while preserving redirect fail-closed behavior and sanitized `502 UPSTREAM_UNAVAILABLE` transport semantics.
+Bounded maintenance is now **CLOSED through PR #244 at the repository boundary**. The latest slice repairs Sandbox receipt-lock acquisition cleanup so a metadata-write failure after exclusive lock creation cannot leave an idempotency key permanently busy.
 
-Implementation checkpoint before this documentation convergence: `47cbeaa8760debbfde87cff7cb7a828037a2829b`. PR #242 exact implementation head `db8a8f6068a40e47187a2142e6801e975e749276` passed CI #1743, Product Eval #982, and PCS-06 Integrated Browser Acceptance #18.
+Implementation checkpoint before this documentation convergence: `3114354ab44894ef80e75b9983fceac64babc2e0`. PR #244 exact implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` passed CI #1747 and Product Eval #986.
 
 This maintenance does not open PE-09, PCS-11, Batch 13, a new F6 item, production promotion, Cloudflare/public-edge activation, or paid-provider evidence. It also does not claim that SumoPod staging has been redeployed. The existing proven staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until newer real-host deployment evidence exists.
 
-Evidence: [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
+Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
 
 There is still **NO ACTIVE IMPLEMENTATION QUEUE** after this checkpoint.
 
@@ -135,6 +135,18 @@ This slice bounded the Ai server-side Flow owner proxy to 10 seconds by default 
 The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
+
+## Maintenance checkpoint 5 — 2026-09-21
+
+Bounded repository maintenance is now **CLOSED through PR #244** at the source boundary. The latest implementation checkpoint before this docs-only convergence is `3114354ab44894ef80e75b9983fceac64babc2e0`.
+
+This slice repairs Sandbox receipt-lock acquisition cleanup. If exclusive lock creation succeeds but lock metadata initialization fails, the just-created descriptor/file is cleaned before the original error is rethrown, preventing a pre-effect failure from leaving the idempotency key permanently busy. PR #244 exact head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` passed CI #1747 and Product Eval #986 before merge.
+
+**Current implementation queue remains none.** This checkpoint does not authorize production promotion, Cloudflare/public-edge activation, hosted spend, a new PE/PCS/Batch/F6 scope, or any staging-runtime claim beyond existing evidence.
+
+The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
 
 ## Closed PE-08 boundary
 
