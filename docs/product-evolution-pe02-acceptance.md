@@ -115,4 +115,4 @@ Ai Project Sources API/UI contracts
 
 Draft PR #170 was superseded administratively by non-draft PR #171 without changing the reviewed implementation. PR #171 is merged as `c734f00eaa791077c99557e6e89579534c43d651`; the final reviewed PR head and exact-head gates were rechecked in [verification/pe-00-02-recheck-2026-09-19.md](verification/pe-00-02-recheck-2026-09-19.md).
 
-PE-02 remains **CLOSED / PASS**. PE-03 is now active from that merged base.
+PE-02 remains **CLOSED / PASS**. PE-03 through PE-08 and the follow-on PCS-00..PCS-10 roadmap subsequently closed; no Product Evolution batch is active.
