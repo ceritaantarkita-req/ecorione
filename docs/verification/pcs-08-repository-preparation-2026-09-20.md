@@ -155,13 +155,51 @@ PASS PCS-08 staging deploy sha=0b50a426ca2b14202eba769297af6c15a579b09f tag=stag
 
 This is the first successful real GitHub -> SumoPod exact-main deployment through the PCS-08 path.
 
+## Controlled rollback exercise
+
+With automatic CD frozen at `0`, the operator performed a deliberate runtime rollback from:
+
+```text
+current SHA   0b50a426ca2b14202eba769297af6c15a579b09f
+current tag   staging-0b50a426ca2b
+previous SHA  99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+previous tag  staging-99523b0
+```
+
+The precheck matched the release receipt and active runtime. The rollback then checked out the previous source revision detached and applied the prior immutable image tag.
+
+Readiness-aware public verification observed transient home HTTP 502 for attempts 1-4 while `/ops` was already 401, then passed on attempt 5 with home 200 + `/ops` 401. All 15 configured services were running and the active AI image matched `ecorione:staging-99523b0`.
+
+The historical `99523b0...` checkout contains the pre-PR-208 MCP smoke request shape, which returns HTTP 400 because the request is malformed. To verify the rolled-back runtime rather than the obsolete verifier, the reviewed current `production-public-smoke.mjs` from exact main `0b50a426...` was exported to a temporary file and executed without changing the rollback checkout/runtime. That reviewed verifier passed home, protected `/ops` + `/settings`, MCP protected-resource metadata, and the valid unauthenticated MCP 401 challenge.
+
+The remaining rollback gates also passed:
+
+```text
+authenticated /api/ops       healthy=true, 0 unhealthy required services
+exact-host evidence          expectedShaMatched=true
+configured/running services  15 / 15
+worktree                     clean / DETACHED
+public home                  HTTP 200 / TLS verify 0
+unauthenticated /ops         HTTP 401
+rollback result              PASS
+```
+
+The exercise ended with:
+
+```text
+PASS PCS-08 CONTROLLED ROLLBACK EXERCISE
+SHA=99523b0bb29ce11a74ec61c0e364ef5b6dd543ae
+TAG=staging-99523b0
+```
+
+No data rollback was performed or claimed.
+
 ## Pending evidence
 
 Before PCS-08 can close:
 
-1. verify the host release receipt matches `0b50a426ca2b14202eba769297af6c15a579b09f` / `staging-0b50a426ca2b`;
-2. complete a deliberate controlled rollback exercise against the readiness-aware verifier;
-3. restore the intended current `main` revision after the rollback exercise;
-4. record final PCS-08 closure evidence.
+1. restore intended current `main` `0b50a426ca2b14202eba769297af6c15a579b09f` through the governed GitHub CD path;
+2. verify the restored release receipt, exact source/image identity, service fleet, public boundary, ops health, and exact-host evidence;
+3. record final PCS-08 closure evidence.
 
 No source-only result is sufficient to claim those remote boundaries.
