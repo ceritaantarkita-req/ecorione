@@ -53,7 +53,9 @@ export class McpAuthError extends Error {
 export class McpAuthDependencyError extends Error {
   readonly statusCode = 502;
 
-  constructor(message = "JWKS authorization server tidak tersedia atau mengembalikan data tidak valid.") {
+  constructor(
+    message = "JWKS authorization server tidak tersedia atau mengembalikan data tidak valid.",
+  ) {
     super(message);
     this.name = "McpAuthDependencyError";
   }
