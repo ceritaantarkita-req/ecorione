@@ -2,7 +2,7 @@
 
 Date: **2026-09-21**
 
-Status: **REAL HOST ACCEPTANCE COMPLETE / CLOSURE GATES PENDING**
+Status: **CLOSED / PASS**
 
 ## Starting boundary
 
@@ -330,4 +330,20 @@ All PCS-09 real-host acceptance gates are now satisfied at their documented boun
 
 Remaining non-claims are intentional: no off-host disaster recovery, no total-VPS-loss recovery, no point-in-time recovery, no production SLA/SLO, no public production promotion, no long-term telemetry retention, and no persistence claim for absent Connect files.
 
-This branch is therefore a **PCS-09 closure candidate**. Repository CI/Product Eval and merge of the closure-evidence PR remain the final repository gates before PCS-09 can be marked CLOSED / PASS and PCS-10 documentation convergence begins.
+Repository closure evidence then completed:
+
+```text
+PR                         #218
+exact closure head         ece59440d742f59252046562cf3ba86e7911b46f
+PR CI                      #1678 PASS
+PR Product Eval            #917 PASS
+squash merge main          3db9e4854afbaccb9790638243fa98048c1a4f78
+merged-main CI             #1679 PASS
+merged-main Product Eval   #918 PASS
+Staging Deploy             #135 gate PASS / deploy SKIPPED
+Staging Deploy             #136 gate PASS / deploy SKIPPED
+```
+
+The two post-merge Staging Deploy runs proved automatic activation remained disabled; the documentation merge therefore did not mutate the proven runtime at `0f332c73dc7b363bffecdeecae921d805d5ae131`.
+
+PCS-09 is **CLOSED / PASS** at the documented staging boundary. PCS-10 owns documentation convergence only; it does not silently promote staging to production.
