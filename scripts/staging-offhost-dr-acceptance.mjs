@@ -21,12 +21,16 @@ function fail(message) {
 }
 
 function parseArgs(argv) {
-  const index = argv.indexOf("--restore-receipt");
-  const path = index >= 0 ? argv[index + 1] : "";
-  if (!path) {
-    fail("use --restore-receipt <mode-0600 restore receipt>");
+  const receiptAt = argv.indexOf("--restore-receipt");
+  const canaryAt = argv.indexOf("--canary-state");
+  const receipt = receiptAt >= 0 ? argv[receiptAt + 1] : "";
+  const canary = canaryAt >= 0 ? argv[canaryAt + 1] : "";
+  if (!receipt || !canary) {
+    fail(
+      "use --restore-receipt <mode-0600 restore receipt> --canary-state <mode-0600 semantic canary>",
+    );
   }
-  return resolve(path);
+  return { receipt: resolve(receipt), canary: resolve(canary) };
 }
 
 function run(name, args, options = {}) {
@@ -84,8 +88,11 @@ async function main() {
     fail("run as root");
   }
 
-  const receiptPath = parseArgs(process.argv.slice(2));
+  const { receipt: receiptPath, canary: canaryStatePath } = parseArgs(
+    process.argv.slice(2),
+  );
   assertRegularMode600(receiptPath, "restore receipt");
+  assertRegularMode600(canaryStatePath, "semantic canary state");
   const restore = JSON.parse(readFileSync(receiptPath, "utf8"));
   if (
     restore.schemaVersion !== 1 ||
@@ -93,6 +100,8 @@ async function main() {
     !TAG_RE.test(restore.sourceTag ?? "") ||
     !PROJECT_RE.test(restore.composeProject ?? "") ||
     restore.retrievedFromIndependentTarget !== true ||
+    typeof restore.semanticCanaryStateFilename !== "string" ||
+    !/^[0-9a-f]{64}$/.test(restore.semanticCanarySha256 ?? "") ||
     !Array.isArray(restore.restoredVolumes) ||
     restore.restoredVolumes.length === 0
   ) {
@@ -111,6 +120,16 @@ async function main() {
 
   if (expectedProject !== restore.composeProject) {
     fail("configured Compose project does not match restore receipt");
+  }
+
+  if (restore.semanticCanaryStateFilename !== canaryStatePath.split(/[\\/]/u).at(-1)) {
+    fail("semantic canary filename does not match restore receipt");
+  }
+  const canarySha256 = run("sha256sum", [canaryStatePath], {
+    label: "semantic canary checksum",
+  }).split(/\s+/u)[0];
+  if (canarySha256 !== restore.semanticCanarySha256) {
+    fail("semantic canary checksum does not match restore receipt");
   }
   if (!publicBaseUrl) {
     fail("ECORIONE_PUBLIC_BASE_URL is required");
@@ -189,6 +208,25 @@ async function main() {
     fail("AI image tag does not match restored source tag");
   }
 
+  const semanticCanary = run(
+    process.execPath,
+    [
+      "scripts/staging-offhost-dr-canary.mjs",
+      "--phase",
+      "post",
+      "--state",
+      canaryStatePath,
+    ],
+    {
+      env: {
+        ...process.env,
+        ECORIONE_COMPOSE_PROJECT: restore.composeProject,
+      },
+      label: "semantic owner-data DR canary",
+    },
+  );
+  if (semanticCanary) console.log(semanticCanary);
+
   const smoke = run(process.execPath, ["scripts/production-public-smoke.mjs"], {
     env: { ...process.env, ECORIONE_PUBLIC_BASE_URL: publicBaseUrl },
     label: "public smoke",
@@ -262,6 +300,9 @@ async function main() {
     restoredVolumeCount: restore.restoredVolumes.length,
     retrievedFromIndependentTarget: true,
     retrievalReceiptFilename: restore.retrievalReceiptFilename ?? null,
+    semanticCanaryStateFilename: restore.semanticCanaryStateFilename,
+    semanticCanarySha256: restore.semanticCanarySha256,
+    semanticCanaryAccepted: true,
     aiImage,
     publicBaseOrigin: new URL(publicBaseUrl).origin,
     preRebootAccepted: true,
