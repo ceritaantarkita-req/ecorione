@@ -30,18 +30,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Format
-        run: |
-          pnpm exec prettier --write \
-            scripts/release-security-acceptance.mjs \
-            scripts/staging-pcs09-inventory.mjs \
-            scripts/staging-pcs09-restart-evidence.mjs \
-            test/pcs09-staging-hardening-source-contract.test.ts
-          git diff -- \
-            scripts/release-security-acceptance.mjs \
-            scripts/staging-pcs09-inventory.mjs \
-            scripts/staging-pcs09-restart-evidence.mjs \
-            test/pcs09-staging-hardening-source-contract.test.ts
-          exit 1
+        run: pnpm run format:check
 
       - name: Lint
         run: pnpm run lint
