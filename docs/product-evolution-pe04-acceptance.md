@@ -177,4 +177,4 @@ Product Eval
 Phase 4 / Temporal runtime acceptance
 ```
 
-PE-05 must not begin until the exact reviewed PE-04 head is green and merged.
+Historical sequencing gate: PE-05 could not begin until the exact reviewed PE-04 head was green and merged. That gate was satisfied; PE-05 through PE-08 and PCS-00..PCS-10 subsequently closed.
