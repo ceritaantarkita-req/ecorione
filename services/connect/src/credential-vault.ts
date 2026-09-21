@@ -1,10 +1,13 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import {
   chmodSync,
+  closeSync,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
   renameSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { dirname } from "node:path";
@@ -100,6 +103,13 @@ export class CredentialVaultFormatError extends CredentialVaultError {
   constructor(message: string) {
     super(`Credential vault tidak valid: ${message}`);
     this.name = "CredentialVaultFormatError";
+  }
+}
+
+export class CredentialVaultBusyError extends CredentialVaultError {
+  constructor(path: string) {
+    super(`Credential vault lock sedang aktif: ${path}.`);
+    this.name = "CredentialVaultBusyError";
   }
 }
 
@@ -210,6 +220,32 @@ function writeVault(path: string, vault: VaultFile): void {
   chmodSync(path, 0o600);
 }
 
+function withVaultLock<T>(path: string, fn: () => T): T {
+  mkdirSync(dirname(path), { recursive: true });
+  const lockPath = `${path}.lock`;
+  let fd: number;
+  try {
+    fd = openSync(lockPath, "wx", 0o600);
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code?: unknown }).code === "EEXIST"
+    ) {
+      throw new CredentialVaultBusyError(lockPath);
+    }
+    throw error;
+  }
+  try {
+    writeFileSync(fd, "locked\n", "utf8");
+    return fn();
+  } finally {
+    closeSync(fd);
+    unlinkSync(lockPath);
+  }
+}
+
 /**
  * Connect-owned encrypted credential store.
  *
@@ -265,38 +301,42 @@ export class FileCredentialVault implements ProviderCredentialReader {
         error instanceof Error ? error.message : String(error),
       );
     }
-    const vault = readVault(this.path);
-    const prior = vault.entries.find(
-      (candidate) => candidate.provider === provider && candidate.purpose === purpose,
-    );
-    const generation = (prior?.generation ?? 0) + 1;
-    const next = encryptEntry({
-      provider,
-      purpose,
-      generation,
-      updatedAt: normalizedUpdatedAt,
-      secret,
-      key: this.masterKey,
-    });
-    const entries = vault.entries
-      .filter((entry) => !(entry.provider === provider && entry.purpose === purpose))
-      .concat(next)
-      .sort((a, b) =>
-        scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)),
+    return withVaultLock(this.path, () => {
+      const vault = readVault(this.path);
+      const prior = vault.entries.find(
+        (candidate) => candidate.provider === provider && candidate.purpose === purpose,
       );
-    writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
-    return { provider, purpose, generation, updatedAt: normalizedUpdatedAt };
+      const generation = (prior?.generation ?? 0) + 1;
+      const next = encryptEntry({
+        provider,
+        purpose,
+        generation,
+        updatedAt: normalizedUpdatedAt,
+        secret,
+        key: this.masterKey,
+      });
+      const entries = vault.entries
+        .filter((entry) => !(entry.provider === provider && entry.purpose === purpose))
+        .concat(next)
+        .sort((a, b) =>
+          scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)),
+        );
+      writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
+      return { provider, purpose, generation, updatedAt: normalizedUpdatedAt };
+    });
   }
 
   remove(provider: CredentialProvider, purpose: CredentialPurpose): boolean {
     assertCredentialScope(provider, purpose);
-    const vault = readVault(this.path);
-    const entries = vault.entries.filter(
-      (entry) => !(entry.provider === provider && entry.purpose === purpose),
-    );
-    if (entries.length == vault.entries.length) return false;
-    writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
-    return true;
+    return withVaultLock(this.path, () => {
+      const vault = readVault(this.path);
+      const entries = vault.entries.filter(
+        (entry) => !(entry.provider === provider && entry.purpose === purpose),
+      );
+      if (entries.length === vault.entries.length) return false;
+      writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
+      return true;
+    });
   }
 
   /** Re-encrypts every entry under a new 32-byte master key as one atomic file replacement. */
@@ -307,23 +347,25 @@ export class FileCredentialVault implements ProviderCredentialReader {
     if (nextKey.byteLength !== 32) {
       throw new CredentialVaultFormatError("master key baru harus tepat 32 byte.");
     }
-    const vault = readVault(this.path);
-    const plaintext = vault.entries.map((entry) => ({
-      entry,
-      secret: decryptEntry(entry, this.masterKey),
-    }));
-    const entries = plaintext.map(({ entry, secret }) =>
-      encryptEntry({
-        provider: entry.provider,
-        purpose: entry.purpose,
-        generation: entry.generation,
-        updatedAt: entry.updatedAt,
-        secret,
-        key: nextKey,
-      }),
-    );
-    writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
-    this.masterKey.fill(0);
-    this.masterKey = nextKey;
+    withVaultLock(this.path, () => {
+      const vault = readVault(this.path);
+      const plaintext = vault.entries.map((entry) => ({
+        entry,
+        secret: decryptEntry(entry, this.masterKey),
+      }));
+      const entries = plaintext.map(({ entry, secret }) =>
+        encryptEntry({
+          provider: entry.provider,
+          purpose: entry.purpose,
+          generation: entry.generation,
+          updatedAt: entry.updatedAt,
+          secret,
+          key: nextKey,
+        }),
+      );
+      writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
+      this.masterKey.fill(0);
+      this.masterKey = nextKey;
+    });
   }
 }

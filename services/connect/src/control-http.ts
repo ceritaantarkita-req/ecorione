@@ -1,7 +1,11 @@
 import { HttpError, observabilityFor, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { CREDENTIAL_PROVIDERS, type CredentialVaultAdmin } from "./credential-vault.js";
+import {
+  CREDENTIAL_PROVIDERS,
+  CredentialVaultBusyError,
+  type CredentialVaultAdmin,
+} from "./credential-vault.js";
 import { nowIso } from "./clock.js";
 import {
   PROVIDER_CATALOG,
@@ -19,6 +23,21 @@ const CredentialBodySchema = z.object({ secret: z.string().min(1).max(32_768) })
 export interface ConnectControlOptions {
   readonly runtimeSettings?: RuntimeSettingsAdmin | undefined;
   readonly credentialVault?: CredentialVaultAdmin | undefined;
+}
+
+function credentialMutation<T>(fn: () => T): T {
+  try {
+    return fn();
+  } catch (error) {
+    if (error instanceof CredentialVaultBusyError) {
+      throw new HttpError(
+        503,
+        "CREDENTIAL_VAULT_BUSY",
+        "Credential vault sedang dipakai; coba lagi.",
+      );
+    }
+    throw error;
+  }
 }
 
 export function registerConnectControlRoutes(
@@ -75,7 +94,9 @@ export function registerConnectControlRoutes(
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
       const { secret: value } = parseOrBadRequest(CredentialBodySchema, req.body);
-      const metadata = vault().set(provider, purposeFor(provider), value, nowIso());
+      const metadata = credentialMutation(() =>
+        vault().set(provider, purposeFor(provider), value, nowIso()),
+      );
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
         provider,
@@ -88,7 +109,7 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
-      const removed = vault().remove(provider, purposeFor(provider));
+      const removed = credentialMutation(() => vault().remove(provider, purposeFor(provider)));
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
         provider,
