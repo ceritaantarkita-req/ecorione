@@ -46,4 +46,19 @@ describe("PCS-09 staging hardening source contract", () => {
     expect(source).toContain("keep this session open");
     expect(source).not.toContain("ufw reset");
   });
+
+  it("uses a cold same-host backup with isolated verification and guaranteed restart cleanup", () => {
+    const source = readFileSync(resolve(ROOT, "scripts/staging-pcs09-backup.sh"), "utf8");
+    expect(source).toContain('--apply');
+    expect(source).toContain("Release receipt must be root-owned");
+    expect(source).toContain("compose stop");
+    expect(source).toContain("trap cleanup EXIT");
+    expect(source).toContain("fingerprint_volume");
+    expect(source).toContain("docker volume create");
+    expect(source).toContain("isolated content verification");
+    expect(source).toContain("NOT off-host disaster recovery");
+    expect(source).toContain("Connect Vault master key");
+    expect(source).not.toContain("docker system prune");
+    expect(source).not.toContain("docker volume prune");
+  });
 });
