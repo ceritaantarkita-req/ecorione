@@ -46,6 +46,12 @@ const caddy = readFileSync("deploy/Caddyfile", "utf8");
 const server = readFileSync("packages/shared-server/src/server.ts", "utf8");
 const proxy = readFileSync("apps/ai/lib/settings-proxy.ts", "utf8");
 const flow = readFileSync("services/flow/src/graph-activities.ts", "utf8");
+const sharedClient = readFileSync("packages/shared-server/src/client.ts", "utf8");
+const hubMcp = readFileSync("services/hub/src/mcp.ts", "utf8");
+const hubExchange = readFileSync("services/hub/src/exchange-http.ts", "utf8");
+const hubMultimodal = readFileSync("services/hub/src/multimodal-http.ts", "utf8");
+const brainContextEcx = readFileSync("apps/ai/lib/brain-context-ecx.ts", "utf8");
+const syncHttp = readFileSync("services/sync/src/http.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
@@ -61,6 +67,18 @@ if (!proxy.includes("const ALLOWED") || !proxy.includes('redirect: "error"'))
   findings.push("settings proxy path/redirect hardening missing");
 if (!flow.includes("ECORIONE_FLOW_HTTP_HOST_ALLOWLIST") || !flow.includes('redirect: "error"'))
   findings.push("Flow SSRF boundary missing");
+for (const [boundary, source] of [
+  ["shared internal HTTP client", sharedClient],
+  ["Hub MCP Artifact fetch", hubMcp],
+  ["Hub ECX Artifact fetch", hubExchange],
+  ["Hub multimodal Artifact fetch", hubMultimodal],
+  ["Ai Brain owner fetch", brainContextEcx],
+  ["Sync Connect MCP fetch", syncHttp],
+]) {
+  if (!source.includes('redirect: "error"')) {
+    findings.push(`${boundary} must fail closed on redirects`);
+  }
+}
 if (!mcpTypes.includes("allowInsecureLoopback") || !mcpTypes.includes("credentialRef"))
   findings.push("MCP transport credential/HTTPS schema missing");
 if (!mcpSdk.includes("ECORIONE_MCP_STDIO_ALLOWLIST"))
