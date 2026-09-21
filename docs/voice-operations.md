@@ -1,5 +1,9 @@
 # Realtime Voice Operations — Batch 6
 
+Status: **CLOSED OPERATIONAL CONTRACT / BATCH 6 CLOSED**
+
+This runbook remains the current operational contract for the closed Batch 6 voice surface.
+
 ## Boundary
 
 `Ai microphone/VAD -> Hub voice session -> Connect STT -> Hub chat -> Connect model -> Connect TTS -> Hub SSE -> Ai playback`
@@ -52,4 +56,4 @@ STT is incremental per audio chunk. Assistant text/audio is streamed from Hub as
 
 - Batch 6 integration run `34422346310`: root typecheck PASS and focused voice regression PASS.
 - Strict lint-fix run `34423581218`: lint PASS, root typecheck PASS, focused voice regression PASS, and the temporary helper self-deleted before the candidate head.
-- Closure still requires exact-head repository CI, exact-head MCP External HTTPS Acceptance, expected-head merge, and post-merge `main` verification before Batch 6 can be marked `CLOSED`.
+- Those closure requirements were subsequently satisfied; Batch 6 is CLOSED at its documented boundary. The run IDs above remain implementation-time evidence rather than a current pending gate.
