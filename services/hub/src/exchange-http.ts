@@ -145,7 +145,7 @@ async function readArtifactSelectorText(
 
   let response: Response;
   try {
-    response = await fetch(contentUrl, { headers });
+    response = await fetch(contentUrl, { headers, redirect: "error" });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     throw new BadGatewayError(`Artifact selector preview tidak tersedia: ${detail}`);
@@ -259,7 +259,7 @@ async function hydrateArtifact(
   if (input.token !== undefined) headers.set("authorization", `Bearer ${input.token}`);
   let response: Response;
   try {
-    response = await fetch(url, { headers });
+    response = await fetch(url, { headers, redirect: "error" });
   } catch (error) {
     throw new BadGatewayError(
       `Artifact tidak tersedia: ${error instanceof Error ? error.message : String(error)}`,
