@@ -1,6 +1,6 @@
 # ECORIONE Release / Upgrade / Rollback Operations
 
-Last updated: **2026-09-18**
+Last updated: **2026-09-21**
 
 Fase 6+ repository reproducibility gates now include immutable remote-action pin review, fixed GitHub-hosted runner-label review, exact Node/Inno toolchains, and governed container-image digest review. Normal CI runs `pnpm run actions:pin-review` and `pnpm run actions:runner-review`; release-security acceptance protects and re-executes both policies.
 
@@ -8,7 +8,7 @@ Node build-toolchain identity is centralized in `.node-version` and continuously
 
 Windows installer compiler identity is centralized in `.inno-setup-version`. Desktop Installer reads that exact pin and installs Chocolatey `innosetup` with `--version`; normal CI runs `pnpm run toolchain:installer-review`, release-security acceptance re-executes the policy, and installer/toolchain pull requests run the Desktop Installer workflow.
 
-Status: **Batch 1–12 release baseline CLOSED / READY within documented self-host boundary**
+Status: **release baseline CLOSED / SumoPod staging delivery VERIFIED / production promotion separate**
 
 Current handoff: `docs/current-state-and-next-steps.md`.
 
@@ -21,7 +21,7 @@ export ECORIONE_DEPLOY_ENV=deploy/staging.env
 export ECORIONE_COMPOSE_PROJECT=ecorione-staging
 ```
 
-`ECORIONE_PRODUCTION_ENV` remains a compatibility fallback. See `docs/sumopod-staging.md` for the approved PCS-07 staging procedure.
+`ECORIONE_PRODUCTION_ENV` remains a compatibility fallback. SumoPod staging is now verified through PCS-07..PCS-09; use `docs/staging-continuous-deployment.md` for routine governed GitHub-to-staging delivery and `docs/sumopod-staging.md` / `docs/staging-hardening-backup-observability.md` for host procedures and acceptance boundaries.
 
 1. Run `scripts/self-host-install.sh`; first run creates the selected mode-0600 deployment env from `deploy/production.env.example` and exits.
 2. Replace every `CHANGE_ME`; keep hosted provider API secrets in Connect Vault rather than deployment env plaintext.
