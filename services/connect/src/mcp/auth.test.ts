@@ -91,6 +91,31 @@ describe("MCP OAuth resource server", () => {
     }
   });
 
+  it("membatasi waktu tunggu default JWKS fetch dan memetakan timeout sebagai dependency failure", async () => {
+    const originalDispatcher = getGlobalDispatcher();
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+
+    try {
+      const pool = agent.get("https://auth.example");
+      pool
+        .intercept({ path: "/jwks", method: "GET" })
+        .reply(200, { keys: [PUBLIC_JWK] })
+        .delay(250);
+
+      const cfg: McpAuthConfig = { ...config(), fetchJson: undefined };
+      await expect(
+        new JwksCache(cfg, 5 * 60 * 1000, 30 * 1000, 25).keys(NOW_MS),
+      ).rejects.toMatchObject({
+        name: "McpAuthDependencyError",
+        statusCode: 502,
+      });
+    } finally {
+      setGlobalDispatcher(originalDispatcher);
+    }
+  });
+
   it("refreshes a still-fresh JWKS cache once when a rotated kid appears", async () => {
     let fetches = 0;
     const rotated = { ...PUBLIC_JWK, kid: "k2" };
