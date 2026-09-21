@@ -163,9 +163,9 @@ This remains repository maintenance, not a new roadmap or staging deployment cla
 
 ## Latest-main staging convergence checkpoint 1 — 2026-09-21
 
-A bounded operational convergence scope is now active to move the latest reviewed GitHub `main` onto the proven SumoPod staging environment through the existing PCS-08 deployment path. Target `main` `de8d5d510d07ce06ece21368e4305148a2b587c9` passed CI #1750 and Product Eval #989; Staging Deploy #277/#278 passed their gate jobs but skipped deployment, so the proven runtime claim remains `0f332c73dc7b...` until a successful deploy and runtime verification exist.
+A bounded operational convergence scope remains active to move the latest reviewed GitHub `main` onto the proven SumoPod staging environment through the existing PCS-08 deployment path. Scope-opening PR #246 merged as `e38d9d8cd5af44b51068100428a321179b1bdcdf`; post-merge CI #1752 and Product Eval #991 passed. Staging Deploy #282 passed its exact-main gate but skipped deployment because governed CD activation remains disabled, so the proven runtime claim remains `0f332c73dc7b...` until a successful deploy and runtime verification exist.
 
-Checkpoint: [verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md).
+Latest checkpoint: [verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md).
 
 ## Repository-wide documentation reconciliation — 2026-09-21
 
