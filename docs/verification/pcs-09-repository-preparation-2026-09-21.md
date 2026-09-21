@@ -2,7 +2,7 @@
 
 Date: **2026-09-21**
 
-Status: **REPOSITORY PREPARATION / REAL HOST EVIDENCE PENDING**
+Status: **REPOSITORY IMPLEMENTATION MERGED / REAL HOST EVIDENCE PENDING**
 
 ## Starting boundary
 
@@ -37,14 +37,25 @@ The inventory checks:
 
 The first non-strict run may legitimately report SSH hardening blockers. That is baseline evidence, not a reason to weaken the checks.
 
+## Repository merge evidence
+
+PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 and Product Eval #903, then squash-merged to `main` as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`.
+
+The exact merged `main` revision then passed:
+
+- CI #1665;
+- Product Eval #904;
+- MCP External HTTPS Acceptance #894.
+
+Automatic Staging Deploy workflow-run gates #106 and #107 completed successfully while the deployment job remained skipped because the repository activation variable stayed disabled. Therefore this documentation merge did not mutate the proven staging runtime.
+
 ## Pending PCS-09 evidence
 
-1. exact-head CI + Product Eval for this repository preparation;
-2. governed deployment of reviewed PCS-09 tooling to staging;
-3. real non-strict host inventory;
-4. key-only SSH hardening with fresh-session proof;
-5. strict inventory PASS;
-6. actual VPS reboot persistence evidence;
-7. same-host verified backup and isolated restore evidence;
-8. staging Operations + host resource evidence;
-9. sanitized final closure.
+1. governed deployment of exact reviewed PCS-09 `main` to staging;
+2. real non-strict host inventory;
+3. key-only SSH hardening with fresh-session proof;
+4. strict inventory PASS;
+5. actual VPS reboot persistence evidence;
+6. same-host verified backup and isolated restore evidence;
+7. staging Operations + host resource evidence;
+8. sanitized final closure.
