@@ -3,10 +3,18 @@ import {
   TriggerFireResponseSchema,
   WebhookIngressDeliverySchema,
 } from "@ecorione/shared-schema";
-import { HttpError, httpJson, parseOrBadRequest } from "@ecorione/shared-server";
+import {
+  BadGatewayError,
+  HttpError,
+  RemoteServiceError,
+  httpJson,
+  parseOrBadRequest,
+} from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { ProviderCredentialReader } from "./credential-vault.js";
+
+const DEFAULT_WEBHOOK_FORWARD_TIMEOUT_MS = 10_000;
 
 const WebhookParamsSchema = z.object({
   hookId: z
@@ -22,6 +30,7 @@ export interface ConnectWebhookOptions {
   readonly credentialVault?: ProviderCredentialReader | undefined;
   /** Development-only fallback when the encrypted vault is not configured. */
   readonly developmentRootSecret?: string | undefined;
+  readonly forwardTimeoutMs?: number | undefined;
 }
 
 export function deriveWebhookToken(rootSecret: string, hookId: string): string {
@@ -45,6 +54,11 @@ export function registerConnectWebhookRoutes(
   app: FastifyInstance,
   options: ConnectWebhookOptions,
 ): void {
+  const forwardTimeoutMs = options.forwardTimeoutMs ?? DEFAULT_WEBHOOK_FORWARD_TIMEOUT_MS;
+  if (!Number.isInteger(forwardTimeoutMs) || forwardTimeoutMs < 1 || forwardTimeoutMs > 60_000) {
+    throw new Error("Webhook Flow forward timeout harus integer 1..60000 ms.");
+  }
+
   const rootSecret = (): string => {
     const secret =
       options.credentialVault?.get("webhook", "tokens") ?? options.developmentRootSecret;
@@ -78,13 +92,19 @@ export function registerConnectWebhookRoutes(
       }
       const delivery = parseOrBadRequest(WebhookIngressDeliverySchema, req.body);
 
-      return TriggerFireResponseSchema.parse(
-        await httpJson(`${options.flowUrl}/v1/webhooks/${encodeURIComponent(hookId)}`, {
+      let forwarded: unknown;
+      try {
+        forwarded = await httpJson(`${options.flowUrl}/v1/webhooks/${encodeURIComponent(hookId)}`, {
           method: "POST",
           token: options.internalToken,
           body: delivery,
-        }),
-      );
+          signal: AbortSignal.timeout(forwardTimeoutMs),
+        });
+      } catch (error) {
+        if (error instanceof RemoteServiceError) throw error;
+        throw new BadGatewayError("Flow webhook ingress tidak tersedia.");
+      }
+      return TriggerFireResponseSchema.parse(forwarded);
     },
   );
 }
