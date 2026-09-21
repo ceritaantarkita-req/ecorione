@@ -92,16 +92,15 @@ async function main() {
     !SHA_RE.test(restore.sourceSha ?? "") ||
     !TAG_RE.test(restore.sourceTag ?? "") ||
     !PROJECT_RE.test(restore.composeProject ?? "") ||
+    restore.retrievedFromIndependentTarget !== true ||
     !Array.isArray(restore.restoredVolumes) ||
     restore.restoredVolumes.length === 0
   ) {
     fail("restore receipt is invalid");
   }
 
-  const deployEnv = resolve(
-    ROOT,
-    process.env.ECORIONE_DEPLOY_ENV?.trim() || "deploy/staging.env",
-  );
+  const deployEnvArg = process.env.ECORIONE_DEPLOY_ENV?.trim() || "deploy/staging.env";
+  const deployEnv = resolve(ROOT, deployEnvArg);
   const overlayRaw = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "";
   const overlay = overlayRaw ? resolve(ROOT, overlayRaw) : null;
   const edgeNetwork = process.env.ECORIONE_EDGE_NETWORK?.trim() || "";
@@ -210,7 +209,7 @@ async function main() {
 
   const hostEvidenceEnv = {
     ...process.env,
-    ECORIONE_DEPLOY_ENV: resolve(deployEnv).slice(ROOT.length + 1),
+    ECORIONE_DEPLOY_ENV: deployEnvArg,
     ECORIONE_COMPOSE_PROJECT: restore.composeProject,
     ECORIONE_EXPECTED_SHA: restore.sourceSha,
   };
@@ -261,6 +260,8 @@ async function main() {
     composeProject: restore.composeProject,
     serviceCount: running.length,
     restoredVolumeCount: restore.restoredVolumes.length,
+    retrievedFromIndependentTarget: true,
+    retrievalReceiptFilename: restore.retrievalReceiptFilename ?? null,
     aiImage,
     publicBaseOrigin: new URL(publicBaseUrl).origin,
     preRebootAccepted: true,
