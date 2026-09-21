@@ -207,6 +207,24 @@ PE-08 is not a feature expansion batch. Production VPS/Cloudflare, rendered loca
 
 Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
 
+## Post-closure maintenance checkpoint — 2026-09-21
+
+A bounded repository audit after PE/PCS closure repaired concrete maintenance defects without opening a new roadmap. The implementation checkpoint immediately before this documentation convergence is `1618b45e3c0837a84e17d258182cd73cad3f0591`.
+
+Closed maintenance through PR #232 includes:
+
+- W18 cleanup state preservation while Hosted remains forced OFF;
+- redirect fail-closed hardening across internal/owner, hosted-provider, multimodal, local-runtime, and JWKS fetch boundaries;
+- bounded JWKS key-rotation refresh with cooldown against fetch amplification;
+- correct MCP auth error semantics: malformed/invalid tokens remain caller auth failures while JWKS dependency outages remain upstream failures;
+- preservation of JWKS outage classification during unknown-`kid` refresh cooldown;
+- Local multimodal endpoint scope validation aligned with the existing Local privacy boundary;
+- correction of one stale PCS-09 preparation sentence without rewriting historical evidence.
+
+This is maintenance, not PE-09, PCS-11, Batch 13, or a production-promotion scope. The repository changes also do **not** by themselves prove a newer SumoPod runtime revision. The previously proven staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless later deployment evidence proves otherwise.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2026-09-21.md).
+
 ## Current work state and deferred boundaries
 
 - Active implementation scope — **NONE**. PCS-00..PCS-10 and PE-00..PE-08 are closed; new work requires an explicit operator decision.
