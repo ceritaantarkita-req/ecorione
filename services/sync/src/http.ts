@@ -289,6 +289,7 @@ export function buildSyncServer(
         method: req.method,
         headers: requestHeaders(req),
         ...(req.method === "POST" ? { body: JSON.stringify(req.body ?? {}) } : {}),
+        redirect: "error",
       });
     } catch (error) {
       throw new BadGatewayError(

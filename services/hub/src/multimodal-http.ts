@@ -107,7 +107,7 @@ async function artifactBytes(
   try {
     response = await fetch(
       `${options.artifactUrl}/v1/artifacts/${pointer.id}/content?${query.toString()}`,
-      { headers },
+      { headers, redirect: "error" },
     );
   } catch {
     throw new BadGatewayError("Artifact tidak tersedia.");

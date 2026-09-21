@@ -109,6 +109,7 @@ async function postJson(url: string, body: unknown): Promise<unknown> {
       ...(token === undefined ? {} : { authorization: `Bearer ${token}` }),
     },
     body: JSON.stringify(body),
+    redirect: "error",
   });
   const parsed = await response.json().catch(() => null);
   if (!response.ok) {

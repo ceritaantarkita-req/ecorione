@@ -32,6 +32,7 @@ export async function httpJson<T>(url: string, options: HttpJsonOptions = {}): P
   const init: RequestInit = {
     method: options.method ?? (options.body === undefined ? "GET" : "POST"),
     headers,
+    redirect: "error",
   };
   if (body !== undefined) init.body = body;
   if (options.signal !== undefined) init.signal = options.signal;
