@@ -16,15 +16,15 @@ Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](ver
 
 The maintenance queue remains closed. A separate bounded **Latest-main staging convergence** operational scope is now active.
 
-## Latest-main staging convergence — ACTIVE
+## Latest-main staging convergence — ACTIVE / CD ACTIVATION REQUIRED
 
 The operator explicitly resumed work on 2026-09-21 with one bounded operational goal: deploy the latest reviewed GitHub `main` onto the already-proven SumoPod staging environment through the existing governed PCS-08 path, then verify and document the exact runtime revision.
 
-Current target source revision is `de8d5d510d07ce06ece21368e4305148a2b587c9`. Exact-main CI #1750 and Product Eval #989 passed. Staging Deploy #277 and #278 both passed their gate job but skipped the deploy job, so there is **no newer runtime claim yet**. The proven staging revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
+The scope-opening docs merged as `e38d9d8cd5af44b51068100428a321179b1bdcdf` after PR #246 exact-head CI #1751 + Product Eval #990 passed. That merged `main` then passed CI #1752 + Product Eval #991. Staging Deploy #282 passed its exact-current-main gate but skipped the deploy job, proving that governed staging CD activation remains disabled. There is **no newer runtime claim yet**; the proven staging revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
 
 Closure requires a successful governed deploy plus public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and documentation convergence. This scope is not PE-09, PCS-11, Batch 13, production promotion, public-edge activation, or paid-provider evidence.
 
-Evidence/checkpoint: [verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md).
+Latest evidence/checkpoint: [verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md). Checkpoint 1 remains preserved as the scope-opening record.
 
 ## Latest repository-hardening closure
 

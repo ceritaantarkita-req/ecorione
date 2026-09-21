@@ -14,9 +14,9 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 On 2026-09-21 the operator explicitly resumed work to converge current reviewed GitHub `main` onto SumoPod staging. This is an operational convergence scope only; it does not reopen Product Evolution or PCS and does not authorize production promotion.
 
-Target source revision: `de8d5d510d07ce06ece21368e4305148a2b587c9`. CI #1750 and Product Eval #989 are PASS. Staging Deploy #277 and #278 each passed the exact-main gate and skipped the deploy job, so repository evidence is green but the remote runtime is not yet proven newer than `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
+The scope-opening PR #246 merged as `e38d9d8cd5af44b51068100428a321179b1bdcdf` after exact-head CI #1751 + Product Eval #990 passed. Post-merge `main` then passed CI #1752 + Product Eval #991. Staging Deploy #282 passed the exact-current-main gate but skipped the deploy job because the governed CD activation remains disabled. Repository evidence is green, but the remote runtime is not yet proven newer than `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
 
-The scope closes only after a governed staging deploy passes public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and canonical documentation convergence. Evidence: [verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md).
+The scope closes only after a governed staging deploy passes public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and canonical documentation convergence. Latest evidence: [verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-2-2026-09-21.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 
