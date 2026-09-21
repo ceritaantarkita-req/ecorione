@@ -107,6 +107,13 @@ if (
   findings.push("MCP JWKS rotation refresh must remain bounded");
 }
 if (
+  !mcpAuth.includes("AbortSignal.timeout") ||
+  !mcpAuth.includes("fetchTimeoutMs") ||
+  !mcpAuth.includes("DEFAULT_JWKS_FETCH_TIMEOUT_MS")
+) {
+  findings.push("MCP JWKS fetch must remain timeout-bounded");
+}
+if (
   !mcpAuth.includes("McpAuthDependencyError") ||
   !mcpAuth.includes("parseJwtPart") ||
   !mcpHttp.includes("error instanceof McpAuthDependencyError")
