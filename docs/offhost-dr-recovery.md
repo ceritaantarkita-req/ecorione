@@ -244,7 +244,21 @@ Before real-volume mutation the restore tool reruns the isolated Docker verifier
 
 On success it writes a mode-0600 restore receipt under `/var/lib/ecorione-dr`. At this point data is ready, but the application and secrets are not yet accepted.
 
-Restore the required deployment env, Vault master key, operator credentials, OAuth/provider secrets, and other out-of-band configuration from their separately protected recovery source. Then check out the exact recovered source SHA and start the recorded source/image topology.
+Restore the required deployment env, Vault master key, operator credentials, OAuth/provider secrets, and other out-of-band configuration from their separately protected recovery source. Then check out the exact recovered source SHA.
+
+Start the recovered topology through the guarded helper rather than a hand-written Compose command:
+
+```bash
+export ECORIONE_DEPLOY_ENV=deploy/staging.env
+export ECORIONE_COMPOSE_PROJECT=ecorione-staging
+export ECORIONE_COMPOSE_OVERLAY=deploy/compose.sumopod.yml
+export ECORIONE_EDGE_NETWORK=inmydraft-demos_web
+
+sudo -E bash scripts/staging-offhost-dr-start.sh --apply \
+  /var/lib/ecorione-dr/<restore-receipt>.json
+```
+
+The start helper requires independent-retrieval proof, exact Git SHA, a clean tracked worktree, all restored volumes present, and no existing project containers. It sets the recorded image tag and waits for every configured service. On startup failure it removes only attempted project containers/network and preserves the restored volumes.
 
 Run pre-reboot application recovery acceptance:
 
