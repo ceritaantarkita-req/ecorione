@@ -257,6 +257,20 @@ Repository source state and remote runtime state remain separate evidence bounda
 
 Evidence: [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
 
+## Post-closure maintenance checkpoint 4 — 2026-09-21
+
+A fourth bounded maintenance slice is now closed through PR #242 at the repository boundary. The implementation checkpoint immediately before this documentation convergence is `47cbeaa8760debbfde87cff7cb7a828037a2829b`.
+
+PR #242 bounds the Ai server-side Flow owner proxy to 10 seconds by default. A stalled Flow response now resolves through the existing sanitized `502 UPSTREAM_UNAVAILABLE` transport boundary instead of keeping the Ai route pending indefinitely. Redirect fail-closed behavior, Flow response semantics, owner authority, and Temporal execution ownership are unchanged.
+
+The authoritative implementation head `db8a8f6068a40e47187a2142e6801e975e749276` passed CI #1743, Product Eval #982, and PCS-06 Integrated Browser Acceptance #18. The earlier candidate `7b21c96e6a18b46e333e145b8820381234b8c0bf` failed only the Prettier check in CI #1742 and was not merged.
+
+This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
+
+Repository source state and remote runtime state remain separate evidence boundaries. The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless a later explicit deployment record proves a newer runtime.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
+
 ## Current work state and deferred boundaries
 
 - Active implementation scope — **NONE**. PCS-00..PCS-10 and PE-00..PE-08 are closed; new work requires an explicit operator decision.
