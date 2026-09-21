@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-if [[ "${1:-}" != "--apply" || ( "$#" -ne 3 && "$#" -ne 4 ) ]]; then
-  echo "Usage: sudo -E bash $0 --apply <bundle.ecdr> <metadata.json> [export-manifest.receipt.env]" >&2
+if [[ "${1:-}" != "--apply" || ( "$#" -lt 3 || "$#" -gt 5 ) ]]; then
+  echo "Usage: sudo -E bash $0 --apply <bundle.ecdr> <metadata.json> [export-manifest.receipt.env] [canary.json]" >&2
   exit 2
 fi
 
@@ -24,6 +24,7 @@ fi
 BUNDLE="$2"
 META="$3"
 MANIFEST="${4:-}"
+CANARY="${5:-}"
 TARGET="$ECORIONE_DR_SSH_TARGET"
 REMOTE_DIR="${ECORIONE_DR_SSH_DIR%/}"
 IDENTITY="$ECORIONE_DR_SSH_IDENTITY"
@@ -41,6 +42,13 @@ KNOWN_HOSTS="$ECORIONE_DR_SSH_KNOWN_HOSTS"
 FILES=("$BUNDLE" "$META" "$IDENTITY" "$KNOWN_HOSTS")
 if [[ -n "$MANIFEST" ]]; then
   FILES+=("$MANIFEST")
+fi
+if [[ -n "$CANARY" ]]; then
+  [[ -n "$MANIFEST" ]] || {
+    echo "Canary transfer requires the matching export manifest." >&2
+    exit 1
+  }
+  FILES+=("$CANARY")
 fi
 for FILE in "${FILES[@]}"; do
   [[ -f "$FILE" && ! -L "$FILE" ]] || {
@@ -75,6 +83,15 @@ if [[ -n "$MANIFEST" ]]; then
   MANIFEST_NAME="$(basename "$MANIFEST")"
   [[ "$MANIFEST_NAME" == "$STEM.receipt.env" ]] || {
     echo "Export manifest must match the bundle stem and end with .receipt.env." >&2
+    exit 1
+  }
+fi
+
+CANARY_NAME=""
+if [[ -n "$CANARY" ]]; then
+  CANARY_NAME="$(basename "$CANARY")"
+  [[ "$CANARY_NAME" == "$STEM.canary.json" ]] || {
+    echo "Semantic canary state must match the bundle stem and end with .canary.json." >&2
     exit 1
   }
 fi
@@ -133,11 +150,18 @@ LOCAL_MANIFEST_SHA=""
 if [[ -n "$MANIFEST" ]]; then
   LOCAL_MANIFEST_SHA="$(transfer_one "$MANIFEST" "$MANIFEST_NAME")"
 fi
+LOCAL_CANARY_SHA=""
+if [[ -n "$CANARY" ]]; then
+  LOCAL_CANARY_SHA="$(transfer_one "$CANARY" "$CANARY_NAME")"
+fi
 
 echo "PASS encrypted DR artifacts copied to independent SSH target with checksum verification"
 echo "bundle_sha256=$LOCAL_BUNDLE_SHA"
 echo "metadata_sha256=$LOCAL_META_SHA"
 if [[ -n "$LOCAL_MANIFEST_SHA" ]]; then
   echo "export_manifest_sha256=$LOCAL_MANIFEST_SHA"
+fi
+if [[ -n "$LOCAL_CANARY_SHA" ]]; then
+  echo "canary_sha256=$LOCAL_CANARY_SHA"
 fi
 echo "Private DR decryption key is intentionally not transferred by this script."
