@@ -100,6 +100,18 @@ The SumoPod target is a **verified remote development/staging runtime**, not pro
 
 **Current work queue: none.** Any new feature, hardening item, production-promotion path, or infrastructure change requires a new explicit scope; nothing is implicitly opened by closure of PCS-10.
 
+## Follow-up maintenance checkpoint — 2026-09-21
+
+Bounded repository maintenance is now **CLOSED through PR #237** at the source boundary. The latest implementation checkpoint before this docs-only convergence is `443ed254f7b4c5c3880387872e882e954602452b`.
+
+The follow-up slice hardened Sync's MCP bridge failure boundary, serialized credential-vault mutations, serialized Sandbox idempotent execution races, and bounded default JWKS fetch latency. Exact-head CI/Product Eval passed for every PR; MCP External HTTPS also passed where the public MCP boundary changed.
+
+**Current implementation queue remains none.** This checkpoint does not authorize production promotion, Cloudflare/public-edge activation, hosted spend, a new PE/PCS/Batch/F6 scope, or any staging-runtime claim beyond existing evidence.
+
+The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
+
+Evidence: [verification/post-closure-maintenance-checkpoint-2-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2-2026-09-21.md).
+
 ## Closed PE-08 boundary
 
 **PE-08 — Product closure**
