@@ -91,6 +91,42 @@ describe("MCP OAuth resource server", () => {
     }
   });
 
+  it("refreshes a still-fresh JWKS cache once when a rotated kid appears", async () => {
+    let fetches = 0;
+    const rotated = { ...PUBLIC_JWK, kid: "k2" };
+    const cfg: McpAuthConfig = {
+      ...config(),
+      fetchJson: async () => {
+        fetches += 1;
+        return { keys: fetches === 1 ? [PUBLIC_JWK] : [rotated] };
+      },
+    };
+    const cache = new JwksCache(cfg);
+
+    expect((await cache.keyForKid("k1", NOW_MS))?.kid).toBe("k1");
+    expect(fetches).toBe(1);
+    expect((await cache.keyForKid("k2", NOW_MS + 1_000))?.kid).toBe("k2");
+    expect(fetches).toBe(2);
+  });
+
+  it("throttles repeated unknown-kid refreshes inside the cooldown", async () => {
+    let fetches = 0;
+    const cfg: McpAuthConfig = {
+      ...config(),
+      fetchJson: async () => {
+        fetches += 1;
+        return { keys: [PUBLIC_JWK] };
+      },
+    };
+    const cache = new JwksCache(cfg, 5 * 60 * 1000, 30 * 1000);
+
+    expect((await cache.keyForKid("k1", NOW_MS))?.kid).toBe("k1");
+    expect(await cache.keyForKid("missing-1", NOW_MS + 1_000)).toBeUndefined();
+    expect(fetches).toBe(2);
+    expect(await cache.keyForKid("missing-2", NOW_MS + 2_000)).toBeUndefined();
+    expect(fetches).toBe(2);
+  });
+
   it("menolak token dengan audience lain (anti token passthrough)", async () => {
     const cfg = config();
     await expect(
