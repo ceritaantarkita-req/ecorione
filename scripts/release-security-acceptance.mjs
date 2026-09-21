@@ -67,6 +67,7 @@ const mcpAuth = readFileSync("services/connect/src/mcp/auth.ts", "utf8");
 const mcpHttp = readFileSync("services/connect/src/mcp/http.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
+const sandboxClients = readFileSync("services/sandbox/src/clients.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 
@@ -112,6 +113,13 @@ if (
   !mcpAuth.includes("DEFAULT_JWKS_FETCH_TIMEOUT_MS")
 ) {
   findings.push("MCP JWKS fetch must remain timeout-bounded");
+}
+if (
+  !sandboxClients.includes("AbortSignal.timeout") ||
+  !sandboxClients.includes("DEFAULT_SANDBOX_CONTROL_TIMEOUT_MS") ||
+  !sandboxClients.includes("signal: signal()")
+) {
+  findings.push("Sandbox control-plane HTTP must remain timeout-bounded");
 }
 if (
   !mcpAuth.includes("McpAuthDependencyError") ||
