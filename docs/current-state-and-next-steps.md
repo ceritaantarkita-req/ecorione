@@ -2,13 +2,21 @@
 
 Last updated: **2026-09-21**
 
-Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / STAGING VERIFIED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / PRODUCT EVOLUTION CLOSED / PCS-00..PCS-10 CLOSED / LATEST-MAIN STAGING CONVERGENCE ACTIVE / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## Active bounded operational scope — latest-main staging convergence
+
+On 2026-09-21 the operator explicitly resumed work to converge current reviewed GitHub `main` onto SumoPod staging. This is an operational convergence scope only; it does not reopen Product Evolution or PCS and does not authorize production promotion.
+
+Target source revision: `de8d5d510d07ce06ece21368e4305148a2b587c9`. CI #1750 and Product Eval #989 are PASS. Staging Deploy #277 and #278 each passed the exact-main gate and skipped the deploy job, so repository evidence is green but the remote runtime is not yet proven newer than `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`.
+
+The scope closes only after a governed staging deploy passes public smoke, authenticated Ops health, exact-host identity, release-receipt verification, and canonical documentation convergence. Evidence: [verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md](verification/latest-main-staging-convergence-checkpoint-1-2026-09-21.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 
@@ -287,7 +295,7 @@ Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](ver
 
 ## Current work state and deferred boundaries
 
-- Active implementation scope — **NONE**. PCS-00..PCS-10 and PE-00..PE-08 are closed; new work requires an explicit operator decision.
+- Active operational scope — **LATEST-MAIN STAGING CONVERGENCE**. PE-00..PE-08 and PCS-00..PCS-10 remain closed; no new product implementation batch is open.
 - Post-closure product/UX + SumoPod remote staging — **CLOSED / PASS**; see `post-closure-product-staging-roadmap.md`.
 - Public production cutover — **DEFERRED / SEPARATE EXPLICIT GATE**. Staging, remote persistence, security, same-host backup verification, observability, and operator acceptance are already proven at the documented staging boundary; they do not automatically authorize production.
 - Cloudflare named Tunnel/public-edge choice — optional/pending operator hostname/edge decision.
