@@ -159,4 +159,12 @@ PR #251 initial exact head `1d2104da9e331ea49e56d90f10533702464366f9` reached CI
 
 No gate was weakened. Those files were rewritten by the repository's exact locked Prettier toolchain. The temporary formatter workflow then removed itself from the final tree; formatting commit head was `d49a4fe53e0dc1655f9605b3cb65b33080d1bc68`.
 
+A subsequent static review before accepting the rerun found three repository-side defects and hardened them before runtime use:
+
+- the export script had a literal `\\n` embedded between its final metadata/export-manifest echo statements; it was repaired into two actual shell lines;
+- recovery acceptance derived the host-evidence overlay path by slicing an absolute path; it now passes the reviewed operator-supplied overlay path unchanged to the existing host-evidence validator;
+- real-volume restore accepted a regular retrieval receipt without enforcing mode 0600 and parsed fields into a normal object; it now requires mode 0600 and uses a null-prototype map for receipt fields.
+
+Source-contract coverage was extended for the receipt-permission/parser and overlay-path repairs. These fixes do not change the documented DR claim boundary.
+
 Repository implementation can close only after exact-head CI/Product Eval and relevant acceptance gates pass. Real-host DR remains a separate evidence boundary.
