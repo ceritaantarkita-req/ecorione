@@ -62,6 +62,20 @@ The bundle format uses:
 
 The JSON sidecar contains cryptographic metadata needed for decryption and integrity validation, but no private key or source-host secret.
 
+## Runtime activation prerequisite
+
+Checkpoint-2 recovery tooling must itself be part of the exact reviewed staging revision before real DR evidence begins. Do **not** copy new DR scripts into the older proven `52046db...` checkout and then call that current-revision evidence.
+
+After checkpoint 2 merges and its exact merged-main repository gates pass:
+
+1. temporarily enable the existing governed PCS-08 staging deployment gate;
+2. deploy that exact reviewed `main` SHA through the existing GitHub -> SumoPod path;
+3. require public smoke, authenticated Operations, exact-host evidence, and release-receipt update to pass;
+4. freeze automatic staging deployment back to disabled;
+5. use the resulting release receipt as the source identity for the fresh DR export.
+
+Any later docs-only closure merge must not silently move the runtime again. Runtime identity and repository-documentation identity remain separate evidence boundaries.
+
 ## A. Preferred current-revision export path
 
 Checkpoint 2 adds a guarded orchestrator so the operator does not manually stitch together backup, bundling, manifest generation, and transfer.
