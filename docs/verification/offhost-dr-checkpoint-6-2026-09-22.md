@@ -126,6 +126,23 @@ Source-contract tests lock:
 - absence of the legacy free-form `loss-declared-at` argument;
 - closure binding to marker filename/hash/timestamp.
 
+## Repository gate history
+
+PR #258 initial candidate reached CI #1854, which passed naming but stopped at the read-only Prettier format gate on exactly:
+
+```text
+scripts/staging-offhost-dr-closure-evidence.mjs
+test/offhost-dr-loss-marker.test.ts
+```
+
+No gate was bypassed or weakened. The repository's locked Prettier toolchain formatted only those two files through a temporary self-removing workflow. That formatter completed successfully and removed itself; the formatter result head was:
+
+```text
+928cacd9cef47b040761aa3d6e9fa08449b0ae37
+```
+
+The final exact-head CI/Product Eval/MCP/Desktop gates must rerun after this normal evidence commit.
+
 ## Current non-claims
 
 Checkpoint 6 does **not** prove:
