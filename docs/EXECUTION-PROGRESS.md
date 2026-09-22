@@ -77,6 +77,7 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | Off-host Backup & DR repository foundation | **CLOSED / PASS (checkpoint 1)** |
 | DR execution + clean-host recovery path | **CLOSED / PASS (checkpoint 2 repository boundary)** |
 | Standalone replacement-host recovery boundary | **CLOSED / PASS (checkpoint 3 repository boundary)** |
+| Source + independent-target DR readiness guardrails | **ACTIVE / CHECKPOINT 4 REPOSITORY REVIEW** |
 | Real independent off-host copy | **PENDING RUNTIME EVIDENCE** |
 | Clean-host isolated restore of real staging backup | **PENDING RUNTIME EVIDENCE** |
 | Total-host-loss application recovery | **NOT YET PROVEN** |
@@ -89,7 +90,8 @@ Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling bound
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
 Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).  
-Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).
+Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).  
+Checkpoint 4 evidence: [verification/offhost-dr-checkpoint-4-2026-09-22.md](verification/offhost-dr-checkpoint-4-2026-09-22.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional and is not part of the currently verified staging edge. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 

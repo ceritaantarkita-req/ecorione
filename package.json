@@ -84,7 +84,9 @@
     "staging:dr:start": "bash scripts/staging-offhost-dr-start.sh",
     "staging:dr:canary": "node scripts/staging-offhost-dr-canary.mjs",
     "staging:dr:replacement-preflight": "bash scripts/staging-offhost-dr-replacement-preflight.sh",
-    "staging:dr:local-smoke": "node scripts/staging-offhost-dr-local-smoke.mjs"
+    "staging:dr:local-smoke": "node scripts/staging-offhost-dr-local-smoke.mjs",
+    "staging:dr:source-readiness": "bash scripts/staging-offhost-dr-source-readiness.sh --check",
+    "staging:dr:target-readiness": "bash scripts/staging-offhost-dr-target-readiness.sh --check"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

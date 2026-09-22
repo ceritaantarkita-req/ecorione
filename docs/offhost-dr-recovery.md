@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–3 CLOSED / RUNTIME EXECUTION PENDING**
+Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–3 CLOSED / CHECKPOINT 4 READINESS GUARDRAILS ACTIVE / RUNTIME EXECUTION PENDING**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -81,6 +81,30 @@ The current connector can read workflow state but does not expose repository-var
 Any later docs-only closure merge must not silently move the runtime again. Runtime identity and repository-documentation identity remain separate evidence boundaries.
 
 Checkpoint 3 repository implementation is CLOSED / PASS through PR #252 final head `b4986b081a0e76c660b6f09e2f2e2ef46f003d57` and merge `9e522e62212b5a4170ad4947c4bdd75c28f34464`. Exact PR-head CI #1820, Product Eval #1059, MCP #970, and Desktop Installer #160 passed; merged-main CI #1821, Product Eval #1060, and MCP #971 also passed. Staging Deploy #412/#413 gate-passed and deploy remained skipped because `ECORIONE_STAGING_CD_ENABLED` stayed disabled.
+
+Checkpoint 3 closure bookkeeping then merged through PR #253 as `801adbc1eca847c77cba4b9bb89264ccf47cbf88` after CI #1822 + Product Eval #1061. Merged-main CI #1823 + Product Eval #1062 passed. Staging Deploy #416/#417 gate-passed and their deploy jobs remained skipped, so the proven runtime did not move.
+
+Checkpoint 4 adds read-only runtime readiness guardrails before the first DR mutation. After the governed deployment of the exact current main succeeds and CD is frozen again, place **only** the RSA-3072+ DR public key on the source host and run:
+
+```bash
+export ECORIONE_DR_PUBLIC_KEY=/secure/path/ecorione-dr-public.pem
+sudo -E bash scripts/staging-offhost-dr-source-readiness.sh --check
+```
+
+The readiness gate refuses private-key PEM material, non-RSA keys, and RSA keys below 3072 bits. This must PASS before creating a canary or cold backup. Record the emitted `target_min_free_kib=<N>` and keep using the same `ECORIONE_DR_PUBLIC_KEY` path for the later export.
+
+Configure the independent SSH target, confirm the failure domain manually, then require:
+
+```bash
+export ECORIONE_DR_TARGET_MIN_FREE_KIB='<N>'
+sudo -E bash scripts/staging-offhost-dr-target-readiness.sh --check
+```
+
+The target check performs no upload or remote mutation. Only after **both** readiness gates PASS may the export orchestrator below run.
+
+The export orchestrator also **re-runs both readiness gates itself before any export-directory creation, semantic canary, cold-stop, backup, bundle, or transfer mutation**. It derives the effective target-capacity floor as the greater of the live source-derived requirement and any stricter operator-supplied `ECORIONE_DR_TARGET_MIN_FREE_KIB`. This makes the manual checks a visible operator gate while keeping the mutation path fail-closed if the environment drifts between checks and export.
+
+The export generation includes bundle + metadata + semantic canary + export manifest. The semantic-canary file is transferred before the export manifest; the manifest remains the remote generation commit marker.
 
 ## A. Preferred current-revision export path
 

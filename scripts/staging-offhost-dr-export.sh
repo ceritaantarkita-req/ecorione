@@ -65,6 +65,38 @@ git_as_owner() {
   exit 1
 }
 
+echo "Running read-only DR source readiness before any export mutation..."
+SOURCE_READINESS_OUTPUT="$(
+  ECORIONE_DR_PUBLIC_KEY="$PUBLIC_KEY" \
+    sudo -E bash scripts/staging-offhost-dr-source-readiness.sh --check
+)"
+printf '%s\n' "$SOURCE_READINESS_OUTPUT"
+
+SOURCE_TARGET_MIN="$(
+  printf '%s\n' "$SOURCE_READINESS_OUTPUT" |
+    sed -n 's/^target_min_free_kib=//p' |
+    tail -n 1
+)"
+[[ "$SOURCE_TARGET_MIN" =~ ^[0-9]+$ ]] || {
+  echo "Source readiness did not return a valid target_min_free_kib." >&2
+  exit 1
+}
+
+REQUESTED_TARGET_MIN="${ECORIONE_DR_TARGET_MIN_FREE_KIB:-0}"
+[[ "$REQUESTED_TARGET_MIN" =~ ^[0-9]+$ ]] || {
+  echo "ECORIONE_DR_TARGET_MIN_FREE_KIB must be numeric when set." >&2
+  exit 1
+}
+if (( REQUESTED_TARGET_MIN > SOURCE_TARGET_MIN )); then
+  EFFECTIVE_TARGET_MIN="$REQUESTED_TARGET_MIN"
+else
+  EFFECTIVE_TARGET_MIN="$SOURCE_TARGET_MIN"
+fi
+export ECORIONE_DR_TARGET_MIN_FREE_KIB="$EFFECTIVE_TARGET_MIN"
+
+echo "Running read-only independent-target readiness before any export mutation..."
+sudo -E bash scripts/staging-offhost-dr-target-readiness.sh --check
+
 install -d -o root -g root -m 0700 "$RECEIPT_ROOT"
 if [[ -e "$EXPORT_DIR" ]]; then
   [[ -d "$EXPORT_DIR" && ! -L "$EXPORT_DIR" ]] || {
@@ -179,7 +211,7 @@ chmod 0600 "$EXPORT_MANIFEST"
 
 echo "Transferring encrypted DR artifacts and export manifest to the acknowledged independent failure domain..."
 sudo -E bash scripts/staging-offhost-dr-transfer.sh --apply \
-  "$BUNDLE" "$METADATA" "$EXPORT_MANIFEST"
+  "$BUNDLE" "$METADATA" "$EXPORT_MANIFEST" "$CANARY_STATE"
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 RECEIPT="$RECEIPT_ROOT/export-$STAMP-${CURRENT_SHA:0:12}.env"
