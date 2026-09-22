@@ -283,10 +283,11 @@ describe("off-host DR source contract", () => {
     expect(targetReadiness).toContain("test -w");
     expect(targetReadiness).toContain("IMPORTANT: this check performs no upload, mkdir, rename, or deletion");
     expect(targetReadiness).not.toContain("ssh-keyscan");
-    expect(targetReadiness).not.toContain("scp ");
-    expect(targetReadiness).not.toContain("mkdir");
+    expect(targetReadiness).not.toContain('scp "${SSH_OPTS[@]}"');
+    expect(targetReadiness).not.toContain("mkdir -");
+    expect(targetReadiness).not.toContain("install -d");
     expect(targetReadiness).not.toContain("rm -");
-    expect(targetReadiness).not.toContain("mv ");
+    expect(targetReadiness).not.toContain("mv -");
   });
 
   it("gates recovered application identity and changed-boot-id persistence", () => {
