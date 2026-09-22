@@ -275,10 +275,13 @@ describe("off-host DR closure timing evidence", () => {
           {
             schemaVersion: 1,
             acceptedAt: "2026-09-22T01:45:00Z",
+            recoveryStartedAt: "2026-09-22T01:15:00Z",
+            dataReadyAt: "2026-09-22T01:30:00Z",
             sourceSha,
             sourceTag,
             composeProject: "ecorione-staging",
             serviceCount: 15,
+            restoredVolumeCount: 1,
             retrievedFromIndependentTarget: true,
             retrievalReceiptFilename: "ecorione-dr-test.retrieval.env",
             semanticCanaryStateFilename: "ecorione-dr-test.canary.json",
