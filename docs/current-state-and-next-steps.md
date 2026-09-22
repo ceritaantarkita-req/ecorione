@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–4 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINTS 1–4 CLOSED / CHECKPOINT 5 RETENTION + RPO/RTO EVIDENCE ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -36,13 +36,16 @@ Checkpoint 4 repository implementation is CLOSED / PASS through PR #254 exact he
 
 The source host still needs only an RSA-3072+ public key for the later export. The private DR key stays out-of-band and is required only on the recovery side.
 
-This checkpoint does **not** claim a real off-host copy, source readiness PASS, target readiness PASS, or total-host-loss recovery. Those remain runtime evidence gates.
+Checkpoint 5 adds a read-only remote generation audit and a deterministic sanitized closure-evidence generator. The target audit verifies retained manifest/artifact modes, stems and remote hashes without upload/delete/rename; the closure generator requires an explicit operator-declared source-loss timestamp and computes conservative RPO plus retrieval/data/application/final RTO milestones from the retained receipts.
+
+This checkpoint does **not** claim a real off-host copy, three real retained generations, source/target readiness PASS, measured real-host RPO/RTO, or total-host-loss recovery. Those remain runtime evidence gates.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
 Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).  
 Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).  
-Checkpoint 4 evidence: [verification/offhost-dr-checkpoint-4-2026-09-22.md](verification/offhost-dr-checkpoint-4-2026-09-22.md).
+Checkpoint 4 evidence: [verification/offhost-dr-checkpoint-4-2026-09-22.md](verification/offhost-dr-checkpoint-4-2026-09-22.md).  
+Checkpoint 5 evidence: [verification/offhost-dr-checkpoint-5-2026-09-22.md](verification/offhost-dr-checkpoint-5-2026-09-22.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 
