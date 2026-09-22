@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINTS 1–3 CLOSED / CHECKPOINT 4 READINESS GUARDRAILS ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–4 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -31,6 +31,8 @@ Checkpoint 1 repository foundation is CLOSED / PASS through PR #250 / merge `3c5
 Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 is CLOSED / PASS at the repository boundary through PR #252 / merge `9e522e62212b5a4170ad4947c4bdd75c28f34464`; it adds a standalone replacement-host boundary with clean-host preflight, loopback-only Caddy policy edge, local MCP/security smoke, loopback authenticated Operations, and post-reboot repeat evidence without relying on SumoPod Traefik, public DNS, or public TLS.
 
 Checkpoint 4 adds two read-only pre-mutation gates: source-host readiness binds the active release receipt, exact Git/image identity, PCS-09 strict inventory, running services, volume footprint, and local backup headroom; independent-target readiness binds strict SSH trust/custody plus a remote free-space floor derived from that exact source footprint. Neither gate creates a backup or uploads an artifact.
+
+Checkpoint 4 repository implementation is CLOSED / PASS through PR #254 exact head `5245be4a7f0874d57b9b89e4e587aa79db90f8cf` and merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed. Merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
 The source host still needs only an RSA-3072+ public key for the later export. The private DR key stays out-of-band and is required only on the recovery side.
 
