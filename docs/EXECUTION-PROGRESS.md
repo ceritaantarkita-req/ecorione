@@ -75,18 +75,21 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | Scope | State |
 |---|---:|
 | Off-host Backup & DR repository foundation | **CLOSED / PASS (checkpoint 1)** |
-| DR execution + clean-host recovery path | **ACTIVE / CHECKPOINT 2** |\n| Real independent off-host copy | **PENDING RUNTIME EVIDENCE** |
+| DR execution + clean-host recovery path | **CLOSED / PASS (checkpoint 2 repository boundary)** |
+| Standalone replacement-host recovery boundary | **ACTIVE / CHECKPOINT 3** |
+| Real independent off-host copy | **PENDING RUNTIME EVIDENCE** |
 | Clean-host isolated restore of real staging backup | **PENDING RUNTIME EVIDENCE** |
 | Total-host-loss application recovery | **NOT YET PROVEN** |
 | Production promotion | **DEFERRED / SEPARATE GATE** |
 
 Checkpoint 1 repository foundation closed through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`; exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed, while Staging Deploy #308/#309 passed their gates and skipped deployment.
 
-Checkpoint 2 adds fresh current-revision export orchestration, retained off-host export manifests, independent re-fetch/retrieval receipts, guarded exact-volume clean-host restore, application recovery acceptance, and replacement-host changed-boot-id evidence. It does not relabel historical PCS-09 same-host evidence as off-host recovery and does not open PE-09, PCS-11, or Batch 13.
+Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 final head `dbb9423def581e95cb9e1bbe18fd3208164ef575` (CI #1799, Product Eval #1038, MCP #955, Desktop Installer #146) and merge `768c0f617064343f0bfc569d52212c80a03f0b83` (merged-main CI #1800, Product Eval #1039, MCP #956). Staging Deploy #372/#373 gate-passed and deploy remained skipped because activation stayed disabled. Checkpoint 3 is active and adds a standalone loopback-only replacement-host boundary so DR does not depend on the lost SumoPod Traefik/public edge.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
-Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).
+Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).  
+Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional and is not part of the currently verified staging edge. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
