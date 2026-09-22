@@ -72,6 +72,18 @@ describe("off-host DR source contract", () => {
     expect(exportScript).toContain('rm -f "$CANARY_TMP"');
     expect(exportScript).toContain("export_manifest_filename");
     expect(exportScript).toContain("staging-offhost-dr-transfer.sh --apply");
+    expect(exportScript).toContain('"$BUNDLE" "$METADATA" "$EXPORT_MANIFEST" "$CANARY_STATE"');
+    expect(exportScript).toContain("staging-offhost-dr-source-readiness.sh --check");
+    expect(exportScript).toContain("staging-offhost-dr-target-readiness.sh --check");
+    expect(exportScript.indexOf("staging-offhost-dr-source-readiness.sh --check")).toBeLessThan(
+      exportScript.indexOf("Creating semantic owner-data canary"),
+    );
+    expect(exportScript.indexOf("staging-offhost-dr-target-readiness.sh --check")).toBeLessThan(
+      exportScript.indexOf("Creating semantic owner-data canary"),
+    );
+    expect(exportScript.indexOf("Creating semantic owner-data canary")).toBeLessThan(
+      exportScript.indexOf("staging-pcs09-backup.sh --apply"),
+    );
     expect(exportScript).toContain("transfer_verified=1");
     expect(exportScript).not.toContain("docker volume prune");
   });
