@@ -154,19 +154,46 @@ git status --short
 
 Expected application HEAD remains `b27c1e5833be0a0fccf3f525d82ae8853cd22113`.
 
+## Marker-bound retrieval — PASS
+
+The fixed fetch helper was executed only from the isolated PR #268 merge worktree while the application checkout remained exact and clean at `b27c1e5833be0a0fccf3f525d82ae8853cd22113`.
+
+Generation `ecorione-dr-20260922152938-b27c1e5833be` was retrieved from the independent target with the existing immutable loss marker. The marker-bound retrieval receipt records:
+
+```text
+retrieval_started_at=2026-09-22T17:14:13.854Z
+retrieved_at=2026-09-22T17:14:15.951Z
+bundle_sha256=cf0a002595e36c215041fd66ce206e584a5c98919b6c90ca52cad59f123ff318
+metadata_sha256=4820c11a612aa06503decfec6b8d693756e71ee70c8afefae709f9566a30af91
+canary_sha256=b5f234304bc1b861ce03615e6b2e6cf6c0cd15271f7d104e3a57021ed8634ec6
+```
+
+The temporary fetch worktree was removed after PASS and the application checkout still resolved to exact `b27c1e...`.
+
+## Isolated decrypt/content verification — PASS
+
+Before verification, every retrieved recovery input and the loss marker was root-owned mode 0600. The `ecorione-staging` Compose project had zero containers and zero project-labelled volumes.
+
+The exact-source verifier successfully:
+
+- authenticated and decrypted the encrypted generation;
+- confirmed `source_sha=b27c1e5833be0a0fccf3f525d82ae8853cd22113`;
+- confirmed `source_tag=staging-b27c1e5833be`;
+- restored and fingerprint-checked all 12 archived volumes in isolated temporary Docker volumes;
+- emitted `PASS ECORIONE off-host DR bundle integrity verification`;
+- removed all `ecorione-dr-verify-*` temporary volumes on completion.
+
+After verification, the real `ecorione-staging` project still had zero containers and zero project-labelled volumes. No real recovery volume had been mutated yet.
+
 ## Next runtime gate
 
-The next sequence is:
+The next sequence is now:
 
-1. create an isolated temporary worktree at PR #268 merge `bfca380ec12d30fe833b02011494e18988ec8807`;
-2. rerun the existing marker-bound fetch from the independent target, preserving the existing loss marker;
-3. require a verified retrieval receipt for generation #3;
-4. decrypt and run isolated Docker-volume content verification;
-5. run clean replacement-host preflight from the exact `b27c...` checkout;
-6. perform guarded real-volume restore;
-7. start through the standalone loopback recovery overlay;
-8. pass semantic canary, protected-route, MCP, authenticated Operations and exact-source acceptance;
-9. capture reboot baseline, reboot the replacement host, and pass post-reboot evidence with changed boot ID;
-10. generate final marker-bound closure evidence with measured RPO/RTO.
+1. run the read-only clean replacement-host preflight from exact `b27c...`;
+2. if and only if preflight passes, perform the guarded real-volume restore;
+3. start through the standalone loopback recovery overlay;
+4. pass semantic canary, protected-route, MCP, authenticated Operations and exact-source acceptance;
+5. capture reboot baseline, reboot the replacement host, and pass post-reboot evidence with changed boot ID;
+6. generate final marker-bound closure evidence with measured RPO/RTO.
 
 Until all of those gates pass, **total-host-loss recovery remains NOT YET PROVEN**.
