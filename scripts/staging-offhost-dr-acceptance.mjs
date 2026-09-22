@@ -111,7 +111,16 @@ async function main() {
   const overlayRaw = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "";
   const overlay = overlayRaw ? resolve(ROOT, overlayRaw) : null;
   const edgeNetwork = process.env.ECORIONE_EDGE_NETWORK?.trim() || "";
-  const publicBaseUrl = process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "";
+  const acceptanceMode = process.env.ECORIONE_DR_ACCEPTANCE_MODE?.trim() || "public";
+  if (!["public", "loopback"].includes(acceptanceMode)) {
+    fail("ECORIONE_DR_ACCEPTANCE_MODE must be public or loopback");
+  }
+  const acceptanceBaseUrl =
+    acceptanceMode === "loopback"
+      ? process.env.ECORIONE_DR_LOOPBACK_BASE_URL?.trim() || "http://127.0.0.1:18080"
+      : process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "";
+  const expectedMcpResource =
+    process.env.ECORIONE_DR_EXPECTED_MCP_RESOURCE?.trim() || "";
   const opsFile = resolve(process.env.ECORIONE_OPS_CREDENTIAL_FILE?.trim() || "");
   const expectedProject =
     process.env.ECORIONE_COMPOSE_PROJECT?.trim() || restore.composeProject;
@@ -129,8 +138,23 @@ async function main() {
   if (canarySha256 !== restore.semanticCanarySha256) {
     fail("semantic canary checksum does not match restore receipt");
   }
-  if (!publicBaseUrl) {
-    fail("ECORIONE_PUBLIC_BASE_URL is required");
+  if (!acceptanceBaseUrl) {
+    fail(
+      acceptanceMode === "loopback"
+        ? "ECORIONE_DR_LOOPBACK_BASE_URL is required"
+        : "ECORIONE_PUBLIC_BASE_URL is required",
+    );
+  }
+  if (acceptanceMode === "loopback") {
+    if (overlayRaw !== "deploy/compose.dr-recovery.yml") {
+      fail("loopback DR acceptance requires deploy/compose.dr-recovery.yml");
+    }
+    if (edgeNetwork) {
+      fail("loopback DR acceptance must not use ECORIONE_EDGE_NETWORK");
+    }
+    if (!expectedMcpResource) {
+      fail("ECORIONE_DR_EXPECTED_MCP_RESOURCE is required in loopback mode");
+    }
   }
   if (!process.env.ECORIONE_OPS_CREDENTIAL_FILE?.trim()) {
     fail("ECORIONE_OPS_CREDENTIAL_FILE is required");
@@ -219,17 +243,28 @@ async function main() {
   );
   if (semanticCanary) console.log(semanticCanary);
 
-  const smoke = run(process.execPath, ["scripts/production-public-smoke.mjs"], {
-    env: { ...process.env, ECORIONE_PUBLIC_BASE_URL: publicBaseUrl },
-    label: "public smoke",
-  });
+  const smoke =
+    acceptanceMode === "loopback"
+      ? run(process.execPath, ["scripts/staging-offhost-dr-local-smoke.mjs"], {
+          env: {
+            ...process.env,
+            ECORIONE_DR_LOOPBACK_BASE_URL: acceptanceBaseUrl,
+            ECORIONE_DR_EXPECTED_MCP_RESOURCE: expectedMcpResource,
+          },
+          label: "replacement-host loopback smoke",
+        })
+      : run(process.execPath, ["scripts/production-public-smoke.mjs"], {
+          env: { ...process.env, ECORIONE_PUBLIC_BASE_URL: acceptanceBaseUrl },
+          label: "public smoke",
+        });
   if (smoke) console.log(smoke);
 
   const opsCredentials = readOpsCredentials(opsFile);
   const ops = run(process.execPath, ["scripts/production-ops-snapshot.mjs"], {
     env: {
       ...process.env,
-      ECORIONE_PUBLIC_BASE_URL: publicBaseUrl,
+      ECORIONE_PUBLIC_BASE_URL: acceptanceBaseUrl,
+      ECORIONE_PUBLIC_SMOKE_ALLOW_HTTP: acceptanceMode === "loopback" ? "1" : "0",
       ECORIONE_OPS_USER: opsCredentials.username,
       ECORIONE_OPS_PASSWORD: opsCredentials.password,
     },
@@ -296,11 +331,16 @@ async function main() {
     semanticCanarySha256: restore.semanticCanarySha256,
     semanticCanaryAccepted: true,
     aiImage,
-    publicBaseOrigin: new URL(publicBaseUrl).origin,
+    edgeMode: acceptanceMode,
+    acceptanceBaseOrigin: new URL(acceptanceBaseUrl).origin,
+    publicBaseOrigin:
+      acceptanceMode === "public" ? new URL(acceptanceBaseUrl).origin : null,
     preRebootAccepted: true,
     rebootPersistenceAccepted: false,
     claimBoundary:
-      "Application recovery accepted before reboot; total-host-loss closure still requires a changed-boot-id persistence proof.",
+      acceptanceMode === "loopback"
+        ? "Application/data recovery accepted through the loopback-only replacement-host policy boundary before reboot; public DNS/TLS is a separate gate and changed-boot-id persistence is still required."
+        : "Application recovery accepted through the public boundary before reboot; total-host-loss closure still requires a changed-boot-id persistence proof.",
   };
   writeFileSync(acceptancePath, `${JSON.stringify(acceptance, null, 2)}\n`, {
     mode: 0o600,
