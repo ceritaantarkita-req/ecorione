@@ -87,15 +87,22 @@ read_field() {
 audit_generation() {
   local manifest_name="$1"
   local manifest_path="$REMOTE_DIR/$manifest_name"
-  local manifest_q body stem created source_sha source_tag
+  local manifest_q manifest_mode body stem created source_sha source_tag
   local bundle_name metadata_name canary_name bundle_sha metadata_sha canary_sha
   local file_name expected actual file_q mode
 
   [[ "$manifest_name" =~ ^ecorione-dr-[A-Za-z0-9_.-]+\.receipt\.env$ ]] || return 1
   manifest_q="$(remote_quote "$manifest_path")"
 
+  manifest_mode="$(
+    ssh "${SSH_OPTS[@]}" "$TARGET" \
+      "set -eu; test -f $manifest_q; test ! -L $manifest_q; stat -c '%a' $manifest_q"
+  )" || return 1
+  [[ "$manifest_mode" == "600" ]] || return 1
+
   body="$(
-    ssh "${SSH_OPTS[@]}" "$TARGET"       "set -eu; test -f $manifest_q; test ! -L $manifest_q; cat $manifest_q"
+    ssh "${SSH_OPTS[@]}" "$TARGET" \
+      "set -eu; cat $manifest_q"
   )" || return 1
 
   [[ "$(read_field "$body" schema_version)" == "1" ]] || return 1
