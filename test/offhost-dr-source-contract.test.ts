@@ -333,12 +333,36 @@ describe("off-host DR source contract", () => {
 
     expect(evidence).toContain("conservativeRpoSeconds");
     expect(evidence).toContain("finalRecoveryRtoSeconds");
-    expect(evidence).toContain("loss_declared_at");
+    expect(evidence).toContain('args["loss-marker"]');
+    expect(evidence).toContain("ecorione-offhost-dr-loss-marker");
+    expect(evidence).toContain("expectedExportManifestFilename");
+    expect(evidence).toContain("lossMarkerSha256");
     expect(evidence).toContain("totalHostLossRecoveryCandidate");
     expect(evidence).toContain("changedBootIdProven");
     expect(evidence).toContain("refusing to overwrite closure evidence output");
+    expect(evidence).not.toContain('args["loss-declared-at"]');
     expect(evidence).not.toContain("ECORIONE_OPS_PASSWORD");
     expect(evidence).not.toContain("privateKey");
+  });
+
+  it("binds the DR recovery clock to an immutable selected-generation loss marker", () => {
+    const lossMarker = source("scripts/staging-offhost-dr-loss-marker.mjs");
+    const evidence = source("scripts/staging-offhost-dr-closure-evidence.mjs");
+
+    expect(lossMarker).toContain("randomUUID");
+    expect(lossMarker).toContain("ecorione-offhost-dr-loss-marker");
+    expect(lossMarker).toContain("recovery-host-system-utc");
+    expect(lossMarker).toContain("expectedExportManifestFilename");
+    expect(lossMarker).toContain('flag: "wx"');
+    expect(lossMarker).toContain("mode: 0o600");
+    expect(lossMarker).toContain("refusing to overwrite existing loss marker");
+    expect(lossMarker).not.toContain("loss-declared-at");
+
+    expect(evidence).toContain('"loss-marker"');
+    expect(evidence).toContain("lossMarker.expectedExportManifestFilename");
+    expect(evidence).toContain("loss marker selected export manifest does not match");
+    expect(evidence).toContain("lossMarker.declaredAt");
+    expect(evidence).toContain("lossMarkerSha256");
   });
 
   it("gates recovered application identity and changed-boot-id persistence", () => {
