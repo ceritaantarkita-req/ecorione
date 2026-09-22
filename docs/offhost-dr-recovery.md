@@ -64,7 +64,7 @@ The JSON sidecar contains cryptographic metadata needed for decryption and integ
 
 ## Runtime activation prerequisite
 
-Repository checkpoints 1–6 are CLOSED / PASS. The current real staging runtime still predates those DR-tooling merges, so real DR evidence must begin with one governed deployment of the **exact current reviewed `main`** through the existing PCS-08 path. Do **not** copy newer DR scripts into the older proven checkout and call that current-revision evidence.
+Repository checkpoints 1–7 are CLOSED / PASS. The current real staging runtime still predates those DR-tooling merges, so real DR evidence must begin with one governed deployment of the **exact current reviewed `main`** through the existing PCS-08 path. Do **not** copy newer DR scripts into the older proven checkout and call that current-revision evidence.
 
 To activate runtime evidence:
 
@@ -205,15 +205,19 @@ export ECORIONE_DR_SSH_KNOWN_HOSTS='/root/.ssh/ecorione_dr_known_hosts'
 export ECORIONE_DR_FAILURE_DOMAIN_ACK=1
 ```
 
-Transfer:
+For a **complete retained generation usable by the current fetch/recovery path**, use the preferred export orchestrator in section A. The manual bundler in section C produces only bundle + metadata and is diagnostic/building-block tooling; transferring only that pair does **not** create a complete checkpoint-7 recovery generation.
+
+If manually exercising the transfer helper against an already prepared full generation, pass all four matching files:
 
 ```bash
 sudo -E bash scripts/staging-offhost-dr-transfer.sh --apply \
   /var/lib/ecorione-staging/dr-export/<bundle>.ecdr \
-  /var/lib/ecorione-staging/dr-export/<bundle>.json
+  /var/lib/ecorione-staging/dr-export/<bundle>.json \
+  /var/lib/ecorione-staging/dr-export/<bundle>.receipt.env \
+  /var/lib/ecorione-staging/dr-export/<bundle>.canary.json
 ```
 
-The helper uses strict host-key checking, disables forwarding, uploads temporary files first, verifies SHA-256 remotely, moves them into final names only after verification, then verifies final hashes again.
+The helper uses strict host-key checking, disables forwarding, uploads temporary files first, verifies SHA-256 remotely, and finalizes bundle + metadata + canary before publishing the export manifest **last** as the retained-generation commit marker. Recovery treats final manifest presence as proof that every referenced artifact should already exist under its final name and hash.
 
 The private DR key is intentionally not transferred.
 
