@@ -83,14 +83,16 @@ flock -n 9 || {
 }
 
 TMP_LOG="$(mktemp)"
-CANARY_TMP="$RECEIPT_ROOT/canary-pre-$(date -u +%Y%m%dT%H%M%SZ)-${CURRENT_SHA:0:12}-$.json"
+CANARY_TMP="$RECEIPT_ROOT/canary-pre-$(date -u +%Y%m%dT%H%M%SZ)-${CURRENT_SHA:0:12}-$$.json"
 cleanup() {
   rm -f "$TMP_LOG"
+  rm -f "$CANARY_TMP"
 }
 trap cleanup EXIT
 
 echo "Creating semantic owner-data canary before the cold backup..."
-ECORIONE_COMPOSE_PROJECT="${ECORIONE_COMPOSE_PROJECT:-ecorione-staging}"   node scripts/staging-offhost-dr-canary.mjs --phase baseline --state "$CANARY_TMP"
+ECORIONE_COMPOSE_PROJECT="${ECORIONE_COMPOSE_PROJECT:-ecorione-staging}" \
+  node scripts/staging-offhost-dr-canary.mjs --phase baseline --state "$CANARY_TMP"
 
 echo "Creating a fresh coordinated current-revision cold backup..."
 sudo -E bash scripts/staging-pcs09-backup.sh --apply | tee "$TMP_LOG"
