@@ -138,6 +138,77 @@ describe("off-host DR source contract", () => {
     }
   });
 
+  it("renders the recovery Compose overlay as loopback-only in Docker Compose", () => {
+    if (process.env.ECORIONE_PHASE3_DOCKER_ACCEPTANCE !== "1") return;
+
+    const env = {
+      ...process.env,
+      ECORIONE_INTERNAL_TOKEN: "dr-render-internal-token-long-enough",
+      ECORIONE_SYNC_OWNER_TOKEN: "dr-render-sync-owner-token-long-enough",
+      TEMPORAL_POSTGRES_PASSWORD: "dr-render-temporal-password",
+      ECORIONE_DOMAIN: "recovery.invalid",
+      ECORIONE_OPS_PASSWORD_HASH: "dr-render-hash",
+      ECORIONE_MCP_OAUTH_ISSUER: "https://auth.example.test/",
+      ECORIONE_MCP_RESOURCE: "https://ecorione.example.test/mcp",
+      ECORIONE_MCP_JWKS_URL: "https://auth.example.test/jwks.json",
+      ECORIONE_MCP_HANDLE_KEY: "dr-render-handle-key-long-enough",
+      ECORIONE_MCP_ALLOWED_ORIGINS: "https://chatgpt.com",
+      ECORIONE_DR_LOOPBACK_PORT: "18080",
+      ECORIONE_IMAGE_TAG: "staging-0123456789ab",
+    };
+
+    const result = spawnSync(
+      "docker",
+      [
+        "compose",
+        "-p",
+        "ecorione-staging",
+        "-f",
+        resolve(ROOT, "deploy/compose.yml"),
+        "-f",
+        resolve(ROOT, "deploy/compose.dr-recovery.yml"),
+        "config",
+        "--format",
+        "json",
+      ],
+      {
+        cwd: ROOT,
+        env,
+        encoding: "utf8",
+      },
+    );
+
+    expect(result.status, result.stderr || result.stdout).toBe(0);
+    const config = JSON.parse(result.stdout) as {
+      services?: {
+        caddy?: {
+          ports?: Array<{
+            target?: number;
+            published?: string | number;
+            host_ip?: string;
+          }>;
+          networks?: string[] | Record<string, unknown>;
+        };
+      };
+    };
+    const caddy = config.services?.caddy;
+    expect(caddy?.ports).toEqual([
+      {
+        mode: "ingress",
+        target: 8080,
+        published: "18080",
+        protocol: "tcp",
+        host_ip: "127.0.0.1",
+      },
+    ]);
+    const networks = Array.isArray(caddy?.networks)
+      ? caddy.networks
+      : Object.keys(caddy?.networks ?? {});
+    expect(networks).toEqual(["internal"]);
+    expect(result.stdout).not.toContain('"published":"80"');
+    expect(result.stdout).not.toContain('"published":"443"');
+  });
+
   it("keeps replacement-host DR on a standalone loopback-only edge", () => {
     const overlay = source("deploy/compose.dr-recovery.yml");
     const preflight = source("scripts/staging-offhost-dr-replacement-preflight.sh");
