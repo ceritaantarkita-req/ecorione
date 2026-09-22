@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **OFF-HOST DR ACTIVE / CHECKPOINT 1 REPOSITORY FOUNDATION / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR ACTIVE / CHECKPOINT 2 EXECUTION + CLEAN-HOST RECOVERY PATH / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -32,14 +32,17 @@ Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-
 
 The operator explicitly opened **Off-host Backup & DR** as the next infrastructure scope on 2026-09-22. This is a separate operational workstream, not PE-09, PCS-11, Batch 13, production promotion, public-edge activation, or a feature batch.
 
-Checkpoint 1 establishes the repository-side recovery foundation: a verified PCS-09 backup can be converted into an authenticated encrypted portable bundle, copied to an explicitly acknowledged independent SSH failure domain with remote checksum verification, then decrypted and restored into isolated temporary Docker volumes on a clean host for deterministic content verification. The DR private key is intentionally kept out of the source-host bundle/transfer path.
+Checkpoint 1 is **CLOSED / PASS at the repository-foundation boundary** through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed; Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
+
+Checkpoint 2 adds the execution/recovery path: fresh current-revision backup orchestration, encrypted export manifests, independent target re-fetch + retrieval receipts, guarded exact-volume clean-host restore, exact-source application acceptance, and changed-boot-id replacement-host persistence evidence.
 
 Real-host status remains bounded: no current-revision SumoPod backup has yet been accepted as an off-host copy, and no clean replacement host has recovered the real staging state. Total-host-loss recovery therefore remains a non-claim.
 
-Next gates are: fresh cold backup of current staging revision -> encrypted bundle -> independent off-host transfer -> clean-host `--verify-docker` -> full replacement-host application recovery with separately recovered secrets -> restart/persistence + health/exact-source acceptance -> sanitized closure evidence.
+Next runtime gates are: current-revision export -> independent target retention -> recovery-host fetch -> retrieval receipt -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> exact-source application acceptance -> full replacement-host reboot/post verification -> sanitized closure evidence.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
-Checkpoint evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).
+Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
+Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).
 
 ## Latest repository-hardening closure
 

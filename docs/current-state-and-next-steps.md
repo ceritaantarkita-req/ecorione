@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINT 1 REPOSITORY FOUNDATION / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINT 2 EXECUTION + CLEAN-HOST RECOVERY PATH / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -24,16 +24,19 @@ This convergence did not rerun the full VPS reboot or same-host cold-backup acce
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
-## Off-host Backup & DR — ACTIVE / CHECKPOINT 1
+## Off-host Backup & DR — ACTIVE / CHECKPOINT 2
 
-The operator explicitly opened off-host DR after latest-main staging convergence closed. The repository foundation now provides authenticated encryption of verified PCS-09 backups, strict checksum-verified transfer to an acknowledged independent SSH failure domain, clean-host decrypt/integrity verification, and optional isolated Docker-volume restore verification.
+Checkpoint 1 repository foundation is CLOSED / PASS through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed. Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
 
-The source host needs only an RSA-3072+ public key. The private DR key stays out-of-band and is required only for recovery. The portable payload uses AES-256-GCM with the data key wrapped by RSA-OAEP/SHA-256.
+Checkpoint 2 now adds the fail-closed execution/recovery path: a fresh current-revision cold backup must be created before export; bundle + metadata + retained export manifest are checksum-verified on the independent target; the recovery host must re-fetch that retained generation and produce a retrieval receipt; real-volume restore is refused unless that retrieval proof exists and the replacement Compose namespace is clean; exact-source/image application acceptance and changed-boot-id reboot evidence are separate later gates.
 
-This checkpoint does **not** claim a real off-host copy or total-host-loss recovery. Those claims require a fresh backup of the current staging revision, transfer outside SumoPod, independent retrieval, clean-host `--verify-docker`, exact-source application reconstruction with separately recovered secrets, restart/persistence proof, and final sanitized recovery evidence.
+The source host still needs only an RSA-3072+ public key. The private DR key stays out-of-band and is required only on the recovery side.
+
+This checkpoint does **not** claim a real off-host copy or total-host-loss recovery. Those remain runtime evidence gates.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
-Checkpoint evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).
+Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
+Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 

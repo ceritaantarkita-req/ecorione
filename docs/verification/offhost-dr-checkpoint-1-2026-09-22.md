@@ -1,6 +1,6 @@
 # Off-host DR checkpoint 1 — repository foundation — 2026-09-22
 
-Status: **IMPLEMENTED AT REPOSITORY FOUNDATION / REAL-HOST DR NOT YET CLAIMED**
+Status: **CLOSED / PASS AT REPOSITORY FOUNDATION / REAL-HOST DR NOT YET CLAIMED**
 
 ## Scope
 
@@ -65,6 +65,19 @@ PR #250 initial exact head `7696da4f612d8ef383646bfa70b44def61692950` then expos
 A later exact-head CI #1763 progressed through format, lint, and typecheck and then ran the normal test suite. It reported 1092 passed, 2 skipped, and one failed test: the new DR source-contract test looked for the literal text `archive SHA-256 mismatch`, while the implementation correctly constructs the message as `${archive} SHA-256 mismatch`. The implementation's archive hashing path was unchanged. The test was corrected to assert the actual `await sha256File(archivePath)` integrity path plus the `SHA-256 mismatch` failure boundary; the suite was not weakened or skipped.
 
 This is implementation evidence only. It is **not** SumoPod runtime evidence and does not prove a real off-host copy or replacement-host recovery.
+
+## Repository closure
+
+PR #250 final exact head `9ad4946ed7fa4921c6c0cd8afdbaa312e9ab25e6` passed:
+
+- CI #1765 — PASS;
+- Product Eval #1004 — PASS;
+- MCP External HTTPS Acceptance #921 — PASS;
+- Desktop Installer #113 — PASS.
+
+PR #250 then squash-merged to `main` as `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS Acceptance #922 all passed. Staging Deploy #308/#309 each passed their gate and skipped deploy because staging activation remained disabled, so this repository closure did not mutate the proven SumoPod runtime.
+
+Checkpoint 1 is therefore CLOSED / PASS at the repository-foundation boundary.
 
 ## Remaining real-host gates
 
