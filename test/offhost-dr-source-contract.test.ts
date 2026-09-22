@@ -144,6 +144,8 @@ describe("off-host DR source contract", () => {
     expect(preflight).toContain("Compose project volumes already exist");
     expect(preflight).toContain("must not inherit ECORIONE_EDGE_NETWORK");
     expect(preflight).toContain("production-preflight.sh");
+    expect(preflight).toContain('export ECORIONE_DEPLOY_ENV="$DEPLOY_ENV"');
+    expect(preflight).toContain("config --format json");
     expect(preflight).toContain("127.0.0.1:");
     expect(preflight).not.toContain("docker volume prune");
     expect(preflight).not.toContain("docker system prune");
