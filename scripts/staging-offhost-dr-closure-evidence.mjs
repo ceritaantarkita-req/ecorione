@@ -174,7 +174,7 @@ if (
   lossMarker.schemaVersion !== 1 ||
   lossMarker.kind !== "ecorione-offhost-dr-loss-marker" ||
   typeof lossMarker.drillId !== "string" ||
-  !/^[0-9a-f-]{36}$/u.test(lossMarker.drillId) ||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(lossMarker.drillId) ||
   typeof lossMarker.declaredAt !== "string" ||
   typeof lossMarker.expectedExportManifestFilename !== "string" ||
   lossMarker.clockSource !== "recovery-host-system-utc"
@@ -287,7 +287,7 @@ const finalAcceptedAt = acceptance.postRebootAcceptedAt;
 
 const backupBoundaryMs = isoMs(backupBoundaryAt, "canary createdAt");
 const exportCreatedMs = isoMs(exportCreatedAt, "manifest created_at");
-const lossMs = isoMs(lossDeclaredAt, "loss_declared_at");
+const lossMs = isoMs(lossDeclaredAt, "loss marker declaredAt");
 const retrievedMs = isoMs(retrievedAt, "retrieval retrieved_at");
 const recoveryStartedMs = isoMs(recoveryStartedAt, "restore recoveryStartedAt");
 const dataReadyMs = isoMs(dataReadyAt, "restore dataReadyAt");
@@ -298,7 +298,7 @@ if (exportCreatedMs < backupBoundaryMs) {
   fail("export manifest predates semantic-canary backup boundary");
 }
 if (lossMs < exportCreatedMs) {
-  fail("loss_declared_at must not predate successful export generation");
+  fail("loss marker declaredAt must not predate successful export generation");
 }
 if (retrievedMs < lossMs) fail("retrieval completed before declared source loss");
 if (recoveryStartedMs < retrievedMs)
