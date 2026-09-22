@@ -178,6 +178,15 @@ async function main() {
   if (acceptanceMode !== acceptance.edgeMode) {
     fail("DR acceptance mode does not match the acceptance receipt");
   }
+  if (new URL(acceptanceBaseUrl).origin !== acceptance.acceptanceBaseOrigin) {
+    fail("DR acceptance base origin does not match the acceptance receipt");
+  }
+  if (
+    acceptanceMode === "loopback" &&
+    new URL(expectedMcpResource).toString() !== acceptance.expectedMcpResource
+  ) {
+    fail("DR expected MCP resource does not match the acceptance receipt");
+  }
   if (acceptanceMode === "loopback") {
     if (overlayArg !== "deploy/compose.dr-recovery.yml") {
       fail("loopback DR reboot evidence requires deploy/compose.dr-recovery.yml");
