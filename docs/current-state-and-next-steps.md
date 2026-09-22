@@ -26,7 +26,7 @@ The first marker-bound fetch exposed a second repository tooling bug: the fetch 
 
 The exact-source application checkout must remain at `b27c1e...`. The newer fetch compatibility fix may be run only from an isolated temporary worktree; it does not change the recorded application source identity.
 
-Next runtime gate: fixed marker-bound fetch -> retrieval receipt -> isolated decrypt/Docker verification -> clean-host preflight -> guarded real-volume restore -> standalone loopback start/acceptance -> changed-boot-ID reboot evidence -> marker-bound final closure receipt. Until all of those pass, **total-host-loss recovery remains NOT YET PROVEN**.
+Marker-bound retrieval and isolated decrypt/Docker verification now PASS. Generation #3 was independently fetched with the existing immutable loss marker, its hashes matched the retained export manifest, and all 12 archived volumes passed isolated restore/fingerprint verification without creating any real `ecorione-staging` container or project volume. The application checkout remained exact `b27c1e...` throughout. Next runtime gate: read-only clean-host preflight -> guarded real-volume restore -> standalone loopback start/acceptance -> changed-boot-ID reboot evidence -> marker-bound final closure receipt. Until all of those pass, **total-host-loss recovery remains NOT YET PROVEN**.
 
 Runtime checkpoint evidence: [verification/offhost-dr-runtime-checkpoint-2026-09-22.md](verification/offhost-dr-runtime-checkpoint-2026-09-22.md).
 
@@ -68,7 +68,7 @@ Checkpoint 7 repository implementation is CLOSED / PASS through PR #263 exact he
 
 Checkpoint 6 repository implementation is CLOSED / PASS through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` and merge `cb043b47a2c899e3c0585b06db4992fcc727c723`. Exact-head CI #1857, Product Eval #1096, MCP #1001, and Desktop Installer #188 passed. Merged-main CI #1858, Product Eval #1097, and MCP #1002 passed. Staging Deploy #480/#481 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
-The repository-only checkpoint non-claims above are now partly superseded by real runtime evidence: source/target readiness passed, three real retained generations exist, retention is ready, a clean replacement host is provisioned, and a real loss marker has been created. Retrieval/restore/application/reboot/closure evidence is still incomplete, so measured final RPO/RTO and total-host-loss recovery remain non-claims.
+The repository-only checkpoint non-claims above are now partly superseded by real runtime evidence: source/target readiness passed, three real retained generations exist, retention is ready, a clean replacement host is provisioned, a real loss marker exists, marker-bound independent retrieval passed, and all 12 archived volumes passed isolated decrypt/content verification. Real-volume restore/application/reboot/closure evidence is still incomplete, so measured final RPO/RTO and total-host-loss recovery remain non-claims.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
