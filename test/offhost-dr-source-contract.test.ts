@@ -270,6 +270,10 @@ describe("off-host DR source contract", () => {
     expect(sourceReadiness).toContain("Git HEAD does not match release receipt");
     expect(sourceReadiness).toContain("AI image tag does not match release receipt");
     expect(sourceReadiness).toContain("target_min_free_kib=");
+    expect(sourceReadiness).toContain("ECORIONE_DR_PUBLIC_KEY");
+    expect(sourceReadiness).toContain("source host must receive public key only");
+    expect(sourceReadiness).toContain("DR public key must be RSA >= 3072 bits");
+    expect(sourceReadiness).toContain("dr_public_key_ready=1");
     expect(sourceReadiness).toContain("IMPORTANT: no backup/export/remote transfer was created");
     expect(sourceReadiness).not.toContain("staging-pcs09-backup.sh --apply");
     expect(sourceReadiness).not.toContain("staging-offhost-dr-export.sh --apply");
