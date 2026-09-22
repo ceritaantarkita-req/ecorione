@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINTS 1–6 CLOSED / CHECKPOINT 7 MARKER-BEFORE-FETCH ENFORCEMENT ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–7 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -43,6 +43,8 @@ Checkpoint 5 repository implementation is CLOSED / PASS through PR #256 exact he
 Checkpoint 6 removes the free-form timing input from DR closure. A mode-0600 immutable loss-marker receipt now records current recovery-host UTC time, drill UUID, and selected export-manifest filename before fetch; closure evidence must bind to that marker and records its SHA-256.
 
 Checkpoint 7 moves that marker from a final-evidence-only input into the actual recovery gate. Independent fetch now requires the exact marker before the first SCP, writes marker identity/hash plus retrieval-start time into the retrieval receipt, restore rejects unbound retrieval evidence, acceptance propagates the same chain, and final closure cross-checks all receipts against the actual marker file.
+
+Checkpoint 7 repository implementation is CLOSED / PASS through PR #263 exact head `ba7ef7d6922c0177be582d5734095ed154f72622` and merge `cf8921f19a5c78db2d3d2fd075ac232983a0bbb4`. Exact-head CI #1870 and Product Eval #1109 passed. Merged-main CI #1871 and Product Eval #1110 passed. Staging Deploy #504/#505 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
 Checkpoint 6 repository implementation is CLOSED / PASS through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` and merge `cb043b47a2c899e3c0585b06db4992fcc727c723`. Exact-head CI #1857, Product Eval #1096, MCP #1001, and Desktop Installer #188 passed. Merged-main CI #1858, Product Eval #1097, and MCP #1002 passed. Staging Deploy #480/#481 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
