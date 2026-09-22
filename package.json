@@ -82,7 +82,9 @@
     "staging:dr:acceptance": "node scripts/staging-offhost-dr-acceptance.mjs",
     "staging:dr:reboot": "node scripts/staging-offhost-dr-reboot-evidence.mjs",
     "staging:dr:start": "bash scripts/staging-offhost-dr-start.sh",
-    "staging:dr:canary": "node scripts/staging-offhost-dr-canary.mjs"
+    "staging:dr:canary": "node scripts/staging-offhost-dr-canary.mjs",
+    "staging:dr:replacement-preflight": "bash scripts/staging-offhost-dr-replacement-preflight.sh",
+    "staging:dr:local-smoke": "node scripts/staging-offhost-dr-local-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
