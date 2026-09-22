@@ -104,17 +104,49 @@ unset ECORIONE_EDGE_NETWORK
 
 bash scripts/production-preflight.sh
 
-CONFIG="$(
-  docker compose     -p "$PROJECT"     --env-file "$DEPLOY_ENV"     -f deploy/compose.yml     -f "$RECOVERY_OVERLAY"     config
+CONFIG_JSON="$(
+  docker compose \
+    -p "$PROJECT" \
+    --env-file "$DEPLOY_ENV" \
+    -f deploy/compose.yml \
+    -f "$RECOVERY_OVERLAY" \
+    config --format json
 )"
 
-grep -Fq "127.0.0.1:${LOOPBACK_PORT}" <<<"$CONFIG" ||   fail "recovery Compose config does not publish Caddy on the expected loopback port"
-if grep -Eq 'published:[[:space:]]*"?80"?$|published:[[:space:]]*"?443"?$' <<<"$CONFIG"; then
-  fail "recovery Compose config unexpectedly publishes public 80/443"
-fi
-if grep -Fq "inmydraft-demos_web" <<<"$CONFIG"; then
-  fail "recovery Compose config unexpectedly depends on the historical SumoPod edge network"
-fi
+node - "$LOOPBACK_PORT" <<'NODE' <<<"$CONFIG_JSON"
+const fs = require("fs");
+const expectedPort = Number(process.argv[2]);
+const config = JSON.parse(fs.readFileSync(0, "utf8"));
+const caddy = config?.services?.caddy;
+if (!caddy || !Array.isArray(caddy.ports)) {
+  throw new Error("recovery Compose config has no Caddy port inventory");
+}
+if (caddy.ports.length !== 1) {
+  throw new Error("recovery Caddy must publish exactly one loopback port");
+}
+const port = caddy.ports[0];
+if (
+  Number(port.target) !== 8080 ||
+  Number(port.published) !== expectedPort ||
+  port.host_ip !== "127.0.0.1"
+) {
+  throw new Error("recovery Caddy port is not exact 127.0.0.1:<port> -> 8080");
+}
+if (caddy.ports.some((item) => [80, 443].includes(Number(item.published)))) {
+  throw new Error("recovery Compose config unexpectedly publishes public 80/443");
+}
+const serviceNetworks = caddy.networks;
+const networkNames = Array.isArray(serviceNetworks)
+  ? serviceNetworks
+  : Object.keys(serviceNetworks || {});
+if (networkNames.length !== 1 || networkNames[0] !== "internal") {
+  throw new Error("recovery Caddy must attach only to the internal network");
+}
+if (JSON.stringify(config).includes("inmydraft-demos_web")) {
+  throw new Error("recovery Compose config depends on the historical SumoPod edge network");
+}
+NODE
+
 
 echo "PASS ECORIONE clean replacement-host preflight"
 echo "source_sha=$SOURCE_SHA"
