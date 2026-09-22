@@ -40,7 +40,7 @@ The clean replacement environment `ecorione-recovery` is provisioned with native
 
 Generation `ecorione-dr-20260922152938-b27c1e5833be.receipt.env` is selected. Its immutable loss marker was created at `2026-09-22T16:21:58.074Z`; SumoPod is treated as unavailable from that boundary onward.
 
-The first marker-bound fetch found a compatibility defect in `staging-offhost-dr-fetch.sh`: remote shell quoting is incompatible with modern OpenSSH SCP/SFTP filename handling. Direct strict-SCP proof showed the selected remote manifest is present and readable. PR #268 exact head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 + Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`; it also makes fetch failures stop at the first failed artifact operation.
+The first marker-bound fetch found a compatibility defect in `staging-offhost-dr-fetch.sh`: remote shell quoting is incompatible with modern OpenSSH SCP/SFTP filename handling. Direct strict-SCP proof showed the selected remote manifest is present and readable. PR #268 exact head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 + Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`; merged-main CI #1882 and Product Eval #1121 also passed; it also makes fetch failures stop at the first failed artifact operation.
 
 The application checkout must remain pinned to `b27c1e...`. Continue by running only the reviewed fixed fetch helper from an isolated worktree, then return all recovery verification/restore/start/acceptance work to the exact-source checkout.
 
