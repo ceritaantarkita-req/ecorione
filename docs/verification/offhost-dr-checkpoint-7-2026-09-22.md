@@ -138,6 +138,27 @@ Source-contract coverage locks:
 - final closure cross-binds all marker fields;
 - fetch remains strict-host-key and never uses `ssh-keyscan`.
 
+## Repository gate history
+
+PR #263 initial reviewed candidate reached Product Eval #1106 PASS. CI #1867 passed naming but stopped at the read-only Prettier format gate on exactly:
+
+```text
+scripts/staging-offhost-dr-acceptance.mjs
+scripts/staging-offhost-dr-closure-evidence.mjs
+scripts/staging-offhost-dr-reboot-evidence.mjs
+scripts/staging-offhost-dr-restore.mjs
+test/offhost-dr-closure-evidence.test.ts
+test/offhost-dr-source-contract.test.ts
+```
+
+No gate was weakened. The repository's locked Prettier toolchain formatted only those files. Temporary formatter workflow #1 completed successfully, pushed the formatted source, and self-removed. Formatter result head was:
+
+```text
+442c7c3c64125f05dcb9874cfa9fc6459a33524b
+```
+
+The final exact-head repository gates must rerun after this evidence commit.
+
 ## Current non-claims
 
 Checkpoint 7 does **not** prove:
