@@ -84,13 +84,14 @@ Checkpoint 3 repository implementation is CLOSED / PASS through PR #252 final he
 
 Checkpoint 3 closure bookkeeping then merged through PR #253 as `801adbc1eca847c77cba4b9bb89264ccf47cbf88` after CI #1822 + Product Eval #1061. Merged-main CI #1823 + Product Eval #1062 passed. Staging Deploy #416/#417 gate-passed and their deploy jobs remained skipped, so the proven runtime did not move.
 
-Checkpoint 4 adds read-only runtime readiness guardrails before the first DR mutation. After the governed deployment of the exact current main succeeds and CD is frozen again, run:
+Checkpoint 4 adds read-only runtime readiness guardrails before the first DR mutation. After the governed deployment of the exact current main succeeds and CD is frozen again, place **only** the RSA-3072+ DR public key on the source host and run:
 
 ```bash
+export ECORIONE_DR_PUBLIC_KEY=/secure/path/ecorione-dr-public.pem
 sudo -E bash scripts/staging-offhost-dr-source-readiness.sh --check
 ```
 
-This must PASS before creating a canary or cold backup. Record the emitted `target_min_free_kib=<N>`.
+The readiness gate refuses private-key PEM material, non-RSA keys, and RSA keys below 3072 bits. This must PASS before creating a canary or cold backup. Record the emitted `target_min_free_kib=<N>` and keep using the same `ECORIONE_DR_PUBLIC_KEY` path for the later export.
 
 Configure the independent SSH target, confirm the failure domain manually, then require:
 
