@@ -268,8 +268,10 @@ describe("off-host DR closure timing evidence", () => {
       const sourceTag = `staging-${sourceSha.slice(0, 12)}`;
 
       write600(canaryPath, canaryRaw);
-      const marker = lossMarkerFixture("ecorione-dr-test.receipt.env", "2026-09-21T23:59:00Z");
-      const marker = lossMarkerFixture("ecorione-dr-other.receipt.env", "2026-09-22T01:00:00Z");
+      const marker = lossMarkerFixture(
+        "ecorione-dr-other.receipt.env",
+        "2026-09-22T01:00:00Z",
+      );
       write600(
         manifestPath,
         envFile({
@@ -431,6 +433,10 @@ describe("off-host DR closure timing evidence", () => {
       const canarySha = createHash("sha256").update(canaryRaw).digest("hex");
       const sourceSha = "a".repeat(40);
       const sourceTag = `staging-${sourceSha.slice(0, 12)}`;
+      const marker = lossMarkerFixture(
+        "ecorione-dr-test.receipt.env",
+        "2026-09-21T23:59:00Z",
+      );
 
       write600(canaryPath, canaryRaw);
       write600(
