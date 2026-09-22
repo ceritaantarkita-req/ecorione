@@ -255,12 +255,8 @@ describe("off-host DR source contract", () => {
     expect(reboot).toContain("loopback DR reboot evidence must not use ECORIONE_EDGE_NETWORK");
     expect(acceptance).toContain("acceptanceBaseOrigin");
     expect(acceptance).toContain("expectedMcpResource");
-    expect(reboot).toContain(
-      "DR acceptance base origin does not match the acceptance receipt",
-    );
-    expect(reboot).toContain(
-      "DR expected MCP resource does not match the acceptance receipt",
-    );
+    expect(reboot).toContain("DR acceptance base origin does not match the acceptance receipt");
+    expect(reboot).toContain("DR expected MCP resource does not match the acceptance receipt");
   });
 
   it("gates recovered application identity and changed-boot-id persistence", () => {
