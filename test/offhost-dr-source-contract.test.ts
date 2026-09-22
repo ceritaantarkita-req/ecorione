@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -121,6 +122,141 @@ describe("off-host DR source contract", () => {
     expect(fetch).toContain("Retrieved semantic canary checksum mismatch");
     expect(restore).toContain("--canary-state");
     expect(restore).toContain("semanticCanarySha256");
+  });
+
+  it("keeps checkpoint-3 shell entrypoints syntactically valid on Bash hosts", () => {
+    if (process.platform === "win32") return;
+
+    for (const path of [
+      "scripts/staging-offhost-dr-replacement-preflight.sh",
+      "scripts/staging-offhost-dr-start.sh",
+    ]) {
+      const result = spawnSync("bash", ["-n", resolve(ROOT, path)], {
+        encoding: "utf8",
+      });
+      expect(result.status, `${path}: ${result.stderr || result.stdout}`).toBe(0);
+    }
+  });
+
+  it("renders the recovery Compose overlay as loopback-only in Docker Compose", () => {
+    if (process.env.ECORIONE_PHASE3_DOCKER_ACCEPTANCE !== "1") return;
+
+    const env = {
+      ...process.env,
+      ECORIONE_INTERNAL_TOKEN: "dr-render-internal-token-long-enough",
+      ECORIONE_SYNC_OWNER_TOKEN: "dr-render-sync-owner-token-long-enough",
+      TEMPORAL_POSTGRES_PASSWORD: "dr-render-temporal-password",
+      ECORIONE_DOMAIN: "recovery.invalid",
+      ECORIONE_OPS_PASSWORD_HASH: "dr-render-hash",
+      ECORIONE_MCP_OAUTH_ISSUER: "https://auth.example.test/",
+      ECORIONE_MCP_RESOURCE: "https://ecorione.example.test/mcp",
+      ECORIONE_MCP_JWKS_URL: "https://auth.example.test/jwks.json",
+      ECORIONE_MCP_HANDLE_KEY: "dr-render-handle-key-long-enough",
+      ECORIONE_MCP_ALLOWED_ORIGINS: "https://chatgpt.com",
+      ECORIONE_DR_LOOPBACK_PORT: "18080",
+      ECORIONE_IMAGE_TAG: "staging-0123456789ab",
+    };
+
+    const result = spawnSync(
+      "docker",
+      [
+        "compose",
+        "-p",
+        "ecorione-staging",
+        "-f",
+        resolve(ROOT, "deploy/compose.yml"),
+        "-f",
+        resolve(ROOT, "deploy/compose.dr-recovery.yml"),
+        "config",
+        "--format",
+        "json",
+      ],
+      {
+        cwd: ROOT,
+        env,
+        encoding: "utf8",
+      },
+    );
+
+    expect(result.status, result.stderr || result.stdout).toBe(0);
+    const config = JSON.parse(result.stdout) as {
+      services?: {
+        caddy?: {
+          ports?: Array<{
+            target?: number;
+            published?: string | number;
+            host_ip?: string;
+          }>;
+          networks?: string[] | Record<string, unknown>;
+        };
+      };
+    };
+    const caddy = config.services?.caddy;
+    expect(caddy?.ports).toEqual([
+      {
+        mode: "ingress",
+        target: 8080,
+        published: "18080",
+        protocol: "tcp",
+        host_ip: "127.0.0.1",
+      },
+    ]);
+    const networks = Array.isArray(caddy?.networks)
+      ? caddy.networks
+      : Object.keys(caddy?.networks ?? {});
+    expect(networks).toEqual(["internal"]);
+    expect(result.stdout).not.toContain('"published":"80"');
+    expect(result.stdout).not.toContain('"published":"443"');
+  });
+
+  it("keeps replacement-host DR on a standalone loopback-only edge", () => {
+    const overlay = source("deploy/compose.dr-recovery.yml");
+    const preflight = source("scripts/staging-offhost-dr-replacement-preflight.sh");
+    const localSmoke = source("scripts/staging-offhost-dr-local-smoke.mjs");
+    const start = source("scripts/staging-offhost-dr-start.sh");
+    const acceptance = source("scripts/staging-offhost-dr-acceptance.mjs");
+    const reboot = source("scripts/staging-offhost-dr-reboot-evidence.mjs");
+
+    expect(overlay).toContain("127.0.0.1:");
+    expect(overlay).toContain("!override");
+    expect(overlay).toContain("Caddyfile.sumopod");
+    expect(overlay).not.toContain("traefik");
+    expect(overlay).not.toContain("external: true");
+    expect(overlay).not.toContain('"80:80"');
+    expect(overlay).not.toContain('"443:443"');
+
+    expect(preflight).toContain("replacement host is not clean");
+    expect(preflight).toContain("Compose project containers already exist");
+    expect(preflight).toContain("Compose project volumes already exist");
+    expect(preflight).toContain("must not inherit ECORIONE_EDGE_NETWORK");
+    expect(preflight).toContain("production-preflight.sh");
+    expect(preflight).toContain('export ECORIONE_DEPLOY_ENV="$DEPLOY_ENV"');
+    expect(preflight).toContain("config --format json");
+    expect(preflight).toContain("127.0.0.1:");
+    expect(preflight).not.toContain("docker volume prune");
+    expect(preflight).not.toContain("docker system prune");
+
+    expect(localSmoke).toContain("DR loopback base must stay on loopback");
+    expect(localSmoke).toContain("ECORIONE_DR_EXPECTED_MCP_RESOURCE");
+    expect(localSmoke).toContain("recovered MCP resource identity changed");
+    expect(localSmoke).toContain("/ops");
+    expect(localSmoke).toContain("memory:read");
+
+    expect(start).toContain("ECORIONE_DR_STANDALONE_RECOVERY");
+    expect(start).toContain("deploy/compose.dr-recovery.yml");
+    expect(start).toContain("must not use ECORIONE_EDGE_NETWORK");
+
+    expect(acceptance).toContain("ECORIONE_DR_ACCEPTANCE_MODE");
+    expect(acceptance).toContain('["public", "loopback"]');
+    expect(acceptance).toContain("staging-offhost-dr-local-smoke.mjs");
+    expect(acceptance).toContain("loopback DR acceptance must not use ECORIONE_EDGE_NETWORK");
+
+    expect(reboot).toContain("staging-offhost-dr-local-smoke.mjs");
+    expect(reboot).toContain("loopback DR reboot evidence must not use ECORIONE_EDGE_NETWORK");
+    expect(acceptance).toContain("acceptanceBaseOrigin");
+    expect(acceptance).toContain("expectedMcpResource");
+    expect(reboot).toContain("DR acceptance base origin does not match the acceptance receipt");
+    expect(reboot).toContain("DR expected MCP resource does not match the acceptance receipt");
   });
 
   it("gates recovered application identity and changed-boot-id persistence", () => {

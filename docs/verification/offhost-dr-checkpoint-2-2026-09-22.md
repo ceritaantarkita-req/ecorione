@@ -1,6 +1,6 @@
 # Off-host DR checkpoint 2 — execution and clean-host recovery path — 2026-09-22
 
-Status: **IMPLEMENTED AT REPOSITORY EXECUTION BOUNDARY / REAL-HOST DR STILL PENDING**
+Status: **CLOSED / PASS AT REPOSITORY EXECUTION BOUNDARY / REAL-HOST DR STILL PENDING**
 
 ## Scope
 
@@ -202,4 +202,21 @@ The same pre-merge audit also hardened remote generation commit semantics. The i
 
 Exact head `e6cfc2644c1a36f5f3d4aa105c62c2fd990bfc3c` then reached the full normal test stage: Format, lint, and typecheck passed; Product Eval #1036 and MCP External HTTPS Acceptance #953 also passed. CI #1797 failed exactly one source-contract assertion while 206 test files / 1096 tests passed. The failing assertion incorrectly expected `-$.json` instead of the implemented collision-safe `-$.json`; that test defect came from string-replacement escaping during the preceding test edit, not from the shell implementation. The assertion was corrected without weakening the implementation or gate.
 
-Repository implementation can close only after exact-head CI/Product Eval and relevant acceptance gates pass. Real-host DR remains a separate evidence boundary.
+## Repository closure
+
+PR #251 final exact head `dbb9423def581e95cb9e1bbe18fd3208164ef575` passed all required pull-request gates:
+
+- CI #1799 — PASS;
+- Product Eval #1038 — PASS;
+- MCP External HTTPS Acceptance #955 — PASS;
+- Desktop Installer #146 — PASS.
+
+PR #251 then merged to `main` as `768c0f617064343f0bfc569d52212c80a03f0b83`. Exact merged-main gates passed:
+
+- CI #1800 — PASS;
+- Product Eval #1039 — PASS;
+- MCP External HTTPS Acceptance #956 — PASS.
+
+Staging Deploy #372 and #373 each passed the exact-current-main gate, but the deploy job was intentionally skipped because repository variable `ECORIONE_STAGING_CD_ENABLED` remained disabled. Therefore checkpoint 2 repository closure caused **no SumoPod runtime mutation**.
+
+Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary. Real-host DR remains a separate evidence boundary and is not closed by these repository gates.

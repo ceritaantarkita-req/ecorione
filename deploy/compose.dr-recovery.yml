@@ -1,0 +1,13 @@
+services:
+  caddy:
+    # Total-host-loss recovery must not depend on the lost SumoPod Traefik edge.
+    # Reuse the reviewed internal Caddy policy boundary, but expose it only on
+    # loopback for DR acceptance. Public DNS/TLS remains a separate gate.
+    ports: !override
+      - "127.0.0.1:${ECORIONE_DR_LOOPBACK_PORT:-18080}:8080"
+    volumes: !override
+      - ./Caddyfile.sumopod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: !override
+      - internal

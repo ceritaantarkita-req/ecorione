@@ -18,6 +18,7 @@ RESTORE_RECEIPT="$2"
 DEPLOY_ENV="${ECORIONE_DEPLOY_ENV:-deploy/staging.env}"
 OVERLAY="${ECORIONE_COMPOSE_OVERLAY:-}"
 EDGE_NETWORK="${ECORIONE_EDGE_NETWORK:-}"
+STANDALONE_RECOVERY="${ECORIONE_DR_STANDALONE_RECOVERY:-0}"
 
 [[ -f "$RESTORE_RECEIPT" && ! -L "$RESTORE_RECEIPT" ]] || {
   echo "Restore receipt must be a regular non-symlink file." >&2
@@ -38,6 +39,16 @@ EDGE_NETWORK="${ECORIONE_EDGE_NETWORK:-}"
 if [[ -n "$OVERLAY" ]]; then
   [[ -f "$OVERLAY" && ! -L "$OVERLAY" ]] || {
     echo "Compose overlay must be a regular non-symlink file." >&2
+    exit 1
+  }
+fi
+if [[ "$STANDALONE_RECOVERY" == "1" ]]; then
+  [[ "$OVERLAY" == "deploy/compose.dr-recovery.yml" ]] || {
+    echo "Standalone DR startup requires deploy/compose.dr-recovery.yml." >&2
+    exit 1
+  }
+  [[ -z "$EDGE_NETWORK" ]] || {
+    echo "Standalone DR startup must not use ECORIONE_EDGE_NETWORK." >&2
     exit 1
   }
 fi

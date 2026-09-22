@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / CHECKPOINT 2 — EXECUTION + CLEAN-HOST RECOVERY PATH**
+Status: **ACTIVE / CHECKPOINT 3 — STANDALONE REPLACEMENT-HOST RECOVERY BOUNDARY**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -64,15 +64,19 @@ The JSON sidecar contains cryptographic metadata needed for decryption and integ
 
 ## Runtime activation prerequisite
 
-Checkpoint-2 recovery tooling must itself be part of the exact reviewed staging revision before real DR evidence begins. Do **not** copy new DR scripts into the older proven `52046db...` checkout and then call that current-revision evidence.
+Checkpoint 2 repository tooling is CLOSED / PASS through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Exact merged-main CI/Product Eval/MCP gates passed. Staging Deploy #372/#373 passed their gate but intentionally skipped the deploy job because `ECORIONE_STAGING_CD_ENABLED` remained disabled.
 
-After checkpoint 2 merges and its exact merged-main repository gates pass:
+Checkpoint 3 adds the standalone replacement-host boundary and must itself be part of the exact reviewed staging revision before real DR evidence begins. Do **not** copy DR scripts into an older proven checkout and then call that current-revision evidence.
+
+After checkpoint 3 merges and its exact merged-main repository gates pass:
 
 1. temporarily enable the existing governed PCS-08 staging deployment gate;
-2. deploy that exact reviewed `main` SHA through the existing GitHub -> SumoPod path;
+2. manually dispatch **Staging Deploy** for that exact current `main` SHA;
 3. require public smoke, authenticated Operations, exact-host evidence, and release-receipt update to pass;
-4. freeze automatic staging deployment back to disabled;
+4. freeze automatic staging deployment back to disabled immediately after PASS;
 5. use the resulting release receipt as the source identity for the fresh DR export.
+
+The current connector can read workflow state but does not expose repository-variable mutation or workflow-dispatch actions. Do not bypass that safety boundary by editing the deployment workflow to force a run.
 
 Any later docs-only closure merge must not silently move the runtime again. Runtime identity and repository-documentation identity remain separate evidence boundaries.
 
@@ -241,9 +245,25 @@ That retrieval receipt is required by the real-volume restore gate.
 
 ## G. Guarded clean-host real-volume restore
 
-First keep the recovery host clean: do not start the ECORIONE Compose project and do not pre-create its target volumes.
+First keep the replacement host clean: do not start the ECORIONE Compose project and do not pre-create its target volumes. Restore the required deployment env/secrets file from its separately protected recovery source before preflight; it must remain mode 0600.
 
-Then:
+Use the standalone loopback recovery boundary and run the read-only preflight **before** real-volume mutation:
+
+```bash
+export ECORIONE_DEPLOY_ENV=deploy/staging.env
+export ECORIONE_COMPOSE_PROJECT=ecorione-staging
+export ECORIONE_COMPOSE_OVERLAY=deploy/compose.dr-recovery.yml
+export ECORIONE_DR_LOOPBACK_PORT=18080
+unset ECORIONE_EDGE_NETWORK
+
+sudo -E bash scripts/staging-offhost-dr-replacement-preflight.sh --check \
+  /secure/recovery/<bundle>.json \
+  /secure/recovery/<bundle>.retrieval.env
+```
+
+The replacement-host preflight requires exact recovered Git identity, a clean tracked worktree, no project containers, no project-labelled volumes, a free loopback port, safe mode-0600 recovery inputs, a valid rendered Compose config, exactly one Caddy publication on `127.0.0.1:18080 -> 8080`, no public 80/443 publication, and no dependency on the historical SumoPod edge network.
+
+Only after that PASS:
 
 ```bash
 export ECORIONE_DR_RESTORE_ACK=1
@@ -262,36 +282,40 @@ On success it writes a mode-0600 restore receipt under `/var/lib/ecorione-dr`. A
 
 Restore the required deployment env, Vault master key, operator credentials, OAuth/provider secrets, and other out-of-band configuration from their separately protected recovery source. Then check out the exact recovered source SHA.
 
-Start the recovered topology through the guarded helper rather than a hand-written Compose command:
+Start the recovered topology through the guarded standalone helper rather than a hand-written Compose command:
 
 ```bash
 export ECORIONE_DEPLOY_ENV=deploy/staging.env
 export ECORIONE_COMPOSE_PROJECT=ecorione-staging
-export ECORIONE_COMPOSE_OVERLAY=deploy/compose.sumopod.yml
-export ECORIONE_EDGE_NETWORK=inmydraft-demos_web
+export ECORIONE_COMPOSE_OVERLAY=deploy/compose.dr-recovery.yml
+export ECORIONE_DR_LOOPBACK_PORT=18080
+export ECORIONE_DR_STANDALONE_RECOVERY=1
+unset ECORIONE_EDGE_NETWORK
 
 sudo -E bash scripts/staging-offhost-dr-start.sh --apply \
   /var/lib/ecorione-dr/<restore-receipt>.json
 ```
 
-The start helper requires independent-retrieval proof, exact Git SHA, a clean tracked worktree, all restored volumes present, and no existing project containers. It sets the recorded image tag and waits for every configured service. On startup failure it removes only attempted project containers/network and preserves the restored volumes.
+The start helper requires independent-retrieval proof, exact Git SHA, a clean tracked worktree, all restored volumes present, and no existing project containers. In standalone mode it refuses any overlay other than `deploy/compose.dr-recovery.yml` and refuses an external edge network. It sets the recorded image tag and waits for every configured service. On startup failure it removes only attempted project containers/network and preserves the restored volumes.
 
-Run pre-reboot application recovery acceptance:
+Run pre-reboot application recovery acceptance through the loopback-only Caddy policy boundary:
 
 ```bash
 export ECORIONE_DEPLOY_ENV=deploy/staging.env
 export ECORIONE_COMPOSE_PROJECT=ecorione-staging
-export ECORIONE_COMPOSE_OVERLAY=deploy/compose.sumopod.yml
-export ECORIONE_EDGE_NETWORK=inmydraft-demos_web
-export ECORIONE_PUBLIC_BASE_URL=https://ecorione.inmydraft.com
+export ECORIONE_COMPOSE_OVERLAY=deploy/compose.dr-recovery.yml
+export ECORIONE_DR_ACCEPTANCE_MODE=loopback
+export ECORIONE_DR_LOOPBACK_BASE_URL=http://127.0.0.1:18080
+export ECORIONE_DR_EXPECTED_MCP_RESOURCE=https://ecorione.inmydraft.com/mcp
 export ECORIONE_OPS_CREDENTIAL_FILE=/secure/recovery/ecorione-staging-ops.txt
+unset ECORIONE_EDGE_NETWORK
 
 sudo -E node scripts/staging-offhost-dr-acceptance.mjs \
   --restore-receipt /var/lib/ecorione-dr/<restore-receipt>.json \
   --canary-state /secure/recovery/<bundle>.canary.json
 ```
 
-The acceptance gate requires exact Git SHA, clean tracked worktree, all configured services, exact Ai image tag, restored volume presence, a successful semantic-canary read through Historical Ledger + Context + Artifact owner APIs, public smoke, authenticated Operations, and sanitized exact-host evidence. Only after those pass does it write the recovered release receipt and a pre-reboot recovery acceptance receipt.
+The loopback acceptance gate requires exact Git SHA, clean tracked worktree, all configured services, exact Ai image tag, restored volume presence, the Historical Ledger + Context + Artifact semantic canary, security headers, protected `/ops`/`/settings`, the configured external MCP resource/challenge identity, authenticated Operations, and sanitized exact-host evidence. This proves the recovered application/security boundary without claiming public DNS/TLS reachability.
 
 Capture the reboot baseline:
 
@@ -311,7 +335,7 @@ sudo -E node scripts/staging-offhost-dr-reboot-evidence.mjs \
   --canary-state /secure/recovery/<bundle>.canary.json
 ```
 
-The post phase requires a changed Linux boot ID plus preserved exact source/image, project-volume inventory, Connect durable-file fingerprints, a second successful semantic-canary read, public boundary, authenticated Operations, and exact-host evidence.
+Keep the same checkpoint-3 loopback environment exported for both reboot-evidence phases. The post phase requires a changed Linux boot ID plus preserved exact source/image, project-volume inventory, Connect durable-file fingerprints, a second successful semantic-canary read, loopback Caddy/security/MCP checks, authenticated Operations, and exact-host evidence. Public DNS/TLS remains a separate gate.
 
 ## H. Total-host-loss application recovery drill
 
@@ -326,11 +350,15 @@ The isolated archive restore above proves portable data integrity. Final DR clos
 7. restore required secrets/configuration from their separate recovery source;
 8. start the exact recorded image/source topology;
 9. require all configured services running;
-10. require public home health and protected `/ops`/`/settings`;
-11. require authenticated Operations healthy with no required unhealthy owner service;
-12. require exact-source/host evidence to match the recorded SHA;
-13. perform a controlled restart/reboot and prove persistence;
-14. record sanitized timestamps for recovery start, data-ready, application-ready, and final acceptance.
+10. require the loopback-only Caddy boundary healthy with security headers and protected `/ops`/`/settings`;
+11. require the configured MCP resource/challenge identity to remain unchanged;
+12. require the semantic Ledger/Context/Artifact canary to be readable with exact identity/digests;
+13. require authenticated Operations healthy with no required unhealthy owner service;
+14. require exact-source/host evidence to match the recorded SHA;
+15. perform a full replacement-host reboot and repeat semantic/edge/Ops/host evidence with a changed boot ID;
+16. record sanitized timestamps for recovery start, data-ready, application-ready, and final acceptance.
+
+Public DNS, public TLS issuance/renewal, Cloudflare and production promotion remain separate from this host-loss recovery proof.
 
 Only after this sequence passes may the project claim total-host-loss recovery.
 
