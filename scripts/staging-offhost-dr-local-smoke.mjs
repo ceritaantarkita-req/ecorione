@@ -6,7 +6,7 @@ const rawResource = process.env.ECORIONE_DR_EXPECTED_MCP_RESOURCE;
 
 if (!rawResource) {
   throw new Error(
-    "ECORIONE_DR_EXPECTED_MCP_RESOURCE is required, for example https://ecorione.inmydraft.com/mcp",
+    "ECORIONE_DR_EXPECTED_MCP_RESOURCE is required, for example https://ecorione.example.com/mcp",
   );
 }
 
