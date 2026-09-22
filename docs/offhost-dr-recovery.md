@@ -254,7 +254,15 @@ It never restores into the live staging volume names and never uses Docker prune
 
 After treating the source host as unavailable, the replacement host must fetch the retained generation from the independent target rather than copying it from the source VPS.
 
-Use the exact off-host export-manifest filename:
+Select the exact retained export-manifest filename and create the immutable recovery clock marker **before any fetch**:
+
+```bash
+node scripts/staging-offhost-dr-loss-marker.mjs \
+  --manifest-name ecorione-dr-<timestamp>-<sha12>.receipt.env \
+  --output /var/lib/ecorione-dr/recovery-loss-marker.json
+```
+
+Then use that exact manifest + marker for the independent fetch:
 
 ```bash
 export ECORIONE_DR_SSH_TARGET='backupuser@independent-backup-host.example'
@@ -380,20 +388,21 @@ The isolated archive restore above proves portable data integrity. Final DR clos
 1. provision a replacement host without relying on the lost SumoPod filesystem;
 2. install the required Docker/Git/Node baseline;
 3. clone GitHub and check out the exact `sourceSha` embedded in the DR metadata;
-4. retrieve the encrypted off-host bundle from the independent target;
-5. decrypt/verify it with the out-of-band private DR key;
-6. restore the archived data into the exact Compose-owned target volumes;
-7. restore required secrets/configuration from their separate recovery source;
-8. start the exact recorded image/source topology;
-9. require all configured services running;
-10. require the loopback-only Caddy boundary healthy with security headers and protected `/ops`/`/settings`;
-11. require the configured MCP resource/challenge identity to remain unchanged;
-12. require the semantic Ledger/Context/Artifact canary to be readable with exact identity/digests;
-13. require authenticated Operations healthy with no required unhealthy owner service;
-14. require exact-source/host evidence to match the recorded SHA;
-15. perform a full replacement-host reboot and repeat semantic/edge/Ops/host evidence with a changed boot ID;
-16. record sanitized timestamps for recovery start, data-ready, application-ready, and final acceptance;
-17. generate the final timing receipt bound to the immutable loss-marker receipt created before independent fetch.
+4. select the retained generation and create its immutable loss-marker receipt;
+5. retrieve that generation from the independent target with the marker-required fetch path;
+6. decrypt/verify it with the out-of-band private DR key;
+7. restore the archived data into the exact Compose-owned target volumes;
+8. restore required secrets/configuration from their separate recovery source;
+9. start the exact recorded image/source topology;
+10. require all configured services running;
+11. require the loopback-only Caddy boundary healthy with security headers and protected `/ops`/`/settings`;
+12. require the configured MCP resource/challenge identity to remain unchanged;
+13. require the semantic Ledger/Context/Artifact canary to be readable with exact identity/digests;
+14. require authenticated Operations healthy with no required unhealthy owner service;
+15. require exact-source/host evidence to match the recorded SHA;
+16. perform a full replacement-host reboot and repeat semantic/edge/Ops/host evidence with a changed boot ID;
+17. record sanitized timestamps for recovery start, data-ready, application-ready, and final acceptance;
+18. generate the final timing receipt cross-bound to the marker/retrieval/restore/acceptance chain.
 
 After the retained generation is selected and **before independent fetch**, create the immutable recovery clock marker:
 
