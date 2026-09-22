@@ -175,7 +175,8 @@ async function main() {
         : "ECORIONE_PUBLIC_BASE_URL is required",
     );
   }
-  if (acceptanceMode !== acceptance.edgeMode) {
+  const recordedEdgeMode = acceptance.edgeMode ?? "public";
+  if (acceptanceMode !== recordedEdgeMode) {
     fail("DR acceptance mode does not match the acceptance receipt");
   }
   if (new URL(acceptanceBaseUrl).origin !== acceptance.acceptanceBaseOrigin) {
