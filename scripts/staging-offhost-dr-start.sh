@@ -151,9 +151,9 @@ trap cleanup EXIT
 
 # Every ECORIONE owner service in deploy/compose.yml shares the same exact
 # application image/tag. Build that image once, then start the topology without
-# asking Compose to build each service concurrently. This avoids an OpenSSH-like
-# recovery-host class of tooling drift where Compose falls back from Bake/buildx
-# and races multiple exporters against the same image tag.
+# asking Compose to build each service concurrently. This avoids a recovery-host
+# tooling race when Compose falls back from Bake/buildx and multiple exporters
+# target the same image tag at once.
 docker compose "${COMPOSE_ARGS[@]}" build ai
 docker image inspect "ecorione:${SOURCE_TAG}" >/dev/null
 
