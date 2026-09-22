@@ -22,7 +22,7 @@ A genuinely clean replacement environment now exists as the separate WSL2 distro
 
 Generation `ecorione-dr-20260922152938-b27c1e5833be.receipt.env` is selected for the drill. Its immutable loss marker was created at `2026-09-22T16:21:58.074Z`. From that marker onward the SumoPod source is treated as unavailable for this drill.
 
-The first marker-bound fetch exposed a second repository tooling bug: the fetch helper shell-quoted a remote path even though modern OpenSSH `scp` uses SFTP by default, causing literal quote characters to be interpreted as part of the filename. Independent target inventory and a direct strict-SCP probe proved generation #3 is present and readable. PR #268 fixed the SFTP-safe path and made artifact fetch failures fail fast; exact head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 + Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`.
+The first marker-bound fetch exposed a second repository tooling bug: the fetch helper shell-quoted a remote path even though modern OpenSSH `scp` uses SFTP by default, causing literal quote characters to be interpreted as part of the filename. Independent target inventory and a direct strict-SCP probe proved generation #3 is present and readable. PR #268 fixed the SFTP-safe path and made artifact fetch failures fail fast; exact head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 + Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`; merged-main CI #1882 and Product Eval #1121 also passed.
 
 The exact-source application checkout must remain at `b27c1e...`. The newer fetch compatibility fix may be run only from an isolated temporary worktree; it does not change the recorded application source identity.
 
