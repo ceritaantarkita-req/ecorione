@@ -36,6 +36,17 @@ function lossMarker(manifestName: string, declaredAt: string) {
   )}\n`;
 }
 
+function lossMarkerFixture(manifestName: string, declaredAt: string) {
+  const raw = lossMarker(manifestName, declaredAt);
+  return {
+    raw,
+    sha256: createHash("sha256").update(raw).digest("hex"),
+    drillId: "11111111-2222-4333-8444-555555555555",
+    declaredAt,
+    clockSource: "recovery-host-system-utc",
+  };
+}
+
 describe("off-host DR closure timing evidence", () => {
   it("computes conservative RPO and staged RTO from final recovery receipts", () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-dr-evidence-"));
@@ -64,6 +75,7 @@ describe("off-host DR closure timing evidence", () => {
       const sourceSha = "a".repeat(40);
       const sourceTag = `staging-${sourceSha.slice(0, 12)}`;
       const stem = "ecorione-dr-20260922T000500Z-aaaaaaaaaaaa";
+      const marker = lossMarkerFixture("ecorione-dr-20260922T000500Z-aaaaaaaaaaaa.receipt.env", "2026-09-22T01:00:00Z");
 
       write600(canaryPath, canaryRaw);
       write600(
@@ -88,7 +100,13 @@ describe("off-host DR closure timing evidence", () => {
         retrievalPath,
         envFile({
           schema_version: "1",
+          retrieval_started_at: "2026-09-22T01:05:00Z",
           retrieved_at: "2026-09-22T01:10:00Z",
+          loss_marker_filename: "loss-marker.json",
+          loss_marker_sha256: marker.sha256,
+          loss_marker_drill_id: marker.drillId,
+          loss_marker_clock_source: marker.clockSource,
+          loss_declared_at: marker.declaredAt,
           export_manifest_filename: `${stem}.receipt.env`,
           bundle_filename: `${stem}.ecdr`,
           metadata_filename: `${stem}.json`,
@@ -113,6 +131,13 @@ describe("off-host DR closure timing evidence", () => {
             bundleFilename: `${stem}.ecdr`,
             retrievalReceiptFilename: `${stem}.retrieval.env`,
             retrievedFromIndependentTarget: true,
+            lossMarkerFilename: "loss-marker.json",
+            lossMarkerSha256: marker.sha256,
+            lossMarkerDrillId: marker.drillId,
+            lossMarkerClockSource: marker.clockSource,
+            lossDeclaredAt: marker.declaredAt,
+            retrievalStartedAt: "2026-09-22T01:05:00Z",
+            retrievedAt: "2026-09-22T01:10:00Z",
             semanticCanaryStateFilename: `${stem}.canary.json`,
             semanticCanarySha256: canarySha,
             restoredVolumes: [
@@ -142,6 +167,13 @@ describe("off-host DR closure timing evidence", () => {
             serviceCount: 15,
             restoredVolumeCount: 1,
             retrievedFromIndependentTarget: true,
+            lossMarkerFilename: "loss-marker.json",
+            lossMarkerSha256: marker.sha256,
+            lossMarkerDrillId: marker.drillId,
+            lossMarkerClockSource: marker.clockSource,
+            lossDeclaredAt: marker.declaredAt,
+            retrievalStartedAt: "2026-09-22T01:05:00Z",
+            retrievedAt: "2026-09-22T01:10:00Z",
             retrievalReceiptFilename: `${stem}.retrieval.env`,
             semanticCanaryStateFilename: `${stem}.canary.json`,
             semanticCanarySha256: canarySha,
@@ -159,7 +191,7 @@ describe("off-host DR closure timing evidence", () => {
         )}\n`,
       );
 
-      write600(lossMarkerPath, lossMarker(`${stem}.receipt.env`, "2026-09-22T01:00:00Z"));
+      write600(lossMarkerPath, marker.raw);
 
       const result = spawnSync(
         process.execPath,
@@ -199,6 +231,7 @@ describe("off-host DR closure timing evidence", () => {
       expect(evidence.measuredSeconds).toEqual({
         conservativeRpoSeconds: 3600,
         exportAgeAtLossSeconds: 3300,
+        retrievalStartDelaySeconds: 300,
         retrievalReadyRtoSeconds: 600,
         dataReadyRtoSeconds: 1800,
         applicationReadyRtoSeconds: 2700,
@@ -235,6 +268,8 @@ describe("off-host DR closure timing evidence", () => {
       const sourceTag = `staging-${sourceSha.slice(0, 12)}`;
 
       write600(canaryPath, canaryRaw);
+      const marker = lossMarkerFixture("ecorione-dr-test.receipt.env", "2026-09-21T23:59:00Z");
+      const marker = lossMarkerFixture("ecorione-dr-other.receipt.env", "2026-09-22T01:00:00Z");
       write600(
         manifestPath,
         envFile({
@@ -256,7 +291,13 @@ describe("off-host DR closure timing evidence", () => {
         retrievalPath,
         envFile({
           schema_version: "1",
+          retrieval_started_at: "2026-09-22T01:05:00Z",
           retrieved_at: "2026-09-22T01:10:00Z",
+          loss_marker_filename: "loss-marker.json",
+          loss_marker_sha256: marker.sha256,
+          loss_marker_drill_id: marker.drillId,
+          loss_marker_clock_source: marker.clockSource,
+          loss_declared_at: marker.declaredAt,
           export_manifest_filename: "ecorione-dr-test.receipt.env",
           bundle_filename: "ecorione-dr-test.ecdr",
           metadata_filename: "ecorione-dr-test.json",
@@ -281,6 +322,13 @@ describe("off-host DR closure timing evidence", () => {
             bundleFilename: "ecorione-dr-test.ecdr",
             retrievalReceiptFilename: "ecorione-dr-test.retrieval.env",
             retrievedFromIndependentTarget: true,
+            lossMarkerFilename: "loss-marker.json",
+            lossMarkerSha256: marker.sha256,
+            lossMarkerDrillId: marker.drillId,
+            lossMarkerClockSource: marker.clockSource,
+            lossDeclaredAt: marker.declaredAt,
+            retrievalStartedAt: "2026-09-22T01:05:00Z",
+            retrievedAt: "2026-09-22T01:10:00Z",
             semanticCanaryStateFilename: "ecorione-dr-test.canary.json",
             semanticCanarySha256: canarySha,
             restoredVolumes: [
@@ -305,6 +353,13 @@ describe("off-host DR closure timing evidence", () => {
             serviceCount: 15,
             restoredVolumeCount: 1,
             retrievedFromIndependentTarget: true,
+            lossMarkerFilename: "loss-marker.json",
+            lossMarkerSha256: marker.sha256,
+            lossMarkerDrillId: marker.drillId,
+            lossMarkerClockSource: marker.clockSource,
+            lossDeclaredAt: marker.declaredAt,
+            retrievalStartedAt: "2026-09-22T01:05:00Z",
+            retrievedAt: "2026-09-22T01:10:00Z",
             retrievalReceiptFilename: "ecorione-dr-test.retrieval.env",
             semanticCanaryStateFilename: "ecorione-dr-test.canary.json",
             semanticCanarySha256: canarySha,
@@ -321,10 +376,7 @@ describe("off-host DR closure timing evidence", () => {
           2,
         )}\n`,
       );
-      write600(
-        lossMarkerPath,
-        lossMarker("ecorione-dr-other.receipt.env", "2026-09-22T01:00:00Z"),
-      );
+      write600(lossMarkerPath, marker.raw);
 
       const result = spawnSync(
         process.execPath,
@@ -402,7 +454,13 @@ describe("off-host DR closure timing evidence", () => {
         retrievalPath,
         envFile({
           schema_version: "1",
+          retrieval_started_at: "2026-09-22T01:05:00Z",
           retrieved_at: "2026-09-22T01:10:00Z",
+          loss_marker_filename: "loss-marker.json",
+          loss_marker_sha256: marker.sha256,
+          loss_marker_drill_id: marker.drillId,
+          loss_marker_clock_source: marker.clockSource,
+          loss_declared_at: marker.declaredAt,
           export_manifest_filename: "ecorione-dr-test.receipt.env",
           bundle_filename: "ecorione-dr-test.ecdr",
           metadata_filename: "ecorione-dr-test.json",
@@ -427,6 +485,13 @@ describe("off-host DR closure timing evidence", () => {
             bundleFilename: "ecorione-dr-test.ecdr",
             retrievalReceiptFilename: "ecorione-dr-test.retrieval.env",
             retrievedFromIndependentTarget: true,
+            lossMarkerFilename: "loss-marker.json",
+            lossMarkerSha256: marker.sha256,
+            lossMarkerDrillId: marker.drillId,
+            lossMarkerClockSource: marker.clockSource,
+            lossDeclaredAt: marker.declaredAt,
+            retrievalStartedAt: "2026-09-22T01:05:00Z",
+            retrievedAt: "2026-09-22T01:10:00Z",
             semanticCanaryStateFilename: "ecorione-dr-test.canary.json",
             semanticCanarySha256: canarySha,
             restoredVolumes: [
@@ -451,6 +516,13 @@ describe("off-host DR closure timing evidence", () => {
             serviceCount: 15,
             restoredVolumeCount: 1,
             retrievedFromIndependentTarget: true,
+            lossMarkerFilename: "loss-marker.json",
+            lossMarkerSha256: marker.sha256,
+            lossMarkerDrillId: marker.drillId,
+            lossMarkerClockSource: marker.clockSource,
+            lossDeclaredAt: marker.declaredAt,
+            retrievalStartedAt: "2026-09-22T01:05:00Z",
+            retrievedAt: "2026-09-22T01:10:00Z",
             retrievalReceiptFilename: "ecorione-dr-test.retrieval.env",
             semanticCanaryStateFilename: "ecorione-dr-test.canary.json",
             semanticCanarySha256: canarySha,
@@ -468,10 +540,7 @@ describe("off-host DR closure timing evidence", () => {
         )}\n`,
       );
 
-      write600(
-        lossMarkerPath,
-        lossMarker("ecorione-dr-test.receipt.env", "2026-09-21T23:59:00Z"),
-      );
+      write600(lossMarkerPath, marker.raw);
 
       const result = spawnSync(
         process.execPath,
