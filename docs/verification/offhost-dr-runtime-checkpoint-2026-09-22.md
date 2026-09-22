@@ -185,15 +185,29 @@ The exact-source verifier successfully:
 
 After verification, the real `ecorione-staging` project still had zero containers and zero project-labelled volumes. No real recovery volume had been mutated yet.
 
+## Clean replacement-host preflight — PASS
+
+The official read-only replacement-host preflight passed from exact source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` with:
+
+```text
+source_tag=staging-b27c1e5833be
+compose_project=ecorione-staging
+recovery_overlay=deploy/compose.dr-recovery.yml
+loopback_base=http://127.0.0.1:18080
+```
+
+Before preflight the loopback port was free and the project had no containers or project-labelled volumes. The production configuration preflight passed; the optional repository acceptance sub-step was skipped because pnpm is not installed on the clean recovery host, which is an explicitly supported path in the preflight script. After preflight, Git remained exact and clean and the project container/volume inventory remained empty.
+
+This closes the final read-only gate before real recovery-volume mutation.
+
 ## Next runtime gate
 
 The next sequence is now:
 
-1. run the read-only clean replacement-host preflight from exact `b27c...`;
-2. if and only if preflight passes, perform the guarded real-volume restore;
-3. start through the standalone loopback recovery overlay;
-4. pass semantic canary, protected-route, MCP, authenticated Operations and exact-source acceptance;
-5. capture reboot baseline, reboot the replacement host, and pass post-reboot evidence with changed boot ID;
-6. generate final marker-bound closure evidence with measured RPO/RTO.
+1. perform the guarded real-volume restore;
+2. start through the standalone loopback recovery overlay;
+3. pass semantic canary, protected-route, MCP, authenticated Operations and exact-source acceptance;
+4. capture reboot baseline, reboot the replacement host, and pass post-reboot evidence with changed boot ID;
+5. generate final marker-bound closure evidence with measured RPO/RTO.
 
 Until all of those gates pass, **total-host-loss recovery remains NOT YET PROVEN**.
