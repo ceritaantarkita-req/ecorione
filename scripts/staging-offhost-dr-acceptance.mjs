@@ -15,6 +15,10 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SHA_RE = /^[0-9a-f]{40}$/;
 const TAG_RE = /^staging-[0-9a-f]{12}$/;
 const PROJECT_RE = /^[a-z0-9][a-z0-9_-]*$/;
+const HASH_RE = /^[0-9a-f]{64}$/;
+const UUID_V4_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u;
 
 function fail(message) {
   throw new Error("Off-host DR recovery acceptance: " + message);
@@ -98,8 +102,15 @@ async function main() {
     !TAG_RE.test(restore.sourceTag ?? "") ||
     !PROJECT_RE.test(restore.composeProject ?? "") ||
     restore.retrievedFromIndependentTarget !== true ||
+    !/^[A-Za-z0-9_.-]+\.json$/u.test(restore.lossMarkerFilename ?? "") ||
+    !HASH_RE.test(restore.lossMarkerSha256 ?? "") ||
+    !UUID_V4_RE.test(restore.lossMarkerDrillId ?? "") ||
+    restore.lossMarkerClockSource !== "recovery-host-system-utc" ||
+    !ISO_RE.test(restore.lossDeclaredAt ?? "") ||
+    !ISO_RE.test(restore.retrievalStartedAt ?? "") ||
+    !ISO_RE.test(restore.retrievedAt ?? "") ||
     typeof restore.semanticCanaryStateFilename !== "string" ||
-    !/^[0-9a-f]{64}$/.test(restore.semanticCanarySha256 ?? "") ||
+    !HASH_RE.test(restore.semanticCanarySha256 ?? "") ||
     !Array.isArray(restore.restoredVolumes) ||
     restore.restoredVolumes.length === 0
   ) {
@@ -326,6 +337,13 @@ async function main() {
     restoredVolumeCount: restore.restoredVolumes.length,
     retrievedFromIndependentTarget: true,
     retrievalReceiptFilename: restore.retrievalReceiptFilename ?? null,
+    lossMarkerFilename: restore.lossMarkerFilename,
+    lossMarkerSha256: restore.lossMarkerSha256,
+    lossMarkerDrillId: restore.lossMarkerDrillId,
+    lossMarkerClockSource: restore.lossMarkerClockSource,
+    lossDeclaredAt: restore.lossDeclaredAt,
+    retrievalStartedAt: restore.retrievalStartedAt,
+    retrievedAt: restore.retrievedAt,
     semanticCanaryStateFilename: restore.semanticCanaryStateFilename,
     semanticCanarySha256: restore.semanticCanarySha256,
     semanticCanaryAccepted: true,
