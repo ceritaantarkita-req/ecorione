@@ -164,8 +164,7 @@ async function main() {
     acceptanceMode === "loopback"
       ? process.env.ECORIONE_DR_LOOPBACK_BASE_URL?.trim() || "http://127.0.0.1:18080"
       : process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "";
-  const expectedMcpResource =
-    process.env.ECORIONE_DR_EXPECTED_MCP_RESOURCE?.trim() || "";
+  const expectedMcpResource = process.env.ECORIONE_DR_EXPECTED_MCP_RESOURCE?.trim() || "";
   const opsFileRaw = process.env.ECORIONE_OPS_CREDENTIAL_FILE?.trim() || "";
   const opsFile = resolve(opsFileRaw);
 

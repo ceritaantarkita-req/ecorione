@@ -160,7 +160,7 @@ describe("off-host DR source contract", () => {
     expect(start).toContain("deploy/compose.dr-recovery.yml");
     expect(start).toContain("must not use ECORIONE_EDGE_NETWORK");
 
-    expect(acceptance).toContain('ECORIONE_DR_ACCEPTANCE_MODE');
+    expect(acceptance).toContain("ECORIONE_DR_ACCEPTANCE_MODE");
     expect(acceptance).toContain('["public", "loopback"]');
     expect(acceptance).toContain("staging-offhost-dr-local-smoke.mjs");
     expect(acceptance).toContain("loopback DR acceptance must not use ECORIONE_EDGE_NETWORK");

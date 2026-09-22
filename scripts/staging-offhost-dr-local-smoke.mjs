@@ -124,7 +124,10 @@ assert(
   challenge.includes(`resource_metadata="${expectedMetadataUrl}"`),
   "recovered MCP challenge resource_metadata changed",
 );
-assert(challenge.includes('scope="memory:read"'), "recovered MCP challenge lost memory:read scope");
+assert(
+  challenge.includes('scope="memory:read"'),
+  "recovered MCP challenge lost memory:read scope",
+);
 console.log("PASS DR loopback MCP unauthenticated challenge");
 
 console.log(
