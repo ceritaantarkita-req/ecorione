@@ -106,7 +106,7 @@ PR #268 fixes both failure modes:
 1. it no longer wraps the constrained remote SCP/SFTP path in literal shell quotes;
 2. it fails immediately on SCP/chmod/mv failure and cleans any partial file instead of cascading into misleading schema errors.
 
-PR #268 exact reviewed head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 and Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`.
+PR #268 exact reviewed head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 and Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`; merged-main CI #1882 and Product Eval #1121 also passed.
 
 ## Exact-source boundary for continuation
 
