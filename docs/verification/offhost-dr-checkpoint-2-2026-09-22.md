@@ -198,4 +198,6 @@ The locked repository Prettier toolchain formatted exactly those files. The temp
 
 A later static audit caught an export-temp collision bug before runtime use: the semantic-canary temporary filename had been emitted as `...-$.json` instead of the intended PID-scoped `...-$.json`. Checkpoint 2 now uses the collision-safe PID suffix, removes the temporary canary state on failed export, and source-contract coverage locks both behaviors. This defect invalidated the then-current head as a closure candidate before any real staging mutation occurred.
 
+The same pre-merge audit also hardened remote generation commit semantics. The independent SSH transfer now writes bundle + metadata + semantic-canary artifacts first and publishes the retained export manifest **last**. Existing final generation files are never overwritten; failed/partial transfers clean their temporary remote file, and a final checksum mismatch removes the just-published invalid artifact. The manifest therefore acts as the recovery-visible generation commit marker only after every referenced artifact is already final and checksum-verified.
+
 Repository implementation can close only after exact-head CI/Product Eval and relevant acceptance gates pass. Real-host DR remains a separate evidence boundary.
