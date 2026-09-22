@@ -97,6 +97,7 @@ if ss -H -ltn | awk '{print $4}' | grep -Eq ":${LOOPBACK_PORT}$"; then
   fail "loopback recovery port $LOOPBACK_PORT is already in use"
 fi
 
+export ECORIONE_DEPLOY_ENV="$DEPLOY_ENV"
 export ECORIONE_COMPOSE_PROJECT="$PROJECT"
 export ECORIONE_COMPOSE_OVERLAY="$RECOVERY_OVERLAY"
 export ECORIONE_DR_LOOPBACK_PORT="$LOOPBACK_PORT"
