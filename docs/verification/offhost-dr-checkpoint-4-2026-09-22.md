@@ -35,6 +35,9 @@ governed staging deployment
 - exact local Git HEAD == release receipt;
 - clean tracked worktree;
 - all DR entrypoints present as regular non-symlink files;
+- explicit `ECORIONE_DR_PUBLIC_KEY` present as a regular non-symlink file;
+- configured DR key contains no private-key PEM marker;
+- DR key parses as RSA with modulus >= 3072 bits;
 - required local commands;
 - pinned PCS-09 helper image present;
 - configured SumoPod edge network present;
@@ -63,6 +66,7 @@ backup_available_kib=
 
 The source readiness gate does **not**:
 
+- accept private DR key material on the source host;
 - create the semantic canary;
 - stop Compose;
 - create a backup;
@@ -103,6 +107,7 @@ The target readiness gate performs only remote `test`, `stat`, and `df`-class re
 The intended sequence is:
 
 ```bash
+export ECORIONE_DR_PUBLIC_KEY=/secure/path/ecorione-dr-public.pem
 sudo -E bash scripts/staging-offhost-dr-source-readiness.sh --check
 ```
 
