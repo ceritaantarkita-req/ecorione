@@ -84,7 +84,7 @@ PCS-09 will create and verify a same-host staging backup before any disaster-rec
 
 Same-host backup is not off-host disaster recovery. A separate off-host copy to a distinct failure domain is required before total-VPS-loss recovery can be claimed.
 
-That separate workstream is now explicitly active at checkpoint 2. Checkpoint 1 is CLOSED / PASS at the repository-foundation boundary; checkpoint 2 adds current-revision export orchestration, retained export manifests, independent re-fetch/retrieval receipts, guarded exact-volume clean-host restore, application acceptance, and replacement-host reboot evidence. See [offhost-dr-recovery.md](offhost-dr-recovery.md). No real current-revision off-host copy or total-host-loss recovery is claimed until the runtime gates in that runbook pass.
+That separate workstream is now explicitly active at the runtime-execution boundary. Checkpoints 1–3 are CLOSED / PASS at repository boundaries: encrypted portable backup, independent-transfer/retrieval provenance, guarded clean-host restore, semantic canary, standalone replacement-host preflight, loopback-only Caddy/security/MCP/Ops acceptance, and changed-boot-id reboot evidence are implemented and reviewed. See [offhost-dr-recovery.md](offhost-dr-recovery.md). No real current-revision off-host copy or total-host-loss recovery is claimed until the runtime gates in that runbook pass.
 
 Repository backup command:
 
