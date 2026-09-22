@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINT 2 EXECUTION + CLEAN-HOST RECOVERY PATH / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINT 3 STANDALONE REPLACEMENT-HOST RECOVERY / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -24,11 +24,11 @@ This convergence did not rerun the full VPS reboot or same-host cold-backup acce
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
-## Off-host Backup & DR — ACTIVE / CHECKPOINT 2
+## Off-host Backup & DR — ACTIVE / CHECKPOINT 3
 
 Checkpoint 1 repository foundation is CLOSED / PASS through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed. Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
 
-Checkpoint 2 now adds the fail-closed execution/recovery path: a fresh current-revision cold backup must be created before export; bundle + metadata + retained export manifest are checksum-verified on the independent target; the recovery host must re-fetch that retained generation and produce a retrieval receipt; real-volume restore is refused unless that retrieval proof exists and the replacement Compose namespace is clean; exact-source/image application acceptance and changed-boot-id reboot evidence are separate later gates.
+Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 now adds a standalone replacement-host boundary: clean-host preflight, loopback-only Caddy policy edge, local MCP/security smoke, loopback authenticated Operations, and post-reboot repeat evidence without relying on SumoPod Traefik, public DNS, or public TLS.
 
 The source host still needs only an RSA-3072+ public key. The private DR key stays out-of-band and is required only on the recovery side.
 
@@ -36,7 +36,8 @@ This checkpoint does **not** claim a real off-host copy or total-host-loss recov
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
-Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).
+Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).  
+Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 
