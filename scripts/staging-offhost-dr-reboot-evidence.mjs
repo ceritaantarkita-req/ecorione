@@ -156,11 +156,40 @@ async function main() {
   const overlayArg = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "";
   const overlay = overlayArg ? resolve(ROOT, overlayArg) : null;
   const edgeNetwork = process.env.ECORIONE_EDGE_NETWORK?.trim() || "";
-  const publicBaseUrl = process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "";
+  const acceptanceMode = process.env.ECORIONE_DR_ACCEPTANCE_MODE?.trim() || "public";
+  if (!["public", "loopback"].includes(acceptanceMode)) {
+    fail("ECORIONE_DR_ACCEPTANCE_MODE must be public or loopback");
+  }
+  const acceptanceBaseUrl =
+    acceptanceMode === "loopback"
+      ? process.env.ECORIONE_DR_LOOPBACK_BASE_URL?.trim() || "http://127.0.0.1:18080"
+      : process.env.ECORIONE_PUBLIC_BASE_URL?.trim() || "";
+  const expectedMcpResource =
+    process.env.ECORIONE_DR_EXPECTED_MCP_RESOURCE?.trim() || "";
   const opsFileRaw = process.env.ECORIONE_OPS_CREDENTIAL_FILE?.trim() || "";
   const opsFile = resolve(opsFileRaw);
 
-  if (!publicBaseUrl) fail("ECORIONE_PUBLIC_BASE_URL is required");
+  if (!acceptanceBaseUrl) {
+    fail(
+      acceptanceMode === "loopback"
+        ? "ECORIONE_DR_LOOPBACK_BASE_URL is required"
+        : "ECORIONE_PUBLIC_BASE_URL is required",
+    );
+  }
+  if (acceptanceMode !== acceptance.edgeMode) {
+    fail("DR acceptance mode does not match the acceptance receipt");
+  }
+  if (acceptanceMode === "loopback") {
+    if (overlayArg !== "deploy/compose.dr-recovery.yml") {
+      fail("loopback DR reboot evidence requires deploy/compose.dr-recovery.yml");
+    }
+    if (edgeNetwork) {
+      fail("loopback DR reboot evidence must not use ECORIONE_EDGE_NETWORK");
+    }
+    if (!expectedMcpResource) {
+      fail("ECORIONE_DR_EXPECTED_MCP_RESOURCE is required in loopback mode");
+    }
+  }
   if (!opsFileRaw) fail("ECORIONE_OPS_CREDENTIAL_FILE is required");
   if (acceptance.semanticCanaryStateFilename !== canaryState.split(/[\\/]/u).at(-1)) {
     fail("semantic canary filename does not match acceptance receipt");
@@ -249,8 +278,8 @@ async function main() {
         spendBudget: fingerprint(connectContainer, "/app/data/connect-spend-budget.json"),
       },
       publicBoundary: {
-        home: await httpStatus(publicBaseUrl, "/"),
-        ops: await httpStatus(publicBaseUrl, "/ops"),
+        home: await httpStatus(acceptanceBaseUrl, "/"),
+        ops: await httpStatus(acceptanceBaseUrl, "/ops"),
       },
     };
   }
@@ -344,17 +373,28 @@ async function main() {
     fail("Connect durable-file fingerprints changed across reboot");
   }
 
-  const smoke = run(process.execPath, ["scripts/production-public-smoke.mjs"], {
-    env: { ...process.env, ECORIONE_PUBLIC_BASE_URL: publicBaseUrl },
-    label: "post-reboot public smoke",
-  });
+  const smoke =
+    acceptanceMode === "loopback"
+      ? run(process.execPath, ["scripts/staging-offhost-dr-local-smoke.mjs"], {
+          env: {
+            ...process.env,
+            ECORIONE_DR_LOOPBACK_BASE_URL: acceptanceBaseUrl,
+            ECORIONE_DR_EXPECTED_MCP_RESOURCE: expectedMcpResource,
+          },
+          label: "post-reboot replacement-host loopback smoke",
+        })
+      : run(process.execPath, ["scripts/production-public-smoke.mjs"], {
+          env: { ...process.env, ECORIONE_PUBLIC_BASE_URL: acceptanceBaseUrl },
+          label: "post-reboot public smoke",
+        });
   if (smoke) console.log(smoke);
 
   const opsCredentials = readOpsCredentials(opsFile);
   const ops = run(process.execPath, ["scripts/production-ops-snapshot.mjs"], {
     env: {
       ...process.env,
-      ECORIONE_PUBLIC_BASE_URL: publicBaseUrl,
+      ECORIONE_PUBLIC_BASE_URL: acceptanceBaseUrl,
+      ECORIONE_PUBLIC_SMOKE_ALLOW_HTTP: acceptanceMode === "loopback" ? "1" : "0",
       ECORIONE_OPS_USER: opsCredentials.username,
       ECORIONE_OPS_PASSWORD: opsCredentials.password,
     },
@@ -392,10 +432,13 @@ async function main() {
     projectVolumeCount: current.volumes.length,
     connectFingerprintsPreserved: true,
     projectVolumesPreserved: true,
-    publicBoundary: current.publicBoundary,
+    edgeMode: acceptanceMode,
+    acceptanceBoundary: current.publicBoundary,
     retrievedFromIndependentTarget: true,
     claimBoundary:
-      "Replacement-host reboot persistence, exact source/image identity, project volumes, Connect durable fingerprints, public smoke, Ops and host evidence verified after independent off-host retrieval.",
+      acceptanceMode === "loopback"
+        ? "Replacement-host reboot persistence, exact source/image identity, project volumes, Connect durable fingerprints, loopback policy-boundary smoke, Ops and host evidence verified after independent off-host retrieval; public DNS/TLS remains separate."
+        : "Replacement-host reboot persistence, exact source/image identity, project volumes, Connect durable fingerprints, public smoke, Ops and host evidence verified after independent off-host retrieval.",
   };
   writeFileSync(rebootStatePath, `${JSON.stringify(result, null, 2)}\n`, {
     mode: 0o600,
