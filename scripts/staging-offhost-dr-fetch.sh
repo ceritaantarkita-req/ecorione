@@ -154,23 +154,19 @@ SSH_OPTS=(
   -o ClearAllForwardings=yes
 )
 
-remote_quote() {
-  printf "'%s'" "${1//\'/\'\\\'\'}"
-}
-
 fetch_one() {
   local name="$1"
   local final="$DEST_DIR/$name"
   local part="$DEST_DIR/.$name.part-$$"
-  local remote_q
-
   [[ ! -e "$final" && ! -e "$part" ]] || {
     echo "Refusing to overwrite local recovery artifact: $name" >&2
     return 1
   }
 
-  remote_q="$(remote_quote "$REMOTE_DIR/$name")"
-  if ! scp "${SSH_OPTS[@]}" "$TARGET:$remote_q" "$part"; then
+  # TARGET, REMOTE_DIR and name are constrained to scp/SFTP-safe characters above.
+  # Do not shell-quote the remote path: modern OpenSSH scp uses SFTP by default
+  # and would treat literal quote characters as part of the filename.
+  if ! scp "${SSH_OPTS[@]}" "${TARGET}:${REMOTE_DIR}/${name}" "$part"; then
     rm -f "$part"
     echo "Failed to fetch recovery artifact: $name" >&2
     return 1
