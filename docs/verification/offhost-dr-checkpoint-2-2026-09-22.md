@@ -196,4 +196,6 @@ After the semantic owner-data canary was added, PR #251 exact head `8f4f8d6f9a8b
 
 The locked repository Prettier toolchain formatted exactly those files. The temporary formatter workflow self-removed successfully; the resulting formatting commit is `dcfae1e69f71cf5239d964faf9e37561fa9a82d8`. CI was not bypassed or weakened; a later exact-head rerun remains required before merge.
 
+A later static audit caught an export-temp collision bug before runtime use: the semantic-canary temporary filename had been emitted as `...-$.json` instead of the intended PID-scoped `...-$.json`. Checkpoint 2 now uses the collision-safe PID suffix, removes the temporary canary state on failed export, and source-contract coverage locks both behaviors. This defect invalidated the then-current head as a closure candidate before any real staging mutation occurred.
+
 Repository implementation can close only after exact-head CI/Product Eval and relevant acceptance gates pass. Real-host DR remains a separate evidence boundary.
