@@ -63,7 +63,7 @@ remote_quote() {
 
 REMOTE_DIR_Q="$(remote_quote "$REMOTE_DIR")"
 RESULT="$(
-  ssh "${SSH_OPTS[@]}" "$TARGET"     "set -eu; test -d $REMOTE_DIR_Q; test ! -L $REMOTE_DIR_Q; test -w $REMOTE_DIR_Q; stat -c 'owner=%U mode=%a' $REMOTE_DIR_Q; df -Pk $REMOTE_DIR_Q | awk 'NR==2 {print \"available_kib=\" \\$4}'"
+  ssh "${SSH_OPTS[@]}" "$TARGET"     "set -eu; test -d $REMOTE_DIR_Q; test ! -L $REMOTE_DIR_Q; test -w $REMOTE_DIR_Q; stat -c 'owner=%U mode=%a' $REMOTE_DIR_Q; printf 'available_kib='; df -Pk $REMOTE_DIR_Q | tail -n 1 | tr -s ' ' | cut -d' ' -f4"
 )"
 
 OWNER="$(printf '%s\n' "$RESULT" | sed -n 's/^owner=\([^ ]*\) mode=.*/\1/p')"
