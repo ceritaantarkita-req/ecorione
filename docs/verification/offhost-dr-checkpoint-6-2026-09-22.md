@@ -167,7 +167,6 @@ Both post-merge Staging Deploy triggers kept the deploy job skipped. Checkpoint-
 
 Checkpoint 6 does **not** prove:
 
-- final exact-head repository gates yet;
 - a newer governed SumoPod deployment;
 - a real source-loss declaration;
 - a real off-host export;
