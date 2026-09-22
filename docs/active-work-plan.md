@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **OFF-HOST DR ACTIVE / CHECKPOINTS 1–3 CLOSED / CHECKPOINT 4 READINESS GUARDRAILS ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–4 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -40,7 +40,7 @@ Real-host status remains bounded: no current-revision SumoPod backup has yet bee
 
 The active work is now runtime execution with checkpoint-4 pre-mutation guardrails: governed deployment of the exact reviewed current `main` to staging -> freeze CD again -> **source-host readiness PASS** -> **independent-target readiness PASS using the source-derived capacity floor** -> fresh current-revision export -> independent target retention -> recovery-host fetch -> clean replacement-host preflight -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> loopback exact-source application acceptance -> full replacement-host reboot/post verification -> sanitized closure evidence.
 
-Checkpoint 4 is repository tooling under review and does not claim source/target runtime readiness until those commands actually PASS against SumoPod and the independent target.
+Checkpoint 4 is CLOSED / PASS at the repository boundary through PR #254 / merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed; merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 gate-passed and deploy remained skipped. Source/target runtime readiness still requires real-host PASS evidence.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
