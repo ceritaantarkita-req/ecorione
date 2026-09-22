@@ -187,4 +187,13 @@ A subsequent static review before accepting the rerun found three repository-sid
 
 Source-contract coverage was extended for the receipt-permission/parser and overlay-path repairs. These fixes do not change the documented DR claim boundary.
 
+After the semantic owner-data canary was added, PR #251 exact head `8f4f8d6f9a8beefb233f6abbdd7a16f9ada4fb09` passed Product Eval #1027, MCP External HTTPS Acceptance #944, and Desktop Installer #135. CI #1788 again failed only the read-only format gate, this time on the four newly added/modified semantic-recovery files:
+
+- `scripts/staging-offhost-dr-acceptance.mjs`;
+- `scripts/staging-offhost-dr-canary-inner.mjs`;
+- `scripts/staging-offhost-dr-canary.mjs`;
+- `scripts/staging-offhost-dr-reboot-evidence.mjs`.
+
+The locked repository Prettier toolchain formatted exactly those files. The temporary formatter workflow self-removed successfully; the resulting formatting commit is `dcfae1e69f71cf5239d964faf9e37561fa9a82d8`. CI was not bypassed or weakened; a later exact-head rerun remains required before merge.
+
 Repository implementation can close only after exact-head CI/Product Eval and relevant acceptance gates pass. Real-host DR remains a separate evidence boundary.
