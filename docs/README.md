@@ -104,7 +104,7 @@ Use the owner-specific runbook when touching its subsystem:
 - [extension-operations.md](extension-operations.md)
 - [data-rebuild-operations.md](data-rebuild-operations.md)
 - [data-governance-dr-operations.md](data-governance-dr-operations.md)
-- [offhost-dr-recovery.md](offhost-dr-recovery.md) — active off-host backup and total-host-loss recovery workstream; checkpoints 1–4 are closed at repository boundaries; checkpoint 5 adds retained-generation audit plus RPO/RTO closure evidence; real runtime execution is pending.
+- [offhost-dr-recovery.md](offhost-dr-recovery.md) — active off-host backup and total-host-loss recovery workstream; checkpoints 1–5 are closed at repository boundaries; retained-generation audit and RPO/RTO closure tooling are in place; real runtime execution is pending.
 - [multimodal-operations.md](multimodal-operations.md)
 - [voice-operations.md](voice-operations.md)
 - [webhook-operations.md](webhook-operations.md)
@@ -121,7 +121,7 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current operating/deferred boundaries
 
-- active operational scope — **Off-host Backup & DR / RUNTIME EXECUTION PENDING**; checkpoints 1–4 are CLOSED / PASS at repository boundaries, checkpoint 5 evidence tooling is under repository review, while real independent copy and total-host-loss application recovery remain pending runtime evidence.
+- active operational scope — **Off-host Backup & DR / RUNTIME EXECUTION PENDING**; checkpoints 1–5 are CLOSED / PASS at repository boundaries, while real independent copy, retained-generation/timing evidence, and total-host-loss application recovery remain pending runtime evidence.
 - SumoPod remote development/staging — **VERIFIED** at application revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` through governed Staging Deploy #293.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.

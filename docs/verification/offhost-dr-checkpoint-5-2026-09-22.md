@@ -1,6 +1,6 @@
 # Off-host DR checkpoint 5 — retained-generation audit and RPO/RTO evidence — 2026-09-22
 
-Status: **IMPLEMENTED / REPOSITORY GATES PENDING / REAL-HOST DR STILL PENDING**
+Status: **CLOSED / PASS AT REPOSITORY BOUNDARY / REAL-HOST DR STILL PENDING**
 
 ## Scope
 
@@ -189,6 +189,28 @@ No gate was weakened. The repository's locked Prettier toolchain formatted only 
 
 A new exact-head CI/Product Eval/MCP/Desktop run is required after this evidence commit.
 
+## Repository closure
+
+Checkpoint 5 implementation closed through PR #256.
+
+```text
+PR exact head       7c1c8948022fc81e0c640fff7a8bcb7e4e689db3
+CI                  #1850 PASS
+Product Eval        #1089 PASS
+MCP HTTPS           #996 PASS
+Desktop Installer   #184 PASS
+merge main          941cb8c9ed237a5417550449c7d73e712b10ba72
+merged-main CI      #1851 PASS
+merged-main Product #1090 PASS
+merged-main MCP     #997 PASS
+Staging Deploy      #468 gate PASS / deploy SKIPPED
+Staging Deploy      #469 gate PASS / deploy SKIPPED
+```
+
+Both post-merge Staging Deploy triggers kept the deploy job skipped. Checkpoint-5 repository closure therefore caused no SumoPod runtime mutation.
+
+Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary. Real retained-generation counts, target integrity, RPO/RTO measurements, and total-host-loss recovery remain runtime evidence.
+
 ## Current non-claims
 
 Checkpoint 5 does **not** prove:
@@ -208,10 +230,9 @@ Those remain runtime evidence boundaries.
 
 Repository-side:
 
-1. require exact-head CI + Product Eval + relevant acceptance gates;
-2. merge only the reviewed head;
-3. require merged-main gates;
-4. converge canonical docs with exact identities.
+1. repository checkpoint 5 is CLOSED / PASS through PR #256 / merge `941cb8c9ed237a5417550449c7d73e712b10ba72`;
+2. preserve this docs-only closure as bookkeeping only;
+3. do not infer real target retention or RPO/RTO measurements from repository closure.
 
 Runtime-side after repository closure:
 

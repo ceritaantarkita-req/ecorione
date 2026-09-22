@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINTS 1–4 CLOSED / CHECKPOINT 5 RETENTION + RPO/RTO EVIDENCE ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–5 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -37,6 +37,8 @@ Checkpoint 4 repository implementation is CLOSED / PASS through PR #254 exact he
 The source host still needs only an RSA-3072+ public key for the later export. The private DR key stays out-of-band and is required only on the recovery side.
 
 Checkpoint 5 adds a read-only remote generation audit and a deterministic sanitized closure-evidence generator. The target audit verifies retained manifest/artifact modes, stems and remote hashes without upload/delete/rename; the closure generator requires an explicit operator-declared source-loss timestamp and computes conservative RPO plus retrieval/data/application/final RTO milestones from the retained receipts.
+
+Checkpoint 5 repository implementation is CLOSED / PASS through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` and merge `941cb8c9ed237a5417550449c7d73e712b10ba72`. Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed. Merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
 This checkpoint does **not** claim a real off-host copy, three real retained generations, source/target readiness PASS, measured real-host RPO/RTO, or total-host-loss recovery. Those remain runtime evidence gates.
 
