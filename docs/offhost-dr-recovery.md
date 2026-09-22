@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / CHECKPOINT 3 — STANDALONE REPLACEMENT-HOST RECOVERY BOUNDARY**
+Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–3 CLOSED / RUNTIME EXECUTION PENDING**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -79,6 +79,8 @@ After checkpoint 3 merges and its exact merged-main repository gates pass:
 The current connector can read workflow state but does not expose repository-variable mutation or workflow-dispatch actions. Do not bypass that safety boundary by editing the deployment workflow to force a run.
 
 Any later docs-only closure merge must not silently move the runtime again. Runtime identity and repository-documentation identity remain separate evidence boundaries.
+
+Checkpoint 3 repository implementation is CLOSED / PASS through PR #252 final head `b4986b081a0e76c660b6f09e2f2e2ef46f003d57` and merge `9e522e62212b5a4170ad4947c4bdd75c28f34464`. Exact PR-head CI #1820, Product Eval #1059, MCP #970, and Desktop Installer #160 passed; merged-main CI #1821, Product Eval #1060, and MCP #971 also passed. Staging Deploy #412/#413 gate-passed and deploy remained skipped because `ECORIONE_STAGING_CD_ENABLED` stayed disabled.
 
 ## A. Preferred current-revision export path
 

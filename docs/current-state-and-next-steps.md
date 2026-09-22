@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINT 3 STANDALONE REPLACEMENT-HOST RECOVERY / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–3 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -24,11 +24,11 @@ This convergence did not rerun the full VPS reboot or same-host cold-backup acce
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
-## Off-host Backup & DR — ACTIVE / CHECKPOINT 3
+## Off-host Backup & DR — ACTIVE / RUNTIME EXECUTION PENDING
 
 Checkpoint 1 repository foundation is CLOSED / PASS through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed. Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
 
-Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 now adds a standalone replacement-host boundary: clean-host preflight, loopback-only Caddy policy edge, local MCP/security smoke, loopback authenticated Operations, and post-reboot repeat evidence without relying on SumoPod Traefik, public DNS, or public TLS.
+Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 is CLOSED / PASS at the repository boundary through PR #252 / merge `9e522e62212b5a4170ad4947c4bdd75c28f34464`; it adds a standalone replacement-host boundary with clean-host preflight, loopback-only Caddy policy edge, local MCP/security smoke, loopback authenticated Operations, and post-reboot repeat evidence without relying on SumoPod Traefik, public DNS, or public TLS.
 
 The source host still needs only an RSA-3072+ public key. The private DR key stays out-of-band and is required only on the recovery side.
 

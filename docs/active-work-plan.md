@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **OFF-HOST DR ACTIVE / CHECKPOINT 3 STANDALONE REPLACEMENT-HOST RECOVERY / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–3 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -34,11 +34,11 @@ The operator explicitly opened **Off-host Backup & DR** as the next infrastructu
 
 Checkpoint 1 is **CLOSED / PASS at the repository-foundation boundary** through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed; Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
 
-Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 is active and removes the remaining dependency on the lost SumoPod public edge by adding a standalone loopback-only replacement-host preflight/edge/acceptance boundary.
+Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 is also CLOSED / PASS at the repository boundary through PR #252 / merge `9e522e62212b5a4170ad4947c4bdd75c28f34464`; exact head CI #1820, Product Eval #1059, MCP #970 and Desktop Installer #160 passed, followed by merged-main CI #1821, Product Eval #1060 and MCP #971. Staging Deploy #412/#413 gate-passed and deploy remained skipped because activation stayed disabled.
 
 Real-host status remains bounded: no current-revision SumoPod backup has yet been accepted as an off-host copy, and no clean replacement host has recovered the real staging state. Total-host-loss recovery therefore remains a non-claim.
 
-Next runtime gates are: current-revision export -> independent target retention -> recovery-host fetch -> retrieval receipt -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> exact-source application acceptance -> full replacement-host reboot/post verification -> sanitized closure evidence.
+The active work is now runtime execution: governed deployment of the exact reviewed checkpoint-3 merge to staging -> freeze CD again -> fresh current-revision export -> independent target retention -> recovery-host fetch -> clean replacement-host preflight -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> loopback exact-source application acceptance -> full replacement-host reboot/post verification -> sanitized closure evidence.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  

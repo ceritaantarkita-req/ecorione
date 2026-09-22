@@ -76,7 +76,7 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 |---|---:|
 | Off-host Backup & DR repository foundation | **CLOSED / PASS (checkpoint 1)** |
 | DR execution + clean-host recovery path | **CLOSED / PASS (checkpoint 2 repository boundary)** |
-| Standalone replacement-host recovery boundary | **ACTIVE / CHECKPOINT 3** |
+| Standalone replacement-host recovery boundary | **CLOSED / PASS (checkpoint 3 repository boundary)** |
 | Real independent off-host copy | **PENDING RUNTIME EVIDENCE** |
 | Clean-host isolated restore of real staging backup | **PENDING RUNTIME EVIDENCE** |
 | Total-host-loss application recovery | **NOT YET PROVEN** |
@@ -84,7 +84,7 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 
 Checkpoint 1 repository foundation closed through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`; exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed, while Staging Deploy #308/#309 passed their gates and skipped deployment.
 
-Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 final head `dbb9423def581e95cb9e1bbe18fd3208164ef575` (CI #1799, Product Eval #1038, MCP #955, Desktop Installer #146) and merge `768c0f617064343f0bfc569d52212c80a03f0b83` (merged-main CI #1800, Product Eval #1039, MCP #956). Staging Deploy #372/#373 gate-passed and deploy remained skipped because activation stayed disabled. Checkpoint 3 is active and adds a standalone loopback-only replacement-host boundary so DR does not depend on the lost SumoPod Traefik/public edge.
+Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 final head `dbb9423def581e95cb9e1bbe18fd3208164ef575` (CI #1799, Product Eval #1038, MCP #955, Desktop Installer #146) and merge `768c0f617064343f0bfc569d52212c80a03f0b83` (merged-main CI #1800, Product Eval #1039, MCP #956). Staging Deploy #372/#373 gate-passed and deploy remained skipped because activation stayed disabled. Checkpoint 3 is CLOSED / PASS at the repository boundary through PR #252 final head `b4986b081a0e76c660b6f09e2f2e2ef46f003d57` (CI #1820, Product Eval #1059, MCP #970, Desktop Installer #160) and merge `9e522e62212b5a4170ad4947c4bdd75c28f34464` (merged-main CI #1821, Product Eval #1060, MCP #971). Staging Deploy #412/#413 gate-passed and deploy remained skipped because activation stayed disabled.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
