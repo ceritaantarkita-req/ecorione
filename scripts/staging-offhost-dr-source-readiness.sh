@@ -75,7 +75,7 @@ HEAD_SHA="$(git_as_owner rev-parse HEAD)"
 [[ "$HEAD_SHA" == "$CURRENT_SHA" ]] || fail "Git HEAD does not match release receipt"
 [[ -z "$(git_as_owner status --porcelain --untracked-files=no)" ]] ||   fail "tracked staging worktree is dirty"
 
-for SCRIPT in   scripts/staging-offhost-dr-export.sh   scripts/staging-offhost-dr-bundle.mjs   scripts/staging-offhost-dr-transfer.sh   scripts/staging-offhost-dr-fetch.sh   scripts/staging-offhost-dr-verify.mjs   scripts/staging-offhost-dr-replacement-preflight.sh   scripts/staging-offhost-dr-restore.mjs   scripts/staging-offhost-dr-start.sh   scripts/staging-offhost-dr-acceptance.mjs   scripts/staging-offhost-dr-reboot-evidence.mjs   scripts/staging-offhost-dr-canary.mjs   scripts/staging-offhost-dr-canary-inner.mjs; do
+for SCRIPT in   scripts/staging-offhost-dr-export.sh   scripts/staging-offhost-dr-bundle.mjs   scripts/staging-offhost-dr-transfer.sh   scripts/staging-offhost-dr-fetch.sh   scripts/staging-offhost-dr-verify.mjs   scripts/staging-offhost-dr-replacement-preflight.sh   scripts/staging-offhost-dr-restore.mjs   scripts/staging-offhost-dr-start.sh   scripts/staging-offhost-dr-acceptance.mjs   scripts/staging-offhost-dr-reboot-evidence.mjs   scripts/staging-offhost-dr-canary.mjs   scripts/staging-offhost-dr-canary-inner.mjs   scripts/staging-offhost-dr-target-readiness.sh; do
   [[ -f "$SCRIPT" && ! -L "$SCRIPT" ]] || fail "missing or unsafe DR tool: $SCRIPT"
 done
 
