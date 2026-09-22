@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **OFF-HOST DR ACTIVE / CHECKPOINTS 1–4 CLOSED / CHECKPOINT 5 RETENTION + RPO/RTO EVIDENCE ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–5 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -39,6 +39,8 @@ Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling bound
 Real-host status remains bounded: no current-revision SumoPod backup has yet been accepted as an off-host copy, and no clean replacement host has recovered the real staging state. Total-host-loss recovery therefore remains a non-claim.
 
 The active work is now runtime execution with checkpoints 4–5 guardrails: governed deployment of exact reviewed `main` -> freeze CD -> source readiness -> independent-target readiness -> fresh export -> **remote retained-generation audit** -> recovery-host fetch -> clean replacement-host preflight -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> loopback exact-source application acceptance -> full replacement-host reboot/post verification -> **sanitized RPO/RTO closure evidence**.
+
+Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 / merge `941cb8c9ed237a5417550449c7d73e712b10ba72`. Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed; merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
 
 Checkpoint 4 is CLOSED / PASS at the repository boundary through PR #254 / merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed; merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 gate-passed and deploy remained skipped. Source/target runtime readiness still requires real-host PASS evidence.
 
