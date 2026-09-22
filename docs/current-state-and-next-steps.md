@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–7 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / RETENTION CLOSED / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -10,13 +10,33 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
+## Off-host DR runtime checkpoint — 2026-09-22
+
+Real-host execution has moved beyond repository-only preparation.
+
+The governed staging source selected for the active drill is exact SHA `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. Three real encrypted off-host generations for that identity are retained on the independent SSH target; the fixed retained-generation audit reports `complete_generations=3`, `incomplete_generations=0`, and `retention_ready=1`.
+
+The audit evidence path itself exposed one runtime tooling bug: SSH inside the manifest `while read` loop consumed the loop stdin. PR #267 fixed that with `ssh -n`; the fix was exercised from an isolated worktree and proved all three retained generations complete without moving the application runtime.
+
+A genuinely clean replacement environment now exists as the separate WSL2 distro `ecorione-recovery`. It has native Docker/Compose, Node 22, Git, an initially empty Docker inventory, the pinned PostgreSQL helper image, and a clean detached checkout at exact source SHA `b27c1e...`. A dedicated recovery SSH key with pinned target host trust passes strict access to the independent backup target. The RSA DR private key and required deployment/operator secrets were recovered from separate operator-controlled sources and installed only on the clean recovery host as mode-0600 inputs.
+
+Generation `ecorione-dr-20260922152938-b27c1e5833be.receipt.env` is selected for the drill. Its immutable loss marker was created at `2026-09-22T16:21:58.074Z`. From that marker onward the SumoPod source is treated as unavailable for this drill.
+
+The first marker-bound fetch exposed a second repository tooling bug: the fetch helper shell-quoted a remote path even though modern OpenSSH `scp` uses SFTP by default, causing literal quote characters to be interpreted as part of the filename. Independent target inventory and a direct strict-SCP probe proved generation #3 is present and readable. PR #268 fixed the SFTP-safe path and made artifact fetch failures fail fast; exact head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 + Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`.
+
+The exact-source application checkout must remain at `b27c1e...`. The newer fetch compatibility fix may be run only from an isolated temporary worktree; it does not change the recorded application source identity.
+
+Next runtime gate: fixed marker-bound fetch -> retrieval receipt -> isolated decrypt/Docker verification -> clean-host preflight -> guarded real-volume restore -> standalone loopback start/acceptance -> changed-boot-ID reboot evidence -> marker-bound final closure receipt. Until all of those pass, **total-host-loss recovery remains NOT YET PROVEN**.
+
+Runtime checkpoint evidence: [verification/offhost-dr-runtime-checkpoint-2026-09-22.md](verification/offhost-dr-runtime-checkpoint-2026-09-22.md).
+
 ## Latest-main staging convergence closure — 2026-09-22
 
 The bounded latest-main staging-convergence scope is CLOSED / PASS at the runtime boundary.
 
 Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as `staging-52046db35e40`. Both workflow jobs passed. Public smoke, authenticated Operations health, MCP protection checks, sanitized exact-host identity, and final PCS-08 deploy validation passed. The host evidence reported `headSha == expectedSha`, `healthy: true`, and no unhealthy owner services.
 
-The current proven SumoPod staging application revision is now `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40`. The prior `0f332c73...` runtime remains valid historical PCS-09 evidence but is no longer the current application identity.
+That convergence checkpoint established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at the time. It is now historical: subsequent governed DR runtime activation established exact staging source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, which is the source identity selected by the active recovery drill.
 
 The reviewed deploy orchestrator writes the non-secret release receipt only after public/Ops/exact-host validation succeeds and emits its final PASS after that write, so the successful run proves the receipt path completed for the deployed SHA/tag.
 
@@ -48,7 +68,7 @@ Checkpoint 7 repository implementation is CLOSED / PASS through PR #263 exact he
 
 Checkpoint 6 repository implementation is CLOSED / PASS through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` and merge `cb043b47a2c899e3c0585b06db4992fcc727c723`. Exact-head CI #1857, Product Eval #1096, MCP #1001, and Desktop Installer #188 passed. Merged-main CI #1858, Product Eval #1097, and MCP #1002 passed. Staging Deploy #480/#481 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
-This checkpoint does **not** claim a real off-host copy, three real retained generations, a real loss marker, source/target readiness PASS, measured real-host RPO/RTO, or total-host-loss recovery. Those remain runtime evidence gates.
+The repository-only checkpoint non-claims above are now partly superseded by real runtime evidence: source/target readiness passed, three real retained generations exist, retention is ready, a clean replacement host is provisioned, and a real loss marker has been created. Retrieval/restore/application/reboot/closure evidence is still incomplete, so measured final RPO/RTO and total-host-loss recovery remain non-claims.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
