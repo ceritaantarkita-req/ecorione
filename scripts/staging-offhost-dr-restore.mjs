@@ -30,6 +30,9 @@ const HELPER_IMAGE =
 const HASH_RE = /^[0-9a-f]{64}$/;
 const SHA_RE = /^[0-9a-f]{40}$/;
 const TAG_RE = /^staging-[0-9a-f]{12}$/;
+const UUID_V4_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u;
 const SAFE_NAME_RE = /^[A-Za-z0-9_.-]+$/;
 const ARCHIVE_RE = /^[A-Za-z0-9_.-]+\.tar\.gz$/;
 
@@ -406,11 +409,31 @@ async function main() {
     retrieval.schema_version !== "1" ||
     retrieval.failure_domain_ack !== "1" ||
     retrieval.retrieval_verified !== "1" ||
+    !/^[A-Za-z0-9_.-]+\.json$/u.test(retrieval.loss_marker_filename ?? "") ||
+    !HASH_RE.test(retrieval.loss_marker_sha256 ?? "") ||
+    !UUID_V4_RE.test(retrieval.loss_marker_drill_id ?? "") ||
+    retrieval.loss_marker_clock_source !== "recovery-host-system-utc" ||
+    !ISO_RE.test(retrieval.loss_declared_at ?? "") ||
+    !ISO_RE.test(retrieval.retrieval_started_at ?? "") ||
+    !ISO_RE.test(retrieval.retrieved_at ?? "") ||
     !HASH_RE.test(retrieval.bundle_sha256 ?? "") ||
     !HASH_RE.test(retrieval.metadata_sha256 ?? "") ||
     !HASH_RE.test(retrieval.canary_sha256 ?? "")
   ) {
     throw new Error("Invalid off-host retrieval receipt");
+  }
+
+  const lossDeclaredMs = Date.parse(retrieval.loss_declared_at);
+  const retrievalStartedMs = Date.parse(retrieval.retrieval_started_at);
+  const retrievedMs = Date.parse(retrieval.retrieved_at);
+  if (
+    !Number.isFinite(lossDeclaredMs) ||
+    !Number.isFinite(retrievalStartedMs) ||
+    !Number.isFinite(retrievedMs) ||
+    lossDeclaredMs > retrievalStartedMs ||
+    retrievalStartedMs > retrievedMs
+  ) {
+    throw new Error("Invalid marker-bound retrieval chronology");
   }
 
   const metadata = parseMetadata(metadataPath);
@@ -508,6 +531,13 @@ async function main() {
       bundleFilename: basename(bundlePath),
       retrievalReceiptFilename: basename(retrievalReceiptPath),
       retrievedFromIndependentTarget: true,
+      lossMarkerFilename: retrieval.loss_marker_filename,
+      lossMarkerSha256: retrieval.loss_marker_sha256,
+      lossMarkerDrillId: retrieval.loss_marker_drill_id,
+      lossMarkerClockSource: retrieval.loss_marker_clock_source,
+      lossDeclaredAt: retrieval.loss_declared_at,
+      retrievalStartedAt: retrieval.retrieval_started_at,
+      retrievedAt: retrieval.retrieved_at,
       semanticCanaryStateFilename: basename(canaryStatePath),
       semanticCanarySha256: actualCanarySha,
       ciphertextSha256: metadata.ciphertextSha256,
