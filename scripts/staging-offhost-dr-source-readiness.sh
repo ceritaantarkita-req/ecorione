@@ -22,6 +22,8 @@ EDGE_NETWORK="${ECORIONE_EDGE_NETWORK:-inmydraft-demos_web}"
 PUBLIC_BASE_URL="${ECORIONE_PUBLIC_BASE_URL:-https://ecorione.inmydraft.com}"
 BACKUP_ROOT="${ECORIONE_STAGING_BACKUP_ROOT:-/var/lib/ecorione-staging/backups}"
 HELPER_IMAGE="postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94"
+: "${ECORIONE_DR_PUBLIC_KEY:?set ECORIONE_DR_PUBLIC_KEY to the public-only RSA DR key}"
+PUBLIC_KEY="$ECORIONE_DR_PUBLIC_KEY"
 
 fail() {
   echo "ERROR: $*" >&2
@@ -36,6 +38,22 @@ docker compose version >/dev/null 2>&1 || fail "docker compose v2 is required"
 for FILE in "$STATE_FILE" "$ENV_FILE" "$OVERLAY"; do
   [[ -f "$FILE" && ! -L "$FILE" ]] || fail "unsafe or missing file: $FILE"
 done
+[[ -f "$PUBLIC_KEY" && ! -L "$PUBLIC_KEY" ]] || fail "DR public key must be a regular non-symlink file"
+PUBLIC_KEY_MODE="$(stat -c '%a' "$PUBLIC_KEY")"
+[[ "$PUBLIC_KEY_MODE" == "600" || "$PUBLIC_KEY_MODE" == "644" ]] ||   fail "DR public key must be mode 600 or 644"
+
+if grep -Eq 'BEGIN (RSA |ENCRYPTED )?PRIVATE KEY' "$PUBLIC_KEY"; then
+  fail "configured DR key contains private-key material; source host must receive public key only"
+fi
+node -e '
+  const { createPublicKey } = require("crypto");
+  const fs = require("fs");
+  const key = createPublicKey(fs.readFileSync(process.argv[1]));
+  if (key.asymmetricKeyType !== "rsa") throw new Error("DR public key must be RSA");
+  if ((key.asymmetricKeyDetails?.modulusLength ?? 0) < 3072) {
+    throw new Error("DR public key must be RSA >= 3072 bits");
+  }
+' "$PUBLIC_KEY"
 
 [[ "$(stat -c '%U:%G' "$STATE_FILE")" == "root:root" ]] ||   fail "release receipt must be root-owned"
 STATE_MODE="$(stat -c '%a' "$STATE_FILE")"
@@ -134,5 +152,6 @@ echo "volume_total_kib=$TOTAL_KIB"
 echo "backup_required_kib=$REQUIRED_KIB"
 echo "target_min_free_kib=$REQUIRED_KIB"
 echo "backup_available_kib=$AVAILABLE_KIB"
-echo "external_inputs_ready=not_checked"
+echo "dr_public_key_ready=1"
+echo "external_target_ready=not_checked"
 echo "IMPORTANT: no backup/export/remote transfer was created by this readiness check."
