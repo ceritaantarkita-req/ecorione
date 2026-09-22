@@ -105,6 +105,14 @@ audit_generation() {
       "set -eu; cat $manifest_q"
   )" || return 1
 
+  for required_key in \
+    schema_version created_at source_sha source_tag \
+    bundle_filename metadata_filename canary_filename \
+    bundle_sha256 metadata_sha256 canary_sha256 \
+    failure_domain_ack transfer_intent; do
+    [[ "$(printf '%s\n' "$body" | grep -c "^${required_key}=")" == "1" ]] || return 1
+  done
+
   [[ "$(read_field "$body" schema_version)" == "1" ]] || return 1
   [[ "$(read_field "$body" failure_domain_ack)" == "1" ]] || return 1
   [[ "$(read_field "$body" transfer_intent)" == "1" ]] || return 1
