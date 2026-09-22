@@ -123,6 +123,50 @@ describe("off-host DR source contract", () => {
     expect(restore).toContain("semanticCanarySha256");
   });
 
+  it("keeps replacement-host DR on a standalone loopback-only edge", () => {
+    const overlay = source("deploy/compose.dr-recovery.yml");
+    const preflight = source("scripts/staging-offhost-dr-replacement-preflight.sh");
+    const localSmoke = source("scripts/staging-offhost-dr-local-smoke.mjs");
+    const start = source("scripts/staging-offhost-dr-start.sh");
+    const acceptance = source("scripts/staging-offhost-dr-acceptance.mjs");
+    const reboot = source("scripts/staging-offhost-dr-reboot-evidence.mjs");
+
+    expect(overlay).toContain("127.0.0.1:");
+    expect(overlay).toContain("!override");
+    expect(overlay).toContain("Caddyfile.sumopod");
+    expect(overlay).not.toContain("traefik");
+    expect(overlay).not.toContain("inmydraft-demos_web");
+    expect(overlay).not.toContain('"80:80"');
+    expect(overlay).not.toContain('"443:443"');
+
+    expect(preflight).toContain("replacement host is not clean");
+    expect(preflight).toContain("Compose project containers already exist");
+    expect(preflight).toContain("Compose project volumes already exist");
+    expect(preflight).toContain("must not inherit ECORIONE_EDGE_NETWORK");
+    expect(preflight).toContain("production-preflight.sh");
+    expect(preflight).toContain("127.0.0.1:");
+    expect(preflight).not.toContain("docker volume prune");
+    expect(preflight).not.toContain("docker system prune");
+
+    expect(localSmoke).toContain("DR loopback base must stay on loopback");
+    expect(localSmoke).toContain("ECORIONE_DR_EXPECTED_MCP_RESOURCE");
+    expect(localSmoke).toContain("recovered MCP resource identity changed");
+    expect(localSmoke).toContain("/ops");
+    expect(localSmoke).toContain("memory:read");
+
+    expect(start).toContain("ECORIONE_DR_STANDALONE_RECOVERY");
+    expect(start).toContain("deploy/compose.dr-recovery.yml");
+    expect(start).toContain("must not use ECORIONE_EDGE_NETWORK");
+
+    expect(acceptance).toContain('ECORIONE_DR_ACCEPTANCE_MODE');
+    expect(acceptance).toContain('["public", "loopback"]');
+    expect(acceptance).toContain("staging-offhost-dr-local-smoke.mjs");
+    expect(acceptance).toContain("loopback DR acceptance must not use ECORIONE_EDGE_NETWORK");
+
+    expect(reboot).toContain("staging-offhost-dr-local-smoke.mjs");
+    expect(reboot).toContain("loopback DR reboot evidence must not use ECORIONE_EDGE_NETWORK");
+  });
+
   it("gates recovered application identity and changed-boot-id persistence", () => {
     const start = source("scripts/staging-offhost-dr-start.sh");
     const acceptance = source("scripts/staging-offhost-dr-acceptance.mjs");
