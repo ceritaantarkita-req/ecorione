@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-if [[ "${1:-}" != "--apply" || "$#" -ne 3 ]]; then
-  echo "Usage: sudo -E bash $0 --apply <destination-dir> <export-manifest.receipt.env>" >&2
+if [[ "${1:-}" != "--apply" || "$#" -ne 4 ]]; then
+  echo "Usage: sudo -E bash $0 --apply <destination-dir> <export-manifest.receipt.env> <loss-marker.json>" >&2
   exit 2
 fi
 
@@ -10,6 +10,13 @@ fi
   echo "Run as root with sudo -E." >&2
   exit 1
 }
+
+for command_name in node scp sha256sum stat; do
+  command -v "$command_name" >/dev/null 2>&1 || {
+    echo "$command_name is required." >&2
+    exit 1
+  }
+done
 
 : "${ECORIONE_DR_SSH_TARGET:?set ECORIONE_DR_SSH_TARGET=user@independent-host}"
 : "${ECORIONE_DR_SSH_DIR:?set ECORIONE_DR_SSH_DIR=/absolute/backup/path}"
@@ -23,6 +30,7 @@ fi
 
 DEST_DIR="$2"
 MANIFEST_NAME="$3"
+LOSS_MARKER="$4"
 TARGET="$ECORIONE_DR_SSH_TARGET"
 REMOTE_DIR="${ECORIONE_DR_SSH_DIR%/}"
 IDENTITY="$ECORIONE_DR_SSH_IDENTITY"
@@ -49,6 +57,79 @@ for FILE in "$IDENTITY" "$KNOWN_HOSTS"; do
 done
 [[ "$(stat -c '%a' "$IDENTITY")" == "600" ]] || {
   echo "DR SSH identity must be mode 600." >&2
+  exit 1
+}
+KNOWN_MODE="$(stat -c '%a' "$KNOWN_HOSTS")"
+[[ "$KNOWN_MODE" == "600" || "$KNOWN_MODE" == "644" ]] || {
+  echo "DR known_hosts must be mode 600 or 644." >&2
+  exit 1
+}
+[[ -s "$KNOWN_HOSTS" ]] || {
+  echo "DR known_hosts is empty." >&2
+  exit 1
+}
+
+[[ -f "$LOSS_MARKER" && ! -L "$LOSS_MARKER" ]] || {
+  echo "Loss marker must be a regular non-symlink file created before retrieval." >&2
+  exit 1
+}
+[[ "$(stat -c '%a' "$LOSS_MARKER")" == "600" ]] || {
+  echo "Loss marker must be mode 600." >&2
+  exit 1
+}
+
+LOSS_MARKER_INFO="$(
+  node - "$LOSS_MARKER" "$MANIFEST_NAME" <<'NODE'
+const { createHash } = require("node:crypto");
+const { readFileSync } = require("node:fs");
+
+const [path, manifestName] = process.argv.slice(2);
+const raw = readFileSync(path);
+let marker;
+try {
+  marker = JSON.parse(raw.toString("utf8"));
+} catch {
+  throw new Error("loss marker is not valid JSON");
+}
+
+if (
+  marker?.schemaVersion !== 1 ||
+  marker.kind !== "ecorione-offhost-dr-loss-marker" ||
+  typeof marker.drillId !== "string" ||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(
+    marker.drillId,
+  ) ||
+  typeof marker.declaredAt !== "string" ||
+  !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u.test(marker.declaredAt) ||
+  marker.expectedExportManifestFilename !== manifestName ||
+  marker.clockSource !== "recovery-host-system-utc"
+) {
+  throw new Error("loss marker does not match the selected retained generation");
+}
+
+const declaredMs = Date.parse(marker.declaredAt);
+if (!Number.isFinite(declaredMs) || declaredMs > Date.now()) {
+  throw new Error("loss marker declaredAt is invalid or in the future");
+}
+
+const digest = createHash("sha256").update(raw).digest("hex");
+process.stdout.write(
+  [marker.drillId, marker.declaredAt, marker.clockSource, digest].join("\t"),
+);
+NODE
+)" || {
+  echo "Loss marker validation failed." >&2
+  exit 1
+}
+
+IFS=$'\t' read -r LOSS_MARKER_DRILL_ID LOSS_DECLARED_AT LOSS_MARKER_CLOCK_SOURCE LOSS_MARKER_SHA <<<"$LOSS_MARKER_INFO"
+[[ "$LOSS_MARKER_SHA" =~ ^[0-9a-f]{64}$ ]] || {
+  echo "Loss marker SHA-256 validation failed." >&2
+  exit 1
+}
+LOSS_MARKER_NAME="$(basename "$LOSS_MARKER")"
+[[ "$LOSS_MARKER_NAME" =~ ^[A-Za-z0-9_.-]+\.json$ ]] || {
+  echo "Loss marker filename is unsafe." >&2
   exit 1
 }
 
@@ -95,6 +176,15 @@ fetch_one() {
   printf '%s' "$final"
 }
 
+RETRIEVAL_STARTED_AT="$(node -e 'process.stdout.write(new Date().toISOString())')"
+node -e '
+  const [declaredAt, startedAt] = process.argv.slice(1);
+  if (Date.parse(declaredAt) > Date.parse(startedAt)) process.exit(1);
+' "$LOSS_DECLARED_AT" "$RETRIEVAL_STARTED_AT" || {
+  echo "Loss marker must predate retrieval start." >&2
+  exit 1
+}
+
 MANIFEST_PATH="$(fetch_one "$MANIFEST_NAME")"
 
 read_field() {
@@ -110,6 +200,11 @@ read_field() {
   echo "Export manifest does not record failure-domain acknowledgement." >&2
   exit 1
 }
+[[ "$(read_field transfer_intent)" == "1" ]] || {
+  echo "Export manifest does not record transfer intent." >&2
+  exit 1
+}
+
 BUNDLE_NAME="$(read_field bundle_filename)"
 META_NAME="$(read_field metadata_filename)"
 BUNDLE_SHA="$(read_field bundle_sha256)"
@@ -125,12 +220,12 @@ CANARY_SHA="$(read_field canary_sha256)"
   echo "Invalid metadata filename in export manifest." >&2
   exit 1
 }
-[[ "$BUNDLE_SHA" =~ ^[0-9a-f]{64}$ && "$META_SHA" =~ ^[0-9a-f]{64}$ && "$CANARY_SHA" =~ ^[0-9a-f]{64}$ ]] || {
-  echo "Invalid artifact hashes in export manifest." >&2
-  exit 1
-}
 [[ "$CANARY_NAME" =~ ^ecorione-dr-[A-Za-z0-9_.-]+\.canary\.json$ ]] || {
   echo "Invalid canary filename in export manifest." >&2
+  exit 1
+}
+[[ "$BUNDLE_SHA" =~ ^[0-9a-f]{64}$ && "$META_SHA" =~ ^[0-9a-f]{64}$ && "$CANARY_SHA" =~ ^[0-9a-f]{64}$ ]] || {
+  echo "Invalid artifact hashes in export manifest." >&2
   exit 1
 }
 [[ "${BUNDLE_NAME%.ecdr}" == "${META_NAME%.json}" ]] || {
@@ -149,6 +244,7 @@ CANARY_SHA="$(read_field canary_sha256)"
 BUNDLE_PATH="$(fetch_one "$BUNDLE_NAME")"
 META_PATH="$(fetch_one "$META_NAME")"
 CANARY_PATH="$(fetch_one "$CANARY_NAME")"
+
 ACTUAL_BUNDLE_SHA="$(sha256sum "$BUNDLE_PATH" | cut -d' ' -f1)"
 ACTUAL_META_SHA="$(sha256sum "$META_PATH" | cut -d' ' -f1)"
 ACTUAL_CANARY_SHA="$(sha256sum "$CANARY_PATH" | cut -d' ' -f1)"
@@ -173,9 +269,17 @@ RETRIEVAL_RECEIPT="$DEST_DIR/$STEM.retrieval.env"
   exit 1
 }
 
+RETRIEVED_AT="$(node -e 'process.stdout.write(new Date().toISOString())')"
+
 cat >"$RETRIEVAL_RECEIPT" <<EOF
 schema_version=1
-retrieved_at=$(date -u +%FT%TZ)
+retrieval_started_at=$RETRIEVAL_STARTED_AT
+retrieved_at=$RETRIEVED_AT
+loss_marker_filename=$LOSS_MARKER_NAME
+loss_marker_sha256=$LOSS_MARKER_SHA
+loss_marker_drill_id=$LOSS_MARKER_DRILL_ID
+loss_marker_clock_source=$LOSS_MARKER_CLOCK_SOURCE
+loss_declared_at=$LOSS_DECLARED_AT
 export_manifest_filename=$MANIFEST_NAME
 bundle_filename=$BUNDLE_NAME
 metadata_filename=$META_NAME
@@ -185,7 +289,7 @@ metadata_sha256=$META_SHA
 canary_sha256=$CANARY_SHA
 failure_domain_ack=1
 retrieval_verified=1
-claim_boundary=artifacts independently fetched from acknowledged off-host SSH target and matched retained export-manifest hashes
+claim_boundary=artifacts independently fetched after a marker-bound recovery clock was established and matched retained export-manifest hashes
 EOF
 chmod 0600 "$RETRIEVAL_RECEIPT"
 
@@ -194,6 +298,11 @@ echo "bundle=$BUNDLE_PATH"
 echo "metadata=$META_PATH"
 echo "canary_state=$CANARY_PATH"
 echo "retrieval_receipt=$RETRIEVAL_RECEIPT"
+echo "loss_marker=$LOSS_MARKER"
+echo "loss_marker_sha256=$LOSS_MARKER_SHA"
+echo "loss_marker_drill_id=$LOSS_MARKER_DRILL_ID"
+echo "retrieval_started_at=$RETRIEVAL_STARTED_AT"
+echo "retrieved_at=$RETRIEVED_AT"
 echo "bundle_sha256=$BUNDLE_SHA"
 echo "metadata_sha256=$META_SHA"
 echo "canary_sha256=$CANARY_SHA"

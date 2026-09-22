@@ -93,13 +93,26 @@ describe("off-host DR source contract", () => {
     const restore = source("scripts/staging-offhost-dr-restore.mjs");
 
     expect(fetch).toContain("retrieval_verified=1");
+    expect(fetch).toContain("<loss-marker.json>");
+    expect(fetch).toContain("Loss marker must be mode 600");
+    expect(fetch).toContain("loss_marker_sha256=");
+    expect(fetch).toContain("loss_marker_drill_id=");
+    expect(fetch).toContain("retrieval_started_at=");
+    expect(fetch).toContain("loss_declared_at=");
     expect(fetch).toContain("StrictHostKeyChecking=yes");
     expect(fetch).toContain("Retrieved bundle checksum mismatch");
+    expect(fetch.indexOf("LOSS_MARKER_INFO")).toBeLessThan(
+      fetch.indexOf('MANIFEST_PATH="$(fetch_one "$MANIFEST_NAME")"'),
+    );
     expect(fetch).not.toContain("ssh-keyscan");
 
     expect(restore).toContain("ECORIONE_DR_RESTORE_ACK");
     expect(restore).toContain("--retrieval-receipt");
     expect(restore).toContain("retrieval.retrieval_verified");
+    expect(restore).toContain("retrieval.loss_marker_sha256");
+    expect(restore).toContain("retrieval.loss_marker_drill_id");
+    expect(restore).toContain("retrieval.retrieval_started_at");
+    expect(restore).toContain("Invalid marker-bound retrieval chronology");
     expect(restore).toContain("retrieval receipt must be mode 600");
     expect(restore).toContain("Object.create(null)");
     expect(restore).toContain("Compose project containers already exist");
@@ -145,6 +158,7 @@ describe("off-host DR source contract", () => {
       "scripts/staging-offhost-dr-source-readiness.sh",
       "scripts/staging-offhost-dr-target-readiness.sh",
       "scripts/staging-offhost-dr-target-audit.sh",
+      "scripts/staging-offhost-dr-fetch.sh",
     ]) {
       const result = spawnSync("bash", ["-n", resolve(ROOT, path)], {
         encoding: "utf8",
@@ -347,6 +361,9 @@ describe("off-host DR source contract", () => {
 
   it("binds the DR recovery clock to an immutable selected-generation loss marker", () => {
     const lossMarker = source("scripts/staging-offhost-dr-loss-marker.mjs");
+    const fetch = source("scripts/staging-offhost-dr-fetch.sh");
+    const restore = source("scripts/staging-offhost-dr-restore.mjs");
+    const acceptance = source("scripts/staging-offhost-dr-acceptance.mjs");
     const evidence = source("scripts/staging-offhost-dr-closure-evidence.mjs");
 
     expect(lossMarker).toContain("randomUUID");
@@ -358,9 +375,24 @@ describe("off-host DR source contract", () => {
     expect(lossMarker).toContain("refusing to overwrite existing loss marker");
     expect(lossMarker).not.toContain("loss-declared-at");
 
+    expect(fetch).toContain("loss_marker_filename=");
+    expect(fetch).toContain("loss_marker_sha256=");
+    expect(fetch).toContain("loss_marker_drill_id=");
+    expect(fetch).toContain("retrieval_started_at=");
+    expect(restore).toContain("lossMarkerSha256: retrieval.loss_marker_sha256");
+    expect(restore).toContain("lossMarkerDrillId: retrieval.loss_marker_drill_id");
+    expect(acceptance).toContain("lossMarkerSha256: restore.lossMarkerSha256");
+    expect(acceptance).toContain("lossMarkerDrillId: restore.lossMarkerDrillId");
+    expect(acceptance).toContain(
+      "restore receipt marker-bound retrieval chronology is invalid",
+    );
+
     expect(evidence).toContain('"loss-marker"');
     expect(evidence).toContain("lossMarker.expectedExportManifestFilename");
     expect(evidence).toContain("loss marker selected export manifest does not match");
+    expect(evidence).toContain("retrieval.loss_marker_sha256");
+    expect(evidence).toContain("retrieval.retrieval_started_at");
+    expect(evidence).toContain("retrievalStartDelaySeconds");
     expect(evidence).toContain("lossMarker.declaredAt");
     expect(evidence).toContain("lossMarkerSha256");
   });
@@ -396,6 +428,9 @@ describe("off-host DR source contract", () => {
     expect(reboot).toContain("production-public-smoke.mjs");
     expect(reboot).toContain("production-ops-snapshot.mjs");
     expect(reboot).toContain("staging-host-evidence.mjs");
+    expect(reboot).toContain("acceptance.lossMarkerSha256");
+    expect(reboot).toContain("acceptance.lossMarkerDrillId");
+    expect(reboot).toContain("acceptance receipt marker-bound retrieval chronology is invalid");
     expect(reboot).toContain("totalHostLossRecoveryCandidate: true");
   });
 });

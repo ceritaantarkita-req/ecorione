@@ -212,6 +212,7 @@ if (
 if (lossMarker.expectedExportManifestFilename !== basename(manifestPath)) {
   fail("loss marker selected export manifest does not match closure manifest");
 }
+const lossMarkerSha = sha256(lossMarkerPath);
 
 for (const [actual, expected, label] of [
   [restore.sourceSha, sourceSha, "restore source SHA"],
@@ -221,6 +222,41 @@ for (const [actual, expected, label] of [
   [acceptance.composeProject, restore.composeProject, "acceptance compose project"],
   [acceptance.recoveryStartedAt, restore.recoveryStartedAt, "acceptance recovery start"],
   [acceptance.dataReadyAt, restore.dataReadyAt, "acceptance data-ready timestamp"],
+  [retrieval.loss_marker_filename, basename(lossMarkerPath), "retrieval loss-marker filename"],
+  [retrieval.loss_marker_sha256, lossMarkerSha, "retrieval loss-marker SHA-256"],
+  [retrieval.loss_marker_drill_id, lossMarker.drillId, "retrieval loss-marker drill ID"],
+  [
+    retrieval.loss_marker_clock_source,
+    lossMarker.clockSource,
+    "retrieval loss-marker clock source",
+  ],
+  [retrieval.loss_declared_at, lossMarker.declaredAt, "retrieval loss declaration"],
+  [restore.lossMarkerFilename, basename(lossMarkerPath), "restore loss-marker filename"],
+  [restore.lossMarkerSha256, lossMarkerSha, "restore loss-marker SHA-256"],
+  [restore.lossMarkerDrillId, lossMarker.drillId, "restore loss-marker drill ID"],
+  [restore.lossMarkerClockSource, lossMarker.clockSource, "restore loss-marker clock source"],
+  [restore.lossDeclaredAt, lossMarker.declaredAt, "restore loss declaration"],
+  [
+    restore.retrievalStartedAt,
+    retrieval.retrieval_started_at,
+    "restore retrieval-start timestamp",
+  ],
+  [restore.retrievedAt, retrieval.retrieved_at, "restore retrieval-complete timestamp"],
+  [acceptance.lossMarkerFilename, basename(lossMarkerPath), "acceptance loss-marker filename"],
+  [acceptance.lossMarkerSha256, lossMarkerSha, "acceptance loss-marker SHA-256"],
+  [acceptance.lossMarkerDrillId, lossMarker.drillId, "acceptance loss-marker drill ID"],
+  [
+    acceptance.lossMarkerClockSource,
+    lossMarker.clockSource,
+    "acceptance loss-marker clock source",
+  ],
+  [acceptance.lossDeclaredAt, lossMarker.declaredAt, "acceptance loss declaration"],
+  [
+    acceptance.retrievalStartedAt,
+    retrieval.retrieval_started_at,
+    "acceptance retrieval-start timestamp",
+  ],
+  [acceptance.retrievedAt, retrieval.retrieved_at, "acceptance retrieval-complete timestamp"],
   [retrieval.export_manifest_filename, basename(manifestPath), "retrieval manifest filename"],
   [retrieval.bundle_filename, manifest.bundle_filename, "retrieved bundle filename"],
   [retrieval.metadata_filename, manifest.metadata_filename, "retrieved metadata filename"],
@@ -281,6 +317,7 @@ if (!Number.isInteger(acceptance.serviceCount) || acceptance.serviceCount < 1) {
 const backupBoundaryAt = canary.createdAt;
 const exportCreatedAt = manifest.created_at;
 const lossDeclaredAt = lossMarker.declaredAt;
+const retrievalStartedAt = retrieval.retrieval_started_at;
 const retrievedAt = retrieval.retrieved_at;
 const recoveryStartedAt = restore.recoveryStartedAt;
 const dataReadyAt = restore.dataReadyAt;
@@ -290,6 +327,7 @@ const finalAcceptedAt = acceptance.postRebootAcceptedAt;
 const backupBoundaryMs = isoMs(backupBoundaryAt, "canary createdAt");
 const exportCreatedMs = isoMs(exportCreatedAt, "manifest created_at");
 const lossMs = isoMs(lossDeclaredAt, "loss marker declaredAt");
+const retrievalStartedMs = isoMs(retrievalStartedAt, "retrieval retrieval_started_at");
 const retrievedMs = isoMs(retrievedAt, "retrieval retrieved_at");
 const recoveryStartedMs = isoMs(recoveryStartedAt, "restore recoveryStartedAt");
 const dataReadyMs = isoMs(dataReadyAt, "restore dataReadyAt");
@@ -302,7 +340,12 @@ if (exportCreatedMs < backupBoundaryMs) {
 if (lossMs < exportCreatedMs) {
   fail("loss marker declaredAt must not predate successful export generation");
 }
-if (retrievedMs < lossMs) fail("retrieval completed before declared source loss");
+if (retrievalStartedMs < lossMs) {
+  fail("independent retrieval started before the loss marker");
+}
+if (retrievedMs < retrievalStartedMs) {
+  fail("retrieval completion predates retrieval start");
+}
 if (recoveryStartedMs < retrievedMs)
   fail("real-volume recovery started before retrieval completed");
 if (dataReadyMs < recoveryStartedMs) fail("data-ready precedes recovery start");
@@ -319,7 +362,7 @@ const evidence = {
   drill: {
     drillId: lossMarker.drillId,
     lossMarkerFilename: basename(lossMarkerPath),
-    lossMarkerSha256: sha256(lossMarkerPath),
+    lossMarkerSha256: lossMarkerSha,
     clockSource: lossMarker.clockSource,
   },
   generation: {
@@ -337,6 +380,7 @@ const evidence = {
     backupBoundaryAt,
     exportCreatedAt,
     lossDeclaredAt,
+    retrievalStartedAt,
     retrievedAt,
     recoveryStartedAt,
     dataReadyAt,
@@ -346,6 +390,11 @@ const evidence = {
   measuredSeconds: {
     conservativeRpoSeconds: secondsBetween(backupBoundaryMs, lossMs, "conservative RPO"),
     exportAgeAtLossSeconds: secondsBetween(exportCreatedMs, lossMs, "export age at loss"),
+    retrievalStartDelaySeconds: secondsBetween(
+      lossMs,
+      retrievalStartedMs,
+      "retrieval-start delay",
+    ),
     retrievalReadyRtoSeconds: secondsBetween(lossMs, retrievedMs, "retrieval-ready RTO"),
     dataReadyRtoSeconds: secondsBetween(lossMs, dataReadyMs, "data-ready RTO"),
     applicationReadyRtoSeconds: secondsBetween(lossMs, appReadyMs, "application-ready RTO"),
