@@ -42,7 +42,7 @@ done
 PUBLIC_KEY_MODE="$(stat -c '%a' "$PUBLIC_KEY")"
 [[ "$PUBLIC_KEY_MODE" == "600" || "$PUBLIC_KEY_MODE" == "644" ]] ||   fail "DR public key must be mode 600 or 644"
 
-if grep -Eq 'BEGIN (RSA |ENCRYPTED )?PRIVATE KEY' "$PUBLIC_KEY"; then
+if grep -Eq 'BEGIN (RSA |EC |OPENSSH |ENCRYPTED )?PRIVATE KEY' "$PUBLIC_KEY"; then
   fail "configured DR key contains private-key material; source host must receive public key only"
 fi
 node -e '
