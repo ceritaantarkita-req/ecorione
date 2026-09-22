@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–3 CLOSED / CHECKPOINT 4 READINESS GUARDRAILS ACTIVE / RUNTIME EXECUTION PENDING**
+Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–4 CLOSED / RUNTIME EXECUTION PENDING**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -84,7 +84,9 @@ Checkpoint 3 repository implementation is CLOSED / PASS through PR #252 final he
 
 Checkpoint 3 closure bookkeeping then merged through PR #253 as `801adbc1eca847c77cba4b9bb89264ccf47cbf88` after CI #1822 + Product Eval #1061. Merged-main CI #1823 + Product Eval #1062 passed. Staging Deploy #416/#417 gate-passed and their deploy jobs remained skipped, so the proven runtime did not move.
 
-Checkpoint 4 adds read-only runtime readiness guardrails before the first DR mutation. After the governed deployment of the exact current main succeeds and CD is frozen again, place **only** the RSA-3072+ DR public key on the source host and run:
+Checkpoint 4 repository readiness guardrails are now CLOSED / PASS through PR #254 exact head `5245be4a7f0874d57b9b89e4e587aa79db90f8cf` and merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed. Merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 gate-passed and deploy remained skipped, so the SumoPod runtime still did not move.
+
+Checkpoint 4 adds read-only runtime readiness guardrails before the first DR mutation and is CLOSED / PASS at the repository boundary. After the governed deployment of the exact current main succeeds and CD is frozen again, place **only** the RSA-3072+ DR public key on the source host and run:
 
 ```bash
 export ECORIONE_DR_PUBLIC_KEY=/secure/path/ecorione-dr-public.pem
