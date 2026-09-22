@@ -119,6 +119,25 @@ At this checkpoint:
 - no real retrieval/restore/reboot drill has run;
 - total-host-loss recovery remains **NOT PROVEN**.
 
+## Repository gate history
+
+PR #252 initially opened at exact head `17e3ac85a8876c071daafb000eb5fdf677bb2b7f`. CI #1801 exposed a valid naming-gate failure before the normal verify path could be accepted. The two offending literals were both checkpoint-3 additions:
+
+- the local smoke example used the historical deployment domain in executable source;
+- the source-contract test named the historical external Docker network directly.
+
+Neither literal was required for recovery behavior. The executable example was changed to a neutral example domain and the test was rewritten to assert the generic invariant that the recovery overlay has no external network. The naming rule was not weakened.
+
+Early checkpoint-3 commits also added two convenience aliases to `package.json`. That unnecessarily triggered the heavy Desktop Installer workflow on every synchronize event and accumulated stale installer runs that were unrelated to DR behavior. The aliases were removed; the canonical runbook already calls the scripts directly. The final checkpoint-3 diff no longer changes `package.json` and therefore does not require a Desktop Installer result for closure.
+
+A later exact head `9085e208cfb6d13a2719b768dd1f5198ddc8774d` reached CI #1811. Its naming job passed, but the read-only format/parser gate correctly failed because two source edits contained a literal `\\n` sequence after `const expectedMcpResource =` rather than a real line break. That syntax defect was repaired in both acceptance and reboot-evidence entrypoints.
+
+The same repair cycle used the repository's locked Prettier toolchain on the two entrypoints plus `test/offhost-dr-source-contract.test.ts`. The temporary formatter workflow completed successfully and removed itself from the branch; the resulting formatter head was `72075838ddf97db8cb33a868d6bfd0fca1e48b62`.
+
+Checkpoint 3 also adds a real rendered-Compose test under the existing Linux Docker acceptance flag. CI now executes `docker compose ... config --format json` with `deploy/compose.dr-recovery.yml` and requires the rendered Caddy service to expose exactly one `127.0.0.1:18080 -> 8080` publication on the internal network. This complements the source-contract checks and catches unsupported/incorrect Compose override semantics before runtime use.
+
+No failed gate was bypassed, converted to a warning, or removed.
+
 ## Safe resumable handoff
 
 Repository-side next steps:
