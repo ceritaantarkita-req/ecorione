@@ -108,6 +108,12 @@ Checkpoint 3 must itself merge and pass exact merged-main gates before real DR e
 
 The currently available GitHub connector can read workflow state and merge reviewed PRs but does not expose repository-variable mutation or workflow-dispatch actions. The safety gate must **not** be bypassed by editing the workflow to force a deployment.
 
+## Repository gate history
+
+PR #252 exact head `e13fbf7b4d747b02135594e242dfc914b7913cf5` passed Product Eval #1057 and the CI read-only format + naming gates, but CI #1818 stopped at lint before typecheck/test. ESLint reported one checkpoint-3 defect in `scripts/staging-offhost-dr-local-smoke.mjs`: bare `AbortController` violated the repository Node/global contract (`no-undef`). The implementation now uses `globalThis.AbortController`, matching the existing repository public-smoke pattern. No lint rule or CI gate was weakened.
+
+A new exact-head CI run is required before merge.
+
 ## Current non-claims
 
 At this checkpoint:
