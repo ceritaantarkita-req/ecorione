@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–6 CLOSED / CHECKPOINT 7 MARKER-BEFORE-FETCH ENFORCEMENT ACTIVE / RUNTIME EXECUTION PENDING**
+Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–7 CLOSED / RUNTIME EXECUTION PENDING**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -89,7 +89,7 @@ Checkpoint 5 retained-generation audit and sanitized RPO/RTO evidence tooling is
 
 Checkpoint 6 hardens recovery-clock provenance by replacing the free-form closure `loss_declared_at` argument with an immutable mode-0600 loss-marker receipt bound to the selected retained export manifest. It is CLOSED / PASS at the repository boundary through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` and merge `cb043b47a2c899e3c0585b06db4992fcc727c723`. Exact-head CI #1857, Product Eval #1096, MCP #1001, and Desktop Installer #188 passed. Merged-main CI #1858, Product Eval #1097, and MCP #1002 passed. Staging Deploy #480/#481 gate-passed and deploy remained skipped.
 
-Checkpoint 7 enforces checkpoint 6's marker boundary at the actual independent-fetch step. The updated fetch path refuses to start SCP without a valid mode-0600 loss marker bound to the requested retained generation, records marker identity/hash plus retrieval-start time in the retrieval receipt, and propagates that chain through restore/acceptance/final closure. Repository review is active; no runtime claim is made yet.
+Checkpoint 7 enforces checkpoint 6's marker boundary at the actual independent-fetch step. The updated fetch path refuses to start SCP without a valid mode-0600 loss marker bound to the requested retained generation, records marker identity/hash plus retrieval-start time in the retrieval receipt, and propagates that chain through restore/acceptance/reboot/final closure. It is CLOSED / PASS at the repository boundary through PR #263 exact head `ba7ef7d6922c0177be582d5734095ed154f72622` and merge `cf8921f19a5c78db2d3d2fd075ac232983a0bbb4`. Exact-head CI #1870 and Product Eval #1109 passed. Merged-main CI #1871 and Product Eval #1110 passed. Staging Deploy #504/#505 gate-passed and deploy remained skipped.
 
 Checkpoint 4 adds read-only runtime readiness guardrails before the first DR mutation and is CLOSED / PASS at the repository boundary. After the governed deployment of the exact current main succeeds and CD is frozen again, place **only** the RSA-3072+ DR public key on the source host and run:
 
@@ -471,7 +471,7 @@ sudo -E bash scripts/staging-offhost-dr-target-audit.sh --check
 
 ## Checkpoint state
 
-Checkpoints 1–6 are CLOSED / PASS at repository boundaries. Checkpoint 7 marker-before-fetch enforcement is under repository review. Runtime execution remains the active DR work.
+Checkpoints 1–7 are CLOSED / PASS at repository boundaries. Runtime execution remains the active DR work.
 
 Repository foundation contains:
 
@@ -481,7 +481,7 @@ Repository foundation contains:
 - deterministic source-contract coverage;
 - this operator runbook.
 
-Repository checkpoints 1–6, plus checkpoint-7 work while under review, still intentionally make these non-claims until real infrastructure execution occurs:
+Repository checkpoints 1–7 still intentionally make these non-claims until real infrastructure execution occurs:
 
 - no current-revision SumoPod backup has yet been copied off-host by this workstream;
 - no independent target has been recorded as configured evidence;
