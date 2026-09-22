@@ -178,6 +178,17 @@ Source-contract coverage also locks:
 - RPO/RTO field presence;
 - no secret/password/private-key fields in sanitized timing evidence.
 
+## Repository gate history
+
+PR #256 initial exact head `cd4de5b80b4e3c6fac7fab3c0503c4757cfd32c8` reached CI #1847. Naming passed, while the read-only Prettier gate failed on exactly:
+
+- `scripts/staging-offhost-dr-closure-evidence.mjs`;
+- `test/offhost-dr-closure-evidence.test.ts`.
+
+No gate was weakened. The repository's locked Prettier toolchain formatted only those two files. The temporary formatter workflow completed successfully and self-removed; the formatter result head is `ddc5323b4a65d0a1192d5f9efa41e461eeef90ca`.
+
+A new exact-head CI/Product Eval/MCP/Desktop run is required after this evidence commit.
+
 ## Current non-claims
 
 Checkpoint 5 does **not** prove:
