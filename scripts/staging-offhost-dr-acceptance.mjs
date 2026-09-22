@@ -332,6 +332,8 @@ async function main() {
     aiImage,
     edgeMode: acceptanceMode,
     acceptanceBaseOrigin: new URL(acceptanceBaseUrl).origin,
+    expectedMcpResource:
+      acceptanceMode === "loopback" ? new URL(expectedMcpResource).toString() : null,
     publicBaseOrigin: acceptanceMode === "public" ? new URL(acceptanceBaseUrl).origin : null,
     preRebootAccepted: true,
     rebootPersistenceAccepted: false,
