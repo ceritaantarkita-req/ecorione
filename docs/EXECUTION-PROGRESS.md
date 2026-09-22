@@ -82,7 +82,7 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | Source + independent-target DR readiness guardrails | **CLOSED / PASS (checkpoint 4 repository boundary)** |
 | Retained-generation audit + RPO/RTO closure evidence | **CLOSED / PASS (checkpoint 5 repository boundary)** |
 | Immutable loss-marker timing provenance | **CLOSED / PASS (checkpoint 6 repository boundary)** |
-| Marker-before-fetch retrieval enforcement | **ACTIVE / CHECKPOINT 7 REPOSITORY REVIEW** |
+| Marker-before-fetch retrieval enforcement | **CLOSED / PASS (checkpoint 7 repository boundary)** |
 | Real independent off-host copy | **PENDING RUNTIME EVIDENCE** |
 | Clean-host isolated restore of real staging backup | **PENDING RUNTIME EVIDENCE** |
 | Total-host-loss application recovery | **NOT YET PROVEN** |
@@ -93,6 +93,8 @@ Checkpoint 1 repository foundation closed through PR #250 / merge `3c5417dd44099
 Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 final head `dbb9423def581e95cb9e1bbe18fd3208164ef575` (CI #1799, Product Eval #1038, MCP #955, Desktop Installer #146) and merge `768c0f617064343f0bfc569d52212c80a03f0b83` (merged-main CI #1800, Product Eval #1039, MCP #956). Staging Deploy #372/#373 gate-passed and deploy remained skipped because activation stayed disabled. Checkpoint 3 is CLOSED / PASS at the repository boundary through PR #252 final head `b4986b081a0e76c660b6f09e2f2e2ef46f003d57` (CI #1820, Product Eval #1059, MCP #970, Desktop Installer #160) and merge `9e522e62212b5a4170ad4947c4bdd75c28f34464` (merged-main CI #1821, Product Eval #1060, MCP #971). Staging Deploy #412/#413 gate-passed and deploy remained skipped because activation stayed disabled.
 
 Checkpoint 4 is CLOSED / PASS at the repository readiness-guardrail boundary through PR #254 exact head `5245be4a7f0874d57b9b89e4e587aa79db90f8cf` (CI #1843, Product Eval #1082, MCP #991, Desktop Installer #180) and merge `2d0ce4f871eb828d421d87bf15b244542a661246` (merged-main CI #1844, Product Eval #1083, MCP #992). Staging Deploy #456/#457 gate-passed and deploy remained skipped.
+
+Checkpoint 7 is CLOSED / PASS at the repository marker-before-fetch enforcement boundary through PR #263 exact head `ba7ef7d6922c0177be582d5734095ed154f72622` (CI #1870, Product Eval #1109) and merge `cf8921f19a5c78db2d3d2fd075ac232983a0bbb4` (merged-main CI #1871, Product Eval #1110). Staging Deploy #504/#505 gate-passed and deploy remained skipped.
 
 Checkpoint 5 is CLOSED / PASS at the repository retained-generation/timing-evidence boundary through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` (CI #1850, Product Eval #1089, MCP #996, Desktop Installer #184) and merge `941cb8c9ed237a5417550449c7d73e712b10ba72` (merged-main CI #1851, Product Eval #1090, MCP #997). Staging Deploy #468/#469 gate-passed and deploy remained skipped.
 
