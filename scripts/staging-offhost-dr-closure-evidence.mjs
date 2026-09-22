@@ -174,7 +174,9 @@ if (
   lossMarker.schemaVersion !== 1 ||
   lossMarker.kind !== "ecorione-offhost-dr-loss-marker" ||
   typeof lossMarker.drillId !== "string" ||
-  !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(lossMarker.drillId) ||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(
+    lossMarker.drillId,
+  ) ||
   typeof lossMarker.declaredAt !== "string" ||
   typeof lossMarker.expectedExportManifestFilename !== "string" ||
   lossMarker.clockSource !== "recovery-host-system-utc"

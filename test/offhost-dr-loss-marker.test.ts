@@ -56,13 +56,7 @@ describe("off-host DR loss marker", () => {
       const output = join(dir, "loss-marker.json");
       const result = spawnSync(
         process.execPath,
-        [
-          SCRIPT,
-          "--manifest-name",
-          "../ecorione-dr-test.receipt.env",
-          "--output",
-          output,
-        ],
+        [SCRIPT, "--manifest-name", "../ecorione-dr-test.receipt.env", "--output", output],
         { cwd: ROOT, encoding: "utf8" },
       );
 
