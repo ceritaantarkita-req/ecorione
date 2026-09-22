@@ -74,7 +74,8 @@ AVAILABLE_KIB="$(printf '%s\n' "$RESULT" | sed -n 's/^available_kib=//p')"
 [[ "$MODE" == "700" || "$MODE" == "750" ]] ||   fail "remote backup directory mode must be 700 or 750"
 [[ "$AVAILABLE_KIB" =~ ^[0-9]+$ ]] || fail "unable to verify remote free space"
 
-MIN_TARGET_KIB="${ECORIONE_DR_TARGET_MIN_FREE_KIB:-10485760}"
+: "${ECORIONE_DR_TARGET_MIN_FREE_KIB:?set ECORIONE_DR_TARGET_MIN_FREE_KIB from source readiness backup_required_kib}"
+MIN_TARGET_KIB="$ECORIONE_DR_TARGET_MIN_FREE_KIB"
 [[ "$MIN_TARGET_KIB" =~ ^[0-9]+$ ]] || fail "ECORIONE_DR_TARGET_MIN_FREE_KIB must be numeric"
 (( AVAILABLE_KIB >= MIN_TARGET_KIB )) || {
   echo "available_kib=$AVAILABLE_KIB required_min_kib=$MIN_TARGET_KIB" >&2
