@@ -117,6 +117,19 @@ async function main() {
     fail("restore receipt is invalid");
   }
 
+  const lossDeclaredMs = Date.parse(restore.lossDeclaredAt);
+  const retrievalStartedMs = Date.parse(restore.retrievalStartedAt);
+  const retrievedMs = Date.parse(restore.retrievedAt);
+  if (
+    !Number.isFinite(lossDeclaredMs) ||
+    !Number.isFinite(retrievalStartedMs) ||
+    !Number.isFinite(retrievedMs) ||
+    lossDeclaredMs > retrievalStartedMs ||
+    retrievalStartedMs > retrievedMs
+  ) {
+    fail("restore receipt marker-bound retrieval chronology is invalid");
+  }
+
   const deployEnvArg = process.env.ECORIONE_DEPLOY_ENV?.trim() || "deploy/staging.env";
   const deployEnv = resolve(ROOT, deployEnvArg);
   const overlayRaw = process.env.ECORIONE_COMPOSE_OVERLAY?.trim() || "";
