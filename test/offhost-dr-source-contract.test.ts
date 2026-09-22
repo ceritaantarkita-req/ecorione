@@ -144,6 +144,7 @@ describe("off-host DR source contract", () => {
       "scripts/staging-offhost-dr-start.sh",
       "scripts/staging-offhost-dr-source-readiness.sh",
       "scripts/staging-offhost-dr-target-readiness.sh",
+      "scripts/staging-offhost-dr-target-audit.sh",
     ]) {
       const result = spawnSync("bash", ["-n", resolve(ROOT, path)], {
         encoding: "utf8",
@@ -308,6 +309,36 @@ describe("off-host DR source contract", () => {
     expect(targetReadiness).not.toContain("install -d");
     expect(targetReadiness).not.toContain("rm -");
     expect(targetReadiness).not.toContain("mv -");
+  });
+
+  it("audits retained off-host generations without remote mutation", () => {
+    const audit = source("scripts/staging-offhost-dr-target-audit.sh");
+    const evidence = source("scripts/staging-offhost-dr-closure-evidence.mjs");
+
+    expect(audit).toContain("ECORIONE_DR_RETENTION_MIN_GENERATIONS");
+    expect(audit).toContain("StrictHostKeyChecking=yes");
+    expect(audit).toContain("ClearAllForwardings=yes");
+    expect(audit).toContain("transfer_intent");
+    expect(audit).toContain("sha256sum");
+    expect(audit).toContain('[[ "$manifest_mode" == "600" ]]');
+    expect(audit).toContain("retention_ready=");
+    expect(audit).toContain("complete_generations=");
+    expect(audit).toContain("incomplete_generations=");
+    expect(audit).toContain("no remote generation was created, renamed, or deleted");
+    expect(audit).not.toContain("ssh-keyscan");
+    expect(audit).not.toContain('scp "${SSH_OPTS[@]}"');
+    expect(audit).not.toContain("mkdir -");
+    expect(audit).not.toContain("rm -");
+    expect(audit).not.toContain("mv -");
+
+    expect(evidence).toContain("conservativeRpoSeconds");
+    expect(evidence).toContain("finalRecoveryRtoSeconds");
+    expect(evidence).toContain("loss_declared_at");
+    expect(evidence).toContain("totalHostLossRecoveryCandidate");
+    expect(evidence).toContain("changedBootIdProven");
+    expect(evidence).toContain("refusing to overwrite closure evidence output");
+    expect(evidence).not.toContain("ECORIONE_OPS_PASSWORD");
+    expect(evidence).not.toContain("privateKey");
   });
 
   it("gates recovered application identity and changed-boot-id persistence", () => {
