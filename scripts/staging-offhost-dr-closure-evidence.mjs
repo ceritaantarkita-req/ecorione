@@ -181,11 +181,33 @@ if (!TAG_RE.test(sourceTag ?? "") || sourceTag !== `staging-${sourceSha.slice(0,
   fail("manifest source tag is invalid");
 }
 
+if (
+  typeof manifest.bundle_filename !== "string" ||
+  !/^ecorione-dr-[A-Za-z0-9_.-]+\.ecdr$/u.test(manifest.bundle_filename) ||
+  typeof manifest.metadata_filename !== "string" ||
+  !/^ecorione-dr-[A-Za-z0-9_.-]+\.json$/u.test(manifest.metadata_filename) ||
+  typeof manifest.canary_filename !== "string" ||
+  !/^ecorione-dr-[A-Za-z0-9_.-]+\.canary\.json$/u.test(manifest.canary_filename)
+) {
+  fail("manifest artifact filenames are invalid");
+}
+const generationStem = manifest.bundle_filename.slice(0, -".ecdr".length);
+if (
+  manifest.metadata_filename !== `${generationStem}.json` ||
+  manifest.canary_filename !== `${generationStem}.canary.json` ||
+  basename(manifestPath) !== `${generationStem}.receipt.env`
+) {
+  fail("manifest generation stems do not match");
+}
+
 for (const [actual, expected, label] of [
   [restore.sourceSha, sourceSha, "restore source SHA"],
   [restore.sourceTag, sourceTag, "restore source tag"],
   [acceptance.sourceSha, sourceSha, "acceptance source SHA"],
   [acceptance.sourceTag, sourceTag, "acceptance source tag"],
+  [acceptance.composeProject, restore.composeProject, "acceptance compose project"],
+  [acceptance.recoveryStartedAt, restore.recoveryStartedAt, "acceptance recovery start"],
+  [acceptance.dataReadyAt, restore.dataReadyAt, "acceptance data-ready timestamp"],
   [retrieval.export_manifest_filename, basename(manifestPath), "retrieval manifest filename"],
   [retrieval.bundle_filename, manifest.bundle_filename, "retrieved bundle filename"],
   [retrieval.metadata_filename, manifest.metadata_filename, "retrieved metadata filename"],
@@ -216,6 +238,16 @@ const canarySha = sha256(canaryPath);
 requireEqual(canarySha, manifest.canary_sha256, "local canary SHA-256 vs export manifest");
 requireEqual(canarySha, restore.semanticCanarySha256, "local canary SHA-256 vs restore receipt");
 requireEqual(canarySha, acceptance.semanticCanarySha256, "local canary SHA-256 vs acceptance receipt");
+
+if (
+  !Number.isInteger(acceptance.restoredVolumeCount) ||
+  acceptance.restoredVolumeCount !== restore.restoredVolumes.length
+) {
+  fail("acceptance restored-volume count does not match restore receipt");
+}
+if (!Number.isInteger(acceptance.serviceCount) || acceptance.serviceCount < 1) {
+  fail("acceptance service count is invalid");
+}
 
 const backupBoundaryAt = canary.createdAt;
 const exportCreatedAt = manifest.created_at;
