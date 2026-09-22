@@ -31,7 +31,7 @@ fail() {
   exit 1
 }
 
-for command_name in ssh scp sha256sum stat; do
+for command_name in ssh stat; do
   command -v "$command_name" >/dev/null 2>&1 || fail "$command_name is required"
 done
 
