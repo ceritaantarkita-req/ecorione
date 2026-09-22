@@ -86,7 +86,10 @@
     "staging:dr:replacement-preflight": "bash scripts/staging-offhost-dr-replacement-preflight.sh",
     "staging:dr:local-smoke": "node scripts/staging-offhost-dr-local-smoke.mjs",
     "staging:dr:source-readiness": "bash scripts/staging-offhost-dr-source-readiness.sh --check",
-    "staging:dr:target-readiness": "bash scripts/staging-offhost-dr-target-readiness.sh --check"
+    "staging:dr:target-readiness": "bash scripts/staging-offhost-dr-target-readiness.sh --check",
+    "staging:dr:target-audit": "bash scripts/staging-offhost-dr-target-audit.sh --report",
+    "staging:dr:retention-check": "bash scripts/staging-offhost-dr-target-audit.sh --check",
+    "staging:dr:closure-evidence": "node scripts/staging-offhost-dr-closure-evidence.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

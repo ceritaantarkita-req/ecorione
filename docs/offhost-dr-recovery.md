@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–4 CLOSED / RUNTIME EXECUTION PENDING**
+Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–4 CLOSED / CHECKPOINT 5 RETENTION + RPO/RTO EVIDENCE ACTIVE / RUNTIME EXECUTION PENDING**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -384,7 +384,23 @@ The isolated archive restore above proves portable data integrity. Final DR clos
 13. require authenticated Operations healthy with no required unhealthy owner service;
 14. require exact-source/host evidence to match the recorded SHA;
 15. perform a full replacement-host reboot and repeat semantic/edge/Ops/host evidence with a changed boot ID;
-16. record sanitized timestamps for recovery start, data-ready, application-ready, and final acceptance.
+16. record sanitized timestamps for recovery start, data-ready, application-ready, and final acceptance;
+17. generate the final timing receipt with an explicit operator-declared source-loss timestamp.
+
+After post-reboot acceptance has mutated the acceptance receipt into final candidate state:
+
+```bash
+node scripts/staging-offhost-dr-closure-evidence.mjs \
+  --export-manifest /secure/recovery/<bundle>.receipt.env \
+  --canary-state /secure/recovery/<bundle>.canary.json \
+  --retrieval-receipt /secure/recovery/<bundle>.retrieval.env \
+  --restore-receipt /var/lib/ecorione-dr/<restore-receipt>.json \
+  --acceptance-receipt /var/lib/ecorione-dr/recovery-acceptance.json \
+  --loss-declared-at '<UTC-ISO8601>' \
+  --output /var/lib/ecorione-dr/recovery-closure-evidence.json
+```
+
+The tool refuses to infer failure time. The operator-provided `loss_declared_at` is the start of the measured drill. Conservative RPO uses the semantic-canary creation timestamp as the pre-backup boundary; RTO milestones cover independent retrieval, data-ready, application-ready, and final changed-boot-ID acceptance. These measurements describe one drill and are not a production SLA.
 
 Public DNS, public TLS issuance/renewal, Cloudflare and production promotion remain separate from this host-loss recovery proof.
 
@@ -414,9 +430,21 @@ Until usage evidence justifies a different policy:
 
 This is an initial operational policy, not a production SLA.
 
+Checkpoint 5 adds a read-only remote audit for this policy:
+
+```bash
+export ECORIONE_DR_RETENTION_MIN_GENERATIONS=3
+sudo -E bash scripts/staging-offhost-dr-target-audit.sh --report
+sudo -E bash scripts/staging-offhost-dr-target-audit.sh --check
+```
+
+`--report` inventories every retained generation commit marker, requires mode-0600 manifests/artifacts, validates filenames/stems and remote SHA-256 values, reports complete/incomplete generation counts and latest source identity, but does not fail solely because fewer than three complete generations exist.
+
+`--check` additionally fails if any retained generation is incomplete/corrupt or if complete generations are below the configured minimum. The audit is read-only: no upload, mkdir, rename, or deletion is performed on the independent target.
+
 ## Checkpoint state
 
-Checkpoint 1 repository foundation is CLOSED / PASS. Checkpoint 2 now extends the repository path with current-revision export orchestration, retained export manifests, independent fetch/retrieval receipts, guarded real-volume restore, application acceptance, and replacement-host reboot evidence.
+Checkpoints 1–4 are CLOSED / PASS at repository boundaries. Checkpoint 5 adds retained-generation audit plus sanitized RPO/RTO closure evidence and is under repository review.
 
 Repository foundation contains:
 
