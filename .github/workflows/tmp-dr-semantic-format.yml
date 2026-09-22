@@ -1,0 +1,35 @@
+name: Temporary DR semantic formatter
+
+on:
+  push:
+    branches:
+      - ops/offhost-dr-recovery-checkpoint2-20260922
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: ops/offhost-dr-recovery-checkpoint2-20260922
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format semantic DR sources and self-remove
+        run: |
+          set -euo pipefail
+          pnpm exec prettier --write             scripts/staging-offhost-dr-acceptance.mjs             scripts/staging-offhost-dr-canary-inner.mjs             scripts/staging-offhost-dr-canary.mjs             scripts/staging-offhost-dr-reboot-evidence.mjs
+          git rm .github/workflows/tmp-dr-semantic-format.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             scripts/staging-offhost-dr-acceptance.mjs             scripts/staging-offhost-dr-canary-inner.mjs             scripts/staging-offhost-dr-canary.mjs             scripts/staging-offhost-dr-reboot-evidence.mjs
+          git diff --cached --check
+          git commit -m "style: format semantic DR recovery sources"
+          git push origin HEAD:ops/offhost-dr-recovery-checkpoint2-20260922
