@@ -1,6 +1,6 @@
 # Off-host DR checkpoint 4 — runtime readiness guardrails — 2026-09-22
 
-Status: **IMPLEMENTED / REPOSITORY GATES PENDING / REAL-HOST DR STILL PENDING**
+Status: **CLOSED / PASS AT REPOSITORY BOUNDARY / REAL-HOST DR STILL PENDING**
 
 ## Scope
 
@@ -229,6 +229,26 @@ A later normal user commit records this evidence so the final exact-head gates c
 
 ## Repository evidence boundary
 
+## Repository closure
+
+Checkpoint 4 implementation closed through PR #254.
+
+```text
+PR exact head       5245be4a7f0874d57b9b89e4e587aa79db90f8cf
+CI                  #1843 PASS
+Product Eval        #1082 PASS
+MCP HTTPS           #991 PASS
+Desktop Installer   #180 PASS
+merge main          2d0ce4f871eb828d421d87bf15b244542a661246
+merged-main CI      #1844 PASS
+merged-main Product #1083 PASS
+merged-main MCP     #992 PASS
+Staging Deploy      #456 gate PASS / deploy SKIPPED
+Staging Deploy      #457 gate PASS / deploy SKIPPED
+```
+
+Both post-merge Staging Deploy triggers kept the deploy job skipped. The checkpoint-4 repository closure therefore did **not** change the SumoPod runtime.
+
 Checkpoint 4 still does **not** prove:
 
 - final checkpoint-4 exact-head CI/Product Eval/MCP/Desktop gates;
@@ -244,10 +264,9 @@ Checkpoint 4 still does **not** prove:
 
 Repository-side:
 
-1. require final exact-head CI + Product Eval + relevant acceptance gates;
-2. merge only that reviewed head;
-3. require merged-main gates;
-4. converge canonical docs with exact merge identities.
+1. repository checkpoint 4 is CLOSED / PASS through PR #254 / merge `2d0ce4f871eb828d421d87bf15b244542a661246`;
+2. preserve this docs-only closure as bookkeeping only;
+3. do not claim SumoPod/runtime movement from repository closure.
 
 Runtime-side after repository closure:
 
