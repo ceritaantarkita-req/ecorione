@@ -17,7 +17,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 2) {
     if (!argv[i]?.startsWith("--") || argv[i + 1] === undefined) {
       fail(
-        "use --export-manifest <env> --canary-state <json> --retrieval-receipt <env> --restore-receipt <json> --acceptance-receipt <json> --loss-declared-at <iso8601> --output <json>",
+        "use --export-manifest <env> --canary-state <json> --retrieval-receipt <env> --restore-receipt <json> --acceptance-receipt <json> --loss-marker <json> --output <json>",
       );
     }
     out[argv[i].slice(2)] = argv[i + 1];
@@ -28,7 +28,7 @@ function parseArgs(argv) {
     "retrieval-receipt",
     "restore-receipt",
     "acceptance-receipt",
-    "loss-declared-at",
+    "loss-marker",
     "output",
   ]) {
     if (!out[key]) fail(`missing --${key}`);
@@ -107,6 +107,7 @@ const canaryPath = resolve(args["canary-state"]);
 const retrievalPath = resolve(args["retrieval-receipt"]);
 const restorePath = resolve(args["restore-receipt"]);
 const acceptancePath = resolve(args["acceptance-receipt"]);
+const lossMarkerPath = resolve(args["loss-marker"]);
 const outputPath = resolve(args.output);
 
 for (const [path, label] of [
@@ -115,6 +116,7 @@ for (const [path, label] of [
   [retrievalPath, "retrieval receipt"],
   [restorePath, "restore receipt"],
   [acceptancePath, "acceptance receipt"],
+  [lossMarkerPath, "loss marker"],
 ]) {
   assertMode600(path, label);
 }
@@ -125,6 +127,7 @@ const retrieval = parseEnv(retrievalPath);
 const canary = parseJson(canaryPath, "semantic canary state");
 const restore = parseJson(restorePath, "restore receipt");
 const acceptance = parseJson(acceptancePath, "acceptance receipt");
+const lossMarker = parseJson(lossMarkerPath, "loss marker");
 
 if (
   manifest.schema_version !== "1" ||
@@ -167,6 +170,20 @@ if (
   fail("acceptance receipt has not reached final changed-boot-id recovery candidate state");
 }
 
+if (
+  lossMarker.schemaVersion !== 1 ||
+  lossMarker.kind !== "ecorione-offhost-dr-loss-marker" ||
+  typeof lossMarker.drillId !== "string" ||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(
+    lossMarker.drillId,
+  ) ||
+  typeof lossMarker.declaredAt !== "string" ||
+  typeof lossMarker.expectedExportManifestFilename !== "string" ||
+  lossMarker.clockSource !== "recovery-host-system-utc"
+) {
+  fail("loss marker is invalid");
+}
+
 const sourceSha = manifest.source_sha;
 const sourceTag = manifest.source_tag;
 if (!SHA_RE.test(sourceSha ?? "")) fail("manifest source SHA is invalid");
@@ -191,6 +208,9 @@ if (
   basename(manifestPath) !== `${generationStem}.receipt.env`
 ) {
   fail("manifest generation stems do not match");
+}
+if (lossMarker.expectedExportManifestFilename !== basename(manifestPath)) {
+  fail("loss marker selected export manifest does not match closure manifest");
 }
 
 for (const [actual, expected, label] of [
@@ -260,7 +280,7 @@ if (!Number.isInteger(acceptance.serviceCount) || acceptance.serviceCount < 1) {
 
 const backupBoundaryAt = canary.createdAt;
 const exportCreatedAt = manifest.created_at;
-const lossDeclaredAt = args["loss-declared-at"];
+const lossDeclaredAt = lossMarker.declaredAt;
 const retrievedAt = retrieval.retrieved_at;
 const recoveryStartedAt = restore.recoveryStartedAt;
 const dataReadyAt = restore.dataReadyAt;
@@ -269,7 +289,7 @@ const finalAcceptedAt = acceptance.postRebootAcceptedAt;
 
 const backupBoundaryMs = isoMs(backupBoundaryAt, "canary createdAt");
 const exportCreatedMs = isoMs(exportCreatedAt, "manifest created_at");
-const lossMs = isoMs(lossDeclaredAt, "loss_declared_at");
+const lossMs = isoMs(lossDeclaredAt, "loss marker declaredAt");
 const retrievedMs = isoMs(retrievedAt, "retrieval retrieved_at");
 const recoveryStartedMs = isoMs(recoveryStartedAt, "restore recoveryStartedAt");
 const dataReadyMs = isoMs(dataReadyAt, "restore dataReadyAt");
@@ -280,7 +300,7 @@ if (exportCreatedMs < backupBoundaryMs) {
   fail("export manifest predates semantic-canary backup boundary");
 }
 if (lossMs < exportCreatedMs) {
-  fail("loss_declared_at must not predate successful export generation");
+  fail("loss marker declaredAt must not predate successful export generation");
 }
 if (retrievedMs < lossMs) fail("retrieval completed before declared source loss");
 if (recoveryStartedMs < retrievedMs)
@@ -296,6 +316,12 @@ const evidence = {
   sourceSha,
   sourceTag,
   composeProject: acceptance.composeProject,
+  drill: {
+    drillId: lossMarker.drillId,
+    lossMarkerFilename: basename(lossMarkerPath),
+    lossMarkerSha256: sha256(lossMarkerPath),
+    clockSource: lossMarker.clockSource,
+  },
   generation: {
     exportManifestFilename: basename(manifestPath),
     bundleFilename: manifest.bundle_filename,
@@ -339,7 +365,7 @@ const evidence = {
     totalHostLossRecoveryCandidate: true,
   },
   claimBoundary:
-    "Sanitized timing/evidence receipt for one independently retrieved total-host-loss recovery drill. It does not prove a production SLA or independent-target retention policy by itself.",
+    "Sanitized timing/evidence receipt for one independently retrieved total-host-loss recovery drill, bound to an immutable mode-0600 loss-marker receipt. It does not prove a production SLA or independent-target retention policy by itself.",
 };
 
 if (!evidence.recovery.changedBootIdProven) {

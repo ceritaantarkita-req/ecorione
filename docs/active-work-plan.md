@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–5 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR ACTIVE / CHECKPOINTS 1–5 CLOSED / CHECKPOINT 6 LOSS-MARKER PROVENANCE ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -38,7 +38,7 @@ Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling bound
 
 Real-host status remains bounded: no current-revision SumoPod backup has yet been accepted as an off-host copy, and no clean replacement host has recovered the real staging state. Total-host-loss recovery therefore remains a non-claim.
 
-The active work is now runtime execution with checkpoints 4–5 guardrails: governed deployment of exact reviewed `main` -> freeze CD -> source readiness -> independent-target readiness -> fresh export -> **remote retained-generation audit** -> recovery-host fetch -> clean replacement-host preflight -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> loopback exact-source application acceptance -> full replacement-host reboot/post verification -> **sanitized RPO/RTO closure evidence**.
+The active work is now runtime execution with checkpoints 4–6 guardrails: governed deployment of exact reviewed `main` -> freeze CD -> source readiness -> independent-target readiness -> fresh export -> remote retained-generation audit -> **create immutable loss marker for the selected generation before fetch** -> recovery-host fetch -> clean replacement-host preflight -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> loopback exact-source application acceptance -> full replacement-host reboot/post verification -> **sanitized RPO/RTO closure evidence bound to that loss marker**.
 
 Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 / merge `941cb8c9ed237a5417550449c7d73e712b10ba72`. Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed; merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
 
@@ -49,7 +49,8 @@ Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](veri
 Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).  
 Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).  
 Checkpoint 4 evidence: [verification/offhost-dr-checkpoint-4-2026-09-22.md](verification/offhost-dr-checkpoint-4-2026-09-22.md).  
-Checkpoint 5 evidence: [verification/offhost-dr-checkpoint-5-2026-09-22.md](verification/offhost-dr-checkpoint-5-2026-09-22.md).
+Checkpoint 5 evidence: [verification/offhost-dr-checkpoint-5-2026-09-22.md](verification/offhost-dr-checkpoint-5-2026-09-22.md).  
+Checkpoint 6 evidence: [verification/offhost-dr-checkpoint-6-2026-09-22.md](verification/offhost-dr-checkpoint-6-2026-09-22.md).
 
 ## Latest repository-hardening closure
 
