@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -121,6 +122,20 @@ describe("off-host DR source contract", () => {
     expect(fetch).toContain("Retrieved semantic canary checksum mismatch");
     expect(restore).toContain("--canary-state");
     expect(restore).toContain("semanticCanarySha256");
+  });
+
+  it("keeps checkpoint-3 shell entrypoints syntactically valid on Bash hosts", () => {
+    if (process.platform === "win32") return;
+
+    for (const path of [
+      "scripts/staging-offhost-dr-replacement-preflight.sh",
+      "scripts/staging-offhost-dr-start.sh",
+    ]) {
+      const result = spawnSync("bash", ["-n", resolve(ROOT, path)], {
+        encoding: "utf8",
+      });
+      expect(result.status, `${path}: ${result.stderr || result.stdout}`).toBe(0);
+    }
   });
 
   it("keeps replacement-host DR on a standalone loopback-only edge", () => {
