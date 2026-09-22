@@ -36,7 +36,7 @@ Checkpoint 4 repository implementation is CLOSED / PASS through PR #254 exact he
 
 The source host still needs only an RSA-3072+ public key for the later export. The private DR key stays out-of-band and is required only on the recovery side.
 
-Checkpoint 5 adds a read-only remote generation audit and a deterministic sanitized closure-evidence generator. The target audit verifies retained manifest/artifact modes, stems and remote hashes without upload/delete/rename; the closure generator requires an explicit operator-declared source-loss timestamp and computes conservative RPO plus retrieval/data/application/final RTO milestones from the retained receipts.
+Checkpoint 5 adds a read-only remote generation audit and a deterministic sanitized closure-evidence generator. The target audit verifies retained manifest/artifact modes, stems and remote hashes without upload/delete/rename; checkpoint 6 then replaces checkpoint 5's free-form loss-time input with an immutable mode-0600 loss-marker receipt bound to the selected retained generation. Final closure evidence computes conservative RPO plus retrieval/data/application/final RTO milestones from that marker-bound receipt chain.
 
 Checkpoint 5 repository implementation is CLOSED / PASS through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` and merge `941cb8c9ed237a5417550449c7d73e712b10ba72`. Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed. Merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
