@@ -170,9 +170,21 @@ fetch_one() {
   }
 
   remote_q="$(remote_quote "$REMOTE_DIR/$name")"
-  scp "${SSH_OPTS[@]}" "$TARGET:$remote_q" "$part"
-  chmod 0600 "$part"
-  mv "$part" "$final"
+  if ! scp "${SSH_OPTS[@]}" "$TARGET:$remote_q" "$part"; then
+    rm -f "$part"
+    echo "Failed to fetch recovery artifact: $name" >&2
+    return 1
+  fi
+  chmod 0600 "$part" || {
+    rm -f "$part"
+    echo "Failed to secure fetched recovery artifact: $name" >&2
+    return 1
+  }
+  mv "$part" "$final" || {
+    rm -f "$part"
+    echo "Failed to finalize fetched recovery artifact: $name" >&2
+    return 1
+  }
   printf '%s' "$final"
 }
 
