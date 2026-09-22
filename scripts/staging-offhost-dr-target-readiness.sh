@@ -46,6 +46,10 @@ KNOWN_MODE="$(stat -c '%a' "$KNOWN_HOSTS")"
 [[ "$KNOWN_MODE" == "600" || "$KNOWN_MODE" == "644" ]] ||   fail "DR known_hosts must be mode 600 or 644"
 [[ -s "$KNOWN_HOSTS" ]] || fail "DR known_hosts is empty"
 
+: "${ECORIONE_DR_TARGET_MIN_FREE_KIB:?set ECORIONE_DR_TARGET_MIN_FREE_KIB from source readiness backup_required_kib}"
+MIN_TARGET_KIB="$ECORIONE_DR_TARGET_MIN_FREE_KIB"
+[[ "$MIN_TARGET_KIB" =~ ^[0-9]+$ ]] || fail "ECORIONE_DR_TARGET_MIN_FREE_KIB must be numeric"
+
 SSH_OPTS=(
   -F /dev/null
   -i "$IDENTITY"
@@ -74,9 +78,6 @@ AVAILABLE_KIB="$(printf '%s\n' "$RESULT" | sed -n 's/^available_kib=//p')"
 [[ "$MODE" == "700" || "$MODE" == "750" ]] ||   fail "remote backup directory mode must be 700 or 750"
 [[ "$AVAILABLE_KIB" =~ ^[0-9]+$ ]] || fail "unable to verify remote free space"
 
-: "${ECORIONE_DR_TARGET_MIN_FREE_KIB:?set ECORIONE_DR_TARGET_MIN_FREE_KIB from source readiness backup_required_kib}"
-MIN_TARGET_KIB="$ECORIONE_DR_TARGET_MIN_FREE_KIB"
-[[ "$MIN_TARGET_KIB" =~ ^[0-9]+$ ]] || fail "ECORIONE_DR_TARGET_MIN_FREE_KIB must be numeric"
 (( AVAILABLE_KIB >= MIN_TARGET_KIB )) || {
   echo "available_kib=$AVAILABLE_KIB required_min_kib=$MIN_TARGET_KIB" >&2
   fail "independent target free space is below the configured minimum"
