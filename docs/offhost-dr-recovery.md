@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–4 CLOSED / CHECKPOINT 5 RETENTION + RPO/RTO EVIDENCE ACTIVE / RUNTIME EXECUTION PENDING**
+Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–5 CLOSED / RUNTIME EXECUTION PENDING**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -85,6 +85,8 @@ Checkpoint 3 repository implementation is CLOSED / PASS through PR #252 final he
 Checkpoint 3 closure bookkeeping then merged through PR #253 as `801adbc1eca847c77cba4b9bb89264ccf47cbf88` after CI #1822 + Product Eval #1061. Merged-main CI #1823 + Product Eval #1062 passed. Staging Deploy #416/#417 gate-passed and their deploy jobs remained skipped, so the proven runtime did not move.
 
 Checkpoint 4 repository readiness guardrails are now CLOSED / PASS through PR #254 exact head `5245be4a7f0874d57b9b89e4e587aa79db90f8cf` and merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed. Merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 gate-passed and deploy remained skipped, so the SumoPod runtime still did not move.
+
+Checkpoint 5 retained-generation audit and sanitized RPO/RTO evidence tooling is CLOSED / PASS through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` and merge `941cb8c9ed237a5417550449c7d73e712b10ba72`. Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed. Merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 gate-passed and deploy remained skipped, so the proven SumoPod runtime still did not move.
 
 Checkpoint 4 adds read-only runtime readiness guardrails before the first DR mutation and is CLOSED / PASS at the repository boundary. After the governed deployment of the exact current main succeeds and CD is frozen again, place **only** the RSA-3072+ DR public key on the source host and run:
 
@@ -444,7 +446,7 @@ sudo -E bash scripts/staging-offhost-dr-target-audit.sh --check
 
 ## Checkpoint state
 
-Checkpoints 1–4 are CLOSED / PASS at repository boundaries. Checkpoint 5 adds retained-generation audit plus sanitized RPO/RTO closure evidence and is under repository review.
+Checkpoints 1–5 are CLOSED / PASS at repository boundaries. Runtime execution is now the remaining active DR work.
 
 Repository foundation contains:
 
