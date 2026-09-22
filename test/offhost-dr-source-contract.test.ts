@@ -430,9 +430,7 @@ describe("off-host DR source contract", () => {
     expect(reboot).toContain("staging-host-evidence.mjs");
     expect(reboot).toContain("acceptance.lossMarkerSha256");
     expect(reboot).toContain("acceptance.lossMarkerDrillId");
-    expect(reboot).toContain(
-      "acceptance receipt marker-bound retrieval chronology is invalid",
-    );
+    expect(reboot).toContain("acceptance receipt marker-bound retrieval chronology is invalid");
     expect(reboot).toContain("totalHostLossRecoveryCandidate: true");
   });
 });

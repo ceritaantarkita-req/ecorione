@@ -16,8 +16,7 @@ const SHA_RE = /^[0-9a-f]{40}$/;
 const TAG_RE = /^staging-[0-9a-f]{12}$/;
 const PROJECT_RE = /^[a-z0-9][a-z0-9_-]*$/;
 const HASH_RE = /^[0-9a-f]{64}$/;
-const UUID_V4_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u;
 
 function fail(message) {

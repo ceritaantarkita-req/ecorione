@@ -327,10 +327,7 @@ const finalAcceptedAt = acceptance.postRebootAcceptedAt;
 const backupBoundaryMs = isoMs(backupBoundaryAt, "canary createdAt");
 const exportCreatedMs = isoMs(exportCreatedAt, "manifest created_at");
 const lossMs = isoMs(lossDeclaredAt, "loss marker declaredAt");
-const retrievalStartedMs = isoMs(
-  retrievalStartedAt,
-  "retrieval retrieval_started_at",
-);
+const retrievalStartedMs = isoMs(retrievalStartedAt, "retrieval retrieval_started_at");
 const retrievedMs = isoMs(retrievedAt, "retrieval retrieved_at");
 const recoveryStartedMs = isoMs(recoveryStartedAt, "restore recoveryStartedAt");
 const dataReadyMs = isoMs(dataReadyAt, "restore dataReadyAt");
