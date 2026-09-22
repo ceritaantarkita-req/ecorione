@@ -411,7 +411,7 @@ describe("off-host DR source contract", () => {
     expect(start).toContain("Git HEAD does not match recovered source SHA");
     expect(start).toContain("Compose project containers already exist");
     expect(start).toContain("ECORIONE_IMAGE_TAG");
-    expect(start).toContain('build ai');
+    expect(start).toContain("build ai");
     expect(start).toContain('docker image inspect "ecorione:${SOURCE_TAG}"');
     expect(start).toContain("up -d --no-build");
     expect(start).not.toContain("up -d --build");
