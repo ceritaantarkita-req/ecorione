@@ -44,7 +44,7 @@ This convergence did not rerun the full VPS reboot or same-host cold-backup acce
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
-## Off-host Backup & DR — ACTIVE / RUNTIME EXECUTION PENDING
+## Off-host Backup & DR — ACTIVE / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS
 
 Checkpoint 1 repository foundation is CLOSED / PASS through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed. Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
 
