@@ -1,12 +1,6 @@
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import {
-  chmodSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -263,7 +257,9 @@ describe("off-host DR closure timing evidence", () => {
             retrievedFromIndependentTarget: true,
             semanticCanaryStateFilename: "ecorione-dr-test.canary.json",
             semanticCanarySha256: canarySha,
-            restoredVolumes: [{ name: "x", logicalName: "x", treeSha256: "d".repeat(64), fileCount: 1 }],
+            restoredVolumes: [
+              { name: "x", logicalName: "x", treeSha256: "d".repeat(64), fileCount: 1 },
+            ],
           },
           null,
           2,

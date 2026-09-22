@@ -1,19 +1,12 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
-import {
-  existsSync,
-  lstatSync,
-  readFileSync,
-  writeFileSync,
-  chmodSync,
-} from "node:fs";
+import { existsSync, lstatSync, readFileSync, writeFileSync, chmodSync } from "node:fs";
 import { basename, resolve } from "node:path";
 
 const SHA_RE = /^[0-9a-f]{40}$/;
 const HASH_RE = /^[0-9a-f]{64}$/;
 const TAG_RE = /^staging-[0-9a-f]{12}$/;
-const ISO_RE =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 function fail(message) {
   throw new Error("Off-host DR closure evidence: " + message);
@@ -216,9 +209,17 @@ for (const [actual, expected, label] of [
   [retrieval.metadata_sha256, manifest.metadata_sha256, "retrieved metadata SHA-256"],
   [retrieval.canary_sha256, manifest.canary_sha256, "retrieved canary SHA-256"],
   [restore.bundleFilename, manifest.bundle_filename, "restore bundle filename"],
-  [restore.retrievalReceiptFilename, basename(retrievalPath), "restore retrieval receipt filename"],
+  [
+    restore.retrievalReceiptFilename,
+    basename(retrievalPath),
+    "restore retrieval receipt filename",
+  ],
   [restore.semanticCanaryStateFilename, basename(canaryPath), "restore canary filename"],
-  [acceptance.retrievalReceiptFilename, basename(retrievalPath), "acceptance retrieval receipt filename"],
+  [
+    acceptance.retrievalReceiptFilename,
+    basename(retrievalPath),
+    "acceptance retrieval receipt filename",
+  ],
   [acceptance.semanticCanaryStateFilename, basename(canaryPath), "acceptance canary filename"],
 ]) {
   requireEqual(actual, expected, label);
@@ -236,8 +237,16 @@ for (const [hash, label] of [
 
 const canarySha = sha256(canaryPath);
 requireEqual(canarySha, manifest.canary_sha256, "local canary SHA-256 vs export manifest");
-requireEqual(canarySha, restore.semanticCanarySha256, "local canary SHA-256 vs restore receipt");
-requireEqual(canarySha, acceptance.semanticCanarySha256, "local canary SHA-256 vs acceptance receipt");
+requireEqual(
+  canarySha,
+  restore.semanticCanarySha256,
+  "local canary SHA-256 vs restore receipt",
+);
+requireEqual(
+  canarySha,
+  acceptance.semanticCanarySha256,
+  "local canary SHA-256 vs acceptance receipt",
+);
 
 if (
   !Number.isInteger(acceptance.restoredVolumeCount) ||
@@ -274,10 +283,12 @@ if (lossMs < exportCreatedMs) {
   fail("loss_declared_at must not predate successful export generation");
 }
 if (retrievedMs < lossMs) fail("retrieval completed before declared source loss");
-if (recoveryStartedMs < retrievedMs) fail("real-volume recovery started before retrieval completed");
+if (recoveryStartedMs < retrievedMs)
+  fail("real-volume recovery started before retrieval completed");
 if (dataReadyMs < recoveryStartedMs) fail("data-ready precedes recovery start");
 if (appReadyMs < dataReadyMs) fail("application acceptance precedes data-ready");
-if (finalMs < appReadyMs) fail("final changed-boot-id acceptance precedes application acceptance");
+if (finalMs < appReadyMs)
+  fail("final changed-boot-id acceptance precedes application acceptance");
 
 const evidence = {
   schemaVersion: 1,
@@ -307,32 +318,12 @@ const evidence = {
     finalPostRebootAcceptedAt: finalAcceptedAt,
   },
   measuredSeconds: {
-    conservativeRpoSeconds: secondsBetween(
-      backupBoundaryMs,
-      lossMs,
-      "conservative RPO",
-    ),
-    exportAgeAtLossSeconds: secondsBetween(
-      exportCreatedMs,
-      lossMs,
-      "export age at loss",
-    ),
-    retrievalReadyRtoSeconds: secondsBetween(
-      lossMs,
-      retrievedMs,
-      "retrieval-ready RTO",
-    ),
+    conservativeRpoSeconds: secondsBetween(backupBoundaryMs, lossMs, "conservative RPO"),
+    exportAgeAtLossSeconds: secondsBetween(exportCreatedMs, lossMs, "export age at loss"),
+    retrievalReadyRtoSeconds: secondsBetween(lossMs, retrievedMs, "retrieval-ready RTO"),
     dataReadyRtoSeconds: secondsBetween(lossMs, dataReadyMs, "data-ready RTO"),
-    applicationReadyRtoSeconds: secondsBetween(
-      lossMs,
-      appReadyMs,
-      "application-ready RTO",
-    ),
-    finalRecoveryRtoSeconds: secondsBetween(
-      lossMs,
-      finalMs,
-      "final recovery RTO",
-    ),
+    applicationReadyRtoSeconds: secondsBetween(lossMs, appReadyMs, "application-ready RTO"),
+    finalRecoveryRtoSeconds: secondsBetween(lossMs, finalMs, "final recovery RTO"),
   },
   recovery: {
     restoredVolumeCount: restore.restoredVolumes.length,
@@ -366,5 +357,7 @@ console.log(`output=${outputPath}`);
 console.log(`source_sha=${sourceSha}`);
 console.log(`conservative_rpo_seconds=${evidence.measuredSeconds.conservativeRpoSeconds}`);
 console.log(`data_ready_rto_seconds=${evidence.measuredSeconds.dataReadyRtoSeconds}`);
-console.log(`application_ready_rto_seconds=${evidence.measuredSeconds.applicationReadyRtoSeconds}`);
+console.log(
+  `application_ready_rto_seconds=${evidence.measuredSeconds.applicationReadyRtoSeconds}`,
+);
 console.log(`final_recovery_rto_seconds=${evidence.measuredSeconds.finalRecoveryRtoSeconds}`);
