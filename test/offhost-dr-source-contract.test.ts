@@ -49,7 +49,14 @@ describe("off-host DR source contract", () => {
     expect(transfer).toContain("IdentitiesOnly=yes");
     expect(transfer).toContain("ClearAllForwardings=yes");
     expect(transfer).toContain("sha256sum");
-    expect(transfer).toContain(".part-$$");
+    expect(transfer).toContain(".part-$");
+    expect(transfer).toContain("test ! -e $final_q");
+    expect(transfer).toContain("rm -f $part_q");
+    expect(transfer).not.toContain("mv -f");
+    expect(transfer.indexOf('transfer_one "$CANARY" "$CANARY_NAME"')).toBeLessThan(
+      transfer.indexOf('transfer_one "$MANIFEST" "$MANIFEST_NAME"'),
+    );
+    expect(transfer).toContain("generation commit marker");
     expect(transfer).toContain("Private DR decryption key is intentionally not transferred");
     expect(transfer).not.toContain("ssh-keyscan");
     expect(transfer).not.toContain("eval ");
