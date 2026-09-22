@@ -101,6 +101,8 @@ describe("off-host DR source contract", () => {
     expect(fetch).toContain("loss_declared_at=");
     expect(fetch).toContain("StrictHostKeyChecking=yes");
     expect(fetch).toContain("Retrieved bundle checksum mismatch");
+    expect(fetch).toContain("Failed to fetch recovery artifact");
+    expect(fetch).toContain('if ! scp "${SSH_OPTS[@]}"');
     expect(fetch.indexOf("LOSS_MARKER_INFO")).toBeLessThan(
       fetch.indexOf('MANIFEST_PATH="$(fetch_one "$MANIFEST_NAME")"'),
     );
