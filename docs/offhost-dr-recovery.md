@@ -64,17 +64,16 @@ The JSON sidecar contains cryptographic metadata needed for decryption and integ
 
 ## Runtime activation prerequisite
 
-Checkpoint 2 repository tooling is CLOSED / PASS through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Exact merged-main CI/Product Eval/MCP gates passed. Staging Deploy #372/#373 passed their gate but intentionally skipped the deploy job because `ECORIONE_STAGING_CD_ENABLED` remained disabled.
+Repository checkpoints 1–6 are CLOSED / PASS. The current real staging runtime still predates those DR-tooling merges, so real DR evidence must begin with one governed deployment of the **exact current reviewed `main`** through the existing PCS-08 path. Do **not** copy newer DR scripts into the older proven checkout and call that current-revision evidence.
 
-Checkpoint 3 adds the standalone replacement-host boundary and must itself be part of the exact reviewed staging revision before real DR evidence begins. Do **not** copy DR scripts into an older proven checkout and then call that current-revision evidence.
-
-After checkpoint 3 merges and its exact merged-main repository gates pass:
+To activate runtime evidence:
 
 1. temporarily enable the existing governed PCS-08 staging deployment gate;
-2. manually dispatch **Staging Deploy** for that exact current `main` SHA;
+2. manually dispatch **Staging Deploy** for the exact current reviewed `main` SHA;
 3. require public smoke, authenticated Operations, exact-host evidence, and release-receipt update to pass;
-4. freeze automatic staging deployment back to disabled immediately after PASS;
-5. use the resulting release receipt as the source identity for the fresh DR export.
+4. confirm the release receipt records that exact deployed SHA/tag;
+5. freeze automatic staging deployment back to disabled immediately after PASS;
+6. use that release receipt as the source identity for source readiness and the fresh DR export.
 
 The current connector can read workflow state but does not expose repository-variable mutation or workflow-dispatch actions. Do not bypass that safety boundary by editing the deployment workflow to force a run.
 
@@ -389,7 +388,7 @@ The isolated archive restore above proves portable data integrity. Final DR clos
 14. require exact-source/host evidence to match the recorded SHA;
 15. perform a full replacement-host reboot and repeat semantic/edge/Ops/host evidence with a changed boot ID;
 16. record sanitized timestamps for recovery start, data-ready, application-ready, and final acceptance;
-17. generate the final timing receipt with an explicit operator-declared source-loss timestamp.
+17. generate the final timing receipt bound to the immutable loss-marker receipt created before independent fetch.
 
 After the retained generation is selected and **before independent fetch**, create the immutable recovery clock marker:
 
@@ -468,7 +467,7 @@ Repository foundation contains:
 - deterministic source-contract coverage;
 - this operator runbook.
 
-Checkpoint 2 still intentionally makes these non-claims until real infrastructure execution occurs:
+Repository checkpoints 1–6 still intentionally make these non-claims until real infrastructure execution occurs:
 
 - no current-revision SumoPod backup has yet been copied off-host by this workstream;
 - no independent target has been recorded as configured evidence;
