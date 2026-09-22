@@ -150,7 +150,7 @@ describe("off-host DR source contract", () => {
     expect(overlay).toContain("!override");
     expect(overlay).toContain("Caddyfile.sumopod");
     expect(overlay).not.toContain("traefik");
-    expect(overlay).not.toContain("inmydraft-demos_web");
+    expect(overlay).not.toContain("external: true");
     expect(overlay).not.toContain('"80:80"');
     expect(overlay).not.toContain('"443:443"');
 
