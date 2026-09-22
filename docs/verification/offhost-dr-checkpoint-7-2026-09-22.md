@@ -71,7 +71,7 @@ The guarded real-volume restore now rejects retrieval receipts unless they conta
 
 The restore receipt propagates those fields.
 
-Application acceptance then requires and propagates the same marker-bound fields into the acceptance receipt.
+Application acceptance then requires and propagates the same marker-bound fields into the acceptance receipt. Reboot evidence also rejects an acceptance receipt that lost the marker identity or has impossible marker/retrieval chronology; its post-reboot mutation preserves the full receipt via object spread.
 
 ## Final closure cross-binding
 
@@ -134,6 +134,7 @@ Source-contract coverage locks:
 - marker SHA/drill/timing fields exist in retrieval evidence;
 - restore rejects unbound/invalid retrieval chronology;
 - acceptance propagates marker identity;
+- reboot evidence keeps the marker-bound chain fail-closed;
 - final closure cross-binds all marker fields;
 - fetch remains strict-host-key and never uses `ssh-keyscan`.
 
