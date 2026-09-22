@@ -1,6 +1,6 @@
 # Off-host DR checkpoint 7 — marker-before-fetch enforcement — 2026-09-22
 
-Status: **IMPLEMENTED / REPOSITORY GATES PENDING / REAL-HOST DR STILL PENDING**
+Status: **CLOSED / PASS AT REPOSITORY BOUNDARY / REAL-HOST DR STILL PENDING**
 
 ## Scope
 
@@ -157,13 +157,29 @@ No gate was weakened. The repository's locked Prettier toolchain formatted only 
 442c7c3c64125f05dcb9874cfa9fc6459a33524b
 ```
 
-The final exact-head repository gates must rerun after this evidence commit.
+Final exact-head repository gates then passed on PR #263 head `ba7ef7d6922c0177be582d5734095ed154f72622`: CI #1870 PASS and Product Eval #1109 PASS.
+
+## Repository closure
+
+Checkpoint 7 implementation closed through PR #263.
+
+```text
+PR exact head       ba7ef7d6922c0177be582d5734095ed154f72622
+CI                  #1870 PASS
+Product Eval        #1109 PASS
+merge main          cf8921f19a5c78db2d3d2fd075ac232983a0bbb4
+merged-main CI      #1871 PASS
+merged-main Product #1110 PASS
+Staging Deploy      #504 gate PASS / deploy SKIPPED
+Staging Deploy      #505 gate PASS / deploy SKIPPED
+```
+
+Both post-merge Staging Deploy triggers kept the deploy job skipped. Checkpoint-7 repository closure therefore did **not** change the SumoPod runtime.
 
 ## Current non-claims
 
 Checkpoint 7 does **not** prove:
 
-- final exact-head repository gates yet;
 - a newer governed SumoPod deployment;
 - a real marker-before-fetch execution;
 - a real independent retrieval;
@@ -176,10 +192,9 @@ Those remain runtime evidence boundaries.
 
 Repository-side:
 
-1. require exact-head CI + Product Eval + relevant acceptance gates;
-2. merge only the reviewed head;
-3. require merged-main gates;
-4. converge canonical docs with exact identities.
+1. checkpoint 7 is CLOSED / PASS through PR #263 / merge `cf8921f19a5c78db2d3d2fd075ac232983a0bbb4`;
+2. preserve this docs-only closure as bookkeeping only;
+3. do not claim SumoPod/runtime movement from repository closure.
 
 Runtime-side after repository closure:
 

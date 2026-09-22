@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **OFF-HOST DR ACTIVE / CHECKPOINTS 1–6 CLOSED / CHECKPOINT 7 MARKER-BEFORE-FETCH ENFORCEMENT ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–7 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -43,6 +43,8 @@ The active work is now runtime execution with checkpoints 4–7 guardrails: gove
 Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` (CI #1850, Product Eval #1089, MCP #996, Desktop Installer #184) and merge `941cb8c9ed237a5417550449c7d73e712b10ba72` (merged-main CI #1851, Product Eval #1090, MCP #997). Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
 
 Checkpoint 6 is CLOSED / PASS at the repository loss-marker provenance boundary through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` (CI #1857, Product Eval #1096, MCP #1001, Desktop Installer #188) and merge `cb043b47a2c899e3c0585b06db4992fcc727c723` (merged-main CI #1858, Product Eval #1097, MCP #1002). Staging Deploy #480/#481 gate-passed and deploy remained skipped. Real loss-marker and timing evidence still require runtime execution.
+
+Checkpoint 7 is CLOSED / PASS at the repository marker-before-fetch enforcement boundary through PR #263 exact head `ba7ef7d6922c0177be582d5734095ed154f72622` (CI #1870, Product Eval #1109) and merge `cf8921f19a5c78db2d3d2fd075ac232983a0bbb4` (merged-main CI #1871, Product Eval #1110). Staging Deploy #504/#505 gate-passed and deploy remained skipped. Real marker-before-fetch, retrieval, restore, and timing evidence still require runtime execution.
 
 Checkpoint 4 is CLOSED / PASS at the repository boundary through PR #254 / merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed; merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 gate-passed and deploy remained skipped. Source/target runtime readiness still requires real-host PASS evidence.
 
