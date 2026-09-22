@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **OFF-HOST DR ACTIVE / CHECKPOINTS 1–5 CLOSED / CHECKPOINT 6 LOSS-MARKER PROVENANCE ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–6 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -40,7 +40,9 @@ Real-host status remains bounded: no current-revision SumoPod backup has yet bee
 
 The active work is now runtime execution with checkpoints 4–6 guardrails: governed deployment of exact reviewed `main` -> freeze CD -> source readiness -> independent-target readiness -> fresh export -> remote retained-generation audit -> **create immutable loss marker for the selected generation before fetch** -> recovery-host fetch -> clean replacement-host preflight -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> loopback exact-source application acceptance -> full replacement-host reboot/post verification -> **sanitized RPO/RTO closure evidence bound to that loss marker**.
 
-Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 / merge `941cb8c9ed237a5417550449c7d73e712b10ba72`. Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed; merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
+Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 / merge `941cb8c9ed237a5417550449c7d73e712b10ba72`.
+Checkpoint 6 is CLOSED / PASS at the repository loss-marker provenance boundary through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` (CI #1857, Product Eval #1096, MCP #1001, Desktop Installer #188) and merge `cb043b47a2c899e3c0585b06db4992fcc727c723` (merged-main CI #1858, Product Eval #1097, MCP #1002). Staging Deploy #480/#481 gate-passed and deploy remained skipped. Real loss-marker and timing evidence still require runtime execution.
+ Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed; merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
 
 Checkpoint 4 is CLOSED / PASS at the repository boundary through PR #254 / merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed; merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 gate-passed and deploy remained skipped. Source/target runtime readiness still requires real-host PASS evidence.
 

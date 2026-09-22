@@ -1,6 +1,6 @@
 # Off-host DR checkpoint 6 — immutable loss-marker provenance — 2026-09-22
 
-Status: **IMPLEMENTED / REPOSITORY GATES PENDING / REAL-HOST DR STILL PENDING**
+Status: **CLOSED / PASS AT REPOSITORY BOUNDARY / REAL-HOST DR STILL PENDING**
 
 ## Scope
 
@@ -142,6 +142,26 @@ No gate was bypassed or weakened. The repository's locked Prettier toolchain for
 ```
 
 The final exact-head CI/Product Eval/MCP/Desktop gates must rerun after this normal evidence commit.
+
+## Repository closure
+
+Checkpoint 6 implementation closed through PR #258.
+
+```text
+PR exact head       b8379a2c756e2e4ea3e00424c360072b6a910829
+CI                  #1857 PASS
+Product Eval        #1096 PASS
+MCP HTTPS           #1001 PASS
+Desktop Installer   #188 PASS
+merge main          cb043b47a2c899e3c0585b06db4992fcc727c723
+merged-main CI      #1858 PASS
+merged-main Product #1097 PASS
+merged-main MCP     #1002 PASS
+Staging Deploy      #480 gate PASS / deploy SKIPPED
+Staging Deploy      #481 gate PASS / deploy SKIPPED
+```
+
+Both post-merge Staging Deploy triggers kept the deploy job skipped. Checkpoint-6 repository closure therefore did **not** change the SumoPod runtime.
 
 ## Current non-claims
 

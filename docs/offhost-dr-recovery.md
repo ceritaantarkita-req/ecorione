@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–5 CLOSED / CHECKPOINT 6 LOSS-MARKER PROVENANCE ACTIVE / RUNTIME EXECUTION PENDING**
+Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–6 CLOSED / RUNTIME EXECUTION PENDING**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -88,7 +88,7 @@ Checkpoint 4 repository readiness guardrails are now CLOSED / PASS through PR #2
 
 Checkpoint 5 retained-generation audit and sanitized RPO/RTO evidence tooling is CLOSED / PASS through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` and merge `941cb8c9ed237a5417550449c7d73e712b10ba72`. Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed. Merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 gate-passed and deploy remained skipped, so the proven SumoPod runtime still did not move.
 
-Checkpoint 6 hardens recovery-clock provenance by replacing the free-form closure `loss_declared_at` argument with an immutable mode-0600 loss-marker receipt bound to the selected retained export manifest. Repository review is active; no runtime claim is made yet.
+Checkpoint 6 hardens recovery-clock provenance by replacing the free-form closure `loss_declared_at` argument with an immutable mode-0600 loss-marker receipt bound to the selected retained export manifest. It is CLOSED / PASS at the repository boundary through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` and merge `cb043b47a2c899e3c0585b06db4992fcc727c723`. Exact-head CI #1857, Product Eval #1096, MCP #1001, and Desktop Installer #188 passed. Merged-main CI #1858, Product Eval #1097, and MCP #1002 passed. Staging Deploy #480/#481 gate-passed and deploy remained skipped.
 
 Checkpoint 4 adds read-only runtime readiness guardrails before the first DR mutation and is CLOSED / PASS at the repository boundary. After the governed deployment of the exact current main succeeds and CD is frozen again, place **only** the RSA-3072+ DR public key on the source host and run:
 
@@ -458,7 +458,7 @@ sudo -E bash scripts/staging-offhost-dr-target-audit.sh --check
 
 ## Checkpoint state
 
-Checkpoints 1–5 are CLOSED / PASS at repository boundaries. Checkpoint 6 loss-marker provenance is under repository review. Runtime execution remains the active DR work.
+Checkpoints 1–6 are CLOSED / PASS at repository boundaries. Runtime execution remains the active DR work.
 
 Repository foundation contains:
 
