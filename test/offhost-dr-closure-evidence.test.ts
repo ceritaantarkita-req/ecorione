@@ -20,6 +20,22 @@ function envFile(values: Record<string, string>) {
     .concat("\n");
 }
 
+function lossMarker(manifestName: string, declaredAt: string) {
+  return `${JSON.stringify(
+    {
+      schemaVersion: 1,
+      kind: "ecorione-offhost-dr-loss-marker",
+      drillId: "11111111-2222-4333-8444-555555555555",
+      declaredAt,
+      expectedExportManifestFilename: manifestName,
+      clockSource: "recovery-host-system-utc",
+      claimBoundary: "test fixture",
+    },
+    null,
+    2,
+  )}\n`;
+}
+
 describe("off-host DR closure timing evidence", () => {
   it("computes conservative RPO and staged RTO from final recovery receipts", () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-dr-evidence-"));
@@ -32,6 +48,7 @@ describe("off-host DR closure timing evidence", () => {
       );
       const restorePath = join(dir, "restore.json");
       const acceptancePath = join(dir, "acceptance.json");
+      const lossMarkerPath = join(dir, "loss-marker.json");
       const outputPath = join(dir, "closure.json");
 
       const canary = {
@@ -142,6 +159,8 @@ describe("off-host DR closure timing evidence", () => {
         )}\n`,
       );
 
+      write600(lossMarkerPath, lossMarker(`${stem}.receipt.env`, "2026-09-22T01:00:00Z"));
+
       const result = spawnSync(
         process.execPath,
         [
@@ -156,8 +175,8 @@ describe("off-host DR closure timing evidence", () => {
           restorePath,
           "--acceptance-receipt",
           acceptancePath,
-          "--loss-declared-at",
-          "2026-09-22T01:00:00Z",
+          "--loss-marker",
+          lossMarkerPath,
           "--output",
           outputPath,
         ],
@@ -171,6 +190,12 @@ describe("off-host DR closure timing evidence", () => {
 
       const evidence = JSON.parse(readFileSync(outputPath, "utf8"));
       expect(evidence.sourceSha).toBe(sourceSha);
+      expect(evidence.drill).toMatchObject({
+        drillId: "11111111-2222-4333-8444-555555555555",
+        lossMarkerFilename: "loss-marker.json",
+        clockSource: "recovery-host-system-utc",
+      });
+      expect(evidence.drill.lossMarkerSha256).toMatch(/^[0-9a-f]{64}$/);
       expect(evidence.measuredSeconds).toEqual({
         conservativeRpoSeconds: 3600,
         exportAgeAtLossSeconds: 3300,
@@ -194,6 +219,7 @@ describe("off-host DR closure timing evidence", () => {
       const retrievalPath = join(dir, "ecorione-dr-test.retrieval.env");
       const restorePath = join(dir, "restore.json");
       const acceptancePath = join(dir, "acceptance.json");
+      const lossMarkerPath = join(dir, "loss-marker.json");
       const outputPath = join(dir, "closure.json");
       const canaryRaw = `${JSON.stringify(
         {
@@ -296,6 +322,11 @@ describe("off-host DR closure timing evidence", () => {
         )}\n`,
       );
 
+      write600(
+        lossMarkerPath,
+        lossMarker("ecorione-dr-test.receipt.env", "2026-09-21T23:59:00Z"),
+      );
+
       const result = spawnSync(
         process.execPath,
         [
@@ -310,8 +341,8 @@ describe("off-host DR closure timing evidence", () => {
           restorePath,
           "--acceptance-receipt",
           acceptancePath,
-          "--loss-declared-at",
-          "2026-09-21T23:59:00Z",
+          "--loss-marker",
+          lossMarkerPath,
           "--output",
           outputPath,
         ],
