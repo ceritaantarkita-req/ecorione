@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–6 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR ACTIVE / CHECKPOINTS 1–6 CLOSED / CHECKPOINT 7 MARKER-BEFORE-FETCH ENFORCEMENT ACTIVE / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -42,6 +42,8 @@ Checkpoint 5 repository implementation is CLOSED / PASS through PR #256 exact he
 
 Checkpoint 6 removes the free-form timing input from DR closure. A mode-0600 immutable loss-marker receipt now records current recovery-host UTC time, drill UUID, and selected export-manifest filename before fetch; closure evidence must bind to that marker and records its SHA-256.
 
+Checkpoint 7 moves that marker from a final-evidence-only input into the actual recovery gate. Independent fetch now requires the exact marker before the first SCP, writes marker identity/hash plus retrieval-start time into the retrieval receipt, restore rejects unbound retrieval evidence, acceptance propagates the same chain, and final closure cross-checks all receipts against the actual marker file.
+
 Checkpoint 6 repository implementation is CLOSED / PASS through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` and merge `cb043b47a2c899e3c0585b06db4992fcc727c723`. Exact-head CI #1857, Product Eval #1096, MCP #1001, and Desktop Installer #188 passed. Merged-main CI #1858, Product Eval #1097, and MCP #1002 passed. Staging Deploy #480/#481 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
 This checkpoint does **not** claim a real off-host copy, three real retained generations, a real loss marker, source/target readiness PASS, measured real-host RPO/RTO, or total-host-loss recovery. Those remain runtime evidence gates.
@@ -52,7 +54,8 @@ Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](veri
 Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).  
 Checkpoint 4 evidence: [verification/offhost-dr-checkpoint-4-2026-09-22.md](verification/offhost-dr-checkpoint-4-2026-09-22.md).  
 Checkpoint 5 evidence: [verification/offhost-dr-checkpoint-5-2026-09-22.md](verification/offhost-dr-checkpoint-5-2026-09-22.md).  
-Checkpoint 6 evidence: [verification/offhost-dr-checkpoint-6-2026-09-22.md](verification/offhost-dr-checkpoint-6-2026-09-22.md).
+Checkpoint 6 evidence: [verification/offhost-dr-checkpoint-6-2026-09-22.md](verification/offhost-dr-checkpoint-6-2026-09-22.md).  
+Checkpoint 7 evidence: [verification/offhost-dr-checkpoint-7-2026-09-22.md](verification/offhost-dr-checkpoint-7-2026-09-22.md).
 
 ## Historical operator decision that opened PCS — 2026-09-20
 
