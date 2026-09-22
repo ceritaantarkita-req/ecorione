@@ -200,11 +200,44 @@ Before preflight the loopback port was free and the project had no containers or
 
 This closes the final read-only gate before real recovery-volume mutation.
 
+## Guarded real project-volume restore — PASS
+
+The guarded restore reran isolated verification successfully, then created and fingerprint-verified the exact 12 Compose-owned recovery volumes:
+
+```text
+ecorione-staging_artifact_data
+ecorione-staging_caddy_config
+ecorione-staging_caddy_data
+ecorione-staging_connect_data
+ecorione-staging_context_data
+ecorione-staging_flow_data
+ecorione-staging_hub_data
+ecorione-staging_rnd_data
+ecorione-staging_sandbox_data
+ecorione-staging_space_data
+ecorione-staging_sync_data
+ecorione-staging_temporal_db
+```
+
+The restore emitted:
+
+```text
+PASS ECORIONE clean-host real project-volume restore
+restore_receipt=/var/lib/ecorione-dr/restore-b27c1e5833be-1790099700511.json
+source_sha=b27c1e5833be0a0fccf3f525d82ae8853cd22113
+source_tag=staging-b27c1e5833be
+volumes=12
+```
+
+Post-restore inventory confirmed exactly 12 project-labelled volumes and zero project containers. The application has not been started yet.
+
+Operator note: `/var/lib/ecorione-dr` is root-controlled. A wildcard such as `sudo ls /var/lib/ecorione-dr/restore-*.json` can fail because wildcard expansion occurs in the caller's shell before `sudo`. Use the exact emitted receipt path, or run the wildcard inside a root shell.
+
 ## Next runtime gate
 
 The next sequence is now:
 
-1. perform the guarded real-volume restore;
+1. verify the exact emitted restore receipt path/mode and receipt fields;
 2. start through the standalone loopback recovery overlay;
 3. pass semantic canary, protected-route, MCP, authenticated Operations and exact-source acceptance;
 4. capture reboot baseline, reboot the replacement host, and pass post-reboot evidence with changed boot ID;

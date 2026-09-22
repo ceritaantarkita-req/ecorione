@@ -338,6 +338,8 @@ Before real-volume mutation the restore tool reruns the isolated Docker verifier
 
 On success it writes a mode-0600 restore receipt under `/var/lib/ecorione-dr`. At this point data is ready, but the application and secrets are not yet accepted.
 
+Operational note: the recovery-state directory is root-controlled. Shell wildcard expansion occurs before `sudo`, so a command such as `sudo ls /var/lib/ecorione-dr/restore-*.json` may report no match when the unprivileged caller cannot traverse that directory. Prefer the exact `restore_receipt=` path printed by the restore tool, or perform wildcard expansion inside a root shell such as `sudo sh -c 'ls -1t /var/lib/ecorione-dr/restore-*.json'`.
+
 Restore the required deployment env, Vault master key, operator credentials, OAuth/provider secrets, and other out-of-band configuration from their separately protected recovery source. Then check out the exact recovered source SHA.
 
 Start the recovered topology through the guarded standalone helper rather than a hand-written Compose command:
