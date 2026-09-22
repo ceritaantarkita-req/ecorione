@@ -1,6 +1,6 @@
 # Off-host DR checkpoint 3 — standalone replacement-host recovery boundary — 2026-09-22
 
-Status: **IMPLEMENTED / REPOSITORY GATES PENDING / REAL-HOST DR STILL PENDING**
+Status: **CLOSED / PASS AT REPOSITORY BOUNDARY / REAL-HOST DR STILL PENDING**
 
 ## Scope
 
@@ -164,3 +164,24 @@ Runtime-side next steps after that repository closure:
 7. provision a clean replacement host and continue through fetch -> preflight -> restore -> standalone loopback start -> acceptance -> reboot/post evidence.
 
 No workflow bypass, ad-hoc live-source copy, or production promotion is authorized by this checkpoint.
+
+## Repository closure
+
+PR #252 final exact head `b4986b081a0e76c660b6f09e2f2e2ef46f003d57` passed:
+
+- CI #1820 — PASS;
+- Product Eval #1059 — PASS;
+- MCP External HTTPS Acceptance #970 — PASS;
+- Desktop Installer #160 — PASS.
+
+PR #252 squash-merged to `main` as `9e522e62212b5a4170ad4947c4bdd75c28f34464`.
+
+Exact merged-main gates then passed:
+
+- CI #1821 — PASS;
+- Product Eval #1060 — PASS;
+- MCP External HTTPS Acceptance #971 — PASS.
+
+Staging Deploy #412 and #413 both passed their current-main gate but the deploy job was intentionally skipped because `ECORIONE_STAGING_CD_ENABLED` remained disabled. Therefore checkpoint 3 repository closure caused **no SumoPod runtime mutation**.
+
+Checkpoint 3 is CLOSED / PASS at the repository boundary. The active workstream is now **runtime execution of Off-host Backup & DR**: governed deployment of the exact reviewed recovery tooling, real independent off-host export, clean replacement-host retrieval/restore, semantic acceptance, and changed-boot-id reboot proof.
