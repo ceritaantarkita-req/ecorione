@@ -280,13 +280,7 @@ async function main() {
 
   const semanticCanary = run(
     process.execPath,
-    [
-      "scripts/staging-offhost-dr-canary.mjs",
-      "--phase",
-      "post",
-      "--state",
-      canaryState,
-    ],
+    ["scripts/staging-offhost-dr-canary.mjs", "--phase", "post", "--state", canaryState],
     {
       env: {
         ...process.env,

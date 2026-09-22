@@ -208,10 +208,9 @@ if (phase === "baseline") {
   }
   await jsonRequest(`${hubUrl}/v1/history/verify`, { token });
 
-  const episode = await jsonRequest(
-    `${contextUrl}/v1/episodes/${state.context.episodeId}`,
-    { token },
-  );
+  const episode = await jsonRequest(`${contextUrl}/v1/episodes/${state.context.episodeId}`, {
+    token,
+  });
   if (episode.rawText !== state.context.rawText) {
     throw new Error("Recovered DR canary Context content changed");
   }

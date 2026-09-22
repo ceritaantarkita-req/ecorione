@@ -88,9 +88,7 @@ async function main() {
     fail("run as root");
   }
 
-  const { receipt: receiptPath, canary: canaryStatePath } = parseArgs(
-    process.argv.slice(2),
-  );
+  const { receipt: receiptPath, canary: canaryStatePath } = parseArgs(process.argv.slice(2));
   assertRegularMode600(receiptPath, "restore receipt");
   assertRegularMode600(canaryStatePath, "semantic canary state");
   const restore = JSON.parse(readFileSync(receiptPath, "utf8"));
@@ -210,13 +208,7 @@ async function main() {
 
   const semanticCanary = run(
     process.execPath,
-    [
-      "scripts/staging-offhost-dr-canary.mjs",
-      "--phase",
-      "post",
-      "--state",
-      canaryStatePath,
-    ],
+    ["scripts/staging-offhost-dr-canary.mjs", "--phase", "post", "--state", canaryStatePath],
     {
       env: {
         ...process.env,

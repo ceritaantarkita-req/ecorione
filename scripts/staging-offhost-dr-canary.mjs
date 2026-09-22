@@ -105,11 +105,10 @@ if (phase === "baseline") {
 } else {
   assertMode600(state);
   const raw = readFileSync(state, "utf8");
-  const output = run(
-    "docker",
-    ["exec", "-i", hubContainer, "node", INNER, "--phase", "post"],
-    { input: raw, label: "DR semantic canary post verification" },
-  );
+  const output = run("docker", ["exec", "-i", hubContainer, "node", INNER, "--phase", "post"], {
+    input: raw,
+    label: "DR semantic canary post verification",
+  });
   const parsed = JSON.parse(output);
   if (parsed?.schemaVersion !== 1 || parsed?.phase !== "post-verified") {
     fail("invalid semantic canary post output");
