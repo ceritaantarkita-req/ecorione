@@ -71,8 +71,7 @@ export ECORIONE_COMPOSE_OVERLAY="$OVERLAY"
 export ECORIONE_EDGE_NETWORK="$EDGE_NETWORK"
 export ECORIONE_PUBLIC_BASE_URL="$PUBLIC_BASE_URL"
 
-node scripts/staging-pcs09-inventory.mjs --strict >/tmp/ecorione-dr-source-readiness-pcs09.$$.json
-trap 'rm -f /tmp/ecorione-dr-source-readiness-pcs09.$$.json' EXIT
+node scripts/staging-pcs09-inventory.mjs --strict >/dev/null
 
 COMPOSE_ARGS=(
   compose
@@ -125,9 +124,6 @@ AI_CONTAINER="$(docker "${COMPOSE_ARGS[@]}" ps -q ai)"
 [[ -n "$AI_CONTAINER" ]] || fail "AI container is missing"
 AI_IMAGE="$(docker inspect --format '{{.Config.Image}}' "$AI_CONTAINER")"
 [[ "$AI_IMAGE" == "ecorione:$CURRENT_TAG" ]] ||   fail "AI image tag does not match release receipt"
-
-trap - EXIT
-rm -f /tmp/ecorione-dr-source-readiness-pcs09.$$.json
 
 echo "PASS ECORIONE source-host DR readiness"
 echo "source_sha=$CURRENT_SHA"
