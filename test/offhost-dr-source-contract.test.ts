@@ -67,7 +67,7 @@ describe("off-host DR source contract", () => {
     expect(exportScript).toContain("staging-pcs09-backup.sh --apply");
     expect(exportScript).toContain("Fresh backup SHA does not match");
     expect(exportScript).toContain("staging-offhost-dr-bundle.mjs");
-    expect(exportScript).toContain('-$.json"');
+    expect(exportScript).toContain('-$$.json"');
     expect(exportScript).toContain('rm -f "$CANARY_TMP"');
     expect(exportScript).toContain("export_manifest_filename");
     expect(exportScript).toContain("staging-offhost-dr-transfer.sh --apply");
