@@ -130,6 +130,8 @@ describe("off-host DR source contract", () => {
     for (const path of [
       "scripts/staging-offhost-dr-replacement-preflight.sh",
       "scripts/staging-offhost-dr-start.sh",
+      "scripts/staging-offhost-dr-source-readiness.sh",
+      "scripts/staging-offhost-dr-target-readiness.sh",
     ]) {
       const result = spawnSync("bash", ["-n", resolve(ROOT, path)], {
         encoding: "utf8",
@@ -257,6 +259,34 @@ describe("off-host DR source contract", () => {
     expect(acceptance).toContain("expectedMcpResource");
     expect(reboot).toContain("DR acceptance base origin does not match the acceptance receipt");
     expect(reboot).toContain("DR expected MCP resource does not match the acceptance receipt");
+  });
+
+  it("keeps runtime DR readiness checks read-only and capacity-bound", () => {
+    const sourceReadiness = source("scripts/staging-offhost-dr-source-readiness.sh");
+    const targetReadiness = source("scripts/staging-offhost-dr-target-readiness.sh");
+
+    expect(sourceReadiness).toContain("/var/lib/ecorione-staging/deploy-state.env");
+    expect(sourceReadiness).toContain("staging-pcs09-inventory.mjs --strict");
+    expect(sourceReadiness).toContain("Git HEAD does not match release receipt");
+    expect(sourceReadiness).toContain("AI image tag does not match release receipt");
+    expect(sourceReadiness).toContain("target_min_free_kib=");
+    expect(sourceReadiness).toContain("IMPORTANT: no backup/export/remote transfer was created");
+    expect(sourceReadiness).not.toContain("staging-pcs09-backup.sh --apply");
+    expect(sourceReadiness).not.toContain("staging-offhost-dr-export.sh --apply");
+    expect(sourceReadiness).not.toContain("docker volume create");
+    expect(sourceReadiness).not.toContain("docker compose stop");
+
+    expect(targetReadiness).toContain("ECORIONE_DR_FAILURE_DOMAIN_ACK");
+    expect(targetReadiness).toContain("StrictHostKeyChecking=yes");
+    expect(targetReadiness).toContain("ClearAllForwardings=yes");
+    expect(targetReadiness).toContain("ECORIONE_DR_TARGET_MIN_FREE_KIB");
+    expect(targetReadiness).toContain("test -w");
+    expect(targetReadiness).toContain("IMPORTANT: this check performs no upload, mkdir, rename, or deletion");
+    expect(targetReadiness).not.toContain("ssh-keyscan");
+    expect(targetReadiness).not.toContain("scp ");
+    expect(targetReadiness).not.toContain("mkdir");
+    expect(targetReadiness).not.toContain("rm -");
+    expect(targetReadiness).not.toContain("mv ");
   });
 
   it("gates recovered application identity and changed-boot-id persistence", () => {
