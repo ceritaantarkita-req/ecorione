@@ -82,6 +82,7 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | Source + independent-target DR readiness guardrails | **CLOSED / PASS (checkpoint 4 repository boundary)** |
 | Retained-generation audit + RPO/RTO closure evidence | **CLOSED / PASS (checkpoint 5 repository boundary)** |
 | Immutable loss-marker timing provenance | **CLOSED / PASS (checkpoint 6 repository boundary)** |
+| Marker-before-fetch retrieval enforcement | **ACTIVE / CHECKPOINT 7 REPOSITORY REVIEW** |
 | Real independent off-host copy | **PENDING RUNTIME EVIDENCE** |
 | Clean-host isolated restore of real staging backup | **PENDING RUNTIME EVIDENCE** |
 | Total-host-loss application recovery | **NOT YET PROVEN** |
@@ -101,7 +102,8 @@ Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](veri
 Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).  
 Checkpoint 4 evidence: [verification/offhost-dr-checkpoint-4-2026-09-22.md](verification/offhost-dr-checkpoint-4-2026-09-22.md).  
 Checkpoint 5 evidence: [verification/offhost-dr-checkpoint-5-2026-09-22.md](verification/offhost-dr-checkpoint-5-2026-09-22.md).  
-Checkpoint 6 evidence: [verification/offhost-dr-checkpoint-6-2026-09-22.md](verification/offhost-dr-checkpoint-6-2026-09-22.md).
+Checkpoint 6 evidence: [verification/offhost-dr-checkpoint-6-2026-09-22.md](verification/offhost-dr-checkpoint-6-2026-09-22.md).  
+Checkpoint 7 evidence: [verification/offhost-dr-checkpoint-7-2026-09-22.md](verification/offhost-dr-checkpoint-7-2026-09-22.md).
 
 Public production cutover remains deferred. Cloudflare Tunnel remains optional and is not part of the currently verified staging edge. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md).
 
