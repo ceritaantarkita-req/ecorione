@@ -22,7 +22,7 @@ The bounded operational convergence scope is CLOSED / PASS at the SumoPod stagin
 
 Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as image `staging-52046db35e40`. The gate and deploy jobs both passed. Public home reached HTTP 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, MCP metadata/challenge checks passed, authenticated Ops reported `healthy: true` with no unhealthy services, sanitized exact-host evidence matched the target SHA, and the final PCS-08 deploy assertion passed.
 
-The current proven staging application revision is therefore `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40`. The previous `0f332c73...` runtime remains historical PCS-09 evidence only.
+That convergence established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at that checkpoint. It is now historical: the active DR runtime source is the later governed deployment `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. The previous `0f332c73...` runtime remains historical PCS-09 evidence only.
 
 This convergence did not rerun the destructive/full-host PCS-09 reboot or same-host cold-backup acceptance against the new SHA, and it does not authorize production promotion, public-edge activation, hosted spend, PE-09, PCS-11, Batch 13, or a new F6 scope.
 
