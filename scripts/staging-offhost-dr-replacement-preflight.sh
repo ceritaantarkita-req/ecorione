@@ -113,9 +113,9 @@ CONFIG_JSON="$(
     config --format json
 )"
 
-node - "$LOOPBACK_PORT" <<'NODE' <<<"$CONFIG_JSON"
+printf '%s' "$CONFIG_JSON" | node -e '
 const fs = require("fs");
-const expectedPort = Number(process.argv[2]);
+const expectedPort = Number(process.argv[1]);
 const config = JSON.parse(fs.readFileSync(0, "utf8"));
 const caddy = config?.services?.caddy;
 if (!caddy || !Array.isArray(caddy.ports)) {
@@ -145,7 +145,7 @@ if (networkNames.length !== 1 || networkNames[0] !== "internal") {
 if (JSON.stringify(config).includes("inmydraft-demos_web")) {
   throw new Error("recovery Compose config depends on the historical SumoPod edge network");
 }
-NODE
+' "$LOOPBACK_PORT"
 
 
 echo "PASS ECORIONE clean replacement-host preflight"
