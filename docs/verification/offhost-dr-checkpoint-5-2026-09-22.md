@@ -215,12 +215,11 @@ Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary. Real 
 
 Checkpoint 5 does **not** prove:
 
-- final exact-head repository gates yet;
 - a newer governed SumoPod deployment;
 - a real independent target;
 - three real retained generations;
 - a real target audit;
-- a real `loss_declared_at`;
+- a real recovery-clock marker or source-loss declaration;
 - measured real-host RPO/RTO;
 - total-host-loss recovery.
 
