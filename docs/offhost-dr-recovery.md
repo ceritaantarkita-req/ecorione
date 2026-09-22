@@ -102,6 +102,10 @@ sudo -E bash scripts/staging-offhost-dr-target-readiness.sh --check
 
 The target check performs no upload or remote mutation. Only after **both** readiness gates PASS may the export orchestrator below run.
 
+The export orchestrator also **re-runs both readiness gates itself before any export-directory creation, semantic canary, cold-stop, backup, bundle, or transfer mutation**. It derives the effective target-capacity floor as the greater of the live source-derived requirement and any stricter operator-supplied `ECORIONE_DR_TARGET_MIN_FREE_KIB`. This makes the manual checks a visible operator gate while keeping the mutation path fail-closed if the environment drifts between checks and export.
+
+The export generation includes bundle + metadata + semantic canary + export manifest. The semantic-canary file is transferred before the export manifest; the manifest remains the remote generation commit marker.
+
 ## A. Preferred current-revision export path
 
 Checkpoint 2 adds a guarded orchestrator so the operator does not manually stitch together backup, bundling, manifest generation, and transfer.
