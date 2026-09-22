@@ -41,7 +41,7 @@ function protectedResourceMetadataUrl(resource) {
 }
 
 async function request(path, init = {}) {
-  const controller = new AbortController();
+  const controller = new globalThis.AbortController();
   const timer = setTimeout(() => controller.abort(), 15_000);
   try {
     return await fetch(new URL(path, base), {
