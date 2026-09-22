@@ -119,7 +119,7 @@ transfer_one() {
   local name="$2"
   local local_sha remote_sha final_sha part part_q final_q
 
-  part="$REMOTE_DIR/.$name.part-$"
+  part="$REMOTE_DIR/.$name.part-$$"
   part_q="$(remote_quote "$part")"
   final_q="$(remote_quote "$REMOTE_DIR/$name")"
 
