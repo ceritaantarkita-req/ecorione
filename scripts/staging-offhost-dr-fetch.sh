@@ -11,6 +11,13 @@ fi
   exit 1
 }
 
+for command_name in node scp sha256sum stat; do
+  command -v "$command_name" >/dev/null 2>&1 || {
+    echo "$command_name is required." >&2
+    exit 1
+  }
+done
+
 : "${ECORIONE_DR_SSH_TARGET:?set ECORIONE_DR_SSH_TARGET=user@independent-host}"
 : "${ECORIONE_DR_SSH_DIR:?set ECORIONE_DR_SSH_DIR=/absolute/backup/path}"
 : "${ECORIONE_DR_SSH_IDENTITY:?set ECORIONE_DR_SSH_IDENTITY=/root/.ssh/...}"
