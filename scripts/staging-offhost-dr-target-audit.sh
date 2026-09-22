@@ -50,6 +50,8 @@ KNOWN_MODE="$(stat -c '%a' "$KNOWN_HOSTS")"
 [[ -s "$KNOWN_HOSTS" ]] || fail "DR known_hosts is empty"
 
 SSH_OPTS=(
+  # Do not let ssh consume the while-read manifest stream below.
+  -n
   -F /dev/null
   -i "$IDENTITY"
   -o BatchMode=yes

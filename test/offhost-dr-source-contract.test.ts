@@ -332,6 +332,7 @@ describe("off-host DR source contract", () => {
     expect(audit).toContain("ECORIONE_DR_RETENTION_MIN_GENERATIONS");
     expect(audit).toContain("StrictHostKeyChecking=yes");
     expect(audit).toContain("ClearAllForwardings=yes");
+    expect(audit).toContain("  -n\n  -F /dev/null");
     expect(audit).toContain("transfer_intent");
     expect(audit).toContain("sha256sum");
     expect(audit).toContain('[[ "$manifest_mode" == "600" ]]');
