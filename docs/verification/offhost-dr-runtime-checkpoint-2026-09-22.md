@@ -116,6 +116,44 @@ The post-marker fetch compatibility fix is newer repository tooling. Do not upda
 
 For continuation, use an isolated temporary Git worktree at the reviewed PR #268 merge only to execute the fixed `staging-offhost-dr-fetch.sh`. All application verification, preflight, restore, build/start, acceptance, and reboot evidence continue from the exact `b27c...` application checkout.
 
+For this drill the exact continuation is:
+
+```bash
+cd /srv/ecorione-recovery
+
+git fetch origin main --prune
+git cat-file -e bfca380ec12d30fe833b02011494e18988ec8807^{commit}
+
+git worktree add --detach \
+  /tmp/ecorione-dr-fetch-bfca380 \
+  bfca380ec12d30fe833b02011494e18988ec8807
+
+export ECORIONE_DR_SSH_TARGET='ecorione-backup@100.95.105.104'
+export ECORIONE_DR_SSH_DIR='/srv/backups/ecorione'
+export ECORIONE_DR_SSH_IDENTITY='/root/.ssh/ecorione_dr_recovery'
+export ECORIONE_DR_SSH_KNOWN_HOSTS='/root/.ssh/ecorione_dr_known_hosts'
+export ECORIONE_DR_FAILURE_DOMAIN_ACK=1
+
+sudo -E bash \
+  /tmp/ecorione-dr-fetch-bfca380/scripts/staging-offhost-dr-fetch.sh \
+  --apply \
+  /secure/recovery \
+  ecorione-dr-20260922152938-b27c1e5833be.receipt.env \
+  /var/lib/ecorione-dr/recovery-loss-marker.json
+```
+
+Do not create a second loss marker. Do not fetch these artifacts from SumoPod. If the command passes, remove only the temporary worktree and confirm the application checkout is still exact:
+
+```bash
+cd /srv/ecorione-recovery
+git worktree remove /tmp/ecorione-dr-fetch-bfca380
+git worktree prune
+git rev-parse HEAD
+git status --short
+```
+
+Expected application HEAD remains `b27c1e5833be0a0fccf3f525d82ae8853cd22113`.
+
 ## Next runtime gate
 
 The next sequence is:
