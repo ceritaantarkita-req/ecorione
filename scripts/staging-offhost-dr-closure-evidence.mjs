@@ -109,10 +109,6 @@ function requireEqual(actual, expected, label) {
 }
 
 const args = parseArgs(process.argv.slice(2));
-if (typeof process.getuid === "function" && process.getuid() !== 0) {
-  fail("run as root");
-}
-
 const manifestPath = resolve(args["export-manifest"]);
 const canaryPath = resolve(args["canary-state"]);
 const retrievalPath = resolve(args["retrieval-receipt"]);
