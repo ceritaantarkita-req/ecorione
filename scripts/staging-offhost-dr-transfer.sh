@@ -119,25 +119,32 @@ transfer_one() {
   local name="$2"
   local local_sha remote_sha final_sha part part_q final_q
 
-  part="$REMOTE_DIR/.$name.part-$$"
+  part="$REMOTE_DIR/.$name.part-$"
   part_q="$(remote_quote "$part")"
   final_q="$(remote_quote "$REMOTE_DIR/$name")"
 
-  scp "${SSH_OPTS[@]}" "$local_path" "$TARGET:$part"
+  ssh "${SSH_OPTS[@]}" "$TARGET" "test ! -e $final_q && rm -f $part_q"
+  if ! scp "${SSH_OPTS[@]}" "$local_path" "$TARGET:$part"; then
+    ssh "${SSH_OPTS[@]}" "$TARGET" "rm -f $part_q" >/dev/null 2>&1 || true
+    return 1
+  fi
+
   local_sha="$(sha256sum "$local_path" | cut -d' ' -f1)"
   remote_sha="$(
     ssh "${SSH_OPTS[@]}" "$TARGET" "sha256sum $part_q | cut -d' ' -f1"
   )"
   [[ "$local_sha" == "$remote_sha" ]] || {
+    ssh "${SSH_OPTS[@]}" "$TARGET" "rm -f $part_q" >/dev/null 2>&1 || true
     echo "Remote checksum mismatch for $name." >&2
     return 1
   }
 
-  ssh "${SSH_OPTS[@]}" "$TARGET"     "chmod 0600 $part_q && mv -f $part_q $final_q"
+  ssh "${SSH_OPTS[@]}" "$TARGET" "chmod 0600 $part_q && test ! -e $final_q && mv $part_q $final_q"
   final_sha="$(
     ssh "${SSH_OPTS[@]}" "$TARGET" "sha256sum $final_q | cut -d' ' -f1"
   )"
   [[ "$local_sha" == "$final_sha" ]] || {
+    ssh "${SSH_OPTS[@]}" "$TARGET" "rm -f $final_q" >/dev/null 2>&1 || true
     echo "Final off-host checksum mismatch for $name." >&2
     return 1
   }
@@ -146,13 +153,16 @@ transfer_one() {
 
 LOCAL_BUNDLE_SHA="$(transfer_one "$BUNDLE" "$BUNDLE_NAME")"
 LOCAL_META_SHA="$(transfer_one "$META" "$META_NAME")"
-LOCAL_MANIFEST_SHA=""
-if [[ -n "$MANIFEST" ]]; then
-  LOCAL_MANIFEST_SHA="$(transfer_one "$MANIFEST" "$MANIFEST_NAME")"
-fi
 LOCAL_CANARY_SHA=""
 if [[ -n "$CANARY" ]]; then
   LOCAL_CANARY_SHA="$(transfer_one "$CANARY" "$CANARY_NAME")"
+fi
+
+# Publish the retained export manifest last. Recovery treats its final presence as
+# the generation commit marker, so all referenced artifacts must already be final.
+LOCAL_MANIFEST_SHA=""
+if [[ -n "$MANIFEST" ]]; then
+  LOCAL_MANIFEST_SHA="$(transfer_one "$MANIFEST" "$MANIFEST_NAME")"
 fi
 
 echo "PASS encrypted DR artifacts copied to independent SSH target with checksum verification"
