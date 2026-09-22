@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–7 CLOSED / RUNTIME EXECUTION PENDING**
+Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–7 CLOSED / RETENTION CLOSED / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS**
 
 This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
@@ -281,6 +281,16 @@ sudo -E bash scripts/staging-offhost-dr-fetch.sh --apply \
   /var/lib/ecorione-dr/recovery-loss-marker.json
 ```
 
+### Modern OpenSSH SCP/SFTP compatibility note
+
+Runtime execution on 2026-09-22 exposed a compatibility defect in the earlier fetch helper. Modern OpenSSH `scp` uses SFTP by default, so wrapping the already constrained remote pathname in literal shell quote characters can cause those quote characters to be interpreted as part of the filename. The symptom is a false `No such file or directory` even though the retained artifact exists.
+
+PR #268 fixes this by passing the constrained `${TARGET}:${REMOTE_DIR}/${name}` path directly and by failing immediately on SCP/chmod/mv failure while cleaning any partial local artifact.
+
+If a real recovery drill has already created its immutable loss marker against an older exact application source revision, **do not move the application checkout merely to obtain this fetch compatibility fix**. Keep the application checkout pinned to the source SHA recorded by the DR metadata. Use an isolated temporary worktree at the reviewed fetch-fix merge only to execute `staging-offhost-dr-fetch.sh`, then perform verification, preflight, restore, start, acceptance, reboot evidence, and closure from the exact recorded application checkout.
+
+This exception is for the recovery transport helper only. It must not be used to relabel a newer application checkout as exact-source recovery evidence.
+
 The fetch helper now refuses to begin independent retrieval unless the supplied mode-0600 loss marker already exists, is valid, and binds the exact requested export-manifest filename. It records `retrieval_started_at` only after that marker check and before the first SCP.
 
 The fetch helper then downloads the retained export manifest first, derives the exact encrypted artifact and semantic-canary filenames/hashes from it, fetches the bundle + metadata + canary, verifies all hashes, and writes:
@@ -485,13 +495,15 @@ Repository foundation contains:
 - deterministic source-contract coverage;
 - this operator runbook.
 
-Repository checkpoints 1–7 still intentionally make these non-claims until real infrastructure execution occurs:
+Repository checkpoints 1–7 are now followed by real runtime execution evidence. As of the 2026-09-22 runtime checkpoint:
 
-- no current-revision SumoPod backup has yet been copied off-host by this workstream;
-- no independent target has been recorded as configured evidence;
-- no DR private key is stored in Git;
-- no destructive staging mutation was performed by repository preparation;
-- no clean replacement VPS has yet recovered the real SumoPod state;
-- total-host-loss recovery is **NOT YET PROVEN**.
+- exact source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be` has three complete encrypted retained generations on the independent target;
+- the corrected target audit reports `complete_generations=3`, `incomplete_generations=0`, and `retention_ready=1`;
+- a clean replacement WSL2 distro exists with exact-source checkout, native Docker/Compose, Node/Git, the required helper image, dedicated strict SSH retrieval credentials, the out-of-band RSA private key, and separately recovered mode-0600 deployment/operator inputs;
+- generation `ecorione-dr-20260922152938-b27c1e5833be.receipt.env` has an immutable loss marker created at `2026-09-22T16:21:58.074Z`;
+- the first marker-bound fetch exposed the SCP/SFTP quoting defect described in section F; independent inventory plus direct strict-SCP proved the retained generation is intact, and PR #268 merged the transport fix;
+- no DR private key or recovery secret value is stored in Git or in this documentation.
 
-Runtime evidence must be added only after those real-host gates are actually executed.
+The remaining runtime gates are verified independent retrieval, isolated decrypt/content verification, clean-host preflight, guarded real-volume restore, application acceptance, changed-boot-ID reboot evidence, and final marker-bound RPO/RTO closure. Until those pass, total-host-loss recovery is **NOT YET PROVEN**.
+
+Runtime evidence: [verification/offhost-dr-runtime-checkpoint-2026-09-22.md](verification/offhost-dr-runtime-checkpoint-2026-09-22.md).

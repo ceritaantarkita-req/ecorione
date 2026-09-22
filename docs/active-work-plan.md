@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-22**
 
-Status: **OFF-HOST DR ACTIVE / REPOSITORY CHECKPOINTS 1–7 CLOSED / RUNTIME EXECUTION PENDING / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR ACTIVE / RETENTION CLOSED / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -22,7 +22,7 @@ The bounded operational convergence scope is CLOSED / PASS at the SumoPod stagin
 
 Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as image `staging-52046db35e40`. The gate and deploy jobs both passed. Public home reached HTTP 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, MCP metadata/challenge checks passed, authenticated Ops reported `healthy: true` with no unhealthy services, sanitized exact-host evidence matched the target SHA, and the final PCS-08 deploy assertion passed.
 
-The current proven staging application revision is therefore `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40`. The previous `0f332c73...` runtime remains historical PCS-09 evidence only.
+That convergence established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at that checkpoint. It is now historical: the active DR runtime source is the later governed deployment `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. The previous `0f332c73...` runtime remains historical PCS-09 evidence only.
 
 This convergence did not rerun the destructive/full-host PCS-09 reboot or same-host cold-backup acceptance against the new SHA, and it does not authorize production promotion, public-edge activation, hosted spend, PE-09, PCS-11, Batch 13, or a new F6 scope.
 
@@ -30,15 +30,32 @@ Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-
 
 ## Off-host Backup & DR — ACTIVE
 
+### Runtime execution checkpoint — ACTIVE
+
+The active runtime source is exact `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`.
+
+Three complete encrypted generations are now retained on the independent SSH target and the corrected audit reports `retention_ready=1`. PR #267 fixed the audit's SSH-stdin consumption bug without moving the application runtime.
+
+The clean replacement environment `ecorione-recovery` is provisioned with native Docker/Compose, Node 22, Git, an empty initial project inventory, the exact `b27c1e...` checkout, the out-of-band RSA DR private key, separate deployment/operator secrets, and a dedicated strict SSH retrieval credential. The existing backup-target WSL distro remains separate from the replacement distro.
+
+Generation `ecorione-dr-20260922152938-b27c1e5833be.receipt.env` is selected. Its immutable loss marker was created at `2026-09-22T16:21:58.074Z`; SumoPod is treated as unavailable from that boundary onward.
+
+The first marker-bound fetch found a compatibility defect in `staging-offhost-dr-fetch.sh`: remote shell quoting is incompatible with modern OpenSSH SCP/SFTP filename handling. Direct strict-SCP proof showed the selected remote manifest is present and readable. PR #268 exact head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 + Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`; merged-main CI #1882 and Product Eval #1121 also passed; it also makes fetch failures stop at the first failed artifact operation.
+
+The application checkout must remain pinned to `b27c1e...`. Continue by running only the reviewed fixed fetch helper from an isolated worktree, then return all recovery verification/restore/start/acceptance work to the exact-source checkout.
+
+Evidence: [verification/offhost-dr-runtime-checkpoint-2026-09-22.md](verification/offhost-dr-runtime-checkpoint-2026-09-22.md).
+
+
 The operator explicitly opened **Off-host Backup & DR** as the next infrastructure scope on 2026-09-22. This is a separate operational workstream, not PE-09, PCS-11, Batch 13, production promotion, public-edge activation, or a feature batch.
 
 Checkpoint 1 is **CLOSED / PASS at the repository-foundation boundary** through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed; Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
 
 Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 is also CLOSED / PASS at the repository boundary through PR #252 / merge `9e522e62212b5a4170ad4947c4bdd75c28f34464`; exact head CI #1820, Product Eval #1059, MCP #970 and Desktop Installer #160 passed, followed by merged-main CI #1821, Product Eval #1060 and MCP #971. Staging Deploy #412/#413 gate-passed and deploy remained skipped because activation stayed disabled.
 
-Real-host status remains bounded: no current-revision SumoPod backup has yet been accepted as an off-host copy, and no clean replacement host has recovered the real staging state. Total-host-loss recovery therefore remains a non-claim.
+Real-host execution is now materially underway: current-revision off-host generations exist, the three-generation retention gate is closed, the clean replacement host and separate secret-recovery inputs are ready, and the immutable loss marker is live. The replacement host has not yet completed verified retrieval, real-volume restore, application acceptance, reboot persistence, or final RPO/RTO closure. Total-host-loss recovery therefore remains a non-claim.
 
-The active work is now runtime execution with checkpoints 4–7 guardrails: governed deployment of exact reviewed `main` -> freeze CD -> source readiness -> independent-target readiness -> fresh export -> remote retained-generation audit -> create immutable loss marker for the selected generation -> **marker-required recovery-host fetch that records retrieval start** -> clean replacement-host preflight -> isolated verification -> guarded real-volume restore -> separately recovered secrets/config -> loopback exact-source application acceptance -> full replacement-host reboot/post verification -> sanitized RPO/RTO closure evidence cross-bound to the marker/retrieval chain.
+The active work is now the post-marker recovery tail: **fixed marker-required fetch from the independent target** -> retrieval receipt -> isolated decrypt/Docker verification -> clean replacement-host preflight -> guarded real-volume restore -> loopback exact-source start/application acceptance -> full replacement-host reboot/post verification -> sanitized RPO/RTO closure evidence cross-bound to the existing marker/retrieval chain.
 
 Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` (CI #1850, Product Eval #1089, MCP #996, Desktop Installer #184) and merge `941cb8c9ed237a5417550449c7d73e712b10ba72` (merged-main CI #1851, Product Eval #1090, MCP #997). Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
 
