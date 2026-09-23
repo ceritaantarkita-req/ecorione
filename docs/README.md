@@ -1,13 +1,13 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-22**
+Last updated: **2026-09-23**
 
 This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
 
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current state and explicit deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; Off-host Backup & DR is the only active operational scope.
+2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; DR-2 physical independence checkpoint 2 is the only active operational scope.
 3. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — CLOSED PCS-00..PCS-10 product/UX + SumoPod staging roadmap.
 4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — closed PE product model and ownership rules.
 5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — closed PE-00 through PE-08 batch plan.
@@ -104,7 +104,8 @@ Use the owner-specific runbook when touching its subsystem:
 - [extension-operations.md](extension-operations.md)
 - [data-rebuild-operations.md](data-rebuild-operations.md)
 - [data-governance-dr-operations.md](data-governance-dr-operations.md)
-- [offhost-dr-recovery.md](offhost-dr-recovery.md) — active off-host backup and total-host-loss recovery workstream; checkpoints 1–7 are closed at repository boundaries; marker-before-fetch retrieval enforcement is in place; real runtime execution is pending.
+- [offhost-dr-recovery.md](offhost-dr-recovery.md) — CLOSED / PASS original total-SumoPod-host-loss recovery runbook and evidence boundary.
+- [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md) — ACTIVE DR-2 follow-up; checkpoint 1 repository foundation is closed and checkpoint 2 external-target selection is the current gate.
 - [multimodal-operations.md](multimodal-operations.md)
 - [voice-operations.md](voice-operations.md)
 - [webhook-operations.md](webhook-operations.md)
@@ -121,8 +122,9 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current operating/deferred boundaries
 
-- active operational scope — **Off-host Backup & DR / RUNTIME EXECUTION PENDING**; checkpoints 1–7 are CLOSED / PASS at repository boundaries, while real independent copy, retained-generation/timing evidence, and total-host-loss application recovery remain pending runtime evidence.
-- SumoPod remote development/staging — **VERIFIED** at application revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` through governed Staging Deploy #293.
+- active operational scope — **DR-2 physical independence / CHECKPOINT 2 EXTERNAL-TARGET SELECTION**; checkpoint 1 is CLOSED / PASS and no genuinely external target has been selected or contacted yet.
+- original Off-host Backup & DR — **CLOSED / PASS** for total SumoPod staging-host loss at the documented boundary; exact recovered runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / image `staging-b27c1e5833be`.
+- SumoPod remote development/staging — **VERIFIED / NOT PRODUCTION**; the latest proven application runtime remains `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. Later documentation/DR-2 merges did not deploy because staging deployment activation remained disabled.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
 - AutoClick — deferred by design.
@@ -170,6 +172,6 @@ Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-
 
 ## Repository-wide documentation reconciliation — 2026-09-21
 
-The repository contains 192 Markdown/MDX documents. Current/canonical documents are reconciled to the closed PE/PCS state and verified staging boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.
+The repository documentation tree contains 221 Markdown/MDX/TXT documents under `docs/` after adding the 2026-09-23 reconciliation record (220 existed at audit baseline). Current/canonical documents are reconciled to the closed PE/PCS/original-DR state and active DR-2 checkpoint 2 boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.
 
-Audit record: [verification/repository-documentation-reconciliation-2026-09-21.md](verification/repository-documentation-reconciliation-2026-09-21.md).
+Historical audit record: [verification/repository-documentation-reconciliation-2026-09-21.md](verification/repository-documentation-reconciliation-2026-09-21.md). Current reconciliation: [verification/repository-documentation-reconciliation-2026-09-23.md](verification/repository-documentation-reconciliation-2026-09-23.md).

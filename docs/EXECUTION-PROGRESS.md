@@ -1,6 +1,6 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-09-22**
+Last updated: **2026-09-23**
 
 Status: **CURRENT SUMMARY**
 
@@ -70,23 +70,25 @@ Runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). R
 
 PCS-09 repository implementation merged through PR #216. Exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and squash-merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 + MCP External HTTPS Acceptance #894 passed. Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was then deployed through governed Staging Deploy run #35563423107. Real-host acceptance completed: SSH password/root login disabled with fresh key-session proof, strict inventory `blockers=[]` / `closureReady=true`, full VPS reboot with changed Linux boot ID and 15/15 service + volume preservation, verified same-host backup/isolated restore for all 12 project volumes, and final Operations/host-resource evidence with healthy owner fleet and strict host inventory. Closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918 passed, while Staging Deploy #135/#136 gate PASSed and deploy remained skipped. PCS-09 is **CLOSED / PASS**. PCS-10 documentation convergence is **CLOSED / PASS** through closure PR #219 exact head `c84f76face60d203592d8bc6e1a51acccfec5004`, which passed CI #1684 + Product Eval #923 and merged to `main` as `6058aa0ff294218147a91ee0fc7b77f32d1be80d`. Post-merge documentation bookkeeping PR #220 then passed CI #1686 + Product Eval #925 and merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07`. Off-host DR, total-host-loss recovery, production promotion, and non-zero paid-provider telemetry remain explicit non-claims.
 
-Latest-main staging convergence then CLOSED / PASS at the runtime boundary. After repository checkpoint PR #248 merged as `52046db35e403babdda934881773c46bf2c57b68`, governed Staging Deploy #293 / run `35627920447` deployed that exact current `main` SHA as `staging-52046db35e40`. Gate + deploy passed; public home reached 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, authenticated Ops reported a healthy fleet with no unhealthy services, MCP metadata/challenge checks passed, sanitized host evidence matched exact SHA, and final PCS-08 deployment validation passed. The reviewed orchestrator writes its release receipt before the final PASS. The current proven staging application identity is therefore `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40`. Full PCS-09 reboot/backup acceptance was not rerun on this SHA. Evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
+Latest-main staging convergence then CLOSED / PASS at the runtime boundary. After repository checkpoint PR #248 merged as `52046db35e403babdda934881773c46bf2c57b68`, governed Staging Deploy #293 / run `35627920447` deployed that exact current `main` SHA as `staging-52046db35e40`. Gate + deploy passed; public home reached 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, authenticated Ops reported a healthy fleet with no unhealthy services, MCP metadata/challenge checks passed, sanitized host evidence matched exact SHA, and final PCS-08 deployment validation passed. The reviewed orchestrator writes its release receipt before the final PASS. That convergence established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at that historical checkpoint. It was later superseded by the governed DR runtime deployment `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, which completed the original Off-host DR recovery drill. Later documentation/DR-2 merges did not deploy because staging deployment activation remained disabled. Evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
 ## Active infrastructure work
 
 | Scope | State |
 |---|---:|
-| Off-host Backup & DR repository foundation | **CLOSED / PASS (checkpoint 1)** |
-| DR execution + clean-host recovery path | **CLOSED / PASS (checkpoint 2 repository boundary)** |
-| Standalone replacement-host recovery boundary | **CLOSED / PASS (checkpoint 3 repository boundary)** |
-| Source + independent-target DR readiness guardrails | **CLOSED / PASS (checkpoint 4 repository boundary)** |
-| Retained-generation audit + RPO/RTO closure evidence | **CLOSED / PASS (checkpoint 5 repository boundary)** |
-| Immutable loss-marker timing provenance | **CLOSED / PASS (checkpoint 6 repository boundary)** |
-| Marker-before-fetch retrieval enforcement | **CLOSED / PASS (checkpoint 7 repository boundary)** |
-| Real independent off-host copy | **PENDING RUNTIME EVIDENCE** |
-| Clean-host isolated restore of real staging backup | **PENDING RUNTIME EVIDENCE** |
-| Total-host-loss application recovery | **NOT YET PROVEN** |
+| Original Off-host Backup & DR repository checkpoints 1–7 | **CLOSED / PASS** |
+| Original real independent retrieval + 12-volume clean-host restore | **CLOSED / PASS** |
+| Original exact-source 15-service application recovery | **CLOSED / PASS** |
+| Original changed-boot-ID persistence + final marker-bound closure | **CLOSED / PASS** |
+| Total SumoPod staging-host-loss recovery | **PROVEN at documented boundary** |
+| DR-2 checkpoint 1 — physical-independence repository foundation | **CLOSED / PASS** |
+| DR-2 checkpoint 2 — genuinely external backup-target selection | **ACTIVE / OPERATOR GATE** |
+| DR-2 physical-independence runtime proof | **NOT YET PROVEN** |
 | Production promotion | **DEFERRED / SEPARATE GATE** |
+
+Original runtime closure later completed on exact staging source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`: three retained encrypted generations, marker-bound independent retrieval, isolated verification, guarded restore of all 12 project volumes, exact-source 15-service startup, semantic canary, protected/MCP/Ops checks, changed Linux boot ID, preserved Connect/project-volume fingerprints, and final closure evidence all passed. Final one-drill measurements were conservative RPO 3147s, retrieval-ready RTO 3138s, data-ready RTO 5582s, application-ready RTO 30042s, and final recovery RTO 71523s. These are measurements, not an SLA. Evidence: [verification/offhost-dr-runtime-closure-2026-09-23.md](verification/offhost-dr-runtime-closure-2026-09-23.md).
+
+DR-2 then opened as an additive scope to remove the same-physical-Windows-host caveat. Checkpoint 1 merged through PR #278 / `4d1f4ef82839c74cc1ca8454511405a68424f0b7`; bookkeeping PR #280 merged as `3bb1d0b26064469998e4595809d646575cd04456`. Checkpoint 2 external-target selection is now the only active infrastructure gate. Evidence: [verification/offhost-dr2-checkpoint-1-2026-09-23.md](verification/offhost-dr2-checkpoint-1-2026-09-23.md).
 
 Checkpoint 1 repository foundation closed through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`; exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed, while Staging Deploy #308/#309 passed their gates and skipped deployment.
 

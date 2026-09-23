@@ -39,7 +39,7 @@ The bounded operational convergence scope is CLOSED / PASS at the SumoPod stagin
 
 Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as image `staging-52046db35e40`. The gate and deploy jobs both passed. Public home reached HTTP 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, MCP metadata/challenge checks passed, authenticated Ops reported `healthy: true` with no unhealthy services, sanitized exact-host evidence matched the target SHA, and the final PCS-08 deploy assertion passed.
 
-That convergence established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at that checkpoint. It is now historical: the active DR runtime source is the later governed deployment `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. The previous `0f332c73...` runtime remains historical PCS-09 evidence only.
+That convergence established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at that checkpoint. It is now historical: the later governed original-DR runtime source was `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. The previous `0f332c73...` runtime remains historical PCS-09 evidence only.
 
 This convergence did not rerun the destructive/full-host PCS-09 reboot or same-host cold-backup acceptance against the new SHA, and it does not authorize production promotion, public-edge activation, hosted spend, PE-09, PCS-11, Batch 13, or a new F6 scope.
 
@@ -49,7 +49,7 @@ Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-
 
 ### Runtime execution checkpoint — CLOSED / PASS
 
-The active runtime source is exact `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`.
+The original DR runtime source was exact `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`.
 
 Three complete encrypted generations are now retained on the independent SSH target and the corrected audit reports `retention_ready=1`. PR #267 fixed the audit's SSH-stdin consumption bug without moving the application runtime.
 
@@ -74,13 +74,13 @@ Real-host execution is now complete at the documented boundary. Three-generation
 
 There is **no active execution tail in the original Off-host DR workstream**. It remains CLOSED / PASS. DR-2 physical independence is the separately opened follow-up scope and does not alter that closure.
 
-Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` (CI #1850, Product Eval #1089, MCP #996, Desktop Installer #184) and merge `941cb8c9ed237a5417550449c7d73e712b10ba72` (merged-main CI #1851, Product Eval #1090, MCP #997). Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
+Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` (CI #1850, Product Eval #1089, MCP #996, Desktop Installer #184) and merge `941cb8c9ed237a5417550449c7d73e712b10ba72` (merged-main CI #1851, Product Eval #1090, MCP #997). Staging Deploy #468/#469 gate-passed and deploy remained skipped. At that repository checkpoint, real target retention/timing evidence was still pending; the later original runtime drill subsequently supplied and closed that evidence.
 
-Checkpoint 6 is CLOSED / PASS at the repository loss-marker provenance boundary through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` (CI #1857, Product Eval #1096, MCP #1001, Desktop Installer #188) and merge `cb043b47a2c899e3c0585b06db4992fcc727c723` (merged-main CI #1858, Product Eval #1097, MCP #1002). Staging Deploy #480/#481 gate-passed and deploy remained skipped. Real loss-marker and timing evidence still require runtime execution.
+Checkpoint 6 is CLOSED / PASS at the repository loss-marker provenance boundary through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` (CI #1857, Product Eval #1096, MCP #1001, Desktop Installer #188) and merge `cb043b47a2c899e3c0585b06db4992fcc727c723` (merged-main CI #1858, Product Eval #1097, MCP #1002). Staging Deploy #480/#481 gate-passed and deploy remained skipped. At that repository checkpoint, real loss-marker/timing evidence was still pending; the later original runtime drill subsequently supplied and closed that evidence.
 
-Checkpoint 7 is CLOSED / PASS at the repository marker-before-fetch enforcement boundary through PR #263 exact head `ba7ef7d6922c0177be582d5734095ed154f72622` (CI #1870, Product Eval #1109) and merge `cf8921f19a5c78db2d3d2fd075ac232983a0bbb4` (merged-main CI #1871, Product Eval #1110). Staging Deploy #504/#505 gate-passed and deploy remained skipped. Real marker-before-fetch, retrieval, restore, and timing evidence still require runtime execution.
+Checkpoint 7 is CLOSED / PASS at the repository marker-before-fetch enforcement boundary through PR #263 exact head `ba7ef7d6922c0177be582d5734095ed154f72622` (CI #1870, Product Eval #1109) and merge `cf8921f19a5c78db2d3d2fd075ac232983a0bbb4` (merged-main CI #1871, Product Eval #1110). Staging Deploy #504/#505 gate-passed and deploy remained skipped. At that repository checkpoint, real marker-before-fetch/retrieval/restore/timing evidence was still pending; the later original runtime drill subsequently supplied and closed that evidence.
 
-Checkpoint 4 is CLOSED / PASS at the repository boundary through PR #254 / merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed; merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 gate-passed and deploy remained skipped. Source/target runtime readiness still requires real-host PASS evidence.
+Checkpoint 4 is CLOSED / PASS at the repository boundary through PR #254 / merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed; merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 gate-passed and deploy remained skipped. At that repository checkpoint, source/target runtime readiness still required real-host PASS evidence; the later original runtime drill subsequently supplied and closed it.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
@@ -171,7 +171,7 @@ PCS-00 baseline lock
  -> PCS-10 closure/docs
 ```
 
-The SumoPod target is a **verified remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source. The current proven staging application revision is `0f332c73dc7b363bffecdeecae921d805d5ae131`; later documentation merges intentionally did not redeploy it.
+The SumoPod target is a **verified remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source. At the PCS-10 checkpoint the proven staging application revision was `0f332c73dc7b363bffecdeecae921d805d5ae131`. Later governed deployments superseded that historical runtime; the original DR drill ultimately exercised `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`.
 
 **At the PCS-10/latest-main historical checkpoint the work queue was none.** DR-2 physical independence is now explicitly opened as a separate infrastructure scope; no feature, PE, PCS, Batch, production-promotion, or public-edge scope is implicitly opened.
 
@@ -183,7 +183,7 @@ The follow-up slice hardened Sync's MCP bridge failure boundary, serialized cred
 
 **Current implementation queue remains none.** This checkpoint does not authorize production promotion, Cloudflare/public-edge activation, hosted spend, a new PE/PCS/Batch/F6 scope, or any staging-runtime claim beyond existing evidence.
 
-The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
+At this historical maintenance checkpoint, the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`; later governed deployments superseded it.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-2-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2-2026-09-21.md).
 
@@ -195,7 +195,7 @@ This slice bounded Sandbox control-plane owner calls and Connect webhook forward
 
 **Current implementation queue remains none.** This checkpoint does not authorize production promotion, Cloudflare/public-edge activation, hosted spend, a new PE/PCS/Batch/F6 scope, or any staging-runtime claim beyond existing evidence.
 
-The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
+At this historical maintenance checkpoint, the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`; later governed deployments superseded it.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
 
@@ -207,7 +207,7 @@ This slice bounded the Ai server-side Flow owner proxy to 10 seconds by default 
 
 **Current implementation queue remains none.** This checkpoint does not authorize production promotion, Cloudflare/public-edge activation, hosted spend, a new PE/PCS/Batch/F6 scope, or any staging-runtime claim beyond existing evidence.
 
-The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
+At this historical maintenance checkpoint, the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`; later governed deployments superseded it.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
 
@@ -219,7 +219,7 @@ This slice repairs Sandbox receipt-lock acquisition cleanup. If exclusive lock c
 
 **Current implementation queue remains none.** This checkpoint does not authorize production promotion, Cloudflare/public-edge activation, hosted spend, a new PE/PCS/Batch/F6 scope, or any staging-runtime claim beyond existing evidence.
 
-The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` until a later explicit deployment record proves otherwise.
+At this historical maintenance checkpoint, the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`; later governed deployments superseded it.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
 

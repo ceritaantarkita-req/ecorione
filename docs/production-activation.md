@@ -1,7 +1,7 @@
 # ECORIONE — Production Activation Workstream
 
 Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING VERIFIED**
-Date: 2026-09-21
+Date: 2026-09-23
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
 
@@ -89,7 +89,7 @@ local persistence/restart — CLOSED / PASS
   -> public production promotion only after a new explicit operator decision
 ```
 
-None of the closed local checkpoints should be mislabeled as VPS, Cloudflare, hosted-provider, remote-host durability, or off-host DR evidence.
+None of the closed local checkpoints should be mislabeled as VPS, Cloudflare, hosted-provider, remote-host durability, or Off-host DR evidence. Separate later runtime evidence now proves total SumoPod staging-host loss recovery for the original DR boundary; DR-2 physical independence remains a distinct active follow-up.
 
 On native Windows, shell-syntax verification for these Linux production scripts must use an explicit real Bash executable (for example MSYS/Git Bash) through `ECORIONE_BASH`; do not rely on the Windows `bash.exe` launcher resolving to the intended runtime.
 
@@ -130,7 +130,7 @@ Production secrets are never command-line examples in this document. Provider se
 | 11 | Production E2E edge smoke | **PENDING FUTURE DEPLOYMENT** | `pnpm production:smoke` on actual public edge |
 | 12 | Hosted provider credentials/canaries | **OPTIONAL / OPERATOR CREDENTIALS REQUIRED** | Never required for current local work |
 | 13 | Durable production observability | **PENDING FUTURE DEPLOYMENT** | Local observability baseline does not replace production retention/alerting evidence |
-| 14 | Host hardening/off-host DR | **PENDING FUTURE DEPLOYMENT** | Requires actual host/failure-domain evidence |
+| 14 | Host hardening / disaster recovery | **PARTIALLY PROVEN / DR-2 ACTIVE** | Original SumoPod host-loss DR is CLOSED / PASS; stronger physical-host/storage independence remains DR-2 checkpoint 2+ |
 
 ## Resume procedure
 

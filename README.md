@@ -4,7 +4,7 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-> **Current status — 2026-09-22:** the original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, and post-closure **PCS-00..PCS-10** are **CLOSED / PASS** at their documented boundaries. SumoPod remote staging is verified and GitHub `main` remains source of truth. Public production promotion/Cloudflare remains a separate explicit operator decision; AutoClick remains deferred by design.
+> **Current status — 2026-09-23:** the original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, and the original Off-host DR total-SumoPod-host-loss drill are **CLOSED / PASS** at their documented boundaries. **DR-2 physical independence is the only active infrastructure scope; checkpoint 1 is CLOSED / PASS and checkpoint 2 is the active operator gate to select a genuinely external backup target.** SumoPod remains staging, GitHub `main` remains source of truth, public production/Cloudflare promotion remains a separate explicit decision, and AutoClick remains deferred by design.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -71,7 +71,7 @@ Read [docs/product-evolution-architecture.md](docs/product-evolution-architectur
 
 PE-08 Product closure is CLOSED / PASS on PR #180. Product Evolution PE-00 through PE-08 is complete at the documented boundaries; no Batch 13 is opened. Native Windows portability hardening was merged through PR #182 after Windows-local verification plus CI #1477 and Product Eval #716 passed. Clean-checkout reproducibility then closed on PR #183: canonical formatting is committed and CI now validates source without a pre-format mutation; exact closure head passed CI #1482 and Product Eval #721. Fresh-clone Windows EOL closure then completed on PR #185: the three `.cmd` blobs were renormalized to canonical LF in Git while `.gitattributes` preserves CRLF in Windows working trees; PR CI #1486, Product Eval #725, Desktop Installer #76, and post-merge main CI #1487 / Product Eval #726 all passed.
 
-The follow-on PCS-00..PCS-10 roadmap is also CLOSED / PASS. It delivered persistent Project chat/history, provider/model onboarding, Local runtime resilience, product visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, governed GitHub-to-staging CD, real-host hardening/reboot/backup/observability evidence, and final documentation convergence. The later bounded latest-main staging-convergence scope is also CLOSED / PASS at the runtime boundary: governed Staging Deploy #293 moved SumoPod staging to exact reviewed revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` and passed public smoke, authenticated Ops health, and exact-host evidence.
+The follow-on PCS-00..PCS-10 roadmap is also CLOSED / PASS. It delivered persistent Project chat/history, provider/model onboarding, Local runtime resilience, product visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, governed GitHub-to-staging CD, real-host hardening/reboot/backup/observability evidence, and final documentation convergence. The later latest-main staging convergence to `52046db35e403babdda934881773c46bf2c57b68` is historical; the newer governed staging runtime selected and fully exercised by the closed DR drill is exact `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. Subsequent documentation/DR-2 merges have not been deployed because staging deployment activation remains disabled.
 
 ## Local development
 
@@ -86,7 +86,7 @@ pnpm dev
 
 ## Production/self-host
 
-Repository-side production/self-host tooling is ready and the SumoPod **remote staging** boundary has been verified through PCS-07..PCS-09. That staging evidence is not a production claim. Public production promotion, final public edge/domain posture, off-host DR, and long-term telemetry retention remain separate explicit gates. See the staging, production, and release runbooks under `docs/`.
+Repository-side production/self-host tooling is ready and the SumoPod **remote staging** boundary is verified. The original total-SumoPod-host-loss Off-host DR drill is also CLOSED / PASS at its documented boundary, including independent retrieval, 12-volume restore, 15-service recovery, semantic canary checks, changed-boot-ID persistence, and final RPO/RTO closure evidence. **DR-2** remains active only to prove stronger physical-host/storage independence for the backup target and replacement compute. Public production promotion, final public edge/domain posture, provider/account-wide DR, and long-term telemetry retention remain separate explicit gates. See the staging, DR, production, and release runbooks under `docs/`.
 
 ## License
 

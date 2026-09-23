@@ -221,4 +221,4 @@ Production DR still requires verified backups copied to a different failure doma
 
 ## Historical next checkpoint
 
-At closure time, the next operator-approved local checkpoint was the **local observability baseline**. That checkpoint and subsequent UX/model-identity work later closed at their documented boundaries; SumoPod compute-host staging was also later verified through PCS-07..PCS-09. Public production/Cloudflare and off-host DR remain separate explicit boundaries.
+At closure time, the next operator-approved local checkpoint was the **local observability baseline**. That checkpoint and subsequent UX/model-identity work later closed at their documented boundaries; SumoPod compute-host staging was later verified through PCS-07..PCS-09. The original Off-host DR workstream subsequently CLOSED / PASS for total SumoPod staging-host loss at its documented boundary. Public production/Cloudflare, point-in-time recovery, provider/account-wide DR, and the newer DR-2 physical-independence proof remain separate explicit boundaries.

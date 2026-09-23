@@ -1,6 +1,6 @@
 # ECORIONE — SumoPod Remote Staging Runbook
 
-Last updated: **2026-09-22**
+Last updated: **2026-09-23**
 
 Status: **REMOTE STAGING VERIFIED / PCS-07..PCS-09 CLOSED / PASS / NOT PRODUCTION**
 
@@ -251,6 +251,6 @@ PCS-08 governed continuous deployment is CLOSED / PASS, including exact-current-
 
 PCS-09 staging hardening is CLOSED / PASS. Its historical runtime evidence was captured on exact reviewed revision `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b`, including key-only SSH hardening, strict zero-blocker inventory, a real full-VPS reboot, verified same-host cold backup for all 12 project volumes, and final credentialed Operations + host-resource evidence. Evidence: [verification/pcs-09-repository-preparation-2026-09-21.md](verification/pcs-09-repository-preparation-2026-09-21.md).
 
-Latest-main staging convergence subsequently deployed exact reviewed revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` through governed Staging Deploy #293. Public smoke, authenticated Ops health, MCP protection checks, and sanitized exact-host evidence passed. This is now the current proven application runtime. The full PCS-09 reboot/backup acceptance was not repeated for the new SHA. Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
+Latest-main staging convergence subsequently deployed exact reviewed revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` through governed Staging Deploy #293. That identity is historical. A later governed DR activation selected and exercised exact staging runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`; the original Off-host DR drill then CLOSED / PASS at the documented SumoPod host-loss boundary. Subsequent documentation/DR-2 merges have not redeployed staging because deployment activation remained disabled. Evidence: [verification/offhost-dr-runtime-closure-2026-09-23.md](verification/offhost-dr-runtime-closure-2026-09-23.md).
 
-Public production promotion remains a separate explicit decision.
+Public production promotion remains a separate explicit decision. DR-2 physical independence is also a separate active follow-up and does not change this staging runbook's production boundary.

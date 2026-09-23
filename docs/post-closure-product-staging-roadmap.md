@@ -1,6 +1,6 @@
 # ECORIONE — Post-Closure Product + Remote Staging Roadmap
 
-Last updated: **2026-09-21**
+Last updated: **2026-09-23**
 
 Status: **CLOSED / PASS — PCS-00..PCS-10**
 
@@ -202,7 +202,7 @@ Requirements:
 
 State: **CLOSED / PASS**.
 
-PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 also passed. Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was then governed-deployed to SumoPod. Real-host evidence now passes key-only SSH hardening, strict inventory, full-VPS reboot persistence, 12-volume same-host cold backup with isolated content verification, and final Operations/host-resource checks. Off-host DR and production promotion remain explicit non-claims. Closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918 passed. Staging Deploy #135/#136 gate PASSed with deploy skipped, preserving the proven runtime.
+PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 also passed. Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was then governed-deployed to SumoPod. Real-host evidence now passes key-only SSH hardening, strict inventory, full-VPS reboot persistence, 12-volume same-host cold backup with isolated content verification, and final Operations/host-resource checks. At PCS-09 closure, Off-host DR and production promotion were explicit non-claims. The original Off-host DR workstream later CLOSED / PASS for total SumoPod staging-host loss at its documented boundary; production promotion remains a non-claim, and DR-2 physical independence is now the separate active follow-up scope. Closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918 passed. Staging Deploy #135/#136 gate PASSed with deploy skipped, preserving the proven runtime.
 
 - establish HTTPS and operator authentication;
 - verify restart persistence on the actual VPS;
