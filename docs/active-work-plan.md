@@ -2,22 +2,26 @@
 
 Last updated: **2026-09-23**
 
-Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 ACTIVE / PRODUCTION CUTOVER DEFERRED**
+Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 TARGET CHOICE PENDING / PRODUCTION CUTOVER DEFERRED**
 
-## DR-2 physical independence — ACTIVE / CHECKPOINT 1
+## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 PENDING
 
-Issue #277 is the only active infrastructure implementation scope. It is additive to the completed Off-host DR drill and must not rewrite Issue #266 evidence.
+Issue #277 remains open as the additive physical-independence workstream; Issue #266 remains closed and unchanged.
 
-Checkpoint 1 delivers provider-neutral repository tooling only:
+Checkpoint 1 repository foundation is CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca8454511405a68424f0b7`:
 
-- `scripts/staging-dr2-host-evidence.mjs` captures sanitized hashed host identity plus a failure-domain label into a mode-0600 non-overwriting receipt;
-- `scripts/staging-dr2-physical-independence-preflight.mjs` requires explicit `ECORIONE_DR_PHYSICAL_INDEPENDENCE_ACK=1`, rejects matching failure-domain/machine identities, and adds a stricter guard when both hosts are WSL;
-- deterministic tests cover PASS, matching-machine rejection, reused-domain rejection, missing attestation, WSL identity requirements, and overwrite refusal;
-- no runtime target is selected, contacted, provisioned, or paid for in checkpoint 1.
+- sanitized host-evidence capture and mode-0600 non-overwriting receipts are merged;
+- explicit physical-independence attestation plus distinct failure-domain/machine identity checks are merged;
+- the two-WSL system-UUID guard is merged;
+- deterministic positive/negative tests are merged;
+- exact-head CI #1913, Product Eval #1152, MCP #1011, and Desktop Installer #197 passed;
+- merged-main CI #1914, Product Eval #1153, and MCP #1012 passed;
+- Staging Deploy #591/#592 gate-passed and deploy remained skipped.
 
-Checkpoint 2 is blocked on an operator choice of a genuinely external backup target. Existing strict SSH transport remains the preferred first path because it is already exercised by the closed DR baseline.
+There is no additional repository implementation required before checkpoint 2. The next gate is an operator choice of a genuinely external backup target. Existing strict SSH transport remains the preferred first path because it is already exercised by the closed DR baseline. No paid/external target action is authorized implicitly.
 
-Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
+Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).  
+Checkpoint 1 evidence: [verification/dr2-physical-independence-checkpoint-1-2026-09-23.md](verification/dr2-physical-independence-checkpoint-1-2026-09-23.md).
 
 ## Latest post-closure maintenance checkpoint
 
