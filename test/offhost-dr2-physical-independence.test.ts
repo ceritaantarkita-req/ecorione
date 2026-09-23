@@ -101,21 +101,11 @@ describe("DR-2 physical independence preflight", () => {
 
     writeEvidence(
       backup,
-      evidence(
-        "backup-target",
-        "external-target-a",
-        "a".repeat(64),
-        "b".repeat(64),
-      ),
+      evidence("backup-target", "external-target-a", "a".repeat(64), "b".repeat(64)),
     );
     writeEvidence(
       replacement,
-      evidence(
-        "replacement-host",
-        "recovery-host-b",
-        "c".repeat(64),
-        "d".repeat(64),
-      ),
+      evidence("replacement-host", "recovery-host-b", "c".repeat(64), "d".repeat(64)),
     );
 
     const result = runPreflight(backup, replacement, output);
@@ -143,21 +133,11 @@ describe("DR-2 physical independence preflight", () => {
 
     writeEvidence(
       backup,
-      evidence(
-        "backup-target",
-        "external-target-a",
-        "a".repeat(64),
-        "b".repeat(64),
-      ),
+      evidence("backup-target", "external-target-a", "a".repeat(64), "b".repeat(64)),
     );
     writeEvidence(
       replacement,
-      evidence(
-        "replacement-host",
-        "recovery-host-b",
-        "a".repeat(64),
-        "d".repeat(64),
-      ),
+      evidence("replacement-host", "recovery-host-b", "a".repeat(64), "d".repeat(64)),
     );
 
     const result = runPreflight(backup, replacement, output);
@@ -175,21 +155,11 @@ describe("DR-2 physical independence preflight", () => {
 
     writeEvidence(
       backup,
-      evidence(
-        "backup-target",
-        "same-domain",
-        "a".repeat(64),
-        "b".repeat(64),
-      ),
+      evidence("backup-target", "same-domain", "a".repeat(64), "b".repeat(64)),
     );
     writeEvidence(
       replacement,
-      evidence(
-        "replacement-host",
-        "same-domain",
-        "c".repeat(64),
-        "d".repeat(64),
-      ),
+      evidence("replacement-host", "same-domain", "c".repeat(64), "d".repeat(64)),
     );
 
     const result = runPreflight(backup, replacement, output);
@@ -207,21 +177,11 @@ describe("DR-2 physical independence preflight", () => {
 
     writeEvidence(
       backup,
-      evidence(
-        "backup-target",
-        "external-target-a",
-        "a".repeat(64),
-        "b".repeat(64),
-      ),
+      evidence("backup-target", "external-target-a", "a".repeat(64), "b".repeat(64)),
     );
     writeEvidence(
       replacement,
-      evidence(
-        "replacement-host",
-        "recovery-host-b",
-        "c".repeat(64),
-        "d".repeat(64),
-      ),
+      evidence("replacement-host", "recovery-host-b", "c".repeat(64), "d".repeat(64)),
     );
 
     const result = runPreflight(backup, replacement, output, "0");
@@ -241,13 +201,7 @@ describe("DR-2 physical independence preflight", () => {
 
     writeEvidence(
       backup,
-      evidence(
-        "backup-target",
-        "external-target-a",
-        "a".repeat(64),
-        null,
-        "wsl",
-      ),
+      evidence("backup-target", "external-target-a", "a".repeat(64), null, "wsl"),
     );
     writeEvidence(
       replacement,
@@ -277,21 +231,11 @@ describe("DR-2 physical independence preflight", () => {
 
     writeEvidence(
       backup,
-      evidence(
-        "backup-target",
-        "external-target-a",
-        "a".repeat(64),
-        "b".repeat(64),
-      ),
+      evidence("backup-target", "external-target-a", "a".repeat(64), "b".repeat(64)),
     );
     writeEvidence(
       replacement,
-      evidence(
-        "replacement-host",
-        "recovery-host-b",
-        "c".repeat(64),
-        "d".repeat(64),
-      ),
+      evidence("replacement-host", "recovery-host-b", "c".repeat(64), "d".repeat(64)),
     );
     writeFileSync(output, "{}\n", { mode: 0o600 });
 
