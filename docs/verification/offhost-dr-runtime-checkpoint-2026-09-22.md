@@ -1,6 +1,6 @@
 # Off-host DR runtime checkpoint — 2026-09-22
 
-Status: **ACTIVE / RETENTION CLOSED / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS / TOTAL-HOST-LOSS NOT YET CLOSED**
+Status: **CLOSED / PASS — TOTAL SUMOPOD HOST-LOSS RECOVERY PROVEN AT THE DOCUMENTED BOUNDARY**
 
 ## Scope
 
@@ -272,13 +272,59 @@ acceptedAt=2026-09-23T00:42:40.366Z
 
 This acceptance includes semantic owner-data canary verification, loopback security/protected-route/MCP smoke, authenticated Operations, and sanitized exact-host evidence. Public DNS/TLS remains outside this recovery proof.
 
-## Next runtime gate
+## Replacement-host reboot persistence — PASS
 
-The next sequence is now:
+The reboot baseline captured exact source/image identity, 15 configured/running services, 12 project volumes, Connect durable-file fingerprints, semantic canary state, and Linux boot ID `54ff4a46-1cf9-4152-a61f-0ee581a78859`.
 
-1. capture the replacement-host reboot baseline;
-2. perform one operator-controlled full reboot of the `ecorione-recovery` replacement environment;
-3. require changed Linux boot ID plus preserved exact source/image, project volumes, Connect durable fingerprints, semantic canary, loopback smoke, authenticated Operations and host evidence;
-4. generate final marker-bound closure evidence with measured RPO/RTO.
+A single-distro WSL terminate did not change the Linux boot ID, so it was rejected as insufficient evidence. A full WSL2 utility-VM shutdown/relaunch then changed the recovery-host boot ID to `b7504194-fbe6-4741-8752-506ab7aaccd7`.
 
-Until the changed-boot-ID and final closure gates pass, **total-host-loss recovery remains NOT YET PROVEN**.
+Post-reboot evidence then passed with:
+
+```text
+phase=post-verified
+serviceCount=15
+projectVolumeCount=12
+connectFingerprintsPreserved=true
+projectVolumesPreserved=true
+semanticCanaryVerifiedAfterReboot=true
+rebootPersistenceAccepted=true
+totalHostLossRecoveryCandidate=true
+```
+
+The recovered topology returned automatically, remained loopback-only on `127.0.0.1:18080`, preserved exact source/image identity, and re-passed semantic canary, MCP/protected-route smoke, authenticated Operations, and sanitized host evidence.
+
+## Final marker-bound closure evidence — PASS
+
+The final mode-0600 closure receipt `/var/lib/ecorione-dr/recovery-closure-evidence.json` passed all cross-checks against the selected export manifest, semantic canary, immutable loss marker, retrieval receipt, restore receipt, and final acceptance receipt.
+
+Final measured drill values:
+
+```text
+source_sha=b27c1e5833be0a0fccf3f525d82ae8853cd22113
+source_tag=staging-b27c1e5833be
+restoredVolumeCount=12
+serviceCount=15
+failureDomainAcknowledged=true
+independentRetrievalVerified=true
+semanticCanaryAccepted=true
+semanticCanaryVerifiedAfterReboot=true
+changedBootIdProven=true
+totalHostLossRecoveryCandidate=true
+conservativeRpoSeconds=3147
+retrievalReadyRtoSeconds=3138
+dataReadyRtoSeconds=5582
+applicationReadyRtoSeconds=30042
+finalRecoveryRtoSeconds=71523
+```
+
+These timings describe this one drill and are not a production SLA.
+
+## Closure boundary
+
+At the tested boundary, **total loss of the SumoPod staging host is recoverable from the retained encrypted off-host generation** without using the lost source after the immutable loss marker. The drill proves exact-source application recovery, all 12 owner volumes, separate recovery secrets, 15-service startup, semantic owner-data continuity, protected/MCP/Ops boundaries, and changed-boot-ID persistence.
+
+This is not evidence of independent physical-laptop or physical-disk recovery between the backup target and replacement compute: both WSL distros used for those two roles were hosted on the same Windows machine. The separately protected secret copy was also created immediately before this drill, so this run proves use of that out-of-band copy after loss declaration rather than historical long-term secret-backup independence.
+
+Public DNS/TLS, Cloudflare/production cutover, provider/account-wide disaster recovery, and production SLA commitments remain separate boundaries.
+
+Detailed closure evidence: [offhost-dr-runtime-closure-2026-09-23.md](offhost-dr-runtime-closure-2026-09-23.md).
