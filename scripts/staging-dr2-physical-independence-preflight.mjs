@@ -59,9 +59,7 @@ function parseEvidence(path, expectedRole) {
     value?.role !== expectedRole ||
     !LABEL_RE.test(value?.failureDomain ?? "") ||
     !HASH_RE.test(value?.hostIdentity?.machineIdSha256 ?? "") ||
-    !["string", "object"].includes(
-      typeof value?.hostIdentity?.systemUuidSha256,
-    ) ||
+    !["string", "object"].includes(typeof value?.hostIdentity?.systemUuidSha256) ||
     typeof value?.hostIdentity?.virtualization !== "string" ||
     typeof value?.capturedAt !== "string"
   ) {
@@ -108,21 +106,14 @@ const replacement = parseEvidence(replacementHost, "replacement-host");
 if (backup.failureDomain === replacement.failureDomain) {
   fail("backup target and replacement host use the same failure-domain label");
 }
-if (
-  backup.hostIdentity.machineIdSha256 ===
-  replacement.hostIdentity.machineIdSha256
-) {
+if (backup.hostIdentity.machineIdSha256 === replacement.hostIdentity.machineIdSha256) {
   fail("backup target and replacement host have the same machine-id fingerprint");
 }
 
 const backupSystem = backup.hostIdentity.systemUuidSha256;
 const replacementSystem = replacement.hostIdentity.systemUuidSha256;
 
-if (
-  backupSystem !== null &&
-  replacementSystem !== null &&
-  backupSystem === replacementSystem
-) {
+if (backupSystem !== null && replacementSystem !== null && backupSystem === replacementSystem) {
   fail("backup target and replacement host have the same system UUID fingerprint");
 }
 
