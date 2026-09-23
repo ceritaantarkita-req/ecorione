@@ -489,7 +489,7 @@ sudo -E bash scripts/staging-offhost-dr-target-audit.sh --check
 
 ## Checkpoint state
 
-Checkpoints 1–7 are CLOSED / PASS at repository boundaries. Runtime execution remains the active DR work.
+Checkpoints 1–7 are CLOSED / PASS at repository boundaries, and the real runtime total-SumoPod-host-loss drill is now CLOSED / PASS at the documented boundary.
 
 Repository foundation contains:
 
@@ -508,6 +508,6 @@ Repository checkpoints 1–7 are now followed by real runtime execution evidence
 - the first marker-bound fetch exposed the SCP/SFTP quoting defect described in section F; independent inventory plus direct strict-SCP proved the retained generation is intact, and PR #268 merged the transport fix;
 - no DR private key or recovery secret value is stored in Git or in this documentation.
 
-Real runtime execution has now passed independent retrieval, isolated decrypt/content verification, clean-host preflight, guarded real-volume restore, exact-source loopback startup, semantic-canary/application acceptance, authenticated Operations, and exact-host evidence. The acceptance receipt records `preRebootAccepted=true`. The remaining runtime gates are changed-boot-ID replacement-host reboot evidence and final marker-bound RPO/RTO closure. Until those pass, total-host-loss recovery is **NOT YET PROVEN**.
+Real runtime execution passed independent retrieval, isolated decrypt/content verification, clean-host preflight, guarded real-volume restore, exact-source loopback startup, semantic-canary/application acceptance, authenticated Operations, exact-host evidence, changed-boot-ID reboot persistence, and final marker-bound RPO/RTO closure evidence. For the tested exact source/generation, total loss of the SumoPod staging host is therefore **PROVEN RECOVERABLE at this runbook boundary**. This does not claim physical-machine/disk independence because the backup-target and recovery WSL distros were hosted on the same Windows machine, and it does not turn one-drill RPO/RTO measurements into an SLA.
 
 Runtime evidence: [verification/offhost-dr-runtime-checkpoint-2026-09-22.md](verification/offhost-dr-runtime-checkpoint-2026-09-22.md).

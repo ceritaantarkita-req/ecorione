@@ -1,8 +1,8 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-22**
+Last updated: **2026-09-23**
 
-Status: **CURRENT / OFF-HOST DR ACTIVE / RETENTION CLOSED / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OFF-HOST DR CLOSED-PASS / TOTAL SUMOPOD HOST-LOSS RECOVERY PROVEN / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -26,7 +26,7 @@ The first marker-bound fetch exposed a second repository tooling bug: the fetch 
 
 The exact-source application checkout must remain at `b27c1e...`. The newer fetch compatibility fix may be run only from an isolated temporary worktree; it does not change the recorded application source identity.
 
-Marker-bound retrieval, isolated decrypt/Docker verification, clean replacement-host preflight, guarded real project-volume restore, exact-source application startup, and pre-reboot application recovery acceptance now PASS. All 15 configured services are running behind loopback-only `127.0.0.1:18080`; the acceptance receipt proves semantic canary, protected-route/MCP smoke, authenticated Operations, and exact-host evidence with `preRebootAccepted=true`. PR #273 records the recovered-startup single-build fix after the real Docker Compose tag-export race. Next runtime gate: reboot baseline -> full replacement-host reboot -> changed-boot-ID post-reboot acceptance -> marker-bound final closure receipt. Until all of those pass, **total-host-loss recovery remains NOT YET PROVEN**.
+The full off-host DR runtime drill is now **CLOSED / PASS** at the documented SumoPod host-loss boundary. Marker-bound independent retrieval, isolated decrypt/content verification, clean-host preflight, all 12 real project-volume restores, exact-source 15-service loopback startup, semantic canary, protected-route/MCP smoke, authenticated Operations, exact-host evidence, changed Linux boot ID, preserved project volumes/Connect fingerprints after reboot, and final marker-bound closure evidence all passed. Final measured drill values are `conservativeRpoSeconds=3147`, `retrievalReadyRtoSeconds=3138`, `dataReadyRtoSeconds=5582`, `applicationReadyRtoSeconds=30042`, and `finalRecoveryRtoSeconds=71523`. These are one-drill measurements, not an SLA. The tested recovery target and replacement compute were separate WSL distros on the same Windows machine, so physical-machine/disk independence is not claimed.
 
 Runtime checkpoint evidence: [verification/offhost-dr-runtime-checkpoint-2026-09-22.md](verification/offhost-dr-runtime-checkpoint-2026-09-22.md).
 
@@ -44,7 +44,7 @@ This convergence did not rerun the full VPS reboot or same-host cold-backup acce
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
-## Off-host Backup & DR — ACTIVE / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS
+## Off-host Backup & DR — CLOSED / PASS
 
 Checkpoint 1 repository foundation is CLOSED / PASS through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed. Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
 
@@ -68,7 +68,7 @@ Checkpoint 7 repository implementation is CLOSED / PASS through PR #263 exact he
 
 Checkpoint 6 repository implementation is CLOSED / PASS through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` and merge `cb043b47a2c899e3c0585b06db4992fcc727c723`. Exact-head CI #1857, Product Eval #1096, MCP #1001, and Desktop Installer #188 passed. Merged-main CI #1858, Product Eval #1097, and MCP #1002 passed. Staging Deploy #480/#481 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
 
-The repository-only checkpoint non-claims above are now partly superseded by real runtime evidence: source/target readiness passed, three real retained generations exist, retention is ready, a clean replacement host is provisioned, a real loss marker exists, marker-bound independent retrieval passed, and all 12 archived volumes passed isolated decrypt/content verification. Real-volume restore/application/reboot/closure evidence is still incomplete, so measured final RPO/RTO and total-host-loss recovery remain non-claims.
+The repository-only checkpoint non-claims above are now superseded by real runtime closure at the documented boundary: source/target readiness, three-generation retention, immutable marker, independent retrieval, isolated verification, 12-volume restore, exact-source startup, pre/post-reboot acceptance, changed-boot-ID persistence, and sanitized closure timing evidence all passed. Total loss of the SumoPod staging host is therefore proven recoverable for this tested generation and topology, subject to the documented same-Windows-host and secret-custody caveats.
 
 Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
 Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  

@@ -1,8 +1,8 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-22**
+Last updated: **2026-09-23**
 
-Status: **OFF-HOST DR ACTIVE / RETENTION CLOSED / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS / PRODUCTION CUTOVER DEFERRED**
+Status: **OFF-HOST DR CLOSED-PASS / NO ACTIVE DR EXECUTION TAIL / PRODUCTION CUTOVER DEFERRED**
 
 ## Latest post-closure maintenance checkpoint
 
@@ -28,9 +28,9 @@ This convergence did not rerun the destructive/full-host PCS-09 reboot or same-h
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
-## Off-host Backup & DR — ACTIVE
+## Off-host Backup & DR — CLOSED / PASS
 
-### Runtime execution checkpoint — ACTIVE
+### Runtime execution checkpoint — CLOSED / PASS
 
 The active runtime source is exact `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`.
 
@@ -53,9 +53,9 @@ Checkpoint 1 is **CLOSED / PASS at the repository-foundation boundary** through 
 
 Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 is also CLOSED / PASS at the repository boundary through PR #252 / merge `9e522e62212b5a4170ad4947c4bdd75c28f34464`; exact head CI #1820, Product Eval #1059, MCP #970 and Desktop Installer #160 passed, followed by merged-main CI #1821, Product Eval #1060 and MCP #971. Staging Deploy #412/#413 gate-passed and deploy remained skipped because activation stayed disabled.
 
-Real-host execution is now materially underway: current-revision off-host generations exist, the three-generation retention gate is closed, the clean replacement host and separate secret-recovery inputs are ready, the immutable loss marker is live, marker-bound independent retrieval passed, and isolated verification passed across all 12 archived volumes. The replacement-host read-only preflight, guarded 12-volume restore, exact-source 15-service loopback startup, and pre-reboot application acceptance now pass. Reboot persistence and final RPO/RTO closure remain incomplete. Total-host-loss recovery therefore remains a non-claim.
+Real-host execution is now complete at the documented boundary. Three-generation retention, immutable marker-bound independent retrieval, isolated verification, clean-host preflight, guarded 12-volume restore, exact-source 15-service loopback startup, pre-reboot acceptance, full changed-boot-ID reboot persistence, repeated semantic/MCP/Ops/host evidence, and final sanitized closure timing evidence all passed.
 
-The active work is now the post-acceptance recovery tail: **capture reboot baseline** -> full replacement-host reboot -> changed-boot-ID post-reboot verification -> sanitized RPO/RTO closure evidence cross-bound to the existing marker/retrieval chain.
+There is **no active Off-host DR execution tail**. This workstream is CLOSED / PASS. Future work should be opened as a new explicit scope, for example a physically independent backup/recovery target, periodic rehearsal cadence, or production-cutover DR policy.
 
 Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` (CI #1850, Product Eval #1089, MCP #996, Desktop Installer #184) and merge `941cb8c9ed237a5417550449c7d73e712b10ba72` (merged-main CI #1851, Product Eval #1090, MCP #997). Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
 
