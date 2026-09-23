@@ -2,11 +2,11 @@
 
 Last updated: **2026-09-23**
 
-Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 OPERATOR GATE ACTIVE / PRODUCTION CUTOVER DEFERRED**
+Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 ACTIVE
+## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
-Issue #277 is the only active infrastructure implementation scope. It is additive to the completed Off-host DR drill and must not rewrite Issue #266 evidence.
+Issue #277 remains the DR-2 tracking scope but is currently deferred; there is no active DR-2 runtime implementation. It is additive to the completed Off-host DR drill and must not rewrite Issue #266 evidence.
 
 Checkpoint 1 is CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca8454511405a68424f0b7`. It delivered provider-neutral repository tooling only:
 
@@ -17,9 +17,11 @@ Checkpoint 1 is CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca84545
 
 Exact-head gates passed: CI #1913, Product Eval #1152, MCP External HTTPS #1011, Desktop Installer #197. Merged-main CI #1914, Product Eval #1153, MCP External HTTPS #1012, and Staging Deploy #591/#592 also passed.
 
-Checkpoint 2 is the active operator gate and is blocked on selection of a genuinely external backup target. Existing strict SSH transport remains the preferred first path because it is already exercised by the closed DR baseline.
+Checkpoint 2 is safe-paused before target selection. Existing strict SSH transport remains the preferred resume path if DR-2 is restarted later.
 
 A provider-neutral selection package is now prepared: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It is a safe checkpoint only: no external target is selected, contacted, provisioned, or paid for, and checkpoint 3 must not begin until checkpoint 2 is explicitly closed.
+
+Interim operator decision: keep local backup as the current backup posture. An encrypted Google Drive copy may be added later as a secondary off-device copy, but no Drive transport or DR-2 recovery claim is currently implemented or validated.
 
 Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 
