@@ -7,7 +7,7 @@ This file is the single navigation entry point for repository documentation. If 
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current state and explicit deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; DR-2 physical independence checkpoint 2 is the only active operational scope.
+2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; DR-2 checkpoint 2 is currently deferred at a safe pre-selection boundary.
 3. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — CLOSED PCS-00..PCS-10 product/UX + SumoPod staging roadmap.
 4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — closed PE product model and ownership rules.
 5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — closed PE-00 through PE-08 batch plan.
@@ -105,7 +105,7 @@ Use the owner-specific runbook when touching its subsystem:
 - [data-rebuild-operations.md](data-rebuild-operations.md)
 - [data-governance-dr-operations.md](data-governance-dr-operations.md)
 - [offhost-dr-recovery.md](offhost-dr-recovery.md) — CLOSED / PASS original total-SumoPod-host-loss recovery runbook and evidence boundary.
-- [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md) — ACTIVE DR-2 follow-up; checkpoint 1 repository foundation is closed and checkpoint 2 external-target selection is the current gate.
+- [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md) — DEFERRED DR-2 follow-up; checkpoint 1 is closed and checkpoint 2 is safe-paused before any external target selection.
   - checkpoint-2 safe selection package: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md); no target selected yet.
 - [multimodal-operations.md](multimodal-operations.md)
 - [voice-operations.md](voice-operations.md)
@@ -123,7 +123,7 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current operating/deferred boundaries
 
-- active operational scope — **DR-2 physical independence / CHECKPOINT 2 EXTERNAL-TARGET SELECTION**; checkpoint 1 is CLOSED / PASS and no genuinely external target has been selected or contacted yet.
+- active operational scope — **NONE for DR-2 runtime**; DR-2 checkpoint 2 is deferred at the safe pre-selection boundary. Interim backup posture is local backup; optional encrypted Google Drive copy is not yet a validated DR-2 target.
 - original Off-host Backup & DR — **CLOSED / PASS** for total SumoPod staging-host loss at the documented boundary; exact recovered runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / image `staging-b27c1e5833be`.
 - SumoPod remote development/staging — **VERIFIED / NOT PRODUCTION**; the latest proven application runtime remains `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. Later documentation/DR-2 merges did not deploy because staging deployment activation remained disabled.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.

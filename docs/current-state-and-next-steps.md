@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-23**
 
-Status: **CURRENT / ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE ACTIVE / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -10,15 +10,15 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
-## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 ACTIVE
+## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
 Issue #277 opens a new additive infrastructure scope after the original Off-host DR runtime closure. The closed Issue #266 claim remains unchanged: total loss of the tested SumoPod staging host is recoverable at its documented boundary.
 
 DR-2 addresses the remaining caveat that the previous backup-target WSL distro and replacement-host WSL distro shared one physical Windows machine. Checkpoint 1 repository foundation is now CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca8454511405a68424f0b7`, with exact-head CI #1913, Product Eval #1152, MCP External HTTPS #1011, and Desktop Installer #197 PASS, followed by merged-main CI #1914, Product Eval #1153, and MCP External HTTPS #1012 PASS.
 
-Checkpoint 2 is now the active operator gate: select a genuinely external backup target outside the physical/storage failure domain of the replacement compute. No external target has been selected or contacted yet; any paid infrastructure, fresh-generation export, and new recovery drill remain unstarted.
+Checkpoint 2 is now deliberately deferred by operator decision. No external target has been selected or contacted; no paid infrastructure, fresh-generation export, or new recovery drill has started. The interim backup posture is local backup only. An encrypted Google Drive copy is allowed later as an optional secondary off-device copy, but it is not yet a selected/validated DR-2 target.
 
-The repository-side checkpoint-2 selection package is prepared and records eligible/ineligible target classes, the required non-secret operator decision, strict SSH custody/trust acceptance, and the safe stop boundary. This preparation does **not** select a target and does not close checkpoint 2. Evidence: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md).
+The repository-side checkpoint-2 selection package is prepared and records eligible/ineligible target classes, the required non-secret operator decision, strict SSH custody/trust acceptance, and the safe stop boundary. This preparation does **not** select a target and does not close checkpoint 2. It remains the safe resume point if DR-2 is restarted later. Evidence: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md).
 
 Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 

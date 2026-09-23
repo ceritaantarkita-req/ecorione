@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-23**
 
-Status: **ACTIVE / CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 — EXTERNAL TARGET SELECTION**
+Status: **DEFERRED BY OPERATOR / CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 SAFE-PAUSED BEFORE TARGET SELECTION**
 
 Issue: #277
 
@@ -57,7 +57,7 @@ Checkpoint 1 contacted, mutated, and provisioned no external target. Exact revie
 
 Checkpoint 1 closure evidence: [verification/offhost-dr2-checkpoint-1-2026-09-23.md](verification/offhost-dr2-checkpoint-1-2026-09-23.md).
 
-### Checkpoint 2 — external target selection — ACTIVE / OPERATOR GATE
+### Checkpoint 2 — external target selection — DEFERRED / SAFE-PAUSED
 
 The operator selects a genuinely external backup target. The target must be outside the physical host/storage failure domain of the chosen replacement recovery compute.
 
@@ -73,6 +73,8 @@ Existing strict SSH transport is preferred initially because the closed DR path 
 Adding object-storage transport is a separate decision and is not required merely to close physical independence.
 
 Checkpoint-2 selection/custody acceptance package: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It defines eligible/ineligible target classes, the operator decision record, strict SSH custody/trust acceptance, and a safe stop boundary without selecting or mutating any external system.
+
+Operator decision on 2026-09-23: external physical-independence work may be postponed. For the interim, local backup is accepted as the working backup posture; an encrypted Google Drive copy may be used later as a secondary off-device copy, but Google Drive is **not** yet selected or validated as a DR-2 target. This deferral does not weaken the already-closed original SumoPod host-loss proof, but it also does not close DR-2 physical independence.
 
 ### Checkpoint 3 — real physical-independence preflight
 
@@ -166,7 +168,7 @@ DR-2 may be CLOSED / PASS only when all of the following are true:
 - final marker-bound closure evidence passes;
 - docs record the exact claim boundary and remaining provider/account/secret/SLA caveats.
 
-Until then, **DR-2 physical-independence recovery remains ACTIVE / NOT YET CLOSED**.
+Until the operator resumes checkpoint 2 and later runtime gates pass, **DR-2 physical-independence recovery remains DEFERRED / NOT YET CLOSED**.
 
 ## Relationship to the closed DR baseline
 
