@@ -10,7 +10,7 @@ It intentionally preserves:
 - bounded benchmark measurements;
 - reconciliation records.
 
-Use [../current-state-and-next-steps.md](../current-state-and-next-steps.md) for current status and [../active-work-plan.md](../active-work-plan.md) for the current work queue. The only active infrastructure scope is DR-2 physical independence checkpoint 2 external-target selection; PE/PCS/original Off-host DR implementation scopes remain closed.
+Use [../current-state-and-next-steps.md](../current-state-and-next-steps.md) for current status and [../active-work-plan.md](../active-work-plan.md) for the current work queue. DR-2 checkpoint 2 external-target selection is currently deferred at a safe pre-selection boundary; PE/PCS/original Off-host DR implementation scopes remain closed.
 
 Do not “clean up” a historical failure by rewriting its original result. If later work fixes the issue, record that in a later verification file and in the current-state docs.
 
@@ -23,8 +23,8 @@ Historical latest-main staging-convergence evidence: [latest-main-staging-conver
 
 Latest original Off-host DR runtime closure: [offhost-dr-runtime-closure-2026-09-23.md](offhost-dr-runtime-closure-2026-09-23.md). It records total SumoPod staging-host-loss recovery PASS at the documented boundary on exact source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, with 12 restored volumes, 15 services, semantic canary, changed-boot-ID persistence, and final marker-bound RPO/RTO evidence.
 
-Latest DR-2 evidence: [offhost-dr2-checkpoint-1-2026-09-23.md](offhost-dr2-checkpoint-1-2026-09-23.md). Checkpoint 1 repository foundation is CLOSED / PASS; checkpoint 2 external-target selection is the active operator gate and no physical-independence runtime claim exists yet.
+Latest DR-2 foundation evidence: [offhost-dr2-checkpoint-1-2026-09-23.md](offhost-dr2-checkpoint-1-2026-09-23.md). Checkpoint 1 repository foundation is CLOSED / PASS; checkpoint 2 external-target selection is now deferred and no physical-independence runtime claim exists.
 
-DR-2 checkpoint 2 safe selection package: [offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It prepares the operator decision and strict-SSH custody/trust boundary without selecting or mutating any external target; checkpoint 2 remains ACTIVE until an explicit operator target choice is made.
+DR-2 checkpoint 2 safe selection package: [offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It prepares the operator decision and strict-SSH custody/trust boundary without selecting or mutating any external target; checkpoint 2 is now DEFERRED until an explicit operator decision resumes target selection.
 
 DR-2 checkpoint 2 deferment: [offhost-dr2-checkpoint-2-deferment-2026-09-23.md](offhost-dr2-checkpoint-2-deferment-2026-09-23.md). The operator postponed external-target selection; local backup is the interim posture and Google Drive is only an optional future encrypted secondary copy, not a validated DR-2 target.
