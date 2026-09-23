@@ -52,7 +52,7 @@ That convergence checkpoint established `52046db35e403babdda934881773c46bf2c57b6
 
 The reviewed deploy orchestrator writes the non-secret release receipt only after public/Ops/exact-host validation succeeds and emits its final PASS after that write, so the successful run proves the receipt path completed for the deployed SHA/tag.
 
-This convergence did not rerun the full VPS reboot or same-host cold-backup acceptance on the new SHA. That statement is historical: the later Off-host DR runtime drill subsequently CLOSED / PASS for total SumoPod staging-host loss at its documented boundary. DR-2 physical independence is now the separate active follow-up scope; production promotion, public-edge activation, paid-provider evidence, and long-term external telemetry retention remain separate deferred boundaries.
+This convergence did not rerun the full VPS reboot or same-host cold-backup acceptance on the new SHA. That statement is historical: the later Off-host DR runtime drill subsequently CLOSED / PASS for total SumoPod staging-host loss at its documented boundary. DR-2 physical independence is now the separate deferred follow-up scope; production promotion, public-edge activation, paid-provider evidence, and long-term external telemetry retention remain separate deferred boundaries.
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
