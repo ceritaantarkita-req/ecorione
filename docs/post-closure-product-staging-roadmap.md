@@ -1,6 +1,6 @@
 # ECORIONE — Post-Closure Product + Remote Staging Roadmap
 
-Last updated: **2026-09-21**
+Last updated: **2026-09-23**
 
 Status: **CLOSED / PASS — PCS-00..PCS-10**
 
