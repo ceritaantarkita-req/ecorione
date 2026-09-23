@@ -26,3 +26,5 @@ Latest original Off-host DR runtime closure: [offhost-dr-runtime-closure-2026-09
 Latest DR-2 evidence: [offhost-dr2-checkpoint-1-2026-09-23.md](offhost-dr2-checkpoint-1-2026-09-23.md). Checkpoint 1 repository foundation is CLOSED / PASS; checkpoint 2 external-target selection is the active operator gate and no physical-independence runtime claim exists yet.
 
 DR-2 checkpoint 2 safe selection package: [offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It prepares the operator decision and strict-SSH custody/trust boundary without selecting or mutating any external target; checkpoint 2 remains ACTIVE until an explicit operator target choice is made.
+
+DR-2 checkpoint 2 deferment: [offhost-dr2-checkpoint-2-deferment-2026-09-23.md](offhost-dr2-checkpoint-2-deferment-2026-09-23.md). The operator postponed external-target selection; local backup is the interim posture and Google Drive is only an optional future encrypted secondary copy, not a validated DR-2 target.
