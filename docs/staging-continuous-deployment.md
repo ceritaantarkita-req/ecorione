@@ -189,7 +189,7 @@ It then requires every configured service to be running and performs a basic pub
 
 A rollback does **not** convert the failed GitHub deployment into success. The GitHub job remains failed.
 
-Runtime rollback is not data rollback. PCS-09 separately proved same-host cold backup plus isolated restore-content verification; off-host DR, point-in-time recovery, and total-host-loss recovery remain separate non-claims.
+Runtime rollback is not data rollback. PCS-09 separately proved same-host cold backup plus isolated restore-content verification. The later original Off-host DR drill separately proved total SumoPod staging-host loss recovery at its documented boundary; that proof does not come from CD itself. Point-in-time recovery, DR-2 physical-host/storage independence, provider/account-wide DR, and production promotion remain separate boundaries.
 
 ## Release identity
 
