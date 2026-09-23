@@ -90,7 +90,9 @@
     "staging:dr:target-audit": "bash scripts/staging-offhost-dr-target-audit.sh --report",
     "staging:dr:retention-check": "bash scripts/staging-offhost-dr-target-audit.sh --check",
     "staging:dr:closure-evidence": "node scripts/staging-offhost-dr-closure-evidence.mjs",
-    "staging:dr:loss-marker": "node scripts/staging-offhost-dr-loss-marker.mjs"
+    "staging:dr:loss-marker": "node scripts/staging-offhost-dr-loss-marker.mjs",
+    "staging:dr2:host-evidence": "node scripts/staging-dr2-host-evidence.mjs",
+    "staging:dr2:physical-preflight": "node scripts/staging-dr2-physical-independence-preflight.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

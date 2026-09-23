@@ -2,13 +2,23 @@
 
 Last updated: **2026-09-23**
 
-Status: **CURRENT / OFF-HOST DR CLOSED-PASS / TOTAL SUMOPOD HOST-LOSS RECOVERY PROVEN / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE ACTIVE / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## DR-2 physical independence — ACTIVE / CHECKPOINT 1
+
+Issue #277 opens a new additive infrastructure scope after the original Off-host DR runtime closure. The closed Issue #266 claim remains unchanged: total loss of the tested SumoPod staging host is recoverable at its documented boundary.
+
+DR-2 addresses the remaining caveat that the previous backup-target WSL distro and replacement-host WSL distro shared one physical Windows machine. Checkpoint 1 is repository-only foundation: sanitized host-identity capture, mode-0600 non-overwriting receipts, explicit physical-independence operator attestation, distinct failure-domain/machine fingerprints, and a WSL-specific system-UUID guard. No external target is provisioned or contacted by checkpoint 1.
+
+Runtime target selection, any paid infrastructure, fresh-generation export, and a new recovery drill remain later explicit gates.
+
+Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 
 ## Off-host DR runtime checkpoint — 2026-09-22
 
@@ -356,7 +366,7 @@ Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](ver
 
 ## Current work state and deferred boundaries
 
-- Active implementation/operational scope — **NONE**. Latest-main staging convergence, PE-00..PE-08, and PCS-00..PCS-10 are closed at their documented boundaries.
+- Active implementation/operational scope — **DR-2 physical independence, checkpoint 1 repository foundation**. The original Off-host DR runtime drill, latest-main staging convergence, PE-00..PE-08, and PCS-00..PCS-10 remain closed at their documented boundaries.
 - Post-closure product/UX + SumoPod remote staging — **CLOSED / PASS**; see `post-closure-product-staging-roadmap.md`.
 - Public production cutover — **DEFERRED / SEPARATE EXPLICIT GATE**. Staging, remote persistence, security, same-host backup verification, observability, and operator acceptance are already proven at the documented staging boundary; they do not automatically authorize production.
 - Cloudflare named Tunnel/public-edge choice — optional/pending operator hostname/edge decision.
