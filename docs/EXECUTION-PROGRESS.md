@@ -82,13 +82,13 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | Original changed-boot-ID persistence + final marker-bound closure | **CLOSED / PASS** |
 | Total SumoPod staging-host-loss recovery | **PROVEN at documented boundary** |
 | DR-2 checkpoint 1 — physical-independence repository foundation | **CLOSED / PASS** |
-| DR-2 checkpoint 2 — genuinely external backup-target selection | **ACTIVE / OPERATOR GATE** |
+| DR-2 checkpoint 2 — genuinely external backup-target selection | **DEFERRED / SAFE-PAUSED** |
 | DR-2 physical-independence runtime proof | **NOT YET PROVEN** |
 | Production promotion | **DEFERRED / SEPARATE GATE** |
 
 Original runtime closure later completed on exact staging source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`: three retained encrypted generations, marker-bound independent retrieval, isolated verification, guarded restore of all 12 project volumes, exact-source 15-service startup, semantic canary, protected/MCP/Ops checks, changed Linux boot ID, preserved Connect/project-volume fingerprints, and final closure evidence all passed. Final one-drill measurements were conservative RPO 3147s, retrieval-ready RTO 3138s, data-ready RTO 5582s, application-ready RTO 30042s, and final recovery RTO 71523s. These are measurements, not an SLA. Evidence: [verification/offhost-dr-runtime-closure-2026-09-23.md](verification/offhost-dr-runtime-closure-2026-09-23.md).
 
-DR-2 then opened as an additive scope to remove the same-physical-Windows-host caveat. Checkpoint 1 merged through PR #278 / `4d1f4ef82839c74cc1ca8454511405a68424f0b7`; bookkeeping PR #280 merged as `3bb1d0b26064469998e4595809d646575cd04456`. Checkpoint 2 external-target selection is now the only active infrastructure gate. Evidence: [verification/offhost-dr2-checkpoint-1-2026-09-23.md](verification/offhost-dr2-checkpoint-1-2026-09-23.md).
+DR-2 then opened as an additive scope to remove the same-physical-Windows-host caveat. Checkpoint 1 merged through PR #278 / `4d1f4ef82839c74cc1ca8454511405a68424f0b7`; bookkeeping PR #280 merged as `3bb1d0b26064469998e4595809d646575cd04456`. Checkpoint 2 is now deliberately deferred at the safe pre-selection boundary. Local backup is the interim posture; an encrypted Google Drive copy may be added later as a secondary off-device copy but is not yet a validated DR-2 target. Evidence: [verification/offhost-dr2-checkpoint-1-2026-09-23.md](verification/offhost-dr2-checkpoint-1-2026-09-23.md) and [verification/offhost-dr2-checkpoint-2-deferment-2026-09-23.md](verification/offhost-dr2-checkpoint-2-deferment-2026-09-23.md).
 
 Checkpoint 1 repository foundation closed through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`; exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed, while Staging Deploy #308/#309 passed their gates and skipped deployment.
 
