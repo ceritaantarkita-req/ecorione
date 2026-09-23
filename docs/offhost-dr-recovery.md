@@ -358,6 +358,8 @@ sudo -E bash scripts/staging-offhost-dr-start.sh --apply \
 
 The start helper requires independent-retrieval proof, exact Git SHA, a clean tracked worktree, all restored volumes present, and no existing project containers. In standalone mode it refuses any overlay other than `deploy/compose.dr-recovery.yml` and refuses an external edge network. It sets the recorded image tag and waits for every configured service. On startup failure it removes only attempted project containers/network and preserves the restored volumes.
 
+Runtime execution exposed a clean-host Compose build race when several services sharing one application image attempted to export the same tag concurrently while Bake/buildx was unavailable. PR #273 changes the helper to build the shared ECORIONE application image once, verify the exact source tag, then start the complete topology with `up -d --no-build`. This is recovery orchestration hardening; it does not alter application source identity or restored data.
+
 Run pre-reboot application recovery acceptance through the loopback-only Caddy policy boundary:
 
 ```bash
@@ -506,6 +508,6 @@ Repository checkpoints 1–7 are now followed by real runtime execution evidence
 - the first marker-bound fetch exposed the SCP/SFTP quoting defect described in section F; independent inventory plus direct strict-SCP proved the retained generation is intact, and PR #268 merged the transport fix;
 - no DR private key or recovery secret value is stored in Git or in this documentation.
 
-The remaining runtime gates are verified independent retrieval, isolated decrypt/content verification, clean-host preflight, guarded real-volume restore, application acceptance, changed-boot-ID reboot evidence, and final marker-bound RPO/RTO closure. Until those pass, total-host-loss recovery is **NOT YET PROVEN**.
+Real runtime execution has now passed independent retrieval, isolated decrypt/content verification, clean-host preflight, guarded real-volume restore, exact-source loopback startup, semantic-canary/application acceptance, authenticated Operations, and exact-host evidence. The acceptance receipt records `preRebootAccepted=true`. The remaining runtime gates are changed-boot-ID replacement-host reboot evidence and final marker-bound RPO/RTO closure. Until those pass, total-host-loss recovery is **NOT YET PROVEN**.
 
 Runtime evidence: [verification/offhost-dr-runtime-checkpoint-2026-09-22.md](verification/offhost-dr-runtime-checkpoint-2026-09-22.md).
