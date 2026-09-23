@@ -80,8 +80,7 @@ const { role, failureDomain, output } = parseArgs(process.argv.slice(2));
 if (process.platform !== "linux") {
   fail("host evidence capture is supported only on Linux recovery/target hosts");
 }
-if (existsSync(output))
-  fail("refusing to overwrite existing host evidence output");
+if (existsSync(output)) fail("refusing to overwrite existing host evidence output");
 
 const machineId = readTrimmed("/etc/machine-id");
 if (!machineId) fail("/etc/machine-id is missing or unsafe");
@@ -118,7 +117,5 @@ console.log("PASS ECORIONE DR-2 sanitized host evidence capture");
 console.log(`role=${role}`);
 console.log(`failure_domain=${failureDomain}`);
 console.log(`virtualization=${evidence.hostIdentity.virtualization}`);
-console.log(
-  `system_uuid_fingerprint_present=${systemUuid ? "1" : "0"}`,
-);
+console.log(`system_uuid_fingerprint_present=${systemUuid ? "1" : "0"}`);
 console.log(`output=${output}`);
