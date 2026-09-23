@@ -2,20 +2,22 @@
 
 Last updated: **2026-09-23**
 
-Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 ACTIVE / PRODUCTION CUTOVER DEFERRED**
+Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 OPERATOR GATE ACTIVE / PRODUCTION CUTOVER DEFERRED**
 
-## DR-2 physical independence — ACTIVE / CHECKPOINT 1
+## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 ACTIVE
 
 Issue #277 is the only active infrastructure implementation scope. It is additive to the completed Off-host DR drill and must not rewrite Issue #266 evidence.
 
-Checkpoint 1 delivers provider-neutral repository tooling only:
+Checkpoint 1 is CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca8454511405a68424f0b7`. It delivered provider-neutral repository tooling only:
 
 - `scripts/staging-dr2-host-evidence.mjs` captures sanitized hashed host identity plus a failure-domain label into a mode-0600 non-overwriting receipt;
 - `scripts/staging-dr2-physical-independence-preflight.mjs` requires explicit `ECORIONE_DR_PHYSICAL_INDEPENDENCE_ACK=1`, rejects matching failure-domain/machine identities, and adds a stricter guard when both hosts are WSL;
 - deterministic tests cover PASS, matching-machine rejection, reused-domain rejection, missing attestation, WSL identity requirements, and overwrite refusal;
-- no runtime target is selected, contacted, provisioned, or paid for in checkpoint 1.
+- no runtime target was selected, contacted, provisioned, or paid for in checkpoint 1.
 
-Checkpoint 2 is blocked on an operator choice of a genuinely external backup target. Existing strict SSH transport remains the preferred first path because it is already exercised by the closed DR baseline.
+Exact-head gates passed: CI #1913, Product Eval #1152, MCP External HTTPS #1011, Desktop Installer #197. Merged-main CI #1914, Product Eval #1153, MCP External HTTPS #1012, and Staging Deploy #591/#592 also passed.
+
+Checkpoint 2 is the active operator gate and is blocked on selection of a genuinely external backup target. Existing strict SSH transport remains the preferred first path because it is already exercised by the closed DR baseline.
 
 Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 
