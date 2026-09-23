@@ -1,6 +1,6 @@
 # ECORIONE — PCS-09 Staging Hardening, Persistence, Backup & Observability
 
-Last updated: **2026-09-22**
+Last updated: **2026-09-23**
 
 Status: **PCS-09 CLOSED / PASS**
 
@@ -84,7 +84,7 @@ PCS-09 will create and verify a same-host staging backup before any disaster-rec
 
 Same-host backup is not off-host disaster recovery. A separate off-host copy to a distinct failure domain is required before total-VPS-loss recovery can be claimed.
 
-That separate workstream is now explicitly active at the runtime-execution boundary. Checkpoints 1–3 are CLOSED / PASS at repository boundaries: encrypted portable backup, independent-transfer/retrieval provenance, guarded clean-host restore, semantic canary, standalone replacement-host preflight, loopback-only Caddy/security/MCP/Ops acceptance, and changed-boot-id reboot evidence are implemented and reviewed. See [offhost-dr-recovery.md](offhost-dr-recovery.md). No real current-revision off-host copy or total-host-loss recovery is claimed until the runtime gates in that runbook pass.
+That separate workstream is now explicitly active at the runtime-execution boundary. Checkpoints 1–3 are CLOSED / PASS at repository boundaries: encrypted portable backup, independent-transfer/retrieval provenance, guarded clean-host restore, semantic canary, standalone replacement-host preflight, loopback-only Caddy/security/MCP/Ops acceptance, and changed-boot-id reboot evidence are implemented and reviewed. See [offhost-dr-recovery.md](offhost-dr-recovery.md). That statement was the PCS-09 handoff boundary. The later original Off-host DR runtime drill passed those gates and CLOSED / PASS for total SumoPod staging-host loss; see [verification/offhost-dr-runtime-closure-2026-09-23.md](verification/offhost-dr-runtime-closure-2026-09-23.md). DR-2 physical independence remains a newer separate follow-up.
 
 Repository backup command:
 
@@ -110,8 +110,8 @@ Long-term telemetry retention remains an external-scraper responsibility until a
 
 PCS-09 closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`. Merged-main CI #1679 + Product Eval #918 passed. Automatic Staging Deploy #135/#136 passed their gates and skipped deploy because activation remained disabled.
 
-The PCS-09 closure runtime was the independently proven exact revision `0f332c73dc7b363bffecdeecae921d805d5ae131`. A later bounded latest-main staging-convergence deployment superseded the current application identity to `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` through Staging Deploy #293. That later convergence passed public/Ops/exact-host deployment gates but did not rerun this document's full reboot or cold-backup acceptance sequence.
+The PCS-09 closure runtime was the independently proven exact revision `0f332c73dc7b363bffecdeecae921d805d5ae131`. A later bounded latest-main staging-convergence deployment moved the application identity to `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` through Staging Deploy #293. That checkpoint was later superseded by the governed original-DR staging runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, which completed the total-SumoPod-host-loss recovery drill. This document's PCS-09 reboot/cold-backup evidence remains historical evidence for its own exact runtime.
 
 ## Explicit non-claims
 
-PCS-09 does not by itself prove off-host disaster recovery, point-in-time recovery, total VPS loss recovery, recovery of an out-of-band Vault master key, production SLA/SLO, public production cutover, or long-term telemetry retention.
+PCS-09 does not by itself prove off-host disaster recovery, point-in-time recovery, total VPS loss recovery, recovery of an out-of-band Vault master key, production SLA/SLO, public production cutover, or long-term telemetry retention. Separate later original-DR evidence proves total SumoPod staging-host loss recovery at its documented boundary; point-in-time recovery, DR-2 physical independence, provider/account-wide DR, production SLA/SLO, and public production remain separate.
