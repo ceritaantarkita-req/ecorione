@@ -4,7 +4,7 @@ Last updated: **2026-09-23**
 
 Status: **PCS-09 CLOSED / PASS**
 
-PCS-09 starts after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS. It hardens and proves the real remote staging host. It does not promote ECORIONE to production. The host currently has Node.js but no pnpm; operator evidence commands therefore invoke reviewed Node/Bash entrypoints directly.
+PCS-09 historically started after PCS-08 GitHub-to-SumoPod continuous deployment CLOSED / PASS. It hardened and proved the real remote staging host and did not promote ECORIONE to production. At the PCS-09 evidence boundary the host had Node.js but no pnpm, so operator evidence commands invoked reviewed Node/Bash entrypoints directly. This document preserves that exact PCS-09 runtime context; later DR evidence is recorded separately.
 
 ## Evidence order
 
