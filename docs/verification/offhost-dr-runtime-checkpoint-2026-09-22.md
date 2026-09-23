@@ -233,14 +233,52 @@ Post-restore inventory confirmed exactly 12 project-labelled volumes and zero pr
 
 Operator note: `/var/lib/ecorione-dr` is root-controlled. A wildcard such as `sudo ls /var/lib/ecorione-dr/restore-*.json` can fail because wildcard expansion occurs in the caller's shell before `sudo`. Use the exact emitted receipt path, or run the wildcard inside a root shell.
 
+## Restore receipt verification — PASS
+
+Exact receipt `/var/lib/ecorione-dr/restore-b27c1e5833be-1790099700511.json` is root-owned mode 0600 and records exact source `b27c1e5833be0a0fccf3f525d82ae8853cd22113`, source tag `staging-b27c1e5833be`, Compose project `ecorione-staging`, 12 restored volumes, and independent-target retrieval evidence. Its measured data milestones are:
+
+```text
+recoveryStartedAt=2026-09-22T17:54:37.742Z
+dataReadyAt=2026-09-22T17:55:00.511Z
+```
+
+Before application startup the receipt correctly recorded `applicationStarted=false` and `secretsRestored=false`; application-level recovery is proven separately by acceptance evidence below.
+
+## Recovered application startup — PASS
+
+The first startup attempt exposed a Docker Compose recovery-host build race: with Bake configured but buildx unavailable, several services exported the same `ecorione:staging-b27c1e5833be` tag concurrently and failed with `image ... already exists` before application containers were accepted.
+
+PR #273 fixes the durable helper by building the shared exact-source application image once, verifying the expected image tag, and starting the topology with `up -d --no-build`. For the already active drill, the exact application checkout remained pinned to `b27c1e...`; the equivalent single-build/no-build sequence was executed without moving source identity.
+
+Runtime startup then passed with all 15 configured services running and the recovery edge listening only on `127.0.0.1:18080`. Git remained exact and clean.
+
+## Pre-reboot application recovery acceptance — PASS
+
+The loopback acceptance gate passed and wrote mode-0600 receipt:
+
+```text
+acceptance_receipt=/var/lib/ecorione-dr/recovery-acceptance.json
+source_sha=b27c1e5833be0a0fccf3f525d82ae8853cd22113
+source_tag=staging-b27c1e5833be
+serviceCount=15
+restoredVolumeCount=12
+semanticCanaryAccepted=true
+preRebootAccepted=true
+rebootPersistenceAccepted=false
+edgeMode=loopback
+acceptanceBaseOrigin=http://127.0.0.1:18080
+acceptedAt=2026-09-23T00:42:40.366Z
+```
+
+This acceptance includes semantic owner-data canary verification, loopback security/protected-route/MCP smoke, authenticated Operations, and sanitized exact-host evidence. Public DNS/TLS remains outside this recovery proof.
+
 ## Next runtime gate
 
 The next sequence is now:
 
-1. verify the exact emitted restore receipt path/mode and receipt fields;
-2. start through the standalone loopback recovery overlay;
-3. pass semantic canary, protected-route, MCP, authenticated Operations and exact-source acceptance;
-4. capture reboot baseline, reboot the replacement host, and pass post-reboot evidence with changed boot ID;
-5. generate final marker-bound closure evidence with measured RPO/RTO.
+1. capture the replacement-host reboot baseline;
+2. perform one operator-controlled full reboot of the `ecorione-recovery` replacement environment;
+3. require changed Linux boot ID plus preserved exact source/image, project volumes, Connect durable fingerprints, semantic canary, loopback smoke, authenticated Operations and host evidence;
+4. generate final marker-bound closure evidence with measured RPO/RTO.
 
-Until all of those gates pass, **total-host-loss recovery remains NOT YET PROVEN**.
+Until the changed-boot-ID and final closure gates pass, **total-host-loss recovery remains NOT YET PROVEN**.
