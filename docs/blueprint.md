@@ -1,6 +1,6 @@
 # ecorione — Cetak biru lengkap: Fase 0 sampai Fase 6+
 
-> **CURRENT STATUS NOTICE — 2026-09-21:** this is the original architecture/phase blueprint, not the current work queue. Fase 0–4, the planned Batch/W/F6 baseline, Product Evolution PE-00..PE-08, and PCS-00..PCS-10 are closed at their documented boundaries. Fase 5 AutoClick remains deferred by design; Fase 6+ is an evidence-driven framework with no active item. SumoPod remote staging is verified; public production remains a separate explicit gate. Use `docs/current-state-and-next-steps.md` and `docs/active-work-plan.md` for current execution.
+> **CURRENT STATUS NOTICE — 2026-09-23:** this is the original architecture/phase blueprint, not the current work queue. Fase 0–4, the planned Batch/W/F6 baseline, Product Evolution PE-00..PE-08, PCS-00..PCS-10, and the original Off-host DR total-SumoPod-host-loss drill are closed at their documented boundaries. Fase 5 AutoClick remains deferred by design; Fase 6+ is an evidence-driven framework with no active feature item. DR-2 physical independence checkpoint 2 is the only active infrastructure gate. SumoPod staging is verified; public production remains a separate explicit gate. Use `docs/current-state-and-next-steps.md` and `docs/active-work-plan.md` for current execution.
 
 
 Status: **v1.0** — 2026-09-08. Ini dokumen tunggal yang menjelaskan **seluruh** rencana
@@ -9,7 +9,7 @@ Ditulis supaya siapa pun (manusia atau AI lain — ChatGPT, dst) yang membuka re
 tanpa histori percakapan sebelumnya tetap tahu persis apa yang sedang dan akan dibangun,
 tanpa harus menyimpulkan sendiri dari `prd.md` yang ditulis untuk audiens berbeda (§0).
 
-> **HISTORICAL EXECUTION BLUEPRINT NOTICE:** dokumen v1.0 ini dipertahankan untuk menjelaskan rencana/urutan awal. Tabel status fase di bawah adalah snapshot planning 2026-09-08 dan **bukan current implementation state**. Current state pada 2026-09-21: Fase 0–4 CLOSED baseline, Fase 5 AutoClick DEFERRED BY DESIGN, planned platform/production Batch 1–12 CLOSED, PE-00..PE-08 CLOSED / PASS, PCS-00..PCS-10 CLOSED / PASS, SumoPod staging VERIFIED, dan tidak ada implementation queue aktif. Mulai dari `current-state-and-next-steps.md` lalu `EXECUTION-PROGRESS.md` sebelum memakai blueprint ini.
+> **HISTORICAL EXECUTION BLUEPRINT NOTICE:** dokumen v1.0 ini dipertahankan untuk menjelaskan rencana/urutan awal. Tabel status fase di bawah adalah snapshot planning 2026-09-08 dan **bukan current implementation state**. Current state pada 2026-09-23: Fase 0–4 CLOSED baseline, Fase 5 AutoClick DEFERRED BY DESIGN, planned platform/production Batch 1–12 CLOSED, PE-00..PE-08 CLOSED / PASS, PCS-00..PCS-10 CLOSED / PASS, original Off-host DR CLOSED / PASS, SumoPod staging VERIFIED, dan DR-2 checkpoint 2 menjadi satu-satunya active infrastructure gate. Mulai dari `current-state-and-next-steps.md` lalu `EXECUTION-PROGRESS.md` sebelum memakai blueprint ini.
 
 ## 0. Cara pakai dokumen ini
 
