@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-23**
 
-Status: **ACTIVE / CHECKPOINT 1 — REPOSITORY FOUNDATION**
+Status: **ACTIVE / CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 TARGET SELECTION PENDING**
 
 Issue: #277
 
@@ -36,7 +36,7 @@ DR-2 does not authorize:
 
 ## Checkpoint plan
 
-### Checkpoint 1 — repository foundation
+### Checkpoint 1 — repository foundation — CLOSED / PASS
 
 Add provider-neutral tooling that can:
 
@@ -53,9 +53,11 @@ Add provider-neutral tooling that can:
 11. require system UUID fingerprints when both hosts report WSL virtualization;
 12. state clearly that preflight evidence is not final DR-2 recovery proof.
 
-Checkpoint 1 must not contact, mutate, or provision any external target.
+Checkpoint 1 is CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca8454511405a68424f0b7`. Exact-head CI #1913, Product Eval #1152, MCP External HTTPS #1011, and Desktop Installer #197 passed; merged-main CI #1914, Product Eval #1153, and MCP External HTTPS #1012 passed. Staging Deploy #591/#592 gate-passed and skipped deployment. Checkpoint 1 contacted, mutated, and provisioned no external target.
 
-### Checkpoint 2 — external target selection
+Evidence: [verification/dr2-physical-independence-checkpoint-1-2026-09-23.md](verification/dr2-physical-independence-checkpoint-1-2026-09-23.md).
+
+### Checkpoint 2 — external target selection — PENDING OPERATOR CHOICE
 
 The operator selects a genuinely external backup target. The target must be outside the physical host/storage failure domain of the chosen replacement recovery compute.
 
