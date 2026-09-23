@@ -24,7 +24,7 @@ Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md)
 
 Real-host execution has moved beyond repository-only preparation.
 
-The governed staging source selected for the active drill is exact SHA `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. Three real encrypted off-host generations for that identity are retained on the independent SSH target; the fixed retained-generation audit reports `complete_generations=3`, `incomplete_generations=0`, and `retention_ready=1`.
+The governed staging source selected for the now-closed original DR drill was exact SHA `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. Three real encrypted off-host generations for that identity are retained on the independent SSH target; the fixed retained-generation audit reports `complete_generations=3`, `incomplete_generations=0`, and `retention_ready=1`.
 
 The audit evidence path itself exposed one runtime tooling bug: SSH inside the manifest `while read` loop consumed the loop stdin. PR #267 fixed that with `ssh -n`; the fix was exercised from an isolated worktree and proved all three retained generations complete without moving the application runtime.
 
@@ -46,7 +46,7 @@ The bounded latest-main staging-convergence scope is CLOSED / PASS at the runtim
 
 Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as `staging-52046db35e40`. Both workflow jobs passed. Public smoke, authenticated Operations health, MCP protection checks, sanitized exact-host identity, and final PCS-08 deploy validation passed. The host evidence reported `headSha == expectedSha`, `healthy: true`, and no unhealthy owner services.
 
-That convergence checkpoint established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at the time. It is now historical: subsequent governed DR runtime activation established exact staging source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, which is the source identity selected by the active recovery drill.
+That convergence checkpoint established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at the time. It is now historical: subsequent governed DR runtime activation established exact staging source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, which became the source identity selected by the later, now-closed original recovery drill.
 
 The reviewed deploy orchestrator writes the non-secret release receipt only after public/Ops/exact-host validation succeeds and emits its final PASS after that write, so the successful run proves the receipt path completed for the deployed SHA/tag.
 
@@ -332,7 +332,7 @@ Closed maintenance in this slice includes:
 
 This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
 
-Repository source state and remote runtime state remain separate evidence boundaries. The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless a later explicit deployment record proves a newer runtime.
+At this historical maintenance checkpoint, repository source state and remote runtime state remained separate evidence boundaries and the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`. Later governed staging convergence and DR activation superseded that runtime identity.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
 
@@ -346,7 +346,7 @@ The authoritative implementation head `db8a8f6068a40e47187a2142e6801e975e749276`
 
 This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
 
-Repository source state and remote runtime state remain separate evidence boundaries. The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless a later explicit deployment record proves a newer runtime.
+At this historical maintenance checkpoint, repository source state and remote runtime state remained separate evidence boundaries and the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`. Later governed staging convergence and DR activation superseded that runtime identity.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
 
@@ -360,7 +360,7 @@ The authoritative implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9`
 
 This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
 
-Repository source state and remote runtime state remain separate evidence boundaries. The latest proven SumoPod staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless a later explicit deployment record proves a newer runtime.
+At this historical maintenance checkpoint, repository source state and remote runtime state remained separate evidence boundaries and the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`. Later governed staging convergence and DR activation superseded that runtime identity.
 
 Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
 
