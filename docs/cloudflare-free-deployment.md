@@ -1,13 +1,13 @@
 # ECORIONE — Cloudflare Free Deployment Guide
 
 Last reviewed against Cloudflare documentation: **2026-09-10**  
-Current project status reconciled: **2026-09-21**
+Current project status reconciled: **2026-09-23**
 
 Status: **OPTIONAL PUBLIC EDGE / NOT YET SELECTED FOR SUMOPOD STAGING**
 
 This file remains the deployment guide for a future Cloudflare Free + Tunnel rollout. The operator has now approved an operator-owned SumoPod VPS for **remote development/staging**, but has **not yet selected Cloudflare Tunnel as the staging/public edge**. Staging may proceed through the self-host runbook first; Cloudflare remains a separate optional edge decision.
 
-The closed local checkpoints do not constitute Cloudflare evidence. SumoPod remote staging has now completed its own persistence/security/backup/observability acceptance through PCS-09, but that verified staging evidence still does not constitute public production or Cloudflare-Tunnel evidence.
+The closed local checkpoints do not constitute Cloudflare evidence. SumoPod remote staging, the later original Off-host DR host-loss recovery closure, and DR-2 repository preparation are all separate from Cloudflare/public-edge evidence; none constitutes public production or Cloudflare-Tunnel proof.
 
 Do not execute Cloudflare account, DNS, Tunnel, or origin-lockdown mutation merely because SumoPod staging is approved. Use this guide only after an explicit edge/hostname decision. Current state: `docs/current-state-and-next-steps.md`; staging roadmap: `docs/post-closure-product-staging-roadmap.md`.
 
