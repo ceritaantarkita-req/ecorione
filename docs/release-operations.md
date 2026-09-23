@@ -21,7 +21,7 @@ export ECORIONE_DEPLOY_ENV=deploy/staging.env
 export ECORIONE_COMPOSE_PROJECT=ecorione-staging
 ```
 
-`ECORIONE_PRODUCTION_ENV` remains a compatibility fallback. SumoPod staging is verified through PCS-07..PCS-09 and the original Off-host DR host-loss drill is CLOSED / PASS at its own boundary. Use `docs/staging-continuous-deployment.md` for routine governed GitHub-to-staging delivery, `docs/sumopod-staging.md` / `docs/staging-hardening-backup-observability.md` for host procedures, `docs/offhost-dr-recovery.md` for the closed original DR runbook, and `docs/offhost-dr-physical-independence.md` for the active DR-2 follow-up.
+`ECORIONE_PRODUCTION_ENV` remains a compatibility fallback. SumoPod staging is verified through PCS-07..PCS-09 and the original Off-host DR host-loss drill is CLOSED / PASS at its own boundary. Use `docs/staging-continuous-deployment.md` for routine governed GitHub-to-staging delivery, `docs/sumopod-staging.md` / `docs/staging-hardening-backup-observability.md` for host procedures, `docs/offhost-dr-recovery.md` for the closed original DR runbook, and `docs/offhost-dr-physical-independence.md` for the deferred DR-2 follow-up and its safe resume boundary.
 
 1. Run `scripts/self-host-install.sh`; first run creates the selected mode-0600 deployment env from `deploy/production.env.example` and exits.
 2. Replace every `CHANGE_ME`; keep hosted provider API secrets in Connect Vault rather than deployment env plaintext.
