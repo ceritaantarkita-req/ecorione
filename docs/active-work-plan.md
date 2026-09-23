@@ -2,7 +2,22 @@
 
 Last updated: **2026-09-23**
 
-Status: **OFF-HOST DR CLOSED-PASS / NO ACTIVE DR EXECUTION TAIL / PRODUCTION CUTOVER DEFERRED**
+Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 ACTIVE / PRODUCTION CUTOVER DEFERRED**
+
+## DR-2 physical independence — ACTIVE / CHECKPOINT 1
+
+Issue #277 is the only active infrastructure implementation scope. It is additive to the completed Off-host DR drill and must not rewrite Issue #266 evidence.
+
+Checkpoint 1 delivers provider-neutral repository tooling only:
+
+- `scripts/staging-dr2-host-evidence.mjs` captures sanitized hashed host identity plus a failure-domain label into a mode-0600 non-overwriting receipt;
+- `scripts/staging-dr2-physical-independence-preflight.mjs` requires explicit `ECORIONE_DR_PHYSICAL_INDEPENDENCE_ACK=1`, rejects matching failure-domain/machine identities, and adds a stricter guard when both hosts are WSL;
+- deterministic tests cover PASS, matching-machine rejection, reused-domain rejection, missing attestation, WSL identity requirements, and overwrite refusal;
+- no runtime target is selected, contacted, provisioned, or paid for in checkpoint 1.
+
+Checkpoint 2 is blocked on an operator choice of a genuinely external backup target. Existing strict SSH transport remains the preferred first path because it is already exercised by the closed DR baseline.
+
+Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 
 ## Latest post-closure maintenance checkpoint
 
@@ -55,7 +70,7 @@ Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling bound
 
 Real-host execution is now complete at the documented boundary. Three-generation retention, immutable marker-bound independent retrieval, isolated verification, clean-host preflight, guarded 12-volume restore, exact-source 15-service loopback startup, pre-reboot acceptance, full changed-boot-ID reboot persistence, repeated semantic/MCP/Ops/host evidence, and final sanitized closure timing evidence all passed.
 
-There is **no active Off-host DR execution tail**. This workstream is CLOSED / PASS. Future work should be opened as a new explicit scope, for example a physically independent backup/recovery target, periodic rehearsal cadence, or production-cutover DR policy.
+There is **no active execution tail in the original Off-host DR workstream**. It remains CLOSED / PASS. DR-2 physical independence is the separately opened follow-up scope and does not alter that closure.
 
 Checkpoint 5 is CLOSED / PASS at the repository evidence-tooling boundary through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` (CI #1850, Product Eval #1089, MCP #996, Desktop Installer #184) and merge `941cb8c9ed237a5417550449c7d73e712b10ba72` (merged-main CI #1851, Product Eval #1090, MCP #997). Staging Deploy #468/#469 gate-passed and deploy remained skipped. Real target retention and timing evidence still require runtime execution.
 
@@ -156,7 +171,7 @@ PCS-00 baseline lock
 
 The SumoPod target is a **verified remote development/staging runtime**, not production. GitHub remains source of truth; do not turn the live VPS working tree into an unmanaged development source. The current proven staging application revision is `0f332c73dc7b363bffecdeecae921d805d5ae131`; later documentation merges intentionally did not redeploy it.
 
-**Current work queue: none.** Latest-main staging convergence is CLOSED / PASS. No new feature, PE, PCS, Batch, production-promotion, or public-edge scope is implicitly opened.
+**At the PCS-10/latest-main historical checkpoint the work queue was none.** DR-2 physical independence is now explicitly opened as a separate infrastructure scope; no feature, PE, PCS, Batch, production-promotion, or public-edge scope is implicitly opened.
 
 ## Follow-up maintenance checkpoint — 2026-09-21
 
