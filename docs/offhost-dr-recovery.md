@@ -1,16 +1,16 @@
 # ECORIONE — Off-host Backup & Disaster Recovery
 
-Last updated: **2026-09-22**
+Last updated: **2026-09-23**
 
-Status: **ACTIVE / REPOSITORY CHECKPOINTS 1–7 CLOSED / RETENTION CLOSED / CLEAN REPLACEMENT-HOST RECOVERY IN PROGRESS**
+Status: **CLOSED / PASS — REPOSITORY CHECKPOINTS 1–7 CLOSED / RETENTION CLOSED / TOTAL SUMOPOD HOST-LOSS RECOVERY PROVEN AT THE DOCUMENTED BOUNDARY**
 
-This is the explicitly opened infrastructure workstream after latest-main staging convergence closed. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
+This infrastructure workstream opened after latest-main staging convergence and is now **CLOSED / PASS** at the documented SumoPod host-loss boundary. It is **not** PE-09, PCS-11, Batch 13, production promotion, or a feature batch.
 
 ## Objective
 
-Prove that ECORIONE can recover after loss of the entire SumoPod staging host by using a backup that exists in a separate failure domain.
+The objective was to prove that ECORIONE can recover after loss of the entire SumoPod staging host by using a backup retained outside the lost SumoPod host. That runtime objective is now satisfied at the documented boundary.
 
-Final closure requires evidence for all of the following:
+Final closure required evidence for all of the following:
 
 1. create a fresh coordinated cold backup from the current proven staging revision;
 2. convert that verified PCS-09 backup into a portable authenticated encrypted DR bundle;
@@ -22,7 +22,7 @@ Final closure requires evidence for all of the following:
 8. pass application health, protected-route, authenticated Operations, exact-source, persistence/restart, and final recovery checks;
 9. record sanitized recovery evidence including measured RPO/RTO boundaries.
 
-Until those gates pass, **total-host-loss recovery remains a non-claim**.
+Those gates passed in the final runtime drill. The resulting claim is limited to total loss of the tested SumoPod staging host; it does not claim independent physical-machine/disk survival, provider/account-wide disaster recovery, public-edge recovery, or a production SLA. See [verification/offhost-dr-runtime-closure-2026-09-23.md](verification/offhost-dr-runtime-closure-2026-09-23.md).
 
 ## Failure-domain model
 
