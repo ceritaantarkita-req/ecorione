@@ -253,4 +253,4 @@ PCS-09 staging hardening is CLOSED / PASS. Its historical runtime evidence was c
 
 Latest-main staging convergence subsequently deployed exact reviewed revision `52046db35e403babdda934881773c46bf2c57b68` / image `staging-52046db35e40` through governed Staging Deploy #293. That identity is historical. A later governed DR activation selected and exercised exact staging runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`; the original Off-host DR drill then CLOSED / PASS at the documented SumoPod host-loss boundary. Subsequent documentation/DR-2 merges have not redeployed staging because deployment activation remained disabled. Evidence: [verification/offhost-dr-runtime-closure-2026-09-23.md](verification/offhost-dr-runtime-closure-2026-09-23.md).
 
-Public production promotion remains a separate explicit decision. DR-2 physical independence is also a separate active follow-up and does not change this staging runbook's production boundary.
+Public production promotion remains a separate explicit decision. DR-2 physical independence is also a separate deferred follow-up and does not change this staging runbook's production boundary.

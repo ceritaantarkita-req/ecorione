@@ -89,7 +89,7 @@ local persistence/restart — CLOSED / PASS
   -> public production promotion only after a new explicit operator decision
 ```
 
-None of the closed local checkpoints should be mislabeled as VPS, Cloudflare, hosted-provider, remote-host durability, or Off-host DR evidence. Separate later runtime evidence now proves total SumoPod staging-host loss recovery for the original DR boundary; DR-2 physical independence remains a distinct active follow-up.
+None of the closed local checkpoints should be mislabeled as VPS, Cloudflare, hosted-provider, remote-host durability, or Off-host DR evidence. Separate later runtime evidence now proves total SumoPod staging-host loss recovery for the original DR boundary; DR-2 physical independence remains a distinct deferred follow-up.
 
 On native Windows, shell-syntax verification for these Linux production scripts must use an explicit real Bash executable (for example MSYS/Git Bash) through `ECORIONE_BASH`; do not rely on the Windows `bash.exe` launcher resolving to the intended runtime.
 

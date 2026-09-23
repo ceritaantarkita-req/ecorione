@@ -4,7 +4,7 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-> **Current status — 2026-09-23:** the original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, and the original Off-host DR total-SumoPod-host-loss drill are **CLOSED / PASS** at their documented boundaries. **DR-2 physical independence is the only active infrastructure scope; checkpoint 1 is CLOSED / PASS and checkpoint 2 is the active operator gate to select a genuinely external backup target.** SumoPod remains staging, GitHub `main` remains source of truth, public production/Cloudflare promotion remains a separate explicit decision, and AutoClick remains deferred by design.
+> **Current status — 2026-09-23:** the original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, and the original Off-host DR total-SumoPod-host-loss drill are **CLOSED / PASS** at their documented boundaries. **DR-2 physical independence is currently DEFERRED at checkpoint 2 before any external target selection.** Local backup is the interim posture; an encrypted Google Drive copy may be added later as a secondary off-device copy but is not yet a validated DR-2 target. SumoPod remains staging, GitHub `main` remains source of truth, public production/Cloudflare promotion remains a separate explicit decision, and AutoClick remains deferred by design.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -86,7 +86,7 @@ pnpm dev
 
 ## Production/self-host
 
-Repository-side production/self-host tooling is ready and the SumoPod **remote staging** boundary is verified. The original total-SumoPod-host-loss Off-host DR drill is also CLOSED / PASS at its documented boundary, including independent retrieval, 12-volume restore, 15-service recovery, semantic canary checks, changed-boot-ID persistence, and final RPO/RTO closure evidence. **DR-2** remains active only to prove stronger physical-host/storage independence for the backup target and replacement compute. Public production promotion, final public edge/domain posture, provider/account-wide DR, and long-term telemetry retention remain separate explicit gates. See the staging, DR, production, and release runbooks under `docs/`.
+Repository-side production/self-host tooling is ready and the SumoPod **remote staging** boundary is verified. The original total-SumoPod-host-loss Off-host DR drill is also CLOSED / PASS at its documented boundary, including independent retrieval, 12-volume restore, 15-service recovery, semantic canary checks, changed-boot-ID persistence, and final RPO/RTO closure evidence. **DR-2** remains the deferred follow-up for stronger physical-host/storage independence for the backup target and replacement compute. Public production promotion, final public edge/domain posture, provider/account-wide DR, and long-term telemetry retention remain separate explicit gates. See the staging, DR, production, and release runbooks under `docs/`.
 
 ## License
 

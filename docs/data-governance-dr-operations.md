@@ -2,7 +2,7 @@
 
 Batch 8 operational contract. Architectural rules are in ADR-29.
 
-> **CURRENT DR STATUS — 2026-09-23:** this Batch 8 owner-data contract remains authoritative for owner-scoped backup/restore semantics. The later original Off-host DR drill is CLOSED / PASS for total SumoPod staging-host loss at its documented boundary. DR-2 physical independence checkpoint 2 is the active follow-up; it strengthens failure-domain placement without changing owner backup/restore invariants below.
+> **CURRENT DR STATUS — 2026-09-23:** this Batch 8 owner-data contract remains authoritative for owner-scoped backup/restore semantics. The later original Off-host DR drill is CLOSED / PASS for total SumoPod staging-host loss at its documented boundary. DR-2 physical independence checkpoint 2 is the deferred follow-up; it strengthens failure-domain placement without changing owner backup/restore invariants below.
 
 ## 1. Dataset release lifecycle
 
