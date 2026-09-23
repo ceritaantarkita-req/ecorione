@@ -1,21 +1,11 @@
 import { spawnSync } from "node:child_process";
-import {
-  chmodSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 const ROOT = resolve(import.meta.dirname, "..");
-const SCRIPT = resolve(
-  ROOT,
-  "scripts/staging-dr2-physical-independence-preflight.mjs",
-);
+const SCRIPT = resolve(ROOT, "scripts/staging-dr2-physical-independence-preflight.mjs");
 const TEMP_DIRS: string[] = [];
 
 function tempDir() {
@@ -56,23 +46,10 @@ function writeEvidence(path: string, value: unknown) {
   chmodSync(path, 0o600);
 }
 
-function runPreflight(
-  backup: string,
-  replacement: string,
-  output: string,
-  ack = "1",
-) {
+function runPreflight(backup: string, replacement: string, output: string, ack = "1") {
   return spawnSync(
     process.execPath,
-    [
-      SCRIPT,
-      "--backup-target",
-      backup,
-      "--replacement-host",
-      replacement,
-      "--output",
-      output,
-    ],
+    [SCRIPT, "--backup-target", backup, "--replacement-host", replacement, "--output", output],
     {
       cwd: ROOT,
       encoding: "utf8",
@@ -110,9 +87,7 @@ describe("DR-2 physical independence preflight", () => {
 
     const result = runPreflight(backup, replacement, output);
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain(
-      "PASS ECORIONE DR-2 physical-independence preflight",
-    );
+    expect(result.stdout).toContain("PASS ECORIONE DR-2 physical-independence preflight");
 
     const receipt = JSON.parse(readFileSync(output, "utf8"));
     expect(receipt.preflightPassed).toBe(true);
@@ -186,9 +161,7 @@ describe("DR-2 physical independence preflight", () => {
 
     const result = runPreflight(backup, replacement, output, "0");
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain(
-      "ECORIONE_DR_PHYSICAL_INDEPENDENCE_ACK=1",
-    );
+    expect(result.stderr).toContain("ECORIONE_DR_PHYSICAL_INDEPENDENCE_ACK=1");
   });
 
   it("requires system UUID fingerprints when both hosts are WSL", () => {
@@ -205,20 +178,12 @@ describe("DR-2 physical independence preflight", () => {
     );
     writeEvidence(
       replacement,
-      evidence(
-        "replacement-host",
-        "recovery-host-b",
-        "c".repeat(64),
-        "d".repeat(64),
-        "wsl",
-      ),
+      evidence("replacement-host", "recovery-host-b", "c".repeat(64), "d".repeat(64), "wsl"),
     );
 
     const result = runPreflight(backup, replacement, output);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain(
-      "two WSL hosts require distinct system UUID fingerprints",
-    );
+    expect(result.stderr).toContain("two WSL hosts require distinct system UUID fingerprints");
   });
 
   it("refuses to overwrite an existing preflight receipt", () => {
@@ -241,8 +206,6 @@ describe("DR-2 physical independence preflight", () => {
 
     const result = runPreflight(backup, replacement, output);
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain(
-      "refusing to overwrite existing preflight output",
-    );
+    expect(result.stderr).toContain("refusing to overwrite existing preflight output");
   });
 });
