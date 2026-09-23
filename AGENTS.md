@@ -15,7 +15,7 @@ Before changing the repo:
 
 Dated audits and `docs/verification/` are evidence, not current work queues.
 
-## Current state — 2026-09-22
+## Current state — 2026-09-23
 
 - original Batch 1–12 / W / F6 baseline: **CLOSED**;
 - Windows runtime + installer: **VERIFIED**;
@@ -45,7 +45,8 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - PCS-10 closure/documentation convergence: **CLOSED / PASS** (PR #219 head `c84f76face60d203592d8bc6e1a51acccfec5004`; CI #1684; Product Eval #923; merge `6058aa0ff294218147a91ee0fc7b77f32d1be80d`; post-merge bookkeeping PR #220 merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07` after CI #1686 + Product Eval #925);
 - SumoPod remote development/staging: **VERIFIED / NOT PRODUCTION**;
 - public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
-- off-host Backup & DR: **ACTIVE / RUNTIME EXECUTION PENDING**; checkpoints 1–7 are CLOSED / PASS at repository boundaries, while real independent copy, real retained-generation/timing evidence, and total-host-loss recovery remain unproven;
+- original Off-host Backup & DR: **CLOSED / PASS** for total SumoPod staging-host loss at the documented boundary; exact recovered runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, 12 owner volumes, 15 services, semantic canary, changed-boot-ID persistence, and final marker-bound closure evidence passed;
+- DR-2 physical independence: **ACTIVE / CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 OPERATOR GATE ACTIVE**; no genuinely external target has been selected or contacted yet;
 - AutoClick: **DEFERRED BY DESIGN**.
 
 Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any new product scope requires an explicit roadmap/decision.
@@ -90,9 +91,9 @@ There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PAS
 
 **PCS-00 through PCS-10 are CLOSED / PASS at documented boundaries.**
 
-**Off-host Backup & DR is the only active operational scope.** It is explicitly authorized as a separate infrastructure workstream and is not PCS-11, PE-09, Batch 13, production promotion, or a feature batch. Checkpoints 1–7 are CLOSED / PASS at their repository boundaries. Checkpoint 4 adds read-only source-host and independent-target readiness gates before the first real DR mutation. Checkpoint 5 adds read-only retained-generation auditing plus sanitized RPO/RTO closure evidence. Checkpoint 6 replaces free-form loss-time input with an immutable selected-generation loss-marker receipt and is CLOSED / PASS at the repository boundary. Checkpoint 7 enforces that marker before independent fetch and propagates its identity/timing through retrieval, restore, acceptance, reboot evidence, and final closure; it is CLOSED / PASS at the repository boundary. Runtime execution remains: governed staging activation of exact reviewed tooling -> freeze CD -> source readiness -> independent-target readiness -> real off-host export -> clean replacement-host retrieval/restore -> semantic acceptance -> changed-boot-id reboot proof. Do not claim real off-host protection or total-host-loss recovery until the runtime gates in `docs/offhost-dr-recovery.md` pass on an independent failure domain.
+**DR-2 physical independence is the only active operational scope.** The original Off-host Backup & DR workstream is CLOSED / PASS and must not be reopened or downgraded by DR-2. DR-2 is explicitly authorized as a separate infrastructure workstream and is not PCS-11, PE-09, Batch 13, production promotion, or a feature batch. Checkpoint 1 repository foundation is CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca8454511405a68424f0b7`; documentation bookkeeping is CLOSED / PASS through PR #280 / merge `3bb1d0b26064469998e4595809d646575cd04456`. Checkpoint 2 is the active operator gate: select a genuinely external backup target outside the physical/storage failure domain of the chosen replacement compute. Do not provision paid/external infrastructure without explicit operator choice, and do not claim DR-2 physical independence until fresh host evidence, fresh external retention, clean-host recovery, reboot persistence, and final closure evidence all pass.
 
-For staging maintenance use `docs/staging-continuous-deployment.md`, `docs/sumopod-staging.md`, `docs/staging-hardening-backup-observability.md`, and `docs/offhost-dr-recovery.md`. Deploy only exact reviewed `main` through the least-privilege governed CD path; preserve host/GitHub secret isolation, fail releases when health/smoke/evidence fails, and retain the tested runtime rollback path. GitHub `main` remains source of truth; SumoPod evidence is staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not create PCS-11, reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
+For staging/DR maintenance use `docs/staging-continuous-deployment.md`, `docs/sumopod-staging.md`, `docs/staging-hardening-backup-observability.md`, `docs/offhost-dr-recovery.md`, and `docs/offhost-dr-physical-independence.md`. Deploy only exact reviewed `main` through the least-privilege governed CD path; preserve host/GitHub secret isolation, fail releases when health/smoke/evidence fails, and retain the tested runtime rollback path. GitHub `main` remains source of truth; SumoPod evidence is staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not create PCS-11, reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
 
 ## Git / closure discipline
 
