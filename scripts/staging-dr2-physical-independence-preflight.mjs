@@ -1,11 +1,5 @@
 #!/usr/bin/env node
-import {
-  chmodSync,
-  existsSync,
-  lstatSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { chmodSync, existsSync, lstatSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 
 const HASH_RE = /^[0-9a-f]{64}$/u;
@@ -23,9 +17,7 @@ function parseArgs(argv) {
     const key = argv[index];
     const value = argv[index + 1];
     if (!key?.startsWith("--") || value === undefined) {
-      fail(
-        "use --backup-target <json> --replacement-host <json> --output <json>",
-      );
+      fail("use --backup-target <json> --replacement-host <json> --output <json>");
     }
     values[key.slice(2)] = value;
   }
@@ -67,7 +59,9 @@ function parseEvidence(path, expectedRole) {
     value?.role !== expectedRole ||
     !LABEL_RE.test(value?.failureDomain ?? "") ||
     !HASH_RE.test(value?.hostIdentity?.machineIdSha256 ?? "") ||
-    !["string", "object"].includes(typeof value?.hostIdentity?.systemUuidSha256) ||
+    !["string", "object"].includes(
+      typeof value?.hostIdentity?.systemUuidSha256,
+    ) ||
     typeof value?.hostIdentity?.virtualization !== "string" ||
     typeof value?.capturedAt !== "string"
   ) {
@@ -105,9 +99,7 @@ if (process.env.ECORIONE_DR_PHYSICAL_INDEPENDENCE_ACK !== "1") {
   );
 }
 
-const { backupTarget, replacementHost, output } = parseArgs(
-  process.argv.slice(2),
-);
+const { backupTarget, replacementHost, output } = parseArgs(process.argv.slice(2));
 if (existsSync(output)) fail("refusing to overwrite existing preflight output");
 
 const backup = parseEvidence(backupTarget, "backup-target");
