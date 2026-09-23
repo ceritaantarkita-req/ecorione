@@ -25,6 +25,8 @@ Interim operator decision: keep local backup as the current backup posture. An e
 
 Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 
+Safe resumable checkpoint: [verification/offhost-dr2-safe-checkpoint-2026-09-23.md](verification/offhost-dr2-safe-checkpoint-2026-09-23.md). No DR-2 runtime work is in flight and checkpoint 3 remains blocked.
+
 ## Latest post-closure maintenance checkpoint
 
 Bounded maintenance is now **CLOSED through PR #244 at the repository boundary**. The latest slice repairs Sandbox receipt-lock acquisition cleanup so a metadata-write failure after exclusive lock creation cannot leave an idempotency key permanently busy.

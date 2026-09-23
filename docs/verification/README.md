@@ -28,3 +28,5 @@ Latest DR-2 foundation evidence: [offhost-dr2-checkpoint-1-2026-09-23.md](offhos
 DR-2 checkpoint 2 safe selection package: [offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It prepares the operator decision and strict-SSH custody/trust boundary without selecting or mutating any external target; checkpoint 2 is now DEFERRED until an explicit operator decision resumes target selection.
 
 DR-2 checkpoint 2 deferment: [offhost-dr2-checkpoint-2-deferment-2026-09-23.md](offhost-dr2-checkpoint-2-deferment-2026-09-23.md). The operator postponed external-target selection; local backup is the interim posture and Google Drive is only an optional future encrypted secondary copy, not a validated DR-2 target.
+
+DR-2 safe resumable checkpoint: [offhost-dr2-safe-checkpoint-2026-09-23.md](offhost-dr2-safe-checkpoint-2026-09-23.md). It records exact repository main, merged-main gates, local-backup posture, no external mutation, and the resume sequence.

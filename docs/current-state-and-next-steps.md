@@ -22,6 +22,8 @@ The repository-side checkpoint-2 selection package is prepared and records eligi
 
 Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 
+Safe checkpoint: [verification/offhost-dr2-safe-checkpoint-2026-09-23.md](verification/offhost-dr2-safe-checkpoint-2026-09-23.md). This records the exact resumable repository state after PR #283/#284, with DR-2 checkpoint 2 deferred and no external/runtime mutation in flight.
+
 ## Off-host DR runtime checkpoint — 2026-09-22
 
 Real-host execution has moved beyond repository-only preparation.
