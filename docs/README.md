@@ -106,6 +106,7 @@ Use the owner-specific runbook when touching its subsystem:
 - [data-governance-dr-operations.md](data-governance-dr-operations.md)
 - [offhost-dr-recovery.md](offhost-dr-recovery.md) — CLOSED / PASS original total-SumoPod-host-loss recovery runbook and evidence boundary.
 - [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md) — ACTIVE DR-2 follow-up; checkpoint 1 repository foundation is closed and checkpoint 2 external-target selection is the current gate.
+  - checkpoint-2 safe selection package: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md); no target selected yet.
 - [multimodal-operations.md](multimodal-operations.md)
 - [voice-operations.md](voice-operations.md)
 - [webhook-operations.md](webhook-operations.md)

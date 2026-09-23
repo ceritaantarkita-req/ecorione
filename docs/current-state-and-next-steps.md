@@ -18,6 +18,8 @@ DR-2 addresses the remaining caveat that the previous backup-target WSL distro a
 
 Checkpoint 2 is now the active operator gate: select a genuinely external backup target outside the physical/storage failure domain of the replacement compute. No external target has been selected or contacted yet; any paid infrastructure, fresh-generation export, and new recovery drill remain unstarted.
 
+The repository-side checkpoint-2 selection package is prepared and records eligible/ineligible target classes, the required non-secret operator decision, strict SSH custody/trust acceptance, and the safe stop boundary. This preparation does **not** select a target and does not close checkpoint 2. Evidence: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md).
+
 Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 
 ## Off-host DR runtime checkpoint — 2026-09-22

@@ -19,6 +19,8 @@ Exact-head gates passed: CI #1913, Product Eval #1152, MCP External HTTPS #1011,
 
 Checkpoint 2 is the active operator gate and is blocked on selection of a genuinely external backup target. Existing strict SSH transport remains the preferred first path because it is already exercised by the closed DR baseline.
 
+A provider-neutral selection package is now prepared: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It is a safe checkpoint only: no external target is selected, contacted, provisioned, or paid for, and checkpoint 3 must not begin until checkpoint 2 is explicitly closed.
+
 Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
 
 ## Latest post-closure maintenance checkpoint

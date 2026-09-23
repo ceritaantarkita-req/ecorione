@@ -72,6 +72,8 @@ Existing strict SSH transport is preferred initially because the closed DR path 
 
 Adding object-storage transport is a separate decision and is not required merely to close physical independence.
 
+Checkpoint-2 selection/custody acceptance package: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It defines eligible/ineligible target classes, the operator decision record, strict SSH custody/trust acceptance, and a safe stop boundary without selecting or mutating any external system.
+
 ### Checkpoint 3 — real physical-independence preflight
 
 Capture fresh mode-0600 evidence on both real hosts:
