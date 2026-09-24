@@ -25,7 +25,12 @@
     reverse_proxy sync:17011
   }
 
+  # Private-by-default browser/app surface. Reuse the existing operator credential
+  # so staging can be closed immediately without introducing a second secret set.
   handle {
+    basic_auth {
+      {$ECORIONE_OPS_USER} {$ECORIONE_OPS_PASSWORD_HASH}
+    }
     reverse_proxy ai:3000
   }
 }
