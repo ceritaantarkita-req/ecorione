@@ -1,6 +1,9 @@
 /** Artifact service entrypoint. */
 import { resolve } from "node:path";
-import { bindHostForAuthenticatedService, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { createContextMetadataClient } from "./context-client.js";
 import { buildArtifactServer } from "./http.js";
 import { ArtifactStore } from "./store.js";
