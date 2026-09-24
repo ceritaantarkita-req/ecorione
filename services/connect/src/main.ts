@@ -1,6 +1,9 @@
 /** Entrypoint produksi Connect. */
 import { resolve } from "node:path";
-import { bindHostForAuthenticatedService, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
 import { buildConnectServer, type BuildConnectServerOptions } from "./http.js";
 import { parseOptionalLocalModelDigest } from "./local-model-identity.js";
