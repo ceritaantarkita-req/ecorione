@@ -1,6 +1,9 @@
 /** Space service entrypoint. */
 import { resolve } from "node:path";
-import { bindHostForAuthenticatedService, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { openSpaceDatabase } from "./db.js";
 import { buildSpaceServer } from "./http.js";
 import { SpaceStore } from "./store.js";
