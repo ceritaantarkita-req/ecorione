@@ -10,6 +10,8 @@ The 2026-09-24 current-main + staging parity audit is complete and is intentiona
 
 Highest-priority audit finding is CRITICAL: the general Ai web/API edge lacks a human-authentication boundary and server-side proxies inject the internal service token, so a reachable edge can expose Project/history/chat and mutation capabilities to unauthenticated network clients. Historical staging used the same product/Caddy tree; no fresh live-host probe was performed in this audit. Next are the HIGH remote-bind/auth direct-start gap and incomplete bounded internal-HTTP timeout coverage, followed by the Space `17029`/Flow `17028` default-port defect and product/UX findings. Full evidence: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). Critical auth tracking: Issue #287; no implementation scope is open yet.
 
+Safe resumable audit checkpoint: [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md). No audit finding is being implemented yet; the next discussion must explicitly select one bounded scope.
+
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
 Issue #277 remains the DR-2 tracking scope but is currently deferred; there is no active DR-2 runtime implementation. It is additive to the completed Off-host DR drill and must not rewrite Issue #266 evidence.
