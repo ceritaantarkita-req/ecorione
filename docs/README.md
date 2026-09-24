@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-23**
+Last updated: **2026-09-24**
 
 This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
 
@@ -116,7 +116,9 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Evidence
 
-[verification/](verification/) contains dated closure records, failed attempts, runtime measurements, and exact-head evidence. It is not a work queue.
+[verification/](verification/) contains dated closure records, failed attempts, runtime measurements, exact-head evidence, and bounded audits. It is not a work queue.
+
+Latest bounded repository/product + staging-parity audit: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). Findings are documented but do not open an implementation scope automatically.
 
 ## Archive
 
