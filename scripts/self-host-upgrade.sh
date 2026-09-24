@@ -63,7 +63,11 @@ STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 printf '%s
 ' "pre-upgrade backup must be verified per docs/data-rebuild-operations.md before this command" > "data/release-receipts/$STAMP.pre-upgrade.txt"
 ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" config >/dev/null
-ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" up -d --build
+# Every ECORIONE application service intentionally runs the same reviewed image.
+# Build it once, then start the full Compose project without asking Compose to
+# independently build/export the same tag for every service.
+docker build -f Dockerfile -t "ecorione:$TAG" .
+ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" up -d --no-build
 # Caddy consumes its policy from a bind-mounted Caddyfile. Compose does not recreate
 # an already-running Caddy container when only that file changes, so explicitly
 # recreate the edge container to guarantee reviewed routing/auth changes are loaded.

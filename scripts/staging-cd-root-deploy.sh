@@ -254,6 +254,79 @@ validate_deployed_revision() {
     node scripts/staging-host-evidence.mjs
 }
 
+prune_stale_staging_images() {
+  local current_tag previous_tag image
+
+  [[ -f "$STATE_FILE" && ! -L "$STATE_FILE" ]] || {
+    echo "Skipping staging-image retention: release state is unavailable or unsafe"
+    return 0
+  }
+  [[ "$(stat -c '%U' "$STATE_FILE")" == "root" ]] || {
+    echo "Skipping staging-image retention: release state is not root-owned"
+    return 0
+  }
+
+  current_tag="$(sed -n 's/^current_tag=//p' "$STATE_FILE")"
+  previous_tag="$(sed -n 's/^previous_tag=//p' "$STATE_FILE")"
+  [[ "$current_tag" =~ ^staging-[A-Za-z0-9._-]+$ ]] || {
+    echo "Skipping staging-image retention: current_tag is invalid"
+    return 0
+  }
+  [[ "$previous_tag" =~ ^staging-[A-Za-z0-9._-]+$ ]] || {
+    echo "Skipping staging-image retention: previous_tag is invalid"
+    return 0
+  }
+
+  while IFS= read -r image; do
+    [[ "$image" == ecorione:staging-* ]] || continue
+    if [[ "$image" == "ecorione:$current_tag" || "$image" == "ecorione:$previous_tag" ]]; then
+      echo "Keeping rollback-set image $image"
+    elif docker ps -a --format '{{.Image}}' | grep -Fxq "$image"; then
+      echo "Keeping container-referenced image $image"
+    else
+      echo "Removing stale staging image $image"
+      docker image rm "$image"
+    fi
+  done < <(docker image ls ecorione --format '{{.Repository}}:{{.Tag}}')
+}
+
+stabilize_post_deploy_capacity() {
+  local target_gib target_kib free_kib free_gib
+
+  prune_stale_staging_images
+
+  target_gib="${ECORIONE_DOCKER_POST_DEPLOY_TARGET_GIB:-25}"
+  [[ "$target_gib" =~ ^[0-9]+$ && "$target_gib" -ge "$BUILD_MIN_FREE_GIB" ]] || {
+    echo "ECORIONE_DOCKER_POST_DEPLOY_TARGET_GIB must be an integer >= $BUILD_MIN_FREE_GIB" >&2
+    return 1
+  }
+  target_kib="$((target_gib * 1024 * 1024))"
+  free_kib="$(df -Pk "$DOCKER_ROOT" | awk 'NR == 2 { print $4 }')"
+  [[ "$free_kib" =~ ^[0-9]+$ ]] || {
+    echo "Unable to determine post-deploy Docker free space" >&2
+    return 1
+  }
+
+  if (( free_kib < target_kib )); then
+    echo "Post-deploy Docker free space is below ${target_gib} GiB target; pruning BuildKit cache only."
+    docker builder prune --all --force
+    free_kib="$(df -Pk "$DOCKER_ROOT" | awk 'NR == 2 { print $4 }')"
+    [[ "$free_kib" =~ ^[0-9]+$ ]] || {
+      echo "Unable to determine post-cleanup Docker free space" >&2
+      return 1
+    }
+  fi
+
+  if (( free_kib < min_free_kib )); then
+    free_gib="$(awk -v kib="$free_kib" 'BEGIN { printf "%.2f", kib / 1024 / 1024 }')"
+    echo "Healthy release recorded, but Docker filesystem has only ${free_gib} GiB free; ${BUILD_MIN_FREE_GIB} GiB minimum required for the next governed deploy." >&2
+    return 1
+  fi
+
+  free_gib="$(awk -v kib="$free_kib" 'BEGIN { printf "%.2f", kib / 1024 / 1024 }')"
+  echo "PASS staging capacity stabilized: ${free_gib} GiB free"
+}
+
 tracked_status="$(owner_git status --porcelain --untracked-files=no)"
 [[ -z "$tracked_status" ]] || {
   echo "Refusing deploy: tracked staging checkout is dirty" >&2
@@ -285,6 +358,8 @@ if [[ -e "$STATE_FILE" ]]; then
 
   RECORDED_SHA="$(sed -n 's/^current_sha=//p' "$STATE_FILE")"
   RECORDED_TAG="$(sed -n 's/^current_tag=//p' "$STATE_FILE")"
+  RECORDED_PREVIOUS_SHA="$(sed -n 's/^previous_sha=//p' "$STATE_FILE")"
+  RECORDED_PREVIOUS_TAG="$(sed -n 's/^previous_tag=//p' "$STATE_FILE")"
   [[ "$RECORDED_SHA" =~ ^[0-9a-f]{40}$ ]] || {
     echo "Refusing deploy: staging release state has invalid current_sha" >&2
     exit 1
@@ -293,27 +368,56 @@ if [[ -e "$STATE_FILE" ]]; then
     echo "Refusing deploy: staging release state has invalid current_tag" >&2
     exit 1
   }
+  [[ "$RECORDED_PREVIOUS_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+    echo "Refusing deploy: staging release state has invalid previous_sha" >&2
+    exit 1
+  }
+  [[ "$RECORDED_PREVIOUS_TAG" =~ ^[A-Za-z0-9._-]+$ ]] || {
+    echo "Refusing deploy: staging release state has invalid previous_tag" >&2
+    exit 1
+  }
 
   CURRENT_HEAD="$(owner_git rev-parse HEAD)"
-  if [[ "$RECORDED_SHA" == "$TARGET_SHA" && "$CURRENT_HEAD" == "$TARGET_SHA" ]]; then
+  ACTIVE_IMAGE="$(
+    docker ps \
+      --filter label=com.docker.compose.project=ecorione-staging \
+      --filter label=com.docker.compose.service=ai \
+      --format '{{.Image}}' | head -n 1
+  )"
+  ACTIVE_TAG="${ACTIVE_IMAGE#ecorione:}"
+  [[ "$ACTIVE_IMAGE" == "ecorione:$ACTIVE_TAG" && "$ACTIVE_TAG" =~ ^[A-Za-z0-9._-]+$ ]] || {
+    echo "Refusing deploy: unable to determine active ECORIONE staging image" >&2
+    exit 1
+  }
+  [[ "$RECORDED_SHA" == "$CURRENT_HEAD" && "$RECORDED_TAG" == "$ACTIVE_TAG" ]] || {
+    echo "Refusing deploy: release receipt, Git HEAD, and active image are inconsistent" >&2
+    echo "receipt_sha=$RECORDED_SHA head_sha=$CURRENT_HEAD receipt_tag=$RECORDED_TAG active_tag=$ACTIVE_TAG" >&2
+    exit 1
+  }
+
+  if [[ "$RECORDED_SHA" == "$TARGET_SHA" ]]; then
     echo "Revalidating already-recorded staging deployment sha=$TARGET_SHA tag=$RECORDED_TAG"
     validate_deployed_revision "$RECORDED_TAG" "$TARGET_SHA" || {
       echo "Recorded staging deployment failed health/evidence revalidation" >&2
       exit 1
     }
+    stabilize_post_deploy_capacity || exit 1
     echo "PASS PCS-08 staging deploy already recorded and revalidated sha=$TARGET_SHA"
     exit 0
   fi
 fi
 
 PREVIOUS_SHA="$(owner_git rev-parse HEAD)"
-PREVIOUS_IMAGE="$(
-  docker ps \
-    --filter label=com.docker.compose.project=ecorione-staging \
-    --filter label=com.docker.compose.service=ai \
-    --format '{{.Image}}' | head -n 1
-)"
-PREVIOUS_TAG="${PREVIOUS_IMAGE#ecorione:}"
+if [[ -z "${ACTIVE_TAG:-}" ]]; then
+  ACTIVE_IMAGE="$(
+    docker ps \
+      --filter label=com.docker.compose.project=ecorione-staging \
+      --filter label=com.docker.compose.service=ai \
+      --format '{{.Image}}' | head -n 1
+  )"
+  ACTIVE_TAG="${ACTIVE_IMAGE#ecorione:}"
+fi
+PREVIOUS_TAG="$ACTIVE_TAG"
 [[ "$PREVIOUS_TAG" =~ ^[A-Za-z0-9._-]+$ ]] || {
   echo "Unable to determine previous known-good ECORIONE image tag" >&2
   exit 1
@@ -333,15 +437,15 @@ rollback() {
   owner_git checkout --detach "$PREVIOUS_SHA" || rollback_status=1
   owner_run_with_tag "$PREVIOUS_TAG" \
     bash scripts/self-host-rollback.sh --apply "$PREVIOUS_TAG" || rollback_status=1
-  wait_for_services "$PREVIOUS_TAG" || rollback_status=1
-  basic_public_check || rollback_status=1
+  validate_deployed_revision "$PREVIOUS_TAG" "$PREVIOUS_SHA" || rollback_status=1
   set_env_image_tag "$PREVIOUS_TAG" || rollback_status=1
+  stabilize_post_deploy_capacity || rollback_status=1
   set -e
 
   if [[ "$rollback_status" -ne 0 ]]; then
     echo "ROLLBACK FAILED; operator intervention required" >&2
   else
-    echo "Rollback verified at basic public boundary" >&2
+    echo "Rollback fully revalidated at public, Operations, exact-host, and capacity boundaries" >&2
   fi
   return 1
 }
@@ -376,5 +480,7 @@ TMP_STATE="$(mktemp "$STATE_DIR/.deploy-state.XXXXXX")"
 } > "$TMP_STATE"
 chmod 0644 "$TMP_STATE"
 mv "$TMP_STATE" "$STATE_FILE"
+
+stabilize_post_deploy_capacity || exit 1
 
 echo "PASS PCS-08 staging deploy sha=$TARGET_SHA tag=$TARGET_TAG"

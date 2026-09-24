@@ -8,7 +8,7 @@ PCS-08 automates deployment of the current reviewed GitHub `main` revision to th
 
 **2026-09-24 auth closure:** the public smoke contract now includes the general Ai human-authentication boundary. Final governed staging acceptance on `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved the protected login bootstrap, representative unauthenticated Ai read/mutation failures, the separate MCP/OAuth boundary, healthy authenticated Operations, and exact-host identity. This remains staging evidence, not production promotion. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
-**Current CD stop:** a later deployment exhausted the staging Docker filesystem during image export/unpack. Repository guards are now merged through PR #297/#298, but the already-installed privileged host deploy helper predates the final pre-fetch guard. `ECORIONE_STAGING_CD_ENABLED=0` must remain disabled until controlled host recovery proves disk headroom, refreshes the installed helper, and revalidates the private edge/Ops boundary. Evidence: [verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md](verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md).
+**Current CD state:** Session 1 capacity recovery and Session 2 auto-deploy restoration are CLOSED / PASS. `ECORIONE_STAGING_CD_ENABLED=1` is active, and true post-merge GitHub -> SumoPod deployment has been proven on exact reviewed main. Session 3 is now hardening the pipeline against recurrence of the disk incident: one shared application image build per release, current+rollback image retention, post-deploy capacity stabilization, stronger baseline identity checks, and full rollback revalidation. Audit evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
 
 ## Deployment model
 
@@ -172,13 +172,15 @@ The root-owned deploy orchestrator:
 5. records the previous checkout SHA and active ECORIONE image tag;
 6. checks out the requested SHA detached;
 7. runs the existing production preflight with the SumoPod staging env/project/overlay;
-8. builds/applies a unique `staging-<12-sha>` image tag;
+8. builds one shared unique `staging-<12-sha>` application image, then starts the full Compose project with `--no-build`;
 9. waits until every configured staging service is running;
 10. runs public HTTPS smoke;
-11. runs authenticated `/api/ops` health using the host-only operator credential file;
+11. runs bounded authenticated `/api/ops` health using the host-only operator credential file;
 12. runs sanitized exact-host evidence against the target SHA;
 13. updates the host-only `ECORIONE_IMAGE_TAG` only after all gates pass;
-14. writes a non-secret release receipt to `/var/lib/ecorione-staging/deploy-state.env`.
+14. writes a non-secret release receipt to `/var/lib/ecorione-staging/deploy-state.env`;
+15. retains only the recorded current + rollback ECORIONE staging images, while never removing container-referenced images;
+16. conditionally prunes reproducible BuildKit cache to restore the post-deploy free-space target while preserving the 20 GiB fail-closed floor.
 
 No provider key, internal token, Vault key, database password, operator password, or SSH private key is written to Git.
 
@@ -189,7 +191,7 @@ If a post-checkout deployment gate fails, the orchestrator attempts runtime roll
 - the previous Git checkout SHA; and
 - the previous active ECORIONE image tag.
 
-It then requires every configured service to be running and performs a basic public home + protected-`/ops` verification.
+It then runs the same full revision validation used for a forward deployment: every configured service running, public/private smoke, bounded authenticated Operations health, exact-host source identity, and capacity stabilization. Rollback reuses the already-proven previous image with `--no-build`; it does not rebuild a historical rollback tag.
 
 A rollback does **not** convert the failed GitHub deployment into success. The GitHub job remains failed.
 
