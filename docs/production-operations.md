@@ -62,6 +62,8 @@ Tier 0/Tier 1.5 run inside the Sandbox service boundary. Any Docker execution ti
 
 ## Public edge — recommended Cloudflare Free path
 
+**Current security stop condition (2026-09-24):** do not expose or promote the Ai web/API surface as a trusted personal/production edge until fail-closed human authentication is added and unauthenticated Project/history/chat/mutation negative-path tests pass. The current Caddy policy protects operator routes but not the general Ai fallback. MCP/OAuth remains a separate protocol/auth boundary.
+
 The recommended next real deployment is:
 
 ```text

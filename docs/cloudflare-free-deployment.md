@@ -1,7 +1,7 @@
 # ECORIONE — Cloudflare Free Deployment Guide
 
 Last reviewed against Cloudflare documentation: **2026-09-10**  
-Current project status reconciled: **2026-09-23**
+Current project status reconciled: **2026-09-24**
 
 Status: **OPTIONAL PUBLIC EDGE / NOT YET SELECTED FOR SUMOPOD STAGING**
 
@@ -10,6 +10,8 @@ This file remains the deployment guide for a future Cloudflare Free + Tunnel rol
 The closed local checkpoints do not constitute Cloudflare evidence. SumoPod remote staging, the later original Off-host DR host-loss recovery closure, and DR-2 repository preparation are all separate from Cloudflare/public-edge evidence; none constitutes public production or Cloudflare-Tunnel proof.
 
 Do not execute Cloudflare account, DNS, Tunnel, or origin-lockdown mutation merely because SumoPod staging is approved. Use this guide only after an explicit edge/hostname decision. Current state: `docs/current-state-and-next-steps.md`; staging roadmap: `docs/post-closure-product-staging-roadmap.md`.
+
+**Security prerequisite added 2026-09-24:** the general Ai web/API fallback currently lacks a human-authentication boundary. Cloudflare/Tunnel/WAF transport must not be used as a substitute for fixing that application/edge auth gap, and no future public cutover may proceed until unauthenticated Ai read/mutation paths fail closed while MCP/OAuth keeps its separate protocol boundary.
 
 ## 1. Architecture decision if Cloudflare is selected
 

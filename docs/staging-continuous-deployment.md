@@ -1,10 +1,12 @@
 # ECORIONE — GitHub to SumoPod Staging Continuous Deployment
 
-Last updated: **2026-09-23**
+Last updated: **2026-09-24**
 
 Status: **PCS-08 CLOSED / PASS**
 
 PCS-08 automates deployment of the current reviewed GitHub `main` revision to the proven SumoPod staging runtime. PCS-09 has since CLOSED / PASS the staging persistence/security/backup/observability boundary. Neither closure promotes staging to production.
+
+**2026-09-24 audit correction:** the existing public smoke contract proves reachability, protected operator routes, MCP boundary, Ops health, and exact-host identity; it does **not** prove human authentication for the general Ai web/API surface. Issue #287 tracks the missing human-auth boundary. Until that is closed, a successful Staging Deploy must not be interpreted as proving a safe personal-data public Ai edge.
 
 ## Deployment model
 

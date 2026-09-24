@@ -1,6 +1,6 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-23**
+Last updated: **2026-09-24**
 
 Status: **CURRENT / ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
@@ -9,6 +9,14 @@ Status: **CURRENT / ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 PHYSICAL INDEPENDENC
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-24 current-main + staging parity audit
+
+The requested repository/product and repository-versus-staging audit is complete. No implementation scope was opened and no staging mutation occurred. Exact Git-tree comparison proves `apps/`, `services/`, and `packages/` are byte-tree identical between historical staging `52046db35e403babdda934881773c46bf2c57b68`, original-DR source `b27c1e5833be0a0fccf3f525d82ae8853cd22113`, and repository `main` at the audit baseline `4143adf2185e82d5c8713dc6c148ba828b104d07`. The audit therefore found no pending product-code deployment drift; later repository drift is operational DR tooling/docs/tests.
+
+The audit identified one CRITICAL source-level authentication defect: the general Ai edge has no human authentication boundary, while Ai APIs inject the internal service token server-side; when that edge is reachable, unauthenticated network clients can reach Project/history/chat and mutation surfaces. Historical staging evidence used the same byte-identical product/Caddy tree, but this audit did not perform a fresh live-host probe. It also identified two HIGH debts: incomplete bounded timeout coverage on internal HTTP owner calls, plus a latent direct-start security configuration gap where owner services can combine non-loopback bind with a missing internal bearer token outside the guarded Compose paths. A concrete Space standalone default-port bug (`17029` instead of canonical Flow `17028`), two Project UX/state defects (inert virtual `All`; stale persisted Project selection), and bounded product/maintainability gaps were also found. None of these findings is authorized for implementation merely by being documented.
+
+Audit evidence: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). Critical Ai-auth finding tracking: Issue #287; implementation is not yet authorized.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 

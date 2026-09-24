@@ -1,7 +1,7 @@
 # ECORIONE — Production Activation Workstream
 
 Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING VERIFIED**
-Date: 2026-09-23
+Date: 2026-09-24
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
 
@@ -10,6 +10,8 @@ On 2026-09-20 the operator explicitly approved deployment to an operator-owned *
 Current state is documented in `docs/current-state-and-next-steps.md` and `docs/post-closure-product-staging-roadmap.md`. Local persistence/restart, isolated local backup/restore, bounded local observability, prior UX/product validation, immutable local-model identity, W16/W17 selector evidence, W18 hosted economics, F6 hardening, W20 final sync, Product Evolution PE-00..PE-08, and PCS-00..PCS-10 are closed at their documented boundaries. Verified remote staging is still not production.
 
 ## Objective when resumed
+
+**2026-09-24 security gate:** the current-main audit found that the general Ai web/API edge lacks human authentication; only operator routes are Basic-Auth protected. No production promotion, personal-data exposure, or claim of a safe public Ai surface is allowed until this defect is fixed and unauthenticated negative-path acceptance passes. The audit did not perform a fresh live SumoPod probe.
 
 Promote the already-verified self-host/staging topology to a production configuration only after a new explicit operator decision, then validate production-specific hostname/edge, credentials/providers, traffic, recovery, retention, and operational evidence. The existing SumoPod staging deployment is real compute-host evidence but is intentionally not relabeled as production.
 
@@ -26,7 +28,7 @@ Staging rules:
 - hosted AI (initially OpenRouter where configured) may be used without any local Ollama dependency;
 - local inference remains optional and OpenAI-compatible;
 - no provider key, VPS password, public/private IP, vault master key, or deployment token is committed to Git;
-- internal service ports remain private; expose only the intended authenticated web edge;
+- internal service ports remain private; the intended web edge must be human-authenticated before it is treated as safe. The 2026-09-24 audit found that the current general Ai fallback is not yet human-authenticated;
 - validate restart persistence, backup, observability, and rollback on the actual VPS;
 - staging evidence cannot be cited as production evidence.
 
@@ -130,7 +132,7 @@ Production secrets are never command-line examples in this document. Provider se
 | 11 | Production E2E edge smoke | **PENDING FUTURE DEPLOYMENT** | `pnpm production:smoke` on actual public edge |
 | 12 | Hosted provider credentials/canaries | **OPTIONAL / OPERATOR CREDENTIALS REQUIRED** | Never required for current local work |
 | 13 | Durable production observability | **PENDING FUTURE DEPLOYMENT** | Local observability baseline does not replace production retention/alerting evidence |
-| 14 | Host hardening / disaster recovery | **PARTIALLY PROVEN / DR-2 ACTIVE** | Original SumoPod host-loss DR is CLOSED / PASS; stronger physical-host/storage independence remains DR-2 checkpoint 2+ |
+| 14 | Host hardening / disaster recovery | **ORIGINAL DR PROVEN / DR-2 DEFERRED** | Original SumoPod host-loss DR is CLOSED / PASS; stronger physical-host/storage independence is safe-paused before DR-2 checkpoint-2 target selection |
 
 ## Resume procedure
 
