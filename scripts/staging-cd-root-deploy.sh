@@ -143,7 +143,10 @@ wait_for_public_boundary() {
         "$ECORIONE_STAGING_PUBLIC_BASE_URL/ops" || true
     )"
 
-    if [[ "$home_code" =~ ^[23][0-9]{2}$ && "$ops_code" == "401" ]]; then
+    # Readiness accepts both the legacy public home (2xx/3xx) and the
+    # private-by-default home (401). The revision-specific smoke test below
+    # enforces the intended policy; this loop only waits for the edge to settle.
+    if [[ ( "$home_code" =~ ^[23][0-9]{2}$ || "$home_code" == "401" ) && "$ops_code" == "401" ]]; then
       echo "Public boundary ready on attempt $attempt: home=$home_code ops=$ops_code"
       return 0
     fi
