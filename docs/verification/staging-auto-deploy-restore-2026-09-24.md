@@ -1,6 +1,6 @@
 # ECORIONE — Staging Auto-Deploy Restore — 2026-09-24
 
-Status: **SESSION 2 IN PROGRESS / CONTROLLED CONVERGENCE PASS / AUTO-DEPLOY PATH ENABLED / AUTOMATIC RUN EXPOSED OPS-READINESS RACE / SAFE ROLLBACK PASS**
+Status: **SESSION 2 IN PROGRESS / OPS-READINESS FIX MERGED / HELPER REFRESHED / CONTROLLED CONVERGENCE PASS / FINAL AUTOMATIC PROOF PENDING**
 
 ## Scope
 
@@ -183,6 +183,59 @@ The governed deploy helper now adds a bounded authenticated Operations readiness
 This preserves fail-closed behavior while avoiding rollback on a single transient post-startup health sample.
 
 The source contract test now requires this bounded readiness loop. The installed privileged helper must be refreshed from the reviewed merged fix before Session 2 resumes automatic deployment proof.
+
+## Ops-readiness fix convergence — PASS
+
+PR #302 merged as reviewed main:
+
+`bd31ab7d64c0579f752fb225ed78b1dab94eed2a`
+
+Before merging, automatic CD was intentionally disabled again to prevent the still-installed pre-fix privileged helper from handling the new SHA.
+
+The installed privileged deploy helper was then refreshed directly from exact reviewed main. SHA-256 matched between repository source and `/usr/local/sbin/ecorione-staging-deploy`:
+
+`1342ee0cc45f8b1d385f20200867b0adf76a5d69c64af1656ff007cc1df8b4f3`
+
+Controlled convergence of exact main `bd31ab7d64c0579f752fb225ed78b1dab94eed2a` then passed.
+
+Observed release identity:
+
+- current SHA: `bd31ab7d64c0579f752fb225ed78b1dab94eed2a`;
+- current tag: `staging-bd31ab7d64c0`;
+- previous known-good SHA: `fad170645ba612b746453487dc97cc0e03cb05e7`;
+- previous tag: `staging-fad170645ba6`.
+
+Validation passed:
+
+- public auth bootstrap and all representative private Ai routes;
+- MCP protected-resource metadata and unauthenticated OAuth challenge;
+- authenticated Operations: `healthy: true`, `serviceCount: 9`, `unhealthyServices: []`;
+- bounded readiness path emitted `Operations healthy on attempt 1/20`;
+- exact host evidence: `expectedShaMatched=true`, `cleanWorktree=true`;
+- all 15 configured services running;
+- `nonRunningServices=[]`;
+- `availableDiskGiB=22.66`;
+- deployment env mode 0600, non-symlinked, no placeholders.
+
+The helper emitted:
+
+`PASS PCS-08 staging deploy sha=bd31ab7d64c0579f752fb225ed78b1dab94eed2a tag=staging-bd31ab7d64c0`
+
+This proves the bounded Operations-readiness fix is installed and the current reviewed main is healthy on staging.
+
+## Final Session 2 proof pending
+
+Automatic CD remains temporarily disabled while this final proof checkpoint is prepared.
+
+The only remaining Session 2 proof is:
+
+1. keep only the current and recorded rollback ECORIONE images if disk headroom needs widening;
+2. set `ECORIONE_STAGING_CD_ENABLED=1`;
+3. merge this docs-only checkpoint to create one new reviewed main SHA;
+4. require merged-main CI and Product Eval PASS;
+5. require the automatic `workflow_run` Staging Deploy to execute its deploy job rather than skip;
+6. require the refreshed helper to pass private-edge smoke, bounded Operations health, exact-host identity, and release receipt for that exact new main;
+7. record that run and close Session 2.
 
 ## Explicit non-claims
 
