@@ -14,6 +14,12 @@ The staging disk-pressure recovery is now **SESSION 1 CLOSED / PASS**. The host 
 
 **Next authorized scope: Session 2 — Restore Auto Deploy / controlled convergence.** Keep `ECORIONE_STAGING_CD_ENABLED=0` while confirming current main and green gates, then run one controlled exact-SHA staging convergence. Require the capacity guard, all configured services, private-edge negative paths, MCP/OAuth checks, authenticated Operations, release receipt, and exact-host identity to pass. Only after that controlled convergence passes may `ECORIONE_STAGING_CD_ENABLED=1` be restored. Do not start remaining HIGH audit fixes, Space/Project UX work, production promotion, or DR-2 runtime work before Session 2 closes.
 
+### Session 2 — controlled convergence PASS / auto-deploy enable pending
+
+Controlled staging convergence to exact current main `fad170645ba612b746453487dc97cc0e03cb05e7` is PASS. The reviewed host helper built and activated `staging-fad170645ba6`, public/private boundary validation passed, authenticated Operations is healthy, exact-host evidence matches the target, all 15 configured services are running, and post-deploy disk headroom is `27.51 GiB`.
+
+**Only remaining authorized step in Session 2:** restore `ECORIONE_STAGING_CD_ENABLED=1` and prove the governed GitHub Staging Deploy workflow executes its deploy job through the restricted SSH path for current main. Do not start HIGH audit fixes, Space/Project UX work, production promotion, or DR-2 runtime work before that proof closes. Evidence: [verification/staging-auto-deploy-restore-2026-09-24.md](verification/staging-auto-deploy-restore-2026-09-24.md).
+
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
 Issue #277 remains the DR-2 tracking scope but is currently deferred; there is no active DR-2 runtime implementation. It is additive to the completed Off-host DR drill and must not rewrite Issue #266 evidence.
