@@ -93,9 +93,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
 
   it("builds the shared application image once and reuses it across services", () => {
     expect(upgrade).toContain('docker build -f Dockerfile -t "ecorione:$TAG" .');
-    expect(upgrade).toContain('up -d --no-build');
-    expect(upgrade).not.toContain('up -d --build');
-    expect(rollback).toContain('up -d --no-build');
+    expect(upgrade).toContain("up -d --no-build");
+    expect(upgrade).not.toContain("up -d --build");
+    expect(rollback).toContain("up -d --no-build");
   });
 
   it("keeps only current + rollback staging images and stabilizes post-deploy capacity", () => {
@@ -107,9 +107,11 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
   });
 
   it("requires release receipt, Git HEAD and active image to agree before mutation", () => {
-    expect(rootDeploy).toContain("release receipt, Git HEAD, and active image are inconsistent");
-    expect(rootDeploy).toContain('RECORDED_PREVIOUS_SHA=');
-    expect(rootDeploy).toContain('RECORDED_PREVIOUS_TAG=');
+    expect(rootDeploy).toContain(
+      "release receipt, Git HEAD, and active image are inconsistent",
+    );
+    expect(rootDeploy).toContain("RECORDED_PREVIOUS_SHA=");
+    expect(rootDeploy).toContain("RECORDED_PREVIOUS_TAG=");
     expect(rootDeploy).toContain('RECORDED_TAG" == "$ACTIVE_TAG');
   });
 
@@ -117,8 +119,12 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("rollback()");
     expect(rootDeploy).toContain("scripts/self-host-rollback.sh");
     expect(rootDeploy).toContain('owner_git checkout --detach "$PREVIOUS_SHA"');
-    expect(rootDeploy).toContain('validate_deployed_revision "$PREVIOUS_TAG" "$PREVIOUS_SHA"');
-    expect(rootDeploy).toContain("Rollback fully revalidated at public, Operations, exact-host, and capacity boundaries");
+    expect(rootDeploy).toContain(
+      'validate_deployed_revision "$PREVIOUS_TAG" "$PREVIOUS_SHA"',
+    );
+    expect(rootDeploy).toContain(
+      "Rollback fully revalidated at public, Operations, exact-host, and capacity boundaries",
+    );
     expect(rootDeploy).toContain("ROLLBACK FAILED; operator intervention required");
   });
 
