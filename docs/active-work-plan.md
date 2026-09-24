@@ -4,7 +4,7 @@ Last updated: **2026-09-25**
 
 Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Audit follow-up checkpoint — CRITICAL + HIGH FINDINGS CLOSED / SESSION 5 NEXT
+## Audit follow-up checkpoint — SESSION 5 CLOSED / PROJECT UX NEXT DISCUSSION
 
 The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
@@ -36,16 +36,22 @@ A-12 and A-01 are closed on current reviewed main.
 
 There are no open CRITICAL/HIGH findings remaining from the 2026-09-24 audit. Evidence: [verification/session-4-high-findings-safe-checkpoint-2026-09-25.md](verification/session-4-high-findings-safe-checkpoint-2026-09-25.md).
 
-### Session 5 — NEXT DISCUSSION / NOT STARTED
+### Session 5 — CLOSED / PASS
 
-Bounded next scope is A-13 only:
+A-13 is closed through PR #312 / merge `d8d2a113c917cee87f2d43a5a2243eda2e4d2173`.
 
-- change Space standalone/default Flow URL from `http://127.0.0.1:17029` to canonical `http://127.0.0.1:17028`;
-- inspect both `services/space/src/main.ts` and `services/space/src/http.ts`;
-- add deterministic regression coverage for the canonical owner port map;
-- verify Compose remains unaffected because it already injects `http://flow:17028`;
-- inspect Flow-linked/AI-linked block effects before closure;
-- do not redesign Flow/Temporal or open Project UX work in the same slice.
+- Space standalone/default Flow now resolves to canonical `http://127.0.0.1:17028`;
+- one shared resolver owns the fallback while explicit `ECORIONE_FLOW_URL` overrides remain supported;
+- deterministic unit/source-contract coverage locks Space, `.env.example`, engine health mapping, desktop Compose and staging Compose to the canonical port contract;
+- existing Flow-linked/AI-linked Space resolution behavior remains unchanged and covered;
+- desktop/staging Compose remains unchanged at `http://flow:17028`;
+- exact-head CI #2032 and Product Eval #1271 passed;
+- merged-main CI #2033 and Product Eval #1272 passed;
+- automatic Staging Deploy #833 executed and passed on exact `d8d2a113...`, with healthy Operations, exact-host match, no non-running configured service, preserved auth/MCP boundary, and `28.86 GiB` stabilized free space.
+
+Evidence: [verification/session-5-a13-safe-checkpoint-2026-09-25.md](verification/session-5-a13-safe-checkpoint-2026-09-25.md).
+
+**Next bounded discussion scope is Project UX only:** make virtual `All` functional. After that, handle stale persisted Project selection as a separate bounded step, then final system audit, then final safe checkpoint. No Project UX implementation is active in this checkpoint.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
