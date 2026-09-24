@@ -29,30 +29,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Debug Prettier output for A-12
-        run: |
-          pnpm exec prettier \
-            services/rnd/src/main.ts \
-            services/context/src/main.ts \
-            services/connect/src/main.ts \
-            services/hub/src/main.ts \
-            services/artifact/src/main.ts \
-            services/sandbox/src/main.ts \
-            services/space/src/main.ts \
-            services/flow/src/main.ts \
-            test/a12-owner-remote-bind-auth.test.ts \
-            --write
-          git diff -- \
-            services/rnd/src/main.ts \
-            services/context/src/main.ts \
-            services/connect/src/main.ts \
-            services/hub/src/main.ts \
-            services/artifact/src/main.ts \
-            services/sandbox/src/main.ts \
-            services/space/src/main.ts \
-            services/flow/src/main.ts \
-            test/a12-owner-remote-bind-auth.test.ts
-
       - name: Format
         run: pnpm run format:check
 
