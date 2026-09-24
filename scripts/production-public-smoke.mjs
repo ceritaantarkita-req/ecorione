@@ -60,19 +60,9 @@ function expectSecurityHeaders(response, label) {
   assert.equal(response.headers.get("x-frame-options"), "DENY", `${label}: missing frame deny`);
 }
 
-for (const protectedPath of [
-  "/",
-  "/ops",
-  "/settings",
-  "/api/ops",
-  "/api/settings",
-]) {
+for (const protectedPath of ["/", "/ops", "/settings", "/api/ops", "/api/settings"]) {
   const response = await request(protectedPath);
-  assert.equal(
-    response.status,
-    401,
-    `${protectedPath} must remain protected with HTTP 401`,
-  );
+  assert.equal(response.status, 401, `${protectedPath} must remain protected with HTTP 401`);
   expectSecurityHeaders(response, protectedPath);
   pass(`${protectedPath} protected`, "HTTP 401");
 }
