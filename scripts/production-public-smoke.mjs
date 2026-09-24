@@ -60,7 +60,13 @@ function expectSecurityHeaders(response, label) {
   assert.equal(response.headers.get("x-frame-options"), "DENY", `${label}: missing frame deny`);
 }
 
-for (const protectedPath of ["/", "/ops", "/settings", "/api/ops", "/api/settings"]) {
+for (const protectedPath of [
+  "/",
+  "/ops",
+  "/settings",
+  "/api/ops",
+  "/api/settings",
+]) {
   const response = await request(protectedPath);
   assert.equal(
     response.status,
