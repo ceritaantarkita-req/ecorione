@@ -77,12 +77,25 @@ describe("production activation scripts", () => {
       (req, res) => {
         const origin = `http://${req.headers.host}`;
         const security = { "x-content-type-options": "nosniff", "x-frame-options": "DENY" };
+        if (req.url === "/") {
+          res.writeHead(302, { ...security, location: "/login" });
+          res.end();
+          return;
+        }
         if (
-          req.url === "/" ||
-          req.url === "/ops" ||
-          req.url === "/settings" ||
-          req.url === "/api/ops" ||
-          req.url === "/api/settings"
+          [
+            "/login",
+            "/ops",
+            "/settings",
+            "/api/ops",
+            "/api/settings",
+            "/api/projects",
+            "/api/projects/history",
+            "/api/brain",
+            "/api/space/pages",
+            "/api/chat",
+            "/api/forget",
+          ].includes(req.url ?? "")
         ) {
           res.writeHead(401, security);
           res.end();

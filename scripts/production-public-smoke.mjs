@@ -60,11 +60,52 @@ function expectSecurityHeaders(response, label) {
   assert.equal(response.headers.get("x-frame-options"), "DENY", `${label}: missing frame deny`);
 }
 
-for (const protectedPath of ["/", "/ops", "/settings", "/api/ops", "/api/settings"]) {
+const root = await request("/");
+assert.equal(
+  root.status,
+  302,
+  `/ must redirect unauthenticated clients to /login, got ${root.status}`,
+);
+assert.equal(
+  root.headers.get("location"),
+  "/login",
+  "unauthenticated root redirect must target /login",
+);
+expectSecurityHeaders(root, "/");
+pass("/ auth bootstrap redirect", "HTTP 302 -> /login");
+
+const loginChallenge = await request("/login");
+assert.equal(loginChallenge.status, 401, "/login must challenge unauthenticated clients");
+expectSecurityHeaders(loginChallenge, "/login");
+pass("/login protected", "HTTP 401");
+
+const protectedReads = [
+  "/ops",
+  "/settings",
+  "/api/ops",
+  "/api/settings",
+  "/api/projects",
+  "/api/projects/history",
+  "/api/brain",
+  "/api/space/pages",
+];
+
+for (const protectedPath of protectedReads) {
   const response = await request(protectedPath);
   assert.equal(response.status, 401, `${protectedPath} must remain protected with HTTP 401`);
   expectSecurityHeaders(response, protectedPath);
   pass(`${protectedPath} protected`, "HTTP 401");
+}
+
+for (const protectedMutation of ["/api/chat", "/api/forget"]) {
+  const response = await request(protectedMutation, { method: "POST" });
+  assert.equal(
+    response.status,
+    401,
+    `${protectedMutation} mutation must remain protected with HTTP 401`,
+  );
+  expectSecurityHeaders(response, protectedMutation);
+  pass(`${protectedMutation} mutation protected`, "HTTP 401");
 }
 
 const metadataPath = "/.well-known/oauth-protected-resource/mcp";
