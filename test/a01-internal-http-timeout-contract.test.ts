@@ -24,9 +24,7 @@ describe("A-01 internal HTTP timeout contract", () => {
 
   it("Brain raw owner fetch memiliki deadline eksplisit yang sama", () => {
     const source = readFileSync("apps/ai/lib/brain-projection.ts", "utf8");
-    expect(source).toContain("DEFAULT_INTERNAL_HTTP_TIMEOUT_MS");
-    expect(source).toContain(
-      "signal: AbortSignal.timeout(DEFAULT_INTERNAL_HTTP_TIMEOUT_MS)",
-    );
+    expect(source).toContain("BRAIN_OWNER_TIMEOUT_MS = 10_000");
+    expect(source).toContain("signal: AbortSignal.timeout(BRAIN_OWNER_TIMEOUT_MS)");
   });
 });
