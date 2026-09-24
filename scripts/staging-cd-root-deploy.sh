@@ -437,15 +437,15 @@ rollback() {
   owner_git checkout --detach "$PREVIOUS_SHA" || rollback_status=1
   owner_run_with_tag "$PREVIOUS_TAG" \
     bash scripts/self-host-rollback.sh --apply "$PREVIOUS_TAG" || rollback_status=1
-  wait_for_services "$PREVIOUS_TAG" || rollback_status=1
-  basic_public_check || rollback_status=1
+  validate_deployed_revision "$PREVIOUS_TAG" "$PREVIOUS_SHA" || rollback_status=1
   set_env_image_tag "$PREVIOUS_TAG" || rollback_status=1
+  stabilize_post_deploy_capacity || rollback_status=1
   set -e
 
   if [[ "$rollback_status" -ne 0 ]]; then
     echo "ROLLBACK FAILED; operator intervention required" >&2
   else
-    echo "Rollback verified at basic public boundary" >&2
+    echo "Rollback fully revalidated at public, Operations, exact-host, and capacity boundaries" >&2
   fi
   return 1
 }
