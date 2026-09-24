@@ -8,6 +8,8 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 
 **Start here:** [docs/README.md](docs/README.md).
 
+> **Security audit notice — 2026-09-24:** the bounded current-main audit found a CRITICAL missing human-authentication boundary on the general Ai web/API edge. `/ops` and `/settings` are protected, but general Ai proxies are not user-authenticated and inject the internal service token server-side. No fresh live-host probe was performed, but public/staging/production exposure must not be treated as safe for personal data until this boundary is fixed and negatively tested. See `docs/verification/current-main-staging-audit-2026-09-24.md`.
+
 ## What exists today
 
 | Area | Current baseline |
