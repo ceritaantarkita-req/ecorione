@@ -58,13 +58,14 @@ describe("production activation scripts", () => {
       (req, res) => {
         const origin = `http://${req.headers.host}`;
         const security = { "x-content-type-options": "nosniff", "x-frame-options": "DENY" };
-        if (req.url === "/") {
-          res.writeHead(200, security);
-          res.end("ok");
-          return;
-        }
-        if (req.url === "/ops" || req.url === "/settings") {
-          res.writeHead(401);
+        if (
+          req.url === "/" ||
+          req.url === "/ops" ||
+          req.url === "/settings" ||
+          req.url === "/api/ops" ||
+          req.url === "/api/settings"
+        ) {
+          res.writeHead(401, security);
           res.end();
           return;
         }
