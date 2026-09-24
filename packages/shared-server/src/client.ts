@@ -11,8 +11,21 @@ export interface HttpJsonOptions {
   readonly body?: unknown;
   readonly token?: string | undefined;
   readonly headers?: Readonly<Record<string, string>>;
-  /** `AbortSignal` opsional — dipakai test untuk memastikan tidak ada panggilan menggantung. */
+  /** Signal eksplisit dari caller menggantikan deadline default internal HTTP. */
   readonly signal?: AbortSignal;
+  /** Deadline request ketika caller tidak menyediakan signal sendiri. */
+  readonly timeoutMs?: number | undefined;
+}
+
+export const DEFAULT_INTERNAL_HTTP_TIMEOUT_MS = 10_000;
+
+function boundedSignal(options: HttpJsonOptions): AbortSignal {
+  if (options.signal !== undefined) return options.signal;
+  const timeoutMs = options.timeoutMs ?? DEFAULT_INTERNAL_HTTP_TIMEOUT_MS;
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 120_000) {
+    throw new Error("httpJson timeoutMs harus integer 1..120000 ms.");
+  }
+  return AbortSignal.timeout(timeoutMs);
 }
 
 export async function httpJson<T>(url: string, options: HttpJsonOptions = {}): Promise<T> {
@@ -35,7 +48,7 @@ export async function httpJson<T>(url: string, options: HttpJsonOptions = {}): P
     redirect: "error",
   };
   if (body !== undefined) init.body = body;
-  if (options.signal !== undefined) init.signal = options.signal;
+  init.signal = boundedSignal(options);
 
   const res = await fetch(url, init);
 
