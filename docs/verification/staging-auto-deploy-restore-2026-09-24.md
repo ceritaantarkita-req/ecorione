@@ -1,6 +1,6 @@
 # ECORIONE — Staging Auto-Deploy Restore — 2026-09-24
 
-Status: **SESSION 2 IN PROGRESS / CONTROLLED CONVERGENCE PASS / AUTO-DEPLOY ENABLED / AUTOMATIC WORKFLOW_RUN PROOF PENDING**
+Status: **SESSION 2 IN PROGRESS / CONTROLLED CONVERGENCE PASS / AUTO-DEPLOY PATH ENABLED / AUTOMATIC RUN EXPOSED OPS-READINESS RACE / SAFE ROLLBACK PASS**
 
 ## Scope
 
@@ -144,6 +144,45 @@ One final automatic-path proof remains before Session 2 is declared CLOSED:
 6. record that automatic run in the final closure.
 
 Until that proof is captured, the least-privilege path is restored and enabled, but end-to-end automatic post-merge behavior is not yet the final closure claim.
+
+## Automatic workflow_run attempt — FAILED SAFE / rollback PASS
+
+PR #301 merged as current main:
+
+`a12094a45ee15339f4005e33bb30c2d27dc205bc`
+
+Merged-main gates passed:
+
+- CI #1992 — PASS;
+- Product Eval #1231 — PASS.
+
+The first workflow-run trigger after Product Eval completed before CI and therefore correctly produced a gate-only Staging Deploy run with deploy skipped.
+
+After CI completed, automatic Staging Deploy run `36000222819` / #751 started for exact main `a12094a45ee15339f4005e33bb30c2d27dc205bc`. The gate passed and the deploy job executed through the restricted SSH path.
+
+The image build and container recreation succeeded, and public/private boundary smoke passed. However the first authenticated Operations snapshot was taken immediately after startup and reported only `space` unhealthy:
+
+- `healthy: false`;
+- `serviceCount: 9`;
+- `unhealthyServices: ["space"]`.
+
+The deploy helper therefore correctly refused to record the release and rolled the runtime back to known-good `fad170645ba612b746453487dc97cc0e03cb05e7` / `staging-fad170645ba6`. Basic public-boundary rollback verification passed.
+
+Because the new main is documentation-only relative to the previously healthy application runtime and the failing service had only just started, this is treated as an operations-readiness race in the deployment acceptance path, not as authorization to ignore health failures.
+
+## Bounded fix in progress
+
+The governed deploy helper now adds a bounded authenticated Operations readiness loop:
+
+- up to 20 attempts;
+- 3 seconds between attempts;
+- every attempt still runs the canonical `production-ops-snapshot.mjs`;
+- success requires the full snapshot to be healthy;
+- timeout still fails the deployment and triggers rollback.
+
+This preserves fail-closed behavior while avoiding rollback on a single transient post-startup health sample.
+
+The source contract test now requires this bounded readiness loop. The installed privileged helper must be refreshed from the reviewed merged fix before Session 2 resumes automatic deployment proof.
 
 ## Explicit non-claims
 
