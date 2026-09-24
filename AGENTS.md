@@ -87,6 +87,8 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 
 ## Current active scope
 
+**Security stop condition:** the 2026-09-24 bounded audit found a CRITICAL missing human-authentication boundary on the general Ai web/API edge. Do not promote public production or treat a reachable Ai edge as safe for personal data until a bounded fix adds fail-closed human authentication with unauthenticated negative-path tests. This audit finding does not itself authorize implementation; the operator must open the bounded fix scope.
+
 There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
 
 **PCS-00 through PCS-10 are CLOSED / PASS at documented boundaries.**
