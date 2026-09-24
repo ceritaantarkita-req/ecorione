@@ -28,7 +28,7 @@ Staging rules:
 - hosted AI (initially OpenRouter where configured) may be used without any local Ollama dependency;
 - local inference remains optional and OpenAI-compatible;
 - no provider key, VPS password, public/private IP, vault master key, or deployment token is committed to Git;
-- internal service ports remain private; expose only the intended authenticated web edge;
+- internal service ports remain private; the intended web edge must be human-authenticated before it is treated as safe. The 2026-09-24 audit found that the current general Ai fallback is not yet human-authenticated;
 - validate restart persistence, backup, observability, and rollback on the actual VPS;
 - staging evidence cannot be cited as production evidence.
 
