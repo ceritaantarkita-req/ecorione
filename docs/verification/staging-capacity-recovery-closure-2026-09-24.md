@@ -17,25 +17,36 @@ The dirty worktree was preserved first:
 - pre-recovery status saved under `/home/ubuntu/ecorione-recovery-20260924`;
 - binary worktree diff saved before reset.
 
-Only reproducible BuildKit cache was reclaimed:
+Recovery first reclaimed reproducible BuildKit cache only:
 
 `docker builder prune --all --force`
 
-No Docker volumes, running containers, networks, active images, rollback images, or unrelated shared-host workloads were pruned.
+That recovered the host from the immediate full-filesystem condition but exact host evidence still measured 19.2 GiB available, slightly below the reviewed 20 GiB deploy floor. A second bounded cleanup therefore removed only explicit unused historical `ecorione:staging-*` image tags after verifying they were not referenced by any container and were neither the current runtime nor the recorded previous rollback image.
+
+Retained images:
+
+- current runtime: `ecorione:staging-b73e885d51e8`;
+- recorded rollback: `ecorione:staging-d92d89406479`.
+
+No Docker volumes, running containers, networks, current/rollback images, or unrelated shared-host workloads were pruned.
 
 ## Capacity result
 
 Before recovery, the root filesystem had approximately 11 GiB available.
 
-After BuildKit-only cleanup:
+After BuildKit-only cleanup, `df -h` reported about 20 GiB available while exact host evidence reported 19.2 GiB, so the host was still below the strict reviewed deploy floor.
+
+After the bounded unused-ECORIONE-image cleanup:
 
 - root filesystem: 79 GiB total;
-- used: 57 GiB;
-- available: 20 GiB;
-- usage: 75%;
-- Docker Build Cache: 0 B.
+- used: 46 GiB;
+- available: 30 GiB;
+- usage: 61%;
+- Docker Build Cache: 0 B;
+- Docker image inventory reduced to 30 total images / 12.31 GB;
+- only the current and recorded previous ECORIONE staging images remain.
 
-This satisfies the reviewed 20 GiB staging deploy floor at the observed `df -h` boundary, although exact binary-GiB host evidence later reported 19.2 GiB available. The next convergence deploy must therefore retain the repository disk-floor guard and may still refuse to proceed if available space falls below its exact threshold.
+This restores meaningful capacity headroom above the 20 GiB staging deploy floor without broad Docker pruning.
 
 ## Repository/worktree recovery
 
@@ -116,7 +127,9 @@ Host:
 - Ubuntu 24.04.4 LTS;
 - Linux 6.8.0-136-generic;
 - x86_64;
-- available disk reported by exact host evidence: 19.2 GiB.
+- pre-final-cleanup exact host evidence reported 19.2 GiB available;
+- post-cleanup `df -h` reports 30 GiB available;
+- final exact-host evidence is re-run before this closure is merged.
 
 Runtime:
 
@@ -131,7 +144,7 @@ Deployment env remained mode 0600, non-symlinked, and free of `CHANGE_ME` placeh
 
 ## Current safe state
 
-Session 1 is CLOSED.
+Session 1 is **ready to close after one final exact-host evidence rerun** confirming the post-cleanup disk measurement and unchanged runtime identity.
 
 The staging runtime is healthy and still pinned to the last fully proven application SHA:
 
