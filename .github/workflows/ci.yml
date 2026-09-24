@@ -29,11 +29,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Debug Prettier output for PCS-08
-        run: |
-          pnpm exec prettier test/pcs08-staging-cd-source-contract.test.ts --write
-          git diff -- test/pcs08-staging-cd-source-contract.test.ts
-
       - name: Format
         run: pnpm run format:check
 
