@@ -120,6 +120,8 @@ Use the owner-specific runbook when touching its subsystem:
 
 Latest bounded repository/product + staging-parity audit: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). It records a CRITICAL missing human-authentication boundary on the reachable Ai edge (Issue #287), plus HIGH reliability/security debts and product gaps. Findings are documented but do not open an implementation scope automatically.
 
+Safe checkpoint for the next discussion: [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md). Start there before opening any implementation work from the audit.
+
 ## Archive
 
 [archive/](archive/) contains superseded audits/plans/snapshots. Do not use it to choose current work.
