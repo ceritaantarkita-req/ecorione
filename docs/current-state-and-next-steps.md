@@ -16,7 +16,7 @@ The requested repository/product and repository-versus-staging audit is complete
 
 The audit identified one CRITICAL source-level authentication defect: the general Ai edge has no human authentication boundary, while Ai APIs inject the internal service token server-side; when that edge is reachable, unauthenticated network clients can reach Project/history/chat and mutation surfaces. Historical staging evidence used the same byte-identical product/Caddy tree, but this audit did not perform a fresh live-host probe. It also identified two HIGH debts: incomplete bounded timeout coverage on internal HTTP owner calls, plus a latent direct-start security configuration gap where owner services can combine non-loopback bind with a missing internal bearer token outside the guarded Compose paths. A concrete Space standalone default-port bug (`17029` instead of canonical Flow `17028`), two Project UX/state defects (inert virtual `All`; stale persisted Project selection), and bounded product/maintainability gaps were also found. None of these findings is authorized for implementation merely by being documented.
 
-Audit evidence: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md).
+Audit evidence: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). Critical Ai-auth finding tracking: Issue #287; implementation is not yet authorized.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
