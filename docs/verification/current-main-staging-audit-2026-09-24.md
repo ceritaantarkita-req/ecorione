@@ -102,6 +102,37 @@ Some previously hardened paths already use explicit timeouts, so the policy is i
 
 **Recommended future scope:** establish one explicit internal-HTTP timeout policy, then add deterministic stalled-upstream tests.
 
+
+### A-12 — HIGH — remote bind can fail open without an internal bearer token outside guarded Compose paths
+
+**Type:** security configuration / defense-in-depth.
+
+`packages/shared-server/src/server.ts` makes two independent decisions:
+
+- `bindHost()` returns `0.0.0.0` when `ECORIONE_ALLOW_REMOTE_BIND=1`;
+- bearer authentication is skipped entirely when `createServer(...)` receives no token.
+
+The production entrypoints for RnD, Context, Connect, Hub, Artifact, Sandbox, Space, and Flow all read `ECORIONE_INTERNAL_TOKEN` as optional and then call `bindHost()` independently. A direct/manual service launch can therefore combine remote bind with an absent internal token and expose an owner service unauthenticated.
+
+The reviewed Compose paths are **not currently exposed by this configuration gap**: both `deploy/compose.yml` and `desktop/compose.yml` set `ECORIONE_ALLOW_REMOTE_BIND=1` while requiring `ECORIONE_INTERNAL_TOKEN` with Compose's mandatory-variable syntax. The finding is a latent fail-open direct/self-host configuration surface, not evidence of a current SumoPod staging breach.
+
+**Recommended future scope:** add a fail-closed startup invariant for owner services so non-loopback bind cannot start without the service's required authentication material, plus deterministic tests for the direct-start configuration matrix.
+
+### A-13 — MEDIUM — Space standalone default points at the Ai fallback port instead of Flow
+
+**Type:** reliability / configuration-default defect.
+
+Canonical Flow port is `17028` in `.env.example`, Flow itself, Hub, Connect, worker configuration, Ops aggregation, and Compose. Ai fallback ports are `17029–17039`.
+
+However:
+
+- `services/space/src/main.ts` defaults `ECORIONE_FLOW_URL` to `http://127.0.0.1:17029`;
+- `services/space/src/http.ts` uses the same `17029` fallback when `flowUrl` is omitted.
+
+Compose explicitly injects `http://flow:17028`, so the proven staging/desktop Compose paths are not affected. A standalone/default Space process can nevertheless resolve Flow-linked or AI-linked blocks against the wrong port.
+
+**Recommended future scope:** change both Space defaults to `17028` and add a deterministic source/runtime regression test so the owner port map cannot drift.
+
 ### A-02 — MEDIUM — Projects “All” is rendered as a button but has no behavior
 
 **Type:** confirmed static UX defect.
@@ -196,7 +227,7 @@ Several Ai product surfaces intentionally hardcode `ws_personal` and default `pr
 
 ## 4. Security audit result
 
-No P0/critical source-level security defect was identified in this audit.
+No P0/critical source-level security defect was identified in this audit. One HIGH security-configuration debt was identified: non-loopback direct service starts can fail open when remote bind is explicitly enabled but the internal bearer token is absent. The guarded Compose paths require that token and are not evidence of a current exposure.
 
 Positive evidence:
 
@@ -250,14 +281,16 @@ Historical host evidence also showed pending Ubuntu security updates and meaning
 
 This audit does **not** authorize implementation automatically.
 
-1. bounded internal HTTP timeout policy + regression tests;
-2. Project state/UI correctness: virtual All + stale persisted Project reconciliation;
-3. Project settings + source onboarding UX;
-4. Schedule calendar/navigation/year + AI-assisted schedule interaction;
-5. Brain scalable layout/pan/zoom + richer canonical-owner projection;
-6. frontend module decomposition while touching those surfaces;
-7. Compose readiness/health improvements;
-8. fresh staging runtime acceptance after selected changes merge.
+1. fail-closed remote-bind/auth startup invariant + regression tests;
+2. bounded internal HTTP timeout policy + stalled-upstream tests;
+3. Space Flow default-port correction + regression test;
+4. Project state/UI correctness: virtual All + stale persisted Project reconciliation;
+5. Project settings + source onboarding UX;
+6. Schedule calendar/navigation/year + AI-assisted schedule interaction;
+7. Brain scalable layout/pan/zoom + richer canonical-owner projection;
+8. frontend module decomposition while touching those surfaces;
+9. Compose readiness/health improvements;
+10. fresh staging runtime acceptance after selected changes merge.
 
 Do not open a new autonomous service, graph database, scheduler, or cross-service database path to solve these items.
 
