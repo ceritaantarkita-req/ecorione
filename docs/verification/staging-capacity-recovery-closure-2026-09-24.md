@@ -129,7 +129,7 @@ Host:
 - x86_64;
 - pre-final-cleanup exact host evidence reported 19.2 GiB available;
 - post-cleanup `df -h` reports 30 GiB available;
-- final exact-host evidence is re-run before this closure is merged.
+- final exact-host evidence reports **29.99 GiB available**.
 
 Runtime:
 
@@ -144,7 +144,17 @@ Deployment env remained mode 0600, non-symlinked, and free of `CHANGE_ME` placeh
 
 ## Current safe state
 
-Session 1 is **ready to close after one final exact-host evidence rerun** confirming the post-cleanup disk measurement and unchanged runtime identity.
+Session 1 is **CLOSED / PASS**.
+
+Final post-cleanup exact-host evidence passed at `2026-09-24T11:49:17.828Z` with:
+
+- `headSha == expectedSha == b73e885d51e82716d5b29b3b31d207aae5ec95d0`;
+- `expectedShaMatched=true`;
+- `cleanWorktree=true`;
+- `availableDiskGiB=29.99`;
+- all 15 configured services present in `runningServices`;
+- `nonRunningServices=[]`;
+- deployment env mode `600`, not a symlink, and no placeholders.
 
 The staging runtime is healthy and still pinned to the last fully proven application SHA:
 
