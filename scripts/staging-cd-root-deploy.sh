@@ -254,6 +254,79 @@ validate_deployed_revision() {
     node scripts/staging-host-evidence.mjs
 }
 
+prune_stale_staging_images() {
+  local current_tag previous_tag image
+
+  [[ -f "$STATE_FILE" && ! -L "$STATE_FILE" ]] || {
+    echo "Skipping staging-image retention: release state is unavailable or unsafe"
+    return 0
+  }
+  [[ "$(stat -c '%U' "$STATE_FILE")" == "root" ]] || {
+    echo "Skipping staging-image retention: release state is not root-owned"
+    return 0
+  }
+
+  current_tag="$(sed -n 's/^current_tag=//p' "$STATE_FILE")"
+  previous_tag="$(sed -n 's/^previous_tag=//p' "$STATE_FILE")"
+  [[ "$current_tag" =~ ^staging-[A-Za-z0-9._-]+$ ]] || {
+    echo "Skipping staging-image retention: current_tag is invalid"
+    return 0
+  }
+  [[ "$previous_tag" =~ ^staging-[A-Za-z0-9._-]+$ ]] || {
+    echo "Skipping staging-image retention: previous_tag is invalid"
+    return 0
+  }
+
+  while IFS= read -r image; do
+    [[ "$image" == ecorione:staging-* ]] || continue
+    if [[ "$image" == "ecorione:$current_tag" || "$image" == "ecorione:$previous_tag" ]]; then
+      echo "Keeping rollback-set image $image"
+    elif docker ps -a --format '{{.Image}}' | grep -Fxq "$image"; then
+      echo "Keeping container-referenced image $image"
+    else
+      echo "Removing stale staging image $image"
+      docker image rm "$image"
+    fi
+  done < <(docker image ls ecorione --format '{{.Repository}}:{{.Tag}}')
+}
+
+stabilize_post_deploy_capacity() {
+  local target_gib target_kib free_kib free_gib
+
+  prune_stale_staging_images
+
+  target_gib="${ECORIONE_DOCKER_POST_DEPLOY_TARGET_GIB:-25}"
+  [[ "$target_gib" =~ ^[0-9]+$ && "$target_gib" -ge "$BUILD_MIN_FREE_GIB" ]] || {
+    echo "ECORIONE_DOCKER_POST_DEPLOY_TARGET_GIB must be an integer >= $BUILD_MIN_FREE_GIB" >&2
+    return 1
+  }
+  target_kib="$((target_gib * 1024 * 1024))"
+  free_kib="$(df -Pk "$DOCKER_ROOT" | awk 'NR == 2 { print $4 }')"
+  [[ "$free_kib" =~ ^[0-9]+$ ]] || {
+    echo "Unable to determine post-deploy Docker free space" >&2
+    return 1
+  }
+
+  if (( free_kib < target_kib )); then
+    echo "Post-deploy Docker free space is below ${target_gib} GiB target; pruning BuildKit cache only."
+    docker builder prune --all --force
+    free_kib="$(df -Pk "$DOCKER_ROOT" | awk 'NR == 2 { print $4 }')"
+    [[ "$free_kib" =~ ^[0-9]+$ ]] || {
+      echo "Unable to determine post-cleanup Docker free space" >&2
+      return 1
+    }
+  fi
+
+  if (( free_kib < min_free_kib )); then
+    free_gib="$(awk -v kib="$free_kib" 'BEGIN { printf "%.2f", kib / 1024 / 1024 }')"
+    echo "Healthy release recorded, but Docker filesystem has only ${free_gib} GiB free; ${BUILD_MIN_FREE_GIB} GiB minimum required for the next governed deploy." >&2
+    return 1
+  fi
+
+  free_gib="$(awk -v kib="$free_kib" 'BEGIN { printf "%.2f", kib / 1024 / 1024 }')"
+  echo "PASS staging capacity stabilized: ${free_gib} GiB free"
+}
+
 tracked_status="$(owner_git status --porcelain --untracked-files=no)"
 [[ -z "$tracked_status" ]] || {
   echo "Refusing deploy: tracked staging checkout is dirty" >&2
