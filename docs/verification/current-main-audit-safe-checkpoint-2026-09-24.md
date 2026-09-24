@@ -210,3 +210,44 @@ Staging Deploy #678 gate PASS / deploy SKIPPED
 ```
 
 This document is the safe resume point for the next discussion. Later docs-only bookkeeping may advance GitHub `main`, but it must not be treated as product/runtime mutation unless `apps/`, `services/`, `packages/`, deployment policy, or an explicit staging deployment changes.
+
+
+## Final discussion handoff lock — 2026-09-24
+
+The docs-only checkpoint finalization PR #289 exact head `0998eb40f98d180957730ea9664a25f912ba025a` merged as:
+
+```text
+c6ae2361ae940d1a32375a41af6c91110667c895
+```
+
+Merged-main verification is green:
+
+```text
+CI #1959 PASS
+Product Eval #1198 PASS
+Staging Deploy #681 gate PASS / deploy SKIPPED
+Staging Deploy #682 gate PASS / deploy SKIPPED
+```
+
+The current `main` product/deployment trees remain identical to the proven original-DR application source:
+
+```text
+apps/     10339ff31ffde5a18c3ed2621b991212ee7281e3
+services/ 137cb974fda63d6c6c87d623e0c222079dad5676
+packages/ de1f62cfe4e9220d2efc0e2bce31cd4ba0e383b2
+deploy/   78882ec2c5979e7c0e4668fa3738c2e42ed9319c
+```
+
+Those four tree identities match `b27c1e5833be0a0fccf3f525d82ae8853cd22113`.
+
+Therefore the discussion handoff is safe:
+
+- no audit finding has been implemented;
+- no staging application deploy occurred;
+- no live provider/credential mutation occurred;
+- no DR-2 external target was selected;
+- no production promotion occurred;
+- Issue #287 remains OPEN and non-authorizing;
+- the next session should begin from this document and choose one bounded implementation scope before editing product code.
+
+If later docs-only commits advance `main`, this handoff remains valid so long as the four tree identities above remain unchanged and no explicit runtime mutation is performed.
