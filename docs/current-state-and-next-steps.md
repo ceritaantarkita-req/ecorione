@@ -20,6 +20,8 @@ Audit evidence: [verification/current-main-staging-audit-2026-09-24.md](verifica
 
 Safe discussion checkpoint: [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md). It freezes the audited boundary, prioritized findings, non-claims, and the exact resume rule: choose one bounded implementation scope before coding.
 
+Final discussion handoff baseline is repository `main` `c6ae2361ae940d1a32375a41af6c91110667c895`: CI #1959 and Product Eval #1198 PASS; Staging Deploy #681/#682 gate PASS with deploy SKIPPED. `apps/`, `services/`, `packages/`, and `deploy/` remain tree-identical to the proven original-DR application source, so this is a docs-only checkpoint rather than a new runtime claim.
+
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
 Issue #277 opens a new additive infrastructure scope after the original Off-host DR runtime closure. The closed Issue #266 claim remains unchanged: total loss of the tested SumoPod staging host is recoverable at its documented boundary.
