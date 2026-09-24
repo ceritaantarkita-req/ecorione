@@ -62,7 +62,7 @@ Tier 0/Tier 1.5 run inside the Sandbox service boundary. Any Docker execution ti
 
 ## Public edge — recommended Cloudflare Free path
 
-**Current security stop condition (2026-09-24):** do not expose or promote the Ai web/API surface as a trusted personal/production edge until fail-closed human authentication is added and unauthenticated Project/history/chat/mutation negative-path tests pass. The current Caddy policy protects operator routes but not the general Ai fallback. MCP/OAuth remains a separate protocol/auth boundary.
+**2026-09-24 security stop-condition update:** the missing general-Ai human-authentication boundary is CLOSED / PASS on SumoPod staging. The general Ai fallback now fails closed behind the existing operator Basic-Auth credential set, representative Project/history/Brain/Space reads and chat/forget mutations pass unauthenticated negative-path acceptance, and MCP/OAuth remains separate. This is staging closure only; production promotion still requires its own explicit decision and production-specific gates. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
 The recommended next real deployment is:
 
