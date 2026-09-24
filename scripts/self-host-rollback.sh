@@ -22,7 +22,9 @@ fi
 mode="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || true)"
 [[ -z "$mode" || "$mode" == "600" ]] || { echo "Refusing deploy: $ENV_FILE must be mode 600; current mode is $mode" >&2; exit 1; }
 ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" config >/dev/null
-ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" up -d
+# Rollback must reactivate the already-proven image exactly. Never rebuild a
+# historical rollback tag from source as part of emergency recovery.
+ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" up -d --no-build
 printf '%s
 ' "$(date -u +%FT%TZ) rollback=$TAG" >> data/release-rollback.log
 echo "Runtime image rollback applied. Data rollback is separate and must use verified owner backup/restore receipts.";
