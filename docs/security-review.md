@@ -29,7 +29,9 @@ Batch 12 closes a production/self-host **baseline**, not an assertion that futur
 
 ## AuthN/AuthZ and audit review
 
-Caddy Basic Auth protects external `/ops` and `/settings` in the repository self-host baseline. Internal service routes remain protected by `ECORIONE_INTERNAL_TOKEN` according to their boundary. Hub remains the capability/policy/approval authority for node/model/MCP execution. Control-plane configuration does not grant execution permission by itself.
+**2026-09-24 audit finding — CRITICAL:** Caddy Basic Auth protects external `/ops` and `/settings`, but the general Ai page/API fallback has no human-authentication boundary. Ai route handlers inject `ECORIONE_INTERNAL_TOKEN` server-side, so any network client that can reach the Ai edge can reach Project/history/chat and other Ai proxy surfaces without proving a user identity. The same-origin middleware is CSRF protection, not authentication; it intentionally permits headerless curl/native mutation requests. Historical SumoPod staging used the same byte-identical product/Caddy tree, although this audit did not perform a fresh live-host probe. This must be closed before the reachable Ai edge is treated as safe for personal/production data.
+
+Internal service routes remain protected by `ECORIONE_INTERNAL_TOKEN` according to their boundary on the guarded Compose paths. The same audit separately found that direct owner-service starts can enable non-loopback bind while omitting that token, so direct-start remote binding must also become fail-closed. Hub remains the capability/policy/approval authority for node/model/MCP execution. Control-plane configuration does not grant execution permission by itself.
 
 Cloudflare Tunnel, DNS, WAF, Access, or any other reverse proxy **must not become ECORIONE's authorization authority**. They may add edge defense, but Hub/Connect security boundaries remain authoritative.
 
