@@ -4,7 +4,7 @@
 
 import { resolve } from "node:path";
 import { makeId } from "@ecorione/shared-schema";
-import { bindHost, httpJson, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import { bindHostForAuthenticatedService, httpJson, resolveRepoRuntimePath } from "@ecorione/shared-server";
 import { registerAccessRoutes } from "./access-http.js";
 import { registerArtifactRoutes } from "./artifact-routes.js";
 import { nowIso } from "./clock.js";
@@ -23,6 +23,7 @@ const dbPath = resolveRepoRuntimePath(
   "data/ecorione.db",
 );
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
+const host = bindHostForAuthenticatedService(token);
 const connectUrl = process.env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
 
 const db = openContextDatabase({ path: dbPath });
@@ -68,9 +69,9 @@ registerMultimodalRoutes(app, repo);
 registerAccessRoutes(app, repo);
 
 app
-  .listen({ port, host: bindHost() })
+  .listen({ port, host })
   .then(() => {
-    app.log.info(`Context jalan di http://${bindHost()}:${String(port)}`);
+    app.log.info(`Context jalan di http://${host}:${String(port)}`);
   })
   .catch((err: unknown) => {
     app.log.error(err);
