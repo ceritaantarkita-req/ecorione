@@ -159,6 +159,8 @@ The reviewed Compose paths are **not currently exposed by this configuration gap
 
 ### A-13 — MEDIUM — Space standalone default points at the Ai fallback port instead of Flow
 
+**Closure update — 2026-09-25: CLOSED / PASS.** PR #312 / merge `d8d2a113c917cee87f2d43a5a2243eda2e4d2173` changed the Space standalone/default Flow owner URL to canonical port `17028`, centralized the fallback while preserving explicit overrides, and added deterministic owner-port contract coverage. Exact-head CI #2032 + Product Eval #1271 passed; merged-main CI #2033 + Product Eval #1272 passed; automatic Staging Deploy #833 executed and passed on exact `d8d2a113...`. The original audit evidence and recommendation below are retained as historical discovery context.
+
 **Type:** reliability / configuration-default defect.
 
 Canonical Flow port is `17028` in `.env.example`, Flow itself, Hub, Connect, worker configuration, Ops aggregation, and Compose. Ai fallback ports are `17029–17039`.
