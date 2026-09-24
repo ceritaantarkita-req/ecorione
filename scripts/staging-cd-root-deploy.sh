@@ -199,6 +199,30 @@ basic_public_check() {
   wait_for_public_boundary
 }
 
+wait_for_ops_health() {
+  local image_tag="$1"
+  local ops_user="$2"
+  local ops_pass="$3"
+  local attempt
+
+  for attempt in $(seq 1 20); do
+    if owner_run_with_tag "$image_tag" env \
+      ECORIONE_PUBLIC_BASE_URL="$ECORIONE_STAGING_PUBLIC_BASE_URL" \
+      ECORIONE_OPS_USER="$ops_user" \
+      ECORIONE_OPS_PASSWORD="$ops_pass" \
+      node scripts/production-ops-snapshot.mjs; then
+      echo "Operations healthy on attempt $attempt/20"
+      return 0
+    fi
+
+    echo "Waiting for Operations health attempt $attempt/20"
+    sleep 3
+  done
+
+  echo "Timed out waiting for authenticated Operations health" >&2
+  return 1
+}
+
 validate_deployed_revision() {
   local image_tag="$1"
   local expected_sha="$2"
@@ -219,11 +243,7 @@ validate_deployed_revision() {
     return 1
   fi
 
-  if ! owner_run_with_tag "$image_tag" env \
-    ECORIONE_PUBLIC_BASE_URL="$ECORIONE_STAGING_PUBLIC_BASE_URL" \
-    ECORIONE_OPS_USER="$ops_user" \
-    ECORIONE_OPS_PASSWORD="$ops_pass" \
-    node scripts/production-ops-snapshot.mjs; then
+  if ! wait_for_ops_health "$image_tag" "$ops_user" "$ops_pass"; then
     unset ops_user ops_pass
     return 1
   fi
