@@ -3,7 +3,10 @@
  */
 
 import { resolve } from "node:path";
-import { bindHostForAuthenticatedService, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { openRndDatabase } from "./db.js";
 import { buildRndServer } from "./http.js";
 
