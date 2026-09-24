@@ -17,9 +17,7 @@ describe("A-12 owner remote-bind authentication contract", () => {
     it(`${path} fail-closed melalui authenticated bind helper`, () => {
       const source = readFileSync(path, "utf8");
       expect(source).toContain("bindHostForAuthenticatedService");
-      expect(source).toContain(
-        "const host = bindHostForAuthenticatedService(token);",
-      );
+      expect(source).toContain("const host = bindHostForAuthenticatedService(token);");
       expect(source).toContain(".listen({ port, host })");
       expect(source).not.toContain("host: bindHost()");
     });
