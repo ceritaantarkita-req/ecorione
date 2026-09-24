@@ -6,6 +6,8 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
   const forcedCommand = readFileSync("scripts/staging-cd-forced-command.sh", "utf8");
   const rootDeploy = readFileSync("scripts/staging-cd-root-deploy.sh", "utf8");
   const bootstrap = readFileSync("scripts/staging-cd-host-bootstrap.sh", "utf8");
+  const upgrade = readFileSync("scripts/self-host-upgrade.sh", "utf8");
+  const rollback = readFileSync("scripts/self-host-rollback.sh", "utf8");
 
   it("deploys only a current main SHA after both required gates are green", () => {
     expect(workflow).toContain('workflows: ["CI", "Product Eval"]');
@@ -89,12 +91,34 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain('validate_deployed_revision "$TARGET_TAG" "$TARGET_SHA"');
   });
 
+  it("builds the shared application image once and reuses it across services", () => {
+    expect(upgrade).toContain('docker build -f Dockerfile -t "ecorione:$TAG" .');
+    expect(upgrade).toContain('up -d --no-build');
+    expect(upgrade).not.toContain('up -d --build');
+    expect(rollback).toContain('up -d --no-build');
+  });
+
+  it("keeps only current + rollback staging images and stabilizes post-deploy capacity", () => {
+    expect(rootDeploy).toContain("prune_stale_staging_images");
+    expect(rootDeploy).toContain("ECORIONE_DOCKER_POST_DEPLOY_TARGET_GIB");
+    expect(rootDeploy).toContain("Removing stale staging image");
+    expect(rootDeploy).toContain("PASS staging capacity stabilized");
+    expect(rootDeploy).toContain("stabilize_post_deploy_capacity || exit 1");
+  });
+
+  it("requires release receipt, Git HEAD and active image to agree before mutation", () => {
+    expect(rootDeploy).toContain("release receipt, Git HEAD, and active image are inconsistent");
+    expect(rootDeploy).toContain('RECORDED_PREVIOUS_SHA=');
+    expect(rootDeploy).toContain('RECORDED_PREVIOUS_TAG=');
+    expect(rootDeploy).toContain('RECORDED_TAG" == "$ACTIVE_TAG');
+  });
+
   it("fails the release and attempts known-good rollback when a post-deploy gate fails", () => {
     expect(rootDeploy).toContain("rollback()");
     expect(rootDeploy).toContain("scripts/self-host-rollback.sh");
     expect(rootDeploy).toContain('owner_git checkout --detach "$PREVIOUS_SHA"');
-    expect(rootDeploy).toContain("basic_public_check");
-    expect(rootDeploy).toContain("Rollback verified at basic public boundary");
+    expect(rootDeploy).toContain('validate_deployed_revision "$PREVIOUS_TAG" "$PREVIOUS_SHA"');
+    expect(rootDeploy).toContain("Rollback fully revalidated at public, Operations, exact-host, and capacity boundaries");
     expect(rootDeploy).toContain("ROLLBACK FAILED; operator intervention required");
   });
 
