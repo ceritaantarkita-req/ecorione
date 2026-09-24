@@ -33,4 +33,6 @@ DR-2 safe resumable checkpoint: [offhost-dr2-safe-checkpoint-2026-09-23.md](offh
 
 Current-main + staging parity audit: [current-main-staging-audit-2026-09-24.md](current-main-staging-audit-2026-09-24.md). It records exact product-tree parity, the CRITICAL general-Ai human-authentication gap tracked in Issue #287, HIGH reliability/security findings, product gaps, and repository-versus-runtime boundaries. Findings are non-authorizing; no deployment or runtime mutation is part of the audit.
 
-Current-main audit safe/resumable checkpoint: [current-main-audit-safe-checkpoint-2026-09-24.md](current-main-audit-safe-checkpoint-2026-09-24.md). It records the exact audit merge, prioritized findings, no-mutation boundary, and the rule that the next discussion must select one bounded implementation scope before coding.
+Current-main audit safe/resumable checkpoint: [current-main-audit-safe-checkpoint-2026-09-24.md](current-main-audit-safe-checkpoint-2026-09-24.md). It records the exact pre-fix audit merge, prioritized findings, and original no-mutation boundary.
+
+Ai human-authentication closure: [ai-human-auth-closure-2026-09-24.md](ai-human-auth-closure-2026-09-24.md). It closes the CRITICAL Issue #287 finding at the SumoPod staging boundary through PRs #293–#295, final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`, green CI/Product Eval, governed staging deploy, representative unauthenticated Ai read/mutation failures, preserved MCP/OAuth behavior, healthy Operations, and exact-host evidence.

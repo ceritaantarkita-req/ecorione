@@ -4,15 +4,13 @@ Last updated: **2026-09-24**
 
 Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Audit-only checkpoint — NO IMPLEMENTATION ACTIVE
+## Audit follow-up checkpoint — CRITICAL AI AUTH CLOSED / NEXT SCOPE UNSELECTED
 
-The 2026-09-24 current-main + staging parity audit is complete and is intentionally non-mutating. It does not open PE-09, PCS-11, Batch 13, a new F6 item, production promotion, or a DR-2 runtime checkpoint. Findings are prioritized but remain unimplemented until the operator chooses a bounded next scope.
+The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
-Highest-priority audit finding is CRITICAL: the general Ai web/API edge lacks a human-authentication boundary and server-side proxies inject the internal service token, so a reachable edge can expose Project/history/chat and mutation capabilities to unauthenticated network clients. Historical staging used the same product/Caddy tree; no fresh live-host probe was performed in this audit. Next are the HIGH remote-bind/auth direct-start gap and incomplete bounded internal-HTTP timeout coverage, followed by the Space `17029`/Flow `17028` default-port defect and product/UX findings. Full evidence: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md).
+The failed intermediate staging attempts are preserved as historical evidence: one exposed compatibility with the installed readiness gate, and one exposed an overly strict smoke assertion on Caddy-generated Basic-Auth 401 headers. Both were corrected without reopening the application architecture.
 
-Safe discussion handoff is pinned in [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md). Repository baseline before this handoff-doc update is `c6ae2361ae940d1a32375a41af6c91110667c895`, with CI #1959 + Product Eval #1198 PASS and Staging Deploy #681/#682 deploy jobs intentionally SKIPPED. **No audit fix is in flight.** Critical auth tracking: Issue #287; no implementation scope is open yet.
-
-Safe resumable audit checkpoint: [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md). No audit finding is being implemented yet; the next discussion must explicitly select one bounded scope.
+No next implementation scope is selected. Remaining prioritized audit work includes the HIGH direct-start remote-bind/auth gap and incomplete bounded internal-HTTP timeout coverage, followed by the Space `17029`/Flow `17028` default-port defect and Project/product UX findings. None is implicitly authorized by this closure. PE-09, PCS-11, Batch 13, a new F6 item, production promotion, and DR-2 runtime work remain unopened/deferred as previously documented.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 

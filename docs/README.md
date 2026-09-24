@@ -118,7 +118,7 @@ Use the owner-specific runbook when touching its subsystem:
 
 [verification/](verification/) contains dated closure records, failed attempts, runtime measurements, exact-head evidence, and bounded audits. It is not a work queue.
 
-Latest bounded repository/product + staging-parity audit: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). It records a CRITICAL missing human-authentication boundary on the reachable Ai edge (Issue #287), plus HIGH reliability/security debts and product gaps. Findings are documented but do not open an implementation scope automatically.
+Latest bounded repository/product + staging-parity audit: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). It originally recorded a CRITICAL missing human-authentication boundary plus HIGH reliability/security debts and product gaps. The CRITICAL Ai-auth finding is now CLOSED / PASS at the SumoPod staging boundary; closure evidence is [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md). Remaining findings still require separately selected scopes.
 
 Safe checkpoint for the next discussion: [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md). Start there before opening any implementation work from the audit.
 

@@ -6,7 +6,7 @@ Status: **PCS-08 CLOSED / PASS**
 
 PCS-08 automates deployment of the current reviewed GitHub `main` revision to the proven SumoPod staging runtime. PCS-09 has since CLOSED / PASS the staging persistence/security/backup/observability boundary. Neither closure promotes staging to production.
 
-**2026-09-24 audit correction:** the existing public smoke contract proves reachability, protected operator routes, MCP boundary, Ops health, and exact-host identity; it does **not** prove human authentication for the general Ai web/API surface. Issue #287 tracks the missing human-auth boundary. Until that is closed, a successful Staging Deploy must not be interpreted as proving a safe personal-data public Ai edge.
+**2026-09-24 auth closure:** the public smoke contract now includes the general Ai human-authentication boundary. Final governed staging acceptance on `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved the protected login bootstrap, representative unauthenticated Ai read/mutation failures, the separate MCP/OAuth boundary, healthy authenticated Operations, and exact-host identity. This remains staging evidence, not production promotion. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
 ## Deployment model
 

@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-24**
 
-Status: **HISTORICAL SECURITY BASELINE CLOSED / 2026-09-24 CRITICAL AI AUTH FINDING OPEN / PRODUCTION DEFERRED**
+Status: **HISTORICAL SECURITY BASELINE CLOSED / CRITICAL AI AUTH FINDING CLOSED ON STAGING / PRODUCTION DEFERRED**
 
 Batch 12 closes a production/self-host **baseline**, not an assertion that future vulnerabilities are impossible. Final closure evidence is in `docs/verification/batch12-closure-2026-09-10.md`; current operational priorities are in `docs/current-state-and-next-steps.md`.
 
@@ -29,7 +29,7 @@ Batch 12 closes a production/self-host **baseline**, not an assertion that futur
 
 ## AuthN/AuthZ and audit review
 
-**2026-09-24 audit finding — CRITICAL:** Caddy Basic Auth protects external `/ops` and `/settings`, but the general Ai page/API fallback has no human-authentication boundary. Ai route handlers inject `ECORIONE_INTERNAL_TOKEN` server-side, so any network client that can reach the Ai edge can reach Project/history/chat and other Ai proxy surfaces without proving a user identity. The same-origin middleware is CSRF protection, not authentication; it intentionally permits headerless curl/native mutation requests. Historical SumoPod staging used the same byte-identical product/Caddy tree, although this audit did not perform a fresh live-host probe. This must be closed before the reachable Ai edge is treated as safe for personal/production data.
+**2026-09-24 CRITICAL audit finding — CLOSED / PASS at SumoPod staging boundary:** the general Ai page/API fallback previously lacked human authentication while Ai route handlers injected `ECORIONE_INTERNAL_TOKEN` server-side. PRs #293–#295 now place the general Ai fallback behind the existing operator Basic-Auth credential boundary, with an unauthenticated root redirect to a protected `/login` bootstrap. Final governed staging acceptance on reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved representative Project/history/Brain/Space reads and chat/forget mutations return HTTP 401 + Basic challenge, while MCP protected-resource discovery remains public and `/mcp` retains its OAuth/OIDC challenge. This is an urgent single-credential human gate, not a final multi-user identity/RBAC design. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
 Internal service routes remain protected by `ECORIONE_INTERNAL_TOKEN` according to their boundary on the guarded Compose paths. The same audit separately found that direct owner-service starts can enable non-loopback bind while omitting that token, so direct-start remote binding must also become fail-closed. Hub remains the capability/policy/approval authority for node/model/MCP execution. Control-plane configuration does not grant execution permission by itself.
 

@@ -11,7 +11,7 @@ The closed local checkpoints do not constitute Cloudflare evidence. SumoPod remo
 
 Do not execute Cloudflare account, DNS, Tunnel, or origin-lockdown mutation merely because SumoPod staging is approved. Use this guide only after an explicit edge/hostname decision. Current state: `docs/current-state-and-next-steps.md`; staging roadmap: `docs/post-closure-product-staging-roadmap.md`.
 
-**Security prerequisite added 2026-09-24:** the general Ai web/API fallback currently lacks a human-authentication boundary. Cloudflare/Tunnel/WAF transport must not be used as a substitute for fixing that application/edge auth gap, and no future public cutover may proceed until unauthenticated Ai read/mutation paths fail closed while MCP/OAuth keeps its separate protocol boundary.
+**Security prerequisite status updated 2026-09-24:** the previously missing general-Ai human-authentication boundary is now CLOSED / PASS on SumoPod staging through PRs #293–#295 and governed staging acceptance. Representative Ai read/mutation paths fail closed unauthenticated while MCP/OAuth keeps its separate protocol boundary. Cloudflare/Tunnel/WAF still must not replace application/edge authentication, and production cutover remains a separate explicit gate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
 ## 1. Architecture decision if Cloudflare is selected
 

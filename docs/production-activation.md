@@ -11,7 +11,7 @@ Current state is documented in `docs/current-state-and-next-steps.md` and `docs/
 
 ## Objective when resumed
 
-**2026-09-24 security gate:** the current-main audit found that the general Ai web/API edge lacks human authentication; only operator routes are Basic-Auth protected. No production promotion, personal-data exposure, or claim of a safe public Ai surface is allowed until this defect is fixed and unauthenticated negative-path acceptance passes. The audit did not perform a fresh live SumoPod probe.
+**2026-09-24 security gate update:** the earlier general-Ai human-authentication defect is now CLOSED / PASS at the SumoPod staging boundary through PRs #293–#295. Final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0` passed CI, Product Eval, governed deployment, representative unauthenticated Ai read/mutation negative paths, preserved MCP/OAuth checks, healthy authenticated Operations, and exact-host evidence. This removes that specific staging blocker but does **not** authorize production promotion; production identity/session design and all production-only gates remain separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
 Promote the already-verified self-host/staging topology to a production configuration only after a new explicit operator decision, then validate production-specific hostname/edge, credentials/providers, traffic, recovery, retention, and operational evidence. The existing SumoPod staging deployment is real compute-host evidence but is intentionally not relabeled as production.
 
