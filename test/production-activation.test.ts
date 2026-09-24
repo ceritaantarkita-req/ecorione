@@ -69,11 +69,17 @@ describe("production activation scripts", () => {
       new URL("../scripts/self-host-upgrade.sh", import.meta.url),
       "utf8",
     );
-    expect(upgrade).toContain("ECORIONE_DOCKER_BUILD_MIN_FREE_GIB:-20");
-    expect(upgrade).toContain("docker builder prune --all --force");
-    expect(upgrade).not.toMatch(/^\s*docker system prune/m);
-    expect(upgrade).not.toMatch(/^\s*docker image prune/m);
-    expect(upgrade).not.toMatch(/^\s*docker volume prune/m);
+    const deploy = readFileSync(
+      new URL("../scripts/staging-cd-root-deploy.sh", import.meta.url),
+      "utf8",
+    );
+    for (const script of [upgrade, deploy]) {
+      expect(script).toContain("ECORIONE_DOCKER_BUILD_MIN_FREE_GIB:-20");
+      expect(script).toContain("docker builder prune --all --force");
+      expect(script).not.toMatch(/^\s*docker system prune/m);
+      expect(script).not.toMatch(/^\s*docker image prune/m);
+      expect(script).not.toMatch(/^\s*docker volume prune/m);
+    }
   });
 
   it("treats private-home 401 as a ready staging edge", () => {

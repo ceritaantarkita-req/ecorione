@@ -57,6 +57,42 @@ flock -n 9 || {
   exit 1
 }
 
+# A previous build can exhaust the Docker filesystem before Git can even fetch or
+# detach to the next reviewed SHA. Reclaim only reproducible BuildKit cache at the
+# start of the governed deploy when free space is below the same floor used by
+# self-host-upgrade. Tagged rollback images, containers, networks, and volumes are
+# intentionally left untouched.
+BUILD_MIN_FREE_GIB="${ECORIONE_DOCKER_BUILD_MIN_FREE_GIB:-20}"
+[[ "$BUILD_MIN_FREE_GIB" =~ ^[0-9]+$ && "$BUILD_MIN_FREE_GIB" -ge 1 ]] || {
+  echo "ECORIONE_DOCKER_BUILD_MIN_FREE_GIB must be a positive integer" >&2
+  exit 2
+}
+DOCKER_ROOT="$(docker info --format '{{.DockerRootDir}}')"
+[[ -n "$DOCKER_ROOT" && -d "$DOCKER_ROOT" ]] || {
+  echo "Unable to determine Docker root directory" >&2
+  exit 1
+}
+free_kib="$(df -Pk "$DOCKER_ROOT" | awk 'NR == 2 { print $4 }')"
+[[ "$free_kib" =~ ^[0-9]+$ ]] || {
+  echo "Unable to determine free disk space for Docker root $DOCKER_ROOT" >&2
+  exit 1
+}
+min_free_kib="$((BUILD_MIN_FREE_GIB * 1024 * 1024))"
+if (( free_kib < min_free_kib )); then
+  echo "Docker filesystem is below the ${BUILD_MIN_FREE_GIB} GiB deploy floor; pruning BuildKit cache only."
+  docker builder prune --all --force
+  free_kib="$(df -Pk "$DOCKER_ROOT" | awk 'NR == 2 { print $4 }')"
+  [[ "$free_kib" =~ ^[0-9]+$ ]] || {
+    echo "Unable to determine free disk space after BuildKit cache prune" >&2
+    exit 1
+  }
+fi
+if (( free_kib < min_free_kib )); then
+  free_gib="$(awk -v kib="$free_kib" 'BEGIN { printf "%.2f", kib / 1024 / 1024 }')"
+  echo "Refusing deploy: Docker filesystem has ${free_gib} GiB free; ${BUILD_MIN_FREE_GIB} GiB required." >&2
+  exit 1
+fi
+
 owner_git() {
   sudo -u "$OWNER" -H git -C "$REPO" "$@"
 }
