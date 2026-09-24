@@ -1,6 +1,6 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-24**
+Last updated: **2026-09-25**
 
 Status: **CURRENT / ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
@@ -16,7 +16,7 @@ The requested repository/product and repository-versus-staging audit is complete
 
 The audit identified one CRITICAL source-level authentication defect plus several lower-priority findings. The CRITICAL general-Ai human-authentication gap is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295. Final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0` passed CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224`. Real public acceptance proved the unauthenticated root redirects to a protected login bootstrap, representative Project/history/Brain/Space reads and chat/forget mutations fail with HTTP 401 + Basic challenge, MCP protected-resource metadata remains reachable, unauthenticated MCP remains OAuth-challenged, authenticated Operations is healthy, and exact-host evidence matches the deployed SHA. Closure evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
-The remaining audit findings are still open and separately bounded: incomplete internal-HTTP timeout coverage, the direct-start remote-bind + missing bearer-token configuration gap, the Space standalone default-port defect (`17029` instead of canonical Flow `17028`), two Project UX/state defects (inert virtual `All`; stale persisted Project selection), and other bounded product/maintainability gaps. Closing the CRITICAL auth finding does not authorize those scopes, DR-2 checkpoint 2, or production promotion.
+Session 4 has now closed both remaining HIGH findings from that audit. A-12 (owner remote-bind without required authentication material) is CLOSED / PASS through PR #308 / merge `e4810e0d7980682028be67634fa430090fe9bf92`; A-01 (unbounded internal owner/service HTTP calls) is CLOSED / PASS through PR #309 / merge `2ee12fd454ade78ce1bf732390334726980e0451`. The current runtime is exact `2ee12fd...` after automatic Staging Deploy #821, with private-edge/MCP smoke PASS, healthy Operations, exact-host SHA match, all 15 configured services running, and post-retention capacity stabilization to `25.11 GiB` free. There are no remaining open CRITICAL/HIGH findings from the 2026-09-24 audit. Lower-priority findings remain separately bounded.
 
 Original audit evidence remains preserved at [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md), with the pre-fix safe discussion boundary retained at [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md).
 
@@ -39,6 +39,16 @@ The repository variable is restored to `ECORIONE_STAGING_CD_ENABLED=1`. Governed
 Session 2 is CLOSED / PASS and automatic staging delivery is live. Session 3 source audit is complete and found five actionable pipeline hardening gaps: historical staging image accumulation, duplicate shared-image build/export work, weaker rollback verification than forward deployment, missing release-receipt/runtime identity consistency checks before mutation, and no steady-state post-deploy capacity target. A documentation drift finding is also being corrected. The dual CI/Product Eval workflow-run trigger is intentionally retained because it safely waits for whichever peer gate finishes second.
 
 The hardening merged in PR #305 as `53cd5d61dc87cf221b90fdde9a7b77d582e42ce0`. With automatic CD temporarily disabled, the privileged helper was refreshed from that exact reviewed main and controlled rollout passed: one shared image build, all 15 services running, public/MCP smoke PASS, Operations healthy, exact-host SHA match, current+rollback image retention, stale-image removal, bounded BuildKit cleanup, and 30.00 GiB post-deploy free space. The final true automatic post-merge proof is PASS: PR #306 merged as `977db6f4bb72acfb6f4601372de6dc82b9200995`, CI #2007 and Product Eval #1246 passed, and automatic Staging Deploy #781 executed the restricted SSH deploy job successfully. Exact-host identity matched, all 15 services were running, Operations was healthy, retention preserved current+rollback only, and final capacity stabilization reported 28.87 GiB free. Session 3 is CLOSED / PASS. Backup freshness per deployment remains a separately recorded deferred policy question rather than an implicit claim. Audit: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
+
+### 2026-09-25 Session 4 HIGH findings closure
+
+**Session 4 is CLOSED / PASS.** PR #308 closed A-12 by making non-loopback owner-service startup fail closed when `ECORIONE_INTERNAL_TOKEN` is absent. PR #309 closed A-01 by establishing a default 10-second internal HTTP deadline while preserving tighter caller-owned signals and adding deterministic stalled-upstream coverage.
+
+Exact safe runtime baseline is `2ee12fd454ade78ce1bf732390334726980e0451`. Merged-main CI #2027, Product Eval #1266, MCP External HTTPS #1030 and automatic Staging Deploy #821 passed. Runtime validation reports healthy Operations, no unhealthy required services, exact-host identity match, clean worktree, all 15 configured services running, and `25.11 GiB` free after retention/capacity stabilization.
+
+Safe resumable checkpoint: [verification/session-4-high-findings-safe-checkpoint-2026-09-25.md](verification/session-4-high-findings-safe-checkpoint-2026-09-25.md).
+
+**Next planned scope for discussion: Session 5 — A-13 technical defect only.** Correct Space's standalone/default Flow URL from `17029` to canonical `17028`, add deterministic regression coverage, verify downstream Flow-linked behavior, and keep Compose behavior unchanged. Project UX defects and final system audit remain later scopes.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
