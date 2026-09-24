@@ -97,7 +97,10 @@ describe("production activation scripts", () => {
             "/api/forget",
           ].includes(req.url ?? "")
         ) {
-          res.writeHead(401, security);
+          res.writeHead(401, {
+            ...security,
+            "www-authenticate": 'Basic realm="restricted"',
+          });
           res.end();
           return;
         }

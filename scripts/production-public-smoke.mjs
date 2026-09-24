@@ -60,6 +60,14 @@ function expectSecurityHeaders(response, label) {
   assert.equal(response.headers.get("x-frame-options"), "DENY", `${label}: missing frame deny`);
 }
 
+function expectBasicChallenge(response, label) {
+  const challenge = response.headers.get("www-authenticate") ?? "";
+  assert(
+    challenge.toLowerCase().startsWith("basic "),
+    `${label}: missing Basic authentication challenge`,
+  );
+}
+
 const root = await request("/");
 assert.equal(
   root.status,
@@ -76,8 +84,8 @@ pass("/ auth bootstrap redirect", "HTTP 302 -> /login");
 
 const loginChallenge = await request("/login");
 assert.equal(loginChallenge.status, 401, "/login must challenge unauthenticated clients");
-expectSecurityHeaders(loginChallenge, "/login");
-pass("/login protected", "HTTP 401");
+expectBasicChallenge(loginChallenge, "/login");
+pass("/login protected", "HTTP 401 + Basic challenge");
 
 const protectedReads = [
   "/ops",
@@ -93,8 +101,8 @@ const protectedReads = [
 for (const protectedPath of protectedReads) {
   const response = await request(protectedPath);
   assert.equal(response.status, 401, `${protectedPath} must remain protected with HTTP 401`);
-  expectSecurityHeaders(response, protectedPath);
-  pass(`${protectedPath} protected`, "HTTP 401");
+  expectBasicChallenge(response, protectedPath);
+  pass(`${protectedPath} protected`, "HTTP 401 + Basic challenge");
 }
 
 for (const protectedMutation of ["/api/chat", "/api/forget"]) {
@@ -104,8 +112,8 @@ for (const protectedMutation of ["/api/chat", "/api/forget"]) {
     401,
     `${protectedMutation} mutation must remain protected with HTTP 401`,
   );
-  expectSecurityHeaders(response, protectedMutation);
-  pass(`${protectedMutation} mutation protected`, "HTTP 401");
+  expectBasicChallenge(response, protectedMutation);
+  pass(`${protectedMutation} mutation protected`, "HTTP 401 + Basic challenge");
 }
 
 const metadataPath = "/.well-known/oauth-protected-resource/mcp";
