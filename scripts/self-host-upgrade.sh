@@ -27,6 +27,10 @@ printf '%s
 ' "pre-upgrade backup must be verified per docs/data-rebuild-operations.md before this command" > "data/release-receipts/$STAMP.pre-upgrade.txt"
 ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" config >/dev/null
 ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" up -d --build
+# Caddy consumes its policy from a bind-mounted Caddyfile. Compose does not recreate
+# an already-running Caddy container when only that file changes, so explicitly
+# recreate the edge container to guarantee reviewed routing/auth changes are loaded.
+ECORIONE_IMAGE_TAG="$TAG" docker compose "${COMPOSE_ARGS[@]}" up -d --no-deps --force-recreate caddy
 printf '%s
 ' "$TAG" > "data/release-receipts/$STAMP.applied-tag.txt"
 echo "Upgrade applied. Run provider canary, /ops smoke, and backup verification before declaring healthy.";

@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
@@ -53,6 +54,16 @@ function runNode(
 }
 
 describe("production activation scripts", () => {
+  it("recreates Caddy so reviewed edge policy changes are loaded", () => {
+    const upgrade = readFileSync(
+      new URL("../scripts/self-host-upgrade.sh", import.meta.url),
+      "utf8",
+    );
+    expect(upgrade).toContain(
+      'docker compose "${COMPOSE_ARGS[@]}" up -d --no-deps --force-recreate caddy',
+    );
+  });
+
   it("public smoke validates edge routing and protected operator/MCP surfaces", async () => {
     await withServer(
       (req, res) => {
