@@ -10,7 +10,9 @@ The 2026-09-24 current-main + staging parity audit remains the source of the pri
 
 The failed intermediate staging attempts are preserved as historical evidence: one exposed compatibility with the installed readiness gate, and one exposed an overly strict smoke assertion on Caddy-generated Basic-Auth 401 headers. Both were corrected without reopening the application architecture.
 
-No next implementation scope is selected. Remaining prioritized audit work includes the HIGH direct-start remote-bind/auth gap and incomplete bounded internal-HTTP timeout coverage, followed by the Space `17029`/Flow `17028` default-port defect and Project/product UX findings. None is implicitly authorized by this closure. PE-09, PCS-11, Batch 13, a new F6 item, production promotion, and DR-2 runtime work remain unopened/deferred as previously documented.
+The immediate next runtime scope is now constrained by a staging disk-pressure incident, not by the remaining audit backlog. Staging Deploy `35982405234` exhausted the Docker filesystem during image export/unpack. The private edge still fails closed externally, but exact host checkout/disk health is not re-proven. Repository safeguards are merged through PR #297/#298, while automatic staging deployment is explicitly disabled with `ECORIONE_STAGING_CD_ENABLED=0`.
+
+**Next authorized discussion scope: controlled staging host recovery only.** Required work is read-only host inspection, bounded BuildKit-cache reclamation if needed, free-space proof, privileged deploy-helper refresh from reviewed source, private-edge/Ops revalidation, and only then a decision on re-enabling CD and one controlled convergence deploy. Do not start the remaining HIGH audit fixes, Space/Project UX work, production promotion, or DR-2 runtime work before this recovery boundary is resolved. Safe checkpoint: [verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md](verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 

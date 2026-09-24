@@ -20,6 +20,12 @@ The remaining audit findings are still open and separately bounded: incomplete i
 
 Original audit evidence remains preserved at [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md), with the pre-fix safe discussion boundary retained at [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md).
 
+### 2026-09-24 staging disk-recovery safe stop
+
+A later docs-convergence deploy exposed host Docker-filesystem exhaustion during image export/unpack. Staging Deploy `35982405234` failed with `no space left on device`; runtime image rollback recreated the known-good protected boundary, but the rollback Git checkout itself could not complete because the filesystem was full. Fresh unauthenticated probes still return root 302 to the protected login and representative Ai routes return 401, so the private edge remains fail-closed, but exact host Git/disk state is not currently claimed synchronized or healthy.
+
+Repository hardening is merged through PR #297 (`518555ff16ebb04285b06cba20422dedcf1f53e1`) and PR #298 (`48cf5598d6b07c13c20941fa5f06776bde9882e4`). The reviewed deploy path now uses a 20 GiB default Docker-root floor and only bounded BuildKit-cache cleanup; broad system/image/volume pruning is explicitly excluded. Automatic staging deployment is now disabled with `ECORIONE_STAGING_CD_ENABLED=0`. The installed privileged host helper still needs controlled refresh after host disk recovery, so **no further deploy is authorized yet**. Safe resume evidence: [verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md](verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md).
+
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
 Issue #277 opens a new additive infrastructure scope after the original Off-host DR runtime closure. The closed Issue #266 claim remains unchanged: total loss of the tested SumoPod staging host is recoverable at its documented boundary.
