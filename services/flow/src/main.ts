@@ -1,5 +1,8 @@
 import { resolve } from "node:path";
-import { bindHostForAuthenticatedService, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { openFlowDatabase } from "./db.js";
 import { FlowGraphRepository } from "./graph-repository.js";
 import { buildFlowServer } from "./http.js";
