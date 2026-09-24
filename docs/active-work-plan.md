@@ -4,7 +4,7 @@ Last updated: **2026-09-24**
 
 Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Audit follow-up checkpoint — CRITICAL AI AUTH CLOSED / NEXT SCOPE UNSELECTED
+## Audit follow-up checkpoint — CRITICAL + HIGH FINDINGS CLOSED / NEXT: SESSION 5 TECHNICAL DEFECT
 
 The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
@@ -25,6 +25,19 @@ Repository variable `ECORIONE_STAGING_CD_ENABLED=1` is restored. The bounded Ope
 Session 2 is CLOSED / PASS. Session 3 audit is complete at source level and the bounded hardening implementation is in review. Priority fixes are: explicit current+rollback image retention, single shared application image build, post-deploy capacity stabilization, release-receipt/runtime identity consistency, and full rollback revalidation. The dual workflow-run trigger remains unchanged; backup freshness per deploy is documented as a separate deferred policy question.
 
 PR #305 hardening and PR #306 final-proof checkpoint are merged. CI #2007 and Product Eval #1246 passed, and automatic Staging Deploy #781 deployed exact main `977db6f4bb72acfb6f4601372de6dc82b9200995` through the restricted SSH path. Runtime identity, public/MCP smoke, Operations health, all 15 services, current+rollback retention, stale-image cleanup and 28.87 GiB final free space all passed. **Session 3 is CLOSED / PASS.** Evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
+
+### Session 4 — CLOSED / PASS
+
+The two HIGH findings remaining from the 2026-09-24 audit are closed at reviewed-source and SumoPod staging-runtime boundaries.
+
+- **A-12 remote-bind/auth fail-closed:** PR #308 exact head `50d117517b008c3106222d42c41870a3c438662b` passed CI #2020, Product Eval #1259, MCP #1023, and PCS-06 browser #29. Merge `e4810e0d7980682028be67634fa430090fe9bf92` passed merged-main CI #2021 + Product Eval #1260, and automatic Staging Deploy #809 passed with exact-host SHA match, healthy Operations, all 15 services running, and 26.48 GiB final free space.
+- **A-01 bounded internal HTTP:** PR #309 exact head `75d17e6d223422a757e1423315ce2083ef0ef211` passed CI #2026, Product Eval #1265, MCP #1029, and PCS-06 browser #34. Merge `2ee12fd454ade78ce1bf732390334726980e0451` passed merged-main CI #2027 + Product Eval #1266, and automatic Staging Deploy #821 passed with exact-host SHA match, healthy Operations, all 15 services running, and 25.11 GiB final free space.
+
+**Session 4 is CLOSED / PASS.** Evidence: [verification/session4-high-security-closure-2026-09-24.md](verification/session4-high-security-closure-2026-09-24.md).
+
+### Session 5 — next bounded scope
+
+Next authorized queue item is the confirmed technical defect **A-13**: Space standalone Flow fallback uses `17029` instead of canonical Flow port `17028`. Fix both Space defaults and add deterministic regression coverage. Do not mix Project UX work into Session 5; inert **All** and stale persisted Project selection remain Session 6.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
