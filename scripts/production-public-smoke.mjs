@@ -60,8 +60,26 @@ function expectSecurityHeaders(response, label) {
   assert.equal(response.headers.get("x-frame-options"), "DENY", `${label}: missing frame deny`);
 }
 
+const root = await request("/");
+assert.equal(
+  root.status,
+  302,
+  `/ must redirect unauthenticated clients to /login, got ${root.status}`,
+);
+assert.equal(
+  root.headers.get("location"),
+  "/login",
+  "unauthenticated root redirect must target /login",
+);
+expectSecurityHeaders(root, "/");
+pass("/ auth bootstrap redirect", "HTTP 302 -> /login");
+
+const loginChallenge = await request("/login");
+assert.equal(loginChallenge.status, 401, "/login must challenge unauthenticated clients");
+expectSecurityHeaders(loginChallenge, "/login");
+pass("/login protected", "HTTP 401");
+
 const protectedReads = [
-  "/",
   "/ops",
   "/settings",
   "/api/ops",

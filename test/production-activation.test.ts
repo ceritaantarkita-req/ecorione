@@ -77,9 +77,14 @@ describe("production activation scripts", () => {
       (req, res) => {
         const origin = `http://${req.headers.host}`;
         const security = { "x-content-type-options": "nosniff", "x-frame-options": "DENY" };
+        if (req.url === "/") {
+          res.writeHead(302, { ...security, location: "/login" });
+          res.end();
+          return;
+        }
         if (
           [
-            "/",
+            "/login",
             "/ops",
             "/settings",
             "/api/ops",
