@@ -64,6 +64,18 @@ describe("production activation scripts", () => {
     );
   });
 
+  it("bounds low-disk staging cleanup to Docker build cache", () => {
+    const upgrade = readFileSync(
+      new URL("../scripts/self-host-upgrade.sh", import.meta.url),
+      "utf8",
+    );
+    expect(upgrade).toContain("ECORIONE_DOCKER_BUILD_MIN_FREE_GIB:-20");
+    expect(upgrade).toContain("docker builder prune --all --force");
+    expect(upgrade).not.toMatch(/^\s*docker system prune/m);
+    expect(upgrade).not.toMatch(/^\s*docker image prune/m);
+    expect(upgrade).not.toMatch(/^\s*docker volume prune/m);
+  });
+
   it("treats private-home 401 as a ready staging edge", () => {
     const deploy = readFileSync(
       new URL("../scripts/staging-cd-root-deploy.sh", import.meta.url),
