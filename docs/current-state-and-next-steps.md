@@ -28,6 +28,12 @@ Runtime revalidation passed: public auth negative paths remain fail-closed, MCP/
 
 Automatic staging deployment remains intentionally disabled with `ECORIONE_STAGING_CD_ENABLED=0`. **Next scope is Session 2 only: one controlled convergence deploy to current reviewed main, followed by re-enabling GitHub -> staging auto-deploy only if all gates, disk guard, private-edge checks, Ops health, release receipt, and exact-host identity pass.** Recovery closure: [verification/staging-capacity-recovery-closure-2026-09-24.md](verification/staging-capacity-recovery-closure-2026-09-24.md). Historical failure/safe-stop evidence remains preserved at [verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md](verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md).
 
+### 2026-09-24 Session 2 controlled convergence
+
+Session 2 has completed the controlled convergence half of the auto-deploy restoration scope. Exact current reviewed main `fad170645ba612b746453487dc97cc0e03cb05e7` deployed successfully to SumoPod staging as `staging-fad170645ba6` through the reviewed privileged deploy helper. Public auth negative paths, MCP/OAuth behavior, authenticated Operations, exact-host identity, all 15 configured services, and disk headroom (`27.51 GiB`) all passed.
+
+Automatic deployment is **not yet claimed restored**. The remaining bounded step is to set `ECORIONE_STAGING_CD_ENABLED=1` and prove a governed GitHub Staging Deploy run executes the deploy job rather than skipping it, revalidating exact current main through the least-privilege SSH forced-command path. Evidence-in-progress: [verification/staging-auto-deploy-restore-2026-09-24.md](verification/staging-auto-deploy-restore-2026-09-24.md).
+
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
 Issue #277 opens a new additive infrastructure scope after the original Off-host DR runtime closure. The closed Issue #266 claim remains unchanged: total loss of the tested SumoPod staging host is recoverable at its documented boundary.
