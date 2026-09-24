@@ -86,7 +86,7 @@ This parity proves repository-product equivalence, not fresh live-host health on
 
 **Type:** authentication / confidentiality / integrity / spend exposure.
 
-The self-host/SumoPod Caddy policy protects only `/ops*`, `/api/ops*`, `/settings*`, and `/api/settings*` with Basic Auth. The general fallback routes every other Ai page/API request directly to `ai:3000`.
+The self-host/SumoPod Caddy policy protects only `/ops*`, `/api/ops*`, `/settings*`, and `/api/settings*` with Basic Auth. The general fallback routes every other Ai page/API request directly to `ai:3000`. The SumoPod Traefik overlay publishes that Caddy service without an additional authentication middleware.
 
 Ai route handlers then inject `ECORIONE_INTERNAL_TOKEN` server-side when calling Hub/Connect/owner services. There is no separate authenticated human principal/session at the Ai boundary.
 
@@ -105,7 +105,7 @@ Consequently, any network client that can reach the Ai edge can, at the source-p
 
 This is not merely a cross-origin browser attack: the origin middleware explicitly treats headerless non-browser requests as allowed.
 
-The exact `apps/` and Caddy/SumoPod routing files are byte-identical between the historically proven staging runtime and current audit baseline. Historical staging acceptance also proved the public home path returned 200 while only operator surfaces were expected to return 401. A fresh live-host probe was not performed in this audit, so this finding does **not** claim the SumoPod hostname is currently online; it does prove the reviewed public-edge design lacks user authentication whenever that edge is reachable.
+The exact `apps/` and Caddy/SumoPod routing files are byte-identical between the historically proven staging runtime and current audit baseline. Historical staging acceptance also proved the public home path returned 200 while only operator surfaces were expected to return 401. A fresh live-host probe was not performed in this audit, so this finding does **not** claim the SumoPod hostname is currently online; it does prove the reviewed public-edge design lacks user authentication whenever that edge is reachable. The native desktop Compose path binds Ai to `127.0.0.1`, so this is primarily a reachable remote-edge defect rather than evidence that the local desktop surface is internet-exposed.
 
 **Recommended future scope:** before further public/staging feature work, add one fail-closed human-auth boundary for the Ai surface (edge or application session), define a minimal explicit allowlist for endpoints that are genuinely public, preserve MCP/OAuth routes as their separate authenticated protocol boundary, and add unauthenticated negative-path acceptance for Project/history/chat/mutation APIs.
 
