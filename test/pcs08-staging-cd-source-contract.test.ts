@@ -119,9 +119,7 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("rollback()");
     expect(rootDeploy).toContain("scripts/self-host-rollback.sh");
     expect(rootDeploy).toContain('owner_git checkout --detach "$PREVIOUS_SHA"');
-    expect(rootDeploy).toContain(
-      'validate_deployed_revision "$PREVIOUS_TAG" "$PREVIOUS_SHA"',
-    );
+    expect(rootDeploy).toContain('validate_deployed_revision "$PREVIOUS_TAG" "$PREVIOUS_SHA"');
     expect(rootDeploy).toContain(
       "Rollback fully revalidated at public, Operations, exact-host, and capacity boundaries",
     );
