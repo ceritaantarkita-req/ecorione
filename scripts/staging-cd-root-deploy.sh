@@ -408,13 +408,16 @@ if [[ -e "$STATE_FILE" ]]; then
 fi
 
 PREVIOUS_SHA="$(owner_git rev-parse HEAD)"
-PREVIOUS_IMAGE="$(
-  docker ps \
-    --filter label=com.docker.compose.project=ecorione-staging \
-    --filter label=com.docker.compose.service=ai \
-    --format '{{.Image}}' | head -n 1
-)"
-PREVIOUS_TAG="${PREVIOUS_IMAGE#ecorione:}"
+if [[ -z "${ACTIVE_TAG:-}" ]]; then
+  ACTIVE_IMAGE="$(
+    docker ps \
+      --filter label=com.docker.compose.project=ecorione-staging \
+      --filter label=com.docker.compose.service=ai \
+      --format '{{.Image}}' | head -n 1
+  )"
+  ACTIVE_TAG="${ACTIVE_IMAGE#ecorione:}"
+fi
+PREVIOUS_TAG="$ACTIVE_TAG"
 [[ "$PREVIOUS_TAG" =~ ^[A-Za-z0-9._-]+$ ]] || {
   echo "Unable to determine previous known-good ECORIONE image tag" >&2
   exit 1
