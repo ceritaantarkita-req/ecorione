@@ -11,6 +11,8 @@ Current state is documented in `docs/current-state-and-next-steps.md` and `docs/
 
 ## Objective when resumed
 
+**2026-09-24 security gate:** the current-main audit found that the general Ai web/API edge lacks human authentication; only operator routes are Basic-Auth protected. No production promotion, personal-data exposure, or claim of a safe public Ai surface is allowed until this defect is fixed and unauthenticated negative-path acceptance passes. The audit did not perform a fresh live SumoPod probe.
+
 Promote the already-verified self-host/staging topology to a production configuration only after a new explicit operator decision, then validate production-specific hostname/edge, credentials/providers, traffic, recovery, retention, and operational evidence. The existing SumoPod staging deployment is real compute-host evidence but is intentionally not relabeled as production.
 
 ## Remote staging objective — verified
