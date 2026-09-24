@@ -82,6 +82,33 @@ This parity proves repository-product equivalence, not fresh live-host health on
 
 ## 3. Findings
 
+### A-00 — CRITICAL — public Ai surface has no human authentication boundary
+
+**Type:** authentication / confidentiality / integrity / spend exposure.
+
+The self-host/SumoPod Caddy policy protects only `/ops*`, `/api/ops*`, `/settings*`, and `/api/settings*` with Basic Auth. The general fallback routes every other Ai page/API request directly to `ai:3000`.
+
+Ai route handlers then inject `ECORIONE_INTERNAL_TOKEN` server-side when calling Hub/Connect/owner services. There is no separate authenticated human principal/session at the Ai boundary.
+
+The same-origin middleware is a CSRF boundary, not authentication:
+
+- safe methods such as GET are always allowed;
+- mutation requests without `Sec-Fetch-Site` and `Origin` are intentionally accepted for curl/native/smoke clients.
+
+Consequently, any network client that can reach the Ai edge can, at the source-policy level, call non-operator Ai APIs without proving user identity. Concrete exposed capabilities include:
+
+- `GET /api/projects?workspaceId=ws_personal` -> Hub Project listing;
+- Project history/session replay APIs -> Historical Ledger conversation metadata/content up to the route's `RESTRICTED` grant;
+- Brain/Space/Flow reads;
+- direct non-browser mutation requests to Project, Space, Flow, attachment, memory-forget, voice, and chat routes;
+- chat requests can cross the server-side internal bearer boundary and may consume configured model capacity/spend.
+
+This is not merely a cross-origin browser attack: the origin middleware explicitly treats headerless non-browser requests as allowed.
+
+The exact `apps/` and Caddy/SumoPod routing files are byte-identical between the historically proven staging runtime and current audit baseline. Historical staging acceptance also proved the public home path returned 200 while only operator surfaces were expected to return 401. A fresh live-host probe was not performed in this audit, so this finding does **not** claim the SumoPod hostname is currently online; it does prove the reviewed public-edge design lacks user authentication whenever that edge is reachable.
+
+**Recommended future scope:** before further public/staging feature work, add one fail-closed human-auth boundary for the Ai surface (edge or application session), define a minimal explicit allowlist for endpoints that are genuinely public, preserve MCP/OAuth routes as their separate authenticated protocol boundary, and add unauthenticated negative-path acceptance for Project/history/chat/mutation APIs.
+
 ### A-01 — HIGH — internal HTTP timeout coverage is incomplete
 
 **Type:** reliability / partial-failure containment.
@@ -227,7 +254,7 @@ Several Ai product surfaces intentionally hardcode `ws_personal` and default `pr
 
 ## 4. Security audit result
 
-No P0/critical source-level security defect was identified in this audit. One HIGH security-configuration debt was identified: non-loopback direct service starts can fail open when remote bind is explicitly enabled but the internal bearer token is absent. The guarded Compose paths require that token and are not evidence of a current exposure.
+A CRITICAL source-level authentication defect was identified: the general public Ai surface has no human authentication boundary, while Ai APIs inject the internal service bearer token server-side. Historical staging evidence proves this same routing/product tree has been publicly reachable, but this audit did not perform a fresh live-host probe. A separate HIGH security-configuration debt was also identified: non-loopback direct service starts can fail open when remote bind is explicitly enabled but the internal bearer token is absent. The guarded Compose paths require that token and are not evidence of that second exposure.
 
 Positive evidence:
 
@@ -281,16 +308,17 @@ Historical host evidence also showed pending Ubuntu security updates and meaning
 
 This audit does **not** authorize implementation automatically.
 
-1. fail-closed remote-bind/auth startup invariant + regression tests;
-2. bounded internal HTTP timeout policy + stalled-upstream tests;
-3. Space Flow default-port correction + regression test;
-4. Project state/UI correctness: virtual All + stale persisted Project reconciliation;
-5. Project settings + source onboarding UX;
-6. Schedule calendar/navigation/year + AI-assisted schedule interaction;
-7. Brain scalable layout/pan/zoom + richer canonical-owner projection;
-8. frontend module decomposition while touching those surfaces;
-9. Compose readiness/health improvements;
-10. fresh staging runtime acceptance after selected changes merge.
+1. fail-closed human authentication for the public Ai surface + unauthenticated negative-path tests;
+2. fail-closed remote-bind/auth startup invariant + regression tests;
+3. bounded internal HTTP timeout policy + stalled-upstream tests;
+4. Space Flow default-port correction + regression test;
+5. Project state/UI correctness: virtual All + stale persisted Project reconciliation;
+6. Project settings + source onboarding UX;
+7. Schedule calendar/navigation/year + AI-assisted schedule interaction;
+8. Brain scalable layout/pan/zoom + richer canonical-owner projection;
+9. frontend module decomposition while touching those surfaces;
+10. Compose readiness/health improvements;
+11. fresh staging runtime acceptance after selected changes merge.
 
 Do not open a new autonomous service, graph database, scheduler, or cross-service database path to solve these items.
 
