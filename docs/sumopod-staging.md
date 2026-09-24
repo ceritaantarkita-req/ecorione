@@ -1,6 +1,6 @@
 # ECORIONE — SumoPod Remote Staging Runbook
 
-Last updated: **2026-09-23**
+Last updated: **2026-09-24**
 
 Status: **REMOTE STAGING VERIFIED / PCS-07..PCS-09 CLOSED / PASS / NOT PRODUCTION**
 
@@ -26,6 +26,8 @@ persistent owner volumes + Temporal
 GitHub `main` remains source of truth. Do not make arbitrary live-VPS source edits and then treat the host as canonical development state.
 
 PCS-07 proved the initial remote staging deployment and basic runtime reachability. PCS-08 later closed governed GitHub-to-staging continuous deployment, and PCS-09 closed HTTPS/operator protection, key-only SSH hardening, restart persistence, same-host verified backup/restore evidence, and staging observability. Those later closures do not promote staging to production.
+
+**Current security stop condition:** the 2026-09-24 audit found that the general Ai page/API fallback is not human-authenticated; only operator routes are Basic-Auth protected. Historical staging used the same product/Caddy tree. No fresh live-host probe was performed in that audit, but a reachable staging Ai edge must not be treated as safe for personal data until Issue #287 is closed with fail-closed human authentication and negative-path acceptance.
 
 ## Secret and host rules
 
@@ -78,7 +80,7 @@ The reviewed `deploy/compose.sumopod.yml` overlay therefore:
 - keeps Caddy as ECORIONE's internal routing/policy boundary on port 8080;
 - attaches only that Caddy service to the existing Traefik edge network;
 - lets Traefik terminate public TLS and route the ECORIONE hostname to internal Caddy;
-- preserves the existing Caddy basic-auth boundary for `/ops`, `/api/ops`, `/settings`, and `/api/settings`;
+- preserves the existing Caddy basic-auth boundary for `/ops`, `/api/ops`, `/settings`, and `/api/settings`; **this is operator-route protection only and is not human authentication for the general Ai fallback**;
 - does not mount the Docker socket into any ECORIONE container.
 
 On the currently audited host, the existing Traefik network is `inmydraft-demos_web`. Re-verify the network name with `docker inspect traefik` before using this value on a rebuilt or different host.
