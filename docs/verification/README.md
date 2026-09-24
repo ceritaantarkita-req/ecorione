@@ -31,4 +31,4 @@ DR-2 checkpoint 2 deferment: [offhost-dr2-checkpoint-2-deferment-2026-09-23.md](
 
 DR-2 safe resumable checkpoint: [offhost-dr2-safe-checkpoint-2026-09-23.md](offhost-dr2-safe-checkpoint-2026-09-23.md). It records exact repository main, merged-main gates, local-backup posture, no external mutation, and the resume sequence.
 
-Current-main + staging parity audit: [current-main-staging-audit-2026-09-24.md](current-main-staging-audit-2026-09-24.md). It records exact product-tree parity across historical staging/original-DR/current-main boundaries and a prioritized, non-authorizing defect/product-gap inventory. No deployment or runtime mutation is part of the audit.
+Current-main + staging parity audit: [current-main-staging-audit-2026-09-24.md](current-main-staging-audit-2026-09-24.md). It records exact product-tree parity, the CRITICAL general-Ai human-authentication gap tracked in Issue #287, HIGH reliability/security findings, product gaps, and repository-versus-runtime boundaries. Findings are non-authorizing; no deployment or runtime mutation is part of the audit.
