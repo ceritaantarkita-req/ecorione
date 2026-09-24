@@ -28,6 +28,12 @@ import { z } from "zod";
 import { nowIso } from "./clock.js";
 import { SpaceReferenceError, type SpaceStore, SpaceVersionConflictError } from "./store.js";
 
+export const DEFAULT_FLOW_URL = "http://127.0.0.1:17028";
+
+export function resolveSpaceFlowUrl(flowUrl?: string): string {
+  return flowUrl ?? DEFAULT_FLOW_URL;
+}
+
 const PageQuerySchema = z.object({
   workspaceId: WorkspaceIdSchema.optional(),
   scope: ScopeSchema.optional(),
@@ -83,7 +89,7 @@ export function buildSpaceServer(
   options: BuildSpaceServerOptions,
 ): FastifyInstance {
   const app = createServer({ name: "space", token: options.token, logger: options.logger });
-  const flowUrl = options.flowUrl ?? "http://127.0.0.1:17029";
+  const flowUrl = resolveSpaceFlowUrl(options.flowUrl);
 
   app.post("/v1/pages", async (req, reply) => {
     const body = parseOrBadRequest(SpaceCreatePageInputSchema, req.body);
