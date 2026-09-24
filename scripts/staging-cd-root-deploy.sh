@@ -481,4 +481,6 @@ TMP_STATE="$(mktemp "$STATE_DIR/.deploy-state.XXXXXX")"
 chmod 0644 "$TMP_STATE"
 mv "$TMP_STATE" "$STATE_FILE"
 
+stabilize_post_deploy_capacity || exit 1
+
 echo "PASS PCS-08 staging deploy sha=$TARGET_SHA tag=$TARGET_TAG"
