@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-24**
 
-Status: **repository security baseline CLOSED / SumoPod staging hardening VERIFIED / future security remains evidence-driven**
+Status: **HISTORICAL SECURITY BASELINE CLOSED / 2026-09-24 CRITICAL AI AUTH FINDING OPEN / PRODUCTION DEFERRED**
 
 Batch 12 closes a production/self-host **baseline**, not an assertion that future vulnerabilities are impossible. Final closure evidence is in `docs/verification/batch12-closure-2026-09-10.md`; current operational priorities are in `docs/current-state-and-next-steps.md`.
 
