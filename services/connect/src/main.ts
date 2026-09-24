@@ -1,6 +1,9 @@
 /** Entrypoint produksi Connect. */
 import { resolve } from "node:path";
-import { bindHost, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
 import { buildConnectServer, type BuildConnectServerOptions } from "./http.js";
 import { parseOptionalLocalModelDigest } from "./local-model-identity.js";
@@ -21,6 +24,7 @@ import { FileSpendBudget, parseOptionalBudgetUsd } from "./spend-budget.js";
 const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 const port = Number(process.env.ECORIONE_CONNECT_PORT ?? "17023");
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
+const host = bindHostForAuthenticatedService(token);
 const hostedProvider = parseHostedProvider(process.env.ECORIONE_HOSTED_PROVIDER);
 
 const vaultMasterKey = process.env.ECORIONE_CONNECT_VAULT_MASTER_KEY || undefined;
@@ -187,10 +191,10 @@ const app = buildConnectServer({
 });
 
 app
-  .listen({ port, host: bindHost() })
+  .listen({ port, host })
   .then(() => {
     app.log.info(
-      `Connect jalan di http://${bindHost()}:${String(port)} provider=${hostedProvider} local=${localRuntime}`,
+      `Connect jalan di http://${host}:${String(port)} provider=${hostedProvider} local=${localRuntime}`,
     );
   })
   .catch((err: unknown) => {

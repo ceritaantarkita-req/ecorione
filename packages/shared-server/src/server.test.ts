@@ -1,6 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { createServer } from "./server.js";
+import { bindHostForAuthenticatedService, createServer } from "./server.js";
 import { BadRequestError, NotFoundError } from "./errors.js";
+
+describe("bindHostForAuthenticatedService", () => {
+  it("tetap membolehkan loopback tanpa internal token", () => {
+    const previous = process.env.ECORIONE_ALLOW_REMOTE_BIND;
+    delete process.env.ECORIONE_ALLOW_REMOTE_BIND;
+    try {
+      expect(bindHostForAuthenticatedService(undefined)).toBe("127.0.0.1");
+    } finally {
+      if (previous === undefined) delete process.env.ECORIONE_ALLOW_REMOTE_BIND;
+      else process.env.ECORIONE_ALLOW_REMOTE_BIND = previous;
+    }
+  });
+
+  it("menolak remote bind tanpa internal token", () => {
+    const previous = process.env.ECORIONE_ALLOW_REMOTE_BIND;
+    process.env.ECORIONE_ALLOW_REMOTE_BIND = "1";
+    try {
+      expect(() => bindHostForAuthenticatedService(undefined)).toThrow(
+        "ECORIONE_INTERNAL_TOKEN wajib dikonfigurasi",
+      );
+    } finally {
+      if (previous === undefined) delete process.env.ECORIONE_ALLOW_REMOTE_BIND;
+      else process.env.ECORIONE_ALLOW_REMOTE_BIND = previous;
+    }
+  });
+
+  it("membolehkan remote bind ketika internal token tersedia", () => {
+    const previous = process.env.ECORIONE_ALLOW_REMOTE_BIND;
+    process.env.ECORIONE_ALLOW_REMOTE_BIND = "1";
+    try {
+      expect(bindHostForAuthenticatedService("internal-secret")).toBe("0.0.0.0");
+    } finally {
+      if (previous === undefined) delete process.env.ECORIONE_ALLOW_REMOTE_BIND;
+      else process.env.ECORIONE_ALLOW_REMOTE_BIND = previous;
+    }
+  });
+});
 
 describe("createServer", () => {
   it("melayani /healthz tanpa token, bahkan saat auth aktif", async () => {

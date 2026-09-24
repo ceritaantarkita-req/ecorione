@@ -3,7 +3,10 @@
  */
 
 import { resolve } from "node:path";
-import { bindHost, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { openRndDatabase } from "./db.js";
 import { buildRndServer } from "./http.js";
 
@@ -21,14 +24,15 @@ const datasetRoot = resolveRepoRuntimePath(
   "data/rnd-datasets",
 );
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
+const host = bindHostForAuthenticatedService(token);
 
 const db = openRndDatabase(dbPath);
 const app = buildRndServer(db, { token, logger: true, datasetRoot });
 
 app
-  .listen({ port, host: bindHost() })
+  .listen({ port, host })
   .then(() => {
-    app.log.info(`RnD trace/dataset store jalan di http://${bindHost()}:${String(port)}`);
+    app.log.info(`RnD trace/dataset store jalan di http://${host}:${String(port)}`);
   })
   .catch((err: unknown) => {
     app.log.error(err);

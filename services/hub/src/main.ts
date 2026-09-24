@@ -3,7 +3,10 @@
  */
 
 import { resolve } from "node:path";
-import { bindHost, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { openHubDatabase } from "./db.js";
 import { buildHubServer } from "./http.js";
 import { registerHubMultimodal } from "./multimodal-bootstrap.js";
@@ -17,6 +20,7 @@ const dbPath = resolveRepoRuntimePath(
   "data/hub.db",
 );
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
+const host = bindHostForAuthenticatedService(token);
 const contextUrl = process.env.ECORIONE_CONTEXT_URL ?? "http://127.0.0.1:17022";
 const connectUrl = process.env.ECORIONE_CONNECT_URL ?? "http://127.0.0.1:17023";
 const rndUrl = process.env.ECORIONE_RND_URL ?? "http://127.0.0.1:17021";
@@ -39,9 +43,9 @@ const app = buildHubServer(db, {
 registerHubMultimodal(app, db, { contextUrl, connectUrl, artifactUrl, internalToken: token });
 
 app
-  .listen({ port, host: bindHost() })
+  .listen({ port, host })
   .then(() => {
-    app.log.info(`Hub jalan di http://${bindHost()}:${String(port)}`);
+    app.log.info(`Hub jalan di http://${host}:${String(port)}`);
   })
   .catch((err: unknown) => {
     app.log.error(err);

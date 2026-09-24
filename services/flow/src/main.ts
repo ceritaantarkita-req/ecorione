@@ -1,5 +1,8 @@
 import { resolve } from "node:path";
-import { bindHost, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { openFlowDatabase } from "./db.js";
 import { FlowGraphRepository } from "./graph-repository.js";
 import { buildFlowServer } from "./http.js";
@@ -14,6 +17,7 @@ const temporalNamespace = process.env.ECORIONE_TEMPORAL_NAMESPACE ?? "default";
 const hubUrl = process.env.ECORIONE_HUB_URL ?? "http://127.0.0.1:17024";
 const rndUrl = process.env.ECORIONE_RND_URL ?? "http://127.0.0.1:17021";
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
+const host = bindHostForAuthenticatedService(token);
 const dbPath = resolveRepoRuntimePath(
   REPO_ROOT,
   process.env.ECORIONE_FLOW_DB_PATH,
@@ -37,8 +41,8 @@ const app = buildFlowServer(temporal, {
 });
 app.addHook("onClose", async () => db.close());
 app
-  .listen({ port, host: bindHost() })
-  .then(() => app.log.info(`Flow jalan di http://${bindHost()}:${String(port)}`))
+  .listen({ port, host })
+  .then(() => app.log.info(`Flow jalan di http://${host}:${String(port)}`))
   .catch((err: unknown) => {
     app.log.error(err);
     db.close();

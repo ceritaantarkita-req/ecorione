@@ -51,6 +51,16 @@ export function bindHost(): string {
   return process.env.ECORIONE_ALLOW_REMOTE_BIND === "1" ? "0.0.0.0" : "127.0.0.1";
 }
 
+export function bindHostForAuthenticatedService(token: string | undefined): string {
+  const host = bindHost();
+  if (host !== "127.0.0.1" && (token === undefined || token.length === 0)) {
+    throw new Error(
+      "ECORIONE_INTERNAL_TOKEN wajib dikonfigurasi sebelum owner service boleh bind non-loopback.",
+    );
+  }
+  return host;
+}
+
 function errorBody(err: HttpError): Record<string, unknown> {
   const body: Record<string, unknown> = { error: { type: err.type, message: err.message } };
   if (err.detail !== undefined) (body.error as Record<string, unknown>).detail = err.detail;
