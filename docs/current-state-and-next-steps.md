@@ -44,11 +44,19 @@ The hardening merged in PR #305 as `53cd5d61dc87cf221b90fdde9a7b77d582e42ce0`. W
 
 **Session 4 is CLOSED / PASS.** PR #308 closed A-12 by making non-loopback owner-service startup fail closed when `ECORIONE_INTERNAL_TOKEN` is absent. PR #309 closed A-01 by establishing a default 10-second internal HTTP deadline while preserving tighter caller-owned signals and adding deterministic stalled-upstream coverage.
 
-Exact safe runtime baseline is `2ee12fd454ade78ce1bf732390334726980e0451`. Merged-main CI #2027, Product Eval #1266, MCP External HTTPS #1030 and automatic Staging Deploy #821 passed. Runtime validation reports healthy Operations, no unhealthy required services, exact-host identity match, clean worktree, all 15 configured services running, and `25.11 GiB` free after retention/capacity stabilization.
+Exact safe runtime baseline was `2ee12fd454ade78ce1bf732390334726980e0451`. Merged-main CI #2027, Product Eval #1266, MCP External HTTPS #1030 and automatic Staging Deploy #821 passed. Runtime validation reported healthy Operations, no unhealthy required services, exact-host identity match, clean worktree, all 15 configured services running, and `25.11 GiB` free after retention/capacity stabilization.
 
 Safe resumable checkpoint: [verification/session-4-high-findings-safe-checkpoint-2026-09-25.md](verification/session-4-high-findings-safe-checkpoint-2026-09-25.md).
 
-**Next planned scope for discussion: Session 5 — A-13 technical defect only.** Correct Space's standalone/default Flow URL from `17029` to canonical `17028`, add deterministic regression coverage, verify downstream Flow-linked behavior, and keep Compose behavior unchanged. Project UX defects and final system audit remain later scopes.
+### 2026-09-25 Session 5 A-13 closure
+
+**Session 5 is CLOSED / PASS.** PR #312 corrected Space's standalone/default Flow owner URL from `17029` to canonical `17028`, centralized the fallback in one resolver, preserved explicit overrides, and added deterministic owner-port contract coverage without changing the downstream Flow-linked/AI-linked resolution path or Compose configuration.
+
+Exact reviewed PR head `51a8a46c33dedd8d92b075b857ab21d47ad10325` passed CI #2032 and Product Eval #1271. Merge `d8d2a113c917cee87f2d43a5a2243eda2e4d2173` passed merged-main CI #2033 and Product Eval #1272. Automatic Staging Deploy #833 executed the real deploy job and passed on exact `d8d2a113...`: public/private auth and MCP checks passed, Operations reported healthy with no unhealthy services, exact-host identity matched with a clean worktree, no configured service was non-running, and final capacity stabilization reported `28.86 GiB` free.
+
+Safe resumable checkpoint: [verification/session-5-a13-safe-checkpoint-2026-09-25.md](verification/session-5-a13-safe-checkpoint-2026-09-25.md).
+
+**Next planned scope for discussion:** Project UX only — make virtual `All` functional. Stale persisted Project-selection reconciliation follows as a separate bounded step; final system audit and final safe checkpoint remain later scopes.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
