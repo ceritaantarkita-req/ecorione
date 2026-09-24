@@ -3,7 +3,10 @@
  */
 
 import { resolve } from "node:path";
-import { bindHostForAuthenticatedService, resolveRepoRuntimePath } from "@ecorione/shared-server";
+import {
+  bindHostForAuthenticatedService,
+  resolveRepoRuntimePath,
+} from "@ecorione/shared-server";
 import { openHubDatabase } from "./db.js";
 import { buildHubServer } from "./http.js";
 import { registerHubMultimodal } from "./multimodal-bootstrap.js";
