@@ -80,6 +80,9 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     expect(rootDeploy).toContain("Timed out waiting for public boundary readiness");
     expect(rootDeploy).toContain("sleep 3");
     expect(rootDeploy).toContain("scripts/production-public-smoke.mjs");
+    expect(rootDeploy).toContain("wait_for_ops_health");
+    expect(rootDeploy).toContain("Operations healthy on attempt");
+    expect(rootDeploy).toContain("Timed out waiting for authenticated Operations health");
     expect(rootDeploy).toContain("scripts/production-ops-snapshot.mjs");
     expect(rootDeploy).toContain("scripts/staging-host-evidence.mjs");
     expect(rootDeploy).toContain('ECORIONE_EXPECTED_SHA="$expected_sha"');
