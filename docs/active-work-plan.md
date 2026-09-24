@@ -8,7 +8,7 @@ Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHE
 
 The 2026-09-24 current-main + staging parity audit is complete and is intentionally non-mutating. It does not open PE-09, PCS-11, Batch 13, a new F6 item, production promotion, or a DR-2 runtime checkpoint. Findings are prioritized but remain unimplemented until the operator chooses a bounded next scope.
 
-Highest-priority audit finding: incomplete bounded timeout coverage for selected internal HTTP owner calls. Product-facing findings include the inert Projects `All` control, stale persisted Project selection, Project settings/source onboarding gaps, Schedule calendar/chat UX gaps, Brain scaling/richness gaps, frontend page concentration, and Compose readiness. Full evidence: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md).
+Highest-priority audit findings are the latent fail-open direct-start remote-bind/auth configuration gap and incomplete bounded timeout coverage for selected internal HTTP owner calls. A separate concrete configuration bug points standalone Space at Ai fallback port `17029` instead of canonical Flow `17028`. Product-facing findings include the inert Projects `All` control, stale persisted Project selection, Project settings/source onboarding gaps, Schedule calendar/chat UX gaps, Brain scaling/richness gaps, frontend page concentration, and Compose readiness. The guarded Compose paths still require the internal token, and no current staging exposure is claimed. Full evidence: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
