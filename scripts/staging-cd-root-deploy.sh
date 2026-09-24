@@ -358,6 +358,8 @@ if [[ -e "$STATE_FILE" ]]; then
 
   RECORDED_SHA="$(sed -n 's/^current_sha=//p' "$STATE_FILE")"
   RECORDED_TAG="$(sed -n 's/^current_tag=//p' "$STATE_FILE")"
+  RECORDED_PREVIOUS_SHA="$(sed -n 's/^previous_sha=//p' "$STATE_FILE")"
+  RECORDED_PREVIOUS_TAG="$(sed -n 's/^previous_tag=//p' "$STATE_FILE")"
   [[ "$RECORDED_SHA" =~ ^[0-9a-f]{40}$ ]] || {
     echo "Refusing deploy: staging release state has invalid current_sha" >&2
     exit 1
@@ -366,9 +368,34 @@ if [[ -e "$STATE_FILE" ]]; then
     echo "Refusing deploy: staging release state has invalid current_tag" >&2
     exit 1
   }
+  [[ "$RECORDED_PREVIOUS_SHA" =~ ^[0-9a-f]{40}$ ]] || {
+    echo "Refusing deploy: staging release state has invalid previous_sha" >&2
+    exit 1
+  }
+  [[ "$RECORDED_PREVIOUS_TAG" =~ ^[A-Za-z0-9._-]+$ ]] || {
+    echo "Refusing deploy: staging release state has invalid previous_tag" >&2
+    exit 1
+  }
 
   CURRENT_HEAD="$(owner_git rev-parse HEAD)"
-  if [[ "$RECORDED_SHA" == "$TARGET_SHA" && "$CURRENT_HEAD" == "$TARGET_SHA" ]]; then
+  ACTIVE_IMAGE="$(
+    docker ps \
+      --filter label=com.docker.compose.project=ecorione-staging \
+      --filter label=com.docker.compose.service=ai \
+      --format '{{.Image}}' | head -n 1
+  )"
+  ACTIVE_TAG="${ACTIVE_IMAGE#ecorione:}"
+  [[ "$ACTIVE_IMAGE" == "ecorione:$ACTIVE_TAG" && "$ACTIVE_TAG" =~ ^[A-Za-z0-9._-]+$ ]] || {
+    echo "Refusing deploy: unable to determine active ECORIONE staging image" >&2
+    exit 1
+  }
+  [[ "$RECORDED_SHA" == "$CURRENT_HEAD" && "$RECORDED_TAG" == "$ACTIVE_TAG" ]] || {
+    echo "Refusing deploy: release receipt, Git HEAD, and active image are inconsistent" >&2
+    echo "receipt_sha=$RECORDED_SHA head_sha=$CURRENT_HEAD receipt_tag=$RECORDED_TAG active_tag=$ACTIVE_TAG" >&2
+    exit 1
+  }
+
+  if [[ "$RECORDED_SHA" == "$TARGET_SHA" ]]; then
     echo "Revalidating already-recorded staging deployment sha=$TARGET_SHA tag=$RECORDED_TAG"
     validate_deployed_revision "$RECORDED_TAG" "$TARGET_SHA" || {
       echo "Recorded staging deployment failed health/evidence revalidation" >&2
