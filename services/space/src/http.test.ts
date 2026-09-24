@@ -1,7 +1,7 @@
 import { createServer } from "@ecorione/shared-server";
 import { afterEach, describe, expect, it } from "vitest";
 import { openSpaceDatabase, type SpaceDatabase } from "./db.js";
-import { buildSpaceServer } from "./http.js";
+import { buildSpaceServer, DEFAULT_FLOW_URL, resolveSpaceFlowUrl } from "./http.js";
 import { SpaceStore } from "./store.js";
 
 const dbs: SpaceDatabase[] = [];
@@ -22,6 +22,12 @@ async function createPage(
 }
 
 describe("Space", () => {
+  it("uses canonical Flow 17028 default while preserving explicit overrides", () => {
+    expect(DEFAULT_FLOW_URL).toBe("http://127.0.0.1:17028");
+    expect(resolveSpaceFlowUrl()).toBe(DEFAULT_FLOW_URL);
+    expect(resolveSpaceFlowUrl("http://flow:17028")).toBe("http://flow:17028");
+  });
+
   it("owns typed composition, stable ordering, and optimistic versions", async () => {
     const db = openSpaceDatabase(":memory:");
     dbs.push(db);
