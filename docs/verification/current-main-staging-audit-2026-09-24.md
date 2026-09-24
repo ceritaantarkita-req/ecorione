@@ -84,6 +84,8 @@ This parity proves repository-product equivalence, not fresh live-host health on
 
 ### A-00 — CRITICAL — public Ai surface has no human authentication boundary
 
+Tracking issue: **#287** (implementation not yet authorized).
+
 **Type:** authentication / confidentiality / integrity / spend exposure.
 
 The self-host/SumoPod Caddy policy protects only `/ops*`, `/api/ops*`, `/settings*`, and `/api/settings*` with Basic Auth. The general fallback routes every other Ai page/API request directly to `ai:3000`. The SumoPod Traefik overlay publishes that Caddy service without an additional authentication middleware.
