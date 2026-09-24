@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { MockAgent, setGlobalDispatcher, type Interceptable } from "undici";
 import { httpJson } from "./client.js";
 import type { RemoteServiceError } from "./errors.js";
@@ -11,6 +11,10 @@ function mockAgentFor(baseUrl: string): Interceptable {
 }
 
 describe("httpJson", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("mengirim POST dengan body JSON dan Authorization bearer, mem-parse respons JSON", async () => {
     const pool = mockAgentFor("http://svc.local");
     pool
@@ -79,6 +83,40 @@ describe("httpJson", () => {
     await expect(
       httpJson("http://svc.local/v1/redirect", { token: "tok-redirect" }),
     ).rejects.toThrow();
+  });
+
+  it("memutus upstream yang stall dengan deadline eksplisit", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: string | URL | Request, init?: RequestInit) => {
+        return new Promise<Response>((_resolve, reject) => {
+          const signal = init?.signal;
+          if (signal === null || signal === undefined) {
+            reject(new Error("signal wajib ada"));
+            return;
+          }
+          if (signal.aborted) {
+            reject(signal.reason);
+            return;
+          }
+          signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+        });
+      }),
+    );
+
+    await expect(
+      httpJson("http://stall.local/v1/wait", { timeoutMs: 20 }),
+    ).rejects.toThrow();
+  });
+
+  it("menolak konfigurasi timeout invalid sebelum network call", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await expect(
+      httpJson("http://svc.local/v1/items", { timeoutMs: 0 }),
+    ).rejects.toThrow("timeoutMs harus integer 1..120000");
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("menangani respons body kosong (mis. 204) tanpa melempar saat parsing JSON", async () => {
