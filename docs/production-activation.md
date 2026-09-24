@@ -1,7 +1,7 @@
 # ECORIONE — Production Activation Workstream
 
 Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING VERIFIED**
-Date: 2026-09-23
+Date: 2026-09-24
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
 
@@ -130,7 +130,7 @@ Production secrets are never command-line examples in this document. Provider se
 | 11 | Production E2E edge smoke | **PENDING FUTURE DEPLOYMENT** | `pnpm production:smoke` on actual public edge |
 | 12 | Hosted provider credentials/canaries | **OPTIONAL / OPERATOR CREDENTIALS REQUIRED** | Never required for current local work |
 | 13 | Durable production observability | **PENDING FUTURE DEPLOYMENT** | Local observability baseline does not replace production retention/alerting evidence |
-| 14 | Host hardening / disaster recovery | **PARTIALLY PROVEN / DR-2 ACTIVE** | Original SumoPod host-loss DR is CLOSED / PASS; stronger physical-host/storage independence remains DR-2 checkpoint 2+ |
+| 14 | Host hardening / disaster recovery | **ORIGINAL DR PROVEN / DR-2 DEFERRED** | Original SumoPod host-loss DR is CLOSED / PASS; stronger physical-host/storage independence is safe-paused before DR-2 checkpoint-2 target selection |
 
 ## Resume procedure
 
