@@ -1,10 +1,10 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-24**
+Last updated: **2026-09-25**
 
 Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Audit follow-up checkpoint — CRITICAL AI AUTH CLOSED / NEXT SCOPE UNSELECTED
+## Audit follow-up checkpoint — CRITICAL + HIGH FINDINGS CLOSED / SESSION 5 NEXT
 
 The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
@@ -25,6 +25,27 @@ Repository variable `ECORIONE_STAGING_CD_ENABLED=1` is restored. The bounded Ope
 Session 2 is CLOSED / PASS. Session 3 audit is complete at source level and the bounded hardening implementation is in review. Priority fixes are: explicit current+rollback image retention, single shared application image build, post-deploy capacity stabilization, release-receipt/runtime identity consistency, and full rollback revalidation. The dual workflow-run trigger remains unchanged; backup freshness per deploy is documented as a separate deferred policy question.
 
 PR #305 hardening and PR #306 final-proof checkpoint are merged. CI #2007 and Product Eval #1246 passed, and automatic Staging Deploy #781 deployed exact main `977db6f4bb72acfb6f4601372de6dc82b9200995` through the restricted SSH path. Runtime identity, public/MCP smoke, Operations health, all 15 services, current+rollback retention, stale-image cleanup and 28.87 GiB final free space all passed. **Session 3 is CLOSED / PASS.** Evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
+
+### Session 4 — CLOSED / PASS
+
+A-12 and A-01 are closed on current reviewed main.
+
+- PR #308 / merge `e4810e0d7980682028be67634fa430090fe9bf92`: non-loopback owner bind now requires authentication material; exact-head CI #2020, Product Eval #1259, MCP #1023 and PCS-06 #29 passed; automatic staging deploy #809 passed.
+- PR #309 / merge `2ee12fd454ade78ce1bf732390334726980e0451`: shared internal HTTP calls now have a default 10-second deadline with deterministic stalled-upstream coverage; exact-head CI #2026, Product Eval #1265, MCP #1029 and PCS-06 #34 passed; merged-main CI #2027, Product Eval #1266, MCP #1030 and automatic staging deploy #821 passed.
+- Final runtime: exact SHA `2ee12fd...`, Operations healthy, all 15 configured services running, private Ai boundary and MCP/OAuth smoke PASS, post-retention free space `25.11 GiB`.
+
+There are no open CRITICAL/HIGH findings remaining from the 2026-09-24 audit. Evidence: [verification/session-4-high-findings-safe-checkpoint-2026-09-25.md](verification/session-4-high-findings-safe-checkpoint-2026-09-25.md).
+
+### Session 5 — NEXT DISCUSSION / NOT STARTED
+
+Bounded next scope is A-13 only:
+
+- change Space standalone/default Flow URL from `http://127.0.0.1:17029` to canonical `http://127.0.0.1:17028`;
+- inspect both `services/space/src/main.ts` and `services/space/src/http.ts`;
+- add deterministic regression coverage for the canonical owner port map;
+- verify Compose remains unaffected because it already injects `http://flow:17028`;
+- inspect Flow-linked/AI-linked block effects before closure;
+- do not redesign Flow/Temporal or open Project UX work in the same slice.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 

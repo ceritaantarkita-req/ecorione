@@ -1,6 +1,16 @@
 # Current main + staging parity audit — 2026-09-24
 
-Status: **AUDIT COMPLETE / NO RUNTIME MUTATION / FINDINGS NOT YET AUTHORIZED FOR IMPLEMENTATION**
+Status: **AUDIT COMPLETE / A-00 + A-01 + A-12 CLOSED-PASS / LOWER-PRIORITY FINDINGS REMAIN OPEN**
+
+## Post-audit closure update — 2026-09-25
+
+The audit baseline and original no-mutation conclusions below remain historical evidence. Subsequent explicitly authorized work has now closed every CRITICAL/HIGH finding from this audit:
+
+- **A-00 CRITICAL human-authentication boundary — CLOSED / PASS** through the private-by-default Ai edge closure documented in [ai-human-auth-closure-2026-09-24.md](ai-human-auth-closure-2026-09-24.md).
+- **A-12 HIGH owner remote-bind fail-open configuration — CLOSED / PASS** through PR #308 / merge `e4810e0d7980682028be67634fa430090fe9bf92`; automatic Staging Deploy #809 passed exact merged main.
+- **A-01 HIGH internal HTTP timeout coverage — CLOSED / PASS** through PR #309 / merge `2ee12fd454ade78ce1bf732390334726980e0451`; automatic Staging Deploy #821 passed exact merged main.
+
+The exact safe handoff, runtime evidence, test gates, remaining lower-priority findings, and next authorized discussion scope are recorded in [session-4-high-findings-safe-checkpoint-2026-09-25.md](session-4-high-findings-safe-checkpoint-2026-09-25.md).
 
 ## Scope
 
@@ -82,9 +92,9 @@ This parity proves repository-product equivalence, not fresh live-host health on
 
 ## 3. Findings
 
-### A-00 — CRITICAL — public Ai surface has no human authentication boundary
+### A-00 — CRITICAL — CLOSED / PASS — public Ai surface had no human authentication boundary
 
-Tracking issue: **#287** (implementation not yet authorized).
+Tracking issue **#287** is closed at the documented urgent private-by-default staging boundary. The original finding text below is retained as historical audit evidence.
 
 **Type:** authentication / confidentiality / integrity / spend exposure.
 
@@ -111,7 +121,7 @@ The exact `apps/` and Caddy/SumoPod routing files are byte-identical between the
 
 **Recommended future scope:** before further public/staging feature work, add one fail-closed human-auth boundary for the Ai surface (edge or application session), define a minimal explicit allowlist for endpoints that are genuinely public, preserve MCP/OAuth routes as their separate authenticated protocol boundary, and add unauthenticated negative-path acceptance for Project/history/chat/mutation APIs.
 
-### A-01 — HIGH — internal HTTP timeout coverage is incomplete
+### A-01 — HIGH — CLOSED / PASS — internal HTTP timeout coverage was incomplete
 
 **Type:** reliability / partial-failure containment.
 
@@ -129,10 +139,10 @@ Some previously hardened paths already use explicit timeouts, so the policy is i
 
 **Risk:** a dependency that accepts a connection but stalls can hold a browser request, Trigger path, worker activity, or owner verification much longer than the bounded-failure behavior used elsewhere.
 
-**Recommended future scope:** establish one explicit internal-HTTP timeout policy, then add deterministic stalled-upstream tests.
+**Closure:** PR #309 added a 10-second default internal HTTP deadline at the shared boundary, preserved tighter caller-owned signals, bounded the remaining Brain owner fetch, and added deterministic stalled-upstream/source-contract coverage. Exact-head CI #2026, Product Eval #1265, MCP External HTTPS #1029, and PCS-06 #34 passed; merged main `2ee12fd454ade78ce1bf732390334726980e0451` then passed CI #2027, Product Eval #1266, MCP External HTTPS #1030, and automatic Staging Deploy #821.
 
 
-### A-12 — HIGH — remote bind can fail open without an internal bearer token outside guarded Compose paths
+### A-12 — HIGH — CLOSED / PASS — remote bind could fail open without an internal bearer token outside guarded Compose paths
 
 **Type:** security configuration / defense-in-depth.
 
@@ -145,7 +155,7 @@ The production entrypoints for RnD, Context, Connect, Hub, Artifact, Sandbox, Sp
 
 The reviewed Compose paths are **not currently exposed by this configuration gap**: both `deploy/compose.yml` and `desktop/compose.yml` set `ECORIONE_ALLOW_REMOTE_BIND=1` while requiring `ECORIONE_INTERNAL_TOKEN` with Compose's mandatory-variable syntax. The finding is a latent fail-open direct/self-host configuration surface, not evidence of a current SumoPod staging breach.
 
-**Recommended future scope:** add a fail-closed startup invariant for owner services so non-loopback bind cannot start without the service's required authentication material, plus deterministic tests for the direct-start configuration matrix.
+**Closure:** PR #308 added a fail-closed authenticated bind helper and moved RnD, Context, Connect, Hub, Artifact, Sandbox, Space, and Flow production entrypoints onto it. Loopback remains valid without the internal token, while non-loopback startup now refuses to proceed without authentication material. Exact-head CI #2020, Product Eval #1259, MCP External HTTPS #1023, and PCS-06 #29 passed; merged main `e4810e0d7980682028be67634fa430090fe9bf92` then passed automatic Staging Deploy #809.
 
 ### A-13 — MEDIUM — Space standalone default points at the Ai fallback port instead of Flow
 
@@ -256,7 +266,7 @@ Several Ai product surfaces intentionally hardcode `ws_personal` and default `pr
 
 ## 4. Security audit result
 
-A CRITICAL source-level authentication defect was identified: the general public Ai surface has no human authentication boundary, while Ai APIs inject the internal service bearer token server-side. Historical staging evidence proves this same routing/product tree has been publicly reachable, but this audit did not perform a fresh live-host probe. A separate HIGH security-configuration debt was also identified: non-loopback direct service starts can fail open when remote bind is explicitly enabled but the internal bearer token is absent. The guarded Compose paths require that token and are not evidence of that second exposure.
+At the original audit baseline, one CRITICAL human-authentication defect and two HIGH findings were identified. Those CRITICAL/HIGH findings are now CLOSED / PASS through the explicitly authorized follow-up work summarized above. This document keeps the original findings for traceability; it should not be read as claiming they remain open on current main. Lower-priority findings remain separately bounded.
 
 Positive evidence:
 
