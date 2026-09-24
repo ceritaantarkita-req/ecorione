@@ -1,6 +1,6 @@
 # ECORIONE — Staging Auto-Deploy Restore — 2026-09-24
 
-Status: **SESSION 2 IN PROGRESS / OPS-READINESS FIX MERGED / HELPER REFRESHED / CONTROLLED CONVERGENCE PASS / FINAL AUTOMATIC PROOF PENDING**
+Status: **SESSION 2 CLOSED / PASS / GITHUB -> SUMOPOD AUTO-DEPLOY RESTORED**
 
 ## Scope
 
@@ -223,25 +223,55 @@ The helper emitted:
 
 This proves the bounded Operations-readiness fix is installed and the current reviewed main is healthy on staging.
 
-## Final Session 2 proof pending
+## Final automatic post-merge proof — PASS
 
-Automatic CD remains temporarily disabled while this final proof checkpoint is prepared.
+Before the final proof, unused historical ECORIONE images were removed explicitly while preserving only the current runtime image and the recorded rollback image. Root filesystem free space increased to approximately 27 GiB by `df -h`.
 
-The only remaining Session 2 proof is:
+Repository variable:
 
-1. keep only the current and recorded rollback ECORIONE images if disk headroom needs widening;
-2. set `ECORIONE_STAGING_CD_ENABLED=1`;
-3. merge this docs-only checkpoint to create one new reviewed main SHA;
-4. require merged-main CI and Product Eval PASS;
-5. require the automatic `workflow_run` Staging Deploy to execute its deploy job rather than skip;
-6. require the refreshed helper to pass private-edge smoke, bounded Operations health, exact-host identity, and release receipt for that exact new main;
-7. record that run and close Session 2.
+`ECORIONE_STAGING_CD_ENABLED=1`
+
+was restored and confirmed.
+
+PR #303 then merged as exact reviewed main:
+
+`59e86b5cf0269348b8db572da488e0c846f71a86`
+
+Merged-main gates passed:
+
+- CI #1997 — PASS;
+- Product Eval #1236 — PASS.
+
+The first Staging Deploy workflow-run fired after Product Eval while CI was still running and correctly skipped deployment. After CI completed, automatic Staging Deploy run `36008243369` / #761 executed the deploy job through the least-privilege SSH forced-command path.
+
+The automatic deployment built and activated:
+
+`staging-59e86b5cf026`
+
+Post-deploy validation passed:
+
+- public auth bootstrap and representative private Ai reads/mutations PASS;
+- MCP protected-resource metadata and unauthenticated OAuth challenge PASS;
+- authenticated Operations: `healthy: true`, `serviceCount: 9`, `unhealthyServices: []`;
+- bounded readiness path emitted `Operations healthy on attempt 1/20`;
+- exact host evidence: `headSha == expectedSha == 59e86b5cf0269348b8db572da488e0c846f71a86`;
+- `expectedShaMatched=true`;
+- `cleanWorktree=true`;
+- all 15 configured services running;
+- `nonRunningServices=[]`;
+- `availableDiskGiB=24.03`;
+- deployment env remained mode 0600, non-symlinked, with no placeholders.
+
+The governed helper emitted:
+
+`PASS PCS-08 staging deploy sha=59e86b5cf0269348b8db572da488e0c846f71a86 tag=staging-59e86b5cf026`
+
+This closes Session 2: GitHub -> SumoPod automatic staging deployment is restored and proven on a true post-merge workflow-run.
 
 ## Explicit non-claims
 
-This checkpoint does not yet claim:
+This closure does not claim:
 
-- GitHub -> staging auto-deploy is restored;
 - production readiness;
 - final multi-user authentication/RBAC;
 - DR-2 physical independence;
