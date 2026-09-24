@@ -1,6 +1,6 @@
 # ECORIONE — Deployment Pipeline Audit — 2026-09-24
 
-Status: **SESSION 3 IN PROGRESS / SOURCE HARDENING MERGED / CONTROLLED ROLLOUT PASS / FINAL AUTOMATIC PROOF PENDING**
+Status: **SESSION 3 CLOSED / PASS / DEPLOYMENT PIPELINE HARDENED AND AUTO-PROVEN**
 
 ## Scope
 
@@ -200,18 +200,42 @@ The helper emitted:
 
 This proves DP-01, DP-02, DP-04 and DP-05 in live controlled rollout. DP-03 rollback hardening remains source-tested and is intentionally not fault-injected against a healthy staging runtime solely to create failure evidence.
 
-## Final Session 3 proof pending
+## Final automatic post-merge proof — PASS
 
-Automatic CD remains temporarily disabled.
+Automatic CD was restored to `ECORIONE_STAGING_CD_ENABLED=1` and confirmed before the final proof merge.
 
-The only remaining Session 3 closure proof is:
+PR #306 merged as exact reviewed main:
 
-1. set `ECORIONE_STAGING_CD_ENABLED=1`;
-2. merge this docs-only checkpoint to create a new reviewed main SHA;
-3. require merged-main CI + Product Eval PASS;
-4. require the true automatic `workflow_run` Staging Deploy to execute the deploy job;
-5. require public/Ops/exact-host/release identity/capacity stabilization PASS for that exact new SHA;
-6. record the automatic run and close Session 3.
+`977db6f4bb72acfb6f4601372de6dc82b9200995`
+
+Merged-main gates passed:
+
+- CI #2007 — PASS;
+- Product Eval #1246 — PASS.
+
+As designed, the first workflow-run fired after Product Eval while CI was still running and completed gate-only. After CI completed, automatic Staging Deploy run `36024559391` / #781 executed the deploy job through the restricted SSH forced-command path.
+
+Automatic runtime validation passed:
+
+- one shared image build/export for `staging-977db6f4bb72`;
+- public/private auth smoke PASS;
+- MCP protected-resource metadata and unauthenticated challenge PASS;
+- Operations `healthy=true`, `unhealthyServices=[]`;
+- bounded readiness `Operations healthy on attempt 1/20`;
+- exact host evidence `headSha == expectedSha == 977db6f4bb72acfb6f4601372de6dc82b9200995`;
+- `cleanWorktree=true`;
+- all 15 configured services running;
+- `nonRunningServices=[]`;
+- exact-host evidence measured `27.53 GiB` free before final retention;
+- retention kept current `staging-977db6f4bb72` and rollback `staging-53cd5d61dc87`;
+- stale `staging-ce4719a7b54f` was removed;
+- final capacity stabilization emitted `28.87 GiB free`.
+
+The helper emitted:
+
+`PASS PCS-08 staging deploy sha=977db6f4bb72acfb6f4601372de6dc82b9200995 tag=staging-977db6f4bb72`
+
+Session 3 is therefore **CLOSED / PASS**. The audited deployment pipeline is now live with single-image build, exact runtime identity checks, bounded readiness, current+rollback retention, post-deploy capacity stabilization, and full rollback validation in source contract.
 
 ## Non-claims
 
