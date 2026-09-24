@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { DEFAULT_INTERNAL_HTTP_TIMEOUT_MS } from "@ecorione/shared-server";
 import { z } from "zod";
 import {
   BrainGraphResponseSchema,
@@ -30,6 +29,7 @@ const TriggerListResponseSchema = z
 
 const DEFAULT_HUB_URL = "http://127.0.0.1:17024";
 const DEFAULT_FLOW_URL = "http://127.0.0.1:17028";
+const BRAIN_OWNER_TIMEOUT_MS = 10_000;
 
 function ownerBaseUrl(
   name: "ECORIONE_HUB_URL" | "ECORIONE_FLOW_URL",
@@ -84,7 +84,7 @@ async function ownerJson(
     response = await fetch(url, {
       headers: requestHeaders(),
       redirect: "error",
-      signal: AbortSignal.timeout(DEFAULT_INTERNAL_HTTP_TIMEOUT_MS),
+      signal: AbortSignal.timeout(BRAIN_OWNER_TIMEOUT_MS),
     });
   } catch {
     throw new BrainOwnerRequestError(owner, 502, `${owner} tidak dapat dihubungi.`);
