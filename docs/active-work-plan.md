@@ -24,7 +24,7 @@ Repository variable `ECORIONE_STAGING_CD_ENABLED=1` is restored. The bounded Ope
 
 Session 2 is CLOSED / PASS. Session 3 audit is complete at source level and the bounded hardening implementation is in review. Priority fixes are: explicit current+rollback image retention, single shared application image build, post-deploy capacity stabilization, release-receipt/runtime identity consistency, and full rollback revalidation. The dual workflow-run trigger remains unchanged; backup freshness per deploy is documented as a separate deferred policy question.
 
-**Rollout boundary:** because the root-owned deploy helper changes, do not merge the hardening while automatic CD remains enabled. After PR gates pass, set `ECORIONE_STAGING_CD_ENABLED=0`, merge, refresh the installed helper from exact reviewed main, run one controlled deployment, restore CD, and require one true automatic post-merge proof before closing Session 3. Evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
+PR #305 is merged, the installed root helper matches reviewed main, and the controlled hardening rollout is PASS with one shared image build, full runtime validation, current+rollback retention, stale-image cleanup and 30.00 GiB post-deploy free space. **Only remaining authorized Session 3 work:** restore `ECORIONE_STAGING_CD_ENABLED=1`, merge the final docs checkpoint, and require one true automatic post-merge deploy to pass exact-SHA runtime and capacity validation. Evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
