@@ -338,3 +338,16 @@ implementation of audit findings: not started
 ~~~
 
 The next conversation may choose which audit finding becomes the first bounded implementation checkpoint.
+
+## Post-audit closure update — Session 4
+
+The original findings above remain preserved as the 2026-09-24 audit record. Subsequent bounded implementation has now closed the security/reliability items at their tested boundaries:
+
+- **A-00 CRITICAL** — public Ai human authentication: CLOSED / PASS in the dedicated auth closure.
+- **A-12 HIGH** — direct owner remote bind without internal bearer: CLOSED / PASS through PR #308 / merge `e4810e0d7980682028be67634fa430090fe9bf92`, followed by automatic Staging Deploy #809 PASS.
+- **A-01 HIGH** — incomplete internal HTTP timeout coverage: CLOSED / PASS through PR #309 / merge `2ee12fd454ade78ce1bf732390334726980e0451`, followed by automatic Staging Deploy #821 PASS.
+
+Session 4 closure evidence: [session4-high-security-closure-2026-09-24.md](session4-high-security-closure-2026-09-24.md).
+
+The next prioritized implementation item is **A-13 MEDIUM**, the Space standalone Flow fallback-port correction. Project UX/state defects remain separate follow-up scope.
+
