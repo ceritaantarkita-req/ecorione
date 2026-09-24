@@ -64,6 +64,14 @@ describe("production activation scripts", () => {
     );
   });
 
+  it("treats private-home 401 as a ready staging edge", () => {
+    const deploy = readFileSync(
+      new URL("../scripts/staging-cd-root-deploy.sh", import.meta.url),
+      "utf8",
+    );
+    expect(deploy).toContain('"$home_code" == "401"');
+  });
+
   it("public smoke validates edge routing and protected operator/MCP surfaces", async () => {
     await withServer(
       (req, res) => {
