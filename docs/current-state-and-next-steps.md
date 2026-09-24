@@ -380,7 +380,7 @@ Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](ver
 
 ## Current work state and deferred boundaries
 
-- Active implementation/operational scope — **DR-2 physical independence, checkpoint 2 external target selection**. The original Off-host DR runtime drill, latest-main staging convergence, PE-00..PE-08, and PCS-00..PCS-10 remain closed at their documented boundaries.
+- Active implementation/operational scope — **NONE**. The 2026-09-24 audit is complete and no finding is authorized for implementation yet. DR-2 checkpoint 2 is deferred/safe-paused. The original Off-host DR runtime drill, latest-main staging convergence, PE-00..PE-08, and PCS-00..PCS-10 remain closed at their documented boundaries.
 - Post-closure product/UX + SumoPod remote staging — **CLOSED / PASS**; see `post-closure-product-staging-roadmap.md`.
 - Public production cutover — **DEFERRED / SEPARATE EXPLICIT GATE**. Staging, remote persistence, security, same-host backup verification, observability, and operator acceptance are already proven at the documented staging boundary; they do not automatically authorize production.
 - Cloudflare named Tunnel/public-edge choice — optional/pending operator hostname/edge decision.
