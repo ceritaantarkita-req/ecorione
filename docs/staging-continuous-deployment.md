@@ -8,6 +8,8 @@ PCS-08 automates deployment of the current reviewed GitHub `main` revision to th
 
 **2026-09-24 auth closure:** the public smoke contract now includes the general Ai human-authentication boundary. Final governed staging acceptance on `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved the protected login bootstrap, representative unauthenticated Ai read/mutation failures, the separate MCP/OAuth boundary, healthy authenticated Operations, and exact-host identity. This remains staging evidence, not production promotion. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
+**Current CD stop:** a later deployment exhausted the staging Docker filesystem during image export/unpack. Repository guards are now merged through PR #297/#298, but the already-installed privileged host deploy helper predates the final pre-fetch guard. `ECORIONE_STAGING_CD_ENABLED=0` must remain disabled until controlled host recovery proves disk headroom, refreshes the installed helper, and revalidates the private edge/Ops boundary. Evidence: [verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md](verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md).
+
 ## Deployment model
 
 ```text

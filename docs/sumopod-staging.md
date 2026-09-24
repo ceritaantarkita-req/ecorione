@@ -29,6 +29,8 @@ PCS-07 proved the initial remote staging deployment and basic runtime reachabili
 
 **2026-09-24 security closure:** the earlier audit stop condition is now CLOSED / PASS at the SumoPod staging boundary. The general Ai browser/API fallback is protected by the existing operator Basic-Auth credential set, with `/` using a protected `/login` bootstrap. Final governed staging acceptance on `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved representative Ai reads/mutations fail closed unauthenticated while MCP discovery/OAuth remains separate. This is a private single-credential staging gate, not a final multi-user authentication system. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
+**Current operational stop:** a subsequent docs-convergence deploy exhausted the Docker filesystem. The known-good protected network boundary was recreated, but host Git/disk state is not re-proven clean after the failed rollback checkout. Automatic CD is disabled and must remain disabled until controlled disk recovery plus installed deploy-helper refresh is complete. See [verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md](verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md).
+
 ## Secret and host rules
 
 Never commit or record in repository docs:
