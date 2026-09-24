@@ -60,15 +60,11 @@ function expectSecurityHeaders(response, label) {
   assert.equal(response.headers.get("x-frame-options"), "DENY", `${label}: missing frame deny`);
 }
 
-const home = await request("/");
-assert(home.status >= 200 && home.status < 400, `home expected 2xx/3xx, got ${home.status}`);
-expectSecurityHeaders(home, "home");
-pass("public home", `HTTP ${home.status}`);
-
-for (const operatorPath of ["/ops", "/settings"]) {
-  const response = await request(operatorPath);
-  assert.equal(response.status, 401, `${operatorPath} must remain protected with HTTP 401`);
-  pass(`${operatorPath} protected`, "HTTP 401");
+for (const protectedPath of ["/", "/ops", "/settings", "/api/ops", "/api/settings"]) {
+  const response = await request(protectedPath);
+  assert.equal(response.status, 401, `${protectedPath} must remain protected with HTTP 401`);
+  expectSecurityHeaders(response, protectedPath);
+  pass(`${protectedPath} protected`, "HTTP 401");
 }
 
 const metadataPath = "/.well-known/oauth-protected-resource/mcp";
