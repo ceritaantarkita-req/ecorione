@@ -29,11 +29,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Debug Prettier output for A-01
-        run: |
-          pnpm exec prettier packages/shared-server/src/client.test.ts --write
-          git diff -- packages/shared-server/src/client.test.ts
-
       - name: Format
         run: pnpm run format:check
 
