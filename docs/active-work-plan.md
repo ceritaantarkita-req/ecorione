@@ -20,11 +20,11 @@ Controlled staging convergence to exact current main `fad170645ba612b746453487dc
 
 Repository variable `ECORIONE_STAGING_CD_ENABLED=1` is restored. The bounded Operations-readiness retry is merged and installed. Final automatic proof passed on PR #303 merge `59e86b5cf0269348b8db572da488e0c846f71a86`: CI #1997 PASS, Product Eval #1236 PASS, and automatic Staging Deploy run `36008243369` / #761 PASS with deploy job executed, public/MCP validation PASS, Operations healthy, exact-host SHA match, all 15 services running, and `24.03 GiB` free disk. Evidence: [verification/staging-auto-deploy-restore-2026-09-24.md](verification/staging-auto-deploy-restore-2026-09-24.md).
 
-### Session 3 — Deployment Pipeline Audit / hardening in review
+### Session 3 — CLOSED / PASS
 
 Session 2 is CLOSED / PASS. Session 3 audit is complete at source level and the bounded hardening implementation is in review. Priority fixes are: explicit current+rollback image retention, single shared application image build, post-deploy capacity stabilization, release-receipt/runtime identity consistency, and full rollback revalidation. The dual workflow-run trigger remains unchanged; backup freshness per deploy is documented as a separate deferred policy question.
 
-PR #305 is merged, the installed root helper matches reviewed main, and the controlled hardening rollout is PASS with one shared image build, full runtime validation, current+rollback retention, stale-image cleanup and 30.00 GiB post-deploy free space. **Only remaining authorized Session 3 work:** restore `ECORIONE_STAGING_CD_ENABLED=1`, merge the final docs checkpoint, and require one true automatic post-merge deploy to pass exact-SHA runtime and capacity validation. Evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
+PR #305 hardening and PR #306 final-proof checkpoint are merged. CI #2007 and Product Eval #1246 passed, and automatic Staging Deploy #781 deployed exact main `977db6f4bb72acfb6f4601372de6dc82b9200995` through the restricted SSH path. Runtime identity, public/MCP smoke, Operations health, all 15 services, current+rollback retention, stale-image cleanup and 28.87 GiB final free space all passed. **Session 3 is CLOSED / PASS.** Evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
