@@ -1,6 +1,6 @@
 # ECORIONE — Deployment Pipeline Audit — 2026-09-24
 
-Status: **SESSION 3 IN PROGRESS / AUDIT COMPLETE / HARDENING PR OPEN**
+Status: **SESSION 3 IN PROGRESS / SOURCE HARDENING MERGED / CONTROLLED ROLLOUT PASS / FINAL AUTOMATIC PROOF PENDING**
 
 ## Scope
 
@@ -143,6 +143,75 @@ The source hardening changes the root-owned deploy helper. Therefore:
 8. set `ECORIONE_STAGING_CD_ENABLED=1`;
 9. require one true automatic post-merge proof;
 10. close Session 3.
+
+## Controlled rollout of hardening — PASS
+
+PR #305 merged as reviewed main:
+
+`53cd5d61dc87cf221b90fdde9a7b77d582e42ce0`
+
+Merged-main gates passed while automatic CD remained intentionally disabled:
+
+- CI #2005 — PASS;
+- Product Eval #1244 — PASS;
+- Staging Deploy #777 gate PASS with deploy skipped because CD was disabled.
+
+The privileged deploy helper was refreshed from exact reviewed main. SHA-256 matched between repository source and installed helper:
+
+`e5bfb9003b625a0d3cb1e92c2b36bd9b28eb7de74016cd3264e3ee4edd628d54`
+
+Controlled deployment then passed on exact reviewed main.
+
+Observed proof:
+
+- exactly one Docker image build/export for `ecorione:staging-53cd5d61dc87`;
+- Compose started all 15 services from the prebuilt image;
+- public/private auth smoke PASS;
+- MCP metadata and unauthenticated challenge PASS;
+- authenticated Operations: `healthy=true`, `unhealthyServices=[]`;
+- bounded readiness: `Operations healthy on attempt 1/20`;
+- exact-host evidence: `headSha == expectedSha == 53cd5d61dc87cf221b90fdde9a7b77d582e42ce0`;
+- `cleanWorktree=true`;
+- all 15 configured services running;
+- `nonRunningServices=[]`.
+
+The post-deploy retention/capacity stage then:
+
+- kept current `staging-53cd5d61dc87`;
+- kept recorded rollback `staging-ce4719a7b54f`;
+- removed stale historical ECORIONE staging tags;
+- pruned only reproducible BuildKit cache because free space was below the 25 GiB target;
+- emitted `PASS staging capacity stabilized: 30.00 GiB free`.
+
+Final controlled-runtime inventory contained exactly the current and rollback ECORIONE images, and root filesystem headroom was 30 GiB by `df -h`.
+
+Release state:
+
+```text
+current_sha=53cd5d61dc87cf221b90fdde9a7b77d582e42ce0
+current_tag=staging-53cd5d61dc87
+previous_sha=ce4719a7b54f716f8eb6f08602e67a592d01b519
+previous_tag=staging-ce4719a7b54f
+```
+
+The helper emitted:
+
+`PASS PCS-08 staging deploy sha=53cd5d61dc87cf221b90fdde9a7b77d582e42ce0 tag=staging-53cd5d61dc87`
+
+This proves DP-01, DP-02, DP-04 and DP-05 in live controlled rollout. DP-03 rollback hardening remains source-tested and is intentionally not fault-injected against a healthy staging runtime solely to create failure evidence.
+
+## Final Session 3 proof pending
+
+Automatic CD remains temporarily disabled.
+
+The only remaining Session 3 closure proof is:
+
+1. set `ECORIONE_STAGING_CD_ENABLED=1`;
+2. merge this docs-only checkpoint to create a new reviewed main SHA;
+3. require merged-main CI + Product Eval PASS;
+4. require the true automatic `workflow_run` Staging Deploy to execute the deploy job;
+5. require public/Ops/exact-host/release identity/capacity stabilization PASS for that exact new SHA;
+6. record the automatic run and close Session 3.
 
 ## Non-claims
 
