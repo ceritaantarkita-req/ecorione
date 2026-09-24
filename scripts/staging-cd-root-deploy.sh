@@ -401,6 +401,7 @@ if [[ -e "$STATE_FILE" ]]; then
       echo "Recorded staging deployment failed health/evidence revalidation" >&2
       exit 1
     }
+    stabilize_post_deploy_capacity || exit 1
     echo "PASS PCS-08 staging deploy already recorded and revalidated sha=$TARGET_SHA"
     exit 0
   fi
