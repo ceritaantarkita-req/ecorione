@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { DEFAULT_INTERNAL_HTTP_TIMEOUT_MS } from "@ecorione/shared-server";
 import { z } from "zod";
 import {
   BrainGraphResponseSchema,
@@ -83,6 +84,7 @@ async function ownerJson(
     response = await fetch(url, {
       headers: requestHeaders(),
       redirect: "error",
+      signal: AbortSignal.timeout(DEFAULT_INTERNAL_HTTP_TIMEOUT_MS),
     });
   } catch {
     throw new BrainOwnerRequestError(owner, 502, `${owner} tidak dapat dihubungi.`);
