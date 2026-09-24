@@ -1,6 +1,6 @@
 # ECORIONE — Staging Auto-Deploy Restore — 2026-09-24
 
-Status: **SESSION 2 IN PROGRESS / CONTROLLED CONVERGENCE PASS / AUTO-DEPLOY ENABLE PENDING**
+Status: **SESSION 2 IN PROGRESS / CONTROLLED CONVERGENCE PASS / AUTO-DEPLOY ENABLED / AUTOMATIC WORKFLOW_RUN PROOF PENDING**
 
 ## Scope
 
@@ -102,21 +102,48 @@ The deploy helper emitted:
 
 This proves controlled convergence to the reviewed current main.
 
-## Remaining Session 2 step
+## Auto-deploy enablement and least-privilege path — PASS
 
-Automatic staging deployment is not yet claimed restored.
+Repository variable:
 
-Before Session 2 can close:
+`ECORIONE_STAGING_CD_ENABLED=1`
 
-1. set repository variable `ECORIONE_STAGING_CD_ENABLED=1`;
-2. trigger the governed `Staging Deploy` workflow against current `main`;
-3. require gate PASS;
-4. require deploy job PASS through the least-privilege SSH forced-command path;
-5. require the helper to revalidate the already-recorded exact current main deployment;
-6. verify the workflow is no longer skipping deploy because of the repository variable;
-7. preserve the resulting workflow run as closure evidence.
+was restored by the operator and read back as `1`.
 
-Until those steps pass, automatic deployment remains deliberately disabled.
+A governed manual `workflow_dispatch` of Staging Deploy then executed as run `35999280717` / run number `743`.
+
+Results:
+
+- workflow conclusion: `success`;
+- gate job: PASS;
+- deploy job: PASS, not skipped;
+- least-privilege SSH identity installation: PASS;
+- exact reviewed main deploy command: PASS.
+
+The restricted host helper recognized the exact current SHA as already recorded and performed full revalidation rather than rebuilding unnecessarily:
+
+`Revalidating already-recorded staging deployment sha=fad170645ba612b746453487dc97cc0e03cb05e7 tag=staging-fad170645ba6`
+
+The revalidation again passed private-edge smoke, MCP/OAuth behavior, authenticated Operations, exact-host identity, all 15 configured services, and `availableDiskGiB=27.51`.
+
+The workflow ended with:
+
+`PASS PCS-08 staging deploy already recorded and revalidated sha=fad170645ba612b746453487dc97cc0e03cb05e7`
+
+This proves the repository variable is active and the governed least-privilege GitHub -> host deploy path is functional.
+
+## Remaining Session 2 proof
+
+One final automatic-path proof remains before Session 2 is declared CLOSED:
+
+1. merge this checkpoint PR to create a new reviewed `main` SHA;
+2. require CI and Product Eval PASS on that merged main;
+3. require the `workflow_run`-triggered Staging Deploy gate to PASS;
+4. require its deploy job to execute, not skip, with `ECORIONE_STAGING_CD_ENABLED=1`;
+5. require exact-host/private-edge/Ops validation PASS for that new main SHA;
+6. record that automatic run in the final closure.
+
+Until that proof is captured, the least-privilege path is restored and enabled, but end-to-end automatic post-merge behavior is not yet the final closure claim.
 
 ## Explicit non-claims
 
