@@ -104,18 +104,16 @@ describe("httpJson", () => {
       }),
     );
 
-    await expect(
-      httpJson("http://stall.local/v1/wait", { timeoutMs: 20 }),
-    ).rejects.toThrow();
+    await expect(httpJson("http://stall.local/v1/wait", { timeoutMs: 20 })).rejects.toThrow();
   });
 
   it("menolak konfigurasi timeout invalid sebelum network call", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
-    await expect(
-      httpJson("http://svc.local/v1/items", { timeoutMs: 0 }),
-    ).rejects.toThrow("timeoutMs harus integer 1..120000");
+    await expect(httpJson("http://svc.local/v1/items", { timeoutMs: 0 })).rejects.toThrow(
+      "timeoutMs harus integer 1..120000",
+    );
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
