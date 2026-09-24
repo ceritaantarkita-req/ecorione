@@ -1,6 +1,6 @@
 # Current-main audit safe checkpoint — 2026-09-24
 
-Status: **SAFE CHECKPOINT CANDIDATE / AUDIT MERGED / IMPLEMENTATION NOT STARTED**
+Status: **SAFE / AUDIT MERGED / IMPLEMENTATION NOT STARTED / RESUMABLE**
 
 Audit merge on `main`:
 
@@ -180,13 +180,22 @@ Only after that scope is explicitly authorized should implementation begin.
 
 ## Merge verification
 
-PR #286 exact head already passed:
+PR #286 exact head passed:
 
 ```text
 CI #1954 PASS
 Product Eval #1193 PASS
 ```
 
-At the time this checkpoint document was first drafted, merged-main Product Eval #1194 and Staging Deploy #673 had passed, while merged-main CI #1955 was still running.
+Audit-merged main `da26196071302d3ffc44d3cd5d0ed8d81e9020c2` then passed:
 
-This checkpoint must not be called FINAL until merged-main CI #1955 completes successfully and the final checkpoint documentation merge is itself green.
+```text
+CI #1955 PASS
+Product Eval #1194 PASS
+Staging Deploy #673 gate PASS / deploy SKIPPED
+Staging Deploy #674 gate PASS / deploy SKIPPED
+```
+
+The skipped deploy jobs are expected because staging deployment activation remains disabled. No application deployment or runtime mutation was introduced by the audit/docs merge.
+
+This document is the safe resume point for the next discussion. Its own documentation PR must still pass exact-head CI/Product Eval before merge.
