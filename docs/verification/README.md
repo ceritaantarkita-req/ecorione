@@ -30,3 +30,5 @@ DR-2 checkpoint 2 safe selection package: [offhost-dr2-checkpoint-2-selection-pa
 DR-2 checkpoint 2 deferment: [offhost-dr2-checkpoint-2-deferment-2026-09-23.md](offhost-dr2-checkpoint-2-deferment-2026-09-23.md). The operator postponed external-target selection; local backup is the interim posture and Google Drive is only an optional future encrypted secondary copy, not a validated DR-2 target.
 
 DR-2 safe resumable checkpoint: [offhost-dr2-safe-checkpoint-2026-09-23.md](offhost-dr2-safe-checkpoint-2026-09-23.md). It records exact repository main, merged-main gates, local-backup posture, no external mutation, and the resume sequence.
+
+Current-main + staging parity audit: [current-main-staging-audit-2026-09-24.md](current-main-staging-audit-2026-09-24.md). It records exact product-tree parity across historical staging/original-DR/current-main boundaries and a prioritized, non-authorizing defect/product-gap inventory. No deployment or runtime mutation is part of the audit.
