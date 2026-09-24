@@ -198,4 +198,15 @@ Staging Deploy #674 gate PASS / deploy SKIPPED
 
 The skipped deploy jobs are expected because staging deployment activation remains disabled. No application deployment or runtime mutation was introduced by the audit/docs merge.
 
-This document is the safe resume point for the next discussion. Its own documentation PR must still pass exact-head CI/Product Eval before merge.
+The safe-checkpoint documentation PR #288 exact head `1133ad1a607927d1a25c98f6027c7bd77f795162` passed CI #1956 and Product Eval #1195, then merged as `76c093e597eba1d09881e2460aae13f5cf26ecbb`.
+
+That merged checkpoint then passed:
+
+```text
+CI #1957 PASS
+Product Eval #1196 PASS
+Staging Deploy #677 gate PASS / deploy SKIPPED
+Staging Deploy #678 gate PASS / deploy SKIPPED
+```
+
+This document is the safe resume point for the next discussion. Later docs-only bookkeeping may advance GitHub `main`, but it must not be treated as product/runtime mutation unless `apps/`, `services/`, `packages/`, deployment policy, or an explicit staging deployment changes.
