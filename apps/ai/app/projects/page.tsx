@@ -204,7 +204,9 @@ export default function ProjectsPage() {
                 className="ecr-input"
                 value={createAutonomyCeiling}
                 onChange={(event) =>
-                  setCreateAutonomyCeiling(event.target.value as ProjectAutonomyCeiling)
+                  setCreateAutonomyCeiling(
+                    event.target.value as ProjectAutonomyCeiling,
+                  )
                 }
               >
                 <option value="L0">L0</option>
@@ -344,7 +346,10 @@ export default function ProjectsPage() {
 
               <ProjectSettings project={selected} onSaved={projectSaved} />
 
-              <ProjectSources projectId={selected.id} workspaceId={selected.workspaceId} />
+              <ProjectSources
+                projectId={selected.id}
+                workspaceId={selected.workspaceId}
+              />
 
               <section className={styles.recent}>
                 <h3>Recent conversations</h3>
