@@ -392,9 +392,18 @@
 }
 
 .sourceUploadForm {
+  min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 130px auto;
   gap: 8px;
+}
+
+.sourceUploadForm > * {
+  min-width: 0;
+}
+
+.sourceUploadForm input[type="file"] {
+  width: 100%;
 }
 
 .sourceForm {
