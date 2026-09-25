@@ -12,8 +12,14 @@ import {
   SessionIdSchema,
   WorkspaceIdSchema,
 } from "./ids.js";
+import { BrainContextConstraintSchema } from "./brain.js";
 import { AutonomyLevelSchema } from "./policy.js";
 import { ScopeSchema, SensitivitySchema } from "./classification.js";
+
+export const ChatContextConstraintSchema = BrainContextConstraintSchema.extend({
+  source: z.literal("brain"),
+}).strict();
+export type ChatContextConstraint = z.infer<typeof ChatContextConstraintSchema>;
 
 export const ChatRequestSchema = z.object({
   sessionId: SessionIdSchema,
@@ -25,6 +31,11 @@ export const ChatRequestSchema = z.object({
   scope: ScopeSchema.default("personal"),
   /** Plafon sensitivitas fakta yang boleh ikut ditarik ke konteks giliran ini. */
   maxSensitivity: SensitivitySchema.default("INTERNAL"),
+  /**
+   * Optional fail-closed retrieval narrowing for an embedded Brain turn.
+   * This can only remove Context candidates; normal Project/scope/sensitivity authorization still applies.
+   */
+  contextConstraint: ChatContextConstraintSchema.optional(),
   /** Chat adalah aksi `READ` — level ini disiapkan untuk giliran yang nanti memicu tool. */
   autonomy: AutonomyLevelSchema.default("L1"),
 });
