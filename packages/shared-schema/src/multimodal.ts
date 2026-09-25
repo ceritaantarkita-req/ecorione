@@ -11,6 +11,7 @@ import {
   EpisodeIdSchema,
   EventIdSchema,
   OperationIdSchema,
+  ProjectIdSchema,
   SessionIdSchema,
   WorkspaceIdSchema,
 } from "./ids.js";
@@ -110,6 +111,7 @@ export type MultimodalAdapterResult = z.infer<typeof MultimodalAdapterResultSche
 
 export const MultimodalDerivationWriteSchema = z.object({
   operationId: OperationIdSchema,
+  projectId: ProjectIdSchema.nullable().default(null),
   sourceArtifactId: ArtifactIdSchema,
   episodeId: EpisodeIdSchema,
   task: MultimodalAnalyzeTaskSchema,
@@ -135,6 +137,29 @@ export const MultimodalAnalyzeResponseSchema = z.object({
   historyEventId: EventIdSchema,
 });
 export type MultimodalAnalyzeResponse = z.infer<typeof MultimodalAnalyzeResponseSchema>;
+
+export const ProjectSourceExtractRequestSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    artifactId: ArtifactIdSchema,
+  })
+  .strict();
+export type ProjectSourceExtractRequest = z.infer<typeof ProjectSourceExtractRequestSchema>;
+
+export const ProjectSourceExtractResponseSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    projectId: ProjectIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    sourceArtifactId: ArtifactIdSchema,
+    task: MultimodalAnalyzeTaskSchema,
+    state: z.literal("READY"),
+    result: MultimodalAdapterResultSchema.omit({ audioBase64: true, audioMimeType: true }),
+    contextEpisodeId: EpisodeIdSchema,
+  })
+  .strict();
+export type ProjectSourceExtractResponse = z.infer<typeof ProjectSourceExtractResponseSchema>;
 
 export const MultimodalSynthesizeResponseSchema = z.object({
   operationId: OperationIdSchema,
