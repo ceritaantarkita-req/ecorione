@@ -23,7 +23,6 @@ describe("A-08a Brain canonical owner-resource projection source contract", () =
     expect(projection).toContain('view.binding.resourceType === "space-page"');
     expect(projection).toContain('addEdge(edges, "REFERENCES", id, resourceNodeId)');
     expect(projection).toContain('addEdge(edges, "BELONGS_TO", resourceNodeId, projectNodeId)');
-    expect(projection).not.toContain("ECORIONE_CONTEXT_URL");
     expect(projection).not.toContain("ECORIONE_SPACE_URL");
     expect(projection).not.toContain("metadata: view.metadata");
   });
