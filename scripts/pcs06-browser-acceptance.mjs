@@ -533,10 +533,7 @@ async function installApiMocks(context) {
       if (path === "/api/flow/triggers" && method === "GET") {
         return json(route, { triggers: [scheduleTrigger] });
       }
-      if (
-        path === `/api/flow/triggers/${scheduleTrigger.id}/schedule` &&
-        method === "GET"
-      ) {
+      if (path === `/api/flow/triggers/${scheduleTrigger.id}/schedule` && method === "GET") {
         return json(route, scheduleRuntime);
       }
       if (path === "/api/flow/graphs" && method === "GET") {
