@@ -22,6 +22,12 @@ const project = {
   updatedAt: now,
   archivedAt: null,
 };
+const projectSecondary = {
+  ...project,
+  id: "prj_research",
+  name: "Research",
+};
+let createdProjects = [];
 const historySession = {
   id: "sess_pcs06browser",
   createdAt: now,
@@ -183,7 +189,7 @@ const brain = {
   totalEdges: 0,
   truncated: false,
 };
-const scheduleTrigger = {
+let scheduleTrigger = {
   id: "trg_pcs06schedule",
   workspaceId: "ws_personal",
   projectId: "prj_personal",
@@ -205,6 +211,7 @@ const scheduleTrigger = {
   createdAt: now,
   updatedAt: now,
 };
+let scheduleMutationCount = 0;
 const scheduleRuntime = {
   triggerId: scheduleTrigger.id,
   scheduleId: scheduleTrigger.temporalScheduleId,
@@ -384,7 +391,22 @@ async function installApiMocks(context) {
     const method = request.method();
 
     if (path === "/api/projects" && method === "GET") {
-      return json(route, { projects: [project] });
+      return json(route, { projects: [project, projectSecondary, ...createdProjects] });
+    }
+    if (path === "/api/projects" && method === "POST") {
+      const body = request.postDataJSON();
+      const created = {
+        ...project,
+        id: "prj_pcs06inline",
+        name: body.name,
+        createdAt: now,
+        updatedAt: now,
+      };
+      createdProjects = [
+        ...createdProjects.filter((candidate) => candidate.id !== created.id),
+        created,
+      ];
+      return json(route, created, 201);
     }
     if (path === "/api/projects/history" && method === "GET") {
       if (!url.searchParams.has("projectId")) aggregateProjectHistoryRequested = true;
@@ -460,6 +482,26 @@ async function installApiMocks(context) {
       });
     }
 
+    if (path === "/api/work/schedule-assist" && method === "POST") {
+      return json(route, {
+        draft: {
+          name: "PCS-06 Weekday",
+          graphId: scheduleTrigger.graphId,
+          graphVersion: scheduleTrigger.graphVersion,
+          requestedAutonomy: scheduleTrigger.requestedAutonomy,
+          enabled: scheduleTrigger.enabled,
+          configuration: {
+            cronExpression: "30 9 * * 1-5",
+            timezone: "Asia/Jakarta",
+            catchupWindowMs: scheduleTrigger.configuration.catchupWindowMs,
+            overlap: scheduleTrigger.configuration.overlap,
+          },
+        },
+        summary: "Drafted weekdays at 09:30 WIB.",
+        source: "local-model",
+      });
+    }
+
     if (path === "/api/settings/settings/runtime" && method === "GET") {
       return json(route, runtime);
     }
@@ -532,6 +574,22 @@ async function installApiMocks(context) {
       }
       if (path === "/api/flow/triggers" && method === "GET") {
         return json(route, { triggers: [scheduleTrigger] });
+      }
+      if (
+        path === `/api/flow/triggers/${scheduleTrigger.id}` &&
+        method === "PATCH"
+      ) {
+        const body = request.postDataJSON();
+        scheduleMutationCount += 1;
+        scheduleTrigger = {
+          ...scheduleTrigger,
+          ...body,
+          temporalScheduleId: scheduleTrigger.temporalScheduleId,
+          revision: scheduleTrigger.revision + 1,
+          updatedAt: now,
+        };
+        delete scheduleTrigger.expectedRevision;
+        return json(route, scheduleTrigger);
       }
       if (path === `/api/flow/triggers/${scheduleTrigger.id}/schedule` && method === "GET") {
         return json(route, scheduleRuntime);
@@ -805,6 +863,36 @@ async function runDesktopJourney() {
 
     await goto(page, "/work", "desktop-work");
     await page.getByRole("heading", { name: "Work", exact: true }).waitFor();
+
+    const projectSearch = page.getByRole("combobox", { name: "Search Project" });
+    await projectSearch.fill("Research");
+    await page.getByRole("option").filter({ hasText: "Research" }).waitFor();
+    await page.getByRole("button", { name: "Toggle Project options" }).click();
+    await page.getByRole("button", { name: "+ New Project", exact: true }).click();
+    await page.getByRole("textbox", { name: "New Project name" }).fill("PCS-06 Inline");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+    await page.getByText("Project PCS-06 Inline dibuat dan dipilih.", { exact: true }).waitFor();
+    await projectSearch.fill("Personal");
+    await page.getByRole("option").filter({ hasText: "Personal" }).click();
+
+    await page.getByRole("button", { name: "list", exact: true }).click();
+    const scheduleCard = page.locator("article").filter({ hasText: "PCS-06 Daily" }).first();
+    await scheduleCard.getByRole("button", { name: "Edit", exact: true }).click();
+    await page
+      .getByRole("textbox", { name: "Describe schedule" })
+      .fill("ubah jadi weekdays jam 09.30 WIB");
+    await page.getByRole("button", { name: "Draft with local AI", exact: true }).click();
+    await page.getByDisplayValue("PCS-06 Weekday").waitFor();
+    await page.getByDisplayValue("30 9 * * 1-5").waitFor();
+    if (scheduleMutationCount !== 0) {
+      throw new Error("desktop-work: AI draft mutated Trigger before explicit Save");
+    }
+    await page.getByRole("button", { name: "Save schedule", exact: true }).click();
+    await page.getByText("Schedule diperbarui.", { exact: true }).waitFor();
+    if (scheduleMutationCount !== 1) {
+      throw new Error(`desktop-work: expected one explicit Trigger mutation, got ${scheduleMutationCount}`);
+    }
+
     await page.getByRole("button", { name: "year", exact: true }).click();
     await page.getByRole("button", { name: "Previous period" }).waitFor();
     await page.getByRole("button", { name: "Today", exact: true }).waitFor();
