@@ -5,10 +5,7 @@ describe("A-05b.3a Project URL source ingestion contract", () => {
   const connect = readFileSync("services/connect/src/source-fetch.ts", "utf8");
   const connectHttp = readFileSync("services/connect/src/source-fetch-http.ts", "utf8");
   const hub = readFileSync("services/hub/src/project-source-http.ts", "utf8");
-  const ai = readFileSync(
-    "apps/ai/app/api/projects/[id]/sources/ingest-url/route.ts",
-    "utf8",
-  );
+  const ai = readFileSync("apps/ai/app/api/projects/[id]/sources/ingest-url/route.ts", "utf8");
   const ui = readFileSync("apps/ai/app/projects/ProjectSources.tsx", "utf8");
 
   it("keeps external fetch owned by Connect with SSRF and bounded-transfer guards", () => {
