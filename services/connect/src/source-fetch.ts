@@ -88,7 +88,7 @@ function headerValue(
   name: string,
 ): string | undefined {
   const value = headers[name.toLowerCase()];
-  return Array.isArray(value) ? value[0] : value;
+  return typeof value === "string" ? value : value?.[0];
 }
 
 function mimeTypeFrom(
