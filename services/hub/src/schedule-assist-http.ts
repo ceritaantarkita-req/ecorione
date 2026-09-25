@@ -82,8 +82,8 @@ function mapProjectError(error: unknown): unknown {
 function parseModelReply(reply: string): z.infer<typeof ModelReplySchema> {
   const trimmed = reply.trim();
   const unfenced = trimmed
-    .replace(/^\`\`\`(?:json)?\s*/iu, "")
-    .replace(/\s*\`\`\`$/u, "")
+    .replace(/^```(?:json)?\s*/iu, "")
+    .replace(/\s*```$/u, "")
     .trim();
   const start = unfenced.indexOf("{");
   const end = unfenced.lastIndexOf("}");
