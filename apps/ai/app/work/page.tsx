@@ -17,12 +17,18 @@ import {
   isProjectIdCandidate,
   resolveActiveProjectId,
 } from "../../lib/project-selection";
+import { ScheduleCalendar } from "./ScheduleCalendar";
 import styles from "./Work.module.css";
+import {
+  shiftCalendarCursor,
+  todayDateKey,
+  type CalendarMode,
+  type ScheduleOccurrence,
+} from "./work-calendar";
 
 const WORKSPACE_ID = "ws_personal";
 
 type WorkTab = "schedule" | "flows" | "runs";
-type CalendarMode = "list" | "day" | "week" | "month";
 type TimeConfig = {
   cronExpression: string;
   timezone: string;
@@ -130,31 +136,13 @@ function formatWhen(iso: string, timezone = "Asia/Jakarta"): string {
   }).format(date);
 }
 
-function periodBounds(mode: Exclude<CalendarMode, "list">): [number, number] {
-  const now = new Date();
-  const start = new Date(now);
-  const end = new Date(now);
-  if (mode === "day") {
-    start.setHours(0, 0, 0, 0);
-    end.setHours(24, 0, 0, 0);
-  } else if (mode === "week") {
-    const day = (start.getDay() + 6) % 7;
-    start.setDate(start.getDate() - day);
-    start.setHours(0, 0, 0, 0);
-    end.setTime(start.getTime());
-    end.setDate(end.getDate() + 7);
-  } else {
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
-    end.setTime(start.getTime());
-    end.setMonth(end.getMonth() + 1);
-  }
-  return [start.getTime(), end.getTime()];
-}
-
 export default function WorkPage() {
   const [tab, setTab] = useState<WorkTab>("schedule");
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("list");
+  const [calendarTimezone, setCalendarTimezone] = useState("Asia/Jakarta");
+  const [calendarCursor, setCalendarCursor] = useState(() =>
+    todayDateKey("Asia/Jakarta"),
+  );
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
   const [projectReady, setProjectReady] = useState(false);
@@ -179,17 +167,20 @@ export default function WorkPage() {
   );
 
   const occurrences = useMemo(() => {
-    const rows: Array<{
-      trigger: TriggerDefinition;
-      timezone: string;
-      when: string;
-    }> = [];
+    const rows: ScheduleOccurrence[] = [];
     for (const trigger of timeTriggers) {
       const runtime = runtimes[trigger.id];
       const config = timeConfig(trigger);
       if (runtime === null || runtime === undefined || config === null) continue;
       for (const when of runtime.nextActionTimes) {
-        rows.push({ trigger, timezone: config.timezone, when });
+        rows.push({
+          triggerId: trigger.id,
+          triggerName: trigger.name,
+          graphId: trigger.graphId,
+          graphVersion: trigger.graphVersion,
+          sourceTimezone: config.timezone,
+          when,
+        });
       }
     }
     return rows.sort((a, b) => a.when.localeCompare(b.when));
@@ -202,15 +193,6 @@ export default function WorkPage() {
         : runs.filter((run) => run.triggerId === runTriggerFilter),
     [runTriggerFilter, runs],
   );
-
-  const visibleOccurrences = useMemo(() => {
-    if (calendarMode === "list") return occurrences;
-    const [start, end] = periodBounds(calendarMode);
-    return occurrences.filter((row) => {
-      const value = new Date(row.when).getTime();
-      return value >= start && value < end;
-    });
-  }, [calendarMode, occurrences]);
 
   const loadWork = useCallback(async (nextProjectId: string) => {
     const seq = ++requestRef.current;
@@ -263,6 +245,18 @@ export default function WorkPage() {
       setRuntimes({});
     } finally {
       if (seq === requestRef.current) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (detected.length > 0) {
+        setCalendarTimezone(detected);
+        setCalendarCursor(todayDateKey(detected));
+      }
+    } catch {
+      // Asia/Jakarta remains the deterministic product fallback.
     }
   }, []);
 
@@ -513,7 +507,7 @@ export default function WorkPage() {
           </div>
 
           <div className={styles.viewSwitch} aria-label="Schedule view">
-            {(["list", "day", "week", "month"] as const).map((mode) => (
+            {(["list", "day", "week", "month", "year"] as const).map((mode) => (
               <button
                 type="button"
                 key={mode}
@@ -756,30 +750,27 @@ export default function WorkPage() {
               ) : null}
             </div>
           ) : (
-            <div className={styles.timeline}>
-              <div className={styles.timelineHead}>
-                <strong>{calendarMode.toUpperCase()}</strong>
-                <span>
-                  {visibleOccurrences.length} upcoming occurrence(s) exposed by Temporal
-                </span>
-              </div>
-              {visibleOccurrences.map((row) => (
-                <article key={`${row.trigger.id}-${row.when}`} className={styles.occurrence}>
-                  <time dateTime={row.when}>{formatWhen(row.when, row.timezone)}</time>
-                  <div>
-                    <strong>{row.trigger.name}</strong>
-                    <span>
-                      {row.timezone} · {row.trigger.graphId} v{row.trigger.graphVersion}
-                    </span>
-                  </div>
-                </article>
-              ))}
-              {visibleOccurrences.length === 0 ? (
-                <div className={styles.empty}>
-                  Tidak ada occurrence Temporal pada window ini.
-                </div>
-              ) : null}
-            </div>
+            <ScheduleCalendar
+              mode={calendarMode}
+              cursor={calendarCursor}
+              calendarTimezone={calendarTimezone}
+              occurrences={occurrences}
+              onPrevious={() =>
+                setCalendarCursor((current) =>
+                  shiftCalendarCursor(calendarMode, current, -1),
+                )
+              }
+              onNext={() =>
+                setCalendarCursor((current) =>
+                  shiftCalendarCursor(calendarMode, current, 1),
+                )
+              }
+              onToday={() => setCalendarCursor(todayDateKey(calendarTimezone))}
+              onOpenMonth={(dateKey) => {
+                setCalendarCursor(dateKey);
+                setCalendarMode("month");
+              }}
+            />
           )}
         </section>
       ) : null}
