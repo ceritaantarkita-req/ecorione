@@ -63,12 +63,10 @@ describe("Work Schedule calendar helpers", () => {
     };
     expect(dateKeyInZone(occurrence.when, "Asia/Jakarta")).toBe("2026-09-25");
     expect(dateKeyInZone(second.when, "Asia/Jakarta")).toBe("2026-09-26");
-    expect(
-      occurrenceVisibleInPeriod(occurrence, "day", "2026-09-25", "Asia/Jakarta"),
-    ).toBe(true);
-    expect(
-      occurrenceVisibleInPeriod(second, "day", "2026-09-25", "Asia/Jakarta"),
-    ).toBe(false);
+    expect(occurrenceVisibleInPeriod(occurrence, "day", "2026-09-25", "Asia/Jakarta")).toBe(
+      true,
+    );
+    expect(occurrenceVisibleInPeriod(second, "day", "2026-09-25", "Asia/Jakarta")).toBe(false);
 
     const grouped = groupOccurrencesByDate([second, occurrence], "Asia/Jakarta");
     expect(grouped.get("2026-09-25")?.[0]?.triggerId).toBe("trg_daily");
