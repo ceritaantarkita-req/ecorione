@@ -181,6 +181,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
 
     const contextCall = calls.find((call) => call.url.endsWith("/v1/retrieve"));
     expect(contextCall?.body?.candidateSourceUris).toBeUndefined();
+    expect(contextCall?.body?.candidateFactIds).toBeUndefined();
 
     const planCall = calls.find((call) => call.url.endsWith("/v1/exchange/plan"));
     expect(planCall?.body?.refs).toEqual([
@@ -229,6 +230,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
         if (url.endsWith("/v1/retrieve")) {
           const request = requiredBody(body);
           expect(request.candidateSourceUris).toEqual([SOURCE_URI]);
+          expect(request.candidateFactIds).toEqual([]);
           return json(retrievePayload([alpha], true));
         }
         if (url.endsWith("/v1/exchange/plan")) {
@@ -279,7 +281,10 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
       }),
     );
 
-    expect(result.neighborhood?.contextConstraint.sourceUris).toEqual([SOURCE_URI]);
+    expect(result.neighborhood?.contextConstraint).toEqual({
+      sourceUris: [SOURCE_URI],
+      factIds: [],
+    });
     expect(result.retrieval.diagnostics.authorizedCandidates).toBe(2);
     expect(result.retrieval.diagnostics.narrowedCandidates).toBe(1);
     expect(result.ecx.selectedFactIds).toEqual(["mem_pe07alpha"]);
