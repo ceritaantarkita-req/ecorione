@@ -30,9 +30,13 @@ export function brainLaneX(type: BrainNodeType): number {
 }
 
 export function layoutBrainNodes(nodes: BrainNode[]): BrainLayout {
-  const grouped = new Map<BrainNodeType, BrainNode[]>(
-    BRAIN_NODE_TYPES.map((type) => [type, nodes.filter((node) => node.type === type)]),
-  );
+  const grouped = new Map<BrainNodeType, BrainNode[]>();
+  for (const type of BRAIN_NODE_TYPES) {
+    grouped.set(
+      type,
+      nodes.filter((node) => node.type === type),
+    );
+  }
   const largestLane = Math.max(
     1,
     ...BRAIN_NODE_TYPES.map((type) => grouped.get(type)?.length ?? 0),
