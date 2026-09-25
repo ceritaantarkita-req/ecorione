@@ -55,14 +55,16 @@ describe("GET /api/projects/source-catalog", () => {
         path: "/v1/pages?workspaceId=ws_personal",
         method: "GET",
       })
-      .reply(200, [
-        {
-          id: "page_notes",
-          workspaceId: "ws_personal",
-          title: "Research notes",
-          scope: "personal",
-        },
-      ]);
+      .reply(200, {
+        pages: [
+          {
+            id: "page_notes",
+            workspaceId: "ws_personal",
+            title: "Research notes",
+            scope: "personal",
+          },
+        ],
+      });
     pool
       .intercept({
         path: "/v1/graphs?workspaceId=ws_personal",
@@ -124,7 +126,9 @@ describe("GET /api/projects/source-catalog", () => {
         method: "GET",
       })
       .reply(503, { error: { message: "down" } });
-    pool.intercept({ path: "/v1/pages?workspaceId=ws_personal", method: "GET" }).reply(200, []);
+    pool
+      .intercept({ path: "/v1/pages?workspaceId=ws_personal", method: "GET" })
+      .reply(200, { pages: [] });
     pool
       .intercept({ path: "/v1/graphs?workspaceId=ws_personal", method: "GET" })
       .reply(200, { graphs: [] });
