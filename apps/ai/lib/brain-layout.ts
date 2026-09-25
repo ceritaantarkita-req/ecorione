@@ -8,21 +8,18 @@ export type BrainLayout = {
   positions: Map<string, BrainPoint>;
 };
 
-export const BRAIN_CANVAS_WIDTH = 1080;
 export const BRAIN_CANVAS_MIN_HEIGHT = 640;
 export const BRAIN_CANVAS_Y_PADDING = 72;
 export const BRAIN_NODE_MIN_CENTER_GAP = 64;
-
-const LANE_X: Record<BrainNodeType, number> = {
-  Project: 100,
-  Source: 300,
-  Flow: 510,
-  Trigger: 730,
-  Run: 960,
-};
+export const BRAIN_CANVAS_X_PADDING = 100;
+export const BRAIN_LANE_CENTER_GAP = 190;
+export const BRAIN_CANVAS_WIDTH =
+  BRAIN_CANVAS_X_PADDING * 2 + BRAIN_LANE_CENTER_GAP * (BRAIN_NODE_TYPES.length - 1);
 
 export function brainLaneX(type: BrainNodeType): number {
-  return LANE_X[type];
+  const index = BRAIN_NODE_TYPES.indexOf(type);
+  if (index < 0) throw new Error(`Unsupported Brain node type: ${type}`);
+  return BRAIN_CANVAS_X_PADDING + BRAIN_LANE_CENTER_GAP * index;
 }
 
 export function layoutBrainNodes(nodes: BrainNode[]): BrainLayout {
