@@ -135,11 +135,7 @@ async function readBounded(
   }
 
   if (total === 0) {
-    throw new ExternalSourceFetchError(
-      502,
-      "URL_SOURCE_UNAVAILABLE",
-      "URL source kosong.",
-    );
+    throw new ExternalSourceFetchError(502, "URL_SOURCE_UNAVAILABLE", "URL source kosong.");
   }
   return Buffer.concat(chunks, total);
 }
