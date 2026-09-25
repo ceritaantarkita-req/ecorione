@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type {
+  ProjectMcpResourceIngestResponse,
   ProjectSourceExtractResponse,
   ProjectSourceResourceType,
   ProjectUrlIngestResponse,
@@ -27,6 +28,13 @@ interface SourceCatalogItem {
   readonly detail: string;
 }
 
+interface McpResourceItem {
+  readonly uri: string;
+  readonly name?: string | undefined;
+  readonly description?: string | undefined;
+  readonly mimeType?: string | undefined;
+}
+
 function errorMessage(body: unknown, fallback: string): string {
   if (typeof body !== "object" || body === null) return fallback;
   const error = (body as { error?: unknown }).error;
@@ -49,6 +57,7 @@ export function ProjectSources(props: {
   const [uploadRole, setUploadRole] = useState<ProjectSourceRole>("source");
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(false);
+  const [mcpResources, setMcpResources] = useState<Record<string, McpResourceItem[]>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const endpoint = `/api/projects/${encodeURIComponent(props.projectId)}/sources`;
@@ -152,6 +161,75 @@ export function ProjectSources(props: {
       await load();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal menambahkan source.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  async function browseMcpResources(source: ProjectSourceView): Promise<void> {
+    if (
+      source.binding.resourceType !== "mcp-server" ||
+      source.availability !== "AVAILABLE" ||
+      busyKey !== null
+    ) {
+      return;
+    }
+    const serverId = source.binding.resourceId;
+    const key = `mcp-browse:${serverId}`;
+    setBusyKey(key);
+    setFeedback(null);
+    try {
+      const params = new URLSearchParams({
+        workspaceId: props.workspaceId,
+        serverId,
+      });
+      const response = await fetch(`${endpoint}/mcp-resources?${params.toString()}`, {
+        cache: "no-store",
+      });
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) throw new Error(errorMessage(body, "Gagal memuat MCP resources."));
+      const discovered = body as {
+        resources: McpResourceItem[];
+        warning: string | null;
+      };
+      setMcpResources((current) => ({ ...current, [serverId]: discovered.resources }));
+      if (discovered.warning !== null) setFeedback(discovered.warning);
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Gagal memuat MCP resources.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  async function ingestMcpResource(
+    source: ProjectSourceView,
+    resource: McpResourceItem,
+  ): Promise<void> {
+    if (source.binding.resourceType !== "mcp-server" || busyKey !== null) return;
+    const serverId = source.binding.resourceId;
+    const key = `mcp-ingest:${serverId}:${resource.uri}`;
+    setBusyKey(key);
+    setFeedback(null);
+    try {
+      const response = await fetch(`${endpoint}/ingest-mcp-resource`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: props.workspaceId,
+          serverId,
+          resourceUri: resource.uri,
+          role: source.binding.role,
+        }),
+      });
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) throw new Error(errorMessage(body, "Gagal mengambil MCP resource."));
+      const ingested = body as ProjectMcpResourceIngestResponse;
+      setFeedback(
+        `Connector snapshot tersimpan → Artifact ${ingested.artifact.id}. Gunakan Extract pada Artifact untuk derived Project context.`,
+      );
+      await Promise.all([load(), loadCatalog()]);
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Gagal mengambil MCP resource.");
     } finally {
       setBusyKey(null);
     }
@@ -266,7 +344,7 @@ export function ProjectSources(props: {
       <div className={styles.sourcesHeader}>
         <div>
           <h3>Sources</h3>
-          <p>Referensi ke owner asli. Konten tidak disalin ke Project.</p>
+          <p>Binding tetap referensi owner; snapshot eksternal disimpan sebagai Artifact terpisah.</p>
         </div>
         <button
           className="ecr-btn ecr-btn--secondary"
@@ -435,8 +513,54 @@ export function ProjectSources(props: {
                     {catalogItem === undefined ? "" : ` · ${catalogItem.detail}`}
                   </small>
                   {source.unavailableReason !== null ? <p>{source.unavailableReason}</p> : null}
+                  {source.binding.resourceType === "mcp-server" &&
+                  mcpResources[source.binding.resourceId] !== undefined ? (
+                    <div className={styles.mcpResourceList}>
+                      {mcpResources[source.binding.resourceId]?.length === 0 ? (
+                        <small>Tidak ada resource yang diiklankan server ini.</small>
+                      ) : (
+                        mcpResources[source.binding.resourceId]?.map((resource) => (
+                          <div key={resource.uri} className={styles.mcpResourceItem}>
+                            <div>
+                              <strong>{resource.name ?? resource.uri}</strong>
+                              <code>{resource.uri}</code>
+                              <small>
+                                {resource.mimeType ?? "mime unknown"}
+                                {resource.description === undefined
+                                  ? ""
+                                  : ` · ${resource.description}`}
+                              </small>
+                            </div>
+                            <button
+                              className="ecr-btn ecr-btn--primary"
+                              type="button"
+                              disabled={busyKey !== null}
+                              onClick={() => void ingestMcpResource(source, resource)}
+                            >
+                              {busyKey ===
+                              `mcp-ingest:${source.binding.resourceId}:${resource.uri}`
+                                ? "Ingesting..."
+                                : "Ingest"}
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ) : null}
                 </div>
                 <div className={styles.sourceActions}>
+                  {source.binding.resourceType === "mcp-server" ? (
+                    <button
+                      className="ecr-btn ecr-btn--secondary"
+                      type="button"
+                      disabled={busyKey !== null || source.availability !== "AVAILABLE"}
+                      onClick={() => void browseMcpResources(source)}
+                    >
+                      {busyKey === `mcp-browse:${source.binding.resourceId}`
+                        ? "Browsing..."
+                        : "Browse resources"}
+                    </button>
+                  ) : null}
                   {source.binding.resourceType === "url" ? (
                     <button
                       className="ecr-btn ecr-btn--primary"
