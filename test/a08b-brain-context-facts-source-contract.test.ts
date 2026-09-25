@@ -18,21 +18,18 @@ describe("A-08b Brain Context Fact projection source contract", () => {
     expect(projection).not.toContain("falkor");
   });
 
-  it(
-    "reads bounded Project facts from the Context owner only after Hub Project authorization",
-    () => {
-      const auth = projection.indexOf("const project = await authorizeBrainProject(query)");
-      const facts = projection.indexOf('ownerJson("Context"');
-      expect(auth).toBeGreaterThanOrEqual(0);
-      expect(facts).toBeGreaterThan(auth);
-      expect(projection).toContain('"ECORIONE_CONTEXT_URL"');
-      expect(projection).toContain('maxSensitivity: "RESTRICTED"');
-      expect(projection).toContain("BRAIN_FACT_LIMIT = 40");
-      expect(projection).toContain("fact.projectId !== query.projectId");
-      expect(projection).not.toContain("services/context/src/db");
-      expect(projection).not.toContain("openContextDatabase");
-    },
-  );
+  it("reads bounded Project facts from the Context owner only after Hub Project authorization", () => {
+    const auth = projection.indexOf("const project = await authorizeBrainProject(query)");
+    const facts = projection.indexOf('ownerJson("Context"');
+    expect(auth).toBeGreaterThanOrEqual(0);
+    expect(facts).toBeGreaterThan(auth);
+    expect(projection).toContain('"ECORIONE_CONTEXT_URL"');
+    expect(projection).toContain('maxSensitivity: "RESTRICTED"');
+    expect(projection).toContain("BRAIN_FACT_LIMIT = 40");
+    expect(projection).toContain("fact.projectId !== query.projectId");
+    expect(projection).not.toContain("services/context/src/db");
+    expect(projection).not.toContain("openContextDatabase");
+  });
 
   it("keeps Fact relationships deterministic and mutation-free", () => {
     expect(projection).toContain('addEdge(edges, "BELONGS_TO", id, projectNodeId)');
@@ -42,15 +39,12 @@ describe("A-08b Brain Context Fact projection source contract", () => {
     expect(projection).not.toContain("chat/completions");
   });
 
-  it(
-    "proves Project isolation, an explicit sensitivity bound, and rendered Fact UI",
-    () => {
-      expect(runtime).toContain('"Fact:mem_pe06personal"');
-      expect(runtime).toContain('"Fact:mem_pe06sibling"');
-      expect(projection).toContain('maxSensitivity: "RESTRICTED"');
-      expect(css).toContain("repeat(8, minmax(86px, 1fr))");
-      expect(browser).toContain('name: "Fact", exact: true');
-      expect(browser).toContain("Fact: PCS-06 canonical fact");
-    },
-  );
+  it("proves Project isolation, an explicit sensitivity bound, and rendered Fact UI", () => {
+    expect(runtime).toContain('"Fact:mem_pe06personal"');
+    expect(runtime).toContain('"Fact:mem_pe06sibling"');
+    expect(projection).toContain('maxSensitivity: "RESTRICTED"');
+    expect(css).toContain("repeat(8, minmax(86px, 1fr))");
+    expect(browser).toContain('name: "Fact", exact: true');
+    expect(browser).toContain("Fact: PCS-06 canonical fact");
+  });
 });
