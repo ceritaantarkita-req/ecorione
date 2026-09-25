@@ -8,8 +8,8 @@ import { BrainNeighborhoodSeedError, selectBrainNeighborhood } from "./brain-pro
 const graph = BrainGraphResponseSchema.parse({
   workspaceId: "ws_personal",
   projectId: "prj_alpha",
-  totalNodes: 4,
-  totalEdges: 3,
+  totalNodes: 5,
+  totalEdges: 4,
   truncated: false,
   nodes: [
     {
@@ -68,6 +68,18 @@ const graph = BrainGraphResponseSchema.parse({
       href: "/flow",
       metadata: {},
     },
+    {
+      id: "fact:alpha",
+      type: "Fact",
+      canonicalId: "mem_alpha_fact01",
+      owner: "Context",
+      label: "Alpha fact",
+      workspaceId: "ws_personal",
+      projectId: "prj_alpha",
+      availability: "AVAILABLE",
+      href: null,
+      metadata: { sensitivity: "INTERNAL" },
+    },
   ],
   edges: [
     {
@@ -86,6 +98,12 @@ const graph = BrainGraphResponseSchema.parse({
       id: "BELONGS_TO:flow:alpha->project:alpha",
       type: "BELONGS_TO",
       sourceNodeId: "flow:alpha",
+      targetNodeId: "project:alpha",
+    },
+    {
+      id: "BELONGS_TO:fact:alpha->project:alpha",
+      type: "BELONGS_TO",
+      sourceNodeId: "fact:alpha",
       targetNodeId: "project:alpha",
     },
   ],
@@ -116,8 +134,27 @@ describe("PE-07 Brain neighborhood", () => {
       "https://a.example/source",
       "https://b.example/source",
     ]);
+    expect(first.contextConstraint.factIds).toEqual([]);
     expect(first.edges).toHaveLength(2);
     expect(first.truncated).toBe(false);
+  });
+
+  it("emits exact Fact IDs for a Fact-grounded neighborhood", () => {
+    const query = BrainNeighborhoodQuerySchema.parse({
+      workspaceId: "ws_personal",
+      projectId: "prj_alpha",
+      seedNodeIds: ["fact:alpha"],
+      maxHops: 0,
+      maxNodes: 1,
+    });
+
+    const result = selectBrainNeighborhood(graph, query);
+
+    expect(result.nodes.map((node) => node.id)).toEqual(["fact:alpha"]);
+    expect(result.contextConstraint).toEqual({
+      sourceUris: [],
+      factIds: ["mem_alpha_fact01"],
+    });
   });
 
   it("fails closed when the requested seed is not in the authorized Project graph", () => {
