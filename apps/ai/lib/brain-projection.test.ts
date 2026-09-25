@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BrainQuerySchema,
+  MemoryFactSchema,
   ProjectIdSchema,
   WorkspaceIdSchema,
   type FlowGraphSummary,
@@ -244,6 +245,68 @@ describe("PE-06 Brain deterministic projection", () => {
         (edge) =>
           edge.type === "BELONGS_TO" &&
           edge.sourceNodeId === page?.id &&
+          edge.targetNodeId === projectNode?.id,
+      ),
+    ).toBe(true);
+  });
+
+  it("projects canonical Context facts after existing owner node classes", () => {
+    const fact = MemoryFactSchema.parse({
+      id: "mem_financefact01",
+      subject: "Revenue",
+      predicate: "status",
+      object: "reviewed",
+      text: "Q3 revenue has been reviewed",
+      confidence: 0.96,
+      salience: 0.8,
+      sourceEpisodeIds: ["epi_financefact01"],
+      tValid: NOW,
+      tInvalid: null,
+      supersededBy: null,
+      createdAt: NOW,
+      projectId: PROJECT_ID,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+      trust: "USER",
+      provenance: {
+        sourceApp: "projection-test",
+        sourceUri: "artifact:art_report",
+      },
+    });
+
+    const result = buildBrainGraph(query(), {
+      project,
+      sources: [],
+      graphs: [graph(1)],
+      triggers: [],
+      runs: [],
+      facts: [fact],
+    });
+
+    expect(result.nodes.map((node) => node.type)).toEqual(["Project", "Flow", "Fact"]);
+    const factNode = result.nodes.find((node) => node.type === "Fact");
+    const projectNode = result.nodes.find((node) => node.type === "Project");
+    expect(factNode).toMatchObject({
+      canonicalId: "mem_financefact01",
+      owner: "Context",
+      label: "Q3 revenue has been reviewed",
+      availability: "AVAILABLE",
+      href: null,
+      metadata: {
+        subject: "Revenue",
+        predicate: "status",
+        object: "reviewed",
+        sensitivity: "INTERNAL",
+        syncClass: "LOCAL_ONLY",
+        sourceUri: "artifact:art_report",
+      },
+    });
+    expect(
+      result.edges.some(
+        (edge) =>
+          edge.type === "BELONGS_TO" &&
+          edge.sourceNodeId === factNode?.id &&
           edge.targetNodeId === projectNode?.id,
       ),
     ).toBe(true);
