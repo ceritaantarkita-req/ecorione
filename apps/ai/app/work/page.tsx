@@ -140,9 +140,7 @@ export default function WorkPage() {
   const [tab, setTab] = useState<WorkTab>("schedule");
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("list");
   const [calendarTimezone, setCalendarTimezone] = useState("Asia/Jakarta");
-  const [calendarCursor, setCalendarCursor] = useState(() =>
-    todayDateKey("Asia/Jakarta"),
-  );
+  const [calendarCursor, setCalendarCursor] = useState(() => todayDateKey("Asia/Jakarta"));
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
   const [projectReady, setProjectReady] = useState(false);
@@ -756,14 +754,10 @@ export default function WorkPage() {
               calendarTimezone={calendarTimezone}
               occurrences={occurrences}
               onPrevious={() =>
-                setCalendarCursor((current) =>
-                  shiftCalendarCursor(calendarMode, current, -1),
-                )
+                setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, -1))
               }
               onNext={() =>
-                setCalendarCursor((current) =>
-                  shiftCalendarCursor(calendarMode, current, 1),
-                )
+                setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, 1))
               }
               onToday={() => setCalendarCursor(todayDateKey(calendarTimezone))}
               onOpenMonth={(dateKey) => {
