@@ -4,7 +4,7 @@ Last updated: **2026-09-25**
 
 Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Audit follow-up checkpoint — SESSION 7 CLOSED / NEXT SCOPE DECISION
+## Audit follow-up checkpoint — SESSION 8 CLOSED / A-05 REMAINDER DECISION
 
 The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
@@ -79,7 +79,24 @@ A-03 is closed through PR #316 / merge `8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e
 
 Evidence: [verification/session-7-a03-safe-checkpoint-2026-09-25.md](verification/session-7-a03-safe-checkpoint-2026-09-25.md).
 
-**No implementation is in flight.** Next bounded discussion should choose between opening Project settings + source onboarding (remaining A-04/A-05 gaps) as a new product scope, or proceeding directly to the final system audit. Schedule UX, Brain expansion, frontend decomposition, Compose readiness, production cutover, provider spend, and DR-2 remain separate scopes.
+### Session 8 — CLOSED / PASS
+
+The bounded Project settings + source-onboarding scope is now implemented through PRs #318–#324.
+
+- A-04 Project settings: PR #318 / merge `33d54928de60ba3f6d8cd3770c18d7ad5eea6f98`;
+- A-05a owner-backed source picker: PR #319 / merge `8c6188983f058854028d803168c946445f92b31c`;
+- A-05b.1 direct file ingestion: PR #320 / merge `c299f0c0b74cd770a80483b0492b3b9e843f8b86`;
+- A-05b.2 Project-scoped extraction: PR #321 / merge `74dea0b83046af18ab3c4a89a95996ba4c3bdc46`;
+- A-05b.3a URL snapshot ingestion + DNS-pinning hardening: PRs #322–#323 / merges `f993b2c325b8d5645b28ec1788dbb0d8cf3ff1d8` and `55466c71bb3d978039f2088b9209607399262a09`;
+- A-05b.3b generic MCP/connector resource browse + snapshot ingestion: PR #324 / merge `3dd350e938d3651e75fc81ac30e9ef751c477ca5`.
+
+PR #324 exact head `3d4ab01ad5ac42c6317567f0ef122e1c46a0ab11` passed CI `36107141520`, Product Eval `36107141692`, MCP External HTTPS `36107141555`, and PCS-06 browser `36107141502`. Merged main `3dd350e938d3651e75fc81ac30e9ef751c477ca5` passed CI `36109640813`, Product Eval `36109640801`, and MCP External HTTPS `36109640848`. Automatic Staging Deploy `36109914350` gate-passed and successfully executed `Deploy exact reviewed main SHA`.
+
+Ownership remains locked: Project/Hub owns binding and authority, Artifact owns snapshot bytes, Context owns derived extraction, and Connect owns connector/MCP/fetch adaptation. MCP resource snapshots are `RESTRICTED + LOCAL_ONLY`, require explicit `mcp.resource.read / mcp.read` authority, and do not fabricate chat/history.
+
+Evidence: [verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md](verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md).
+
+**No implementation is in flight.** A-04 is closed. The next bounded discussion is only the A-05 external-ingestion remainder: decide whether to open provider-specific Google Drive onboarding and/or recursive folder semantics as A-05b.3c, or explicitly accept the generic MCP-resource boundary for now. Do not start Schedule A-06 until that decision is recorded. Brain expansion, frontend decomposition, Compose readiness, production cutover, provider spend, and DR-2 remain separate scopes.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
