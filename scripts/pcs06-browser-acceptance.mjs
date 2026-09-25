@@ -183,6 +183,40 @@ const brain = {
   totalEdges: 0,
   truncated: false,
 };
+const scheduleTrigger = {
+  id: "trg_pcs06schedule",
+  workspaceId: "ws_personal",
+  projectId: "prj_personal",
+  name: "PCS-06 Daily",
+  kind: "time",
+  graphId: "fg_pcs06schedule",
+  graphVersion: 1,
+  versionPolicy: "PINNED",
+  requestedAutonomy: "L2",
+  enabled: true,
+  configuration: {
+    cronExpression: "0 8 * * *",
+    timezone: "Asia/Jakarta",
+    catchupWindowMs: 60_000,
+    overlap: "SKIP",
+  },
+  temporalScheduleId: "sched_pcs06schedule",
+  revision: 1,
+  createdAt: now,
+  updatedAt: now,
+};
+const scheduleRuntime = {
+  triggerId: scheduleTrigger.id,
+  scheduleId: scheduleTrigger.temporalScheduleId,
+  paused: false,
+  nextActionTimes: [
+    "2026-09-25T01:00:00.000Z",
+    "2026-09-26T01:00:00.000Z",
+    "2026-10-01T01:00:00.000Z",
+  ],
+  recentActionCount: 2,
+};
+
 const flowDefinitions = [
   {
     id: "core/trigger/v1",
@@ -497,7 +531,10 @@ async function installApiMocks(context) {
         return json(route, { nodes: flowDefinitions });
       }
       if (path === "/api/flow/triggers" && method === "GET") {
-        return json(route, { triggers: [] });
+        return json(route, { triggers: [scheduleTrigger] });
+      }
+      if (path === `/api/flow/triggers/${scheduleTrigger.id}/schedule` && method === "GET") {
+        return json(route, scheduleRuntime);
       }
       if (path === "/api/flow/graphs" && method === "GET") {
         return json(route, {
@@ -768,6 +805,17 @@ async function runDesktopJourney() {
 
     await goto(page, "/work", "desktop-work");
     await page.getByRole("heading", { name: "Work", exact: true }).waitFor();
+    await page.getByRole("button", { name: "year", exact: true }).click();
+    await page.getByRole("button", { name: "Previous period" }).waitFor();
+    await page.getByRole("button", { name: "Today", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Next period" }).click();
+    await page.getByRole("button", { name: "Today", exact: true }).click();
+    await page.getByText(/Temporal occurrence\(s\)/).waitFor();
+    await assertNoPageOverflow(page, "desktop-work-calendar-year");
+    await page.getByRole("button", { name: "month", exact: true }).click();
+    await page.getByText("Sen", { exact: true }).waitFor();
+    await assertNoPageOverflow(page, "desktop-work-calendar-month");
+    await page.screenshot({ path: `${outDir}/desktop-work-calendar.png`, fullPage: true });
     await page.getByRole("button", { name: "Flows", exact: true }).click();
     await page.getByRole("heading", { name: "Flows", exact: true }).waitFor();
     await page.getByRole("button", { name: "Runs", exact: true }).click();
@@ -932,7 +980,11 @@ async function runNarrowCoverage() {
     [
       "/work",
       "narrow-work",
-      (page) => page.getByRole("heading", { name: "Work", exact: true }).waitFor(),
+      async (page) => {
+        await page.getByRole("heading", { name: "Work", exact: true }).waitFor();
+        await page.getByRole("button", { name: "month", exact: true }).click();
+        await page.getByText("Sen", { exact: true }).waitFor();
+      },
     ],
     [
       "/brain",
