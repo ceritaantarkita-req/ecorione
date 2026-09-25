@@ -44,7 +44,6 @@ function source(index: number): ProjectSourceView {
   };
 }
 
-
 function artifactSource(
   role: ProjectSourceView["binding"]["role"] = "source",
 ): ProjectSourceView {
