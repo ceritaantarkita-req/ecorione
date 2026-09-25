@@ -17,6 +17,8 @@ import type {
   McpGovernanceRequest,
   McpRemoteResource,
   McpRemoteTool,
+  McpResourceReadRequest,
+  McpResourceReadResult,
   McpServerConfig,
   McpServerId,
   McpToolCallRequest,
@@ -47,6 +49,13 @@ export class McpToolNotAdvertisedError extends Error {
   constructor(serverId: string, toolName: string) {
     super(`MCP server ${serverId} tidak mengiklankan tool ${toolName}.`);
     this.name = "McpToolNotAdvertisedError";
+  }
+}
+
+export class McpResourceNotAdvertisedError extends Error {
+  constructor(serverId: string, uri: string) {
+    super(`MCP server ${serverId} tidak mengiklankan resource ${uri}.`);
+    this.name = "McpResourceNotAdvertisedError";
   }
 }
 
@@ -123,6 +132,14 @@ export interface McpDiscoveryResult {
     readonly tools?: string | undefined;
     readonly resources?: string | undefined;
   };
+}
+
+export interface McpResourceReadOutcome {
+  readonly serverId: McpServerId;
+  readonly resourceUri: string;
+  readonly protocolEra: string;
+  readonly result: McpResourceReadResult;
+  readonly audit: "recorded" | "degraded";
 }
 
 export interface McpInvocationResult {
@@ -294,6 +311,61 @@ export class McpManager {
           : String(resourcesOutcome.reason);
     }
     return { serverId, protocolEra: client.protocolEra, tools, resources, errors };
+  }
+
+  async readResource(
+    serverId: McpServerId,
+    request: McpResourceReadRequest,
+  ): Promise<McpResourceReadOutcome> {
+    const config = this.registry.get(serverId, request.workspaceId);
+    if (!config.enabled) throw new McpServerDisabledError(config.id);
+    const governanceRequest: McpGovernanceRequest = {
+      server: config,
+      toolName: "resources.read",
+      actionClass: "READ",
+      arguments: { uri: request.uri },
+      context: request,
+      idempotencyKey: null,
+    };
+    await this.governance.authorize(governanceRequest);
+    const client = await this.client(config, request.workspaceId);
+    const advertised = await client.listResources(config.requestTimeoutMs);
+    if (!advertised.some((resource) => resource.uri === request.uri)) {
+      throw new McpResourceNotAdvertisedError(config.id, request.uri);
+    }
+
+    let result: McpResourceReadResult;
+    try {
+      result = await client.readResource(request.uri, config.requestTimeoutMs);
+    } catch (error) {
+      await bestEffort(() =>
+        this.governance.auditFailure({
+          request: governanceRequest,
+          transport: config.transport.type,
+          protocolEra: client.protocolEra,
+          error,
+          outcomeUncertain: false,
+        }),
+      );
+      await this.disconnect(serverId, request.workspaceId).catch(() => undefined);
+      throw error;
+    }
+
+    const audit = await bestEffort(() =>
+      this.governance.auditResourceRead({
+        request: governanceRequest,
+        transport: config.transport.type,
+        protocolEra: client.protocolEra,
+        result,
+      }),
+    );
+    return {
+      serverId,
+      resourceUri: request.uri,
+      protocolEra: client.protocolEra,
+      result,
+      audit,
+    };
   }
 
   async callTool(
