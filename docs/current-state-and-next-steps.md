@@ -1,6 +1,6 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-25**
+Last updated: **2026-09-26**
 
 Status: **CURRENT / ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
@@ -110,7 +110,7 @@ Safe resumable checkpoint: [verification/session-9-a08c-brain-fact-provenance-cl
 
 **A-08d Embedded Brain grounded assistant is CLOSED / PASS.** PR #341 / merge `1f25f32cdbb0bfd6dc043491f7668df6bc1795cb` adds a local-only selected-node Brain assistant by reusing the canonical Ai -> Hub -> Context -> Connect chat path. Exact authorized Fact IDs and URL Source URIs narrow Context candidates only after normal authorization; grounded turns do not silently fall back to wider Project Core Memory or broad Artifact pointers; no second chat/history system or direct Brain model endpoint was added. PR-head CI #2199, Product Eval #1438, PCS-06 #155, and MCP #1120 passed; merged-main CI #2200, Product Eval #1439, and MCP #1121 passed. The actual post-gate Staging Deploy #1172 deployed exact `1f25f32...` successfully with healthy Operations, all 15 configured services running, exact-SHA match, preserved auth/MCP checks, and 25.03 GiB free. Safe closure evidence: [verification/session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md](verification/session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md).
 
-**No product implementation is currently in flight.** Remaining A-08 work is limited to connector/resource hierarchy where stable authorized canonical identities exist and Core Memory representation only where Context exposes a stable canonical identity. Brain remains a rebuildable projection, not a graph store or second chat system. A-09/A-10 remain unopened until this remainder is explicitly selected or deferred.
+**A-08 is CLOSED / PASS at its implemented boundary, with the two remaining speculative expansions explicitly DEFERRED.** Connector/resource hierarchy is deferred because the current Connect/MCP resource contract exposes stable authorized resource `uri` values but no canonical parent/child relationship. Core Memory Brain representation is deferred because Context exposes label/project lookup semantics but no canonical Core Memory block ID. Brain therefore does not infer URI hierarchy or invent IDs from labels/text. No product implementation is in flight. A-09/A-10 are now eligible for separate explicit selection but remain unopened. Evidence: [verification/session-9-a08-remainder-closure-decision-2026-09-26.md](verification/session-9-a08-remainder-closure-decision-2026-09-26.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
