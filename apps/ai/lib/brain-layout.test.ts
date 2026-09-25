@@ -30,9 +30,7 @@ describe("A-07 Brain scalable layout", () => {
 
     const runY = runs.map((run) => layout.positions.get(run.id)?.y ?? -1);
     for (let index = 1; index < runY.length; index += 1) {
-      expect(runY[index]! - runY[index - 1]!).toBeGreaterThanOrEqual(
-        BRAIN_NODE_MIN_CENTER_GAP,
-      );
+      expect(runY[index]! - runY[index - 1]!).toBeGreaterThanOrEqual(BRAIN_NODE_MIN_CENTER_GAP);
     }
   });
 
