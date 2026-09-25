@@ -40,7 +40,7 @@ describe("A-06b Project picker + Schedule assistant source contract", () => {
     expect(page).toContain("Review draft lalu Save");
     expect(page).toContain("const target =");
     expect(page).toContain('? "/api/flow/triggers"');
-    expect(page).toContain('/api/flow/triggers/${encodeURIComponent(draft.id)}');
+    expect(page).toContain("/api/flow/triggers/${encodeURIComponent(draft.id)}");
     expect(page).toContain('method: draft.id === null ? "POST" : "PATCH"');
     expect(page).not.toContain('fetch("/api/work/schedule-assist", {\n        method: "PATCH"');
   });
