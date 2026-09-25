@@ -78,7 +78,7 @@ export function shiftCalendarCursor(
   dateKey: string,
   direction: -1 | 1,
 ): string {
-  const { year, month, day } = parseDateKey(dateKey);
+  const { year, month } = parseDateKey(dateKey);
   if (mode === "day") return addDays(dateKey, direction);
   if (mode === "week") return addDays(dateKey, direction * 7);
   if (mode === "month") {
