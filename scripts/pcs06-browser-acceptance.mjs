@@ -889,10 +889,7 @@ async function runDesktopJourney() {
         const cronInput = globalThis.document.querySelector(
           'input[aria-label="Cron expression"]',
         );
-        return (
-          nameInput?.value === name &&
-          cronInput?.value === cron
-        );
+        return nameInput?.value === name && cronInput?.value === cron;
       },
       { name: "PCS-06 Weekday", cron: "30 9 * * 1-5" },
     );
