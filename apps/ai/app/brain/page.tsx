@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   BRAIN_EDGE_TYPES,
   BRAIN_NODE_TYPES,
@@ -19,13 +26,22 @@ import {
   isProjectIdCandidate,
   resolveActiveProjectId,
 } from "../../lib/project-selection";
+import { layoutBrainNodes } from "../../lib/brain-layout";
 import styles from "./Brain.module.css";
 
 const WORKSPACE_ID = "ws_personal";
-const VIEWBOX_WIDTH = 1080;
-const VIEWBOX_HEIGHT = 640;
+const MIN_GRAPH_ZOOM = 0.75;
+const MAX_GRAPH_ZOOM = 1.75;
+const GRAPH_ZOOM_STEP = 0.25;
+const GRAPH_PAN_STEP = 180;
 
-type Point = { x: number; y: number };
+type PanDrag = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  scrollLeft: number;
+  scrollTop: number;
+};
 
 function errorMessage(body: unknown, fallback: string): string {
   if (body !== null && typeof body === "object" && "error" in body) {
@@ -48,37 +64,6 @@ async function json<T>(response: Response): Promise<T> {
     throw new Error(errorMessage(body, `HTTP ${String(response.status)}`));
   }
   return body;
-}
-
-function laneX(type: BrainNodeType): number {
-  switch (type) {
-    case "Project":
-      return 100;
-    case "Source":
-      return 300;
-    case "Flow":
-      return 510;
-    case "Trigger":
-      return 730;
-    case "Run":
-      return 960;
-  }
-}
-
-function positions(nodes: BrainNode[]): Map<string, Point> {
-  const result = new Map<string, Point>();
-  for (const type of BRAIN_NODE_TYPES) {
-    const group = nodes.filter((node) => node.type === type);
-    if (type === "Project") {
-      for (const node of group) result.set(node.id, { x: laneX(type), y: VIEWBOX_HEIGHT / 2 });
-      continue;
-    }
-    const step = VIEWBOX_HEIGHT / (group.length + 1);
-    group.forEach((node, index) => {
-      result.set(node.id, { x: laneX(type), y: step * (index + 1) });
-    });
-  }
-  return result;
 }
 
 function nodeRadius(type: BrainNodeType): number {
@@ -115,6 +100,9 @@ export default function BrainPage() {
     "Brain membaca relationship deterministik dari canonical owner contracts.",
   );
   const requestRef = useRef(0);
+  const graphScrollRef = useRef<HTMLDivElement>(null);
+  const panDragRef = useRef<PanDrag | null>(null);
+  const [graphZoom, setGraphZoom] = useState(1);
 
   const loadBrain = useCallback(async (nextProjectId: string) => {
     const seq = ++requestRef.current;
@@ -228,6 +216,55 @@ export default function BrainPage() {
     });
   }
 
+  function panGraph(left: number, top: number): void {
+    graphScrollRef.current?.scrollBy({ left, top });
+  }
+
+  function zoomGraph(delta: number): void {
+    setGraphZoom((current) =>
+      Math.min(MAX_GRAPH_ZOOM, Math.max(MIN_GRAPH_ZOOM, current + delta)),
+    );
+  }
+
+  function resetGraphView(): void {
+    setGraphZoom(1);
+    graphScrollRef.current?.scrollTo({ left: 0, top: 0 });
+  }
+
+  function startGraphPan(event: ReactPointerEvent<HTMLDivElement>): void {
+    if (event.button !== 0) return;
+    const target = event.target as { closest?: (selector: string) => unknown };
+    if (target.closest?.('[role="button"]')) return;
+
+    const viewport = event.currentTarget;
+    panDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      scrollLeft: viewport.scrollLeft,
+      scrollTop: viewport.scrollTop,
+    };
+    viewport.setPointerCapture(event.pointerId);
+  }
+
+  function moveGraphPan(event: ReactPointerEvent<HTMLDivElement>): void {
+    const drag = panDragRef.current;
+    if (drag === null || drag.pointerId !== event.pointerId) return;
+
+    const viewport = event.currentTarget;
+    viewport.scrollLeft = drag.scrollLeft - (event.clientX - drag.startX);
+    viewport.scrollTop = drag.scrollTop - (event.clientY - drag.startY);
+  }
+
+  function endGraphPan(event: ReactPointerEvent<HTMLDivElement>): void {
+    const drag = panDragRef.current;
+    if (drag === null || drag.pointerId !== event.pointerId) return;
+    panDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
   const visibleNodes = useMemo(
     () => (graph?.nodes ?? []).filter((node) => enabledNodeTypes.has(node.type)),
     [enabledNodeTypes, graph],
@@ -246,7 +283,8 @@ export default function BrainPage() {
       ),
     [enabledEdgeTypes, graph, visibleIds],
   );
-  const nodePositions = useMemo(() => positions(visibleNodes), [visibleNodes]);
+  const graphLayout = useMemo(() => layoutBrainNodes(visibleNodes), [visibleNodes]);
+  const nodePositions = graphLayout.positions;
   const nodesById = useMemo(
     () => new Map((graph?.nodes ?? []).map((node) => [node.id, node])),
     [graph],
@@ -338,13 +376,80 @@ export default function BrainPage() {
               <span key={type}>{type}</span>
             ))}
           </div>
-          <div className={styles.graphScroll}>
+          <div className={styles.graphToolbar} aria-label="Brain graph navigation">
+            <div className={styles.panControls}>
+              <button
+                type="button"
+                aria-label="Pan left"
+                onClick={() => panGraph(-GRAPH_PAN_STEP, 0)}
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                aria-label="Pan up"
+                onClick={() => panGraph(0, -GRAPH_PAN_STEP)}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                aria-label="Pan down"
+                onClick={() => panGraph(0, GRAPH_PAN_STEP)}
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                aria-label="Pan right"
+                onClick={() => panGraph(GRAPH_PAN_STEP, 0)}
+              >
+                →
+              </button>
+            </div>
+            <div className={styles.zoomControls}>
+              <button
+                type="button"
+                aria-label="Zoom out"
+                disabled={graphZoom <= MIN_GRAPH_ZOOM}
+                onClick={() => zoomGraph(-GRAPH_ZOOM_STEP)}
+              >
+                −
+              </button>
+              <output aria-label="Brain graph zoom">{Math.round(graphZoom * 100)}%</output>
+              <button
+                type="button"
+                aria-label="Zoom in"
+                disabled={graphZoom >= MAX_GRAPH_ZOOM}
+                onClick={() => zoomGraph(GRAPH_ZOOM_STEP)}
+              >
+                +
+              </button>
+              <button type="button" aria-label="Reset graph view" onClick={resetGraphView}>
+                Reset
+              </button>
+            </div>
+          </div>
+          <div
+            ref={graphScrollRef}
+            className={styles.graphScroll}
+            aria-label="Pan Brain graph"
+            tabIndex={0}
+            onPointerDown={startGraphPan}
+            onPointerMove={moveGraphPan}
+            onPointerUp={endGraphPan}
+            onPointerCancel={endGraphPan}
+          >
             {visibleNodes.length === 0 && !loading ? (
               <div className={styles.empty}>Tidak ada node yang aktif pada filter ini.</div>
             ) : (
               <svg
                 className={styles.graph}
-                viewBox={`0 0 ${String(VIEWBOX_WIDTH)} ${String(VIEWBOX_HEIGHT)}`}
+                viewBox={`0 0 ${String(graphLayout.width)} ${String(graphLayout.height)}`}
+                style={{
+                  width: `${String(graphLayout.width * graphZoom)}px`,
+                  height: `${String(graphLayout.height * graphZoom)}px`,
+                }}
                 role="img"
                 aria-label="Connected Brain graph"
               >

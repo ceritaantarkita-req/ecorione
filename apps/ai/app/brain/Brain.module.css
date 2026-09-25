@@ -200,18 +200,78 @@
   text-align: center;
 }
 
+.graphToolbar {
+  min-width: 0;
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--surface-2);
+}
+
+.panControls,
+.zoomControls {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.graphToolbar button {
+  min-width: 30px;
+  min-height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font: 10px var(--font-mono);
+}
+
+.graphToolbar button:hover,
+.graphToolbar button:focus-visible {
+  border-color: var(--accent);
+}
+
+.graphToolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.graphToolbar output {
+  min-width: 42px;
+  color: var(--text-muted);
+  font: 9px var(--font-mono);
+  text-align: center;
+}
+
 .graphScroll {
   width: 100%;
   min-width: 0;
+  height: min(68dvh, 640px);
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  cursor: grab;
+}
+
+.graphScroll:active {
+  cursor: grabbing;
+}
+
+.graphScroll:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .graph {
   display: block;
-  width: 100%;
   min-width: 760px;
-  height: min(68dvh, 640px);
+  max-width: none;
+  user-select: none;
   background:
     radial-gradient(
       circle at center,
@@ -424,9 +484,22 @@
     display: none;
   }
 
+  .graphToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .panControls,
+  .zoomControls {
+    justify-content: center;
+  }
+
+  .graphScroll {
+    height: 520px;
+  }
+
   .graph {
     min-width: 720px;
-    height: 520px;
   }
 }
 
