@@ -50,10 +50,9 @@ describe("Project selection reconciliation", () => {
 
   it("returns null when there is no active Project", () => {
     expect(
-      resolveActiveProjectId(
-        "prj_missing",
-        [project(PERSONAL_PROJECT_ID, "2026-09-25T01:00:00.000Z")],
-      ),
+      resolveActiveProjectId("prj_missing", [
+        project(PERSONAL_PROJECT_ID, "2026-09-25T01:00:00.000Z"),
+      ]),
     ).toBeNull();
   });
 
