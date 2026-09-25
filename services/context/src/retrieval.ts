@@ -32,6 +32,8 @@ export interface RetrievalOptions {
   readonly hostedEligibleOnly?: boolean;
   /** Optional Brain-derived exact provenance source URI constraint. Undefined is baseline; [] is fail-closed empty. */
   readonly candidateSourceUris?: readonly string[] | undefined;
+  /** Optional Brain-derived exact Fact ID constraint. Undefined is baseline; [] is fail-closed empty. */
+  readonly candidateFactIds?: readonly MemoryFactId[] | undefined;
 }
 export interface RetrievalDiagnostics {
   readonly lexicalCandidates: number;
@@ -80,15 +82,16 @@ export class ContextRetriever {
       options.candidateSourceUris === undefined
         ? undefined
         : new Set(options.candidateSourceUris);
-    const allowedFacts =
-      sourceConstraint === undefined
-        ? authorizedFacts
-        : new Map(
-            [...authorizedFacts].filter(([, fact]) => {
-              const sourceUri = fact.provenance.sourceUri;
-              return sourceUri !== undefined && sourceConstraint.has(sourceUri);
-            }),
-          );
+    const factConstraint =
+      options.candidateFactIds === undefined ? undefined : new Set(options.candidateFactIds);
+    const allowedFacts = new Map(
+      [...authorizedFacts].filter(([factId, fact]) => {
+        if (factConstraint !== undefined && !factConstraint.has(factId)) return false;
+        if (sourceConstraint === undefined) return true;
+        const sourceUri = fact.provenance.sourceUri;
+        return sourceUri !== undefined && sourceConstraint.has(sourceUri);
+      }),
+    );
     const allowedIds = new Set(allowedFacts.keys());
     const lexical = this.lexicalSearch(
       options.query,
@@ -98,6 +101,7 @@ export class ContextRetriever {
       options.hostedEligibleOnly ?? false,
       options.projectId ?? null,
       options.candidateSourceUris,
+      options.candidateFactIds,
     );
     const vector = this.vectorSearch(options.queryEmbedding, candidateLimit, allowedIds);
     const fused = reciprocalRankFusion([lexical, vector]);
@@ -118,7 +122,8 @@ export class ContextRetriever {
         returned: Math.min(hits.length, k),
         authorizedCandidates: authorizedFacts.size,
         narrowedCandidates: allowedFacts.size,
-        constraintApplied: options.candidateSourceUris !== undefined,
+        constraintApplied:
+          options.candidateSourceUris !== undefined || options.candidateFactIds !== undefined,
       },
     };
   }
@@ -148,9 +153,15 @@ export class ContextRetriever {
     hostedEligibleOnly: boolean,
     projectId: ProjectId | null,
     candidateSourceUris: readonly string[] | undefined,
+    candidateFactIds: readonly MemoryFactId[] | undefined,
   ): RankedList {
     const match = toFtsQuery(query);
-    if (match === null || candidateSourceUris?.length === 0) return [];
+    if (
+      match === null ||
+      candidateSourceUris?.length === 0 ||
+      candidateFactIds?.length === 0
+    )
+      return [];
     const allowed = allowedSensitivities(maxSensitivity);
     const egress = hostedEligibleOnly ? "AND f.sync_class IN ('CLOUD_ALLOWED','PUBLIC')" : "";
     const projectClause =
@@ -163,6 +174,11 @@ export class ContextRetriever {
         ? ""
         : `AND f.source_uri IN (${placeholders(candidateSourceUris.length)})`;
     const sourceParams = candidateSourceUris ?? [];
+    const factClause =
+      candidateFactIds === undefined
+        ? ""
+        : `AND f.id IN (${placeholders(candidateFactIds.length)})`;
+    const factParams = candidateFactIds ?? [];
     try {
       const rows = this.repo.db.raw
         .prepare(
@@ -177,11 +193,20 @@ export class ContextRetriever {
           ${egress}
           ${projectClause}
           ${sourceClause}
+          ${factClause}
         ORDER BY bm25(facts_fts)
         LIMIT ?
       `,
         )
-        .all(match, ...scopes, ...allowed, ...projectParams, ...sourceParams, limit) as {
+        .all(
+          match,
+          ...scopes,
+          ...allowed,
+          ...projectParams,
+          ...sourceParams,
+          ...factParams,
+          limit,
+        ) as {
         id: string;
       }[];
       return rows.map((r) => r.id as MemoryFactId);
