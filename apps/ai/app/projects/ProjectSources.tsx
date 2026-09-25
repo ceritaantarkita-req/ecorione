@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type {
   ProjectSourceResourceType,
   ProjectSourceRole,
@@ -16,6 +16,15 @@ const RESOURCE_TYPES: Array<{ value: ProjectSourceResourceType; label: string }>
   { value: "url", label: "URL" },
 ];
 
+type CatalogResourceType = Exclude<ProjectSourceResourceType, "url">;
+
+interface SourceCatalogItem {
+  readonly resourceType: CatalogResourceType;
+  readonly resourceId: string;
+  readonly label: string;
+  readonly detail: string;
+}
+
 function errorMessage(body: unknown, fallback: string): string {
   if (typeof body !== "object" || body === null) return fallback;
   const error = (body as { error?: unknown }).error;
@@ -29,13 +38,24 @@ export function ProjectSources(props: {
   readonly workspaceId: string;
 }): React.JSX.Element {
   const [sources, setSources] = useState<ProjectSourceView[]>([]);
-  const [resourceType, setResourceType] = useState<ProjectSourceResourceType>("url");
+  const [sourceCatalog, setSourceCatalog] = useState<SourceCatalogItem[]>([]);
+  const [catalogWarnings, setCatalogWarnings] = useState<string[]>([]);
+  const [resourceType, setResourceType] = useState<ProjectSourceResourceType>("artifact");
   const [resourceId, setResourceId] = useState("");
   const [role, setRole] = useState<ProjectSourceRole>("source");
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const endpoint = `/api/projects/${encodeURIComponent(props.projectId)}/sources`;
+
+  const candidates = useMemo(
+    () =>
+      resourceType === "url"
+        ? []
+        : sourceCatalog.filter((item) => item.resourceType === resourceType),
+    [resourceType, sourceCatalog],
+  );
 
   const load = useCallback(async () => {
     const response = await fetch(
@@ -47,12 +67,36 @@ export function ProjectSources(props: {
     setSources((body as { sources: ProjectSourceView[] }).sources);
   }, [endpoint, props.workspaceId]);
 
+  const loadCatalog = useCallback(async () => {
+    setCatalogLoading(true);
+    try {
+      const response = await fetch(
+        `/api/projects/source-catalog?workspaceId=${encodeURIComponent(props.workspaceId)}`,
+        { cache: "no-store" },
+      );
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) throw new Error(errorMessage(body, "Gagal memuat source catalog."));
+      const catalog = body as { items: SourceCatalogItem[]; warnings: string[] };
+      setSourceCatalog(catalog.items);
+      setCatalogWarnings(catalog.warnings);
+    } finally {
+      setCatalogLoading(false);
+    }
+  }, [props.workspaceId]);
+
   useEffect(() => {
     setFeedback(null);
-    void load().catch((error: unknown) =>
+    void Promise.all([load(), loadCatalog()]).catch((error: unknown) =>
       setFeedback(error instanceof Error ? error.message : "Gagal memuat Project Sources."),
     );
-  }, [load]);
+  }, [load, loadCatalog]);
+
+  useEffect(() => {
+    if (resourceType === "url") return;
+    if (!candidates.some((candidate) => candidate.resourceId === resourceId)) {
+      setResourceId(candidates[0]?.resourceId ?? "");
+    }
+  }, [candidates, resourceId, resourceType]);
 
   async function attach(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -73,7 +117,7 @@ export function ProjectSources(props: {
       });
       const body: unknown = await response.json().catch(() => undefined);
       if (!response.ok) throw new Error(errorMessage(body, "Gagal menambahkan source."));
-      setResourceId("");
+      if (resourceType === "url") setResourceId("");
       await load();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal menambahkan source.");
@@ -112,6 +156,11 @@ export function ProjectSources(props: {
     }
   }
 
+  const selectedCandidate =
+    resourceType === "url"
+      ? undefined
+      : candidates.find((candidate) => candidate.resourceId === resourceId);
+
   return (
     <section className={styles.sources}>
       <div className={styles.sourcesHeader}>
@@ -119,13 +168,31 @@ export function ProjectSources(props: {
           <h3>Sources</h3>
           <p>Referensi ke owner asli. Konten tidak disalin ke Project.</p>
         </div>
+        <button
+          className="ecr-btn ecr-btn--secondary"
+          type="button"
+          disabled={catalogLoading || busyKey !== null}
+          onClick={() =>
+            void loadCatalog().catch((error: unknown) =>
+              setFeedback(
+                error instanceof Error ? error.message : "Gagal memuat source catalog.",
+              ),
+            )
+          }
+        >
+          {catalogLoading ? "Memuat..." : "Refresh picker"}
+        </button>
       </div>
 
       <form className={styles.sourceForm} onSubmit={attach}>
         <select
           className="ecr-input"
           value={resourceType}
-          onChange={(event) => setResourceType(event.target.value as ProjectSourceResourceType)}
+          onChange={(event) => {
+            const next = event.target.value as ProjectSourceResourceType;
+            setResourceType(next);
+            setResourceId("");
+          }}
           aria-label="Tipe source"
         >
           {RESOURCE_TYPES.map((option) => (
@@ -134,19 +201,37 @@ export function ProjectSources(props: {
             </option>
           ))}
         </select>
-        <input
-          className="ecr-input"
-          value={resourceId}
-          onChange={(event) => setResourceId(event.target.value)}
-          placeholder={
-            resourceType === "url"
-              ? "https://..."
-              : resourceType === "artifact"
-                ? "art_..."
-                : "resource id"
-          }
-          aria-label="Resource ID"
-        />
+
+        {resourceType === "url" ? (
+          <input
+            className="ecr-input"
+            value={resourceId}
+            onChange={(event) => setResourceId(event.target.value)}
+            placeholder="https://..."
+            aria-label="HTTPS URL source"
+          />
+        ) : (
+          <select
+            className="ecr-input"
+            value={resourceId}
+            onChange={(event) => setResourceId(event.target.value)}
+            aria-label="Pilih resource"
+            disabled={catalogLoading || candidates.length === 0}
+          >
+            {candidates.length === 0 ? (
+              <option value="">
+                {catalogLoading ? "Memuat resource..." : "Tidak ada resource tersedia"}
+              </option>
+            ) : (
+              candidates.map((candidate) => (
+                <option key={candidate.resourceId} value={candidate.resourceId}>
+                  {candidate.label} · {candidate.detail}
+                </option>
+              ))
+            )}
+          </select>
+        )}
+
         <select
           className="ecr-input"
           value={role}
@@ -165,6 +250,17 @@ export function ProjectSources(props: {
         </button>
       </form>
 
+      {selectedCandidate !== undefined ? (
+        <p className={styles.sourcePickerHint}>
+          {selectedCandidate.label} · <code>{selectedCandidate.resourceId}</code> ·{" "}
+          {selectedCandidate.detail}
+        </p>
+      ) : null}
+
+      {catalogWarnings.length > 0 ? (
+        <p className={styles.sourcePickerWarning}>{catalogWarnings.join(" ")}</p>
+      ) : null}
+
       {feedback !== null ? <p className={styles.feedback}>{feedback}</p> : null}
 
       {sources.length === 0 ? (
@@ -177,11 +273,16 @@ export function ProjectSources(props: {
               source.binding.resourceId,
               source.binding.role,
             ].join(":");
+            const catalogItem = sourceCatalog.find(
+              (item) =>
+                item.resourceType === source.binding.resourceType &&
+                item.resourceId === source.binding.resourceId,
+            );
             return (
               <li key={key} className={styles.sourceItem}>
                 <div className={styles.sourceInfo}>
                   <div className={styles.sourceTitle}>
-                    <span>{source.binding.resourceType}</span>
+                    <span>{catalogItem?.label ?? source.binding.resourceType}</span>
                     <span
                       className={
                         source.availability === "AVAILABLE"
@@ -195,6 +296,7 @@ export function ProjectSources(props: {
                   <code>{source.binding.resourceId}</code>
                   <small>
                     {source.binding.owner} · {source.binding.role}
+                    {catalogItem === undefined ? "" : ` · ${catalogItem.detail}`}
                   </small>
                   {source.unavailableReason !== null ? <p>{source.unavailableReason}</p> : null}
                 </div>
