@@ -217,8 +217,8 @@ export function ProjectSources(props: {
         <div>
           <strong>Upload file</strong>
           <small>
-            Maks. 20 MiB. Disimpan oleh Artifact dan langsung diikat ke Project. OCR/indexing belum
-            dijalankan pada tahap ini.
+            Maks. 20 MiB. Disimpan oleh Artifact dan langsung diikat ke Project. OCR/indexing
+            belum dijalankan pada tahap ini.
           </small>
         </div>
         <form className={styles.sourceUploadForm} onSubmit={upload}>
