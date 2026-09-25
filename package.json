@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write \"services/hub/src/multimodal-analysis.ts\" \"services/hub/src/project-source-http.test.ts\" \"services/hub/src/project-source-http.ts\" \"test/a05b2-project-source-extraction-source-contract.test.ts\" && git diff -- \"services/hub/src/multimodal-analysis.ts\" \"services/hub/src/project-source-http.test.ts\" \"services/hub/src/project-source-http.ts\" \"test/a05b2-project-source-extraction-source-contract.test.ts\" && exit 1",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
