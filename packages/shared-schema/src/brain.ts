@@ -17,6 +17,7 @@ export type BrainNodeType = z.infer<typeof BrainNodeTypeSchema>;
 export const BRAIN_EDGE_TYPES = [
   "BELONGS_TO",
   "REFERENCES",
+  "GENERATED_FROM",
   "USES",
   "TRIGGERED",
   "EXECUTED",

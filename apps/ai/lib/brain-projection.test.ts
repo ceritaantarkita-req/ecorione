@@ -310,6 +310,57 @@ describe("PE-06 Brain deterministic projection", () => {
           edge.targetNodeId === projectNode?.id,
       ),
     ).toBe(true);
+    expect(result.edges.some((edge) => edge.type === "GENERATED_FROM")).toBe(false);
+  });
+
+  it("links Fact provenance only to an authorized bound Artifact node", () => {
+    const fact = MemoryFactSchema.parse({
+      id: "mem_financefact02",
+      subject: "Revenue",
+      predicate: "source",
+      object: "Q3 report",
+      text: "Q3 revenue came from the bound report",
+      confidence: 0.94,
+      salience: 0.7,
+      sourceEpisodeIds: ["epi_financefact02"],
+      tValid: NOW,
+      tInvalid: null,
+      supersededBy: null,
+      createdAt: NOW,
+      projectId: PROJECT_ID,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+      trust: "USER",
+      provenance: {
+        sourceApp: "hub:project-source",
+        sourceUri: "artifact:art_report",
+      },
+    });
+
+    const result = buildBrainGraph(query(), {
+      project,
+      sources: [artifactSource()],
+      graphs: [],
+      triggers: [],
+      runs: [],
+      facts: [fact],
+    });
+
+    const factNode = result.nodes.find(
+      (node) => node.type === "Fact" && node.canonicalId === fact.id,
+    );
+    const artifactNode = result.nodes.find(
+      (node) => node.type === "Artifact" && node.canonicalId === "art_report",
+    );
+    expect(factNode).toBeDefined();
+    expect(artifactNode).toBeDefined();
+    expect(result.edges.filter((edge) => edge.type === "GENERATED_FROM")).toEqual([
+      expect.objectContaining({
+        sourceNodeId: factNode?.id,
+        targetNodeId: artifactNode?.id,
+      }),
+    ]);
   });
 
   it("applies the bounded node limit and never returns an edge to a hidden node", () => {

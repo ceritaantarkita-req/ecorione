@@ -205,6 +205,125 @@ describe("PE-06 Brain API", () => {
     expect(body.truncated).toBe(false);
   });
 
+  it("projects Fact provenance only to the authorized bound Artifact owner node", async () => {
+    hub
+      .intercept({
+        path: "/v1/projects/prj_finance?workspaceId=ws_personal",
+        method: "GET",
+      })
+      .reply(200, project());
+    hub
+      .intercept({
+        path: "/v1/projects/prj_finance/sources?workspaceId=ws_personal",
+        method: "GET",
+      })
+      .reply(200, {
+        sources: [
+          {
+            binding: {
+              projectId: "prj_finance",
+              workspaceId: "ws_personal",
+              resourceType: "artifact",
+              resourceId: "art_finance01",
+              owner: "Artifact",
+              role: "source",
+              createdAt: NOW,
+            },
+            availability: "AVAILABLE",
+            metadata: {
+              id: "art_finance01",
+              path: "sha256/aa/finance.pdf",
+              description: "Finance report",
+              mimeType: "application/pdf",
+              sizeBytes: 4096,
+              scope: "personal",
+              sensitivity: "INTERNAL",
+              syncClass: "LOCAL_ONLY",
+            },
+            unavailableReason: null,
+          },
+        ],
+      });
+    flow
+      .intercept({
+        path: "/v1/graphs?workspaceId=ws_personal&projectId=prj_finance",
+        method: "GET",
+      })
+      .reply(200, { graphs: [] });
+    flow
+      .intercept({
+        path: "/v1/triggers?workspaceId=ws_personal&projectId=prj_finance",
+        method: "GET",
+      })
+      .reply(200, { triggers: [] });
+    flow
+      .intercept({
+        path: "/v1/runs?workspaceId=ws_personal&projectId=prj_finance&limit=50",
+        method: "GET",
+      })
+      .reply(200, { runs: [] });
+    context
+      .intercept({
+        path: "/v1/facts?projectId=prj_finance&maxSensitivity=RESTRICTED&limit=40",
+        method: "GET",
+      })
+      .reply(200, {
+        facts: [
+          {
+            id: "mem_financefact01",
+            subject: "Finance",
+            predicate: "source",
+            object: "report",
+            text: "Finance fact from the bound report",
+            confidence: 0.95,
+            salience: 0.8,
+            sourceEpisodeIds: ["epi_financefact01"],
+            tValid: NOW,
+            tInvalid: null,
+            supersededBy: null,
+            createdAt: NOW,
+            projectId: "prj_finance",
+            scope: "personal",
+            sensitivity: "INTERNAL",
+            syncClass: "LOCAL_ONLY",
+            trust: "USER",
+            provenance: {
+              sourceApp: "hub:project-source",
+              sourceUri: "artifact:art_finance01",
+            },
+          },
+        ],
+      });
+
+    const response = await GET(
+      new Request("http://ai.local/api/brain?workspaceId=ws_personal&projectId=prj_finance"),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      nodes: Array<{ id: string; type: string; canonicalId: string }>;
+      edges: Array<{
+        type: string;
+        sourceNodeId: string;
+        targetNodeId: string;
+      }>;
+    };
+    const factNode = body.nodes.find(
+      (node) => node.type === "Fact" && node.canonicalId === "mem_financefact01",
+    );
+    const artifactNode = body.nodes.find(
+      (node) => node.type === "Artifact" && node.canonicalId === "art_finance01",
+    );
+    expect(factNode).toBeDefined();
+    expect(artifactNode).toBeDefined();
+    expect(body.edges).toContainEqual(
+      expect.objectContaining({
+        type: "GENERATED_FROM",
+        sourceNodeId: factNode?.id,
+        targetNodeId: artifactNode?.id,
+      }),
+    );
+  });
+
   it("filters sibling-Project owner rows defensively before node or edge disclosure", async () => {
     hub
       .intercept({
