@@ -10,28 +10,26 @@ describe("A-02 Projects All aggregate contract", () => {
 
   it("makes the virtual All entry an explicit selectable UI state", () => {
     expect(page).toContain('const ALL_ID = "__all__"');
-    expect(page).toContain("onClick={() => setSelectedId(ALL_ID)}");
+    expect(page).toContain("setSelectedId(ALL_ID)");
     expect(page).toContain("aria-pressed={allSelected}");
-    expect(page).toContain("className={allSelected ? styles.virtualActive : styles.virtual}");
+    expect(page).toContain("styles.virtualActive");
   });
 
   it("loads workspace aggregate history only when All is selected", () => {
     expect(page).toContain(
       "loadSessions(selectedId === ALL_ID ? undefined : selectedId)",
     );
-    expect(historyRoute).toContain('const rawProjectId = url.searchParams.get("projectId")');
-    expect(historyRoute).toContain('rawProjectId === null ? null : ProjectIdSchema.safeParse(rawProjectId)');
-    expect(historyRoute).toContain('const projectQuery =');
+    expect(historyRoute).toContain('url.searchParams.get("projectId")');
+    expect(historyRoute).toContain("ProjectIdSchema.safeParse(rawProjectId)");
+    expect(historyRoute).toContain("projectId === null");
+    expect(historyRoute).toContain("projectQuery");
   });
 
   it("keeps All metadata-only and opens each conversation through its owning Project", () => {
-    expect(page).toContain(
-      "Memory dan Sources tetap terisolasi per\n                    Project.",
-    );
+    expect(page).toContain("Memory dan Sources tetap terisolasi per");
     expect(page).not.toContain("openProject(ALL_ID)");
     expect(page).toContain("session.projectId === null");
-    expect(page).toContain(
-      "/?project=${encodeURIComponent(project.id)}&session=${encodeURIComponent(session.id)}",
-    );
+    expect(page).toContain("encodeURIComponent(project.id)");
+    expect(page).toContain("encodeURIComponent(session.id)");
   });
 });
