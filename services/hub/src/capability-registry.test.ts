@@ -61,6 +61,38 @@ describe("CapabilityRegistry", () => {
     expect(registry.authorize(mcpAuthorize("ws_alpha", "SENSITIVE")).outcome).toBe("DENY");
   });
 
+  it("keeps MCP resource reads fail-closed until the exact subject is granted", () => {
+    const registry = setup();
+    const request = CapabilityAuthorizationRequestSchema.parse({
+      operationId: "op_mcpresourceauth01",
+      workspaceId: "ws_personal",
+      subject: { kind: "mcp-tool", id: "drive/resources.read" },
+      capabilityId: "mcp.resource.read",
+      permissionIds: ["mcp.read"],
+      scope: "personal",
+      sensitivity: "RESTRICTED",
+      autonomy: "L1",
+    });
+    expect(registry.authorize(request).outcome).toBe("DENY");
+
+    registry.grant(
+      CapabilityGrantRequestSchema.parse({
+        operationId: "op_mcpresourcegrant1",
+        workspaceId: "ws_personal",
+        subject: { kind: "mcp-tool", id: "drive/resources.read" },
+        capabilityId: "mcp.resource.read",
+        permissionIds: ["mcp.read"],
+        scope: "personal",
+        maxSensitivity: "RESTRICTED",
+        autonomy: "L1",
+        reason: "Allow this connector resource read explicitly.",
+        idempotencyKey: "mcp-resource-drive-read-grant",
+      }),
+      T0,
+    );
+    expect(registry.authorize(request).outcome).toBe("ALLOW");
+  });
+
   it("applies one-time explicit baseline grants and keeps them revocable", () => {
     const registry = setup();
     const baseline = CapabilityAuthorizationRequestSchema.parse({

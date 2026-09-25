@@ -7,6 +7,7 @@ import type {
   McpProtocolEra,
   McpRemoteResource,
   McpRemoteTool,
+  McpResourceReadResult,
   McpServerConfig,
   McpToolCallResult,
 } from "./types.js";
@@ -106,6 +107,29 @@ class SdkMcpClientFacade implements McpClientFacade {
       timeoutMs,
     );
     return result as McpToolCallResult;
+  }
+
+  async readResource(uri: string, timeoutMs: number): Promise<McpResourceReadResult> {
+    const result = await withTimeout(
+      this.client.readResource({ uri }),
+      `MCP resources/read ${uri}`,
+      timeoutMs,
+    );
+    return {
+      contents: result.contents.map((content) =>
+        "text" in content
+          ? {
+              uri: content.uri,
+              mimeType: content.mimeType,
+              text: content.text,
+            }
+          : {
+              uri: content.uri,
+              mimeType: content.mimeType,
+              blob: content.blob,
+            },
+      ),
+    };
   }
 
   async close(): Promise<void> {

@@ -18,6 +18,7 @@ import {
 } from "./invocation-store.js";
 import {
   McpRemoteOutcomeUncertainError,
+  McpResourceNotAdvertisedError,
   McpServerDisabledError,
   McpToolDisabledError,
   McpToolNotAdvertisedError,
@@ -31,6 +32,7 @@ import {
 } from "./sdk-client.js";
 import {
   McpDiscoverRequestSchema,
+  McpResourceReadRequestSchema,
   McpServerConfigSchema,
   McpServerIdSchema,
   McpToolCallRequestSchema,
@@ -45,7 +47,7 @@ const ToolParamsSchema = z.object({
   tool: z.string().min(1).max(128),
 });
 
-function toHttpError(error: unknown): unknown {
+export function toMcpHttpError(error: unknown): unknown {
   if (error instanceof McpServerNotFoundError) return new NotFoundError(error.message);
   if (error instanceof McpServerDisabledError) return new ConflictError(error.message);
   if (error instanceof McpToolDisabledError || error instanceof McpTransportDeniedError) {
@@ -69,7 +71,11 @@ function toHttpError(error: unknown): unknown {
   if (error instanceof McpInvocationConflictError) {
     return new ConflictError(error.message);
   }
-  if (error instanceof McpToolNotAdvertisedError) return new BadRequestError(error.message);
+  if (
+    error instanceof McpToolNotAdvertisedError ||
+    error instanceof McpResourceNotAdvertisedError
+  )
+    return new BadRequestError(error.message);
   if (error instanceof McpCredentialMissingError) {
     return new HttpError(503, "MCP_CREDENTIAL_UNAVAILABLE", error.message);
   }
@@ -96,7 +102,7 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
     try {
       return manager.status(params.id, query.workspaceId);
     } catch (error) {
-      throw toHttpError(error);
+      throw toMcpHttpError(error);
     }
   });
 
@@ -122,9 +128,38 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
       metrics.observe("ecorione_mcp_discovery_duration_ms", performance.now() - started, {
         server: params.id,
       });
-      throw toHttpError(error);
+      throw toMcpHttpError(error);
     }
   });
+
+  app.post<{ Params: { id: string } }>(
+    "/v1/mcp-outbound/servers/:id/resources/read",
+    async (req) => {
+      const params = parseOrBadRequest(ServerParamsSchema, req.params);
+      const body = parseOrBadRequest(McpResourceReadRequestSchema, req.body);
+      const started = performance.now();
+      try {
+        const result = await manager.readResource(params.id, body);
+        metrics.addCounter("ecorione_mcp_resource_reads_total", 1, {
+          server: params.id,
+          outcome: "success",
+        });
+        metrics.observe("ecorione_mcp_resource_read_duration_ms", performance.now() - started, {
+          server: params.id,
+        });
+        return result;
+      } catch (error) {
+        metrics.addCounter("ecorione_mcp_resource_reads_total", 1, {
+          server: params.id,
+          outcome: "error",
+        });
+        metrics.observe("ecorione_mcp_resource_read_duration_ms", performance.now() - started, {
+          server: params.id,
+        });
+        throw toMcpHttpError(error);
+      }
+    },
+  );
 
   app.post<{ Params: { id: string; tool: string } }>(
     "/v1/mcp-outbound/servers/:id/tools/:tool/call",
@@ -154,7 +189,7 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
           server: params.id,
           tool: params.tool,
         });
-        throw toHttpError(error);
+        throw toMcpHttpError(error);
       }
     },
   );
@@ -195,7 +230,7 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
       try {
         return { disconnected: await manager.disconnect(params.id, body.workspaceId) };
       } catch (error) {
-        throw toHttpError(error);
+        throw toMcpHttpError(error);
       }
     },
   );

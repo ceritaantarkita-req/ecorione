@@ -9,7 +9,12 @@ import {
   type Timestamp,
 } from "@ecorione/shared-schema";
 import { httpJson, RemoteServiceError } from "@ecorione/shared-server";
-import type { McpGovernanceRequest, McpProtocolEra, McpToolCallResult } from "./types.js";
+import type {
+  McpGovernanceRequest,
+  McpProtocolEra,
+  McpResourceReadResult,
+  McpToolCallResult,
+} from "./types.js";
 
 interface ApprovalSnapshot {
   readonly operationId: OperationId;
@@ -44,6 +49,12 @@ export interface McpGovernance {
     readonly result: McpToolCallResult;
     readonly deduplicated: boolean;
     readonly settlement: "settled" | "reservation-retained" | "not-applicable";
+  }): Promise<void>;
+  auditResourceRead(input: {
+    readonly request: McpGovernanceRequest;
+    readonly transport: "stdio" | "streamable-http";
+    readonly protocolEra: McpProtocolEra;
+    readonly result: McpResourceReadResult;
   }): Promise<void>;
   auditFailure(input: {
     readonly request: McpGovernanceRequest;
@@ -92,6 +103,7 @@ export class HubMcpGovernance implements McpGovernance {
 
   async authorize(request: McpGovernanceRequest): Promise<void> {
     const discover = request.toolName === "server.discover";
+    const resourceRead = request.toolName === "resources.read";
     const authority = CapabilityAuthorizationResultSchema.parse(
       await httpJson<unknown>(`${this.hubUrl}/v1/authority/authorize`, {
         token: this.token,
@@ -99,9 +111,13 @@ export class HubMcpGovernance implements McpGovernance {
           operationId: request.context.operationId,
           workspaceId: request.context.workspaceId,
           subject: { kind: "mcp-tool", id: `${request.server.id}/${request.toolName}` },
-          capabilityId: (discover ? "mcp.discover" : "mcp.tool.call") as CapabilityId,
+          capabilityId: (discover
+            ? "mcp.discover"
+            : resourceRead
+              ? "mcp.resource.read"
+              : "mcp.tool.call") as CapabilityId,
           permissionIds: [
-            discover
+            discover || resourceRead
               ? ("mcp.read" as PermissionId)
               : mcpPermissionForActionClass(request.actionClass),
           ],
@@ -183,6 +199,26 @@ export class HubMcpGovernance implements McpGovernance {
     );
   }
 
+  async auditResourceRead(input: {
+    readonly request: McpGovernanceRequest;
+    readonly transport: "stdio" | "streamable-http";
+    readonly protocolEra: McpProtocolEra;
+    readonly result: McpResourceReadResult;
+  }): Promise<void> {
+    await this.audit(
+      "MCP_RESOURCE_READ",
+      input.request.context.operationId,
+      input.request.context.now,
+      {
+        serverId: input.request.server.id,
+        resourceUri: input.request.arguments.uri,
+        transport: input.transport,
+        protocolEra: input.protocolEra,
+        contentParts: input.result.contents.length,
+      },
+    );
+  }
+
   async auditFailure(input: {
     readonly request: McpGovernanceRequest;
     readonly transport: "stdio" | "streamable-http";
@@ -206,7 +242,7 @@ export class HubMcpGovernance implements McpGovernance {
   }
 
   private async audit(
-    type: "MCP_TOOL_CALLED" | "ACTION_FAILED",
+    type: "MCP_TOOL_CALLED" | "MCP_RESOURCE_READ" | "ACTION_FAILED",
     operationId: OperationId,
     now: Timestamp,
     detail: Record<string, unknown>,

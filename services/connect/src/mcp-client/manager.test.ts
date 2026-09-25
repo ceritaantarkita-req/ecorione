@@ -9,6 +9,7 @@ import { McpManager, McpRemoteOutcomeUncertainError, McpToolDisabledError } from
 import { FileMcpRegistry } from "./registry.js";
 import {
   McpDiscoverRequestSchema,
+  McpResourceReadRequestSchema,
   McpServerConfigSchema,
   McpToolCallRequestSchema,
   type McpClientFacade,
@@ -47,6 +48,11 @@ class FakeClient implements McpClientFacade {
     if (this.failCall) throw new Error("socket closed");
     return { content: [{ type: "text", text: `${name}:ok` }] };
   }
+  async readResource(uri: string) {
+    return {
+      contents: [{ uri, mimeType: "text/plain", text: "resource-body" }],
+    };
+  }
   async close(): Promise<void> {
     this.closeCount += 1;
   }
@@ -72,6 +78,10 @@ class FakeGovernance implements McpGovernance {
     this.authorized.push(request);
   }
   async auditSuccess(): Promise<void> {
+    this.successCount += 1;
+    if (this.failAudit) throw new Error("audit down");
+  }
+  async auditResourceRead(): Promise<void> {
     this.successCount += 1;
     if (this.failAudit) throw new Error("audit down");
   }
@@ -117,6 +127,18 @@ const discoverRequest = McpDiscoverRequestSchema.parse({
   autonomy: "L1",
   now: "2026-09-09T12:00:00.000Z",
 });
+function resourceRequest(operationId = "op_resource") {
+  return McpResourceReadRequestSchema.parse({
+    workspaceId: "ws_a",
+    operationId,
+    scope: "personal",
+    sensitivity: "INTERNAL",
+    autonomy: "L1",
+    now: "2026-09-09T12:00:00.000Z",
+    uri: "file:///doc",
+  });
+}
+
 function callRequest(operationId = "op_call") {
   return McpToolCallRequestSchema.parse({
     workspaceId: "ws_a",
@@ -144,6 +166,32 @@ describe("McpManager", () => {
     ]);
     expect(result.resources).toEqual([]);
     expect(result.errors.resources).toContain("resources unsupported");
+  });
+
+  it("reads only advertised resources through READ governance", async () => {
+    const { manager, governance } = setup();
+    const result = await manager.readResource("remote", resourceRequest());
+    expect(result.result.contents[0]).toMatchObject({
+      uri: "file:///doc",
+      mimeType: "text/plain",
+      text: "resource-body",
+    });
+    expect(governance.authorized.at(-1)).toMatchObject({
+      toolName: "resources.read",
+      actionClass: "READ",
+      arguments: { uri: "file:///doc" },
+    });
+    expect(result.audit).toBe("recorded");
+
+    await expect(
+      manager.readResource(
+        "remote",
+        McpResourceReadRequestSchema.parse({
+          ...resourceRequest("op_missing_resource"),
+          uri: "file:///missing",
+        }),
+      ),
+    ).rejects.toThrow(/tidak mengiklankan resource/);
   });
 
   it("refuses tools that are not explicitly enabled before remote dispatch", async () => {

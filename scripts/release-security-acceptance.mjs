@@ -71,6 +71,10 @@ const mcpAuth = readFileSync("services/connect/src/mcp/auth.ts", "utf8");
 const mcpHttp = readFileSync("services/connect/src/mcp/http.ts", "utf8");
 const mcpTypes = readFileSync("services/connect/src/mcp-client/types.ts", "utf8");
 const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "utf8");
+const mcpManager = readFileSync("services/connect/src/mcp-client/manager.ts", "utf8");
+const mcpGovernance = readFileSync("services/connect/src/mcp-client/governance.ts", "utf8");
+const mcpResourceSource = readFileSync("services/connect/src/mcp-resource-source.ts", "utf8");
+const hubProjectSources = readFileSync("services/hub/src/project-source-http.ts", "utf8");
 const sandboxClients = readFileSync("services/sandbox/src/clients.ts", "utf8");
 const sandboxReceiptStore = readFileSync("services/sandbox/src/receipt-store.ts", "utf8");
 const connectWebhook = readFileSync("services/connect/src/webhook-http.ts", "utf8");
@@ -181,6 +185,18 @@ if (!mcpTypes.includes("allowInsecureLoopback") || !mcpTypes.includes("credentia
   findings.push("MCP transport credential/HTTPS schema missing");
 if (!mcpSdk.includes("ECORIONE_MCP_STDIO_ALLOWLIST"))
   findings.push("MCP stdio command allowlist missing");
+if (
+  !mcpSdk.includes("client.readResource") ||
+  !mcpManager.includes('toolName: "resources.read"') ||
+  !mcpManager.includes("client.listResources") ||
+  !mcpGovernance.includes('"mcp.resource.read"') ||
+  !mcpGovernance.includes('"MCP_RESOURCE_READ"') ||
+  !mcpResourceSource.includes("DEFAULT_EXTERNAL_SOURCE_MAX_BYTES") ||
+  !hubProjectSources.includes('"RESTRICTED"') ||
+  !hubProjectSources.includes('"LOCAL_ONLY"')
+) {
+  findings.push("Project MCP resource ingestion governance/privacy boundary missing");
+}
 if (/image:\s+\S+:latest\b/.test(compose)) findings.push("latest Docker image is forbidden");
 if (
   packageJson?.scripts?.["dependency:review"] !== "node scripts/dependency-security-review.mjs"
