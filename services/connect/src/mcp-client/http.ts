@@ -71,7 +71,10 @@ export function toMcpHttpError(error: unknown): unknown {
   if (error instanceof McpInvocationConflictError) {
     return new ConflictError(error.message);
   }
-  if (error instanceof McpToolNotAdvertisedError || error instanceof McpResourceNotAdvertisedError)
+  if (
+    error instanceof McpToolNotAdvertisedError ||
+    error instanceof McpResourceNotAdvertisedError
+  )
     return new BadRequestError(error.message);
   if (error instanceof McpCredentialMissingError) {
     return new HttpError(503, "MCP_CREDENTIAL_UNAVAILABLE", error.message);
