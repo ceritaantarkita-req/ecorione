@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
+  ArtifactIdSchema,
   BrainGraphResponseSchema,
   BrainNeighborhoodResponseSchema,
   FlowGraphSummarySchema,
@@ -235,6 +236,12 @@ function addEdge(
 ): void {
   const id = `${type}:${sourceNodeId}->${targetNodeId}`;
   edges.set(id, { id, type, sourceNodeId, targetNodeId });
+}
+
+function provenanceArtifactId(sourceUri: string | undefined): string | null {
+  if (sourceUri === undefined || !sourceUri.startsWith("artifact:")) return null;
+  const parsed = ArtifactIdSchema.safeParse(sourceUri.slice("artifact:".length));
+  return parsed.success ? parsed.data : null;
 }
 
 const TYPE_ORDER: Record<BrainNodeType, number> = {
@@ -483,6 +490,14 @@ export function buildBrainGraph(
       },
     });
     addEdge(edges, "BELONGS_TO", id, projectNodeId);
+
+    const artifactId = provenanceArtifactId(fact.provenance.sourceUri);
+    if (artifactId !== null) {
+      const artifactNodeId = nodeId("Artifact", artifactId);
+      if (nodes.has(artifactNodeId)) {
+        addEdge(edges, "GENERATED_FROM", id, artifactNodeId);
+      }
+    }
   }
 
   const allNodes = [...nodes.values()].sort(compareNode);
