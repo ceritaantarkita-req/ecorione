@@ -50,9 +50,7 @@ function eventLink(occurrence: ScheduleOccurrence, timezone: string) {
       href={`/flow?graph=${encodeURIComponent(occurrence.graphId)}&version=${String(occurrence.graphVersion)}`}
       title={`${occurrence.triggerName} · ${occurrence.sourceTimezone}`}
     >
-      <time dateTime={occurrence.when}>
-        {formatCalendarTime(occurrence.when, timezone)}
-      </time>
+      <time dateTime={occurrence.when}>{formatCalendarTime(occurrence.when, timezone)}</time>
       <span>{occurrence.triggerName}</span>
     </Link>
   );
@@ -60,12 +58,7 @@ function eventLink(occurrence: ScheduleOccurrence, timezone: string) {
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const visible = props.occurrences.filter((occurrence) =>
-    occurrenceVisibleInPeriod(
-      occurrence,
-      props.mode,
-      props.cursor,
-      props.calendarTimezone,
-    ),
+    occurrenceVisibleInPeriod(occurrence, props.mode, props.cursor, props.calendarTimezone),
   );
   const grouped = groupOccurrencesByDate(visible, props.calendarTimezone);
 
@@ -148,9 +141,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                     {events.length > 0 ? <span>{events.length}</span> : null}
                   </header>
                   <div className={styles.calendarCellEvents}>
-                    {events.slice(0, 3).map((occurrence) =>
-                      eventLink(occurrence, props.calendarTimezone),
-                    )}
+                    {events
+                      .slice(0, 3)
+                      .map((occurrence) => eventLink(occurrence, props.calendarTimezone))}
                     {events.length > 3 ? (
                       <small>+{events.length - 3} occurrence(s)</small>
                     ) : null}
@@ -167,9 +160,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
           {yearMonthKeys(props.cursor).map((monthKey) => {
             const monthOccurrences = visible.filter(
               (occurrence) =>
-                dateKeyToMonthKey(
-                  dateKeyInZone(occurrence.when, props.calendarTimezone),
-                ) === monthKey,
+                dateKeyToMonthKey(dateKeyInZone(occurrence.when, props.calendarTimezone)) ===
+                monthKey,
             );
             const next = monthOccurrences[0];
             return (
