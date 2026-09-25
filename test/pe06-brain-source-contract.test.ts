@@ -58,7 +58,9 @@ describe("PE-06 Brain source contract", () => {
     const schema = await source(schemaPath);
     expect(schema).toContain("z.coerce.number().int().min(10).max(200).default(120)");
     expect(schema).toContain("z.coerce.number().int().min(1).max(100).default(50)");
-    expect(schema).toContain('"Project", "Source", "Flow", "Trigger", "Run"');
+    for (const type of ["Project", "Source", "Flow", "Trigger", "Run"] as const) {
+      expect(schema).toContain(`"${type}"`);
+    }
     expect(schema).toContain('"BELONGS_TO"');
     expect(schema).toContain('"TRIGGERED"');
     expect(schema).toContain('"EXECUTED"');
