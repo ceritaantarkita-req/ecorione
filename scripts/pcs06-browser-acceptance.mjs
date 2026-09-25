@@ -195,11 +195,96 @@ const brain = {
       href: "/projects",
       metadata: {},
     },
+    {
+      id: "brain_source_artifact",
+      type: "Source",
+      canonicalId: "artifact:art_pcs06:source",
+      owner: "Artifact",
+      label: "artifact · art_pcs06",
+      workspaceId: "ws_personal",
+      projectId: "prj_personal",
+      availability: "AVAILABLE",
+      href: "/projects",
+      metadata: { resourceType: "artifact", resourceId: "art_pcs06", role: "source" },
+    },
+    {
+      id: "brain_artifact_pcs06",
+      type: "Artifact",
+      canonicalId: "art_pcs06",
+      owner: "Artifact",
+      label: "PCS-06 Artifact",
+      workspaceId: "ws_personal",
+      projectId: "prj_personal",
+      availability: "AVAILABLE",
+      href: "/projects",
+      metadata: { mimeType: "application/pdf", sizeBytes: 4096 },
+    },
+    {
+      id: "brain_source_page",
+      type: "Source",
+      canonicalId: "space-page:page_pcs06:reference",
+      owner: "Space",
+      label: "space-page · page_pcs06",
+      workspaceId: "ws_personal",
+      projectId: "prj_personal",
+      availability: "AVAILABLE",
+      href: "/projects",
+      metadata: { resourceType: "space-page", resourceId: "page_pcs06", role: "reference" },
+    },
+    {
+      id: "brain_page_pcs06",
+      type: "Page",
+      canonicalId: "page_pcs06",
+      owner: "Space",
+      label: "PCS-06 Notes",
+      workspaceId: "ws_personal",
+      projectId: "prj_personal",
+      availability: "AVAILABLE",
+      href: "/space",
+      metadata: { scope: "personal", version: 1 },
+    },
     ...brainRunNodes,
   ],
-  edges: [],
-  totalNodes: 51,
-  totalEdges: 0,
+  edges: [
+    {
+      id: "BELONGS_TO:brain_source_artifact->brain_project_personal",
+      type: "BELONGS_TO",
+      sourceNodeId: "brain_source_artifact",
+      targetNodeId: "brain_project_personal",
+    },
+    {
+      id: "REFERENCES:brain_source_artifact->brain_artifact_pcs06",
+      type: "REFERENCES",
+      sourceNodeId: "brain_source_artifact",
+      targetNodeId: "brain_artifact_pcs06",
+    },
+    {
+      id: "BELONGS_TO:brain_artifact_pcs06->brain_project_personal",
+      type: "BELONGS_TO",
+      sourceNodeId: "brain_artifact_pcs06",
+      targetNodeId: "brain_project_personal",
+    },
+    {
+      id: "BELONGS_TO:brain_source_page->brain_project_personal",
+      type: "BELONGS_TO",
+      sourceNodeId: "brain_source_page",
+      targetNodeId: "brain_project_personal",
+    },
+    {
+      id: "REFERENCES:brain_source_page->brain_page_pcs06",
+      type: "REFERENCES",
+      sourceNodeId: "brain_source_page",
+      targetNodeId: "brain_page_pcs06",
+    },
+    {
+      id: "BELONGS_TO:brain_page_pcs06->brain_project_personal",
+      type: "BELONGS_TO",
+      sourceNodeId: "brain_page_pcs06",
+      targetNodeId: "brain_project_personal",
+    },
+  ],
+  totalNodes: 55,
+  totalEdges: 6,
   truncated: false,
 };
 let scheduleTrigger = {
@@ -937,6 +1022,10 @@ async function runDesktopJourney() {
     await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
     const brainSvg = page.locator('svg[aria-label="Connected Brain graph"]');
     await brainSvg.waitFor();
+    await page.getByRole("checkbox", { name: "Artifact", exact: true }).waitFor();
+    await page.getByRole("checkbox", { name: "Page", exact: true }).waitFor();
+    await page.locator('g[aria-label="Artifact: PCS-06 Artifact"]').waitFor();
+    await page.locator('g[aria-label="Page: PCS-06 Notes"]').waitFor();
     const brainRuns = page.locator('g[aria-label^="Run:"]');
     if ((await brainRuns.count()) !== 50) {
       throw new Error(`desktop-brain: expected 50 Run nodes, got ${await brainRuns.count()}`);

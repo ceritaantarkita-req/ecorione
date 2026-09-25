@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import { ProjectIdSchema, WorkspaceIdSchema, type BrainNode } from "@ecorione/shared-schema";
 import {
   BRAIN_CANVAS_MIN_HEIGHT,
+  BRAIN_CANVAS_WIDTH,
+  BRAIN_LANE_CENTER_GAP,
   BRAIN_NODE_MIN_CENTER_GAP,
+  brainLaneX,
   layoutBrainNodes,
 } from "./brain-layout";
 
@@ -45,6 +48,13 @@ describe("A-07 Brain scalable layout", () => {
     expect(layout.height).toBe(BRAIN_CANVAS_MIN_HEIGHT);
     expect(layout.positions.get(project.id)?.y).toBe(BRAIN_CANVAS_MIN_HEIGHT / 2);
     expect(layout.positions.get(flow.id)?.y).toBe(BRAIN_CANVAS_MIN_HEIGHT / 2);
+  });
+
+  it("expands horizontal lanes deterministically for Artifact and Page owner resources", () => {
+    expect(BRAIN_CANVAS_WIDTH).toBeGreaterThan(1080);
+    expect(brainLaneX("Artifact") - brainLaneX("Source")).toBe(BRAIN_LANE_CENTER_GAP);
+    expect(brainLaneX("Page") - brainLaneX("Artifact")).toBe(BRAIN_LANE_CENTER_GAP);
+    expect(brainLaneX("Flow") - brainLaneX("Page")).toBe(BRAIN_LANE_CENTER_GAP);
   });
 
   it("is deterministic for the same ordered owner projection", () => {
