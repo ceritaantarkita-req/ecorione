@@ -4,6 +4,7 @@ import Link from "next/link";
 import styles from "./Work.module.css";
 import {
   calendarPeriodLabel,
+  dateKeyInZone,
   dateKeyToMonthKey,
   formatCalendarTime,
   groupOccurrencesByDate,
@@ -167,14 +168,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             const monthOccurrences = visible.filter(
               (occurrence) =>
                 dateKeyToMonthKey(
-                  new Intl.DateTimeFormat("en-CA", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    timeZone: props.calendarTimezone,
-                  })
-                    .format(new Date(occurrence.when))
-                    .replaceAll("/", "-"),
+                  dateKeyInZone(occurrence.when, props.calendarTimezone),
                 ) === monthKey,
             );
             const next = monthOccurrences[0];
