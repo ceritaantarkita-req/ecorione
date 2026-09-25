@@ -881,8 +881,23 @@ async function runDesktopJourney() {
       .getByRole("textbox", { name: "Describe schedule" })
       .fill("ubah jadi weekdays jam 09.30 WIB");
     await page.getByRole("button", { name: "Draft with local AI", exact: true }).click();
-    await page.getByDisplayValue("PCS-06 Weekday").waitFor();
-    await page.getByDisplayValue("30 9 * * 1-5").waitFor();
+    await page.waitForFunction(
+      ({ name, cron }) => {
+        const nameInput = globalThis.document.querySelector(
+          'input[aria-label="Schedule name"]',
+        );
+        const cronInput = globalThis.document.querySelector(
+          'input[aria-label="Cron expression"]',
+        );
+        return (
+          nameInput instanceof HTMLInputElement &&
+          cronInput instanceof HTMLInputElement &&
+          nameInput.value === name &&
+          cronInput.value === cron
+        );
+      },
+      { name: "PCS-06 Weekday", cron: "30 9 * * 1-5" },
+    );
     if (scheduleMutationCount !== 0) {
       throw new Error("desktop-work: AI draft mutated Trigger before explicit Save");
     }
