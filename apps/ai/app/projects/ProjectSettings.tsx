@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import type { Project, ProjectAutonomyCeiling } from "@ecorione/shared-schema";
+import type {
+  Project,
+  ProjectAutonomyCeiling,
+} from "@ecorione/shared-schema";
 import styles from "./Projects.module.css";
 
 function errorMessage(body: unknown, fallback: string): string {
@@ -56,20 +59,17 @@ export function ProjectSettings(props: {
     setBusy(true);
     setFeedback(null);
     try {
-      const response = await fetch(
-        `/api/projects/${encodeURIComponent(props.project.id)}`,
-        {
-          method: "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            workspaceId: props.project.workspaceId,
-            name: name.trim(),
-            description,
-            instruction,
-            autonomyCeiling,
-          }),
-        },
-      );
+      const response = await fetch(`/api/projects/${encodeURIComponent(props.project.id)}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: props.project.workspaceId,
+          name: name.trim(),
+          description,
+          instruction,
+          autonomyCeiling,
+        }),
+      });
       const body: unknown = await response.json().catch(() => undefined);
       if (!response.ok) {
         throw new Error(errorMessage(body, "Gagal menyimpan Project settings."));
@@ -91,7 +91,9 @@ export function ProjectSettings(props: {
       <div className={styles.settingsHeader}>
         <div>
           <h3>Project settings</h3>
-          <p>Atur konteks Project tanpa mengubah boundary Workspace atau owner data.</p>
+          <p>
+            Atur konteks Project tanpa mengubah boundary Workspace atau owner data.
+          </p>
         </div>
       </div>
 
@@ -145,7 +147,9 @@ export function ProjectSettings(props: {
             <option value="L2">L2</option>
             <option value="L3">L3</option>
           </select>
-          <small>Batas maksimum autonomy request untuk Project ini. V1 berhenti di L3.</small>
+          <small>
+            Batas maksimum autonomy request untuk Project ini. V1 berhenti di L3.
+          </small>
         </label>
 
         <div className={styles.readonlySetting}>
@@ -176,7 +180,9 @@ export function ProjectSettings(props: {
         </div>
       </form>
 
-      {feedback !== null ? <p className={styles.settingsFeedback}>{feedback}</p> : null}
+      {feedback !== null ? (
+        <p className={styles.settingsFeedback}>{feedback}</p>
+      ) : null}
     </section>
   );
 }
