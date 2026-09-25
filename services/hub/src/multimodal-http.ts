@@ -9,26 +9,17 @@ import {
   OperationIdSchema,
   assertId,
   makeId,
-  maySendToHosted,
   type ArtifactPointer,
-  type CapabilityId,
   type Episode,
   type MultimodalAdapterResult,
   type MultimodalAnalyzeRequest,
   type MultimodalAnalyzeResponse,
   type MultimodalSynthesizeResponse,
-  type PermissionId,
-  type Scope,
-  type Sensitivity,
-  type SyncClass,
   type Timestamp,
-  type WorkspaceId,
 } from "@ecorione/shared-schema";
 import {
   BadGatewayError,
-  BadRequestError,
   ConflictError,
-  ForbiddenError,
   HttpError,
   NotFoundError,
   RemoteServiceError,
@@ -36,9 +27,14 @@ import {
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
-import type { CapabilityRegistry } from "./capability-registry.js";
 import type { HistoryLedger } from "./history-ledger.js";
-import type { HubRepository } from "./repository.js";
+import {
+  artifactContentBase64,
+  assertAnalyzeMime,
+  authorizeInference,
+  requestedRoutes,
+  semanticMultimodalResult,
+} from "./multimodal-analysis.js";
 import {
   MultimodalRunConflictError,
   MultimodalRunNotFoundError,
@@ -88,124 +84,6 @@ async function serviceJson<T>(
   } catch (error) {
     upstreamHttpError(service, error);
   }
-}
-
-async function artifactBytes(
-  options: MultimodalRouteOptions,
-  pointer: ArtifactPointer,
-): Promise<string> {
-  const query = new URLSearchParams({
-    scope: pointer.scope,
-    maxSensitivity: pointer.sensitivity,
-    hostedEligible: "0",
-  });
-  const headers = new Headers();
-  if (options.internalToken !== undefined) {
-    headers.set("authorization", `Bearer ${options.internalToken}`);
-  }
-  let response: Response;
-  try {
-    response = await fetch(
-      `${options.artifactUrl}/v1/artifacts/${pointer.id}/content?${query.toString()}`,
-      { headers, redirect: "error" },
-    );
-  } catch {
-    throw new BadGatewayError("Artifact tidak tersedia.");
-  }
-  if (!response.ok) {
-    if (response.status === 404)
-      throw new NotFoundError(`Artifact content tidak ditemukan: ${pointer.id}.`);
-    if (response.status === 403)
-      throw new ForbiddenError("Artifact content ditolak owner boundary.");
-    throw new BadGatewayError(
-      `Artifact content gagal dibaca (HTTP ${String(response.status)}).`,
-    );
-  }
-  const bytes = Buffer.from(await response.arrayBuffer());
-  if (bytes.byteLength !== pointer.sizeBytes) {
-    throw new BadGatewayError(`Artifact ${pointer.id} berubah ukuran setelah authorization.`);
-  }
-  return bytes.toString("base64");
-}
-
-function assertMime(task: MultimodalAnalyzeRequest["task"], mimeType: string): void {
-  const mediaImage = mimeType.startsWith("image/");
-  const document =
-    mimeType === "application/pdf" ||
-    mimeType === "application/msword" ||
-    mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-    mimeType === "application/vnd.oasis.opendocument.text" ||
-    mimeType.startsWith("text/");
-  if ((task === "ocr" || task === "vision") && (mediaImage || document)) return;
-  if (task === "transcribe" && (mimeType.startsWith("audio/") || mimeType.startsWith("video/")))
-    return;
-  throw new BadRequestError(`MIME ${mimeType} tidak didukung untuk task ${task}.`);
-}
-
-export function requestedRoutes(
-  route: MultimodalAnalyzeRequest["route"],
-): readonly ("local" | "hosted")[] {
-  if (route.preferred === "hosted") return ["hosted"];
-  return route.allowHostedFallback ? ["local", "hosted"] : ["local"];
-}
-
-export function authorizeInference(input: {
-  authority: CapabilityRegistry;
-  repo: HubRepository;
-  workspaceId: WorkspaceId;
-  operationId: MultimodalAnalyzeRequest["operationId"];
-  routes: readonly ("local" | "hosted")[];
-  scope: Scope;
-  sensitivity: Sensitivity;
-  syncClass: SyncClass;
-  now: Timestamp;
-}): void {
-  for (const route of input.routes) {
-    if (route === "hosted" && !maySendToHosted(input.syncClass)) {
-      throw new ForbiddenError(
-        `syncClass ${input.syncClass} tidak mengizinkan plaintext hosted inference.`,
-      );
-    }
-    const capabilityId = (
-      route === "hosted" ? "model.invoke.hosted" : "model.invoke.local"
-    ) as CapabilityId;
-    const permissionIds = (
-      route === "hosted"
-        ? ["model.invoke", "network.connect", "provider.spend"]
-        : ["model.invoke", "execution.local"]
-    ) as PermissionId[];
-    const result = input.authority.authorize({
-      operationId: input.operationId,
-      workspaceId: input.workspaceId,
-      subject: { kind: "model", id: route },
-      capabilityId,
-      permissionIds,
-      scope: input.scope,
-      sensitivity: input.sensitivity,
-      autonomy: "L1",
-    });
-    input.repo.recordAuditEvent({
-      type: result.outcome === "ALLOW" ? "CAPABILITY_AUTHORIZED" : "CAPABILITY_DENIED",
-      operationId: input.operationId,
-      module: "Hub",
-      detail: {
-        route,
-        capabilityId,
-        permissionIds,
-        scope: input.scope,
-        sensitivity: input.sensitivity,
-      },
-      now: input.now,
-    });
-    if (result.outcome === "DENY") throw new ForbiddenError(result.reason);
-  }
-}
-
-function stripAudio(
-  result: MultimodalAdapterResult,
-): Omit<MultimodalAdapterResult, "audioBase64" | "audioMimeType"> {
-  const { audioBase64: _audioBase64, audioMimeType: _audioMimeType, ...semantic } = result;
-  return semantic;
 }
 
 function eventType(
@@ -278,7 +156,7 @@ export function registerMultimodalRoutes(
           options.internalToken,
         ),
       );
-      assertMime(body.task, pointer.mimeType);
+      assertAnalyzeMime(body.task, pointer.mimeType);
       const syncClass = pointer.syncClass ?? "LOCAL_ONLY";
       const workspaceId = body.workspaceId ?? assertId("workspace", "ws_personal");
       authorizeInference({
@@ -299,7 +177,7 @@ export function registerMultimodalRoutes(
         sensitivity: pointer.sensitivity,
         syncClass,
       });
-      const contentBase64 = await artifactBytes(options, pointer);
+      const contentBase64 = await artifactContentBase64(options, pointer);
       const inferred = MultimodalAdapterResultSchema.parse(
         await serviceJson<MultimodalAdapterResult>(
           "Connect",
@@ -345,7 +223,7 @@ export function registerMultimodalRoutes(
           },
         },
       );
-      const semanticResult = stripAudio(inferred);
+      const semanticResult = semanticMultimodalResult(inferred);
       await serviceJson(
         "Context",
         `${options.contextUrl}/v1/multimodal/derivations`,
@@ -494,7 +372,7 @@ export function registerMultimodalRoutes(
         },
       );
       const outputArtifact = ArtifactPointerSchema.parse(upload.pointer);
-      const semanticResult = stripAudio(inferred);
+      const semanticResult = semanticMultimodalResult(inferred);
       const historyEvent = deps.history.appendNext(body.sessionId, {
         id: makeId("event"),
         recordedAt: now,
