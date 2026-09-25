@@ -7,6 +7,7 @@ import type {
   Project,
   RunListItem,
   RunProjection,
+  ScheduleAssistResponse,
   TriggerDefinition,
   TriggerScheduleRuntime,
 } from "@ecorione/shared-schema";
@@ -17,6 +18,7 @@ import {
   isProjectIdCandidate,
   resolveActiveProjectId,
 } from "../../lib/project-selection";
+import { ProjectPicker } from "./ProjectPicker";
 import { ScheduleCalendar } from "./ScheduleCalendar";
 import styles from "./Work.module.css";
 import {
@@ -151,6 +153,7 @@ export default function WorkPage() {
   const [selectedRun, setSelectedRun] = useState<RunProjection | null>(null);
   const [runTriggerFilter, setRunTriggerFilter] = useState<string | null>(null);
   const [draft, setDraft] = useState<ScheduleDraft>(EMPTY_DRAFT);
+  const [assistIntent, setAssistIntent] = useState("");
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<string | null>(null);
@@ -316,6 +319,24 @@ export default function WorkPage() {
     }
   }
 
+  function useCreatedProject(project: Project): void {
+    setProjects((current) => [
+      ...current.filter((candidate) => candidate.id !== project.id),
+      project,
+    ]);
+    setProjectId(project.id);
+    setProjectReady(true);
+    setEditing(false);
+    setDraft(EMPTY_DRAFT);
+    setAssistIntent("");
+    try {
+      window.localStorage.setItem(PROJECT_STORAGE_KEY, project.id);
+    } catch {
+      // Owner selection remains valid for this page without browser persistence.
+    }
+    setMessage(`Project ${project.name} dibuat dan dipilih.`);
+  }
+
   function startCreate(): void {
     const first = graphs[0];
     setDraft({
@@ -323,19 +344,72 @@ export default function WorkPage() {
       graphId: first?.graphId ?? "",
       graphVersion: first?.currentVersion ?? 1,
     });
+    setAssistIntent("");
     setEditing(true);
     setMessage("Buat Schedule baru dengan exact pinned Flow version.");
   }
 
   function startEdit(trigger: TriggerDefinition): void {
     setDraft(draftFromTrigger(trigger));
+    setAssistIntent("");
     setEditing(true);
     setMessage(`Mengedit ${trigger.name}. Perubahan tetap melewati Hub policy.`);
   }
 
   function cancelEdit(): void {
     setDraft(EMPTY_DRAFT);
+    setAssistIntent("");
     setEditing(false);
+  }
+
+  async function assistSchedule(): Promise<void> {
+    const intent = assistIntent.trim();
+    if (pending !== null || intent.length < 3) return;
+    setPending("assist");
+    try {
+      const response = await fetch("/api/work/schedule-assist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: WORKSPACE_ID,
+          projectId,
+          intent,
+          current: {
+            name: draft.name,
+            graphId: draft.graphId.length === 0 ? null : draft.graphId,
+            graphVersion: draft.graphVersion,
+            requestedAutonomy: draft.requestedAutonomy,
+            enabled: draft.enabled,
+            configuration: {
+              cronExpression: draft.cronExpression,
+              timezone: draft.timezone,
+              catchupWindowMs: draft.catchupWindowMs,
+              overlap: draft.overlap,
+            },
+          },
+        }),
+      });
+      const assisted = await json<ScheduleAssistResponse>(response);
+      setDraft((current) => ({
+        ...current,
+        name: assisted.draft.name,
+        graphId: assisted.draft.graphId,
+        graphVersion: assisted.draft.graphVersion,
+        requestedAutonomy: assisted.draft.requestedAutonomy,
+        enabled: assisted.draft.enabled,
+        cronExpression: assisted.draft.configuration.cronExpression,
+        timezone: assisted.draft.configuration.timezone,
+        catchupWindowMs: assisted.draft.configuration.catchupWindowMs,
+        overlap: assisted.draft.configuration.overlap,
+      }));
+      setMessage(`${assisted.summary} Review draft lalu Save untuk mengubah Trigger.`);
+    } catch (reason) {
+      setMessage(
+        `Schedule assist gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
+      );
+    } finally {
+      setPending(null);
+    }
   }
 
   async function saveSchedule(event: FormEvent): Promise<void> {
@@ -435,8 +509,6 @@ export default function WorkPage() {
     }
   }
 
-  const selectedProject = projects.find((project) => project.id === projectId);
-
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
@@ -445,21 +517,13 @@ export default function WorkPage() {
           <h1>Work</h1>
           <p>Atur jadwal, Flow, dan hasil eksekusi untuk Project aktif.</p>
         </div>
-        <label className={styles.projectPicker}>
-          <span>Project</span>
-          <select value={projectId} onChange={(event) => chooseProject(event.target.value)}>
-            {projects.length === 0 ? (
-              <option value={PERSONAL_PROJECT_ID}>Personal</option>
-            ) : (
-              projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))
-            )}
-          </select>
-          <small>{selectedProject?.id ?? projectId}</small>
-        </label>
+        <ProjectPicker
+          workspaceId={WORKSPACE_ID}
+          projects={projects}
+          projectId={projectId}
+          onChoose={chooseProject}
+          onCreated={useCreatedProject}
+        />
       </header>
 
       <nav className={styles.tabs} aria-label="Work views">
@@ -524,6 +588,30 @@ export default function WorkPage() {
                 <strong>{draft.id === null ? "New schedule" : "Edit schedule"}</strong>
                 <button type="button" onClick={cancelEdit}>
                   Cancel
+                </button>
+              </div>
+              <div className={styles.scheduleAssistant}>
+                <div>
+                  <strong>AI-assisted draft</strong>
+                  <small>
+                    Describe the create/edit intent. Local AI only proposes fields; Save still
+                    writes through Trigger → Flow → Temporal.
+                  </small>
+                </div>
+                <textarea
+                  value={assistIntent}
+                  aria-label="Describe schedule"
+                  rows={3}
+                  maxLength={2000}
+                  placeholder="Contoh: jalankan Daily Brief setiap Senin–Jumat jam 08.30 WIB"
+                  onChange={(event) => setAssistIntent(event.target.value)}
+                />
+                <button
+                  type="button"
+                  disabled={pending !== null || assistIntent.trim().length < 3}
+                  onClick={() => void assistSchedule()}
+                >
+                  {pending === "assist" ? "Drafting…" : "Draft with local AI"}
                 </button>
               </div>
               <label>
