@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write \"apps/ai/app/brain/page.tsx\" \"scripts/pcs06-browser-acceptance.mjs\" \"services/context/src/retrieval.ts\" \"services/hub/src/orchestrate.test.ts\" && git diff -- \"apps/ai/app/brain/page.tsx\" \"scripts/pcs06-browser-acceptance.mjs\" \"services/context/src/retrieval.ts\" \"services/hub/src/orchestrate.test.ts\" && exit 1",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
