@@ -7,11 +7,7 @@ import type { McpResourceReadResult } from "./mcp-client/types.js";
 import { DEFAULT_EXTERNAL_SOURCE_MAX_BYTES } from "./source-fetch.js";
 
 function strictBase64(value: string): Buffer {
-  if (
-    value.length === 0 ||
-    value.length % 4 !== 0 ||
-    !/^[A-Za-z0-9+/]+={0,2}$/u.test(value)
-  ) {
+  if (value.length === 0 || value.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/u.test(value)) {
     throw new BadRequestError("MCP resource blob bukan base64 valid.");
   }
   const bytes = Buffer.from(value, "base64");
@@ -25,9 +21,7 @@ function strictBase64(value: string): Buffer {
 function ensureSize(bytes: Buffer, maxBytes: number): Buffer {
   if (bytes.byteLength === 0) throw new BadRequestError("MCP resource kosong.");
   if (bytes.byteLength > maxBytes) {
-    throw new BadRequestError(
-      `MCP resource melewati batas ${String(maxBytes)} byte.`,
-    );
+    throw new BadRequestError(`MCP resource melewati batas ${String(maxBytes)} byte.`);
   }
   return bytes;
 }
@@ -54,10 +48,7 @@ export function snapshotMcpResource(
         .map((part) => part.mimeType)
         .filter((value): value is string => value !== undefined),
     );
-    mimeType =
-      mimeTypes.size === 1
-        ? ([...mimeTypes][0] ?? "text/plain")
-        : "text/plain";
+    mimeType = mimeTypes.size === 1 ? ([...mimeTypes][0] ?? "text/plain") : "text/plain";
   } else if (
     result.contents.length === 1 &&
     result.contents[0]?.blob !== undefined &&
