@@ -16,6 +16,7 @@ import type {
   HistoryRange,
   HistorySession,
   MemoryUsed,
+  Project,
 } from "@ecorione/shared-schema";
 import {
   MAX_COMPOSER_ATTACHMENTS,
@@ -33,10 +34,15 @@ import {
   type ChatTarget,
   type ChatTurn,
 } from "../lib/chat-history";
+import {
+  PERSONAL_PROJECT_ID,
+  PROJECT_STORAGE_KEY,
+  activeProjects,
+  isProjectIdCandidate,
+  resolveActiveProjectId,
+} from "../lib/project-selection";
 import { isClientSessionId, makeSessionId, projectSessionStorageKey } from "../lib/session";
 const WORKSPACE_ID = "ws_personal";
-const PERSONAL_PROJECT_ID = "prj_personal";
-const PROJECT_STORAGE_KEY = "ecorione.projectId";
 type RuntimeSnapshot = {
   settings?: {
     hostedCallsEnabled?: boolean;
@@ -60,6 +66,7 @@ type ConversationReplay = {
   readonly truncated: boolean;
 };
 type SessionList = { readonly sessions: HistorySession[] };
+type ProjectList = { readonly projects: Project[] };
 
 let turnCounter = 0;
 function nextTurnId(): string {
@@ -180,51 +187,94 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!hydrated) return;
+    let cancelled = false;
+    setProjectReady(false);
+
     const params = new URLSearchParams(window.location.search);
     const fromQuery = params.get("project");
-    let nextProject = PERSONAL_PROJECT_ID;
-    if (fromQuery !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(fromQuery)) {
-      nextProject = fromQuery;
-    } else {
+    let candidate: string | null = isProjectIdCandidate(fromQuery) ? fromQuery : null;
+    if (candidate === null) {
       try {
         const stored = window.localStorage.getItem(PROJECT_STORAGE_KEY);
-        if (stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)) nextProject = stored;
+        if (isProjectIdCandidate(stored)) candidate = stored;
       } catch {
-        // Storage can be unavailable in privacy-restricted contexts.
+        // The active Project list remains the source of truth.
       }
     }
-
     const requested = params.get("session");
-    const explicitSession = isClientSessionId(requested) ? requested : null;
-    let storedSession: string | null = null;
-    try {
-      const candidate = window.localStorage.getItem(projectSessionStorageKey(nextProject));
-      if (isClientSessionId(candidate)) storedSession = candidate;
-    } catch {
-      // In-memory continuity remains available for this page load.
-    }
-    const nextSession = explicitSession ?? storedSession ?? makeSessionId();
 
-    setProjectId(nextProject);
-    setRequestedSessionId(explicitSession);
-    setSessionId(nextSession);
-    setTurns([]);
-    setHistorySessions([]);
-    setHistoryListReady(false);
-    setHistoryTruncated(false);
-    setHistoryFeedback(null);
-    setSessionReady(false);
-    routeLockedRef.current = false;
+    void fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" })
+      .then(async (res) => {
+        const body: unknown = await res.json().catch(() => undefined);
+        if (!res.ok) {
+          throw new Error(extractErrorMessage(body) ?? "Gagal memuat daftar Project aktif.");
+        }
+        return body as ProjectList;
+      })
+      .then((body) => {
+        if (cancelled) return;
+        const nextProject = resolveActiveProjectId(candidate, activeProjects(body.projects));
+        if (nextProject === null) {
+          setHistoryFeedback("Tidak ada Project aktif yang tersedia.");
+          return;
+        }
 
-    try {
-      window.localStorage.setItem(PROJECT_STORAGE_KEY, nextProject);
-      if (explicitSession === null) {
-        window.localStorage.setItem(projectSessionStorageKey(nextProject), nextSession);
-      }
-    } catch {
-      // The explicit in-memory Project/session still works without persistence.
-    }
-    setProjectReady(true);
+        const selectionCorrected = candidate !== null && candidate !== nextProject;
+        const explicitSession =
+          !selectionCorrected && isClientSessionId(requested) ? requested : null;
+        let storedSession: string | null = null;
+        try {
+          const stored = window.localStorage.getItem(projectSessionStorageKey(nextProject));
+          if (isClientSessionId(stored)) storedSession = stored;
+        } catch {
+          // In-memory continuity remains available for this page load.
+        }
+        const nextSession = explicitSession ?? storedSession ?? makeSessionId();
+
+        setProjectId(nextProject);
+        setRequestedSessionId(explicitSession);
+        setSessionId(nextSession);
+        setTurns([]);
+        setHistorySessions([]);
+        setHistoryListReady(false);
+        setHistoryTruncated(false);
+        setHistoryFeedback(
+          selectionCorrected
+            ? "Project sebelumnya tidak tersedia. Beralih ke Project aktif."
+            : null,
+        );
+        setSessionReady(false);
+        routeLockedRef.current = false;
+
+        try {
+          window.localStorage.setItem(PROJECT_STORAGE_KEY, nextProject);
+          if (explicitSession === null) {
+            window.localStorage.setItem(projectSessionStorageKey(nextProject), nextSession);
+          }
+        } catch {
+          // The reconciled in-memory Project/session still works without persistence.
+        }
+
+        if (selectionCorrected) {
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.set("project", nextProject);
+          nextUrl.searchParams.delete("session");
+          window.history.replaceState(null, "", nextUrl);
+        }
+        setProjectReady(true);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setProjectReady(false);
+        setSessionReady(false);
+        setHistoryFeedback(
+          error instanceof Error ? error.message : "Gagal memuat daftar Project aktif.",
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [hydrated]);
 
   useEffect(() => {

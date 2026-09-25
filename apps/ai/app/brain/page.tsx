@@ -12,11 +12,16 @@ import {
   type BrainNodeType,
   type Project,
 } from "@ecorione/shared-schema";
+import {
+  PERSONAL_PROJECT_ID,
+  PROJECT_STORAGE_KEY,
+  activeProjects,
+  isProjectIdCandidate,
+  resolveActiveProjectId,
+} from "../../lib/project-selection";
 import styles from "./Brain.module.css";
 
 const WORKSPACE_ID = "ws_personal";
-const PERSONAL_PROJECT_ID = "prj_personal";
-const PROJECT_STORAGE_KEY = "ecorione.projectId";
 const VIEWBOX_WIDTH = 1080;
 const VIEWBOX_HEIGHT = 640;
 
@@ -96,6 +101,7 @@ function relationText(edge: BrainEdge, nodesById: Map<string, BrainNode>): strin
 export default function BrainPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
+  const [projectReady, setProjectReady] = useState(false);
   const [graph, setGraph] = useState<BrainGraphResponse | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [enabledNodeTypes, setEnabledNodeTypes] = useState<Set<BrainNodeType>>(
@@ -146,31 +152,59 @@ export default function BrainPage() {
   }, []);
 
   useEffect(() => {
-    let chosen = PERSONAL_PROJECT_ID;
+    let cancelled = false;
+    let candidate: string | null = null;
     try {
       const stored = window.localStorage.getItem(PROJECT_STORAGE_KEY);
-      if (stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)) chosen = stored;
+      if (isProjectIdCandidate(stored)) candidate = stored;
     } catch {
-      // Personal remains the safe fallback.
+      // The active Project list remains the source of truth.
     }
-    setProjectId(chosen);
+
     void fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" })
       .then((response) => json<{ projects: Project[] }>(response))
-      .then((body) =>
-        setProjects(body.projects.filter((project) => project.archivedAt === null)),
-      )
-      .catch(() => setProjects([]));
+      .then((body) => {
+        if (cancelled) return;
+        const active = activeProjects(body.projects);
+        const chosen = resolveActiveProjectId(candidate, active);
+        setProjects(active);
+        if (chosen === null) {
+          setProjectReady(false);
+          setMessage("Brain tidak menemukan Project aktif.");
+          return;
+        }
+        setProjectId(chosen);
+        setProjectReady(true);
+        try {
+          window.localStorage.setItem(PROJECT_STORAGE_KEY, chosen);
+        } catch {
+          // In-memory selection still uses the reconciled active Project.
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setProjects([]);
+        setProjectReady(false);
+        setMessage("Brain gagal memuat daftar Project aktif.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
+    if (!projectReady) return;
     void loadBrain(projectId);
-  }, [loadBrain, projectId]);
+  }, [loadBrain, projectId, projectReady]);
 
   function chooseProject(next: string): void {
-    setProjectId(next);
+    const chosen = resolveActiveProjectId(next, projects);
+    if (chosen === null) return;
+    setProjectId(chosen);
     setSelectedId(null);
     try {
-      window.localStorage.setItem(PROJECT_STORAGE_KEY, next);
+      window.localStorage.setItem(PROJECT_STORAGE_KEY, chosen);
     } catch {
       // Project selection still works for this session when storage is unavailable.
     }

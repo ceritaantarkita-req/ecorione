@@ -7,6 +7,7 @@ const pagePath = resolve("apps/ai/app/brain/page.tsx");
 const cssPath = resolve("apps/ai/app/brain/Brain.module.css");
 const navPath = resolve("apps/ai/app/ProductNav.tsx");
 const schemaPath = resolve("packages/shared-schema/src/brain.ts");
+const projectSelectionPath = resolve("apps/ai/lib/project-selection.ts");
 
 async function source(path: string): Promise<string> {
   return readFile(path, "utf8");
@@ -14,10 +15,16 @@ async function source(path: string): Promise<string> {
 
 describe("PE-06 Brain source contract", () => {
   it("exposes Brain as a first-class Project-scoped navigation surface", async () => {
-    const [page, nav] = await Promise.all([source(pagePath), source(navPath)]);
+    const [page, nav, projectSelection] = await Promise.all([
+      source(pagePath),
+      source(navPath),
+      source(projectSelectionPath),
+    ]);
     expect(nav).toContain('["Brain", "/brain", "brain"]');
     expect(page).toContain('const WORKSPACE_ID = "ws_personal"');
-    expect(page).toContain('const PROJECT_STORAGE_KEY = "ecorione.projectId"');
+    expect(page).toContain("PROJECT_STORAGE_KEY");
+    expect(page).toContain('from "../../lib/project-selection"');
+    expect(projectSelection).toContain('PROJECT_STORAGE_KEY = "ecorione.projectId"');
     expect(page).toContain("/api/brain?");
     expect(page).toContain("BRAIN_NODE_TYPES");
     expect(page).toContain("BRAIN_EDGE_TYPES");
