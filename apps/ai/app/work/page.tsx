@@ -10,11 +10,15 @@ import type {
   TriggerDefinition,
   TriggerScheduleRuntime,
 } from "@ecorione/shared-schema";
+import {
+  PROJECT_STORAGE_KEY,
+  activeProjects,
+  isProjectIdCandidate,
+  resolveActiveProjectId,
+} from "../../lib/project-selection";
 import styles from "./Work.module.css";
 
 const WORKSPACE_ID = "ws_personal";
-const PERSONAL_PROJECT_ID = "prj_personal";
-const PROJECT_STORAGE_KEY = "ecorione.projectId";
 
 type WorkTab = "schedule" | "flows" | "runs";
 type CalendarMode = "list" | "day" | "week" | "month";
@@ -151,7 +155,8 @@ export default function WorkPage() {
   const [tab, setTab] = useState<WorkTab>("schedule");
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("list");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectReady, setProjectReady] = useState(false);
   const [triggers, setTriggers] = useState<TriggerDefinition[]>([]);
   const [graphs, setGraphs] = useState<FlowGraphSummary[]>([]);
   const [runs, setRuns] = useState<RunListItem[]>([]);
@@ -261,30 +266,58 @@ export default function WorkPage() {
   }, []);
 
   useEffect(() => {
-    let chosen = PERSONAL_PROJECT_ID;
+    let cancelled = false;
+    let candidate: string | null = null;
     try {
       const stored = window.localStorage.getItem(PROJECT_STORAGE_KEY);
-      if (stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)) chosen = stored;
+      if (isProjectIdCandidate(stored)) candidate = stored;
     } catch {
-      // Personal remains the safe fallback.
+      // The active Project list remains the source of truth.
     }
-    setProjectId(chosen);
+
     void fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" })
       .then((response) => json<{ projects: Project[] }>(response))
-      .then((body) =>
-        setProjects(body.projects.filter((project) => project.archivedAt === null)),
-      )
-      .catch(() => setProjects([]));
+      .then((body) => {
+        if (cancelled) return;
+        const active = activeProjects(body.projects);
+        const chosen = resolveActiveProjectId(candidate, active);
+        setProjects(active);
+        if (chosen === null) {
+          setProjectReady(false);
+          setMessage("Work tidak menemukan Project aktif.");
+          return;
+        }
+        setProjectId(chosen);
+        setProjectReady(true);
+        try {
+          window.localStorage.setItem(PROJECT_STORAGE_KEY, chosen);
+        } catch {
+          // In-memory selection still uses the reconciled active Project.
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setProjects([]);
+        setProjectReady(false);
+        setMessage("Work gagal memuat daftar Project aktif.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
+    if (!projectReady || projectId === null) return;
     void loadWork(projectId);
-  }, [loadWork, projectId]);
+  }, [loadWork, projectId, projectReady]);
 
   function chooseProject(next: string): void {
-    setProjectId(next);
+    const chosen = resolveActiveProjectId(next, projects);
+    if (chosen === null) return;
+    setProjectId(chosen);
     try {
-      window.localStorage.setItem(PROJECT_STORAGE_KEY, next);
+      window.localStorage.setItem(PROJECT_STORAGE_KEY, chosen);
     } catch {
       // Selection remains usable for this page even without persistent browser storage.
     }
@@ -314,7 +347,7 @@ export default function WorkPage() {
 
   async function saveSchedule(event: FormEvent): Promise<void> {
     event.preventDefault();
-    if (pending !== null || draft.graphId.length === 0) return;
+    if (pending !== null || draft.graphId.length === 0 || projectId === null) return;
     setPending("save");
     try {
       const base = {
