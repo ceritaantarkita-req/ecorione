@@ -29,7 +29,7 @@ export const PROJECT_SOURCE_ROLES = ["source", "reference"] as const;
 export const ProjectSourceRoleSchema = z.enum(PROJECT_SOURCE_ROLES);
 export type ProjectSourceRole = z.infer<typeof ProjectSourceRoleSchema>;
 
-const McpServerRefSchema = z
+export const McpServerRefSchema = z
   .string()
   .min(1)
   .max(128)
@@ -186,6 +186,35 @@ export const ProjectUrlIngestResponseSchema = z
   })
   .strict();
 export type ProjectUrlIngestResponse = z.infer<typeof ProjectUrlIngestResponseSchema>;
+
+export const ProjectMcpResourceIngestRequestSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    serverId: McpServerRefSchema,
+    resourceUri: z.string().min(1).max(4096),
+    role: ProjectSourceRoleSchema.default("source"),
+  })
+  .strict();
+export type ProjectMcpResourceIngestRequest = z.infer<
+  typeof ProjectMcpResourceIngestRequestSchema
+>;
+
+export const ProjectMcpResourceIngestResponseSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    projectId: ProjectIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    serverId: McpServerRefSchema,
+    resourceUri: z.string().min(1).max(4096),
+    artifact: ArtifactPointerSchema,
+    source: ProjectSourceViewSchema,
+    state: z.literal("READY"),
+  })
+  .strict();
+export type ProjectMcpResourceIngestResponse = z.infer<
+  typeof ProjectMcpResourceIngestResponseSchema
+>;
 
 export const ProjectSourceListResponseSchema = z
   .object({ sources: z.array(ProjectSourceViewSchema) })
