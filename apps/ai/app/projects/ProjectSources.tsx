@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type {
+  ProjectSourceExtractResponse,
   ProjectSourceResourceType,
   ProjectSourceRole,
   ProjectSourceView,
@@ -155,6 +156,40 @@ export function ProjectSources(props: {
     }
   }
 
+  async function extract(source: ProjectSourceView): Promise<void> {
+    if (
+      source.binding.resourceType !== "artifact" ||
+      source.availability !== "AVAILABLE" ||
+      busyKey !== null
+    ) {
+      return;
+    }
+    const key = `extract:${source.binding.resourceId}`;
+    setBusyKey(key);
+    setFeedback(null);
+    try {
+      const response = await fetch(`${endpoint}/extract`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: props.workspaceId,
+          artifactId: source.binding.resourceId,
+        }),
+      });
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) throw new Error(errorMessage(body, "Gagal mengekstrak source."));
+      const extracted = body as ProjectSourceExtractResponse;
+      const preview = extracted.result.text.trim().slice(0, 160);
+      setFeedback(
+        `Extraction ${extracted.task} selesai → Project context ${extracted.contextEpisodeId}.${preview.length === 0 ? "" : ` ${preview}`}`,
+      );
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Gagal mengekstrak source.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
   async function detach(source: ProjectSourceView): Promise<void> {
     const key = [
       source.binding.resourceType,
@@ -217,8 +252,8 @@ export function ProjectSources(props: {
         <div>
           <strong>Upload file</strong>
           <small>
-            Maks. 20 MiB. Disimpan oleh Artifact dan langsung diikat ke Project. OCR/indexing
-            belum dijalankan pada tahap ini.
+            Maks. 20 MiB. Disimpan oleh Artifact dan langsung diikat ke Project. Gunakan Extract
+            pada Artifact untuk membuat derived context Project; tidak membuat chat/history.
           </small>
         </div>
         <form className={styles.sourceUploadForm} onSubmit={upload}>
@@ -365,14 +400,28 @@ export function ProjectSources(props: {
                   </small>
                   {source.unavailableReason !== null ? <p>{source.unavailableReason}</p> : null}
                 </div>
-                <button
-                  className="ecr-btn ecr-btn--secondary"
-                  type="button"
-                  disabled={busyKey !== null}
-                  onClick={() => void detach(source)}
-                >
-                  Lepas
-                </button>
+                <div className={styles.sourceActions}>
+                  {source.binding.resourceType === "artifact" ? (
+                    <button
+                      className="ecr-btn ecr-btn--primary"
+                      type="button"
+                      disabled={busyKey !== null || source.availability !== "AVAILABLE"}
+                      onClick={() => void extract(source)}
+                    >
+                      {busyKey === `extract:${source.binding.resourceId}`
+                        ? "Extracting..."
+                        : "Extract"}
+                    </button>
+                  ) : null}
+                  <button
+                    className="ecr-btn ecr-btn--secondary"
+                    type="button"
+                    disabled={busyKey !== null}
+                    onClick={() => void detach(source)}
+                  >
+                    Lepas
+                  </button>
+                </div>
               </li>
             );
           })}
