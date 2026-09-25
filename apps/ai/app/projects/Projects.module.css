@@ -432,6 +432,12 @@
   background: var(--surface-2);
 }
 
+.sourceActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .sourceInfo {
   min-width: 0;
   display: grid;
