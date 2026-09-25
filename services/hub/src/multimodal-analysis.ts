@@ -97,9 +97,7 @@ export async function artifactContentBase64(
   }
   const bytes = Buffer.from(await response.arrayBuffer());
   if (bytes.byteLength !== pointer.sizeBytes) {
-    throw new BadGatewayError(
-      `Artifact ${pointer.id} berubah ukuran setelah authorization.`,
-    );
+    throw new BadGatewayError(`Artifact ${pointer.id} berubah ukuran setelah authorization.`);
   }
   return bytes.toString("base64");
 }
