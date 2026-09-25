@@ -198,11 +198,17 @@ This should receive a deterministic regression test before repair.
 
 ### A-04 — PRODUCT GAP — Project creation/settings are thinner than the intended product
 
+**Closure update — 2026-09-25: CLOSED / PASS.** PR #318 / merge `33d54928de60ba3f6d8cd3770c18d7ad5eea6f98` added the same-origin Project PATCH path and Projects settings UI for name, description, instruction, and autonomy ceiling. The single V1 memory policy `GLOBAL_PLUS_PROJECT` is intentionally displayed read-only rather than represented as a fake selector. The later Session 8 source-ingestion sequence preserved this ownership/model boundary and final implementation main `3dd350e938d3651e75fc81ac30e9ef751c477ca5` reached staging through successful Staging Deploy run `36109914350`.
+
 The backend Project model supports name, description, instruction, autonomy ceiling, and fixed memory policy `GLOBAL_PLUS_PROJECT`. Hub exposes Project PATCH.
 
 The current Ai Projects surface creates by name only, displays memory/autonomy metadata, does not expose description/instruction/autonomy editing, has no same-origin Ai API route for generic Project PATCH, and cannot offer a meaningful memory-policy selector because V1 memory policy is currently a single literal.
 
 ### A-05 — PRODUCT GAP — Project Sources are bindings, not source onboarding/ingestion
+
+**Progress update — 2026-09-25: PARTIALLY CLOSED / SAFE-PAUSED REMAINDER.** Session 8 closed the currently authorized source slices through PRs #319–#324: owner-backed source selection, direct file -> Artifact ingestion, separate Project-scoped extraction, hardened HTTPS URL snapshot ingestion, and browsing/ingesting concrete resources from a Project-bound MCP server. Generic connector snapshots are stored as `RESTRICTED + LOCAL_ONLY`, exact resource reads require explicit `mcp.resource.read / mcp.read` authority, and the path does not synthesize chat/history. Final implementation main is `3dd350e938d3651e75fc81ac30e9ef751c477ca5`, with merged-main CI/Product Eval/MCP PASS and automatic Staging Deploy run `36109914350` PASS.
+
+The original A-05 finding is **not claimed fully closed**: native Google Drive connection/onboarding and recursive folder/folder-snapshot semantics remain an explicit A-05b.3c decision. Generic MCP resource ingestion can serve connectors that already expose concrete MCP resources, but that is not equivalent to native Google Drive onboarding.
 
 Current Project Sources support references to Artifact, Space page, Flow graph, MCP server, and HTTPS URL.
 
@@ -331,7 +337,7 @@ This audit does **not** authorize implementation automatically.
 3. bounded internal HTTP timeout policy + stalled-upstream tests;
 4. Space Flow default-port correction + regression test;
 5. Project state/UI correctness: CLOSED (virtual All in Session 6; stale persisted Project reconciliation in Session 7);
-6. Project settings + source onboarding UX;
+6. Project settings: CLOSED in Session 8; source onboarding: partially closed, with native Google Drive/folder-semantics remainder decision before A-06;
 7. Schedule calendar/navigation/year + AI-assisted schedule interaction;
 8. Brain scalable layout/pan/zoom + richer canonical-owner projection;
 9. frontend module decomposition while touching those surfaces;
