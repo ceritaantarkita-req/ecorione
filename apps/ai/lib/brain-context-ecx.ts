@@ -148,7 +148,10 @@ export async function runBrainContextEcx(
       now: input.now,
       ...(neighborhood === null
         ? {}
-        : { candidateSourceUris: neighborhood.contextConstraint.sourceUris }),
+        : {
+            candidateSourceUris: neighborhood.contextConstraint.sourceUris,
+            candidateFactIds: neighborhood.contextConstraint.factIds,
+          }),
     }),
   );
   const retrievalLatencyMs = performance.now() - retrievalStarted;
