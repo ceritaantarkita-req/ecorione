@@ -8,8 +8,10 @@ import {
 import { GET } from "./route";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
+let context: Interceptable;
 let hub: Interceptable;
 let flow: Interceptable;
+let originalContextUrl: string | undefined;
 let originalHubUrl: string | undefined;
 let originalFlowUrl: string | undefined;
 
@@ -93,16 +95,21 @@ beforeEach(() => {
   const agent = new MockAgent();
   agent.disableNetConnect();
   setGlobalDispatcher(agent);
+  context = agent.get("http://context.local");
   hub = agent.get("http://hub.local");
   flow = agent.get("http://flow.local");
+  originalContextUrl = process.env.ECORIONE_CONTEXT_URL;
   originalHubUrl = process.env.ECORIONE_HUB_URL;
   originalFlowUrl = process.env.ECORIONE_FLOW_URL;
+  process.env.ECORIONE_CONTEXT_URL = "http://context.local";
   process.env.ECORIONE_HUB_URL = "http://hub.local";
   process.env.ECORIONE_FLOW_URL = "http://flow.local";
 });
 
 afterEach(() => {
   setGlobalDispatcher(originalDispatcher);
+  if (originalContextUrl === undefined) delete process.env.ECORIONE_CONTEXT_URL;
+  else process.env.ECORIONE_CONTEXT_URL = originalContextUrl;
   if (originalHubUrl === undefined) delete process.env.ECORIONE_HUB_URL;
   else process.env.ECORIONE_HUB_URL = originalHubUrl;
   if (originalFlowUrl === undefined) delete process.env.ECORIONE_FLOW_URL;
@@ -158,6 +165,12 @@ describe("PE-06 Brain API", () => {
         method: "GET",
       })
       .reply(200, { runs: [run()] });
+    context
+      .intercept({
+        path: "/v1/facts?projectId=prj_finance&maxSensitivity=RESTRICTED&limit=40",
+        method: "GET",
+      })
+      .reply(200, { facts: [] });
 
     const response = await GET(
       new Request("http://ai.local/api/brain?workspaceId=ws_personal&projectId=prj_finance"),
@@ -223,6 +236,12 @@ describe("PE-06 Brain API", () => {
         method: "GET",
       })
       .reply(200, { runs: [run("prj_other")] });
+    context
+      .intercept({
+        path: "/v1/facts?projectId=prj_finance&maxSensitivity=RESTRICTED&limit=40",
+        method: "GET",
+      })
+      .reply(200, { facts: [] });
 
     const response = await GET(
       new Request("http://ai.local/api/brain?workspaceId=ws_personal&projectId=prj_finance"),
