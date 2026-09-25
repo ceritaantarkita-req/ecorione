@@ -260,6 +260,7 @@ const brain = {
         object: "verified",
         sensitivity: "INTERNAL",
         syncClass: "LOCAL_ONLY",
+        sourceUri: "artifact:art_pcs06",
       },
     },
   ],
@@ -306,9 +307,15 @@ const brain = {
       sourceNodeId: "brain_fact_pcs06",
       targetNodeId: "brain_project_personal",
     },
+    {
+      id: "GENERATED_FROM:brain_fact_pcs06->brain_artifact_pcs06",
+      type: "GENERATED_FROM",
+      sourceNodeId: "brain_fact_pcs06",
+      targetNodeId: "brain_artifact_pcs06",
+    },
   ],
   totalNodes: 56,
-  totalEdges: 7,
+  totalEdges: 8,
   truncated: false,
 };
 let scheduleTrigger = {
@@ -1051,7 +1058,14 @@ async function runDesktopJourney() {
     await page.getByRole("checkbox", { name: "Fact", exact: true }).waitFor();
     await page.locator('g[aria-label="Artifact: PCS-06 Artifact"]').waitFor();
     await page.locator('g[aria-label="Page: PCS-06 Notes"]').waitFor();
-    await page.locator('g[aria-label="Fact: PCS-06 canonical fact"]').waitFor();
+    const factNode = page.locator('g[aria-label="Fact: PCS-06 canonical fact"]');
+    await factNode.waitFor();
+    await factNode.click();
+    await page
+      .getByText("PCS-06 canonical fact · GENERATED_FROM · PCS-06 Artifact", {
+        exact: true,
+      })
+      .waitFor();
     const brainRuns = page.locator('g[aria-label^="Run:"]');
     if ((await brainRuns.count()) !== 50) {
       throw new Error(`desktop-brain: expected 50 Run nodes, got ${await brainRuns.count()}`);
