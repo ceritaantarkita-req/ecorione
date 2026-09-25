@@ -36,7 +36,7 @@ describe("A-03 stale Project selection source contract", () => {
   });
 
   it("removes the old syntax-only localStorage acceptance from all three surfaces", () => {
-    const oldPattern = 'stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)';
+    const oldPattern = "stored !== null && /^prj_[a-z0-9][a-z0-9_-]*$/.test(stored)";
     expect(ai).not.toContain(oldPattern);
     expect(work).not.toContain(oldPattern);
     expect(brain).not.toContain(oldPattern);
