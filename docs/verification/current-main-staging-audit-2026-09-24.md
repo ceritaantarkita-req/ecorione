@@ -210,31 +210,23 @@ The current Ai Projects surface creates by name only, displays memory/autonomy m
 
 The remaining boundary decision is now resolved: native Google Drive OAuth/onboarding is deferred as a separate future integration because the repository has no Drive/OAuth lifecycle domain, and recursive folder auto-ingestion is intentionally rejected for this roadmap. Generic MCP resource ingestion is the accepted A-05 connector boundary.
 
-Current Project Sources support references to Artifact, Space page, Flow graph, MCP server, and HTTPS URL.
+Current Project Sources support owner-backed references plus the later Session 8 ingestion slices: direct file -> Artifact upload, separate Project-scoped extraction, hardened HTTPS URL snapshot ingestion, and browsing/ingesting concrete resources from a Project-bound MCP server.
 
-Not currently implemented in the Project surface:
+The original audit's missing direct-upload, connector-resource browsing, and URL-ingestion items are therefore closed. The remaining provider-specific limitations are native Google Drive OAuth/onboarding and recursive folder mirroring; both are explicitly deferred outside A-05 for this roadmap.
 
-- Google Drive connection/onboarding;
-- direct document/photo/folder upload as Project Source;
-- browsing/selecting connector resources;
-- URL content ingestion from the Projects page.
+### A-06 — PRODUCT GAP — Schedule product evolution
 
-For URL bindings specifically, Hub marks the binding available after schema validation; it does not fetch/ingest the URL as part of Project Source attachment. This is correct for the current reference-only contract but should not be presented as if URL content has been connected and indexed.
+**Progress update — 2026-09-25: A-06a CLOSED / PASS.** PR #327 / merge `3b1abefd18263f7441d139e3435b064f83b142ea` closes the calendar/navigation portion of this finding. Work now has `list/day/week/month/year`, an explicit calendar cursor, Previous/Today/Next navigation, real day/week/month/year projections, responsive layouts, and exact Flow-version links. The implementation renders only Temporal `nextActionTimes`, so Flow remains Trigger owner and Temporal remains schedule truth.
 
-### A-06 — PRODUCT GAP — Schedule is operationally real but not yet the requested calendar UX
+Exact-head CI `36113711079`, Product Eval `36113711113`, and PCS-06 rendered-browser `36113711071` passed. Merged-main CI `36114202738` and Product Eval `36114202810` passed. Automatic Staging Deploy `36114495464` deployed exact reviewed main successfully.
 
-The runtime architecture is real and sound: Schedule is a time Trigger UI, Flow owns Trigger definition, Temporal owns schedule truth, exact Flow version is pinned, timezone/catch-up/overlap/autonomy are represented, and linked Runs are exposed.
+Remaining A-06b product gaps:
 
-Current product gaps:
+- Project selection is still a native `select`, not searchable autocomplete;
+- no inline `+ new Project` action;
+- no embedded AI/chat composer for natural-language Schedule creation/editing.
 
-- views are `list/day/week/month`; **year is absent**;
-- day/week/month render a filtered upcoming-occurrence **timeline**, not a calendar grid;
-- there is no date cursor or previous/next period navigation;
-- Project selection is a native `select`, not searchable autocomplete;
-- no inline “+ new Project” action;
-- no embedded AI/chat composer for natural-language schedule creation/editing.
-
-This should be treated as UX/product evolution, not a scheduler-backend rewrite.
+This remains UX/product evolution, not a scheduler-backend rewrite.
 
 ### A-07 — MEDIUM PRODUCT/UX — Brain V1 becomes unreadable at allowed graph sizes
 
@@ -338,7 +330,7 @@ This audit does **not** authorize implementation automatically.
 4. Space Flow default-port correction + regression test;
 5. Project state/UI correctness: CLOSED (virtual All in Session 6; stale persisted Project reconciliation in Session 7);
 6. Project settings + source onboarding: CLOSED for this roadmap (generic MCP connector boundary; native Google Drive integration deferred separately);
-7. Schedule calendar/navigation/year + AI-assisted schedule interaction;
+7. Schedule A-06b only: searchable Project picker / inline Project creation + AI-assisted schedule interaction; A-06a calendar/navigation/year is CLOSED / PASS;
 8. Brain scalable layout/pan/zoom + richer canonical-owner projection;
 9. frontend module decomposition while touching those surfaces;
 10. Compose readiness/health improvements;
