@@ -18,10 +18,7 @@ export function resolveActiveProjectId(
   projects: readonly Project[],
 ): string | null {
   const active = activeProjects(projects);
-  if (
-    isProjectIdCandidate(candidate) &&
-    active.some((project) => project.id === candidate)
-  ) {
+  if (isProjectIdCandidate(candidate) && active.some((project) => project.id === candidate)) {
     return candidate;
   }
   const personal = active.find((project) => project.id === PERSONAL_PROJECT_ID);
