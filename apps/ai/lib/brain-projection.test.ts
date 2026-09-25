@@ -44,6 +44,60 @@ function source(index: number): ProjectSourceView {
   };
 }
 
+
+function artifactSource(
+  role: ProjectSourceView["binding"]["role"] = "source",
+): ProjectSourceView {
+  return {
+    binding: {
+      projectId: PROJECT_ID,
+      workspaceId: WORKSPACE_ID,
+      resourceType: "artifact",
+      resourceId: "art_report",
+      owner: "Artifact",
+      role,
+      createdAt: NOW,
+    },
+    availability: "AVAILABLE",
+    metadata: {
+      id: "art_report",
+      path: "sha256/aa/report.pdf",
+      description: "Q3 report",
+      mimeType: "application/pdf",
+      sizeBytes: 4096,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+    },
+    unavailableReason: null,
+  };
+}
+
+function pageSource(): ProjectSourceView {
+  return {
+    binding: {
+      projectId: PROJECT_ID,
+      workspaceId: WORKSPACE_ID,
+      resourceType: "space-page",
+      resourceId: "page_notes",
+      owner: "Space",
+      role: "reference",
+      createdAt: NOW,
+    },
+    availability: "AVAILABLE",
+    metadata: {
+      id: "page_notes",
+      workspaceId: WORKSPACE_ID,
+      title: "Finance notes",
+      scope: "personal",
+      version: 3,
+      createdAt: NOW,
+      updatedAt: NOW,
+    },
+    unavailableReason: null,
+  };
+}
+
 function graph(index: number): FlowGraphSummary {
   return {
     graphId: `fg_finance${String(index).padStart(2, "0")}`,
@@ -103,6 +157,97 @@ describe("PE-06 Brain deterministic projection", () => {
     expect(first.edges.map((edge) => edge.id)).toEqual(
       [...first.edges.map((edge) => edge.id)].sort((left, right) => left.localeCompare(right)),
     );
+  });
+
+  it("projects bound Artifact and Space Page resources as first-class canonical owner nodes", () => {
+    const result = buildBrainGraph(query(), {
+      project,
+      sources: [pageSource(), artifactSource("reference"), artifactSource("source")],
+      graphs: [],
+      triggers: [],
+      runs: [],
+    });
+
+    const artifact = result.nodes.find(
+      (node) => node.type === "Artifact" && node.canonicalId === "art_report",
+    );
+    const page = result.nodes.find(
+      (node) => node.type === "Page" && node.canonicalId === "page_notes",
+    );
+    const artifactBindings = result.nodes.filter(
+      (node) =>
+        node.type === "Source" &&
+        node.metadata.resourceType === "artifact" &&
+        node.metadata.resourceId === "art_report",
+    );
+    const pageBinding = result.nodes.find(
+      (node) =>
+        node.type === "Source" &&
+        node.metadata.resourceType === "space-page" &&
+        node.metadata.resourceId === "page_notes",
+    );
+    const projectNode = result.nodes.find((node) => node.type === "Project");
+
+    expect(artifact).toMatchObject({
+      owner: "Artifact",
+      label: "Q3 report",
+      availability: "AVAILABLE",
+      href: "/projects",
+      metadata: {
+        mimeType: "application/pdf",
+        sizeBytes: 4096,
+        sensitivity: "INTERNAL",
+        syncClass: "LOCAL_ONLY",
+      },
+    });
+    expect(page).toMatchObject({
+      owner: "Space",
+      label: "Finance notes",
+      availability: "AVAILABLE",
+      href: "/space",
+      metadata: {
+        scope: "personal",
+        version: 3,
+      },
+    });
+    expect(artifactBindings).toHaveLength(2);
+    expect(pageBinding).toBeDefined();
+    expect(projectNode).toBeDefined();
+
+    for (const binding of artifactBindings) {
+      expect(
+        result.edges.some(
+          (edge) =>
+            edge.type === "REFERENCES" &&
+            edge.sourceNodeId === binding.id &&
+            edge.targetNodeId === artifact?.id,
+        ),
+      ).toBe(true);
+    }
+    expect(
+      result.edges.some(
+        (edge) =>
+          edge.type === "REFERENCES" &&
+          edge.sourceNodeId === pageBinding?.id &&
+          edge.targetNodeId === page?.id,
+      ),
+    ).toBe(true);
+    expect(
+      result.edges.some(
+        (edge) =>
+          edge.type === "BELONGS_TO" &&
+          edge.sourceNodeId === artifact?.id &&
+          edge.targetNodeId === projectNode?.id,
+      ),
+    ).toBe(true);
+    expect(
+      result.edges.some(
+        (edge) =>
+          edge.type === "BELONGS_TO" &&
+          edge.sourceNodeId === page?.id &&
+          edge.targetNodeId === projectNode?.id,
+      ),
+    ).toBe(true);
   });
 
   it("applies the bounded node limit and never returns an edge to a hidden node", () => {
