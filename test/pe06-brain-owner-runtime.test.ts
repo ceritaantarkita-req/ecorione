@@ -5,6 +5,10 @@ import {
   assertId,
   type BrainGraphResponse,
 } from "../packages/shared-schema/src/index.js";
+import { openContextDatabase } from "../services/context/src/db.js";
+import { buildContextServer } from "../services/context/src/http.js";
+import { ContextRepository } from "../services/context/src/repository.js";
+import { factInput } from "../services/context/src/test-helpers.js";
 import { openHubDatabase } from "../services/hub/src/db.js";
 import { buildHubServer } from "../services/hub/src/http.js";
 import { openRndDatabase } from "../services/rnd/src/db.js";
@@ -28,6 +32,7 @@ type Closeable = {
 
 const closeables: Closeable[] = [];
 const databases: Array<{ close(): void }> = [];
+let originalContextUrl: string | undefined;
 let originalHubUrl: string | undefined;
 let originalFlowUrl: string | undefined;
 let originalInternalToken: string | undefined;
@@ -118,9 +123,11 @@ function nodeIds(graph: BrainGraphResponse): string[] {
 }
 
 afterEach(async () => {
+  process.env.ECORIONE_CONTEXT_URL = originalContextUrl;
   process.env.ECORIONE_HUB_URL = originalHubUrl;
   process.env.ECORIONE_FLOW_URL = originalFlowUrl;
   process.env.ECORIONE_INTERNAL_TOKEN = originalInternalToken;
+  if (originalContextUrl === undefined) delete process.env.ECORIONE_CONTEXT_URL;
   if (originalHubUrl === undefined) delete process.env.ECORIONE_HUB_URL;
   if (originalFlowUrl === undefined) delete process.env.ECORIONE_FLOW_URL;
   if (originalInternalToken === undefined) delete process.env.ECORIONE_INTERNAL_TOKEN;
@@ -131,6 +138,7 @@ afterEach(async () => {
 
 describe("PE-06 Brain real-owner runtime acceptance", () => {
   it("rebuilds the same Project graph from canonical owners and removes detached state without mutating owners", async () => {
+    originalContextUrl = process.env.ECORIONE_CONTEXT_URL;
     originalHubUrl = process.env.ECORIONE_HUB_URL;
     originalFlowUrl = process.env.ECORIONE_FLOW_URL;
     originalInternalToken = process.env.ECORIONE_INTERNAL_TOKEN;
@@ -140,10 +148,37 @@ describe("PE-06 Brain real-owner runtime acceptance", () => {
     databases.push(rndDb);
     const rndUrl = await listen(buildRndServer(rndDb));
 
+    const contextDb = openContextDatabase();
+    databases.push(contextDb);
+    const contextRepo = new ContextRepository(contextDb);
+    contextRepo.insertFact(
+      factInput({
+        id: "mem_pe06personal",
+        text: "PE-06 personal Brain fact",
+        projectId: PERSONAL_PROJECT_ID as never,
+        sourceEpisodeIds: ["epi_pe06personal"],
+        provenance: {
+          sourceApp: "pe06-runtime",
+          sourceUri: "artifact:art_pe06personal",
+        },
+      }),
+    );
+    contextRepo.insertFact(
+      factInput({
+        id: "mem_pe06secret",
+        text: "PE-06 secret Brain fact",
+        projectId: PERSONAL_PROJECT_ID as never,
+        sourceEpisodeIds: ["epi_pe06secret"],
+        sensitivity: "SECRET",
+        provenance: { sourceApp: "pe06-runtime" },
+      }),
+    );
+    const contextUrl = await listen(buildContextServer(contextRepo, undefined));
+
     const hubDb = openHubDatabase();
     databases.push(hubDb);
     const hub = buildHubServer(hubDb, {
-      contextUrl: "http://127.0.0.1:1",
+      contextUrl,
       connectUrl: "http://127.0.0.1:1",
       rndUrl,
       flowUrl: "http://127.0.0.1:1",
@@ -153,6 +188,7 @@ describe("PE-06 Brain real-owner runtime acceptance", () => {
     const flow = buildFlowServer(temporal(), { hubUrl, rndUrl });
     const flowUrl = await listen(flow);
 
+    process.env.ECORIONE_CONTEXT_URL = contextUrl;
     process.env.ECORIONE_HUB_URL = hubUrl;
     process.env.ECORIONE_FLOW_URL = flowUrl;
 
@@ -193,6 +229,16 @@ describe("PE-06 Brain real-owner runtime acceptance", () => {
       201,
     );
 
+    contextRepo.insertFact(
+      factInput({
+        id: "mem_pe06sibling",
+        text: "PE-06 sibling Brain fact",
+        projectId: sibling.id as never,
+        sourceEpisodeIds: ["epi_pe06sibling"],
+        provenance: { sourceApp: "pe06-runtime" },
+      }),
+    );
+
     const siblingFlow = await requestJson<{
       version: { graphId: string; version: number };
     }>(
@@ -213,8 +259,11 @@ describe("PE-06 Brain real-owner runtime acceptance", () => {
       `Project:${PERSONAL_PROJECT_ID}`,
       `Source:url:${SOURCE_URL}:source`,
       `Flow:${personalFlow.version.graphId}`,
+      "Fact:mem_pe06personal",
     ]);
     expect(nodeIds(first)).not.toContain(`Flow:${siblingFlow.version.graphId}`);
+    expect(nodeIds(first)).not.toContain("Fact:mem_pe06sibling");
+    expect(nodeIds(first)).not.toContain("Fact:mem_pe06secret");
     expect(first.edges.map((edge) => edge.type)).toEqual(["BELONGS_TO", "BELONGS_TO"]);
 
     const projectNode = first.nodes.find((node) => node.type === "Project");
@@ -244,6 +293,7 @@ describe("PE-06 Brain real-owner runtime acceptance", () => {
     expect(nodeIds(afterDetach)).toEqual([
       `Project:${PERSONAL_PROJECT_ID}`,
       `Flow:${personalFlow.version.graphId}`,
+      "Fact:mem_pe06personal",
     ]);
     expect(afterDetach.nodes.some((node) => node.canonicalId.includes(SOURCE_URL))).toBe(false);
 
