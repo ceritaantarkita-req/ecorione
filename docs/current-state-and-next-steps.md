@@ -64,7 +64,15 @@ Exact reviewed PR head `ec8388df4361a94fee7eb63926e580a25e1acd4b` passed CI #204
 
 Safe resumable checkpoint: [verification/session-6-a02-safe-checkpoint-2026-09-25.md](verification/session-6-a02-safe-checkpoint-2026-09-25.md).
 
-**Next planned scope for discussion: A-03 only.** Reconcile stale persisted `ecorione.projectId` when a previously selected Project is no longer active, with deterministic regression coverage across Ai/Work/Brain. Project settings/source onboarding, final system audit, and final safe checkpoint remain separate later scopes.
+### 2026-09-25 Session 7 A-03 closure
+
+**Session 7 is CLOSED / PASS.** PR #316 reconciles persisted/query Project selection against the active Project list before Ai/Work/Brain bind owner state. Archived/missing candidates now fall back to active Personal, or the first active Project when Personal is unavailable. Ai drops a stale explicit session binding when Project correction occurs; Work and Brain wait for Project readiness before owner reads. The reconciled Project is persisted back to `ecorione.projectId` without merging Project memory/source scopes.
+
+Exact reviewed PR head `5d72d7455f1a8f945c904b4847659233e2240003` passed CI #2050, Product Eval #1289 and PCS-06 Integrated Browser Acceptance #47. The browser regression explicitly seeded `prj_archived` and passed reconciliation across Ai/Work/Brain without stale owner requests. Merge `8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e` passed merged-main CI #2051 and Product Eval #1290. Automatic Staging Deploy #869 executed the real deploy job on exact `8bbaf855...`: auth/MCP smoke passed, Operations reported healthy with no unhealthy services, exact-host identity matched, no configured service was non-running, and final capacity stabilization reported `25.10 GiB` free.
+
+Safe resumable checkpoint: [verification/session-7-a03-safe-checkpoint-2026-09-25.md](verification/session-7-a03-safe-checkpoint-2026-09-25.md).
+
+**Next planned discussion is a scope decision, not an active implementation.** Choose whether to open Project settings + source onboarding for the remaining A-04/A-05 gaps, or proceed directly to the final system audit. Other product/infrastructure items remain separate later scopes.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 

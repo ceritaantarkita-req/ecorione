@@ -184,6 +184,8 @@ Compose explicitly injects `http://flow:17028`, so the proven staging/desktop Co
 
 ### A-03 — MEDIUM — persisted Project selection can become stale
 
+**Closure update — 2026-09-25: CLOSED / PASS.** PR #316 / merge `8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e` introduced one shared active-Project reconciliation contract across Ai/Work/Brain. Persisted/query candidates are accepted only when present in the active Project list; archived/missing candidates converge to active Personal or the first active Project, and owner reads are blocked until reconciliation completes. Exact-head CI #2050, Product Eval #1289 and PCS-06 browser #47 passed; merged-main CI #2051 and Product Eval #1290 passed; automatic Staging Deploy #869 executed and passed on exact `8bbaf855...`. The original audit evidence below is retained as historical discovery context.
+
 **Type:** UX/state-consistency risk.
 
 Ai, Work, and Brain independently read `ecorione.projectId` from browser local storage and accept any syntactically valid `prj_...` ID before reconciling it against the active Project list.
@@ -328,7 +330,7 @@ This audit does **not** authorize implementation automatically.
 2. fail-closed remote-bind/auth startup invariant + regression tests;
 3. bounded internal HTTP timeout policy + stalled-upstream tests;
 4. Space Flow default-port correction + regression test;
-5. Project state/UI correctness: stale persisted Project reconciliation (virtual All closed in Session 6);
+5. Project state/UI correctness: CLOSED (virtual All in Session 6; stale persisted Project reconciliation in Session 7);
 6. Project settings + source onboarding UX;
 7. Schedule calendar/navigation/year + AI-assisted schedule interaction;
 8. Brain scalable layout/pan/zoom + richer canonical-owner projection;

@@ -4,7 +4,7 @@ Last updated: **2026-09-25**
 
 Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Audit follow-up checkpoint — SESSION 6 CLOSED / A-03 NEXT DISCUSSION
+## Audit follow-up checkpoint — SESSION 7 CLOSED / NEXT SCOPE DECISION
 
 The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
@@ -65,7 +65,21 @@ A-02 is closed through PR #314 / merge `591b54131c2d0b53532f33e08b878c15a0617951
 
 Evidence: [verification/session-6-a02-safe-checkpoint-2026-09-25.md](verification/session-6-a02-safe-checkpoint-2026-09-25.md).
 
-**Next bounded discussion scope is A-03 only:** reconcile stale persisted `ecorione.projectId` against the active Project list across Ai/Work/Brain. Project settings/source onboarding and final system audit remain separate later scopes; no implementation is in flight at this checkpoint.
+### Session 7 — CLOSED / PASS
+
+A-03 is closed through PR #316 / merge `8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e`.
+
+- one shared Project-selection contract reconciles persisted/query candidates against active Projects before owner-state binding;
+- archived/missing candidates fall back to active Personal, or the first active Project when Personal is unavailable;
+- Ai drops stale session binding when Project selection is corrected; Work and Brain wait for Project readiness before owner reads;
+- rendered PCS-06 browser coverage seeds `prj_archived`, opens Ai/Work/Brain, verifies storage convergence to `prj_personal`, and fails if a stale Project reaches owner APIs;
+- exact-head CI #2050, Product Eval #1289 and PCS-06 browser #47 passed;
+- merged-main CI #2051 and Product Eval #1290 passed;
+- automatic Staging Deploy #869 deployed exact `8bbaf855...` and passed with healthy Operations, exact-host match, no non-running configured service, preserved auth/MCP boundary, and `25.10 GiB` stabilized free space.
+
+Evidence: [verification/session-7-a03-safe-checkpoint-2026-09-25.md](verification/session-7-a03-safe-checkpoint-2026-09-25.md).
+
+**No implementation is in flight.** Next bounded discussion should choose between opening Project settings + source onboarding (remaining A-04/A-05 gaps) as a new product scope, or proceeding directly to the final system audit. Schedule UX, Brain expansion, frontend decomposition, Compose readiness, production cutover, provider spend, and DR-2 remain separate scopes.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
