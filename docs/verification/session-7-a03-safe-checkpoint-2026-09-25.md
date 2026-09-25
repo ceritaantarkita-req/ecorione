@@ -46,6 +46,7 @@ Exact PR head `5d72d745...`:
 
 Merged main `8bbaf855...`:
 
+- pre-documentation code checkpoint: `checkpoint/session7-a03-code-20260925` -> exact `8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e`;
 - CI #2051 — PASS;
 - Product Eval #1290 — PASS;
 - Staging Deploy #868 gate — PASS with deploy job skipped on the first peer-gate completion;
