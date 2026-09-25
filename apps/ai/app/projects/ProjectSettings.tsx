@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import type {
-  Project,
-  ProjectAutonomyCeiling,
-} from "@ecorione/shared-schema";
+import type { Project, ProjectAutonomyCeiling } from "@ecorione/shared-schema";
 import styles from "./Projects.module.css";
 
 function errorMessage(body: unknown, fallback: string): string {
@@ -78,9 +75,7 @@ export function ProjectSettings(props: {
       props.onSaved(updated);
       setFeedback("Project settings disimpan.");
     } catch (error) {
-      setFeedback(
-        error instanceof Error ? error.message : "Gagal menyimpan Project settings.",
-      );
+      setFeedback(error instanceof Error ? error.message : "Gagal menyimpan Project settings.");
     } finally {
       setBusy(false);
     }
@@ -91,9 +86,7 @@ export function ProjectSettings(props: {
       <div className={styles.settingsHeader}>
         <div>
           <h3>Project settings</h3>
-          <p>
-            Atur konteks Project tanpa mengubah boundary Workspace atau owner data.
-          </p>
+          <p>Atur konteks Project tanpa mengubah boundary Workspace atau owner data.</p>
         </div>
       </div>
 
@@ -147,17 +140,15 @@ export function ProjectSettings(props: {
             <option value="L2">L2</option>
             <option value="L3">L3</option>
           </select>
-          <small>
-            Batas maksimum autonomy request untuk Project ini. V1 berhenti di L3.
-          </small>
+          <small>Batas maksimum autonomy request untuk Project ini. V1 berhenti di L3.</small>
         </label>
 
         <div className={styles.readonlySetting}>
           <span>Memory policy</span>
           <strong>{props.project.memoryPolicy}</strong>
           <small>
-            Fixed V1 policy. Global memory yang berizin + memory Project aktif; sibling
-            Project tidak digabung otomatis.
+            Fixed V1 policy. Global memory yang berizin + memory Project aktif; sibling Project
+            tidak digabung otomatis.
           </small>
         </div>
 
@@ -180,9 +171,7 @@ export function ProjectSettings(props: {
         </div>
       </form>
 
-      {feedback !== null ? (
-        <p className={styles.settingsFeedback}>{feedback}</p>
-      ) : null}
+      {feedback !== null ? <p className={styles.settingsFeedback}>{feedback}</p> : null}
     </section>
   );
 }
