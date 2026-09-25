@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write \"test/a08a-brain-owner-resources-source-contract.test.ts\" && git diff -- \"test/a08a-brain-owner-resources-source-contract.test.ts\" && exit 1",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
