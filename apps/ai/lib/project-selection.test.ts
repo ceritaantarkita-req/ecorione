@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Project } from "@ecorione/shared-schema";
+import { ProjectSchema, type Project } from "@ecorione/shared-schema";
 import {
   PERSONAL_PROJECT_ID,
   activeProjects,
@@ -18,12 +18,12 @@ const base = {
 };
 
 function project(id: string, archivedAt: string | null = null): Project {
-  return {
+  return ProjectSchema.parse({
     ...base,
     id,
     name: id === PERSONAL_PROJECT_ID ? "Personal" : id,
     archivedAt,
-  };
+  });
 }
 
 describe("Project selection reconciliation", () => {
