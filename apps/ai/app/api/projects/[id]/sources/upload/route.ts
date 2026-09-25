@@ -11,7 +11,9 @@ import { jsonError } from "../../../../../../lib/proxy";
 export const MAX_PROJECT_SOURCE_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 function authHeaders(contentType = false): Record<string, string> {
-  const result: Record<string, string> = contentType ? { "content-type": "application/json" } : {};
+  const result: Record<string, string> = contentType
+    ? { "content-type": "application/json" }
+    : {};
   const token = internalToken();
   if (token !== undefined) result.authorization = `Bearer ${token}`;
   return result;
