@@ -1,8 +1,4 @@
-import {
-  BRAIN_NODE_TYPES,
-  type BrainNode,
-  type BrainNodeType,
-} from "@ecorione/shared-schema";
+import { BRAIN_NODE_TYPES, type BrainNode, type BrainNodeType } from "@ecorione/shared-schema";
 
 export type BrainPoint = { x: number; y: number };
 
@@ -43,8 +39,7 @@ export function layoutBrainNodes(nodes: BrainNode[]): BrainLayout {
   );
   const height = Math.max(
     BRAIN_CANVAS_MIN_HEIGHT,
-    BRAIN_CANVAS_Y_PADDING * 2 +
-      Math.max(0, largestLane - 1) * BRAIN_NODE_MIN_CENTER_GAP,
+    BRAIN_CANVAS_Y_PADDING * 2 + Math.max(0, largestLane - 1) * BRAIN_NODE_MIN_CENTER_GAP,
   );
   const positions = new Map<string, BrainPoint>();
 
