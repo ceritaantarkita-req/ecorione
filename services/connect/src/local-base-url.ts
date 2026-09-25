@@ -70,6 +70,7 @@ export function classifyLocalHost(hostname: string): LocalHostReach {
   if (host.length === 0) return "public";
 
   if (host.startsWith("[") && host.endsWith("]")) return classifyIpv6(host.slice(1, -1));
+  if (host.includes(":")) return classifyIpv6(host);
 
   const octets = parseIpv4(host);
   if (octets !== null) return classifyIpv4(octets);
