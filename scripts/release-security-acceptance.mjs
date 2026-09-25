@@ -98,7 +98,6 @@ for (const [boundary, source] of [
   ["Anthropic provider fetch", anthropicProvider],
   ["OpenAI-compatible provider fetch", openAiCompatibleProvider],
   ["Connect multimodal adapter fetch", multimodalAdapter],
-  ["Connect Project URL fetch", connectSourceFetch],
   ["Local completion fetch", localProvider],
   ["Local provenance fetch", localProvenance],
   ["MCP JWKS fetch", mcpAuth],
@@ -150,13 +149,17 @@ if (
   findings.push("Connect webhook -> Flow forwarding must remain timeout-bounded");
 }
 if (
-  !connectSourceFetch.includes("AbortSignal.timeout") ||
+  !connectSourceFetch.includes("httpsRequest") ||
+  !connectSourceFetch.includes("DEFAULT_EXTERNAL_SOURCE_TIMEOUT_MS") ||
   !connectSourceFetch.includes("DEFAULT_EXTERNAL_SOURCE_MAX_BYTES") ||
   !connectSourceFetch.includes("lookup(hostname") ||
+  !connectSourceFetch.includes("lookup: lookupPinned") ||
+  !connectSourceFetch.includes("servername: url.hostname") ||
   !connectSourceFetch.includes("classifyLocalHost") ||
-  !connectSourceFetch.includes("isLocalReachableHost")
+  !connectSourceFetch.includes("isLocalReachableHost") ||
+  !connectSourceFetch.includes("response.statusCode >= 300")
 ) {
-  findings.push("Connect Project URL ingestion SSRF/timeout/size boundary missing");
+  findings.push("Connect Project URL ingestion SSRF/redirect/timeout/size boundary missing");
 }
 if (
   !mcpAuth.includes("McpAuthDependencyError") ||
