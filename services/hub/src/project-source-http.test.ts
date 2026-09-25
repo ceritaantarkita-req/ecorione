@@ -415,6 +415,182 @@ describe("PE-02 Project Sources HTTP", () => {
     expect(response.statusCode).toBe(404);
   });
 
+  it("browses and snapshots a Project-bound MCP resource without chat history", async () => {
+    const serverId = "docs-server";
+    const resourceUri = "gdrive://file/source-1";
+    const snapshot = Buffer.from("connector snapshot");
+    const pointer = {
+      id: ARTIFACT_ID,
+      path: `cas/${ARTIFACT_ID}`,
+      description: `MCP ${serverId}: ${resourceUri}`,
+      mimeType: "text/plain",
+      sizeBytes: snapshot.byteLength,
+      scope: "personal",
+      sensitivity: "RESTRICTED",
+      syncClass: "LOCAL_ONLY",
+    };
+
+    connect
+      .intercept({
+        path: "/v1/mcp-outbound/servers?workspaceId=ws_personal",
+        method: "GET",
+      })
+      .reply(200, {
+        servers: [
+          {
+            id: serverId,
+            displayName: "Docs",
+            enabled: true,
+            workspaceIds: ["ws_personal"],
+          },
+        ],
+      });
+    const attachedServer = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources",
+      payload: sourceBody("mcp-server", serverId),
+    });
+    expect(attachedServer.statusCode).toBe(201);
+
+    connect
+      .intercept({
+        path: `/v1/mcp-outbound/servers/${serverId}/discover`,
+        method: "POST",
+      })
+      .reply(200, {
+        serverId,
+        protocolEra: "modern",
+        tools: [],
+        resources: [
+          {
+            uri: resourceUri,
+            name: "Source 1",
+            mimeType: "text/plain",
+          },
+        ],
+        errors: {},
+      });
+
+    const browse = await app.inject({
+      method: "GET",
+      url: `/v1/projects/prj_personal/sources/mcp-resources?workspaceId=ws_personal&serverId=${serverId}`,
+    });
+    expect(browse.statusCode).toBe(200);
+    expect(browse.json()).toEqual({
+      serverId,
+      resources: [
+        {
+          uri: resourceUri,
+          name: "Source 1",
+          mimeType: "text/plain",
+        },
+      ],
+      warning: null,
+    });
+
+    connect
+      .intercept({
+        path: `/v1/source-fetch/mcp-resource/${serverId}`,
+        method: "POST",
+      })
+      .reply(200, {
+        serverId,
+        resourceUri,
+        mimeType: "text/plain",
+        sizeBytes: snapshot.byteLength,
+        contentBase64: snapshot.toString("base64"),
+      });
+    artifact
+      .intercept({
+        path: "/v1/artifacts",
+        method: "POST",
+        body: JSON.stringify({
+          contentBase64: snapshot.toString("base64"),
+          mimeType: "text/plain",
+          description: `MCP ${serverId}: ${resourceUri}`,
+          scope: "personal",
+          sensitivity: "RESTRICTED",
+          syncClass: "LOCAL_ONLY",
+        }),
+      })
+      .reply(201, { pointer, deduplicated: false });
+    context
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, pointer);
+
+    const ingested = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-mcp-resource",
+      payload: {
+        operationId: "op_projectmcpingest001",
+        workspaceId: "ws_personal",
+        serverId,
+        resourceUri,
+        role: "source",
+      },
+    });
+    expect(ingested.statusCode).toBe(200);
+    expect(ingested.json()).toMatchObject({
+      operationId: "op_projectmcpingest001",
+      projectId: "prj_personal",
+      workspaceId: "ws_personal",
+      serverId,
+      resourceUri,
+      artifact: {
+        id: ARTIFACT_ID,
+        sensitivity: "RESTRICTED",
+        syncClass: "LOCAL_ONLY",
+      },
+      source: {
+        availability: "AVAILABLE",
+        binding: {
+          resourceType: "artifact",
+          resourceId: ARTIFACT_ID,
+          role: "source",
+        },
+      },
+      state: "READY",
+    });
+
+    expect(
+      db.raw
+        .prepare("SELECT COUNT(*) AS count FROM history_events WHERE operation_id=?")
+        .get("op_projectmcpingest001"),
+    ).toEqual({ count: 0 });
+
+    const retry = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-mcp-resource",
+      payload: {
+        operationId: "op_projectmcpingest001",
+        workspaceId: "ws_personal",
+        serverId,
+        resourceUri,
+        role: "source",
+      },
+    });
+    expect(retry.statusCode).toBe(200);
+    expect(retry.json().artifact.id).toBe(ARTIFACT_ID);
+  });
+
+  it("rejects MCP resource ingestion when the server is not bound to the Project", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-mcp-resource",
+      payload: {
+        operationId: "op_projectmcpingest002",
+        workspaceId: "ws_personal",
+        serverId: "docs-server",
+        resourceUri: "gdrive://file/unbound",
+        role: "source",
+      },
+    });
+    expect(response.statusCode).toBe(404);
+  });
+
   it("extracts an attached Artifact into Project-scoped Context without chat history", async () => {
     const sourceBytes = Buffer.from("Project source text");
     const pointer = {
