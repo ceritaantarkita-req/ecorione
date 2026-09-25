@@ -9,15 +9,11 @@ import { jsonError } from "../../../../lib/proxy";
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const rawProjectId = url.searchParams.get("projectId");
-  const projectId =
-    rawProjectId === null ? null : ProjectIdSchema.safeParse(rawProjectId);
+  const projectId = rawProjectId === null ? null : ProjectIdSchema.safeParse(rawProjectId);
   const workspaceId = WorkspaceIdSchema.safeParse(
     url.searchParams.get("workspaceId") ?? DEFAULT_WORKSPACE_ID,
   );
-  if (
-    !workspaceId.success ||
-    (projectId !== null && !projectId.success)
-  ) {
+  if (!workspaceId.success || (projectId !== null && !projectId.success)) {
     return jsonError(400, "BAD_REQUEST", "Project/Workspace tidak valid.");
   }
 
@@ -25,9 +21,7 @@ export async function GET(request: Request): Promise<Response> {
   const token = internalToken();
   if (token !== undefined) headers.authorization = `Bearer ${token}`;
   const projectQuery =
-    projectId === null
-      ? ""
-      : `&projectId=${encodeURIComponent(projectId.data)}`;
+    projectId === null ? "" : `&projectId=${encodeURIComponent(projectId.data)}`;
   try {
     const upstream = await fetch(
       `${hubUrl()}/v1/history/sessions?scope=personal&workspaceId=${encodeURIComponent(workspaceId.data)}${projectQuery}&maxSensitivity=RESTRICTED&hostedEligible=0`,
