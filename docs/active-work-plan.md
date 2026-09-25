@@ -1,10 +1,10 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-25**
+Last updated: **2026-09-26**
 
 Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Audit follow-up checkpoint — SESSION 9 / A-08d CLOSED / NEXT A-08 SLICE UNSELECTED
+## Audit follow-up checkpoint — SESSION 9 / A-08 CLOSED / REMAINDER DEFERRED
 
 The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
@@ -112,7 +112,7 @@ A-06b exact implementation head `f7e10c1d4fae957e7a9b52bbbc78805424f8da12` passe
 
 **A-08d Embedded Brain grounded assistant is CLOSED / PASS.** PR #341 exact head `39f1b4f96ddb38bf97f9fb2011d609e73b5d5030` passed CI #2199, Product Eval #1438, PCS-06 #155, and MCP #1120, then merged as `1f25f32cdbb0bfd6dc043491f7668df6bc1795cb`. Merged-main CI #2200, Product Eval #1439, and MCP #1121 passed. Staging Deploy #1171 is historical gate-only evidence because its deploy job was skipped; Staging Deploy #1172 is the actual exact-SHA deployment and passed with healthy Operations, exact host identity, all 15 configured services running, preserved auth/MCP boundaries, and 25.03 GiB free after stabilization. Brain now offers a local-only selected-node assistant through the existing Ai -> Hub -> Context -> Connect path; Context narrowing uses exact authorized Fact IDs/URL Source URIs, wider Project Core Memory and broad Artifact fallback are suppressed for grounded turns, no second chat/history backend exists, and A-08c provenance remains intact. Evidence: [verification/session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md](verification/session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md).
 
-**No product implementation is in flight.** Remaining A-08 candidates are now limited to connector hierarchy only where stable authorized canonical resource identities exist, and Core Memory representation only if Context exposes a stable canonical identity. Neither is implicitly authorized; select or explicitly defer the remainder before opening A-09/A-10.
+**A-08 is now CLOSED at the proven owner-backed boundary.** The final two candidates were audited and explicitly deferred: Connect exposes stable MCP resource `uri` values but no owner-backed parent/child hierarchy relationship, so Brain will not infer folder structure from URI shape; Context Core Memory uses global/project label keys but exposes no canonical block ID, so Brain will not synthesize one from `(projectId, label)`. No runtime change is required for this closure. A-09 and A-10 are now eligible for separate explicit selection, but neither is opened automatically. Evidence: [verification/session-9-a08-remainder-closure-decision-2026-09-26.md](verification/session-9-a08-remainder-closure-decision-2026-09-26.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
