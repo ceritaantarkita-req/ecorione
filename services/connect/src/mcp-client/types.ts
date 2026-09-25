@@ -185,6 +185,11 @@ export const McpToolCallRequestSchema = McpRequestContextSchema.extend({
 });
 export type McpToolCallRequest = z.infer<typeof McpToolCallRequestSchema>;
 
+export const McpResourceReadRequestSchema = McpRequestContextSchema.extend({
+  uri: z.string().min(1).max(4096),
+});
+export type McpResourceReadRequest = z.infer<typeof McpResourceReadRequestSchema>;
+
 export interface McpRemoteTool {
   readonly name: string;
   readonly description?: string | undefined;
@@ -206,6 +211,17 @@ export interface McpToolCallResult {
   readonly [key: string]: unknown;
 }
 
+export interface McpRemoteResourceContent {
+  readonly uri: string;
+  readonly mimeType?: string | undefined;
+  readonly text?: string | undefined;
+  readonly blob?: string | undefined;
+}
+
+export interface McpResourceReadResult {
+  readonly contents: readonly McpRemoteResourceContent[];
+}
+
 export type McpProtocolEra = "modern" | "legacy" | "unknown";
 
 export interface McpClientFacade {
@@ -217,6 +233,7 @@ export interface McpClientFacade {
     args: Readonly<Record<string, unknown>>,
     timeoutMs: number,
   ): Promise<McpToolCallResult>;
+  readResource(uri: string, timeoutMs: number): Promise<McpResourceReadResult>;
   close(): Promise<void>;
 }
 
