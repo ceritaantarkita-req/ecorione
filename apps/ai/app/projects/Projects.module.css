@@ -232,7 +232,8 @@
     min-height: 420px;
   }
 
-  .recent a {
+  .recent a,
+  .recentItem {
     align-items: flex-start;
     flex-direction: column;
     gap: 2px;
