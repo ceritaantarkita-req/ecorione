@@ -70,7 +70,8 @@
 
 .project,
 .projectActive,
-.virtual {
+.virtual,
+.virtualActive {
   width: 100%;
   padding: 10px 11px;
   display: flex;
@@ -90,20 +91,23 @@
   background: var(--surface-2);
 }
 
-.projectActive {
+.projectActive,
+.virtualActive {
   background: var(--surface-2);
   box-shadow: var(--elevation-active-rail);
 }
 
 .project small,
 .projectActive small,
-.virtual small {
+.virtual small,
+.virtualActive small {
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 9.5px;
 }
 
-.virtual {
+.virtual,
+.virtualActive {
   margin-bottom: 7px;
   border-bottom: 1px solid var(--border-soft);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
@@ -170,7 +174,8 @@
   list-style: none;
 }
 
-.recent a {
+.recent a,
+.recentItem {
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -183,6 +188,10 @@
 
 .recent a:hover {
   background: var(--surface-2);
+}
+
+.recentItem {
+  color: var(--text);
 }
 
 .recent small,
@@ -223,7 +232,8 @@
     min-height: 420px;
   }
 
-  .recent a {
+  .recent a,
+  .recentItem {
     align-items: flex-start;
     flex-direction: column;
     gap: 2px;

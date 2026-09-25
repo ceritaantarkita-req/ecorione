@@ -45,9 +45,47 @@ describe("GET /api/projects/history", () => {
     expect(await res.json()).toEqual({ sessions: [] });
   });
 
-  it("requires an explicit valid Project id", async () => {
+  it("requests workspace aggregate metadata when Project id is omitted", async () => {
+    pool
+      .intercept({
+        path: "/v1/history/sessions?scope=personal&workspaceId=ws_personal&maxSensitivity=RESTRICTED&hostedEligible=0",
+        method: "GET",
+      })
+      .reply(200, {
+        sessions: [
+          {
+            id: "sess_all_view",
+            createdAt: "2026-09-25T00:00:00.000Z",
+            updatedAt: "2026-09-25T00:01:00.000Z",
+            workspaceId: "ws_personal",
+            projectId: "prj_finance",
+            title: "Finance review",
+            scope: "personal",
+            sensitivity: "INTERNAL",
+            syncClass: "LOCAL_ONLY",
+            nextSeq: 1,
+            headHash: "a".repeat(64),
+          },
+        ],
+      });
+
     const res = await GET(
       new Request("http://ai.local/api/projects/history?workspaceId=ws_personal"),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.sessions).toHaveLength(1);
+    expect(body.sessions[0]).toMatchObject({
+      id: "sess_all_view",
+      projectId: "prj_finance",
+    });
+  });
+
+  it("rejects an invalid explicit Project id", async () => {
+    const res = await GET(
+      new Request(
+        "http://ai.local/api/projects/history?workspaceId=ws_personal&projectId=not-valid",
+      ),
     );
     expect(res.status).toBe(400);
   });
