@@ -60,6 +60,20 @@ export const BUILTIN_CAPABILITIES: readonly CapabilityDefinition[] = [
     ],
   }),
   CapabilityDefinitionSchema.parse({
+    id: "mcp.resource.read",
+    description: "Membaca content resource dari MCP server yang sudah dikonfigurasi.",
+    permissions: [
+      {
+        id: "mcp.read",
+        actionClass: "READ",
+        resource: "mcp",
+        access: "read",
+        sideEffect: false,
+        description: "Membaca resource MCP yang diiklankan server.",
+      },
+    ],
+  }),
+  CapabilityDefinitionSchema.parse({
     id: "mcp.tool.call",
     description: "Memanggil remote MCP tool sesuai ActionClass lokal yang dipin operator.",
     permissions: [
