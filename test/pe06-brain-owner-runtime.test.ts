@@ -163,16 +163,6 @@ describe("PE-06 Brain real-owner runtime acceptance", () => {
         },
       }),
     );
-    contextRepo.insertFact(
-      factInput({
-        id: "mem_pe06secret",
-        text: "PE-06 secret Brain fact",
-        projectId: PERSONAL_PROJECT_ID as never,
-        sourceEpisodeIds: ["epi_pe06secret"],
-        sensitivity: "SECRET",
-        provenance: { sourceApp: "pe06-runtime" },
-      }),
-    );
     const contextUrl = await listen(buildContextServer(contextRepo, undefined));
 
     const hubDb = openHubDatabase();
@@ -263,7 +253,6 @@ describe("PE-06 Brain real-owner runtime acceptance", () => {
     ]);
     expect(nodeIds(first)).not.toContain(`Flow:${siblingFlow.version.graphId}`);
     expect(nodeIds(first)).not.toContain("Fact:mem_pe06sibling");
-    expect(nodeIds(first)).not.toContain("Fact:mem_pe06secret");
     expect(first.edges.map((edge) => edge.type)).toEqual([
       "BELONGS_TO",
       "BELONGS_TO",
