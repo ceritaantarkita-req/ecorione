@@ -39,7 +39,9 @@ describe("classifyLocalHost", () => {
 
   it("mengenali unique-local IPv6 dan IPv4-mapped", () => {
     expect(classifyLocalHost("[fd00::1]")).toBe("private");
+    expect(classifyLocalHost("fd00::1")).toBe("private");
     expect(classifyLocalHost("[fc00::1]")).toBe("private");
+    expect(classifyLocalHost("2606:4700::1111")).toBe("public");
     expect(classifyLocalHost("[::ffff:192.168.0.5]")).toBe("private");
     expect(classifyLocalHost("[::ffff:8.8.8.8]")).toBe("public");
     expect(classifyLocalHost("[2606:4700::1111]")).toBe("public");
