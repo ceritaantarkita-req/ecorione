@@ -38,7 +38,8 @@ describe("A-07 Brain scalable-layout source contract", () => {
     const css = await source(cssPath);
 
     expect(css).toMatch(/\.graphScroll\s*\{[\s\S]*?height:\s*min\(68dvh, 640px\);/);
-    expect(css).toMatch(/\.graphScroll\s*\{[\s\S]*?overflow:\s*auto;/);
+    expect(css).toMatch(/\.graphScroll\s*\{[\s\S]*?overflow-x:\s*auto;/);
+    expect(css).toMatch(/\.graphScroll\s*\{[\s\S]*?overflow-y:\s*auto;/);
     expect(css).toMatch(/\.graph\s*\{[\s\S]*?max-width:\s*none;/);
   });
 
