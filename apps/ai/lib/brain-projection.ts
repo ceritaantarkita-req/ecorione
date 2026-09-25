@@ -187,6 +187,22 @@ function sourceLabel(view: ProjectSourceView): string {
   return `${view.binding.resourceType} · ${short}`;
 }
 
+function metadataObject(view: ProjectSourceView): Record<string, unknown> | null {
+  return typeof view.metadata === "object" && view.metadata !== null
+    ? (view.metadata as Record<string, unknown>)
+    : null;
+}
+
+function metadataString(view: ProjectSourceView, key: string): string | null {
+  const value = metadataObject(view)?.[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function metadataNumber(view: ProjectSourceView, key: string): number | null {
+  const value = metadataObject(view)?.[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 function addEdge(
   edges: Map<string, BrainEdge>,
   type: BrainEdge["type"],
@@ -200,9 +216,11 @@ function addEdge(
 const TYPE_ORDER: Record<BrainNodeType, number> = {
   Project: 0,
   Source: 1,
-  Flow: 2,
-  Trigger: 3,
-  Run: 4,
+  Artifact: 2,
+  Page: 3,
+  Flow: 4,
+  Trigger: 5,
+  Run: 6,
 };
 
 function compareNode(a: BrainNode, b: BrainNode): number {
@@ -260,6 +278,62 @@ export function buildBrainGraph(
       },
     });
     addEdge(edges, "BELONGS_TO", id, projectNodeId);
+
+    if (view.binding.resourceType === "artifact") {
+      const resourceId = view.binding.resourceId;
+      const resourceNodeId = nodeId("Artifact", resourceId);
+      nodes.set(resourceNodeId, {
+        id: resourceNodeId,
+        type: "Artifact",
+        canonicalId: resourceId,
+        owner: "Artifact",
+        label: metadataString(view, "description") ?? resourceId,
+        workspaceId: query.workspaceId,
+        projectId: query.projectId,
+        availability: view.availability,
+        href: "/projects",
+        metadata: {
+          mimeType: metadataString(view, "mimeType"),
+          sizeBytes: metadataNumber(view, "sizeBytes"),
+          scope: metadataString(view, "scope"),
+          sensitivity: metadataString(view, "sensitivity"),
+          syncClass: metadataString(view, "syncClass"),
+          unavailableReason:
+            view.availability === "UNAVAILABLE"
+              ? (view.unavailableReason ?? "unavailable")
+              : null,
+        },
+      });
+      addEdge(edges, "BELONGS_TO", resourceNodeId, projectNodeId);
+      addEdge(edges, "REFERENCES", id, resourceNodeId);
+    }
+
+    if (view.binding.resourceType === "space-page") {
+      const resourceId = view.binding.resourceId;
+      const resourceNodeId = nodeId("Page", resourceId);
+      nodes.set(resourceNodeId, {
+        id: resourceNodeId,
+        type: "Page",
+        canonicalId: resourceId,
+        owner: "Space",
+        label: metadataString(view, "title") ?? resourceId,
+        workspaceId: query.workspaceId,
+        projectId: query.projectId,
+        availability: view.availability,
+        href: "/space",
+        metadata: {
+          scope: metadataString(view, "scope"),
+          version: metadataNumber(view, "version"),
+          updatedAt: metadataString(view, "updatedAt"),
+          unavailableReason:
+            view.availability === "UNAVAILABLE"
+              ? (view.unavailableReason ?? "unavailable")
+              : null,
+        },
+      });
+      addEdge(edges, "BELONGS_TO", resourceNodeId, projectNodeId);
+      addEdge(edges, "REFERENCES", id, resourceNodeId);
+    }
   }
 
   const graphIds = new Set<string>();
