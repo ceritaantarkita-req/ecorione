@@ -268,6 +268,7 @@ const flowDefinitions = [
 let savedFlowVersion = null;
 let authorityReady = false;
 let graphRunStarted = false;
+let aggregateProjectHistoryRequested = false;
 const externalRequests = new Set();
 
 function json(route, body, status = 200) {
@@ -343,6 +344,7 @@ async function installApiMocks(context) {
       return json(route, { projects: [project] });
     }
     if (path === "/api/projects/history" && method === "GET") {
+      if (!url.searchParams.has("projectId")) aggregateProjectHistoryRequested = true;
       return json(route, { sessions: [updatedSession()] });
     }
     if (path === `/api/projects/history/${historySession.id}` && method === "GET") {
@@ -719,6 +721,21 @@ async function runDesktopJourney() {
     await page.getByRole("link", { name: "Projects", exact: true }).click();
     await page.getByRole("heading", { name: "Projects", exact: true }).waitFor();
     await page.getByText("PCS-06 Browser", { exact: true }).waitFor();
+    aggregateProjectHistoryRequested = false;
+    await page.getByRole("button", { name: /All/ }).click();
+    await page.getByRole("heading", { name: "All", exact: true }).waitFor();
+    await page.getByText("Recent conversations: 1", { exact: true }).waitFor();
+    if (!aggregateProjectHistoryRequested) {
+      throw new Error("desktop-projects: All did not request aggregate Project history");
+    }
+    if ((await page.getByRole("button", { name: "Buka Chat", exact: true }).count()) !== 0) {
+      throw new Error("desktop-projects: virtual All must not expose a synthetic chat scope");
+    }
+    await page
+      .locator(
+        `a[href="/?project=${project.id}&session=${historySession.id}"]`,
+      )
+      .waitFor();
     await assertNoPageOverflow(page, "desktop-projects");
     await page.getByRole("link", { name: "Ai", exact: true }).click();
     await page.getByText("PCS06_HOSTED_OK", { exact: true }).waitFor();
