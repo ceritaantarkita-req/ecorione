@@ -43,6 +43,7 @@ import { registerMcpRoutes } from "./mcp.js";
 import { registerNodeAuthorityRoutes } from "./node-authority.js";
 import { registerProjectRoutes } from "./project-http.js";
 import { registerProjectSourceRoutes } from "./project-source-http.js";
+import { registerScheduleAssistRoutes } from "./schedule-assist-http.js";
 import { ProjectSourceRegistry } from "./project-source-registry.js";
 import {
   ProjectRegistry,
@@ -363,6 +364,11 @@ export function buildHubServer(
   );
 
   registerProjectRoutes(app, projects);
+  registerScheduleAssistRoutes(app, projects, authority, repo, {
+    flowUrl: options.flowUrl ?? "http://127.0.0.1:17028",
+    connectUrl: options.connectUrl,
+    internalToken: options.internalToken,
+  });
   registerProjectSourceRoutes(app, projects, projectSources, repo, authority, {
     contextUrl: options.contextUrl,
     spaceUrl: options.spaceUrl ?? "http://127.0.0.1:17027",
