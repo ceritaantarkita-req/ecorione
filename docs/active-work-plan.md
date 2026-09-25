@@ -4,7 +4,7 @@ Last updated: **2026-09-25**
 
 Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Audit follow-up checkpoint — SESSION 9 / A-06 CLOSED / NEXT SCOPE UNSELECTED
+## Audit follow-up checkpoint — SESSION 9 / A-08c CLOSED / NEXT A-08 SLICE UNSELECTED
 
 The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
@@ -110,7 +110,7 @@ A-06b exact implementation head `f7e10c1d4fae957e7a9b52bbbc78805424f8da12` passe
 
 **A-08c Brain Fact provenance is now CLOSED / PASS.** PR #338 merged as `0a36a041a4077e185cbc934723d7ca195c5f5fc5`. Brain adds `GENERATED_FROM` only for schema-valid `artifact:<ArtifactId>` Context provenance when that exact Artifact node is already present from authorized Project Source state; unbound/malformed/non-Artifact provenance remains metadata-only. Exact-head CI `36156486474`, Product Eval `36156486661`, MCP External HTTPS `36156486439`, and PCS-06 `36156486530` passed. Merged-main CI `36157146397`, Product Eval `36157146459`, and MCP External HTTPS `36157146498` passed. Automatic Staging Deploy `36157615400` gate/deploy passed and executed `Deploy exact reviewed main SHA`. Evidence: [verification/session-9-a08c-brain-fact-provenance-closure-2026-09-25.md](verification/session-9-a08c-brain-fact-provenance-closure-2026-09-25.md).
 
-**No implementation is in flight.** Remaining A-08 candidates are connector hierarchy only where the connector exposes stable authorized resource identities, Core Memory only if a stable canonical owner identity exists, and embedded Brain AI/chat only by reusing existing Ai/Context/ECX paths rather than creating a second chat system. Select one bounded slice before implementation; do not open A-09/A-10 until A-08 remainder is closed or explicitly deferred.
+**No implementation is in flight and there are no open PRs.** Canonical repository/staging checkpoint is `807b6f42683a910d106a3176f95442145807cf97`; the last product-code-changing main is `0a36a041a4077e185cbc934723d7ca195c5f5fc5`. PR #337 (selected-node grounded Brain assistant prototype) was closed without merge because it was based before A-08c, diverged from current main, and had a red CI verify run; it is reference material only and must be ported fresh if that slice is selected. Stale Session 4 docs PR #310 was also closed without merge. Remaining A-08 candidates are connector hierarchy only where the connector exposes stable authorized resource identities, Core Memory only if a stable canonical owner identity exists, and embedded Brain AI/chat only by reusing existing Ai/Context/ECX paths rather than creating a second chat system. Select one bounded slice or explicitly defer the remainder before opening A-09/A-10. Evidence: [verification/session-9-post-a08c-safe-checkpoint-2026-09-25.md](verification/session-9-post-a08c-safe-checkpoint-2026-09-25.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
