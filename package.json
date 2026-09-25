@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write \"apps/ai/app/projects/ProjectSources.tsx\" \"packages/shared-schema/src/project-source.ts\" \"services/connect/src/mcp-client/http.ts\" \"services/connect/src/mcp-resource-source.ts\" \"services/connect/src/source-fetch-http.ts\" \"services/hub/src/project-source-http.ts\" && git diff -- \"apps/ai/app/projects/ProjectSources.tsx\" \"packages/shared-schema/src/project-source.ts\" \"services/connect/src/mcp-client/http.ts\" \"services/connect/src/mcp-resource-source.ts\" \"services/connect/src/source-fetch-http.ts\" \"services/hub/src/project-source-http.ts\" && exit 1",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
