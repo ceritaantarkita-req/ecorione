@@ -96,9 +96,13 @@ Safe resumable checkpoint: [verification/session-9-a06b-schedule-closure-2026-09
 
 Safe resumable checkpoint: [verification/session-9-a07-brain-scalable-layout-closure-2026-09-25.md](verification/session-9-a07-brain-scalable-layout-closure-2026-09-25.md).
 
-**Next bounded product gap is A-08 richer canonical-owner Brain projection.** A-08 should add only owner-backed node/edge classes that have stable authorized identities and provenance; no graph database and no LLM-created canonical relationships.
+**A-08a richer canonical-owner Brain projection is CLOSED / PASS.** PR #333 / merge `461a9665584b5e3a47396663cd4220f21c62027c` adds first-class Artifact and Page nodes from already-authorized Project Source views. Source remains the binding node; canonical Artifact/Page IDs remain owned by Artifact/Space; Brain stays rebuildable and does not copy canonical state or create model-authored relationships. Exact-head CI `36141048119`, Product Eval `36141048146`, PCS-06 `36141048129`, and MCP External HTTPS `36141048157` passed; merged-main CI `36141655282`, Product Eval `36141655343`, and MCP External HTTPS `36141655291` passed; Staging Deploy `36142092154` deployed exact reviewed main.
 
-**No product implementation is currently in flight.** Brain A-07/A-08 remains untouched. Its former A-06 prerequisite is satisfied, but selecting or opening Brain work requires an explicit next-scope decision rather than automatic continuation.
+Safe resumable checkpoint: [verification/session-9-a08a-brain-owner-resources-closure-2026-09-25.md](verification/session-9-a08a-brain-owner-resources-closure-2026-09-25.md).
+
+**Next bounded candidate is A-08b Context Fact projection.** Context already exposes stable `MemoryFact.id` values through an owner HTTP API with Project filtering and bounded sensitivity/limit controls. A-08b should therefore use Hub-first Project authorization followed by bounded Context owner reads, add first-class Fact nodes only, and avoid Context DB access, Core Memory bundling, connector hierarchy bundling, graph storage, or LLM-created canonical relationships.
+
+**No product implementation is currently in flight.**
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
