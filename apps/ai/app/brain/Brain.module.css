@@ -251,7 +251,8 @@
   width: 100%;
   min-width: 0;
   height: min(68dvh, 640px);
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   cursor: grab;
