@@ -176,7 +176,6 @@ export async function fetchExternalUrl(
     response = await fetchImpl(parsed.data, {
       method: "GET",
       redirect: "error",
-      cache: "no-store",
       signal: AbortSignal.timeout(timeoutMs),
       headers: {
         accept: "*/*",
