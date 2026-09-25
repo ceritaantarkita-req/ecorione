@@ -732,9 +732,7 @@ async function runDesktopJourney() {
       throw new Error("desktop-projects: virtual All must not expose a synthetic chat scope");
     }
     await page
-      .locator(
-        `a[href="/?project=${project.id}&session=${historySession.id}"]`,
-      )
+      .locator(`a[href="/?project=${project.id}&session=${historySession.id}"]`)
       .waitFor();
     await assertNoPageOverflow(page, "desktop-projects");
     await page.getByRole("link", { name: "Ai", exact: true }).click();
