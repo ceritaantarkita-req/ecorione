@@ -104,7 +104,11 @@ Safe resumable checkpoint: [verification/session-9-a08a-brain-owner-resources-cl
 
 Safe resumable checkpoint: [verification/session-9-a08b-brain-context-facts-closure-2026-09-25.md](verification/session-9-a08b-brain-context-facts-closure-2026-09-25.md).
 
-**No product implementation is currently in flight.** Remaining A-08 work must be selected as one explicit bounded slice; Brain must continue to reuse canonical owner contracts and must not become a graph store or second chat system.
+**A-08c Fact provenance projection is CLOSED / PASS.** PR #338 / merge `0a36a041a4077e185cbc934723d7ca195c5f5fc5` adds deterministic `GENERATED_FROM` edges from Context Fact to Artifact only when `sourceUri` is an exact schema-valid `artifact:<ArtifactId>` and the corresponding Artifact node is already present from authorized Project Source state. No graph store, inference, semantic relationship guessing, or owner mutation was added. Exact-head CI `36156486474`, Product Eval `36156486661`, MCP External HTTPS `36156486439`, and PCS-06 `36156486530` passed; merged-main CI `36157146397`, Product Eval `36157146459`, and MCP External HTTPS `36157146498` passed; Staging Deploy `36157615400` deployed exact reviewed main.
+
+Safe resumable checkpoint: [verification/session-9-a08c-brain-fact-provenance-closure-2026-09-25.md](verification/session-9-a08c-brain-fact-provenance-closure-2026-09-25.md).
+
+**No product implementation is currently in flight.** Remaining A-08 work is limited to connector hierarchy with stable authorized identities, Core Memory only with stable canonical owner identity, and embedded Brain AI/chat only by reusing existing Ai/Context/ECX. Brain must remain a rebuildable projection, not a graph store or second chat system.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
