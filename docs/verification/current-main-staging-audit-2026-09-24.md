@@ -249,13 +249,13 @@ Evidence: [session-9-a07-brain-scalable-layout-closure-2026-09-25.md](session-9-
 
 ### A-08 — PARTIALLY CLOSED — richer canonical-owner Brain projection
 
-**Progress update — 2026-09-25: A-08a CLOSED / PASS.** PR #333 / merge `461a9665584b5e3a47396663cd4220f21c62027c` adds first-class Artifact and Space Page nodes derived from authorized Project Source views. Source remains the binding/reference node; canonical owner IDs remain authoritative and Brain adds only deterministic relationships. No graph database, owner mutation, cross-service DB read, or model-created canonical edge was introduced.
+**A-08a CLOSED / PASS.** PR #333 / merge `461a9665584b5e3a47396663cd4220f21c62027c` adds first-class Artifact and Space Page nodes derived from authorized Project Source views. Source remains the binding/reference node; canonical owner IDs remain authoritative and Brain adds only deterministic relationships.
 
-Exact-head CI `36141048119`, Product Eval `36141048146`, PCS-06 `36141048129`, and MCP External HTTPS `36141048157` passed. Merged-main CI `36141655282`, Product Eval `36141655343`, and MCP External HTTPS `36141655291` passed. Automatic Staging Deploy `36142092154` executed `Deploy exact reviewed main SHA` successfully.
+**A-08b CLOSED / PASS.** PR #335 / merge `bc5601602e401bb0f4d19f567b4dd10c6388f94d` adds first-class Context-owned Fact nodes from stable `MemoryFact.id` values. Hub authorizes the exact Project before the bounded Context owner read; Context is queried with `maxSensitivity=RESTRICTED` and max 40 Facts; sibling-Project rows fail closed. No Context DB read, graph database, owner mutation, fact mutation, or model-created canonical edge was introduced.
 
-Remaining A-08 scope includes owner-backed memory/facts and other hierarchy classes only where stable authorized owner identity exists. Context Facts are the next audited candidate because `MemoryFact.id` is stable and Context exposes an official Project-filtered read API. Core Memory, connector hierarchy, and embedded Brain AI/chat remain separate slices.
+A-08b exact-head CI `36147793139`, Product Eval `36147793105`, PCS-06 `36147793042`, and MCP External HTTPS `36147793068` passed. Merged-main CI `36148568175`, Product Eval `36148568188`, and MCP External HTTPS `36148568214` passed. Automatic Staging Deploy `36149034797` executed `Deploy exact reviewed main SHA` successfully.
 
-The correct direction remains expansion from canonical owners, not a second graph database.
+Remaining A-08 candidates are separate slices and require stable authorized owner identity: explicit Fact provenance relationships, connector resource hierarchy, Core Memory representation, and embedded Brain AI/chat. The correct direction remains expansion from canonical owners and reuse of existing Ai/Context/ECX paths, not a second graph database or chat system.
 
 ### A-09 — MEDIUM — frontend maintainability concentration
 
