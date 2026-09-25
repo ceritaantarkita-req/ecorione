@@ -18,6 +18,7 @@ import {
 } from "./invocation-store.js";
 import {
   McpRemoteOutcomeUncertainError,
+  McpResourceNotAdvertisedError,
   McpServerDisabledError,
   McpToolDisabledError,
   McpToolNotAdvertisedError,
@@ -31,6 +32,7 @@ import {
 } from "./sdk-client.js";
 import {
   McpDiscoverRequestSchema,
+  McpResourceReadRequestSchema,
   McpServerConfigSchema,
   McpServerIdSchema,
   McpToolCallRequestSchema,
@@ -69,7 +71,8 @@ function toHttpError(error: unknown): unknown {
   if (error instanceof McpInvocationConflictError) {
     return new ConflictError(error.message);
   }
-  if (error instanceof McpToolNotAdvertisedError) return new BadRequestError(error.message);
+  if (error instanceof McpToolNotAdvertisedError || error instanceof McpResourceNotAdvertisedError)
+    return new BadRequestError(error.message);
   if (error instanceof McpCredentialMissingError) {
     return new HttpError(503, "MCP_CREDENTIAL_UNAVAILABLE", error.message);
   }
@@ -125,6 +128,35 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
       throw toHttpError(error);
     }
   });
+
+  app.post<{ Params: { id: string } }>(
+    "/v1/mcp-outbound/servers/:id/resources/read",
+    async (req) => {
+      const params = parseOrBadRequest(ServerParamsSchema, req.params);
+      const body = parseOrBadRequest(McpResourceReadRequestSchema, req.body);
+      const started = performance.now();
+      try {
+        const result = await manager.readResource(params.id, body);
+        metrics.addCounter("ecorione_mcp_resource_reads_total", 1, {
+          server: params.id,
+          outcome: "success",
+        });
+        metrics.observe("ecorione_mcp_resource_read_duration_ms", performance.now() - started, {
+          server: params.id,
+        });
+        return result;
+      } catch (error) {
+        metrics.addCounter("ecorione_mcp_resource_reads_total", 1, {
+          server: params.id,
+          outcome: "error",
+        });
+        metrics.observe("ecorione_mcp_resource_read_duration_ms", performance.now() - started, {
+          server: params.id,
+        });
+        throw toHttpError(error);
+      }
+    },
+  );
 
   app.post<{ Params: { id: string; tool: string } }>(
     "/v1/mcp-outbound/servers/:id/tools/:tool/call",
