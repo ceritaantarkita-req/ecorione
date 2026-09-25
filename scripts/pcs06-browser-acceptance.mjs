@@ -944,7 +944,7 @@ async function runDesktopJourney() {
     const runCenters = await brainRuns.evaluateAll((nodes) =>
       nodes.map((node) => {
         const transform = node.getAttribute("transform") ?? "";
-        const match = /translate\\([^ ]+ ([^)]+)\\)/.exec(transform);
+        const match = /translate\([^ ]+ ([^)]+)\)/.exec(transform);
         return match === null ? Number.NaN : Number(match[1]);
       }),
     );
