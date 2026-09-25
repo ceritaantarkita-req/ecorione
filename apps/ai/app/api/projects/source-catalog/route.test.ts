@@ -124,9 +124,7 @@ describe("GET /api/projects/source-catalog", () => {
         method: "GET",
       })
       .reply(503, { error: { message: "down" } });
-    pool
-      .intercept({ path: "/v1/pages?workspaceId=ws_personal", method: "GET" })
-      .reply(200, []);
+    pool.intercept({ path: "/v1/pages?workspaceId=ws_personal", method: "GET" }).reply(200, []);
     pool
       .intercept({ path: "/v1/graphs?workspaceId=ws_personal", method: "GET" })
       .reply(200, { graphs: [] });
