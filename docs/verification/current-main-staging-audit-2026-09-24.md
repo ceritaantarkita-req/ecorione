@@ -319,9 +319,9 @@ Historical host evidence also showed pending Ubuntu security updates and meaning
 | Project sources | reference bindings | needs connector/upload onboarding |
 | Schedule connected to Project/Flow | implemented | strong base |
 | durable scheduling | Temporal-backed | strong base |
-| day/week/month/list | occurrence timeline | partial UX |
-| year/calendar navigation | absent | gap |
-| AI-assisted Schedule chat | absent | gap |
+| day/week/month/list | real calendar projections from Temporal nextActionTimes | CLOSED / PASS |
+| year/calendar navigation | implemented with explicit cursor navigation | CLOSED / PASS |
+| AI-assisted Schedule chat | local AI-assisted create/edit draft compiler with explicit Save | CLOSED / PASS |
 | Brain connected-dot graph | implemented | strong base |
 | Brain Project/Flow/Trigger/Run links | implemented | strong base |
 | Brain file/folder/memory richness | partial | gap |
@@ -339,8 +339,8 @@ This audit does **not** authorize implementation automatically.
 4. Space Flow default-port correction + regression test;
 5. Project state/UI correctness: CLOSED (virtual All in Session 6; stale persisted Project reconciliation in Session 7);
 6. Project settings + source onboarding: CLOSED for this roadmap (generic MCP connector boundary; native Google Drive integration deferred separately);
-7. Schedule A-06b only: searchable Project picker / inline Project creation + AI-assisted schedule interaction; A-06a calendar/navigation/year is CLOSED / PASS;
-8. Brain scalable layout/pan/zoom + richer canonical-owner projection;
+7. Schedule A-06: CLOSED / PASS (A-06a calendar/navigation + A-06b searchable/inline Project selection and governed local AI-assisted drafting);
+8. Brain scalable layout/pan/zoom + richer canonical-owner projection — eligible for a future explicit scope decision, not automatically authorized;
 9. frontend module decomposition while touching those surfaces;
 10. Compose readiness/health improvements;
 11. fresh staging runtime acceptance after selected changes merge.
