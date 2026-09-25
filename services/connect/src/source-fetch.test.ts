@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_EXTERNAL_SOURCE_MAX_BYTES,
-  ExternalSourceFetchError,
   fetchExternalUrl,
+  type ExternalSourceFetchError,
 } from "./source-fetch.js";
 
 function resolver(
