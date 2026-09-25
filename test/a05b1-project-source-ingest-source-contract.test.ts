@@ -25,7 +25,8 @@ describe("A-05b.1 direct Project source ingestion contract", () => {
 
   it("keeps extraction/indexing out of A-05b.1 and exposes direct upload in Projects", () => {
     expect(picker).toContain("${endpoint}/upload");
-    expect(picker).toContain("OCR/indexing belum");
+    expect(picker).toContain("OCR/indexing");
+    expect(picker).toContain("belum dijalankan");
     expect(uploadRoute).not.toContain("ocr");
     expect(uploadRoute).not.toContain("vision");
     expect(uploadRoute).not.toContain("transcribe");
