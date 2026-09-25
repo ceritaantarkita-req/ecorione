@@ -13,7 +13,7 @@ describe("A-06a Schedule calendar UX source contract", () => {
     expect(page).toContain("todayDateKey");
     expect(calendar).toContain('aria-label="Previous period"');
     expect(calendar).toContain('aria-label="Next period"');
-    expect(calendar).toContain(">Today<");
+    expect(calendar).toContain("onToday");\n    expect(calendar).toContain("Today");
     expect(calendar).toContain("nextActionTimes");
     expect(calendar).toContain("Work tidak");
     expect(page).not.toContain("setInterval(");
