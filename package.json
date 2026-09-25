@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --write \"apps/ai/app/work/page.tsx\" \"apps/ai/app/work/ScheduleCalendar.tsx\" \"apps/ai/app/work/work-calendar.test.ts\" \"scripts/pcs06-browser-acceptance.mjs\" \"test/a06a-schedule-calendar-source-contract.test.ts\" && git diff -- \"apps/ai/app/work/page.tsx\" \"apps/ai/app/work/ScheduleCalendar.tsx\" \"apps/ai/app/work/work-calendar.test.ts\" \"scripts/pcs06-browser-acceptance.mjs\" \"test/a06a-schedule-calendar-source-contract.test.ts\" && exit 1",
+    "format:check": "prettier --check .",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
