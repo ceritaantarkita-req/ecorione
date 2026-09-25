@@ -334,6 +334,7 @@ let scheduleTrigger = {
   updatedAt: now,
 };
 let scheduleMutationCount = 0;
+let brainGroundedChatRequested = false;
 const scheduleRuntime = {
   triggerId: scheduleTrigger.id,
   scheduleId: scheduleTrigger.temporalScheduleId,
@@ -549,6 +550,46 @@ async function installApiMocks(context) {
     }
     if (path === "/api/chat" && method === "POST") {
       const body = request.postDataJSON();
+      if (body.contextConstraint?.source === "brain") {
+        if (
+          body.target !== "local" ||
+          body.projectId !== "prj_personal" ||
+          body.maxSensitivity !== "RESTRICTED" ||
+          JSON.stringify(body.contextConstraint.sourceUris) !== "[]" ||
+          JSON.stringify(body.contextConstraint.factIds) !== '["mem_pcs06brain"]'
+        ) {
+          throw new Error(
+            `PCS-06 Brain chat received unsafe grounding payload: ${JSON.stringify(body)}`,
+          );
+        }
+        brainGroundedChatRequested = true;
+        return json(route, {
+          operationId: "op_pcs06brainchat01",
+          sessionId: body.sessionId,
+          reply: "PCS06_BRAIN_GROUNDED_OK",
+          memoryUsed: {
+            coreMemoryBlocks: [],
+            recalledFacts: [
+              { id: "mem_pcs06brain", text: "PCS-06 canonical fact", score: 1 },
+            ],
+            episodicSummaries: [],
+          },
+          cost: {
+            model: "local-pcs06",
+            cacheHit: false,
+            actualUsd: 0,
+            naiveUsd: 0,
+            savedUsd: 0,
+            savedPct: 0,
+            routeReason: "brain-grounded-local",
+          },
+          policy: {
+            outcome: "ALLOW",
+            reason: "PCS-06 deterministic Brain grounding stub.",
+            ruleId: "pcs06",
+          },
+        });
+      }
       const seq = historyEvents.length;
       const userId = `evt_pcs06user${String(seq).padStart(2, "0")}`;
       const agentId = `evt_pcs06agent${String(seq + 1).padStart(2, "0")}`;
@@ -820,6 +861,28 @@ async function installApiMocks(context) {
       }
     }
 
+    if (path === "/api/brain/neighborhood" && method === "GET") {
+      const seedNodeId = url.searchParams.get("seedNodeId");
+      if (
+        seedNodeId !== "brain_fact_pcs06" ||
+        url.searchParams.get("projectId") !== "prj_personal"
+      ) {
+        return json(
+          route,
+          { error: { type: "PCS06_BAD_BRAIN_SEED", message: "Unexpected Brain seed." } },
+          404,
+        );
+      }
+      return json(route, {
+        workspaceId: "ws_personal",
+        projectId: "prj_personal",
+        seedNodeIds: [seedNodeId],
+        nodes: [brain.nodes.find((node) => node.id === seedNodeId)],
+        edges: [],
+        contextConstraint: { sourceUris: [], factIds: ["mem_pcs06brain"] },
+        truncated: false,
+      });
+    }
     if (path === "/api/brain" && method === "GET") {
       return json(route, brain);
     }
@@ -1051,7 +1114,19 @@ async function runDesktopJourney() {
     await page.getByRole("checkbox", { name: "Fact", exact: true }).waitFor();
     await page.locator('g[aria-label="Artifact: PCS-06 Artifact"]').waitFor();
     await page.locator('g[aria-label="Page: PCS-06 Notes"]').waitFor();
-    await page.locator('g[aria-label="Fact: PCS-06 canonical fact"]').waitFor();
+    const brainFact = page.locator('g[aria-label="Fact: PCS-06 canonical fact"]');
+    await brainFact.waitFor();
+    await brainFact.click();
+    await page.getByLabel("Brain grounded assistant").waitFor();
+    await page
+      .getByRole("textbox", { name: "Ask about selected Brain context" })
+      .fill("What does this selected fact say?");
+    await page.getByRole("button", { name: "Ask Brain", exact: true }).click();
+    await page.getByText("PCS06_BRAIN_GROUNDED_OK", { exact: true }).waitFor();
+    if (!brainGroundedChatRequested) {
+      throw new Error("desktop-brain: grounded assistant did not use exact local Brain constraint");
+    }
+    await assertNoPageOverflow(page, "desktop-brain-grounded-assistant");
     const brainRuns = page.locator('g[aria-label^="Run:"]');
     if ((await brainRuns.count()) !== 50) {
       throw new Error(`desktop-brain: expected 50 Run nodes, got ${await brainRuns.count()}`);
@@ -1261,6 +1336,10 @@ async function runNarrowCoverage() {
         await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
         await page.getByRole("button", { name: "Zoom in", exact: true }).waitFor();
         await page.getByLabel("Pan Brain graph").waitFor();
+        const fact = page.locator('g[aria-label="Fact: PCS-06 canonical fact"]');
+        await fact.waitFor();
+        await fact.click();
+        await page.getByLabel("Brain grounded assistant").waitFor();
       },
     ],
     [
