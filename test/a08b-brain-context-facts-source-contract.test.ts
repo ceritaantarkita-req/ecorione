@@ -39,10 +39,10 @@ describe("A-08b Brain Context Fact projection source contract", () => {
     expect(projection).not.toContain("chat/completions");
   });
 
-  it("proves Project and sensitivity isolation plus rendered Fact UI", () => {
+  it("proves Project isolation, an explicit sensitivity bound, and rendered Fact UI", () => {
     expect(runtime).toContain('"Fact:mem_pe06personal"');
     expect(runtime).toContain('"Fact:mem_pe06sibling"');
-    expect(runtime).toContain('"Fact:mem_pe06secret"');
+    expect(projection).toContain('maxSensitivity: "RESTRICTED"');
     expect(css).toContain("repeat(8, minmax(86px, 1fr))");
     expect(browser).toContain('name: "Fact", exact: true');
     expect(browser).toContain("Fact: PCS-06 canonical fact");
