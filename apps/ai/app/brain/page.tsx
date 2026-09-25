@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import {\n  useCallback,\n  useEffect,\n  useMemo,\n  useRef,\n  useState,\n  type PointerEvent as ReactPointerEvent,\n} from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   BRAIN_EDGE_TYPES,
   BRAIN_NODE_TYPES,
@@ -19,7 +26,8 @@ import {
   isProjectIdCandidate,
   resolveActiveProjectId,
 } from "../../lib/project-selection";
-import { layoutBrainNodes } from "../../lib/brain-layout";\nimport styles from "./Brain.module.css";
+import { layoutBrainNodes } from "../../lib/brain-layout";
+import styles from "./Brain.module.css";
 
 const WORKSPACE_ID = "ws_personal";
 const MIN_GRAPH_ZOOM = 0.75;
