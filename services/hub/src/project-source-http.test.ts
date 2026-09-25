@@ -14,6 +14,7 @@ let context: Interceptable;
 let space: Interceptable;
 let flow: Interceptable;
 let connect: Interceptable;
+let artifact: Interceptable;
 let db: HubDatabase;
 let app: ReturnType<typeof buildHubServer>;
 
@@ -28,6 +29,7 @@ beforeEach(() => {
   space = agent.get("http://space.local");
   flow = agent.get("http://flow.local");
   connect = agent.get("http://connect.local");
+  artifact = agent.get("http://artifact.local");
   db = openHubDatabase();
   app = buildHubServer(db, {
     contextUrl: "http://context.local",
@@ -35,6 +37,7 @@ beforeEach(() => {
     rndUrl: "http://rnd.local",
     spaceUrl: "http://space.local",
     flowUrl: "http://flow.local",
+    artifactUrl: "http://artifact.local",
   });
 });
 
@@ -272,6 +275,119 @@ describe("PE-02 Project Sources HTTP", () => {
     expect(
       db.raw.prepare("SELECT COUNT(*) AS count FROM project_source_bindings").get(),
     ).toEqual({ count: 0 });
+  });
+
+  it("extracts an attached Artifact into Project-scoped Context without chat history", async () => {
+    const sourceBytes = Buffer.from("Project source text");
+    const pointer = {
+      id: ARTIFACT_ID,
+      path: `cas/${ARTIFACT_ID}`,
+      description: "Project source",
+      mimeType: "text/plain",
+      sizeBytes: sourceBytes.byteLength,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+    };
+
+    context
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, pointer);
+    const attached = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources",
+      payload: sourceBody("artifact", ARTIFACT_ID),
+    });
+    expect(attached.statusCode).toBe(201);
+
+    context
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, pointer);
+    artifact
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/content?scope=personal&maxSensitivity=INTERNAL&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, sourceBytes, { headers: { "content-type": "text/plain" } });
+    connect
+      .intercept({ path: "/v1/multimodal/infer", method: "POST" })
+      .reply(200, {
+        routeUsed: "local",
+        adapter: "project-ocr-local-v1",
+        provider: "local",
+        model: "project-ocr-20260925",
+        language: "id",
+        text: "Isi dokumen Project",
+        segments: [{ text: "Isi dokumen Project", page: 1, confidence: 0.99 }],
+        actualUsd: 0,
+        naiveUsd: 0,
+      });
+    context
+      .intercept({ path: "/v1/episodes", method: "POST" })
+      .reply(201, {
+        id: "epi_projectsource001",
+        ts: "2026-09-25T00:00:00.000Z",
+        rawText: "Isi dokumen Project",
+        projectId: "prj_personal",
+        provenance: {
+          sourceApp: "hub:project-source",
+          toolCallId: "op_projectextract001",
+          sourceUri: `artifact:${ARTIFACT_ID}`,
+        },
+        scope: "personal",
+        sensitivity: "INTERNAL",
+        syncClass: "LOCAL_ONLY",
+        trust: "LOCAL_AGENT",
+        summary: null,
+        consolidatedAt: null,
+      });
+    context
+      .intercept({ path: "/v1/multimodal/derivations", method: "POST" })
+      .reply(201, { ok: true });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/extract",
+      payload: {
+        operationId: "op_projectextract001",
+        workspaceId: "ws_personal",
+        artifactId: ARTIFACT_ID,
+      },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      operationId: "op_projectextract001",
+      projectId: "prj_personal",
+      workspaceId: "ws_personal",
+      sourceArtifactId: ARTIFACT_ID,
+      task: "ocr",
+      state: "READY",
+      contextEpisodeId: "epi_projectsource001",
+      result: {
+        routeUsed: "local",
+        text: "Isi dokumen Project",
+      },
+    });
+
+    expect(
+      db.raw
+        .prepare("SELECT COUNT(*) AS count FROM history_events WHERE operation_id=?")
+        .get("op_projectextract001"),
+    ).toEqual({ count: 0 });
+
+    const audit = await app.inject({
+      method: "GET",
+      url: "/v1/audit?operationId=op_projectextract001",
+    });
+    expect(audit.json().events.map((event: { type: string }) => event.type)).toContain(
+      "PROJECT_SOURCE_EXTRACTED",
+    );
   });
 
   it("rejects Artifact binding when Context authorization denies access", async () => {
