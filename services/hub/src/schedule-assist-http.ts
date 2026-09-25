@@ -28,9 +28,7 @@ import {
 } from "./project-registry.js";
 import type { HubRepository } from "./repository.js";
 
-const FlowListResponseSchema = z
-  .object({ graphs: z.array(FlowGraphSummarySchema) })
-  .strict();
+const FlowListResponseSchema = z.object({ graphs: z.array(FlowGraphSummarySchema) }).strict();
 
 const ModelDraftSchema = z
   .object({
@@ -50,10 +48,7 @@ const ModelClarifySchema = z
   })
   .strict();
 
-const ModelReplySchema = z.discriminatedUnion("status", [
-  ModelDraftSchema,
-  ModelClarifySchema,
-]);
+const ModelReplySchema = z.discriminatedUnion("status", [ModelDraftSchema, ModelClarifySchema]);
 
 interface CompleteResponse {
   readonly reply: string;
@@ -182,8 +177,7 @@ export function registerScheduleAssistRoutes(
 
     const graphs = graphBody.graphs.filter(
       (graph) =>
-        graph.workspaceId === resolved.workspaceId &&
-        graph.projectId === resolved.project.id,
+        graph.workspaceId === resolved.workspaceId && graph.projectId === resolved.project.id,
     );
     if (graphs.length === 0) {
       throw new BadRequestError(
