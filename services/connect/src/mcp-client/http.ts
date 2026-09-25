@@ -47,7 +47,7 @@ const ToolParamsSchema = z.object({
   tool: z.string().min(1).max(128),
 });
 
-function toHttpError(error: unknown): unknown {
+export function toMcpHttpError(error: unknown): unknown {
   if (error instanceof McpServerNotFoundError) return new NotFoundError(error.message);
   if (error instanceof McpServerDisabledError) return new ConflictError(error.message);
   if (error instanceof McpToolDisabledError || error instanceof McpTransportDeniedError) {
@@ -99,7 +99,7 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
     try {
       return manager.status(params.id, query.workspaceId);
     } catch (error) {
-      throw toHttpError(error);
+      throw toMcpHttpError(error);
     }
   });
 
@@ -125,7 +125,7 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
       metrics.observe("ecorione_mcp_discovery_duration_ms", performance.now() - started, {
         server: params.id,
       });
-      throw toHttpError(error);
+      throw toMcpHttpError(error);
     }
   });
 
@@ -153,7 +153,7 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
         metrics.observe("ecorione_mcp_resource_read_duration_ms", performance.now() - started, {
           server: params.id,
         });
-        throw toHttpError(error);
+        throw toMcpHttpError(error);
       }
     },
   );
@@ -186,7 +186,7 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
           server: params.id,
           tool: params.tool,
         });
-        throw toHttpError(error);
+        throw toMcpHttpError(error);
       }
     },
   );
@@ -227,7 +227,7 @@ export function registerOutboundMcpRoutes(app: FastifyInstance, manager: McpMana
       try {
         return { disconnected: await manager.disconnect(params.id, body.workspaceId) };
       } catch (error) {
-        throw toHttpError(error);
+        throw toMcpHttpError(error);
       }
     },
   );
