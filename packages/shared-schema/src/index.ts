@@ -16,6 +16,7 @@ export * from "./project.js";
 export * from "./project-source.js";
 export * from "./brain.js";
 export * from "./trigger.js";
+export * from "./schedule-assist.js";
 export * from "./run.js";
 export * from "./mcp.js";
 export * from "./sync.js";
