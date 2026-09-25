@@ -152,7 +152,7 @@ describe("/api/projects/:id/sources/upload", () => {
     );
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({
-      error: { code: "BAD_REQUEST" },
+      error: { type: "BAD_REQUEST" },
     });
   });
 });
