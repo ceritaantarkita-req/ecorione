@@ -20,6 +20,7 @@ import {
 import {
   BadGatewayError,
   ConflictError,
+  ForbiddenError,
   HttpError,
   NotFoundError,
   RemoteServiceError,
@@ -27,6 +28,7 @@ import {
   parseOrBadRequest,
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
+import type { CapabilityRegistry } from "./capability-registry.js";
 import type { HistoryLedger } from "./history-ledger.js";
 import {
   artifactContentBase64,
@@ -35,6 +37,7 @@ import {
   requestedRoutes,
   semanticMultimodalResult,
 } from "./multimodal-analysis.js";
+import type { HubRepository } from "./repository.js";
 import {
   MultimodalRunConflictError,
   MultimodalRunNotFoundError,
