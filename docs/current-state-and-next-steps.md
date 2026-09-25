@@ -86,6 +86,12 @@ Safe resumable checkpoint: [verification/session-8-a05b3b-safe-checkpoint-2026-0
 
 **A-05 closure decision is now explicit.** Generic MCP-resource ingestion is accepted as the Project connector boundary for this roadmap. Native Google Drive OAuth/onboarding is deferred as a separate future integration; recursive folder auto-ingestion is intentionally not introduced. Schedule A-06 is therefore the next authorized product scope, starting from the existing Trigger/Temporal backend rather than a scheduler rewrite. Evidence: [verification/session-9-a05-closure-decision-2026-09-25.md](verification/session-9-a05-closure-decision-2026-09-25.md).
 
+**A-06a Schedule calendar/navigation is CLOSED / PASS.** PR #327 / merge `3b1abefd18263f7441d139e3435b064f83b142ea` adds `list/day/week/month/year`, explicit Previous/Today/Next cursor navigation, real calendar projections, responsive layouts, and bounded Work-page extraction. Calendar rendering is derived only from Temporal `nextActionTimes`; Flow remains Trigger-definition owner, Temporal remains schedule truth, and no second scheduler/domain was introduced. Exact-head CI `36113711079`, Product Eval `36113711113`, and PCS-06 `36113711071` passed; merged-main CI `36114202738` and Product Eval `36114202810` passed; Staging Deploy `36114495464` successfully deployed exact reviewed main.
+
+Safe resumable checkpoint: [verification/session-9-a06a-schedule-safe-checkpoint-2026-09-25.md](verification/session-9-a06a-schedule-safe-checkpoint-2026-09-25.md).
+
+**Next bounded product scope is A-06b, not Brain yet.** Remaining Schedule work is searchable/autocomplete Project selection + inline `+ new Project`, and AI-assisted natural-language schedule creation/editing through the existing Trigger/Flow/Temporal authority path. A-06b may be implemented next or explicitly deferred before A-07/A-08 opens.
+
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
 Issue #277 opens a new additive infrastructure scope after the original Off-host DR runtime closure. The closed Issue #266 claim remains unchanged: total loss of the tested SumoPod staging host is recoverable at its documented boundary.
