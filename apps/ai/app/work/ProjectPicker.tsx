@@ -69,7 +69,7 @@ export function ProjectPicker(props: ProjectPickerProps) {
       });
       const body: unknown = await response.json().catch(() => null);
       if (!response.ok || body === null) {
-        throw new Error(projectError(body, `Project create gagal (HTTP ${String(response.status)}).`));
+        throw new Error(\n          projectError(body, `Project create gagal (HTTP ${String(response.status)}).`),\n        );
       }
       const project = body as Project;
       props.onCreated(project);
@@ -180,7 +180,7 @@ export function ProjectPicker(props: ProjectPickerProps) {
       ) : null}
 
       <small>{selected?.id ?? props.projectId}</small>
-      {feedback !== null ? <small className={styles.projectPickerError}>{feedback}</small> : null}
+      {feedback !== null ? (\n        <small className={styles.projectPickerError}>{feedback}</small>\n      ) : null}
     </div>
   );
 }
