@@ -869,7 +869,7 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "Create", exact: true }).click();
     await page.waitForFunction((value) => {
       const input = globalThis.document.querySelector('input[aria-label="Search Project"]');
-      return input instanceof HTMLInputElement && input.value === value;
+      return input?.value === value;
     }, "PCS-06 Inline");
     await projectSearch.fill("Personal");
     await page.getByRole("option").filter({ hasText: "Personal" }).click();
@@ -890,10 +890,8 @@ async function runDesktopJourney() {
           'input[aria-label="Cron expression"]',
         );
         return (
-          nameInput instanceof HTMLInputElement &&
-          cronInput instanceof HTMLInputElement &&
-          nameInput.value === name &&
-          cronInput.value === cron
+          nameInput?.value === name &&
+          cronInput?.value === cron
         );
       },
       { name: "PCS-06 Weekday", cron: "30 9 * * 1-5" },
