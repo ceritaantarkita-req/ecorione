@@ -50,7 +50,10 @@ const flow = readFileSync("services/flow/src/graph-activities.ts", "utf8");
 const sharedClient = readFileSync("packages/shared-server/src/client.ts", "utf8");
 const hubMcp = readFileSync("services/hub/src/mcp.ts", "utf8");
 const hubExchange = readFileSync("services/hub/src/exchange-http.ts", "utf8");
-const hubMultimodal = readFileSync("services/hub/src/multimodal-http.ts", "utf8");
+const hubMultimodal = [
+  readFileSync("services/hub/src/multimodal-http.ts", "utf8"),
+  readFileSync("services/hub/src/multimodal-analysis.ts", "utf8"),
+].join("\n");
 const brainContextEcx = readFileSync("apps/ai/lib/brain-context-ecx.ts", "utf8");
 const syncHttp = readFileSync("services/sync/src/http.ts", "utf8");
 const anthropicProvider = readFileSync("services/connect/src/providers/anthropic.ts", "utf8");
