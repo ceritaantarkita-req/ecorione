@@ -30,9 +30,7 @@ export default function ProjectsPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const loadProjects = useCallback(async () => {
-    const res = await fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, {
-      cache: "no-store",
-    });
+    const res = await fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" });
     const body: unknown = await res.json().catch(() => undefined);
     if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat Projects."));
     setProjects((body as ProjectList).projects);
@@ -56,9 +54,8 @@ export default function ProjectsPage() {
   }, [loadProjects]);
 
   useEffect(() => {
-    void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch(
-      (error: unknown) =>
-        setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
+    void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch((error: unknown) =>
+      setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
     );
   }, [loadSessions, selectedId]);
 
@@ -185,8 +182,8 @@ export default function ProjectsPage() {
                 <div>
                   <h2>All</h2>
                   <p>
-                    Ringkasan metadata seluruh Project aktif. Memory dan Sources tetap terisolasi per
-                    Project.
+                    Ringkasan metadata seluruh Project aktif. Memory dan Sources tetap
+                    terisolasi per Project.
                   </p>
                 </div>
               </div>
@@ -213,7 +210,9 @@ export default function ProjectsPage() {
                           <span>{session.title ?? session.id}</span>
                           <small>
                             {project?.name ??
-                              (session.projectId === null ? "Unassigned" : "Project unavailable")}
+                              (session.projectId === null
+                                ? "Unassigned"
+                                : "Project unavailable")}
                             {" · "}
                             {session.updatedAt ?? session.createdAt}
                           </small>
