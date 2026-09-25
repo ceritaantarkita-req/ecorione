@@ -108,7 +108,7 @@ Safe resumable checkpoint: [verification/session-9-a08b-brain-context-facts-clos
 
 Safe resumable checkpoint: [verification/session-9-a08c-brain-fact-provenance-closure-2026-09-25.md](verification/session-9-a08c-brain-fact-provenance-closure-2026-09-25.md).
 
-**No product implementation is currently in flight.** Remaining A-08 work is limited to connector hierarchy with stable authorized identities, Core Memory only with stable canonical owner identity, and embedded Brain AI/chat only by reusing existing Ai/Context/ECX. Brain must remain a rebuildable projection, not a graph store or second chat system.
+**No product implementation is currently in flight and GitHub has zero open PRs.** Canonical repository/staging checkpoint is `807b6f42683a910d106a3176f95442145807cf97`; product-code semantics remain from `0a36a041a4077e185cbc934723d7ca195c5f5fc5`. PR #337, an older selected-node grounded Brain assistant prototype, was deliberately closed without merge because it diverged from the post-A-08c main and had a failing CI verify run. It may be studied but must be ported onto a fresh branch if selected. Stale PR #310 was also closed without merge because its Session 4 documentation is already superseded. Remaining A-08 work is limited to connector hierarchy with stable authorized identities, Core Memory only with stable canonical owner identity, and embedded Brain AI/chat only by reusing existing Ai/Context/ECX. Brain must remain a rebuildable projection, not a graph store or second chat system. Safe checkpoint: [verification/session-9-post-a08c-safe-checkpoint-2026-09-25.md](verification/session-9-post-a08c-safe-checkpoint-2026-09-25.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
