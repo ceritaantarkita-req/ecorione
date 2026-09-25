@@ -244,6 +244,24 @@ const brain = {
       metadata: { scope: "personal", version: 1 },
     },
     ...brainRunNodes,
+    {
+      id: "brain_fact_pcs06",
+      type: "Fact",
+      canonicalId: "mem_pcs06brain",
+      owner: "Context",
+      label: "PCS-06 canonical fact",
+      workspaceId: "ws_personal",
+      projectId: "prj_personal",
+      availability: "AVAILABLE",
+      href: null,
+      metadata: {
+        subject: "PCS-06",
+        predicate: "status",
+        object: "verified",
+        sensitivity: "INTERNAL",
+        syncClass: "LOCAL_ONLY",
+      },
+    },
   ],
   edges: [
     {
@@ -282,9 +300,15 @@ const brain = {
       sourceNodeId: "brain_page_pcs06",
       targetNodeId: "brain_project_personal",
     },
+    {
+      id: "BELONGS_TO:brain_fact_pcs06->brain_project_personal",
+      type: "BELONGS_TO",
+      sourceNodeId: "brain_fact_pcs06",
+      targetNodeId: "brain_project_personal",
+    },
   ],
-  totalNodes: 55,
-  totalEdges: 6,
+  totalNodes: 56,
+  totalEdges: 7,
   truncated: false,
 };
 let scheduleTrigger = {
@@ -1024,8 +1048,10 @@ async function runDesktopJourney() {
     await brainSvg.waitFor();
     await page.getByRole("checkbox", { name: "Artifact", exact: true }).waitFor();
     await page.getByRole("checkbox", { name: "Page", exact: true }).waitFor();
+    await page.getByRole("checkbox", { name: "Fact", exact: true }).waitFor();
     await page.locator('g[aria-label="Artifact: PCS-06 Artifact"]').waitFor();
     await page.locator('g[aria-label="Page: PCS-06 Notes"]').waitFor();
+    await page.locator('g[aria-label="Fact: PCS-06 canonical fact"]').waitFor();
     const brainRuns = page.locator('g[aria-label^="Run:"]');
     if ((await brainRuns.count()) !== 50) {
       throw new Error(`desktop-brain: expected 50 Run nodes, got ${await brainRuns.count()}`);

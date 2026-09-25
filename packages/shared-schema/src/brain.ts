@@ -9,6 +9,7 @@ export const BRAIN_NODE_TYPES = [
   "Flow",
   "Trigger",
   "Run",
+  "Fact",
 ] as const;
 export const BrainNodeTypeSchema = z.enum(BRAIN_NODE_TYPES);
 export type BrainNodeType = z.infer<typeof BrainNodeTypeSchema>;
@@ -23,7 +24,14 @@ export const BRAIN_EDGE_TYPES = [
 export const BrainEdgeTypeSchema = z.enum(BRAIN_EDGE_TYPES);
 export type BrainEdgeType = z.infer<typeof BrainEdgeTypeSchema>;
 
-export const BrainOwnerSchema = z.enum(["Hub", "Flow", "Artifact", "Space", "Connect"]);
+export const BrainOwnerSchema = z.enum([
+  "Hub",
+  "Flow",
+  "Artifact",
+  "Space",
+  "Connect",
+  "Context",
+]);
 export type BrainOwner = z.infer<typeof BrainOwnerSchema>;
 
 export const BrainAvailabilitySchema = z.enum(["AVAILABLE", "UNAVAILABLE"]);

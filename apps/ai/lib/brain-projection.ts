@@ -4,6 +4,7 @@ import {
   BrainGraphResponseSchema,
   BrainNeighborhoodResponseSchema,
   FlowGraphSummarySchema,
+  MemoryFactSchema,
   ProjectSchema,
   ProjectSourceListResponseSchema,
   RunListResponseSchema,
@@ -16,6 +17,7 @@ import {
   type BrainNodeType,
   type BrainQuery,
   type FlowGraphSummary,
+  type MemoryFact,
   type Project,
   type ProjectSourceView,
   type RunListItem,
@@ -26,17 +28,24 @@ const FlowListResponseSchema = z.object({ graphs: z.array(FlowGraphSummarySchema
 const TriggerListResponseSchema = z
   .object({ triggers: z.array(TriggerDefinitionSchema) })
   .strict();
+const FactListResponseSchema = z.object({ facts: z.array(MemoryFactSchema).max(500) }).strict();
 
+const DEFAULT_CONTEXT_URL = "http://127.0.0.1:17022";
 const DEFAULT_HUB_URL = "http://127.0.0.1:17024";
 const DEFAULT_FLOW_URL = "http://127.0.0.1:17028";
 const BRAIN_OWNER_TIMEOUT_MS = 10_000;
+const BRAIN_FACT_LIMIT = 40;
 
 function ownerBaseUrl(
-  name: "ECORIONE_HUB_URL" | "ECORIONE_FLOW_URL",
+  name: "ECORIONE_CONTEXT_URL" | "ECORIONE_HUB_URL" | "ECORIONE_FLOW_URL",
   fallback: string,
 ): string {
   const value = process.env[name];
   return value !== undefined && value.length > 0 ? value : fallback;
+}
+
+function brainContextUrl(): string {
+  return ownerBaseUrl("ECORIONE_CONTEXT_URL", DEFAULT_CONTEXT_URL);
 }
 
 function brainHubUrl(): string {
@@ -54,7 +63,7 @@ function brainInternalToken(): string | undefined {
 
 export class BrainOwnerRequestError extends Error {
   constructor(
-    readonly owner: "HubProject" | "HubSources" | "Flow",
+    readonly owner: "HubProject" | "HubSources" | "Flow" | "Context",
     readonly statusCode: number,
     message: string,
   ) {
@@ -68,6 +77,7 @@ type BrainOwnerSnapshot = {
   graphs: FlowGraphSummary[];
   triggers: TriggerDefinition[];
   runs: RunListItem[];
+  facts?: MemoryFact[];
 };
 
 function requestHeaders(): Record<string, string> {
@@ -136,7 +146,12 @@ async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot>
     workspaceId: query.workspaceId,
     projectId: query.projectId,
   });
-  const [sourceRaw, graphRaw, triggerRaw, runRaw] = await Promise.all([
+  const factQuery = new URLSearchParams({
+    projectId: query.projectId,
+    maxSensitivity: "RESTRICTED",
+    limit: String(Math.min(BRAIN_FACT_LIMIT, query.limit)),
+  });
+  const [sourceRaw, graphRaw, triggerRaw, runRaw, factRaw] = await Promise.all([
     ownerJson(
       "HubSources",
       `${brainHubUrl()}/v1/projects/${encodeURIComponent(query.projectId)}/sources?workspaceId=${encodeURIComponent(query.workspaceId)}`,
@@ -147,6 +162,7 @@ async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot>
       "Flow",
       `${brainFlowUrl()}/v1/runs?${common.toString()}&limit=${String(query.runLimit)}`,
     ),
+    ownerJson("Context", `${brainContextUrl()}/v1/facts?${factQuery.toString()}`),
   ]);
 
   const sourceViews = ProjectSourceListResponseSchema.parse(sourceRaw).sources.filter(
@@ -167,8 +183,16 @@ async function readOwnerSnapshot(query: BrainQuery): Promise<BrainOwnerSnapshot>
     query.workspaceId,
     query.projectId,
   );
+  const facts = FactListResponseSchema.parse(factRaw).facts;
+  if (facts.some((fact) => fact.projectId !== query.projectId)) {
+    throw new BrainOwnerRequestError(
+      "Context",
+      502,
+      "Context mengembalikan fakta di luar Project yang diotorisasi.",
+    );
+  }
 
-  return { project, sources: sourceViews, graphs, triggers, runs };
+  return { project, sources: sourceViews, graphs, triggers, runs, facts };
 }
 
 function nodeId(type: BrainNodeType, canonicalId: string): string {
@@ -221,6 +245,7 @@ const TYPE_ORDER: Record<BrainNodeType, number> = {
   Flow: 4,
   Trigger: 5,
   Run: 6,
+  Fact: 7,
 };
 
 function compareNode(a: BrainNode, b: BrainNode): number {
@@ -427,6 +452,37 @@ export function buildBrainGraph(
     if (run.triggerId !== null && triggerIds.has(run.triggerId)) {
       addEdge(edges, "TRIGGERED", nodeId("Trigger", run.triggerId), id);
     }
+  }
+
+  for (const fact of [...(snapshot.facts ?? [])].sort((a, b) => a.id.localeCompare(b.id))) {
+    const id = nodeId("Fact", fact.id);
+    const label = fact.text.length > 512 ? `${fact.text.slice(0, 509)}…` : fact.text;
+    nodes.set(id, {
+      id,
+      type: "Fact",
+      canonicalId: fact.id,
+      owner: "Context",
+      label,
+      workspaceId: query.workspaceId,
+      projectId: query.projectId,
+      availability: "AVAILABLE",
+      href: null,
+      metadata: {
+        subject: fact.subject,
+        predicate: fact.predicate,
+        object: fact.object,
+        confidence: fact.confidence,
+        salience: fact.salience,
+        scope: fact.scope,
+        sensitivity: fact.sensitivity,
+        syncClass: fact.syncClass,
+        trust: fact.trust,
+        sourceUri: fact.provenance.sourceUri ?? null,
+        createdAt: fact.createdAt,
+        tValid: fact.tValid,
+      },
+    });
+    addEdge(edges, "BELONGS_TO", id, projectNodeId);
   }
 
   const allNodes = [...nodes.values()].sort(compareNode);
