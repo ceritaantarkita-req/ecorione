@@ -1062,9 +1062,8 @@ async function runDesktopJourney() {
     await factNode.waitFor();
     await factNode.click();
     await page
-      .getByText("PCS-06 canonical fact · GENERATED_FROM · PCS-06 Artifact", {
-        exact: true,
-      })
+      .locator("small")
+      .filter({ hasText: "PCS-06 canonical fact · GENERATED_FROM · PCS-06 Artifact" })
       .waitFor();
     const brainRuns = page.locator('g[aria-label^="Run:"]');
     if ((await brainRuns.count()) !== 50) {
