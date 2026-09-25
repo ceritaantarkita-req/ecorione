@@ -71,10 +71,7 @@ function mimeTypeFrom(response: Response): string {
   return raw;
 }
 
-async function readBounded(
-  response: Response,
-  maxBytes: number,
-): Promise<Buffer> {
+async function readBounded(response: Response, maxBytes: number): Promise<Buffer> {
   const contentLength = response.headers.get("content-length");
   if (contentLength !== null) {
     const declared = Number(contentLength);
@@ -117,13 +114,12 @@ async function readBounded(
   }
 
   if (total === 0) {
-    throw new ExternalSourceFetchError(
-      502,
-      "URL_SOURCE_UNAVAILABLE",
-      "URL source kosong.",
-    );
+    throw new ExternalSourceFetchError(502, "URL_SOURCE_UNAVAILABLE", "URL source kosong.");
   }
-  return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), total);
+  return Buffer.concat(
+    chunks.map((chunk) => Buffer.from(chunk)),
+    total,
+  );
 }
 
 function isTimeout(error: unknown): boolean {
