@@ -225,6 +225,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
         if (url.includes("/v1/graphs?")) return json({ graphs: [] });
         if (url.includes("/v1/triggers?")) return json({ triggers: [] });
         if (url.includes("/v1/runs?")) return json({ runs: [] });
+        if (url.includes("/v1/facts?")) return json({ facts: [] });
         if (url.endsWith("/v1/retrieve")) {
           const request = requiredBody(body);
           expect(request.candidateSourceUris).toEqual([SOURCE_URI]);
@@ -298,6 +299,7 @@ describe("PE-07 Brain -> Context -> ECX integration", () => {
         if (url.includes("/v1/graphs?")) return json({ graphs: [] });
         if (url.includes("/v1/triggers?")) return json({ triggers: [] });
         if (url.includes("/v1/runs?")) return json({ runs: [] });
+        if (url.includes("/v1/facts?")) return json({ facts: [] });
         throw new Error(`unexpected fetch ${url}`);
       }),
     );
