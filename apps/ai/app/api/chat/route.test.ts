@@ -159,13 +159,10 @@ describe("POST /api/chat", () => {
       },
     };
 
-    pool
-      .intercept({
-        path: "/v1/chat",
-        method: "POST",
-        body: JSON.stringify(body),
-      })
-      .reply(200, {
+    let forwarded: unknown;
+    pool.intercept({ path: "/v1/chat", method: "POST" }).reply(200, (opts) => {
+      forwarded = JSON.parse(String(opts.body));
+      return {
         operationId: "op_brainroute",
         sessionId: "sess_brainroute",
         reply: "grounded",
@@ -184,7 +181,8 @@ describe("POST /api/chat", () => {
           routeReason: "local",
         },
         policy: { outcome: "ALLOW", reason: "ok", ruleId: "read-always-allowed" },
-      });
+      };
+    });
 
     const res = await POST(
       new Request("http://ai.local/api/chat", {
@@ -193,6 +191,7 @@ describe("POST /api/chat", () => {
       }),
     );
     expect(res.status).toBe(200);
+    expect(forwarded).toEqual(body);
     expect((await res.json()) as { reply: string }).toMatchObject({ reply: "grounded" });
   });
 
