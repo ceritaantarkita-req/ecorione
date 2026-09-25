@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import type { HistorySession, Project } from "@ecorione/shared-schema";
+import type {
+  HistorySession,
+  Project,
+  ProjectAutonomyCeiling,
+} from "@ecorione/shared-schema";
+import { ProjectSettings } from "./ProjectSettings";
 import { ProjectSources } from "./ProjectSources";
 import styles from "./Projects.module.css";
 
@@ -26,11 +31,17 @@ export default function ProjectsPage() {
   const [selectedId, setSelectedId] = useState<string>(PERSONAL_ID);
   const [sessions, setSessions] = useState<HistorySession[]>([]);
   const [name, setName] = useState("");
+  const [createDescription, setCreateDescription] = useState("");
+  const [createInstruction, setCreateInstruction] = useState("");
+  const [createAutonomyCeiling, setCreateAutonomyCeiling] =
+    useState<ProjectAutonomyCeiling>("L3");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const loadProjects = useCallback(async () => {
-    const res = await fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" });
+    const res = await fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, {
+      cache: "no-store",
+    });
     const body: unknown = await res.json().catch(() => undefined);
     if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat Projects."));
     setProjects((body as ProjectList).projects);
@@ -54,8 +65,9 @@ export default function ProjectsPage() {
   }, [loadProjects]);
 
   useEffect(() => {
-    void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch((error: unknown) =>
-      setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
+    void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch(
+      (error: unknown) =>
+        setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
     );
   }, [loadSessions, selectedId]);
 
@@ -69,12 +81,21 @@ export default function ProjectsPage() {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ workspaceId: WORKSPACE_ID, name: trimmed }),
+        body: JSON.stringify({
+          workspaceId: WORKSPACE_ID,
+          name: trimmed,
+          description: createDescription,
+          instruction: createInstruction,
+          autonomyCeiling: createAutonomyCeiling,
+        }),
       });
       const body: unknown = await res.json().catch(() => undefined);
       if (!res.ok) throw new Error(errorMessage(body, "Gagal membuat Project."));
       const project = body as Project;
       setName("");
+      setCreateDescription("");
+      setCreateInstruction("");
+      setCreateAutonomyCeiling("L3");
       await loadProjects();
       setSelectedId(project.id);
     } catch (error) {
@@ -114,6 +135,12 @@ export default function ProjectsPage() {
     window.location.assign(`/?project=${encodeURIComponent(projectId)}`);
   }
 
+  function projectSaved(updated: Project): void {
+    setProjects((current) =>
+      current.map((project) => (project.id === updated.id ? updated : project)),
+    );
+  }
+
   const allSelected = selectedId === ALL_ID;
   const selected = allSelected
     ? undefined
@@ -130,21 +157,64 @@ export default function ProjectsPage() {
           </p>
         </div>
         <form className={styles.create} onSubmit={createProject}>
-          <input
-            className="ecr-input"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Nama Project"
-            aria-label="Nama Project baru"
-            maxLength={160}
-          />
-          <button
-            className="ecr-btn ecr-btn--primary"
-            type="submit"
-            disabled={busy || !name.trim()}
-          >
-            Buat
-          </button>
+          <div className={styles.createMain}>
+            <input
+              className="ecr-input"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Nama Project"
+              aria-label="Nama Project baru"
+              maxLength={160}
+            />
+            <button
+              className="ecr-btn ecr-btn--primary"
+              type="submit"
+              disabled={busy || !name.trim()}
+            >
+              Buat
+            </button>
+          </div>
+          <details className={styles.createAdvanced}>
+            <summary>Initial settings</summary>
+            <label>
+              <span>Description</span>
+              <textarea
+                className="ecr-input"
+                value={createDescription}
+                onChange={(event) => setCreateDescription(event.target.value)}
+                maxLength={2048}
+                rows={2}
+                placeholder="Tujuan Project"
+              />
+            </label>
+            <label>
+              <span>Project instruction</span>
+              <textarea
+                className="ecr-input"
+                value={createInstruction}
+                onChange={(event) => setCreateInstruction(event.target.value)}
+                maxLength={8000}
+                rows={3}
+                placeholder="Instruksi untuk AI di Project ini"
+              />
+            </label>
+            <label>
+              <span>Autonomy ceiling</span>
+              <select
+                className="ecr-input"
+                value={createAutonomyCeiling}
+                onChange={(event) =>
+                  setCreateAutonomyCeiling(event.target.value as ProjectAutonomyCeiling)
+                }
+              >
+                <option value="L0">L0</option>
+                <option value="L1">L1</option>
+                <option value="L2">L2</option>
+                <option value="L3">L3</option>
+              </select>
+            </label>
+            <small>Memory policy V1 tetap GLOBAL_PLUS_PROJECT.</small>
+          </details>
         </form>
       </header>
 
@@ -271,6 +341,8 @@ export default function ProjectsPage() {
                 <span>Memory: {selected.memoryPolicy}</span>
                 <span>Autonomy ceiling: {selected.autonomyCeiling}</span>
               </div>
+
+              <ProjectSettings project={selected} onSaved={projectSaved} />
 
               <ProjectSources projectId={selected.id} workspaceId={selected.workspaceId} />
 
