@@ -8,7 +8,7 @@ import {
 import { artifactUrl, hubUrl, internalToken } from "../../../../../../lib/env";
 import { jsonError } from "../../../../../../lib/proxy";
 
-export const MAX_PROJECT_SOURCE_UPLOAD_BYTES = 20 * 1024 * 1024;
+const MAX_PROJECT_SOURCE_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 function authHeaders(contentType = false): Record<string, string> {
   const result: Record<string, string> = contentType
