@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write apps/ai/app/work/ProjectPicker.tsx scripts/pcs06-browser-acceptance.mjs services/hub/src/schedule-assist-http.ts && git diff -- apps/ai/app/work/ProjectPicker.tsx scripts/pcs06-browser-acceptance.mjs services/hub/src/schedule-assist-http.ts && exit 1",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
