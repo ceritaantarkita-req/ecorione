@@ -5,7 +5,7 @@ import {
   setGlobalDispatcher,
   type Interceptable,
 } from "undici";
-import { MAX_PROJECT_SOURCE_UPLOAD_BYTES, POST } from "./route";
+import { POST } from "./route";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let hubPool: Interceptable;
@@ -14,6 +14,7 @@ let originalHubUrl: string | undefined;
 let originalArtifactUrl: string | undefined;
 
 const ARTIFACT_ID = `art_${"a".repeat(64)}`;
+const MAX_PROJECT_SOURCE_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 function uploadRequest(bytes: Uint8Array, name = "notes.txt"): Request {
   const form = new FormData();
