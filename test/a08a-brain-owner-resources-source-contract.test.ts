@@ -22,7 +22,9 @@ describe("A-08a Brain canonical owner-resource projection source contract", () =
     expect(projection).toContain('view.binding.resourceType === "artifact"');
     expect(projection).toContain('view.binding.resourceType === "space-page"');
     expect(projection).toContain('addEdge(edges, "REFERENCES", id, resourceNodeId)');
-    expect(projection).toContain('addEdge(edges, "BELONGS_TO", resourceNodeId, projectNodeId)');
+    expect(projection).toContain(
+      'addEdge(edges, "BELONGS_TO", resourceNodeId, projectNodeId)',
+    );
     expect(projection).not.toContain("ECORIONE_CONTEXT_URL");
     expect(projection).not.toContain("ECORIONE_SPACE_URL");
     expect(projection).not.toContain("metadata: view.metadata");
@@ -43,7 +45,7 @@ describe("A-08a Brain canonical owner-resource projection source contract", () =
     expect(css).toContain("repeat(7, minmax(86px, 1fr))");
     expect(browser).toContain('name: "Artifact", exact: true');
     expect(browser).toContain('name: "Page", exact: true');
-    expect(browser).toContain('Artifact: PCS-06 Artifact');
-    expect(browser).toContain('Page: PCS-06 Notes');
+    expect(browser).toContain("Artifact: PCS-06 Artifact");
+    expect(browser).toContain("Page: PCS-06 Notes");
   });
 });
