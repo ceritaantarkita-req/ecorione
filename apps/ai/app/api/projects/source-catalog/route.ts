@@ -76,10 +76,10 @@ async function artifacts(): Promise<OwnerResult> {
 
 async function pages(workspaceId: string): Promise<OwnerResult> {
   try {
-    const body = await json(
-      `${spaceUrl()}/v1/pages?workspaceId=${encodeURIComponent(workspaceId)}`,
+    const body = object(
+      await json(`${spaceUrl()}/v1/pages?workspaceId=${encodeURIComponent(workspaceId)}`),
     );
-    const values = Array.isArray(body) ? body : [];
+    const values = Array.isArray(body?.pages) ? body.pages : [];
     const items = values.flatMap((page): CatalogItem[] => {
       const value = object(page);
       const resourceId = text(value?.id);
