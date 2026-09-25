@@ -86,11 +86,13 @@ Safe resumable checkpoint: [verification/session-8-a05b3b-safe-checkpoint-2026-0
 
 **A-05 closure decision is now explicit.** Generic MCP-resource ingestion is accepted as the Project connector boundary for this roadmap. Native Google Drive OAuth/onboarding is deferred as a separate future integration; recursive folder auto-ingestion is intentionally not introduced. Schedule A-06 is therefore the next authorized product scope, starting from the existing Trigger/Temporal backend rather than a scheduler rewrite. Evidence: [verification/session-9-a05-closure-decision-2026-09-25.md](verification/session-9-a05-closure-decision-2026-09-25.md).
 
-**A-06a Schedule calendar/navigation is CLOSED / PASS.** PR #327 / merge `3b1abefd18263f7441d139e3435b064f83b142ea` adds `list/day/week/month/year`, explicit Previous/Today/Next cursor navigation, real calendar projections, responsive layouts, and bounded Work-page extraction. Calendar rendering is derived only from Temporal `nextActionTimes`; Flow remains Trigger-definition owner, Temporal remains schedule truth, and no second scheduler/domain was introduced. Exact-head CI `36113711079`, Product Eval `36113711113`, and PCS-06 `36113711071` passed; merged-main CI `36114202738` and Product Eval `36114202810` passed; Staging Deploy `36114495464` successfully deployed exact reviewed main.
+**A-06 Schedule is CLOSED / PASS.** A-06a closed calendar/navigation through PR #327 / merge `3b1abefd18263f7441d139e3435b064f83b142ea`. A-06b closed the remainder through PR #329 / merge `d182c5ec06be14de068b7c3911a0decffcc94d41`: searchable/autocomplete Project selection, inline `+ New Project`, and local AI-assisted natural-language Schedule create/edit drafting. The assistant only proposes a validated draft; Flow remains Trigger-definition owner, Temporal remains schedule truth, and explicit Save is still the mutation boundary.
 
-Safe resumable checkpoint: [verification/session-9-a06a-schedule-safe-checkpoint-2026-09-25.md](verification/session-9-a06a-schedule-safe-checkpoint-2026-09-25.md).
+A-06b exact-head CI `36124634778`, Product Eval `36124634690`, PCS-06 rendered-browser `36124634717`, and MCP External HTTPS `36124634826` passed. Merged-main CI `36125055447`, Product Eval `36125055440`, and MCP External HTTPS `36125055159` passed. Staging Deploy `36125427040` then deployed exact implementation main `d182c5ec06be14de068b7c3911a0decffcc94d41` successfully with exact-SHA match, healthy Operations, preserved auth/MCP boundaries, and stabilized capacity.
 
-**Next bounded product scope is A-06b, not Brain yet.** Remaining Schedule work is searchable/autocomplete Project selection + inline `+ new Project`, and AI-assisted natural-language schedule creation/editing through the existing Trigger/Flow/Temporal authority path. A-06b may be implemented next or explicitly deferred before A-07/A-08 opens.
+Safe resumable checkpoint: [verification/session-9-a06b-schedule-closure-2026-09-25.md](verification/session-9-a06b-schedule-closure-2026-09-25.md).
+
+**No product implementation is currently in flight.** Brain A-07/A-08 remains untouched. Its former A-06 prerequisite is satisfied, but selecting or opening Brain work requires an explicit next-scope decision rather than automatic continuation.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
