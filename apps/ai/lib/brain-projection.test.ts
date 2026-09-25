@@ -355,9 +355,7 @@ describe("PE-06 Brain deterministic projection", () => {
     );
     expect(factNode).toBeDefined();
     expect(artifactNode).toBeDefined();
-    expect(
-      result.edges.filter((edge) => edge.type === "GENERATED_FROM"),
-    ).toEqual([
+    expect(result.edges.filter((edge) => edge.type === "GENERATED_FROM")).toEqual([
       expect.objectContaining({
         sourceNodeId: factNode?.id,
         targetNodeId: artifactNode?.id,
