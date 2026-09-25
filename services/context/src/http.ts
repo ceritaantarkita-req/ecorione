@@ -3,6 +3,7 @@ import {
   assertId,
   InvalidIdError,
   makeId,
+  MemoryFactIdSchema,
   ProjectIdSchema,
   ScopeSchema,
   SensitivitySchema,
@@ -123,6 +124,7 @@ const RetrieveBodySchema = z.object({
   now: z.string().datetime({ offset: false }),
   hostedEligibleOnly: z.boolean().default(false),
   candidateSourceUris: z.array(z.string().url().max(2048)).max(32).optional(),
+  candidateFactIds: z.array(MemoryFactIdSchema).max(32).optional(),
 });
 const CoreMemoryQuerySchema = z.object({
   projectId: ProjectIdSchema.nullable().optional(),

@@ -33,6 +33,7 @@ describe("PE-07 Brain Context ECX source contract", () => {
     expect(memoryRefs).toBeGreaterThan(ecxPlan);
     expect(semantic).toBeGreaterThan(ecxPlan);
     expect(integration).toContain("candidateSourceUris");
+    expect(integration).toContain("candidateFactIds");
     expect(integration).not.toContain("/v1/complete");
     expect(integration).not.toContain("embedding");
   });
@@ -41,16 +42,19 @@ describe("PE-07 Brain Context ECX source contract", () => {
     const retrieval = await source(retrievalPath);
     const authorized = retrieval.indexOf("const authorizedFacts = this.allowedFacts");
     const sourceConstraint = retrieval.indexOf("const sourceConstraint");
+    const factConstraint = retrieval.indexOf("const factConstraint");
     const lexical = retrieval.indexOf("const lexical = this.lexicalSearch");
 
     expect(authorized).toBeGreaterThan(-1);
     expect(sourceConstraint).toBeGreaterThan(authorized);
-    expect(lexical).toBeGreaterThan(sourceConstraint);
+    expect(factConstraint).toBeGreaterThan(authorized);
+    expect(lexical).toBeGreaterThan(factConstraint);
     expect(retrieval).toContain("f.t_invalid IS NULL");
     expect(retrieval).toContain("f.sensitivity IN");
     expect(retrieval).toContain("f.sync_class IN ('CLOUD_ALLOWED','PUBLIC')");
     expect(retrieval).toContain("f.project_id=?");
     expect(retrieval).toContain("f.source_uri IN");
+    expect(retrieval).toContain("f.id IN");
   });
 
   it("makes baseline omission different from an explicit empty fail-closed constraint", async () => {
@@ -59,8 +63,11 @@ describe("PE-07 Brain Context ECX source contract", () => {
       source(contextHttpPath),
     ]);
     expect(retrieval).toContain("options.candidateSourceUris === undefined");
-    expect(retrieval).toContain("candidateSourceUris?.length === 0");
+    expect(retrieval).toContain("options.candidateFactIds === undefined");
+    expect(retrieval).toContain("(candidateSourceUris?.length ?? 0) === 0");
+    expect(retrieval).toContain("(candidateFactIds?.length ?? 0) === 0");
     expect(http).toContain("candidateSourceUris:");
+    expect(http).toContain("candidateFactIds:");
     expect(http).toContain(".max(32).optional()");
   });
 });

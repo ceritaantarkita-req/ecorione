@@ -142,6 +142,59 @@ describe("POST /api/chat", () => {
     expect((await res.json()) as { reply: string }).toMatchObject({ reply: "lokal aktif" });
   });
 
+  it("Brain grounding diteruskan utuh ke Hub lewat chat route yang sama", async () => {
+    const body = {
+      sessionId: "sess_brainroute",
+      workspaceId: "ws_personal",
+      projectId: "prj_finance",
+      message: "jelaskan fakta ini",
+      target: "local",
+      scope: "personal",
+      maxSensitivity: "RESTRICTED",
+      autonomy: "L1",
+      contextConstraint: {
+        source: "brain",
+        sourceUris: [],
+        factIds: ["mem_brainroute"],
+      },
+    };
+
+    let forwarded: unknown;
+    pool.intercept({ path: "/v1/chat", method: "POST" }).reply(200, (opts) => {
+      forwarded = JSON.parse(String(opts.body));
+      return {
+        operationId: "op_brainroute",
+        sessionId: "sess_brainroute",
+        reply: "grounded",
+        memoryUsed: {
+          coreMemoryBlocks: [],
+          recalledFacts: [{ id: "mem_brainroute", text: "grounded", score: 1 }],
+          episodicSummaries: [],
+        },
+        cost: {
+          model: "local-test",
+          cacheHit: false,
+          actualUsd: 0,
+          naiveUsd: 0,
+          savedUsd: 0,
+          savedPct: 0,
+          routeReason: "local",
+        },
+        policy: { outcome: "ALLOW", reason: "ok", ruleId: "read-always-allowed" },
+      };
+    });
+
+    const res = await POST(
+      new Request("http://ai.local/api/chat", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(forwarded).toEqual(body);
+    expect((await res.json()) as { reply: string }).toMatchObject({ reply: "grounded" });
+  });
+
   it("body tidak cocok ChatRequestSchema (sessionId salah format) → 400, tanpa memanggil Hub", async () => {
     const req = new Request("http://ai.local/api/chat", {
       method: "POST",

@@ -188,6 +188,119 @@ describe("chat", () => {
     expect(denied).toHaveLength(1);
   });
 
+  it("Brain-grounded local chat narrows Context and does not fall back to wider memory", async () => {
+    const groundedFact = {
+      id: "mem_brain_grounded01",
+      subject: "Brain",
+      predicate: "status",
+      object: "grounded",
+      text: "Only this selected Brain fact may be used.",
+      confidence: 1,
+      salience: 1,
+      sourceEpisodeIds: ["epi_brain_grounded01"],
+      tValid: NOW,
+      tInvalid: null,
+      supersededBy: null,
+      createdAt: NOW,
+      projectId: "prj_personal",
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+      trust: "USER",
+      provenance: { sourceApp: "brain-test" },
+    };
+
+    contextPool.intercept({ path: "/v1/retrieve", method: "POST" }).reply(200, (opts) => {
+      const body = JSON.parse(String(opts.body)) as Record<string, unknown>;
+      expect(body).toMatchObject({
+        query: "Explain the selected fact",
+        scopes: ["personal"],
+        projectId: "prj_personal",
+        maxSensitivity: "RESTRICTED",
+        hostedEligibleOnly: false,
+        candidateSourceUris: [],
+        candidateFactIds: ["mem_brain_grounded01"],
+      });
+      return {
+        hits: [{ fact: groundedFact, score: 1, matchedBy: ["lexical"] }],
+        diagnostics: {
+          lexicalCandidates: 1,
+          vectorCandidates: 0,
+          afterFilter: 1,
+          returned: 1,
+          authorizedCandidates: 2,
+          narrowedCandidates: 1,
+          constraintApplied: true,
+        },
+      };
+    });
+    contextPool
+      .intercept({
+        path: "/v1/episodes?sessionId=sess_braingrounded&projectId=prj_personal&limit=6&hostedEligible=0",
+        method: "GET",
+      })
+      .reply(200, { episodes: [] });
+    mockEpisodeWrites();
+
+    connectPool.intercept({ path: "/v1/complete", method: "POST" }).reply(200, (opts) => {
+      const body = JSON.parse(String(opts.body)) as {
+        target: string;
+        prefix: { systemPrompt: string; coreMemory: { blocks: unknown[] } };
+        dynamicText: string;
+      };
+      expect(body.target).toBe("local");
+      expect(body.prefix.coreMemory.blocks).toEqual([]);
+      expect(body.prefix.systemPrompt).toContain("explicitly selected Brain neighborhood");
+      expect(body.dynamicText).toContain("Only this selected Brain fact may be used.");
+      return {
+        reply: "Grounded reply.",
+        provider: "local",
+        model: "qwen3.5:9b",
+        pricingModel: "qwen3.5:9b",
+        responseModel: "qwen3.5:9b",
+        cacheHit: false,
+        usage: USAGE,
+        cost: {
+          model: "qwen3.5:9b",
+          naiveModel: "qwen3.5:9b",
+          usage: USAGE,
+          baselineUsage: USAGE,
+          actualUsd: 0,
+          naiveUsd: 0,
+          savedUsd: 0,
+          savedPct: 0,
+          routeReason: "local",
+          policyVersion: "2",
+          optimizerOverheadMs: 0,
+        },
+        routeReason: "local",
+      };
+    });
+    rndPool.intercept({ path: "/v1/traces", method: "POST" }).reply(201, { id: "span_brain" });
+
+    const result = await chat(
+      deps,
+      chatRequest({
+        sessionId: "sess_braingrounded" as never,
+        message: "Explain the selected fact",
+        target: "local",
+        maxSensitivity: "RESTRICTED",
+        contextConstraint: {
+          source: "brain",
+          sourceUris: [],
+          factIds: ["mem_brain_grounded01" as never],
+        },
+      }),
+      NOW,
+    );
+
+    expect(result.reply).toBe("Grounded reply.");
+    expect(result.memoryUsed.coreMemoryBlocks).toEqual([]);
+    expect(result.memoryUsed.recalledFacts.map((fact) => fact.id)).toEqual([
+      "mem_brain_grounded01",
+    ]);
+  });
+
   it("Context tidak bisa dihubungi → UpstreamError Context", async () => {
     contextPool
       .intercept({
