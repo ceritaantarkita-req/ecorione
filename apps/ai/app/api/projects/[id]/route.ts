@@ -1,7 +1,4 @@
-import {
-  ProjectIdSchema,
-  ProjectUpdateRequestSchema,
-} from "@ecorione/shared-schema";
+import { ProjectIdSchema, ProjectUpdateRequestSchema } from "@ecorione/shared-schema";
 import { hubUrl, internalToken } from "../../../../lib/env";
 import { jsonError } from "../../../../lib/proxy";
 
@@ -28,20 +25,16 @@ export async function PATCH(
   }
 
   const parsed = ProjectUpdateRequestSchema.safeParse(raw);
-  if (!parsed.success)
-    return jsonError(400, "BAD_REQUEST", "Project settings tidak valid.");
+  if (!parsed.success) return jsonError(400, "BAD_REQUEST", "Project settings tidak valid.");
 
   try {
-    const upstream = await fetch(
-      `${hubUrl()}/v1/projects/${encodeURIComponent(id.data)}`,
-      {
-        method: "PATCH",
-        headers: headers(),
-        body: JSON.stringify(parsed.data),
-        redirect: "error",
-        cache: "no-store",
-      },
-    );
+    const upstream = await fetch(`${hubUrl()}/v1/projects/${encodeURIComponent(id.data)}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify(parsed.data),
+      redirect: "error",
+      cache: "no-store",
+    });
     const text = await upstream.text();
     return new Response(text.length === 0 ? undefined : text, {
       status: upstream.status,
