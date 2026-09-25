@@ -255,7 +255,9 @@ Evidence: [session-9-a07-brain-scalable-layout-closure-2026-09-25.md](session-9-
 
 A-08b exact-head CI `36147793139`, Product Eval `36147793105`, PCS-06 `36147793042`, and MCP External HTTPS `36147793068` passed. Merged-main CI `36148568175`, Product Eval `36148568188`, and MCP External HTTPS `36148568214` passed. Automatic Staging Deploy `36149034797` executed `Deploy exact reviewed main SHA` successfully.
 
-Remaining A-08 candidates are separate slices and require stable authorized owner identity: explicit Fact provenance relationships, connector resource hierarchy, Core Memory representation, and embedded Brain AI/chat. The correct direction remains expansion from canonical owners and reuse of existing Ai/Context/ECX paths, not a second graph database or chat system.
+**A-08c CLOSED / PASS.** PR #338 / merge `0a36a041a4077e185cbc934723d7ca195c5f5fc5` adds `GENERATED_FROM` only for schema-valid `artifact:<ArtifactId>` Fact provenance when that Artifact is already present from authorized Project Source state. Unbound, malformed, non-Artifact, or non-visible Artifact provenance creates no canonical relationship. Exact-head CI `36156486474`, Product Eval `36156486661`, MCP External HTTPS `36156486439`, and PCS-06 `36156486530` passed; merged-main CI `36157146397`, Product Eval `36157146459`, and MCP External HTTPS `36157146498` passed; automatic Staging Deploy `36157615400` executed `Deploy exact reviewed main SHA` successfully.
+
+Remaining A-08 candidates require stable authorized owner identity: connector resource hierarchy, Core Memory representation, and embedded Brain AI/chat. The correct direction remains expansion from canonical owners and reuse of existing Ai/Context/ECX paths, not a second graph database or chat system.
 
 ### A-09 — MEDIUM — frontend maintainability concentration
 
