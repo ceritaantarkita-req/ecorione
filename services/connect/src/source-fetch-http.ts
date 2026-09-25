@@ -29,24 +29,20 @@ export function registerExternalSourceFetchRoutes(
   });
 }
 
-
 const McpResourceParamsSchema = z.object({ id: McpServerIdSchema });
 
 export function registerMcpResourceSourceFetchRoutes(
   app: FastifyInstance,
   manager: McpManager,
 ): void {
-  app.post<{ Params: { id: string } }>(
-    "/v1/source-fetch/mcp-resource/:id",
-    async (req) => {
-      const { id } = parseOrBadRequest(McpResourceParamsSchema, req.params);
-      const body = parseOrBadRequest(McpResourceReadRequestSchema, req.body);
-      try {
-        const result = await manager.readResource(id, body);
-        return snapshotMcpResource(id, body.uri, result.result);
-      } catch (error) {
-        throw toMcpHttpError(error);
-      }
-    },
-  );
+  app.post<{ Params: { id: string } }>("/v1/source-fetch/mcp-resource/:id", async (req) => {
+    const { id } = parseOrBadRequest(McpResourceParamsSchema, req.params);
+    const body = parseOrBadRequest(McpResourceReadRequestSchema, req.body);
+    try {
+      const result = await manager.readResource(id, body);
+      return snapshotMcpResource(id, body.uri, result.result);
+    } catch (error) {
+      throw toMcpHttpError(error);
+    }
+  });
 }
