@@ -72,7 +72,19 @@ Exact reviewed PR head `5d72d7455f1a8f945c904b4847659233e2240003` passed CI #205
 
 Safe resumable checkpoint: [verification/session-7-a03-safe-checkpoint-2026-09-25.md](verification/session-7-a03-safe-checkpoint-2026-09-25.md).
 
-**Next planned discussion is a scope decision, not an active implementation.** Choose whether to open Project settings + source onboarding for the remaining A-04/A-05 gaps, or proceed directly to the final system audit. Other product/infrastructure items remain separate later scopes.
+### 2026-09-25 Session 8 — Project settings + source onboarding
+
+**Session 8 is CLOSED / PASS at the implemented boundary.** A-04 Project settings and the currently authorized A-05 source slices are merged and live on staging.
+
+The sequence is PR #318 (Project settings), #319 (owner-backed source picker), #320 (direct file ingestion), #321 (Project-scoped extraction), #322 (URL snapshot ingestion), #323 (DNS-pinned URL-fetch hardening), and #324 (generic MCP/connector resource browse + snapshot ingestion). Final implementation main is `3dd350e938d3651e75fc81ac30e9ef751c477ca5`.
+
+PR #324 exact head `3d4ab01ad5ac42c6317567f0ef122e1c46a0ab11` passed CI `36107141520`, Product Eval `36107141692`, MCP External HTTPS `36107141555`, and PCS-06 Integrated Browser Acceptance `36107141502`. Merged main passed CI `36109640813`, Product Eval `36109640801`, and MCP External HTTPS `36109640848`. Automatic Staging Deploy `36109914350` executed the deploy job and successfully deployed exact reviewed main `3dd350e938d3651e75fc81ac30e9ef751c477ca5`.
+
+Current Project source behavior now supports owner-backed bindings, direct Artifact upload, separate Project-scoped extraction, hardened HTTPS URL snapshots, and browsing/ingesting concrete resources from a Project-bound MCP server. Connector snapshots remain `RESTRICTED + LOCAL_ONLY`; exact MCP resource reads require explicit `mcp.resource.read / mcp.read` authority and are audited. Project does not become byte storage owner and the ingestion paths do not synthesize chat/history.
+
+Safe resumable checkpoint: [verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md](verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md).
+
+**Next planned discussion is the remaining A-05 boundary, not active implementation.** Decide whether native Google Drive connection/onboarding and recursive folder semantics are required as A-05b.3c, or accept generic MCP-resource ingestion as sufficient for now. Schedule A-06 must not begin until that decision is explicit. Other product/infrastructure items remain separate later scopes.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
