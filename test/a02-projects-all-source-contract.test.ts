@@ -21,7 +21,8 @@ describe("A-02 Projects All aggregate contract", () => {
   });
 
   it("keeps All metadata-only and opens each conversation through its owning Project", () => {
-    expect(page).toContain("Memory dan Sources tetap terisolasi per");
+    expect(page).toContain("Memory dan Sources tetap");
+    expect(page).toContain("terisolasi per Project.");
     expect(page).not.toContain("openProject(ALL_ID)");
     expect(page).toContain("session.projectId === null");
     expect(page).toContain("encodeURIComponent(project.id)");
