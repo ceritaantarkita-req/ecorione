@@ -438,6 +438,143 @@
   font: 8px/1.45 var(--font-mono);
 }
 
+.assistant {
+  min-width: 0;
+  border-top: 1px solid var(--border-soft);
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.assistantHead {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.assistantHead > div {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.assistantHead strong {
+  font-size: 11px;
+}
+
+.assistantHead span,
+.assistantHead code,
+.assistantTurn span,
+.assistantTurn small,
+.assistantEmpty,
+.assistantComposer label,
+.assistantComposer small {
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font: 8px/1.45 var(--font-mono);
+}
+
+.assistantTurns {
+  min-width: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.assistantTurn {
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  background: var(--surface-2);
+}
+
+.assistantTurn > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.assistantTurn p,
+.assistantEmpty {
+  margin: 0;
+}
+
+.assistantTurn p {
+  overflow-wrap: anywhere;
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+
+.assistantEmpty {
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 9px;
+}
+
+.assistantComposer {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.assistantComposer textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  padding: 8px;
+  font: 10px/1.45 var(--font-sans);
+}
+
+.assistantComposer textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.assistantComposer > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.assistantComposer small {
+  min-width: 0;
+}
+
+.assistantComposer button {
+  flex: none;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 7px 10px;
+  cursor: pointer;
+  font: 9px var(--font-mono);
+}
+
+.assistantComposer button:hover,
+.assistantComposer button:focus-visible {
+  border-color: var(--accent);
+}
+
+.assistantComposer button:disabled,
+.assistantComposer textarea:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .empty {
   min-width: 0;
   padding: 22px;
@@ -514,5 +651,15 @@
 
   .meta {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .assistantHead > div,
+  .assistantComposer > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .assistantComposer button {
+    width: 100%;
   }
 }
