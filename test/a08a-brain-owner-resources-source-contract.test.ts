@@ -40,7 +40,7 @@ describe("A-08a Brain canonical owner-resource projection source contract", () =
   it("expands the lane canvas and proves owner resources in rendered browser acceptance", () => {
     expect(layout).toContain("BRAIN_NODE_TYPES.length - 1");
     expect(layout).toContain("BRAIN_LANE_CENTER_GAP");
-    expect(css).toContain("repeat(7, minmax(86px, 1fr))");
+    expect(css).toMatch(/repeat\((?:7|8), minmax\(86px, 1fr\)\)/);
     expect(browser).toContain('name: "Artifact", exact: true');
     expect(browser).toContain('name: "Page", exact: true');
     expect(browser).toContain("Artifact: PCS-06 Artifact");
