@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { BrainNode } from "@ecorione/shared-schema";
+import { ProjectIdSchema, WorkspaceIdSchema, type BrainNode } from "@ecorione/shared-schema";
 import {
   BRAIN_CANVAS_MIN_HEIGHT,
   BRAIN_NODE_MIN_CENTER_GAP,
   layoutBrainNodes,
 } from "./brain-layout";
+
+const WORKSPACE_ID = WorkspaceIdSchema.parse("ws_personal");
+const PROJECT_ID = ProjectIdSchema.parse("prj_personal");
 
 function node(id: string, type: BrainNode["type"]): BrainNode {
   return {
@@ -13,8 +16,8 @@ function node(id: string, type: BrainNode["type"]): BrainNode {
     canonicalId: id,
     owner: type === "Project" || type === "Source" ? "Hub" : "Flow",
     label: id,
-    workspaceId: "ws_personal",
-    projectId: "prj_personal",
+    workspaceId: WORKSPACE_ID,
+    projectId: PROJECT_ID,
     availability: "AVAILABLE",
     href: null,
     metadata: {},
