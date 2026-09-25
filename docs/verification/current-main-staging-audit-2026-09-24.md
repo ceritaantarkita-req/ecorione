@@ -214,19 +214,28 @@ Current Project Sources support owner-backed references plus the later Session 8
 
 The original audit's missing direct-upload, connector-resource browsing, and URL-ingestion items are therefore closed. The remaining provider-specific limitations are native Google Drive OAuth/onboarding and recursive folder mirroring; both are explicitly deferred outside A-05 for this roadmap.
 
-### A-06 — PRODUCT GAP — Schedule product evolution
+### A-06 — CLOSED / PASS — Schedule product evolution
 
-**Progress update — 2026-09-25: A-06a CLOSED / PASS.** PR #327 / merge `3b1abefd18263f7441d139e3435b064f83b142ea` closes the calendar/navigation portion of this finding. Work now has `list/day/week/month/year`, an explicit calendar cursor, Previous/Today/Next navigation, real day/week/month/year projections, responsive layouts, and exact Flow-version links. The implementation renders only Temporal `nextActionTimes`, so Flow remains Trigger owner and Temporal remains schedule truth.
+**Closure update — 2026-09-25: A-06 CLOSED / PASS.** The original finding is retained here for traceability, but both bounded remediation slices are now closed.
 
-Exact-head CI `36113711079`, Product Eval `36113711113`, and PCS-06 rendered-browser `36113711071` passed. Merged-main CI `36114202738` and Product Eval `36114202810` passed. Automatic Staging Deploy `36114495464` deployed exact reviewed main successfully.
+A-06a closed calendar/navigation through PR #327 / merge `3b1abefd18263f7441d139e3435b064f83b142ea`, adding `list/day/week/month/year`, explicit Previous/Today/Next calendar navigation, responsive real projections, and exact Flow-version links while rendering only Temporal `nextActionTimes`.
 
-Remaining A-06b product gaps:
+A-06b closed the remaining product gaps through PR #329 / merge `d182c5ec06be14de068b7c3911a0decffcc94d41`:
 
-- Project selection is still a native `select`, not searchable autocomplete;
-- no inline `+ new Project` action;
-- no embedded AI/chat composer for natural-language Schedule creation/editing.
+- Project selection is now searchable/autocomplete instead of native-select-only;
+- Work exposes inline `+ New Project` through the existing Project owner API;
+- Work exposes local AI-assisted natural-language Schedule create/edit drafting;
+- AI assistance is draft-only and `LOCAL_ONLY` through Hub -> Connect;
+- only existing Project Flow IDs can be selected by the model;
+- `graphVersion` is pinned from the Flow owner;
+- autonomy/enabled/catch-up/overlap governance fields are preserved;
+- generated time configuration is schema-validated;
+- explicit Save remains the only path that mutates the existing Flow Trigger API;
+- Temporal remains schedule truth and no second scheduler/task store/history domain was introduced.
 
-This remains UX/product evolution, not a scheduler-backend rewrite.
+Exact A-06b implementation head `f7e10c1d4fae957e7a9b52bbbc78805424f8da12` passed CI `36124634778`, Product Eval `36124634690`, PCS-06 rendered-browser `36124634717`, and MCP External HTTPS `36124634826`. Merged main `d182c5ec06be14de068b7c3911a0decffcc94d41` passed CI `36125055447`, Product Eval `36125055440`, and MCP External HTTPS `36125055159`. Automatic Staging Deploy `36125427040` executed the exact-SHA deploy successfully, with Operations healthy, no unhealthy services, preserved auth/MCP boundaries, and 27.69 GiB free after stabilization.
+
+Evidence: [session-9-a06b-schedule-closure-2026-09-25.md](session-9-a06b-schedule-closure-2026-09-25.md).
 
 ### A-07 — MEDIUM PRODUCT/UX — Brain V1 becomes unreadable at allowed graph sizes
 
