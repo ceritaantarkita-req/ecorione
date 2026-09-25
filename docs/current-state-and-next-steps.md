@@ -84,7 +84,7 @@ Current Project source behavior now supports owner-backed bindings, direct Artif
 
 Safe resumable checkpoint: [verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md](verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md).
 
-**Next planned discussion is the remaining A-05 boundary, not active implementation.** Decide whether native Google Drive connection/onboarding and recursive folder semantics are required as A-05b.3c, or accept generic MCP-resource ingestion as sufficient for now. Schedule A-06 must not begin until that decision is explicit. Other product/infrastructure items remain separate later scopes.
+**A-05 closure decision is now explicit.** Generic MCP-resource ingestion is accepted as the Project connector boundary for this roadmap. Native Google Drive OAuth/onboarding is deferred as a separate future integration; recursive folder auto-ingestion is intentionally not introduced. Schedule A-06 is therefore the next authorized product scope, starting from the existing Trigger/Temporal backend rather than a scheduler rewrite. Evidence: [verification/session-9-a05-closure-decision-2026-09-25.md](verification/session-9-a05-closure-decision-2026-09-25.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
