@@ -1,12 +1,13 @@
 import { lookup } from "node:dns/promises";
 import {
   ExternalUrlFetchResponseSchema,
+  MAX_EXTERNAL_URL_SOURCE_BYTES,
   ProjectSourceHttpsUrlSchema,
   type ExternalUrlFetchResponse,
 } from "@ecorione/shared-schema";
 import { classifyLocalHost, isLocalReachableHost } from "./local-base-url.js";
 
-export const DEFAULT_EXTERNAL_SOURCE_MAX_BYTES = 20 * 1024 * 1024;
+export const DEFAULT_EXTERNAL_SOURCE_MAX_BYTES = MAX_EXTERNAL_URL_SOURCE_BYTES;
 export const DEFAULT_EXTERNAL_SOURCE_TIMEOUT_MS = 10_000;
 
 export type ExternalSourceResolveHost = (
