@@ -67,9 +67,11 @@
   font: 10px var(--font-mono);
 }
 
-.projectPicker select,
+.projectPicker input,
+.projectCreateInline input,
 .editor input,
-.editor select {
+.editor select,
+.editor textarea {
   width: 100%;
   min-width: 0;
   min-height: var(--control-height);
@@ -78,6 +80,87 @@
   background: var(--surface);
   color: var(--text);
   padding: 7px 9px;
+}
+
+.projectCombobox {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px;
+}
+
+.projectCombobox button,
+.projectCreateInline button,
+.projectOptions button {
+  min-height: var(--control-height);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 7px 9px;
+  cursor: pointer;
+  font: 10px var(--font-mono);
+}
+
+.projectCombobox button:hover,
+.projectCombobox button:focus-visible,
+.projectCreateInline button:hover,
+.projectCreateInline button:focus-visible,
+.projectOptions button:hover,
+.projectOptions button:focus-visible {
+  border-color: var(--accent);
+}
+
+.projectOptions {
+  min-width: 0;
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 3px;
+  background: var(--surface);
+  padding: 5px;
+}
+
+.projectOptions > button {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.projectOptions > button[aria-selected="true"] {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.projectOptions strong,
+.projectOptions small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectOptions > span {
+  padding: 8px;
+  color: var(--text-muted);
+}
+
+.projectCreateToggle {
+  margin-top: 3px;
+  border-style: dashed !important;
+}
+
+.projectCreateInline {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px;
+}
+
+.projectPickerError {
+  color: var(--danger) !important;
 }
 
 .projectPicker small,
@@ -222,6 +305,43 @@
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border-soft);
   align-items: center;
+}
+
+.scheduleAssistant {
+  grid-column: 1 / -1;
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(280px, 1.5fr) auto;
+  align-items: end;
+  gap: 10px;
+  background: var(--surface-2);
+  padding: 10px;
+}
+
+.scheduleAssistant > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.scheduleAssistant strong {
+  font-size: 11px;
+}
+
+.scheduleAssistant small {
+  color: var(--text-muted);
+  font: 9px/1.45 var(--font-mono);
+}
+
+.scheduleAssistant textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.scheduleAssistant button {
+  min-height: var(--control-height);
 }
 
 .editor label {
@@ -910,6 +1030,15 @@
   }
 
   .editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scheduleAssistant {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .projectCreateInline {
     grid-template-columns: minmax(0, 1fr);
   }
 
