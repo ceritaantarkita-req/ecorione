@@ -8,6 +8,8 @@ await mkdir(outDir, { recursive: true });
 const now = "2026-09-20T09:15:00.000";
 const HASH_A = "a".repeat(64);
 const HASH_B = "b".repeat(64);
+const STALE_PROJECT_ID = "prj_archived";
+const PROJECT_STORAGE_KEY = "ecorione.projectId";
 const project = {
   id: "prj_personal",
   workspaceId: "ws_personal",
@@ -269,6 +271,7 @@ let savedFlowVersion = null;
 let authorityReady = false;
 let graphRunStarted = false;
 let aggregateProjectHistoryRequested = false;
+const staleProjectOwnerRequests = [];
 const externalRequests = new Set();
 
 function json(route, body, status = 200) {
@@ -325,6 +328,12 @@ function saveFlow(body) {
 async function installApiMocks(context) {
   context.on("request", (request) => {
     const url = new URL(request.url());
+    if (
+      url.pathname.startsWith("/api/") &&
+      url.searchParams.get("projectId") === STALE_PROJECT_ID
+    ) {
+      staleProjectOwnerRequests.push(`${request.method()} ${url.pathname}`);
+    }
     if (
       (url.protocol === "http:" || url.protocol === "https:") &&
       url.hostname !== "127.0.0.1" &&
@@ -860,6 +869,50 @@ async function runNarrowRoute(path, label, assertion) {
   }
 }
 
+async function runStaleProjectSelectionJourney() {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await context.addInitScript(
+    ({ key, staleProjectId }) => {
+      globalThis.localStorage.setItem(key, staleProjectId);
+    },
+    { key: PROJECT_STORAGE_KEY, staleProjectId: STALE_PROJECT_ID },
+  );
+  await installApiMocks(context);
+  const checked = await checkedPage(context, "stale-project-selection");
+  const page = checked.page;
+
+  async function assertReconciled(path, label) {
+    staleProjectOwnerRequests.length = 0;
+    await goto(page, path, label);
+    const stored = await page.evaluate((key) => globalThis.localStorage.getItem(key), PROJECT_STORAGE_KEY);
+    if (stored !== project.id) {
+      throw new Error(`${label}: stale Project was not reconciled to ${project.id}; got ${stored}`);
+    }
+    if (staleProjectOwnerRequests.length > 0) {
+      throw new Error(
+        `${label}: stale Project reached owner API ${JSON.stringify(staleProjectOwnerRequests)}`,
+      );
+    }
+  }
+
+  try {
+    await assertReconciled("/", "stale-project-ai");
+    await page.getByRole("textbox", { name: "Pesan" }).waitFor();
+
+    await assertReconciled("/work", "stale-project-work");
+    await page.getByRole("heading", { name: "Work", exact: true }).waitFor();
+
+    await assertReconciled("/brain", "stale-project-brain");
+    await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
+
+    checked.assertClean();
+    console.log("PASS stale Project selection reconciliation across Ai/Work/Brain");
+  } finally {
+    await page.close();
+    await context.close();
+  }
+}
+
 async function runNarrowCoverage() {
   const cases = [
     ["/", "narrow-ai", (page) => page.getByRole("textbox", { name: "Pesan" }).waitFor()],
@@ -932,6 +985,11 @@ async function runNarrowCoverage() {
 
 try {
   await runDesktopJourney();
+} catch (error) {
+  failures.push(error instanceof Error ? error.message : String(error));
+}
+try {
+  await runStaleProjectSelectionJourney();
 } catch (error) {
   failures.push(error instanceof Error ? error.message : String(error));
 }
