@@ -1,4 +1,7 @@
-import {\n  ProjectIdSchema,\n  ProjectUpdateRequestSchema,\n} from "@ecorione/shared-schema";
+import {
+  ProjectIdSchema,
+  ProjectUpdateRequestSchema,
+} from "@ecorione/shared-schema";
 import { hubUrl, internalToken } from "../../../../lib/env";
 import { jsonError } from "../../../../lib/proxy";
 
@@ -25,7 +28,8 @@ export async function PATCH(
   }
 
   const parsed = ProjectUpdateRequestSchema.safeParse(raw);
-  if (!parsed.success)\n    return jsonError(400, "BAD_REQUEST", "Project settings tidak valid.");
+  if (!parsed.success)
+    return jsonError(400, "BAD_REQUEST", "Project settings tidak valid.");
 
   try {
     const upstream = await fetch(
