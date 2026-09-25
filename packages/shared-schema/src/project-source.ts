@@ -164,6 +164,19 @@ export const ExternalUrlFetchResponseSchema = z
   .strict();
 export type ExternalUrlFetchResponse = z.infer<typeof ExternalUrlFetchResponseSchema>;
 
+export const ExternalMcpResourceFetchResponseSchema = z
+  .object({
+    serverId: McpServerRefSchema,
+    resourceUri: z.string().min(1).max(4096),
+    mimeType: z.string().min(1).max(128),
+    sizeBytes: z.number().int().positive().max(20 * 1024 * 1024),
+    contentBase64: z.string().min(1),
+  })
+  .strict();
+export type ExternalMcpResourceFetchResponse = z.infer<
+  typeof ExternalMcpResourceFetchResponseSchema
+>;
+
 export const ProjectUrlIngestRequestSchema = z
   .object({
     operationId: OperationIdSchema,
