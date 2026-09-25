@@ -46,13 +46,6 @@ function ensurePublicHost(
   url: URL,
   addresses: readonly { readonly address: string; readonly family: number }[],
 ): void {
-  if (isLocalReachableHost(url.hostname)) {
-    throw new ExternalSourceFetchError(
-      400,
-      "URL_SOURCE_BLOCKED",
-      "URL source harus memakai host publik.",
-    );
-  }
   if (addresses.length === 0) {
     throw new ExternalSourceFetchError(
       502,
@@ -153,6 +146,14 @@ export async function fetchExternalUrl(
     );
   }
   const url = new URL(parsed.data);
+  if (isLocalReachableHost(url.hostname)) {
+    throw new ExternalSourceFetchError(
+      400,
+      "URL_SOURCE_BLOCKED",
+      "URL source harus memakai host publik.",
+    );
+  }
+
   const resolveHost = deps.resolveHost ?? defaultResolveHost;
   let addresses: readonly { readonly address: string; readonly family: number }[];
   try {
