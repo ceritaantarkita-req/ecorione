@@ -618,6 +618,7 @@ export default function WorkPage() {
                 Name
                 <input
                   required
+                  aria-label="Schedule name"
                   value={draft.name}
                   onChange={(event) =>
                     setDraft((current) => ({ ...current, name: event.target.value }))
@@ -663,6 +664,7 @@ export default function WorkPage() {
                 Cron
                 <input
                   required
+                  aria-label="Cron expression"
                   value={draft.cronExpression}
                   onChange={(event) =>
                     setDraft((current) => ({ ...current, cronExpression: event.target.value }))
