@@ -884,9 +884,14 @@ async function runStaleProjectSelectionJourney() {
   async function assertReconciled(path, label) {
     staleProjectOwnerRequests.length = 0;
     await goto(page, path, label);
-    const stored = await page.evaluate((key) => globalThis.localStorage.getItem(key), PROJECT_STORAGE_KEY);
+    const stored = await page.evaluate(
+      (key) => globalThis.localStorage.getItem(key),
+      PROJECT_STORAGE_KEY,
+    );
     if (stored !== project.id) {
-      throw new Error(`${label}: stale Project was not reconciled to ${project.id}; got ${stored}`);
+      throw new Error(
+        `${label}: stale Project was not reconciled to ${project.id}; got ${stored}`,
+      );
     }
     if (staleProjectOwnerRequests.length > 0) {
       throw new Error(
