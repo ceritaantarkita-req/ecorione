@@ -13,6 +13,8 @@ import {
   WorkspaceIdSchema,
   makeId,
   projectSourceOwner,
+  type Episode,
+  type MultimodalAdapterResult,
   type ProjectSourceBinding,
   type ProjectSourceExtractResponse,
   type ProjectSourceView,
@@ -322,7 +324,7 @@ export function registerProjectSourceRoutes(
     });
 
     const contentBase64 = await artifactContentBase64(options, pointer);
-    let inferred: ReturnType<typeof MultimodalAdapterResultSchema.parse>;
+    let inferred: MultimodalAdapterResult;
     try {
       inferred = MultimodalAdapterResultSchema.parse(
         await httpJson(`${options.connectUrl}/v1/multimodal/infer`, {
@@ -351,7 +353,7 @@ export function registerProjectSourceRoutes(
     }
 
     const semantic = semanticMultimodalResult(inferred);
-    let episode: ReturnType<typeof EpisodeSchema.parse>;
+    let episode: Episode;
     try {
       episode = EpisodeSchema.parse(
         await httpJson(`${options.contextUrl}/v1/episodes`, {
