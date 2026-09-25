@@ -237,15 +237,15 @@ Exact A-06b implementation head `f7e10c1d4fae957e7a9b52bbbc78805424f8da12` passe
 
 Evidence: [session-9-a06b-schedule-closure-2026-09-25.md](session-9-a06b-schedule-closure-2026-09-25.md).
 
-### A-07 — MEDIUM PRODUCT/UX — Brain V1 becomes unreadable at allowed graph sizes
+### A-07 — CLOSED / PASS — Brain scalable layout
 
-Brain V1 correctly implements a deterministic, rebuildable connected-dot projection and preserves owner authority.
+**Closure update — 2026-09-25.** PR #331 / merge `13775e3903a74732162658292a8dd350a068de6b` closes the original readability/scalability finding.
 
-Current node types are Project, Source, Flow, Trigger, and Run. The graph query allows up to 120 visible nodes and 50 Runs. The SVG uses a fixed `1080 x 640` viewbox and vertically spaces every node type by `step = 640 / (group.length + 1)`.
+Brain now uses a deterministic dynamic canvas height with >=64px center spacing per lane, including the allowed 50-Run case. Pan controls, drag-to-pan, zoom in/out, reset, and contained internal overflow are implemented. The Brain projection/owner model is unchanged: no graph database, no new canonical data owner, and no A-08 richer node classes were introduced.
 
-Run nodes have radius 18. At 50 Runs, vertical step is about 12.5 px while node diameter is 36 px. Overlap is therefore deterministic well before the allowed limit.
+Exact-head CI `36131738117`, Product Eval `36131738109`, and PCS-06 `36131738174` passed. Merged-main CI `36132291003` and Product Eval `36132290871` passed. Automatic Staging Deploy `36132607599` executed `Deploy exact reviewed main SHA` successfully.
 
-The page has no pan or zoom control.
+Evidence: [session-9-a07-brain-scalable-layout-closure-2026-09-25.md](session-9-a07-brain-scalable-layout-closure-2026-09-25.md).
 
 ### A-08 — PRODUCT GAP — Brain does not yet represent the full intended knowledge/file graph
 
