@@ -4,6 +4,8 @@ import { ArtifactPointerSchema, TimestampSchema } from "./memory.js";
 import { FlowGraphIdSchema } from "./nodes.js";
 import { SpacePageIdSchema } from "./space.js";
 
+export const MAX_EXTERNAL_URL_SOURCE_BYTES = 20 * 1024 * 1024;
+
 export const PROJECT_SOURCE_RESOURCE_TYPES = [
   "artifact",
   "space-page",
@@ -151,7 +153,7 @@ export const ExternalUrlFetchResponseSchema = z
   .object({
     url: ProjectSourceHttpsUrlSchema,
     mimeType: z.string().min(1).max(128),
-    sizeBytes: z.number().int().positive().max(20 * 1024 * 1024),
+    sizeBytes: z.number().int().positive().max(MAX_EXTERNAL_URL_SOURCE_BYTES),
     contentBase64: z.string().min(1),
   })
   .strict();
