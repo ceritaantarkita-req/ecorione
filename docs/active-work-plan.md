@@ -96,7 +96,7 @@ Ownership remains locked: Project/Hub owns binding and authority, Artifact owns 
 
 Evidence: [verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md](verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md).
 
-**No implementation is in flight.** A-04 is closed. The next bounded discussion is only the A-05 external-ingestion remainder: decide whether to open provider-specific Google Drive onboarding and/or recursive folder semantics as A-05b.3c, or explicitly accept the generic MCP-resource boundary for now. Do not start Schedule A-06 until that decision is recorded. Brain expansion, frontend decomposition, Compose readiness, production cutover, provider spend, and DR-2 remain separate scopes.
+**A-05 is now CLOSED at the generic connector boundary.** Native Google Drive OAuth/onboarding is deferred as a separate future integration because the current repository has no Drive adapter/OAuth lifecycle/token-refresh/file-hierarchy domain. Recursive folder ingestion is intentionally not added; folders remain connector navigation and concrete resources are snapshotted individually. This decision unblocks Schedule A-06. Brain expansion, frontend decomposition, Compose readiness, production cutover, provider spend, native Google Drive integration, and DR-2 remain separate scopes. Evidence: [verification/session-9-a05-closure-decision-2026-09-25.md](verification/session-9-a05-closure-decision-2026-09-25.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
