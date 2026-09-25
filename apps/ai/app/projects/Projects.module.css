@@ -365,6 +365,38 @@
   background: var(--surface-2);
 }
 
+.sourceUpload {
+  margin-bottom: 14px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.6fr) minmax(0, 1.4fr);
+  gap: 12px;
+  align-items: end;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.sourceUpload > div {
+  display: grid;
+  gap: 4px;
+}
+
+.sourceUpload strong {
+  font-size: 12px;
+}
+
+.sourceUpload small {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.sourceUploadForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px auto;
+  gap: 8px;
+}
+
 .sourceForm {
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr) 130px auto;
@@ -464,6 +496,8 @@
   }
 
   .settingsForm,
+  .sourceUpload,
+  .sourceUploadForm,
   .sourceForm {
     grid-template-columns: 1fr;
   }
