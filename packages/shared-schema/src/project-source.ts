@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ArtifactIdSchema, ProjectIdSchema, WorkspaceIdSchema } from "./ids.js";
-import { TimestampSchema } from "./memory.js";
+import { ArtifactPointerSchema, TimestampSchema } from "./memory.js";
 import { FlowGraphIdSchema } from "./nodes.js";
 import { SpacePageIdSchema } from "./space.js";
 
@@ -28,7 +28,7 @@ const McpServerRefSchema = z
   .max(128)
   .regex(/^[a-z0-9][a-z0-9._-]*$/);
 
-const HttpsUrlRefSchema = z
+export const ProjectSourceHttpsUrlSchema = z
   .string()
   .url()
   .max(2048)
@@ -58,7 +58,7 @@ function resourceIdSchema(type: ProjectSourceResourceType): z.ZodType<string> {
     case "mcp-server":
       return McpServerRefSchema;
     case "url":
-      return HttpsUrlRefSchema;
+      return ProjectSourceHttpsUrlSchema;
   }
 }
 
@@ -139,6 +139,46 @@ export const ProjectSourceViewSchema = z
   })
   .strict();
 export type ProjectSourceView = z.infer<typeof ProjectSourceViewSchema>;
+
+export const ExternalUrlFetchRequestSchema = z
+  .object({
+    url: ProjectSourceHttpsUrlSchema,
+  })
+  .strict();
+export type ExternalUrlFetchRequest = z.infer<typeof ExternalUrlFetchRequestSchema>;
+
+export const ExternalUrlFetchResponseSchema = z
+  .object({
+    url: ProjectSourceHttpsUrlSchema,
+    mimeType: z.string().min(1).max(128),
+    sizeBytes: z.number().int().positive().max(20 * 1024 * 1024),
+    contentBase64: z.string().min(1),
+  })
+  .strict();
+export type ExternalUrlFetchResponse = z.infer<typeof ExternalUrlFetchResponseSchema>;
+
+export const ProjectUrlIngestRequestSchema = z
+  .object({
+    operationId: z.string().min(1).max(128),
+    workspaceId: WorkspaceIdSchema,
+    url: ProjectSourceHttpsUrlSchema,
+    role: ProjectSourceRoleSchema.default("source"),
+  })
+  .strict();
+export type ProjectUrlIngestRequest = z.infer<typeof ProjectUrlIngestRequestSchema>;
+
+export const ProjectUrlIngestResponseSchema = z
+  .object({
+    operationId: z.string().min(1).max(128),
+    projectId: ProjectIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    url: ProjectSourceHttpsUrlSchema,
+    artifact: ArtifactPointerSchema,
+    source: ProjectSourceViewSchema,
+    state: z.literal("READY"),
+  })
+  .strict();
+export type ProjectUrlIngestResponse = z.infer<typeof ProjectUrlIngestResponseSchema>;
 
 export const ProjectSourceListResponseSchema = z
   .object({ sources: z.array(ProjectSourceViewSchema) })
