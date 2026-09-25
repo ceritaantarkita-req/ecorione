@@ -141,9 +141,12 @@ describe("/api/projects/:id/sources/upload", () => {
   });
 
   it("rejects files larger than the Artifact owner limit before egress", async () => {
-    const response = await POST(uploadRequest(new Uint8Array(MAX_PROJECT_SOURCE_UPLOAD_BYTES + 1)), {
-      params: Promise.resolve({ id: "prj_finance" }),
-    });
+    const response = await POST(
+      uploadRequest(new Uint8Array(MAX_PROJECT_SOURCE_UPLOAD_BYTES + 1)),
+      {
+        params: Promise.resolve({ id: "prj_finance" }),
+      },
+    );
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({
       error: { code: "BAD_REQUEST" },
