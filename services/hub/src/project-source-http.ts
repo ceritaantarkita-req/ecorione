@@ -1,10 +1,13 @@
 import {
   ArtifactPointerSchema,
   EpisodeSchema,
+  ExternalUrlFetchResponseSchema,
   MultimodalAdapterResultSchema,
   ProjectIdSchema,
   ProjectSourceExtractRequestSchema,
   ProjectSourceExtractResponseSchema,
+  ProjectUrlIngestRequestSchema,
+  ProjectUrlIngestResponseSchema,
   ProjectSourceAttachRequestSchema,
   ProjectSourceBindingSchema,
   ProjectSourceDetachRequestSchema,
@@ -18,11 +21,13 @@ import {
   type ProjectSourceBinding,
   type ProjectSourceExtractResponse,
   type ProjectSourceView,
+  type ProjectUrlIngestResponse,
   type Timestamp,
 } from "@ecorione/shared-schema";
 import {
   BadGatewayError,
   ConflictError,
+  HttpError,
   NotFoundError,
   RemoteServiceError,
   httpJson,
@@ -49,6 +54,10 @@ import type { ProjectSourceRegistry } from "./project-source-registry.js";
 
 const ParamsSchema = z.object({ id: ProjectIdSchema });
 const WorkspaceQuerySchema = z.object({ workspaceId: WorkspaceIdSchema });
+const ArtifactUploadResponseSchema = z.object({
+  pointer: ArtifactPointerSchema,
+  deduplicated: z.boolean(),
+});
 
 export interface ProjectSourceOwnerOptions {
   readonly contextUrl: string;
@@ -264,6 +273,170 @@ export function registerProjectSourceRoutes(
         unavailableReason: null,
       }),
     );
+  });
+
+  app.post<{ Params: { id: string } }>("/v1/projects/:id/sources/ingest-url", async (req) => {
+    const { id } = parseOrBadRequest(ParamsSchema, req.params);
+    const body = parseOrBadRequest(ProjectUrlIngestRequestSchema, req.body);
+    try {
+      projects.require(id, body.workspaceId);
+    } catch (error) {
+      throw mapProjectError(error);
+    }
+
+    const urlBinding = sources
+      .list(id, body.workspaceId)
+      .find(
+        (candidate) =>
+          candidate.resourceType === "url" &&
+          candidate.resourceId === body.url &&
+          candidate.role === body.role,
+      );
+    if (urlBinding === undefined) {
+      throw new NotFoundError("URL belum terikat sebagai Project Source.");
+    }
+
+    const idempotencyKey = `project-url-ingest:${body.operationId}`;
+    const prior = repo.getIdempotentResult<ProjectUrlIngestResponse>(idempotencyKey);
+    if (prior !== null) {
+      repo.recordAuditEvent({
+        type: "ACTION_SKIPPED_IDEMPOTENT",
+        operationId: body.operationId,
+        module: "Hub",
+        detail: {
+          idempotencyKey,
+          projectId: id,
+          url: body.url,
+        },
+        now: nowIso(),
+      });
+      return ProjectUrlIngestResponseSchema.parse(prior.result);
+    }
+
+    let fetched: ReturnType<typeof ExternalUrlFetchResponseSchema.parse>;
+    try {
+      fetched = ExternalUrlFetchResponseSchema.parse(
+        await httpJson(`${options.connectUrl}/v1/source-fetch/url`, {
+          method: "POST",
+          token: options.internalToken,
+          body: { url: body.url },
+        }),
+      );
+    } catch (error) {
+      if (error instanceof RemoteServiceError) {
+        if (error.statusCode >= 400 && error.statusCode < 500) {
+          throw new HttpError(
+            error.statusCode,
+            "URL_SOURCE_REJECTED",
+            `Connect URL ingestion: ${error.message}`,
+          );
+        }
+        if (error.statusCode === 504) {
+          throw new HttpError(504, "URL_SOURCE_TIMEOUT", "Connect URL ingestion timeout.");
+        }
+      }
+      throw new BadGatewayError("Connect URL ingestion tidak tersedia.");
+    }
+
+    let uploaded: ReturnType<typeof ArtifactUploadResponseSchema.parse>;
+    try {
+      uploaded = ArtifactUploadResponseSchema.parse(
+        await httpJson(`${options.artifactUrl}/v1/artifacts`, {
+          method: "POST",
+          token: options.internalToken,
+          body: {
+            contentBase64: fetched.contentBase64,
+            mimeType: fetched.mimeType,
+            description: `URL snapshot: ${body.url}`.slice(0, 200),
+            scope: "personal",
+            sensitivity: "INTERNAL",
+            syncClass: "LOCAL_ONLY",
+          },
+        }),
+      );
+    } catch (error) {
+      if (error instanceof RemoteServiceError) {
+        throw new BadGatewayError(`Artifact URL snapshot gagal: ${error.message}`);
+      }
+      throw error;
+    }
+
+    const candidate = ProjectSourceBindingSchema.parse({
+      projectId: id,
+      workspaceId: body.workspaceId,
+      resourceType: "artifact",
+      resourceId: uploaded.pointer.id,
+      owner: projectSourceOwner("artifact"),
+      role: body.role,
+      createdAt: nowIso(),
+    });
+    const metadata = await resolveOwner(candidate, options);
+    const attached = sources.attach({
+      projectId: id,
+      workspaceId: body.workspaceId,
+      resourceType: "artifact",
+      resourceId: uploaded.pointer.id,
+      role: body.role,
+      createdAt: candidate.createdAt as Timestamp,
+    });
+    if (attached.created) {
+      repo.recordAuditEvent({
+        type: "PROJECT_SOURCE_ATTACHED",
+        operationId: body.operationId,
+        module: "Hub",
+        detail: {
+          projectId: id,
+          workspaceId: body.workspaceId,
+          resourceType: "artifact",
+          resourceId: uploaded.pointer.id,
+          owner: attached.binding.owner,
+          role: body.role,
+          derivedFromUrl: body.url,
+        },
+        now: candidate.createdAt as Timestamp,
+      });
+    }
+
+    const source = ProjectSourceViewSchema.parse({
+      binding: attached.binding,
+      availability: "AVAILABLE",
+      metadata,
+      unavailableReason: null,
+    });
+    const response = ProjectUrlIngestResponseSchema.parse({
+      operationId: body.operationId,
+      projectId: id,
+      workspaceId: body.workspaceId,
+      url: body.url,
+      artifact: uploaded.pointer,
+      source,
+      state: "READY",
+    });
+    const now = nowIso();
+    repo.saveIdempotentResult(
+      idempotencyKey,
+      body.operationId,
+      "project-source.ingest-url",
+      response,
+      now,
+    );
+    repo.recordAuditEvent({
+      type: "PROJECT_SOURCE_INGESTED",
+      operationId: body.operationId,
+      module: "Hub",
+      detail: {
+        projectId: id,
+        workspaceId: body.workspaceId,
+        sourceType: "url",
+        sourceUrl: body.url,
+        artifactId: uploaded.pointer.id,
+        deduplicated: uploaded.deduplicated,
+        sizeBytes: fetched.sizeBytes,
+        mimeType: fetched.mimeType,
+      },
+      now,
+    });
+    return response;
   });
 
   app.post<{ Params: { id: string } }>("/v1/projects/:id/sources/extract", async (req) => {

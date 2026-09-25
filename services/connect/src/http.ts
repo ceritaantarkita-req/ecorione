@@ -52,6 +52,7 @@ import {
 import { LocalModelDigestMismatchError } from "./providers/local-model-provenance.js";
 import { LocalRuntimeIdSchema, type LocalRuntimeId } from "./providers/local-runtime.js";
 import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
+import { registerExternalSourceFetchRoutes } from "./source-fetch-http.js";
 import { registerConnectWebhookRoutes } from "./webhook-http.js";
 
 export const DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES = 32 * 1024 * 1024;
@@ -199,6 +200,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
   });
 
   if (options.mcpManager !== undefined) registerOutboundMcpRoutes(app, options.mcpManager);
+  registerExternalSourceFetchRoutes(app);
   registerConnectControlRoutes(app, {
     runtimeSettings: options.runtimeSettings,
     credentialVault: options.credentialVaultAdmin,

@@ -277,6 +277,144 @@ describe("PE-02 Project Sources HTTP", () => {
     ).toEqual({ count: 0 });
   });
 
+  it("ingests a bound HTTPS URL into an Artifact snapshot without chat history", async () => {
+    const sourceUrl = "https://example.com/source.txt";
+    const snapshot = Buffer.from("url snapshot");
+    const pointer = {
+      id: ARTIFACT_ID,
+      path: `cas/${ARTIFACT_ID}`,
+      description: `URL snapshot: ${sourceUrl}`,
+      mimeType: "text/plain",
+      sizeBytes: snapshot.byteLength,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+    };
+
+    const attachedUrl = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources",
+      payload: sourceBody("url", sourceUrl),
+    });
+    expect(attachedUrl.statusCode).toBe(201);
+
+    connect
+      .intercept({
+        path: "/v1/source-fetch/url",
+        method: "POST",
+        body: JSON.stringify({ url: sourceUrl }),
+      })
+      .reply(200, {
+        url: sourceUrl,
+        mimeType: "text/plain",
+        sizeBytes: snapshot.byteLength,
+        contentBase64: snapshot.toString("base64"),
+      });
+    artifact
+      .intercept({
+        path: "/v1/artifacts",
+        method: "POST",
+        body: JSON.stringify({
+          contentBase64: snapshot.toString("base64"),
+          mimeType: "text/plain",
+          description: `URL snapshot: ${sourceUrl}`,
+          scope: "personal",
+          sensitivity: "INTERNAL",
+          syncClass: "LOCAL_ONLY",
+        }),
+      })
+      .reply(201, {
+        pointer,
+        deduplicated: false,
+      });
+    context
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, pointer);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-url",
+      payload: {
+        operationId: "op_projecturlingest001",
+        workspaceId: "ws_personal",
+        url: sourceUrl,
+        role: "source",
+      },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      operationId: "op_projecturlingest001",
+      projectId: "prj_personal",
+      workspaceId: "ws_personal",
+      url: sourceUrl,
+      artifact: { id: ARTIFACT_ID, syncClass: "LOCAL_ONLY" },
+      source: {
+        availability: "AVAILABLE",
+        binding: {
+          resourceType: "artifact",
+          resourceId: ARTIFACT_ID,
+          role: "source",
+        },
+      },
+      state: "READY",
+    });
+
+    expect(
+      db.raw
+        .prepare(
+          "SELECT COUNT(*) AS count FROM project_source_bindings WHERE project_id=? AND workspace_id=?",
+        )
+        .get("prj_personal", "ws_personal"),
+    ).toEqual({ count: 2 });
+    expect(
+      db.raw
+        .prepare("SELECT COUNT(*) AS count FROM history_events WHERE operation_id=?")
+        .get("op_projecturlingest001"),
+    ).toEqual({ count: 0 });
+
+    const retry = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-url",
+      payload: {
+        operationId: "op_projecturlingest001",
+        workspaceId: "ws_personal",
+        url: sourceUrl,
+        role: "source",
+      },
+    });
+    expect(retry.statusCode).toBe(200);
+    expect(retry.json().artifact.id).toBe(ARTIFACT_ID);
+
+    const audit = await app.inject({
+      method: "GET",
+      url: "/v1/audit?operationId=op_projecturlingest001",
+    });
+    expect(audit.json().events.map((event: { type: string }) => event.type)).toEqual(
+      expect.arrayContaining([
+        "PROJECT_SOURCE_ATTACHED",
+        "PROJECT_SOURCE_INGESTED",
+        "ACTION_SKIPPED_IDEMPOTENT",
+      ]),
+    );
+  });
+
+  it("rejects URL ingestion when the URL is not already bound to the Project", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-url",
+      payload: {
+        operationId: "op_projecturlingest002",
+        workspaceId: "ws_personal",
+        url: "https://example.com/unbound",
+        role: "source",
+      },
+    });
+    expect(response.statusCode).toBe(404);
+  });
+
   it("extracts an attached Artifact into Project-scoped Context without chat history", async () => {
     const sourceBytes = Buffer.from("Project source text");
     const pointer = {

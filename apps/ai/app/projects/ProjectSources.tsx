@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import type {
   ProjectSourceExtractResponse,
   ProjectSourceResourceType,
+  ProjectUrlIngestResponse,
   ProjectSourceRole,
   ProjectSourceView,
 } from "@ecorione/shared-schema";
@@ -151,6 +152,41 @@ export function ProjectSources(props: {
       await load();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal menambahkan source.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  async function ingestUrl(source: ProjectSourceView): Promise<void> {
+    if (
+      source.binding.resourceType !== "url" ||
+      source.availability !== "AVAILABLE" ||
+      busyKey !== null
+    ) {
+      return;
+    }
+    const key = `ingest-url:${source.binding.resourceId}:${source.binding.role}`;
+    setBusyKey(key);
+    setFeedback(null);
+    try {
+      const response = await fetch(`${endpoint}/ingest-url`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: props.workspaceId,
+          url: source.binding.resourceId,
+          role: source.binding.role,
+        }),
+      });
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) throw new Error(errorMessage(body, "Gagal mengambil URL source."));
+      const ingested = body as ProjectUrlIngestResponse;
+      setFeedback(
+        `URL snapshot tersimpan → Artifact ${ingested.artifact.id}. Gunakan Extract pada Artifact untuk derived Project context.`,
+      );
+      await Promise.all([load(), loadCatalog()]);
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Gagal mengambil URL source.");
     } finally {
       setBusyKey(null);
     }
@@ -401,6 +437,19 @@ export function ProjectSources(props: {
                   {source.unavailableReason !== null ? <p>{source.unavailableReason}</p> : null}
                 </div>
                 <div className={styles.sourceActions}>
+                  {source.binding.resourceType === "url" ? (
+                    <button
+                      className="ecr-btn ecr-btn--primary"
+                      type="button"
+                      disabled={busyKey !== null || source.availability !== "AVAILABLE"}
+                      onClick={() => void ingestUrl(source)}
+                    >
+                      {busyKey ===
+                      `ingest-url:${source.binding.resourceId}:${source.binding.role}`
+                        ? "Ingesting..."
+                        : "Ingest snapshot"}
+                    </button>
+                  ) : null}
                   {source.binding.resourceType === "artifact" ? (
                     <button
                       className="ecr-btn ecr-btn--primary"
