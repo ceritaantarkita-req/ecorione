@@ -1,7 +1,15 @@
 import { z } from "zod";
 import { ProjectIdSchema, WorkspaceIdSchema } from "./ids.js";
 
-export const BRAIN_NODE_TYPES = ["Project", "Source", "Flow", "Trigger", "Run"] as const;
+export const BRAIN_NODE_TYPES = [
+  "Project",
+  "Source",
+  "Artifact",
+  "Page",
+  "Flow",
+  "Trigger",
+  "Run",
+] as const;
 export const BrainNodeTypeSchema = z.enum(BRAIN_NODE_TYPES);
 export type BrainNodeType = z.infer<typeof BrainNodeTypeSchema>;
 
