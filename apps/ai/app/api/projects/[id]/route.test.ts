@@ -45,7 +45,6 @@ describe("PATCH /api/projects/:id", () => {
       })
       .reply(200, {
         id: "prj_finance",
-        workspaceId: "ws_personal",
         ...body,
         memoryPolicy: "GLOBAL_PLUS_PROJECT",
         createdAt: "2026-09-19T00:00:00.000Z",
