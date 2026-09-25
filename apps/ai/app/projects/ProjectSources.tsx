@@ -344,7 +344,10 @@ export function ProjectSources(props: {
       <div className={styles.sourcesHeader}>
         <div>
           <h3>Sources</h3>
-          <p>Binding tetap referensi owner; snapshot eksternal disimpan sebagai Artifact terpisah.</p>
+          <p>
+            Binding tetap referensi owner; snapshot eksternal disimpan sebagai Artifact
+            terpisah.
+          </p>
         </div>
         <button
           className="ecr-btn ecr-btn--secondary"
