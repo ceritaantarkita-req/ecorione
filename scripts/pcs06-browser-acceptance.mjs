@@ -969,9 +969,9 @@ async function runDesktopJourney() {
       throw new Error("desktop-brain: Pan down control did not move the viewport");
     }
     await page.getByRole("button", { name: "Zoom in", exact: true }).click();
-    await page.getByLabel("Brain graph zoom").getByText("125%", { exact: true }).waitFor();
+    await page.getByLabel("Brain graph zoom").filter({ hasText: "125%" }).waitFor();
     await page.getByRole("button", { name: "Reset graph view", exact: true }).click();
-    await page.getByLabel("Brain graph zoom").getByText("100%", { exact: true }).waitFor();
+    await page.getByLabel("Brain graph zoom").filter({ hasText: "100%" }).waitFor();
     if ((await brainViewport.evaluate((element) => element.scrollTop)) !== 0) {
       throw new Error("desktop-brain: reset did not restore the viewport origin");
     }
