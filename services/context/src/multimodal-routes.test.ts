@@ -12,6 +12,7 @@ let app: FastifyInstance;
 
 const payload = {
   operationId: "op_multiderivation001",
+  projectId: "prj_personal",
   sourceArtifactId: "art_source001",
   episodeId: "epi_source001",
   task: "ocr",
@@ -67,6 +68,7 @@ describe("Context multimodal derivations", () => {
       url: `/v1/multimodal/derivations/${payload.operationId}`,
     });
     expect(read.statusCode).toBe(200);
+    expect(read.json().projectId).toBe("prj_personal");
     expect(read.json().sourceArtifactId).toBe(payload.sourceArtifactId);
     expect(read.json().result.segments[0].boundingBox).toEqual({
       x: 0.1,

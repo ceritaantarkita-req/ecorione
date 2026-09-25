@@ -1,5 +1,10 @@
 import {
+  ArtifactPointerSchema,
+  EpisodeSchema,
+  MultimodalAdapterResultSchema,
   ProjectIdSchema,
+  ProjectSourceExtractRequestSchema,
+  ProjectSourceExtractResponseSchema,
   ProjectSourceAttachRequestSchema,
   ProjectSourceBindingSchema,
   ProjectSourceDetachRequestSchema,
@@ -8,7 +13,10 @@ import {
   WorkspaceIdSchema,
   makeId,
   projectSourceOwner,
+  type Episode,
+  type MultimodalAdapterResult,
   type ProjectSourceBinding,
+  type ProjectSourceExtractResponse,
   type ProjectSourceView,
   type Timestamp,
 } from "@ecorione/shared-schema";
@@ -22,7 +30,14 @@ import {
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import type { CapabilityRegistry } from "./capability-registry.js";
 import { nowIso } from "./clock.js";
+import {
+  analyzeTaskForMimeType,
+  artifactContentBase64,
+  authorizeInference,
+  semanticMultimodalResult,
+} from "./multimodal-analysis.js";
 import type { HubRepository } from "./repository.js";
 import {
   ProjectArchivedError,
@@ -40,6 +55,7 @@ export interface ProjectSourceOwnerOptions {
   readonly spaceUrl: string;
   readonly flowUrl: string;
   readonly connectUrl: string;
+  readonly artifactUrl: string;
   readonly internalToken?: string | undefined;
 }
 
@@ -180,6 +196,7 @@ export function registerProjectSourceRoutes(
   projects: ProjectRegistry,
   sources: ProjectSourceRegistry,
   repo: HubRepository,
+  authority: CapabilityRegistry,
   options: ProjectSourceOwnerOptions,
 ): void {
   app.get<{ Params: { id: string } }>("/v1/projects/:id/sources", async (req) => {
@@ -247,6 +264,172 @@ export function registerProjectSourceRoutes(
         unavailableReason: null,
       }),
     );
+  });
+
+  app.post<{ Params: { id: string } }>("/v1/projects/:id/sources/extract", async (req) => {
+    const { id } = parseOrBadRequest(ParamsSchema, req.params);
+    const body = parseOrBadRequest(ProjectSourceExtractRequestSchema, req.body);
+    try {
+      projects.require(id, body.workspaceId);
+    } catch (error) {
+      throw mapProjectError(error);
+    }
+
+    const binding = sources
+      .list(id, body.workspaceId)
+      .find(
+        (candidate) =>
+          candidate.resourceType === "artifact" && candidate.resourceId === body.artifactId,
+      );
+    if (binding === undefined) {
+      throw new NotFoundError("Artifact belum terikat sebagai Project Source.");
+    }
+
+    const idempotencyKey = `project-source-extract:${body.operationId}`;
+    const prior = repo.getIdempotentResult<ProjectSourceExtractResponse>(idempotencyKey);
+    if (prior !== null) {
+      repo.recordAuditEvent({
+        type: "ACTION_SKIPPED_IDEMPOTENT",
+        operationId: body.operationId,
+        module: "Hub",
+        detail: {
+          idempotencyKey,
+          projectId: id,
+          sourceArtifactId: body.artifactId,
+        },
+        now: nowIso(),
+      });
+      return ProjectSourceExtractResponseSchema.parse(prior.result);
+    }
+
+    const pointerResult = ArtifactPointerSchema.safeParse(await resolveOwner(binding, options));
+    if (!pointerResult.success) {
+      throw new BadGatewayError("Artifact owner mengembalikan metadata yang tidak valid.");
+    }
+    const pointer = pointerResult.data;
+    const task = analyzeTaskForMimeType(pointer.mimeType);
+    const now = nowIso();
+
+    authorizeInference({
+      authority,
+      repo,
+      workspaceId: body.workspaceId,
+      operationId: body.operationId,
+      routes: ["local"],
+      scope: pointer.scope,
+      sensitivity: pointer.sensitivity,
+      syncClass: pointer.syncClass ?? "LOCAL_ONLY",
+      now,
+    });
+
+    const contentBase64 = await artifactContentBase64(options, pointer);
+    let inferred: MultimodalAdapterResult;
+    try {
+      inferred = MultimodalAdapterResultSchema.parse(
+        await httpJson(`${options.connectUrl}/v1/multimodal/infer`, {
+          method: "POST",
+          token: options.internalToken,
+          body: {
+            operationId: body.operationId,
+            task,
+            route: { preferred: "local", allowHostedFallback: false },
+            syncClass: pointer.syncClass ?? "LOCAL_ONLY",
+            mimeType: pointer.mimeType,
+            contentBase64,
+          },
+        }),
+      );
+    } catch (error) {
+      if (error instanceof RemoteServiceError) {
+        throw new BadGatewayError(`Connect extraction gagal: ${error.message}`);
+      }
+      throw error;
+    }
+    if (inferred.audioBase64 !== undefined || inferred.audioMimeType !== undefined) {
+      throw new BadGatewayError(
+        "Adapter Project extraction mengembalikan audio yang tidak diminta.",
+      );
+    }
+
+    const semantic = semanticMultimodalResult(inferred);
+    let episode: Episode;
+    try {
+      episode = EpisodeSchema.parse(
+        await httpJson(`${options.contextUrl}/v1/episodes`, {
+          method: "POST",
+          token: options.internalToken,
+          body: {
+            ts: now,
+            rawText: semantic.text,
+            projectId: id,
+            provenance: {
+              sourceApp: "hub:project-source",
+              toolCallId: body.operationId,
+              sourceUri: `artifact:${body.artifactId}`,
+            },
+            scope: pointer.scope,
+            sensitivity: pointer.sensitivity,
+            syncClass: pointer.syncClass ?? "LOCAL_ONLY",
+            trust: inferred.routeUsed === "hosted" ? "HOSTED_AGENT" : "LOCAL_AGENT",
+          },
+        }),
+      );
+      await httpJson(`${options.contextUrl}/v1/multimodal/derivations`, {
+        method: "POST",
+        token: options.internalToken,
+        body: {
+          operationId: body.operationId,
+          projectId: id,
+          sourceArtifactId: body.artifactId,
+          episodeId: episode.id,
+          task,
+          result: semantic,
+          scope: pointer.scope,
+          sensitivity: pointer.sensitivity,
+          syncClass: pointer.syncClass ?? "LOCAL_ONLY",
+          trust: inferred.routeUsed === "hosted" ? "HOSTED_AGENT" : "LOCAL_AGENT",
+          createdAt: now,
+        },
+      });
+    } catch (error) {
+      if (error instanceof RemoteServiceError) {
+        throw new BadGatewayError(`Context extraction gagal: ${error.message}`);
+      }
+      throw error;
+    }
+
+    const response = ProjectSourceExtractResponseSchema.parse({
+      operationId: body.operationId,
+      projectId: id,
+      workspaceId: body.workspaceId,
+      sourceArtifactId: body.artifactId,
+      task,
+      state: "READY",
+      result: semantic,
+      contextEpisodeId: episode.id,
+    });
+    repo.saveIdempotentResult(
+      idempotencyKey,
+      body.operationId,
+      "project-source.extract",
+      response,
+      now,
+    );
+    repo.recordAuditEvent({
+      type: "PROJECT_SOURCE_EXTRACTED",
+      operationId: body.operationId,
+      module: "Hub",
+      detail: {
+        projectId: id,
+        workspaceId: body.workspaceId,
+        sourceArtifactId: body.artifactId,
+        contextEpisodeId: episode.id,
+        task,
+        routeUsed: inferred.routeUsed,
+      },
+      now,
+    });
+    return response;
   });
 
   app.delete<{ Params: { id: string } }>("/v1/projects/:id/sources", async (req, reply) => {

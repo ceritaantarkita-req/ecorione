@@ -363,11 +363,12 @@ export function buildHubServer(
   );
 
   registerProjectRoutes(app, projects);
-  registerProjectSourceRoutes(app, projects, projectSources, repo, {
+  registerProjectSourceRoutes(app, projects, projectSources, repo, authority, {
     contextUrl: options.contextUrl,
     spaceUrl: options.spaceUrl ?? "http://127.0.0.1:17027",
     flowUrl: options.flowUrl ?? "http://127.0.0.1:17028",
     connectUrl: options.connectUrl,
+    artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
     internalToken: options.internalToken,
   });
   registerHistoryRoutes(app, history);
