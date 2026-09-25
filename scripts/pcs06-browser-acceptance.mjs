@@ -575,10 +575,7 @@ async function installApiMocks(context) {
       if (path === "/api/flow/triggers" && method === "GET") {
         return json(route, { triggers: [scheduleTrigger] });
       }
-      if (
-        path === `/api/flow/triggers/${scheduleTrigger.id}` &&
-        method === "PATCH"
-      ) {
+      if (path === `/api/flow/triggers/${scheduleTrigger.id}` && method === "PATCH") {
         const body = request.postDataJSON();
         scheduleMutationCount += 1;
         scheduleTrigger = {
@@ -870,7 +867,9 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "+ New Project", exact: true }).click();
     await page.getByRole("textbox", { name: "New Project name" }).fill("PCS-06 Inline");
     await page.getByRole("button", { name: "Create", exact: true }).click();
-    await page.getByText("Project PCS-06 Inline dibuat dan dipilih.", { exact: true }).waitFor();
+    if ((await projectSearch.inputValue()) !== "PCS-06 Inline") {
+      throw new Error("desktop-work: inline Project was not selected after create");
+    }
     await projectSearch.fill("Personal");
     await page.getByRole("option").filter({ hasText: "Personal" }).click();
 
@@ -887,9 +886,11 @@ async function runDesktopJourney() {
       throw new Error("desktop-work: AI draft mutated Trigger before explicit Save");
     }
     await page.getByRole("button", { name: "Save schedule", exact: true }).click();
-    await page.getByText("Schedule diperbarui.", { exact: true }).waitFor();
+    await page.getByText("PCS-06 Weekday", { exact: true }).waitFor();
     if (scheduleMutationCount !== 1) {
-      throw new Error(`desktop-work: expected one explicit Trigger mutation, got ${scheduleMutationCount}`);
+      throw new Error(
+        `desktop-work: expected one explicit Trigger mutation, got ${scheduleMutationCount}`,
+      );
     }
 
     await page.getByRole("button", { name: "year", exact: true }).click();
