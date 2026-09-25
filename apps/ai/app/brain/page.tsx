@@ -12,11 +12,14 @@ import {
 import {
   BRAIN_EDGE_TYPES,
   BRAIN_NODE_TYPES,
+  makeId,
   type BrainEdge,
   type BrainEdgeType,
   type BrainGraphResponse,
+  type BrainNeighborhoodResponse,
   type BrainNode,
   type BrainNodeType,
+  type ChatResponse,
   type Project,
 } from "@ecorione/shared-schema";
 import {
@@ -41,6 +44,13 @@ type PanDrag = {
   startY: number;
   scrollLeft: number;
   scrollTop: number;
+};
+
+type BrainAssistantTurn = {
+  readonly operationId: string;
+  readonly question: string;
+  readonly reply: string;
+  readonly factIds: readonly string[];
 };
 
 function errorMessage(body: unknown, fallback: string): string {
@@ -103,6 +113,13 @@ export default function BrainPage() {
   const graphScrollRef = useRef<HTMLDivElement>(null);
   const panDragRef = useRef<PanDrag | null>(null);
   const [graphZoom, setGraphZoom] = useState(1);
+  const [assistantSessionId, setAssistantSessionId] = useState(() => makeId("session"));
+  const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantTurns, setAssistantTurns] = useState<BrainAssistantTurn[]>([]);
+  const [assistantBusy, setAssistantBusy] = useState(false);
+  const [assistantStatus, setAssistantStatus] = useState(
+    "Pilih Fact atau URL Source untuk memulai grounded local chat.",
+  );
 
   const loadBrain = useCallback(async (nextProjectId: string) => {
     const seq = ++requestRef.current;
@@ -185,6 +202,86 @@ export default function BrainPage() {
     if (!projectReady) return;
     void loadBrain(projectId);
   }, [loadBrain, projectId, projectReady]);
+
+  useEffect(() => {
+    setAssistantSessionId(makeId("session"));
+    setAssistantQuestion("");
+    setAssistantTurns([]);
+    setAssistantBusy(false);
+    setAssistantStatus(
+      selectedId === null
+        ? "Pilih Fact atau URL Source untuk memulai grounded local chat."
+        : "Grounded chat hanya memakai Context yang dapat diturunkan dari node ini.",
+    );
+  }, [projectId, selectedId]);
+
+  async function askBrain(): Promise<void> {
+    const question = assistantQuestion.trim();
+    if (selectedId === null || question.length === 0 || assistantBusy) return;
+
+    setAssistantBusy(true);
+    setAssistantStatus("Membatasi Context ke neighborhood node yang dipilih…");
+    try {
+      const neighborhoodQuery = new URLSearchParams({
+        workspaceId: WORKSPACE_ID,
+        projectId,
+        seedNodeId: selectedId,
+        maxHops: "1",
+        maxNodes: "16",
+      });
+      const neighborhood = await fetch(
+        `/api/brain/neighborhood?${neighborhoodQuery.toString()}`,
+        { cache: "no-store" },
+      ).then((response) => json<BrainNeighborhoodResponse>(response));
+
+      const constraint = neighborhood.contextConstraint;
+      if (constraint.sourceUris.length === 0 && constraint.factIds.length === 0) {
+        throw new Error(
+          "Node ini belum memiliki Fact atau URL Source yang bisa dipakai sebagai grounding.",
+        );
+      }
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          sessionId: assistantSessionId,
+          workspaceId: WORKSPACE_ID,
+          projectId,
+          message: question,
+          target: "local",
+          scope: "personal",
+          maxSensitivity: "RESTRICTED",
+          autonomy: "L1",
+          contextConstraint: {
+            source: "brain",
+            sourceUris: constraint.sourceUris,
+            factIds: constraint.factIds,
+          },
+        }),
+      }).then((result) => json<ChatResponse>(result));
+
+      setAssistantTurns((current) => [
+        ...current,
+        {
+          operationId: response.operationId,
+          question,
+          reply: response.reply,
+          factIds: response.memoryUsed.recalledFacts.map((fact) => fact.id),
+        },
+      ]);
+      setAssistantQuestion("");
+      setAssistantStatus(
+        `Grounded local reply · ${String(response.memoryUsed.recalledFacts.length)} recalled fact(s).`,
+      );
+    } catch (reason) {
+      setAssistantStatus(
+        `Brain assistant gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
+      );
+    } finally {
+      setAssistantBusy(false);
+    }
+  }
 
   function chooseProject(next: string): void {
     const chosen = resolveActiveProjectId(next, projects);
@@ -600,6 +697,74 @@ export default function BrainPage() {
                   <p>Tidak ada relationship pada projection saat ini.</p>
                 ) : null}
               </div>
+
+              <section className={styles.assistant} aria-label="Brain grounded assistant">
+                <div className={styles.assistantHead}>
+                  <div>
+                    <strong>Grounded assistant</strong>
+                    <span>Local only · selected node context</span>
+                  </div>
+                  <code>{assistantSessionId}</code>
+                </div>
+
+                <div className={styles.assistantTurns} aria-live="polite">
+                  {assistantTurns.map((turn) => (
+                    <article key={turn.operationId} className={styles.assistantTurn}>
+                      <div>
+                        <span>You</span>
+                        <p>{turn.question}</p>
+                      </div>
+                      <div>
+                        <span>Ai</span>
+                        <p>{turn.reply}</p>
+                        <small>
+                          {turn.factIds.length > 0
+                            ? `Facts: ${turn.factIds.join(", ")}`
+                            : "No recalled Fact IDs"}
+                        </small>
+                      </div>
+                    </article>
+                  ))}
+                  {assistantTurns.length === 0 ? (
+                    <p className={styles.assistantEmpty}>
+                      Ask hanya menggunakan Fact atau URL Source yang ada di neighborhood
+                      node terpilih. Tidak ada fallback ke memori Project yang lebih luas.
+                    </p>
+                  ) : null}
+                </div>
+
+                <form
+                  className={styles.assistantComposer}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void askBrain();
+                  }}
+                >
+                  <label htmlFor="brain-grounded-question">Ask about selected Brain context</label>
+                  <textarea
+                    id="brain-grounded-question"
+                    value={assistantQuestion}
+                    rows={3}
+                    maxLength={2048}
+                    placeholder="Tanya tentang node yang dipilih…"
+                    disabled={assistantBusy}
+                    onChange={(event) => setAssistantQuestion(event.target.value)}
+                  />
+                  <div>
+                    <small role="status">{assistantStatus}</small>
+                    <button
+                      type="submit"
+                      disabled={
+                        assistantBusy ||
+                        selectedId === null ||
+                        assistantQuestion.trim().length === 0
+                      }
+                    >
+                      {assistantBusy ? "Asking…" : "Ask Brain"}
+                    </button>
+                  </div>
+                </form>
+              </section>
             </>
           )}
         </aside>
