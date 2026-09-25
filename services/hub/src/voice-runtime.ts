@@ -23,7 +23,7 @@ import {
 } from "@ecorione/shared-schema";
 import type { CapabilityRegistry } from "./capability-registry.js";
 import type { HistoryLedger } from "./history-ledger.js";
-import { authorizeInference, requestedRoutes } from "./multimodal-http.js";
+import { authorizeInference, requestedRoutes } from "./multimodal-analysis.js";
 import type { HubRepository } from "./repository.js";
 import type { VoiceSessionStore } from "./voice-store.js";
 
