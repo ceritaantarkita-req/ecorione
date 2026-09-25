@@ -279,8 +279,7 @@ export function registerProjectSourceRoutes(
       .list(id, body.workspaceId)
       .find(
         (candidate) =>
-          candidate.resourceType === "artifact" &&
-          candidate.resourceId === body.artifactId,
+          candidate.resourceType === "artifact" && candidate.resourceId === body.artifactId,
       );
     if (binding === undefined) {
       throw new NotFoundError("Artifact belum terikat sebagai Project Source.");
