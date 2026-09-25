@@ -167,6 +167,18 @@ const spacePage = {
   createdAt: now,
   updatedAt: now,
 };
+const brainRunNodes = Array.from({ length: 50 }, (_, index) => ({
+  id: `brain_run_${String(index + 1).padStart(2, "0")}`,
+  type: "Run",
+  canonicalId: `run_pcs06_${String(index + 1).padStart(2, "0")}`,
+  owner: "Flow",
+  label: `PCS-06 Run ${String(index + 1).padStart(2, "0")}`,
+  workspaceId: "ws_personal",
+  projectId: "prj_personal",
+  availability: "AVAILABLE",
+  href: "/flow",
+  metadata: {},
+}));
 const brain = {
   workspaceId: "ws_personal",
   projectId: "prj_personal",
@@ -183,9 +195,10 @@ const brain = {
       href: "/projects",
       metadata: {},
     },
+    ...brainRunNodes,
   ],
   edges: [],
-  totalNodes: 1,
+  totalNodes: 51,
   totalEdges: 0,
   truncated: false,
 };
@@ -922,7 +935,48 @@ async function runDesktopJourney() {
 
     await goto(page, "/brain", "desktop-brain");
     await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
-    await page.locator('svg[aria-label="Connected Brain graph"]').waitFor();
+    const brainSvg = page.locator('svg[aria-label="Connected Brain graph"]');
+    await brainSvg.waitFor();
+    const brainRuns = page.locator('g[aria-label^="Run:"]');
+    if ((await brainRuns.count()) !== 50) {
+      throw new Error(`desktop-brain: expected 50 Run nodes, got ${await brainRuns.count()}`);
+    }
+    const runCenters = await brainRuns.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const transform = node.getAttribute("transform") ?? "";
+        const match = /translate\\([^ ]+ ([^)]+)\\)/.exec(transform);
+        return match === null ? Number.NaN : Number(match[1]);
+      }),
+    );
+    if (
+      runCenters.some((value) => !Number.isFinite(value)) ||
+      runCenters.slice(1).some((value, index) => value - runCenters[index] < 64)
+    ) {
+      throw new Error("desktop-brain: 50-Run layout does not preserve 64px center spacing");
+    }
+
+    const brainViewport = page.getByLabel("Pan Brain graph");
+    const viewportMetrics = await brainViewport.evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+    }));
+    if (viewportMetrics.scrollHeight <= viewportMetrics.clientHeight) {
+      throw new Error("desktop-brain: dense graph must expose contained vertical pan space");
+    }
+
+    await page.getByRole("button", { name: "Pan down", exact: true }).click();
+    if ((await brainViewport.evaluate((element) => element.scrollTop)) <= 0) {
+      throw new Error("desktop-brain: Pan down control did not move the viewport");
+    }
+    await page.getByRole("button", { name: "Zoom in", exact: true }).click();
+    await page.getByLabel("Brain graph zoom").getByText("125%", { exact: true }).waitFor();
+    await page.getByRole("button", { name: "Reset graph view", exact: true }).click();
+    await page.getByLabel("Brain graph zoom").getByText("100%", { exact: true }).waitFor();
+    if ((await brainViewport.evaluate((element) => element.scrollTop)) !== 0) {
+      throw new Error("desktop-brain: reset did not restore the viewport origin");
+    }
+    await assertNoPageOverflow(page, "desktop-brain-scalable-layout");
+    await page.screenshot({ path: `${outDir}/desktop-brain-scalable.png`, fullPage: true });
 
     await goto(page, "/space", "desktop-space");
     await page.getByRole("heading", { name: "Space", exact: true }).waitFor();
@@ -1088,7 +1142,11 @@ async function runNarrowCoverage() {
     [
       "/brain",
       "narrow-brain",
-      (page) => page.getByRole("heading", { name: "Brain", exact: true }).waitFor(),
+      async (page) => {
+        await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
+        await page.getByRole("button", { name: "Zoom in", exact: true }).waitFor();
+        await page.getByLabel("Pan Brain graph").waitFor();
+      },
     ],
     [
       "/space",
