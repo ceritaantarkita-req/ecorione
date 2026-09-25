@@ -1,11 +1,5 @@
 import { WorkspaceIdSchema } from "@ecorione/shared-schema";
-import {
-  connectUrl,
-  contextUrl,
-  flowUrl,
-  internalToken,
-  spaceUrl,
-} from "../../../../lib/env";
+import { connectUrl, contextUrl, flowUrl, internalToken, spaceUrl } from "../../../../lib/env";
 import { jsonError } from "../../../../lib/proxy";
 
 type ResourceType = "artifact" | "space-page" | "flow-graph" | "mcp-server";
@@ -41,7 +35,9 @@ async function json(url: string): Promise<unknown> {
 }
 
 function object(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : null;
 }
 
 function text(value: unknown): string | null {
@@ -155,6 +151,8 @@ export async function GET(request: Request): Promise<Response> {
   ]);
   return Response.json({
     items: results.flatMap((result) => result.items),
-    warnings: results.flatMap((result) => (result.warning === undefined ? [] : [result.warning])),
+    warnings: results.flatMap((result) =>
+      result.warning === undefined ? [] : [result.warning],
+    ),
   });
 }
