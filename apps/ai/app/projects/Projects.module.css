@@ -348,6 +348,23 @@
   font-size: 11px;
 }
 
+.sourcePickerHint,
+.sourcePickerWarning {
+  margin: -4px 0 12px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.sourcePickerHint code {
+  font-family: var(--font-mono);
+}
+
+.sourcePickerWarning {
+  padding: 8px 10px;
+  border-left: 2px solid var(--warning);
+  background: var(--surface-2);
+}
+
 .sourceForm {
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr) 130px auto;
