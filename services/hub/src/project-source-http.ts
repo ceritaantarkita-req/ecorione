@@ -240,58 +240,55 @@ export function registerProjectSourceRoutes(
     return ProjectSourceListResponseSchema.parse({ sources: views });
   });
 
-  app.get<{ Params: { id: string } }>(
-    "/v1/projects/:id/sources/mcp-resources",
-    async (req) => {
-      const { id } = parseOrBadRequest(ParamsSchema, req.params);
-      const { workspaceId, serverId } = parseOrBadRequest(McpResourcesQuerySchema, req.query);
-      try {
-        projects.require(id, workspaceId);
-      } catch (error) {
-        throw mapProjectError(error);
-      }
-      const serverBinding = sources
-        .list(id, workspaceId)
-        .find(
-          (candidate) =>
-            candidate.resourceType === "mcp-server" && candidate.resourceId === serverId,
-        );
-      if (serverBinding === undefined) {
-        throw new NotFoundError("MCP server belum terikat sebagai Project Source.");
-      }
+  app.get<{ Params: { id: string } }>("/v1/projects/:id/sources/mcp-resources", async (req) => {
+    const { id } = parseOrBadRequest(ParamsSchema, req.params);
+    const { workspaceId, serverId } = parseOrBadRequest(McpResourcesQuerySchema, req.query);
+    try {
+      projects.require(id, workspaceId);
+    } catch (error) {
+      throw mapProjectError(error);
+    }
+    const serverBinding = sources
+      .list(id, workspaceId)
+      .find(
+        (candidate) =>
+          candidate.resourceType === "mcp-server" && candidate.resourceId === serverId,
+      );
+    if (serverBinding === undefined) {
+      throw new NotFoundError("MCP server belum terikat sebagai Project Source.");
+    }
 
-      const operationId = makeId("operation");
-      try {
-        const discovered = McpDiscoveryResponseSchema.parse(
-          await httpJson(
-            `${options.connectUrl}/v1/mcp-outbound/servers/${encodeURIComponent(serverId)}/discover`,
-            {
-              method: "POST",
-              token: options.internalToken,
-              body: {
-                workspaceId,
-                operationId,
-                scope: "personal",
-                sensitivity: "RESTRICTED",
-                autonomy: "L1",
-                now: nowIso(),
-              },
+    const operationId = makeId("operation");
+    try {
+      const discovered = McpDiscoveryResponseSchema.parse(
+        await httpJson(
+          `${options.connectUrl}/v1/mcp-outbound/servers/${encodeURIComponent(serverId)}/discover`,
+          {
+            method: "POST",
+            token: options.internalToken,
+            body: {
+              workspaceId,
+              operationId,
+              scope: "personal",
+              sensitivity: "RESTRICTED",
+              autonomy: "L1",
+              now: nowIso(),
             },
-          ),
-        );
-        return {
-          serverId,
-          resources: discovered.resources,
-          warning: discovered.errors?.resources ?? null,
-        };
-      } catch (error) {
-        if (error instanceof RemoteServiceError) {
-          throw new BadGatewayError(`Connect MCP discovery gagal: ${error.message}`);
-        }
-        throw error;
+          },
+        ),
+      );
+      return {
+        serverId,
+        resources: discovered.resources,
+        warning: discovered.errors?.resources ?? null,
+      };
+    } catch (error) {
+      if (error instanceof RemoteServiceError) {
+        throw new BadGatewayError(`Connect MCP discovery gagal: ${error.message}`);
       }
-    },
-  );
+      throw error;
+    }
+  });
 
   app.post<{ Params: { id: string } }>("/v1/projects/:id/sources", async (req, reply) => {
     const { id } = parseOrBadRequest(ParamsSchema, req.params);
@@ -371,8 +368,7 @@ export function registerProjectSourceRoutes(
       }
 
       const idempotencyKey = `project-mcp-resource-ingest:${body.operationId}`;
-      const prior =
-        repo.getIdempotentResult<ProjectMcpResourceIngestResponse>(idempotencyKey);
+      const prior = repo.getIdempotentResult<ProjectMcpResourceIngestResponse>(idempotencyKey);
       if (prior !== null) {
         repo.recordAuditEvent({
           type: "ACTION_SKIPPED_IDEMPOTENT",
