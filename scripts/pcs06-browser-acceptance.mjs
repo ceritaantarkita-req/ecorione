@@ -867,7 +867,6 @@ async function runDesktopJourney() {
     const projectSearch = page.getByRole("combobox", { name: "Search Project" });
     await projectSearch.fill("Research");
     await page.getByRole("option").filter({ hasText: "Research" }).waitFor();
-    await page.getByRole("button", { name: "Toggle Project options" }).click();
     await page.getByRole("button", { name: "+ New Project", exact: true }).click();
     await page.getByRole("textbox", { name: "New Project name" }).fill("PCS-06 Inline");
     await page.getByRole("button", { name: "Create", exact: true }).click();
