@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ArtifactIdSchema, ProjectIdSchema, WorkspaceIdSchema } from "./ids.js";
+import { ArtifactIdSchema, OperationIdSchema, ProjectIdSchema, WorkspaceIdSchema } from "./ids.js";
 import { ArtifactPointerSchema, TimestampSchema } from "./memory.js";
 import { FlowGraphIdSchema } from "./nodes.js";
 import { SpacePageIdSchema } from "./space.js";
@@ -159,7 +159,7 @@ export type ExternalUrlFetchResponse = z.infer<typeof ExternalUrlFetchResponseSc
 
 export const ProjectUrlIngestRequestSchema = z
   .object({
-    operationId: z.string().min(1).max(128),
+    operationId: OperationIdSchema,
     workspaceId: WorkspaceIdSchema,
     url: ProjectSourceHttpsUrlSchema,
     role: ProjectSourceRoleSchema.default("source"),
@@ -169,7 +169,7 @@ export type ProjectUrlIngestRequest = z.infer<typeof ProjectUrlIngestRequestSche
 
 export const ProjectUrlIngestResponseSchema = z
   .object({
-    operationId: z.string().min(1).max(128),
+    operationId: OperationIdSchema,
     projectId: ProjectIdSchema,
     workspaceId: WorkspaceIdSchema,
     url: ProjectSourceHttpsUrlSchema,
