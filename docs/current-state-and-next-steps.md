@@ -92,6 +92,12 @@ A-06b exact-head CI `36124634778`, Product Eval `36124634690`, PCS-06 rendered-b
 
 Safe resumable checkpoint: [verification/session-9-a06b-schedule-closure-2026-09-25.md](verification/session-9-a06b-schedule-closure-2026-09-25.md).
 
+**A-07 Brain scalable layout is CLOSED / PASS.** PR #331 / merge `13775e3903a74732162658292a8dd350a068de6b` replaces fixed-height lane compression with deterministic dynamic canvas height, preserves >=64px center spacing through the 50-Run boundary, adds contained pan/drag/zoom/reset controls, and keeps Brain a rebuildable projection of canonical owners. Exact-head CI `36131738117`, Product Eval `36131738109`, and PCS-06 `36131738174` passed; merged-main CI `36132291003` and Product Eval `36132290871` passed; automatic Staging Deploy `36132607599` deployed exact reviewed main successfully.
+
+Safe resumable checkpoint: [verification/session-9-a07-brain-scalable-layout-closure-2026-09-25.md](verification/session-9-a07-brain-scalable-layout-closure-2026-09-25.md).
+
+**Next bounded product gap is A-08 richer canonical-owner Brain projection.** A-08 should add only owner-backed node/edge classes that have stable authorized identities and provenance; no graph database and no LLM-created canonical relationships.
+
 **No product implementation is currently in flight.** Brain A-07/A-08 remains untouched. Its former A-06 prerequisite is satisfied, but selecting or opening Brain work requires an explicit next-scope decision rather than automatic continuation.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
