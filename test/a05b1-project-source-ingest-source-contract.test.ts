@@ -23,12 +23,12 @@ describe("A-05b.1 direct Project source ingestion contract", () => {
     expect(uploadRoute).not.toContain("ingestAttachment");
   });
 
-  it("keeps extraction/indexing out of A-05b.1 and exposes direct upload in Projects", () => {
+  it("keeps extraction outside the A-05b.1 upload route after A-05b.2", () => {
     expect(picker).toContain("${endpoint}/upload");
-    expect(picker).toContain("OCR/indexing");
-    expect(picker).toContain("belum dijalankan");
+    expect(picker).toContain("${endpoint}/extract");
     expect(uploadRoute).not.toContain("ocr");
     expect(uploadRoute).not.toContain("vision");
     expect(uploadRoute).not.toContain("transcribe");
+    expect(uploadRoute).not.toContain("/v1/multimodal/infer");
   });
 });
