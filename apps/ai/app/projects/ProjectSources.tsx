@@ -43,6 +43,8 @@ export function ProjectSources(props: {
   const [resourceType, setResourceType] = useState<ProjectSourceResourceType>("artifact");
   const [resourceId, setResourceId] = useState("");
   const [role, setRole] = useState<ProjectSourceRole>("source");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadRole, setUploadRole] = useState<ProjectSourceRole>("source");
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -97,6 +99,33 @@ export function ProjectSources(props: {
       setResourceId(candidates[0]?.resourceId ?? "");
     }
   }, [candidates, resourceId, resourceType]);
+
+  async function upload(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (uploadFile === null || busyKey !== null) return;
+    setBusyKey("upload");
+    setFeedback(null);
+    try {
+      const body = new FormData();
+      body.set("workspaceId", props.workspaceId);
+      body.set("role", uploadRole);
+      body.set("file", uploadFile);
+      const response = await fetch(`${endpoint}/upload`, {
+        method: "POST",
+        body,
+      });
+      const payload: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) throw new Error(errorMessage(payload, "Gagal mengunggah source."));
+      setUploadFile(null);
+      form.reset();
+      await Promise.all([load(), loadCatalog()]);
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Gagal mengunggah source.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
 
   async function attach(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -182,6 +211,42 @@ export function ProjectSources(props: {
         >
           {catalogLoading ? "Memuat..." : "Refresh picker"}
         </button>
+      </div>
+
+      <div className={styles.sourceUpload}>
+        <div>
+          <strong>Upload file</strong>
+          <small>
+            Maks. 20 MiB. Disimpan oleh Artifact dan langsung diikat ke Project. OCR/indexing belum
+            dijalankan pada tahap ini.
+          </small>
+        </div>
+        <form className={styles.sourceUploadForm} onSubmit={upload}>
+          <input
+            className="ecr-input"
+            type="file"
+            aria-label="Upload Project source file"
+            disabled={busyKey !== null}
+            onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
+          />
+          <select
+            className="ecr-input"
+            defaultValue="source"
+            aria-label="Peran uploaded source"
+            disabled={busyKey !== null}
+            onChange={(event) => setUploadRole(event.target.value as ProjectSourceRole)}
+          >
+            <option value="source">Source</option>
+            <option value="reference">Reference</option>
+          </select>
+          <button
+            className="ecr-btn ecr-btn--primary"
+            type="submit"
+            disabled={busyKey !== null || uploadFile === null}
+          >
+            {busyKey === "upload" ? "Mengunggah..." : "Upload"}
+          </button>
+        </form>
       </div>
 
       <form className={styles.sourceForm} onSubmit={attach}>
