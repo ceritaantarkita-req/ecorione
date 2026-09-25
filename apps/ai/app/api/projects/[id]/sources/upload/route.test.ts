@@ -17,10 +17,12 @@ const ARTIFACT_ID = `art_${"a".repeat(64)}`;
 const MAX_PROJECT_SOURCE_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 function uploadRequest(bytes: Uint8Array, name = "notes.txt"): Request {
+  const payload = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(payload).set(bytes);
   const form = new FormData();
   form.set("workspaceId", "ws_personal");
   form.set("role", "source");
-  form.set("file", new File([bytes], name, { type: "text/plain" }));
+  form.set("file", new File([payload], name, { type: "text/plain" }));
   return new Request("http://ai.local/api/projects/prj_finance/sources/upload", {
     method: "POST",
     body: form,
