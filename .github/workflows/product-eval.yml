@@ -51,6 +51,8 @@ jobs:
             test/pcs03-local-runtime-source-contract.test.ts \
             test/pcs04-visual-ia-source-contract.test.ts \
             apps/ai/app/api/chat/route.test.ts \
+            services/hub/src/orchestrate.test.ts \
+            test/a08c-brain-grounded-chat-source-contract.test.ts \
             apps/ai/app/api/projects/route.test.ts \
             apps/ai/app/api/brain/route.test.ts \
             apps/ai/lib/brain-projection.test.ts \
