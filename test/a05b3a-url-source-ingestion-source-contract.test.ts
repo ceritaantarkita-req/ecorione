@@ -10,10 +10,13 @@ describe("A-05b.3a Project URL source ingestion contract", () => {
 
   it("keeps external fetch owned by Connect with SSRF and bounded-transfer guards", () => {
     expect(connectHttp).toContain('"/v1/source-fetch/url"');
-    expect(connect).toContain('redirect: "error"');
-    expect(connect).toContain("AbortSignal.timeout");
+    expect(connect).toContain("httpsRequest");
+    expect(connect).toContain("DEFAULT_EXTERNAL_SOURCE_TIMEOUT_MS");
     expect(connect).toContain("DEFAULT_EXTERNAL_SOURCE_MAX_BYTES");
     expect(connect).toContain("lookup(hostname");
+    expect(connect).toContain("lookup: lookupPinned");
+    expect(connect).toContain("servername: url.hostname");
+    expect(connect).toContain("response.statusCode >= 300");
     expect(connect).toContain("isLocalReachableHost");
     expect(connect).toContain("classifyLocalHost");
   });
