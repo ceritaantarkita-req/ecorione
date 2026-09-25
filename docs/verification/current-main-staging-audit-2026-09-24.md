@@ -247,13 +247,15 @@ Exact-head CI `36131738117`, Product Eval `36131738109`, and PCS-06 `36131738174
 
 Evidence: [session-9-a07-brain-scalable-layout-closure-2026-09-25.md](session-9-a07-brain-scalable-layout-closure-2026-09-25.md).
 
-### A-08 — PRODUCT GAP — Brain does not yet represent the full intended knowledge/file graph
+### A-08 — PARTIALLY CLOSED — richer canonical-owner Brain projection
 
-Brain currently derives Project Source + Flow + Trigger + Run relationships. It does not expose first-class nodes for memory/facts, individual files/folders unless indirectly represented by a source owner artifact/reference, or connector-resource hierarchy. Time schedule is represented through Trigger rather than a distinct visual node.
+**Progress update — 2026-09-25: A-08a CLOSED / PASS.** PR #333 / merge `461a9665584b5e3a47396663cd4220f21c62027c` adds first-class Artifact and Space Page nodes derived from authorized Project Source views. Source remains the binding/reference node; canonical owner IDs remain authoritative and Brain adds only deterministic relationships. No graph database, owner mutation, cross-service DB read, or model-created canonical edge was introduced.
 
-The current page also has no embedded AI/chat surface.
+Exact-head CI `36141048119`, Product Eval `36141048146`, PCS-06 `36141048129`, and MCP External HTTPS `36141048157` passed. Merged-main CI `36141655282`, Product Eval `36141655343`, and MCP External HTTPS `36141655291` passed. Automatic Staging Deploy `36142092154` executed `Deploy exact reviewed main SHA` successfully.
 
-The correct future direction is to expand the derived projection from canonical owners, not introduce a second graph database.
+Remaining A-08 scope includes owner-backed memory/facts and other hierarchy classes only where stable authorized owner identity exists. Context Facts are the next audited candidate because `MemoryFact.id` is stable and Context exposes an official Project-filtered read API. Core Memory, connector hierarchy, and embedded Brain AI/chat remain separate slices.
+
+The correct direction remains expansion from canonical owners, not a second graph database.
 
 ### A-09 — MEDIUM — frontend maintainability concentration
 
