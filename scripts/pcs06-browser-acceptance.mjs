@@ -869,7 +869,9 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "Create", exact: true }).click();
     await page.waitForFunction(
       (value) => {
-        const input = globalThis.document.querySelector('input[aria-label="Search Project"]');
+        const input = globalThis.document.querySelector(
+          'input[aria-label="Search Project"]',
+        );
         return input instanceof HTMLInputElement && input.value === value;
       },
       "PCS-06 Inline",
