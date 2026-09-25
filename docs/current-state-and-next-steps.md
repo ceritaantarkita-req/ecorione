@@ -100,9 +100,11 @@ Safe resumable checkpoint: [verification/session-9-a07-brain-scalable-layout-clo
 
 Safe resumable checkpoint: [verification/session-9-a08a-brain-owner-resources-closure-2026-09-25.md](verification/session-9-a08a-brain-owner-resources-closure-2026-09-25.md).
 
-**Next bounded candidate is A-08b Context Fact projection.** Context already exposes stable `MemoryFact.id` values through an owner HTTP API with Project filtering and bounded sensitivity/limit controls. A-08b should therefore use Hub-first Project authorization followed by bounded Context owner reads, add first-class Fact nodes only, and avoid Context DB access, Core Memory bundling, connector hierarchy bundling, graph storage, or LLM-created canonical relationships.
+**A-08b Context Fact projection is CLOSED / PASS.** PR #335 / merge `bc5601602e401bb0f4d19f567b4dd10c6388f94d` adds first-class Context-owned Fact nodes using stable `MemoryFact.id`. Hub authorizes the exact Project before Context reads; Context reads are bounded to `maxSensitivity=RESTRICTED` and max 40; sibling-Project Facts fail closed; Brain remains rebuildable and read-only. Exact-head CI `36147793139`, Product Eval `36147793105`, PCS-06 `36147793042`, and MCP External HTTPS `36147793068` passed. Merged-main CI `36148568175`, Product Eval `36148568188`, and MCP External HTTPS `36148568214` passed. Staging Deploy `36149034797` deployed exact reviewed main successfully.
 
-**No product implementation is currently in flight.**
+Safe resumable checkpoint: [verification/session-9-a08b-brain-context-facts-closure-2026-09-25.md](verification/session-9-a08b-brain-context-facts-closure-2026-09-25.md).
+
+**No product implementation is currently in flight.** Remaining A-08 work must be selected as one explicit bounded slice; Brain must continue to reuse canonical owner contracts and must not become a graph store or second chat system.
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 
