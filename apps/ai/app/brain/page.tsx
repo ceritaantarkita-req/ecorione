@@ -378,16 +378,32 @@ export default function BrainPage() {
           </div>
           <div className={styles.graphToolbar} aria-label="Brain graph navigation">
             <div className={styles.panControls}>
-              <button type="button" aria-label="Pan left" onClick={() => panGraph(-GRAPH_PAN_STEP, 0)}>
+              <button
+                type="button"
+                aria-label="Pan left"
+                onClick={() => panGraph(-GRAPH_PAN_STEP, 0)}
+              >
                 ←
               </button>
-              <button type="button" aria-label="Pan up" onClick={() => panGraph(0, -GRAPH_PAN_STEP)}>
+              <button
+                type="button"
+                aria-label="Pan up"
+                onClick={() => panGraph(0, -GRAPH_PAN_STEP)}
+              >
                 ↑
               </button>
-              <button type="button" aria-label="Pan down" onClick={() => panGraph(0, GRAPH_PAN_STEP)}>
+              <button
+                type="button"
+                aria-label="Pan down"
+                onClick={() => panGraph(0, GRAPH_PAN_STEP)}
+              >
                 ↓
               </button>
-              <button type="button" aria-label="Pan right" onClick={() => panGraph(GRAPH_PAN_STEP, 0)}>
+              <button
+                type="button"
+                aria-label="Pan right"
+                onClick={() => panGraph(GRAPH_PAN_STEP, 0)}
+              >
                 →
               </button>
             </div>
