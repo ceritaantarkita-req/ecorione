@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProjectIdSchema, WorkspaceIdSchema } from "./ids.js";
+import { MemoryFactIdSchema, ProjectIdSchema, WorkspaceIdSchema } from "./ids.js";
 
 export const BRAIN_NODE_TYPES = [
   "Project",
@@ -96,6 +96,7 @@ export type BrainQuery = z.infer<typeof BrainQuerySchema>;
 export const BrainContextConstraintSchema = z
   .object({
     sourceUris: z.array(z.string().url().max(2048)).max(32),
+    factIds: z.array(MemoryFactIdSchema).max(32),
   })
   .strict();
 export type BrainContextConstraint = z.infer<typeof BrainContextConstraintSchema>;
