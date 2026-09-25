@@ -452,6 +452,15 @@ export function registerProjectSourceRoutes(
         }
         throw error;
       }
+      if (
+        uploaded.pointer.scope !== "personal" ||
+        uploaded.pointer.sensitivity !== "RESTRICTED" ||
+        uploaded.pointer.syncClass !== "LOCAL_ONLY"
+      ) {
+        throw new BadGatewayError(
+          "Artifact MCP snapshot mengembalikan privacy metadata yang tidak sesuai.",
+        );
+      }
 
       const candidate = ProjectSourceBindingSchema.parse({
         projectId: id,
