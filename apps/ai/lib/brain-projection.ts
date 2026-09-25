@@ -517,8 +517,11 @@ export class BrainNeighborhoodSeedError extends Error {
   }
 }
 
-function sourceUriConstraint(nodes: readonly BrainNode[]): string[] {
-  return [
+function contextConstraint(nodes: readonly BrainNode[]): {
+  sourceUris: string[];
+  factIds: string[];
+} {
+  const sourceUris = [
     ...new Set(
       nodes.flatMap((node) => {
         if (
@@ -535,6 +538,16 @@ function sourceUriConstraint(nodes: readonly BrainNode[]): string[] {
   ]
     .sort((a, b) => a.localeCompare(b))
     .slice(0, 32);
+  const factIds = [
+    ...new Set(
+      nodes.flatMap((node) =>
+        node.type === "Fact" && node.availability === "AVAILABLE" ? [node.canonicalId] : [],
+      ),
+    ),
+  ]
+    .sort((a, b) => a.localeCompare(b))
+    .slice(0, 32);
+  return { sourceUris, factIds };
 }
 
 export function selectBrainNeighborhood(
@@ -601,9 +614,7 @@ export function selectBrainNeighborhood(
     seedNodeIds: [...query.seedNodeIds].sort((a, b) => a.localeCompare(b)),
     nodes,
     edges,
-    contextConstraint: {
-      sourceUris: sourceUriConstraint(nodes),
-    },
+    contextConstraint: contextConstraint(nodes),
     truncated:
       graph.truncated || reachable.length > nodes.length || matchingEdges.length > edges.length,
   });
