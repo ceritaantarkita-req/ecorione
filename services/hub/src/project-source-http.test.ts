@@ -315,38 +315,34 @@ describe("PE-02 Project Sources HTTP", () => {
         method: "GET",
       })
       .reply(200, sourceBytes, { headers: { "content-type": "text/plain" } });
-    connect
-      .intercept({ path: "/v1/multimodal/infer", method: "POST" })
-      .reply(200, {
-        routeUsed: "local",
-        adapter: "project-ocr-local-v1",
-        provider: "local",
-        model: "project-ocr-20260925",
-        language: "id",
-        text: "Isi dokumen Project",
-        segments: [{ text: "Isi dokumen Project", page: 1, confidence: 0.99 }],
-        actualUsd: 0,
-        naiveUsd: 0,
-      });
-    context
-      .intercept({ path: "/v1/episodes", method: "POST" })
-      .reply(201, {
-        id: "epi_projectsource001",
-        ts: "2026-09-25T00:00:00.000Z",
-        rawText: "Isi dokumen Project",
-        projectId: "prj_personal",
-        provenance: {
-          sourceApp: "hub:project-source",
-          toolCallId: "op_projectextract001",
-          sourceUri: `artifact:${ARTIFACT_ID}`,
-        },
-        scope: "personal",
-        sensitivity: "INTERNAL",
-        syncClass: "LOCAL_ONLY",
-        trust: "LOCAL_AGENT",
-        summary: null,
-        consolidatedAt: null,
-      });
+    connect.intercept({ path: "/v1/multimodal/infer", method: "POST" }).reply(200, {
+      routeUsed: "local",
+      adapter: "project-ocr-local-v1",
+      provider: "local",
+      model: "project-ocr-20260925",
+      language: "id",
+      text: "Isi dokumen Project",
+      segments: [{ text: "Isi dokumen Project", page: 1, confidence: 0.99 }],
+      actualUsd: 0,
+      naiveUsd: 0,
+    });
+    context.intercept({ path: "/v1/episodes", method: "POST" }).reply(201, {
+      id: "epi_projectsource001",
+      ts: "2026-09-25T00:00:00.000Z",
+      rawText: "Isi dokumen Project",
+      projectId: "prj_personal",
+      provenance: {
+        sourceApp: "hub:project-source",
+        toolCallId: "op_projectextract001",
+        sourceUri: `artifact:${ARTIFACT_ID}`,
+      },
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+      trust: "LOCAL_AGENT",
+      summary: null,
+      consolidatedAt: null,
+    });
     context
       .intercept({ path: "/v1/multimodal/derivations", method: "POST" })
       .reply(201, { ok: true });
