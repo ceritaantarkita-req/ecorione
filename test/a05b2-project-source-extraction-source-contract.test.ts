@@ -5,6 +5,7 @@ describe("A-05b.2 Project-scoped extraction contract", () => {
   const hub = readFileSync("services/hub/src/project-source-http.ts", "utf8");
   const schema = readFileSync("packages/shared-schema/src/multimodal.ts", "utf8");
   const context = readFileSync("services/context/src/multimodal-routes.ts", "utf8");
+  const analysis = readFileSync("services/hub/src/multimodal-analysis.ts", "utf8");
   const ai = readFileSync("apps/ai/app/api/projects/[id]/sources/extract/route.ts", "utf8");
   const ui = readFileSync("apps/ai/app/projects/ProjectSources.tsx", "utf8");
 
@@ -16,6 +17,7 @@ describe("A-05b.2 Project-scoped extraction contract", () => {
     expect(hub).toContain("sourceUri: `artifact:${body.artifactId}`");
     expect(schema).toContain("projectId: ProjectIdSchema.nullable().default(null)");
     expect(context).toContain("MultimodalDerivationWriteSchema");
+    expect(analysis).toContain('redirect: "error"');
   });
 
   it("does not fabricate a chat session or Historical Ledger event", () => {
