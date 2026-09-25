@@ -42,16 +42,18 @@ describe("external URL source fetch", () => {
 
   it("rejects local/private URL targets before network fetch", async () => {
     const fetchImpl = vi.fn() as unknown as typeof fetch;
+    const privateLiteralResolver = vi.fn(resolver("127.0.0.1"));
 
     await expect(
       fetchExternalUrl("https://127.0.0.1/private", {
-        resolveHost: resolver("127.0.0.1"),
+        resolveHost: privateLiteralResolver,
         fetchImpl,
       }),
     ).rejects.toMatchObject({
       statusCode: 400,
       code: "URL_SOURCE_BLOCKED",
     });
+    expect(privateLiteralResolver).not.toHaveBeenCalled();
 
     await expect(
       fetchExternalUrl("https://public.example/rebind", {
