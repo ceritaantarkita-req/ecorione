@@ -84,14 +84,17 @@ export class ContextRetriever {
         : new Set(options.candidateSourceUris);
     const factConstraint =
       options.candidateFactIds === undefined ? undefined : new Set(options.candidateFactIds);
-    const allowedFacts = new Map(
-      [...authorizedFacts].filter(([factId, fact]) => {
-        if (factConstraint !== undefined && !factConstraint.has(factId)) return false;
-        if (sourceConstraint === undefined) return true;
-        const sourceUri = fact.provenance.sourceUri;
-        return sourceUri !== undefined && sourceConstraint.has(sourceUri);
-      }),
-    );
+    const constraintApplied = sourceConstraint !== undefined || factConstraint !== undefined;
+    const allowedFacts =
+      constraintApplied
+        ? new Map(
+            [...authorizedFacts].filter(([factId, fact]) => {
+              if (factConstraint?.has(factId) === true) return true;
+              const sourceUri = fact.provenance.sourceUri;
+              return sourceUri !== undefined && sourceConstraint?.has(sourceUri) === true;
+            }),
+          )
+        : authorizedFacts;
     const allowedIds = new Set(allowedFacts.keys());
     const lexical = this.lexicalSearch(
       options.query,
@@ -122,8 +125,7 @@ export class ContextRetriever {
         returned: Math.min(hits.length, k),
         authorizedCandidates: authorizedFacts.size,
         narrowedCandidates: allowedFacts.size,
-        constraintApplied:
-          options.candidateSourceUris !== undefined || options.candidateFactIds !== undefined,
+        constraintApplied,
       },
     };
   }
@@ -156,12 +158,16 @@ export class ContextRetriever {
     candidateFactIds: readonly MemoryFactId[] | undefined,
   ): RankedList {
     const match = toFtsQuery(query);
+    if (match === null) return [];
+    const hasSourceConstraint = candidateSourceUris !== undefined;
+    const hasFactConstraint = candidateFactIds !== undefined;
     if (
-      match === null ||
-      candidateSourceUris?.length === 0 ||
-      candidateFactIds?.length === 0
-    )
+      (hasSourceConstraint || hasFactConstraint) &&
+      (candidateSourceUris?.length ?? 0) === 0 &&
+      (candidateFactIds?.length ?? 0) === 0
+    ) {
       return [];
+    }
     const allowed = allowedSensitivities(maxSensitivity);
     const egress = hostedEligibleOnly ? "AND f.sync_class IN ('CLOUD_ALLOWED','PUBLIC')" : "";
     const projectClause =
@@ -169,16 +175,19 @@ export class ContextRetriever {
         ? "AND f.project_id IS NULL AND f.project_state='GLOBAL'"
         : "AND ((f.project_id IS NULL AND f.project_state='GLOBAL') OR (f.project_id=? AND f.project_state='ASSIGNED'))";
     const projectParams = projectId === null ? [] : [projectId];
-    const sourceClause =
-      candidateSourceUris === undefined
-        ? ""
-        : `AND f.source_uri IN (${placeholders(candidateSourceUris.length)})`;
-    const sourceParams = candidateSourceUris ?? [];
-    const factClause =
-      candidateFactIds === undefined
-        ? ""
-        : `AND f.id IN (${placeholders(candidateFactIds.length)})`;
-    const factParams = candidateFactIds ?? [];
+    const sourceValues = candidateSourceUris ?? [];
+    const factValues = candidateFactIds ?? [];
+    const candidateParts: string[] = [];
+    if (sourceValues.length > 0) {
+      candidateParts.push(`f.source_uri IN (${placeholders(sourceValues.length)})`);
+    }
+    if (factValues.length > 0) {
+      candidateParts.push(`f.id IN (${placeholders(factValues.length)})`);
+    }
+    const candidateClause =
+      hasSourceConstraint || hasFactConstraint
+        ? `AND (${candidateParts.join(" OR ")})`
+        : "";
     try {
       const rows = this.repo.db.raw
         .prepare(
@@ -192,8 +201,7 @@ export class ContextRetriever {
           AND f.sensitivity IN (${placeholders(allowed.length)})
           ${egress}
           ${projectClause}
-          ${sourceClause}
-          ${factClause}
+          ${candidateClause}
         ORDER BY bm25(facts_fts)
         LIMIT ?
       `,
@@ -203,8 +211,8 @@ export class ContextRetriever {
           ...scopes,
           ...allowed,
           ...projectParams,
-          ...sourceParams,
-          ...factParams,
+          ...sourceValues,
+          ...factValues,
           limit,
         ) as {
         id: string;
