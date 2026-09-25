@@ -11,6 +11,7 @@ import type {
   TriggerScheduleRuntime,
 } from "@ecorione/shared-schema";
 import {
+  PERSONAL_PROJECT_ID,
   PROJECT_STORAGE_KEY,
   activeProjects,
   isProjectIdCandidate,
@@ -155,7 +156,7 @@ export default function WorkPage() {
   const [tab, setTab] = useState<WorkTab>("schedule");
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("list");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
   const [projectReady, setProjectReady] = useState(false);
   const [triggers, setTriggers] = useState<TriggerDefinition[]>([]);
   const [graphs, setGraphs] = useState<FlowGraphSummary[]>([]);
@@ -308,7 +309,7 @@ export default function WorkPage() {
   }, []);
 
   useEffect(() => {
-    if (!projectReady || projectId === null) return;
+    if (!projectReady) return;
     void loadWork(projectId);
   }, [loadWork, projectId, projectReady]);
 
@@ -347,7 +348,7 @@ export default function WorkPage() {
 
   async function saveSchedule(event: FormEvent): Promise<void> {
     event.preventDefault();
-    if (pending !== null || draft.graphId.length === 0 || projectId === null) return;
+    if (pending !== null || draft.graphId.length === 0) return;
     setPending("save");
     try {
       const base = {
