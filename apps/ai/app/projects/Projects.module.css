@@ -438,6 +438,41 @@
   gap: 8px;
 }
 
+.mcpResourceList {
+  min-width: 0;
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.mcpResourceItem {
+  min-width: 0;
+  padding: 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+}
+
+.mcpResourceItem > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.mcpResourceItem strong {
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+
+.mcpResourceItem code {
+  overflow-wrap: anywhere;
+  font-size: 9px;
+}
+
 .sourceInfo {
   min-width: 0;
   display: grid;
@@ -515,6 +550,15 @@
   .sourceUploadForm,
   .sourceForm {
     grid-template-columns: 1fr;
+  }
+
+  .sourceItem,
+  .mcpResourceItem {
+    flex-direction: column;
+  }
+
+  .sourceActions {
+    width: 100%;
   }
 
   .settingsForm label,
