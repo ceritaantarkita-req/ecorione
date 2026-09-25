@@ -28,7 +28,9 @@ describe("A-03 stale Project selection source contract", () => {
   it("binds Ai sessions only after resolving the candidate against active Projects", () => {
     expect(ai).toContain("setProjectReady(false)");
     expect(ai).toContain("resolveActiveProjectId(candidate, activeProjects(body.projects))");
-    expect(ai).toContain("const selectionCorrected = candidate !== null && candidate !== nextProject");
+    expect(ai).toContain(
+      "const selectionCorrected = candidate !== null && candidate !== nextProject",
+    );
     expect(ai).toContain('nextUrl.searchParams.delete("session")');
     expect(ai).toContain("setProjectReady(true)");
   });
