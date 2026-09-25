@@ -1,9 +1,14 @@
 /** Server-only runtime configuration for Ai route handlers. */
+const DEFAULT_CONTEXT_URL = "http://127.0.0.1:17022";
 const DEFAULT_HUB_URL = "http://127.0.0.1:17024";
 const DEFAULT_SPACE_URL = "http://127.0.0.1:17027";
 const DEFAULT_FLOW_URL = "http://127.0.0.1:17028";
 const DEFAULT_CONNECT_URL = "http://127.0.0.1:17023";
 
+export function contextUrl(): string {
+  const value = process.env.ECORIONE_CONTEXT_URL;
+  return value !== undefined && value.length > 0 ? value : DEFAULT_CONTEXT_URL;
+}
 export function hubUrl(): string {
   const value = process.env.ECORIONE_HUB_URL;
   return value !== undefined && value.length > 0 ? value : DEFAULT_HUB_URL;

@@ -363,6 +363,9 @@ async function installApiMocks(context) {
         truncated: false,
       });
     }
+    if (path === "/api/projects/source-catalog" && method === "GET") {
+      return json(route, { items: [], warnings: [] });
+    }
     if (path === "/api/projects/prj_personal/sources" && method === "GET") {
       return json(route, { sources: [] });
     }
