@@ -74,6 +74,7 @@ const mcpSdk = readFileSync("services/connect/src/mcp-client/sdk-client.ts", "ut
 const sandboxClients = readFileSync("services/sandbox/src/clients.ts", "utf8");
 const sandboxReceiptStore = readFileSync("services/sandbox/src/receipt-store.ts", "utf8");
 const connectWebhook = readFileSync("services/connect/src/webhook-http.ts", "utf8");
+const connectSourceFetch = readFileSync("services/connect/src/source-fetch.ts", "utf8");
 const ci = readFileSync(".github/workflows/ci.yml", "utf8");
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 
@@ -97,6 +98,7 @@ for (const [boundary, source] of [
   ["Anthropic provider fetch", anthropicProvider],
   ["OpenAI-compatible provider fetch", openAiCompatibleProvider],
   ["Connect multimodal adapter fetch", multimodalAdapter],
+  ["Connect Project URL fetch", connectSourceFetch],
   ["Local completion fetch", localProvider],
   ["Local provenance fetch", localProvenance],
   ["MCP JWKS fetch", mcpAuth],
@@ -146,6 +148,15 @@ if (
   !connectWebhook.includes("BadGatewayError")
 ) {
   findings.push("Connect webhook -> Flow forwarding must remain timeout-bounded");
+}
+if (
+  !connectSourceFetch.includes("AbortSignal.timeout") ||
+  !connectSourceFetch.includes("DEFAULT_EXTERNAL_SOURCE_MAX_BYTES") ||
+  !connectSourceFetch.includes("lookup(hostname") ||
+  !connectSourceFetch.includes("classifyLocalHost") ||
+  !connectSourceFetch.includes("isLocalReachableHost")
+) {
+  findings.push("Connect Project URL ingestion SSRF/timeout/size boundary missing");
 }
 if (
   !mcpAuth.includes("McpAuthDependencyError") ||
