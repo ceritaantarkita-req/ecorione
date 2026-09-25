@@ -58,6 +58,7 @@ jobs:
             apps/ai/lib/brain-context-ecx.test.ts \
             services/context/src/pe07-brain-constraint.test.ts \
             test/pe07-brain-context-ecx-source-contract.test.ts \
+            test/a08d-brain-grounded-chat-source-contract.test.ts \
             test/pe06-brain-source-contract.test.ts \
             test/pe06-brain-owner-runtime.test.ts \
             test/pe08-product-closure.test.ts \
