@@ -867,9 +867,13 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "+ New Project", exact: true }).click();
     await page.getByRole("textbox", { name: "New Project name" }).fill("PCS-06 Inline");
     await page.getByRole("button", { name: "Create", exact: true }).click();
-    if ((await projectSearch.inputValue()) !== "PCS-06 Inline") {
-      throw new Error("desktop-work: inline Project was not selected after create");
-    }
+    await page.waitForFunction(
+      (value) => {
+        const input = globalThis.document.querySelector('input[aria-label="Search Project"]');
+        return input instanceof HTMLInputElement && input.value === value;
+      },
+      "PCS-06 Inline",
+    );
     await projectSearch.fill("Personal");
     await page.getByRole("option").filter({ hasText: "Personal" }).click();
 
