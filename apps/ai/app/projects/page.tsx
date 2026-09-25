@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import type {
-  HistorySession,
-  Project,
-  ProjectAutonomyCeiling,
-} from "@ecorione/shared-schema";
+import type { HistorySession, Project, ProjectAutonomyCeiling } from "@ecorione/shared-schema";
 import { ProjectSettings } from "./ProjectSettings";
 import { ProjectSources } from "./ProjectSources";
 import styles from "./Projects.module.css";
@@ -65,9 +61,8 @@ export default function ProjectsPage() {
   }, [loadProjects]);
 
   useEffect(() => {
-    void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch(
-      (error: unknown) =>
-        setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
+    void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch((error: unknown) =>
+      setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
     );
   }, [loadSessions, selectedId]);
 
@@ -204,9 +199,7 @@ export default function ProjectsPage() {
                 className="ecr-input"
                 value={createAutonomyCeiling}
                 onChange={(event) =>
-                  setCreateAutonomyCeiling(
-                    event.target.value as ProjectAutonomyCeiling,
-                  )
+                  setCreateAutonomyCeiling(event.target.value as ProjectAutonomyCeiling)
                 }
               >
                 <option value="L0">L0</option>
@@ -346,10 +339,7 @@ export default function ProjectsPage() {
 
               <ProjectSettings project={selected} onSaved={projectSaved} />
 
-              <ProjectSources
-                projectId={selected.id}
-                workspaceId={selected.workspaceId}
-              />
+              <ProjectSources projectId={selected.id} workspaceId={selected.workspaceId} />
 
               <section className={styles.recent}>
                 <h3>Recent conversations</h3>
