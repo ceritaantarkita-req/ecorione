@@ -8,6 +8,7 @@ import styles from "./Projects.module.css";
 
 const WORKSPACE_ID = "ws_personal";
 const PERSONAL_ID = "prj_personal";
+const ALL_ID = "__all__";
 
 type ProjectList = { projects: Project[] };
 type SessionList = { sessions: HistorySession[] };
@@ -35,11 +36,12 @@ export default function ProjectsPage() {
     setProjects((body as ProjectList).projects);
   }, []);
 
-  const loadSessions = useCallback(async (projectId: string) => {
-    const res = await fetch(
-      `/api/projects/history?workspaceId=${WORKSPACE_ID}&projectId=${encodeURIComponent(projectId)}`,
-      { cache: "no-store" },
-    );
+  const loadSessions = useCallback(async (projectId?: string) => {
+    const params = new URLSearchParams({ workspaceId: WORKSPACE_ID });
+    if (projectId !== undefined) params.set("projectId", projectId);
+    const res = await fetch(`/api/projects/history?${params.toString()}`, {
+      cache: "no-store",
+    });
     const body: unknown = await res.json().catch(() => undefined);
     if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat percakapan Project."));
     setSessions((body as SessionList).sessions);
@@ -52,7 +54,7 @@ export default function ProjectsPage() {
   }, [loadProjects]);
 
   useEffect(() => {
-    void loadSessions(selectedId).catch((error: unknown) =>
+    void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch((error: unknown) =>
       setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
     );
   }, [loadSessions, selectedId]);
@@ -112,7 +114,10 @@ export default function ProjectsPage() {
     window.location.assign(`/?project=${encodeURIComponent(projectId)}`);
   }
 
-  const selected = projects.find((project) => project.id === selectedId);
+  const allSelected = selectedId === ALL_ID;
+  const selected = allSelected
+    ? undefined
+    : projects.find((project) => project.id === selectedId);
 
   return (
     <main className={styles.shell}>
@@ -147,7 +152,13 @@ export default function ProjectsPage() {
 
       <section className={styles.grid}>
         <aside className={styles.sidebar} aria-label="Daftar Project">
-          <button className={styles.virtual} type="button" title="All adalah view virtual">
+          <button
+            className={allSelected ? styles.virtualActive : styles.virtual}
+            type="button"
+            title="All adalah view virtual"
+            aria-pressed={allSelected}
+            onClick={() => setSelectedId(ALL_ID)}
+          >
             <span>All</span>
             <small>Semua Project · virtual</small>
           </button>
@@ -165,7 +176,65 @@ export default function ProjectsPage() {
         </aside>
 
         <section className={styles.detail}>
-          {selected === undefined ? (
+          {allSelected ? (
+            <>
+              <div className={styles.detailHeader}>
+                <div>
+                  <h2>All</h2>
+                  <p>
+                    Ringkasan metadata seluruh Project aktif. Memory dan Sources tetap terisolasi per
+                    Project.
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.meta}>
+                <span>Workspace: {WORKSPACE_ID}</span>
+                <span>Projects: {projects.length}</span>
+                <span>Recent conversations: {sessions.length}</span>
+              </div>
+
+              <section className={styles.recent}>
+                <h3>Recent conversations</h3>
+                {sessions.length === 0 ? (
+                  <p className={styles.empty}>Belum ada percakapan di Workspace ini.</p>
+                ) : (
+                  <ul>
+                    {sessions.slice(0, 12).map((session) => {
+                      const project =
+                        session.projectId === null
+                          ? undefined
+                          : projects.find((item) => item.id === session.projectId);
+                      const row = (
+                        <>
+                          <span>{session.title ?? session.id}</span>
+                          <small>
+                            {project?.name ??
+                              (session.projectId === null ? "Unassigned" : "Project unavailable")}
+                            {" · "}
+                            {session.updatedAt ?? session.createdAt}
+                          </small>
+                        </>
+                      );
+                      return (
+                        <li key={session.id}>
+                          {project === undefined ? (
+                            <div className={styles.recentItem}>{row}</div>
+                          ) : (
+                            <Link
+                              href={`/?project=${encodeURIComponent(project.id)}&session=${encodeURIComponent(session.id)}`}
+                            >
+                              {row}
+                            </Link>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+            </>
+          ) : selected === undefined ? (
             <p className={styles.empty}>Pilih Project.</p>
           ) : (
             <>
