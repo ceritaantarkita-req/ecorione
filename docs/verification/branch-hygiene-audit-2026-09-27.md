@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **AUDIT COMPLETE / DELETION NOT YET EXECUTED**
+Status: **STAGE-2 AUDIT COMPLETE / DELETION NOT YET EXECUTED**
 
 Audited repository:
 
@@ -45,18 +45,57 @@ Anything failing that exact rule is held for a second-stage audit.
 
 ## 3. Result
 
-Classification at the audited baseline:
+### Stage 1 — merged-PR/head proof
 
-- **332 branches — SAFE-DELETE CANDIDATES**
-  - merged PR exists;
-  - current branch head exactly matches merged PR head;
-  - no post-merge branch movement detected.
-- **61 branches — HOLD / REVIEW**
-  - **43** have no matching PR record;
-  - **14** have a closed PR but no merged PR;
-  - **4** have a merged PR but the branch head advanced after the merged PR head.
+Initial classification:
+
+- **332 branches — SAFE-DELETE** because a merged PR exists and the current branch head exactly equals the merged PR head;
+- **61 branches — HOLD / REVIEW** because they did not satisfy that rule.
+
+### Stage 2 — main-ancestry proof
+
+The 61 held branches collapsed to **49 unique head SHAs**. Each unique head was compared directly against exact audited main:
+
+```text
+d0b9c9141cba27fe640f325efff122486d1a1b56
+```
+
+A held branch was promoted only when `compare(branch_head...main)` returned `behind_by = 0`, proving that the branch head itself is already an ancestor of `main`.
+
+Stage 2 promoted **22 branches**:
+
+- checkpoint/session6-a02-code-20260925
+- checkpoint/session6-a02-final-20260925
+- checkpoint/session6-a02-safe-20260925
+- checkpoint/session7-a03-code-20260925
+- checkpoint/session7-a03-final-20260925
+- docs/f6-e03-close-next-audit-20260918
+- docs/offhost-dr-checkpoint2-repo-closure-20260922
+- docs/w11-artifact-ready-20260916
+- fix/w09-w10-port-runtime-followup-v3-20260916
+- noop
+- docs/w03-final-closure-20260915-copy
+- docs/w03-final-closure-20260915-final
+- docs/w03-final-closure-20260915-pr
+- docs/w03-final-closure-20260915-pr2
+- docs/w03-final-closure-20260915-pr3
+- docs/w03-final-closure-20260915-pr4
+- docs/w03-final-closure-20260915-prhead
+- docs/w03-final-closure-20260915-ready
+- docs/w03-final-closure-20260915-x
+- docs/w03-final-closure-20260915-y
+- docs/w03-final-closure-20260915-z
+- zzz-test-ignore
+
+Final classification after Stage 2:
+
+- **354 branches — SAFE-DELETE**
+  - **332** exact merged-PR-head;
+  - **22** verified ancestor-of-main heads.
+- **39 branches — HOLD / REVIEW**
+  - every held head has `behind_by > 0` against audited `main`, so at least one commit remains outside the `main` commit graph.
 - `main` is excluded by definition.
-- this audit branch is also excluded from its own allowlist.
+- audit/execution branches created after the baseline are not silently admitted; they require their own later proof.
 
 Machine-readable evidence:
 
@@ -72,9 +111,9 @@ That JSON records for every safe-delete candidate:
 
 It also records every held branch and why it was not admitted to the safe-delete set.
 
-## 4. Why the remaining 61 are held
+## 4. Why the remaining 39 are held
 
-The hold set contains several kinds of potentially meaningful provenance:
+The remaining hold set contains several kinds of potentially meaningful provenance:
 
 - checkpoint/recovery branches;
 - probe/diagnostic branches;
@@ -108,7 +147,7 @@ This means a later branch mutation cannot silently inherit an old deletion decis
 
 ## 6. Destructive boundary
 
-This audit **does not authorize deletion of the 61 held branches**.
+This audit **does not authorize deletion of the 39 held branches**.
 
 A second-stage audit is required for them. That review should determine whether each held branch is:
 
@@ -133,5 +172,5 @@ When an authenticated local git client is available, run the cleanup script in d
 3. Run dry-run first.
 4. Apply deletion only to branches still matching their audited SHA.
 5. Recount branches after cleanup.
-6. Audit the remaining hold set separately.
+6. Audit the remaining 39-branch hold set separately.
 7. Do not touch `main`, Issue #277/DR-2 scope, staging credentials, production cutover, or runtime code as part of branch cleanup.
