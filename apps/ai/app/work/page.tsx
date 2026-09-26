@@ -482,12 +482,14 @@ export default function WorkPage() {
             setMessage(`Runs linked to ${triggerName}: ${String(relatedRuns)}`);
           }}
           onCalendarModeChange={setCalendarMode}
-          onPrevious={() =>
-            setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, -1))
-          }
-          onNext={() =>
-            setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, 1))
-          }
+          onPrevious={() => {
+            if (calendarMode === "list") return;
+            setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, -1));
+          }}
+          onNext={() => {
+            if (calendarMode === "list") return;
+            setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, 1));
+          }}
           onToday={() => setCalendarCursor(todayDateKey(calendarTimezone))}
           onOpenMonth={(dateKey) => {
             setCalendarCursor(dateKey);
