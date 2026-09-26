@@ -177,7 +177,7 @@ Safety properties:
 
 This means a later branch mutation cannot silently inherit an old deletion decision.
 
-## 6. Destructive boundary
+## 7. Destructive boundary
 
 This audit **does not authorize deletion of the 39 held branches**.
 
