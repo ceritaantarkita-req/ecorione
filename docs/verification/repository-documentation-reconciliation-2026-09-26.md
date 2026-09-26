@@ -2,7 +2,7 @@
 
 Date: **2026-09-26**
 
-Status: **AUDIT COMPLETE / DOCUMENTATION RECONCILIATION IN REVIEW**
+Status: **AUDIT COMPLETE / CURRENT-DOCUMENT RECONCILIATION RECORDED**
 
 Baseline GitHub `main` audited:
 
@@ -39,8 +39,9 @@ The older DR runtime `b27c1e...`, latest-main convergence `52046db...`, and ever
 
 The exact baseline tree contains:
 
-- **972 tracked blobs/files**;
-- **250 tracked files under `docs/`**;
+- **972 tracked blobs/files** at the audited pre-reconciliation baseline;
+- **250 tracked files under `docs/`** at that baseline;
+- this reconciliation adds one verification record, so the resulting tree contains **973 tracked blobs/files** and **251 tracked files under `docs/`**;
 - **17 `package.json` manifests**:
   - 1 repository root package;
   - 1 browser app: `@ecorione/ai`;
