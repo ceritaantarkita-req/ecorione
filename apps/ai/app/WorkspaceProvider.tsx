@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { DEFAULT_WORKSPACE_ID, type WorkspaceId } from "@ecorione/shared-schema";
 import {
   WORKSPACE_QUERY_KEY,
@@ -38,10 +31,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       // Browser storage is optional; URL/default selection remains available.
     }
 
-    const nextWorkspace = resolveWorkspaceId(
-      params.get(WORKSPACE_QUERY_KEY),
-      storedWorkspace,
-    );
+    const nextWorkspace = resolveWorkspaceId(params.get(WORKSPACE_QUERY_KEY), storedWorkspace);
     setWorkspaceId(nextWorkspace);
     try {
       window.localStorage.setItem(WORKSPACE_STORAGE_KEY, nextWorkspace);
