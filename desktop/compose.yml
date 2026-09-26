@@ -21,6 +21,12 @@ x-app: &app
   environment:
     <<: *runtime-env
 
+x-http-health: &http-health
+  interval: 5s
+  timeout: 3s
+  retries: 20
+  start_period: 5s
+
 services:
   temporal-db:
     image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
@@ -49,6 +55,14 @@ services:
       POSTGRES_PWD: ${TEMPORAL_POSTGRES_PASSWORD:?set TEMPORAL_POSTGRES_PASSWORD}
       POSTGRES_SEEDS: temporal-db
     networks: [internal]
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD-SHELL",
+          "TEMPORAL_ADDRESS=temporal:7233 temporal operator cluster health | grep -q SERVING",
+        ]
+      start_period: 10s
 
   rnd:
     <<: *app
@@ -58,6 +72,15 @@ services:
       ECORIONE_RND_DB_PATH: /app/data/rnd.db
       ECORIONE_RND_DATASET_ROOT: /app/data/datasets
     volumes: [rnd_data:/app/data]
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17021/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   connect:
     <<: *app
@@ -81,6 +104,15 @@ services:
     volumes: [connect_data:/app/data]
     extra_hosts:
       - host.docker.internal:host-gateway
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17023/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   context:
     <<: *app
@@ -89,7 +121,18 @@ services:
       <<: *runtime-env
       ECORIONE_DB_PATH: /app/data/context.db
     volumes: [context_data:/app/data]
-    depends_on: [connect]
+    depends_on:
+      connect:
+        condition: service_healthy
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17022/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   hub:
     <<: *app
@@ -98,7 +141,22 @@ services:
       <<: *runtime-env
       ECORIONE_HUB_DB_PATH: /app/data/hub.db
     volumes: [hub_data:/app/data]
-    depends_on: [context, connect, rnd]
+    depends_on:
+      context:
+        condition: service_healthy
+      connect:
+        condition: service_healthy
+      rnd:
+        condition: service_healthy
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17024/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   artifact:
     <<: *app
@@ -107,7 +165,18 @@ services:
       <<: *runtime-env
       ECORIONE_ARTIFACT_DIR: /app/data/artifacts
     volumes: [artifact_data:/app/data]
-    depends_on: [context]
+    depends_on:
+      context:
+        condition: service_healthy
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17025/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   sandbox:
     <<: *app
@@ -117,7 +186,18 @@ services:
       ECORIONE_SANDBOX_WORKSPACE_ROOT: /app/data/workspaces
       ECORIONE_SANDBOX_RECEIPT_DIR: /app/data/receipts
     volumes: [sandbox_data:/app/data]
-    depends_on: [hub]
+    depends_on:
+      hub:
+        condition: service_healthy
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17026/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   flow:
     <<: *app
@@ -126,7 +206,20 @@ services:
       <<: *runtime-env
       ECORIONE_FLOW_DB_PATH: /app/data/flow.sqlite
     volumes: [flow_data:/app/data]
-    depends_on: [temporal, hub]
+    depends_on:
+      temporal:
+        condition: service_healthy
+      hub:
+        condition: service_healthy
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17028/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   space:
     <<: *app
@@ -135,19 +228,65 @@ services:
       <<: *runtime-env
       ECORIONE_SPACE_DB_PATH: /app/data/space.db
     volumes: [space_data:/app/data]
-    depends_on: [context, artifact, flow]
+    depends_on:
+      context:
+        condition: service_healthy
+      artifact:
+        condition: service_healthy
+      flow:
+        condition: service_healthy
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17027/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   flow-worker:
     <<: *app
     command: ["pnpm", "--filter", "@ecorione/flow", "start:worker"]
-    depends_on: [temporal, hub, connect, context, artifact, sandbox, space, rnd]
+    depends_on:
+      temporal:
+        condition: service_healthy
+      hub:
+        condition: service_healthy
+      connect:
+        condition: service_healthy
+      context:
+        condition: service_healthy
+      artifact:
+        condition: service_healthy
+      sandbox:
+        condition: service_healthy
+      space:
+        condition: service_healthy
+      rnd:
+        condition: service_healthy
 
   ai:
     <<: *app
     command: ["pnpm", "--filter", "@ecorione/ai", "start"]
     ports:
       - "127.0.0.1:${ECORIONE_AI_PORT:-17020}:3000"
-    depends_on: [hub, space, flow]
+    depends_on:
+      hub:
+        condition: service_healthy
+      space:
+        condition: service_healthy
+      flow:
+        condition: service_healthy
+    healthcheck:
+      <<: *http-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
 networks:
   internal:
