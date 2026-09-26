@@ -1,6 +1,6 @@
 # Production / Self-host Operations
 
-Last updated: **2026-09-23**
+Last updated: **2026-09-26**
 
 Status: **production/self-host baseline READY / SumoPod remote staging VERIFIED / public production NOT ACTIVATED**
 
@@ -9,6 +9,8 @@ Batch 11 delivered the production operations baseline and Batch 12 closed the pl
 The same reviewed self-host topology has been exercised on the real SumoPod **staging** host through PCS-07..PCS-09. A later original Off-host DR drill separately proved total SumoPod staging-host loss recovery at its documented boundary using exact source `b27c1e5833be0a0fccf3f525d82ae8853cd22113`, independent retained-generation retrieval, 12-volume restore, 15-service recovery, semantic canary verification, and changed-boot-ID persistence. This still does **not** make staging production: public production, point-in-time recovery, provider/account-wide disaster recovery, long-term telemetry retention, and DR-2 physical-host/storage independence remain separate boundaries.
 
 Current handoff: `docs/current-state-and-next-steps.md`.
+
+Current remote-staging bookkeeping identity is exact GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47`, deployed by governed Staging Deploy #1288 with 15/15 configured services running, healthy Operations, zero unhealthy owner services, preserved auth/MCP boundaries, and 26.29 GiB stabilized free space. This remains staging evidence; public production is not activated.
 
 ## Current verified baseline
 
