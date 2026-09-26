@@ -181,7 +181,7 @@ This means a later branch mutation cannot silently inherit an old deletion decis
 
 This audit **does not authorize deletion of the 20 retained branches**.
 
-A second-stage audit is required for them. That review should determine whether each held branch is:
+A later content/provenance audit is required for them. That review should determine whether each held branch is:
 
 - an ancestor/checkpoint already represented by current `main`;
 - superseded by another merged PR;
