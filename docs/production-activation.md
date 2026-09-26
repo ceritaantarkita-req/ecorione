@@ -5,7 +5,7 @@ Date: 2026-09-26
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
 
-Current SumoPod staging is converged to exact GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` through governed Staging Deploy #1288. Public production remains deferred; this current staging identity is operational evidence, not a promotion decision.
+At this reconciliation baseline, SumoPod staging was converged to exact GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` through governed Staging Deploy #1288; subsequent docs-only bookkeeping may advance the exact SHA without changing the production-promotion decision. Public production remains deferred; this current staging identity is operational evidence, not a promotion decision.
 
 On 2026-09-20 the operator explicitly approved deployment to an operator-owned **SumoPod VPS as remote development/staging** so ECORIONE can run independently of the operator laptop. This does **not** authorize a public production cutover. Production promotion, final public edge/domain posture, and production-only claims remain separate gates.
 
