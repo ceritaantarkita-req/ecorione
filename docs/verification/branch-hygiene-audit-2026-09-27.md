@@ -236,10 +236,11 @@ When an authenticated local git client is available, run the cleanup script in d
 
 ## 10. Safe resume
 
-1. Do not recompute the **354** allowlisted branches by branch-name pattern alone.
+1. Do not recompute the **373** allowlisted branches by branch-name pattern alone.
 2. Use the committed JSON allowlist and exact-SHA revalidation.
 3. Run dry-run first.
 4. Apply deletion only to branches still matching their audited SHA.
 5. Recount branches after cleanup.
-6. Keep the **39 retained branches** unless a later supersession/provenance audit proves where their unique commits are preserved.
-7. Do not touch `main`, Issue #277/DR-2 scope, staging credentials, production cutover, or runtime code as part of branch cleanup.
+6. Keep the **20 retained branches** unless a later supersession/provenance audit proves where their unique commits are preserved or that they are intentionally disposable.
+7. Preserve PR #337's Brain implementation reference and PR #91's unlanded Temporal timeout change unless a later explicit decision supersedes them.
+8. Do not touch `main`, Issue #277/DR-2 scope, staging credentials, production cutover, or runtime code as part of branch cleanup.
