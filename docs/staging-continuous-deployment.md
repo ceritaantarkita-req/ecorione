@@ -1,6 +1,6 @@
 # ECORIONE — GitHub to SumoPod Staging Continuous Deployment
 
-Last updated: **2026-09-24**
+Last updated: **2026-09-26**
 
 Status: **PCS-08 CLOSED / PASS**
 
@@ -8,7 +8,7 @@ PCS-08 automates deployment of the current reviewed GitHub `main` revision to th
 
 **2026-09-24 auth closure:** the public smoke contract now includes the general Ai human-authentication boundary. Final governed staging acceptance on `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved the protected login bootstrap, representative unauthenticated Ai read/mutation failures, the separate MCP/OAuth boundary, healthy authenticated Operations, and exact-host identity. This remains staging evidence, not production promotion. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
-**Current CD state:** Session 1 capacity recovery and Session 2 auto-deploy restoration are CLOSED / PASS. `ECORIONE_STAGING_CD_ENABLED=1` is active, and true post-merge GitHub -> SumoPod deployment has been proven on exact reviewed main. Session 3 is now hardening the pipeline against recurrence of the disk incident: one shared application image build per release, current+rollback image retention, post-deploy capacity stabilization, stronger baseline identity checks, and full rollback revalidation. Audit evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
+**Current CD state:** Session 1 capacity recovery, Session 2 auto-deploy restoration, and Session 3 pipeline hardening are all CLOSED / PASS. The governed post-merge path is active/proven: exact current `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` passed CI #2258 + Product Eval #1497 and Staging Deploy #1288 executed the deploy job successfully. The host matched the target SHA, all 15 configured services were running, Operations was healthy with zero unhealthy owner services, public/auth + MCP smoke passed, and capacity stabilized at 26.29 GiB free. Audit evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md); current reconciliation: [verification/repository-documentation-reconciliation-2026-09-26.md](verification/repository-documentation-reconciliation-2026-09-26.md).
 
 ## Deployment model
 
