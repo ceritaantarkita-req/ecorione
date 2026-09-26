@@ -150,7 +150,42 @@ A second-stage audit is required for them. That review should determine whether 
 - useful recovery provenance;
 - disposable test/probe state.
 
-## 7. Execution limitation in this session
+## 7. Stage-2 merge + runtime proof
+
+Stage 2 merged through PR **#357**.
+
+Exact reviewed PR head:
+
+```text
+8cddeb0f6bb4b81001faccabbeed8440317087a5
+```
+
+Exact-head gates:
+
+- CI **#2268** — PASS;
+- Product Eval **#1507** — PASS.
+
+Squash-merged `main`:
+
+```text
+97a34c3582917745dc4ecfb7f175b77cc3598148
+```
+
+Merged-main gates:
+
+- CI **#2269** — PASS;
+- Product Eval **#1508** — PASS.
+
+Staging delivery:
+
+- Staging Deploy **#1309** — gate PASS, deploy SKIPPED;
+- Staging Deploy **#1310** — gate PASS, deploy PASS.
+
+Actual deploy #1310 proved exact host SHA `97a34c3582917745dc4ecfb7f175b77cc3598148`, clean worktree, preserved public/auth + MCP boundaries, healthy Operations with no unhealthy services, no non-running configured services, and **27.81 GiB** stabilized free space.
+
+PR #358 was later closed **without merge** because it duplicated Stage-2 containment work after PR #357 had already merged. Its stale branch is not authority.
+
+## 8. Execution limitation in this session
 
 The repo-side audit and safe cleanup tooling are complete. Actual remote deletion requires an authenticated git client capable of `git push origin --delete`.
 
