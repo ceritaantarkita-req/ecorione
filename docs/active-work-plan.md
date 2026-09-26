@@ -6,7 +6,7 @@ Status: **ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 CHECKPOINT 1 CLOSED-PASS / CHE
 
 ## Audit follow-up checkpoint — SESSION 10 / A-11 CLOSED / SAFE CHECKPOINT
 
-**Current queue:** there is no active A-series implementation after A-11. The present scope is documentation reconciliation only. Current GitHub `main` and SumoPod staging are converged at `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` through post-merge CI #2258, Product Eval #1497, and governed Staging Deploy #1288. No next numbered audit item is implicitly opened.
+**Current queue:** there is no active A-series implementation after A-11. The present scope is documentation reconciliation only. At the start of this docs-only reconciliation, GitHub `main` and SumoPod staging were converged at `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` through CI #2258, Product Eval #1497, and governed Staging Deploy #1288. A docs-only merge may advance the bookkeeping SHA without reopening runtime scope. No next numbered audit item is implicitly opened.
 
 The 2026-09-24 current-main + staging parity audit remains the source of the prioritized finding list. Its CRITICAL general-Ai human-authentication finding is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295 and final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`. CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224` passed. Representative unauthenticated Ai reads/mutations now fail closed behind Basic Auth while MCP discovery/OAuth remains separate. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
