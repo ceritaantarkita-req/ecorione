@@ -15,7 +15,6 @@ import { DocumentPanel, InspectorPanel, PagesRail } from "./SpacePageSections";
 import styles from "./Space.module.css";
 import { templateFor } from "./space-page-model";
 
-
 export default function SpacePageView() {
   const { workspaceId, ready: workspaceReady } = useWorkspace();
   const [pages, setPages] = useState<SpacePage[]>([]);
