@@ -10,13 +10,13 @@ import type {
   SpacePage,
 } from "@ecorione/shared-schema";
 import { readJson } from "../../lib/client-response";
+import { useWorkspace } from "../WorkspaceProvider";
 import { DocumentPanel, InspectorPanel, PagesRail } from "./SpacePageSections";
 import styles from "./Space.module.css";
 import { templateFor } from "./space-page-model";
 
-const WORKSPACE_ID = "ws_personal";
-
 export default function SpacePageView() {
+  const { workspaceId, ready: workspaceReady } = useWorkspace();
   const [pages, setPages] = useState<SpacePage[]>([]);
   const [document, setDocument] = useState<SpaceDocument | null>(null);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
@@ -75,27 +75,30 @@ export default function SpacePageView() {
     setRenaming(false);
   }
 
-  const loadPage = useCallback(async (id: string) => {
-    const requestId = ++pageRequestRef.current;
-    try {
-      const next = await readJson<SpaceDocument>(
-        await fetch(`/api/space/pages/${encodeURIComponent(id)}?workspaceId=${WORKSPACE_ID}`, {
-          cache: "no-store",
-        }),
-      );
-      if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
-      setDocument(next);
-      setError(null);
-    } catch (err) {
-      if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  }, []);
+  const loadPage = useCallback(
+    async (id: string) => {
+      const requestId = ++pageRequestRef.current;
+      try {
+        const next = await readJson<SpaceDocument>(
+          await fetch(`/api/space/pages/${encodeURIComponent(id)}?workspaceId=${workspaceId}`, {
+            cache: "no-store",
+          }),
+        );
+        if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
+        setDocument(next);
+        setError(null);
+      } catch (err) {
+        if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [workspaceId],
+  );
 
   const refreshPages = useCallback(async () => {
     const requestId = ++pagesRequestRef.current;
     try {
-      const response = await fetch(`/api/space/pages?workspaceId=${WORKSPACE_ID}`, {
+      const response = await fetch(`/api/space/pages?workspaceId=${workspaceId}`, {
         cache: "no-store",
       });
       const next = (await readJson<{ pages: SpacePage[] }>(response)).pages;
@@ -112,7 +115,7 @@ export default function SpacePageView() {
         setError(err instanceof Error ? err.message : String(err));
       }
     }
-  }, []);
+  }, [workspaceId]);
 
   const refreshMemory = useCallback(async () => {
     const requestId = ++memoryRequestRef.current;
@@ -132,9 +135,10 @@ export default function SpacePageView() {
   }, []);
 
   useEffect(() => {
+    if (!workspaceReady) return;
     void refreshPages();
     void refreshMemory();
-  }, [refreshPages, refreshMemory]);
+  }, [refreshMemory, refreshPages, workspaceReady]);
 
   useEffect(() => {
     selectedPageIdRef.current = selectedPageId;
@@ -167,6 +171,7 @@ export default function SpacePageView() {
   async function createPage(event: FormEvent) {
     event.preventDefault();
     if (
+      !workspaceReady ||
       newPageTitle.trim().length === 0 ||
       createPageInFlightRef.current ||
       mutationInFlightRef.current
@@ -180,7 +185,7 @@ export default function SpacePageView() {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            workspaceId: WORKSPACE_ID,
+            workspaceId: workspaceId,
             title: newPageTitle.trim(),
             scope: "personal",
           }),
@@ -215,7 +220,7 @@ export default function SpacePageView() {
     try {
       const body = JSON.parse(draftJson) as unknown;
       const result = await readJson<{ block: SpaceBlock; pageVersion: number }>(
-        await fetch(`/api/space/pages/${document.page.id}/blocks?workspaceId=${WORKSPACE_ID}`, {
+        await fetch(`/api/space/pages/${document.page.id}/blocks?workspaceId=${workspaceId}`, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -242,7 +247,7 @@ export default function SpacePageView() {
     try {
       const body = JSON.parse(inspectorJson) as unknown;
       await readJson(
-        await fetch(`/api/space/blocks/${selectedBlock.id}?workspaceId=${WORKSPACE_ID}`, {
+        await fetch(`/api/space/blocks/${selectedBlock.id}?workspaceId=${workspaceId}`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -268,7 +273,7 @@ export default function SpacePageView() {
     try {
       await readJson(
         await fetch(
-          `/api/space/blocks/${block.id}?workspaceId=${WORKSPACE_ID}&expectedVersion=${String(block.version)}&expectedPageVersion=${String(document.page.version)}`,
+          `/api/space/blocks/${block.id}?workspaceId=${workspaceId}&expectedVersion=${String(block.version)}&expectedPageVersion=${String(document.page.version)}`,
           { method: "DELETE" },
         ),
       );
@@ -295,14 +300,11 @@ export default function SpacePageView() {
     [blockIds[index], blockIds[target]] = [blockIds[target]!, blockIds[index]!];
     try {
       await readJson(
-        await fetch(
-          `/api/space/pages/${document.page.id}/reorder?workspaceId=${WORKSPACE_ID}`,
-          {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ blockIds, expectedPageVersion: document.page.version }),
-          },
-        ),
+        await fetch(`/api/space/pages/${document.page.id}/reorder?workspaceId=${workspaceId}`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ blockIds, expectedPageVersion: document.page.version }),
+        }),
       );
       await loadPage(document.page.id);
       await refreshPages();
@@ -319,7 +321,7 @@ export default function SpacePageView() {
     try {
       const value = await readJson<SpaceBlockReferenceResolution>(
         await fetch(
-          `/api/space/blocks/${selectedBlock.id}/resolve?workspaceId=${WORKSPACE_ID}&maxSensitivity=RESTRICTED`,
+          `/api/space/blocks/${selectedBlock.id}/resolve?workspaceId=${workspaceId}&maxSensitivity=RESTRICTED`,
           { cache: "no-store" },
         ),
       );
@@ -339,7 +341,7 @@ export default function SpacePageView() {
     if (title.length === 0 || !beginMutation("rename-page")) return;
     try {
       await readJson(
-        await fetch(`/api/space/pages/${document.page.id}?workspaceId=${WORKSPACE_ID}`, {
+        await fetch(`/api/space/pages/${document.page.id}?workspaceId=${workspaceId}`, {
           method: "PATCH",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ title, expectedVersion: document.page.version }),
@@ -394,7 +396,7 @@ export default function SpacePageView() {
             owner services.
           </p>
         </div>
-        <span className={styles.workspaceId}>workspace · {WORKSPACE_ID}</span>
+        <span className={styles.workspaceId}>workspace · {workspaceId}</span>
       </header>
 
       {error !== null ? (

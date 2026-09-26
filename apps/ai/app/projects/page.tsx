@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { HistorySession, Project, ProjectAutonomyCeiling } from "@ecorione/shared-schema";
+import {
+  PERSONAL_PROJECT_ID,
+  activeProjects,
+  resolveActiveProjectId,
+} from "../../lib/project-selection";
+import { useWorkspace } from "../WorkspaceProvider";
 import { ProjectSettings } from "./ProjectSettings";
 import { ProjectSources } from "./ProjectSources";
 import styles from "./Projects.module.css";
 
-const WORKSPACE_ID = "ws_personal";
-const PERSONAL_ID = "prj_personal";
 const ALL_ID = "__all__";
 
 type ProjectList = { projects: Project[] };
@@ -23,8 +27,10 @@ function errorMessage(body: unknown, fallback: string): string {
 }
 
 export default function ProjectsPage() {
+  const { workspaceId, ready: workspaceReady } = useWorkspace();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedId, setSelectedId] = useState<string>(PERSONAL_ID);
+  const [projectsReady, setProjectsReady] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>(PERSONAL_PROJECT_ID);
   const [sessions, setSessions] = useState<HistorySession[]>([]);
   const [name, setName] = useState("");
   const [createDescription, setCreateDescription] = useState("");
@@ -35,41 +41,53 @@ export default function ProjectsPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const loadProjects = useCallback(async () => {
-    const res = await fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, {
+    setProjectsReady(false);
+    const res = await fetch(`/api/projects?workspaceId=${workspaceId}`, {
       cache: "no-store",
     });
     const body: unknown = await res.json().catch(() => undefined);
     if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat Projects."));
-    setProjects((body as ProjectList).projects);
-  }, []);
-
-  const loadSessions = useCallback(async (projectId?: string) => {
-    const params = new URLSearchParams({ workspaceId: WORKSPACE_ID });
-    if (projectId !== undefined) params.set("projectId", projectId);
-    const res = await fetch(`/api/projects/history?${params.toString()}`, {
-      cache: "no-store",
+    const nextProjects = (body as ProjectList).projects;
+    setProjects(nextProjects);
+    setSelectedId((current) => {
+      if (current === ALL_ID) return current;
+      return resolveActiveProjectId(current, activeProjects(nextProjects)) ?? ALL_ID;
     });
-    const body: unknown = await res.json().catch(() => undefined);
-    if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat percakapan Project."));
-    setSessions((body as SessionList).sessions);
-  }, []);
+    setProjectsReady(true);
+  }, [workspaceId]);
+
+  const loadSessions = useCallback(
+    async (projectId?: string) => {
+      const params = new URLSearchParams({ workspaceId: workspaceId });
+      if (projectId !== undefined) params.set("projectId", projectId);
+      const res = await fetch(`/api/projects/history?${params.toString()}`, {
+        cache: "no-store",
+      });
+      const body: unknown = await res.json().catch(() => undefined);
+      if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat percakapan Project."));
+      setSessions((body as SessionList).sessions);
+    },
+    [workspaceId],
+  );
 
   useEffect(() => {
+    if (!workspaceReady) return;
     void loadProjects().catch((error: unknown) =>
       setFeedback(error instanceof Error ? error.message : "Gagal memuat Projects."),
     );
-  }, [loadProjects]);
+  }, [loadProjects, workspaceReady]);
 
   useEffect(() => {
+    if (!workspaceReady || !projectsReady) return;
     void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch((error: unknown) =>
       setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
     );
-  }, [loadSessions, selectedId]);
+  }, [loadSessions, projectsReady, selectedId, workspaceReady]);
 
   async function createProject(event: FormEvent): Promise<void> {
     event.preventDefault();
     const trimmed = name.trim();
-    if (trimmed.length === 0 || busy) return;
+    if (trimmed.length === 0 || busy || !workspaceReady) return;
     setBusy(true);
     setFeedback(null);
     try {
@@ -77,7 +95,7 @@ export default function ProjectsPage() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          workspaceId: WORKSPACE_ID,
+          workspaceId: workspaceId,
           name: trimmed,
           description: createDescription,
           instruction: createInstruction,
@@ -101,18 +119,17 @@ export default function ProjectsPage() {
   }
 
   async function archiveProject(projectId: string): Promise<void> {
-    if (busy || projectId === PERSONAL_ID) return;
+    if (busy || !workspaceReady || projectId === PERSONAL_PROJECT_ID) return;
     setBusy(true);
     setFeedback(null);
     try {
       const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/archive`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ workspaceId: WORKSPACE_ID }),
+        body: JSON.stringify({ workspaceId: workspaceId }),
       });
       const body: unknown = await res.json().catch(() => undefined);
       if (!res.ok) throw new Error(errorMessage(body, "Gagal mengarsipkan Project."));
-      if (selectedId === projectId) setSelectedId(PERSONAL_ID);
       await loadProjects();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal mengarsipkan Project.");
@@ -127,7 +144,10 @@ export default function ProjectsPage() {
     } catch {
       // Explicit query parameter remains sufficient when storage is unavailable.
     }
-    window.location.assign(`/?project=${encodeURIComponent(projectId)}`);
+    const target = new URL("/", window.location.origin);
+    target.searchParams.set("workspace", workspaceId);
+    target.searchParams.set("project", projectId);
+    window.location.assign(target.toString());
   }
 
   function projectSaved(updated: Project): void {
@@ -235,7 +255,7 @@ export default function ProjectsPage() {
               onClick={() => setSelectedId(project.id)}
             >
               <span>{project.name}</span>
-              <small>{project.id === PERSONAL_ID ? "default" : project.id}</small>
+              <small>{project.id === PERSONAL_PROJECT_ID ? "default" : project.id}</small>
             </button>
           ))}
         </aside>
@@ -254,7 +274,7 @@ export default function ProjectsPage() {
               </div>
 
               <div className={styles.meta}>
-                <span>Workspace: {WORKSPACE_ID}</span>
+                <span>Workspace: {workspaceId}</span>
                 <span>Projects: {projects.length}</span>
                 <span>Recent conversations: {sessions.length}</span>
               </div>
@@ -318,7 +338,7 @@ export default function ProjectsPage() {
                   >
                     Buka Chat
                   </button>
-                  {selected.id !== PERSONAL_ID ? (
+                  {selected.id !== PERSONAL_PROJECT_ID ? (
                     <button
                       className="ecr-btn ecr-btn--secondary"
                       type="button"

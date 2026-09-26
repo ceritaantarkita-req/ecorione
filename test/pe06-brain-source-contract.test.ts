@@ -21,7 +21,8 @@ describe("PE-06 Brain source contract", () => {
       source(projectSelectionPath),
     ]);
     expect(nav).toContain('["Brain", "/brain", "brain"]');
-    expect(page).toContain('const WORKSPACE_ID = "ws_personal"');
+    expect(page).toContain("useWorkspace");
+    expect(page).toContain("workspaceId: workspaceId");
     expect(page).toContain("PROJECT_STORAGE_KEY");
     expect(page).toContain('from "../../lib/project-selection"');
     expect(projectSelection).toContain('PROJECT_STORAGE_KEY = "ecorione.projectId"');

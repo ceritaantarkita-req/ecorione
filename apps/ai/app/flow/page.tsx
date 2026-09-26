@@ -11,6 +11,7 @@ import type {
   FlowNodeKind,
 } from "@ecorione/shared-schema";
 import styles from "./FlowCanvas.module.css";
+import { useWorkspace } from "../WorkspaceProvider";
 import {
   ConnectionSelect,
   FlowAuthorityPanel,
@@ -22,7 +23,6 @@ import {
 import {
   DRAFT_ID,
   NODE_WIDTH,
-  WORKSPACE_ID,
   configSummary,
   defaultConfig,
   errorMessage,
@@ -40,6 +40,7 @@ type MobileMode = "stack" | "canvas";
 type EdgeDragPayload = { sourceNodeId: string; sourcePort: string };
 
 export default function FlowCanvasPage() {
+  const { workspaceId, ready: workspaceReady } = useWorkspace();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [definitions, setDefinitions] = useState<FlowNodeDefinition[]>([]);
   const [nodes, setNodes] = useState<FlowGraphNode[]>([
@@ -188,9 +189,10 @@ export default function FlowCanvasPage() {
   }, [runId, run?.status]);
 
   function graphDocument(id = graphId ?? DRAFT_ID) {
+    if (!workspaceReady) throw new Error("Workspace context belum siap.");
     return {
       id,
-      workspaceId: WORKSPACE_ID,
+      workspaceId: workspaceId,
       name,
       scope,
       sensitivity,

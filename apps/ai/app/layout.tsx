@@ -3,6 +3,7 @@ import { Fraunces, IBM_Plex_Mono, Manrope } from "next/font/google";
 import type { CSSProperties, ReactNode } from "react";
 import { SIDEBAR_BOOTSTRAP_SCRIPT, THEME_BOOTSTRAP_SCRIPT } from "@ecorione/shared-ui";
 import ProductNav from "./ProductNav";
+import { WorkspaceProvider } from "./WorkspaceProvider";
 import "./globals.css";
 import "./navigation.css";
 import "./mobile-ux-overrides.css";
@@ -50,10 +51,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_BOOTSTRAP_SCRIPT }} />
       </head>
       <body style={appFontTokens}>
-        <div className="ecr-app-shell">
-          <ProductNav />
-          <div className="ecr-app-content">{children}</div>
-        </div>
+        <WorkspaceProvider>
+          <div className="ecr-app-shell">
+            <ProductNav />
+            <div className="ecr-app-content">{children}</div>
+          </div>
+        </WorkspaceProvider>
       </body>
     </html>
   );

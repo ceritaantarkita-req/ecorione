@@ -1,7 +1,6 @@
 import type { FlowGraphNode, FlowNodeKind } from "@ecorione/shared-schema";
 
 export const DRAFT_ID = "fg_draftcanvas01";
-export const WORKSPACE_ID = "ws_personal";
 export const NODE_WIDTH = 196;
 
 export function defaultConfig(kind: FlowNodeKind): Record<string, unknown> {

@@ -29,10 +29,10 @@ import {
   isProjectIdCandidate,
   resolveActiveProjectId,
 } from "../../lib/project-selection";
+import { useWorkspace } from "../WorkspaceProvider";
 import { layoutBrainNodes } from "../../lib/brain-layout";
 import styles from "./Brain.module.css";
 
-const WORKSPACE_ID = "ws_personal";
 const MIN_GRAPH_ZOOM = 0.75;
 const MAX_GRAPH_ZOOM = 1.75;
 const GRAPH_ZOOM_STEP = 0.25;
@@ -94,6 +94,7 @@ function relationText(edge: BrainEdge, nodesById: Map<string, BrainNode>): strin
 }
 
 export default function BrainPage() {
+  const { workspaceId, ready: workspaceReady } = useWorkspace();
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState(PERSONAL_PROJECT_ID);
   const [projectReady, setProjectReady] = useState(false);
@@ -121,43 +122,48 @@ export default function BrainPage() {
     "Pilih Fact atau URL Source untuk memulai grounded local chat.",
   );
 
-  const loadBrain = useCallback(async (nextProjectId: string) => {
-    const seq = ++requestRef.current;
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({
-        workspaceId: WORKSPACE_ID,
-        projectId: nextProjectId,
-        limit: "120",
-        runLimit: "50",
-      });
-      const next = await fetch(`/api/brain?${query.toString()}`, {
-        cache: "no-store",
-      }).then((response) => json<BrainGraphResponse>(response));
-      if (seq !== requestRef.current) return;
-      setGraph(next);
-      setSelectedId((current) =>
-        current !== null && next.nodes.some((node) => node.id === current) ? current : null,
-      );
-      setMessage(
-        next.truncated
-          ? `Showing ${String(next.nodes.length)} of ${String(next.totalNodes)} nodes within bounded query limits.`
-          : `${String(next.nodes.length)} nodes · ${String(next.edges.length)} deterministic relationships.`,
-      );
-    } catch (reason) {
-      if (seq !== requestRef.current) return;
-      setGraph(null);
-      setSelectedId(null);
-      setMessage(
-        `Brain load gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
-      );
-    } finally {
-      if (seq === requestRef.current) setLoading(false);
-    }
-  }, []);
+  const loadBrain = useCallback(
+    async (nextProjectId: string) => {
+      const seq = ++requestRef.current;
+      setLoading(true);
+      try {
+        const query = new URLSearchParams({
+          workspaceId: workspaceId,
+          projectId: nextProjectId,
+          limit: "120",
+          runLimit: "50",
+        });
+        const next = await fetch(`/api/brain?${query.toString()}`, {
+          cache: "no-store",
+        }).then((response) => json<BrainGraphResponse>(response));
+        if (seq !== requestRef.current) return;
+        setGraph(next);
+        setSelectedId((current) =>
+          current !== null && next.nodes.some((node) => node.id === current) ? current : null,
+        );
+        setMessage(
+          next.truncated
+            ? `Showing ${String(next.nodes.length)} of ${String(next.totalNodes)} nodes within bounded query limits.`
+            : `${String(next.nodes.length)} nodes · ${String(next.edges.length)} deterministic relationships.`,
+        );
+      } catch (reason) {
+        if (seq !== requestRef.current) return;
+        setGraph(null);
+        setSelectedId(null);
+        setMessage(
+          `Brain load gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
+        );
+      } finally {
+        if (seq === requestRef.current) setLoading(false);
+      }
+    },
+    [workspaceId],
+  );
 
   useEffect(() => {
+    if (!workspaceReady) return;
     let cancelled = false;
+    setProjectReady(false);
     let candidate: string | null = null;
     try {
       const stored = window.localStorage.getItem(PROJECT_STORAGE_KEY);
@@ -166,7 +172,7 @@ export default function BrainPage() {
       // The active Project list remains the source of truth.
     }
 
-    void fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" })
+    void fetch(`/api/projects?workspaceId=${workspaceId}`, { cache: "no-store" })
       .then((response) => json<{ projects: Project[] }>(response))
       .then((body) => {
         if (cancelled) return;
@@ -196,7 +202,7 @@ export default function BrainPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [workspaceId, workspaceReady]);
 
   useEffect(() => {
     if (!projectReady) return;
@@ -223,7 +229,7 @@ export default function BrainPage() {
     setAssistantStatus("Membatasi Context ke neighborhood node yang dipilih…");
     try {
       const neighborhoodQuery = new URLSearchParams({
-        workspaceId: WORKSPACE_ID,
+        workspaceId: workspaceId,
         projectId,
         seedNodeId: selectedId,
         maxHops: "1",
@@ -246,7 +252,7 @@ export default function BrainPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           sessionId: assistantSessionId,
-          workspaceId: WORKSPACE_ID,
+          workspaceId: workspaceId,
           projectId,
           message: question,
           target: "local",

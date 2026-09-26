@@ -63,18 +63,16 @@ type McpServer = {
   toolPolicies: unknown[];
 };
 
-const PERSONAL_WORKSPACE_ID = "ws_personal";
-
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
   return readJson<T>(response);
 }
 
-export function useSettingsController() {
+export function useSettingsController(initialWorkspaceId: string) {
   const [runtime, setRuntime] = useState<RuntimeSnapshot | null>(null);
   const [providers, setProviders] = useState<ProviderCatalogEntry[]>([]);
   const [credentials, setCredentials] = useState<Credential[]>([]);
-  const [workspaceId, setWorkspaceId] = useState(PERSONAL_WORKSPACE_ID);
+  const [workspaceId, setWorkspaceId] = useState(initialWorkspaceId);
   const [servers, setServers] = useState<McpServer[]>([]);
   const [secret, setSecret] = useState("");
   const [secretRevision, setSecretRevision] = useState(0);
@@ -94,6 +92,11 @@ export function useSettingsController() {
   const actionInFlight = useRef(false);
   const mcpLoadRequestRef = useRef(0);
   const workspaceIdRef = useRef(workspaceId);
+
+  useEffect(() => {
+    workspaceIdRef.current = initialWorkspaceId;
+    setWorkspaceId(initialWorkspaceId);
+  }, [initialWorkspaceId]);
 
   function beginAction(action: string): boolean {
     if (actionInFlight.current) return false;

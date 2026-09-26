@@ -1,5 +1,6 @@
 "use client";
 
+import { useWorkspace } from "../WorkspaceProvider";
 import styles from "./Settings.module.css";
 import {
   useSettingsController,
@@ -9,6 +10,7 @@ import {
 } from "./useSettingsController";
 
 export default function SettingsPage() {
+  const { workspaceId: activeWorkspaceId } = useWorkspace();
   const {
     activateStoredProvider,
     activeHostedModels,
@@ -57,7 +59,7 @@ export default function SettingsPage() {
     testCredential,
     workspaceId,
     workspaceIdRef,
-  } = useSettingsController();
+  } = useSettingsController(activeWorkspaceId);
 
   return (
     <main className={styles.page}>
