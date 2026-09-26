@@ -145,7 +145,9 @@ export function ScheduleSection(props: ScheduleSectionProps) {
               min={1}
               value={props.draft.graphVersion}
               onChange={(event) =>
-                props.onDraftChange({ graphVersion: Math.max(1, Number(event.target.value) || 1) })
+                props.onDraftChange({
+                  graphVersion: Math.max(1, Number(event.target.value) || 1),
+                })
               }
             />
           </label>
@@ -170,7 +172,9 @@ export function ScheduleSection(props: ScheduleSectionProps) {
             Catch-up
             <select
               value={props.draft.catchupWindowMs}
-              onChange={(event) => props.onDraftChange({ catchupWindowMs: Number(event.target.value) })}
+              onChange={(event) =>
+                props.onDraftChange({ catchupWindowMs: Number(event.target.value) })
+              }
             >
               <option value={60_000}>1 minute</option>
               <option value={5 * 60_000}>5 minutes</option>
@@ -214,7 +218,10 @@ export function ScheduleSection(props: ScheduleSectionProps) {
             />
             Enabled
           </label>
-          <button type="submit" disabled={props.pending !== null || props.draft.graphId.length === 0}>
+          <button
+            type="submit"
+            disabled={props.pending !== null || props.draft.graphId.length === 0}
+          >
             {props.pending === "save" ? "Saving…" : "Save schedule"}
           </button>
         </form>
@@ -371,7 +378,9 @@ export function FlowSection({ loading, graphs }: FlowSectionProps) {
             ))}
           </tbody>
         </table>
-        {!loading && graphs.length === 0 ? <div className={styles.empty}>Belum ada Flow.</div> : null}
+        {!loading && graphs.length === 0 ? (
+          <div className={styles.empty}>Belum ada Flow.</div>
+        ) : null}
       </div>
     </section>
   );
@@ -473,7 +482,9 @@ export function RunsSection(props: RunsSectionProps) {
                 <div>
                   <dt>Finished</dt>
                   <dd>
-                    {props.selectedRun.finishedAt ? formatWhen(props.selectedRun.finishedAt) : "—"}
+                    {props.selectedRun.finishedAt
+                      ? formatWhen(props.selectedRun.finishedAt)
+                      : "—"}
                   </dd>
                 </div>
                 <div>
