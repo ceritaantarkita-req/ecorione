@@ -1,0 +1,2891 @@
+{
+  "generated_at": "2026-09-27",
+  "audited_main_sha": "c71df6debc1404ea0e974168d5cab38c2952429f",
+  "branch_count_at_audit": 395,
+  "closed_prs_scanned": 352,
+  "policy": {
+    "safe_delete": "non-main branch has a merged PR and current branch head exactly equals that merged PR head SHA",
+    "hold": "no matching merged PR at exact current branch head; requires additional review"
+  },
+  "counts": {
+    "safe_delete": 332,
+    "hold": 61
+  },
+  "safe_delete": [
+    {
+      "branch": "a08d/brain-grounded-chat-20260925",
+      "expected_sha": "39f1b4f96ddb38bf97f9fb2011d609e73b5d5030",
+      "merged_pr": 341,
+      "merged_at": "2026-09-25T17:09:45Z",
+      "merge_commit_sha": "1f25f32cdbb0bfd6dc043491f7668df6bc1795cb"
+    },
+    {
+      "branch": "agent/a09-chat-decomposition-20260926",
+      "expected_sha": "2540a505baac310ff8c2c4d369294712870a5c87",
+      "merged_pr": 345,
+      "merged_at": "2026-09-26T02:12:35Z",
+      "merge_commit_sha": "cd654d90398d14a8426b067d79c7449573c7038c"
+    },
+    {
+      "branch": "agent/a09-flow-decomposition-20260926",
+      "expected_sha": "804030ea5c117f3ae325f22c47887c7a1debdffd",
+      "merged_pr": 344,
+      "merged_at": "2026-09-26T02:06:38Z",
+      "merge_commit_sha": "3d5f5caf31ff97a36bec316675cd6566c0c907a2"
+    },
+    {
+      "branch": "agent/a09-settings-controller-20260926",
+      "expected_sha": "94fd35e09d43790f58a3dcf5ff509fb6df798b0b",
+      "merged_pr": 346,
+      "merged_at": "2026-09-26T02:19:35Z",
+      "merge_commit_sha": "bd4aeab95554b75e12a3049ea61d235cefafdfb1"
+    },
+    {
+      "branch": "agent/a09d-work-decomposition-20260926",
+      "expected_sha": "aa01002ef117cdb08a24234dd8978dfd2c30dd76",
+      "merged_pr": 347,
+      "merged_at": "2026-09-26T04:01:56Z",
+      "merge_commit_sha": "dca6f652f1a6cb5106ddc14c7922b8925ad61233"
+    },
+    {
+      "branch": "agent/a09e-space-decomposition-20260926",
+      "expected_sha": "ae11342f597e8ebf9227bdeb357c9f5565130ee0",
+      "merged_pr": 348,
+      "merged_at": "2026-09-26T04:32:54Z",
+      "merge_commit_sha": "3c9279a21ec441ab9fe5ec95583c946a238ccc43"
+    },
+    {
+      "branch": "agent/a10-compose-readiness-20260926",
+      "expected_sha": "5fcdf0e4d2ce0a52e5e0197e71ee942a4f5842ba",
+      "merged_pr": 350,
+      "merged_at": "2026-09-26T05:53:31Z",
+      "merge_commit_sha": "710127d66218e4d2e8ed23ddbc485b80b8769f6b"
+    },
+    {
+      "branch": "agent/a11-browser-workspace-context-20260926",
+      "expected_sha": "173ba037182ca999f93c22942c564cff08d8ab6c",
+      "merged_pr": 352,
+      "merged_at": "2026-09-26T14:09:25Z",
+      "merge_commit_sha": "38fa0b8563a0f73fb44b1705e4f0e1418d8a23c5"
+    },
+    {
+      "branch": "agent/a11-closure-checkpoint-20260926",
+      "expected_sha": "3514cfa56344bf4d8073305d8e4a541d9cde92a8",
+      "merged_pr": 353,
+      "merged_at": "2026-09-26T14:27:06Z",
+      "merge_commit_sha": "65bf8d2ce0b832bd12b0b279ccf9df0384a07c47"
+    },
+    {
+      "branch": "agent/active-work-20260914",
+      "expected_sha": "dc6304fa9ee8ead21e57e0638b81474dd3d9bc9c",
+      "merged_pr": 74,
+      "merged_at": "2026-09-14T12:14:30Z",
+      "merge_commit_sha": "dc6304fa9ee8ead21e57e0638b81474dd3d9bc9c"
+    },
+    {
+      "branch": "agent/batch10-closure-20260910",
+      "expected_sha": "cf27c7598c6925174620ed2b0286a1538ed3f765",
+      "merged_pr": 26,
+      "merged_at": "2026-09-10T06:12:34Z",
+      "merge_commit_sha": "09a069897ca4e405fd685087380af48a6334ee19"
+    },
+    {
+      "branch": "agent/batch10-space-block-runtime-20260910",
+      "expected_sha": "3459e4b51ff5c04eeb129ed2463cb0545d9a6ef8",
+      "merged_pr": 25,
+      "merged_at": "2026-09-10T06:03:09Z",
+      "merge_commit_sha": "f5232048f29efa4d4b6632330f0d860afa781d48"
+    },
+    {
+      "branch": "agent/batch11-production-ops-observability-20260910",
+      "expected_sha": "8056db267dd30203e9208a7ccc3fcfb07390bf2c",
+      "merged_pr": 27,
+      "merged_at": "2026-09-10T07:10:05Z",
+      "merge_commit_sha": "2e52af3bb8652154bd70846120767b67297bc1fd"
+    },
+    {
+      "branch": "agent/batch12-final-security-release-20260910",
+      "expected_sha": "c59d5c2f39b99615afcc9dbf17432f9cbc69bce9",
+      "merged_pr": 29,
+      "merged_at": "2026-09-10T13:54:17Z",
+      "merge_commit_sha": "ad67b68290a41e69e18dfa49caefed0090bd9635"
+    },
+    {
+      "branch": "agent/batch3-plugin-closure-20260909",
+      "expected_sha": "594f5f9517a4b50a8a37ab5329e787630943006a",
+      "merged_pr": 12,
+      "merged_at": "2026-09-09T15:21:09Z",
+      "merge_commit_sha": "df00c2bafad2449722293eef803fa8873921fd53"
+    },
+    {
+      "branch": "agent/batch4-authority-closure-20260909",
+      "expected_sha": "c29148b69062d52a342634559f03ee1f17dabd88",
+      "merged_pr": 14,
+      "merged_at": "2026-09-09T17:15:02Z",
+      "merge_commit_sha": "b4df2c364874e6420b6008de7a330a1528546fed"
+    },
+    {
+      "branch": "agent/batch5-closure-20260910",
+      "expected_sha": "63c80af3e82709a05bddf51fc935de669f83070a",
+      "merged_pr": 16,
+      "merged_at": "2026-09-09T18:25:27Z",
+      "merge_commit_sha": "b9933adc4bd6bb8e978e444e40ef0d8f6a2c8ae9"
+    },
+    {
+      "branch": "agent/batch5-native-multimodal-20260910",
+      "expected_sha": "a202c74eea504b9c7220e0b45fc1d113d1ff1be9",
+      "merged_pr": 15,
+      "merged_at": "2026-09-09T18:17:33Z",
+      "merge_commit_sha": "2226493ae54ed83315a9f84fd3b72fe67c947157"
+    },
+    {
+      "branch": "agent/batch6-realtime-voice-20260910",
+      "expected_sha": "4312f76c521cd676ac263a3f400923906fba7bdf",
+      "merged_pr": 17,
+      "merged_at": "2026-09-10T01:02:56Z",
+      "merge_commit_sha": "01cc32f12745f4a5dd391e61e39ad8d8faa4d5b7"
+    },
+    {
+      "branch": "agent/batch7-data-rebuild-20260910",
+      "expected_sha": "87afff362dd00c5922b641e52e18d5813b506593",
+      "merged_pr": 19,
+      "merged_at": "2026-09-10T01:36:37Z",
+      "merge_commit_sha": "a48629d13ad03d9d02e635c6a8ca72f511e7a99c"
+    },
+    {
+      "branch": "agent/batch8-closure-20260910",
+      "expected_sha": "c5d213fc84474ff408ec128f0583a63a12e61a0c",
+      "merged_pr": 22,
+      "merged_at": "2026-09-10T02:40:40Z",
+      "merge_commit_sha": "f427451b43f0919c93e6aee0c385264e6c43c975"
+    },
+    {
+      "branch": "agent/batch8-data-governance-dr-20260910",
+      "expected_sha": "84017f01be52bf65bc8d1ea88ce2d481b1b831d8",
+      "merged_pr": 21,
+      "merged_at": "2026-09-10T02:32:27Z",
+      "merge_commit_sha": "37f073ad9865487a217d4348083f75fe28caa1e9"
+    },
+    {
+      "branch": "agent/batch9-closure-20260910",
+      "expected_sha": "ebd48b8068aeb21f054b50098ad24201cb2c7edd",
+      "merged_pr": 24,
+      "merged_at": "2026-09-10T04:09:22Z",
+      "merge_commit_sha": "3437d163559df0fc5756703ca4f5925d423d5611"
+    },
+    {
+      "branch": "agent/batch9-node-registry-canvas-20260910",
+      "expected_sha": "6294a6f641b1ddecf23ccac23ab1e85ce8da7fe8",
+      "merged_pr": 23,
+      "merged_at": "2026-09-10T04:01:35Z",
+      "merge_commit_sha": "05b05a5f22133d61a411ff22463ac5acfaf4c5eb"
+    },
+    {
+      "branch": "agent/connect-credential-vault-20260909",
+      "expected_sha": "fb7a09d860204580fc01dd81c555128e1a0dc888",
+      "merged_pr": 3,
+      "merged_at": "2026-09-09T09:09:13Z",
+      "merge_commit_sha": "d2abaee1bdbb82a05e1f7f421cf6cc164898be3a"
+    },
+    {
+      "branch": "agent/connect-durable-spend-budget-20260909",
+      "expected_sha": "3f8f80d3839c6e87e3b689942534dc798e03d527",
+      "merged_pr": 4,
+      "merged_at": "2026-09-09T09:45:09Z",
+      "merge_commit_sha": "386f24fe142c8dc68033dec05aaf94a5274d3e38"
+    },
+    {
+      "branch": "agent/fix-main-ci-doc-sync-20260914",
+      "expected_sha": "d7be123adcd598e9424d3ef84a337befdfe07b2f",
+      "merged_pr": 77,
+      "merged_at": "2026-09-14T14:55:28Z",
+      "merge_commit_sha": "21ebecd2af7fb5f0f1fa5d54a971ae13582fe72b"
+    },
+    {
+      "branch": "agent/fullstack-audit-fixes-phases-20260909",
+      "expected_sha": "d54738091a63c93096f7710f1b5cea2fa393779b",
+      "merged_pr": 1,
+      "merged_at": "2026-09-09T05:47:17Z",
+      "merge_commit_sha": "a2f960b199041ef1d4d6717f0e27c0c3dd653c44"
+    },
+    {
+      "branch": "agent/history-ledger-ecx-20260909",
+      "expected_sha": "80c4ac1fbf44c7714e95d3414d105322c6312a94",
+      "merged_pr": 2,
+      "merged_at": "2026-09-09T08:52:34Z",
+      "merge_commit_sha": "e82768a84b30ef4312030d77fede78a13bac8960"
+    },
+    {
+      "branch": "agent/local-temporal-cli-20260914",
+      "expected_sha": "a0bd32f83e1a59b30498903ac739ee6f412cfc72",
+      "merged_pr": 76,
+      "merged_at": "2026-09-14T13:21:20Z",
+      "merge_commit_sha": "c6c1b78654f5d33d745b85b830d3562065e5c4f1"
+    },
+    {
+      "branch": "agent/mcp-external-acceptance-20260909",
+      "expected_sha": "ce15dd0cdefddcc266f6df834506c6ef134ff5d2",
+      "merged_pr": 6,
+      "merged_at": "2026-09-09T11:38:21Z",
+      "merge_commit_sha": "55ee05fe34e595e2c3e2ef6b9742673f1b78f156"
+    },
+    {
+      "branch": "agent/outbound-mcp-manager-20260909",
+      "expected_sha": "5609d8cae9fe9bb83a751da5616822b8dec1c4a2",
+      "merged_pr": 9,
+      "merged_at": "2026-09-09T13:54:26Z",
+      "merge_commit_sha": "97646e102ee90a39aa25a7b79b8cbf86673aa81f"
+    },
+    {
+      "branch": "agent/phase4-ci-flake-hardening-20260909",
+      "expected_sha": "3e2d224d49fa9ce80ed9ad653268a8e6425808c7",
+      "merged_pr": 7,
+      "merged_at": "2026-09-09T12:20:20Z",
+      "merge_commit_sha": "d79793977c9d4ea5d6e472ca4eeeabfed3259e60"
+    },
+    {
+      "branch": "agent/plugin-extension-framework-20260909",
+      "expected_sha": "e706aa70f3b9b80fc6ec12c72972a29f3c503639",
+      "merged_pr": 10,
+      "merged_at": "2026-09-09T15:08:48Z",
+      "merge_commit_sha": "af2b3f12f5deeaf2fd50c045998416365f766b9d"
+    },
+    {
+      "branch": "agent/progress-close-batch1-20260909",
+      "expected_sha": "4c5e670e7e58f51f89075c01d8def87bbf25e853",
+      "merged_pr": 8,
+      "merged_at": "2026-09-09T12:26:04Z",
+      "merge_commit_sha": "69cffc81694bff30260c1c9aaeae2cf667d5534f"
+    },
+    {
+      "branch": "agent/provider-framework-openrouter-20260909",
+      "expected_sha": "5232ef158ac42574a5e2f79fb40740513fe4a493",
+      "merged_pr": 5,
+      "merged_at": "2026-09-09T11:06:10Z",
+      "merge_commit_sha": "f2776b5df1a6f1316bf3f19136552c67df8af2d9"
+    },
+    {
+      "branch": "agent/unified-capability-permission-plane-20260909",
+      "expected_sha": "c23bad4da6eff453e35b72b4167c0c74554d70f3",
+      "merged_pr": 13,
+      "merged_at": "2026-09-09T17:01:39Z",
+      "merge_commit_sha": "455b5cef72d5847b67ddedebc81471432fb0ba42"
+    },
+    {
+      "branch": "agent/w03-runtime-operator-hardening-20260915",
+      "expected_sha": "bc626370c3a8c0b255b4a04f581c829eefe67073",
+      "merged_pr": 86,
+      "merged_at": "2026-09-15T01:26:29Z",
+      "merge_commit_sha": "558c8f0ecfecc23655afe0c5951622265efc1449"
+    },
+    {
+      "branch": "agent/w11-installer-workflow-fix-20260916",
+      "expected_sha": "261820529663abc8a8350cb86b3d55cbde744b7c",
+      "merged_pr": 119,
+      "merged_at": "2026-09-16T13:47:23Z",
+      "merge_commit_sha": "d6b2f7f58f5a6af26e91ee026536e39fcf11d227"
+    },
+    {
+      "branch": "agent/w11-safe-image-probe-20260916",
+      "expected_sha": "92dcdbf908d60344db8c2e1b1b7400ca391a4dc5",
+      "merged_pr": 120,
+      "merged_at": "2026-09-16T14:31:02Z",
+      "merge_commit_sha": "5c20b22cb6e207d4bd508725c039e8af9e84435e"
+    },
+    {
+      "branch": "agent/w14-product-eval-foundation-20260914",
+      "expected_sha": "183b9f3281dbedc16e459a3f09dea000d6756ba1",
+      "merged_pr": 79,
+      "merged_at": "2026-09-14T15:54:14Z",
+      "merge_commit_sha": "01efc87ef0409118ad0104a660f4d97f6a49f667"
+    },
+    {
+      "branch": "agent/w15-local-agentic-eval-foundation-20260914",
+      "expected_sha": "36aafca593b7ce73166aa0ffbcd8f37e90041e6f",
+      "merged_pr": 81,
+      "merged_at": "2026-09-14T16:36:42Z",
+      "merge_commit_sha": "ca059202fc8b8f41ebf3731b2a07bb8a24431143"
+    },
+    {
+      "branch": "agent/w15-runtime-observability-fix-20260915",
+      "expected_sha": "8931fdeb011c97ee525ae4181bdc6269f8c6f930",
+      "merged_pr": 83,
+      "merged_at": "2026-09-14T17:41:19Z",
+      "merge_commit_sha": "f54a11af582d92a955207b087c246b2c56848ab7"
+    },
+    {
+      "branch": "agent/w15-verify-assertion-fix-20260915",
+      "expected_sha": "fc053c369a5f9a85d4b4e00b3e942b5e3b897a86",
+      "merged_pr": 84,
+      "merged_at": "2026-09-14T18:40:22Z",
+      "merge_commit_sha": "00765be1c58198aaacdd867bada83e544fd9edd0"
+    },
+    {
+      "branch": "agent/w16-auto-ref-selector-20260916",
+      "expected_sha": "47db52eeeb39841b57e6a067fb12100cbfec8736",
+      "merged_pr": 112,
+      "merged_at": "2026-09-16T10:32:36Z",
+      "merge_commit_sha": "504e6aef86092d6f398ff290a40f77593c8882ca"
+    },
+    {
+      "branch": "agent/w17-bounded-local-inference-20260916",
+      "expected_sha": "474c753419981a4c4f7c720fa30a46fc3427d07f",
+      "merged_pr": 115,
+      "merged_at": "2026-09-16T12:28:23Z",
+      "merge_commit_sha": "90bc800649b02be1de752d8c67c365c65a9d21a6"
+    },
+    {
+      "branch": "agent/w17-closure-doctor-fix-20260916",
+      "expected_sha": "b79e41af262eeb89e0df67060ec99c5ad0e7f13c",
+      "merged_pr": 116,
+      "merged_at": "2026-09-16T13:10:12Z",
+      "merge_commit_sha": "4f58c9a088fee5e778875f91ce61c816f81326de"
+    },
+    {
+      "branch": "agent/w17-local-closure-runner-20260916",
+      "expected_sha": "3d2753fc7d3fd9fe375ef344cad2e9ea03816546",
+      "merged_pr": 114,
+      "merged_at": "2026-09-16T11:08:17Z",
+      "merge_commit_sha": "26cd88d9a2caefc6e3087b59157ed16e9db26aad"
+    },
+    {
+      "branch": "agent/w17-no-oracle-validation-20260916",
+      "expected_sha": "3dc5753621462f9869963aac3bd62499f06e67cc",
+      "merged_pr": 113,
+      "merged_at": "2026-09-16T10:50:36Z",
+      "merge_commit_sha": "71c4e20756b41cb816eaffc8fbc0a3020b2da3f8"
+    },
+    {
+      "branch": "agent/w18-formal-operator-wrapper-20260918",
+      "expected_sha": "c4b5b30f02716d66a8974903acb824f36ac1d12f",
+      "merged_pr": 138,
+      "merged_at": "2026-09-18T01:59:38Z",
+      "merge_commit_sha": "05ddd248e90e26b9db2c785d533c55ec817db013"
+    },
+    {
+      "branch": "agent/w18-one-call-diagnostic-20260917",
+      "expected_sha": "279058ee69c5b468cc67e1c23ca4dbcb51d2147d",
+      "merged_pr": 129,
+      "merged_at": "2026-09-17T07:07:29Z",
+      "merge_commit_sha": "883e03e99974d9dcc2416974d69652d6432732c2"
+    },
+    {
+      "branch": "audit/ai-flow-proxy-timeout-20260921",
+      "expected_sha": "db8a8f6068a40e47187a2142e6801e975e749276",
+      "merged_pr": 242,
+      "merged_at": "2026-09-21T15:37:35Z",
+      "merge_commit_sha": "47cbeaa8760debbfde87cff7cb7a828037a2829b"
+    },
+    {
+      "branch": "audit/credential-vault-lock-20260921",
+      "expected_sha": "ac826333798fd72a63f63b486aaaca54fd9ffb91",
+      "merged_pr": 235,
+      "merged_at": "2026-09-21T13:05:52Z",
+      "merge_commit_sha": "45b4deeb3d6caa23b8f9a98ae184b59ad48f44df"
+    },
+    {
+      "branch": "audit/current-main-staging-20260924",
+      "expected_sha": "bb872947942ff2cd54d65aabb18c8cb8db54cab1",
+      "merged_pr": 286,
+      "merged_at": "2026-09-24T02:08:58Z",
+      "merge_commit_sha": "da26196071302d3ffc44d3cd5d0ed8d81e9020c2"
+    },
+    {
+      "branch": "audit/deployment-pipeline-hardening-20260924",
+      "expected_sha": "d431f6a3443ea4addf33cddc1666d2aa33fa7f8d",
+      "merged_pr": 305,
+      "merged_at": "2026-09-24T15:22:17Z",
+      "merge_commit_sha": "53cd5d61dc87cf221b90fdde9a7b77d582e42ce0"
+    },
+    {
+      "branch": "audit/jwks-fetch-timeout-20260921",
+      "expected_sha": "942937c4cd33ec8731ad6ad5e5af9c4ffafba841",
+      "merged_pr": 237,
+      "merged_at": "2026-09-21T13:43:55Z",
+      "merge_commit_sha": "443ed254f7b4c5c3880387872e882e954602452b"
+    },
+    {
+      "branch": "audit/sandbox-control-timeout-20260921",
+      "expected_sha": "273b27d33992048bb6227d478999991122fc0df4",
+      "merged_pr": 239,
+      "merged_at": "2026-09-21T14:25:53Z",
+      "merge_commit_sha": "ccffb65a37643551fd492d6979181d612151748c"
+    },
+    {
+      "branch": "audit/sandbox-idempotency-race-20260921",
+      "expected_sha": "71a6b282ef0690c4dff9054a436332e5fb2186bc",
+      "merged_pr": 236,
+      "merged_at": "2026-09-21T13:37:32Z",
+      "merge_commit_sha": "b618d2877bdb38d61a1d46dcf5983602c26a40d2"
+    },
+    {
+      "branch": "audit/sandbox-lock-acquire-cleanup-20260921",
+      "expected_sha": "462c9418078baefc7cd00eed79dd85dac4ee1bf9",
+      "merged_pr": 244,
+      "merged_at": "2026-09-21T15:53:35Z",
+      "merge_commit_sha": "3114354ab44894ef80e75b9983fceac64babc2e0"
+    },
+    {
+      "branch": "audit/sync-mcp-forward-hardening-20260921",
+      "expected_sha": "df17085886e544091a1e38c8dab32e34047386f5",
+      "merged_pr": 234,
+      "merged_at": "2026-09-21T13:11:06Z",
+      "merge_commit_sha": "c6b083e38f5843ccc37f51247f59b8f7ff345264"
+    },
+    {
+      "branch": "audit/webhook-flow-timeout-20260921",
+      "expected_sha": "fa431b1072b48f6ec5dca1364e43bb29c659bff1",
+      "merged_pr": 240,
+      "merged_at": "2026-09-21T14:34:27Z",
+      "merge_commit_sha": "eb4ac86da19bc006009e1a2260f14c119e7997e5"
+    },
+    {
+      "branch": "ci/f6-e03-release-security-acceptance-gate-clean-20260918",
+      "expected_sha": "fdd532e0b6f2fe550708b8389ecc1f47afe946f7",
+      "merged_pr": 151,
+      "merged_at": "2026-09-18T05:51:56Z",
+      "merge_commit_sha": "b9e42445310921ef3c23cda2220631df49403e41"
+    },
+    {
+      "branch": "docs/a08-remainder-closure-20260926",
+      "expected_sha": "73f34fbe794f52fdd76220605c7902154ef2c67a",
+      "merged_pr": 343,
+      "merged_at": "2026-09-25T18:58:00Z",
+      "merge_commit_sha": "76406eb91837a5a5a01fc5f0bd3d71abd9efa209"
+    },
+    {
+      "branch": "docs/a08d-closure-20260925",
+      "expected_sha": "f39381c68b3e445b697f576817acf01c647119f2",
+      "merged_pr": 342,
+      "merged_at": "2026-09-25T17:25:14Z",
+      "merge_commit_sha": "1cdb39f297702441ed1c2d42f92b69e20f9e0097"
+    },
+    {
+      "branch": "docs/a09-safe-checkpoint-20260926",
+      "expected_sha": "e0389182b35ab662eaddf6bb75b9f3c385a37aed",
+      "merged_pr": 349,
+      "merged_at": "2026-09-26T04:49:23Z",
+      "merge_commit_sha": "c297e59c9167f5d3c24ae735635ff85a5338f354"
+    },
+    {
+      "branch": "docs/a10-safe-checkpoint-20260926",
+      "expected_sha": "4959d0a56d732ec30c0b5cb75fb628204a909bd4",
+      "merged_pr": 351,
+      "merged_at": "2026-09-26T09:35:52Z",
+      "merge_commit_sha": "ff07de7a82f3481723ae245d0789c32dce60d824"
+    },
+    {
+      "branch": "docs/ai-auth-closure-checkpoint-20260924",
+      "expected_sha": "0717f8f5551644745f12526f11d3060785f55ff1",
+      "merged_pr": 296,
+      "merged_at": "2026-09-24T09:34:48Z",
+      "merge_commit_sha": "af4161a5b54a882399c71529456111c58e4d5caa"
+    },
+    {
+      "branch": "docs/batch11-closure-20260910",
+      "expected_sha": "77059f2d239a78f38249d22462807750ea64df73",
+      "merged_pr": 28,
+      "merged_at": "2026-09-10T07:26:16Z",
+      "merge_commit_sha": "647f6f2514c49384dbb7eba6e79d11395181f0ba"
+    },
+    {
+      "branch": "docs/batch12-closure-20260910",
+      "expected_sha": "96f1857d0ea3d1b0dac48c904e4ea464f4071161",
+      "merged_pr": 30,
+      "merged_at": "2026-09-10T14:34:58Z",
+      "merge_commit_sha": "783a4ae8a2c90b3c696b3d619fb0c03581f675b2"
+    },
+    {
+      "branch": "docs/batch6-closure-20260910",
+      "expected_sha": "1bf18d646b270f345909e13d493debc10a58385d",
+      "merged_pr": 18,
+      "merged_at": "2026-09-10T01:10:17Z",
+      "merge_commit_sha": "7adfc3f6655f2da1065f653e76c9a74350322fb9"
+    },
+    {
+      "branch": "docs/batch7-closure-20260910",
+      "expected_sha": "d6ef3ecab5893ff9e08dd5644fdd47f866548316",
+      "merged_pr": 20,
+      "merged_at": "2026-09-10T01:43:27Z",
+      "merge_commit_sha": "a97ca1a7355c50d17c078949d3227d9f91f59f93"
+    },
+    {
+      "branch": "docs/cleanup-current-state-20260918",
+      "expected_sha": "372baa62c6288540ef372c5ee5032722f61042e1",
+      "merged_pr": 163,
+      "merged_at": "2026-09-18T16:45:52Z",
+      "merge_commit_sha": "01cda3fae0a7bc4a3ba46d1e1c265a33462b2006"
+    },
+    {
+      "branch": "docs/cmd-eol-closure-20260920",
+      "expected_sha": "0ba4d50a859d079f955add5ee611c0f74c48b25f",
+      "merged_pr": 186,
+      "merged_at": "2026-09-19T18:30:28Z",
+      "merge_commit_sha": "c790f5f95fe19c94c85abed6674a94082c3a675e"
+    },
+    {
+      "branch": "docs/comparative-evidence-closure-20260911",
+      "expected_sha": "a8d18c855f00a20b44a5832a738c3480fea5bd3d",
+      "merged_pr": 42,
+      "merged_at": "2026-09-11T06:04:35Z",
+      "merge_commit_sha": "84cf086745a14e75c3a976ceb5ca7847f691a76f"
+    },
+    {
+      "branch": "docs/comparative-harness-closure-20260911",
+      "expected_sha": "ea45826dbbfbbd2d627f82d3bfd7b8bdafc6bf7c",
+      "merged_pr": 39,
+      "merged_at": "2026-09-11T03:22:13Z",
+      "merge_commit_sha": "5437c1ea5d8ee168dbbe09de688a23c39089c7aa"
+    },
+    {
+      "branch": "docs/current-main-audit-checkpoint-final-20260924",
+      "expected_sha": "0998eb40f98d180957730ea9664a25f912ba025a",
+      "merged_pr": 289,
+      "merged_at": "2026-09-24T02:25:43Z",
+      "merge_commit_sha": "c6ae2361ae940d1a32375a41af6c91110667c895"
+    },
+    {
+      "branch": "docs/current-main-audit-safe-checkpoint-20260924",
+      "expected_sha": "1133ad1a607927d1a25c98f6027c7bd77f795162",
+      "merged_pr": 288,
+      "merged_at": "2026-09-24T02:17:33Z",
+      "merge_commit_sha": "76c093e597eba1d09881e2460aae13f5cf26ecbb"
+    },
+    {
+      "branch": "docs/current-state-sync-20260920",
+      "expected_sha": "817079fd6f3aa7e5db2616baee7d59714176d9fd",
+      "merged_pr": 184,
+      "merged_at": "2026-09-19T17:50:32Z",
+      "merge_commit_sha": "1199e877989273ae40a32d022facba37da20d9f1"
+    },
+    {
+      "branch": "docs/deployment-pipeline-session3-closure-20260924",
+      "expected_sha": "b06208e4d1687305940250ba845d5a561608f908",
+      "merged_pr": 307,
+      "merged_at": "2026-09-24T16:11:53Z",
+      "merge_commit_sha": "3c64c32c4cc4aaa3ca9cb1a068501383509c5c5d"
+    },
+    {
+      "branch": "docs/deployment-pipeline-session3-final-proof-20260924",
+      "expected_sha": "4eab18eda086e55e071d39edd108a0ecd72b1460",
+      "merged_pr": 306,
+      "merged_at": "2026-09-24T15:59:18Z",
+      "merge_commit_sha": "977db6f4bb72acfb6f4601372de6dc82b9200995"
+    },
+    {
+      "branch": "docs/discussion-safe-handoff-20260924",
+      "expected_sha": "2eff1df18250a64e2ac9572910338d65c626ac4b",
+      "merged_pr": 290,
+      "merged_at": "2026-09-24T03:44:32Z",
+      "merge_commit_sha": "d92d894064799e0be34e94e3b23f257077aa8c6c"
+    },
+    {
+      "branch": "docs/dr2-checkpoint1-closure-20260923",
+      "expected_sha": "d8e2964da335bc94dcb75a709128a78644947807",
+      "merged_pr": 280,
+      "merged_at": "2026-09-23T13:51:06Z",
+      "merge_commit_sha": "3bb1d0b26064469998e4595809d646575cd04456"
+    },
+    {
+      "branch": "docs/dr2-checkpoint2-selection-package-20260923",
+      "expected_sha": "01f8915b6730e08c894e78d857b0490990939f20",
+      "merged_pr": 282,
+      "merged_at": "2026-09-23T15:52:27Z",
+      "merge_commit_sha": "5f577d04f4aefadf0f39bbb1340ad31a9019dc04"
+    },
+    {
+      "branch": "docs/dr2-defer-external-target-20260923",
+      "expected_sha": "275a05ebf5d02ea458b7a18b8a0cece4210498e2",
+      "merged_pr": 283,
+      "merged_at": "2026-09-23T16:26:36Z",
+      "merge_commit_sha": "97cca019181f7b003d4781e8392e2bc91df1a9ad"
+    },
+    {
+      "branch": "docs/dr2-deferment-final-sync-20260923",
+      "expected_sha": "3eeabe44a566be6d5502fc69b2b7aaefdedfcf2a",
+      "merged_pr": 284,
+      "merged_at": "2026-09-23T16:36:07Z",
+      "merge_commit_sha": "ec30f4cf9bbb1eef57d6d990be4ec1bab36b108e"
+    },
+    {
+      "branch": "docs/dr2-safe-checkpoint-20260923",
+      "expected_sha": "9e06b70fec0910b3b43651dbe6676ae08481920e",
+      "merged_pr": 285,
+      "merged_at": "2026-09-23T16:57:10Z",
+      "merge_commit_sha": "4143adf2185e82d5c8713dc6c148ba828b104d07"
+    },
+    {
+      "branch": "docs/f6-e01-close-f6-e02-activate-20260918",
+      "expected_sha": "23eafe271ae47167919da96cb30efa6e73c6f342",
+      "merged_pr": 148,
+      "merged_at": "2026-09-18T05:36:04Z",
+      "merge_commit_sha": "904f0624cf11d97c491aa4aeb2c961c33938d092"
+    },
+    {
+      "branch": "docs/f6-e01-reconcile-20260918",
+      "expected_sha": "3bbd5f47e5223bd89119cf59020b0dab1fa551c2",
+      "merged_pr": 145,
+      "merged_at": "2026-09-18T03:12:43Z",
+      "merge_commit_sha": "80c1dab69a07e5494d55b41259e774ff1050b392"
+    },
+    {
+      "branch": "docs/f6-e02-close-f6-e03-activate-20260918",
+      "expected_sha": "03727ec5ad593b0b17c0b97263f18d0a9056cc3e",
+      "merged_pr": 150,
+      "merged_at": "2026-09-18T05:46:39Z",
+      "merge_commit_sha": "d42e69186bba7be2212051b42cc34091e24efa7b"
+    },
+    {
+      "branch": "docs/f6-e03-close-next-scope-20260918",
+      "expected_sha": "7ba308e3fd1723dd06ccc8e70bbe8c7090e01b96",
+      "merged_pr": 152,
+      "merged_at": "2026-09-18T06:34:10Z",
+      "merge_commit_sha": "0e8feca6afe2f210669122bedf3e987e90c1e618"
+    },
+    {
+      "branch": "docs/f6-e04-close-next-audit-20260918",
+      "expected_sha": "df2cd6ca230e6043b2d08e5d5dc857aef0bf5dd8",
+      "merged_pr": 154,
+      "merged_at": "2026-09-18T09:30:16Z",
+      "merge_commit_sha": "22165fad4ad6e7d99d641645edf028b98cd8aadc"
+    },
+    {
+      "branch": "docs/f6-e05-close-e06-activate-20260918",
+      "expected_sha": "d86bbe5bf5612d5d8a21fbb34309e220cd543e53",
+      "merged_pr": 156,
+      "merged_at": "2026-09-18T09:42:30Z",
+      "merge_commit_sha": "88a72b6ffc0b15dee435a905e5d69e411057b0c1"
+    },
+    {
+      "branch": "docs/f6-e06-close-e07-activate-20260918",
+      "expected_sha": "c5295a2c8e15fbb42b8fa922d8a12dbc8338e292",
+      "merged_pr": 158,
+      "merged_at": "2026-09-18T11:23:17Z",
+      "merge_commit_sha": "024426410ce4a86318b4f6092a6ec09667a57c6c"
+    },
+    {
+      "branch": "docs/f6-e07-close-e08-activate-20260918",
+      "expected_sha": "8a043ba547f29ff212e4ca8121a32e427f43055f",
+      "merged_pr": 161,
+      "merged_at": "2026-09-18T13:34:50Z",
+      "merge_commit_sha": "d08c29b6d12ce0d0a333dd21cb78966f39fecb33"
+    },
+    {
+      "branch": "docs/f6-e08-close-baseline-20260918",
+      "expected_sha": "1cb5e96c75ed3aaf2d5864d77efcbbf14d2455af",
+      "merged_pr": 165,
+      "merged_at": "2026-09-18T17:33:48Z",
+      "merge_commit_sha": "962c5db122424bbe7cecc3ea57d39870e91b9ad3"
+    },
+    {
+      "branch": "docs/frontend-static-hardening-closure-20260912",
+      "expected_sha": "80338fca76c5853e97f4da73b519dbc5675bb5d5",
+      "merged_pr": 61,
+      "merged_at": "2026-09-12T06:22:48Z",
+      "merge_commit_sha": "d03c98f2980afd6ded678765a31f5bd513d7c047"
+    },
+    {
+      "branch": "docs/historical-ledger-ecx-evidence-20260911",
+      "expected_sha": "494ab91b09be877520ebf7f6cc6746b69fccb589",
+      "merged_pr": 37,
+      "merged_at": "2026-09-11T02:19:13Z",
+      "merge_commit_sha": "88d588bbe4a5f005652c20f3409dd72093439f56"
+    },
+    {
+      "branch": "docs/latest-main-staging-convergence-checkpoint-2-20260921",
+      "expected_sha": "cd306c1bf7cb9f8c282a9aba13b07e6a1d6c4755",
+      "merged_pr": 247,
+      "merged_at": "2026-09-21T16:19:05Z",
+      "merge_commit_sha": "7e2130094fc9e3ea85dd9b0a3a5236a88c41a2c8"
+    },
+    {
+      "branch": "docs/latest-main-staging-convergence-checkpoint-3-20260921",
+      "expected_sha": "86a72f61373132778c724cac35c44899151a52b9",
+      "merged_pr": 248,
+      "merged_at": "2026-09-21T16:44:42Z",
+      "merge_commit_sha": "52046db35e403babdda934881773c46bf2c57b68"
+    },
+    {
+      "branch": "docs/latest-main-staging-convergence-closure-20260922",
+      "expected_sha": "a6abc18c360e5e74acfac5d79f30b1658ee715cc",
+      "merged_pr": 249,
+      "merged_at": "2026-09-21T17:39:59Z",
+      "merge_commit_sha": "428aec1454f08148c5b33be82d6d48820009dff5"
+    },
+    {
+      "branch": "docs/local-backup-restore-closure-20260911",
+      "expected_sha": "a6e7da5568c7fc72873a2fb81ac7d64a0ccfdab1",
+      "merged_pr": 51,
+      "merged_at": "2026-09-11T15:54:41Z",
+      "merge_commit_sha": "94da64d13fdb4ec364728b7feb323fd028ca8d94"
+    },
+    {
+      "branch": "docs/local-observability-closure-20260912",
+      "expected_sha": "ae4b5c54bd12d8418a45fc543b1edef0f19febcc",
+      "merged_pr": 53,
+      "merged_at": "2026-09-12T02:19:17Z",
+      "merge_commit_sha": "e35d1d702f3a4008904a88108d0a28b96dc9cc59"
+    },
+    {
+      "branch": "docs/local-persistence-restart-closure-20260911",
+      "expected_sha": "e52f804760f913113356a7fd136aed87f98463ba",
+      "merged_pr": 49,
+      "merged_at": "2026-09-11T10:45:05Z",
+      "merge_commit_sha": "4e9ec85443cc463425a5fd47a54dcaad8a08f410"
+    },
+    {
+      "branch": "docs/local-rehearsal-closure-20260911",
+      "expected_sha": "526cc254a57c994093a0b85fa225f9b6af4e7f33",
+      "merged_pr": 35,
+      "merged_at": "2026-09-11T01:03:31Z",
+      "merge_commit_sha": "7b1d50630e21a14413f73e2ca4a0934de042dcdf"
+    },
+    {
+      "branch": "docs/offhost-dr-acceptance-pass-20260923",
+      "expected_sha": "ccd962e0d647994ce745b7a0eb86faffb03b0400",
+      "merged_pr": 274,
+      "merged_at": "2026-09-23T01:22:00Z",
+      "merge_commit_sha": "1fc94173c19842ab4bfdf7585c2fdcac7132a579"
+    },
+    {
+      "branch": "docs/offhost-dr-checkpoint3-closure-20260922",
+      "expected_sha": "1d271c03fa5a512b210e99c9e4b404e4899a98b8",
+      "merged_pr": 253,
+      "merged_at": "2026-09-22T02:11:01Z",
+      "merge_commit_sha": "801adbc1eca847c77cba4b9bb89264ccf47cbf88"
+    },
+    {
+      "branch": "docs/offhost-dr-checkpoint4-closure-20260922",
+      "expected_sha": "63b27420b234a1d186de3461079a61218db833ac",
+      "merged_pr": 255,
+      "merged_at": "2026-09-22T04:53:40Z",
+      "merge_commit_sha": "8f523f1793ec7bc7a2a8bd2c8e7fdcf4ee2aeefa"
+    },
+    {
+      "branch": "docs/offhost-dr-checkpoint5-closure-20260922",
+      "expected_sha": "467b4ad56c57524a666e2e2c4991aeafb6ad06f4",
+      "merged_pr": 257,
+      "merged_at": "2026-09-22T05:58:53Z",
+      "merge_commit_sha": "41dc2ee55e9eed8c9f49864a5794b9bb8ecf0cfe"
+    },
+    {
+      "branch": "docs/offhost-dr-checkpoint6-closure-20260922",
+      "expected_sha": "c25bab4ffa76c9e25f49dea555d822a1a4b49465",
+      "merged_pr": 259,
+      "merged_at": "2026-09-22T06:40:30Z",
+      "merge_commit_sha": "01fbda4043c6241d46aced1949d2168627fd15d2"
+    },
+    {
+      "branch": "docs/offhost-dr-checkpoint6-convergence-20260922",
+      "expected_sha": "cd7312ad910bb1f333327feabaff2392030c1ba0",
+      "merged_pr": 260,
+      "merged_at": "2026-09-22T06:50:22Z",
+      "merge_commit_sha": "00d9f3ce6a8af45322dd15fe9f7a6c2892136102"
+    },
+    {
+      "branch": "docs/offhost-dr-checkpoint7-closure-20260922",
+      "expected_sha": "41e2a286d78dadc02745b0a24daba0ec4c9e6dbb",
+      "merged_pr": 264,
+      "merged_at": "2026-09-22T08:09:26Z",
+      "merge_commit_sha": "014aec5a6d87c5080ab1b8653cb47df32eea350f"
+    },
+    {
+      "branch": "docs/offhost-dr-preflight-pass-20260923",
+      "expected_sha": "67acd0b09db4ff601047a7ba235fe461e66d9288",
+      "merged_pr": 271,
+      "merged_at": "2026-09-22T17:55:49Z",
+      "merge_commit_sha": "6ac6d2c1571f04d7399ff1356c352926e740bc09"
+    },
+    {
+      "branch": "docs/offhost-dr-real-restore-pass-20260923",
+      "expected_sha": "59f1c4f28827bbf45dd40e4f2bbe91d0acbc5d4a",
+      "merged_pr": 272,
+      "merged_at": "2026-09-22T18:43:46Z",
+      "merge_commit_sha": "3e0a6495bd5c16d42a89d529b59252d9d27e2c66"
+    },
+    {
+      "branch": "docs/offhost-dr-runbook-final-status-20260923",
+      "expected_sha": "6105090c28745cd2a2a7dc615e2c33724e5e488f",
+      "merged_pr": 276,
+      "merged_at": "2026-09-23T12:36:37Z",
+      "merge_commit_sha": "a3adedfee06e65eba1efd428b07113c53074ba43"
+    },
+    {
+      "branch": "docs/offhost-dr-runtime-checkpoint-20260922",
+      "expected_sha": "7041fd73f52f044dc7d3896cc9ff317c23ed6554",
+      "merged_pr": 269,
+      "merged_at": "2026-09-22T16:56:38Z",
+      "merge_commit_sha": "9a656ca54911c396d1642be5a4cf492982f2bf83"
+    },
+    {
+      "branch": "docs/offhost-dr-runtime-closure-20260923",
+      "expected_sha": "6d373bda00d12bb891fbaa2173b8fcbde8810848",
+      "merged_pr": 275,
+      "merged_at": "2026-09-23T12:30:53Z",
+      "merge_commit_sha": "4b2db84852b86fd976e82476e420315f78211b71"
+    },
+    {
+      "branch": "docs/offhost-dr-runtime-command-convergence-20260922",
+      "expected_sha": "29732b85aeaaa944611fb3edbcbe295e4619ea98",
+      "merged_pr": 265,
+      "merged_at": "2026-09-22T08:29:53Z",
+      "merge_commit_sha": "b27c1e5833be0a0fccf3f525d82ae8853cd22113"
+    },
+    {
+      "branch": "docs/offhost-dr-runtime-handoff-convergence-20260922",
+      "expected_sha": "45b7f7af5fbcbcfad7c269f21d3cec481b808d7b",
+      "merged_pr": 261,
+      "merged_at": "2026-09-22T07:04:18Z",
+      "merge_commit_sha": "c19db998e4cfae7178453b3e2cc9b4631aeed3db"
+    },
+    {
+      "branch": "docs/offhost-dr-stale-nonclaims-convergence-20260922",
+      "expected_sha": "fbfdf23916b2f3da83454d857c2f1f3e97d12206",
+      "merged_pr": 262,
+      "merged_at": "2026-09-22T07:12:36Z",
+      "merge_commit_sha": "ab2ebe88dd567cf05ae4c5f1ef58ef34ff7f81ea"
+    },
+    {
+      "branch": "docs/offhost-dr-verify-checkpoint-20260923",
+      "expected_sha": "f51b5e21aa9b4a1de32b27168469183d2e8bf10d",
+      "merged_pr": 270,
+      "merged_at": "2026-09-22T17:48:36Z",
+      "merge_commit_sha": "b619231a6b2ade7e213edbf2fcd0dd050435e27f"
+    },
+    {
+      "branch": "docs/pcs-00-closure-20260920",
+      "expected_sha": "bd62605ee90289ec8299cc2dfae021fef820f435",
+      "merged_pr": 190,
+      "merged_at": "2026-09-20T05:18:30Z",
+      "merge_commit_sha": "e4646a5524f1607c648170fb0fbb01062d5095da"
+    },
+    {
+      "branch": "docs/pcs-01-closure-20260920",
+      "expected_sha": "ca550bad340a900606ad8b1957e46d648ab5dda4",
+      "merged_pr": 192,
+      "merged_at": "2026-09-20T05:47:51Z",
+      "merge_commit_sha": "43ef9cd83a5923da27e9fd8570866e79ee67fab5"
+    },
+    {
+      "branch": "docs/pcs-02-closure-20260920",
+      "expected_sha": "6f40b72fa9bf5c05208fb6e8436e4f59ecc651d4",
+      "merged_pr": 194,
+      "merged_at": "2026-09-20T06:37:43Z",
+      "merge_commit_sha": "ac249b576aae54331aa821a57ba5c84c8395a58e"
+    },
+    {
+      "branch": "docs/pcs-03-closure-20260920",
+      "expected_sha": "3048cbcd9ee033dc33ab5074e98ff91b0a8ed75f",
+      "merged_pr": 196,
+      "merged_at": "2026-09-20T08:12:01Z",
+      "merge_commit_sha": "157a30c20d661d5bf4cb94161988993878ae830c"
+    },
+    {
+      "branch": "docs/pcs-04-closure-20260920",
+      "expected_sha": "cff821613e04d669cb8024874b954ccd75e500fb",
+      "merged_pr": 198,
+      "merged_at": "2026-09-20T08:36:32Z",
+      "merge_commit_sha": "2a9c1a02811301bebc780d43a744d46303e102c3"
+    },
+    {
+      "branch": "docs/pcs-05-closure-20260920",
+      "expected_sha": "dfc03ffbe076eac03c2557f7d31974cc4fc78259",
+      "merged_pr": 200,
+      "merged_at": "2026-09-20T09:05:39Z",
+      "merge_commit_sha": "84910568535a2cd907b086e0f6282c9d1d878d44"
+    },
+    {
+      "branch": "docs/pcs-06-closure-20260920",
+      "expected_sha": "7c752dab43356705b6c8a594662231727a1bc134",
+      "merged_pr": 202,
+      "merged_at": "2026-09-20T09:42:28Z",
+      "merge_commit_sha": "1ed0bb2ca7884d9042042405ee068c18762ba68c"
+    },
+    {
+      "branch": "docs/pcs-07-repository-prep-checkpoint-20260920",
+      "expected_sha": "df0f5bdf1b343dd6870c94e8d7392977e45980b5",
+      "merged_pr": 205,
+      "merged_at": "2026-09-20T11:02:16Z",
+      "merge_commit_sha": "87dc41c249cf925280762a1f68de633b89d778e8"
+    },
+    {
+      "branch": "docs/pcs-10-post-merge-verification-20260921",
+      "expected_sha": "14d1cfe4a478c26f21417e0e239236cf23fba898",
+      "merged_pr": 220,
+      "merged_at": "2026-09-21T06:33:31Z",
+      "merge_commit_sha": "fa55e530615e9eb3a35d646e39bbbb3bf34d8a07"
+    },
+    {
+      "branch": "docs/pcs09-preparation-wording-20260921",
+      "expected_sha": "3a8a77a94a44cd054873d984c558a0b45d01dad8",
+      "merged_pr": 223,
+      "merged_at": "2026-09-21T10:37:16Z",
+      "merge_commit_sha": "bfc09a2084a1808732c20f797b1841a0654c5ed1"
+    },
+    {
+      "branch": "docs/pe-00-close-pe-01-activate-20260919",
+      "expected_sha": "8ad5cc5b08f7bd49e2ffa99cc6389018dca63110",
+      "merged_pr": 168,
+      "merged_at": "2026-09-18T18:31:49Z",
+      "merge_commit_sha": "cf72ad0e02c78b7ef9357982cbf6def77748003d"
+    },
+    {
+      "branch": "docs/pe-05-closure-pe-06-activation-20260919",
+      "expected_sha": "6be94ba051f6ac94acf16cd57750dbae1dcb010b",
+      "merged_pr": 175,
+      "merged_at": "2026-09-19T11:50:48Z",
+      "merge_commit_sha": "ace7ca9f5450c390e104b75e6a2559879b339fa0"
+    },
+    {
+      "branch": "docs/pe-06-closure-pe-07-activation-20260919",
+      "expected_sha": "d8e2b3fdbdb208d9884d793f86b9d7b785ee4f8e",
+      "merged_pr": 177,
+      "merged_at": "2026-09-19T13:17:31Z",
+      "merge_commit_sha": "ffa1531a12a1149d3dfceaea8f82e53619e938d4"
+    },
+    {
+      "branch": "docs/pe-07-closure-pe-08-activation-20260919",
+      "expected_sha": "4dbe70b06f0ecfc1d0f12eef817596a5c3594893",
+      "merged_pr": 179,
+      "merged_at": "2026-09-19T14:29:54Z",
+      "merge_commit_sha": "82026c8a1948336b2da4e00ee4832180f68452f7"
+    },
+    {
+      "branch": "docs/pe-08-final-closure-20260919",
+      "expected_sha": "7a9fca46f0e8ca649085b470a73b8bc0b4a13a56",
+      "merged_pr": 181,
+      "merged_at": "2026-09-19T15:09:38Z",
+      "merge_commit_sha": "1cc90b54ce7070f813918566baf80548d919fcb7"
+    },
+    {
+      "branch": "docs/persistence-first-drill-failure-20260911",
+      "expected_sha": "44c6a38588318d1fe8f787856aef8dd110a10431",
+      "merged_pr": 47,
+      "merged_at": "2026-09-11T09:58:27Z",
+      "merge_commit_sha": "5b92e96808af9097c362526f901142be78b793f9"
+    },
+    {
+      "branch": "docs/persistence-readiness-sync-20260911",
+      "expected_sha": "6bdac0d1d0c446b4c0c5f8e93c0343f637cc7ac8",
+      "merged_pr": 45,
+      "merged_at": "2026-09-11T08:01:41Z",
+      "merge_commit_sha": "0a5e585d53e01d819027c602a2ac69f7dc130723"
+    },
+    {
+      "branch": "docs/post-closure-cloudflare-20260910",
+      "expected_sha": "ba981717896ff229afbdf60be958621b05ffcbf3",
+      "merged_pr": 31,
+      "merged_at": "2026-09-10T15:12:52Z",
+      "merge_commit_sha": "aa360b81a6ef5cd41f466d7ada239b4e461c60ee"
+    },
+    {
+      "branch": "docs/post-closure-maintenance-checkpoint-2-20260921",
+      "expected_sha": "9f856c7af6b1d3067b23d11329bb8b867b257d8d",
+      "merged_pr": 238,
+      "merged_at": "2026-09-21T13:51:42Z",
+      "merge_commit_sha": "b017ba8d4df12bd466f750f5bc89a3643ab5e790"
+    },
+    {
+      "branch": "docs/post-closure-maintenance-checkpoint-20260921",
+      "expected_sha": "b157a00f6584d5d90b9ba4d8e3dba2f1333dd10f",
+      "merged_pr": 233,
+      "merged_at": "2026-09-21T12:37:23Z",
+      "merge_commit_sha": "15aab286eb4a340e4ceb44343033c58db68b5750"
+    },
+    {
+      "branch": "docs/post-closure-maintenance-checkpoint-3-20260921",
+      "expected_sha": "72898d7565f2a706cbeb2f0eecad808ec1aa9f51",
+      "merged_pr": 241,
+      "merged_at": "2026-09-21T14:39:47Z",
+      "merge_commit_sha": "78ffe76cc18f50c37323ba8012555cf43df65a5e"
+    },
+    {
+      "branch": "docs/post-closure-maintenance-checkpoint-4-20260921",
+      "expected_sha": "a49f8df6440260a9e1793e687ef552fdf56175f6",
+      "merged_pr": 243,
+      "merged_at": "2026-09-21T15:44:54Z",
+      "merge_commit_sha": "c083f91e65d114f611f51de25da0eb167b43d699"
+    },
+    {
+      "branch": "docs/post-closure-maintenance-checkpoint-5-20260921",
+      "expected_sha": "14d83f3be799c4ad8eabb476140d3ca9a57a1c19",
+      "merged_pr": 245,
+      "merged_at": "2026-09-21T15:58:49Z",
+      "merge_commit_sha": "de8d5d510d07ce06ece21368e4305148a2b587c9"
+    },
+    {
+      "branch": "docs/post-closure-product-staging-20260920",
+      "expected_sha": "c4088bd04298d42809b7b012b353d2e977e7a931",
+      "merged_pr": 188,
+      "merged_at": "2026-09-20T05:07:51Z",
+      "merge_commit_sha": "93c5312d73289305d3e16ff79c5457a5010d0b19"
+    },
+    {
+      "branch": "docs/post-pr77-main-sync-20260914",
+      "expected_sha": "88f9c4853606f287d59bc83af86c778ca88c3745",
+      "merged_pr": 78,
+      "merged_at": "2026-09-14T15:01:46Z",
+      "merge_commit_sha": "d9d6c32e1981b66bef054d5ed8b74dc889f453ba"
+    },
+    {
+      "branch": "docs/product-evolution-roadmap-20260919",
+      "expected_sha": "ad7a5828aa3d4da879f80d321431b0c26f5c8a07",
+      "merged_pr": 166,
+      "merged_at": "2026-09-18T17:50:17Z",
+      "merge_commit_sha": "a3a432fbb6654ccb313169c803b51addc3777f43"
+    },
+    {
+      "branch": "docs/repository-reconciliation-20260926",
+      "expected_sha": "f356f00d643b017d0e9870142c71c597d281872f",
+      "merged_pr": 354,
+      "merged_at": "2026-09-26T17:03:36Z",
+      "merge_commit_sha": "265a28d4c53cc482af8ea33a6362a21e640d30e5"
+    },
+    {
+      "branch": "docs/repository-reconciliation-closure-20260926",
+      "expected_sha": "5b05173516b67b5b57c481cb4c89887916fc3507",
+      "merged_pr": 355,
+      "merged_at": "2026-09-26T17:29:40Z",
+      "merge_commit_sha": "c71df6debc1404ea0e974168d5cab38c2952429f"
+    },
+    {
+      "branch": "docs/repository-state-reconciliation-20260923",
+      "expected_sha": "d8d5fd99ff1c208c8d8ee8f2584b27d9f9df9c2c",
+      "merged_pr": 281,
+      "merged_at": "2026-09-23T15:06:53Z",
+      "merge_commit_sha": "ee49cb5db5da7077fe3f7e2565033c6bc38f2d6f"
+    },
+    {
+      "branch": "docs/repository-state-sync-20260921",
+      "expected_sha": "6102c77064508c8c6967a91635ded463d9572991",
+      "merged_pr": 221,
+      "merged_at": "2026-09-21T10:03:27Z",
+      "merge_commit_sha": "62a21aef24e7babdddcbe0245e1c0ffa42966b4e"
+    },
+    {
+      "branch": "docs/session4-high-findings-safe-checkpoint-20260925",
+      "expected_sha": "5d4e4c3637ce5a0415bdb866969ce109a212d427",
+      "merged_pr": 311,
+      "merged_at": "2026-09-24T17:53:46Z",
+      "merge_commit_sha": "536be0f6b95d0c2369fe7673d88828ad994c8921"
+    },
+    {
+      "branch": "docs/session6-a02-safe-checkpoint-20260925",
+      "expected_sha": "e870d208864f10ea35b6d470b60cdac99df9d0b8",
+      "merged_pr": 315,
+      "merged_at": "2026-09-25T01:37:42Z",
+      "merge_commit_sha": "485970785cbabd1961f1235ac5a68d87917308b8"
+    },
+    {
+      "branch": "docs/session7-a03-safe-checkpoint-20260925",
+      "expected_sha": "9217caf103c223b0a6de7d5aa0ab53e0b8fb896f",
+      "merged_pr": 317,
+      "merged_at": "2026-09-25T02:54:12Z",
+      "merge_commit_sha": "25423b82cee31f17cea3829585a4f1e04c8423ae"
+    },
+    {
+      "branch": "docs/session8-a05b3b-safe-checkpoint-20260925",
+      "expected_sha": "0391e7a91f2ce176980d76961f74c908a85cf540",
+      "merged_pr": 325,
+      "merged_at": "2026-09-25T08:05:29Z",
+      "merge_commit_sha": "8f8e0ff83fbf2a2696aaf28c490e34a00c5d0229"
+    },
+    {
+      "branch": "docs/session9-a05-closure-decision-20260925",
+      "expected_sha": "71bfe75c182623d01796c952372c231e5e47c322",
+      "merged_pr": 326,
+      "merged_at": "2026-09-25T08:22:59Z",
+      "merge_commit_sha": "dae2ea7bf90bc277b17d906a65df3a688566fc76"
+    },
+    {
+      "branch": "docs/session9-a06a-safe-checkpoint-20260925",
+      "expected_sha": "003b5404128d0bc7624331f86a3fd5433bbf2edf",
+      "merged_pr": 328,
+      "merged_at": "2026-09-25T09:28:25Z",
+      "merge_commit_sha": "09e73413deba97932683f435a1909836c3d47be9"
+    },
+    {
+      "branch": "docs/session9-a06b-closure-20260925",
+      "expected_sha": "ed9da366b7946b98989d87bfb1ecabce10467f09",
+      "merged_pr": 330,
+      "merged_at": "2026-09-25T11:21:48Z",
+      "merge_commit_sha": "9d9a97d41d96474aa72931cb78af7404503f82a6"
+    },
+    {
+      "branch": "docs/session9-a07-brain-closure-20260925",
+      "expected_sha": "4dbb5bb6faaffc2d53067fa663e5e70e42914e3e",
+      "merged_pr": 332,
+      "merged_at": "2026-09-25T13:13:24Z",
+      "merge_commit_sha": "6c7cbf0be3c2bc034bd452402733e45670c090be"
+    },
+    {
+      "branch": "docs/session9-a08a-brain-owner-resources-closure-20260925",
+      "expected_sha": "aa0ce1a5a40fa7d7447bdae5fe170a13a29336ee",
+      "merged_pr": 334,
+      "merged_at": "2026-09-25T14:18:05Z",
+      "merge_commit_sha": "6c8d8e6fd59a19487e93256518ef7ce5ddda2018"
+    },
+    {
+      "branch": "docs/session9-a08b-brain-facts-closure-20260925",
+      "expected_sha": "c5159e144d83f92124fe74e38e125eed25e51bc1",
+      "merged_pr": 336,
+      "merged_at": "2026-09-25T14:56:16Z",
+      "merge_commit_sha": "52331b408135bcbb0a99bec871c873710f047c2d"
+    },
+    {
+      "branch": "docs/session9-a08c-brain-fact-provenance-closure-20260925",
+      "expected_sha": "b98eb4c51f9008f2ba592413f9167535349f208f",
+      "merged_pr": 339,
+      "merged_at": "2026-09-25T16:20:39Z",
+      "merge_commit_sha": "807b6f42683a910d106a3176f95442145807cf97"
+    },
+    {
+      "branch": "docs/session9-post-a08c-safe-checkpoint-20260925",
+      "expected_sha": "e6d9575c24ef36e377f4b20a18ff46ae5f27f371",
+      "merged_pr": 340,
+      "merged_at": "2026-09-25T16:36:22Z",
+      "merge_commit_sha": "df1a0b02282476673c2569f365bbd576aa2dfc4c"
+    },
+    {
+      "branch": "docs/staging-auto-deploy-final-proof-20260924",
+      "expected_sha": "d5d5df9a7893d1be43d09d39cd819085d02b2172",
+      "merged_pr": 303,
+      "merged_at": "2026-09-24T13:45:34Z",
+      "merge_commit_sha": "59e86b5cf0269348b8db572da488e0c846f71a86"
+    },
+    {
+      "branch": "docs/staging-auto-deploy-restore-20260924",
+      "expected_sha": "49925ffac0ad342af48d556b560fbd5255b35ecd",
+      "merged_pr": 301,
+      "merged_at": "2026-09-24T12:34:21Z",
+      "merge_commit_sha": "a12094a45ee15339f4005e33bb30c2d27dc205bc"
+    },
+    {
+      "branch": "docs/staging-auto-deploy-session2-closure-20260924",
+      "expected_sha": "98f5b35c1e524e195fe14ca901e955027c39040d",
+      "merged_pr": 304,
+      "merged_at": "2026-09-24T14:01:33Z",
+      "merge_commit_sha": "ce4719a7b54f716f8eb6f08602e67a592d01b519"
+    },
+    {
+      "branch": "docs/staging-capacity-recovery-closure-20260924",
+      "expected_sha": "aeb653da8e1637b33a65ed1862345392b7cc0569",
+      "merged_pr": 300,
+      "merged_at": "2026-09-24T12:07:38Z",
+      "merge_commit_sha": "fad170645ba612b746453487dc97cc0e03cb05e7"
+    },
+    {
+      "branch": "docs/staging-disk-safe-checkpoint-20260924",
+      "expected_sha": "c210a26ca8aaac40d7e664869e8b366e6bd71f12",
+      "merged_pr": 299,
+      "merged_at": "2026-09-24T10:30:04Z",
+      "merge_commit_sha": "6a98926351af97487ef63ec04baeef2cc26c9706"
+    },
+    {
+      "branch": "docs/ux-final-static-baseline-20260912",
+      "expected_sha": "54cceb49f8dadbb6f4cc41ef1f9dcdb00b607f58",
+      "merged_pr": 66,
+      "merged_at": "2026-09-12T08:44:49Z",
+      "merge_commit_sha": "1e4c280a01e49f5b8b793bb6d301aa481f344c45"
+    },
+    {
+      "branch": "docs/ux-origin-main-runtime-handoff-20260912",
+      "expected_sha": "fbf8943295722e536182b4ba4e31ee049e026d95",
+      "merged_pr": 67,
+      "merged_at": "2026-09-12T08:54:01Z",
+      "merge_commit_sha": "3c265ec3c92deb8130318df8699c3182921baac1"
+    },
+    {
+      "branch": "docs/ux-proxy-followup-sync-20260912",
+      "expected_sha": "6a6006d693e9014de344744b13d4b6926f864546",
+      "merged_pr": 64,
+      "merged_at": "2026-09-12T08:22:23Z",
+      "merge_commit_sha": "662808f7fb1e2ac76cf0c961b2850b6778801466"
+    },
+    {
+      "branch": "docs/ux-runtime-protocol-origin-main-20260912",
+      "expected_sha": "aec7624c8ec33644518889e512424b407fecce22",
+      "merged_pr": 68,
+      "merged_at": "2026-09-12T09:03:22Z",
+      "merge_commit_sha": "4329586bbd78df5bd7b2539ca0bfe03120c2a67e"
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": 99,
+      "merged_at": "2026-09-15T14:51:30Z",
+      "merge_commit_sha": "7b9c7c7324707f87c4558f3dba34dd8c4579bc91"
+    },
+    {
+      "branch": "docs/w03-flow-responsive-redesign-20260915",
+      "expected_sha": "cb77941e3e913b99571b5b1669e92a140e6dc98f",
+      "merged_pr": 92,
+      "merged_at": "2026-09-15T06:48:04Z",
+      "merge_commit_sha": "13e2795f063cfcd166981c270648f1952c1e48de"
+    },
+    {
+      "branch": "docs/w03-post-merge-sync-20260915",
+      "expected_sha": "ef76fa6ce12bd914febb05477a7c73bcb03ea331",
+      "merged_pr": 94,
+      "merged_at": "2026-09-15T09:58:11Z",
+      "merge_commit_sha": "bd080b35dc19d455e7f79d76a4a3904d3a115692"
+    },
+    {
+      "branch": "docs/w03-real-laptop-progress-20260915",
+      "expected_sha": "da5760c16e71a51f8c730917f05a921fdb436fa3",
+      "merged_pr": 98,
+      "merged_at": "2026-09-15T12:50:39Z",
+      "merge_commit_sha": "c745de0b863c541d31941d7edfba1582caae3d87"
+    },
+    {
+      "branch": "docs/w03-runtime-ready-sync-20260915",
+      "expected_sha": "7b084267e09f55dce3b07cdd2c8ea7319c9d1fc9",
+      "merged_pr": 87,
+      "merged_at": "2026-09-15T01:33:29Z",
+      "merge_commit_sha": "64d08964f9199af77eaaf1d438192ae56b4c9b00"
+    },
+    {
+      "branch": "docs/w09-w10-windows-closure-20260916",
+      "expected_sha": "e6db3e16f487e47ddbaa1b324c9894e570113ac9",
+      "merged_pr": 107,
+      "merged_at": "2026-09-16T02:29:41Z",
+      "merge_commit_sha": "34d13fde51e10a0e0b5f63a3f8aa1ed69ef620a4"
+    },
+    {
+      "branch": "docs/w11-windows-installer-closure-20260916",
+      "expected_sha": "2eecc242eeca03a3eb6c5469fb22a346965e9141",
+      "merged_pr": 124,
+      "merged_at": "2026-09-16T17:04:37Z",
+      "merge_commit_sha": "100d0f92db9778c42fb3549ae10584eee6d2f11d"
+    },
+    {
+      "branch": "docs/w14-closure-sync-20260914",
+      "expected_sha": "03465b958c8d9df64e29988ec43116e02430e822",
+      "merged_pr": 80,
+      "merged_at": "2026-09-14T16:01:17Z",
+      "merge_commit_sha": "ae1fc3d62a94804331de146ae14fd5a13be575c2"
+    },
+    {
+      "branch": "docs/w15-closure-sync-20260915",
+      "expected_sha": "affa2d9b6c9787d5f4f46968bed43a16bef2131b",
+      "merged_pr": 85,
+      "merged_at": "2026-09-15T00:54:25Z",
+      "merge_commit_sha": "5cb3fa83b5b48bfb65c50acd2dfe06cfcf20e438"
+    },
+    {
+      "branch": "docs/w15-post-merge-sync-20260914",
+      "expected_sha": "01c9d6622a6585c5dcab651d51e1755ca25a0b46",
+      "merged_pr": 82,
+      "merged_at": "2026-09-14T17:05:18Z",
+      "merge_commit_sha": "88c6a19c931fb18d00e14ecd53df140754ed78f0"
+    },
+    {
+      "branch": "docs/w17-closure-sync-20260916",
+      "expected_sha": "730dd9f026268ae030c3c6b2357214c92487c134",
+      "merged_pr": 117,
+      "merged_at": "2026-09-16T13:18:02Z",
+      "merge_commit_sha": "62e0d4b64b41cfa0b3038461bc376d67b1a2cbb8"
+    },
+    {
+      "branch": "docs/w17-w11-handoff-20260916",
+      "expected_sha": "231b90eb12c7ff5e5ca209b3db778a0523895385",
+      "merged_pr": 118,
+      "merged_at": "2026-09-16T13:40:20Z",
+      "merge_commit_sha": "45610d3e618a6004a84525054f9c12c214ccab8d"
+    },
+    {
+      "branch": "docs/w18-formal-guard-postmerge-sync-20260918",
+      "expected_sha": "b0a42a4501d76148160b81c701faf921ea558c10",
+      "merged_pr": 137,
+      "merged_at": "2026-09-18T01:35:44Z",
+      "merge_commit_sha": "4de6669a2bae9e87c50b0177f9eb9609000da120"
+    },
+    {
+      "branch": "docs/w18-formal-pass-postmerge-20260918",
+      "expected_sha": "625677658a0b532cf11805dc3f3d9138983a0b7b",
+      "merged_pr": 141,
+      "merged_at": "2026-09-18T02:29:08Z",
+      "merge_commit_sha": "47c983a062cd9d11c8e2104efb21691c1356a891"
+    },
+    {
+      "branch": "docs/w18-formal-pass-reconcile-20260918",
+      "expected_sha": "7118e9e4887438ddbea3e56a787a9f4f910ec1b1",
+      "merged_pr": 140,
+      "merged_at": "2026-09-18T02:26:06Z",
+      "merge_commit_sha": "eba6cbf5b53ad9af4f61e4519ae1e3400f4fdf53"
+    },
+    {
+      "branch": "docs/w18-formal-readiness-sync-20260918",
+      "expected_sha": "2d3daa6f352487c3c7a14029f14495cbbef6eac0",
+      "merged_pr": 136,
+      "merged_at": "2026-09-17T18:38:21Z",
+      "merge_commit_sha": "a265572d5f41edb00e9a857354a77155704326ce"
+    },
+    {
+      "branch": "docs/w18-operator-wrapper-postmerge-20260918",
+      "expected_sha": "f4980db6c58ac48357606706310b85123f547d84",
+      "merged_pr": 139,
+      "merged_at": "2026-09-18T02:03:29Z",
+      "merge_commit_sha": "f249d9c0681462253bff21ca30354892ca4ce60f"
+    },
+    {
+      "branch": "docs/w18-w20-final-closure-20260918",
+      "expected_sha": "97890b269e19c9c9b8eaa8a89b4a17bcfdd09e11",
+      "merged_pr": 143,
+      "merged_at": "2026-09-18T02:50:23Z",
+      "merge_commit_sha": "65142fe14901c87a8e499710081492d4b77e1357"
+    },
+    {
+      "branch": "docs/w18-w20-final-postmerge-20260918",
+      "expected_sha": "eb127498d57239cfe7902d54dc563cdf387f9d91",
+      "merged_pr": 144,
+      "merged_at": "2026-09-18T02:53:55Z",
+      "merge_commit_sha": "943e46bf7cfd53063e8d8e4970d0c9aa7713dce9"
+    },
+    {
+      "branch": "dr2/physical-independence-foundation-20260923",
+      "expected_sha": "200f050bc74072ebe5f0945aec82b353201e70fe",
+      "merged_pr": 278,
+      "merged_at": "2026-09-23T13:27:00Z",
+      "merge_commit_sha": "4d1f4ef82839c74cc1ca8454511405a68424f0b7"
+    },
+    {
+      "branch": "feat/f6-e01-heldout-selector-eval-20260918",
+      "expected_sha": "08b2a5f56340c12682c2a66474cd8884899f9013",
+      "merged_pr": 146,
+      "merged_at": "2026-09-18T03:21:56Z",
+      "merge_commit_sha": "2aa1ae10ad418acc1e00c0e6a4bdb3156affc669"
+    },
+    {
+      "branch": "feat/f6-e02-dependency-policy-ci-gate-20260918",
+      "expected_sha": "1cd4795b1a65baa1a2320713a3c8ffe520cfc98f",
+      "merged_pr": 149,
+      "merged_at": "2026-09-18T05:41:48Z",
+      "merge_commit_sha": "20aedfe94ee9f3db321dd3a66625bedd56a334a1"
+    },
+    {
+      "branch": "feat/frontend-product-polish-20260912",
+      "expected_sha": "2c935b1eabd0cea29befc1dadf359b7a2ecd3016",
+      "merged_pr": 55,
+      "merged_at": "2026-09-12T03:40:16Z",
+      "merge_commit_sha": "37a106aa5b4278ba22ca93ca7e461529aa96bcf8"
+    },
+    {
+      "branch": "feat/frontend-typography-accessibility-20260912",
+      "expected_sha": "26d0bab541bb08c37d11cd2740d6ccdeee77fd45",
+      "merged_pr": 56,
+      "merged_at": "2026-09-12T05:20:28Z",
+      "merge_commit_sha": "4a197ddde7524a963e71a41811566f0b47d31ebe"
+    },
+    {
+      "branch": "feat/local-backup-restore-evidence-20260911",
+      "expected_sha": "fc0112a0472b7cb3938fc733a583d86432bd175e",
+      "merged_pr": 50,
+      "merged_at": "2026-09-11T15:16:17Z",
+      "merge_commit_sha": "4e6bcd94776fc7dd75440ee35dd8fddf0b602233"
+    },
+    {
+      "branch": "feat/local-observability-baseline-20260911",
+      "expected_sha": "ba4ad0ffedb25313f68fc658d3a8ffe2d54766ef",
+      "merged_pr": 52,
+      "merged_at": "2026-09-11T16:36:39Z",
+      "merge_commit_sha": "bbd9c1aeed0c0aaffc39b6f912c35e96b73702b6"
+    },
+    {
+      "branch": "feat/session10-a07-brain-scalable-layout-20260925",
+      "expected_sha": "67b859db28f5f274b9718b8dd23160a2828c40d8",
+      "merged_pr": 331,
+      "merged_at": "2026-09-25T11:58:13Z",
+      "merge_commit_sha": "13775e3903a74732162658292a8dd350a068de6b"
+    },
+    {
+      "branch": "feat/session8-a04-project-settings-20260925",
+      "expected_sha": "1430560c35128142d67b98935f5aa01239759d12",
+      "merged_pr": 318,
+      "merged_at": "2026-09-25T03:39:30Z",
+      "merge_commit_sha": "33d54928de60ba3f6d8cd3770c18d7ad5eea6f98"
+    },
+    {
+      "branch": "feat/session8-a05a-source-picker-20260925",
+      "expected_sha": "6c03970a0bf7163f5d0fddf3ea82addb399d5813",
+      "merged_pr": 319,
+      "merged_at": "2026-09-25T04:48:12Z",
+      "merge_commit_sha": "8c6188983f058854028d803168c946445f92b31c"
+    },
+    {
+      "branch": "feat/session8-a05b1-direct-project-source-ingest-20260925",
+      "expected_sha": "da1bc0b272be6cd103a9090246120bc1a49e601b",
+      "merged_pr": 320,
+      "merged_at": "2026-09-25T05:09:22Z",
+      "merge_commit_sha": "c299f0c0b74cd770a80483b0492b3b9e843f8b86"
+    },
+    {
+      "branch": "feat/session8-a05b2-project-source-extraction-20260925",
+      "expected_sha": "984aee94029fdff03bad6174650ee07e093b4406",
+      "merged_pr": 321,
+      "merged_at": "2026-09-25T05:47:35Z",
+      "merge_commit_sha": "74dea0b83046af18ab3c4a89a95996ba4c3bdc46"
+    },
+    {
+      "branch": "feat/session8-a05b3b-mcp-resource-ingestion-20260925",
+      "expected_sha": "3d4ab01ad5ac42c6317567f0ef122e1c46a0ab11",
+      "merged_pr": 324,
+      "merged_at": "2026-09-25T07:49:37Z",
+      "merge_commit_sha": "3dd350e938d3651e75fc81ac30e9ef751c477ca5"
+    },
+    {
+      "branch": "feat/session9-a06a-schedule-calendar-20260925",
+      "expected_sha": "fdc516b0336b598fae7217f511146fcbc96f5c21",
+      "merged_pr": 327,
+      "merged_at": "2026-09-25T08:40:24Z",
+      "merge_commit_sha": "3b1abefd18263f7441d139e3435b064f83b142ea"
+    },
+    {
+      "branch": "feat/session9-a06b-schedule-assistant-20260925",
+      "expected_sha": "f7e10c1d4fae957e7a9b52bbbc78805424f8da12",
+      "merged_pr": 329,
+      "merged_at": "2026-09-25T10:38:15Z",
+      "merge_commit_sha": "d182c5ec06be14de068b7c3911a0decffcc94d41"
+    },
+    {
+      "branch": "feat/session9-a08a-brain-owner-resources-20260925",
+      "expected_sha": "dcb6d133cfdffda990201a986ff3f768e2243200",
+      "merged_pr": 333,
+      "merged_at": "2026-09-25T13:32:55Z",
+      "merge_commit_sha": "461a9665584b5e3a47396663cd4220f21c62027c"
+    },
+    {
+      "branch": "feat/session9-a08b-brain-context-facts-20260925",
+      "expected_sha": "c81674311587f6221331d73eb7baac02857b9d24",
+      "merged_pr": 335,
+      "merged_at": "2026-09-25T14:36:02Z",
+      "merge_commit_sha": "bc5601602e401bb0f4d19f567b4dd10c6388f94d"
+    },
+    {
+      "branch": "feat/session9-a08c-brain-fact-provenance-20260925",
+      "expected_sha": "653b8b5f650907bd60e4987b36beae164b872715",
+      "merged_pr": 338,
+      "merged_at": "2026-09-25T15:52:55Z",
+      "merge_commit_sha": "0a36a041a4077e185cbc934723d7ca195c5f5fc5"
+    },
+    {
+      "branch": "feat/ux-product-validation-20260912",
+      "expected_sha": "8bc551155984ddb61c4e81166d156cffe056e9db",
+      "merged_pr": 54,
+      "merged_at": "2026-09-12T02:45:53Z",
+      "merge_commit_sha": "ef28ee077d6156d5a6b8c170ef863bb8a754e222"
+    },
+    {
+      "branch": "feat/w03-flow-responsive-redesign-20260915",
+      "expected_sha": "e2e2e3efe5d383ff305cad48e4fcd50b0262e60d",
+      "merged_pr": 93,
+      "merged_at": "2026-09-15T09:51:55Z",
+      "merge_commit_sha": "88b409f6497166213beeb301aad53d78e922b72e"
+    },
+    {
+      "branch": "feat/w09-w10-dynamic-ai-port-20260915",
+      "expected_sha": "b6673f92e98610147c4a84f4cb858abf17b140a8",
+      "merged_pr": 103,
+      "merged_at": "2026-09-15T17:16:41Z",
+      "merge_commit_sha": "c9e017217533230bbd427057fc1aa0eb6fdde7ab"
+    },
+    {
+      "branch": "feat/w09-w10-windows-engine-acceptance-20260915",
+      "expected_sha": "947ccae0780fdf5201e36b7edacc40517ca0336d",
+      "merged_pr": 100,
+      "merged_at": "2026-09-15T15:29:45Z",
+      "merge_commit_sha": "7380bb83073648717370b92901279652602f6692"
+    },
+    {
+      "branch": "feat/w11-windows-installer-acceptance-20260916",
+      "expected_sha": "1521fa40cdce7c50fef5ca92838fa323e8c99e0e",
+      "merged_pr": 108,
+      "merged_at": "2026-09-16T02:46:02Z",
+      "merge_commit_sha": "2c3bed011577be8a7604f05054c31c152be29c4d"
+    },
+    {
+      "branch": "feat/w18-hosted-economics-harness-20260917",
+      "expected_sha": "96b417acca54c881765ba4e7babf660405c6e158",
+      "merged_pr": 125,
+      "merged_at": "2026-09-16T17:59:08Z",
+      "merge_commit_sha": "982d08b1b7d230d47723e9ef50f9fcbc20bf15ba"
+    },
+    {
+      "branch": "fix/ai-voice-stream-owner-boundary-20260912",
+      "expected_sha": "0b7adac1785ef49b95f4baa7c0769c9929c98fd3",
+      "merged_pr": 65,
+      "merged_at": "2026-09-12T08:35:35Z",
+      "merge_commit_sha": "f3f5fca3d20ddd35e1a4c4a7fbd6983a33db85ca"
+    },
+    {
+      "branch": "fix/audit-hardening-20260914",
+      "expected_sha": "e78231f59c7d75e171a40c6b28a8b7b30a92930c",
+      "merged_pr": 75,
+      "merged_at": "2026-09-14T12:14:29Z",
+      "merge_commit_sha": "a7d3a23b50e9b5a9a0994d7f93fe76154c0d8451"
+    },
+    {
+      "branch": "fix/chat-session-hydration-20260911",
+      "expected_sha": "d95e138e849a4322b56897572ad5dc55414fa6c5",
+      "merged_pr": 36,
+      "merged_at": "2026-09-11T01:46:17Z",
+      "merge_commit_sha": "8b93b346a11cc4293af2b8e75e2ec6af48348e60"
+    },
+    {
+      "branch": "fix/clean-checkout-docs-20260920",
+      "expected_sha": "451c3b45366ca42004d6c5af53f59c475e911e6f",
+      "merged_pr": 183,
+      "merged_at": "2026-09-19T17:45:51Z",
+      "merge_commit_sha": "4980b3ceb149be58788467d2e11769de12977d5a"
+    },
+    {
+      "branch": "fix/cmd-index-eol-normalization-20260920",
+      "expected_sha": "600f459fbe2671e7e4297e60da725b005b6f9533",
+      "merged_pr": 185,
+      "merged_at": "2026-09-19T18:23:34Z",
+      "merge_commit_sha": "4194e89a2b0611897969eaca2cb9c2b4b360c774"
+    },
+    {
+      "branch": "fix/comparative-cache-namespace-20260911",
+      "expected_sha": "689adf108252dd8eb899ea04cc96986da45bc38f",
+      "merged_pr": 40,
+      "merged_at": "2026-09-11T04:21:25Z",
+      "merge_commit_sha": "197627dc04689dea94bf7957e18b2699f8fb9213"
+    },
+    {
+      "branch": "fix/comparative-release-fixture-ambiguity-20260911",
+      "expected_sha": "e11662d8629f37db323ccd50367c1e758e9f56fd",
+      "merged_pr": 41,
+      "merged_at": "2026-09-11T05:19:46Z",
+      "merge_commit_sha": "4d5ee560a3b6cef024b0d7ed7bbec53a17f32675"
+    },
+    {
+      "branch": "fix/dev-runtime-deps-build-20260911",
+      "expected_sha": "878163b0ebef83a1bc204f70e438dffa495e9c9a",
+      "merged_pr": 48,
+      "merged_at": "2026-09-11T10:16:24Z",
+      "merge_commit_sha": "673af91642ea1b9440079e396675c69f53647951"
+    },
+    {
+      "branch": "fix/f6-e01-auto-discover-eval-manifests-20260918",
+      "expected_sha": "96aad04d33e539e352c1cc4e754f70a2c34c77f4",
+      "merged_pr": 147,
+      "merged_at": "2026-09-18T03:26:02Z",
+      "merge_commit_sha": "d7b759354e3845fde058d5f11f52ce52346699a8"
+    },
+    {
+      "branch": "fix/frontend-interaction-state-20260912",
+      "expected_sha": "d66110706ba47811e2f5e4e58ebf8de878c866a4",
+      "merged_pr": 58,
+      "merged_at": "2026-09-12T05:32:25Z",
+      "merge_commit_sha": "484039d0c3b4cce3a39bc72da2492d8feff4234d"
+    },
+    {
+      "branch": "fix/frontend-mutation-guards-20260912",
+      "expected_sha": "94e8fcd709017d16acec717e38259faef8597181",
+      "merged_pr": 59,
+      "merged_at": "2026-09-12T05:38:54Z",
+      "merge_commit_sha": "aa3b5b33637dd9207d1b8562ab7f34ccf968e39c"
+    },
+    {
+      "branch": "fix/frontend-request-races-20260912",
+      "expected_sha": "2248f71c22a0e369f91de5c68b8902f99c07f7de",
+      "merged_pr": 60,
+      "merged_at": "2026-09-12T06:12:10Z",
+      "merge_commit_sha": "63646960da0f4dce946208470eed1c7d6f3068e4"
+    },
+    {
+      "branch": "fix/frontend-ux-static-final-20260912",
+      "expected_sha": "478f900ffa62f1c7023c1f9adc338bb8f21a82d6",
+      "merged_pr": 62,
+      "merged_at": "2026-09-12T07:10:04Z",
+      "merge_commit_sha": "33419b61c8f2678a6e96e5de76fce9fa0cb539a9"
+    },
+    {
+      "branch": "fix/internal-http-timeouts-20260924",
+      "expected_sha": "75d17e6d223422a757e1423315ce2083ef0ef211",
+      "merged_pr": 309,
+      "merged_at": "2026-09-24T17:16:14Z",
+      "merge_commit_sha": "2ee12fd454ade78ce1bf732390334726980e0451"
+    },
+    {
+      "branch": "fix/internal-redirect-fail-closed-20260921",
+      "expected_sha": "87ca5a5fdb4f594b5e80c1b100c62107748f0fa6",
+      "merged_pr": 224,
+      "merged_at": "2026-09-21T10:50:42Z",
+      "merge_commit_sha": "032efd3ea5776985c0f4fd00f6a793886e481b33"
+    },
+    {
+      "branch": "fix/jwks-redirect-fail-closed-20260921",
+      "expected_sha": "1231e2d1da30f64b059a24ad6b69bcd7028b9071",
+      "merged_pr": 228,
+      "merged_at": "2026-09-21T11:33:18Z",
+      "merge_commit_sha": "6f35fd8b0c9d8787cc86a0af679b215ed326132b"
+    },
+    {
+      "branch": "fix/jwks-refresh-outage-semantics-20260921",
+      "expected_sha": "01463071d790ff54cef9b44a5081c86a98a018e3",
+      "merged_pr": 231,
+      "merged_at": "2026-09-21T12:14:11Z",
+      "merge_commit_sha": "bda2cc47dbb7c1cf2a5e227874131b1de12e0c88"
+    },
+    {
+      "branch": "fix/jwks-rotation-refresh-20260921",
+      "expected_sha": "42b31f4e5c3c819c267a055af7962ea95ea505d5",
+      "merged_pr": 229,
+      "merged_at": "2026-09-21T12:01:32Z",
+      "merge_commit_sha": "afc1b27b31396b497d1e6886dbaf0f62013fde5e"
+    },
+    {
+      "branch": "fix/local-chat-live-request-framing-20260912",
+      "expected_sha": "878169d0146632157a5bc347e4ddb19bc05d570f",
+      "merged_pr": 71,
+      "merged_at": "2026-09-12T15:44:54Z",
+      "merge_commit_sha": "b3dbab0706c6faa7e2caede1199271bce8489ebe"
+    },
+    {
+      "branch": "fix/local-runtime-redirect-fail-closed-20260921",
+      "expected_sha": "d88992a496963d8ee7f5c4a444efe6b2b40c3025",
+      "merged_pr": 227,
+      "merged_at": "2026-09-21T11:20:18Z",
+      "merge_commit_sha": "f8a84eb8ec1c4e59d6515993b4868e2626b8360e"
+    },
+    {
+      "branch": "fix/local-verify-env-isolation-20260911",
+      "expected_sha": "ea28715a54c45d7411c1ecca937742a01fb0a0ac",
+      "merged_pr": 33,
+      "merged_at": "2026-09-10T18:09:29Z",
+      "merge_commit_sha": "eac26497aa868e448c5fa4e48c3331abf585d5cf"
+    },
+    {
+      "branch": "fix/mcp-auth-error-semantics-20260921",
+      "expected_sha": "ff22680e012cb484b855a620b6a9d0f11c941550",
+      "merged_pr": 230,
+      "merged_at": "2026-09-21T12:09:08Z",
+      "merge_commit_sha": "202823c672384924f1313c2a55467578d755503d"
+    },
+    {
+      "branch": "fix/multimodal-local-endpoint-scope-20260921",
+      "expected_sha": "032c5b676d64cd1fb41d45b015005ffb2f9ec9a2",
+      "merged_pr": 232,
+      "merged_at": "2026-09-21T12:31:03Z",
+      "merge_commit_sha": "1618b45e3c0837a84e17d258182cd73cad3f0591"
+    },
+    {
+      "branch": "fix/multimodal-redirect-fail-closed-20260921",
+      "expected_sha": "fa799375fdcc983d3b9cb7982b59dca660e559da",
+      "merged_pr": 226,
+      "merged_at": "2026-09-21T11:14:51Z",
+      "merge_commit_sha": "1c4a4cda16fe7df04507622dc241a9124bbe2bc6"
+    },
+    {
+      "branch": "fix/offhost-dr-fetch-failfast-20260922",
+      "expected_sha": "df6381783d00a5b607438032c22afb3775a6a9d7",
+      "merged_pr": 268,
+      "merged_at": "2026-09-22T16:46:06Z",
+      "merge_commit_sha": "bfca380ec12d30fe833b02011494e18988ec8807"
+    },
+    {
+      "branch": "fix/offhost-dr-start-single-build-20260923",
+      "expected_sha": "4254bc82f230e77c1037886f09c470fc0ef5f4ea",
+      "merged_pr": 273,
+      "merged_at": "2026-09-23T00:43:29Z",
+      "merge_commit_sha": "8ef0cb3d205774fd95502eb52dfdf5c7d15fdd74"
+    },
+    {
+      "branch": "fix/offhost-dr-target-audit-stdin-20260922",
+      "expected_sha": "7cfd712afe5096a7e1b090439546a2ac35f2567f",
+      "merged_pr": 267,
+      "merged_at": "2026-09-22T15:17:54Z",
+      "merge_commit_sha": "a20c0a7535b53f79b9244b010ae381b2b6c43bb5"
+    },
+    {
+      "branch": "fix/owner-remote-bind-auth-20260924",
+      "expected_sha": "50d117517b008c3106222d42c41870a3c438662b",
+      "merged_pr": 308,
+      "merged_at": "2026-09-24T16:57:59Z",
+      "merge_commit_sha": "e4810e0d7980682028be67634fa430090fe9bf92"
+    },
+    {
+      "branch": "fix/pcs-07-caddy-hash-env-interpolation-20260920",
+      "expected_sha": "3e12815c4322d02d5de8072354e9896c60bd2e87",
+      "merged_pr": 207,
+      "merged_at": "2026-09-20T15:17:38Z",
+      "merge_commit_sha": "99523b0bb29ce11a74ec61c0e364ef5b6dd543ae"
+    },
+    {
+      "branch": "fix/pcs-07-public-smoke-mcp-challenge-20260920",
+      "expected_sha": "2c5543be19651e1d23083e1cbbf6d9ad40a0e231",
+      "merged_pr": 208,
+      "merged_at": "2026-09-20T15:33:15Z",
+      "merge_commit_sha": "59430c4b72a704d1fd6c6176d12b13fa27ddf674"
+    },
+    {
+      "branch": "fix/pcs-08-staging-edge-readiness-20260921",
+      "expected_sha": "bd130417484edcedfd1632207d53744cc5024db1",
+      "merged_pr": 214,
+      "merged_at": "2026-09-20T18:47:24Z",
+      "merge_commit_sha": "0b50a426ca2b14202eba769297af6c15a579b09f"
+    },
+    {
+      "branch": "fix/persistence-evidence-hardening-20260911",
+      "expected_sha": "f32de9549696251347aa82a9f2324012f7aa946a",
+      "merged_pr": 44,
+      "merged_at": "2026-09-11T07:49:14Z",
+      "merge_commit_sha": "3319f140379c455446bade50c80aadcca5b0ecc7"
+    },
+    {
+      "branch": "fix/provider-redirect-fail-closed-20260921",
+      "expected_sha": "8a2b4e05e4827d2ac5e0fe4354f8d13cc2e5c94f",
+      "merged_pr": 225,
+      "merged_at": "2026-09-21T11:09:54Z",
+      "merge_commit_sha": "d4e5bad0226775e6c6275cfbb044dcab79a3665f"
+    },
+    {
+      "branch": "fix/repo-root-runtime-paths-20260911",
+      "expected_sha": "dd5067c71542d8178c369d0cf9092e0f44663ea5",
+      "merged_pr": 46,
+      "merged_at": "2026-09-11T09:52:50Z",
+      "merge_commit_sha": "778e7eb19a0e2f528c64e68459d8ff6e6ecbe1ce"
+    },
+    {
+      "branch": "fix/secret-scan-local-env-20260911",
+      "expected_sha": "1fd963c1b58892561b4ed9e83d71300d02367f67",
+      "merged_pr": 34,
+      "merged_at": "2026-09-10T18:34:31Z",
+      "merge_commit_sha": "a95e5e20bb30d4828288f6bba230860bc65e631f"
+    },
+    {
+      "branch": "fix/session5-a13-space-flow-port-20260925",
+      "expected_sha": "51a8a46c33dedd8d92b075b857ab21d47ad10325",
+      "merged_pr": 312,
+      "merged_at": "2026-09-24T18:01:21Z",
+      "merge_commit_sha": "d8d2a113c917cee87f2d43a5a2243eda2e4d2173"
+    },
+    {
+      "branch": "fix/session6-a02-projects-all-20260925",
+      "expected_sha": "ec8388df4361a94fee7eb63926e580a25e1acd4b",
+      "merged_pr": 314,
+      "merged_at": "2026-09-25T00:54:01Z",
+      "merge_commit_sha": "591b54131c2d0b53532f33e08b878c15a0617951"
+    },
+    {
+      "branch": "fix/session8-a05b3a-dns-pinned-url-fetch-20260925",
+      "expected_sha": "5c63ae8320d9c00dc57690e29d116624278a6259",
+      "merged_pr": 323,
+      "merged_at": "2026-09-25T07:02:25Z",
+      "merge_commit_sha": "55466c71bb3d978039f2088b9209607399262a09"
+    },
+    {
+      "branch": "fix/settings-valid-workspace-runtime-20260912",
+      "expected_sha": "1aa3976eac735e301b053b52d5a5f1171dd40e5d",
+      "merged_pr": 70,
+      "merged_at": "2026-09-12T15:17:02Z",
+      "merge_commit_sha": "be953a684fbef8b49a8f775dfce721bec3925d5b"
+    },
+    {
+      "branch": "fix/staging-ops-readiness-retry-20260924",
+      "expected_sha": "737aee32aafc13db7aa60d992cb831acf4131f89",
+      "merged_pr": 302,
+      "merged_at": "2026-09-24T13:13:05Z",
+      "merge_commit_sha": "bd31ab7d64c0579f752fb225ed78b1dab94eed2a"
+    },
+    {
+      "branch": "fix/ux-inventory-runtime-contract-20260912",
+      "expected_sha": "50edaa2267a41841da7615eaa64a78488128bf1f",
+      "merged_pr": 69,
+      "merged_at": "2026-09-12T14:59:37Z",
+      "merge_commit_sha": "af54d9d7b93bf3e2b542b354a18c50aaf60406ba"
+    },
+    {
+      "branch": "fix/ux-proxy-contract-hardening-20260912",
+      "expected_sha": "90d531473cc0e2e5597a8e5e851d546432169f61",
+      "merged_pr": 63,
+      "merged_at": "2026-09-12T07:38:59Z",
+      "merge_commit_sha": "6ea63f570b3e764154837bc2ad7ca2c1123f06bc"
+    },
+    {
+      "branch": "fix/w03-connect-windows-startup-20260915",
+      "expected_sha": "e44510057e67ac43f082637bc2e9756f44f4bd26",
+      "merged_pr": 88,
+      "merged_at": "2026-09-15T02:28:16Z",
+      "merge_commit_sha": "37342954d15a02ec52d8dce9b9e7a5a0d8ac09a5"
+    },
+    {
+      "branch": "fix/w03-flow-inventory-marker-20260915",
+      "expected_sha": "29e08ff576ee1156001a5a2a3e66b141c8e99ee4",
+      "merged_pr": 95,
+      "merged_at": "2026-09-15T10:25:01Z",
+      "merge_commit_sha": "db6960e11a4a9ac6f6ee082d320b57ded952f88a"
+    },
+    {
+      "branch": "fix/w03-mobile-ux-round3-20260915",
+      "expected_sha": "27dcff8410e06393faa5fea8e3bcfb563edc73f1",
+      "merged_pr": 97,
+      "merged_at": "2026-09-15T12:27:40Z",
+      "merge_commit_sha": "746dc0705e12d419f93d3592bc6c7bdb55e4b76e"
+    },
+    {
+      "branch": "fix/w03-settings-feedback-responsive-20260915",
+      "expected_sha": "b74190d3b6a2a8838227e59524db2cbee706cb52",
+      "merged_pr": 90,
+      "merged_at": "2026-09-15T04:42:10Z",
+      "merge_commit_sha": "d0bf34ae1ec8b0ab4f2052863f3057f7a98254e1"
+    },
+    {
+      "branch": "fix/w03-settings-mobile-layout-20260915",
+      "expected_sha": "77b78736ca76116dc75d89e8edb7320cc07763cb",
+      "merged_pr": 96,
+      "merged_at": "2026-09-15T11:25:38Z",
+      "merge_commit_sha": "b12586d80fbfdf389ef6a6bfda97c781d8e9760c"
+    },
+    {
+      "branch": "fix/w03-windows-process-tree-cleanup-20260915",
+      "expected_sha": "5b1645e03303a443a1dd5b21e91060f9372e1501",
+      "merged_pr": 89,
+      "merged_at": "2026-09-15T02:44:16Z",
+      "merge_commit_sha": "1034925dce8bfd875d15c6dba562c002cffd55e3"
+    },
+    {
+      "branch": "fix/w09-w10-port-runtime-followup-v4-20260916",
+      "expected_sha": "f3f2318df910829172995a02dfb2d407ca2b34d9",
+      "merged_pr": 104,
+      "merged_at": "2026-09-15T18:04:16Z",
+      "merge_commit_sha": "7b9c49d93fa64051bd6ce8abc0e05f01281f116f"
+    },
+    {
+      "branch": "fix/w09-w10-sentinel-econnreset-20260916",
+      "expected_sha": "16c94c646b8c88f16a3e949e899a2d52c35ee389",
+      "merged_pr": 105,
+      "merged_at": "2026-09-16T00:55:59Z",
+      "merge_commit_sha": "7a31b6b983d941c44fd7fd74612f662d98f8bc00"
+    },
+    {
+      "branch": "fix/w09-w10-sentinel-reachability-20260916",
+      "expected_sha": "8a9e18271187cc1c0e32afaad47c4af3a196639a",
+      "merged_pr": 106,
+      "merged_at": "2026-09-16T01:34:48Z",
+      "merge_commit_sha": "4ea5b942ec705b61fe51c4b47a75bc59ac6019b8"
+    },
+    {
+      "branch": "fix/w09-w10-windows-cleanup-race-20260915",
+      "expected_sha": "54386d11611f424eb9e3f2dec04abd929ffd6ed7",
+      "merged_pr": 102,
+      "merged_at": "2026-09-15T16:26:47Z",
+      "merge_commit_sha": "b1b3280795fdab95f99f5baa2ff05ea1fd057c42"
+    },
+    {
+      "branch": "fix/w09-w10-windows-pnpm-doctor-20260915",
+      "expected_sha": "925af3bd1be6fb7127cebedc83d6c8a81ba652ce",
+      "merged_pr": 101,
+      "merged_at": "2026-09-15T16:05:37Z",
+      "merge_commit_sha": "840814b66ce1ea326b627b970d7002edd599d4a9"
+    },
+    {
+      "branch": "fix/w11-context-migrations-package-20260916",
+      "expected_sha": "0391c62e7b53f696cc3dc98f3ed8e11ff7bffbc6",
+      "merged_pr": 123,
+      "merged_at": "2026-09-16T16:26:51Z",
+      "merge_commit_sha": "8cb665ff25682e683b284c896ec3a2e77bf716ba"
+    },
+    {
+      "branch": "fix/w11-desktop-bundle-stdio-20260916",
+      "expected_sha": "a9b34e05c26c4f776be46c2f730c2e7d6f56f1b4",
+      "merged_pr": 109,
+      "merged_at": "2026-09-16T03:59:16Z",
+      "merge_commit_sha": "c922884b9c2664a0e5df8b1909b9ff73ce398ded"
+    },
+    {
+      "branch": "fix/w11-desktop-source-revision-20260916",
+      "expected_sha": "bf7dc8a6cd46da6518d7ef527a189fff5842dbf6",
+      "merged_pr": 110,
+      "merged_at": "2026-09-16T04:06:34Z",
+      "merge_commit_sha": "936909135e40e7a82004f08d57269f9af59e2fd6"
+    },
+    {
+      "branch": "fix/w11-launcher-image-probe-20260916",
+      "expected_sha": "c6960c547ea021fa46f32865f6a7d38475481915",
+      "merged_pr": 121,
+      "merged_at": "2026-09-16T14:46:25Z",
+      "merge_commit_sha": "dcf12762c6a3466e0d2beadcbadc27179072c347"
+    },
+    {
+      "branch": "fix/w11-native-docker-stderr-20260916",
+      "expected_sha": "5e063e9f4662125416f5d3eca4ebbcdbf02f682c",
+      "merged_pr": 122,
+      "merged_at": "2026-09-16T15:44:08Z",
+      "merge_commit_sha": "45ab54d233f28a71ea5eba6b396b592ce4a42e2a"
+    },
+    {
+      "branch": "fix/w18-cleanup-model-preservation-20260921",
+      "expected_sha": "a51c352c9f06bad53cba5e46a5294c2c993c69b3",
+      "merged_pr": 222,
+      "merged_at": "2026-09-21T10:24:41Z",
+      "merge_commit_sha": "b7062d456517816603dcc54c072cdb68969abb1d"
+    },
+    {
+      "branch": "fix/w18-diagnostic-failure-evidence-20260917",
+      "expected_sha": "a9254fcc23c8643d7d096e50f05f860edf4f0512",
+      "merged_pr": 131,
+      "merged_at": "2026-09-17T13:36:04Z",
+      "merge_commit_sha": "38bdf1fb1dbbb97218e1c88da5a3cee4ee75674d"
+    },
+    {
+      "branch": "fix/w18-diagnostic-pre-dispatch-cap-20260917",
+      "expected_sha": "4b05bbf8bc85b9f7f1a16aa5c90832ccd494fe76",
+      "merged_pr": 130,
+      "merged_at": "2026-09-17T10:55:54Z",
+      "merge_commit_sha": "217b7a69927e57be3478af3800a0ef6c1e0913df"
+    },
+    {
+      "branch": "fix/w18-formal-anthropic-routing-evidence-20260917",
+      "expected_sha": "789c7ba64d1560eeae5433e22af2cc8b4e718b43",
+      "merged_pr": 134,
+      "merged_at": "2026-09-17T15:40:42Z",
+      "merge_commit_sha": "9f95d184c6a59da527fd23454fed06065a5738fe"
+    },
+    {
+      "branch": "fix/w18-formal-pre-dispatch-cap-routing-evidence-20260917",
+      "expected_sha": "1b6f5d631429eda53be734266a5f47e527390739",
+      "merged_pr": 135,
+      "merged_at": "2026-09-18T01:31:15Z",
+      "merge_commit_sha": "fcf71cc03f7584e005a490b8d7d3e4c9afdeba1a"
+    },
+    {
+      "branch": "fix/w18-openrouter-routing-diagnostics-20260917",
+      "expected_sha": "abf50986cee05222318a2b3011837911fa52b1d0",
+      "merged_pr": 132,
+      "merged_at": "2026-09-17T14:03:51Z",
+      "merge_commit_sha": "e180861010085a2c8043cc91209b58b57eadc7f3"
+    },
+    {
+      "branch": "fix/w18-openrouter-zero-cost-response-20260917",
+      "expected_sha": "083b495939370568576d10965bd1fd393163b621",
+      "merged_pr": 126,
+      "merged_at": "2026-09-17T01:57:36Z",
+      "merge_commit_sha": "b9e837c91eddbf23eeb5c5468d4982013ca54363"
+    },
+    {
+      "branch": "fix/w18-pin-openrouter-anthropic-20260917",
+      "expected_sha": "b46e12629043794447fc25f7e63e508e5771e7f6",
+      "merged_pr": 133,
+      "merged_at": "2026-09-17T14:30:54Z",
+      "merge_commit_sha": "a4382135d2d2729546e517b1bc6337542664f4ee"
+    },
+    {
+      "branch": "fix/w18-provider-diagnostics-settlement-20260917",
+      "expected_sha": "b352d064804b56e8b04cef34f3eca8c4332dc4b8",
+      "merged_pr": 127,
+      "merged_at": "2026-09-17T05:11:55Z",
+      "merge_commit_sha": "9d2ef8790c8ad5600f17e27de9ad961e33ec637d"
+    },
+    {
+      "branch": "fix/w18-single-attempt-consumption-guard-20260918",
+      "expected_sha": "1f0d87963857d4bb261579204e76bae970c496b0",
+      "merged_pr": 142,
+      "merged_at": "2026-09-18T02:45:15Z",
+      "merge_commit_sha": "cff6e21edc8085bb895c6ed59c32b5e4aa134ee0"
+    },
+    {
+      "branch": "fix/windows-native-portability-20260919",
+      "expected_sha": "108781b5d53034462393f06d5e9cb36e9c5d5cf5",
+      "merged_pr": 182,
+      "merged_at": "2026-09-19T17:32:59Z",
+      "merge_commit_sha": "3461951414f72c8f183527e3d28eec20dd383d45"
+    },
+    {
+      "branch": "hardening/f6-e08-container-digests-20260918",
+      "expected_sha": "6c46944108cdc275aebc682bd132ec9dc69e14e4",
+      "merged_pr": 164,
+      "merged_at": "2026-09-18T17:08:48Z",
+      "merge_commit_sha": "cacffa6c59d6871ae1ab4e11ae17cd48847864c1"
+    },
+    {
+      "branch": "hotfix/private-auth-challenge-smoke-20260924",
+      "expected_sha": "f8a83894265343c243c33e9e7090525494b83ed2",
+      "merged_pr": 295,
+      "merged_at": "2026-09-24T07:03:16Z",
+      "merge_commit_sha": "b73e885d51e82716d5b29b3b31d207aae5ec95d0"
+    },
+    {
+      "branch": "hotfix/private-edge-readiness-20260924",
+      "expected_sha": "90ca9fb7fc67e21502d218f5116d31c044f110bf",
+      "merged_pr": 293,
+      "merged_at": "2026-09-24T06:21:52Z",
+      "merge_commit_sha": "7f08456a9761f1f590761b38b7fe83b300e82e80"
+    },
+    {
+      "branch": "hotfix/private-web-access-20260924",
+      "expected_sha": "e38cc040a2afe7fa6be88ff51095c69749bd80c4",
+      "merged_pr": 291,
+      "merged_at": "2026-09-24T05:25:39Z",
+      "merge_commit_sha": "364985abd4dedc8ba514af2d395ead78f515ed22"
+    },
+    {
+      "branch": "hotfix/private-web-negative-paths-20260924",
+      "expected_sha": "1d0813a10848f8959f4031d196b537bd2a76fdeb",
+      "merged_pr": 294,
+      "merged_at": "2026-09-24T06:47:58Z",
+      "merge_commit_sha": "6f28bcf3087c5309a2124aa926bee4e39e24d414"
+    },
+    {
+      "branch": "hotfix/reload-caddy-private-access-20260924",
+      "expected_sha": "2436f7cc557d08c6b0e0ab4431fa9cb9a75c66bc",
+      "merged_pr": 292,
+      "merged_at": "2026-09-24T05:45:08Z",
+      "merge_commit_sha": "162b6912d4eaa58ee0c2a0122a9cd540cab32538"
+    },
+    {
+      "branch": "hotfix/staging-build-disk-guard-20260924",
+      "expected_sha": "167196043ca54b25ded216d556c57b7afd5dcf36",
+      "merged_pr": 298,
+      "merged_at": "2026-09-24T10:14:35Z",
+      "merge_commit_sha": "48cf5598d6b07c13c20941fa5f06776bde9882e4"
+    },
+    {
+      "branch": "ops/latest-main-staging-convergence-20260921",
+      "expected_sha": "fcaaa12ea7f5d2866c056a37f31615730b6ffe73",
+      "merged_pr": 246,
+      "merged_at": "2026-09-21T16:10:52Z",
+      "merge_commit_sha": "e38d9d8cd5af44b51068100428a321179b1bdcdf"
+    },
+    {
+      "branch": "ops/local-persistence-restart-evidence-20260911",
+      "expected_sha": "a6914030ea35fb212aa85b0d880a8aac90d36aa6",
+      "merged_pr": 43,
+      "merged_at": "2026-09-11T07:20:40Z",
+      "merge_commit_sha": "47ebb8b5430396dc2968445dfb56998f98e009b3"
+    },
+    {
+      "branch": "ops/offhost-dr-loss-marker-20260922",
+      "expected_sha": "b8379a2c756e2e4ea3e00424c360072b6a910829",
+      "merged_pr": 258,
+      "merged_at": "2026-09-22T06:30:55Z",
+      "merge_commit_sha": "cb043b47a2c899e3c0585b06db4992fcc727c723"
+    },
+    {
+      "branch": "ops/offhost-dr-marker-before-fetch-20260922",
+      "expected_sha": "ba7ef7d6922c0177be582d5734095ed154f72622",
+      "merged_pr": 263,
+      "merged_at": "2026-09-22T07:54:24Z",
+      "merge_commit_sha": "cf8921f19a5c78db2d3d2fd075ac232983a0bbb4"
+    },
+    {
+      "branch": "ops/offhost-dr-recovery-20260922",
+      "expected_sha": "9ad4946ed7fa4921c6c0cd8afdbaa312e9ab25e6",
+      "merged_pr": 250,
+      "merged_at": "2026-09-21T18:30:35Z",
+      "merge_commit_sha": "3c5417dd44099f6c74f0bc832f4631e3fa295c8d"
+    },
+    {
+      "branch": "ops/offhost-dr-recovery-checkpoint2-20260922",
+      "expected_sha": "dbb9423def581e95cb9e1bbe18fd3208164ef575",
+      "merged_pr": 251,
+      "merged_at": "2026-09-22T00:49:57Z",
+      "merge_commit_sha": "768c0f617064343f0bfc569d52212c80a03f0b83"
+    },
+    {
+      "branch": "ops/offhost-dr-recovery-checkpoint3-20260922",
+      "expected_sha": "b4986b081a0e76c660b6f09e2f2e2ef46f003d57",
+      "merged_pr": 252,
+      "merged_at": "2026-09-22T01:59:52Z",
+      "merge_commit_sha": "9e522e62212b5a4170ad4947c4bdd75c28f34464"
+    },
+    {
+      "branch": "ops/offhost-dr-retention-evidence-20260922",
+      "expected_sha": "7c1c8948022fc81e0c640fff7a8bcb7e4e689db3",
+      "merged_pr": 256,
+      "merged_at": "2026-09-22T05:50:03Z",
+      "merge_commit_sha": "941cb8c9ed237a5417550449c7d73e712b10ba72"
+    },
+    {
+      "branch": "ops/offhost-dr-runtime-readiness-20260922",
+      "expected_sha": "5245be4a7f0874d57b9b89e4e587aa79db90f8cf",
+      "merged_pr": 254,
+      "merged_at": "2026-09-22T04:43:42Z",
+      "merge_commit_sha": "2d0ce4f871eb828d421d87bf15b244542a661246"
+    },
+    {
+      "branch": "ops/production-activation-20260910",
+      "expected_sha": "309d604d789f2d14f7ffe7a0666be09e77db1428",
+      "merged_pr": 32,
+      "merged_at": "2026-09-10T17:46:59Z",
+      "merge_commit_sha": "a6cc17530b4e4540d710fa449c93844a8dad7981"
+    },
+    {
+      "branch": "pcs/pcs-00-baseline-lock-20260920",
+      "expected_sha": "f58311ae30beef877f0c38962bcf4b1aefe91917",
+      "merged_pr": 189,
+      "merged_at": "2026-09-20T05:14:51Z",
+      "merge_commit_sha": "12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764"
+    },
+    {
+      "branch": "pcs/pcs-01-chat-continuity-20260920",
+      "expected_sha": "9445b30c659628e1d551191219d0b7cd5ccf2f7c",
+      "merged_pr": 191,
+      "merged_at": "2026-09-20T05:43:13Z",
+      "merge_commit_sha": "ee363c055944b27b549a2f061105eea35fa25f9e"
+    },
+    {
+      "branch": "pcs/pcs-02-provider-onboarding-20260920",
+      "expected_sha": "45dbe9365b23dfa3398a4726a26f9a245bd09e9d",
+      "merged_pr": 193,
+      "merged_at": "2026-09-20T06:33:02Z",
+      "merge_commit_sha": "0fba6842f4c39f2742eb6d518e63c90d1a4883db"
+    },
+    {
+      "branch": "pcs/pcs-03-local-runtime-discovery-20260920",
+      "expected_sha": "5be1c68f7b345d5e7d433a9eed302000ffe552a1",
+      "merged_pr": 195,
+      "merged_at": "2026-09-20T08:06:24Z",
+      "merge_commit_sha": "4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae"
+    },
+    {
+      "branch": "pcs/pcs-04-visual-ia-cleanup-20260920",
+      "expected_sha": "ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5",
+      "merged_pr": 197,
+      "merged_at": "2026-09-20T08:22:37Z",
+      "merge_commit_sha": "8a328ae0c0abeb039866ac40068a9053c4796659"
+    },
+    {
+      "branch": "pcs/pcs-05-flow-runtime-closure-20260920",
+      "expected_sha": "d7eb37e8b5e97da07895fcd050621e563a47359b",
+      "merged_pr": 199,
+      "merged_at": "2026-09-20T08:59:43Z",
+      "merge_commit_sha": "f58923b8261104c8aec331f506a68f8cf5fe5e7e"
+    },
+    {
+      "branch": "pcs/pcs-06-integrated-browser-acceptance-20260920",
+      "expected_sha": "0dfdda92e0bef800ca9a7563223b7423aa9b1299",
+      "merged_pr": 201,
+      "merged_at": "2026-09-20T09:36:49Z",
+      "merge_commit_sha": "0a8f7619567500acaec0758c400d529367baf0e5"
+    },
+    {
+      "branch": "pcs/pcs-07-host-evidence-20260920",
+      "expected_sha": "8eabc24c7df44e2cad36c2c53902ef71a8dd2138",
+      "merged_pr": 204,
+      "merged_at": "2026-09-20T10:19:28Z",
+      "merge_commit_sha": "b1e003f8267cbab4c7e97bd23f81183ca18ed0ba"
+    },
+    {
+      "branch": "pcs/pcs-07-sumopod-closure-20260920",
+      "expected_sha": "11c9a31cfdf9750236fc4598673dfe8712341dc3",
+      "merged_pr": 209,
+      "merged_at": "2026-09-20T15:53:06Z",
+      "merge_commit_sha": "ac9bf1ebfff1ebf2537b72401b8eaf484d3f8f6d"
+    },
+    {
+      "branch": "pcs/pcs-07-sumopod-staging-20260920",
+      "expected_sha": "78f13902f30ab83f92e3c858eadf9fd800ead7de",
+      "merged_pr": 203,
+      "merged_at": "2026-09-20T10:02:00Z",
+      "merge_commit_sha": "5862d461760b57a21c2622ee5a234da27b6245ce"
+    },
+    {
+      "branch": "pcs/pcs-07-sumopod-traefik-edge-20260920",
+      "expected_sha": "31311dc6010109cac5990fb8ffbd5ba1a62e8eb8",
+      "merged_pr": 206,
+      "merged_at": "2026-09-20T15:06:00Z",
+      "merge_commit_sha": "5f290fdeeb8bcdc487848656ff2954d501ec376e"
+    },
+    {
+      "branch": "pcs/pcs-08-cd-idempotency-hardening-20260920",
+      "expected_sha": "60b920412a8dcc08c912da60d68e9fe1416baec8",
+      "merged_pr": 212,
+      "merged_at": "2026-09-20T16:45:47Z",
+      "merge_commit_sha": "74c76fa2685333db3a59b04d0ca34554f8e9fcf0"
+    },
+    {
+      "branch": "pcs/pcs-08-first-deploy-failure-evidence-20260921",
+      "expected_sha": "97979df5e21f8951878a792dd6bfb52fe35bb3f8",
+      "merged_pr": 215,
+      "merged_at": "2026-09-21T03:07:10Z",
+      "merge_commit_sha": "f0aa9ca97518e3b7e57fc6bc7a58e0ed7761ba05"
+    },
+    {
+      "branch": "pcs/pcs-08-host-bootstrap-evidence-20260921",
+      "expected_sha": "f6e7748807cb8a6be3d7e530a5038c09fa0bca20",
+      "merged_pr": 213,
+      "merged_at": "2026-09-20T18:28:45Z",
+      "merge_commit_sha": "38d1bc057827ddd702d603d49bc0cad629d90c5f"
+    },
+    {
+      "branch": "pcs/pcs-08-repository-merge-evidence-20260920",
+      "expected_sha": "6a39b8dd782727a969ecc577d29381b5504187e4",
+      "merged_pr": 211,
+      "merged_at": "2026-09-20T16:35:44Z",
+      "merge_commit_sha": "aec9e7a26c446e1484bd49bf806227322d6f2dff"
+    },
+    {
+      "branch": "pcs/pcs-08-staging-cd-20260920",
+      "expected_sha": "4a5fa9d9d776eae3895a8e0b8e6b73013e3f476f",
+      "merged_pr": 210,
+      "merged_at": "2026-09-20T16:30:58Z",
+      "merge_commit_sha": "652588e00dca5a04c8b39081fb6574a3db508ba1"
+    },
+    {
+      "branch": "pcs/pcs-09-host-baseline-evidence-20260921",
+      "expected_sha": "ece59440d742f59252046562cf3ba86e7911b46f",
+      "merged_pr": 218,
+      "merged_at": "2026-09-21T05:59:01Z",
+      "merge_commit_sha": "3db9e4854afbaccb9790638243fa98048c1a4f78"
+    },
+    {
+      "branch": "pcs/pcs-09-repository-merge-evidence-20260921",
+      "expected_sha": "4300fe143f4d7e5979f0dd89f9d1109e6a01a230",
+      "merged_pr": 217,
+      "merged_at": "2026-09-21T04:34:32Z",
+      "merge_commit_sha": "0f332c73dc7b363bffecdeecae921d805d5ae131"
+    },
+    {
+      "branch": "pcs/pcs-09-staging-hardening-20260921",
+      "expected_sha": "0bf1414859d4bf573f1ebc46ad6286b125ca1f38",
+      "merged_pr": 216,
+      "merged_at": "2026-09-21T04:26:02Z",
+      "merge_commit_sha": "acd050139f8d5db0dcdadeb8c072ab6432100f0f"
+    },
+    {
+      "branch": "pcs/pcs-10-doc-convergence-20260921",
+      "expected_sha": "c84f76face60d203592d8bc6e1a51acccfec5004",
+      "merged_pr": 219,
+      "merged_at": "2026-09-21T06:18:03Z",
+      "merge_commit_sha": "6058aa0ff294218147a91ee0fc7b77f32d1be80d"
+    },
+    {
+      "branch": "pe/pe-00-architecture-20260919",
+      "expected_sha": "b27ffb569f2035d9deb710a734ca2ff2c161ab23",
+      "merged_pr": 167,
+      "merged_at": "2026-09-18T18:26:06Z",
+      "merge_commit_sha": "b7ebf5492aca463e55f9f30bc259b9a6028c62d7"
+    },
+    {
+      "branch": "pe/pe-01-project-foundation-20260919",
+      "expected_sha": "d4c827e29e1d609af4ca6688b6e881ecaf2f7557",
+      "merged_pr": 169,
+      "merged_at": "2026-09-19T04:31:07Z",
+      "merge_commit_sha": "1d2b537de3ad07336adb9a97121309f04d61cc21"
+    },
+    {
+      "branch": "pe/pe-02-project-sources-20260919",
+      "expected_sha": "45782229ca4dec58a86fec85d09fbdba030b579a",
+      "merged_pr": 171,
+      "merged_at": "2026-09-19T05:39:58Z",
+      "merge_commit_sha": "c734f00eaa791077c99557e6e89579534c43d651"
+    },
+    {
+      "branch": "pe/pe-04-work-schedule-runs-20260919",
+      "expected_sha": "94936fa0704991d3536667bb8c947e9d751c813e",
+      "merged_pr": 173,
+      "merged_at": "2026-09-19T10:03:02Z",
+      "merge_commit_sha": "c08581a00a20dc6016c570a1fbb777d81e391699"
+    },
+    {
+      "branch": "pe/pe-05-event-webhook-automation-20260919",
+      "expected_sha": "3d082f555a0c701eb9911d5caa71f7cf250f5710",
+      "merged_pr": 174,
+      "merged_at": "2026-09-19T11:44:09Z",
+      "merge_commit_sha": "84defe934bf6b7d0b8868bd04c8c113e70193fc6"
+    },
+    {
+      "branch": "pe/pe-06-brain-v1-20260919",
+      "expected_sha": "25508dd1cef5d8ebb8846448c7732ddde7866a59",
+      "merged_pr": 176,
+      "merged_at": "2026-09-19T13:02:42Z",
+      "merge_commit_sha": "d54ad62c303847b23634ba33aead4749f21bf1d0"
+    },
+    {
+      "branch": "pe/pe-07-brain-context-ecx-20260919",
+      "expected_sha": "e443a6e9d10b24b7c1de7bcb315b038cf6425a45",
+      "merged_pr": 178,
+      "merged_at": "2026-09-19T14:16:38Z",
+      "merge_commit_sha": "15e31ed4b03f5be5bc6a7104fc14bb1dd0917743"
+    },
+    {
+      "branch": "pe/pe-08-product-closure-20260919",
+      "expected_sha": "5d1b1c80168a26ae38af33d862a6fa26b019802c",
+      "merged_pr": 180,
+      "merged_at": "2026-09-19T15:03:35Z",
+      "merge_commit_sha": "b32d57022344ad08a59b6b7d163507c5530a7ca6"
+    },
+    {
+      "branch": "rnd/comparative-ecx-evidence-20260911",
+      "expected_sha": "d3f1cbf4d0acbb2c92f340b952f2c42e6c9bef4a",
+      "merged_pr": 38,
+      "merged_at": "2026-09-11T03:08:15Z",
+      "merge_commit_sha": "c1849cd0c67712e40ea4e5c90587283900859cdb"
+    },
+    {
+      "branch": "security/f6-e04-immutable-actions-20260918",
+      "expected_sha": "e1818eaac40a8166fd2b677aa815670c1ca0d7b6",
+      "merged_pr": 153,
+      "merged_at": "2026-09-18T06:47:08Z",
+      "merge_commit_sha": "4742a9caf43e67b01345d69f0ea05cbbb2f081f0"
+    },
+    {
+      "branch": "security/f6-e05-fixed-runner-labels-20260918",
+      "expected_sha": "1fb568b1a3fa865f2bad556b06f9fb6e4e2d6da2",
+      "merged_pr": 155,
+      "merged_at": "2026-09-18T09:36:46Z",
+      "merge_commit_sha": "2e031d4d540632385279e3b6559d564afcae96d3"
+    },
+    {
+      "branch": "security/f6-e07-pinned-inno-toolchain-20260918",
+      "expected_sha": "472819b3a7c875246ce76daee8212a7aed8fc8c9",
+      "merged_pr": 160,
+      "merged_at": "2026-09-18T13:28:42Z",
+      "merge_commit_sha": "9362419a9e2766750237e30792a50494d39c9b17"
+    }
+  ],
+  "hold": [
+    {
+      "branch": "agent/a09-space-decomposition-20260926",
+      "current_sha": "1cfdd919b10af0b75be5ecc7c9953394396b4131",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "agent/format-probe-20260914",
+      "current_sha": "509c055b72d3cf486403de2131cc9b0894e232c7",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "agent/format-probe-w06-20260914",
+      "current_sha": "17faea59fd8f834973ea39142511166268410d4f",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "agent/native-multimodal-pipeline-20260910",
+      "current_sha": "c197cc9a4870d2d86898b207f9be1ea95ebed2df",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "agent/plugin-extension-framework-ci-20260909",
+      "current_sha": "e706aa70f3b9b80fc6ec12c72972a29f3c503639",
+      "classification": "closed_unmerged",
+      "latest_pr": 11,
+      "latest_pr_updated_at": "2026-09-09T15:08:19Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "agent/w11-installer-build-20260916",
+      "current_sha": "970d9202de600210f0b5e89d15301cfb284402b9",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "agent/w11-installer-build-r2-20260916",
+      "current_sha": "5c99993847515b98e8233f4c25f024f1ea99cd69",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "agent/w11-installer-build-r3-20260916",
+      "current_sha": "a7a9c13310581316f406ecb0e266cb3fc5e3313c",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "agent/w11-installer-build-r4-20260916",
+      "current_sha": "d870e3a74a6d6ddca526af717feace5b928f163e",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "automation/dynamic-ai-port-desktop-followup-20260915",
+      "current_sha": "743deec4e07d471e810fae3d26dc37790a007416",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "automation/dynamic-ai-port-desktop-followup-v2-20260915",
+      "current_sha": "fc9ee7dcbe23d7d2a717d3e59835753514fb798c",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "automation/dynamic-ai-port-helper-20260915",
+      "current_sha": "c0cb8afef5022b041642ce933a9582c41c2cf24b",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "automation/dynamic-ai-port-helper-v5-20260915",
+      "current_sha": "1db9d032ad43f833f7c64db7bbe895b517c45b9a",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "automation/dynamic-ai-port-helper-v6-20260915",
+      "current_sha": "ab78f5a9232205957c24330653b5a27245e01070",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "automation/dynamic-ai-port-helper-v7-20260915",
+      "current_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "checkpoint/session6-a02-code-20260925",
+      "current_sha": "591b54131c2d0b53532f33e08b878c15a0617951",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "checkpoint/session6-a02-final-20260925",
+      "current_sha": "485970785cbabd1961f1235ac5a68d87917308b8",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "checkpoint/session6-a02-safe-20260925",
+      "current_sha": "485970785cbabd1961f1235ac5a68d87917308b8",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "checkpoint/session7-a03-code-20260925",
+      "current_sha": "8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "checkpoint/session7-a03-final-20260925",
+      "current_sha": "25423b82cee31f17cea3829585a4f1e04c8423ae",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "ci/f6-e03-release-security-acceptance-gate-20260918",
+      "current_sha": "440f6cacec04d0139a36e9ac276c57a7abedab89",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/cmd-eol-final-closure-20260920",
+      "current_sha": "9b781ceb99daa43b0ff634b11ae7d6bf01c1707d",
+      "classification": "closed_unmerged",
+      "latest_pr": 187,
+      "latest_pr_updated_at": "2026-09-19T18:48:28Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/comparative-cache-fix-closure-20260911",
+      "current_sha": "13599d6ad96b1354e60f13a6274cd00cc64a6d3e",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/dr2-checkpoint-1-closure-20260923",
+      "current_sha": "0b7dec78b01cd68d9f79364ea1ad7b833b446ed1",
+      "classification": "closed_unmerged",
+      "latest_pr": 279,
+      "latest_pr_updated_at": "2026-09-24T01:14:09Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/f6-e03-close-next-audit-20260918",
+      "current_sha": "b9e42445310921ef3c23cda2220631df49403e41",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/offhost-dr-checkpoint2-repo-closure-20260922",
+      "current_sha": "768c0f617064343f0bfc569d52212c80a03f0b83",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/session4-high-security-closure-20260924",
+      "current_sha": "fe6119b1831b2081187aa3022c37e860b6542b6b",
+      "classification": "closed_unmerged",
+      "latest_pr": 310,
+      "latest_pr_updated_at": "2026-09-25T16:29:22Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/session5-a13-safe-checkpoint-20260925",
+      "current_sha": "70ba36cbbfb246be65af14e1309c3fb6929198c9",
+      "classification": "closed_unmerged",
+      "latest_pr": 313,
+      "latest_pr_updated_at": "2026-09-25T01:38:01Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/ux-runtime-local-chat-verified-20260912",
+      "current_sha": "c8e242a317ebef14758aa31e96af69084e067092",
+      "classification": "closed_unmerged",
+      "latest_pr": 72,
+      "latest_pr_updated_at": "2026-09-21T10:12:54Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-copy",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-final",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-pr",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-pr2",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-pr3",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-pr4",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-prhead",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-ready",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-x",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-y",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-z",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "docs/w11-artifact-ready-20260916",
+      "current_sha": "936909135e40e7a82004f08d57269f9af59e2fd6",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "feat/session8-a05b3a-url-source-ingestion-20260925",
+      "current_sha": "72eff88e03ef40c773741543c08e8829db46e743",
+      "classification": "merged_but_branch_advanced",
+      "latest_pr": 322,
+      "latest_pr_updated_at": "2026-09-25T06:16:46Z",
+      "latest_merged_pr": 322,
+      "latest_merged_head_sha": "2ccbe7d003e3ff4a9ee04bdd9a4c33cb008dbccc"
+    },
+    {
+      "branch": "feat/session9-a08c-brain-grounded-chat-20260925",
+      "current_sha": "9b591b28349c18a49c0057076a739cae8c50f29b",
+      "classification": "closed_unmerged",
+      "latest_pr": 337,
+      "latest_pr_updated_at": "2026-09-25T16:21:53Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "feat/w11-native-windows-runtime-20260916",
+      "current_sha": "9c7e3a44bfed7d293164ea5b8269adeeb29d240e",
+      "classification": "closed_unmerged",
+      "latest_pr": 111,
+      "latest_pr_updated_at": "2026-09-21T10:13:06Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/flow-temporal-ci-timeout-20260915",
+      "current_sha": "e7e73ad9441fe61963f49c1f6fed60c5176620b1",
+      "classification": "closed_unmerged",
+      "latest_pr": 91,
+      "latest_pr_updated_at": "2026-09-15T04:55:28Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/frontend-action-race-hardening-20260912",
+      "current_sha": "16565cfcdb1e4ddc177919675d7d51d150cc525b",
+      "classification": "closed_unmerged",
+      "latest_pr": 57,
+      "latest_pr_updated_at": "2026-09-12T07:41:35Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/session7-a03-stale-project-selection-20260925",
+      "current_sha": "b3f117968ad6fcfbfd5075548928883cd9bc9102",
+      "classification": "merged_but_branch_advanced",
+      "latest_pr": 316,
+      "latest_pr_updated_at": "2026-09-25T02:30:31Z",
+      "latest_merged_pr": 316,
+      "latest_merged_head_sha": "5d72d7455f1a8f945c904b4847659233e2240003"
+    },
+    {
+      "branch": "fix/ux-runtime-final-hardening-20260912",
+      "current_sha": "a9d9c16c375c114ea06232bcaa7cc2f9a25ea07e",
+      "classification": "closed_unmerged",
+      "latest_pr": 73,
+      "latest_pr_updated_at": "2026-09-21T10:13:01Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/w09-w10-port-runtime-followup-20260916",
+      "current_sha": "f0e614d6dece614d329f0559e2553d5daf029d76",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/w09-w10-port-runtime-followup-v2-20260916",
+      "current_sha": "6dacc42776f71bbed1cc61bc70fd010a8b5d699c",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/w09-w10-port-runtime-followup-v3-20260916",
+      "current_sha": "abef5b798e78a3460a06d457029be80a1bfcbfdd",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/w18-one-call-diagnostic-20260917",
+      "current_sha": "d95022a082ca7cdd0fcdd64b40069efd09cd7031",
+      "classification": "closed_unmerged",
+      "latest_pr": 128,
+      "latest_pr_updated_at": "2026-09-21T10:13:12Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/w18-one-call-diagnostic-v2-20260917",
+      "current_sha": "7773a88d68334144cce6dcbadfc3a23e53e47c91",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "fix/w18-openrouter-routing-metadata-20260917",
+      "current_sha": "54c518ec072fba7eeecc1551b5f04172c3ccaf97",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "noop",
+      "current_sha": "06b15d6dba207c47d8693febffaaabf17afd2ed4",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "ops/w11-installer-build-20260916",
+      "current_sha": "0984c5b2599d84b724f0c6eb87661e5cee0269a9",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "pe/pe-03-trigger-control-plane-20260919",
+      "current_sha": "a1132c8848fefeae43188ac9e35d23d43e658fa7",
+      "classification": "merged_but_branch_advanced",
+      "latest_pr": 172,
+      "latest_pr_updated_at": "2026-09-19T07:48:39Z",
+      "latest_merged_pr": 172,
+      "latest_merged_head_sha": "74730e26321cac06c31243baeeafe29d5f4d75f0"
+    },
+    {
+      "branch": "security/f6-e06-immutable-node-toolchain-20260918",
+      "current_sha": "4c7ad0eb52712a3971c4eeef0106d00bb5eb6816",
+      "classification": "merged_but_branch_advanced",
+      "latest_pr": 157,
+      "latest_pr_updated_at": "2026-09-18T11:17:44Z",
+      "latest_merged_pr": 157,
+      "latest_merged_head_sha": "cd04be6385ffb360862e38e63dcd02d27c3a067d"
+    },
+    {
+      "branch": "security/f6-e07-pinned-inno-setup-20260918",
+      "current_sha": "3d23fa1959d79a6a419ca99d2664d5c2d7a95ac5",
+      "classification": "closed_unmerged",
+      "latest_pr": 159,
+      "latest_pr_updated_at": "2026-09-18T13:28:53Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "security/f6-e08-container-image-digests-20260918",
+      "current_sha": "32809fd1d8307194cda06abc5c093a5060a3e9d5",
+      "classification": "closed_unmerged",
+      "latest_pr": 162,
+      "latest_pr_updated_at": "2026-09-21T10:13:19Z",
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    },
+    {
+      "branch": "zzz-test-ignore",
+      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "classification": "no_pr_record",
+      "latest_pr": null,
+      "latest_pr_updated_at": null,
+      "latest_merged_pr": null,
+      "latest_merged_head_sha": null
+    }
+  ]
+}
