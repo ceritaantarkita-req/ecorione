@@ -29,6 +29,7 @@ function errorMessage(body: unknown, fallback: string): string {
 export default function ProjectsPage() {
   const { workspaceId, ready: workspaceReady } = useWorkspace();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [projectsReady, setProjectsReady] = useState(false);
   const [selectedId, setSelectedId] = useState<string>(PERSONAL_PROJECT_ID);
   const [sessions, setSessions] = useState<HistorySession[]>([]);
   const [name, setName] = useState("");
@@ -40,6 +41,7 @@ export default function ProjectsPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const loadProjects = useCallback(async () => {
+    setProjectsReady(false);
     const res = await fetch(`/api/projects?workspaceId=${workspaceId}`, {
       cache: "no-store",
     });
@@ -51,6 +53,7 @@ export default function ProjectsPage() {
       if (current === ALL_ID) return current;
       return resolveActiveProjectId(current, activeProjects(nextProjects)) ?? ALL_ID;
     });
+    setProjectsReady(true);
   }, [workspaceId]);
 
   const loadSessions = useCallback(async (projectId?: string) => {
@@ -72,11 +75,11 @@ export default function ProjectsPage() {
   }, [loadProjects, workspaceReady]);
 
   useEffect(() => {
-    if (!workspaceReady) return;
+    if (!workspaceReady || !projectsReady) return;
     void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch((error: unknown) =>
       setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
     );
-  }, [loadSessions, selectedId, workspaceReady]);
+  }, [loadSessions, projectsReady, selectedId, workspaceReady]);
 
   async function createProject(event: FormEvent): Promise<void> {
     event.preventDefault();
@@ -141,7 +144,7 @@ export default function ProjectsPage() {
     const target = new URL("/", window.location.origin);
     target.searchParams.set("workspace", workspaceId);
     target.searchParams.set("project", projectId);
-    window.location.assign(target);
+    window.location.assign(target.toString());
   }
 
   function projectSaved(updated: Project): void {
