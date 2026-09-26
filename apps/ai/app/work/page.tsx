@@ -94,59 +94,62 @@ export default function WorkPage() {
     [runTriggerFilter, runs],
   );
 
-  const loadWork = useCallback(async (nextProjectId: string) => {
-    const seq = ++requestRef.current;
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({
-        workspaceId: workspaceId,
-        projectId: nextProjectId,
-      });
-      const [triggerBody, graphBody, runBody] = await Promise.all([
-        fetch(`/api/flow/triggers?${query}`, { cache: "no-store" }).then((response) =>
-          json<{ triggers: TriggerDefinition[] }>(response),
-        ),
-        fetch(`/api/flow/graphs?${query}`, { cache: "no-store" }).then((response) =>
-          json<{ graphs: FlowGraphSummary[] }>(response),
-        ),
-        fetch(`/api/flow/runs?${query}&limit=50`, { cache: "no-store" }).then((response) =>
-          json<{ runs: RunListItem[] }>(response),
-        ),
-      ]);
-      if (seq !== requestRef.current) return;
-      setTriggers(triggerBody.triggers);
-      setGraphs(graphBody.graphs);
-      setRuns(runBody.runs);
-      setSelectedRun(null);
-      setRunTriggerFilter(null);
-
-      const time = triggerBody.triggers.filter((trigger) => trigger.kind === "time");
-      const runtimeEntries = await Promise.all(
-        time.map(async (trigger) => {
-          try {
-            const runtime = await fetch(
-              `/api/flow/triggers/${encodeURIComponent(trigger.id)}/schedule?${query}`,
-              { cache: "no-store" },
-            ).then((response) => json<TriggerScheduleRuntime>(response));
-            return [trigger.id, runtime] as const;
-          } catch {
-            return [trigger.id, null] as const;
-          }
-        }),
-      );
-      if (seq === requestRef.current) setRuntimes(Object.fromEntries(runtimeEntries));
-    } catch (reason) {
-      if (seq !== requestRef.current) return;
-      const detail = reason instanceof Error ? reason.message : String(reason);
-      setMessage(`Work load gagal: ${detail}`);
-      setTriggers([]);
-      setGraphs([]);
-      setRuns([]);
-      setRuntimes({});
-    } finally {
-      if (seq === requestRef.current) setLoading(false);
-    }
-  }, [workspaceId]);
+  const loadWork = useCallback(
+    async (nextProjectId: string) => {
+      const seq = ++requestRef.current;
+      setLoading(true);
+      try {
+        const query = new URLSearchParams({
+          workspaceId: workspaceId,
+          projectId: nextProjectId,
+        });
+        const [triggerBody, graphBody, runBody] = await Promise.all([
+          fetch(`/api/flow/triggers?${query}`, { cache: "no-store" }).then((response) =>
+            json<{ triggers: TriggerDefinition[] }>(response),
+          ),
+          fetch(`/api/flow/graphs?${query}`, { cache: "no-store" }).then((response) =>
+            json<{ graphs: FlowGraphSummary[] }>(response),
+          ),
+          fetch(`/api/flow/runs?${query}&limit=50`, { cache: "no-store" }).then((response) =>
+            json<{ runs: RunListItem[] }>(response),
+          ),
+        ]);
+        if (seq !== requestRef.current) return;
+        setTriggers(triggerBody.triggers);
+        setGraphs(graphBody.graphs);
+        setRuns(runBody.runs);
+        setSelectedRun(null);
+        setRunTriggerFilter(null);
+  
+        const time = triggerBody.triggers.filter((trigger) => trigger.kind === "time");
+        const runtimeEntries = await Promise.all(
+          time.map(async (trigger) => {
+            try {
+              const runtime = await fetch(
+                `/api/flow/triggers/${encodeURIComponent(trigger.id)}/schedule?${query}`,
+                { cache: "no-store" },
+              ).then((response) => json<TriggerScheduleRuntime>(response));
+              return [trigger.id, runtime] as const;
+            } catch {
+              return [trigger.id, null] as const;
+            }
+          }),
+        );
+        if (seq === requestRef.current) setRuntimes(Object.fromEntries(runtimeEntries));
+      } catch (reason) {
+        if (seq !== requestRef.current) return;
+        const detail = reason instanceof Error ? reason.message : String(reason);
+        setMessage(`Work load gagal: ${detail}`);
+        setTriggers([]);
+        setGraphs([]);
+        setRuns([]);
+        setRuntimes({});
+      } finally {
+        if (seq === requestRef.current) setLoading(false);
+      }
+    },
+    [workspaceId],
+  );
 
   useEffect(() => {
     try {
