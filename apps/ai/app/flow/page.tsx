@@ -763,9 +763,7 @@ export default function FlowCanvasPage() {
         node={node}
         onRename={(nextLabel) => {
           setNodes((current) =>
-            current.map((item) =>
-              item.id === node.id ? { ...item, label: nextLabel } : item,
-            ),
+            current.map((item) => (item.id === node.id ? { ...item, label: nextLabel } : item)),
           );
           markDraftChanged();
         }}
@@ -1448,14 +1446,11 @@ export default function FlowCanvasPage() {
         humanDraft={humanDraft}
         onHumanDraftChange={setHumanDraft}
         onDecide={(node, decision) =>
-          void runUiAction(
-            decision === "APPROVE" ? "Approval gagal" : "Rejection gagal",
-            () => decide(node, decision),
+          void runUiAction(decision === "APPROVE" ? "Approval gagal" : "Rejection gagal", () =>
+            decide(node, decision),
           )
         }
-        onSubmitHuman={(node) =>
-          void runUiAction("Input gagal", () => submitHuman(node))
-        }
+        onSubmitHuman={(node) => void runUiAction("Input gagal", () => submitHuman(node))}
       />
     </div>
   );
