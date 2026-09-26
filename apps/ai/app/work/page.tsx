@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type {
   FlowGraphSummary,
@@ -19,7 +18,7 @@ import {
   resolveActiveProjectId,
 } from "../../lib/project-selection";
 import { ProjectPicker } from "./ProjectPicker";
-import { ScheduleCalendar } from "./ScheduleCalendar";
+import { FlowSection, RunsSection, ScheduleSection } from "./WorkPageSections";
 import styles from "./Work.module.css";
 import {
   shiftCalendarCursor,
@@ -27,116 +26,16 @@ import {
   type CalendarMode,
   type ScheduleOccurrence,
 } from "./work-calendar";
+import {
+  EMPTY_DRAFT,
+  draftFromTrigger,
+  json,
+  timeConfig,
+  type ScheduleDraft,
+  type WorkTab,
+} from "./work-page-model";
 
 const WORKSPACE_ID = "ws_personal";
-
-type WorkTab = "schedule" | "flows" | "runs";
-type TimeConfig = {
-  cronExpression: string;
-  timezone: string;
-  catchupWindowMs: number;
-  overlap: "SKIP" | "QUEUE_ONE";
-};
-
-type ScheduleDraft = {
-  id: string | null;
-  revision: number | null;
-  name: string;
-  graphId: string;
-  graphVersion: number;
-  requestedAutonomy: "L0" | "L1" | "L2" | "L3";
-  enabled: boolean;
-  cronExpression: string;
-  timezone: string;
-  catchupWindowMs: number;
-  overlap: "SKIP" | "QUEUE_ONE";
-};
-
-const EMPTY_DRAFT: ScheduleDraft = {
-  id: null,
-  revision: null,
-  name: "",
-  graphId: "",
-  graphVersion: 1,
-  requestedAutonomy: "L2",
-  enabled: true,
-  cronExpression: "0 8 * * *",
-  timezone: "Asia/Jakarta",
-  catchupWindowMs: 60_000,
-  overlap: "SKIP",
-};
-
-function errorMessage(body: unknown, fallback: string): string {
-  if (body !== null && typeof body === "object" && "error" in body) {
-    const error = (body as { error?: unknown }).error;
-    if (
-      error !== null &&
-      typeof error === "object" &&
-      "message" in error &&
-      typeof (error as { message?: unknown }).message === "string"
-    ) {
-      return (error as { message: string }).message;
-    }
-  }
-  return fallback;
-}
-
-async function json<T>(response: Response): Promise<T> {
-  const body = (await response.json().catch(() => null)) as T | null;
-  if (!response.ok || body === null) {
-    throw new Error(errorMessage(body, `HTTP ${String(response.status)}`));
-  }
-  return body;
-}
-
-function timeConfig(trigger: TriggerDefinition): TimeConfig | null {
-  if (trigger.kind !== "time") return null;
-  const config = trigger.configuration as Partial<TimeConfig>;
-  if (
-    typeof config.cronExpression !== "string" ||
-    typeof config.timezone !== "string" ||
-    typeof config.catchupWindowMs !== "number" ||
-    (config.overlap !== "SKIP" && config.overlap !== "QUEUE_ONE")
-  ) {
-    return null;
-  }
-  return {
-    cronExpression: config.cronExpression,
-    timezone: config.timezone,
-    catchupWindowMs: config.catchupWindowMs,
-    overlap: config.overlap,
-  };
-}
-
-function draftFromTrigger(trigger: TriggerDefinition): ScheduleDraft {
-  const config = timeConfig(trigger);
-  if (config === null) return EMPTY_DRAFT;
-  return {
-    id: trigger.id,
-    revision: trigger.revision,
-    name: trigger.name,
-    graphId: trigger.graphId,
-    graphVersion: trigger.graphVersion,
-    requestedAutonomy: trigger.requestedAutonomy,
-    enabled: trigger.enabled,
-    ...config,
-  };
-}
-
-function statusClass(status: string): string {
-  const key = status.toLowerCase().replaceAll("_", "-");
-  return `${styles.status} ${styles[`status_${key}`] ?? ""}`;
-}
-
-function formatWhen(iso: string, timezone = "Asia/Jakarta"): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat("id-ID", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: timezone,
-  }).format(date);
-}
 
 export default function WorkPage() {
   const [tab, setTab] = useState<WorkTab>("schedule");
@@ -554,516 +453,60 @@ export default function WorkPage() {
       </div>
 
       {tab === "schedule" ? (
-        <section className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div>
-              <span className={styles.eyebrow}>Temporal-backed</span>
-              <h2>Schedule</h2>
-              <p>
-                Schedule hanyalah view/editor untuk time Trigger; Temporal tetap runtime truth.
-              </p>
-            </div>
-            <button type="button" onClick={startCreate} disabled={graphs.length === 0}>
-              New schedule
-            </button>
-          </div>
-
-          <div className={styles.viewSwitch} aria-label="Schedule view">
-            {(["list", "day", "week", "month", "year"] as const).map((mode) => (
-              <button
-                type="button"
-                key={mode}
-                aria-pressed={calendarMode === mode}
-                className={calendarMode === mode ? styles.viewActive : undefined}
-                onClick={() => setCalendarMode(mode)}
-              >
-                {mode}
-              </button>
-            ))}
-          </div>
-
-          {editing ? (
-            <form className={styles.editor} onSubmit={saveSchedule}>
-              <div className={styles.editorTitle}>
-                <strong>{draft.id === null ? "New schedule" : "Edit schedule"}</strong>
-                <button type="button" onClick={cancelEdit}>
-                  Cancel
-                </button>
-              </div>
-              <div className={styles.scheduleAssistant}>
-                <div>
-                  <strong>AI-assisted draft</strong>
-                  <small>
-                    Describe the create/edit intent. Local AI only proposes fields; Save still
-                    writes through Trigger → Flow → Temporal.
-                  </small>
-                </div>
-                <textarea
-                  value={assistIntent}
-                  aria-label="Describe schedule"
-                  rows={3}
-                  maxLength={2000}
-                  placeholder="Contoh: jalankan Daily Brief setiap Senin–Jumat jam 08.30 WIB"
-                  onChange={(event) => setAssistIntent(event.target.value)}
-                />
-                <button
-                  type="button"
-                  disabled={pending !== null || assistIntent.trim().length < 3}
-                  onClick={() => void assistSchedule()}
-                >
-                  {pending === "assist" ? "Drafting…" : "Draft with local AI"}
-                </button>
-              </div>
-              <label>
-                Name
-                <input
-                  required
-                  aria-label="Schedule name"
-                  value={draft.name}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, name: event.target.value }))
-                  }
-                />
-              </label>
-              <label>
-                Flow
-                <select
-                  value={draft.graphId}
-                  onChange={(event) => {
-                    const graph = graphs.find((item) => item.graphId === event.target.value);
-                    setDraft((current) => ({
-                      ...current,
-                      graphId: event.target.value,
-                      graphVersion: graph?.currentVersion ?? current.graphVersion,
-                    }));
-                  }}
-                >
-                  <option value="">Select Flow</option>
-                  {graphs.map((graph) => (
-                    <option key={graph.graphId} value={graph.graphId}>
-                      {graph.name} · v{graph.currentVersion}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Pinned version
-                <input
-                  type="number"
-                  min={1}
-                  value={draft.graphVersion}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      graphVersion: Math.max(1, Number(event.target.value) || 1),
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Cron
-                <input
-                  required
-                  aria-label="Cron expression"
-                  value={draft.cronExpression}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, cronExpression: event.target.value }))
-                  }
-                />
-              </label>
-              <label>
-                IANA timezone
-                <input
-                  required
-                  value={draft.timezone}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, timezone: event.target.value }))
-                  }
-                />
-              </label>
-              <label>
-                Catch-up
-                <select
-                  value={draft.catchupWindowMs}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      catchupWindowMs: Number(event.target.value),
-                    }))
-                  }
-                >
-                  <option value={60_000}>1 minute</option>
-                  <option value={5 * 60_000}>5 minutes</option>
-                  <option value={60 * 60_000}>1 hour</option>
-                  <option value={24 * 60 * 60_000}>24 hours</option>
-                </select>
-              </label>
-              <label>
-                Overlap
-                <select
-                  value={draft.overlap}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      overlap: event.target.value as "SKIP" | "QUEUE_ONE",
-                    }))
-                  }
-                >
-                  <option value="SKIP">SKIP</option>
-                  <option value="QUEUE_ONE">QUEUE_ONE</option>
-                </select>
-              </label>
-              <label>
-                Autonomy request
-                <select
-                  value={draft.requestedAutonomy}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      requestedAutonomy: event.target
-                        .value as ScheduleDraft["requestedAutonomy"],
-                    }))
-                  }
-                >
-                  <option value="L0">L0</option>
-                  <option value="L1">L1</option>
-                  <option value="L2">L2</option>
-                  <option value="L3">L3</option>
-                </select>
-              </label>
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={draft.enabled}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, enabled: event.target.checked }))
-                  }
-                />
-                Enabled
-              </label>
-              <button type="submit" disabled={pending !== null || draft.graphId.length === 0}>
-                {pending === "save" ? "Saving…" : "Save schedule"}
-              </button>
-            </form>
-          ) : null}
-
-          {calendarMode === "list" ? (
-            <div className={styles.cardGrid}>
-              {timeTriggers.map((trigger) => {
-                const config = timeConfig(trigger);
-                const runtime = runtimes[trigger.id];
-                const relatedRuns = runs.filter((run) => run.triggerId === trigger.id).length;
-                return (
-                  <article className={styles.card} key={trigger.id}>
-                    <div className={styles.cardHead}>
-                      <div>
-                        <strong>{trigger.name}</strong>
-                        <code>{trigger.id}</code>
-                      </div>
-                      <span className={trigger.enabled ? styles.live : styles.paused}>
-                        {runtime === null
-                          ? "runtime unavailable"
-                          : runtime?.paused
-                            ? "paused"
-                            : trigger.enabled
-                              ? "active"
-                              : "disabled"}
-                      </span>
-                    </div>
-                    <dl className={styles.meta}>
-                      <div>
-                        <dt>Cron</dt>
-                        <dd>{config?.cronExpression ?? "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Timezone</dt>
-                        <dd>{config?.timezone ?? "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Flow</dt>
-                        <dd>
-                          {trigger.graphId} · v{trigger.graphVersion}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Overlap</dt>
-                        <dd>{config?.overlap ?? "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Runs</dt>
-                        <dd>{relatedRuns}</dd>
-                      </div>
-                      <div>
-                        <dt>Next</dt>
-                        <dd>
-                          {runtime?.nextActionTimes[0] === undefined
-                            ? "—"
-                            : formatWhen(runtime.nextActionTimes[0], config?.timezone)}
-                        </dd>
-                      </div>
-                    </dl>
-                    <div className={styles.actions}>
-                      <button type="button" onClick={() => startEdit(trigger)}>
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        disabled={pending !== null}
-                        onClick={() => void setEnabled(trigger, !trigger.enabled)}
-                      >
-                        {trigger.enabled ? "Disable" : "Enable"}
-                      </button>
-                      <Link
-                        href={`/flow?graph=${encodeURIComponent(trigger.graphId)}&version=${String(trigger.graphVersion)}`}
-                      >
-                        Open Flow
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRunTriggerFilter(trigger.id);
-                          setSelectedRun(null);
-                          setTab("runs");
-                          setMessage(`Runs linked to ${trigger.name}: ${String(relatedRuns)}`);
-                        }}
-                      >
-                        Runs
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-              {!loading && timeTriggers.length === 0 ? (
-                <div className={styles.empty}>Belum ada time Trigger di Project ini.</div>
-              ) : null}
-            </div>
-          ) : (
-            <ScheduleCalendar
-              mode={calendarMode}
-              cursor={calendarCursor}
-              calendarTimezone={calendarTimezone}
-              occurrences={occurrences}
-              onPrevious={() =>
-                setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, -1))
-              }
-              onNext={() =>
-                setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, 1))
-              }
-              onToday={() => setCalendarCursor(todayDateKey(calendarTimezone))}
-              onOpenMonth={(dateKey) => {
-                setCalendarCursor(dateKey);
-                setCalendarMode("month");
-              }}
-            />
-          )}
-        </section>
+        <ScheduleSection
+          loading={loading}
+          graphs={graphs}
+          timeTriggers={timeTriggers}
+          runtimes={runtimes}
+          runs={runs}
+          editing={editing}
+          draft={draft}
+          assistIntent={assistIntent}
+          pending={pending}
+          calendarMode={calendarMode}
+          calendarCursor={calendarCursor}
+          calendarTimezone={calendarTimezone}
+          occurrences={occurrences}
+          onStartCreate={startCreate}
+          onCancelEdit={cancelEdit}
+          onSaveSchedule={saveSchedule}
+          onAssistIntentChange={setAssistIntent}
+          onAssistSchedule={() => void assistSchedule()}
+          onDraftChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+          onStartEdit={startEdit}
+          onSetEnabled={(trigger, enabled) => void setEnabled(trigger, enabled)}
+          onOpenRuns={(triggerId, triggerName, relatedRuns) => {
+            setRunTriggerFilter(triggerId);
+            setSelectedRun(null);
+            setTab("runs");
+            setMessage(`Runs linked to ${triggerName}: ${String(relatedRuns)}`);
+          }}
+          onCalendarModeChange={setCalendarMode}
+          onPrevious={() =>
+            setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, -1))
+          }
+          onNext={() =>
+            setCalendarCursor((current) => shiftCalendarCursor(calendarMode, current, 1))
+          }
+          onToday={() => setCalendarCursor(todayDateKey(calendarTimezone))}
+          onOpenMonth={(dateKey) => {
+            setCalendarCursor(dateKey);
+            setCalendarMode("month");
+          }}
+        />
       ) : null}
 
-      {tab === "flows" ? (
-        <section className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div>
-              <span className={styles.eyebrow}>Existing owner</span>
-              <h2>Flows</h2>
-              <p>Work menavigasi Flow; editor dan version truth tetap dimiliki Flow.</p>
-            </div>
-            <Link className={styles.primaryLink} href="/flow">
-              Open Flow editor
-            </Link>
-          </div>
-          <div className={styles.tableWrap}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Version</th>
-                  <th>Sensitivity</th>
-                  <th>Updated</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {graphs.map((graph) => (
-                  <tr key={graph.graphId}>
-                    <td>
-                      <strong>{graph.name}</strong>
-                      <code>{graph.graphId}</code>
-                    </td>
-                    <td>v{graph.currentVersion}</td>
-                    <td>{graph.sensitivity}</td>
-                    <td>{formatWhen(graph.updatedAt)}</td>
-                    <td>
-                      <Link
-                        href={`/flow?graph=${encodeURIComponent(graph.graphId)}&version=${String(graph.currentVersion)}`}
-                      >
-                        Open
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!loading && graphs.length === 0 ? (
-              <div className={styles.empty}>Belum ada Flow.</div>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
+      {tab === "flows" ? <FlowSection loading={loading} graphs={graphs} /> : null}
 
       {tab === "runs" ? (
-        <section className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div>
-              <span className={styles.eyebrow}>ADR-37 projection</span>
-              <h2>Runs</h2>
-              <p>Key = operationId. Tidak ada execution database kedua.</p>
-            </div>
-          </div>
-          {runTriggerFilter !== null ? (
-            <div className={styles.filterBar}>
-              <span>
-                Trigger filter: <code>{runTriggerFilter}</code>
-              </span>
-              <button type="button" onClick={() => setRunTriggerFilter(null)}>
-                Clear filter
-              </button>
-            </div>
-          ) : null}
-          <div className={styles.runLayout}>
-            <div className={styles.runList}>
-              {visibleRuns.map((run) => (
-                <button
-                  type="button"
-                  key={run.operationId}
-                  className={
-                    selectedRun?.operationId === run.operationId
-                      ? `${styles.runRow} ${styles.runRowActive}`
-                      : styles.runRow
-                  }
-                  onClick={() => void openRun(run.operationId)}
-                >
-                  <span className={statusClass(run.status)}>{run.status}</span>
-                  <strong>
-                    {run.graphId} · v{run.graphVersion}
-                  </strong>
-                  <code>{run.operationId}</code>
-                  <small>{formatWhen(run.startedAt)}</small>
-                </button>
-              ))}
-              {!loading && visibleRuns.length === 0 ? (
-                <div className={styles.empty}>
-                  {runTriggerFilter === null
-                    ? "Belum ada Run lifecycle evidence di Project ini."
-                    : "Belum ada Run untuk Trigger ini pada projection saat ini."}
-                </div>
-              ) : null}
-            </div>
-
-            <aside className={styles.runDetail}>
-              {selectedRun === null ? (
-                <div className={styles.empty}>Pilih Run untuk melihat owner evidence.</div>
-              ) : (
-                <>
-                  <div className={styles.cardHead}>
-                    <div>
-                      <span className={statusClass(selectedRun.status)}>
-                        {selectedRun.status}
-                      </span>
-                      <h3>
-                        {selectedRun.graphId} · v{selectedRun.graphVersion}
-                      </h3>
-                      <code>{selectedRun.operationId}</code>
-                    </div>
-                    <Link
-                      href={`/flow?graph=${encodeURIComponent(selectedRun.graphId)}&version=${String(selectedRun.graphVersion)}`}
-                    >
-                      Flow
-                    </Link>
-                  </div>
-                  <dl className={styles.meta}>
-                    <div>
-                      <dt>Trigger</dt>
-                      <dd>{selectedRun.triggerId ?? "Direct run"}</dd>
-                    </div>
-                    <div>
-                      <dt>Workflow</dt>
-                      <dd>{selectedRun.temporalWorkflowId}</dd>
-                    </div>
-                    <div>
-                      <dt>Started</dt>
-                      <dd>{formatWhen(selectedRun.startedAt)}</dd>
-                    </div>
-                    <div>
-                      <dt>Finished</dt>
-                      <dd>
-                        {selectedRun.finishedAt ? formatWhen(selectedRun.finishedAt) : "—"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Actual cost</dt>
-                      <dd>
-                        {selectedRun.cost === null
-                          ? "—"
-                          : `$${selectedRun.cost.totalActualUsd.toFixed(6)}`}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Model calls</dt>
-                      <dd>{selectedRun.cost?.callCount ?? "—"}</dd>
-                    </div>
-                  </dl>
-
-                  <div className={styles.availability}>
-                    {Object.entries(selectedRun.availability).map(([owner, available]) => (
-                      <span key={owner} className={available ? styles.live : styles.paused}>
-                        {owner}: {available ? "available" : "partial"}
-                      </span>
-                    ))}
-                  </div>
-
-                  <details open>
-                    <summary>Output</summary>
-                    <pre>{JSON.stringify(selectedRun.output, null, 2)}</pre>
-                  </details>
-                  <details>
-                    <summary>Approvals ({selectedRun.approvals.length})</summary>
-                    <div className={styles.detailList}>
-                      {selectedRun.approvals.map((approval) => (
-                        <article key={approval.operationId}>
-                          <strong>{approval.status}</strong>
-                          <code>{approval.operationId}</code>
-                          <span>{approval.prompt ?? "No prompt"}</span>
-                          {approval.note ? <span>Note: {approval.note}</span> : null}
-                        </article>
-                      ))}
-                    </div>
-                  </details>
-                  <details>
-                    <summary>Audit actions ({selectedRun.actions.length})</summary>
-                    <div className={styles.detailList}>
-                      {selectedRun.actions.map((action) => (
-                        <article key={action.id}>
-                          <strong>{action.type}</strong>
-                          <span>
-                            {action.module} · {formatWhen(action.ts)}
-                          </span>
-                          <code>{action.operationId ?? "no operation"}</code>
-                        </article>
-                      ))}
-                    </div>
-                  </details>
-                  {selectedRun.errors.length > 0 ? (
-                    <div className={styles.errors}>
-                      {selectedRun.errors.map((error) => (
-                        <p key={error}>{error}</p>
-                      ))}
-                    </div>
-                  ) : null}
-                </>
-              )}
-            </aside>
-          </div>
-        </section>
+        <RunsSection
+          loading={loading}
+          runTriggerFilter={runTriggerFilter}
+          visibleRuns={visibleRuns}
+          selectedRun={selectedRun}
+          onClearFilter={() => setRunTriggerFilter(null)}
+          onOpenRun={(operationId) => void openRun(operationId)}
+        />
       ) : null}
     </main>
   );
