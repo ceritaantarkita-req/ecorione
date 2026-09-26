@@ -10,172 +10,11 @@ import type {
   SpacePage,
 } from "@ecorione/shared-schema";
 import { readJson } from "../../lib/client-response";
+import { DocumentPanel, InspectorPanel, PagesRail } from "./SpacePageSections";
 import styles from "./Space.module.css";
+import { templateFor } from "./space-page-model";
 
 const WORKSPACE_ID = "ws_personal";
-const BLOCK_KINDS: SpaceBlockType[] = [
-  "paragraph",
-  "heading",
-  "list",
-  "checklist",
-  "table",
-  "database-view",
-  "file",
-  "image",
-  "embed",
-  "ai",
-  "context-link",
-  "artifact-link",
-  "flow-link",
-];
-
-function templateFor(kind: SpaceBlockType, document: SpaceDocument | null): unknown | null {
-  switch (kind) {
-    case "paragraph":
-      return { kind, text: "" };
-    case "heading":
-      return { kind, text: "Heading", level: 2 };
-    case "list":
-      return { kind, style: "bullet", items: ["Item"] };
-    case "checklist":
-      return { kind, items: [{ id: "item_first", text: "Task", checked: false }] };
-    case "table":
-      return {
-        kind,
-        columns: [{ id: "col_title", label: "Title" }],
-        rows: [{ id: "row_first", cells: { col_title: "Value" } }],
-      };
-    case "database-view": {
-      const table = document?.blocks.find((block) => block.type === "table");
-      return table === undefined ? null : { kind, sourceBlockId: table.id };
-    }
-    case "file":
-      return { kind, artifactId: `art_${"0".repeat(64)}`, label: "Replace artifact id" };
-    case "image":
-      return { kind, artifactId: `art_${"0".repeat(64)}`, alt: "" };
-    case "embed":
-      return { kind, url: "https://example.com", title: "Embed" };
-    case "ai":
-      return {
-        kind,
-        graphId: "fg_replace01",
-        prompt: "Describe what this AI block should do.",
-      };
-    case "context-link":
-      return { kind, factId: "mem_replace", label: "Context fact" };
-    case "artifact-link":
-      return { kind, artifactId: `art_${"0".repeat(64)}`, label: "Artifact" };
-    case "flow-link":
-      return { kind, graphId: "fg_replace01", label: "Flow" };
-  }
-}
-
-function BlockPreview({ block }: { block: SpaceBlock }) {
-  const body = block.body;
-  switch (body.kind) {
-    case "paragraph":
-      return <p>{body.text || "Empty paragraph"}</p>;
-    case "heading":
-      return (
-        <strong style={{ fontSize: body.level === 1 ? 28 : body.level === 2 ? 22 : 18 }}>
-          {body.text}
-        </strong>
-      );
-    case "list": {
-      const Tag = body.style === "numbered" ? "ol" : "ul";
-      return (
-        <Tag>
-          {body.items.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
-        </Tag>
-      );
-    }
-    case "checklist":
-      return (
-        <div>
-          {body.items.map((item) => (
-            <label key={item.id}>
-              <input type="checkbox" checked={item.checked} readOnly /> {item.text}
-            </label>
-          ))}
-        </div>
-      );
-    case "table":
-      return (
-        <div className={styles.tableWrap}>
-          <table>
-            <thead>
-              <tr>
-                {body.columns.map((column) => (
-                  <th key={column.id}>{column.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {body.rows.slice(0, 8).map((row) => (
-                <tr key={row.id}>
-                  {body.columns.map((column) => (
-                    <td key={column.id}>{row.cells[column.id] ?? ""}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    case "database-view":
-      return <span>Database view → {body.sourceBlockId}</span>;
-    case "file":
-      return (
-        <span>
-          File pointer → {body.artifactId}
-          {body.label ? ` · ${body.label}` : ""}
-        </span>
-      );
-    case "image":
-      return (
-        <span>
-          Image pointer → {body.artifactId}
-          {body.caption ? ` · ${body.caption}` : ""}
-        </span>
-      );
-    case "embed":
-      return (
-        <a href={body.url} target="_blank" rel="noreferrer">
-          {body.title ?? body.url}
-        </a>
-      );
-    case "ai":
-      return (
-        <div>
-          <strong>AI via Flow {body.graphId}</strong>
-          <p>{body.prompt}</p>
-        </div>
-      );
-    case "context-link":
-      return (
-        <span>
-          Context fact → {body.factId}
-          {body.label ? ` · ${body.label}` : ""}
-        </span>
-      );
-    case "artifact-link":
-      return (
-        <span>
-          Artifact → {body.artifactId}
-          {body.label ? ` · ${body.label}` : ""}
-        </span>
-      );
-    case "flow-link":
-      return (
-        <span>
-          Flow → {body.graphId}
-          {body.label ? ` · ${body.label}` : ""}
-        </span>
-      );
-  }
-}
 
 export default function SpacePageView() {
   const [pages, setPages] = useState<SpacePage[]>([]);
@@ -570,336 +409,71 @@ export default function SpacePageView() {
       ) : null}
 
       <div className={styles.workspace}>
-        <aside className={styles.rail}>
-          <h2 className={styles.panelTitle}>Pages</h2>
-          <form onSubmit={createPage} className={styles.createForm}>
-            <input
-              className={styles.input}
-              value={newPageTitle}
-              onChange={(event) => setNewPageTitle(event.target.value)}
-              placeholder="New page"
-              aria-label="New page title"
-            />
-            <button
-              type="submit"
-              className={styles.button}
-              disabled={
-                newPageTitle.trim().length === 0 || creatingPage || pendingMutation !== null
-              }
-            >
-              {creatingPage ? "Creating…" : "Create page"}
-            </button>
-          </form>
-          <div className={styles.pageList}>
-            {pages.length === 0 ? (
-              <p className={styles.help}>No pages yet.</p>
-            ) : (
-              pages.map((page) => (
-                <button
-                  key={page.id}
-                  type="button"
-                  onClick={() => selectPage(page.id)}
-                  className={`${styles.pageButton} ${page.id === selectedPageId ? styles.pageButtonActive : ""}`}
-                  aria-pressed={page.id === selectedPageId}
-                  disabled={creatingPage || pendingMutation !== null}
-                >
-                  <strong>{page.title}</strong>
-                  <small>
-                    v{page.version} · {page.scope}
-                  </small>
-                </button>
-              ))
-            )}
-          </div>
-        </aside>
-
-        <section className={styles.document}>
-          {document === null ? (
-            <div className={styles.documentEmpty}>Create or select a page.</div>
-          ) : (
-            <>
-              <div className={styles.documentHeader}>
-                {renaming ? (
-                  <form className={styles.renameRow} onSubmit={renamePage}>
-                    <input
-                      className={styles.input}
-                      value={renameDraft}
-                      onChange={(event) => setRenameDraft(event.target.value)}
-                      aria-label="Page title"
-                      disabled={pendingMutation !== null}
-                      autoFocus
-                    />
-                    <button
-                      type="submit"
-                      className={styles.buttonPrimary}
-                      disabled={renameDraft.trim().length === 0 || pendingMutation !== null}
-                    >
-                      Save title
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.button}
-                      onClick={() => {
-                        setRenameDraft(document.page.title);
-                        setRenaming(false);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </form>
-                ) : (
-                  <div>
-                    <h2>{document.page.title}</h2>
-                    <span className={styles.meta}>page v{document.page.version}</span>
-                  </div>
-                )}
-                {!renaming ? (
-                  <button
-                    type="button"
-                    className={styles.button}
-                    disabled={pendingMutation !== null}
-                    onClick={() => setRenaming(true)}
-                  >
-                    Rename
-                  </button>
-                ) : null}
-              </div>
-
-              <div className={styles.blocks}>
-                {document.blocks.length === 0 ? (
-                  <div className={styles.documentEmpty}>This page has no blocks yet.</div>
-                ) : (
-                  document.blocks.map((block, index) => (
-                    <article
-                      key={block.id}
-                      onClick={() => {
-                        setDeleteConfirmId(null);
-                        setSelectedBlockId(block.id);
-                      }}
-                      className={`${styles.block} ${selectedBlockId === block.id ? styles.blockSelected : ""}`}
-                    >
-                      <div className={styles.blockToolbar}>
-                        <span className={styles.blockMeta}>
-                          {block.type} · block v{block.version}
-                        </span>
-                        <span className={styles.blockActions}>
-                          <button
-                            type="button"
-                            className={`${styles.iconButton} ${styles.inspectButton}`}
-                            aria-label={`Inspect ${block.type} block`}
-                            aria-pressed={selectedBlockId === block.id}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setDeleteConfirmId(null);
-                              setSelectedBlockId(block.id);
-                            }}
-                          >
-                            Inspect
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.iconButton}
-                            disabled={index === 0 || pendingMutation !== null}
-                            aria-label={`Move ${block.type} block up`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void moveBlock(block, -1);
-                            }}
-                          >
-                            ↑
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.iconButton}
-                            disabled={
-                              index === document.blocks.length - 1 || pendingMutation !== null
-                            }
-                            aria-label={`Move ${block.type} block down`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void moveBlock(block, 1);
-                            }}
-                          >
-                            ↓
-                          </button>
-                          <button
-                            type="button"
-                            className={`${styles.iconButton} ${styles.deleteButton} ${deleteConfirmId === block.id ? styles.deleteButtonConfirm : ""}`}
-                            disabled={pendingMutation !== null}
-                            aria-label={
-                              deleteConfirmId === block.id
-                                ? `Confirm delete ${block.type} block`
-                                : `Delete ${block.type} block`
-                            }
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (deleteConfirmId === block.id) {
-                                void deleteBlock(block);
-                              } else {
-                                setDeleteConfirmId(block.id);
-                                setNotice(
-                                  "Klik Confirm delete sekali lagi untuk menghapus block.",
-                                );
-                              }
-                            }}
-                          >
-                            {deleteConfirmId === block.id ? "Confirm delete" : "Delete"}
-                          </button>
-                        </span>
-                      </div>
-                      <div className={styles.blockContent}>
-                        <BlockPreview block={block} />
-                      </div>
-                    </article>
-                  ))
-                )}
-              </div>
-
-              <div className={styles.addBlock}>
-                <h3>Add block</h3>
-                <div className={styles.kindList}>
-                  {BLOCK_KINDS.map((kind) => (
-                    <button
-                      key={kind}
-                      type="button"
-                      className={`${styles.kindButton} ${kind === draftKind ? styles.kindButtonActive : ""}`}
-                      onClick={() => chooseKind(kind)}
-                      disabled={pendingMutation !== null}
-                    >
-                      {kind}
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  className={styles.textarea}
-                  value={draftJson}
-                  onChange={(event) => setDraftJson(event.target.value)}
-                  rows={9}
-                  spellCheck={false}
-                  aria-label={`${draftKind} block JSON`}
-                  disabled={pendingMutation !== null}
-                />
-                <div className={styles.editorActions}>
-                  <button
-                    type="button"
-                    className={styles.buttonPrimary}
-                    disabled={pendingMutation !== null}
-                    onClick={() => void addBlock()}
-                  >
-                    Add {draftKind}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </section>
-
-        <aside className={styles.inspector}>
-          <div className={styles.inspectorStack}>
-            <section className={styles.inspectorSection}>
-              <h2 className={styles.panelTitle}>Block inspector</h2>
-              {selectedBlock === null ? (
-                <p className={styles.help}>Select a block to inspect its owner-backed body.</p>
-              ) : (
-                <>
-                  <div className={styles.meta}>
-                    {selectedBlock.id} · {selectedBlock.type} · v{selectedBlock.version}
-                  </div>
-                  <textarea
-                    className={styles.textarea}
-                    value={inspectorJson}
-                    onChange={(event) => setInspectorJson(event.target.value)}
-                    rows={15}
-                    spellCheck={false}
-                    aria-label="Selected block JSON"
-                    disabled={pendingMutation !== null}
-                  />
-                  <div className={styles.inspectorActions}>
-                    <button
-                      type="button"
-                      className={styles.buttonPrimary}
-                      disabled={pendingMutation !== null}
-                      onClick={() => void saveBlock()}
-                    >
-                      Save block
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.button}
-                      disabled={pendingMutation !== null}
-                      onClick={() => void resolveBlock()}
-                    >
-                      Resolve link
-                    </button>
-                  </div>
-                  {resolution !== null ? (
-                    <pre className={styles.resolution}>
-                      {JSON.stringify(resolution, null, 2)}
-                    </pre>
-                  ) : null}
-                </>
-              )}
-            </section>
-
-            <section className={styles.inspectorSection}>
-              <h2 className={styles.panelTitle}>Context core memory</h2>
-              <p className={styles.help}>
-                Editor proxy only. Values are stored by Context, not Space.
-              </p>
-              <div className={styles.memoryList}>
-                {memory.blocks.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    className={styles.memoryButton}
-                    disabled={pendingMutation !== null}
-                    onClick={() => {
-                      setMemoryLabel(item.label);
-                      setMemoryDescription(item.description);
-                      setMemoryValue(item.value);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-              <form onSubmit={saveMemory} className={styles.memoryForm}>
-                <input
-                  className={styles.input}
-                  value={memoryLabel}
-                  onChange={(event) => setMemoryLabel(event.target.value)}
-                  placeholder="label"
-                  aria-label="Core memory label"
-                  disabled={pendingMutation !== null}
-                />
-                <input
-                  className={styles.input}
-                  value={memoryDescription}
-                  onChange={(event) => setMemoryDescription(event.target.value)}
-                  placeholder="description"
-                  aria-label="Core memory description"
-                  disabled={pendingMutation !== null}
-                />
-                <textarea
-                  className={styles.textarea}
-                  value={memoryValue}
-                  onChange={(event) => setMemoryValue(event.target.value)}
-                  rows={7}
-                  placeholder="Context-owned value"
-                  aria-label="Core memory value"
-                  disabled={pendingMutation !== null}
-                />
-                <button
-                  type="submit"
-                  className={styles.buttonPrimary}
-                  disabled={pendingMutation !== null}
-                >
-                  {pendingMutation === "save-memory" ? "Saving…" : "Save to Context"}
-                </button>
-              </form>
-            </section>
-          </div>
-        </aside>
+        <PagesRail
+          pages={pages}
+          selectedPageId={selectedPageId}
+          newPageTitle={newPageTitle}
+          creatingPage={creatingPage}
+          pendingMutation={pendingMutation}
+          onCreatePage={createPage}
+          onNewPageTitleChange={setNewPageTitle}
+          onSelectPage={selectPage}
+        />
+        <DocumentPanel
+          document={document}
+          renaming={renaming}
+          renameDraft={renameDraft}
+          selectedBlockId={selectedBlockId}
+          draftKind={draftKind}
+          draftJson={draftJson}
+          deleteConfirmId={deleteConfirmId}
+          pendingMutation={pendingMutation}
+          onRenamePage={renamePage}
+          onRenameDraftChange={setRenameDraft}
+          onCancelRename={() => {
+            if (document !== null) setRenameDraft(document.page.title);
+            setRenaming(false);
+          }}
+          onStartRename={() => setRenaming(true)}
+          onSelectBlock={(blockId) => {
+            setDeleteConfirmId(null);
+            setSelectedBlockId(blockId);
+          }}
+          onMoveBlock={(block, delta) => void moveBlock(block, delta)}
+          onRequestDelete={(block) => {
+            if (deleteConfirmId === block.id) {
+              void deleteBlock(block);
+            } else {
+              setDeleteConfirmId(block.id);
+              setNotice("Klik Confirm delete sekali lagi untuk menghapus block.");
+            }
+          }}
+          onChooseKind={chooseKind}
+          onDraftJsonChange={setDraftJson}
+          onAddBlock={() => void addBlock()}
+        />
+        <InspectorPanel
+          selectedBlock={selectedBlock}
+          inspectorJson={inspectorJson}
+          resolution={resolution}
+          memory={memory}
+          memoryLabel={memoryLabel}
+          memoryDescription={memoryDescription}
+          memoryValue={memoryValue}
+          pendingMutation={pendingMutation}
+          onInspectorJsonChange={setInspectorJson}
+          onSaveBlock={() => void saveBlock()}
+          onResolveBlock={() => void resolveBlock()}
+          onSelectMemory={(label, description, value) => {
+            setMemoryLabel(label);
+            setMemoryDescription(description);
+            setMemoryValue(value);
+          }}
+          onMemoryLabelChange={setMemoryLabel}
+          onMemoryDescriptionChange={setMemoryDescription}
+          onMemoryValueChange={setMemoryValue}
+          onSaveMemory={saveMemory}
+        />
       </div>
     </main>
   );
