@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const pagePath = resolve("apps/ai/app/work/page.tsx");
+const sectionsPath = resolve("apps/ai/app/work/WorkPageSections.tsx");
 const cssPath = resolve("apps/ai/app/work/Work.module.css");
 const navPath = resolve("apps/ai/app/ProductNav.tsx");
 const flowPath = resolve("apps/ai/app/flow/page.tsx");
@@ -40,9 +41,14 @@ describe("PE-04 Work source contract", () => {
   });
 
   it("uses exact Flow deep links from Schedule and Run detail", async () => {
-    const [page, flow] = await Promise.all([source(pagePath), source(flowPath)]);
-    expect(page).toContain("/flow?graph=");
-    expect(page).toContain("&version=");
+    const [page, sections, flow] = await Promise.all([
+      source(pagePath),
+      source(sectionsPath),
+      source(flowPath),
+    ]);
+    const workSurface = page + sections;
+    expect(workSurface).toContain("/flow?graph=");
+    expect(workSurface).toContain("&version=");
     expect(flow).toContain('params.get("graph")');
     expect(flow).toContain('params.get("version")');
     expect(flow).toContain("loadGraph(graph, parsedVersion)");
