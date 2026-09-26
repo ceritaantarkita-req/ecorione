@@ -79,7 +79,7 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | A-09 frontend decomposition | **CLOSED / PASS** |
 | A-10 Compose readiness/health | **CLOSED / PASS** |
 | A-11 browser personal-workspace-first limitation | **CLOSED / PASS** |
-| Repository/documentation reconciliation — 2026-09-26 | **AUDIT COMPLETE / DOCS-ONLY** |
+| Repository/documentation reconciliation — 2026-09-26 | **CLOSED / PASS** |
 
 A-11 is CLOSED / PASS through PR #352 / implementation main `38fa0b8563a0f73fb44b1705e4f0e1418d8a23c5`. Shared browser Workspace selection now replaces page/controller-owned Personal constants across Ai, Projects, Work, Brain, Space, Flow, and Settings while Personal remains the compatibility default. Exact-head CI #2255, Product Eval #1494, PCS-06 #195, merged-main CI #2256, Product Eval #1495, and actual Staging Deploy #1284 passed. Staging proved exact-host identity, preserved auth/MCP boundaries, healthy Operations with zero unhealthy services, 15/15 configured services running, and 27.66 GiB stabilized free space. Workspace registry/switcher, multi-user identity, new service/data ownership, DR-2, native Google Drive, hosted spend, and production cutover remain out of scope.
 
