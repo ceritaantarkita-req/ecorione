@@ -206,10 +206,7 @@ export function FlowAuthorityPanel({
   authorityBusy: boolean;
   pendingAuthorityAction: string | null;
   onRefresh: () => void;
-  onDecide: (
-    requirement: GraphAuthorityRequirement,
-    decision: "APPROVE" | "REJECT",
-  ) => void;
+  onDecide: (requirement: GraphAuthorityRequirement, decision: "APPROVE" | "REJECT") => void;
 }) {
   if (authority === null) return null;
 
@@ -237,8 +234,7 @@ export function FlowAuthorityPanel({
               {requirement.status === "GRANTED" ? "Granted" : requirement.prompt}
             </span>
           </div>
-          {requirement.status === "APPROVAL_REQUIRED" &&
-          requirement.operationId !== null ? (
+          {requirement.status === "APPROVAL_REQUIRED" && requirement.operationId !== null ? (
             <div className={styles.inlineActions}>
               <button
                 className="ecr-btn ecr-btn--primary"
