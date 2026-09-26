@@ -45,32 +45,42 @@ Anything failing that exact rule is held for a second-stage audit.
 
 ## 3. Result
 
-Classification at the audited baseline:
+### Stage 1 — exact merged-PR head proof
 
-- **332 branches — SAFE-DELETE CANDIDATES**
-  - merged PR exists;
-  - current branch head exactly matches merged PR head;
-  - no post-merge branch movement detected.
-- **61 branches — HOLD / REVIEW**
-  - **43** have no matching PR record;
-  - **14** have a closed PR but no merged PR;
-  - **4** have a merged PR but the branch head advanced after the merged PR head.
-- `main` is excluded by definition.
-- this audit branch is also excluded from its own allowlist.
+Initial classification at the 394-branch baseline:
+
+- **332 branches** matched the exact current head of a merged PR and entered the safe-delete set;
+- **61 branches** were held because PR mapping alone was insufficient:
+  - 43 had no matching PR record;
+  - 14 had a closed PR but no merged PR;
+  - 4 had a merged PR but the branch head advanced after the merged PR head.
+
+### Stage 2 — commit containment proof
+
+The 61 held branch tips were then compared against exact audited main `d0b9c9141cba27fe640f325efff122486d1a1b56`.
+
+A branch was promoted when its tip had:
+
+```text
+ahead_by = 0
+```
+
+against audited `main`, meaning every commit reachable from that branch tip was already reachable from `main`.
+
+Result:
+
+- **22 additional branches** were fully contained in `main` and promoted to safe-delete;
+- the merged Stage-1 audit branch itself was added through exact merged-PR head proof;
+- **355 total branches** are now on the exact-SHA safe-delete allowlist;
+- **39 branches** remain HOLD because each still has one or more commits ahead of audited `main`;
+- the currently active containment-audit branch is excluded from its own allowlist.
 
 Machine-readable evidence:
 
-`docs/verification/branch-hygiene-allowlist-2026-09-27.json`
+- `docs/verification/branch-hygiene-allowlist-2026-09-27.json`
+- `docs/verification/branch-hygiene-hold-review-2026-09-27.json`
 
-That JSON records for every safe-delete candidate:
-
-- branch name;
-- expected exact remote SHA;
-- merged PR number;
-- merged timestamp;
-- merge commit SHA.
-
-It also records every held branch and why it was not admitted to the safe-delete set.
+The allowlist records the expected exact remote SHA and the proof type for each deletion candidate. The hold review records each retained branch's `ahead_by` / `behind_by` result and keeps it pending manual supersession/provenance review.
 
 ## 4. Why the remaining 61 are held
 
