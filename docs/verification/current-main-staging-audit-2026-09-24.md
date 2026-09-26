@@ -1,6 +1,6 @@
 # Current main + staging parity audit — 2026-09-24
 
-Status: **AUDIT COMPLETE / A-09 CLOSED-PASS / A-10 CLOSED-PASS / A-11 CLOSED-PASS**
+Status: **AUDIT COMPLETE / SELECTED FOLLOW-UPS THROUGH A-11 CLOSED-PASS**
 
 ## Post-audit closure update — 2026-09-26
 
@@ -11,6 +11,8 @@ The audit baseline and original no-mutation conclusions below remain historical 
 - **A-01 HIGH internal HTTP timeout coverage — CLOSED / PASS** through PR #309 / merge `2ee12fd454ade78ce1bf732390334726980e0451`; automatic Staging Deploy #821 passed exact merged main.
 
 The exact safe handoff, runtime evidence, test gates, remaining lower-priority findings, and next authorized discussion scope are recorded in [session-4-high-findings-safe-checkpoint-2026-09-25.md](session-4-high-findings-safe-checkpoint-2026-09-25.md).
+
+**2026-09-26 reconciliation:** every lower-priority/product follow-up actually selected from this audit through A-11 has now closed at its documented bounded scope. The original discovery text below is retained for provenance, while the headings and closure notes reflect the final state. Native Google Drive, broader multi-user Workspace/identity work, DR-2, hosted spend, and production cutover remain separate/deferred scopes.
 
 ## Scope
 
@@ -157,7 +159,7 @@ The reviewed Compose paths are **not currently exposed by this configuration gap
 
 **Closure:** PR #308 added a fail-closed authenticated bind helper and moved RnD, Context, Connect, Hub, Artifact, Sandbox, Space, and Flow production entrypoints onto it. Loopback remains valid without the internal token, while non-loopback startup now refuses to proceed without authentication material. Exact-head CI #2020, Product Eval #1259, MCP External HTTPS #1023, and PCS-06 #29 passed; merged main `e4810e0d7980682028be67634fa430090fe9bf92` then passed automatic Staging Deploy #809.
 
-### A-13 — MEDIUM — Space standalone default points at the Ai fallback port instead of Flow
+### A-13 — CLOSED / PASS — Space standalone/default Flow owner port
 
 **Closure update — 2026-09-25: CLOSED / PASS.** PR #312 / merge `d8d2a113c917cee87f2d43a5a2243eda2e4d2173` changed the Space standalone/default Flow owner URL to canonical port `17028`, centralized the fallback while preserving explicit overrides, and added deterministic owner-port contract coverage. Exact-head CI #2032 + Product Eval #1271 passed; merged-main CI #2033 + Product Eval #1272 passed; automatic Staging Deploy #833 executed and passed on exact `d8d2a113...`. The original audit evidence and recommendation below are retained as historical discovery context.
 
@@ -174,7 +176,7 @@ Compose explicitly injects `http://flow:17028`, so the proven staging/desktop Co
 
 **Recommended future scope:** change both Space defaults to `17028` and add a deterministic source/runtime regression test so the owner port map cannot drift.
 
-### A-02 — MEDIUM — Projects “All” is rendered as a button but has no behavior
+### A-02 — CLOSED / PASS — Projects virtual “All” aggregate behavior
 
 **Closure update — 2026-09-25: CLOSED / PASS.** PR #314 / merge `591b54131c2d0b53532f33e08b878c15a0617951` made **All** an explicit virtual aggregate state, opened the existing workspace-scoped Historical Ledger metadata path by allowing omitted `projectId`, preserved per-Project memory/source isolation, and routed aggregate conversation links through their owning real Project. Exact-head CI #2041, Product Eval #1280 and PCS-06 browser #41 passed; merged-main CI #2042 and Product Eval #1281 passed; automatic Staging Deploy #851 executed and passed on exact `591b5413...`. The original audit evidence below is retained as historical discovery context.
 
@@ -182,7 +184,7 @@ Compose explicitly injects `http://flow:17028`, so the proven staging/desktop Co
 
 `apps/ai/app/projects/page.tsx` renders the virtual **All** entry as a button with no click handler or state transition. It is visually interactive but does nothing.
 
-### A-03 — MEDIUM — persisted Project selection can become stale
+### A-03 — CLOSED / PASS — persisted Project selection reconciliation
 
 **Closure update — 2026-09-25: CLOSED / PASS.** PR #316 / merge `8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e` introduced one shared active-Project reconciliation contract across Ai/Work/Brain. Persisted/query candidates are accepted only when present in the active Project list; archived/missing candidates converge to active Personal or the first active Project, and owner reads are blocked until reconciliation completes. Exact-head CI #2050, Product Eval #1289 and PCS-06 browser #47 passed; merged-main CI #2051 and Product Eval #1290 passed; automatic Staging Deploy #869 executed and passed on exact `8bbaf855...`. The original audit evidence below is retained as historical discovery context.
 
@@ -196,7 +198,7 @@ Likely failure path: a previously selected Project is archived -> local storage 
 
 This should receive a deterministic regression test before repair.
 
-### A-04 — PRODUCT GAP — Project creation/settings are thinner than the intended product
+### A-04 — CLOSED / PASS — Project settings at the V1 owner boundary
 
 **Closure update — 2026-09-25: CLOSED / PASS.** PR #318 / merge `33d54928de60ba3f6d8cd3770c18d7ad5eea6f98` added the same-origin Project PATCH path and Projects settings UI for name, description, instruction, and autonomy ceiling. The single V1 memory policy `GLOBAL_PLUS_PROJECT` is intentionally displayed read-only rather than represented as a fake selector. The later Session 8 source-ingestion sequence preserved this ownership/model boundary and final implementation main `3dd350e938d3651e75fc81ac30e9ef751c477ca5` reached staging through successful Staging Deploy run `36109914350`.
 
@@ -204,7 +206,7 @@ The backend Project model supports name, description, instruction, autonomy ceil
 
 The current Ai Projects surface creates by name only, displays memory/autonomy metadata, does not expose description/instruction/autonomy editing, has no same-origin Ai API route for generic Project PATCH, and cannot offer a meaningful memory-policy selector because V1 memory policy is currently a single literal.
 
-### A-05 — PRODUCT GAP — Project Sources are bindings, not source onboarding/ingestion
+### A-05 — CLOSED AT GENERIC CONNECTOR BOUNDARY — Project source onboarding/ingestion
 
 **Closure update — 2026-09-25: CLOSED AT GENERIC CONNECTOR BOUNDARY.** Session 8 closed the currently authorized source slices through PRs #319–#324: owner-backed source selection, direct file -> Artifact ingestion, separate Project-scoped extraction, hardened HTTPS URL snapshot ingestion, and browsing/ingesting concrete resources from a Project-bound MCP server. Generic connector snapshots are stored as `RESTRICTED + LOCAL_ONLY`, exact resource reads require explicit `mcp.resource.read / mcp.read` authority, and the path does not synthesize chat/history. Final implementation main is `3dd350e938d3651e75fc81ac30e9ef751c477ca5`, with merged-main CI/Product Eval/MCP PASS and automatic Staging Deploy run `36109914350` PASS.
 
@@ -247,7 +249,7 @@ Exact-head CI `36131738117`, Product Eval `36131738109`, and PCS-06 `36131738174
 
 Evidence: [session-9-a07-brain-scalable-layout-closure-2026-09-25.md](session-9-a07-brain-scalable-layout-closure-2026-09-25.md).
 
-### A-08 — PARTIALLY CLOSED — richer canonical-owner Brain projection
+### A-08 — CLOSED AT PROVEN OWNER-BACKED BOUNDARY — richer canonical-owner Brain projection
 
 **A-08a CLOSED / PASS.** PR #333 / merge `461a9665584b5e3a47396663cd4220f21c62027c` adds first-class Artifact and Space Page nodes derived from authorized Project Source views. Source remains the binding/reference node; canonical owner IDs remain authoritative and Brain adds only deterministic relationships.
 
@@ -259,7 +261,7 @@ A-08b exact-head CI `36147793139`, Product Eval `36147793105`, PCS-06 `361477930
 
 **A-08d CLOSED / PASS.** PR #341 ported the useful selected-node grounded-assistant design from stale PR #337 onto fresh post-A-08c main and merged as `1f25f32cdbb0bfd6dc043491f7668df6bc1795cb`. Brain now embeds a local-only assistant that resolves an authorized bounded neighborhood, forwards exact Fact IDs and URL Source URIs through the existing Ai -> Hub -> Context -> Connect path, and suppresses wider Project Core Memory/broad Artifact fallback for grounded turns. It introduces no second chat/history backend, direct Brain completion endpoint, graph store, hosted-provider path, or model-created canonical relationship. A-08c `GENERATED_FROM` provenance remains covered in the same rendered browser journey. Exact-head CI #2199, Product Eval #1438, PCS-06 #155 and MCP #1120 passed; merged-main CI #2200, Product Eval #1439 and MCP #1121 passed. Staging Deploy #1171 was gate-only with deploy skipped; actual Staging Deploy #1172 deployed exact `1f25f32...` and passed auth/MCP smoke, healthy Operations, exact-host identity, 15/15 services running, and 25.03 GiB stabilized free space. Evidence: [session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md](session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md).
 
-**A-08 remainder is now explicitly CLOSED / DEFERRED.** Current Connect/MCP resource discovery preserves stable authorized resource `uri` values but does not expose canonical parent/child relationships, so no connector folder tree is inferred from URI shape. Context Core Memory persists global/project label keys but its shared/API contract exposes no canonical block ID, so no Brain identity is synthesized from `(projectId, label)`. These two speculative expansions are deferred until their owners expose the required canonical identity/relationship. A-08 is therefore closed at the proven owner-backed boundary. A-09 has since been CLOSED / PASS through PRs #344–#348; A-10 is now the next eligible clean audit boundary. Evidence: [session-9-a08-remainder-closure-decision-2026-09-26.md](session-9-a08-remainder-closure-decision-2026-09-26.md).
+**A-08 remainder is now explicitly CLOSED / DEFERRED.** Current Connect/MCP resource discovery preserves stable authorized resource `uri` values but does not expose canonical parent/child relationships, so no connector folder tree is inferred from URI shape. Context Core Memory persists global/project label keys but its shared/API contract exposes no canonical block ID, so no Brain identity is synthesized from `(projectId, label)`. These two speculative expansions are deferred until their owners expose the required canonical identity/relationship. A-08 is therefore closed at the proven owner-backed boundary. A-09 and A-10 subsequently CLOSED / PASS, and A-11 later CLOSED / PASS through PR #352; no next numbered audit scope is opened automatically. Evidence: [session-9-a08-remainder-closure-decision-2026-09-26.md](session-9-a08-remainder-closure-decision-2026-09-26.md).
 
 ### A-09 — CLOSED / PASS — frontend maintainability concentration
 
@@ -299,7 +301,7 @@ This closure does not create a Workspace registry/switcher, provisioning UX, mem
 
 ## 4. Security audit result
 
-At the original audit baseline, one CRITICAL human-authentication defect and two HIGH findings were identified. Those CRITICAL/HIGH findings are now CLOSED / PASS through the explicitly authorized follow-up work summarized above. This document keeps the original findings for traceability; it should not be read as claiming they remain open on current main. Lower-priority findings remain separately bounded.
+At the original audit baseline, one CRITICAL human-authentication defect and two HIGH findings were identified. Those CRITICAL/HIGH findings are now CLOSED / PASS through the explicitly authorized follow-up work summarized above. The subsequently selected lower-priority/product follow-ups through A-11 are also closed at their documented bounded scopes. This document keeps the original findings for traceability; it should not be read as claiming those closed items remain open on current main. Deferred provider-specific, broader multi-user, DR-2, hosted-spend, and production scopes remain separate.
 
 Positive evidence:
 

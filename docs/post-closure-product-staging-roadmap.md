@@ -4,6 +4,8 @@ Last updated: **2026-09-23**
 
 Status: **CLOSED / PASS — PCS-00..PCS-10**
 
+> **Current-state note — 2026-09-26:** this file preserves the closed PCS roadmap and its historical problem statements. Later 2026-09-24 audit follow-ups through A-11 are also CLOSED / PASS at their bounded scopes. Current repository/staging identity and deferred boundaries are maintained in `current-state-and-next-steps.md`; do not interpret old “current” wording inside the completed PCS sequence as a live backlog.
+
 This roadmap records the completed post-Product-Evolution scope after PE-00..PE-08 and repository portability/reproducibility hardening. PCS-00..PCS-10 are CLOSED / PASS. It is **not PE-09, not Batch 13, and not a claim that production is live**.
 
 The operator approved two connected goals:

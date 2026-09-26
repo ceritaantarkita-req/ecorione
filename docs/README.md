@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-24**
+Last updated: **2026-09-26**
 
 This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
 
@@ -118,9 +118,9 @@ Use the owner-specific runbook when touching its subsystem:
 
 [verification/](verification/) contains dated closure records, failed attempts, runtime measurements, exact-head evidence, and bounded audits. It is not a work queue.
 
-Latest bounded repository/product + staging-parity audit: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). It originally recorded a CRITICAL missing human-authentication boundary plus HIGH reliability/security debts and product gaps. The CRITICAL Ai-auth finding is now CLOSED / PASS at the SumoPod staging boundary; closure evidence is [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md). Remaining findings still require separately selected scopes.
+Latest bounded repository/product + staging-parity audit: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). It preserves the original findings while recording their later closure updates. The CRITICAL/HIGH findings and every subsequently selected bounded follow-up through A-11 are now CLOSED / PASS at their documented boundaries; native Google Drive, broader Workspace/multi-user identity, DR-2 checkpoint 2, hosted-provider spend, and production cutover remain separate/deferred scopes.
 
-Safe checkpoint for the next discussion: [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md). Start there before opening any implementation work from the audit.
+Latest safe product/audit checkpoint: [verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md](verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md). The older [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md) is historical pre-fix evidence, not the current resume point.
 
 ## Archive
 
@@ -130,7 +130,7 @@ Safe checkpoint for the next discussion: [verification/current-main-audit-safe-c
 
 - active operational scope — **NONE for DR-2 runtime**; DR-2 checkpoint 2 is deferred at the safe pre-selection boundary. Interim backup posture is local backup; optional encrypted Google Drive copy is not yet a validated DR-2 target.
 - original Off-host Backup & DR — **CLOSED / PASS** for total SumoPod staging-host loss at the documented boundary; exact recovered runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / image `staging-b27c1e5833be`.
-- SumoPod remote development/staging — **VERIFIED / NOT PRODUCTION**; the latest proven application runtime remains `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. Later documentation/DR-2 merges did not deploy because staging deployment activation remained disabled.
+- SumoPod remote development/staging — **VERIFIED / NOT PRODUCTION**; governed Staging Deploy #1288 converged the host to the pre-reconciliation A-11 bookkeeping baseline `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` / `staging-65bf8d2ce0b8`, with public/auth + MCP checks PASS, Operations healthy, 15/15 configured services running, and 26.29 GiB stabilized free space. Historical DR/runtime identities remain valid only for their dated evidence boundaries.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
 - AutoClick — deferred by design.
@@ -176,8 +176,8 @@ The bounded latest-main staging-convergence scope is CLOSED / PASS at the runtim
 
 Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
-## Repository-wide documentation reconciliation — 2026-09-21
+## Repository-wide documentation reconciliation — 2026-09-26
 
-The repository documentation tree contains 221 Markdown/MDX/TXT documents under `docs/` after adding the 2026-09-23 reconciliation record (220 existed at audit baseline). Current/canonical documents are reconciled to the closed PE/PCS/original-DR state and active DR-2 checkpoint 2 boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, or `next scope` is not current authority unless the current-state documents above explicitly reopen that scope.
+The audited pre-reconciliation baseline contained **250 tracked files under `docs/`** at `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47`; this reconciliation adds one new verification record, so its post-merge tree contains **251** tracked files under `docs/`. Current/canonical documents are reconciled to the closed PE/PCS/original-DR state, the closed audit follow-ups through A-11, and the deferred DR-2 checkpoint-2 boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, superseded runtime identities, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, `next scope`, or naming an older staging SHA is not current authority unless the current-state documents above explicitly reopen that scope.
 
-Historical audit record: [verification/repository-documentation-reconciliation-2026-09-21.md](verification/repository-documentation-reconciliation-2026-09-21.md). Current reconciliation: [verification/repository-documentation-reconciliation-2026-09-23.md](verification/repository-documentation-reconciliation-2026-09-23.md).
+Historical reconciliation records remain [verification/repository-documentation-reconciliation-2026-09-21.md](verification/repository-documentation-reconciliation-2026-09-21.md) and [verification/repository-documentation-reconciliation-2026-09-23.md](verification/repository-documentation-reconciliation-2026-09-23.md). The latest reconciliation is [verification/repository-documentation-reconciliation-2026-09-26.md](verification/repository-documentation-reconciliation-2026-09-26.md).

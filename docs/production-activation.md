@@ -1,9 +1,11 @@
 # ECORIONE — Production Activation Workstream
 
 Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING VERIFIED**
-Date: 2026-09-24
+Date: 2026-09-26
 
 This is the post-closure production-deployment workstream. It does not reopen Batch 1–12 and it is not Batch 13.
+
+At this reconciliation baseline, SumoPod staging was converged to exact GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` through governed Staging Deploy #1288; subsequent docs-only bookkeeping may advance the exact SHA without changing the production-promotion decision. Public production remains deferred; this current staging identity is operational evidence, not a promotion decision.
 
 On 2026-09-20 the operator explicitly approved deployment to an operator-owned **SumoPod VPS as remote development/staging** so ECORIONE can run independently of the operator laptop. This does **not** authorize a public production cutover. Production promotion, final public edge/domain posture, and production-only claims remain separate gates.
 
@@ -28,7 +30,7 @@ Staging rules:
 - hosted AI (initially OpenRouter where configured) may be used without any local Ollama dependency;
 - local inference remains optional and OpenAI-compatible;
 - no provider key, VPS password, public/private IP, vault master key, or deployment token is committed to Git;
-- internal service ports remain private; the intended web edge must be human-authenticated before it is treated as safe. The 2026-09-24 audit found that the current general Ai fallback is not yet human-authenticated;
+- internal service ports remain private; SumoPod staging now has a fail-closed single-credential human Basic-Auth gate on the general Ai fallback, while any future production promotion still requires an explicit production identity/session/auth review rather than assuming the staging credential model is final;
 - validate restart persistence, backup, observability, and rollback on the actual VPS;
 - staging evidence cannot be cited as production evidence.
 

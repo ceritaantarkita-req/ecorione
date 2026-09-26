@@ -15,7 +15,7 @@ Before changing the repo:
 
 Dated audits and `docs/verification/` are evidence, not current work queues.
 
-## Current state — 2026-09-23
+## Current state — 2026-09-26
 
 - original Batch 1–12 / W / F6 baseline: **CLOSED**;
 - Windows runtime + installer: **VERIFIED**;
@@ -48,6 +48,10 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - original Off-host Backup & DR: **CLOSED / PASS** for total SumoPod staging-host loss at the documented boundary; exact recovered runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, 12 owner volumes, 15 services, semantic canary, changed-boot-ID persistence, and final marker-bound closure evidence passed;
 - DR-2 physical independence: **DEFERRED / CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 SAFE-PAUSED BEFORE TARGET SELECTION**; local backup is the interim posture and no genuinely external target has been selected or contacted;
 - AutoClick: **DEFERRED BY DESIGN**.
+- 2026-09-24 audit follow-ups selected through A-11: **CLOSED / PASS at documented bounded scopes**; A-00 human auth, A-12 remote-bind auth, A-01 internal timeouts, A-13 Space/Flow default port, A-02 All, A-03 stale Project selection, A-04 Project settings, A-05 generic source onboarding boundary, A-06 Schedule, A-07/A-08 Brain work, A-09 decomposition, A-10 Compose readiness, and A-11 browser Workspace context are closed;
+- pre-reconciliation GitHub/staging baseline: **`65bf8d2ce0b832bd12b0b279ccf9df0384a07c47`**; later docs-only bookkeeping may advance the exact Git SHA without reopening product/runtime scope;
+- governed SumoPod staging evidence at the reconciliation baseline: **Staging Deploy #1288 PASS** on exact audited baseline `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47`, with public/auth + MCP checks PASS, Operations healthy, 15/15 configured services running, and 26.29 GiB stabilized free space;
+- open implementation PRs at this reconciliation checkpoint: **none**; open Issue #277 remains the deferred DR-2 tracker.
 
 Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any new product scope requires an explicit roadmap/decision.
 
@@ -87,7 +91,9 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 
 ## Current active scope
 
-**Security stop condition:** the 2026-09-24 bounded audit found a CRITICAL missing human-authentication boundary on the general Ai web/API edge. Do not promote public production or treat a reachable Ai edge as safe for personal data until a bounded fix adds fail-closed human authentication with unauthenticated negative-path tests. This audit finding does not itself authorize implementation; the operator must open the bounded fix scope.
+There is **no active product/audit implementation scope** after A-11. The 2026-09-24 CRITICAL human-authentication finding and the subsequently selected A-series follow-ups through A-11 are closed at their documented bounded scopes. Do not reopen them merely for freshness; reopen only for a reproducible regression or an explicitly authorized new boundary.
+
+The staging human gate remains the existing single operator Basic-Auth credential. That is adequate only for the documented private staging boundary; it must not be re-described as final multi-user identity/RBAC or as production authorization.
 
 There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
 

@@ -1,14 +1,16 @@
 # ECORIONE Security Review Baseline
 
-Last updated: **2026-09-24**
+Last updated: **2026-09-26**
 
-Status: **HISTORICAL SECURITY BASELINE CLOSED / CRITICAL AI AUTH FINDING CLOSED ON STAGING / PRODUCTION DEFERRED**
+Status: **HISTORICAL SECURITY BASELINE CLOSED / A-00 + A-12 + A-01 FOLLOW-UPS CLOSED ON STAGING / PRODUCTION DEFERRED**
 
 Batch 12 closes a production/self-host **baseline**, not an assertion that future vulnerabilities are impossible. Final closure evidence is in `docs/verification/batch12-closure-2026-09-10.md`; current operational priorities are in `docs/current-state-and-next-steps.md`.
 
+At the start of this reconciliation, the A-11 bookkeeping/staging baseline was exact GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` through Staging Deploy #1288; a later docs-only merge may advance the Git/staging SHA without changing this security/runtime code boundary. That does not promote staging to production and does not turn the single operator Basic-Auth gate into multi-user identity/RBAC.
+
 ## Enforced controls
 
-- Internal HTTP uses bearer authentication, timing-safe comparison, bounded request IDs/body handling, no-store responses, security headers, and process-local rate limiting. The guarded Compose paths require `ECORIONE_INTERNAL_TOKEN`; the 2026-09-24 audit additionally found that direct owner-service starts can still combine `ECORIONE_ALLOW_REMOTE_BIND=1` with an absent token, so non-loopback startup must be hardened fail-closed before that configuration is treated as safe.
+- Internal HTTP uses bearer authentication, timing-safe comparison, bounded request IDs/body handling, no-store responses, security headers, and process-local rate limiting. The guarded Compose paths require `ECORIONE_INTERNAL_TOKEN`; A-12 subsequently closed the direct-start gap so non-loopback owner-service startup now fails closed when that token is absent (PR #308 / merge `e4810e0d7980682028be67634fa430090fe9bf92`).
 - Public MCP keeps OAuth/OIDC resource-server validation and Sync remains the public bridge; inbound MCP itself stays loopback-only in Compose.
 - Outbound MCP HTTPS rejects unsafe URL forms and insecure HTTP is loopback-only with explicit policy; stdio commands require an operator allowlist and credentials remain Vault references.
 - Flow HTTP is host-allowlisted, redirect-disabled, timeout-bounded, and HTTP-node side effects use deterministic idempotency identities.
@@ -31,7 +33,7 @@ Batch 12 closes a production/self-host **baseline**, not an assertion that futur
 
 **2026-09-24 CRITICAL audit finding — CLOSED / PASS at SumoPod staging boundary:** the general Ai page/API fallback previously lacked human authentication while Ai route handlers injected `ECORIONE_INTERNAL_TOKEN` server-side. PRs #293–#295 now place the general Ai fallback behind the existing operator Basic-Auth credential boundary, with an unauthenticated root redirect to a protected `/login` bootstrap. Final governed staging acceptance on reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved representative Project/history/Brain/Space reads and chat/forget mutations return HTTP 401 + Basic challenge, while MCP protected-resource discovery remains public and `/mcp` retains its OAuth/OIDC challenge. This is an urgent single-credential human gate, not a final multi-user identity/RBAC design. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
-Internal service routes remain protected by `ECORIONE_INTERNAL_TOKEN` according to their boundary on the guarded Compose paths. The same audit separately found that direct owner-service starts can enable non-loopback bind while omitting that token, so direct-start remote binding must also become fail-closed. Hub remains the capability/policy/approval authority for node/model/MCP execution. Control-plane configuration does not grant execution permission by itself.
+Internal service routes remain protected by `ECORIONE_INTERNAL_TOKEN` according to their boundary on the guarded Compose paths. A-12 closed the direct-start remote-bind gap by requiring authentication material before non-loopback owner-service startup; A-01 separately closed the default internal HTTP deadline gap. Hub remains the capability/policy/approval authority for node/model/MCP execution. Control-plane configuration does not grant execution permission by itself.
 
 Cloudflare Tunnel, DNS, WAF, Access, or any other reverse proxy **must not become ECORIONE's authorization authority**. They may add edge defense, but Hub/Connect security boundaries remain authoritative.
 
