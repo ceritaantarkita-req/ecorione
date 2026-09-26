@@ -301,7 +301,7 @@ This closure does not create a Workspace registry/switcher, provisioning UX, mem
 
 ## 4. Security audit result
 
-At the original audit baseline, one CRITICAL human-authentication defect and two HIGH findings were identified. Those CRITICAL/HIGH findings are now CLOSED / PASS through the explicitly authorized follow-up work summarized above. This document keeps the original findings for traceability; it should not be read as claiming they remain open on current main. Lower-priority findings remain separately bounded.
+At the original audit baseline, one CRITICAL human-authentication defect and two HIGH findings were identified. Those CRITICAL/HIGH findings are now CLOSED / PASS through the explicitly authorized follow-up work summarized above. The subsequently selected lower-priority/product follow-ups through A-11 are also closed at their documented bounded scopes. This document keeps the original findings for traceability; it should not be read as claiming those closed items remain open on current main. Deferred provider-specific, broader multi-user, DR-2, hosted-spend, and production scopes remain separate.
 
 Positive evidence:
 
