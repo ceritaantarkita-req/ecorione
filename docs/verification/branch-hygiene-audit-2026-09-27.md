@@ -82,19 +82,19 @@ Machine-readable evidence:
 
 The allowlist records the expected exact remote SHA and the proof type for each deletion candidate. The hold review records each retained branch's `ahead_by` / `behind_by` result and keeps it pending manual supersession/provenance review.
 
-## 4. Why the remaining 61 are held
+## 4. Why the remaining 39 are held
 
-The hold set contains several kinds of potentially meaningful provenance:
+Every remaining held branch has `ahead_by > 0` against audited `main`, so each still carries at least one commit that is not reachable from `main`.
 
-- checkpoint/recovery branches;
-- probe/diagnostic branches;
+The set includes:
+
+- diagnostic/probe branches;
 - abandoned or superseded PR heads;
-- branches with no PR mapping;
-- branches whose remote head moved after a merged PR.
+- installer/runtime experiments;
+- branches whose remote head moved after a merged PR;
+- closed-unmerged implementation/docs branches.
 
-Examples include `checkpoint/*`, installer/probe branches, duplicate historical docs heads, and four branches with post-merge movement.
-
-No held branch should be deleted merely because its name looks old.
+Some of those unique commits may still be semantically superseded by later work, but that requires a separate content/supersession review. They are not safe to delete merely from age, name, or PR status.
 
 ## 5. Cleanup tool
 
