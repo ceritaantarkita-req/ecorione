@@ -1,6 +1,6 @@
 # ECORIONE — SumoPod Remote Staging Runbook
 
-Last updated: **2026-09-24**
+Last updated: **2026-09-26**
 
 Status: **REMOTE STAGING VERIFIED / PCS-07..PCS-09 CLOSED / PASS / NOT PRODUCTION**
 
@@ -29,7 +29,9 @@ PCS-07 proved the initial remote staging deployment and basic runtime reachabili
 
 **2026-09-24 security closure:** the earlier audit stop condition is now CLOSED / PASS at the SumoPod staging boundary. The general Ai browser/API fallback is protected by the existing operator Basic-Auth credential set, with `/` using a protected `/login` bootstrap. Final governed staging acceptance on `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved representative Ai reads/mutations fail closed unauthenticated while MCP discovery/OAuth remains separate. This is a private single-credential staging gate, not a final multi-user authentication system. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
-**Current operational state:** the bounded staging capacity recovery is CLOSED / PASS. BuildKit cache was reclaimed without broad Docker pruning, the host checkout is clean at the actual running reviewed SHA `b73e885d51e82716d5b29b3b31d207aae5ec95d0`, the installed privileged deploy helper matches reviewed main, and private-edge/Ops/exact-host revalidation passed. Automatic CD remains intentionally disabled until one controlled current-main convergence succeeds. See [verification/staging-capacity-recovery-closure-2026-09-24.md](verification/staging-capacity-recovery-closure-2026-09-24.md).
+**2026-09-26 mobile observation:** one iPhone session authenticated successfully but the root `/` bootstrap could remain visually blank, while direct access to protected `/flow` with the same cached Basic-Auth credential loaded the application. Treat this as a bounded staging UX observation pending a separately selected reproducible browser bugfix; do not weaken the auth boundary as a workaround.
+
+**Current operational state:** capacity recovery, auto-deploy restoration, and deployment-pipeline hardening are CLOSED / PASS. Governed Staging Deploy #1288 deployed exact current GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` / `staging-65bf8d2ce0b8`; the host worktree matched clean/detached, public/auth + MCP checks passed, Operations was healthy with zero unhealthy owner services, all 15 configured services were running, and capacity stabilized at 26.29 GiB free. Automatic GitHub -> SumoPod deployment is therefore restored/proven rather than intentionally disabled. Historical capacity-recovery state remains in [verification/staging-capacity-recovery-closure-2026-09-24.md](verification/staging-capacity-recovery-closure-2026-09-24.md).
 
 ## Secret and host rules
 
