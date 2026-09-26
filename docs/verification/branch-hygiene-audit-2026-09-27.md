@@ -99,17 +99,10 @@ Final classification after Stage 2:
 
 Machine-readable evidence:
 
-`docs/verification/branch-hygiene-allowlist-2026-09-27.json`
+- `docs/verification/branch-hygiene-allowlist-2026-09-27.json`
+- `docs/verification/branch-hygiene-hold-review-2026-09-27.json`
 
-That JSON records for every safe-delete candidate:
-
-- branch name;
-- expected exact remote SHA;
-- merged PR number;
-- merged timestamp;
-- merge commit SHA.
-
-It also records every held branch and why it was not admitted to the safe-delete set.
+The allowlist records every safe-delete candidate's exact remote SHA and proof kind. The hold-review record separately captures all **39** retained branches, their original classification, exact tip SHA, and their audited main-graph `ahead_by` / `behind_by` result. That makes the remaining unique-commit risk explicit instead of relying on branch names or PR status.
 
 ## 4. Why the remaining 39 are held
 
