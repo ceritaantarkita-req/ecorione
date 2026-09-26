@@ -24,7 +24,7 @@ Repository variable `ECORIONE_STAGING_CD_ENABLED=1` is restored. The bounded Ope
 
 ### Session 3 — CLOSED / PASS
 
-Session 2 is CLOSED / PASS. Session 3 audit is complete at source level and the bounded hardening implementation is in review. Priority fixes are: explicit current+rollback image retention, single shared application image build, post-deploy capacity stabilization, release-receipt/runtime identity consistency, and full rollback revalidation. The dual workflow-run trigger remains unchanged; backup freshness per deploy is documented as a separate deferred policy question.
+Session 2 is CLOSED / PASS. Session 3 source audit and bounded hardening are also CLOSED / PASS. The implemented fixes are explicit current+rollback image retention, one shared application image build, post-deploy capacity stabilization, release-receipt/runtime identity consistency, and full rollback revalidation. The dual workflow-run trigger remains unchanged; backup freshness per deploy remains a separately documented deferred policy question.
 
 PR #305 hardening and PR #306 final-proof checkpoint are merged. CI #2007 and Product Eval #1246 passed, and automatic Staging Deploy #781 deployed exact main `977db6f4bb72acfb6f4601372de6dc82b9200995` through the restricted SSH path. Runtime identity, public/MCP smoke, Operations health, all 15 services, current+rollback retention, stale-image cleanup and 28.87 GiB final free space all passed. **Session 3 is CLOSED / PASS.** Evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
 
