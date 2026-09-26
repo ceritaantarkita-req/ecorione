@@ -226,11 +226,11 @@ services:
         condition: service_healthy
       flow:
         condition: service_healthy
-
-networks:    healthcheck:
+    healthcheck:
       <<: *http-health
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 
+networks:
   internal:
     internal: false
 
