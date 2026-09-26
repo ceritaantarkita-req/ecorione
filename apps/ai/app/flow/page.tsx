@@ -16,6 +16,7 @@ import {
   FlowAuthorityPanel,
   FlowExecutionPanel,
   QuickNodeSettings,
+  type GraphAuthorityRequirement,
   type GraphAuthorityState,
 } from "./FlowPageSections";
 import {
