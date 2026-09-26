@@ -30,5 +30,11 @@ services:
     ports:
       - "127.0.0.1:7233:7233"
 
-volumes:
+volumes:    healthcheck:
+      test: ["CMD-SHELL", "TEMPORAL_ADDRESS=temporal:7233 temporal operator cluster health | grep -q SERVING"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
   temporal_db:
