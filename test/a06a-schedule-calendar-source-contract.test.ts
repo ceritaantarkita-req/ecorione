@@ -3,12 +3,14 @@ import { describe, expect, it } from "vitest";
 
 describe("A-06a Schedule calendar UX source contract", () => {
   const page = readFileSync("apps/ai/app/work/page.tsx", "utf8");
+  const sections = readFileSync("apps/ai/app/work/WorkPageSections.tsx", "utf8");
   const calendar = readFileSync("apps/ai/app/work/ScheduleCalendar.tsx", "utf8");
   const helpers = readFileSync("apps/ai/app/work/work-calendar.ts", "utf8");
   const css = readFileSync("apps/ai/app/work/Work.module.css", "utf8");
 
   it("adds year mode and explicit cursor navigation without changing schedule authority", () => {
-    expect(page).toContain('["list", "day", "week", "month", "year"]');
+    const workSurface = page + sections;
+    expect(workSurface).toContain('["list", "day", "week", "month", "year"]');
     expect(page).toContain("shiftCalendarCursor");
     expect(page).toContain("todayDateKey");
     expect(calendar).toContain('aria-label="Previous period"');
@@ -17,8 +19,8 @@ describe("A-06a Schedule calendar UX source contract", () => {
     expect(calendar).toContain("Today");
     expect(calendar).toContain("nextActionTimes");
     expect(calendar).toContain("Work tidak");
-    expect(page).not.toContain("setInterval(");
-    expect(page).not.toContain("setTimeout(");
+    expect(workSurface).not.toContain("setInterval(");
+    expect(workSurface).not.toContain("setTimeout(");
   });
 
   it("renders day week month and year calendar projections from Temporal-exposed occurrences", () => {

@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const pagePath = resolve("apps/ai/app/work/page.tsx");
+const sectionsPath = resolve("apps/ai/app/work/WorkPageSections.tsx");
+const modelPath = resolve("apps/ai/app/work/work-page-model.ts");
 const cssPath = resolve("apps/ai/app/work/Work.module.css");
 const navPath = resolve("apps/ai/app/ProductNav.tsx");
 const flowPath = resolve("apps/ai/app/flow/page.tsx");
@@ -13,9 +15,13 @@ async function source(path: string): Promise<string> {
 
 describe("PE-04 Work source contract", () => {
   it("exposes Schedule Flows Runs under global Work navigation", async () => {
-    const [page, nav] = await Promise.all([source(pagePath), source(navPath)]);
+    const [page, model, nav] = await Promise.all([
+      source(pagePath),
+      source(modelPath),
+      source(navPath),
+    ]);
     expect(nav).toContain('["Work", "/work", "work"]');
-    expect(page).toContain('type WorkTab = "schedule" | "flows" | "runs"');
+    expect(model).toContain('export type WorkTab = "schedule" | "flows" | "runs"');
     expect(page).toContain('value === "schedule" ? "Schedule"');
     expect(page).toContain('value === "flows" ? "Flows" : "Runs"');
   });
@@ -29,20 +35,26 @@ describe("PE-04 Work source contract", () => {
   });
 
   it("keeps Run projection operationId-based and Project-scoped", async () => {
-    const page = await source(pagePath);
+    const [page, sections] = await Promise.all([source(pagePath), source(sectionsPath)]);
+    const workSurface = page + sections;
     expect(page).toContain("/api/flow/runs?");
     expect(page).toContain("workspaceId: WORKSPACE_ID");
     expect(page).toContain("projectId: nextProjectId");
     expect(page).toContain("/api/flow/runs/");
     expect(page).toContain("workspaceId: WORKSPACE_ID");
     expect(page).toContain("projectId,");
-    expect(page).toContain("Key = operationId");
+    expect(workSurface).toContain("Key = operationId");
   });
 
   it("uses exact Flow deep links from Schedule and Run detail", async () => {
-    const [page, flow] = await Promise.all([source(pagePath), source(flowPath)]);
-    expect(page).toContain("/flow?graph=");
-    expect(page).toContain("&version=");
+    const [page, sections, flow] = await Promise.all([
+      source(pagePath),
+      source(sectionsPath),
+      source(flowPath),
+    ]);
+    const workSurface = page + sections;
+    expect(workSurface).toContain("/flow?graph=");
+    expect(workSurface).toContain("&version=");
     expect(flow).toContain('params.get("graph")');
     expect(flow).toContain('params.get("version")');
     expect(flow).toContain("loadGraph(graph, parsedVersion)");
