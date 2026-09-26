@@ -193,12 +193,12 @@ The authorized desktop connector was offline during this audit, and the availabl
 
 When an authenticated local git client is available, run the cleanup script in dry-run mode first, inspect the result, then use `-Apply`.
 
-## 8. Safe resume
+## 9. Safe resume
 
-1. Do not recompute the 332 allowlisted branches by branch-name pattern alone.
+1. Do not recompute the **354** allowlisted branches by branch-name pattern alone.
 2. Use the committed JSON allowlist and exact-SHA revalidation.
 3. Run dry-run first.
 4. Apply deletion only to branches still matching their audited SHA.
 5. Recount branches after cleanup.
-6. Audit the remaining 39-branch hold set separately.
+6. Keep the **39 retained branches** unless a later supersession/provenance audit proves where their unique commits are preserved.
 7. Do not touch `main`, Issue #277/DR-2 scope, staging credentials, production cutover, or runtime code as part of branch cleanup.
