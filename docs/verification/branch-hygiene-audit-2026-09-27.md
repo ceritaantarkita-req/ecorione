@@ -189,7 +189,7 @@ A later content/provenance audit is required for them. That review should determ
 - useful recovery provenance;
 - disposable test/probe state.
 
-## 7. Stage-2 merge + runtime proof
+## 8. Stage-2 merge + runtime proof
 
 Stage 2 merged through PR **#357**.
 
