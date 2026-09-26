@@ -17,6 +17,7 @@ import {
   isProjectIdCandidate,
   resolveActiveProjectId,
 } from "../../lib/project-selection";
+import { useWorkspace } from "../WorkspaceProvider";
 import { ProjectPicker } from "./ProjectPicker";
 import { FlowSection, RunsSection, ScheduleSection } from "./WorkPageSections";
 import styles from "./Work.module.css";
@@ -35,9 +36,9 @@ import {
   type WorkTab,
 } from "./work-page-model";
 
-const WORKSPACE_ID = "ws_personal";
 
 export default function WorkPage() {
+  const { workspaceId, ready: workspaceReady } = useWorkspace();
   const [tab, setTab] = useState<WorkTab>("schedule");
   const [calendarMode, setCalendarMode] = useState<CalendarMode>("list");
   const [calendarTimezone, setCalendarTimezone] = useState("Asia/Jakarta");
@@ -99,7 +100,7 @@ export default function WorkPage() {
     setLoading(true);
     try {
       const query = new URLSearchParams({
-        workspaceId: WORKSPACE_ID,
+        workspaceId: workspaceId,
         projectId: nextProjectId,
       });
       const [triggerBody, graphBody, runBody] = await Promise.all([
@@ -146,7 +147,7 @@ export default function WorkPage() {
     } finally {
       if (seq === requestRef.current) setLoading(false);
     }
-  }, []);
+  }, [workspaceId]);
 
   useEffect(() => {
     try {
@@ -161,7 +162,9 @@ export default function WorkPage() {
   }, []);
 
   useEffect(() => {
+    if (!workspaceReady) return;
     let cancelled = false;
+    setProjectReady(false);
     let candidate: string | null = null;
     try {
       const stored = window.localStorage.getItem(PROJECT_STORAGE_KEY);
@@ -170,7 +173,7 @@ export default function WorkPage() {
       // The active Project list remains the source of truth.
     }
 
-    void fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" })
+    void fetch(`/api/projects?workspaceId=${workspaceId}`, { cache: "no-store" })
       .then((response) => json<{ projects: Project[] }>(response))
       .then((body) => {
         if (cancelled) return;
@@ -200,7 +203,7 @@ export default function WorkPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [workspaceId, workspaceReady]);
 
   useEffect(() => {
     if (!projectReady) return;
@@ -270,7 +273,7 @@ export default function WorkPage() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          workspaceId: WORKSPACE_ID,
+          workspaceId: workspaceId,
           projectId,
           intent,
           current: {
@@ -317,7 +320,7 @@ export default function WorkPage() {
     setPending("save");
     try {
       const base = {
-        workspaceId: WORKSPACE_ID,
+        workspaceId: workspaceId,
         projectId,
         name: draft.name,
         kind: "time" as const,
@@ -368,7 +371,7 @@ export default function WorkPage() {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            workspaceId: WORKSPACE_ID,
+            workspaceId: workspaceId,
             projectId,
             expectedRevision: trigger.revision,
           }),
@@ -391,7 +394,7 @@ export default function WorkPage() {
     setPending(operationId);
     try {
       const query = new URLSearchParams({
-        workspaceId: WORKSPACE_ID,
+        workspaceId: workspaceId,
         projectId,
       });
       const run = await fetch(`/api/flow/runs/${encodeURIComponent(operationId)}?${query}`, {
@@ -417,7 +420,7 @@ export default function WorkPage() {
           <p>Atur jadwal, Flow, dan hasil eksekusi untuk Project aktif.</p>
         </div>
         <ProjectPicker
-          workspaceId={WORKSPACE_ID}
+          workspaceId={workspaceId}
           projects={projects}
           projectId={projectId}
           onChoose={chooseProject}
