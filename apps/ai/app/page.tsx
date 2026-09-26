@@ -55,6 +55,7 @@ import {
   XIcon,
 } from "./ChatPageSections";
 import { useWorkspace } from "./WorkspaceProvider";
+
 type RuntimeSnapshot = {
   settings?: {
     hostedCallsEnabled?: boolean;
