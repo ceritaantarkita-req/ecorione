@@ -104,19 +104,58 @@ Machine-readable evidence:
 
 The allowlist records every safe-delete candidate's exact remote SHA and proof kind. The hold-review record separately captures all **39** retained branches, their original classification, exact tip SHA, and their audited main-graph `ahead_by` / `behind_by` result. That makes the remaining unique-commit risk explicit instead of relying on branch names or PR status.
 
-## 4. Why the remaining 39 are held
+## 4. Stage 3 — supersession and retained-branch ancestry
 
-The remaining hold set contains several kinds of potentially meaningful provenance:
+Stage 3 reviewed the 39 unique/diverged branches instead of assuming every non-main commit must keep its own branch forever.
 
-- checkpoint/recovery branches;
-- probe/diagnostic branches;
-- abandoned or superseded PR heads;
-- branches with no PR mapping;
-- branches whose remote head moved after a merged PR.
+Three additional branch heads were proven ancestors of a retained successor branch:
 
-Examples include `checkpoint/*`, installer/probe branches, duplicate historical docs heads, and four branches with post-merge movement.
+```text
+automation/dynamic-ai-port-helper
+  -> dynamic-ai-port-helper-v5
+  -> dynamic-ai-port-helper-v6
+  -> dynamic-ai-port-helper-v7
+```
 
-No held branch should be deleted merely because its name looks old.
+The first three heads are fully contained in retained `v7` and therefore do not carry unique provenance once `v7` is preserved.
+
+Fourteen closed-unmerged PR branches were reviewed from their PR body/conversation history:
+
+- **12** contain explicit supersession, duplicate-verification, or abandoned-by-later-merged-path evidence and were promoted;
+- **PR #337 / Brain grounded chat** remains retained because its cleanup comment explicitly says the branch/head is useful implementation reference;
+- **PR #91 / Flow Temporal timeout** remains retained because its 30s -> 60s timeout change is still absent from current main.
+
+The four branches that had advanced after a merged PR were then reviewed:
+
+- `feat/session8-a05b3a-url-source-ingestion-20260925`: post-merge DNS-pinning work is represented by merged PR #323 and current main;
+- `fix/session7-a03-stale-project-selection-20260925`: the only post-merge delta is formatter alignment already superseded by current-main formatting;
+- `pe/pe-03-trigger-control-plane-20260919`: the only post-merge delta is an older closure-candidate document superseded by the current CLOSED / PASS record;
+- `security/f6-e06-immutable-node-toolchain-20260918`: the only post-merge delta is an expected line-number adjustment superseded by the current test.
+
+Stage 3 therefore promotes **19** more branches:
+
+- 3 ancestor-of-retained-branch;
+- 12 explicit PR-history supersession;
+- 4 post-merge deltas superseded by merged/current-main content.
+
+Final Stage-3 classification:
+
+- **373 SAFE-DELETE candidates**;
+- **20 RETAINED branches** with unresolved unique provenance.
+
+## 5. Why the remaining 20 are held
+
+Every remaining branch still carries commits outside audited main and lacks sufficient proof that those commits are preserved elsewhere or intentionally disposable.
+
+The retained set includes:
+
+- implementation/probe branches with no PR mapping;
+- divergent alternative attempts;
+- the explicitly retained Brain grounded-assistant reference;
+- the unlanded Temporal timeout change;
+- diagnostic/runtime branches whose versioned names do not form a proven ancestry chain.
+
+No retained branch should be deleted merely because its name looks old or a newer-looking sibling exists.
 
 ## 5. Cleanup tool
 
