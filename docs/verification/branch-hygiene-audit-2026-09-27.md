@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **STAGE-2 AUDIT COMPLETE / DELETION NOT YET EXECUTED**
+Status: **STAGE-2 CLOSED / 354 SAFE-DELETE / 39 RETAINED / DELETION NOT YET EXECUTED**
 
 Audited repository:
 
@@ -99,17 +99,10 @@ Final classification after Stage 2:
 
 Machine-readable evidence:
 
-`docs/verification/branch-hygiene-allowlist-2026-09-27.json`
+- `docs/verification/branch-hygiene-allowlist-2026-09-27.json`
+- `docs/verification/branch-hygiene-hold-review-2026-09-27.json`
 
-That JSON records for every safe-delete candidate:
-
-- branch name;
-- expected exact remote SHA;
-- merged PR number;
-- merged timestamp;
-- merge commit SHA.
-
-It also records every held branch and why it was not admitted to the safe-delete set.
+The allowlist records every safe-delete candidate's exact remote SHA and proof kind. The hold-review record separately captures all **39** retained branches, their original classification, exact tip SHA, and their audited main-graph `ahead_by` / `behind_by` result. That makes the remaining unique-commit risk explicit instead of relying on branch names or PR status.
 
 ## 4. Why the remaining 39 are held
 
@@ -157,7 +150,42 @@ A second-stage audit is required for them. That review should determine whether 
 - useful recovery provenance;
 - disposable test/probe state.
 
-## 7. Execution limitation in this session
+## 7. Stage-2 merge + runtime proof
+
+Stage 2 merged through PR **#357**.
+
+Exact reviewed PR head:
+
+```text
+8cddeb0f6bb4b81001faccabbeed8440317087a5
+```
+
+Exact-head gates:
+
+- CI **#2268** — PASS;
+- Product Eval **#1507** — PASS.
+
+Squash-merged `main`:
+
+```text
+97a34c3582917745dc4ecfb7f175b77cc3598148
+```
+
+Merged-main gates:
+
+- CI **#2269** — PASS;
+- Product Eval **#1508** — PASS.
+
+Staging delivery:
+
+- Staging Deploy **#1309** — gate PASS, deploy SKIPPED;
+- Staging Deploy **#1310** — gate PASS, deploy PASS.
+
+Actual deploy #1310 proved exact host SHA `97a34c3582917745dc4ecfb7f175b77cc3598148`, clean worktree, preserved public/auth + MCP boundaries, healthy Operations with no unhealthy services, no non-running configured services, and **27.81 GiB** stabilized free space.
+
+PR #358 was later closed **without merge** because it duplicated Stage-2 containment work after PR #357 had already merged. Its stale branch is not authority.
+
+## 8. Execution limitation in this session
 
 The repo-side audit and safe cleanup tooling are complete. Actual remote deletion requires an authenticated git client capable of `git push origin --delete`.
 
@@ -165,12 +193,12 @@ The authorized desktop connector was offline during this audit, and the availabl
 
 When an authenticated local git client is available, run the cleanup script in dry-run mode first, inspect the result, then use `-Apply`.
 
-## 8. Safe resume
+## 9. Safe resume
 
-1. Do not recompute the 332 allowlisted branches by branch-name pattern alone.
+1. Do not recompute the **354** allowlisted branches by branch-name pattern alone.
 2. Use the committed JSON allowlist and exact-SHA revalidation.
 3. Run dry-run first.
 4. Apply deletion only to branches still matching their audited SHA.
 5. Recount branches after cleanup.
-6. Audit the remaining 39-branch hold set separately.
+6. Keep the **39 retained branches** unless a later supersession/provenance audit proves where their unique commits are preserved.
 7. Do not touch `main`, Issue #277/DR-2 scope, staging credentials, production cutover, or runtime code as part of branch cleanup.
