@@ -234,7 +234,7 @@ The authorized desktop connector was offline during this audit, and the availabl
 
 When an authenticated local git client is available, run the cleanup script in dry-run mode first, inspect the result, then use `-Apply`.
 
-## 9. Safe resume
+## 10. Safe resume
 
 1. Do not recompute the **354** allowlisted branches by branch-name pattern alone.
 2. Use the committed JSON allowlist and exact-SHA revalidation.
