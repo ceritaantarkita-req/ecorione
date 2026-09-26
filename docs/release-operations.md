@@ -12,7 +12,7 @@ Status: **release baseline CLOSED / SumoPod staging delivery VERIFIED / producti
 
 Current handoff: `docs/current-state-and-next-steps.md`.
 
-At the reconciliation baseline, SumoPod staging release identity was `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` / `staging-65bf8d2ce0b8` after governed Staging Deploy #1288. A later docs-only merge may advance the exact release SHA without changing application/service/package content. CI #2258 and Product Eval #1497 passed on that exact docs-reconciled `main`. Historical release/DR SHAs remain evidence for their own dated checkpoints, not the current runtime identity.
+Repository/documentation reconciliation closed through PR #354 / merge `265a28d4c53cc482af8ea33a6362a21e640d30e5`; governed Staging Deploy #1298 deployed `staging-265a28d4c53c`. Merged-main CI #2263 + Product Eval #1502 passed. Later docs-only bookkeeping may advance the exact release SHA without changing application/service/package content. Historical release/DR SHAs remain evidence for their own dated checkpoints, not the current runtime identity.
 
 ## Install
 
