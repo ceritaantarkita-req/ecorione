@@ -449,7 +449,9 @@ export function InspectorPanel(props: InspectorPanelProps) {
 
         <section className={styles.inspectorSection}>
           <h2 className={styles.panelTitle}>Context core memory</h2>
-          <p className={styles.help}>Editor proxy only. Values are stored by Context, not Space.</p>
+          <p className={styles.help}>
+            Editor proxy only. Values are stored by Context, not Space.
+          </p>
           <div className={styles.memoryList}>
             {props.memory.blocks.map((item) => (
               <button
