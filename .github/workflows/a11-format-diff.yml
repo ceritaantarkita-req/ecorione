@@ -1,0 +1,40 @@
+name: A11 Format Diff
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  format-diff:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: ".node-version"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Emit canonical Prettier diff
+        run: |
+          pnpm exec prettier --write \
+            apps/ai/app/brain/page.tsx \
+            apps/ai/app/page.tsx \
+            apps/ai/app/projects/page.tsx \
+            apps/ai/app/space/page.tsx \
+            apps/ai/app/work/page.tsx \
+            apps/ai/app/WorkspaceProvider.tsx \
+            test/a11-browser-workspace-source-contract.test.ts
+          echo "A11_FORMAT_DIFF_BEGIN"
+          git diff --no-color -- \
+            apps/ai/app/brain/page.tsx \
+            apps/ai/app/page.tsx \
+            apps/ai/app/projects/page.tsx \
+            apps/ai/app/space/page.tsx \
+            apps/ai/app/work/page.tsx \
+            apps/ai/app/WorkspaceProvider.tsx \
+            test/a11-browser-workspace-source-contract.test.ts
+          echo "A11_FORMAT_DIFF_END"
