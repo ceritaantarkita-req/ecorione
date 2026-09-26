@@ -179,17 +179,20 @@ export default function ChatPage() {
         turn.kind === "assistant" && turn.memoryUsed !== undefined,
     );
 
-  const loadHistorySessions = useCallback(async (activeProjectId: string) => {
-    const res = await fetch(
-      `/api/projects/history?workspaceId=${workspaceId}&projectId=${encodeURIComponent(activeProjectId)}`,
-      { cache: "no-store" },
-    );
-    const body: unknown = await res.json().catch(() => undefined);
-    if (!res.ok) {
-      throw new Error(extractErrorMessage(body) ?? "Gagal memuat riwayat percakapan.");
-    }
-    return (body as SessionList).sessions;
-  }, [workspaceId]);
+  const loadHistorySessions = useCallback(
+    async (activeProjectId: string) => {
+      const res = await fetch(
+        `/api/projects/history?workspaceId=${workspaceId}&projectId=${encodeURIComponent(activeProjectId)}`,
+        { cache: "no-store" },
+      );
+      const body: unknown = await res.json().catch(() => undefined);
+      if (!res.ok) {
+        throw new Error(extractErrorMessage(body) ?? "Gagal memuat riwayat percakapan.");
+      }
+      return (body as SessionList).sessions;
+    },
+    [workspaceId],
+  );
 
   useEffect(() => {
     if (!hydrated || !workspaceReady) return;
