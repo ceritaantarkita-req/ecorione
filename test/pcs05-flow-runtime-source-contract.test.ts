@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 describe("PCS-05 Flow runtime closure source contract", () => {
   const workflow = readFileSync("services/flow/src/workflows.ts", "utf8");
   const flowHttp = readFileSync("services/flow/src/http.ts", "utf8");
-  const flowUi = readFileSync("apps/ai/app/flow/page.tsx", "utf8");
+  const flowUi = [
+    readFileSync("apps/ai/app/flow/page.tsx", "utf8"),
+    readFileSync("apps/ai/app/flow/FlowPageSections.tsx", "utf8"),
+  ].join("\n");
 
   it("registers graph query handlers before the first awaited lifecycle activity", () => {
     const queryHandler = workflow.indexOf("setHandler(graphRunStateQuery, state)");
