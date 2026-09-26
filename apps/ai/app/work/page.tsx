@@ -120,7 +120,7 @@ export default function WorkPage() {
         setRuns(runBody.runs);
         setSelectedRun(null);
         setRunTriggerFilter(null);
-  
+
         const time = triggerBody.triggers.filter((trigger) => trigger.kind === "time");
         const runtimeEntries = await Promise.all(
           time.map(async (trigger) => {
