@@ -63,7 +63,6 @@ type McpServer = {
   toolPolicies: unknown[];
 };
 
-
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { cache: "no-store", ...init });
   return readJson<T>(response);
