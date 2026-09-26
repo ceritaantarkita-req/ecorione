@@ -35,7 +35,8 @@ describe("PCS-05 Flow runtime closure source contract", () => {
     expect(flowUi).toContain("Prepare authority");
     expect(flowUi).toContain("Execution authority ready");
     expect(flowUi).toContain("Approval required");
-    expect(flowUi).toContain('decideAuthority(requirement, "APPROVE")');
+    expect(flowUi).toContain('onDecide(requirement, "APPROVE")');
+    expect(flowUi).toContain("decideAuthority(requirement, decision)");
     expect(flowUi).toContain("authority.ready !== true");
   });
 });
