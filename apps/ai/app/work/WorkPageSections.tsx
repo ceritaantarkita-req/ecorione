@@ -58,7 +58,11 @@ export function ScheduleSection(props: ScheduleSectionProps) {
           <h2>Schedule</h2>
           <p>Schedule hanyalah view/editor untuk time Trigger; Temporal tetap runtime truth.</p>
         </div>
-        <button type="button" onClick={props.onStartCreate} disabled={props.graphs.length === 0}>
+        <button
+          type="button"
+          onClick={props.onStartCreate}
+          disabled={props.graphs.length === 0}
+        >
           New schedule
         </button>
       </div>
@@ -89,8 +93,8 @@ export function ScheduleSection(props: ScheduleSectionProps) {
             <div>
               <strong>AI-assisted draft</strong>
               <small>
-                Describe the create/edit intent. Local AI only proposes fields; Save still writes
-                through Trigger → Flow → Temporal.
+                Describe the create/edit intent. Local AI only proposes fields; Save still
+                writes through Trigger → Flow → Temporal.
               </small>
             </div>
             <textarea
