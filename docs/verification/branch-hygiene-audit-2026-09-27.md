@@ -145,3 +145,4 @@ When an authenticated local git client is available, run the cleanup script in d
 5. Recount branches after cleanup.
 6. Audit the remaining hold set separately.
 7. Do not touch `main`, Issue #277/DR-2 scope, staging credentials, production cutover, or runtime code as part of branch cleanup.
+8. The 39 unique/diverged branches remain retained until a separate supersession/provenance audit proves where their unique commits are preserved.
