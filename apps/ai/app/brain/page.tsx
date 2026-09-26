@@ -122,40 +122,43 @@ export default function BrainPage() {
     "Pilih Fact atau URL Source untuk memulai grounded local chat.",
   );
 
-  const loadBrain = useCallback(async (nextProjectId: string) => {
-    const seq = ++requestRef.current;
-    setLoading(true);
-    try {
-      const query = new URLSearchParams({
-        workspaceId: workspaceId,
-        projectId: nextProjectId,
-        limit: "120",
-        runLimit: "50",
-      });
-      const next = await fetch(`/api/brain?${query.toString()}`, {
-        cache: "no-store",
-      }).then((response) => json<BrainGraphResponse>(response));
-      if (seq !== requestRef.current) return;
-      setGraph(next);
-      setSelectedId((current) =>
-        current !== null && next.nodes.some((node) => node.id === current) ? current : null,
-      );
-      setMessage(
-        next.truncated
-          ? `Showing ${String(next.nodes.length)} of ${String(next.totalNodes)} nodes within bounded query limits.`
-          : `${String(next.nodes.length)} nodes · ${String(next.edges.length)} deterministic relationships.`,
-      );
-    } catch (reason) {
-      if (seq !== requestRef.current) return;
-      setGraph(null);
-      setSelectedId(null);
-      setMessage(
-        `Brain load gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
-      );
-    } finally {
-      if (seq === requestRef.current) setLoading(false);
-    }
-  }, [workspaceId]);
+  const loadBrain = useCallback(
+    async (nextProjectId: string) => {
+      const seq = ++requestRef.current;
+      setLoading(true);
+      try {
+        const query = new URLSearchParams({
+          workspaceId: workspaceId,
+          projectId: nextProjectId,
+          limit: "120",
+          runLimit: "50",
+        });
+        const next = await fetch(`/api/brain?${query.toString()}`, {
+          cache: "no-store",
+        }).then((response) => json<BrainGraphResponse>(response));
+        if (seq !== requestRef.current) return;
+        setGraph(next);
+        setSelectedId((current) =>
+          current !== null && next.nodes.some((node) => node.id === current) ? current : null,
+        );
+        setMessage(
+          next.truncated
+            ? `Showing ${String(next.nodes.length)} of ${String(next.totalNodes)} nodes within bounded query limits.`
+            : `${String(next.nodes.length)} nodes · ${String(next.edges.length)} deterministic relationships.`,
+        );
+      } catch (reason) {
+        if (seq !== requestRef.current) return;
+        setGraph(null);
+        setSelectedId(null);
+        setMessage(
+          `Brain load gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
+        );
+      } finally {
+        if (seq === requestRef.current) setLoading(false);
+      }
+    },
+    [workspaceId],
+  );
 
   useEffect(() => {
     if (!workspaceReady) return;
