@@ -7,9 +7,7 @@ import {
 export const WORKSPACE_STORAGE_KEY = "ecorione.workspaceId";
 export const WORKSPACE_QUERY_KEY = "workspace";
 
-export function isWorkspaceIdCandidate(
-  value: string | null | undefined,
-): value is WorkspaceId {
+export function isWorkspaceIdCandidate(value: string | null | undefined): value is WorkspaceId {
   return value !== null && value !== undefined && WorkspaceIdSchema.safeParse(value).success;
 }
 
