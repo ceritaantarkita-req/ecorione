@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { FlowGraphNode, FlowGraphRunState } from "@ecorione/shared-schema";
 import styles from "./FlowCanvas.module.css";
 import { configSummary, numberConfig, stringConfig } from "./flow-page-model";
@@ -29,7 +30,7 @@ export function QuickNodeSettings({
   onPatchConfig: (patch: Record<string, unknown>) => void;
   onAdvanced: () => void;
 }) {
-  let primary = null;
+  let primary: ReactNode = null;
   switch (node.kind) {
     case "ai":
       primary = (
