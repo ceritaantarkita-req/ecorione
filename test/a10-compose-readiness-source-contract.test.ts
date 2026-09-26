@@ -11,7 +11,7 @@ function serviceBlock(source: string, name: string): string {
   const start = source.indexOf(startMarker);
   expect(start, `missing service ${name}`).toBeGreaterThanOrEqual(0);
   const bodyStart = start + startMarker.length;
-  const nextServiceOffset = source.slice(bodyStart).search(/\n  [A-Za-z0-9_-]+:\n/u);
+  const nextServiceOffset = source.slice(bodyStart).search(/\n {2}[A-Za-z0-9_-]+:\n/u);
   const nextService = nextServiceOffset >= 0 ? bodyStart + nextServiceOffset : source.length;
   const sectionBoundaries = ["\nnetworks:", "\nvolumes:"]
     .map((marker) => source.indexOf(marker, bodyStart))
