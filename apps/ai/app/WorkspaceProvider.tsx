@@ -51,10 +51,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const value = useMemo(
-    () => ({ workspaceId, ready }),
-    [ready, workspaceId],
-  );
+  const value = useMemo(() => ({ workspaceId, ready }), [ready, workspaceId]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
