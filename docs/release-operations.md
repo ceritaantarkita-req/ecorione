@@ -1,6 +1,6 @@
 # ECORIONE Release / Upgrade / Rollback Operations
 
-Last updated: **2026-09-23**
+Last updated: **2026-09-26**
 
 Fase 6+ repository reproducibility gates now include immutable remote-action pin review, fixed GitHub-hosted runner-label review, exact Node/Inno toolchains, and governed container-image digest review. Normal CI runs `pnpm run actions:pin-review` and `pnpm run actions:runner-review`; release-security acceptance protects and re-executes both policies.
 
@@ -11,6 +11,8 @@ Windows installer compiler identity is centralized in `.inno-setup-version`. Des
 Status: **release baseline CLOSED / SumoPod staging delivery VERIFIED / production promotion separate**
 
 Current handoff: `docs/current-state-and-next-steps.md`.
+
+Current SumoPod staging release identity is `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` / `staging-65bf8d2ce0b8` after governed Staging Deploy #1288. CI #2258 and Product Eval #1497 passed on that exact docs-reconciled `main`. Historical release/DR SHAs remain evidence for their own dated checkpoints, not the current runtime identity.
 
 ## Install
 
