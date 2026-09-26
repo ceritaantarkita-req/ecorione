@@ -75,22 +75,25 @@ export default function SpacePageView() {
     setRenaming(false);
   }
 
-  const loadPage = useCallback(async (id: string) => {
-    const requestId = ++pageRequestRef.current;
-    try {
-      const next = await readJson<SpaceDocument>(
-        await fetch(`/api/space/pages/${encodeURIComponent(id)}?workspaceId=${workspaceId}`, {
-          cache: "no-store",
-        }),
-      );
-      if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
-      setDocument(next);
-      setError(null);
-    } catch (err) {
-      if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  }, [workspaceId]);
+  const loadPage = useCallback(
+    async (id: string) => {
+      const requestId = ++pageRequestRef.current;
+      try {
+        const next = await readJson<SpaceDocument>(
+          await fetch(`/api/space/pages/${encodeURIComponent(id)}?workspaceId=${workspaceId}`, {
+            cache: "no-store",
+          }),
+        );
+        if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
+        setDocument(next);
+        setError(null);
+      } catch (err) {
+        if (requestId !== pageRequestRef.current || selectedPageIdRef.current !== id) return;
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [workspaceId],
+  );
 
   const refreshPages = useCallback(async () => {
     const requestId = ++pagesRequestRef.current;
@@ -297,14 +300,11 @@ export default function SpacePageView() {
     [blockIds[index], blockIds[target]] = [blockIds[target]!, blockIds[index]!];
     try {
       await readJson(
-        await fetch(
-          `/api/space/pages/${document.page.id}/reorder?workspaceId=${workspaceId}`,
-          {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ blockIds, expectedPageVersion: document.page.version }),
-          },
-        ),
+        await fetch(`/api/space/pages/${document.page.id}/reorder?workspaceId=${workspaceId}`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ blockIds, expectedPageVersion: document.page.version }),
+        }),
       );
       await loadPage(document.page.id);
       await refreshPages();
