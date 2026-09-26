@@ -64,7 +64,11 @@ services:
     networks: [internal]
     healthcheck:
       <<: *http-health
-      test: ["CMD-SHELL", "TEMPORAL_ADDRESS=temporal:7233 temporal operator cluster health | grep -q SERVING"]
+      test:
+        [
+          "CMD-SHELL",
+          "TEMPORAL_ADDRESS=temporal:7233 temporal operator cluster health | grep -q SERVING",
+        ]
       start_period: 10s
 
   rnd:
@@ -77,7 +81,13 @@ services:
     volumes: [rnd_data:/app/data]
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17021/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17021/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   context:
     <<: *app
@@ -91,7 +101,13 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17022/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17022/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   connect:
     <<: *app
@@ -117,7 +133,13 @@ services:
       - host.docker.internal:host-gateway
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17023/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17023/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   hub:
     <<: *app
@@ -135,7 +157,13 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17024/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17024/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   artifact:
     <<: *app
@@ -149,7 +177,13 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17025/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17025/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   sandbox:
     <<: *app
@@ -164,7 +198,13 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17026/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17026/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   space:
     <<: *app
@@ -182,7 +222,13 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17027/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17027/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   flow:
     <<: *app
@@ -198,7 +244,13 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17028/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17028/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   flow-worker:
     <<: *app
@@ -232,7 +284,13 @@ services:
     volumes: [sync_data:/app/data]
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17011/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17011/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   mcp:
     build:
@@ -258,7 +316,13 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:17010/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:17010/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   ai:
     <<: *app
@@ -276,7 +340,13 @@ services:
         condition: service_healthy
     healthcheck:
       <<: *http-health
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/healthz',{signal:AbortSignal.timeout(2000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
 
   caddy:
     image: caddy:2.11.4-alpine@sha256:ad27e531c8b286ff153c0e6e16587a1583e4111bb58c4d83bd73d6d3ef0a0ce1
