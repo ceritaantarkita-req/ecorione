@@ -1,15 +1,15 @@
 {
   "generated_at": "2026-09-27",
-  "audited_main_sha": "c71df6debc1404ea0e974168d5cab38c2952429f",
+  "audited_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
   "branch_count_at_audit": 395,
-  "closed_prs_scanned": 352,
+  "closed_prs_scanned": 353,
   "policy": {
-    "safe_delete": "non-main branch has a merged PR and current branch head exactly equals that merged PR head SHA",
-    "hold": "no matching merged PR at exact current branch head; requires additional review"
+    "safe_delete": "non-main branch is either (a) exact current head of a merged PR, or (b) has no commits ahead of audited main (fully contained/reachable); every deletion still requires exact remote SHA revalidation",
+    "hold": "branch retains one or more commits ahead of audited main or lacks sufficient deletion proof; requires manual review"
   },
   "counts": {
-    "safe_delete": 332,
-    "hold": 61
+    "safe_delete": 355,
+    "hold": 39
   },
   "safe_delete": [
     {
@@ -440,6 +440,61 @@
       "merge_commit_sha": "eb4ac86da19bc006009e1a2260f14c119e7997e5"
     },
     {
+      "branch": "checkpoint/session6-a02-code-20260925",
+      "expected_sha": "591b54131c2d0b53532f33e08b878c15a0617951",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 168
+    },
+    {
+      "branch": "checkpoint/session6-a02-final-20260925",
+      "expected_sha": "485970785cbabd1961f1235ac5a68d87917308b8",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 161
+    },
+    {
+      "branch": "checkpoint/session6-a02-safe-20260925",
+      "expected_sha": "485970785cbabd1961f1235ac5a68d87917308b8",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 161
+    },
+    {
+      "branch": "checkpoint/session7-a03-code-20260925",
+      "expected_sha": "8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 145
+    },
+    {
+      "branch": "checkpoint/session7-a03-final-20260925",
+      "expected_sha": "25423b82cee31f17cea3829585a4f1e04c8423ae",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 138
+    },
+    {
       "branch": "ci/f6-e03-release-security-acceptance-gate-clean-20260918",
       "expected_sha": "fdd532e0b6f2fe550708b8389ecc1f47afe946f7",
       "merged_pr": 151,
@@ -508,6 +563,14 @@
       "merged_pr": 20,
       "merged_at": "2026-09-10T01:43:27Z",
       "merge_commit_sha": "a97ca1a7355c50d17c078949d3227d9f91f59f93"
+    },
+    {
+      "branch": "docs/branch-hygiene-audit-20260927",
+      "expected_sha": "81f936991bc285014c3aa4e2c3f18eb2e8e90760",
+      "merged_pr": 356,
+      "merged_at": "2026-09-26T19:06:26Z",
+      "merge_commit_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "reason": "merged-pr-exact-head-post-audit"
     },
     {
       "branch": "docs/cleanup-current-state-20260918",
@@ -636,6 +699,17 @@
       "merge_commit_sha": "d42e69186bba7be2212051b42cc34091e24efa7b"
     },
     {
+      "branch": "docs/f6-e03-close-next-audit-20260918",
+      "expected_sha": "b9e42445310921ef3c23cda2220631df49403e41",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1294
+    },
+    {
       "branch": "docs/f6-e03-close-next-scope-20260918",
       "expected_sha": "7ba308e3fd1723dd06ccc8e70bbe8c7090e01b96",
       "merged_pr": 152,
@@ -746,6 +820,17 @@
       "merged_pr": 274,
       "merged_at": "2026-09-23T01:22:00Z",
       "merge_commit_sha": "1fc94173c19842ab4bfdf7585c2fdcac7132a579"
+    },
+    {
+      "branch": "docs/offhost-dr-checkpoint2-repo-closure-20260922",
+      "expected_sha": "768c0f617064343f0bfc569d52212c80a03f0b83",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 385
     },
     {
       "branch": "docs/offhost-dr-checkpoint3-closure-20260922",
@@ -1217,6 +1302,127 @@
       "merge_commit_sha": "7b9c7c7324707f87c4558f3dba34dd8c4579bc91"
     },
     {
+      "branch": "docs/w03-final-closure-20260915-copy",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-final",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-pr",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-pr2",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-pr3",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-pr4",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-prhead",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-ready",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-x",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-y",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
+      "branch": "docs/w03-final-closure-20260915-z",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
+    },
+    {
       "branch": "docs/w03-flow-responsive-redesign-20260915",
       "expected_sha": "cb77941e3e913b99571b5b1669e92a140e6dc98f",
       "merged_pr": 92,
@@ -1250,6 +1456,17 @@
       "merged_pr": 107,
       "merged_at": "2026-09-16T02:29:41Z",
       "merge_commit_sha": "34d13fde51e10a0e0b5f63a3f8aa1ed69ef620a4"
+    },
+    {
+      "branch": "docs/w11-artifact-ready-20260916",
+      "expected_sha": "936909135e40e7a82004f08d57269f9af59e2fd6",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1602
     },
     {
       "branch": "docs/w11-windows-installer-closure-20260916",
@@ -1847,6 +2064,17 @@
       "merge_commit_sha": "1034925dce8bfd875d15c6dba562c002cffd55e3"
     },
     {
+      "branch": "fix/w09-w10-port-runtime-followup-v3-20260916",
+      "expected_sha": "abef5b798e78a3460a06d457029be80a1bfcbfdd",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1635
+    },
+    {
       "branch": "fix/w09-w10-port-runtime-followup-v4-20260916",
       "expected_sha": "f3f2318df910829172995a02dfb2d407ca2b34d9",
       "merged_pr": 104,
@@ -2041,6 +2269,17 @@
       "merged_pr": 298,
       "merged_at": "2026-09-24T10:14:35Z",
       "merge_commit_sha": "48cf5598d6b07c13c20941fa5f06776bde9882e4"
+    },
+    {
+      "branch": "noop",
+      "expected_sha": "06b15d6dba207c47d8693febffaaabf17afd2ed4",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 2508
     },
     {
       "branch": "ops/latest-main-staging-convergence-20260921",
@@ -2335,6 +2574,17 @@
       "merged_pr": 160,
       "merged_at": "2026-09-18T13:28:42Z",
       "merge_commit_sha": "9362419a9e2766750237e30792a50494d39c9b17"
+    },
+    {
+      "branch": "zzz-test-ignore",
+      "expected_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
+      "merged_pr": null,
+      "merged_at": null,
+      "merge_commit_sha": null,
+      "reason": "fully-contained-in-main",
+      "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+      "ahead_by": 0,
+      "behind_by": 1661
     }
   ],
   "hold": [
@@ -2474,51 +2724,6 @@
       "latest_merged_head_sha": null
     },
     {
-      "branch": "checkpoint/session6-a02-code-20260925",
-      "current_sha": "591b54131c2d0b53532f33e08b878c15a0617951",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "checkpoint/session6-a02-final-20260925",
-      "current_sha": "485970785cbabd1961f1235ac5a68d87917308b8",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "checkpoint/session6-a02-safe-20260925",
-      "current_sha": "485970785cbabd1961f1235ac5a68d87917308b8",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "checkpoint/session7-a03-code-20260925",
-      "current_sha": "8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "checkpoint/session7-a03-final-20260925",
-      "current_sha": "25423b82cee31f17cea3829585a4f1e04c8423ae",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
       "branch": "ci/f6-e03-release-security-acceptance-gate-20260918",
       "current_sha": "440f6cacec04d0139a36e9ac276c57a7abedab89",
       "classification": "no_pr_record",
@@ -2555,24 +2760,6 @@
       "latest_merged_head_sha": null
     },
     {
-      "branch": "docs/f6-e03-close-next-audit-20260918",
-      "current_sha": "b9e42445310921ef3c23cda2220631df49403e41",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/offhost-dr-checkpoint2-repo-closure-20260922",
-      "current_sha": "768c0f617064343f0bfc569d52212c80a03f0b83",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
       "branch": "docs/session4-high-security-closure-20260924",
       "current_sha": "fe6119b1831b2081187aa3022c37e860b6542b6b",
       "classification": "closed_unmerged",
@@ -2596,114 +2783,6 @@
       "classification": "closed_unmerged",
       "latest_pr": 72,
       "latest_pr_updated_at": "2026-09-21T10:12:54Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-copy",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-final",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-pr",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-pr2",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-pr3",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-pr4",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-prhead",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-ready",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-x",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-y",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w03-final-closure-20260915-z",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/w11-artifact-ready-20260916",
-      "current_sha": "936909135e40e7a82004f08d57269f9af59e2fd6",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
       "latest_merged_pr": null,
       "latest_merged_head_sha": null
     },
@@ -2789,15 +2868,6 @@
       "latest_merged_head_sha": null
     },
     {
-      "branch": "fix/w09-w10-port-runtime-followup-v3-20260916",
-      "current_sha": "abef5b798e78a3460a06d457029be80a1bfcbfdd",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
       "branch": "fix/w18-one-call-diagnostic-20260917",
       "current_sha": "d95022a082ca7cdd0fcdd64b40069efd09cd7031",
       "classification": "closed_unmerged",
@@ -2818,15 +2888,6 @@
     {
       "branch": "fix/w18-openrouter-routing-metadata-20260917",
       "current_sha": "54c518ec072fba7eeecc1551b5f04172c3ccaf97",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "noop",
-      "current_sha": "06b15d6dba207c47d8693febffaaabf17afd2ed4",
       "classification": "no_pr_record",
       "latest_pr": null,
       "latest_pr_updated_at": null,
@@ -2877,15 +2938,13 @@
       "latest_pr_updated_at": "2026-09-21T10:13:19Z",
       "latest_merged_pr": null,
       "latest_merged_head_sha": null
-    },
-    {
-      "branch": "zzz-test-ignore",
-      "current_sha": "9e3c992a712a1e4719c7d30640491efdc5d32d71",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
     }
-  ]
+  ],
+  "stage2": {
+    "containment_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+    "promoted_from_hold": 22,
+    "merged_audit_branch_added": 1,
+    "remaining_unique_or_diverged": 39,
+    "excluded_current_audit_branch": "docs/branch-hygiene-containment-20260927"
+  }
 }
