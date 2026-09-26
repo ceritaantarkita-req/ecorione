@@ -279,11 +279,15 @@ Evidence: [session-9-a09-frontend-decomposition-closure-2026-09-26.md](session-9
 
 The original finding was a maintainability concentration risk, not a requirement to minimize page line counts indefinitely. A-09 is closed at the explicit page/controller + domain-local presentation/model boundary.
 
-### A-10 — MEDIUM — Compose readiness is weaker than the runtime acceptance tooling
+### A-10 — CLOSED / PASS — Compose readiness now matches the runtime acceptance boundary
 
-Base Compose defines an explicit Docker healthcheck for Temporal Postgres, but not for the ECORIONE app services. Many service relationships use `depends_on` without service-health conditions.
+**Closure update — 2026-09-26.** PR #350 / merge `710127d66218e4d2e8ed23ddbc485b80b8769f6b` closes the original readiness gap without changing service ownership.
 
-The repository acceptance scripts compensate by waiting/probing after startup, but ordinary Compose startup has a weaker readiness contract. This can create transient dependency-start races and makes “container running” weaker than “service ready”.
+Production and desktop Compose now carry explicit owner-service healthchecks, Temporal uses its own cluster-health `SERVING` probe, and required startup edges use `condition: service_healthy`. Ai exposes a shallow internal `GET /api/healthz` readiness endpoint. `flow-worker` remains a process consumer and does not become a new HTTP health owner.
+
+Final reviewed head `5fcdf0e4d2ce0a52e5e0197e71ee942a4f5842ba` passed CI #2233, Product Eval #1472, PCS-06 #177, and Desktop Installer #246. Merged-main CI #2234 and Product Eval #1473 passed. Staging Deploy #1239 was the expected gate-only/skip run; Staging Deploy #1240 performed the actual exact-SHA deploy and directly demonstrated health-aware startup ordering, healthy Operations with zero unhealthy services, 15/15 configured services running, exact-host SHA match, preserved auth/MCP boundaries, and 29.88 GiB stabilized free space.
+
+Evidence: [session-10-a10-compose-readiness-closure-2026-09-26.md](session-10-a10-compose-readiness-closure-2026-09-26.md).
 
 ### A-11 — LIMITATION — browser-facing product is personal-workspace-first
 
@@ -354,8 +358,8 @@ This audit does **not** authorize implementation automatically.
 7. Schedule A-06: CLOSED / PASS (A-06a calendar/navigation + A-06b searchable/inline Project selection and governed local AI-assisted drafting);
 8. Brain scalable layout + owner-backed projection: CLOSED / PASS at the documented A-07/A-08 boundary, with speculative hierarchy/Core Memory identity deferred;
 9. frontend module decomposition: CLOSED / PASS through A-09a–A-09e / PRs #344–#348;
-10. Compose readiness/health improvements — next eligible clean audit boundary, not automatically authorized;
-11. fresh staging runtime acceptance after selected changes merge.
+10. Compose readiness/health improvements: CLOSED / PASS through A-10 / PR #350;
+11. fresh staging runtime acceptance for A-10: CLOSED / PASS on exact `710127d66218e4d2e8ed23ddbc485b80b8769f6b`; A-11 remains a separate limitation and is not automatically opened.
 
 Do not open a new autonomous service, graph database, scheduler, or cross-service database path to solve these items.
 
