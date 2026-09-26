@@ -457,9 +457,7 @@ export function InspectorPanel(props: InspectorPanelProps) {
                 type="button"
                 className={styles.memoryButton}
                 disabled={props.pendingMutation !== null}
-                onClick={() =>
-                  props.onSelectMemory(item.label, item.description, item.value)
-                }
+                onClick={() => props.onSelectMemory(item.label, item.description, item.value)}
               >
                 {item.label}
               </button>
