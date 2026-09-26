@@ -1,8 +1,8 @@
 # Current main + staging parity audit — 2026-09-24
 
-Status: **AUDIT COMPLETE / A-00 + A-01 + A-12 CLOSED-PASS / LOWER-PRIORITY FINDINGS REMAIN OPEN**
+Status: **AUDIT COMPLETE / A-09 CLOSED-PASS / A-10 OPEN / A-11 LIMITATION**
 
-## Post-audit closure update — 2026-09-25
+## Post-audit closure update — 2026-09-26
 
 The audit baseline and original no-mutation conclusions below remain historical evidence. Subsequent explicitly authorized work has now closed every CRITICAL/HIGH finding from this audit:
 
@@ -259,19 +259,25 @@ A-08b exact-head CI `36147793139`, Product Eval `36147793105`, PCS-06 `361477930
 
 **A-08d CLOSED / PASS.** PR #341 ported the useful selected-node grounded-assistant design from stale PR #337 onto fresh post-A-08c main and merged as `1f25f32cdbb0bfd6dc043491f7668df6bc1795cb`. Brain now embeds a local-only assistant that resolves an authorized bounded neighborhood, forwards exact Fact IDs and URL Source URIs through the existing Ai -> Hub -> Context -> Connect path, and suppresses wider Project Core Memory/broad Artifact fallback for grounded turns. It introduces no second chat/history backend, direct Brain completion endpoint, graph store, hosted-provider path, or model-created canonical relationship. A-08c `GENERATED_FROM` provenance remains covered in the same rendered browser journey. Exact-head CI #2199, Product Eval #1438, PCS-06 #155 and MCP #1120 passed; merged-main CI #2200, Product Eval #1439 and MCP #1121 passed. Staging Deploy #1171 was gate-only with deploy skipped; actual Staging Deploy #1172 deployed exact `1f25f32...` and passed auth/MCP smoke, healthy Operations, exact-host identity, 15/15 services running, and 25.03 GiB stabilized free space. Evidence: [session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md](session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md).
 
-**A-08 remainder is now explicitly CLOSED / DEFERRED.** Current Connect/MCP resource discovery preserves stable authorized resource `uri` values but does not expose canonical parent/child relationships, so no connector folder tree is inferred from URI shape. Context Core Memory persists global/project label keys but its shared/API contract exposes no canonical block ID, so no Brain identity is synthesized from `(projectId, label)`. These two speculative expansions are deferred until their owners expose the required canonical identity/relationship. A-08 is therefore closed at the proven owner-backed boundary; A-09/A-10 are eligible for separate explicit selection but remain unopened. Evidence: [session-9-a08-remainder-closure-decision-2026-09-26.md](session-9-a08-remainder-closure-decision-2026-09-26.md).
+**A-08 remainder is now explicitly CLOSED / DEFERRED.** Current Connect/MCP resource discovery preserves stable authorized resource `uri` values but does not expose canonical parent/child relationships, so no connector folder tree is inferred from URI shape. Context Core Memory persists global/project label keys but its shared/API contract exposes no canonical block ID, so no Brain identity is synthesized from `(projectId, label)`. These two speculative expansions are deferred until their owners expose the required canonical identity/relationship. A-08 is therefore closed at the proven owner-backed boundary. A-09 has since been CLOSED / PASS through PRs #344–#348; A-10 is now the next eligible clean audit boundary. Evidence: [session-9-a08-remainder-closure-decision-2026-09-26.md](session-9-a08-remainder-closure-decision-2026-09-26.md).
 
-### A-09 — MEDIUM — frontend maintainability concentration
+### A-09 — CLOSED / PASS — frontend maintainability concentration
 
-Largest current product files include approximately:
+**Closure update — 2026-09-26.** PRs #344–#348 decompose all five audited concentration surfaces while preserving behavior and owner boundaries:
 
-- `apps/ai/app/flow/page.tsx` — 65 KB;
-- `apps/ai/app/settings/page.tsx` — 50 KB;
-- `apps/ai/app/page.tsx` — 43 KB;
-- `apps/ai/app/work/page.tsx` — 35 KB;
-- `apps/ai/app/space/page.tsx` — 32 KB.
+- Flow -> `FlowPageSections.tsx` + `flow-page-model.ts`, with graph/authority/execution orchestration retained in the page;
+- Ai chat -> `ChatPageSections.tsx`, with session/Project/send/forget/attachment orchestration retained in the page;
+- Settings -> `useSettingsController.ts`, separating API/state orchestration from presentation;
+- Work -> `WorkPageSections.tsx` + `work-page-model.ts`, with Project/Trigger/Schedule/Run owner calls retained in the page;
+- Space -> `SpacePageSections.tsx` + `space-page-model.ts`, with page/block/Core Memory owner calls retained in the page.
 
-These files mix state orchestration, API calls, derived view state, and substantial presentation logic. CI is green, but the next feature iteration should extract domain hooks/components instead of continuing to grow these page modules.
+At closure main `3c9279a21ec441ab9fe5ec95583c946a238ccc43`, the audited page modules are approximately 52,680 chars (Flow), 39,468 (Ai chat), 28,696 (Settings), 17,473 (Work), and 16,044 (Space). Regression contracts require extracted presentation/model modules to remain free of owner API calls where that is the defined boundary.
+
+Every A-09 slice passed exact-head CI, Product Eval, and PCS-06. Final merged-main CI #2228 and Product Eval #1467 passed. Actual Staging Deploy #1228 deployed exact `3c9279a2...` and passed auth/MCP smoke, healthy Operations, exact-host SHA match, 15/15 configured services running, and 27.69 GiB stabilized free space.
+
+Evidence: [session-9-a09-frontend-decomposition-closure-2026-09-26.md](session-9-a09-frontend-decomposition-closure-2026-09-26.md).
+
+The original finding was a maintainability concentration risk, not a requirement to minimize page line counts indefinitely. A-09 is closed at the explicit page/controller + domain-local presentation/model boundary.
 
 ### A-10 — MEDIUM — Compose readiness is weaker than the runtime acceptance tooling
 
@@ -346,9 +352,9 @@ This audit does **not** authorize implementation automatically.
 5. Project state/UI correctness: CLOSED (virtual All in Session 6; stale persisted Project reconciliation in Session 7);
 6. Project settings + source onboarding: CLOSED for this roadmap (generic MCP connector boundary; native Google Drive integration deferred separately);
 7. Schedule A-06: CLOSED / PASS (A-06a calendar/navigation + A-06b searchable/inline Project selection and governed local AI-assisted drafting);
-8. Brain scalable layout/pan/zoom + richer canonical-owner projection — eligible for a future explicit scope decision, not automatically authorized;
-9. frontend module decomposition while touching those surfaces;
-10. Compose readiness/health improvements;
+8. Brain scalable layout + owner-backed projection: CLOSED / PASS at the documented A-07/A-08 boundary, with speculative hierarchy/Core Memory identity deferred;
+9. frontend module decomposition: CLOSED / PASS through A-09a–A-09e / PRs #344–#348;
+10. Compose readiness/health improvements — next eligible clean audit boundary, not automatically authorized;
 11. fresh staging runtime acceptance after selected changes merge.
 
 Do not open a new autonomous service, graph database, scheduler, or cross-service database path to solve these items.
