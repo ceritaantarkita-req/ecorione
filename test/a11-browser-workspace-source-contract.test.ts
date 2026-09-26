@@ -51,7 +51,9 @@ describe("A-11 browser Workspace source contract", () => {
     expect(work).toContain("if (!workspaceReady) return;");
     expect(brain).toContain("if (!workspaceReady) return;");
     expect(space).toContain("if (!workspaceReady) return;");
-    expect(flow).toContain('if (!workspaceReady) throw new Error("Workspace context belum siap.");');
+    expect(flow).toContain(
+      'if (!workspaceReady) throw new Error("Workspace context belum siap.");',
+    );
   });
 
   it("keeps Personal only as the compatibility default, not a page-owned Workspace decision", () => {
