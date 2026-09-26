@@ -6,7 +6,7 @@ Status: **HISTORICAL SECURITY BASELINE CLOSED / A-00 + A-12 + A-01 FOLLOW-UPS CL
 
 Batch 12 closes a production/self-host **baseline**, not an assertion that future vulnerabilities are impossible. Final closure evidence is in `docs/verification/batch12-closure-2026-09-10.md`; current operational priorities are in `docs/current-state-and-next-steps.md`.
 
-At the start of this reconciliation, the A-11 bookkeeping/staging baseline was exact GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47` through Staging Deploy #1288; a later docs-only merge may advance the Git/staging SHA without changing this security/runtime code boundary. That does not promote staging to production and does not turn the single operator Basic-Auth gate into multi-user identity/RBAC.
+Repository/documentation reconciliation later closed through PR #354 / merge `265a28d4c53cc482af8ea33a6362a21e640d30e5`; merged-main CI #2263 + Product Eval #1502 and actual Staging Deploy #1298 passed. That docs-only convergence does not change the security/runtime code boundary, promote staging to production, or turn the single operator Basic-Auth gate into multi-user identity/RBAC.
 
 ## Enforced controls
 

@@ -2,7 +2,7 @@
 
 Date: **2026-09-26**
 
-Status: **AUDIT COMPLETE / CURRENT-DOCUMENT RECONCILIATION RECORDED**
+Status: **CLOSED / PASS — REPOSITORY + CURRENT-DOCUMENT RECONCILIATION**
 
 Baseline GitHub `main` audited:
 
@@ -210,7 +210,64 @@ It must not:
 - enable hosted spend;
 - promote staging to production.
 
-## 11. Safe resume
+## 11. Post-merge closure evidence
+
+The reconciliation implementation/documentation PR is **#354**.
+
+Exact reviewed PR head:
+
+```text
+f356f00d643b017d0e9870142c71c597d281872f
+```
+
+Exact-head gates:
+
+- CI **#2262** — PASS;
+- Product Eval **#1501** — PASS.
+
+PR #354 squash-merged as:
+
+```text
+265a28d4c53cc482af8ea33a6362a21e640d30e5
+```
+
+Merged-main gates on that exact SHA:
+
+- CI **#2263** — PASS;
+- Product Eval **#1502** — PASS.
+
+Staging delivery for the merge SHA produced two workflow-run outcomes:
+
+- Staging Deploy **#1297** — gate PASS, deploy **SKIPPED**;
+- Staging Deploy **#1298** — gate PASS, deploy **PASS**.
+
+Only #1298 is actual runtime deployment proof.
+
+Staging Deploy #1298 directly proved:
+
+- image `staging-265a28d4c53c`;
+- host `HEAD` and expected SHA both `265a28d4c53cc482af8ea33a6362a21e640d30e5`;
+- clean detached staging checkout;
+- unauthenticated root `302 -> /login`;
+- `/login`, `/ops`, `/settings`, `/api/ops`, representative Project/history/Brain/Space reads, and chat/forget mutations fail closed with `401 + Basic challenge`;
+- MCP protected-resource metadata returns 200 and unauthenticated MCP remains OAuth-challenged with 401;
+- Operations `healthy: true` with `unhealthyServices: []`;
+- all **15/15** configured Compose services running;
+- final staging capacity stabilization: **25.11 GiB free**;
+- rollback-set image retention kept the new current image and previous `staging-65bf8d2ce0b8` image while removing the older `staging-38fa0b8563a0` image.
+
+Post-merge repository inventory before opening this final closure-bookkeeping branch:
+
+- **973** tracked blobs/files;
+- **251** tracked files under `docs/`;
+- **0** open pull requests;
+- open issue inventory: **Issue #277 only**, the deferred DR-2 tracker;
+- **393** branch names including `main`;
+- the merged reconciliation branch remained present and was not deleted because branch cleanup is a separate destructive hygiene scope.
+
+This closes the requested repository/documentation reconciliation. Any later docs-only bookkeeping SHA must be distinguished from the runtime proof above; it does not reopen A-11 or create a new product/runtime scope.
+
+## 12. Safe resume
 
 After this reconciliation merges:
 
