@@ -1,6 +1,6 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-09-23**
+Last updated: **2026-09-26**
 
 Status: **CURRENT SUMMARY**
 
@@ -71,6 +71,16 @@ Runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). R
 PCS-09 repository implementation merged through PR #216. Exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and squash-merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`; exact merged-main CI #1665 + Product Eval #904 + MCP External HTTPS Acceptance #894 passed. Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was then deployed through governed Staging Deploy run #35563423107. Real-host acceptance completed: SSH password/root login disabled with fresh key-session proof, strict inventory `blockers=[]` / `closureReady=true`, full VPS reboot with changed Linux boot ID and 15/15 service + volume preservation, verified same-host backup/isolated restore for all 12 project volumes, and final Operations/host-resource evidence with healthy owner fleet and strict host inventory. Closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918 passed, while Staging Deploy #135/#136 gate PASSed and deploy remained skipped. PCS-09 is **CLOSED / PASS**. PCS-10 documentation convergence is **CLOSED / PASS** through closure PR #219 exact head `c84f76face60d203592d8bc6e1a51acccfec5004`, which passed CI #1684 + Product Eval #923 and merged to `main` as `6058aa0ff294218147a91ee0fc7b77f32d1be80d`. Post-merge documentation bookkeeping PR #220 then passed CI #1686 + Product Eval #925 and merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07`. Off-host DR, total-host-loss recovery, production promotion, and non-zero paid-provider telemetry remain explicit non-claims.
 
 Latest-main staging convergence then CLOSED / PASS at the runtime boundary. After repository checkpoint PR #248 merged as `52046db35e403babdda934881773c46bf2c57b68`, governed Staging Deploy #293 / run `35627920447` deployed that exact current `main` SHA as `staging-52046db35e40`. Gate + deploy passed; public home reached 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, authenticated Ops reported a healthy fleet with no unhealthy services, MCP metadata/challenge checks passed, sanitized host evidence matched exact SHA, and final PCS-08 deployment validation passed. The reviewed orchestrator writes its release receipt before the final PASS. That convergence established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at that historical checkpoint. It was later superseded by the governed DR runtime deployment `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, which completed the original Off-host DR recovery drill. Later documentation/DR-2 merges did not deploy because staging deployment activation remained disabled. Evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
+
+## Current audit follow-up
+
+| Scope | State |
+|---|---:|
+| A-09 frontend decomposition | **CLOSED / PASS** |
+| A-10 Compose readiness/health | **CLOSED / PASS** |
+| A-11 browser personal-workspace-first limitation | **ACTIVE / BOUNDED** |
+
+A-11 is limited to removing browser page/controller ownership of the Personal Workspace assumption through one validated Workspace context with Personal as the compatibility default. It does not open multi-user identity, a Workspace registry/switcher, new service/data ownership, DR-2, native Google Drive, hosted spend, or production cutover.
 
 ## Active infrastructure work
 
