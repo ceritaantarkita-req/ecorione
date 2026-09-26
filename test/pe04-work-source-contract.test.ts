@@ -38,10 +38,12 @@ describe("PE-04 Work source contract", () => {
     const [page, sections] = await Promise.all([source(pagePath), source(sectionsPath)]);
     const workSurface = page + sections;
     expect(page).toContain("/api/flow/runs?");
-    expect(page).toContain("workspaceId: WORKSPACE_ID");
+    expect(page).toContain("useWorkspace");
+    expect(page).toContain("workspaceId: workspaceId");
     expect(page).toContain("projectId: nextProjectId");
     expect(page).toContain("/api/flow/runs/");
-    expect(page).toContain("workspaceId: WORKSPACE_ID");
+    expect(page).toContain("useWorkspace");
+    expect(page).toContain("workspaceId: workspaceId");
     expect(page).toContain("projectId,");
     expect(workSurface).toContain("Key = operationId");
   });
