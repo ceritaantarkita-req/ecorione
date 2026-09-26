@@ -54,7 +54,7 @@ import {
   TurnView,
   XIcon,
 } from "./ChatPageSections";
-const WORKSPACE_ID = "ws_personal";
+import { useWorkspace } from "./WorkspaceProvider";
 type RuntimeSnapshot = {
   settings?: {
     hostedCallsEnabled?: boolean;
@@ -128,6 +128,7 @@ const getClientHydrationSnapshot = (): boolean => true;
 const getServerHydrationSnapshot = (): boolean => false;
 
 export default function ChatPage() {
+  const { workspaceId, ready: workspaceReady } = useWorkspace();
   const [sessionId, setSessionId] = useState<string>(() => makeSessionId());
   const hydrated = useSyncExternalStore(
     subscribeHydration,
@@ -179,7 +180,7 @@ export default function ChatPage() {
 
   const loadHistorySessions = useCallback(async (activeProjectId: string) => {
     const res = await fetch(
-      `/api/projects/history?workspaceId=${WORKSPACE_ID}&projectId=${encodeURIComponent(activeProjectId)}`,
+      `/api/projects/history?workspaceId=${workspaceId}&projectId=${encodeURIComponent(activeProjectId)}`,
       { cache: "no-store" },
     );
     const body: unknown = await res.json().catch(() => undefined);
@@ -187,10 +188,10 @@ export default function ChatPage() {
       throw new Error(extractErrorMessage(body) ?? "Gagal memuat riwayat percakapan.");
     }
     return (body as SessionList).sessions;
-  }, []);
+  }, [workspaceId]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !workspaceReady) return;
     let cancelled = false;
     setProjectReady(false);
 
@@ -207,7 +208,7 @@ export default function ChatPage() {
     }
     const requested = params.get("session");
 
-    void fetch(`/api/projects?workspaceId=${WORKSPACE_ID}`, { cache: "no-store" })
+    void fetch(`/api/projects?workspaceId=${workspaceId}`, { cache: "no-store" })
       .then(async (res) => {
         const body: unknown = await res.json().catch(() => undefined);
         if (!res.ok) {
@@ -279,7 +280,7 @@ export default function ChatPage() {
     return () => {
       cancelled = true;
     };
-  }, [hydrated]);
+  }, [hydrated, workspaceId, workspaceReady]);
 
   useEffect(() => {
     if (!projectReady) return;
@@ -343,7 +344,7 @@ export default function ChatPage() {
     setSessionReady(false);
     setHistoryFeedback(null);
     void fetch(
-      `/api/projects/history/${encodeURIComponent(sessionId)}?workspaceId=${WORKSPACE_ID}&projectId=${encodeURIComponent(projectId)}`,
+      `/api/projects/history/${encodeURIComponent(sessionId)}?workspaceId=${workspaceId}&projectId=${encodeURIComponent(projectId)}`,
       { cache: "no-store" },
     )
       .then(async (res) => {
@@ -357,7 +358,7 @@ export default function ChatPage() {
         if (cancelled) return;
         if (
           replay.session.id !== sessionId ||
-          replay.session.workspaceId !== WORKSPACE_ID ||
+          replay.session.workspaceId !== workspaceId ||
           replay.session.projectId !== projectId
         ) {
           throw new Error("Binding percakapan tidak cocok dengan Project aktif.");
@@ -397,6 +398,7 @@ export default function ChatPage() {
     projectReady,
     requestedSessionId,
     sessionId,
+    workspaceId,
   ]);
 
   useEffect(() => {
@@ -534,7 +536,7 @@ export default function ChatPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           sessionId,
-          workspaceId: WORKSPACE_ID,
+          workspaceId: workspaceId,
           projectId,
           message: trimmed,
           target,
@@ -588,7 +590,7 @@ export default function ChatPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           factId,
-          workspaceId: WORKSPACE_ID,
+          workspaceId: workspaceId,
           projectId,
         }),
       });
