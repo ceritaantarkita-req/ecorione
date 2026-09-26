@@ -36,7 +36,6 @@ import {
   type WorkTab,
 } from "./work-page-model";
 
-
 export default function WorkPage() {
   const { workspaceId, ready: workspaceReady } = useWorkspace();
   const [tab, setTab] = useState<WorkTab>("schedule");
