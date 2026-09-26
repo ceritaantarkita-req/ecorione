@@ -10,7 +10,7 @@ The same reviewed self-host topology has been exercised on the real SumoPod **st
 
 Current handoff: `docs/current-state-and-next-steps.md`.
 
-Current remote-staging bookkeeping identity is exact GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47`, deployed by governed Staging Deploy #1288 with 15/15 configured services running, healthy Operations, zero unhealthy owner services, preserved auth/MCP boundaries, and 26.29 GiB stabilized free space. This remains staging evidence; public production is not activated.
+At the reconciliation baseline, remote-staging bookkeeping identity was exact GitHub `main` `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47`, deployed by governed Staging Deploy #1288 with 15/15 configured services running, healthy Operations, zero unhealthy owner services, preserved auth/MCP boundaries, and 26.29 GiB stabilized free space. This remains staging evidence; public production is not activated.
 
 ## Current verified baseline
 
