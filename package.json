@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --write apps/ai/app/space/SpacePageSections.tsx && git diff -- apps/ai/app/space/SpacePageSections.tsx && exit 1",
+    "format:check": "prettier --check .",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
