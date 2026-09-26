@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_WORKSPACE_ID } from "@ecorione/shared-schema";
-import {
-  isWorkspaceIdCandidate,
-  resolveWorkspaceId,
-} from "./workspace-selection";
+import { isWorkspaceIdCandidate, resolveWorkspaceId } from "./workspace-selection";
 
 describe("browser Workspace selection", () => {
   it("prefers an explicit valid query Workspace", () => {
