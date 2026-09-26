@@ -11,15 +11,14 @@ function serviceBlock(source: string, name: string): string {
   const start = source.indexOf(startMarker);
   expect(start, `missing service ${name}`).toBeGreaterThanOrEqual(0);
   const bodyStart = start + startMarker.length;
-  const nextService = source.slice(bodyStart).search(/\n  [A-Za-z0-9_-]+:\n/u);
-  const networks = source.indexOf("\nnetworks:", bodyStart);
-  const end =
-    nextService >= 0
-      ? bodyStart + nextService
-      : networks >= 0
-        ? networks
-        : source.length;
-  return source.slice(start, end);
+  const nextServiceOffset = source.slice(bodyStart).search(/\n  [A-Za-z0-9_-]+:\n/u);
+  const nextService = nextServiceOffset >= 0 ? bodyStart + nextServiceOffset : source.length;
+  const sectionBoundaries = ["\nnetworks:", "\nvolumes:"]
+    .map((marker) => source.indexOf(marker, bodyStart))
+    .filter((index) => index >= 0);
+  const nextSection =
+    sectionBoundaries.length > 0 ? Math.min(...sectionBoundaries) : source.length;
+  return source.slice(start, Math.min(nextService, nextSection));
 }
 
 function expectHttpHealth(source: string, name: string, port: number, path = "/healthz"): void {
