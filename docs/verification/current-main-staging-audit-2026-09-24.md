@@ -1,6 +1,6 @@
 # Current main + staging parity audit — 2026-09-24
 
-Status: **AUDIT COMPLETE / A-09 CLOSED-PASS / A-10 OPEN / A-11 LIMITATION**
+Status: **AUDIT COMPLETE / A-09 CLOSED-PASS / A-10 CLOSED-PASS / A-11 CLOSED-PASS**
 
 ## Post-audit closure update — 2026-09-26
 
@@ -289,9 +289,13 @@ Final reviewed head `5fcdf0e4d2ce0a52e5e0197e71ee942a4f5842ba` passed CI #2233, 
 
 Evidence: [session-10-a10-compose-readiness-closure-2026-09-26.md](session-10-a10-compose-readiness-closure-2026-09-26.md).
 
-### A-11 — LIMITATION — browser-facing product is personal-workspace-first
+### A-11 — CLOSED / PASS — browser Workspace assumption removed at the bounded context layer
 
-Several Ai product surfaces intentionally hardcode `ws_personal` and default `prj_personal`. This is consistent with the current single-owner V1 model and is not a security bug, but multi-workspace/multi-user UX cannot be layered cleanly without first removing page-level personal-workspace assumptions.
+**Closure update — 2026-09-26.** PR #352 / merge `38fa0b8563a0f73fb44b1705e4f0e1418d8a23c5` removes page/controller-owned `ws_personal` decisions behind one validated browser Workspace context. Valid URL selection wins over valid persisted selection; absent/invalid candidates use the canonical Personal compatibility default. Ai, Projects, Work, Brain, Space, Flow, and Settings consume the shared context while existing owner APIs remain the authority boundary.
+
+Final reviewed head `173ba037182ca999f93c22942c564cff08d8ab6c` passed CI #2255, Product Eval #1494, and PCS-06 #195. Merged-main CI #2256 and Product Eval #1495 passed. Staging Deploy #1283 was gate-only; actual Staging Deploy #1284 deployed exact implementation main and passed public/auth + MCP smoke, healthy Operations with zero unhealthy services, exact-host clean-detached identity, 15/15 configured services running, and 27.66 GiB stabilized free space.
+
+This closure does not create a Workspace registry/switcher, provisioning UX, memberships, multi-user identity/auth redesign, new owner/service/database, native Google Drive integration, hosted spend, DR-2 runtime, or production cutover. Evidence: [session-10-a11-browser-workspace-context-closure-2026-09-26.md](session-10-a11-browser-workspace-context-closure-2026-09-26.md).
 
 ## 4. Security audit result
 
@@ -359,7 +363,7 @@ This audit does **not** authorize implementation automatically.
 8. Brain scalable layout + owner-backed projection: CLOSED / PASS at the documented A-07/A-08 boundary, with speculative hierarchy/Core Memory identity deferred;
 9. frontend module decomposition: CLOSED / PASS through A-09a–A-09e / PRs #344–#348;
 10. Compose readiness/health improvements: CLOSED / PASS through A-10 / PR #350;
-11. fresh staging runtime acceptance for A-10: CLOSED / PASS on exact `710127d66218e4d2e8ed23ddbc485b80b8769f6b`; A-11 remains a separate limitation and is not automatically opened.
+11. A-11 browser personal-workspace-first limitation: CLOSED / PASS through PR #352 / exact implementation and proven staging SHA `38fa0b8563a0f73fb44b1705e4f0e1418d8a23c5`; no further audit scope is opened automatically.
 
 Do not open a new autonomous service, graph database, scheduler, or cross-service database path to solve these items.
 
