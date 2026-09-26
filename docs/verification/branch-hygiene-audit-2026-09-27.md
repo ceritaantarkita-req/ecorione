@@ -224,7 +224,9 @@ Actual deploy #1310 proved exact host SHA `97a34c3582917745dc4ecfb7f175b77cc3598
 
 PR #358 was later closed **without merge** because it duplicated Stage-2 containment work after PR #357 had already merged. Its stale branch is not authority.
 
-## 8. Execution limitation in this session
+The retained-branch evidence follow-up then merged through PR **#359** as `23188ca5a4268e121841b167932b984d95102386`. Exact-head CI #2270 + Product Eval #1509 passed; merged-main CI #2271 + Product Eval #1510 passed; Staging Deploy #1313 was gate-only and actual Staging Deploy #1314 passed on exact merge SHA with preserved auth/MCP boundaries, healthy Operations, clean exact-host identity, no non-running configured services, and **26.44 GiB** stabilized free space.
+
+## 9. Execution limitation in this session
 
 The repo-side audit and safe cleanup tooling are complete. Actual remote deletion requires an authenticated git client capable of `git push origin --delete`.
 
