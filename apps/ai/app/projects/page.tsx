@@ -56,16 +56,19 @@ export default function ProjectsPage() {
     setProjectsReady(true);
   }, [workspaceId]);
 
-  const loadSessions = useCallback(async (projectId?: string) => {
-    const params = new URLSearchParams({ workspaceId: workspaceId });
-    if (projectId !== undefined) params.set("projectId", projectId);
-    const res = await fetch(`/api/projects/history?${params.toString()}`, {
-      cache: "no-store",
-    });
-    const body: unknown = await res.json().catch(() => undefined);
-    if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat percakapan Project."));
-    setSessions((body as SessionList).sessions);
-  }, [workspaceId]);
+  const loadSessions = useCallback(
+    async (projectId?: string) => {
+      const params = new URLSearchParams({ workspaceId: workspaceId });
+      if (projectId !== undefined) params.set("projectId", projectId);
+      const res = await fetch(`/api/projects/history?${params.toString()}`, {
+        cache: "no-store",
+      });
+      const body: unknown = await res.json().catch(() => undefined);
+      if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat percakapan Project."));
+      setSessions((body as SessionList).sessions);
+    },
+    [workspaceId],
+  );
 
   useEffect(() => {
     if (!workspaceReady) return;
