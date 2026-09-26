@@ -157,7 +157,7 @@ The retained set includes:
 
 No retained branch should be deleted merely because its name looks old or a newer-looking sibling exists.
 
-## 5. Cleanup tool
+## 6. Cleanup tool
 
 `scripts/cleanup-merged-branches.ps1` is the bounded cleanup executor.
 
