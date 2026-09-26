@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import type {
   FlowGraphEdge,
   FlowGraphNode,
@@ -11,156 +11,33 @@ import type {
   FlowNodeKind,
 } from "@ecorione/shared-schema";
 import styles from "./FlowCanvas.module.css";
-
-const DRAFT_ID = "fg_draftcanvas01";
-const WORKSPACE_ID = "ws_personal";
-const NODE_WIDTH = 196;
+import {
+  ConnectionSelect,
+  FlowAuthorityPanel,
+  FlowExecutionPanel,
+  QuickNodeSettings,
+  type GraphAuthorityRequirement,
+  type GraphAuthorityState,
+} from "./FlowPageSections";
+import {
+  DRAFT_ID,
+  NODE_WIDTH,
+  WORKSPACE_ID,
+  configSummary,
+  defaultConfig,
+  errorMessage,
+  errorType,
+  newEdgeId,
+  newNodeId,
+  outputOffset,
+  parseInput,
+} from "./flow-page-model";
 
 type SaveResponse = { version: FlowGraphVersionView; deduplicated: boolean };
 type NodeRunState = FlowGraphRunState["nodes"][number];
 type BuilderTab = "nodes" | "configure";
 type MobileMode = "stack" | "canvas";
 type EdgeDragPayload = { sourceNodeId: string; sourcePort: string };
-type GraphAuthorityRequirement = {
-  definitionId: string;
-  nodeIds: string[];
-  status: "GRANTED" | "APPROVAL_REQUIRED";
-  operationId: string | null;
-  prompt: string | null;
-};
-type GraphAuthorityState = {
-  ready: boolean;
-  graphVersion: number;
-  requirements: GraphAuthorityRequirement[];
-};
-
-function defaultConfig(kind: FlowNodeKind): Record<string, unknown> {
-  switch (kind) {
-    case "trigger":
-    case "parallel":
-      return {};
-    case "ai":
-      return { target: "local", message: "Process this input." };
-    case "memory":
-      return { query: "{{ }}", k: 8, hostedEligibleOnly: false };
-    case "artifact":
-      return { artifactId: `art_${"0".repeat(64)}`, encoding: "utf8" };
-    case "mcp-tool":
-      return { serverId: "server", tool: "tool", arguments: {} };
-    case "http":
-      return { url: "https://example.com", method: "GET", headers: {} };
-    case "transform":
-      return { mode: "pick", path: "" };
-    case "condition":
-      return { operator: "truthy" };
-    case "loop":
-      return { mode: "identity", maxIterations: 100 };
-    case "delay":
-      return { milliseconds: 1000 };
-    case "approval":
-      return { prompt: "Approve this step?" };
-    case "human-input":
-      return { prompt: "Provide input" };
-    case "sandbox":
-      return {
-        tier: "tier0",
-        workspace: "/tmp/work",
-        command: "pwd",
-        wasmBase64: null,
-        wasmExport: "run",
-        wasmArgs: [],
-      };
-    case "data-owner":
-      return { service: "context", path: "/v1/episodes?limit=20" };
-    case "notification":
-      return { message: "Flow node completed." };
-    case "subflow":
-      return { graphId: DRAFT_ID, waitForCompletion: true };
-  }
-}
-
-function newNodeId(kind: FlowNodeKind): string {
-  return `node_${kind.replaceAll("-", "")}_${crypto.randomUUID().replaceAll("-", "").slice(0, 10)}`;
-}
-
-function newEdgeId(): string {
-  return `edge_${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`;
-}
-
-function errorType(body: unknown): string | null {
-  if (body !== null && typeof body === "object" && "error" in body) {
-    const error = (body as { error?: unknown }).error;
-    if (
-      error !== null &&
-      typeof error === "object" &&
-      "type" in error &&
-      typeof (error as { type?: unknown }).type === "string"
-    ) {
-      return (error as { type: string }).type;
-    }
-  }
-  return null;
-}
-
-function errorMessage(body: unknown, fallback: string): string {
-  if (body !== null && typeof body === "object" && "error" in body) {
-    const error = (body as { error?: unknown }).error;
-    if (
-      error !== null &&
-      typeof error === "object" &&
-      "message" in error &&
-      typeof (error as { message?: unknown }).message === "string"
-    ) {
-      return (error as { message: string }).message;
-    }
-  }
-  return fallback;
-}
-
-function parseInput(value: string): unknown {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return value;
-  }
-}
-
-function stringConfig(node: FlowGraphNode, key: string, fallback = ""): string {
-  const value = node.config[key];
-  return typeof value === "string" ? value : fallback;
-}
-
-function numberConfig(node: FlowGraphNode, key: string, fallback = 0): number {
-  const value = node.config[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-function outputOffset(node: FlowGraphNode, port: string): number {
-  if (node.kind === "condition") return port === "false" ? 48 : 24;
-  return 34;
-}
-
-function configSummary(node: FlowGraphNode): string {
-  switch (node.kind) {
-    case "ai":
-      return `${stringConfig(node, "target", "local")} · ${stringConfig(node, "message", "message")}`;
-    case "http":
-      return `${stringConfig(node, "method", "GET")} · ${stringConfig(node, "url", "URL")}`;
-    case "delay":
-      return `${numberConfig(node, "milliseconds", 1000)} ms`;
-    case "condition":
-      return stringConfig(node, "operator", "truthy");
-    case "approval":
-    case "human-input":
-      return stringConfig(node, "prompt", "Prompt");
-    case "memory":
-      return stringConfig(node, "query", "Query");
-    default:
-      return Object.keys(node.config).length === 0
-        ? "No required config"
-        : `${Object.keys(node.config).length} config field(s)`;
-  }
-}
 
 export default function FlowCanvasPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -880,178 +757,33 @@ export default function FlowCanvasPage() {
     }
   }
 
-  function renderQuickSettings(node: FlowGraphNode): ReactNode {
-    const label = (
-      <label className={styles.quickField}>
-        <span>Label</span>
-        <input
-          className="ecr-input"
-          value={node.label}
-          onChange={(event) => {
-            setNodes((current) =>
-              current.map((item) =>
-                item.id === node.id ? { ...item, label: event.target.value } : item,
-              ),
-            );
-            markDraftChanged();
-          }}
-        />
-      </label>
-    );
-
-    let primary: ReactNode = null;
-    switch (node.kind) {
-      case "ai":
-        primary = (
-          <>
-            <label className={styles.quickField}>
-              <span>Target</span>
-              <select
-                className="ecr-input"
-                value={stringConfig(node, "target", "local")}
-                onChange={(event) => patchNodeConfig(node, { target: event.target.value })}
-              >
-                <option value="local">Local</option>
-                <option value="hosted">Hosted</option>
-              </select>
-            </label>
-            <label className={styles.quickField}>
-              <span>Message</span>
-              <input
-                className="ecr-input"
-                value={stringConfig(node, "message")}
-                onChange={(event) => patchNodeConfig(node, { message: event.target.value })}
-              />
-            </label>
-          </>
-        );
-        break;
-      case "http":
-        primary = (
-          <>
-            <label className={styles.quickField}>
-              <span>Method</span>
-              <select
-                className="ecr-input"
-                value={stringConfig(node, "method", "GET")}
-                onChange={(event) => patchNodeConfig(node, { method: event.target.value })}
-              >
-                <option>GET</option>
-                <option>POST</option>
-                <option>PUT</option>
-                <option>PATCH</option>
-                <option>DELETE</option>
-              </select>
-            </label>
-            <label className={styles.quickField}>
-              <span>URL</span>
-              <input
-                className="ecr-input"
-                value={stringConfig(node, "url")}
-                onChange={(event) => patchNodeConfig(node, { url: event.target.value })}
-              />
-            </label>
-          </>
-        );
-        break;
-      case "delay":
-        primary = (
-          <label className={styles.quickField}>
-            <span>Delay (ms)</span>
-            <input
-              className="ecr-input"
-              type="number"
-              value={numberConfig(node, "milliseconds", 1000)}
-              onChange={(event) =>
-                patchNodeConfig(node, { milliseconds: Number(event.target.value) })
-              }
-            />
-          </label>
-        );
-        break;
-      case "condition":
-        primary = (
-          <label className={styles.quickField}>
-            <span>Operator</span>
-            <input
-              className="ecr-input"
-              value={stringConfig(node, "operator", "truthy")}
-              onChange={(event) => patchNodeConfig(node, { operator: event.target.value })}
-            />
-          </label>
-        );
-        break;
-      case "approval":
-      case "human-input":
-        primary = (
-          <label className={styles.quickField}>
-            <span>Prompt</span>
-            <input
-              className="ecr-input"
-              value={stringConfig(node, "prompt")}
-              onChange={(event) => patchNodeConfig(node, { prompt: event.target.value })}
-            />
-          </label>
-        );
-        break;
-      case "memory":
-        primary = (
-          <label className={styles.quickField}>
-            <span>Query</span>
-            <input
-              className="ecr-input"
-              value={stringConfig(node, "query")}
-              onChange={(event) => patchNodeConfig(node, { query: event.target.value })}
-            />
-          </label>
-        );
-        break;
-      default:
-        primary = <p className={styles.quickSummary}>{configSummary(node)}</p>;
-    }
-
+  function quickNodeSettings(node: FlowGraphNode) {
     return (
-      <div className={styles.quickSettings}>
-        {label}
-        {primary}
-        <button
-          className="ecr-btn ecr-btn--secondary"
-          onClick={() => {
-            selectNode(node.id, true);
-            setBuilderCollapsed(false);
-          }}
-        >
-          Advanced
-        </button>
-      </div>
+      <QuickNodeSettings
+        node={node}
+        onRename={(nextLabel) => {
+          setNodes((current) =>
+            current.map((item) => (item.id === node.id ? { ...item, label: nextLabel } : item)),
+          );
+          markDraftChanged();
+        }}
+        onPatchConfig={(patch) => patchNodeConfig(node, patch)}
+        onAdvanced={() => {
+          selectNode(node.id, true);
+          setBuilderCollapsed(false);
+        }}
+      />
     );
   }
 
-  function renderConnectionSelect(node: FlowGraphNode, port: string): ReactNode {
+  function connectionSelect(node: FlowGraphNode, port: string) {
     return (
-      <label className={styles.stackConnect}>
-        <span>{node.kind === "condition" ? port : "Connect to"}</span>
-        <select
-          className="ecr-input"
-          defaultValue=""
-          onChange={(event) => {
-            const target = event.target.value;
-            if (target.length > 0) connectNodes(node.id, port, target);
-            event.currentTarget.value = "";
-          }}
-        >
-          <option value="" disabled>
-            Choose node…
-          </option>
-          {nodes
-            .filter((candidate) => candidate.id !== node.id && candidate.kind !== "trigger")
-            .map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.label}
-              </option>
-            ))}
-        </select>
-      </label>
+      <ConnectionSelect
+        node={node}
+        port={port}
+        nodes={nodes}
+        onConnect={(targetNodeId) => connectNodes(node.id, port, targetNodeId)}
+      />
     );
   }
 
@@ -1187,65 +919,18 @@ export default function FlowCanvasPage() {
         </div>
       </details>
 
-      {authority !== null ? (
-        <section className={styles.authorityPanel} aria-label="Flow execution authority">
-          <div className={styles.authorityHeader}>
-            <div>
-              <strong>
-                {authority.ready ? "Execution authority ready" : "Approval required"}
-              </strong>
-              <span>Graph v{authority.graphVersion} · exact node.execute grants</span>
-            </div>
-            <button
-              className="ecr-btn ecr-btn--secondary"
-              disabled={authorityBusy || pendingAuthorityAction !== null}
-              onClick={() => void runUiAction("Authority refresh gagal", prepareAuthority)}
-            >
-              Refresh
-            </button>
-          </div>
-          {authority.requirements.map((requirement) => (
-            <div className={styles.authorityRequirement} key={requirement.definitionId}>
-              <div>
-                <code>{requirement.definitionId}</code>
-                <span>
-                  {requirement.nodeIds.length} node(s) ·{" "}
-                  {requirement.status === "GRANTED" ? "Granted" : requirement.prompt}
-                </span>
-              </div>
-              {requirement.status === "APPROVAL_REQUIRED" &&
-              requirement.operationId !== null ? (
-                <div className={styles.inlineActions}>
-                  <button
-                    className="ecr-btn ecr-btn--primary"
-                    disabled={pendingAuthorityAction !== null}
-                    onClick={() =>
-                      void runUiAction("Authority approval gagal", () =>
-                        decideAuthority(requirement, "APPROVE"),
-                      )
-                    }
-                  >
-                    {pendingAuthorityAction === `${requirement.definitionId}:APPROVE`
-                      ? "Approving…"
-                      : "Approve"}
-                  </button>
-                  <button
-                    className="ecr-btn ecr-btn--secondary"
-                    disabled={pendingAuthorityAction !== null}
-                    onClick={() =>
-                      void runUiAction("Authority rejection gagal", () =>
-                        decideAuthority(requirement, "REJECT"),
-                      )
-                    }
-                  >
-                    Reject
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </section>
-      ) : null}
+      <FlowAuthorityPanel
+        authority={authority}
+        authorityBusy={authorityBusy}
+        pendingAuthorityAction={pendingAuthorityAction}
+        onRefresh={() => void runUiAction("Authority refresh gagal", prepareAuthority)}
+        onDecide={(requirement, decision) =>
+          void runUiAction(
+            decision === "APPROVE" ? "Authority approval gagal" : "Authority rejection gagal",
+            () => decideAuthority(requirement, decision),
+          )
+        }
+      />
 
       <div className={styles.mobileModeSwitch} aria-label="Flow mobile view">
         <button
@@ -1340,7 +1025,7 @@ export default function FlowCanvasPage() {
                       {selected.kind} · v{selected.version}
                     </span>
                   </div>
-                  {renderQuickSettings(selected)}
+                  {quickNodeSettings(selected)}
                   <details className={styles.advancedSection}>
                     <summary>Advanced configuration</summary>
                     <div className={styles.inspectorBody}>
@@ -1637,7 +1322,7 @@ export default function FlowCanvasPage() {
                     </span>
                   </div>
                   {expanded ? (
-                    <div className={styles.nodeQuickPopover}>{renderQuickSettings(node)}</div>
+                    <div className={styles.nodeQuickPopover}>{quickNodeSettings(node)}</div>
                   ) : null}
                 </div>
               );
@@ -1732,15 +1417,15 @@ export default function FlowCanvasPage() {
                   </div>
                   {expanded ? (
                     <div className={styles.stackBody}>
-                      {renderQuickSettings(node)}
+                      {quickNodeSettings(node)}
                       <div className={styles.stackConnectionBlock}>
                         {node.kind === "condition" ? (
                           <>
-                            {renderConnectionSelect(node, "true")}
-                            {renderConnectionSelect(node, "false")}
+                            {connectionSelect(node, "true")}
+                            {connectionSelect(node, "false")}
                           </>
                         ) : (
-                          renderConnectionSelect(node, "out")
+                          connectionSelect(node, "out")
                         )}
                       </div>
                     </div>
@@ -1752,69 +1437,21 @@ export default function FlowCanvasPage() {
         </section>
       </main>
 
-      <section className={styles.runPanel}>
-        <div>
-          <div className={styles.panelTitle}>Execution</div>
-          <textarea
-            value={runInput}
-            onChange={(event) => setRunInput(event.target.value)}
-            aria-label="Run input JSON"
-          />
-          <div className={styles.runMeta}>
-            <code>{runId ?? "no run"}</code>
-            <span>{run?.status ?? "IDLE"}</span>
-            <code>{run?.traceOperationId ?? "trace —"}</code>
-          </div>
-        </div>
-        <div className={styles.runNodes}>
-          {run?.nodes.map((node) => (
-            <div key={node.nodeId} className={styles.runNode}>
-              <code>{node.nodeId}</code>
-              <strong>{node.status}</strong>
-              {node.message !== null ? <span>{node.message}</span> : null}
-              {node.status === "WAITING_APPROVAL" ? (
-                <div className={styles.inlineActions}>
-                  <button
-                    className="ecr-btn ecr-btn--primary"
-                    disabled={pendingNodeAction !== null}
-                    onClick={() =>
-                      void runUiAction("Approval gagal", () => decide(node, "APPROVE"))
-                    }
-                  >
-                    {pendingNodeAction === `${node.nodeId}:decision` ? "Sending…" : "Approve"}
-                  </button>
-                  <button
-                    className="ecr-btn ecr-btn--secondary"
-                    disabled={pendingNodeAction !== null}
-                    onClick={() =>
-                      void runUiAction("Rejection gagal", () => decide(node, "REJECT"))
-                    }
-                  >
-                    Reject
-                  </button>
-                </div>
-              ) : null}
-              {node.status === "WAITING_INPUT" ? (
-                <div className={styles.inlineActions}>
-                  <input
-                    className="ecr-input"
-                    value={humanDraft}
-                    onChange={(event) => setHumanDraft(event.target.value)}
-                    placeholder="human input"
-                  />
-                  <button
-                    className="ecr-btn ecr-btn--primary"
-                    disabled={pendingNodeAction !== null}
-                    onClick={() => void runUiAction("Input gagal", () => submitHuman(node))}
-                  >
-                    {pendingNodeAction === `${node.nodeId}:input` ? "Sending…" : "Send"}
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          )) ?? <p className={styles.muted}>Execution status muncul setelah Run.</p>}
-        </div>
-      </section>
+      <FlowExecutionPanel
+        runInput={runInput}
+        onRunInputChange={setRunInput}
+        runId={runId}
+        run={run}
+        pendingNodeAction={pendingNodeAction}
+        humanDraft={humanDraft}
+        onHumanDraftChange={setHumanDraft}
+        onDecide={(node, decision) =>
+          void runUiAction(decision === "APPROVE" ? "Approval gagal" : "Rejection gagal", () =>
+            decide(node, decision),
+          )
+        }
+        onSubmitHuman={(node) => void runUiAction("Input gagal", () => submitHuman(node))}
+      />
     </div>
   );
 }

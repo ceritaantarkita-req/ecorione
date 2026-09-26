@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const flowPagePath = resolve("apps/ai/app/flow/page.tsx");
+const flowSectionsPath = resolve("apps/ai/app/flow/FlowPageSections.tsx");
 const flowCssPath = resolve("apps/ai/app/flow/FlowCanvas.module.css");
 const navigationCssPath = resolve("apps/ai/app/navigation.css");
 
@@ -13,10 +14,12 @@ async function source(path: string): Promise<string> {
 describe("W03 responsive Flow source contracts", () => {
   it("keeps invalid Trigger targets out of connection state", async () => {
     const page = await source(flowPagePath);
+    const sections = await source(flowSectionsPath);
+    const flowUi = `${page}\n${sections}`;
 
-    expect(page).toContain('if (target.kind === "trigger")');
-    expect(page).toContain('candidate.kind !== "trigger"');
-    expect(page).toContain('setMessage("Trigger tidak menerima koneksi masuk.")');
+    expect(flowUi).toContain('if (target.kind === "trigger")');
+    expect(flowUi).toContain('candidate.kind !== "trigger"');
+    expect(flowUi).toContain('setMessage("Trigger tidak menerima koneksi masuk.")');
   });
 
   it("does not render the node shell as a button containing another button", async () => {
