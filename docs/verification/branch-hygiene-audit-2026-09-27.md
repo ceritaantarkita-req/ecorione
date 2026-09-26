@@ -179,7 +179,7 @@ This means a later branch mutation cannot silently inherit an old deletion decis
 
 ## 7. Destructive boundary
 
-This audit **does not authorize deletion of the 39 held branches**.
+This audit **does not authorize deletion of the 20 retained branches**.
 
 A second-stage audit is required for them. That review should determine whether each held branch is:
 
