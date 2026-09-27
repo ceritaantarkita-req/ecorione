@@ -77,14 +77,16 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | Batch | State |
 |---|---:|
 | Batch 1 — Recipient Execution Foundation | **CLOSED / PASS** |
-| Batch 2 — Execution Contract + Idempotency + Provenance | **ACTIVE / SAFE WIP** |
-| Batch 3 — Real Agent A -> Agent B round trip | **NOT STARTED** |
+| Batch 2 — Execution Contract + Idempotency + Provenance | **CLOSED / PASS** |
+| Batch 3 — Real Agent A -> Agent B round trip | **NEXT / NOT STARTED** |
 | Batch 4 — Security, isolation, result integration | **NOT STARTED** |
 | Batch 5 — End-to-end observability, quality, economics | **NOT STARTED** |
 | Batch 6 — Historical Ledger retention/compaction/migration | **NOT STARTED** |
 | Batch 7 — Advanced execution/productization | **NOT STARTED** |
 
-Batch 1 closed through PR #363 exact head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` and merge `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Exact-head CI #2286 + Product Eval #1525 + MCP #1131 passed; merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed. Staging Deploy #1345 was gate-only and #1346 executed the deployment successfully. The closure proves governed single-recipient Hub -> Connect execution with durable recipient binding and exact capability authority. It does not prove Batch 2+ semantics. Evidence: [verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md](verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md).
+Batch 1 closed through PR #363 exact head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` and merge `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Exact-head CI #2286 + Product Eval #1525 + MCP #1131 passed; merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed. Staging Deploy #1345 was gate-only and #1346 executed the deployment successfully. Evidence: [verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md](verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md).
+
+Batch 2 closed through PR #365 exact head `890030465570826eaca9c21f27aa13b0eb821e76` and merge `851d58788075e1f11735b4c23e947edf3304eabe`. Exact-head CI #2294 + Product Eval #1533 + MCP #1137 passed; merged-main CI #2295 + Product Eval #1534 + MCP #1138 passed. Staging Deploy #1361 was gate-only and #1362 executed the deployment successfully. The closure proves durable single-recipient execution receipts, one-claim dispatch protection, success replay without duplicate Connect dispatch, FAILED/UNCERTAIN no-auto-retry semantics, Workspace-scoped status lookup, and deterministic Historical Ledger lifecycle provenance. It does not prove Batch 3+ round-trip/result-integration semantics. Evidence: [verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md).
 
 ## Current audit follow-up
 
