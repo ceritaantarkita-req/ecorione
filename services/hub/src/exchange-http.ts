@@ -694,7 +694,10 @@ function roundTripReturnContext(
   ].join("\n");
 }
 
-function replyEvidence(reply: string): { replyBytes: number; replySha256: string } {
+function replyEvidence(reply: string): {
+  replyBytes: number;
+  replySha256: string;
+} {
   return {
     replyBytes: Buffer.byteLength(reply, "utf8"),
     replySha256: createHash("sha256").update(reply, "utf8").digest("hex"),
@@ -829,6 +832,9 @@ function replayRoundTrip(
   const status = begun.status;
   if (status.state === "STARTED") return null;
   const returnedEventId = appendRoundTripReturned(ledger, status, packet, child);
+  const continuationPending =
+    status.state === "UNCERTAIN" &&
+    status.error === "Parent continuation dispatch outcome pending.";
   if (status.state === "SUCCEEDED") {
     const prior = begun.priorResult;
     if (prior === null) {
@@ -854,11 +860,20 @@ function replayRoundTrip(
       status,
       returnedEventId,
     );
-    appendRoundTripContinuationOutcome(ledger, status, startedEventId, begun.priorResult);
+    if (!continuationPending) {
+      appendRoundTripContinuationOutcome(
+        ledger,
+        status,
+        startedEventId,
+        begun.priorResult,
+      );
+    }
   }
   throw new HttpError(
     409,
-    status.state === "FAILED" ? "ECX_ROUND_TRIP_FAILED" : "ECX_ROUND_TRIP_UNCERTAIN",
+    status.state === "FAILED"
+      ? "ECX_ROUND_TRIP_FAILED"
+      : "ECX_ROUND_TRIP_UNCERTAIN",
     status.state === "FAILED"
       ? "Parent continuation sebelumnya gagal definitif; gunakan packet/operation baru untuk retry."
       : "Parent continuation sebelumnya sudah/mungkin didispatch; dispatch kedua diblokir.",
@@ -1416,7 +1431,11 @@ export function registerExchangeRoutes(
         continuationEventId,
       },
     });
-    const completed = roundTrips.succeed(input.packet.packetId, response, nowIso());
+    const completed = roundTrips.succeed(
+      input.packet.packetId,
+      response,
+      nowIso(),
+    );
     appendRoundTripContinuationOutcome(
       ledger,
       completed,
