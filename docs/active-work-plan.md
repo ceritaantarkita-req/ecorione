@@ -2,7 +2,15 @@
 
 Last updated: **2026-09-27**
 
-Status: **A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / NO ACTIVE PRODUCT-AUDIT IMPLEMENTATION / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+
+## ECX Recipient Execution roadmap — Batch 1 CLOSED / Batch 2 next
+
+**Batch 1 is CLOSED / PASS.** PR #363 reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286 + Product Eval #1525 + MCP #1131 and merged as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed; Staging Deploy #1345 was gate-only and #1346 executed successfully.
+
+The completed boundary is intentionally narrow: single-recipient runtime binding and governed Hub -> Connect execution only. **Do not reopen Batch 1.** Do not add execution receipts, retry/idempotency semantics, Ledger execution lifecycle events, multi-recipient fan-out, aggregation, UI, A2A, or retention/compaction under the Batch 1 label.
+
+**Next queued slice: Batch 2 — Execution Contract + Idempotency + Provenance. It is NOT STARTED.** Resume from the exact merged main above and the canonical checkpoint: [verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md](verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md).
 
 ## Branch-hygiene final closure — 2026-09-27
 
