@@ -2,13 +2,19 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 NOT STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-27 ECX Recipient Execution — Batch 2 ACTIVE safe checkpoint
+
+Batch 2 — **Execution Contract + Idempotency + Provenance** is ACTIVE on branch `agent/ecx-execution-idempotency-b2-20260927`. The implementation is deliberately limited to single-recipient durable execution receipts, retry/dispatch semantics, status lookup, and bounded Historical Ledger lifecycle provenance. Multi-recipient execution, result integration, A2A, UI, and Ledger retention remain out of scope.
+
+Safe-resume checkpoint: [verification/ecx-execution-b2-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b2-wip-checkpoint-2026-09-27.md). **Do not restart Batch 1 or historical ECX audits.**
 
 ## 2026-09-27 ECX Recipient Execution — Batch 1 closure
 

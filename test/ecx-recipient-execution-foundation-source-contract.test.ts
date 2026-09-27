@@ -21,11 +21,15 @@ describe("ECX recipient execution foundation source contract", () => {
     expect(db).toContain("CREATE TABLE IF NOT EXISTS ecx_agent_bindings");
   });
 
-  it("does not add batch-2 idempotency/provenance or multi-recipient execution", () => {
+  it("preserves the Batch 1 ownership boundary as Batch 2 adds bounded execution receipts", () => {
     const db = source("services/hub/src/db.ts");
-    expect(db).not.toContain("ecx_execution_receipts");
+    expect(db).toContain("CREATE TABLE IF NOT EXISTS ecx_agent_bindings");
+    expect(db).toContain("CREATE TABLE IF NOT EXISTS ecx_execution_receipts");
+    expect(db).not.toContain("ecx_execution_events");
+
     const exchange = source("services/hub/src/exchange-http.ts");
-    expect(exchange).not.toContain("agent.execution.started");
+    expect(exchange).toContain("agent.execution.started");
     expect(exchange).not.toContain("Promise.all(input.packets");
+    expect(exchange).not.toContain("/v1/exchange/aggregate");
   });
 });

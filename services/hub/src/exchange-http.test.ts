@@ -219,6 +219,427 @@ describe("ECX HTTP integration", () => {
     }
   });
 
+  it("replays a successful execution without a second provider call and preserves Ledger lifecycle", async () => {
+    const { ledger, app } = setup();
+    const sessionId = assertId("session", "sess_ecxidemsuccess001");
+    ledger.createSession({
+      id: sessionId,
+      createdAt: NOW,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "CLOUD_ALLOWED",
+    });
+
+    const binding = await app.inject({
+      method: "PUT",
+      url: "/v1/exchange/agents/agent:idem-reviewer",
+      payload: {
+        operationId: assertId("operation", "op_ecxidembinding001"),
+        workspaceId: "ws_personal",
+        target: "local",
+        capabilities: ["review"],
+        systemPrompt: "Execute the bounded ECX review.",
+        enabled: true,
+      },
+    });
+    expect(binding.statusCode).toBe(200);
+
+    new CapabilityRegistry(db!).grant(
+      CapabilityGrantRequestSchema.parse({
+        operationId: assertId("operation", "op_ecxidemgrant001"),
+        workspaceId: "ws_personal",
+        subject: { kind: "agent", id: "agent:idem-reviewer" },
+        capabilityId: "model.invoke.local",
+        permissionIds: ["model.invoke", "execution.local"],
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        autonomy: "L1",
+        reason: "ECX Batch 2 success replay test.",
+        idempotencyKey: "ecx-b2-success-grant",
+      }),
+      NOW,
+    );
+
+    const plan = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/plan",
+      payload: {
+        operationId: assertId("operation", "op_ecxidemsuccess001"),
+        requestedAt: NOW,
+        sender: "agent:planner",
+        intent: "review",
+        task: "Reply exactly ECX_IDEMPOTENT_OK.",
+        need: ["review"],
+        refs: [],
+        budget: { maxHydratedBytes: 4096 },
+        candidates: [
+          { agentId: "agent:idem-reviewer", capabilities: ["review"], estimatedCost: 0 },
+        ],
+        historySessionId: sessionId,
+      },
+    });
+    expect(plan.statusCode).toBe(200);
+    const packet = (plan.json() as { packets: unknown[] }).packets[0];
+    expect(packet).toMatchObject({ historySessionId: sessionId });
+
+    const original = getGlobalDispatcher();
+    const mock = new MockAgent();
+    mock.disableNetConnect();
+    mock
+      .get("http://connect.invalid")
+      .intercept({ path: "/v1/complete", method: "POST" })
+      .reply(200, {
+        reply: "ECX_IDEMPOTENT_OK",
+        provider: "local",
+        model: "qwen-test",
+        pricingModel: "local/provider-token-zero",
+        responseModel: "qwen-test",
+        modelIdentity: "local:test:qwen-test",
+        modelIdentityPinned: true,
+        modelIdentityProvenance: "provider-verified",
+        cacheHit: false,
+        usage: {
+          inputTokens: 10,
+          outputTokens: 3,
+          cacheReadTokens: 0,
+          cacheWriteTokens: 0,
+        },
+        cost: {
+          model: "local/provider-token-zero",
+          actualUsd: 0,
+          naiveUsd: 0,
+          savedUsd: 0,
+          savedPct: 0,
+          routeReason: "local-consolidation",
+          policyVersion: "3",
+          optimizerOverheadMs: 0,
+          operationId: "op_ecxidemsuccess001",
+        },
+        routeReason: "local-consolidation",
+      });
+    setGlobalDispatcher(mock);
+    const executePayload = {
+      packet,
+      workspaceId: "ws_personal",
+      scope: "personal",
+      maxSensitivity: "INTERNAL",
+      requestedAt: NOW,
+    };
+    try {
+      const first = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/execute",
+        payload: executePayload,
+      });
+      expect(first.statusCode).toBe(200);
+      expect(first.json()).toMatchObject({
+        state: "SUCCEEDED",
+        replayed: false,
+        recipient: "agent:idem-reviewer",
+        history: {
+          startedEventId: expect.stringMatching(/^evt_/),
+          outcomeEventId: expect.stringMatching(/^evt_/),
+        },
+        completion: { reply: "ECX_IDEMPOTENT_OK" },
+      });
+
+      const retry = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/execute",
+        payload: executePayload,
+      });
+      expect(retry.statusCode).toBe(200);
+      expect(retry.json()).toMatchObject({
+        state: "SUCCEEDED",
+        replayed: true,
+        completion: { reply: "ECX_IDEMPOTENT_OK" },
+      });
+
+      const packetId = (first.json() as { packetId: string }).packetId;
+      const status = await app.inject({
+        method: "GET",
+        url: `/v1/exchange/executions/${packetId}?workspaceId=ws_personal`,
+      });
+      expect(status.statusCode).toBe(200);
+      expect(status.json()).toMatchObject({
+        packetId,
+        state: "SUCCEEDED",
+        resultAvailable: true,
+        historySessionId: sessionId,
+      });
+
+      const wrongWorkspace = await app.inject({
+        method: "GET",
+        url: `/v1/exchange/executions/${packetId}?workspaceId=ws_other`,
+      });
+      expect(wrongWorkspace.statusCode).toBe(404);
+
+      const range = ledger.readRange({
+        sessionId,
+        afterSeq: -1,
+        limit: 10,
+        grant: { scope: "personal", maxSensitivity: "INTERNAL", hostedEligible: false },
+      });
+      expect(range.events.map((event) => event.eventType)).toEqual([
+        "agent.handoff",
+        "agent.execution.started",
+        "agent.execution.succeeded",
+      ]);
+      expect(ledger.getSession(sessionId)?.nextSeq).toBe(3);
+
+      const mutated = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/execute",
+        payload: { ...executePayload, requestedAt: "2026-09-09T00:00:01.000Z" },
+      });
+      expect(mutated.statusCode).toBe(409);
+      expect(mutated.body).toContain("ECX_EXECUTION_CONFLICT");
+    } finally {
+      setGlobalDispatcher(original);
+      await mock.close();
+    }
+  });
+
+  it("marks a definitive Connect 4xx as FAILED and blocks automatic redispatch", async () => {
+    const { ledger, app } = setup();
+    const sessionId = assertId("session", "sess_ecxidemfailed001");
+    ledger.createSession({
+      id: sessionId,
+      createdAt: NOW,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "CLOUD_ALLOWED",
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/v1/exchange/agents/agent:failed-reviewer",
+      payload: {
+        operationId: assertId("operation", "op_ecxfailedbinding001"),
+        workspaceId: "ws_personal",
+        target: "local",
+        capabilities: ["review"],
+        systemPrompt: "Execute the bounded ECX review.",
+        enabled: true,
+      },
+    });
+    new CapabilityRegistry(db!).grant(
+      CapabilityGrantRequestSchema.parse({
+        operationId: assertId("operation", "op_ecxfailedgrant001"),
+        workspaceId: "ws_personal",
+        subject: { kind: "agent", id: "agent:failed-reviewer" },
+        capabilityId: "model.invoke.local",
+        permissionIds: ["model.invoke", "execution.local"],
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        autonomy: "L1",
+        reason: "ECX Batch 2 failed-state test.",
+        idempotencyKey: "ecx-b2-failed-grant",
+      }),
+      NOW,
+    );
+    const plan = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/plan",
+      payload: {
+        operationId: assertId("operation", "op_ecxidemfailed001"),
+        requestedAt: NOW,
+        sender: "agent:planner",
+        intent: "review",
+        task: "This request will be rejected.",
+        need: ["review"],
+        refs: [],
+        budget: { maxHydratedBytes: 4096 },
+        candidates: [
+          { agentId: "agent:failed-reviewer", capabilities: ["review"], estimatedCost: 0 },
+        ],
+        historySessionId: sessionId,
+      },
+    });
+    const packet = (plan.json() as { packets: unknown[] }).packets[0];
+
+    const original = getGlobalDispatcher();
+    const mock = new MockAgent();
+    mock.disableNetConnect();
+    mock
+      .get("http://connect.invalid")
+      .intercept({ path: "/v1/complete", method: "POST" })
+      .reply(400, { error: { type: "BAD_REQUEST", message: "definitive reject" } });
+    setGlobalDispatcher(mock);
+    const executePayload = {
+      packet,
+      workspaceId: "ws_personal",
+      scope: "personal",
+      maxSensitivity: "INTERNAL",
+      requestedAt: NOW,
+    };
+    try {
+      const first = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/execute",
+        payload: executePayload,
+      });
+      expect(first.statusCode).toBe(400);
+      expect(first.body).toContain("ECX_EXECUTION_FAILED");
+
+      const retry = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/execute",
+        payload: executePayload,
+      });
+      expect(retry.statusCode).toBe(409);
+      expect(retry.body).toContain("ECX_EXECUTION_FAILED");
+
+      const packetId = (packet as { packetId: string }).packetId;
+      const status = await app.inject({
+        method: "GET",
+        url: `/v1/exchange/executions/${packetId}?workspaceId=ws_personal`,
+      });
+      expect(status.statusCode).toBe(200);
+      expect(status.json()).toMatchObject({
+        state: "FAILED",
+        resultAvailable: false,
+      });
+
+      const range = ledger.readRange({
+        sessionId,
+        afterSeq: -1,
+        limit: 10,
+        grant: { scope: "personal", maxSensitivity: "INTERNAL", hostedEligible: false },
+      });
+      expect(range.events.map((event) => event.eventType)).toEqual([
+        "agent.handoff",
+        "agent.execution.started",
+        "agent.execution.failed",
+      ]);
+    } finally {
+      setGlobalDispatcher(original);
+      await mock.close();
+    }
+  });
+
+  it("marks an ambiguous Connect 5xx as UNCERTAIN and blocks automatic redispatch", async () => {
+    const { ledger, app } = setup();
+    const sessionId = assertId("session", "sess_ecxidemuncertain001");
+    ledger.createSession({
+      id: sessionId,
+      createdAt: NOW,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "CLOUD_ALLOWED",
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/v1/exchange/agents/agent:uncertain-reviewer",
+      payload: {
+        operationId: assertId("operation", "op_ecxuncertainbinding001"),
+        workspaceId: "ws_personal",
+        target: "local",
+        capabilities: ["review"],
+        systemPrompt: "Execute the bounded ECX review.",
+        enabled: true,
+      },
+    });
+    new CapabilityRegistry(db!).grant(
+      CapabilityGrantRequestSchema.parse({
+        operationId: assertId("operation", "op_ecxuncertaingrant001"),
+        workspaceId: "ws_personal",
+        subject: { kind: "agent", id: "agent:uncertain-reviewer" },
+        capabilityId: "model.invoke.local",
+        permissionIds: ["model.invoke", "execution.local"],
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        autonomy: "L1",
+        reason: "ECX Batch 2 uncertain-state test.",
+        idempotencyKey: "ecx-b2-uncertain-grant",
+      }),
+      NOW,
+    );
+    const plan = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/plan",
+      payload: {
+        operationId: assertId("operation", "op_ecxidemuncertain001"),
+        requestedAt: NOW,
+        sender: "agent:planner",
+        intent: "review",
+        task: "This request will become ambiguous.",
+        need: ["review"],
+        refs: [],
+        budget: { maxHydratedBytes: 4096 },
+        candidates: [
+          {
+            agentId: "agent:uncertain-reviewer",
+            capabilities: ["review"],
+            estimatedCost: 0,
+          },
+        ],
+        historySessionId: sessionId,
+      },
+    });
+    const packet = (plan.json() as { packets: unknown[] }).packets[0];
+
+    const original = getGlobalDispatcher();
+    const mock = new MockAgent();
+    mock.disableNetConnect();
+    mock
+      .get("http://connect.invalid")
+      .intercept({ path: "/v1/complete", method: "POST" })
+      .reply(503, { error: { type: "PROVIDER_UNREACHABLE", message: "ambiguous upstream" } });
+    setGlobalDispatcher(mock);
+    const executePayload = {
+      packet,
+      workspaceId: "ws_personal",
+      scope: "personal",
+      maxSensitivity: "INTERNAL",
+      requestedAt: NOW,
+    };
+    try {
+      const first = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/execute",
+        payload: executePayload,
+      });
+      expect(first.statusCode).toBe(502);
+      expect(first.body).toContain("ECX_EXECUTION_UNCERTAIN");
+
+      const retry = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/execute",
+        payload: executePayload,
+      });
+      expect(retry.statusCode).toBe(409);
+      expect(retry.body).toContain("ECX_EXECUTION_UNCERTAIN");
+
+      const packetId = (packet as { packetId: string }).packetId;
+      const status = await app.inject({
+        method: "GET",
+        url: `/v1/exchange/executions/${packetId}?workspaceId=ws_personal`,
+      });
+      expect(status.statusCode).toBe(200);
+      expect(status.json()).toMatchObject({
+        state: "UNCERTAIN",
+        resultAvailable: false,
+      });
+
+      const range = ledger.readRange({
+        sessionId,
+        afterSeq: -1,
+        limit: 10,
+        grant: { scope: "personal", maxSensitivity: "INTERNAL", hostedEligible: false },
+      });
+      expect(range.events.map((event) => event.eventType)).toEqual([
+        "agent.handoff",
+        "agent.execution.started",
+        "agent.execution.uncertain",
+      ]);
+    } finally {
+      setGlobalDispatcher(original);
+      await mock.close();
+    }
+  });
+
   it("derives hosted eligibility from the recipient binding and rejects LOCAL_ONLY refs", async () => {
     const { ledger, app } = setup();
     const sessionId = assertId("session", "sess_ecxexecutelocal001");

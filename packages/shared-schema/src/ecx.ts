@@ -118,6 +118,7 @@ export const EcxPacketSchema = z.object({
   refs: z.array(EcxReferenceSchema).max(32),
   budget: EcxBudgetSchema,
   responseMode: z.enum(["delta", "full"]),
+  historySessionId: SessionIdSchema.optional(),
 });
 export type EcxPacket = z.infer<typeof EcxPacketSchema>;
 
@@ -262,24 +263,62 @@ export const EcxExecuteRequestSchema = z
   });
 export type EcxExecuteRequest = z.infer<typeof EcxExecuteRequestSchema>;
 
+export const EcxExecutionCompletionSchema = z.object({
+  reply: z.string(),
+  provider: z.string().min(1),
+  model: z.string().min(1),
+  responseModel: z.string().min(1),
+  modelIdentity: z.string().min(1),
+  modelIdentityPinned: z.boolean(),
+  cacheHit: z.boolean(),
+  routeReason: z.string().min(1),
+});
+export type EcxExecutionCompletion = z.infer<typeof EcxExecutionCompletionSchema>;
+
+export const EcxExecutionStateSchema = z.enum(["STARTED", "SUCCEEDED", "FAILED", "UNCERTAIN"]);
+export type EcxExecutionState = z.infer<typeof EcxExecutionStateSchema>;
+
+export const EcxExecutionStatusSchema = z
+  .object({
+    packetId: EventIdSchema,
+    operationId: OperationIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    recipient: EcxAgentIdSchema,
+    target: EcxRuntimeTargetSchema,
+    historySessionId: SessionIdSchema.nullable(),
+    state: EcxExecutionStateSchema,
+    hydratedBytes: z.number().int().nonnegative(),
+    selectedRefIndexes: z.array(z.number().int().nonnegative()),
+    error: z.string().nullable(),
+    resultAvailable: z.boolean(),
+    startedAt: TimestampSchema,
+    updatedAt: TimestampSchema,
+    completedAt: TimestampSchema.nullable(),
+  })
+  .strict();
+export type EcxExecutionStatus = z.infer<typeof EcxExecutionStatusSchema>;
+
+export const EcxExecutionLookupQuerySchema = z
+  .object({ workspaceId: WorkspaceIdSchema })
+  .strict();
+
 export const EcxExecuteResponseSchema = z
   .object({
     packetId: EventIdSchema,
     operationId: OperationIdSchema,
     recipient: EcxAgentIdSchema,
     target: EcxRuntimeTargetSchema,
+    state: z.literal("SUCCEEDED"),
+    replayed: z.boolean(),
     hydratedBytes: z.number().int().nonnegative(),
     selectedRefIndexes: z.array(z.number().int().nonnegative()),
-    completion: z.object({
-      reply: z.string(),
-      provider: z.string().min(1),
-      model: z.string().min(1),
-      responseModel: z.string().min(1),
-      modelIdentity: z.string().min(1),
-      modelIdentityPinned: z.boolean(),
-      cacheHit: z.boolean(),
-      routeReason: z.string().min(1),
-    }),
+    history: z
+      .object({
+        startedEventId: EventIdSchema.nullable(),
+        outcomeEventId: EventIdSchema.nullable(),
+      })
+      .strict(),
+    completion: EcxExecutionCompletionSchema,
   })
   .strict();
 export type EcxExecuteResponse = z.infer<typeof EcxExecuteResponseSchema>;

@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 ACTIVE-SAFE-WIP / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## ECX Recipient Execution roadmap — Batch 1 CLOSED / Batch 2 next
 
@@ -10,7 +10,7 @@ Status: **ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 NEXT-NOT-STARTED
 
 The completed boundary is intentionally narrow: single-recipient runtime binding and governed Hub -> Connect execution only. **Do not reopen Batch 1.** Do not add execution receipts, retry/idempotency semantics, Ledger execution lifecycle events, multi-recipient fan-out, aggregation, UI, A2A, or retention/compaction under the Batch 1 label.
 
-**Next queued slice: Batch 2 — Execution Contract + Idempotency + Provenance. It is NOT STARTED.** Resume from the exact merged main above and the canonical checkpoint: [verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md](verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md).
+**Batch 2 — Execution Contract + Idempotency + Provenance is ACTIVE.** Current safe WIP is on `agent/ecx-execution-idempotency-b2-20260927`. Resume from [verification/ecx-execution-b2-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b2-wip-checkpoint-2026-09-27.md), not by reopening Batch 1.
 
 ## Branch-hygiene final closure — 2026-09-27
 

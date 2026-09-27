@@ -76,6 +76,9 @@ export function planEcx(
     refs: [...input.refs],
     budget: input.budget,
     responseMode: input.responseMode,
+    ...(input.historySessionId === undefined
+      ? {}
+      : { historySessionId: input.historySessionId }),
   }));
   const packetBytes = packets.reduce(
     (total, packet) => total + Buffer.byteLength(JSON.stringify(packet), "utf8"),
