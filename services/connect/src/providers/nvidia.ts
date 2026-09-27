@@ -43,9 +43,7 @@ function adapterInput(input: Omit<NvidiaCallInput, "apiKey">) {
   };
 }
 
-export function estimateNvidiaReservationUsd(
-  input: Omit<NvidiaCallInput, "apiKey">,
-): number {
+export function estimateNvidiaReservationUsd(input: Omit<NvidiaCallInput, "apiKey">): number {
   return Math.max(
     NVIDIA_FREE_ENDPOINT_MIN_RESERVATION_USD,
     estimateOpenAiCompatibleReservationUsd(adapterInput(input)),
