@@ -2,13 +2,25 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 + BATCH 5 CLOSED-PASS / BATCH 6 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 + BATCH 5 + BATCH 6 CLOSED-PASS / BATCH 7 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-27 ECX Execution — Batch 6 closure
+
+Batch 6 — **Historical Ledger retention/compaction/migration is CLOSED / PASS** through canonical PR #374. Exact reviewed head `0ca40cd5f703b950997392967bd505e8271049be` passed CI #2338 and Product Eval #1577, then squash-merged to `main` as `32534adf140f66d3c97e47a0dd8162be2112800c`. Merged-main CI #2339 and Product Eval #1578 passed. Staging Deploy #1448 was gate-only; actual Staging Deploy #1449 deployed the exact merged SHA successfully as `staging-32534adf140f`.
+
+The closed boundary adds additive/restart-safe Hub DB lifecycle migration for Historical Ledger archive state, immutable gzip archive segments + EventId index, transparent archive+hot replay, preserved sequence/hash/EventId semantics, and fail-closed archive verification. Physical compaction moves only a verified contiguous old prefix under one immediate SQLite transaction while retaining the requested recent suffix hot; it does not rewrite logical history.
+
+Runtime proof on Staging Deploy #1449 matched exact SHA `32534adf140f66d3c97e47a0dd8162be2112800c`; public/auth and MCP smoke passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **29.89 GiB free**.
+
+Batch 6 deliberately does **not** add destructive logical-history expiration, automatic time-based purge scheduling, a new History/ECX UI, fan-out/A2A, Flow/Temporal long-running execution, Batch 5 metrics retention, or paid-provider benchmark work. **Batch 7 — Advanced execution/productization is NEXT / NOT STARTED.**
+
+Canonical safe-resume checkpoint: [verification/ecx-execution-b6-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b6-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–6, Historical Ledger core audits, branch hygiene, or historical W17/W18 evidence.**
 
 ## 2026-09-27 ECX Execution — Batch 5 closure
 
