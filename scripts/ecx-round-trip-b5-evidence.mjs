@@ -39,11 +39,7 @@ function completionEvidence(completion, leg, target) {
     failures.push(`${leg} usage telemetry missing or invalid`);
   }
   const cost = completion.cost;
-  if (
-    cost === null ||
-    typeof cost !== "object" ||
-    !finiteNonNegative(cost.actualUsd)
-  ) {
+  if (cost === null || typeof cost !== "object" || !finiteNonNegative(cost.actualUsd)) {
     failures.push(`${leg} actual cost telemetry missing or invalid`);
   }
   const settlement =
@@ -60,15 +56,14 @@ function completionEvidence(completion, leg, target) {
     modelIdentity:
       typeof completion.modelIdentity === "string" ? completion.modelIdentity : null,
     modelIdentityPinned: completion.modelIdentityPinned === true,
-    usage:
-      failures.some((failure) => failure.includes("usage telemetry"))
-        ? null
-        : {
-            inputTokens: usage.inputTokens,
-            outputTokens: usage.outputTokens,
-            cacheReadTokens: usage.cacheReadTokens,
-            cacheWriteTokens: usage.cacheWriteTokens,
-          },
+    usage: failures.some((failure) => failure.includes("usage telemetry"))
+      ? null
+      : {
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          cacheReadTokens: usage.cacheReadTokens,
+          cacheWriteTokens: usage.cacheWriteTokens,
+        },
     actualCostUsd:
       cost !== null && typeof cost === "object" && finiteNonNegative(cost.actualUsd)
         ? cost.actualUsd
@@ -139,8 +134,7 @@ export function evaluateRoundTripCase(input) {
       modelCalls: total.modelCalls + 1,
       inputTokens: total.inputTokens + Number(completion.usage?.inputTokens ?? 0),
       outputTokens: total.outputTokens + Number(completion.usage?.outputTokens ?? 0),
-      cacheReadTokens:
-        total.cacheReadTokens + Number(completion.usage?.cacheReadTokens ?? 0),
+      cacheReadTokens: total.cacheReadTokens + Number(completion.usage?.cacheReadTokens ?? 0),
       cacheWriteTokens:
         total.cacheWriteTokens + Number(completion.usage?.cacheWriteTokens ?? 0),
       actualCostUsd: total.actualCostUsd + Number(completion.actualCostUsd ?? 0),
