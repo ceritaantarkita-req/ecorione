@@ -431,11 +431,7 @@ describe("ECX Batch 7 fan-out round trip", () => {
       sessionId,
       operationId: "op_b7fanout004",
       sender: "agent:parent-size-b7",
-      recipients: [
-        "agent:child-size-a-b7",
-        "agent:child-size-b-b7",
-        "agent:child-size-c-b7",
-      ],
+      recipients: ["agent:child-size-a-b7", "agent:child-size-b-b7", "agent:child-size-c-b7"],
     });
 
     const original = getGlobalDispatcher();
