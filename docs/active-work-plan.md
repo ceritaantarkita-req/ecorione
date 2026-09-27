@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 CLOSED-PASS / BATCH 3 ACTIVE-SAFE-WIP / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 CLOSED-PASS / BATCH 4 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## ECX Recipient Execution roadmap — Batch 1 + Batch 2 CLOSED / Batch 3 next
+## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 CLOSED / Batch 4 next
 
 **Batch 1 is CLOSED / PASS.** PR #363 reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286 + Product Eval #1525 + MCP #1131 and merged as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed; Staging Deploy #1345 was gate-only and #1346 executed successfully.
 
@@ -12,7 +12,9 @@ The completed boundary is intentionally narrow: single-recipient runtime binding
 
 **Batch 2 — Execution Contract + Idempotency + Provenance is CLOSED / PASS.** PR #365 exact head `890030465570826eaca9c21f27aa13b0eb821e76` passed CI #2294 + Product Eval #1533 + MCP #1137 and merged as `851d58788075e1f11735b4c23e947edf3304eabe`. Merged-main CI #2295 + Product Eval #1534 + MCP #1138 passed; Staging Deploy #1361 was gate-only and #1362 executed successfully.
 
-**Batch 3 — Real Agent A -> Agent B round trip is ACTIVE / SAFE WIP.** Resume from [verification/ecx-execution-b3-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b3-wip-checkpoint-2026-09-27.md). The active boundary is single-recipient result return only: `delta` runs one parent continuation; `full` directly hands back the standalone child result. Do not add fan-out, aggregation, A2A, new UI, Flow/Temporal long-running execution, or Ledger retention/compaction.
+**Batch 3 — Real Agent A -> Agent B round trip is CLOSED / PASS.** PR #368 exact head `92f76e547c45c89f01f19159e7e373e101a592a0` passed CI #2304 + Product Eval #1543 + MCP #1145 and merged as `e784dde4ed891020e3c88712d4e660548a0e04c7`. Merged-main CI #2305 + Product Eval #1544 + MCP #1146 passed; Staging Deploy #1382 was gate-only and #1383 executed successfully.
+
+**Next queued slice: Batch 4 — Security, isolation, result integration. It is NOT STARTED.** Resume from [verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md). Do not reopen Batch 3, and do not pull fan-out, external A2A, UI expansion, Flow/Temporal long-running execution, or Ledger retention/compaction into Batch 4 unless that batch explicitly authorizes them.
 
 ## Branch-hygiene final closure — 2026-09-27
 
