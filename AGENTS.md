@@ -15,7 +15,7 @@ Before changing the repo:
 
 Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evidence. They are **not current work queues**.
 
-## Current compatibility baseline — 2026-09-27
+## Current compatibility baseline — 2026-09-28
 
 Audited Batch 7 closure/runtime compatibility baseline immediately before this docs-only reconciliation:
 
@@ -28,7 +28,7 @@ Operations      = healthy
 services        = 15/15 running
 ```
 
-Docs-only successors may advance the exact Git/staging SHA without changing this runtime compatibility boundary. Always inspect live `main` before starting new work.
+Docs-only successors may advance the exact Git/staging SHA without changing this runtime compatibility boundary. Latest audited docs-only repository/staging convergence before the final cleanup-closure pass is `72d680bfb944cc98f60caddcfc94bbffd45f0653` with CI #2356, Product Eval #1595, and actual Staging Deploy #1483 PASS. Always inspect live `main` before starting new work.
 
 Closed roadmap families:
 
@@ -142,7 +142,7 @@ SumoPod is staging, not production. The staging Basic-Auth human gate is a bound
 - preserve `.gitattributes`: text LF by default, `.cmd`/`.bat` CRLF;
 - delete merged temporary branches only after exact remote-SHA revalidation.
 
-The historical branch-hygiene checkpoint ended with 9 branches, but later ECX work created a new branch delta. Use the current reconciliation/allowlist rather than repeating the historical 393-branch audit.
+The historical 393-branch cleanup and the later post-ECX cleanup are both closed. The post-ECX one-time run deleted 17 targeted branches, self-deleted its helper, and restored the exact retained remote inventory to 9 branches. Do not rerun either historical classification merely for freshness; future branch growth must be handled as a new exact-SHA delta.
 
 ## Evidence discipline
 

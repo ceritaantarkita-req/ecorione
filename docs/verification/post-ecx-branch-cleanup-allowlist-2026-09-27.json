@@ -129,5 +129,21 @@
     "exact_matches": 15,
     "moved_or_missing": 0,
     "deletion_executed": false
+  },
+  "cleanup_execution": {
+    "at": "2026-09-28",
+    "main_sha": "72d680bfb944cc98f60caddcfc94bbffd45f0653",
+    "workflow": "Post-ECX Branch Cleanup One-Time",
+    "run_id": 36338085729,
+    "helper_branch": "ops/post-ecx-branch-cleanup-exec-20260928",
+    "helper_head": "bdc855031c6ecde9e82390368885e4a4d9036ccc",
+    "allowlisted_deleted": 15,
+    "reconciliation_branches_deleted": 2,
+    "helper_self_deleted": true,
+    "hold": 0,
+    "failed": 0,
+    "skip": 0,
+    "final_remote_branch_count": 9,
+    "result": "PASS"
   }
 }

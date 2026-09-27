@@ -1,8 +1,8 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-27**
+Last updated: **2026-09-28**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / CURRENT DOC LAYER RECONCILED / POST-ECX BRANCH CLEANUP READY-PENDING-EXECUTION**
+Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / CURRENT DOC LAYER RECONCILED / POST-ECX BRANCH CLEANUP CLOSED-PASS**
 
 ## Current queue
 
@@ -21,58 +21,23 @@ No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically open
 
 ## Repository housekeeping
 
-### 1. Current-doc reconciliation — CLOSED BY THIS RECONCILIATION
+Repository/documentation reconciliation and the post-ECX branch cleanup are both **CLOSED / PASS**.
 
-Goal:
-
-- make `README.md`, `AGENTS.md`, documentation navigation, current-state and progress summaries reflect exact current `main` + staging;
-- remove stale “current” branch-hygiene claims;
-- keep historical WIP/closure evidence intact;
-- separate current truth from dated evidence.
-
-Audited runtime baseline:
+Latest hygiene execution:
 
 ```text
-main / staging = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-CI             = #2352 PASS
-Product Eval   = #1591 PASS
-Staging Deploy = #1475 PASS
-services       = 15/15 running
-Operations     = healthy
-free disk      = 26.31 GiB stabilized
+Actions run                  = 36338085729
+post-ECX allowlist deleted   = 15
+reconciliation refs deleted  = 2
+helper self-deleted          = yes
+final remote branch count    = 9
+unexpected branches          = 0
 ```
 
 Evidence:
-[verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md).
+[verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md).
 
-### 2. Post-ECX branch cleanup — REMAINING / READY / NOT YET EXECUTED
-
-The historical 393-branch cleanup is finished and must not be rerun from zero.
-
-Later ECX work created 15 pre-reconciliation branches beyond the old 9-branch checkpoint.
-
-Those 15 branches are classified in:
-
-[verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json](verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json).
-
-Required execution sequence:
-
-```powershell
-./scripts/cleanup-merged-branches.ps1 \
-  -AllowlistPath docs/verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json
-```
-
-Review the dry-run. Only if every expected ref still matches:
-
-```powershell
-./scripts/cleanup-merged-branches.ps1 \
-  -AllowlistPath docs/verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json \
-  -Apply
-```
-
-If any remote SHA moved, hold that branch. Do not delete it by name alone.
-
-The current reconciliation branch is separate from the pre-audit 15 and should be deleted after merge when branch deletion tooling is available.
+There is no active repository-hygiene queue. Future branch growth must be handled as a new exact-SHA delta, not by rerunning the historical 393-branch or post-ECX cleanup.
 
 ## ECX Recipient Execution baseline — CLOSED / PASS
 

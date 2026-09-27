@@ -13,7 +13,8 @@ Historical evidence may contain statements that were correct at the time but are
 ## Latest repository truth
 
 - [repository-truth-reconciliation-2026-09-27.md](repository-truth-reconciliation-2026-09-27.md) — latest audit/reconciliation of current `main`, staging, docs drift and post-ECX branch delta.
-- [post-ecx-branch-cleanup-allowlist-2026-09-27.json](post-ecx-branch-cleanup-allowlist-2026-09-27.json) — exact-SHA cleanup candidates for the 15 pre-reconciliation ECX branches; deletion is not claimed until execution.
+- [post-ecx-branch-cleanup-execution-2026-09-28.md](post-ecx-branch-cleanup-execution-2026-09-28.md) — FINAL / CLOSED / PASS execution record for the post-ECX branch delta; 17 targeted branches were deleted, the helper self-deleted, and final remote inventory returned to 9 branches.
+- [post-ecx-branch-cleanup-allowlist-2026-09-27.json](post-ecx-branch-cleanup-allowlist-2026-09-27.json) — exact-SHA classification/revalidation source for the 15 ECX branches, now paired with completed execution evidence.
 - [branch-hygiene-safe-checkpoint-2026-09-27.md](branch-hygiene-safe-checkpoint-2026-09-27.md) — historical final checkpoint for the earlier 393-branch cleanup. Its 9-branch inventory is correct for that checkpoint but is not the current inventory after later ECX work.
 
 ## ECX Recipient Execution
@@ -39,7 +40,8 @@ Files named `*-wip-checkpoint-*` are preserved implementation evidence and are e
 - [branch-hygiene-audit-2026-09-27.md](branch-hygiene-audit-2026-09-27.md) — historical classification work.
 - [branch-hygiene-execution-2026-09-27.md](branch-hygiene-execution-2026-09-27.md) — destructive cleanup execution evidence.
 - [branch-hygiene-safe-checkpoint-2026-09-27.md](branch-hygiene-safe-checkpoint-2026-09-27.md) — historical closure of the 393-entry cleanup set.
-- [repository-truth-reconciliation-2026-09-27.md](repository-truth-reconciliation-2026-09-27.md) — current post-ECX reconciliation.
+- [repository-truth-reconciliation-2026-09-27.md](repository-truth-reconciliation-2026-09-27.md) — current post-ECX reconciliation and closure context.
+- [post-ecx-branch-cleanup-execution-2026-09-28.md](post-ecx-branch-cleanup-execution-2026-09-28.md) — completed exact-SHA post-ECX cleanup.
 
 Do not rerun the historical 393-branch classification from zero. New branch work must be handled as a delta against current Git state.
 

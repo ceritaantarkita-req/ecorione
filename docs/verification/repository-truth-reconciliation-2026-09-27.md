@@ -1,12 +1,52 @@
 # Repository Truth Reconciliation — 2026-09-27
 
-Status: **CLOSED / PASS — CURRENT DOC LAYER RECONCILED / POST-ECX BRANCH CLEANUP READY-PENDING-DELETION**
+Status: **FINAL / CLOSED / PASS — CURRENT DOC LAYER RECONCILED / POST-ECX BRANCH CLEANUP COMPLETE**
 
 ## Purpose
 
 Reconcile ECORIONE's current/canonical documentation and post-ECX Git branch inventory with the repository and staging state that actually exists after ECX Recipient Execution Batch 1–7.
 
 This is not Batch 8, PE-09, PCS-11, Batch 13, a new A-series feature, DR-2 runtime work, or production cutover.
+
+## Superseding post-ECX cleanup closure — 2026-09-28
+
+The branch cleanup that was still pending at the PR #378/#379 documentation checkpoint is now **FINAL / CLOSED / PASS**.
+
+Execution baseline:
+
+```text
+main        = 72d680bfb944cc98f60caddcfc94bbffd45f0653
+open PRs    = 0
+remote refs = 26 before one-time helper creation
+```
+
+One-time execution:
+
+```text
+workflow     = Post-ECX Branch Cleanup One-Time
+Actions run  = 36338085729
+helper branch= ops/post-ecx-branch-cleanup-exec-20260928
+helper head  = bdc855031c6ecde9e82390368885e4a4d9036ccc
+result       = PASS
+```
+
+The run proved:
+
+```text
+allowlisted dry-run = 15 would-delete / 0 missing / 0 hold / 0 fail / 0 skip
+allowlisted apply   = 15 deleted / 0 missing / 0 hold / 0 fail / 0 skip
+reconciliation refs = 2 exact refs deleted
+helper branch       = self-deleted
+final remote count  = 9
+unexpected branches = 0
+```
+
+One reconciliation branch had moved after PR #378; it was held, audited, and only admitted after its changed verification files were proven byte-identical to current `main`, then its live tip `4f0f1f25e4674c484efb99a796a0fedbccd7a906` was exact-ref revalidated.
+
+Canonical execution evidence:
+[post-ecx-branch-cleanup-execution-2026-09-28.md](post-ecx-branch-cleanup-execution-2026-09-28.md).
+
+This supersedes the later “cleanup pending” statements preserved below as chronological PR #378/#379 checkpoint evidence.
 
 ## Final reconciliation delivery
 
@@ -47,7 +87,7 @@ Runtime evidence from #1479:
 
 The reconciliation changed documentation only; application/service/package runtime ownership and behavior were not changed.
 
-Post-merge remote branch inventory is **25 branches** because GitHub retains merged branches by repository policy and the reconciliation branch itself remains present.
+At the PR #378 post-merge checkpoint, remote branch inventory was **25 branches** because GitHub retained merged branches by repository policy and the reconciliation branch itself remained present.
 
 The 15 pre-reconciliation ECX cleanup candidates were revalidated after merge against live remote refs:
 
@@ -58,7 +98,7 @@ moved/missing  = 0
 deleted        = 0
 ```
 
-Therefore the cleanup allowlist remains valid, but deletion is still pending. Do not claim branch cleanup complete until the exact-SHA delete operation actually executes.
+At that checkpoint the cleanup allowlist remained valid and deletion was still pending. That checkpoint is superseded by the 2026-09-28 cleanup closure above.
 
 ## Audited repository identity
 

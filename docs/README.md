@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-27**
+Last updated: **2026-09-28**
 
 This is the single navigation entry point for repository documentation.
 
@@ -98,13 +98,13 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current staging / DR truth
 
-The exact audited Batch 7 closure/runtime baseline immediately before this docs-only reconciliation was:
+Runtime compatibility remains the closed Batch 7 implementation. The latest audited docs-only repository/staging convergence before this cleanup-closure pass is:
 
 ```text
-2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+72d680bfb944cc98f60caddcfc94bbffd45f0653
 ```
 
-Merged-main CI #2352, Product Eval #1591, and actual Staging Deploy #1475 all passed; staging reported healthy Operations, 15/15 services running, exact-SHA match, and 26.31 GiB stabilized free disk. Docs-only successors may advance Git/staging revision identity without changing that runtime compatibility boundary.
+CI #2356, Product Eval #1595, and actual Staging Deploy #1483 passed; staging reported healthy Operations, 15/15 services running, exact-SHA match, and 28.79 GiB stabilized free disk. Later docs-only closure commits may advance exact Git/staging identity without changing the Batch 7 runtime compatibility boundary.
 
 SumoPod remains **staging, not production**.
 
@@ -112,13 +112,20 @@ Original Off-host DR is CLOSED / PASS at its documented total-SumoPod-host-loss 
 
 ## Repository hygiene
 
-The historical branch-hygiene work completed its 393-branch exact-SHA safe-delete set. Later ECX work created a new bounded branch delta, so the historical 9-branch inventory must not be used as current repository truth.
+The historical branch-hygiene work completed its 393-entry exact-SHA safe-delete set. A later ECX/reconciliation delta was then handled separately and is now **CLOSED / PASS**.
 
-Current post-ECX cleanup classification:
+Post-ECX cleanup execution:
 
+- exact-SHA dry-run: 15/15 allowlisted branches eligible, zero hold/fail/skip;
+- exact reconciliation refs: 2/2 validated and deleted;
+- one-time helper self-deleted;
+- final remote inventory: **9 branches**;
+- unexpected branches: **0**.
+
+Evidence:
+
+- [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - [verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json](verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json)
-
-Deletion is only valid after exact remote-SHA revalidation.
 
 ## Verification / evidence
 
@@ -129,6 +136,7 @@ Use [verification/README.md](verification/README.md) for the evidence index.
 Important current pointers:
 
 - repository truth reconciliation: [verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md)
+- post-ECX branch cleanup: [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - ECX B7 final checkpoint: [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md)
 - original branch-hygiene closure: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md)
 - A-11 closure: [verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md](verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md)

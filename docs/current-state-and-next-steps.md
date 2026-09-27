@@ -1,55 +1,43 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-27**
+Last updated: **2026-09-28**
 
 Status: **CURRENT / REPOSITORY+STAGING CONVERGED / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
-repository      = ceritaantarkita-req/ecorione
-default branch  = main
-audited closure = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+repository              = ceritaantarkita-req/ecorione
+default branch          = main
+runtime compatibility   = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+latest audited docs SHA = 72d680bfb944cc98f60caddcfc94bbffd45f0653
 ```
 
-`2c2e3c8...` is the exact audited Batch 7 closure/runtime baseline immediately before this docs-only reconciliation. The reconciliation itself may advance the Git/staging SHA without changing application/service/package behavior; inspect live `main` for the newest exact Git revision.
-
-At the latest audit boundary before the current reconciliation branch was created:
-
-```text
-open PRs        = 0
-open issues     = 1 (#277 DR-2)
-remote branches = 24
-tracked files   = 1,011
-docs files      = 269
-verification    = 161 files
-```
-
-The old branch-hygiene checkpoint's 9-branch inventory is historical. Fifteen ECX implementation/closure branches were created after that checkpoint.
+`2c2e3c8...` remains the exact closed Batch 7 runtime compatibility baseline. The later reconciliation commits are docs/evidence only.
 
 ## Current runtime / staging truth
 
-At the audit boundary immediately before this docs-only reconciliation, governed SumoPod staging was deployed from the same exact revision as repository `main`:
+Latest audited docs-only repository/staging convergence before this cleanup-closure pass:
 
 ```text
-SHA   = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-image = staging-2c2e3c8ad1b4
+SHA   = 72d680bfb944cc98f60caddcfc94bbffd45f0653
+image = staging-72d680bfb944
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| CI #2352 | PASS |
-| Product Eval #1591 | PASS |
-| Staging Deploy #1474 | gate-only PASS |
-| Staging Deploy #1475 | actual deploy PASS |
+| CI #2356 | PASS |
+| Product Eval #1595 | PASS |
+| Staging Deploy #1482 | gate PASS |
+| Staging Deploy #1483 | actual deploy PASS |
 | expected host SHA | matched |
 | Operations | `healthy: true` |
 | unhealthy services | 0 |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| stabilized free disk | 26.31 GiB |
+| stabilized free disk | 28.79 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -168,33 +156,34 @@ Do not downgrade or rewrite the original DR closure merely because DR-2 remains 
 
 ## Repository / branch hygiene
 
-The historical branch-hygiene program deleted its complete 393-entry exact-SHA safe-delete set and was correctly CLOSED / PASS at that time.
+Both bounded cleanup waves are now **CLOSED / PASS**.
 
-Subsequent ECX work created a new bounded branch delta.
-
-Before this reconciliation branch:
+Historical cleanup:
 
 ```text
-remote branches = 24
-historical baseline after prior cleanup = 9
-new post-checkpoint delta = 15
+393 / 393 historical exact-SHA safe-delete entries absent
 ```
 
-Those 15 pre-reconciliation ECX branches are classified in:
+Post-ECX cleanup (Actions run `36338085729`):
 
-[verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json](verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json).
+```text
+15 allowlisted ECX branches deleted
+2 reconciliation branches deleted after exact-ref validation
+1 temporary helper self-deleted
+final remote branch count = 9
+unexpected branches = 0
+```
 
-They must not be reported as deleted until the existing cleanup script runs with exact-SHA revalidation.
+The retained 9-branch set is `main`, seven retained substantive/provenance branches, and the historical branch-hygiene checkpoint branch.
 
-The current reconciliation branch itself is separate temporary bookkeeping and should also be removed after merge when deletion tooling is available.
+Execution evidence:
+[verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md).
 
 ## Current active work
 
-There is **no active product/runtime implementation scope**.
+There is **no active product/runtime implementation scope and no active repository-hygiene scope**.
 
-This reconciliation closes the current/canonical documentation drift without changing runtime behavior. The only remaining repository housekeeping is exact-SHA cleanup of the post-ECX branch delta when deletion tooling is available.
-
-No new roadmap is opened.
+Current docs are reconciled, the post-ECX branch delta is cleaned, and no new roadmap is opened.
 
 ## Explicit deferred / separately selectable future scopes
 

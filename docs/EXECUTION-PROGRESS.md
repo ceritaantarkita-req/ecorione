@@ -1,23 +1,24 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-09-27**
+Last updated: **2026-09-28**
 
 Status: **CURRENT SUMMARY**
 
-## Audited closure/runtime baseline
+## Audited repository/staging baseline
 
-Immediately before this docs-only reconciliation:
+Runtime compatibility remains the closed Batch 7 implementation. Latest audited docs-only repository/staging convergence before this cleanup-closure pass:
 
 ```text
-closure / staging = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-CI                = #2352 PASS
-Product Eval      = #1591 PASS
-Staging Deploy    = #1475 PASS
-Operations        = healthy
-services          = 15/15 running
+repository / staging = 72d680bfb944cc98f60caddcfc94bbffd45f0653
+CI                   = #2356 PASS
+Product Eval         = #1595 PASS
+Staging Deploy       = #1483 PASS
+Operations           = healthy
+services             = 15/15 running
+free disk            = 28.79 GiB stabilized
 ```
 
-Docs-only successors may advance exact Git/staging identity without changing this compatibility boundary.
+Later docs-only closure commits may advance exact Git/staging identity without changing the Batch 7 runtime compatibility boundary.
 
 ## Closed foundational roadmaps
 
@@ -154,35 +155,31 @@ Issue #277 remains the DR-2 tracker.
 
 ## Repository hygiene
 
-Historical branch hygiene:
+| Cleanup scope | State |
+|---|---|
+| Historical 393-entry exact-SHA cleanup | CLOSED / PASS |
+| Post-ECX branch delta cleanup | CLOSED / PASS |
+| Final retained remote inventory | 9 branches |
+
+Post-ECX Actions run `36338085729` dry-ran 15/15 allowlisted branches with zero hold/fail/skip, deleted all 15, exact-validated and deleted 2 reconciliation branches, self-deleted its helper, and proved:
 
 ```text
-393 / 393 historical safe-delete entries removed
-7 retained branches + 1 checkpoint branch + main
-historical final inventory = 9 branches
+POST_ECX_BRANCHES_DELETED=17
+FINAL_REMOTE_BRANCH_COUNT=9
+POST_ECX_BRANCH_CLEANUP=PASS
 ```
 
-That 9-branch inventory is no longer current because later ECX work created a new branch delta.
-
-Pre-reconciliation audit:
-
-```text
-current remote branches = 24
-post-historical-checkpoint delta = 15 ECX branches
-```
-
-The 15 branches are classified for exact-SHA cleanup in:
-[verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json](verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json).
-
-Deletion remains pending execution and must not be claimed before the exact-SHA cleanup actually runs.
+Evidence:
+[verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md).
 
 ## Current work state
 
 | Scope | State |
 |---|---|
 | Product/runtime implementation | NONE ACTIVE |
-| Repository truth/docs reconciliation | CLOSED / DOCS-ONLY RECONCILED |
-| Post-ECX branch delta cleanup | READY / PENDING EXECUTION |
+| Repository truth/docs reconciliation | CLOSED / PASS |
+| Post-ECX branch delta cleanup | CLOSED / PASS |
+| Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
 
