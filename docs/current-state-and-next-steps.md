@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 CLOSED-PASS / BATCH 3 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -10,11 +10,15 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
-## 2026-09-27 ECX Recipient Execution — Batch 2 ACTIVE safe checkpoint
+## 2026-09-27 ECX Execution — Batch 2 closure
 
-Batch 2 — **Execution Contract + Idempotency + Provenance** is ACTIVE on branch `agent/ecx-execution-idempotency-b2-20260927`. The implementation is deliberately limited to single-recipient durable execution receipts, retry/dispatch semantics, status lookup, and bounded Historical Ledger lifecycle provenance. Multi-recipient execution, result integration, A2A, UI, and Ledger retention remain out of scope.
+Batch 2 — **Execution Contract + Idempotency + Provenance is CLOSED / PASS** through PR #365. Exact reviewed head `890030465570826eaca9c21f27aa13b0eb821e76` passed CI #2294, Product Eval #1533, and MCP External HTTPS Acceptance #1137, then merged to `main` as `851d58788075e1f11735b4c23e947edf3304eabe`. Merged-main CI #2295, Product Eval #1534, and MCP #1138 passed. Staging Deploy #1361 was gate-only; Staging Deploy #1362 executed the exact reviewed main successfully.
 
-Safe-resume checkpoint: [verification/ecx-execution-b2-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b2-wip-checkpoint-2026-09-27.md). **Do not restart Batch 1 or historical ECX audits.**
+The closed boundary adds durable single-recipient execution receipts, request-fingerprint conflict detection, `STARTED | SUCCEEDED | FAILED | UNCERTAIN` lifecycle state, one-claim dispatch protection, successful-result replay without a second Connect call, fail-closed retry behavior for FAILED/UNCERTAIN receipts, Workspace-scoped status lookup, packet-linked `historySessionId`, and deterministic Historical Ledger execution lifecycle provenance. Historical Ledger remains chronological/replay evidence; Connect remains provider/runtime owner; the receipt is a bounded dispatch guard and not a second event store.
+
+Batch 2 deliberately does **not** implement multi-recipient/fan-out execution, result/delta merge into a parent agent, a full Agent A -> Agent B -> Agent A product round trip, long-running Flow/Temporal execution, A2A, new UI, or Ledger retention/compaction. **Batch 3 — Real Agent A -> Agent B round trip is NEXT / NOT STARTED.**
+
+Canonical safe-resume checkpoint: [verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md). **Do not restart Batch 1, Batch 2, or historical ECX selector/economics audits.**
 
 ## 2026-09-27 ECX Recipient Execution — Batch 1 closure
 
