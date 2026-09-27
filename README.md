@@ -4,26 +4,18 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-## Current status — 2026-09-27
+## Current status — 2026-09-28
 
-The last audited Batch 7 closure/runtime baseline before this docs-only reconciliation is:
+The runtime compatibility baseline remains the closed ECX Batch 7 implementation. The latest audited docs-only repository/staging convergence before this cleanup-closure pass is:
 
 ```text
-reviewed closure = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-staging image    = staging-2c2e3c8ad1b4
+repository/staging = 72d680bfb944cc98f60caddcfc94bbffd45f0653
+image              = staging-72d680bfb944
 ```
 
-Docs-only reconciliation commits may advance Git/staging revision identity without changing the application/service/package compatibility baseline. Use the live repository head for the exact newest Git SHA and the dated reconciliation evidence for audited identities.
+That docs-only closure passed CI **#2356**, Product Eval **#1595**, and actual Staging Deploy **#1483**; Operations was `healthy: true`, **15/15** configured services were running, exact host SHA matched, and capacity stabilized at **28.79 GiB free**.
 
-Latest proof for the audited closure baseline:
-
-- CI **#2352** — PASS;
-- Product Eval **#1591** — PASS;
-- actual Staging Deploy **#1475** — PASS;
-- Operations `healthy: true`;
-- **15/15** configured services running;
-- exact host SHA matched expected SHA;
-- final stabilized free disk: **26.31 GiB**.
+The post-ECX branch delta has also been cleaned with exact-SHA revalidation: **17 targeted branches deleted**, the one-time execution helper self-deleted, and the remote inventory returned to **9 branches**.
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
@@ -136,10 +128,18 @@ SumoPod is **verified staging, not production**.
 
 ## Repository hygiene
 
-The original branch-hygiene program deleted its full historical **393/393** exact-SHA safe-delete set. Subsequent ECX work created a new bounded branch delta. That post-ECX delta is classified separately and must be exact-SHA revalidated before deletion; do not reuse the historical 9-branch inventory as a current claim.
+The historical branch-hygiene program deleted its full **393/393** exact-SHA safe-delete set. Later ECX/reconciliation work created a bounded delta; that delta is now also **CLOSED / PASS** after exact-SHA dry-run and deletion.
 
-Current reconciliation:
-[docs/verification/repository-truth-reconciliation-2026-09-27.md](docs/verification/repository-truth-reconciliation-2026-09-27.md).
+Final cleanup execution:
+
+- 15 post-ECX allowlisted branches deleted;
+- 2 reconciliation branches deleted after exact ref validation;
+- one-time helper self-deleted;
+- final remote inventory: **9 branches**;
+- unexpected branches: **0**.
+
+Evidence:
+[docs/verification/post-ecx-branch-cleanup-execution-2026-09-28.md](docs/verification/post-ecx-branch-cleanup-execution-2026-09-28.md).
 
 ## Local development
 
