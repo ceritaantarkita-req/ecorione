@@ -531,7 +531,10 @@ export function registerExchangeRoutes(
     const automatic = input.selection !== undefined;
     if (automatic) {
       metrics.addCounter("ecorione_ecx_auto_selections_total");
-      metrics.addCounter("ecorione_ecx_auto_selection_candidates_total", input.packet.refs.length);
+      metrics.addCounter(
+        "ecorione_ecx_auto_selection_candidates_total",
+        input.packet.refs.length,
+      );
     }
     const response = await hydratePacket(input, ledger, options);
     if (automatic) {
@@ -614,9 +617,11 @@ export function registerExchangeRoutes(
 
     let completion: ConnectCompletionResult;
     try {
-      completion = await httpJson<ConnectCompletionResult>(`${options.connectUrl}/v1/complete`, {
-        token: options.internalToken,
-        body: {
+      completion = await httpJson<ConnectCompletionResult>(
+        `${options.connectUrl}/v1/complete`,
+        {
+          token: options.internalToken,
+          body: {
           target: binding.target,
           prefix: {
             systemPrompt: [
@@ -631,9 +636,10 @@ export function registerExchangeRoutes(
           userMessage: input.packet.task,
           sensitivity: input.maxSensitivity,
           operationId: input.packet.operationId,
-          now: input.requestedAt,
+            now: input.requestedAt,
+          },
         },
-      });
+      );
     } catch (error) {
       throw new BadGatewayError(
         `Connect tidak tersedia untuk ECX recipient execution: ${

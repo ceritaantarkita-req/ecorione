@@ -221,8 +221,10 @@ describe("ECX HTTP integration", () => {
     }
   });
 
-  it("derives hosted eligibility from the recipient binding and rejects LOCAL_ONLY refs", async () => {
-    const { ledger, app } = setup();
+  it(
+    "derives hosted eligibility from the recipient binding and rejects LOCAL_ONLY refs",
+    async () => {
+      const { ledger, app } = setup();
     const sessionId = assertId("session", "sess_ecxexecutelocal001");
     ledger.createSession({
       id: sessionId,
@@ -308,9 +310,10 @@ describe("ECX HTTP integration", () => {
         requestedAt: NOW,
       },
     });
-    expect(executed.statusCode).toBe(404);
-    expect(executed.body).toContain("History reference tidak tersedia");
-  });
+      expect(executed.statusCode).toBe(404);
+      expect(executed.body).toContain("History reference tidak tersedia");
+    },
+  );
 
   it("automatically selects a relevant history reference before hydration", async () => {
     const { ledger, app } = setup();
