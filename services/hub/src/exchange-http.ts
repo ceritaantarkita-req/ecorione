@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   CapabilityAuthorizationRequestSchema,
   EcxAgentBindingListQuerySchema,
@@ -5,20 +6,26 @@ import {
   EcxAgentIdSchema,
   EcxExecuteRequestSchema,
   EcxExecuteResponseSchema,
+  EcxExecutionCompletionSchema,
+  EcxExecutionLookupQuerySchema,
   EcxHydrateRequestSchema,
   EcxHydrateResponseSchema,
   EcxPlanRequestSchema,
   EcxPlanResponseSchema,
   type ArtifactPointer,
   type EcxExecuteResponse,
+  type EcxExecutionStatus,
   type EcxHydrateRequest,
   type EcxHydrateResponse,
   type EcxHydratedItem,
   type EcxPacket,
   type EcxReference,
+  type EventId,
   type HistoryEventDraft,
   type MemoryFact,
   type Sensitivity,
+  assertId,
+  EventIdSchema,
 } from "@ecorione/shared-schema";
 import {
   BadGatewayError,
@@ -38,7 +45,13 @@ import type { CapabilityRegistry } from "./capability-registry.js";
 import { nowIso } from "./clock.js";
 import type { EcxAgentRegistry } from "./ecx-agent-registry.js";
 import {
+  EcxExecutionConflictError,
+  EcxExecutionNotFoundError,
+  type EcxExecutionStore,
+} from "./ecx-execution-store.js";
+import {
   HistoryAccessDeniedError,
+  HistoryEventConflictError,
   HistoryIntegrityError,
   type HistoryLedger,
   HistorySessionNotFoundError,
@@ -450,11 +463,175 @@ function executionPermissions(target: "local" | "hosted") {
       };
 }
 
+function executionFingerprint(
+  input: ReturnType<typeof EcxExecuteRequestSchema.parse>,
+  target: "local" | "hosted",
+  hydration: EcxHydrateResponse,
+): string {
+  return createHash("sha256")
+    .update(
+      JSON.stringify({
+        packet: input.packet,
+        workspaceId: input.workspaceId,
+        scope: input.scope,
+        maxSensitivity: input.maxSensitivity,
+        requestedAt: input.requestedAt,
+        target,
+        selectedRefIndexes: hydration.items.map((item) => item.index),
+        hydratedItems: hydration.items.map((item) => ({
+          index: item.index,
+          ref: item.ref,
+          mediaType: item.mediaType,
+          sizeBytes: item.sizeBytes,
+          contentBase64: item.contentBase64,
+        })),
+      }),
+    )
+    .digest("hex");
+}
+
+function executionEventId(packetId: EventId, stage: string): EventId {
+  const digest = createHash("sha256")
+    .update([`ecx-execution-v1`, packetId, stage].join("\u0000"))
+    .digest("hex");
+  return assertId("event", `evt_${digest.slice(0, 24)}`);
+}
+
+function mapExecutionHistoryError(error: unknown): never {
+  if (error instanceof HistorySessionNotFoundError) {
+    throw new NotFoundError("History session ECX execution tidak ditemukan.");
+  }
+  if (error instanceof HistoryEventConflictError) {
+    throw new HttpError(409, "ECX_EXECUTION_HISTORY_CONFLICT", error.message);
+  }
+  if (error instanceof HistoryIntegrityError) {
+    throw new HttpError(500, "HISTORY_INTEGRITY_ERROR", error.message);
+  }
+  throw error;
+}
+
+function appendExecutionStarted(
+  ledger: HistoryLedger,
+  status: EcxExecutionStatus,
+  packet: EcxPacket,
+): EventId | null {
+  if (status.historySessionId === null) return null;
+  const eventId = executionEventId(status.packetId, "started");
+  try {
+    ledger.appendNext(status.historySessionId, {
+      id: eventId,
+      recordedAt: status.startedAt,
+      eventType: "agent.execution.started",
+      actor: "hub:exchange",
+      operationId: status.operationId,
+      parentEventId: packet.packetId,
+      payload: {
+        packetId: status.packetId,
+        sender: packet.sender,
+        recipient: status.recipient,
+        target: status.target,
+        state: "STARTED",
+        hydratedBytes: status.hydratedBytes,
+        selectedRefIndexes: status.selectedRefIndexes,
+      },
+    });
+  } catch (error) {
+    mapExecutionHistoryError(error);
+  }
+  return eventId;
+}
+
+function appendExecutionOutcome(
+  ledger: HistoryLedger,
+  status: EcxExecutionStatus,
+  packet: EcxPacket,
+  response: EcxExecuteResponse | null,
+): EventId | null {
+  if (status.historySessionId === null || status.state === "STARTED") return null;
+  const stage = status.state.toLowerCase();
+  const eventId = executionEventId(status.packetId, stage);
+  const eventType =
+    status.state === "SUCCEEDED"
+      ? "agent.execution.succeeded"
+      : status.state === "FAILED"
+        ? "agent.execution.failed"
+        : "agent.execution.uncertain";
+  const recordedAt = status.completedAt ?? status.updatedAt;
+  const completion =
+    status.state === "SUCCEEDED" && response !== null
+      ? {
+          provider: response.completion.provider,
+          model: response.completion.model,
+          responseModel: response.completion.responseModel,
+          modelIdentity: response.completion.modelIdentity,
+          modelIdentityPinned: response.completion.modelIdentityPinned,
+          cacheHit: response.completion.cacheHit,
+          routeReason: response.completion.routeReason,
+        }
+      : {};
+  try {
+    ledger.appendNext(status.historySessionId, {
+      id: eventId,
+      recordedAt,
+      eventType,
+      actor: "hub:exchange",
+      operationId: status.operationId,
+      parentEventId: packet.packetId,
+      payload: {
+        packetId: status.packetId,
+        recipient: status.recipient,
+        target: status.target,
+        state: status.state,
+        hydratedBytes: status.hydratedBytes,
+        selectedRefIndexes: status.selectedRefIndexes,
+        error: status.error,
+        ...completion,
+      },
+    });
+  } catch (error) {
+    mapExecutionHistoryError(error);
+  }
+  return eventId;
+}
+
+function retryExecution(
+  executions: EcxExecutionStore,
+  ledger: HistoryLedger,
+  packet: EcxPacket,
+  begun: ReturnType<EcxExecutionStore["begin"]>,
+): EcxExecuteResponse | null {
+  const status = begun.status;
+  if (status.state === "STARTED") return null;
+  appendExecutionStarted(ledger, status, packet);
+  if (status.state === "SUCCEEDED") {
+    const prior = begun.priorResult;
+    if (prior === null) {
+      throw new HttpError(
+        500,
+        "ECX_EXECUTION_RECEIPT_CORRUPT",
+        "Receipt SUCCEEDED tidak memiliki durable result.",
+      );
+    }
+    appendExecutionOutcome(ledger, status, packet, prior);
+    return EcxExecuteResponseSchema.parse({ ...prior, replayed: true });
+  }
+  appendExecutionOutcome(ledger, status, packet, begun.priorResult);
+  throw new HttpError(
+    409,
+    status.state === "FAILED" ? "ECX_EXECUTION_FAILED" : "ECX_EXECUTION_UNCERTAIN",
+    status.state === "FAILED"
+      ? "Execution sebelumnya gagal definitif; gunakan packet/operation baru untuk retry."
+      : "Execution sebelumnya sudah/mungkin didispatch; outcome tidak boleh dipanggil ulang otomatis.",
+    { packetId: status.packetId, state: status.state },
+  );
+}
+
 export function registerExchangeRoutes(
   app: FastifyInstance,
   ledger: HistoryLedger,
   agents: EcxAgentRegistry,
   authority: CapabilityRegistry,
+  executions: EcxExecutionStore,
   options: ExchangeRouteOptions,
 ): void {
   const metrics = observabilityFor(app);
@@ -546,6 +723,22 @@ export function registerExchangeRoutes(
     return response;
   });
 
+  app.get<{ Params: { packetId: string } }>(
+    "/v1/exchange/executions/:packetId",
+    async (req) => {
+      const packetId = parseOrBadRequest(EventIdSchema, req.params.packetId);
+      const query = parseOrBadRequest(EcxExecutionLookupQuerySchema, req.query);
+      try {
+        return executions.get(packetId, query.workspaceId);
+      } catch (error) {
+        if (error instanceof EcxExecutionNotFoundError) {
+          throw new NotFoundError(error.message);
+        }
+        throw error;
+      }
+    },
+  );
+
   app.post("/v1/exchange/execute", async (req) => {
     const input = parseOrBadRequest(EcxExecuteRequestSchema, req.body);
     const binding = agents.get(input.workspaceId, input.packet.recipient);
@@ -615,11 +808,58 @@ export function registerExchangeRoutes(
       );
     }
 
-    let completion: ConnectCompletionResult;
+    let begun: ReturnType<EcxExecutionStore["begin"]>;
+    const receiptNow = nowIso();
     try {
-      completion = await httpJson<ConnectCompletionResult>(
-        `${options.connectUrl}/v1/complete`,
+      begun = executions.begin({
+        packetId: input.packet.packetId,
+        operationId: input.packet.operationId,
+        workspaceId: input.workspaceId,
+        recipient: input.packet.recipient,
+        target: binding.target,
+        historySessionId: input.packet.historySessionId ?? null,
+        fingerprint: executionFingerprint(input, binding.target, hydration),
+        hydratedBytes: hydration.hydratedBytes,
+        selectedRefIndexes: hydration.items.map((item) => item.index),
+        now: receiptNow,
+      });
+    } catch (error) {
+      if (error instanceof EcxExecutionConflictError) {
+        throw new HttpError(409, "ECX_EXECUTION_CONFLICT", error.message);
+      }
+      throw error;
+    }
+
+    const prior = retryExecution(executions, ledger, input.packet, begun);
+    if (prior !== null) return prior;
+
+    const startedEventId = appendExecutionStarted(ledger, begun.status, input.packet);
+    if (!executions.claimDispatch(input.packet.packetId, nowIso())) {
+      const current = executions.get(input.packet.packetId, input.workspaceId);
+      const currentResult = executions.result(input.packet.packetId);
+      const retry = retryExecution(
+        executions,
+        ledger,
+        input.packet,
         {
+          status: current,
+          priorResult: currentResult,
+          created: false,
+        },
+      );
+      if (retry !== null) return retry;
+      throw new HttpError(
+        409,
+        "ECX_EXECUTION_UNCERTAIN",
+        "Execution sudah diklaim proses lain; dispatch kedua diblokir.",
+        { packetId: current.packetId, state: current.state },
+      );
+    }
+
+    let completion: ReturnType<typeof EcxExecutionCompletionSchema.parse>;
+    try {
+      completion = EcxExecutionCompletionSchema.parse(
+        await httpJson<unknown>(`${options.connectUrl}/v1/complete`, {
           token: options.internalToken,
           body: {
             target: binding.target,
@@ -638,41 +878,70 @@ export function registerExchangeRoutes(
             operationId: input.packet.operationId,
             now: input.requestedAt,
           },
-        },
+        }),
       );
     } catch (error) {
-      throw new BadGatewayError(
-        `Connect tidak tersedia untuk ECX recipient execution: ${
-          error instanceof Error ? error.message : String(error)
-        }.`,
+      const failedAt = nowIso();
+      const message = error instanceof Error ? error.message : String(error);
+      if (
+        error instanceof RemoteServiceError &&
+        error.statusCode >= 400 &&
+        error.statusCode < 500
+      ) {
+        const status = executions.fail(input.packet.packetId, message, failedAt);
+        appendExecutionOutcome(ledger, status, input.packet, null);
+        throw new HttpError(
+          error.statusCode,
+          "ECX_EXECUTION_FAILED",
+          "Connect menolak execution sebelum outcome provider ambigu.",
+          { packetId: status.packetId, state: status.state },
+        );
+      }
+      const status = executions.noteUncertain(input.packet.packetId, message, failedAt);
+      appendExecutionOutcome(ledger, status, input.packet, null);
+      throw new HttpError(
+        502,
+        "ECX_EXECUTION_UNCERTAIN",
+        "Connect/provider gagal setelah dispatch diklaim; retry otomatis diblokir.",
+        { packetId: status.packetId, state: status.state },
       );
     }
 
-    metrics.addCounter("ecorione_ecx_recipient_executions_total", 1, {
-      target: binding.target,
-    });
-    metrics.addCounter("ecorione_ecx_execution_hydrated_bytes_total", hydration.hydratedBytes, {
-      target: binding.target,
-    });
-
-    const response: EcxExecuteResponse = {
+    const outcomeEventId =
+      input.packet.historySessionId === undefined
+        ? null
+        : executionEventId(input.packet.packetId, "succeeded");
+    const response = EcxExecuteResponseSchema.parse({
       packetId: input.packet.packetId,
       operationId: input.packet.operationId,
       recipient: input.packet.recipient,
       target: binding.target,
+      state: "SUCCEEDED",
+      replayed: false,
       hydratedBytes: hydration.hydratedBytes,
       selectedRefIndexes: hydration.items.map((item) => item.index),
-      completion: {
-        reply: completion.reply,
-        provider: completion.provider,
-        model: completion.model,
-        responseModel: completion.responseModel,
-        modelIdentity: completion.modelIdentity,
-        modelIdentityPinned: completion.modelIdentityPinned,
-        cacheHit: completion.cacheHit,
-        routeReason: completion.routeReason,
+      history: {
+        startedEventId,
+        outcomeEventId,
       },
-    };
-    return EcxExecuteResponseSchema.parse(response);
+      completion,
+    });
+    const completed = executions.succeed(input.packet.packetId, response, nowIso());
+    appendExecutionOutcome(ledger, completed, input.packet, response);
+
+    metrics.addCounter("ecorione_ecx_recipient_executions_total", 1, {
+      target: binding.target,
+    });
+    metrics.addCounter(
+      "ecorione_ecx_execution_hydrated_bytes_total",
+      hydration.hydratedBytes,
+      { target: binding.target },
+    );
+    metrics.addCounter("ecorione_ecx_execution_replays_total", 0, {
+      target: binding.target,
+    });
+
+    return response;
   });
+
 }
