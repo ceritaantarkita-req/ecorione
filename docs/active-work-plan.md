@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / DOCS RECONCILIATION ACTIVE / POST-ECX BRANCH CLEANUP READY-PENDING-EXECUTION**
+Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / CURRENT DOC LAYER RECONCILED / POST-ECX BRANCH CLEANUP READY-PENDING-EXECUTION**
 
 ## Current queue
 
@@ -19,11 +19,9 @@ Closed current baselines:
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
 
-## Active repository housekeeping
+## Repository housekeeping
 
-The only current work is repository/documentation reconciliation.
-
-### 1. Current-doc reconciliation — ACTIVE
+### 1. Current-doc reconciliation — CLOSED BY THIS RECONCILIATION
 
 Goal:
 
@@ -47,7 +45,7 @@ free disk      = 26.31 GiB stabilized
 Evidence:
 [verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md).
 
-### 2. Post-ECX branch cleanup — READY / NOT YET EXECUTED
+### 2. Post-ECX branch cleanup — REMAINING / READY / NOT YET EXECUTED
 
 The historical 393-branch cleanup is finished and must not be rerun from zero.
 
