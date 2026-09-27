@@ -2,13 +2,19 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 CLOSED-PASS / BATCH 4 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 CLOSED-PASS / BATCH 4 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-27 ECX Execution — Batch 4 ACTIVE safe checkpoint
+
+Batch 4 — **Security, isolation, result integration** is ACTIVE on branch `agent/ecx-security-integration-b4-20260927`. The bounded implementation hardens only the proven Batch 3 single-recipient handback path: sender result receipt now requires explicit `agent.result.receive` authority; returned results are byte-bounded and carry SHA-256 integrity evidence; delegated result text is escaped inside an untrusted envelope before parent continuation; provenance history sessions are checked against Workspace/scope/sensitivity; and a hosted parent must re-prove the exact local-child source refs as hosted-eligible before receiving derived result content.
+
+Safe-resume checkpoint: [verification/ecx-execution-b4-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b4-wip-checkpoint-2026-09-27.md). **Do not restart Batches 1–3, branch hygiene, Historical Ledger core, or historical ECX selector/economics audits.**
 
 ## 2026-09-27 ECX Execution — Batch 3 closure
 

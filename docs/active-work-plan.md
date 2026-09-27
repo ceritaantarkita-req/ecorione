@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 CLOSED-PASS / BATCH 4 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 CLOSED-PASS / BATCH 4 ACTIVE-SAFE-WIP / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 CLOSED / Batch 4 next
 
@@ -14,7 +14,7 @@ The completed boundary is intentionally narrow: single-recipient runtime binding
 
 **Batch 3 — Real Agent A -> Agent B round trip is CLOSED / PASS.** PR #368 exact head `92f76e547c45c89f01f19159e7e373e101a592a0` passed CI #2304 + Product Eval #1543 + MCP #1145 and merged as `e784dde4ed891020e3c88712d4e660548a0e04c7`. Merged-main CI #2305 + Product Eval #1544 + MCP #1146 passed; Staging Deploy #1382 was gate-only and #1383 executed successfully.
 
-**Next queued slice: Batch 4 — Security, isolation, result integration. It is NOT STARTED.** Resume from [verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md). Do not reopen Batch 3, and do not pull fan-out, external A2A, UI expansion, Flow/Temporal long-running execution, or Ledger retention/compaction into Batch 4 unless that batch explicitly authorizes them.
+**Batch 4 — Security, isolation, result integration is ACTIVE / SAFE WIP.** Resume from [verification/ecx-execution-b4-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b4-wip-checkpoint-2026-09-27.md). The active boundary is explicit result-receive authority + bounded/validated returned-result envelope + hosted-parent source-context isolation + provenance-session boundary checks. Do not add multi-recipient fan-out, aggregation, external A2A, new UI, Flow/Temporal long-running execution, or Historical Ledger retention/compaction.
 
 ## Branch-hygiene final closure — 2026-09-27
 
