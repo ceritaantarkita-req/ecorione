@@ -1,4 +1,5 @@
 import { CapabilityGrantRequestSchema, assertId } from "@ecorione/shared-schema";
+import { observabilityFor } from "@ecorione/shared-server";
 import { afterEach, describe, expect, it } from "vitest";
 import { getGlobalDispatcher, MockAgent, setGlobalDispatcher } from "undici";
 import { CapabilityRegistry } from "./capability-registry.js";
@@ -228,9 +229,7 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
         },
       });
 
-      const firstOps = await app.inject({ method: "GET", url: "/v1/ops/observability" });
-      expect(firstOps.statusCode).toBe(200);
-      const firstSnapshot = firstOps.json();
+      const firstSnapshot = observabilityFor(app).snapshot();
       expect(counter(firstSnapshot, "ecorione_ecx_round_trip_model_calls_total")).toBe(1);
       expect(counter(firstSnapshot, "ecorione_ecx_round_trip_input_tokens_total")).toBe(12);
       expect(counter(firstSnapshot, "ecorione_ecx_round_trip_output_tokens_total")).toBe(4);
@@ -250,8 +249,7 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
       expect(replay.statusCode).toBe(200);
       expect(replay.json()).toMatchObject({ replayed: true });
 
-      const replayOps = await app.inject({ method: "GET", url: "/v1/ops/observability" });
-      const replaySnapshot = replayOps.json();
+      const replaySnapshot = observabilityFor(app).snapshot();
       expect(counter(replaySnapshot, "ecorione_ecx_round_trip_model_calls_total")).toBe(1);
       expect(counter(replaySnapshot, "ecorione_ecx_round_trip_input_tokens_total")).toBe(12);
       expect(
@@ -316,8 +314,7 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
         },
       });
 
-      const ops = await app.inject({ method: "GET", url: "/v1/ops/observability" });
-      const snapshot = ops.json();
+      const snapshot = observabilityFor(app).snapshot();
       expect(counter(snapshot, "ecorione_ecx_round_trip_model_calls_total")).toBe(2);
       expect(counter(snapshot, "ecorione_ecx_round_trip_input_tokens_total")).toBe(20);
       expect(counter(snapshot, "ecorione_ecx_round_trip_output_tokens_total")).toBe(7);
