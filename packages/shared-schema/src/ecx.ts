@@ -53,9 +53,7 @@ export const EcxAgentBindingUpsertRequestSchema = z
   })
   .strict()
   .superRefine(uniqueCapabilities);
-export type EcxAgentBindingUpsertRequest = z.infer<
-  typeof EcxAgentBindingUpsertRequestSchema
->;
+export type EcxAgentBindingUpsertRequest = z.infer<typeof EcxAgentBindingUpsertRequestSchema>;
 
 export const EcxAgentBindingSchema = z
   .object({
@@ -72,9 +70,11 @@ export const EcxAgentBindingSchema = z
   .superRefine(uniqueCapabilities);
 export type EcxAgentBinding = z.infer<typeof EcxAgentBindingSchema>;
 
-export const EcxAgentBindingListQuerySchema = z.object({
-  workspaceId: WorkspaceIdSchema,
-}).strict();
+export const EcxAgentBindingListQuerySchema = z
+  .object({
+    workspaceId: WorkspaceIdSchema,
+  })
+  .strict();
 
 export const EcxHistoryRefSchema = z
   .object({
