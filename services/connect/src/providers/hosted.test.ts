@@ -6,6 +6,7 @@ import {
   type Interceptable,
 } from "undici";
 import { callHostedProvider, estimateHostedReservationUsd } from "./hosted.js";
+import { NVIDIA_FREE_ENDPOINT_MIN_RESERVATION_USD, nvidiaRuntimeModel } from "./nvidia.js";
 import { openAiRuntimeModel } from "./openai.js";
 import { openRouterRuntimeModel } from "./openrouter.js";
 import { prefix } from "../test-helpers.js";
@@ -13,6 +14,7 @@ import { prefix } from "../test-helpers.js";
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let openrouterPool: Interceptable;
 let openaiPool: Interceptable;
+let nvidiaPool: Interceptable;
 
 beforeEach(() => {
   originalDispatcher = getGlobalDispatcher();
@@ -21,6 +23,7 @@ beforeEach(() => {
   setGlobalDispatcher(agent);
   openrouterPool = agent.get("https://openrouter.ai");
   openaiPool = agent.get("https://api.openai.com");
+  nvidiaPool = agent.get("https://integrate.api.nvidia.com");
 });
 
 afterEach(() => setGlobalDispatcher(originalDispatcher));
@@ -114,6 +117,32 @@ describe("hosted provider adapters", () => {
     expect(result.providerReportedActualUsd).toBeUndefined();
   });
 
+  it("NVIDIA memakai free hosted NIM endpoint dengan pinned GLM-5.3 identity", async () => {
+    nvidiaPool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, {
+      model: "z-ai/glm-5.3",
+      choices: [{ message: { content: "via nvidia" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 42, completion_tokens: 8 },
+    });
+
+    const result = await callHostedProvider({
+      provider: "nvidia",
+      apiKey: "nvapi-test-placeholder",
+      model: "z-ai/glm-5.3",
+      ...base,
+    });
+
+    expect(nvidiaRuntimeModel("z-ai/glm-5.3")).toBe("z-ai/glm-5.3");
+    expect(result.reply).toBe("via nvidia");
+    expect(result.model).toBe("z-ai/glm-5.3");
+    expect(result.providerReportedActualUsd).toBeUndefined();
+    expect(result.usage).toEqual({
+      inputTokens: 42,
+      outputTokens: 8,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    });
+  });
+
   it("reservation provider-aware tetap positif untuk seluruh hosted provider", () => {
     expect(
       estimateHostedReservationUsd("anthropic", {
@@ -130,10 +159,14 @@ describe("hosted provider adapters", () => {
     expect(
       estimateHostedReservationUsd("openai", { model: "gpt-5.6-terra", ...base }),
     ).toBeGreaterThan(0);
+    expect(
+      estimateHostedReservationUsd("nvidia", { model: "z-ai/glm-5.3", ...base }),
+    ).toBe(NVIDIA_FREE_ENDPOINT_MIN_RESERVATION_USD);
   });
 
   it("unsupported provider/model mapping gagal eksplisit", () => {
     expect(() => openRouterRuntimeModel("gpt-5.6-terra")).toThrow(/mapping OpenRouter/);
     expect(() => openAiRuntimeModel("claude-sonnet-4-5-20250929")).toThrow(/mapping OpenAI/);
+    expect(() => nvidiaRuntimeModel("gpt-5.6-terra")).toThrow(/mapping NVIDIA NIM/);
   });
 });
