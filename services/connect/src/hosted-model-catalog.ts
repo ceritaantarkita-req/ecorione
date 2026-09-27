@@ -9,6 +9,7 @@ export const SELECTABLE_HOSTED_MODEL_IDS = [
   "claude-opus-4-1-20250805",
   "gpt-5.6-terra",
   "gpt-5.6-sol",
+  "z-ai/glm-5.3",
 ] as const satisfies readonly PinnedModelId[];
 
 export const HostedModelPreferenceSchema = z.enum([
@@ -58,6 +59,13 @@ const VERIFIED_HOSTED_MODELS = {
       id: "gpt-5.6-sol",
       displayName: "GPT-5.6 Sol",
       providerRuntime: "gpt-5.6-sol",
+    },
+  ],
+  nvidia: [
+    {
+      id: "z-ai/glm-5.3",
+      displayName: "GLM-5.3",
+      providerRuntime: "z-ai/glm-5.3",
     },
   ],
 } as const satisfies Readonly<Record<HostedProviderId, readonly HostedModelCatalogEntry[]>>;
