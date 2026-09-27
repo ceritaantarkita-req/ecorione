@@ -8,7 +8,9 @@ function source(path: string): string {
 describe("ECX execution Batch 4 source contract", () => {
   it("requires explicit sender result-receive authority before child execution", () => {
     const exchange = source("services/hub/src/exchange-http.ts");
-    const authorize = exchange.indexOf("authorizeResultReceive(authority, input, continuationId)");
+    const authorize = exchange.indexOf(
+      "authorizeResultReceive(authority, input, continuationId)",
+    );
     const child = exchange.indexOf("const child = await executeRecipient(input)");
     expect(authorize).toBeGreaterThan(0);
     expect(child).toBeGreaterThan(authorize);
