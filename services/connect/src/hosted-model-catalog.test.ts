@@ -15,9 +15,7 @@ describe("hosted model catalog", () => {
       "gpt-5.6-terra",
       "gpt-5.6-sol",
     ]);
-    expect(hostedModelCatalog("nvidia").map((model) => model.id)).toEqual([
-      "z-ai/glm-5.3",
-    ]);
+    expect(hostedModelCatalog("nvidia").map((model) => model.id)).toEqual(["z-ai/glm-5.3"]);
   });
 
   it("always permits governed routing and rejects cross-provider model pairs", () => {
