@@ -14,7 +14,8 @@ evidence     = 0fb98b4dd5c3fe079ac0176360fa07706e658bd7
 tests        = 63884db142be2b568220c172235609f45ca3aa70
 compile-fix  = 7896f5561feb2cfc18c75dd24fd87e7db579ad61
 format/lint  = 16b490f0d1212b8bbb7f265153028827fca6ac16
-test-fix     = 7c0ccd876c541fa673881bdbd9f937b6ebdb4ef7
+test-fix-1   = 7c0ccd876c541fa673881bdbd9f937b6ebdb4ef7
+test-fix-2   = cb0ae7e28c0610db3b63997decfe730b20ac2705
 canonical PR = #371
 duplicate PR = #372 CLOSED UNMERGED
 ```
@@ -116,7 +117,9 @@ The CI failure was a **test harness assumption**, not a runtime Batch 5 behavior
 
 Fix `7c0ccd876c541fa673881bdbd9f937b6ebdb4ef7` imports `observabilityFor(app)` and reads the already-attached Hub `OperationalMetrics.snapshot()` directly inside the unit test. Production auth/telemetry endpoint registration is unchanged.
 
-Alternate PR #372 was closed unmerged after this diagnosis. Do not reopen it unless PR #371 is explicitly abandoned.
+The next exact-head rerun proved that endpoint/snapshot diagnosis: the previous 404/counter failures disappeared, Format/Lint/Typecheck passed, Product Eval #1565 passed, MCP #1164 passed, and only one test assertion remained. The remaining assertion expected round-trip duration histogram count 2 by reading the first series with `.find()`; runtime correctly emits separate labeled series for `outcome=success` and `outcome=replay`. Fix `cb0ae7e28c0610db3b63997decfe730b20ac2705` updates only the test helper to aggregate counts across all label-series sharing the same metric name. Production telemetry remains unchanged.
+
+Alternate PR #372 was closed unmerged after the first diagnosis. Do not reopen it unless PR #371 is explicitly abandoned.
 
 ## Focused tests
 
@@ -136,7 +139,7 @@ Coverage added for:
 
 ## Still required before closure
 
-1. rerun exact-head CI from the observability-test harness fix;
+1. rerun exact-head CI from the latest labeled-histogram test fix;
 2. pass full CI plus Product Eval, MCP acceptance, and Desktop Installer if triggered;
 3. fix any remaining defects on this same canonical PR #371 branch;
 4. mark #371 ready only after exact-head gates are green;
