@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **ACTIVE / SAFE WIP — NOT CLOSED**
+Status: **HISTORICAL WIP / SUPERSEDED BY FINAL BATCH 6 CLOSURE**
 
 ## Resume identity
 
@@ -12,7 +12,7 @@ branch    = agent/ecx-ledger-retention-b6-20260927
 batch     = 6 — Historical Ledger retention/compaction/migration
 ```
 
-Batch 1 through Batch 5 remain **CLOSED / PASS**. This checkpoint resumes only the bounded Historical Ledger data-lifecycle slice from the canonical Batch 5 safe checkpoint.
+Batch 1 through Batch 5 were already **CLOSED / PASS** when this WIP checkpoint was created. This file is now preserved as historical defect-resolution/work-in-progress evidence and is superseded by [ecx-execution-b6-safe-checkpoint-2026-09-27.md](ecx-execution-b6-safe-checkpoint-2026-09-27.md).
 
 ## Accepted design
 
@@ -92,13 +92,10 @@ Batch 6 does **not** reopen or add:
 - destructive time-based purging;
 - rewriting committed sequence numbers or hashes.
 
-## Still required before closure
+## Historical closure follow-up
 
-1. obtain full repository CI/typecheck/test signal on the canonical branch;
-2. fix any implementation defects without weakening invariants;
-3. add/adjust bounded source-contract and lifecycle documentation if gates expose gaps;
-4. merge only a green exact reviewed head;
-5. verify merged-main gates;
-6. verify governed staging delivery;
-7. replace ACTIVE/WIP docs with CLOSED/PASS;
-8. write the canonical Batch 6 safe checkpoint and advance the roadmap only after closure.
+All closure requirements from this WIP checkpoint were subsequently completed through canonical PR #374 exact head `0ca40cd5f703b950997392967bd505e8271049be` / merge `32534adf140f66d3c97e47a0dd8162be2112800c`.
+
+Exact-head CI #2338 + Product Eval #1577 passed. Merged-main CI #2339 + Product Eval #1578 passed. Staging Deploy #1448 was gate-only; actual Staging Deploy #1449 passed with exact SHA match, public/auth + MCP smoke PASS, healthy Operations, 15/15 configured services running, and 29.89 GiB stabilized free disk.
+
+Current resume pointer: [ecx-execution-b6-safe-checkpoint-2026-09-27.md](ecx-execution-b6-safe-checkpoint-2026-09-27.md).
