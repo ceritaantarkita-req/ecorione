@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-27**
+Last updated: **2026-09-28**
 
 This is the single navigation entry point for repository documentation.
 
@@ -112,13 +112,20 @@ Original Off-host DR is CLOSED / PASS at its documented total-SumoPod-host-loss 
 
 ## Repository hygiene
 
-The historical branch-hygiene work completed its 393-branch exact-SHA safe-delete set. Later ECX work created a new bounded branch delta, so the historical 9-branch inventory must not be used as current repository truth.
+The historical branch-hygiene work completed its 393-entry exact-SHA safe-delete set. A later ECX/reconciliation delta was then handled separately and is now **CLOSED / PASS**.
 
-Current post-ECX cleanup classification:
+Post-ECX cleanup execution:
 
+- exact-SHA dry-run: 15/15 allowlisted branches eligible, zero hold/fail/skip;
+- exact reconciliation refs: 2/2 validated and deleted;
+- one-time helper self-deleted;
+- final remote inventory: **9 branches**;
+- unexpected branches: **0**.
+
+Evidence:
+
+- [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - [verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json](verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json)
-
-Deletion is only valid after exact remote-SHA revalidation.
 
 ## Verification / evidence
 
@@ -129,6 +136,7 @@ Use [verification/README.md](verification/README.md) for the evidence index.
 Important current pointers:
 
 - repository truth reconciliation: [verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md)
+- post-ECX branch cleanup: [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - ECX B7 final checkpoint: [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md)
 - original branch-hygiene closure: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md)
 - A-11 closure: [verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md](verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md)
