@@ -70,6 +70,23 @@ describe("PE-01 Historical Ledger migration", () => {
         id: "evt_legacy_project",
         payload_json: '{"text":"legacy"}',
       });
+      expect(
+        db.raw
+          .prepare(
+            "SELECT archive_through_seq,archive_head_hash FROM history_sessions WHERE id=?",
+          )
+          .get("sess_legacy_project"),
+      ).toEqual({ archive_through_seq: -1, archive_head_hash: null });
+      expect(
+        db.raw
+          .prepare(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('history_archive_segments','history_archive_event_index') ORDER BY name",
+          )
+          .all(),
+      ).toEqual([
+        { name: "history_archive_event_index" },
+        { name: "history_archive_segments" },
+      ]);
     } finally {
       db.close();
     }
@@ -86,6 +103,13 @@ describe("PE-01 Historical Ledger migration", () => {
           .prepare("SELECT COUNT(*) AS count FROM history_events WHERE session_id=?")
           .get("sess_legacy_project"),
       ).toEqual({ count: 1 });
+      expect(
+        reopened.raw
+          .prepare(
+            "SELECT archive_through_seq,archive_head_hash FROM history_sessions WHERE id=?",
+          )
+          .get("sess_legacy_project"),
+      ).toEqual({ archive_through_seq: -1, archive_head_hash: null });
     } finally {
       reopened.close();
     }
