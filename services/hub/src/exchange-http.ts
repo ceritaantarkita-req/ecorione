@@ -684,10 +684,7 @@ function promptSafeJson(value: unknown): string {
     .replace(/\u2029/g, "\\u2029");
 }
 
-function roundTripReturnContext(
-  packet: EcxPacket,
-  returnedResult: EcxReturnedResult,
-): string {
+function roundTripReturnContext(packet: EcxPacket, returnedResult: EcxReturnedResult): string {
   return [
     "<untrusted_ecx_return>",
     promptSafeJson({
@@ -743,11 +740,7 @@ function authorizeResultReceive(
     }),
   );
   if (authorization.outcome !== "ALLOW") {
-    throw new HttpError(
-      403,
-      "ECX_RESULT_RECEIVE_AUTHORITY_DENIED",
-      authorization.reason,
-    );
+    throw new HttpError(403, "ECX_RESULT_RECEIVE_AUTHORITY_DENIED", authorization.reason);
   }
 }
 
@@ -1417,10 +1410,7 @@ export function registerExchangeRoutes(
     try {
       await assertHostedParentResultIsolation(input, child, parent.target, ledger, options);
     } catch (error) {
-      if (
-        error instanceof HttpError &&
-        error.type === "ECX_RESULT_HOSTED_ISOLATION_DENIED"
-      ) {
+      if (error instanceof HttpError && error.type === "ECX_RESULT_HOSTED_ISOLATION_DENIED") {
         roundTrips.fail(input.packet.packetId, error.message, nowIso());
       }
       throw error;
