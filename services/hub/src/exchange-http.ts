@@ -841,15 +841,11 @@ export function registerExchangeRoutes(
     if (!executions.claimDispatch(input.packet.packetId, nowIso())) {
       const current = executions.get(input.packet.packetId, input.workspaceId);
       const currentResult = executions.result(input.packet.packetId);
-      const retry = retryExecution(
-        ledger,
-        input.packet,
-        {
-          status: current,
-          priorResult: currentResult,
-          created: false,
-        },
-      );
+      const retry = retryExecution(ledger, input.packet, {
+        status: current,
+        priorResult: currentResult,
+        created: false,
+      });
       if (retry !== null) {
         metrics.addCounter("ecorione_ecx_execution_replays_total", 1, {
           target: binding.target,
@@ -940,12 +936,9 @@ export function registerExchangeRoutes(
     metrics.addCounter("ecorione_ecx_recipient_executions_total", 1, {
       target: binding.target,
     });
-    metrics.addCounter(
-      "ecorione_ecx_execution_hydrated_bytes_total",
-      hydration.hydratedBytes,
-      { target: binding.target },
-    );
+    metrics.addCounter("ecorione_ecx_execution_hydrated_bytes_total", hydration.hydratedBytes, {
+      target: binding.target,
+    });
     return response;
   });
-
 }

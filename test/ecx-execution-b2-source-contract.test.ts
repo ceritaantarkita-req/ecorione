@@ -9,7 +9,9 @@ describe("ECX execution Batch 2 source contract", () => {
   it("keeps the receipt as a bounded dispatch guard rather than a second history store", () => {
     const db = source("services/hub/src/db.ts");
     expect(db).toContain("CREATE TABLE IF NOT EXISTS ecx_execution_receipts");
-    expect(db).toContain("state TEXT NOT NULL CHECK(state IN ('STARTED','SUCCEEDED','FAILED','UNCERTAIN'))");
+    expect(db).toContain(
+      "state TEXT NOT NULL CHECK(state IN ('STARTED','SUCCEEDED','FAILED','UNCERTAIN'))",
+    );
     expect(db).not.toContain("ecx_execution_events");
   });
 

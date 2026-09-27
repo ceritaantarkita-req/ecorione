@@ -136,11 +136,7 @@ export class EcxExecutionStore {
     return result.changes === 1;
   }
 
-  succeed(
-    packetId: EventId,
-    response: EcxExecuteResponse,
-    now: Timestamp,
-  ): EcxExecutionStatus {
+  succeed(packetId: EventId, response: EcxExecuteResponse, now: Timestamp): EcxExecutionStatus {
     this.require(packetId);
     this.db.raw
       .prepare(

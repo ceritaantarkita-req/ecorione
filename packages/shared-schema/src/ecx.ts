@@ -275,12 +275,7 @@ export const EcxExecutionCompletionSchema = z.object({
 });
 export type EcxExecutionCompletion = z.infer<typeof EcxExecutionCompletionSchema>;
 
-export const EcxExecutionStateSchema = z.enum([
-  "STARTED",
-  "SUCCEEDED",
-  "FAILED",
-  "UNCERTAIN",
-]);
+export const EcxExecutionStateSchema = z.enum(["STARTED", "SUCCEEDED", "FAILED", "UNCERTAIN"]);
 export type EcxExecutionState = z.infer<typeof EcxExecutionStateSchema>;
 
 export const EcxExecutionStatusSchema = z
