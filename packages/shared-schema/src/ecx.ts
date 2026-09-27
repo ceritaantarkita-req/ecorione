@@ -273,14 +273,56 @@ export const EcxRoundTripRequestSchema = EcxExecuteRequestSchema.refine(
 );
 export type EcxRoundTripRequest = z.infer<typeof EcxRoundTripRequestSchema>;
 
+const EcxCompletionUsageSchema = z
+  .object({
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    cacheReadTokens: z.number().int().nonnegative(),
+    cacheWriteTokens: z.number().int().nonnegative(),
+  })
+  .strict();
+
+const EcxCompletionCostSchema = z
+  .object({
+    model: z.string().min(1),
+    naiveModel: z.string().min(1).optional(),
+    usage: EcxCompletionUsageSchema.optional(),
+    baselineUsage: EcxCompletionUsageSchema.optional(),
+    actualUsd: z.number().finite().nonnegative(),
+    naiveUsd: z.number().finite().nonnegative(),
+    savedUsd: z.number().finite(),
+    savedPct: z.number().finite(),
+    routeReason: z.string().min(1),
+    policyVersion: z.string().min(1),
+    optimizerOverheadMs: z.number().finite().nonnegative(),
+    escalatedFrom: z.string().min(1).optional(),
+    operationId: OperationIdSchema.optional(),
+  })
+  .strict();
+
+const EcxCompletionBudgetSchema = z
+  .object({
+    reservationId: z.string().min(1),
+    reservedUsd: z.number().finite().nonnegative(),
+    actualUsd: z.number().finite().nonnegative(),
+    overrunUsd: z.number().finite().nonnegative(),
+    settlement: z.enum(["settled", "reservation-retained"]),
+  })
+  .strict();
+
 export const EcxExecutionCompletionSchema = z.object({
   reply: z.string(),
   provider: z.string().min(1),
   model: z.string().min(1),
+  pricingModel: z.string().min(1).optional(),
   responseModel: z.string().min(1),
   modelIdentity: z.string().min(1),
   modelIdentityPinned: z.boolean(),
+  modelIdentityProvenance: z.string().min(1).optional(),
   cacheHit: z.boolean(),
+  usage: EcxCompletionUsageSchema.optional(),
+  cost: EcxCompletionCostSchema.optional(),
+  budget: EcxCompletionBudgetSchema.optional(),
   routeReason: z.string().min(1),
 });
 export type EcxExecutionCompletion = z.infer<typeof EcxExecutionCompletionSchema>;

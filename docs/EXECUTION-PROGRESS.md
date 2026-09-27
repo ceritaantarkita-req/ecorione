@@ -80,7 +80,7 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | Batch 2 — Execution Contract + Idempotency + Provenance | **CLOSED / PASS** |
 | Batch 3 — Real Agent A -> Agent B round trip | **CLOSED / PASS** |
 | Batch 4 — Security, isolation, result integration | **CLOSED / PASS** |
-| Batch 5 — End-to-end observability, quality, economics | **NEXT / NOT STARTED** |
+| Batch 5 — End-to-end observability, quality, economics | **ACTIVE / SAFE WIP** |
 | Batch 6 — Historical Ledger retention/compaction/migration | **NOT STARTED** |
 | Batch 7 — Advanced execution/productization | **NOT STARTED** |
 

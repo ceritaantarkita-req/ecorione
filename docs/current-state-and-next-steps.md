@@ -2,13 +2,19 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-27 ECX Execution — Batch 5 ACTIVE safe checkpoint
+
+Batch 5 — **End-to-end observability, quality, economics** is ACTIVE on canonical PR #371 / branch `agent/ecx-observability-quality-economics-b5-20260927`. The bounded slice preserves Connect-owned completion usage/cost/budget telemetry through ECX execution, projects single-recipient round-trip model-call/token/actual-cost/byte/duration metrics through the existing Hub process-lifetime observability boundary, and adds an offline deterministic quality/economics evidence evaluator that reuses the established exact JSON quality scorer. Alternate PR #372 has been closed unmerged so there is only one Batch 5 source of truth. It does **not** derive savings from ECX bytes, rerun paid W18, add a durable analytics store, or open fan-out/A2A/UI/retention scope.
+
+Safe-resume checkpoint: [verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md). **Do not restart Batches 1–4, Historical Ledger core, branch hygiene, or historical W17/W18 evidence.**
 
 ## 2026-09-27 ECX Execution — Batch 4 closure
 
@@ -18,7 +24,7 @@ The closed boundary adds explicit sender `agent.result.receive` authority before
 
 Runtime proof on Staging Deploy #1403 matched exact SHA `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`; public/auth and MCP smoke passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **29.94 GiB free**.
 
-Batch 4 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. **Batch 5 — End-to-end observability, quality, economics is NEXT / NOT STARTED.**
+Batch 4 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. At the Batch 4 checkpoint, Batch 5 was **NEXT / NOT STARTED**; that historical handoff is superseded by the active Batch 5 checkpoint above.
 
 Canonical safe-resume checkpoint: [verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–4, branch hygiene, Historical Ledger core, or historical ECX selector/economics audits.**
 

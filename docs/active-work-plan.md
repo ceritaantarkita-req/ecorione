@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 ACTIVE-SAFE-WIP / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 + Batch 4 CLOSED / Batch 5 next
+## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 + Batch 4 CLOSED / Batch 5 ACTIVE
 
 **Batch 1 is CLOSED / PASS.** PR #363 reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286 + Product Eval #1525 + MCP #1131 and merged as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed; Staging Deploy #1345 was gate-only and #1346 executed successfully.
 
@@ -16,7 +16,7 @@ The completed boundary is intentionally narrow: single-recipient runtime binding
 
 **Batch 4 — Security, isolation, result integration is CLOSED / PASS.** PR #370 exact head `bba68607227a67080a26d4a000cf9dc73deadaef` passed CI #2314 + Product Eval #1553 + MCP #1153 and merged as `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`. Merged-main CI #2315 + Product Eval #1554 + MCP #1154 passed; Staging Deploy #1402 was gate-only and #1403 executed successfully with exact SHA match, public/auth + MCP smoke PASS, healthy Operations, 15/15 services running, and 29.94 GiB stabilized free disk.
 
-**Next queued slice: Batch 5 — End-to-end observability, quality, economics. It is NOT STARTED.** Resume from [verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md). Do not reopen Batch 4, and do not silently pull fan-out, external A2A, new UI, Flow/Temporal long-running execution, or Historical Ledger retention/compaction into Batch 5 unless its accepted scope explicitly authorizes them.
+**Batch 5 — End-to-end observability, quality, economics is ACTIVE / SAFE WIP.** Canonical work is PR #371 on `agent/ecx-observability-quality-economics-b5-20260927`; alternate PR #372 is closed unmerged. Resume from [verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md). Active scope is Connect telemetry preservation -> Hub process-lifetime round-trip metrics -> deterministic offline quality/economics evidence. No paid W18 rerun, no savings-from-bytes claim, no analytics database, no fan-out/A2A/new ECX UI, and no Historical Ledger retention work.
 
 ## Branch-hygiene final closure — 2026-09-27
 

@@ -55,6 +55,7 @@
     "evidence:backup-restore:inventory": "pnpm run build:runtime-deps && node scripts/local-backup-restore-evidence.mjs --phase inventory",
     "evidence:observability": "pnpm run build:runtime-deps && node scripts/local-observability-evidence.mjs",
     "evidence:observability:inventory": "pnpm run build:runtime-deps && node scripts/local-observability-evidence.mjs --phase inventory",
+    "evidence:ecx-round-trip:b5": "node scripts/ecx-round-trip-b5-evidence.mjs",
     "evidence:ux:inventory": "node scripts/local-ux-product-evidence.mjs",
     "eval:selector:heldout": "vitest run evals/eval-inventory.test.ts evals/ecx-selector-heldout.test.ts",
     "eval:agentic:local": "node scripts/local-agentic-eval.mjs",
