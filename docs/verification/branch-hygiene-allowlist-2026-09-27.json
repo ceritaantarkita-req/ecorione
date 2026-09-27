@@ -8,7 +8,7 @@
     "hold": "branch retains substantive unique/diverged implementation or unlanded behavior and lacks sufficient disposal proof"
   },
   "counts": {
-    "safe_delete": 392,
+    "safe_delete": 393,
     "safe_delete_merged_pr_exact_head": 332,
     "safe_delete_ancestor_of_main": 22,
     "safe_delete_ancestor_of_retained_branch": 3,
@@ -16,7 +16,7 @@
     "safe_delete_post_merge_delta_superseded": 4,
     "safe_delete_ephemeral_probe_or_execution_helper": 12,
     "safe_delete_content_salvaged": 1,
-    "safe_delete_post_baseline_hygiene_or_execution": 6,
+    "safe_delete_post_baseline_hygiene_or_execution": 7,
     "hold": 7
   },
   "safe_delete": [
@@ -312,7 +312,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 11,
-      "successor_prs": [10],
+      "successor_prs": [
+        10
+      ],
       "note": "PR #11 says it points to the exact same commit as PR #10 and exists only to trigger verification; do not merge."
     },
     {
@@ -352,7 +354,9 @@
       "expected_sha": "970d9202de600210f0b5e89d15301cfb284402b9",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [124],
+      "successor_prs": [
+        124
+      ],
       "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124 with real Windows installer verification."
     },
     {
@@ -360,7 +364,9 @@
       "expected_sha": "5c99993847515b98e8233f4c25f024f1ea99cd69",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [124],
+      "successor_prs": [
+        124
+      ],
       "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124."
     },
     {
@@ -368,7 +374,9 @@
       "expected_sha": "a7a9c13310581316f406ecb0e266cb3fc5e3313c",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [124],
+      "successor_prs": [
+        124
+      ],
       "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124."
     },
     {
@@ -376,7 +384,9 @@
       "expected_sha": "d870e3a74a6d6ddca526af717feace5b928f163e",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [124],
+      "successor_prs": [
+        124
+      ],
       "note": "Branch only adds one-shot/retry W11 installer workflows; W11 is closed by merged PR #124."
     },
     {
@@ -568,7 +578,11 @@
       "expected_sha": "743deec4e07d471e810fae3d26dc37790a007416",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [103, 104, 107],
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
       "note": "Branch only adds a temporary dynamic-port desktop follow-up workflow; runtime work landed through PRs #103/#104 and W09/W10 closed via PR #107."
     },
     {
@@ -576,7 +590,11 @@
       "expected_sha": "fc9ee7dcbe23d7d2a717d3e59835753514fb798c",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [103, 104, 107],
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
       "note": "Branch only adds a temporary dynamic-port desktop follow-up workflow; W09/W10 runtime is closed by PR #107."
     },
     {
@@ -617,7 +635,11 @@
       "expected_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [103, 104, 107],
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
       "note": "Branch contains only temporary dynamic-port patch/helper workflows; final runtime behavior landed through PRs #103/#104 and closed via PR #107."
     },
     {
@@ -757,7 +779,9 @@
       "expected_sha": "bf1e1532aab166f397f583ca6423a7ae706fe99a",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 358,
-      "successor_prs": [357],
+      "successor_prs": [
+        357
+      ],
       "note": "PR #358 was closed without merge as redundant after PR #357 merged the same Stage-2 containment work."
     },
     {
@@ -782,6 +806,14 @@
       "merge_commit_sha": "a1991f1fd1e321ecbe32f997d0ef87982fc0b20a"
     },
     {
+      "branch": "docs/branch-hygiene-stage4-20260927",
+      "expected_sha": "316ba052baec2a4b7509e3761dd151a7fcf03f1c",
+      "evidence_kind": "merged_pr_exact_head_post_baseline",
+      "merged_pr": 361,
+      "merge_commit_sha": "9e621680661f7128b9cfea930fd470472ed94381",
+      "note": "Stage-4 audit branch merged through PR #361; exact PR head is now safe-delete evidence after merge."
+    },
+    {
       "branch": "docs/cleanup-current-state-20260918",
       "expected_sha": "372baa62c6288540ef372c5ee5032722f61042e1",
       "merged_pr": 163,
@@ -803,7 +835,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 187,
-      "successor_prs": [186],
+      "successor_prs": [
+        186
+      ],
       "note": "PR #187 body says it is superseded by merged PR #186 with the same Windows EOL closure."
     },
     {
@@ -811,7 +845,9 @@
       "expected_sha": "13599d6ad96b1354e60f13a6274cd00cc64a6d3e",
       "prior_classification": "no_pr_record",
       "evidence_kind": "content_salvaged_into_stage4",
-      "successor_prs": [40],
+      "successor_prs": [
+        40
+      ],
       "note": "The branch's missing comparative cache-fix closure delta was replayed into Stage-4 current documentation before this promotion."
     },
     {
@@ -884,7 +920,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 279,
-      "successor_prs": [280],
+      "successor_prs": [
+        280
+      ],
       "note": "PR #279 conversation says it is superseded by PR #280 and later DR-2 deferment/safe-checkpoint docs."
     },
     {
@@ -1480,7 +1518,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 313,
-      "successor_prs": [315],
+      "successor_prs": [
+        315
+      ],
       "note": "PR #313 body says superseded by PR #315."
     },
     {
@@ -2013,7 +2053,9 @@
       "expected_sha": "72eff88e03ef40c773741543c08e8829db46e743",
       "prior_classification": "merged_but_branch_advanced",
       "evidence_kind": "post_merge_delta_superseded",
-      "successor_prs": [323],
+      "successor_prs": [
+        323
+      ],
       "note": "Four post-merge DNS-pinning commits were carried by merged PR #323; current main preserves DNS-pinned transport/tests and later integration refinements."
     },
     {
@@ -2102,7 +2144,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 111,
-      "successor_prs": [124],
+      "successor_prs": [
+        124
+      ],
       "note": "PR #111 closure comment marks this as superseded/abandoned W11 direction and points to later W11 completion/closure PR #124."
     },
     {
@@ -2199,7 +2243,13 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 57,
-      "successor_prs": [58, 59, 60, 62, 63],
+      "successor_prs": [
+        58,
+        59,
+        60,
+        62,
+        63
+      ],
       "note": "PR #57 body explicitly says the race/serialization work landed through later frontend hardening PRs."
     },
     {
@@ -2536,7 +2586,11 @@
       "expected_sha": "f0e614d6dece614d329f0559e2553d5daf029d76",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [103, 104, 107],
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
       "note": "Branch only adds a temporary W09/W10 runtime follow-up workflow; final runtime acceptance closed via PR #107."
     },
     {
@@ -2544,7 +2598,11 @@
       "expected_sha": "6dacc42776f71bbed1cc61bc70fd010a8b5d699c",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [103, 104, 107],
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
       "note": "Branch only adds a temporary W09/W10 runtime follow-up workflow; final runtime acceptance closed via PR #107."
     },
     {
@@ -2682,7 +2740,10 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 128,
-      "successor_prs": [129, 143],
+      "successor_prs": [
+        129,
+        143
+      ],
       "note": "PR #128 closure comment says diagnostic work continued in merged PR #129 and final W18/W20 closure PR #143."
     },
     {
@@ -2802,7 +2863,11 @@
       "branch": "ops/branch-hygiene-exec-20260927",
       "expected_sha": "3b0e74753c997879f5e2d3af56c211664df0f74b",
       "evidence_kind": "execution_helper_salvaged",
-      "workflow_runs": [1, 2, 3],
+      "workflow_runs": [
+        1,
+        2,
+        3
+      ],
       "note": "One-time execution branch: run #2 proved 354/354 exact-SHA eligible; run #3 deleted 354/354 with zero hold/fail/skip. Its PowerShell root-handling fix and execution evidence are preserved by Stage 4; temporary workflow itself is not canonical runtime."
     },
     {
@@ -2890,7 +2955,9 @@
       "expected_sha": "0984c5b2599d84b724f0c6eb87661e5cee0269a9",
       "prior_classification": "no_pr_record",
       "evidence_kind": "ephemeral_execution_helper_superseded",
-      "successor_prs": [124],
+      "successor_prs": [
+        124
+      ],
       "note": "Branch only adds a temporary exact-main installer build workflow; W11 closed via PR #124."
     },
     {
@@ -3163,7 +3230,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 159,
-      "successor_prs": [160],
+      "successor_prs": [
+        160
+      ],
       "note": "PR #159 body says superseded by PR #160 carrying the same F6-E07 scope plus reviewed acceptance."
     },
     {
@@ -3180,7 +3249,10 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 162,
-      "successor_prs": [164, 165],
+      "successor_prs": [
+        164,
+        165
+      ],
       "note": "PR #162 closure comment says F6-E08 was completed by PR #164 and closed by PR #165."
     },
     {
@@ -3289,6 +3361,16 @@
     "promoted_from_prior_hold": 13,
     "added_post_baseline_hygiene_or_execution_branches": 6,
     "remaining_hold": 7,
-    "excluded_current_stage4_branch": "docs/branch-hygiene-stage4-20260927"
+    "excluded_current_stage4_branch": "docs/branch-hygiene-stage4-20260927",
+    "stage4_pr": 361,
+    "stage4_head_sha": "316ba052baec2a4b7509e3761dd151a7fcf03f1c",
+    "stage4_merge_sha": "9e621680661f7128b9cfea930fd470472ed94381",
+    "stage4_merge_state": "closed-pass",
+    "current_observed_remote_branch_count_before_checkpoint_branch": 47,
+    "current_present_safe_delete_after_stage4_merge": 39,
+    "current_retained": 7,
+    "current_main": 1,
+    "unclassified": 0,
+    "checkpoint_branch_excluded": "docs/branch-hygiene-safe-checkpoint-20260927"
   }
 }
