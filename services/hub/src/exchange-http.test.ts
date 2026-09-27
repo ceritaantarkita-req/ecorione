@@ -1,5 +1,7 @@
-import { assertId } from "@ecorione/shared-schema";
+import { CapabilityGrantRequestSchema, assertId } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
+import { getGlobalDispatcher, MockAgent, setGlobalDispatcher } from "undici";
+import { CapabilityRegistry } from "./capability-registry.js";
 import { openHubDatabase, type HubDatabase } from "./db.js";
 import { HistoryLedger } from "./history-ledger.js";
 import { buildHubServer } from "./http.js";
@@ -81,6 +83,233 @@ describe("ECX HTTP integration", () => {
     expect(retry.statusCode).toBe(200);
     expect(retry.json()).toEqual(first.json());
     expect(ledger.getSession(sessionId)?.nextSeq).toBe(2);
+  });
+
+  it("executes a bound local recipient only after explicit agent authority grant", async () => {
+    const { app } = setup();
+    const binding = await app.inject({
+      method: "PUT",
+      url: "/v1/exchange/agents/agent:reviewer",
+      payload: {
+        operationId: assertId("operation", "op_ecxbinding001"),
+        workspaceId: "ws_personal",
+        target: "local",
+        capabilities: ["review"],
+        systemPrompt: "You are the bounded ECX review recipient.",
+        enabled: true,
+      },
+    });
+    expect(binding.statusCode).toBe(200);
+    expect(binding.json()).toMatchObject({
+      agentId: "agent:reviewer",
+      target: "local",
+      enabled: true,
+    });
+
+    const plan = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/plan",
+      payload: {
+        operationId: assertId("operation", "op_ecxexecute001"),
+        requestedAt: NOW,
+        sender: "agent:planner",
+        intent: "review",
+        task: "Reply exactly ECX_EXECUTION_OK.",
+        need: ["review"],
+        refs: [],
+        budget: { maxHydratedBytes: 4096 },
+        candidates: [
+          { agentId: "agent:reviewer", capabilities: ["review"], estimatedCost: 0 },
+        ],
+      },
+    });
+    expect(plan.statusCode).toBe(200);
+    const packet = (plan.json() as { packets: unknown[] }).packets[0];
+
+    const denied = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/execute",
+      payload: {
+        packet,
+        workspaceId: "ws_personal",
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        requestedAt: NOW,
+      },
+    });
+    expect(denied.statusCode).toBe(403);
+    expect(denied.body).toContain("ECX_RECIPIENT_AUTHORITY_DENIED");
+
+    const authority = new CapabilityRegistry(db!);
+    authority.grant(
+      CapabilityGrantRequestSchema.parse({
+        operationId: assertId("operation", "op_ecxgrant001"),
+        workspaceId: "ws_personal",
+        subject: { kind: "agent", id: "agent:reviewer" },
+        capabilityId: "model.invoke.local",
+        permissionIds: ["model.invoke", "execution.local"],
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        autonomy: "L1",
+        reason: "Focused ECX recipient execution test.",
+        idempotencyKey: "ecx-agent-reviewer-local-grant",
+      }),
+      NOW,
+    );
+
+    const original = getGlobalDispatcher();
+    const mock = new MockAgent();
+    mock.disableNetConnect();
+    const connect = mock.get("http://connect.invalid");
+    connect.intercept({ path: "/v1/complete", method: "POST" }).reply(200, {
+      reply: "ECX_EXECUTION_OK",
+      provider: "local",
+      model: "qwen-test",
+      pricingModel: "local/provider-token-zero",
+      responseModel: "qwen-test",
+      modelIdentity: "local:test:qwen-test",
+      modelIdentityPinned: true,
+      modelIdentityProvenance: "provider-verified",
+      cacheHit: false,
+      usage: {
+        inputTokens: 10,
+        outputTokens: 3,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+      },
+      cost: {
+        model: "local/provider-token-zero",
+        actualUsd: 0,
+        naiveUsd: 0,
+        savedUsd: 0,
+        savedPct: 0,
+        routeReason: "local-consolidation",
+        policyVersion: "3",
+        optimizerOverheadMs: 0,
+        operationId: "op_ecxexecute001",
+      },
+      routeReason: "local-consolidation",
+    });
+    setGlobalDispatcher(mock);
+    try {
+      const executed = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/execute",
+        payload: {
+          packet,
+          workspaceId: "ws_personal",
+          scope: "personal",
+          maxSensitivity: "INTERNAL",
+          requestedAt: NOW,
+        },
+      });
+      expect(executed.statusCode).toBe(200);
+      expect(executed.json()).toMatchObject({
+        recipient: "agent:reviewer",
+        target: "local",
+        hydratedBytes: 0,
+        selectedRefIndexes: [],
+        completion: {
+          reply: "ECX_EXECUTION_OK",
+          provider: "local",
+          routeReason: "local-consolidation",
+        },
+      });
+    } finally {
+      setGlobalDispatcher(original);
+      await mock.close();
+    }
+  });
+
+  it("derives hosted eligibility from the recipient binding and rejects LOCAL_ONLY refs", async () => {
+    const { ledger, app } = setup();
+    const sessionId = assertId("session", "sess_ecxexecutelocal001");
+    ledger.createSession({
+      id: sessionId,
+      createdAt: NOW,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+    });
+    ledger.append(sessionId, 0, {
+      id: assertId("event", "evt_ecxexecutelocal001"),
+      recordedAt: NOW,
+      eventType: "user.message",
+      actor: "user",
+      operationId: null,
+      parentEventId: null,
+      payload: { text: "LOCAL_ONLY secret context" },
+    });
+
+    const binding = await app.inject({
+      method: "PUT",
+      url: "/v1/exchange/agents/agent:hosted-reviewer",
+      payload: {
+        operationId: assertId("operation", "op_ecxbindinghosted001"),
+        workspaceId: "ws_personal",
+        target: "hosted",
+        capabilities: ["review"],
+        systemPrompt: "You are the hosted ECX review recipient.",
+        enabled: true,
+      },
+    });
+    expect(binding.statusCode).toBe(200);
+
+    const authority = new CapabilityRegistry(db!);
+    authority.grant(
+      CapabilityGrantRequestSchema.parse({
+        operationId: assertId("operation", "op_ecxgranthosted001"),
+        workspaceId: "ws_personal",
+        subject: { kind: "agent", id: "agent:hosted-reviewer" },
+        capabilityId: "model.invoke.hosted",
+        permissionIds: ["model.invoke", "network.connect", "provider.spend"],
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        autonomy: "L1",
+        reason: "Focused hosted ECX recipient test.",
+        idempotencyKey: "ecx-agent-hosted-reviewer-grant",
+      }),
+      NOW,
+    );
+
+    const plan = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/plan",
+      payload: {
+        operationId: assertId("operation", "op_ecxexecutehosted001"),
+        requestedAt: NOW,
+        sender: "agent:planner",
+        intent: "review",
+        task: "Review local-only context.",
+        need: ["review"],
+        refs: [{ kind: "history", sessionId, afterSeq: -1, throughSeq: 0 }],
+        budget: { maxHydratedBytes: 4096 },
+        candidates: [
+          {
+            agentId: "agent:hosted-reviewer",
+            capabilities: ["review"],
+            estimatedCost: 1,
+          },
+        ],
+      },
+    });
+    expect(plan.statusCode).toBe(200);
+    const packet = (plan.json() as { packets: unknown[] }).packets[0];
+
+    const executed = await app.inject({
+      method: "POST",
+      url: "/v1/exchange/execute",
+      payload: {
+        packet,
+        workspaceId: "ws_personal",
+        selection: { mode: "semantic-v1", maxRefs: 1 },
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        requestedAt: NOW,
+      },
+    });
+    expect(executed.statusCode).toBe(404);
+    expect(executed.body).toContain("History reference tidak tersedia");
   });
 
   it("automatically selects a relevant history reference before hydration", async () => {
