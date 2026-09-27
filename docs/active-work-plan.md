@@ -2,15 +2,17 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 ACTIVE-SAFE-WIP / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 CLOSED-PASS / BATCH 3 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## ECX Recipient Execution roadmap — Batch 1 CLOSED / Batch 2 next
+## ECX Recipient Execution roadmap — Batch 1 + Batch 2 CLOSED / Batch 3 next
 
 **Batch 1 is CLOSED / PASS.** PR #363 reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286 + Product Eval #1525 + MCP #1131 and merged as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed; Staging Deploy #1345 was gate-only and #1346 executed successfully.
 
 The completed boundary is intentionally narrow: single-recipient runtime binding and governed Hub -> Connect execution only. **Do not reopen Batch 1.** Do not add execution receipts, retry/idempotency semantics, Ledger execution lifecycle events, multi-recipient fan-out, aggregation, UI, A2A, or retention/compaction under the Batch 1 label.
 
-**Batch 2 — Execution Contract + Idempotency + Provenance is ACTIVE.** Current safe WIP is on `agent/ecx-execution-idempotency-b2-20260927`. Resume from [verification/ecx-execution-b2-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b2-wip-checkpoint-2026-09-27.md), not by reopening Batch 1.
+**Batch 2 — Execution Contract + Idempotency + Provenance is CLOSED / PASS.** PR #365 exact head `890030465570826eaca9c21f27aa13b0eb821e76` passed CI #2294 + Product Eval #1533 + MCP #1137 and merged as `851d58788075e1f11735b4c23e947edf3304eabe`. Merged-main CI #2295 + Product Eval #1534 + MCP #1138 passed; Staging Deploy #1361 was gate-only and #1362 executed successfully.
+
+**Next queued slice: Batch 3 — Real Agent A -> Agent B round trip. It is NOT STARTED.** Resume from [verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md). Do not reopen Batch 2, and do not pull multi-recipient fan-out, A2A, UI, or Ledger retention into Batch 3 unless that later batch explicitly authorizes them.
 
 ## Branch-hygiene final closure — 2026-09-27
 
