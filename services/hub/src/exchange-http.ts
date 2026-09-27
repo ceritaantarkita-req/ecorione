@@ -824,11 +824,7 @@ function recordRoundTripCompletionTelemetry(
   metrics.addCounter("ecorione_ecx_round_trip_model_calls_total", 1, labels);
   const usage = input.completion.usage;
   if (usage !== undefined) {
-    metrics.addCounter(
-      "ecorione_ecx_round_trip_input_tokens_total",
-      usage.inputTokens,
-      labels,
-    );
+    metrics.addCounter("ecorione_ecx_round_trip_input_tokens_total", usage.inputTokens, labels);
     metrics.addCounter(
       "ecorione_ecx_round_trip_output_tokens_total",
       usage.outputTokens,
@@ -1549,7 +1545,11 @@ export function registerExchangeRoutes(
         },
       });
       roundTrips.succeed(input.packet.packetId, response, nowIso());
-      recordRoundTripSuccessTelemetry(metrics, response, performance.now() - roundTripStartedAt);
+      recordRoundTripSuccessTelemetry(
+        metrics,
+        response,
+        performance.now() - roundTripStartedAt,
+      );
       return response;
     }
 
