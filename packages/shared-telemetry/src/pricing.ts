@@ -94,6 +94,19 @@ const PRICE_TABLE = {
   },
 
   /**
+   * NVIDIA-hosted NIM API Catalog free prototype endpoint snapshot, verified 2026-09-28.
+   * This zero provider-token price applies only to ECORIONE's fixed
+   * https://integrate.api.nvidia.com/v1 free prototype route for z-ai/glm-5.3.
+   * Partner/self-hosted/production NVIDIA routes are separate pricing boundaries.
+   */
+  "z-ai/glm-5.3": {
+    inputPerMTok: 0,
+    outputPerMTok: 0,
+    cacheWritePerMTok: 0,
+    cacheReadPerMTok: 0,
+  },
+
+  /**
    * Generic local-runtime pricing identity. Local runtime/model identity is recorded
    * separately; this key only means provider-token billing is zero. It does not claim
    * hardware, electricity or latency are free.

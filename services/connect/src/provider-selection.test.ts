@@ -12,6 +12,7 @@ import { NOW, OPERATION_ID, prefix } from "./test-helpers.js";
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let openrouterPool: Interceptable;
 let openaiPool: Interceptable;
+let nvidiaPool: Interceptable;
 let localPool: Interceptable;
 
 beforeEach(() => {
@@ -21,6 +22,7 @@ beforeEach(() => {
   setGlobalDispatcher(agent);
   openrouterPool = agent.get("https://openrouter.ai");
   openaiPool = agent.get("https://api.openai.com");
+  nvidiaPool = agent.get("https://integrate.api.nvidia.com");
   localPool = agent.get("http://127.0.0.1:11434");
 });
 
@@ -115,6 +117,23 @@ describe("provider selection", () => {
     expect(result.provider).toBe("openai");
     expect(result.model).toBe("gpt-5.6-terra");
     expect(result.responseModel).toBe("gpt-5.6-terra");
+  });
+
+  it("NVIDIA API key routes through hosted GLM-5.3 with zero prototype token cost", async () => {
+    nvidiaPool.intercept({ path: "/v1/chat/completions", method: "POST" }).reply(200, {
+      model: "z-ai/glm-5.3",
+      choices: [{ message: { content: "nvidia reply" } }],
+      usage: { prompt_tokens: 24, completion_tokens: 6 },
+    });
+    const result = await complete(
+      deps({ hostedProvider: "nvidia", nvidiaApiKey: "nvapi-test-placeholder" }),
+      input,
+    );
+    expect(result.provider).toBe("nvidia");
+    expect(result.model).toBe("z-ai/glm-5.3");
+    expect(result.responseModel).toBe("z-ai/glm-5.3");
+    expect(result.reply).toBe("nvidia reply");
+    expect(result.cost.actualUsd).toBe(0);
   });
 
   it("vault provider scope menang atas semua raw env fallback", async () => {

@@ -59,7 +59,7 @@ import { useWorkspace } from "./WorkspaceProvider";
 type RuntimeSnapshot = {
   settings?: {
     hostedCallsEnabled?: boolean;
-    hostedProvider?: "anthropic" | "openrouter" | "openai";
+    hostedProvider?: "anthropic" | "openrouter" | "openai" | "nvidia";
     hostedModel?: string;
     defaultChatTarget?: ChatTarget;
   };
@@ -92,7 +92,7 @@ function nextAttachmentId(): string {
   return `att-${attachmentCounter}`;
 }
 function hostedProviderLabel(
-  provider: "anthropic" | "openrouter" | "openai" | undefined,
+  provider: "anthropic" | "openrouter" | "openai" | "nvidia" | undefined,
 ): string {
   switch (provider) {
     case "anthropic":
@@ -101,6 +101,8 @@ function hostedProviderLabel(
       return "OpenRouter";
     case "openai":
       return "OpenAI";
+    case "nvidia":
+      return "NVIDIA";
     default:
       return "Hosted";
   }
@@ -119,6 +121,8 @@ function hostedModelLabel(model: string | undefined): string {
       return "GPT-5.6 Terra";
     case "gpt-5.6-sol":
       return "GPT-5.6 Sol";
+    case "z-ai/glm-5.3":
+      return "GLM-5.3";
     default:
       return model;
   }

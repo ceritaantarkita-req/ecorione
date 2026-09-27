@@ -52,6 +52,7 @@ const PATTERNS = [
   { name: "Anthropic API key", re: /\bsk-ant-[A-Za-z0-9_-]{20,}/g },
   { name: "OpenAI API key", re: /\bsk-(?:proj-)?[A-Za-z0-9_-]{32,}/g },
   { name: "OpenRouter API key", re: /\bsk-or-v1-[A-Za-z0-9]{32,}/g },
+  { name: "NVIDIA API key", re: /\bnvapi-[A-Za-z0-9_-]{20,}/g },
   { name: "GitHub token", re: /\bgh[pousr]_[A-Za-z0-9]{36,}/g },
   { name: "AWS access key id", re: /\bAKIA[0-9A-Z]{16}\b/g },
   { name: "Google API key", re: /\bAIza[0-9A-Za-z_-]{35}\b/g },

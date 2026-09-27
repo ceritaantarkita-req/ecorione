@@ -49,6 +49,7 @@ export interface CompleteDeps {
   readonly anthropicApiKey: string | undefined;
   readonly openrouterApiKey?: string | undefined;
   readonly openaiApiKey?: string | undefined;
+  readonly nvidiaApiKey?: string | undefined;
   /** Local inference is protocol-based; Ollama is only one possible implementation. */
   readonly localRuntime?: LocalRuntimeId | undefined;
   readonly localBaseUrl: string;
@@ -128,6 +129,8 @@ function developmentApiKey(deps: CompleteDeps, provider: HostedProviderId): stri
       return deps.openrouterApiKey;
     case "openai":
       return deps.openaiApiKey;
+    case "nvidia":
+      return deps.nvidiaApiKey;
   }
 }
 

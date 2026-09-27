@@ -120,6 +120,7 @@ describe("proxyToConnectSettings", () => {
     "anthropic",
     "openai",
     "openrouter",
+    "nvidia",
     "kimi",
     "gemini",
     "qwen",

@@ -142,6 +142,7 @@ export interface BuildConnectServerOptions {
   readonly anthropicApiKey?: string | undefined;
   readonly openrouterApiKey?: string | undefined;
   readonly openaiApiKey?: string | undefined;
+  readonly nvidiaApiKey?: string | undefined;
   readonly localRuntime?: LocalRuntimeId | undefined;
   readonly localBaseUrl: string;
   readonly localModelTag: string;
@@ -191,6 +192,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     anthropicApiKey: options.anthropicApiKey,
     openrouterApiKey: options.openrouterApiKey,
     openaiApiKey: options.openaiApiKey,
+    nvidiaApiKey: options.nvidiaApiKey,
     localRuntime: runtime.localRuntime,
     localBaseUrl: runtime.localBaseUrl,
     localModelTag: runtime.localModelTag,

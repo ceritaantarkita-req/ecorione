@@ -90,6 +90,19 @@ describe("Connect Control Center boundary", () => {
           ],
         }),
         expect.objectContaining({
+          id: "nvidia",
+          displayName: "NVIDIA / NIM",
+          routingReady: true,
+          connectionTestReady: true,
+          hostedModels: [
+            expect.objectContaining({
+              id: "z-ai/glm-5.3",
+              displayName: "GLM-5.3",
+              providerRuntime: "z-ai/glm-5.3",
+            }),
+          ],
+        }),
+        expect.objectContaining({
           id: "kimi",
           routingReady: false,
           connectionTestReady: false,

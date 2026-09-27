@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HOSTED_PROVIDER_IDS } from "./provider-types.js";
+import { HOSTED_PROVIDER_IDS, providerCredentialLabel } from "./provider-types.js";
 import {
   AI_PROVIDER_IDS,
   CREDENTIAL_PROVIDER_IDS,
@@ -31,6 +31,20 @@ describe("provider catalog", () => {
       expect(entry?.credentialReady).toBe(true);
       expect(entry?.credentialPurpose).toBe("messages");
     }
+  });
+
+  it("NVIDIA tersedia sebagai hosted routing provider dengan satu model verified", () => {
+    const nvidia = PROVIDER_CATALOG.find((entry) => entry.id === "nvidia");
+    expect(nvidia).toMatchObject({
+      displayName: "NVIDIA / NIM",
+      category: "ai",
+      credentialPurpose: "messages",
+      credentialReady: true,
+      routingReady: true,
+      connectionTestReady: true,
+    });
+    expect(nvidia?.hostedModels.map((model) => model.id)).toEqual(["z-ai/glm-5.3"]);
+    expect(providerCredentialLabel("nvidia")).toBe("NVIDIA_API_KEY");
   });
 
   it("MCP dan webhook tetap integration credentials dan bukan AI routing providers", () => {

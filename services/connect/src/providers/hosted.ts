@@ -2,6 +2,7 @@ import type { StablePrefix } from "@ecorione/context-assembly";
 import type { PinnedModelId, TokenUsage } from "@ecorione/shared-telemetry";
 import type { HostedProviderId } from "../provider-types.js";
 import { callAnthropic, estimateAnthropicReservationUsd } from "./anthropic.js";
+import { callNvidia, estimateNvidiaReservationUsd } from "./nvidia.js";
 import { callOpenAi, estimateOpenAiReservationUsd } from "./openai.js";
 import { callOpenRouter, estimateOpenRouterReservationUsd } from "./openrouter.js";
 
@@ -35,6 +36,8 @@ export function estimateHostedReservationUsd(
       return estimateOpenRouterReservationUsd(input);
     case "openai":
       return estimateOpenAiReservationUsd(input);
+    case "nvidia":
+      return estimateNvidiaReservationUsd(input);
   }
 }
 
@@ -56,5 +59,7 @@ export function callHostedProvider(
       return callOpenRouter(adapterInput, signal);
     case "openai":
       return callOpenAi(adapterInput, signal);
+    case "nvidia":
+      return callNvidia(adapterInput, signal);
   }
 }

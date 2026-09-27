@@ -43,6 +43,8 @@ const openrouterApiKey =
   credentialVault === undefined ? process.env.OPENROUTER_API_KEY || undefined : undefined;
 const openaiApiKey =
   credentialVault === undefined ? process.env.OPENAI_API_KEY || undefined : undefined;
+const nvidiaApiKey =
+  credentialVault === undefined ? process.env.NVIDIA_API_KEY || undefined : undefined;
 const webhookRootSecret =
   credentialVault === undefined
     ? process.env.ECORIONE_WEBHOOK_ROOT_SECRET || undefined
@@ -57,6 +59,8 @@ function developmentHostedApiKey(provider = hostedProvider): string | undefined 
       return openrouterApiKey;
     case "openai":
       return openaiApiKey;
+    case "nvidia":
+      return nvidiaApiKey;
   }
 }
 
@@ -175,6 +179,7 @@ const app = buildConnectServer({
   anthropicApiKey,
   openrouterApiKey,
   openaiApiKey,
+  nvidiaApiKey,
   localRuntime,
   localBaseUrl,
   localModelTag,

@@ -79,6 +79,15 @@ describe("FileRuntimeSettings", () => {
     expect(store.update({ hostedModel: "gpt-5.6-sol" }).settings.hostedModel).toBe(
       "gpt-5.6-sol",
     );
+
+    const nvidia = store.update({ hostedProvider: "nvidia" });
+    expect(nvidia.settings).toMatchObject({
+      hostedProvider: "nvidia",
+      hostedModel: "governed",
+    });
+    expect(store.update({ hostedModel: "z-ai/glm-5.3" }).settings.hostedModel).toBe(
+      "z-ai/glm-5.3",
+    );
   });
 
   it("menolak credential/fragment dan protocol non-http pada local runtime URL", () => {
