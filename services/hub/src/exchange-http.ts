@@ -1419,7 +1419,7 @@ export function registerExchangeRoutes(
     } catch (error) {
       if (
         error instanceof HttpError &&
-        error.code === "ECX_RESULT_HOSTED_ISOLATION_DENIED"
+        error.type === "ECX_RESULT_HOSTED_ISOLATION_DENIED"
       ) {
         roundTrips.fail(input.packet.packetId, error.message, nowIso());
       }
