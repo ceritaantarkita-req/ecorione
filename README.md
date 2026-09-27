@@ -6,14 +6,16 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 
 ## Current status — 2026-09-27
 
-The current repository and governed SumoPod staging runtime are converged on:
+The last audited Batch 7 closure/runtime baseline before this docs-only reconciliation is:
 
 ```text
-main / staging = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-image          = staging-2c2e3c8ad1b4
+reviewed closure = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+staging image    = staging-2c2e3c8ad1b4
 ```
 
-Latest merged-main proof:
+Docs-only reconciliation commits may advance Git/staging revision identity without changing the application/service/package compatibility baseline. Use the live repository head for the exact newest Git SHA and the dated reconciliation evidence for audited identities.
+
+Latest proof for the audited closure baseline:
 
 - CI **#2352** — PASS;
 - Product Eval **#1591** — PASS;
