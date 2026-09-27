@@ -1,12 +1,64 @@
 # Repository Truth Reconciliation — 2026-09-27
 
-Status: **ACTIVE RECONCILIATION / DOCS-ONLY / RUNTIME FROZEN**
+Status: **CLOSED / PASS — CURRENT DOC LAYER RECONCILED / POST-ECX BRANCH CLEANUP READY-PENDING-DELETION**
 
 ## Purpose
 
 Reconcile ECORIONE's current/canonical documentation and post-ECX Git branch inventory with the repository and staging state that actually exists after ECX Recipient Execution Batch 1–7.
 
 This is not Batch 8, PE-09, PCS-11, Batch 13, a new A-series feature, DR-2 runtime work, or production cutover.
+
+## Final reconciliation delivery
+
+Canonical documentation PR:
+
+```text
+PR                    = #378
+reviewed head          = 6601644cb32a4b75d09957eb1e8f289c52b438a5
+exact-head CI          = #2353 / run 36335547946 — PASS
+exact-head Product Eval= #1592 / run 36335548005 — PASS
+merge                  = 5b43ab8494c2104ca4e325843e33554d8ed3f1f1
+merged-main CI         = #2354 / run 36335782557 — PASS
+merged-main Product Eval = #1593 / run 36335782544 — PASS
+```
+
+Governed staging delivery after merge:
+
+```text
+Staging Deploy #1478 / run 36335841204 — gate PASS, deploy skipped
+Staging Deploy #1479 / run 36335964138 — gate PASS, deploy PASS
+deployed SHA = 5b43ab8494c2104ca4e325843e33554d8ed3f1f1
+image        = staging-5b43ab8494c2
+```
+
+Runtime evidence from #1479:
+
+- MCP protected-resource metadata PASS;
+- MCP unauthenticated challenge PASS;
+- Operations `healthy: true`;
+- unhealthy services: none;
+- expected host SHA matched;
+- configured services: 15;
+- running services: 15;
+- non-running services: none;
+- pre-cleanup available disk: 23.87 GiB;
+- final stabilized free disk: **29.87 GiB**;
+- final staging deploy verdict: PASS.
+
+The reconciliation changed documentation only; application/service/package runtime ownership and behavior were not changed.
+
+Post-merge remote branch inventory is **25 branches** because GitHub retains merged branches by repository policy and the reconciliation branch itself remains present.
+
+The 15 pre-reconciliation ECX cleanup candidates were revalidated after merge against live remote refs:
+
+```text
+checked        = 15
+exact matches  = 15
+moved/missing  = 0
+deleted        = 0
+```
+
+Therefore the cleanup allowlist remains valid, but deletion is still pending. Do not claim branch cleanup complete until the exact-SHA delete operation actually executes.
 
 ## Audited repository identity
 
