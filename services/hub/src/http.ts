@@ -36,6 +36,7 @@ import { CapabilityRegistry } from "./capability-registry.js";
 import { registerExchangeRoutes } from "./exchange-http.js";
 import { EcxAgentRegistry } from "./ecx-agent-registry.js";
 import { EcxExecutionStore } from "./ecx-execution-store.js";
+import { EcxRoundTripStore } from "./ecx-round-trip-store.js";
 import { registerExtensionRoutes } from "./extension-http.js";
 import { ExtensionRegistry } from "./extension-registry.js";
 import { registerHistoryRoutes } from "./history-http.js";
@@ -160,6 +161,7 @@ export function buildHubServer(
   const authority = new CapabilityRegistry(db);
   const exchangeAgents = new EcxAgentRegistry(db);
   const exchangeExecutions = new EcxExecutionStore(db);
+  const exchangeRoundTrips = new EcxRoundTripStore(db);
   const extensions = new ExtensionRegistry(db, authority);
   const deps: OrchestrateDeps = {
     repo,
@@ -382,12 +384,20 @@ export function buildHubServer(
     internalToken: options.internalToken,
   });
   registerHistoryRoutes(app, history);
-  registerExchangeRoutes(app, history, exchangeAgents, authority, exchangeExecutions, {
-    contextUrl: options.contextUrl,
+  registerExchangeRoutes(
+    app,
+    history,
+    exchangeAgents,
+    authority,
+    exchangeExecutions,
+    exchangeRoundTrips,
+    {
+      contextUrl: options.contextUrl,
     artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
     connectUrl: options.connectUrl,
-    internalToken: options.internalToken,
-  });
+      internalToken: options.internalToken,
+    },
+  );
 
   registerMcpRoutes(app, repo, {
     contextUrl: options.contextUrl,
