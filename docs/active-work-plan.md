@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 + BATCH 5 + BATCH 6 CLOSED-PASS / BATCH 7 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1–7 CLOSED-PASS / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 + Batch 4 + Batch 5 + Batch 6 CLOSED / Batch 7 next
+## ECX Recipient Execution roadmap — Batch 1–7 CLOSED / PASS
 
 **Batch 1 is CLOSED / PASS.** PR #363 reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286 + Product Eval #1525 + MCP #1131 and merged as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed; Staging Deploy #1345 was gate-only and #1346 executed successfully.
 
@@ -22,7 +22,9 @@ The completed boundary is intentionally narrow: single-recipient runtime binding
 
 The closed boundary adds additive/restart-safe Historical Ledger lifecycle migration, hot-retention + immutable gzip archive segments, exact logical replay across archive + hot storage, archived EventId retry/conflict preservation, and fail-closed archive integrity. It does not add destructive logical-history expiry, background purge scheduling, fan-out/A2A/UI, or Batch 5 metrics retention.
 
-**Next queued slice: Batch 7 — Advanced execution/productization. It is NOT STARTED.** Resume from [verification/ecx-execution-b6-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b6-safe-checkpoint-2026-09-27.md). Do not reopen Batches 1–6, and define Batch 7's accepted productization boundary before implementation.
+**Batch 7 — Advanced execution/productization is CLOSED / PASS.** Canonical PR #376 exact reviewed head `198b46fa0eeb679dc7bfee78492f4c8739a7ed99` passed CI #2349 + Product Eval #1588 + MCP #1175 and merged as `e49af9225194d36e2ed8cbefeb7b4cf5c09dc485`. Merged-main CI #2350 + Product Eval #1589 + MCP #1176 passed; Staging Deploy #1470 was gate-only and #1471 executed successfully with exact SHA match, public/auth + MCP smoke PASS, healthy Operations, 15/15 services running, and 27.68 GiB stabilized free disk. The accepted boundary is bounded 2–8 recipient `delta` fan-out with durable fan-out receipt/replay, per-child Batch 2–4 execution/security semantics, a 131,072-byte aggregate cap, and exactly one parent aggregation continuation. Canonical checkpoint: [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md).
+
+**No Batch 8 is implicitly opened.** The ECX Recipient Execution Batch 1–7 roadmap is closed at its documented boundaries. External A2A, recursive graphs, Flow/Temporal fan-out orchestration, `full` multi-recipient merge semantics, broad ECX UI, paid-provider reruns, DR-2, and production cutover remain separate explicit scopes.
 
 ## Branch-hygiene final closure — 2026-09-27
 
