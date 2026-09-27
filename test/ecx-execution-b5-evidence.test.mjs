@@ -84,7 +84,7 @@ describe("ECX Batch 5 deterministic quality/economics evidence", () => {
   });
 
   it("fails closed on wrong answer or missing pinned identity/economics telemetry", () => {
-    const bad = structuredClone(measuredResponse);
+    const bad = JSON.parse(JSON.stringify(measuredResponse));
     bad.handback.finalReply = '{"answer":"WRONG"}';
     bad.handback.parentCompletion.modelIdentityPinned = false;
     delete bad.handback.parentCompletion.cost;
