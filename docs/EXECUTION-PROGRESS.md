@@ -181,7 +181,7 @@ Deletion remains pending execution and must not be claimed before the exact-SHA 
 | Scope | State |
 |---|---|
 | Product/runtime implementation | NONE ACTIVE |
-| Repository truth/docs reconciliation | ACTIVE HOUSEKEEPING |
+| Repository truth/docs reconciliation | CLOSED / DOCS-ONLY RECONCILED |
 | Post-ECX branch delta cleanup | READY / PENDING EXECUTION |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
