@@ -323,7 +323,7 @@ describe("ECX Batch 4 security, isolation, result integration", () => {
     ledger.createSession({
       id: sourceSessionId,
       createdAt: NOW,
-      workspaceId: "ws_personal",
+      workspaceId: assertId("workspace", "ws_personal"),
       scope: "personal",
       sensitivity: "INTERNAL",
       syncClass: "LOCAL_ONLY",
@@ -453,7 +453,7 @@ describe("ECX Batch 4 security, isolation, result integration", () => {
     ledger.createSession({
       id: historySessionId,
       createdAt: NOW,
-      workspaceId: "ws_other",
+      workspaceId: assertId("workspace", "ws_other"),
       projectId: null,
       scope: "personal",
       sensitivity: "INTERNAL",
