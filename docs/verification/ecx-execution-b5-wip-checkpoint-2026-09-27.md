@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **ACTIVE / SAFE WIP — NOT CLOSED**
+Status: **HISTORICAL WIP / SUPERSEDED BY FINAL BATCH 5 CLOSURE**
 
 ## Resume identity
 
@@ -20,7 +20,7 @@ canonical PR = #371
 duplicate PR = #372 CLOSED UNMERGED
 ```
 
-This is the canonical safe resume pointer before Batch 5 CI/PR closure. It is **not** a PASS claim. Continue only from PR #371; PR #372 is an abandoned alternate path and must not be merged or used as a second source of truth.
+This was the canonical safe resume pointer before Batch 5 CI/PR closure. It is preserved as historical WIP evidence and superseded by [ecx-execution-b5-safe-checkpoint-2026-09-27.md](ecx-execution-b5-safe-checkpoint-2026-09-27.md). PR #371 merged successfully; PR #372 remains closed unmerged and must not be treated as a second source of truth.
 
 ## Why this scope
 
@@ -137,18 +137,9 @@ Coverage added for:
 - source contract forbidding savings-from-bytes metric names;
 - source contract preserving no analytics DB/fan-out/A2A scope.
 
-## Still required before closure
+## Historical closure follow-up
 
-1. rerun exact-head CI from the latest labeled-histogram test fix;
-2. pass full CI plus Product Eval, MCP acceptance, and Desktop Installer if triggered;
-3. fix any remaining defects on this same canonical PR #371 branch;
-4. mark #371 ready only after exact-head gates are green;
-5. merge only the exact reviewed head;
-6. verify merged-main gates;
-7. verify governed staging delivery;
-8. replace ACTIVE/WIP docs with CLOSED/PASS;
-9. write canonical Batch 5 safe checkpoint;
-10. advance Batch 6 only after closure.
+All closure requirements listed in the original WIP checkpoint were subsequently completed through canonical PR #371 exact head `98fdf004e421778874a68be032fc69af9e48fad4` / merge `5b29c15b8878549ed47d6acf2349364f6ce4fc4a`. Exact-head CI #2328 + Product Eval #1567 + MCP #1166 + Desktop Installer #259 passed; merged-main CI #2329 + Product Eval #1568 + MCP #1167 passed; Staging Deploy #1430 was gate-only and actual Staging Deploy #1431 passed with exact SHA match, public/auth + MCP smoke PASS, healthy Operations, 15/15 configured services running, and 27.72 GiB stabilized free disk. Current resume pointer: [ecx-execution-b5-safe-checkpoint-2026-09-27.md](ecx-execution-b5-safe-checkpoint-2026-09-27.md).
 
 ## Explicit non-scope
 

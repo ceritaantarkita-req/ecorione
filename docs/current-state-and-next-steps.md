@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 + BATCH 5 CLOSED-PASS / BATCH 6 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -10,11 +10,17 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
-## 2026-09-27 ECX Execution — Batch 5 ACTIVE safe checkpoint
+## 2026-09-27 ECX Execution — Batch 5 closure
 
-Batch 5 — **End-to-end observability, quality, economics** is ACTIVE on canonical PR #371 / branch `agent/ecx-observability-quality-economics-b5-20260927`. The bounded slice preserves Connect-owned completion usage/cost/budget telemetry through ECX execution, projects single-recipient round-trip model-call/token/actual-cost/byte/duration metrics through the existing Hub process-lifetime observability boundary, and adds an offline deterministic quality/economics evidence evaluator that reuses the established exact JSON quality scorer. Alternate PR #372 has been closed unmerged so there is only one Batch 5 source of truth. It does **not** derive savings from ECX bytes, rerun paid W18, add a durable analytics store, or open fan-out/A2A/UI/retention scope.
+Batch 5 — **End-to-end observability, quality, economics is CLOSED / PASS** through canonical PR #371. Exact reviewed head `98fdf004e421778874a68be032fc69af9e48fad4` passed CI #2328, Product Eval #1567, MCP External HTTPS Acceptance #1166, and Desktop Installer #259, then squash-merged to `main` as `5b29c15b8878549ed47d6acf2349364f6ce4fc4a`. Merged-main CI #2329, Product Eval #1568, and MCP #1167 passed. Staging Deploy #1430 was gate-only; actual Staging Deploy #1431 deployed the exact merged SHA successfully as `staging-5b29c15b8878`. Alternate PR #372 was closed unmerged and introduced no second source of truth.
 
-Safe-resume checkpoint: [verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md). **Do not restart Batches 1–4, Historical Ledger core, branch hygiene, or historical W17/W18 evidence.**
+The closed boundary preserves Connect-owned completion usage/cost/budget telemetry through ECX execution, projects real single-recipient round-trip model-call/token/actual-cost/byte/duration metrics through the existing Hub process-lifetime observability boundary, and adds deterministic offline quality/economics evidence over previously captured round-trip responses using the established exact JSON quality scorer. Successful replay does not double-count model-call/token/cost counters. The evidence path requires pinned model identity plus usage/actual-cost telemetry, rejects unsettled budget evidence when present, and deliberately does not infer savings from ECX packet/hydration byte reduction.
+
+Runtime proof on Staging Deploy #1431 matched exact SHA `5b29c15b8878549ed47d6acf2349364f6ce4fc4a`; public/auth and MCP smoke passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **27.72 GiB free**.
+
+Batch 5 deliberately does **not** add a durable observability/time-series database, rerun paid W18 for freshness, convert historical W18 into current-production claims, claim universal model quality/latency/savings, or open fan-out/A2A/new ECX UI/Flow-Temporal/retention scope. **Batch 6 — Historical Ledger retention/compaction/migration is NEXT / NOT STARTED.**
+
+Canonical safe-resume checkpoint: [verification/ecx-execution-b5-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b5-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–5, Historical Ledger core audits, branch hygiene, or historical W17/W18 evidence.**
 
 ## 2026-09-27 ECX Execution — Batch 4 closure
 
@@ -24,7 +30,7 @@ The closed boundary adds explicit sender `agent.result.receive` authority before
 
 Runtime proof on Staging Deploy #1403 matched exact SHA `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`; public/auth and MCP smoke passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **29.94 GiB free**.
 
-Batch 4 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. At the Batch 4 checkpoint, Batch 5 was **NEXT / NOT STARTED**; that historical handoff is superseded by the active Batch 5 checkpoint above.
+Batch 4 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. At the Batch 4 checkpoint, Batch 5 was **NEXT / NOT STARTED**; that historical handoff is superseded by the Batch 5 closure above.
 
 Canonical safe-resume checkpoint: [verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–4, branch hygiene, Historical Ledger core, or historical ECX selector/economics audits.**
 
