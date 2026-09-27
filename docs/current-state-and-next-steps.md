@@ -1,8 +1,8 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-26**
+Last updated: **2026-09-27**
 
-Status: **CURRENT / AUDIT FOLLOW-UPS THROUGH A-11 CLOSED-PASS / ORIGINAL OFF-HOST DR CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE STAGE 4 CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -19,6 +19,16 @@ The A-series audit-follow-up sequence selected from the 2026-09-24 audit is clos
 The sections below preserve chronological closure evidence. Older paragraphs that say “current runtime” refer to their dated checkpoint unless this top section explicitly supersedes them.
 
 Repository/documentation reconciliation evidence: [verification/repository-documentation-reconciliation-2026-09-26.md](verification/repository-documentation-reconciliation-2026-09-26.md).
+
+## 2026-09-27 branch hygiene safe checkpoint
+
+Branch hygiene is **Stage 4 CLOSED / PASS** at the audited/classification boundary. Stage 1/2 identified 354 exact-SHA cleanup candidates; the one-time cleanup dry-run proved 354/354 eligible and APPLY deleted **354/354 remote branches** with zero hold/failure/skip. Stage 3 and Stage 4 then reconciled remaining unique/probe/execution branches and narrowed substantive retained provenance to **7 branches**.
+
+PR #361 exact head `316ba052baec2a4b7509e3761dd151a7fcf03f1c` passed CI #2276 + Product Eval #1515 and merged as `9e621680661f7128b9cfea930fd470472ed94381`. Merged-main CI #2277 + Product Eval #1516 passed. Staging Deploy #1325 was gate-only; actual Staging Deploy #1326 deployed exact `9e621680...` with public/auth + MCP smoke PASS, Operations healthy with zero unhealthy services, **15/15** configured services running, clean exact-host identity, and **29.92 GiB** stabilized free disk.
+
+Direct GitHub enumeration before opening the checkpoint branch returned **47 remote branches**: `main`, 38 already-allowlisted present branches, seven retained branches, and the now-merged Stage-4 branch. The Stage-4 branch is now also exact-head safe, so the durable classification is **393 cumulative safe-delete entries = 354 already deleted + 39 cleanup-ready still present**, plus **7 retained** and `main`. No branch is unclassified at that baseline.
+
+Safe resume: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md). The next cleanup pass must use exact-SHA revalidation and must not delete the seven retained branches.
 
 ## 2026-09-24 current-main + staging parity audit
 

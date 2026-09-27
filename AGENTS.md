@@ -15,7 +15,7 @@ Before changing the repo:
 
 Dated audits and `docs/verification/` are evidence, not current work queues.
 
-## Current state — 2026-09-26
+## Current state — 2026-09-27
 
 - original Batch 1–12 / W / F6 baseline: **CLOSED**;
 - Windows runtime + installer: **VERIFIED**;
@@ -51,7 +51,8 @@ Dated audits and `docs/verification/` are evidence, not current work queues.
 - 2026-09-24 audit follow-ups selected through A-11: **CLOSED / PASS at documented bounded scopes**; A-00 human auth, A-12 remote-bind auth, A-01 internal timeouts, A-13 Space/Flow default port, A-02 All, A-03 stale Project selection, A-04 Project settings, A-05 generic source onboarding boundary, A-06 Schedule, A-07/A-08 Brain work, A-09 decomposition, A-10 Compose readiness, and A-11 browser Workspace context are closed;
 - repository/documentation reconciliation: **CLOSED / PASS through PR #354**; exact merge `265a28d4c53cc482af8ea33a6362a21e640d30e5` passed merged-main CI #2263 + Product Eval #1502 and actual Staging Deploy #1298;
 - reconciliation runtime proof: public/auth + MCP checks PASS, Operations healthy with zero unhealthy owner services, **15/15** configured services running, clean exact-host SHA match, and **25.11 GiB** stabilized free space; later docs-only bookkeeping may advance the exact SHA without reopening product/runtime scope;
-- open Issue #277 remains the deferred DR-2 tracker; branch cleanup remains a separate destructive hygiene scope.
+- branch hygiene Stage 4: **CLOSED / PASS** through PR #361 / merge `9e621680661f7128b9cfea930fd470472ed94381`; the first exact-SHA cleanup deleted 354/354 branches, cumulative evidence now has 393 safe-delete entries, 39 cleanup-ready branches still present, and seven retained branches that are not deletion-authorized; resume from `docs/verification/branch-hygiene-safe-checkpoint-2026-09-27.md` rather than re-auditing from zero.
+- open Issue #277 remains the deferred DR-2 tracker.
 
 Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any new product scope requires an explicit roadmap/decision.
 

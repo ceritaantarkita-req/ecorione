@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-26**
+Last updated: **2026-09-27**
 
 This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
 
@@ -130,7 +130,7 @@ Latest safe product/audit checkpoint: [verification/session-10-a11-browser-works
 
 - active operational scope — **NONE for DR-2 runtime**; DR-2 checkpoint 2 is deferred at the safe pre-selection boundary. Interim backup posture is local backup; optional encrypted Google Drive copy is not yet a validated DR-2 target.
 - original Off-host Backup & DR — **CLOSED / PASS** for total SumoPod staging-host loss at the documented boundary; exact recovered runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / image `staging-b27c1e5833be`.
-- SumoPod remote development/staging — **VERIFIED / NOT PRODUCTION**; repository/documentation reconciliation PR #354 merged as `265a28d4c53cc482af8ea33a6362a21e640d30e5`, and actual Staging Deploy #1298 deployed `staging-265a28d4c53c` with public/auth + MCP checks PASS, Operations healthy with zero unhealthy owner services, 15/15 configured services running, clean exact-host identity, and 25.11 GiB stabilized free space. Historical runtime identities remain valid only for their dated evidence boundaries; later docs-only bookkeeping may advance the SHA without reopening runtime scope.
+- SumoPod remote development/staging — **VERIFIED / NOT PRODUCTION**; latest branch-hygiene Stage-4 merge `9e621680661f7128b9cfea930fd470472ed94381` passed merged-main CI #2277 + Product Eval #1516 and actual Staging Deploy #1326 as `staging-9e621680661f`, with public/auth + MCP checks PASS, Operations healthy with zero unhealthy services, 15/15 configured services running, clean exact-host identity, and 29.92 GiB stabilized free disk. Historical runtime identities remain evidence for their dated boundaries; later docs-only bookkeeping may advance the exact SHA without reopening runtime scope.
 - public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
 - Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
 - AutoClick — deferred by design.
@@ -181,3 +181,5 @@ Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-
 The audited pre-reconciliation baseline contained **250 tracked files under `docs/`** at `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47`; this reconciliation adds one new verification record, so its post-merge tree contains **251** tracked files under `docs/`. Current/canonical documents are reconciled to the closed PE/PCS/original-DR state, the closed audit follow-ups through A-11, and the deferred DR-2 checkpoint-2 boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, superseded runtime identities, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, `next scope`, or naming an older staging SHA is not current authority unless the current-state documents above explicitly reopen that scope.
 
 Historical reconciliation records remain [verification/repository-documentation-reconciliation-2026-09-21.md](verification/repository-documentation-reconciliation-2026-09-21.md) and [verification/repository-documentation-reconciliation-2026-09-23.md](verification/repository-documentation-reconciliation-2026-09-23.md). The latest reconciliation is [verification/repository-documentation-reconciliation-2026-09-26.md](verification/repository-documentation-reconciliation-2026-09-26.md).
+
+Latest branch-hygiene safe checkpoint: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md). It records the executed 354/354 exact-SHA cleanup, PR #361 Stage-4 closure, exact staging proof, **393 cumulative safe-delete entries**, **39 cleanup-ready branches still present**, and **7 retained branches** that are not deletion-authorized.

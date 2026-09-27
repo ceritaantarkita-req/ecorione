@@ -8,7 +8,7 @@
     "hold": "branch retains substantive unique/diverged implementation or unlanded behavior and lacks sufficient disposal proof"
   },
   "counts": {
-    "safe_delete": 392,
+    "safe_delete": 393,
     "safe_delete_merged_pr_exact_head": 332,
     "safe_delete_ancestor_of_main": 22,
     "safe_delete_ancestor_of_retained_branch": 3,
@@ -16,7 +16,7 @@
     "safe_delete_post_merge_delta_superseded": 4,
     "safe_delete_ephemeral_probe_or_execution_helper": 12,
     "safe_delete_content_salvaged": 1,
-    "safe_delete_post_baseline_hygiene_or_execution": 6,
+    "safe_delete_post_baseline_hygiene_or_execution": 7,
     "hold": 7
   },
   "safe_delete": [
@@ -780,6 +780,14 @@
       "evidence_kind": "merged_pr_exact_head_post_baseline",
       "merged_pr": 360,
       "merge_commit_sha": "a1991f1fd1e321ecbe32f997d0ef87982fc0b20a"
+    },
+    {
+      "branch": "docs/branch-hygiene-stage4-20260927",
+      "expected_sha": "316ba052baec2a4b7509e3761dd151a7fcf03f1c",
+      "evidence_kind": "merged_pr_exact_head_post_baseline",
+      "merged_pr": 361,
+      "merge_commit_sha": "9e621680661f7128b9cfea930fd470472ed94381",
+      "note": "Stage-4 audit branch merged through PR #361; exact PR head is safe-delete evidence after merge."
     },
     {
       "branch": "docs/cleanup-current-state-20260918",
@@ -3287,8 +3295,17 @@
       "skip": 0
     },
     "promoted_from_prior_hold": 13,
-    "added_post_baseline_hygiene_or_execution_branches": 6,
+    "added_post_baseline_hygiene_or_execution_branches": 7,
     "remaining_hold": 7,
-    "excluded_current_stage4_branch": "docs/branch-hygiene-stage4-20260927"
+    "stage4_pr": 361,
+    "stage4_head_sha": "316ba052baec2a4b7509e3761dd151a7fcf03f1c",
+    "stage4_merge_sha": "9e621680661f7128b9cfea930fd470472ed94381",
+    "stage4_merge_state": "closed-pass",
+    "current_observed_remote_branch_count_before_checkpoint_branch": 47,
+    "current_present_safe_delete_after_stage4_merge": 39,
+    "current_retained": 7,
+    "current_main": 1,
+    "unclassified": 0,
+    "checkpoint_branch_excluded": "docs/branch-hygiene-safe-checkpoint-20260927"
   }
 }
