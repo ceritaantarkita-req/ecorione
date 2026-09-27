@@ -1,0 +1,81 @@
+name: NVIDIA Provider Format Fix One-Time
+
+on:
+  push:
+    branches:
+      - feat/nvidia-nim-provider-20260928
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: "!contains(github.event.head_commit.message, '[format-helper]')"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320
+        with:
+          version: 10.28.0
+
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Format NVIDIA provider changes
+        run: |
+          pnpm exec prettier --write \
+            .env.example \
+            apps/ai/app/page.tsx \
+            apps/ai/app/settings/useSettingsController.ts \
+            apps/ai/lib/settings-proxy.test.ts \
+            docs/adr/0022-provider-framework-and-runtime-abstraction.md \
+            packages/shared-telemetry/src/pricing.test.ts \
+            packages/shared-telemetry/src/pricing.ts \
+            scripts/provider-matrix-canary.mjs \
+            scripts/secret-scan.mjs \
+            services/connect/src/complete.ts \
+            services/connect/src/control-http.test.ts \
+            services/connect/src/hosted-model-catalog.test.ts \
+            services/connect/src/hosted-model-catalog.ts \
+            services/connect/src/http.ts \
+            services/connect/src/main.ts \
+            services/connect/src/provider-catalog.test.ts \
+            services/connect/src/provider-catalog.ts \
+            services/connect/src/provider-selection.test.ts \
+            services/connect/src/provider-types.ts \
+            services/connect/src/providers/hosted.test.ts \
+            services/connect/src/providers/hosted.ts \
+            services/connect/src/providers/nvidia.ts \
+            services/connect/src/providers/openai-compatible-cost.test.ts \
+            services/connect/src/providers/openai-compatible.ts \
+            services/connect/src/routing.test.ts \
+            services/connect/src/routing.ts \
+            services/connect/src/runtime-settings.test.ts \
+            test/nvidia-nim-provider-source-contract.test.ts \
+            test/production-activation.test.ts
+
+      - name: Remove helper and commit deterministic format
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/nvidia-provider-format-once.yml
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "style: format NVIDIA provider changes [format-helper]"
+          git push origin HEAD:feat/nvidia-nim-provider-20260928
