@@ -63,6 +63,32 @@ describe("route", () => {
     });
   });
 
+  it("NVIDIA route deterministik memakai pinned GLM-5.3", () => {
+    expect(
+      route({ target: "hosted", sensitivity: "PUBLIC", hostedProvider: "nvidia" }),
+    ).toEqual({
+      model: "z-ai/glm-5.3",
+      routeReason: "default-hosted",
+    });
+    expect(
+      route({
+        target: "hosted",
+        sensitivity: "INTERNAL",
+        hostedProvider: "nvidia",
+        hostedModel: "z-ai/glm-5.3",
+      }),
+    ).toEqual({
+      model: "z-ai/glm-5.3",
+      routeReason: "selected-hosted",
+    });
+    expect(
+      route({ target: "hosted", sensitivity: "RESTRICTED", hostedProvider: "nvidia" }),
+    ).toEqual({
+      model: "z-ai/glm-5.3",
+      routeReason: "sensitivity-restricted",
+    });
+  });
+
   it("menolak pasangan provider/model yang belum diverifikasi", () => {
     expect(() =>
       route({
