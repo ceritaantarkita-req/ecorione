@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **ACTIVE / SAFE WIP — NOT CLOSED**
+Status: **HISTORICAL WIP / SUPERSEDED BY FINAL BATCH 3 CLOSURE**
 
 ## Resume identity
 
@@ -17,7 +17,7 @@ pending-fix = d2d91fd96c01de026c5e496d6a0f4b9fc82814ff
 format      = 2f778ba1215d75367d9ba7246896c3024ad19c3f
 ```
 
-This checkpoint is a safe resume pointer before CI/PR closure. It is **not** a PASS claim.
+This checkpoint was the safe resume pointer before CI/PR closure. It is preserved as historical WIP evidence and superseded by [ecx-execution-b3-safe-checkpoint-2026-09-27.md](ecx-execution-b3-safe-checkpoint-2026-09-27.md). Do not use this file as the current resume pointer.
 
 The latest hardening also suppresses a premature `agent.continuation.uncertain` Ledger outcome while the one claimed parent continuation is still in-flight; only a real ambiguous failure records the immutable UNCERTAIN outcome.
 
@@ -92,17 +92,9 @@ Focused tests cover:
 - source-contract preservation of Batch 2 while Batch 3 composes above it;
 - no fan-out/aggregation/A2A/UI/retention expansion.
 
-## Still required before closure
+## Historical closure follow-up
 
-1. open PR from this branch;
-2. run format/lint/typecheck/full tests;
-3. fix any compile/test defects on this same branch;
-4. pass Product Eval and any other triggered exact-head gates;
-5. merge only after exact-head green;
-6. verify merged-main gates;
-7. verify governed staging delivery;
-8. replace ACTIVE/WIP current docs with CLOSED/PASS;
-9. write final Batch 3 checkpoint.
+All closure requirements listed in the original WIP checkpoint were subsequently completed through PR #368 / merge `e784dde4ed891020e3c88712d4e660548a0e04c7`. Exact-head CI #2304 + Product Eval #1543 + MCP #1145 passed; merged-main CI #2305 + Product Eval #1544 + MCP #1146 passed; Staging Deploy #1382 was gate-only and actual Staging Deploy #1383 passed. Current resume pointer: [ecx-execution-b3-safe-checkpoint-2026-09-27.md](ecx-execution-b3-safe-checkpoint-2026-09-27.md).
 
 ## Explicit non-scope
 
