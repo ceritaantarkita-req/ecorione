@@ -781,16 +781,17 @@ function appendRoundTripContinuationOutcome(
       : status.state === "FAILED"
         ? "agent.continuation.failed"
         : "agent.continuation.uncertain";
+  const parentCompletion = response?.handback.parentCompletion ?? null;
   const completion =
-    status.state === "SUCCEEDED" && response?.handback.parentCompletion !== null
+    status.state === "SUCCEEDED" && parentCompletion !== null && response !== null
       ? {
-          provider: response.handback.parentCompletion.provider,
-          model: response.handback.parentCompletion.model,
-          responseModel: response.handback.parentCompletion.responseModel,
-          modelIdentity: response.handback.parentCompletion.modelIdentity,
-          modelIdentityPinned: response.handback.parentCompletion.modelIdentityPinned,
-          cacheHit: response.handback.parentCompletion.cacheHit,
-          routeReason: response.handback.parentCompletion.routeReason,
+          provider: parentCompletion.provider,
+          model: parentCompletion.model,
+          responseModel: parentCompletion.responseModel,
+          modelIdentity: parentCompletion.modelIdentity,
+          modelIdentityPinned: parentCompletion.modelIdentityPinned,
+          cacheHit: parentCompletion.cacheHit,
+          routeReason: parentCompletion.routeReason,
           ...replyEvidence(response.handback.finalReply),
         }
       : {};

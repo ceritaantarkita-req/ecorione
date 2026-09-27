@@ -393,8 +393,8 @@ export function buildHubServer(
     exchangeRoundTrips,
     {
       contextUrl: options.contextUrl,
-    artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
-    connectUrl: options.connectUrl,
+      artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",
+      connectUrl: options.connectUrl,
       internalToken: options.internalToken,
     },
   );
