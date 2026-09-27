@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { gzipSync, gunzipSync } from "node:zlib";
 import {
   HistoryEventSchema,
   HistorySessionSchema,
@@ -30,6 +31,8 @@ interface SessionRow {
   sync_class: string;
   next_seq: number;
   head_hash: string | null;
+  archive_through_seq: number;
+  archive_head_hash: string | null;
 }
 interface EventRow {
   id: string;
@@ -43,6 +46,25 @@ interface EventRow {
   payload_json: string;
   prev_hash: string | null;
   hash: string;
+}
+interface ArchiveSegmentRow {
+  id: string;
+  session_id: string;
+  first_seq: number;
+  last_seq: number;
+  event_count: number;
+  payload_gzip: Buffer;
+  payload_sha256: string;
+  first_prev_hash: string | null;
+  last_hash: string;
+  created_at: string;
+  format_version: number;
+}
+interface ArchiveEventIndexRow {
+  event_id: string;
+  session_id: string;
+  seq: number;
+  segment_id: string;
 }
 
 export class HistorySessionNotFoundError extends Error {
@@ -147,8 +169,54 @@ function eventFromRow(row: EventRow): HistoryEvent {
   });
 }
 
+function sha256(value: string | Buffer): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 function hashEvent(input: Omit<HistoryEvent, "hash">): string {
-  return createHash("sha256").update(canonicalJson(input)).digest("hex");
+  return sha256(canonicalJson(input));
+}
+
+function archiveEventsFromRow(row: ArchiveSegmentRow): HistoryEvent[] {
+  if (row.format_version !== 1) {
+    throw new HistoryIntegrityError(
+      `History archive ${row.id} memakai format version yang tidak didukung.`,
+    );
+  }
+  try {
+    const json = gunzipSync(row.payload_gzip).toString("utf8");
+    if (sha256(json) !== row.payload_sha256) {
+      throw new HistoryIntegrityError(`History archive ${row.id} payload hash mismatch.`);
+    }
+    const parsed = JSON.parse(json) as unknown;
+    if (!Array.isArray(parsed)) {
+      throw new HistoryIntegrityError(`History archive ${row.id} payload bukan event array.`);
+    }
+    const events = parsed.map((event) => HistoryEventSchema.parse(event));
+    if (events.length !== row.event_count) {
+      throw new HistoryIntegrityError(`History archive ${row.id} event count mismatch.`);
+    }
+    const first = events[0];
+    const last = events.at(-1);
+    if (
+      first === undefined ||
+      last === undefined ||
+      first.sessionId !== row.session_id ||
+      last.sessionId !== row.session_id ||
+      first.seq !== row.first_seq ||
+      last.seq !== row.last_seq ||
+      first.prevHash !== row.first_prev_hash ||
+      last.hash !== row.last_hash
+    ) {
+      throw new HistoryIntegrityError(`History archive ${row.id} boundary metadata mismatch.`);
+    }
+    return events;
+  } catch (error) {
+    if (error instanceof HistoryIntegrityError) throw error;
+    throw new HistoryIntegrityError(
+      `History archive ${row.id} tidak dapat didecode atau diverifikasi.`,
+    );
+  }
 }
 
 function sameDraft(actual: HistoryEvent, expected: HistoryEventDraft): boolean {
@@ -190,6 +258,17 @@ export interface CreateHistorySessionInput {
 export interface AppendHistoryResult {
   readonly event: HistoryEvent;
   readonly deduplicated: boolean;
+}
+
+export interface CompactHistoryResult {
+  readonly sessionId: SessionId;
+  readonly compacted: boolean;
+  readonly archivedEvents: number;
+  readonly archivedThroughSeq: number;
+  readonly hotEvents: number;
+  readonly segmentId: string | null;
+  readonly payloadBytes: number;
+  readonly compressedBytes: number;
 }
 
 export class HistoryLedger {
@@ -274,10 +353,51 @@ export class HistoryLedger {
     return transaction.immediate();
   }
 
-  getSession(id: string): HistorySession | null {
+  private getSessionRow(id: string): SessionRow | null {
     const row = this.db.raw.prepare("SELECT * FROM history_sessions WHERE id=?").get(id) as
       SessionRow | undefined;
-    return row === undefined ? null : sessionFromRow(row);
+    return row ?? null;
+  }
+
+  getSession(id: string): HistorySession | null {
+    const row = this.getSessionRow(id);
+    return row === null ? null : sessionFromRow(row);
+  }
+
+  private archiveSegments(sessionId: SessionId): ArchiveSegmentRow[] {
+    return this.db.raw
+      .prepare(
+        "SELECT * FROM history_archive_segments WHERE session_id=? ORDER BY first_seq ASC",
+      )
+      .all(sessionId) as ArchiveSegmentRow[];
+  }
+
+  private archivedEvents(sessionId: SessionId): HistoryEvent[] {
+    return this.archiveSegments(sessionId).flatMap((row) => archiveEventsFromRow(row));
+  }
+
+  private archivedEvent(id: string): HistoryEvent | null {
+    const index = this.db.raw
+      .prepare("SELECT * FROM history_archive_event_index WHERE event_id=?")
+      .get(id) as ArchiveEventIndexRow | undefined;
+    if (index === undefined) return null;
+    const segment = this.db.raw
+      .prepare("SELECT * FROM history_archive_segments WHERE id=?")
+      .get(index.segment_id) as ArchiveSegmentRow | undefined;
+    if (segment === undefined) {
+      throw new HistoryIntegrityError(
+        `History archive index ${id} menunjuk segment yang hilang.`,
+      );
+    }
+    const event = archiveEventsFromRow(segment).find(
+      (candidate) => candidate.seq === index.seq && candidate.id === id,
+    );
+    if (event === undefined || event.sessionId !== index.session_id) {
+      throw new HistoryIntegrityError(
+        `History archive index ${id} tidak cocok dengan payload.`,
+      );
+    }
+    return event;
   }
 
   listSessions(
@@ -309,7 +429,8 @@ export class HistoryLedger {
   private existingEvent(id: string): HistoryEvent | null {
     const row = this.db.raw.prepare("SELECT * FROM history_events WHERE id=?").get(id) as
       EventRow | undefined;
-    return row === undefined ? null : eventFromRow(row);
+    if (row !== undefined) return eventFromRow(row);
+    return this.archivedEvent(id);
   }
 
   private appendLocked(
@@ -390,14 +511,18 @@ export class HistoryLedger {
   }
 
   verifySession(sessionId: SessionId): void {
-    const session = this.getSession(sessionId);
-    if (session === null) throw new HistorySessionNotFoundError(sessionId);
-    const rows = this.db.raw
+    const sessionRow = this.getSessionRow(sessionId);
+    if (sessionRow === null) throw new HistorySessionNotFoundError(sessionId);
+    const session = sessionFromRow(sessionRow);
+    const archived = this.archivedEvents(sessionId);
+    const hotRows = this.db.raw
       .prepare("SELECT * FROM history_events WHERE session_id=? ORDER BY seq ASC")
       .all(sessionId) as EventRow[];
+    const events = [...archived, ...hotRows.map(eventFromRow)];
+
     let previousHash: string | null = null;
-    for (let index = 0; index < rows.length; index += 1) {
-      const event = eventFromRow(rows[index] as EventRow);
+    for (let index = 0; index < events.length; index += 1) {
+      const event = events[index] as HistoryEvent;
       if (event.seq !== index) {
         throw new HistoryIntegrityError(
           `History ${sessionId} tidak contiguous: expected seq ${String(index)}, got ${String(event.seq)}.`,
@@ -417,9 +542,20 @@ export class HistoryLedger {
       }
       previousHash = event.hash;
     }
-    if (session.nextSeq !== rows.length) {
+
+    const expectedArchiveThrough = archived.length - 1;
+    const expectedArchiveHead = archived.at(-1)?.hash ?? null;
+    if (
+      sessionRow.archive_through_seq !== expectedArchiveThrough ||
+      sessionRow.archive_head_hash !== expectedArchiveHead
+    ) {
       throw new HistoryIntegrityError(
-        `History ${sessionId} nextSeq tidak cocok dengan committed rows.`,
+        `History ${sessionId} archive watermark tidak cocok dengan committed archive.`,
+      );
+    }
+    if (session.nextSeq !== events.length) {
+      throw new HistoryIntegrityError(
+        `History ${sessionId} nextSeq tidak cocok dengan committed history.`,
       );
     }
     if (session.headHash !== previousHash) {
@@ -437,6 +573,112 @@ export class HistoryLedger {
       events += session.nextSeq;
     }
     return { sessions: sessions.length, events };
+  }
+
+  compactSession(input: {
+    readonly sessionId: SessionId;
+    readonly retainRecentEvents: number;
+    readonly createdAt: string;
+  }): CompactHistoryResult {
+    if (!Number.isInteger(input.retainRecentEvents) || input.retainRecentEvents < 0) {
+      throw new HistoryPayloadError("retainRecentEvents harus integer non-negative.");
+    }
+    const transaction = this.db.raw.transaction(() => {
+      this.verifySession(input.sessionId);
+      const row = this.getSessionRow(input.sessionId);
+      if (row === null) throw new HistorySessionNotFoundError(input.sessionId);
+
+      const firstSeq = row.archive_through_seq + 1;
+      const throughSeq = row.next_seq - input.retainRecentEvents - 1;
+      const hotEvents = Math.max(0, row.next_seq - Math.max(firstSeq, throughSeq + 1));
+      if (throughSeq < firstSeq) {
+        return {
+          sessionId: input.sessionId,
+          compacted: false,
+          archivedEvents: 0,
+          archivedThroughSeq: row.archive_through_seq,
+          hotEvents,
+          segmentId: null,
+          payloadBytes: 0,
+          compressedBytes: 0,
+        };
+      }
+
+      const eventRows = this.db.raw
+        .prepare(
+          "SELECT * FROM history_events WHERE session_id=? AND seq>=? AND seq<=? ORDER BY seq ASC",
+        )
+        .all(input.sessionId, firstSeq, throughSeq) as EventRow[];
+      const expectedCount = throughSeq - firstSeq + 1;
+      if (eventRows.length !== expectedCount) {
+        throw new HistoryIntegrityError(
+          `History ${input.sessionId} hot prefix tidak lengkap untuk compaction.`,
+        );
+      }
+      const events = eventRows.map(eventFromRow);
+      const payloadJson = canonicalJson(events);
+      const payload = Buffer.from(payloadJson, "utf8");
+      const compressed = gzipSync(payload, { level: 9 });
+      const payloadSha256 = sha256(payloadJson);
+      const segmentId = `hseg_${sha256(
+        `${input.sessionId}|${String(firstSeq)}|${String(throughSeq)}|${payloadSha256}`,
+      ).slice(0, 48)}`;
+      const first = events[0] as HistoryEvent;
+      const last = events.at(-1) as HistoryEvent;
+
+      this.db.raw
+        .prepare(
+          "INSERT INTO history_archive_segments(id,session_id,first_seq,last_seq,event_count,payload_gzip,payload_sha256,first_prev_hash,last_hash,created_at,format_version) VALUES(?,?,?,?,?,?,?,?,?,?,1)",
+        )
+        .run(
+          segmentId,
+          input.sessionId,
+          firstSeq,
+          throughSeq,
+          events.length,
+          compressed,
+          payloadSha256,
+          first.prevHash,
+          last.hash,
+          input.createdAt,
+        );
+      const insertIndex = this.db.raw.prepare(
+        "INSERT INTO history_archive_event_index(event_id,session_id,seq,segment_id) VALUES(?,?,?,?)",
+      );
+      for (const event of events) {
+        insertIndex.run(event.id, event.sessionId, event.seq, segmentId);
+      }
+
+      this.db.raw
+        .prepare(
+          "INSERT INTO history_compaction_guard(session_id,through_seq,token) VALUES(?,?,?)",
+        )
+        .run(input.sessionId, throughSeq, segmentId);
+      this.db.raw
+        .prepare("DELETE FROM history_events WHERE session_id=? AND seq>=? AND seq<=?")
+        .run(input.sessionId, firstSeq, throughSeq);
+      this.db.raw
+        .prepare(
+          "UPDATE history_sessions SET archive_through_seq=?,archive_head_hash=? WHERE id=?",
+        )
+        .run(throughSeq, last.hash, input.sessionId);
+      this.db.raw
+        .prepare("DELETE FROM history_compaction_guard WHERE session_id=?")
+        .run(input.sessionId);
+
+      this.verifySession(input.sessionId);
+      return {
+        sessionId: input.sessionId,
+        compacted: true,
+        archivedEvents: events.length,
+        archivedThroughSeq: throughSeq,
+        hotEvents: row.next_seq - throughSeq - 1,
+        segmentId,
+        payloadBytes: payload.length,
+        compressedBytes: compressed.length,
+      };
+    });
+    return transaction.immediate();
   }
 
   readRange(input: {
@@ -460,12 +702,31 @@ export class HistoryLedger {
         events: [],
       };
     }
-    const rows = this.db.raw
-      .prepare(
-        "SELECT * FROM history_events WHERE session_id=? AND seq>? AND seq<=? ORDER BY seq ASC LIMIT ?",
-      )
-      .all(input.sessionId, input.afterSeq, upper, input.limit) as EventRow[];
-    const events = rows.map(eventFromRow);
+
+    const archived: HistoryEvent[] = [];
+    for (const segment of this.archiveSegments(input.sessionId)) {
+      if (segment.last_seq <= input.afterSeq || segment.first_seq > upper) continue;
+      for (const event of archiveEventsFromRow(segment)) {
+        if (event.seq > input.afterSeq && event.seq <= upper) archived.push(event);
+        if (archived.length >= input.limit) break;
+      }
+      if (archived.length >= input.limit) break;
+    }
+
+    const remaining = input.limit - archived.length;
+    const hot =
+      remaining <= 0
+        ? []
+        : (
+            this.db.raw
+              .prepare(
+                "SELECT * FROM history_events WHERE session_id=? AND seq>? AND seq<=? ORDER BY seq ASC LIMIT ?",
+              )
+              .all(input.sessionId, input.afterSeq, upper, remaining) as EventRow[]
+          ).map(eventFromRow);
+    const events = [...archived, ...hot]
+      .sort((left, right) => left.seq - right.seq)
+      .slice(0, input.limit);
     return {
       sessionId: input.sessionId,
       afterSeq: input.afterSeq,

@@ -58,7 +58,9 @@ CREATE TABLE IF NOT EXISTS history_sessions (
   sensitivity TEXT NOT NULL,
   sync_class TEXT NOT NULL,
   next_seq INTEGER NOT NULL DEFAULT 0 CHECK(next_seq >= 0),
-  head_hash TEXT
+  head_hash TEXT,
+  archive_through_seq INTEGER NOT NULL DEFAULT -1 CHECK(archive_through_seq >= -1),
+  archive_head_hash TEXT
 );
 CREATE TABLE IF NOT EXISTS history_events (
   id TEXT NOT NULL UNIQUE,
@@ -76,6 +78,38 @@ CREATE TABLE IF NOT EXISTS history_events (
 );
 CREATE INDEX IF NOT EXISTS idx_history_events_operation ON history_events(operation_id);
 CREATE INDEX IF NOT EXISTS idx_history_events_recorded_at ON history_events(recorded_at);
+
+CREATE TABLE IF NOT EXISTS history_archive_segments (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL REFERENCES history_sessions(id),
+  first_seq INTEGER NOT NULL CHECK(first_seq >= 0),
+  last_seq INTEGER NOT NULL CHECK(last_seq >= first_seq),
+  event_count INTEGER NOT NULL CHECK(event_count > 0),
+  payload_gzip BLOB NOT NULL,
+  payload_sha256 TEXT NOT NULL CHECK(length(payload_sha256)=64),
+  first_prev_hash TEXT,
+  last_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  format_version INTEGER NOT NULL CHECK(format_version=1),
+  UNIQUE(session_id, first_seq),
+  UNIQUE(session_id, last_seq)
+);
+CREATE INDEX IF NOT EXISTS idx_history_archive_segments_session
+  ON history_archive_segments(session_id, first_seq, last_seq);
+CREATE TABLE IF NOT EXISTS history_archive_event_index (
+  event_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL REFERENCES history_sessions(id),
+  seq INTEGER NOT NULL CHECK(seq >= 0),
+  segment_id TEXT NOT NULL REFERENCES history_archive_segments(id),
+  UNIQUE(session_id, seq)
+);
+CREATE INDEX IF NOT EXISTS idx_history_archive_event_index_segment
+  ON history_archive_event_index(segment_id, seq);
+CREATE TABLE IF NOT EXISTS history_compaction_guard (
+  session_id TEXT PRIMARY KEY REFERENCES history_sessions(id),
+  through_seq INTEGER NOT NULL CHECK(through_seq >= 0),
+  token TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS ecx_agent_bindings (
   workspace_id TEXT NOT NULL,
@@ -143,8 +177,32 @@ BEGIN
 END;
 CREATE TRIGGER IF NOT EXISTS history_events_no_delete
 BEFORE DELETE ON history_events
+WHEN NOT EXISTS (
+  SELECT 1 FROM history_compaction_guard
+  WHERE session_id=OLD.session_id AND OLD.seq<=through_seq
+)
 BEGIN
   SELECT RAISE(ABORT, 'history_events are append-only');
+END;
+CREATE TRIGGER IF NOT EXISTS history_archive_segments_no_update
+BEFORE UPDATE ON history_archive_segments
+BEGIN
+  SELECT RAISE(ABORT, 'history_archive_segments are immutable');
+END;
+CREATE TRIGGER IF NOT EXISTS history_archive_segments_no_delete
+BEFORE DELETE ON history_archive_segments
+BEGIN
+  SELECT RAISE(ABORT, 'history_archive_segments are immutable');
+END;
+CREATE TRIGGER IF NOT EXISTS history_archive_event_index_no_update
+BEFORE UPDATE ON history_archive_event_index
+BEGIN
+  SELECT RAISE(ABORT, 'history_archive_event_index is immutable');
+END;
+CREATE TRIGGER IF NOT EXISTS history_archive_event_index_no_delete
+BEFORE DELETE ON history_archive_event_index
+BEGIN
+  SELECT RAISE(ABORT, 'history_archive_event_index is immutable');
 END;
 
 CREATE TABLE IF NOT EXISTS extension_revisions (
@@ -308,6 +366,83 @@ function hasColumn(db: SqliteDatabase, table: string, column: string): boolean {
   );
 }
 
+function migrateHistoryLedgerLifecycle(db: SqliteDatabase): void {
+  db.transaction(() => {
+    if (!hasColumn(db, "history_sessions", "archive_through_seq")) {
+      db.exec(
+        "ALTER TABLE history_sessions ADD COLUMN archive_through_seq INTEGER NOT NULL DEFAULT -1 CHECK(archive_through_seq >= -1)",
+      );
+    }
+    if (!hasColumn(db, "history_sessions", "archive_head_hash")) {
+      db.exec("ALTER TABLE history_sessions ADD COLUMN archive_head_hash TEXT");
+    }
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS history_archive_segments (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL REFERENCES history_sessions(id),
+        first_seq INTEGER NOT NULL CHECK(first_seq >= 0),
+        last_seq INTEGER NOT NULL CHECK(last_seq >= first_seq),
+        event_count INTEGER NOT NULL CHECK(event_count > 0),
+        payload_gzip BLOB NOT NULL,
+        payload_sha256 TEXT NOT NULL CHECK(length(payload_sha256)=64),
+        first_prev_hash TEXT,
+        last_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        format_version INTEGER NOT NULL CHECK(format_version=1),
+        UNIQUE(session_id, first_seq),
+        UNIQUE(session_id, last_seq)
+      );
+      CREATE INDEX IF NOT EXISTS idx_history_archive_segments_session
+        ON history_archive_segments(session_id, first_seq, last_seq);
+      CREATE TABLE IF NOT EXISTS history_archive_event_index (
+        event_id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL REFERENCES history_sessions(id),
+        seq INTEGER NOT NULL CHECK(seq >= 0),
+        segment_id TEXT NOT NULL REFERENCES history_archive_segments(id),
+        UNIQUE(session_id, seq)
+      );
+      CREATE INDEX IF NOT EXISTS idx_history_archive_event_index_segment
+        ON history_archive_event_index(segment_id, seq);
+      CREATE TABLE IF NOT EXISTS history_compaction_guard (
+        session_id TEXT PRIMARY KEY REFERENCES history_sessions(id),
+        through_seq INTEGER NOT NULL CHECK(through_seq >= 0),
+        token TEXT NOT NULL
+      );
+      DROP TRIGGER IF EXISTS history_events_no_delete;
+      CREATE TRIGGER history_events_no_delete
+      BEFORE DELETE ON history_events
+      WHEN NOT EXISTS (
+        SELECT 1 FROM history_compaction_guard
+        WHERE session_id=OLD.session_id AND OLD.seq<=through_seq
+      )
+      BEGIN
+        SELECT RAISE(ABORT, 'history_events are append-only');
+      END;
+      CREATE TRIGGER IF NOT EXISTS history_archive_segments_no_update
+      BEFORE UPDATE ON history_archive_segments
+      BEGIN
+        SELECT RAISE(ABORT, 'history_archive_segments are immutable');
+      END;
+      CREATE TRIGGER IF NOT EXISTS history_archive_segments_no_delete
+      BEFORE DELETE ON history_archive_segments
+      BEGIN
+        SELECT RAISE(ABORT, 'history_archive_segments are immutable');
+      END;
+      CREATE TRIGGER IF NOT EXISTS history_archive_event_index_no_update
+      BEFORE UPDATE ON history_archive_event_index
+      BEGIN
+        SELECT RAISE(ABORT, 'history_archive_event_index is immutable');
+      END;
+      CREATE TRIGGER IF NOT EXISTS history_archive_event_index_no_delete
+      BEFORE DELETE ON history_archive_event_index
+      BEGIN
+        SELECT RAISE(ABORT, 'history_archive_event_index is immutable');
+      END;
+    `);
+  })();
+}
+
 function migrateProjectFoundation(db: SqliteDatabase): void {
   db.transaction(() => {
     if (!hasColumn(db, "history_sessions", "workspace_id")) {
@@ -356,6 +491,7 @@ export function openHubDatabase(path: string = IN_MEMORY): HubDatabase {
   }
   raw.exec(SCHEMA);
   migrateProjectFoundation(raw);
+  migrateHistoryLedgerLifecycle(raw);
   return {
     raw,
     path,

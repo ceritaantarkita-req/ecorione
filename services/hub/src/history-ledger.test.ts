@@ -343,4 +343,160 @@ describe("Historical Ledger", () => {
     expect(ledger.verifyAll()).toEqual({ sessions: 1, events: 1 });
     expect(ledger.getSession(sessionId)?.nextSeq).toBe(1);
   });
+
+  it("compacts an immutable prefix while preserving exact replay and append semantics", () => {
+    const { ledger, sessionId } = setup();
+    const drafts: HistoryEventDraft[] = [0, 1, 2].map((index) => ({
+      id: assertId("event", `evt_compact00${String(index + 1)}`),
+      recordedAt: NOW,
+      eventType: index === 0 ? "user.message" : "agent.message",
+      actor: index === 0 ? "user" : "hub",
+      operationId: null,
+      parentEventId: null,
+      payload: { index },
+    }));
+    ledger.appendBatch(sessionId, drafts);
+
+    const result = ledger.compactSession({
+      sessionId,
+      retainRecentEvents: 1,
+      createdAt: "2026-09-09T00:10:00.000Z",
+    });
+    expect(result).toMatchObject({
+      compacted: true,
+      archivedEvents: 2,
+      archivedThroughSeq: 1,
+      hotEvents: 1,
+    });
+    expect(
+      (
+        db?.raw
+          .prepare("SELECT COUNT(*) AS count FROM history_events WHERE session_id=?")
+          .get(sessionId) as { count: number }
+      ).count,
+    ).toBe(1);
+    expect(
+      (
+        db?.raw
+          .prepare(
+            "SELECT COUNT(*) AS count FROM history_archive_event_index WHERE session_id=?",
+          )
+          .get(sessionId) as { count: number }
+      ).count,
+    ).toBe(2);
+
+    const replay = ledger.readRange({
+      sessionId,
+      afterSeq: -1,
+      limit: 10,
+      grant: { scope: "personal", maxSensitivity: "INTERNAL", hostedEligible: false },
+    });
+    expect(replay.events.map((event) => event.seq)).toEqual([0, 1, 2]);
+
+    ledger.append(sessionId, 3, {
+      id: assertId("event", "evt_compact004"),
+      recordedAt: "2026-09-09T00:11:00.000Z",
+      eventType: "agent.message",
+      actor: "hub",
+      operationId: null,
+      parentEventId: null,
+      payload: { index: 3 },
+    });
+    expect(ledger.verifyAll()).toEqual({ sessions: 1, events: 4 });
+    expect(ledger.append(sessionId, 4, drafts[0] as HistoryEventDraft).deduplicated).toBe(true);
+    expect(() =>
+      ledger.append(sessionId, 4, {
+        ...(drafts[0] as HistoryEventDraft),
+        payload: { index: 99 },
+      }),
+    ).toThrow(HistoryEventConflictError);
+  });
+
+  it("makes repeated compaction restart-safe and advances only the next hot prefix", () => {
+    const { ledger, sessionId } = setup();
+    for (let index = 0; index < 4; index += 1) {
+      ledger.append(sessionId, index, {
+        id: assertId("event", `evt_compactr0${String(index + 1)}`),
+        recordedAt: NOW,
+        eventType: "user.message",
+        actor: "user",
+        operationId: null,
+        parentEventId: null,
+        payload: { index },
+      });
+    }
+
+    expect(
+      ledger.compactSession({
+        sessionId,
+        retainRecentEvents: 2,
+        createdAt: "2026-09-09T00:20:00.000Z",
+      }).archivedThroughSeq,
+    ).toBe(1);
+    expect(
+      ledger.compactSession({
+        sessionId,
+        retainRecentEvents: 2,
+        createdAt: "2026-09-09T00:21:00.000Z",
+      }).compacted,
+    ).toBe(false);
+
+    ledger.append(sessionId, 4, {
+      id: assertId("event", "evt_compactr05"),
+      recordedAt: "2026-09-09T00:22:00.000Z",
+      eventType: "agent.message",
+      actor: "hub",
+      operationId: null,
+      parentEventId: null,
+      payload: { index: 4 },
+    });
+    const second = ledger.compactSession({
+      sessionId,
+      retainRecentEvents: 2,
+      createdAt: "2026-09-09T00:23:00.000Z",
+    });
+    expect(second).toMatchObject({ compacted: true, archivedEvents: 1, archivedThroughSeq: 2 });
+    expect(ledger.verifyAll()).toEqual({ sessions: 1, events: 5 });
+  });
+
+  it("protects archive rows and fails closed on archive corruption", () => {
+    const { ledger, sessionId } = setup();
+    ledger.appendBatch(sessionId, [
+      {
+        id: assertId("event", "evt_archive001"),
+        recordedAt: NOW,
+        eventType: "user.message",
+        actor: "user",
+        operationId: null,
+        parentEventId: null,
+        payload: { text: "one" },
+      },
+      {
+        id: assertId("event", "evt_archive002"),
+        recordedAt: NOW,
+        eventType: "agent.message",
+        actor: "hub",
+        operationId: null,
+        parentEventId: null,
+        payload: { text: "two" },
+      },
+    ]);
+    ledger.compactSession({
+      sessionId,
+      retainRecentEvents: 0,
+      createdAt: "2026-09-09T00:30:00.000Z",
+    });
+
+    expect(() =>
+      db?.raw
+        .prepare("UPDATE history_archive_segments SET payload_sha256=? WHERE session_id=?")
+        .run("0".repeat(64), sessionId),
+    ).toThrow(/immutable/);
+
+    db?.raw.exec("DROP TRIGGER history_archive_segments_no_update");
+    db?.raw
+      .prepare("UPDATE history_archive_segments SET payload_gzip=? WHERE session_id=?")
+      .run(Buffer.from("corrupt"), sessionId);
+    expect(() => ledger.verifySession(sessionId)).toThrow(HistoryIntegrityError);
+  });
 });

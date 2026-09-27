@@ -38,6 +38,23 @@ SQLite transaction adalah serialization point v1. Ini sengaja berbeda dari singl
 
 Batch append yang mewakili satu provenance unit harus memakai satu DB transaction: batch commit seluruhnya atau rollback seluruhnya. Ini mencegah partial `agent.handoff`, model event, atau assistant event ketika event berikutnya dalam batch gagal.
 
+## Batch 6 lifecycle extension
+
+Batch 6 menambahkan **physical compaction tanpa logical history rewrite**. Invariant append-only di atas tetap berlaku pada event stream yang terlihat oleh caller.
+
+Aturan lifecycle-nya:
+
+1. event lama hanya boleh dipindahkan sebagai **contiguous verified prefix** dari hot `history_events` ke immutable archive segment;
+2. `SessionId`, `EventId`, `seq`, payload, `prevHash`, dan event hash tidak boleh diubah;
+3. archive segment memiliki format version, SHA-256 payload, boundary sequence/hash, dan immutable EventId index;
+4. read/replay dan retry-by-EventId tetap transparan melintasi archive + hot suffix;
+5. compaction berjalan dalam satu immediate SQLite transaction dan memverifikasi full logical chain sebelum serta sesudah mutation;
+6. legacy database menerima lifecycle columns/tables melalui additive migration; existing committed rows tidak ditulis ulang;
+7. retention berarti jumlah recent events yang tetap berada di hot table, **bukan** izin untuk menghapus logical history;
+8. corrupt/missing archive payload atau watermark mismatch harus fail closed sebagai integrity error.
+
+Representasi archive v1 memakai canonical HistoryEvent JSON yang dikompresi gzip. Penggantian format archive di masa depan harus memakai `format_version` baru dan reader migration eksplisit; format lama tidak boleh ditafsir ulang diam-diam.
+
 ## Integration semantics
 
 - user/input event boleh dicatat sebelum provider dispatch;
@@ -59,4 +76,4 @@ Batch append yang mewakili satu provenance unit harus memakai satu DB transactio
 
 - exact replay/history projection menjadi mungkin;
 - ECX bisa menunjuk range history tanpa copy payload;
-- storage bertambah monoton; retention/compaction adalah pekerjaan terpisah dan tidak boleh mengubah committed sequence tanpa explicit migration/versioning.
+- logical history tetap bertambah monoton; Batch 6 boleh mengompresi representasi fisik prefix lama ke immutable archive segment tanpa mengubah committed sequence/hash, dan perubahan format berikutnya tetap membutuhkan explicit migration/versioning.
