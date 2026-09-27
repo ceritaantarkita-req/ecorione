@@ -4,17 +4,20 @@
   "branch_count_at_audit": 395,
   "closed_prs_scanned": 352,
   "policy": {
-    "safe_delete": "non-main branch has one of five evidence classes: exact merged-PR head, verified ancestor of audited main, verified ancestor of a retained branch, explicit PR-history supersession/abandonment, or post-merge delta demonstrably superseded by merged/current-main content; every deletion still requires exact remote SHA revalidation",
-    "hold": "branch retains unique commits and lacks sufficient supersession/provenance proof; keep until a later audit proves preservation or intentional disposal"
+    "safe_delete": "non-main branch has explicit preservation/disposal proof: exact merged-PR head, verified ancestry, explicit supersession, superseded post-merge delta, explicit ephemeral probe/execution-helper intent with successor closure, salvaged content, or post-baseline hygiene/execution proof; every deletion still requires exact remote SHA revalidation",
+    "hold": "branch retains substantive unique/diverged implementation or unlanded behavior and lacks sufficient disposal proof"
   },
   "counts": {
-    "safe_delete": 373,
+    "safe_delete": 392,
     "safe_delete_merged_pr_exact_head": 332,
     "safe_delete_ancestor_of_main": 22,
     "safe_delete_ancestor_of_retained_branch": 3,
     "safe_delete_explicit_pr_supersession": 12,
     "safe_delete_post_merge_delta_superseded": 4,
-    "hold": 20
+    "safe_delete_ephemeral_probe_or_execution_helper": 12,
+    "safe_delete_content_salvaged": 1,
+    "safe_delete_post_baseline_hygiene_or_execution": 6,
+    "hold": 7
   },
   "safe_delete": [
     {
@@ -234,6 +237,20 @@
       "evidence_kind": "merged_pr_exact_head"
     },
     {
+      "branch": "agent/format-probe-20260914",
+      "expected_sha": "509c055b72d3cf486403de2131cc9b0894e232c7",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_probe_intent",
+      "note": "Unique commit message is 'chore: temporary W10 prettier probe'; branch only carries the temporary CI workflow probe."
+    },
+    {
+      "branch": "agent/format-probe-w06-20260914",
+      "expected_sha": "17faea59fd8f834973ea39142511166268410d4f",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_probe_intent",
+      "note": "Unique commit message is 'chore: temporary W06 prettier probe'; branch only carries the temporary CI workflow probe."
+    },
+    {
       "branch": "agent/fullstack-audit-fixes-phases-20260909",
       "expected_sha": "d54738091a63c93096f7710f1b5cea2fa393779b",
       "merged_pr": 1,
@@ -295,7 +312,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 11,
-      "successor_prs": [10],
+      "successor_prs": [
+        10
+      ],
       "note": "PR #11 says it points to the exact same commit as PR #10 and exists only to trigger verification; do not merge."
     },
     {
@@ -329,6 +348,46 @@
       "merged_at": "2026-09-15T01:26:29Z",
       "merge_commit_sha": "558c8f0ecfecc23655afe0c5951622265efc1449",
       "evidence_kind": "merged_pr_exact_head"
+    },
+    {
+      "branch": "agent/w11-installer-build-20260916",
+      "expected_sha": "970d9202de600210f0b5e89d15301cfb284402b9",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        124
+      ],
+      "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124 with real Windows installer verification."
+    },
+    {
+      "branch": "agent/w11-installer-build-r2-20260916",
+      "expected_sha": "5c99993847515b98e8233f4c25f024f1ea99cd69",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        124
+      ],
+      "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124."
+    },
+    {
+      "branch": "agent/w11-installer-build-r3-20260916",
+      "expected_sha": "a7a9c13310581316f406ecb0e266cb3fc5e3313c",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        124
+      ],
+      "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124."
+    },
+    {
+      "branch": "agent/w11-installer-build-r4-20260916",
+      "expected_sha": "d870e3a74a6d6ddca526af717feace5b928f163e",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        124
+      ],
+      "note": "Branch only adds one-shot/retry W11 installer workflows; W11 is closed by merged PR #124."
     },
     {
       "branch": "agent/w11-installer-workflow-fix-20260916",
@@ -515,6 +574,30 @@
       "evidence_kind": "merged_pr_exact_head"
     },
     {
+      "branch": "automation/dynamic-ai-port-desktop-followup-20260915",
+      "expected_sha": "743deec4e07d471e810fae3d26dc37790a007416",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
+      "note": "Branch only adds a temporary dynamic-port desktop follow-up workflow; runtime work landed through PRs #103/#104 and W09/W10 closed via PR #107."
+    },
+    {
+      "branch": "automation/dynamic-ai-port-desktop-followup-v2-20260915",
+      "expected_sha": "fc9ee7dcbe23d7d2a717d3e59835753514fb798c",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
+      "note": "Branch only adds a temporary dynamic-port desktop follow-up workflow; W09/W10 runtime is closed by PR #107."
+    },
+    {
       "branch": "automation/dynamic-ai-port-helper-20260915",
       "expected_sha": "c0cb8afef5022b041642ce933a9582c41c2cf24b",
       "prior_classification": "no_pr_record",
@@ -546,6 +629,18 @@
       "compare_status": "ahead",
       "ahead_by": 1,
       "behind_by": 0
+    },
+    {
+      "branch": "automation/dynamic-ai-port-helper-v7-20260915",
+      "expected_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
+      "note": "Branch contains only temporary dynamic-port patch/helper workflows; final runtime behavior landed through PRs #103/#104 and closed via PR #107."
     },
     {
       "branch": "checkpoint/session6-a02-code-20260925",
@@ -673,6 +768,44 @@
       "evidence_kind": "merged_pr_exact_head"
     },
     {
+      "branch": "docs/branch-hygiene-audit-20260927",
+      "expected_sha": "81f936991bc285014c3aa4e2c3f18eb2e8e90760",
+      "evidence_kind": "merged_pr_exact_head_post_baseline",
+      "merged_pr": 356,
+      "merge_commit_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56"
+    },
+    {
+      "branch": "docs/branch-hygiene-containment-20260927",
+      "expected_sha": "bf1e1532aab166f397f583ca6423a7ae706fe99a",
+      "evidence_kind": "explicit_pr_supersession",
+      "closed_pr": 358,
+      "successor_prs": [
+        357
+      ],
+      "note": "PR #358 was closed without merge as redundant after PR #357 merged the same Stage-2 containment work."
+    },
+    {
+      "branch": "docs/branch-hygiene-hold-evidence-20260927",
+      "expected_sha": "3c5aa6bb319d725c2a86908d3c595b9755dfa219",
+      "evidence_kind": "merged_pr_exact_head_post_baseline",
+      "merged_pr": 359,
+      "merge_commit_sha": "23188ca5a4268e121841b167932b984d95102386"
+    },
+    {
+      "branch": "docs/branch-hygiene-stage2-20260927",
+      "expected_sha": "8cddeb0f6bb4b81001faccabbeed8440317087a5",
+      "evidence_kind": "merged_pr_exact_head_post_baseline",
+      "merged_pr": 357,
+      "merge_commit_sha": "97a34c3582917745dc4ecfb7f175b77cc3598148"
+    },
+    {
+      "branch": "docs/branch-hygiene-stage3-20260927",
+      "expected_sha": "f61f85ee2157a86142b1f7e0f19e42ed0a602be3",
+      "evidence_kind": "merged_pr_exact_head_post_baseline",
+      "merged_pr": 360,
+      "merge_commit_sha": "a1991f1fd1e321ecbe32f997d0ef87982fc0b20a"
+    },
+    {
       "branch": "docs/cleanup-current-state-20260918",
       "expected_sha": "372baa62c6288540ef372c5ee5032722f61042e1",
       "merged_pr": 163,
@@ -694,8 +827,20 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 187,
-      "successor_prs": [186],
+      "successor_prs": [
+        186
+      ],
       "note": "PR #187 body says it is superseded by merged PR #186 with the same Windows EOL closure."
+    },
+    {
+      "branch": "docs/comparative-cache-fix-closure-20260911",
+      "expected_sha": "13599d6ad96b1354e60f13a6274cd00cc64a6d3e",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "content_salvaged_into_stage4",
+      "successor_prs": [
+        40
+      ],
+      "note": "The branch's missing comparative cache-fix closure delta was replayed into Stage-4 current documentation before this promotion."
     },
     {
       "branch": "docs/comparative-evidence-closure-20260911",
@@ -767,7 +912,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 279,
-      "successor_prs": [280],
+      "successor_prs": [
+        280
+      ],
       "note": "PR #279 conversation says it is superseded by PR #280 and later DR-2 deferment/safe-checkpoint docs."
     },
     {
@@ -1363,7 +1510,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 313,
-      "successor_prs": [315],
+      "successor_prs": [
+        315
+      ],
       "note": "PR #313 body says superseded by PR #315."
     },
     {
@@ -1896,7 +2045,9 @@
       "expected_sha": "72eff88e03ef40c773741543c08e8829db46e743",
       "prior_classification": "merged_but_branch_advanced",
       "evidence_kind": "post_merge_delta_superseded",
-      "successor_prs": [323],
+      "successor_prs": [
+        323
+      ],
       "note": "Four post-merge DNS-pinning commits were carried by merged PR #323; current main preserves DNS-pinned transport/tests and later integration refinements."
     },
     {
@@ -1985,7 +2136,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 111,
-      "successor_prs": [124],
+      "successor_prs": [
+        124
+      ],
       "note": "PR #111 closure comment marks this as superseded/abandoned W11 direction and points to later W11 completion/closure PR #124."
     },
     {
@@ -2082,7 +2235,13 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 57,
-      "successor_prs": [58, 59, 60, 62, 63],
+      "successor_prs": [
+        58,
+        59,
+        60,
+        62,
+        63
+      ],
       "note": "PR #57 body explicitly says the race/serialization work landed through later frontend hardening PRs."
     },
     {
@@ -2415,6 +2574,30 @@
       "evidence_kind": "merged_pr_exact_head"
     },
     {
+      "branch": "fix/w09-w10-port-runtime-followup-20260916",
+      "expected_sha": "f0e614d6dece614d329f0559e2553d5daf029d76",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
+      "note": "Branch only adds a temporary W09/W10 runtime follow-up workflow; final runtime acceptance closed via PR #107."
+    },
+    {
+      "branch": "fix/w09-w10-port-runtime-followup-v2-20260916",
+      "expected_sha": "6dacc42776f71bbed1cc61bc70fd010a8b5d699c",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        103,
+        104,
+        107
+      ],
+      "note": "Branch only adds a temporary W09/W10 runtime follow-up workflow; final runtime acceptance closed via PR #107."
+    },
+    {
       "branch": "fix/w09-w10-port-runtime-followup-v3-20260916",
       "expected_sha": "abef5b798e78a3460a06d457029be80a1bfcbfdd",
       "evidence_kind": "ancestor_of_main",
@@ -2549,7 +2732,10 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 128,
-      "successor_prs": [129, 143],
+      "successor_prs": [
+        129,
+        143
+      ],
       "note": "PR #128 closure comment says diagnostic work continued in merged PR #129 and final W18/W20 closure PR #143."
     },
     {
@@ -2666,6 +2852,17 @@
       "behind_by": 0
     },
     {
+      "branch": "ops/branch-hygiene-exec-20260927",
+      "expected_sha": "3b0e74753c997879f5e2d3af56c211664df0f74b",
+      "evidence_kind": "execution_helper_salvaged",
+      "workflow_runs": [
+        1,
+        2,
+        3
+      ],
+      "note": "One-time execution branch: run #2 proved 354/354 exact-SHA eligible; run #3 deleted 354/354 with zero hold/fail/skip. Its PowerShell root-handling fix and execution evidence are preserved by Stage 4; temporary workflow itself is not canonical runtime."
+    },
+    {
       "branch": "ops/latest-main-staging-convergence-20260921",
       "expected_sha": "fcaaa12ea7f5d2866c056a37f31615730b6ffe73",
       "merged_pr": 246,
@@ -2744,6 +2941,16 @@
       "merged_at": "2026-09-10T17:46:59Z",
       "merge_commit_sha": "a6cc17530b4e4540d710fa449c93844a8dad7981",
       "evidence_kind": "merged_pr_exact_head"
+    },
+    {
+      "branch": "ops/w11-installer-build-20260916",
+      "expected_sha": "0984c5b2599d84b724f0c6eb87661e5cee0269a9",
+      "prior_classification": "no_pr_record",
+      "evidence_kind": "ephemeral_execution_helper_superseded",
+      "successor_prs": [
+        124
+      ],
+      "note": "Branch only adds a temporary exact-main installer build workflow; W11 closed via PR #124."
     },
     {
       "branch": "pcs/pcs-00-baseline-lock-20260920",
@@ -3015,7 +3222,9 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 159,
-      "successor_prs": [160],
+      "successor_prs": [
+        160
+      ],
       "note": "PR #159 body says superseded by PR #160 carrying the same F6-E07 scope plus reviewed acceptance."
     },
     {
@@ -3032,7 +3241,10 @@
       "prior_classification": "closed_unmerged",
       "evidence_kind": "explicit_pr_supersession",
       "closed_pr": 162,
-      "successor_prs": [164, 165],
+      "successor_prs": [
+        164,
+        165
+      ],
       "note": "PR #162 closure comment says F6-E08 was completed by PR #164 and closed by PR #165."
     },
     {
@@ -3056,24 +3268,6 @@
       "latest_merged_head_sha": null
     },
     {
-      "branch": "agent/format-probe-20260914",
-      "current_sha": "509c055b72d3cf486403de2131cc9b0894e232c7",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "agent/format-probe-w06-20260914",
-      "current_sha": "17faea59fd8f834973ea39142511166268410d4f",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
       "branch": "agent/native-multimodal-pipeline-20260910",
       "current_sha": "c197cc9a4870d2d86898b207f9be1ea95ebed2df",
       "classification": "no_pr_record",
@@ -3083,80 +3277,8 @@
       "latest_merged_head_sha": null
     },
     {
-      "branch": "agent/w11-installer-build-20260916",
-      "current_sha": "970d9202de600210f0b5e89d15301cfb284402b9",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "agent/w11-installer-build-r2-20260916",
-      "current_sha": "5c99993847515b98e8233f4c25f024f1ea99cd69",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "agent/w11-installer-build-r3-20260916",
-      "current_sha": "a7a9c13310581316f406ecb0e266cb3fc5e3313c",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "agent/w11-installer-build-r4-20260916",
-      "current_sha": "d870e3a74a6d6ddca526af717feace5b928f163e",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "automation/dynamic-ai-port-desktop-followup-20260915",
-      "current_sha": "743deec4e07d471e810fae3d26dc37790a007416",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "automation/dynamic-ai-port-desktop-followup-v2-20260915",
-      "current_sha": "fc9ee7dcbe23d7d2a717d3e59835753514fb798c",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "automation/dynamic-ai-port-helper-v7-20260915",
-      "current_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
       "branch": "ci/f6-e03-release-security-acceptance-gate-20260918",
       "current_sha": "440f6cacec04d0139a36e9ac276c57a7abedab89",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "docs/comparative-cache-fix-closure-20260911",
-      "current_sha": "13599d6ad96b1354e60f13a6274cd00cc64a6d3e",
       "classification": "no_pr_record",
       "latest_pr": null,
       "latest_pr_updated_at": null,
@@ -3182,24 +3304,6 @@
       "latest_merged_head_sha": null
     },
     {
-      "branch": "fix/w09-w10-port-runtime-followup-20260916",
-      "current_sha": "f0e614d6dece614d329f0559e2553d5daf029d76",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "fix/w09-w10-port-runtime-followup-v2-20260916",
-      "current_sha": "6dacc42776f71bbed1cc61bc70fd010a8b5d699c",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
       "branch": "fix/w18-one-call-diagnostic-v2-20260917",
       "current_sha": "7773a88d68334144cce6dcbadfc3a23e53e47c91",
       "classification": "no_pr_record",
@@ -3211,15 +3315,6 @@
     {
       "branch": "fix/w18-openrouter-routing-metadata-20260917",
       "current_sha": "54c518ec072fba7eeecc1551b5f04172c3ccaf97",
-      "classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null
-    },
-    {
-      "branch": "ops/w11-installer-build-20260916",
-      "current_sha": "0984c5b2599d84b724f0c6eb87661e5cee0269a9",
       "classification": "no_pr_record",
       "latest_pr": null,
       "latest_pr_updated_at": null,
@@ -3240,5 +3335,24 @@
     "promoted_explicit_pr_supersession": 12,
     "promoted_post_merge_delta_superseded": 4,
     "remaining_hold": 20
+  },
+  "stage4": {
+    "evidence_main_sha": "a1991f1fd1e321ecbe32f997d0ef87982fc0b20a",
+    "observed_remote_branch_count_before_stage4_merge": 47,
+    "stage2_execution": {
+      "workflow": "Branch Hygiene One-Time",
+      "dry_run": 2,
+      "apply_run": 3,
+      "allowlisted": 354,
+      "deleted": 354,
+      "already_missing": 0,
+      "hold": 0,
+      "failed": 0,
+      "skip": 0
+    },
+    "promoted_from_prior_hold": 13,
+    "added_post_baseline_hygiene_or_execution_branches": 6,
+    "remaining_hold": 7,
+    "excluded_current_stage4_branch": "docs/branch-hygiene-stage4-20260927"
   }
 }
