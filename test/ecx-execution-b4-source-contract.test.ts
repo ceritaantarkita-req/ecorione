@@ -41,10 +41,11 @@ describe("ECX execution Batch 4 source contract", () => {
     expect(exchange).toContain("ECX_RESULT_HOSTED_ISOLATION_DENIED");
   });
 
-  it("preserves single-recipient scope and does not open fan-out, A2A, UI, or retention", () => {
+  it("keeps Batch 4 result hardening reusable without introducing A2A or a second merge event type", () => {
     const exchange = source("services/hub/src/exchange-http.ts");
-    expect(exchange).not.toContain("Promise.all(input.packets");
-    expect(exchange).not.toContain("/v1/exchange/aggregate");
+    expect(exchange).toContain("validatedReturnedResult");
+    expect(exchange).toContain("assertHostedParentResultIsolation");
+    expect(exchange).toContain('"/v1/exchange/fanout-round-trip"');
     expect(exchange).not.toContain("agent.result.merge");
     expect(exchange).not.toContain("a2a");
   });

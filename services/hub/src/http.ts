@@ -36,6 +36,7 @@ import { CapabilityRegistry } from "./capability-registry.js";
 import { registerExchangeRoutes } from "./exchange-http.js";
 import { EcxAgentRegistry } from "./ecx-agent-registry.js";
 import { EcxExecutionStore } from "./ecx-execution-store.js";
+import { EcxFanoutStore } from "./ecx-fanout-store.js";
 import { EcxRoundTripStore } from "./ecx-round-trip-store.js";
 import { registerExtensionRoutes } from "./extension-http.js";
 import { ExtensionRegistry } from "./extension-registry.js";
@@ -162,6 +163,7 @@ export function buildHubServer(
   const exchangeAgents = new EcxAgentRegistry(db);
   const exchangeExecutions = new EcxExecutionStore(db);
   const exchangeRoundTrips = new EcxRoundTripStore(db);
+  const exchangeFanouts = new EcxFanoutStore(db);
   const extensions = new ExtensionRegistry(db, authority);
   const deps: OrchestrateDeps = {
     repo,
@@ -391,6 +393,7 @@ export function buildHubServer(
     authority,
     exchangeExecutions,
     exchangeRoundTrips,
+    exchangeFanouts,
     {
       contextUrl: options.contextUrl,
       artifactUrl: options.artifactUrl ?? "http://127.0.0.1:17025",

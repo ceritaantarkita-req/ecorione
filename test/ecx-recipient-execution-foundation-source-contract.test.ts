@@ -29,7 +29,13 @@ describe("ECX recipient execution foundation source contract", () => {
 
     const exchange = source("services/hub/src/exchange-http.ts");
     expect(exchange).toContain("agent.execution.started");
-    expect(exchange).not.toContain("Promise.all(input.packets");
+    const start = exchange.indexOf("const executeRecipient = async");
+    const end = exchange.indexOf('app.post("/v1/exchange/execute"', start);
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    const primitive = exchange.slice(start, end);
+    expect(primitive).not.toContain("Promise.allSettled");
+    expect(primitive).not.toContain("fanouts.");
     expect(exchange).not.toContain("/v1/exchange/aggregate");
   });
 });

@@ -12,6 +12,7 @@ import {
 
 export const ECX_VERSION = 1 as const;
 export const ECX_RETURNED_RESULT_MAX_BYTES = 65_536 as const;
+export const ECX_FANOUT_AGGREGATE_MAX_BYTES = 131_072 as const;
 const TimestampSchema = z.string().datetime({ offset: false });
 export const EcxAgentIdSchema = z
   .string()
@@ -453,3 +454,166 @@ export const EcxRoundTripResponseSchema = z
   })
   .strict();
 export type EcxRoundTripResponse = z.infer<typeof EcxRoundTripResponseSchema>;
+
+export const EcxFanoutRoundTripRequestSchema = z
+  .object({
+    packets: z.array(EcxPacketSchema).min(2).max(8),
+    workspaceId: WorkspaceIdSchema,
+    refIndexes: z.array(z.number().int().nonnegative()).min(1).max(32).optional(),
+    selection: EcxReferenceSelectionSchema.optional(),
+    scope: ScopeSchema,
+    maxSensitivity: SensitivitySchema,
+    requestedAt: TimestampSchema,
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    const packetIds = new Set(value.packets.map((packet) => packet.packetId));
+    if (packetIds.size !== value.packets.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Fan-out packetId tidak boleh duplikat.",
+        path: ["packets"],
+      });
+    }
+    const recipients = new Set(value.packets.map((packet) => packet.recipient));
+    if (recipients.size !== value.packets.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Fan-out recipient tidak boleh duplikat.",
+        path: ["packets"],
+      });
+    }
+
+    const baseline = value.packets[0];
+    if (baseline === undefined) return;
+    const signature = (packet: EcxPacket): string =>
+      JSON.stringify({
+        version: packet.version,
+        operationId: packet.operationId,
+        sender: packet.sender,
+        intent: packet.intent,
+        task: packet.task,
+        need: packet.need,
+        refs: packet.refs,
+        budget: packet.budget,
+        responseMode: packet.responseMode,
+        historySessionId: packet.historySessionId ?? null,
+      });
+    const baselineSignature = signature(baseline);
+    value.packets.forEach((packet, index) => {
+      if (packet.sender === packet.recipient) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Fan-out membutuhkan sender dan recipient yang berbeda.",
+          path: ["packets", index, "recipient"],
+        });
+      }
+      if (packet.responseMode !== "delta") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Batch 7 fan-out hanya menerima responseMode delta.",
+          path: ["packets", index, "responseMode"],
+        });
+      }
+      if (signature(packet) !== baselineSignature) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Semua packet fan-out harus berasal dari satu coherent ECX plan.",
+          path: ["packets", index],
+        });
+      }
+    });
+
+    const explicit = value.refIndexes !== undefined;
+    const automatic = value.selection !== undefined;
+    if (baseline.refs.length === 0) {
+      if (explicit || automatic) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Fan-out tanpa refs tidak menerima refIndexes/selection.",
+          path: ["refIndexes"],
+        });
+      }
+    } else if (explicit === automatic) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Pilih tepat satu: refIndexes atau selection.",
+        path: ["refIndexes"],
+      });
+    }
+    if (
+      value.refIndexes !== undefined &&
+      new Set(value.refIndexes).size !== value.refIndexes.length
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "refIndexes tidak boleh duplikat.",
+        path: ["refIndexes"],
+      });
+    }
+  });
+export type EcxFanoutRoundTripRequest = z.infer<typeof EcxFanoutRoundTripRequestSchema>;
+
+export const EcxFanoutAggregateEvidenceSchema = z
+  .object({
+    replyBytes: z.number().int().nonnegative().max(ECX_FANOUT_AGGREGATE_MAX_BYTES),
+    resultSetSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  })
+  .strict();
+export type EcxFanoutAggregateEvidence = z.infer<typeof EcxFanoutAggregateEvidenceSchema>;
+
+export const EcxFanoutStatusSchema = z
+  .object({
+    fanoutId: EventIdSchema,
+    operationId: OperationIdSchema,
+    continuationOperationId: OperationIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    sender: EcxAgentIdSchema,
+    recipients: z.array(EcxAgentIdSchema).min(2).max(8),
+    parentTarget: EcxRuntimeTargetSchema,
+    historySessionId: SessionIdSchema.nullable(),
+    state: EcxExecutionStateSchema,
+    error: z.string().nullable(),
+    resultAvailable: z.boolean(),
+    aggregateEvidence: EcxFanoutAggregateEvidenceSchema.nullable(),
+    startedAt: TimestampSchema,
+    updatedAt: TimestampSchema,
+    completedAt: TimestampSchema.nullable(),
+  })
+  .strict();
+export type EcxFanoutStatus = z.infer<typeof EcxFanoutStatusSchema>;
+
+export const EcxFanoutRoundTripResponseSchema = z
+  .object({
+    fanoutId: EventIdSchema,
+    operationId: OperationIdSchema,
+    continuationOperationId: OperationIdSchema,
+    sender: EcxAgentIdSchema,
+    recipients: z.array(EcxAgentIdSchema).min(2).max(8),
+    responseMode: z.literal("delta"),
+    state: z.literal("SUCCEEDED"),
+    replayed: z.boolean(),
+    children: z.array(EcxExecuteResponseSchema).min(2).max(8),
+    returnedResults: z.array(EcxReturnedResultSchema).min(2).max(8),
+    aggregateEvidence: EcxFanoutAggregateEvidenceSchema,
+    handback: EcxRoundTripHandbackSchema,
+    history: z
+      .object({
+        returnedEventId: EventIdSchema.nullable(),
+        continuationEventId: EventIdSchema.nullable(),
+      })
+      .strict(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (
+      value.children.length !== value.recipients.length ||
+      value.returnedResults.length !== value.recipients.length
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Fan-out response cardinality tidak konsisten.",
+      });
+    }
+  });
+export type EcxFanoutRoundTripResponse = z.infer<typeof EcxFanoutRoundTripResponseSchema>;
