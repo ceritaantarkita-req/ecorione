@@ -398,9 +398,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 11,
-          "successor_prs": [
-            10
-          ],
+          "successor_prs": [10],
           "note": "PR #11 says it points to the exact same commit as PR #10 and exists only to trigger verification; do not merge."
         }
       },
@@ -522,9 +520,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 187,
-          "successor_prs": [
-            186
-          ],
+          "successor_prs": [186],
           "note": "PR #187 body says it is superseded by merged PR #186 with the same Windows EOL closure."
         }
       },
@@ -553,9 +549,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 279,
-          "successor_prs": [
-            280
-          ],
+          "successor_prs": [280],
           "note": "PR #279 conversation says it is superseded by PR #280 and later DR-2 deferment/safe-checkpoint docs."
         }
       },
@@ -613,9 +607,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 313,
-          "successor_prs": [
-            315
-          ],
+          "successor_prs": [315],
           "note": "PR #313 body says superseded by PR #315."
         }
       },
@@ -672,9 +664,7 @@
           "expected_sha": "72eff88e03ef40c773741543c08e8829db46e743",
           "prior_classification": "merged_but_branch_advanced",
           "evidence_kind": "post_merge_delta_superseded",
-          "successor_prs": [
-            323
-          ],
+          "successor_prs": [323],
           "note": "Four post-merge DNS-pinning commits were carried by merged PR #323; current main preserves DNS-pinned transport/tests and later integration refinements."
         }
       },
@@ -703,9 +693,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 111,
-          "successor_prs": [
-            124
-          ],
+          "successor_prs": [124],
           "note": "PR #111 closure comment marks this as superseded/abandoned W11 direction and points to later W11 completion/closure PR #124."
         }
       },
@@ -734,13 +722,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 57,
-          "successor_prs": [
-            58,
-            59,
-            60,
-            62,
-            63
-          ],
+          "successor_prs": [58, 59, 60, 62, 63],
           "note": "PR #57 body explicitly says the race/serialization work landed through later frontend hardening PRs."
         }
       },
@@ -826,10 +808,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 128,
-          "successor_prs": [
-            129,
-            143
-          ],
+          "successor_prs": [129, 143],
           "note": "PR #128 closure comment says diagnostic work continued in merged PR #129 and final W18/W20 closure PR #143."
         }
       },
@@ -914,9 +893,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 159,
-          "successor_prs": [
-            160
-          ],
+          "successor_prs": [160],
           "note": "PR #159 body says superseded by PR #160 carrying the same F6-E07 scope plus reviewed acceptance."
         }
       },
@@ -945,10 +922,7 @@
           "prior_classification": "closed_unmerged",
           "evidence_kind": "explicit_pr_supersession",
           "closed_pr": 162,
-          "successor_prs": [
-            164,
-            165
-          ],
+          "successor_prs": [164, 165],
           "note": "PR #162 closure comment says F6-E08 was completed by PR #164 and closed by PR #165."
         }
       }
