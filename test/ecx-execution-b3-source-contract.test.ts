@@ -39,10 +39,16 @@ describe("ECX execution Batch 3 source contract", () => {
     expect(exchange).not.toContain("payload: { childReply:");
   });
 
-  it("does not open fan-out, aggregation, A2A, UI, or retention scope", () => {
+  it("keeps the Batch 3 single-recipient route intact as Batch 7 composes a separate fan-out route", () => {
     const exchange = source("services/hub/src/exchange-http.ts");
-    expect(exchange).not.toContain("Promise.all(input.packets");
-    expect(exchange).not.toContain("/v1/exchange/aggregate");
+    const roundTrip = exchange.indexOf('app.post("/v1/exchange/round-trip"');
+    const fanout = exchange.indexOf('app.post("/v1/exchange/fanout-round-trip"');
+    expect(roundTrip).toBeGreaterThan(0);
+    expect(fanout).toBeGreaterThan(roundTrip);
+    const singleRecipientRoute = exchange.slice(roundTrip, fanout);
+    expect(singleRecipientRoute).toContain("const child = await executeRecipient(input)");
+    expect(singleRecipientRoute).toContain("roundTrips.claimContinuation");
+    expect(singleRecipientRoute).not.toContain("Promise.allSettled");
     expect(exchange).not.toContain("agent.result.merge");
     expect(exchange).not.toContain("a2a");
   });
