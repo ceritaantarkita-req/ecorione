@@ -372,7 +372,7 @@ describe("ECX HTTP integration", () => {
         method: "GET",
         url: `/v1/exchange/executions/${packetId}?workspaceId=ws_other`,
       });
-      expect(wrongWorkspace.statusCode).toBe(400);
+      expect(wrongWorkspace.statusCode).toBe(404);
 
       const range = ledger.readRange({
         sessionId,
