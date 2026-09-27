@@ -36,7 +36,6 @@ jobs:
       - name: Format NVIDIA provider changes
         run: |
           pnpm exec prettier --write \
-            .env.example \
             apps/ai/app/page.tsx \
             apps/ai/app/settings/useSettingsController.ts \
             apps/ai/lib/settings-proxy.test.ts \
