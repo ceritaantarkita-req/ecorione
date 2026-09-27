@@ -8,12 +8,12 @@ if (!token) {
 }
 
 const requested = (
-  process.env.ECORIONE_PROVIDER_VALIDATION_SET ?? "anthropic,openrouter,openai"
+  process.env.ECORIONE_PROVIDER_VALIDATION_SET ?? "anthropic,openrouter,openai,nvidia"
 )
   .split(",")
   .map((value) => value.trim())
   .filter(Boolean);
-const allowed = new Set(["anthropic", "openrouter", "openai"]);
+const allowed = new Set(["anthropic", "openrouter", "openai", "nvidia"]);
 for (const provider of requested) {
   if (!allowed.has(provider)) {
     console.error(`provider-matrix-canary: unsupported provider ${provider}`);
