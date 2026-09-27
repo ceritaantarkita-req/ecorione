@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 CLOSED-PASS / BATCH 3 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 CLOSED-PASS / BATCH 4 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -10,11 +10,15 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
-## 2026-09-27 ECX Execution — Batch 3 ACTIVE safe checkpoint
+## 2026-09-27 ECX Execution — Batch 3 closure
 
-Batch 3 — **Real Agent A -> Agent B round trip** is ACTIVE on branch `agent/ecx-round-trip-b3-20260927`. The bounded implementation composes strictly above the closed Batch 1/2 single-recipient execution primitive: `delta` executes Agent B then one governed Agent A continuation; `full` returns Agent B's standalone answer directly to the sender boundary without a second parent model call. A durable round-trip receipt prevents duplicate parent continuation dispatch and records bounded result provenance without storing full replies in Historical Ledger.
+Batch 3 — **Real Agent A -> Agent B round trip is CLOSED / PASS** through PR #368. Exact reviewed head `92f76e547c45c89f01f19159e7e373e101a592a0` passed CI #2304, Product Eval #1543, and MCP External HTTPS Acceptance #1145, then merged to `main` as `e784dde4ed891020e3c88712d4e660548a0e04c7`. Merged-main CI #2305, Product Eval #1544, and MCP #1146 passed. Staging Deploy #1382 was gate-only; actual Staging Deploy #1383 executed the exact reviewed main successfully.
 
-Safe-resume checkpoint: [verification/ecx-execution-b3-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b3-wip-checkpoint-2026-09-27.md). **Do not restart Batch 1, Batch 2, or historical ECX audits.**
+The closed boundary proves the first real single-recipient Agent A -> Agent B -> Agent A handback path above the Batch 1/2 primitive. `responseMode: delta` executes Agent B and then exactly one governed parent continuation through Connect; `responseMode: full` returns Agent B's standalone result directly to the sender boundary without a second parent provider call. Durable round-trip receipts preserve replay/idempotency, parent continuation duplicate-dispatch protection, Workspace-scoped status lookup, and bounded Historical Ledger result/continuation provenance without copying full reply text into operational events.
+
+Batch 3 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. **Batch 4 — Security, isolation, result integration is NEXT / NOT STARTED.**
+
+Canonical safe-resume checkpoint: [verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md). **Do not restart Batch 1, Batch 2, Batch 3, or historical ECX selector/economics audits.**
 
 ## 2026-09-27 ECX Execution — Batch 2 closure
 
