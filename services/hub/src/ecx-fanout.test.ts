@@ -305,10 +305,16 @@ describe("ECX Batch 7 fan-out round trip", () => {
       expect(eventTypes.filter((type) => type === "agent.execution.started")).toHaveLength(2);
       expect(eventTypes.filter((type) => type === "agent.execution.succeeded")).toHaveLength(2);
       expect(eventTypes.filter((type) => type === "agent.result.returned")).toHaveLength(1);
-      expect(eventTypes.filter((type) => type === "agent.continuation.started")).toHaveLength(1);
-      expect(eventTypes.filter((type) => type === "agent.continuation.succeeded")).toHaveLength(1);
+      expect(eventTypes.filter((type) => type === "agent.continuation.started")).toHaveLength(
+        1,
+      );
+      expect(eventTypes.filter((type) => type === "agent.continuation.succeeded")).toHaveLength(
+        1,
+      );
 
-      const returned = range.events.find((event) => event.eventType === "agent.result.returned");
+      const returned = range.events.find(
+        (event) => event.eventType === "agent.result.returned",
+      );
       expect(returned?.payload).toMatchObject({
         fanoutId: firstBody.fanoutId,
         recipients: ["agent:child-a-b7", "agent:child-b-b7"],
@@ -397,9 +403,9 @@ describe("ECX Batch 7 fan-out round trip", () => {
       expect(
         range.events.some((event) => event.eventType === "agent.continuation.started"),
       ).toBe(false);
-      expect(
-        range.events.some((event) => event.eventType === "agent.result.returned"),
-      ).toBe(false);
+      expect(range.events.some((event) => event.eventType === "agent.result.returned")).toBe(
+        false,
+      );
     } finally {
       setGlobalDispatcher(original);
       await mock.close();
