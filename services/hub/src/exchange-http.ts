@@ -595,7 +595,6 @@ function appendExecutionOutcome(
 }
 
 function retryExecution(
-  executions: EcxExecutionStore,
   ledger: HistoryLedger,
   packet: EcxPacket,
   begun: ReturnType<EcxExecutionStore["begin"]>,
@@ -830,15 +829,19 @@ export function registerExchangeRoutes(
       throw error;
     }
 
-    const prior = retryExecution(executions, ledger, input.packet, begun);
-    if (prior !== null) return prior;
+    const prior = retryExecution(ledger, input.packet, begun);
+    if (prior !== null) {
+      metrics.addCounter("ecorione_ecx_execution_replays_total", 1, {
+        target: binding.target,
+      });
+      return prior;
+    }
 
     const startedEventId = appendExecutionStarted(ledger, begun.status, input.packet);
     if (!executions.claimDispatch(input.packet.packetId, nowIso())) {
       const current = executions.get(input.packet.packetId, input.workspaceId);
       const currentResult = executions.result(input.packet.packetId);
       const retry = retryExecution(
-        executions,
         ledger,
         input.packet,
         {
@@ -847,7 +850,12 @@ export function registerExchangeRoutes(
           created: false,
         },
       );
-      if (retry !== null) return retry;
+      if (retry !== null) {
+        metrics.addCounter("ecorione_ecx_execution_replays_total", 1, {
+          target: binding.target,
+        });
+        return retry;
+      }
       throw new HttpError(
         409,
         "ECX_EXECUTION_UNCERTAIN",
@@ -937,10 +945,6 @@ export function registerExchangeRoutes(
       hydration.hydratedBytes,
       { target: binding.target },
     );
-    metrics.addCounter("ecorione_ecx_execution_replays_total", 0, {
-      target: binding.target,
-    });
-
     return response;
   });
 

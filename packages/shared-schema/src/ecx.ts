@@ -263,18 +263,16 @@ export const EcxExecuteRequestSchema = z
   });
 export type EcxExecuteRequest = z.infer<typeof EcxExecuteRequestSchema>;
 
-export const EcxExecutionCompletionSchema = z
-  .object({
-    reply: z.string(),
-    provider: z.string().min(1),
-    model: z.string().min(1),
-    responseModel: z.string().min(1),
-    modelIdentity: z.string().min(1),
-    modelIdentityPinned: z.boolean(),
-    cacheHit: z.boolean(),
-    routeReason: z.string().min(1),
-  })
-  .strict();
+export const EcxExecutionCompletionSchema = z.object({
+  reply: z.string(),
+  provider: z.string().min(1),
+  model: z.string().min(1),
+  responseModel: z.string().min(1),
+  modelIdentity: z.string().min(1),
+  modelIdentityPinned: z.boolean(),
+  cacheHit: z.boolean(),
+  routeReason: z.string().min(1),
+});
 export type EcxExecutionCompletion = z.infer<typeof EcxExecutionCompletionSchema>;
 
 export const EcxExecutionStateSchema = z.enum([
