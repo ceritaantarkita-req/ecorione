@@ -5,13 +5,14 @@ import { ClientResponseError, readJson } from "../../lib/client-response";
 import { credentialSaveReady, type CredentialTestStamp } from "../../lib/credential-onboarding";
 import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
 
-export type HostedProviderId = "anthropic" | "openrouter" | "openai";
+export type HostedProviderId = "anthropic" | "openrouter" | "openai" | "nvidia";
 export type HostedModelPreference =
   | "governed"
   | "claude-sonnet-4-5-20250929"
   | "claude-opus-4-1-20250805"
   | "gpt-5.6-terra"
-  | "gpt-5.6-sol";
+  | "gpt-5.6-sol"
+  | "z-ai/glm-5.3";
 type HostedModelCatalogEntry = {
   id: Exclude<HostedModelPreference, "governed">;
   displayName: string;
@@ -188,7 +189,10 @@ export function useSettingsController(initialWorkspaceId: string) {
     (provider): provider is ProviderCatalogEntry & { id: HostedProviderId } =>
       provider.category === "ai" &&
       provider.routingReady &&
-      (provider.id === "anthropic" || provider.id === "openrouter" || provider.id === "openai"),
+      (provider.id === "anthropic" ||
+        provider.id === "openrouter" ||
+        provider.id === "openai" ||
+        provider.id === "nvidia"),
   );
   const credentialProviderOptions = providers.filter((provider) => provider.credentialReady);
   const activeHostedProvider =
