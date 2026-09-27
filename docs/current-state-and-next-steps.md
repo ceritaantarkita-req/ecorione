@@ -2,13 +2,23 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 CLOSED-PASS / BATCH 2 NOT STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-27 ECX Recipient Execution — Batch 1 closure
+
+ECX Recipient Execution **Batch 1 is CLOSED / PASS** through PR #363. Exact reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286, Product Eval #1525, and MCP External HTTPS Acceptance #1131, then merged to `main` as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287, Product Eval #1526, and MCP External HTTPS Acceptance #1132 passed. Staging Deploy #1345 was gate-only; Staging Deploy #1346 executed the deploy job successfully for the exact reviewed main SHA.
+
+The bounded implementation adds a Hub-owned durable ECX agent runtime-binding registry, first-class `agent` capability-authority subjects, binding-driven `model.invoke.local` / `model.invoke.hosted` declarations, binding list/upsert APIs, and `POST /v1/exchange/execute`. Execution resolves the recipient binding, verifies capability overlap, performs exact Hub authority authorization, derives hosted hydration eligibility from the binding rather than caller input, hydrates only through existing owner boundaries, and dispatches model inference through existing Connect `/v1/complete`. Connect remains provider/runtime owner and no new service or parallel execution authority was introduced.
+
+Batch 1 deliberately does **not** claim durable execution idempotency, execution lifecycle receipts, Historical Ledger execution-result events, multi-recipient execution, fan-out/aggregation, result merge semantics, or retention/compaction. Those remain outside this closure. The next approved roadmap slice is **Batch 2 — Execution Contract + Idempotency + Provenance**, but Batch 2 is **NOT STARTED** in this checkpoint.
+
+Canonical safe-resume record: [verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md](verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md).
 
 ## 2026-09-26 current repository + staging convergence
 

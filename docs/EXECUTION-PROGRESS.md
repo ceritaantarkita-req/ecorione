@@ -72,6 +72,20 @@ PCS-09 repository implementation merged through PR #216. Exact head `0bf1414859d
 
 Latest-main staging convergence then CLOSED / PASS at the runtime boundary. After repository checkpoint PR #248 merged as `52046db35e403babdda934881773c46bf2c57b68`, governed Staging Deploy #293 / run `35627920447` deployed that exact current `main` SHA as `staging-52046db35e40`. Gate + deploy passed; public home reached 200 after bounded startup readiness, protected `/ops` and `/settings` returned 401, authenticated Ops reported a healthy fleet with no unhealthy services, MCP metadata/challenge checks passed, sanitized host evidence matched exact SHA, and final PCS-08 deployment validation passed. The reviewed orchestrator writes its release receipt before the final PASS. That convergence established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at that historical checkpoint. It was later superseded by the governed DR runtime deployment `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, which completed the original Off-host DR recovery drill. At that historical checkpoint, later documentation/DR-2 merges had not deployed because staging activation was disabled. That statement is superseded for current operations by the later restored governed CD path; the latest repository-reconciliation runtime proof is actual Staging Deploy #1298 on merge `265a28d4c53cc482af8ea33a6362a21e640d30e5`. Evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
 
+## ECX Recipient Execution roadmap
+
+| Batch | State |
+|---|---:|
+| Batch 1 — Recipient Execution Foundation | **CLOSED / PASS** |
+| Batch 2 — Execution Contract + Idempotency + Provenance | **NEXT / NOT STARTED** |
+| Batch 3 — Real Agent A -> Agent B round trip | **NOT STARTED** |
+| Batch 4 — Security, isolation, result integration | **NOT STARTED** |
+| Batch 5 — End-to-end observability, quality, economics | **NOT STARTED** |
+| Batch 6 — Historical Ledger retention/compaction/migration | **NOT STARTED** |
+| Batch 7 — Advanced execution/productization | **NOT STARTED** |
+
+Batch 1 closed through PR #363 exact head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` and merge `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Exact-head CI #2286 + Product Eval #1525 + MCP #1131 passed; merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed. Staging Deploy #1345 was gate-only and #1346 executed the deployment successfully. The closure proves governed single-recipient Hub -> Connect execution with durable recipient binding and exact capability authority. It does not prove Batch 2+ semantics. Evidence: [verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md](verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md).
+
 ## Current audit follow-up
 
 | Scope | State |
