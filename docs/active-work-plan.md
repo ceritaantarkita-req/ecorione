@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 + BATCH 5 CLOSED-PASS / BATCH 6 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 + BATCH 5 + BATCH 6 CLOSED-PASS / BATCH 7 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 + Batch 4 + Batch 5 CLOSED / Batch 6 next
+## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 + Batch 4 + Batch 5 + Batch 6 CLOSED / Batch 7 next
 
 **Batch 1 is CLOSED / PASS.** PR #363 reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286 + Product Eval #1525 + MCP #1131 and merged as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed; Staging Deploy #1345 was gate-only and #1346 executed successfully.
 
@@ -18,7 +18,11 @@ The completed boundary is intentionally narrow: single-recipient runtime binding
 
 **Batch 5 — End-to-end observability, quality, economics is CLOSED / PASS.** Canonical PR #371 exact head `98fdf004e421778874a68be032fc69af9e48fad4` passed CI #2328 + Product Eval #1567 + MCP #1166 + Desktop Installer #259 and merged as `5b29c15b8878549ed47d6acf2349364f6ce4fc4a`. Merged-main CI #2329 + Product Eval #1568 + MCP #1167 passed; Staging Deploy #1430 was gate-only and #1431 executed successfully with exact SHA match, public/auth + MCP smoke PASS, healthy Operations, 15/15 services running, and 27.72 GiB stabilized free disk. Alternate PR #372 remains closed unmerged.
 
-**Next queued slice: Batch 6 — Historical Ledger retention/compaction/migration. It is NOT STARTED.** Resume from [verification/ecx-execution-b5-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b5-safe-checkpoint-2026-09-27.md). Do not reopen Batch 5, and do not silently add fan-out, external A2A, new ECX UI, long-running execution, paid-provider reruns, or other scope unless Batch 6 explicitly authorizes them.
+**Batch 6 — Historical Ledger retention/compaction/migration is CLOSED / PASS.** Canonical PR #374 exact head `0ca40cd5f703b950997392967bd505e8271049be` passed CI #2338 + Product Eval #1577 and merged as `32534adf140f66d3c97e47a0dd8162be2112800c`. Merged-main CI #2339 + Product Eval #1578 passed; Staging Deploy #1448 was gate-only and #1449 executed successfully with exact SHA match, public/auth + MCP smoke PASS, healthy Operations, 15/15 services running, and 29.89 GiB stabilized free disk.
+
+The closed boundary adds additive/restart-safe Historical Ledger lifecycle migration, hot-retention + immutable gzip archive segments, exact logical replay across archive + hot storage, archived EventId retry/conflict preservation, and fail-closed archive integrity. It does not add destructive logical-history expiry, background purge scheduling, fan-out/A2A/UI, or Batch 5 metrics retention.
+
+**Next queued slice: Batch 7 — Advanced execution/productization. It is NOT STARTED.** Resume from [verification/ecx-execution-b6-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b6-safe-checkpoint-2026-09-27.md). Do not reopen Batches 1–6, and define Batch 7's accepted productization boundary before implementation.
 
 ## Branch-hygiene final closure — 2026-09-27
 
