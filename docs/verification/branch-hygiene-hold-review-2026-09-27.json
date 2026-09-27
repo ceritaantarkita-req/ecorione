@@ -3,8 +3,8 @@
   "source_allowlist": "docs/verification/branch-hygiene-allowlist-2026-09-27.json",
   "audited_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
   "stage2_merge_sha": "97a34c3582917745dc4ecfb7f175b77cc3598148",
-  "count": 39,
-  "policy": "retain every branch with one or more commits ahead of audited main until a later supersession/provenance audit proves those unique commits are preserved elsewhere or intentionally disposable",
+  "count": 20,
+  "policy": "retain every remaining branch until a later content/provenance audit proves its unique commits are preserved elsewhere or intentionally disposable",
   "branches": [
     {
       "branch": "agent/a09-space-decomposition-20260926",
@@ -74,24 +74,6 @@
         "status": "diverged",
         "ahead_by": 21,
         "behind_by": 2265
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "agent/plugin-extension-framework-ci-20260909",
-      "current_sha": "e706aa70f3b9b80fc6ec12c72972a29f3c503639",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 11,
-      "latest_pr_updated_at": "2026-09-09T15:08:19Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 33,
-        "behind_by": 2314
       },
       "decision": "retain-pending-supersession-review",
       "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
@@ -205,60 +187,6 @@
       "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
     },
     {
-      "branch": "automation/dynamic-ai-port-helper-20260915",
-      "current_sha": "c0cb8afef5022b041642ce933a9582c41c2cf24b",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 4,
-        "behind_by": 1639
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "automation/dynamic-ai-port-helper-v5-20260915",
-      "current_sha": "1db9d032ad43f833f7c64db7bbe895b517c45b9a",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 5,
-        "behind_by": 1639
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "automation/dynamic-ai-port-helper-v6-20260915",
-      "current_sha": "ab78f5a9232205957c24330653b5a27245e01070",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 6,
-        "behind_by": 1639
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
       "branch": "automation/dynamic-ai-port-helper-v7-20260915",
       "current_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
       "original_classification": "no_pr_record",
@@ -295,24 +223,6 @@
       "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
     },
     {
-      "branch": "docs/cmd-eol-final-closure-20260920",
-      "current_sha": "9b781ceb99daa43b0ff634b11ae7d6bf01c1707d",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 187,
-      "latest_pr_updated_at": "2026-09-19T18:48:28Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 8,
-        "behind_by": 636
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
       "branch": "docs/comparative-cache-fix-closure-20260911",
       "current_sha": "13599d6ad96b1354e60f13a6274cd00cc64a6d3e",
       "original_classification": "no_pr_record",
@@ -326,96 +236,6 @@
         "status": "diverged",
         "ahead_by": 1,
         "behind_by": 2021
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "docs/dr2-checkpoint-1-closure-20260923",
-      "current_sha": "0b7dec78b01cd68d9f79364ea1ad7b833b446ed1",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 279,
-      "latest_pr_updated_at": "2026-09-24T01:14:09Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 4,
-        "behind_by": 303
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "docs/session4-high-security-closure-20260924",
-      "current_sha": "fe6119b1831b2081187aa3022c37e860b6542b6b",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 310,
-      "latest_pr_updated_at": "2026-09-25T16:29:22Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 5,
-        "behind_by": 171
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "docs/session5-a13-safe-checkpoint-20260925",
-      "current_sha": "70ba36cbbfb246be65af14e1309c3fb6929198c9",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 313,
-      "latest_pr_updated_at": "2026-09-25T01:38:01Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 5,
-        "behind_by": 169
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "docs/ux-runtime-local-chat-verified-20260912",
-      "current_sha": "c8e242a317ebef14758aa31e96af69084e067092",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 72,
-      "latest_pr_updated_at": "2026-09-21T10:12:54Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1991
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "feat/session8-a05b3a-url-source-ingestion-20260925",
-      "current_sha": "72eff88e03ef40c773741543c08e8829db46e743",
-      "original_classification": "merged_but_branch_advanced",
-      "latest_pr": 322,
-      "latest_pr_updated_at": "2026-09-25T06:16:46Z",
-      "latest_merged_pr": 322,
-      "latest_merged_head_sha": "2ccbe7d003e3ff4a9ee04bdd9a4c33cb008dbccc",
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 4,
-        "behind_by": 35
       },
       "decision": "retain-pending-supersession-review",
       "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
@@ -435,26 +255,8 @@
         "ahead_by": 21,
         "behind_by": 20
       },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "feat/w11-native-windows-runtime-20260916",
-      "current_sha": "9c7e3a44bfed7d293164ea5b8269adeeb29d240e",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 111,
-      "latest_pr_updated_at": "2026-09-21T10:13:06Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 19,
-        "behind_by": 1602
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
+      "decision": "retain-implementation-reference",
+      "rationale": "PR #337 cleanup comment explicitly says the branch/head remains useful as implementation reference and should be ported onto fresh main if selected later."
     },
     {
       "branch": "fix/flow-temporal-ci-timeout-20260915",
@@ -471,62 +273,8 @@
         "ahead_by": 5,
         "behind_by": 1709
       },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "fix/frontend-action-race-hardening-20260912",
-      "current_sha": "16565cfcdb1e4ddc177919675d7d51d150cc525b",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 57,
-      "latest_pr_updated_at": "2026-09-12T07:41:35Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 9,
-        "behind_by": 2005
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "fix/session7-a03-stale-project-selection-20260925",
-      "current_sha": "b3f117968ad6fcfbfd5075548928883cd9bc9102",
-      "original_classification": "merged_but_branch_advanced",
-      "latest_pr": 316,
-      "latest_pr_updated_at": "2026-09-25T02:30:31Z",
-      "latest_merged_pr": 316,
-      "latest_merged_head_sha": "5d72d7455f1a8f945c904b4847659233e2240003",
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 146
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "fix/ux-runtime-final-hardening-20260912",
-      "current_sha": "a9d9c16c375c114ea06232bcaa7cc2f9a25ea07e",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 73,
-      "latest_pr_updated_at": "2026-09-21T10:13:01Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 14,
-        "behind_by": 1991
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
+      "decision": "retain-unlanded-change",
+      "rationale": "PR #91 has no supersession note; its 30s->60s Temporal integration timeout change is not present in current main, which still uses 30_000 in the affected tests."
     },
     {
       "branch": "fix/w09-w10-port-runtime-followup-20260916",
@@ -560,24 +308,6 @@
         "status": "diverged",
         "ahead_by": 1,
         "behind_by": 1636
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "fix/w18-one-call-diagnostic-20260917",
-      "current_sha": "d95022a082ca7cdd0fcdd64b40069efd09cd7031",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 128,
-      "latest_pr_updated_at": "2026-09-21T10:13:12Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 6,
-        "behind_by": 1481
       },
       "decision": "retain-pending-supersession-review",
       "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
@@ -635,78 +365,567 @@
       },
       "decision": "retain-pending-supersession-review",
       "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "pe/pe-03-trigger-control-plane-20260919",
-      "current_sha": "a1132c8848fefeae43188ac9e35d23d43e658fa7",
-      "original_classification": "merged_but_branch_advanced",
-      "latest_pr": 172,
-      "latest_pr_updated_at": "2026-09-19T07:48:39Z",
-      "latest_merged_pr": 172,
-      "latest_merged_head_sha": "74730e26321cac06c31243baeeafe29d5f4d75f0",
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 960
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "security/f6-e06-immutable-node-toolchain-20260918",
-      "current_sha": "4c7ad0eb52712a3971c4eeef0106d00bb5eb6816",
-      "original_classification": "merged_but_branch_advanced",
-      "latest_pr": 157,
-      "latest_pr_updated_at": "2026-09-18T11:17:44Z",
-      "latest_merged_pr": 157,
-      "latest_merged_head_sha": "cd04be6385ffb360862e38e63dcd02d27c3a067d",
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1217
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "security/f6-e07-pinned-inno-setup-20260918",
-      "current_sha": "3d23fa1959d79a6a419ca99d2664d5c2d7a95ac5",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 159,
-      "latest_pr_updated_at": "2026-09-18T13:28:53Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 22,
-        "behind_by": 1209
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "security/f6-e08-container-image-digests-20260918",
-      "current_sha": "32809fd1d8307194cda06abc5c093a5060a3e9d5",
-      "original_classification": "closed_unmerged",
-      "latest_pr": 162,
-      "latest_pr_updated_at": "2026-09-21T10:13:19Z",
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 38,
-        "behind_by": 1181
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
     }
-  ]
+  ],
+  "stage2_count": 39,
+  "stage3": {
+    "evidence_main_sha": "23188ca5a4268e121841b167932b984d95102386",
+    "promoted_count": 19,
+    "retained_count": 20,
+    "promoted": [
+      {
+        "branch": "agent/plugin-extension-framework-ci-20260909",
+        "current_sha": "e706aa70f3b9b80fc6ec12c72972a29f3c503639",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 11,
+        "latest_pr_updated_at": "2026-09-09T15:08:19Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 33,
+          "behind_by": 2314
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "agent/plugin-extension-framework-ci-20260909",
+          "expected_sha": "e706aa70f3b9b80fc6ec12c72972a29f3c503639",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 11,
+          "successor_prs": [10],
+          "note": "PR #11 says it points to the exact same commit as PR #10 and exists only to trigger verification; do not merge."
+        }
+      },
+      {
+        "branch": "automation/dynamic-ai-port-helper-20260915",
+        "current_sha": "c0cb8afef5022b041642ce933a9582c41c2cf24b",
+        "original_classification": "no_pr_record",
+        "latest_pr": null,
+        "latest_pr_updated_at": null,
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 4,
+          "behind_by": 1639
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "ancestor_of_retained_branch",
+        "stage3_evidence": {
+          "branch": "automation/dynamic-ai-port-helper-20260915",
+          "expected_sha": "c0cb8afef5022b041642ce933a9582c41c2cf24b",
+          "prior_classification": "no_pr_record",
+          "evidence_kind": "ancestor_of_retained_branch",
+          "retained_branch": "automation/dynamic-ai-port-helper-v7-20260915",
+          "retained_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
+          "compare_status": "ahead",
+          "ahead_by": 3,
+          "behind_by": 0
+        }
+      },
+      {
+        "branch": "automation/dynamic-ai-port-helper-v5-20260915",
+        "current_sha": "1db9d032ad43f833f7c64db7bbe895b517c45b9a",
+        "original_classification": "no_pr_record",
+        "latest_pr": null,
+        "latest_pr_updated_at": null,
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 5,
+          "behind_by": 1639
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "ancestor_of_retained_branch",
+        "stage3_evidence": {
+          "branch": "automation/dynamic-ai-port-helper-v5-20260915",
+          "expected_sha": "1db9d032ad43f833f7c64db7bbe895b517c45b9a",
+          "prior_classification": "no_pr_record",
+          "evidence_kind": "ancestor_of_retained_branch",
+          "retained_branch": "automation/dynamic-ai-port-helper-v7-20260915",
+          "retained_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
+          "compare_status": "ahead",
+          "ahead_by": 2,
+          "behind_by": 0
+        }
+      },
+      {
+        "branch": "automation/dynamic-ai-port-helper-v6-20260915",
+        "current_sha": "ab78f5a9232205957c24330653b5a27245e01070",
+        "original_classification": "no_pr_record",
+        "latest_pr": null,
+        "latest_pr_updated_at": null,
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 6,
+          "behind_by": 1639
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "ancestor_of_retained_branch",
+        "stage3_evidence": {
+          "branch": "automation/dynamic-ai-port-helper-v6-20260915",
+          "expected_sha": "ab78f5a9232205957c24330653b5a27245e01070",
+          "prior_classification": "no_pr_record",
+          "evidence_kind": "ancestor_of_retained_branch",
+          "retained_branch": "automation/dynamic-ai-port-helper-v7-20260915",
+          "retained_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
+          "compare_status": "ahead",
+          "ahead_by": 1,
+          "behind_by": 0
+        }
+      },
+      {
+        "branch": "docs/cmd-eol-final-closure-20260920",
+        "current_sha": "9b781ceb99daa43b0ff634b11ae7d6bf01c1707d",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 187,
+        "latest_pr_updated_at": "2026-09-19T18:48:28Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 8,
+          "behind_by": 636
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "docs/cmd-eol-final-closure-20260920",
+          "expected_sha": "9b781ceb99daa43b0ff634b11ae7d6bf01c1707d",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 187,
+          "successor_prs": [186],
+          "note": "PR #187 body says it is superseded by merged PR #186 with the same Windows EOL closure."
+        }
+      },
+      {
+        "branch": "docs/dr2-checkpoint-1-closure-20260923",
+        "current_sha": "0b7dec78b01cd68d9f79364ea1ad7b833b446ed1",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 279,
+        "latest_pr_updated_at": "2026-09-24T01:14:09Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 4,
+          "behind_by": 303
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "docs/dr2-checkpoint-1-closure-20260923",
+          "expected_sha": "0b7dec78b01cd68d9f79364ea1ad7b833b446ed1",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 279,
+          "successor_prs": [280],
+          "note": "PR #279 conversation says it is superseded by PR #280 and later DR-2 deferment/safe-checkpoint docs."
+        }
+      },
+      {
+        "branch": "docs/session4-high-security-closure-20260924",
+        "current_sha": "fe6119b1831b2081187aa3022c37e860b6542b6b",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 310,
+        "latest_pr_updated_at": "2026-09-25T16:29:22Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 5,
+          "behind_by": 171
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "docs/session4-high-security-closure-20260924",
+          "expected_sha": "fe6119b1831b2081187aa3022c37e860b6542b6b",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 310,
+          "successor_prs": [],
+          "note": "PR #310 cleanup comment says its Session 4 closure content is superseded by later merged canonical docs and safe checkpoints."
+        }
+      },
+      {
+        "branch": "docs/session5-a13-safe-checkpoint-20260925",
+        "current_sha": "70ba36cbbfb246be65af14e1309c3fb6929198c9",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 313,
+        "latest_pr_updated_at": "2026-09-25T01:38:01Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 5,
+          "behind_by": 169
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "docs/session5-a13-safe-checkpoint-20260925",
+          "expected_sha": "70ba36cbbfb246be65af14e1309c3fb6929198c9",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 313,
+          "successor_prs": [315],
+          "note": "PR #313 body says superseded by PR #315."
+        }
+      },
+      {
+        "branch": "docs/ux-runtime-local-chat-verified-20260912",
+        "current_sha": "c8e242a317ebef14758aa31e96af69084e067092",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 72,
+        "latest_pr_updated_at": "2026-09-21T10:12:54Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 1,
+          "behind_by": 1991
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "docs/ux-runtime-local-chat-verified-20260912",
+          "expected_sha": "c8e242a317ebef14758aa31e96af69084e067092",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 72,
+          "successor_prs": [],
+          "note": "PR #72 closure comment says evidence was incorporated into later W03 and PCS-04/PCS-06 acceptance."
+        }
+      },
+      {
+        "branch": "feat/session8-a05b3a-url-source-ingestion-20260925",
+        "current_sha": "72eff88e03ef40c773741543c08e8829db46e743",
+        "original_classification": "merged_but_branch_advanced",
+        "latest_pr": 322,
+        "latest_pr_updated_at": "2026-09-25T06:16:46Z",
+        "latest_merged_pr": 322,
+        "latest_merged_head_sha": "2ccbe7d003e3ff4a9ee04bdd9a4c33cb008dbccc",
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 4,
+          "behind_by": 35
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "post_merge_delta_superseded",
+        "stage3_evidence": {
+          "branch": "feat/session8-a05b3a-url-source-ingestion-20260925",
+          "expected_sha": "72eff88e03ef40c773741543c08e8829db46e743",
+          "prior_classification": "merged_but_branch_advanced",
+          "evidence_kind": "post_merge_delta_superseded",
+          "successor_prs": [323],
+          "note": "Four post-merge DNS-pinning commits were carried by merged PR #323; current main preserves DNS-pinned transport/tests and later integration refinements."
+        }
+      },
+      {
+        "branch": "feat/w11-native-windows-runtime-20260916",
+        "current_sha": "9c7e3a44bfed7d293164ea5b8269adeeb29d240e",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 111,
+        "latest_pr_updated_at": "2026-09-21T10:13:06Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 19,
+          "behind_by": 1602
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "feat/w11-native-windows-runtime-20260916",
+          "expected_sha": "9c7e3a44bfed7d293164ea5b8269adeeb29d240e",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 111,
+          "successor_prs": [124],
+          "note": "PR #111 closure comment marks this as superseded/abandoned W11 direction and points to later W11 completion/closure PR #124."
+        }
+      },
+      {
+        "branch": "fix/frontend-action-race-hardening-20260912",
+        "current_sha": "16565cfcdb1e4ddc177919675d7d51d150cc525b",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 57,
+        "latest_pr_updated_at": "2026-09-12T07:41:35Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 9,
+          "behind_by": 2005
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "fix/frontend-action-race-hardening-20260912",
+          "expected_sha": "16565cfcdb1e4ddc177919675d7d51d150cc525b",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 57,
+          "successor_prs": [58, 59, 60, 62, 63],
+          "note": "PR #57 body explicitly says the race/serialization work landed through later frontend hardening PRs."
+        }
+      },
+      {
+        "branch": "fix/session7-a03-stale-project-selection-20260925",
+        "current_sha": "b3f117968ad6fcfbfd5075548928883cd9bc9102",
+        "original_classification": "merged_but_branch_advanced",
+        "latest_pr": 316,
+        "latest_pr_updated_at": "2026-09-25T02:30:31Z",
+        "latest_merged_pr": 316,
+        "latest_merged_head_sha": "5d72d7455f1a8f945c904b4847659233e2240003",
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 1,
+          "behind_by": 146
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "post_merge_delta_superseded",
+        "stage3_evidence": {
+          "branch": "fix/session7-a03-stale-project-selection-20260925",
+          "expected_sha": "b3f117968ad6fcfbfd5075548928883cd9bc9102",
+          "prior_classification": "merged_but_branch_advanced",
+          "evidence_kind": "post_merge_delta_superseded",
+          "successor_prs": [],
+          "note": "Only post-merge commit is formatter alignment; current main contains the formatter-normalized source contract with later formatting."
+        }
+      },
+      {
+        "branch": "fix/ux-runtime-final-hardening-20260912",
+        "current_sha": "a9d9c16c375c114ea06232bcaa7cc2f9a25ea07e",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 73,
+        "latest_pr_updated_at": "2026-09-21T10:13:01Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 14,
+          "behind_by": 1991
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "fix/ux-runtime-final-hardening-20260912",
+          "expected_sha": "a9d9c16c375c114ea06232bcaa7cc2f9a25ea07e",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 73,
+          "successor_prs": [],
+          "note": "PR #73 closure comment says covered UX/runtime defects were resolved through later merged W03/PCS-04/PCS-06 work."
+        }
+      },
+      {
+        "branch": "fix/w18-one-call-diagnostic-20260917",
+        "current_sha": "d95022a082ca7cdd0fcdd64b40069efd09cd7031",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 128,
+        "latest_pr_updated_at": "2026-09-21T10:13:12Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 6,
+          "behind_by": 1481
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "fix/w18-one-call-diagnostic-20260917",
+          "expected_sha": "d95022a082ca7cdd0fcdd64b40069efd09cd7031",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 128,
+          "successor_prs": [129, 143],
+          "note": "PR #128 closure comment says diagnostic work continued in merged PR #129 and final W18/W20 closure PR #143."
+        }
+      },
+      {
+        "branch": "pe/pe-03-trigger-control-plane-20260919",
+        "current_sha": "a1132c8848fefeae43188ac9e35d23d43e658fa7",
+        "original_classification": "merged_but_branch_advanced",
+        "latest_pr": 172,
+        "latest_pr_updated_at": "2026-09-19T07:48:39Z",
+        "latest_merged_pr": 172,
+        "latest_merged_head_sha": "74730e26321cac06c31243baeeafe29d5f4d75f0",
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 1,
+          "behind_by": 960
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "post_merge_delta_superseded",
+        "stage3_evidence": {
+          "branch": "pe/pe-03-trigger-control-plane-20260919",
+          "expected_sha": "a1132c8848fefeae43188ac9e35d23d43e658fa7",
+          "prior_classification": "merged_but_branch_advanced",
+          "evidence_kind": "post_merge_delta_superseded",
+          "successor_prs": [],
+          "note": "Only post-merge commit adds closure-candidate docs; current main contains the later CLOSED / PASS PE-03 closure record."
+        }
+      },
+      {
+        "branch": "security/f6-e06-immutable-node-toolchain-20260918",
+        "current_sha": "4c7ad0eb52712a3971c4eeef0106d00bb5eb6816",
+        "original_classification": "merged_but_branch_advanced",
+        "latest_pr": 157,
+        "latest_pr_updated_at": "2026-09-18T11:17:44Z",
+        "latest_merged_pr": 157,
+        "latest_merged_head_sha": "cd04be6385ffb360862e38e63dcd02d27c3a067d",
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 1,
+          "behind_by": 1217
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "post_merge_delta_superseded",
+        "stage3_evidence": {
+          "branch": "security/f6-e06-immutable-node-toolchain-20260918",
+          "expected_sha": "4c7ad0eb52712a3971c4eeef0106d00bb5eb6816",
+          "prior_classification": "merged_but_branch_advanced",
+          "evidence_kind": "post_merge_delta_superseded",
+          "successor_prs": [],
+          "note": "Only post-merge commit adjusts an expected finding line number; current main contains the later updated test expectation."
+        }
+      },
+      {
+        "branch": "security/f6-e07-pinned-inno-setup-20260918",
+        "current_sha": "3d23fa1959d79a6a419ca99d2664d5c2d7a95ac5",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 159,
+        "latest_pr_updated_at": "2026-09-18T13:28:53Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 22,
+          "behind_by": 1209
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "security/f6-e07-pinned-inno-setup-20260918",
+          "expected_sha": "3d23fa1959d79a6a419ca99d2664d5c2d7a95ac5",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 159,
+          "successor_prs": [160],
+          "note": "PR #159 body says superseded by PR #160 carrying the same F6-E07 scope plus reviewed acceptance."
+        }
+      },
+      {
+        "branch": "security/f6-e08-container-image-digests-20260918",
+        "current_sha": "32809fd1d8307194cda06abc5c093a5060a3e9d5",
+        "original_classification": "closed_unmerged",
+        "latest_pr": 162,
+        "latest_pr_updated_at": "2026-09-21T10:13:19Z",
+        "latest_merged_pr": null,
+        "latest_merged_head_sha": null,
+        "comparison": {
+          "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
+          "direction": "main...branch",
+          "status": "diverged",
+          "ahead_by": 38,
+          "behind_by": 1181
+        },
+        "decision": "retain-pending-supersession-review",
+        "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph",
+        "stage3_decision": "promoted-to-safe-delete",
+        "stage3_evidence_kind": "explicit_pr_supersession",
+        "stage3_evidence": {
+          "branch": "security/f6-e08-container-image-digests-20260918",
+          "expected_sha": "32809fd1d8307194cda06abc5c093a5060a3e9d5",
+          "prior_classification": "closed_unmerged",
+          "evidence_kind": "explicit_pr_supersession",
+          "closed_pr": 162,
+          "successor_prs": [164, 165],
+          "note": "PR #162 closure comment says F6-E08 was completed by PR #164 and closed by PR #165."
+        }
+      }
+    ]
+  }
 }
