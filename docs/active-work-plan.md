@@ -1,12 +1,12 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-26**
+Last updated: **2026-09-27**
 
-Status: **A-11 CLOSED-PASS / NO ACTIVE PRODUCT-AUDIT IMPLEMENTATION / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / NO ACTIVE PRODUCT-AUDIT IMPLEMENTATION / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Branch-hygiene maintenance checkpoint — 2026-09-27
+## Branch-hygiene final closure — 2026-09-27
 
-**No product/runtime implementation batch is active.** Branch hygiene is maintenance only. Resume from the committed 393-entry exact-SHA allowlist; do not rerun Stages 1–4. The next optional destructive pass targets only the 39 still-present cleanup-ready branches after dry-run/exact-SHA revalidation. Seven retained branches are explicitly outside deletion authorization. The checkpoint branch itself is bookkeeping and must not create an infinite self-cleanup documentation loop.
+**Branch hygiene is FINAL / CLOSED / LOCKED and is not active work.** Both destructive passes are complete: 354 branches were deleted in the first pass and 39 in the second, leaving **0/393 safe-delete entries present**. Final remote inventory is **9 branches = `main` + 7 retained + 1 checkpoint branch**. Do not rerun Stages 1–4 or create another self-cleanup documentation loop unless future remote branch changes create genuinely new work.
 
 ## Audit follow-up checkpoint — SESSION 10 / A-11 CLOSED / SAFE CHECKPOINT
 
@@ -126,7 +126,7 @@ A-06b exact implementation head `f7e10c1d4fae957e7a9b52bbbc78805424f8da12` passe
 
 **A-11 personal-workspace-first limitation is CLOSED / PASS.** PR #352 merged as exact implementation main `38fa0b8563a0f73fb44b1705e4f0e1418d8a23c5`. Browser Workspace selection is now centralized: valid `?workspace=ws_...` overrides valid persisted `ecorione.workspaceId`, invalid/absent candidates fall back to canonical `DEFAULT_WORKSPACE_ID`, and Ai, Projects, Work, Brain, Space, Flow, and Settings consume the shared context instead of owning `ws_personal`. Final reviewed head `173ba037182ca999f93c22942c564cff08d8ab6c` passed CI #2255, Product Eval #1494, and PCS-06 #195; merged-main CI #2256 and Product Eval #1495 passed; actual Staging Deploy #1284 deployed exact `38fa0b856...` and proved preserved public/auth + MCP boundaries, healthy Operations with zero unhealthy services, exact-host match, 15/15 configured services running, and 27.66 GiB stabilized free space. No Workspace registry/switcher, multi-user identity redesign, new owner/service/database, DR-2 work, native Drive integration, hosted spend, or production cutover was introduced. **No new audit scope is opened automatically.** Evidence: [verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md](verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md).
 
-**Repository/docs reconciliation:** CLOSED / PASS. Current/canonical docs were synchronized without rewriting historical verification/archive provenance. The follow-on branch-hygiene work is now **Stage 4 CLOSED / PASS** at its classification/runtime boundary: one-time cleanup deleted 354/354 exact-SHA branches; cumulative evidence now classifies 393 safe-delete branches, of which 39 remain present and cleanup-ready, while seven substantive branches remain retained. PR #361 / merge `9e621680661f7128b9cfea930fd470472ed94381` passed merged-main CI #2277 + Product Eval #1516 and actual Staging Deploy #1326. Evidence: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md).
+**Repository/docs reconciliation:** CLOSED / PASS. Current/canonical docs were synchronized without rewriting historical verification/archive provenance. Follow-on branch hygiene is also **FINAL / CLOSED / LOCKED**: the first cleanup deleted 354/354 exact-SHA branches and cleanup pass 2 deleted the remaining 39/39 after an exact-SHA dry-run. The final reconciliation is **393/393 safe-delete entries absent**, seven substantive branches retained, one checkpoint branch retained, and `main`, for **9 total remote branches**. No branch-hygiene task remains in the active queue. Evidence: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md).
 
 ## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
 

@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE STAGE 4 CLOSED-PASS / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -14,21 +14,21 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 Repository/documentation reconciliation is **CLOSED / PASS through PR #354**. Exact reviewed head `f356f00d643b017d0e9870142c71c597d281872f` passed CI #2262 + Product Eval #1501, then squash-merged as `265a28d4c53cc482af8ea33a6362a21e640d30e5`. Merged-main CI #2263 + Product Eval #1502 passed. Staging Deploy #1297 was gate-only; actual Staging Deploy #1298 deployed exact merge `265a28d4...` as `staging-265a28d4c53c`, with public/auth + MCP smoke PASS, Operations `healthy: true` and no unhealthy owner services, all 15 configured services running, clean detached exact-host identity, and final capacity stabilization at 25.11 GiB free.
 
-The A-series audit-follow-up sequence selected from the 2026-09-24 audit is closed through A-11, and the repository/documentation reconciliation is also closed. There is no active Product Evolution or A-series implementation batch and no automatically opened next audit scope. Issue #277 remains the deliberately deferred DR-2 tracker. The post-merge inventory immediately after PR #354 had 0 open PRs, 973 tracked files, 251 files under `docs/`, and 393 branch names including `main`; branch deletion remains outside this non-destructive documentation scope.
+The A-series audit-follow-up sequence selected from the 2026-09-24 audit is closed through A-11, and the repository/documentation reconciliation is also closed. There is no active Product Evolution or A-series implementation batch and no automatically opened next audit scope. Issue #277 remains the deliberately deferred DR-2 tracker. The post-merge inventory immediately after PR #354 had 0 open PRs, 973 tracked files, 251 files under `docs/`, and 393 branch names including `main`; that historical inventory is superseded by the final branch-hygiene closure below.
 
 The sections below preserve chronological closure evidence. Older paragraphs that say “current runtime” refer to their dated checkpoint unless this top section explicitly supersedes them.
 
 Repository/documentation reconciliation evidence: [verification/repository-documentation-reconciliation-2026-09-26.md](verification/repository-documentation-reconciliation-2026-09-26.md).
 
-## 2026-09-27 branch hygiene safe checkpoint
+## 2026-09-27 branch hygiene final closure
 
-Branch hygiene is **Stage 4 CLOSED / PASS** at the audited/classification boundary. Stage 1/2 identified 354 exact-SHA cleanup candidates; the one-time cleanup dry-run proved 354/354 eligible and APPLY deleted **354/354 remote branches** with zero hold/failure/skip. Stage 3 and Stage 4 then reconciled remaining unique/probe/execution branches and narrowed substantive retained provenance to **7 branches**.
+Branch hygiene is **FINAL / CLOSED / LOCKED**. Stage 1/2 deleted the first **354/354** exact-SHA branches; Stages 3–4 completed classification and retained-branch reconciliation; cleanup pass 2 then dry-ran and deleted the final **39/39** cleanup-ready branches with exact-SHA revalidation. The cumulative safe-delete set is now **393/393 absent**, with **7 retained branches** preserved.
 
 PR #361 exact head `316ba052baec2a4b7509e3761dd151a7fcf03f1c` passed CI #2276 + Product Eval #1515 and merged as `9e621680661f7128b9cfea930fd470472ed94381`. Merged-main CI #2277 + Product Eval #1516 passed. Staging Deploy #1325 was gate-only; actual Staging Deploy #1326 deployed exact `9e621680...` with public/auth + MCP smoke PASS, Operations healthy with zero unhealthy services, **15/15** configured services running, clean exact-host identity, and **29.92 GiB** stabilized free disk.
 
-Direct GitHub enumeration before opening the checkpoint branch returned **47 remote branches**: `main`, 38 already-allowlisted present branches, seven retained branches, and the now-merged Stage-4 branch. The Stage-4 branch is now also exact-head safe, so the durable classification is **393 cumulative safe-delete entries = 354 already deleted + 39 cleanup-ready still present**, plus **7 retained** and `main`. No branch is unclassified at that baseline.
+Cleanup pass 2 ran as GitHub Actions run **36294553329** from execution head `ac13919d2ff9b7723038b22afd0b8111fdac8c25`: dry-run proved `would-delete=39`, `already-missing=354`, `hold=0`, `failed=0`, `skip=0`; APPLY proved `deleted=39`, `already-missing=354`, `hold=0`, `failed=0`, `skip=0`. Final remote inventory is exactly **9 branches = `main` + 7 retained + 1 checkpoint branch**, with **0 unexpected branches** and **0 safe-delete branches still present**.
 
-Safe resume: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md). The next cleanup pass must use exact-SHA revalidation and must not delete the seven retained branches.
+Canonical closure: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md). **No branch-hygiene work remains active. Do not rerun Stages 1–4 or repeat historical classification unless future remote branch changes create genuinely new work.**
 
 ## 2026-09-24 current-main + staging parity audit
 
