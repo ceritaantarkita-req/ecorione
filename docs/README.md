@@ -98,13 +98,13 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current staging / DR truth
 
-Current reviewed `main` and governed SumoPod staging are converged on:
+The exact audited Batch 7 closure/runtime baseline immediately before this docs-only reconciliation was:
 
 ```text
 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
 ```
 
-Latest proof: merged-main CI #2352, Product Eval #1591, and actual Staging Deploy #1475 all passed; staging reported healthy Operations, 15/15 services running, exact-SHA match, and 26.31 GiB stabilized free disk.
+Merged-main CI #2352, Product Eval #1591, and actual Staging Deploy #1475 all passed; staging reported healthy Operations, 15/15 services running, exact-SHA match, and 26.31 GiB stabilized free disk. Docs-only successors may advance Git/staging revision identity without changing that runtime compatibility boundary.
 
 SumoPod remains **staging, not production**.
 
