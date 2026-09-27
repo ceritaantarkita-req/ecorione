@@ -120,7 +120,7 @@ describe("ECX Batch 7 fan-out round trip", () => {
     ledger.createSession({
       id: assertId("session", sessionId),
       createdAt: NOW,
-      workspaceId: "ws_personal",
+      workspaceId: assertId("workspace", "ws_personal"),
       scope: "personal",
       sensitivity: "INTERNAL",
       syncClass: "CLOUD_ALLOWED",
