@@ -2,13 +2,25 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 + BATCH 5 + BATCH 6 CLOSED-PASS / BATCH 7 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1–7 CLOSED-PASS / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-27 ECX Execution — Batch 7 closure
+
+Batch 7 — **Advanced execution/productization is CLOSED / PASS** through canonical PR #376. Exact reviewed head `198b46fa0eeb679dc7bfee78492f4c8739a7ed99` passed CI #2349, Product Eval #1588, and MCP External HTTPS Acceptance #1175, then merged to `main` as `e49af9225194d36e2ed8cbefeb7b4cf5c09dc485`. Merged-main CI #2350, Product Eval #1589, and MCP #1176 passed. Staging Deploy #1470 was gate-only; actual Staging Deploy #1471 deployed the exact merged SHA successfully as `staging-e49af9225194`.
+
+The closed boundary adds one coherent 2–8-recipient `delta` fan-out path. Child dispatch composes the existing Batch 2 execution receipt/idempotency primitive, Batch 3 handback semantics, and Batch 4 authority/result-isolation protections. Successful child results are validated and deterministically ordered, aggregate reply material is capped at **131,072 bytes** and hash-evidenced, hosted-parent eligibility is rechecked for every contributing local child, and the sender/parent is invoked **exactly once** for the aggregate continuation. A durable fan-out receipt provides replay/no-redispatch semantics and Workspace-scoped status, while Historical Ledger records bounded aggregate-return and parent-continuation provenance without becoming a second execution store.
+
+Runtime proof on Staging Deploy #1471 matched exact SHA `e49af9225194d36e2ed8cbefeb7b4cf5c09dc485`; public auth bootstrap and protected-route checks passed, MCP metadata/challenge checks passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **27.68 GiB free**.
+
+Batch 7 deliberately does **not** add external A2A interoperability, recursive agent graphs, Flow/Temporal fan-out orchestration, `full` multi-recipient merge semantics, default broadcast, a broad ECX/History UI, automatic Ledger purge scheduling, paid-provider/W18 reruns, DR-2, or production cutover. The **ECX Recipient Execution Batch 1–7 roadmap is CLOSED / PASS** at its documented boundaries; **no Batch 8 is implicitly opened**.
+
+Canonical final checkpoint: [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–7 unless a new explicitly authorized scope requires it.**
 
 ## 2026-09-27 ECX Execution — Batch 6 closure
 
