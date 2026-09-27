@@ -41,9 +41,11 @@ describe("ECX execution Batch 7 source contract", () => {
     const fanout = exchange.indexOf('app.post("/v1/exchange/fanout-round-trip"');
     const route = exchange.slice(fanout);
     expect(route).toContain("validatedReturnedResult(childInput, child)");
-    expect(route).toContain(
-      "assertHostedParentResultIsolation(childInput, child, parent.target, ledger, options)",
-    );
+    expect(route).toContain("await assertHostedParentResultIsolation(");
+    expect(route).toContain("childInput,");
+    expect(route).toContain("parent.target,");
+    expect(route).toContain("ledger,");
+    expect(route).toContain("options,");
     expect(route).toContain(
       "authorizeResultReceive(authority, firstChildInput, continuationId)",
     );
