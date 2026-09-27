@@ -33,6 +33,19 @@ describe("provider catalog", () => {
     }
   });
 
+  it("NVIDIA tersedia sebagai hosted routing provider dengan satu model verified", () => {
+    const nvidia = PROVIDER_CATALOG.find((entry) => entry.id === "nvidia");
+    expect(nvidia).toMatchObject({
+      displayName: "NVIDIA / NIM",
+      category: "ai",
+      credentialPurpose: "messages",
+      credentialReady: true,
+      routingReady: true,
+      connectionTestReady: true,
+    });
+    expect(nvidia?.hostedModels.map((model) => model.id)).toEqual(["z-ai/glm-5.3"]);
+  });
+
   it("MCP dan webhook tetap integration credentials dan bukan AI routing providers", () => {
     const mcp = PROVIDER_CATALOG.find((entry) => entry.id === "mcp");
     expect(mcp).toMatchObject({
