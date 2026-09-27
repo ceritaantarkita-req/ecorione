@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 CLOSED-PASS / BATCH 3 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 CLOSED-PASS / BATCH 3 ACTIVE-SAFE-WIP / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## ECX Recipient Execution roadmap — Batch 1 + Batch 2 CLOSED / Batch 3 next
 
@@ -12,7 +12,7 @@ The completed boundary is intentionally narrow: single-recipient runtime binding
 
 **Batch 2 — Execution Contract + Idempotency + Provenance is CLOSED / PASS.** PR #365 exact head `890030465570826eaca9c21f27aa13b0eb821e76` passed CI #2294 + Product Eval #1533 + MCP #1137 and merged as `851d58788075e1f11735b4c23e947edf3304eabe`. Merged-main CI #2295 + Product Eval #1534 + MCP #1138 passed; Staging Deploy #1361 was gate-only and #1362 executed successfully.
 
-**Next queued slice: Batch 3 — Real Agent A -> Agent B round trip. It is NOT STARTED.** Resume from [verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md). Do not reopen Batch 2, and do not pull multi-recipient fan-out, A2A, UI, or Ledger retention into Batch 3 unless that later batch explicitly authorizes them.
+**Batch 3 — Real Agent A -> Agent B round trip is ACTIVE / SAFE WIP.** Resume from [verification/ecx-execution-b3-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b3-wip-checkpoint-2026-09-27.md). The active boundary is single-recipient result return only: `delta` runs one parent continuation; `full` directly hands back the standalone child result. Do not add fan-out, aggregation, A2A, new UI, Flow/Temporal long-running execution, or Ledger retention/compaction.
 
 ## Branch-hygiene final closure — 2026-09-27
 
