@@ -17,16 +17,18 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 
 ## Current compatibility baseline — 2026-09-27
 
-Current reviewed repository/staging baseline:
+Audited Batch 7 closure/runtime compatibility baseline immediately before this docs-only reconciliation:
 
 ```text
-main / staging = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-CI             = #2352 PASS
-Product Eval   = #1591 PASS
-Staging Deploy = #1475 PASS
-Operations     = healthy
-services       = 15/15 running
+closure SHA     = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+CI              = #2352 PASS
+Product Eval    = #1591 PASS
+Staging Deploy  = #1475 PASS
+Operations      = healthy
+services        = 15/15 running
 ```
+
+Docs-only successors may advance the exact Git/staging SHA without changing this runtime compatibility boundary. Always inspect live `main` before starting new work.
 
 Closed roadmap families:
 
