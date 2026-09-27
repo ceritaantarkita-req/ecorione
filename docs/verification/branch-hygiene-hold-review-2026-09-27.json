@@ -3,8 +3,8 @@
   "source_allowlist": "docs/verification/branch-hygiene-allowlist-2026-09-27.json",
   "audited_main_sha": "d0b9c9141cba27fe640f325efff122486d1a1b56",
   "stage2_merge_sha": "97a34c3582917745dc4ecfb7f175b77cc3598148",
-  "count": 20,
-  "policy": "retain every remaining branch until a later content/provenance audit proves its unique commits are preserved elsewhere or intentionally disposable",
+  "count": 7,
+  "policy": "retain only substantive unique/diverged branches with unresolved preservation semantics; ephemeral/probe/workflow-only branches with explicit closure evidence are cleanup-eligible",
   "branches": [
     {
       "branch": "agent/a09-space-decomposition-20260926",
@@ -22,43 +22,7 @@
         "behind_by": 11
       },
       "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "agent/format-probe-20260914",
-      "current_sha": "509c055b72d3cf486403de2131cc9b0894e232c7",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1891
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "agent/format-probe-w06-20260914",
-      "current_sha": "17faea59fd8f834973ea39142511166268410d4f",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1882
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
+      "rationale": "Retain: four-commit alternative Space decomposition diverges from merged A-09e PR #348; not an ancestor of the merged successor."
     },
     {
       "branch": "agent/native-multimodal-pipeline-20260910",
@@ -76,133 +40,7 @@
         "behind_by": 2265
       },
       "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "agent/w11-installer-build-20260916",
-      "current_sha": "970d9202de600210f0b5e89d15301cfb284402b9",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 2,
-        "behind_by": 1548
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "agent/w11-installer-build-r2-20260916",
-      "current_sha": "5c99993847515b98e8233f4c25f024f1ea99cd69",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1536
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "agent/w11-installer-build-r3-20260916",
-      "current_sha": "a7a9c13310581316f406ecb0e266cb3fc5e3313c",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1527
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "agent/w11-installer-build-r4-20260916",
-      "current_sha": "d870e3a74a6d6ddca526af717feace5b928f163e",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 3,
-        "behind_by": 1520
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "automation/dynamic-ai-port-desktop-followup-20260915",
-      "current_sha": "743deec4e07d471e810fae3d26dc37790a007416",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1638
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "automation/dynamic-ai-port-desktop-followup-v2-20260915",
-      "current_sha": "fc9ee7dcbe23d7d2a717d3e59835753514fb798c",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1638
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "automation/dynamic-ai-port-helper-v7-20260915",
-      "current_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 7,
-        "behind_by": 1639
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
+      "rationale": "Retain: 21-commit alternative native multimodal implementation diverges from merged Batch 5 PR #15."
     },
     {
       "branch": "ci/f6-e03-release-security-acceptance-gate-20260918",
@@ -220,25 +58,7 @@
         "behind_by": 1305
       },
       "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "docs/comparative-cache-fix-closure-20260911",
-      "current_sha": "13599d6ad96b1354e60f13a6274cd00cc64a6d3e",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 2021
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
+      "rationale": "Retain: nine-commit F6-E03 candidate diverges from merged clean successor PR #151; no exact ancestry/supersession proof for the unique commits."
     },
     {
       "branch": "feat/session9-a08c-brain-grounded-chat-20260925",
@@ -256,7 +76,7 @@
         "behind_by": 20
       },
       "decision": "retain-implementation-reference",
-      "rationale": "PR #337 cleanup comment explicitly says the branch/head remains useful as implementation reference and should be ported onto fresh main if selected later."
+      "rationale": "Retain implementation reference: PR #337 explicitly says this branch/head remains useful reference."
     },
     {
       "branch": "fix/flow-temporal-ci-timeout-20260915",
@@ -274,43 +94,7 @@
         "behind_by": 1709
       },
       "decision": "retain-unlanded-change",
-      "rationale": "PR #91 has no supersession note; its 30s->60s Temporal integration timeout change is not present in current main, which still uses 30_000 in the affected tests."
-    },
-    {
-      "branch": "fix/w09-w10-port-runtime-followup-20260916",
-      "current_sha": "f0e614d6dece614d329f0559e2553d5daf029d76",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1636
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "fix/w09-w10-port-runtime-followup-v2-20260916",
-      "current_sha": "6dacc42776f71bbed1cc61bc70fd010a8b5d699c",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 1,
-        "behind_by": 1636
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
+      "rationale": "Retain unlanded change: branch raises Temporal integration test headroom from 30s to 60s; current main still uses 30_000."
     },
     {
       "branch": "fix/w18-one-call-diagnostic-v2-20260917",
@@ -328,7 +112,7 @@
         "behind_by": 1481
       },
       "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
+      "rationale": "Retain: two-commit alternate W18 diagnostic implementation diverges from merged PR #129."
     },
     {
       "branch": "fix/w18-openrouter-routing-metadata-20260917",
@@ -346,25 +130,7 @@
         "behind_by": 1465
       },
       "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
-    },
-    {
-      "branch": "ops/w11-installer-build-20260916",
-      "current_sha": "0984c5b2599d84b724f0c6eb87661e5cee0269a9",
-      "original_classification": "no_pr_record",
-      "latest_pr": null,
-      "latest_pr_updated_at": null,
-      "latest_merged_pr": null,
-      "latest_merged_head_sha": null,
-      "comparison": {
-        "base": "d0b9c9141cba27fe640f325efff122486d1a1b56",
-        "direction": "main...branch",
-        "status": "diverged",
-        "ahead_by": 4,
-        "behind_by": 1608
-      },
-      "decision": "retain-pending-supersession-review",
-      "rationale": "ahead_by > 0 means the branch still contains commits not reachable from the audited main graph"
+      "rationale": "Retain: three-commit alternate routing-metadata implementation diverges from merged PR #132."
     }
   ],
   "stage2_count": 39,
@@ -925,6 +691,118 @@
           "successor_prs": [164, 165],
           "note": "PR #162 closure comment says F6-E08 was completed by PR #164 and closed by PR #165."
         }
+      }
+    ]
+  },
+  "stage3_count": 39,
+  "stage4_count": 7,
+  "stage4": {
+    "evidence_main_sha": "a1991f1fd1e321ecbe32f997d0ef87982fc0b20a",
+    "promoted_count": 13,
+    "post_baseline_safe_count": 6,
+    "observed_remote_branch_count_before_stage4_merge": 47,
+    "promoted": [
+      {
+        "branch": "agent/format-probe-20260914",
+        "expected_sha": "509c055b72d3cf486403de2131cc9b0894e232c7",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_probe_intent",
+        "note": "Unique commit message is 'chore: temporary W10 prettier probe'; branch only carries the temporary CI workflow probe."
+      },
+      {
+        "branch": "agent/format-probe-w06-20260914",
+        "expected_sha": "17faea59fd8f834973ea39142511166268410d4f",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_probe_intent",
+        "note": "Unique commit message is 'chore: temporary W06 prettier probe'; branch only carries the temporary CI workflow probe."
+      },
+      {
+        "branch": "agent/w11-installer-build-20260916",
+        "expected_sha": "970d9202de600210f0b5e89d15301cfb284402b9",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [124],
+        "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124 with real Windows installer verification."
+      },
+      {
+        "branch": "agent/w11-installer-build-r2-20260916",
+        "expected_sha": "5c99993847515b98e8233f4c25f024f1ea99cd69",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [124],
+        "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124."
+      },
+      {
+        "branch": "agent/w11-installer-build-r3-20260916",
+        "expected_sha": "a7a9c13310581316f406ecb0e266cb3fc5e3313c",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [124],
+        "note": "Branch only adds one-shot W11 installer build workflow; W11 is closed by merged PR #124."
+      },
+      {
+        "branch": "agent/w11-installer-build-r4-20260916",
+        "expected_sha": "d870e3a74a6d6ddca526af717feace5b928f163e",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [124],
+        "note": "Branch only adds one-shot/retry W11 installer workflows; W11 is closed by merged PR #124."
+      },
+      {
+        "branch": "automation/dynamic-ai-port-desktop-followup-20260915",
+        "expected_sha": "743deec4e07d471e810fae3d26dc37790a007416",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [103, 104, 107],
+        "note": "Branch only adds a temporary dynamic-port desktop follow-up workflow; runtime work landed through PRs #103/#104 and W09/W10 closed via PR #107."
+      },
+      {
+        "branch": "automation/dynamic-ai-port-desktop-followup-v2-20260915",
+        "expected_sha": "fc9ee7dcbe23d7d2a717d3e59835753514fb798c",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [103, 104, 107],
+        "note": "Branch only adds a temporary dynamic-port desktop follow-up workflow; W09/W10 runtime is closed by PR #107."
+      },
+      {
+        "branch": "automation/dynamic-ai-port-helper-v7-20260915",
+        "expected_sha": "977178d418f56c3b16fd8dbe6d10e61783a98286",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [103, 104, 107],
+        "note": "Branch contains only temporary dynamic-port patch/helper workflows; final runtime behavior landed through PRs #103/#104 and closed via PR #107."
+      },
+      {
+        "branch": "docs/comparative-cache-fix-closure-20260911",
+        "expected_sha": "13599d6ad96b1354e60f13a6274cd00cc64a6d3e",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "content_salvaged_into_stage4",
+        "successor_prs": [40],
+        "note": "The branch's missing comparative cache-fix closure delta was replayed into Stage-4 current documentation before this promotion."
+      },
+      {
+        "branch": "fix/w09-w10-port-runtime-followup-20260916",
+        "expected_sha": "f0e614d6dece614d329f0559e2553d5daf029d76",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [103, 104, 107],
+        "note": "Branch only adds a temporary W09/W10 runtime follow-up workflow; final runtime acceptance closed via PR #107."
+      },
+      {
+        "branch": "fix/w09-w10-port-runtime-followup-v2-20260916",
+        "expected_sha": "6dacc42776f71bbed1cc61bc70fd010a8b5d699c",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [103, 104, 107],
+        "note": "Branch only adds a temporary W09/W10 runtime follow-up workflow; final runtime acceptance closed via PR #107."
+      },
+      {
+        "branch": "ops/w11-installer-build-20260916",
+        "expected_sha": "0984c5b2599d84b724f0c6eb87661e5cee0269a9",
+        "prior_classification": "no_pr_record",
+        "evidence_kind": "ephemeral_execution_helper_superseded",
+        "successor_prs": [124],
+        "note": "Branch only adds a temporary exact-main installer build workflow; W11 closed via PR #124."
       }
     ]
   }

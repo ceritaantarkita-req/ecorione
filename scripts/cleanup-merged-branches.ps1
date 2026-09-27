@@ -18,7 +18,9 @@ function Invoke-Git {
   return @($output)
 }
 
-$repoRoot = (Invoke-Git rev-parse --show-toplevel)[0].Trim()
+$repoRootLines = @(Invoke-Git rev-parse --show-toplevel)
+if ($repoRootLines.Count -lt 1) { throw "Unable to resolve repository root." }
+$repoRoot = ([string]$repoRootLines[0]).Trim()
 Set-Location $repoRoot
 
 if (-not (Test-Path -LiteralPath $AllowlistPath)) {

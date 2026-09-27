@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **STAGE-3 AUDIT COMPLETE / 373 SAFE-DELETE / 20 RETAINED / DELETION NOT YET EXECUTED**
+Status: **STAGE-4 AUDIT COMPLETE / STAGE-2 CLEANUP EXECUTED PASS / 392 CUMULATIVE SAFE-DELETE / 7 RETAINED / STAGE-4 MERGE PENDING**
 
 Audited repository:
 
@@ -106,141 +106,221 @@ The allowlist records every safe-delete candidate's exact remote SHA and proof k
 
 ## 4. Stage 3 — supersession and retained-branch ancestry
 
-Stage 3 reviewed the 39 unique/diverged branches instead of assuming every non-main commit must keep its own branch forever.
+Stage 3 reviewed the 39 unique/diverged branches that remained after Stage 2.
 
-Three additional branch heads were proven ancestors of a retained successor branch:
+It promoted **19** additional branches:
+
+- **3** heads proven ancestors of a retained successor branch;
+- **12** closed-unmerged branches with explicit PR-history supersession / duplicate-verification / abandoned-by-later-merged-path evidence;
+- **4** branches whose post-merge deltas were demonstrably superseded by merged/current-main content.
+
+That produced:
+
+- **373 cumulative SAFE-DELETE candidates**;
+- **20 retained branches**.
+
+Two retained exceptions were explicitly protected:
+
+- PR #337 / Brain grounded assistant — the cleanup comment says the branch/head remains useful implementation reference;
+- PR #91 / Flow Temporal timeout — the branch's 30s -> 60s Temporal integration timeout change is still absent from current main.
+
+Stage 3 merged through PR **#360** as:
 
 ```text
-automation/dynamic-ai-port-helper
-  -> dynamic-ai-port-helper-v5
-  -> dynamic-ai-port-helper-v6
-  -> dynamic-ai-port-helper-v7
+a1991f1fd1e321ecbe32f997d0ef87982fc0b20a
 ```
 
-The first three heads are fully contained in retained `v7` and therefore do not carry unique provenance once `v7` is preserved.
+Final exact-head gates on PR #360:
 
-Fourteen closed-unmerged PR branches were reviewed from their PR body/conversation history:
+- CI **#2274** — PASS;
+- Product Eval **#1513** — PASS.
 
-- **12** contain explicit supersession, duplicate-verification, or abandoned-by-later-merged-path evidence and were promoted;
-- **PR #337 / Brain grounded chat** remains retained because its cleanup comment explicitly says the branch/head is useful implementation reference;
-- **PR #91 / Flow Temporal timeout** remains retained because its 30s -> 60s timeout change is still absent from current main.
+Merged-main gates:
 
-The four branches that had advanced after a merged PR were then reviewed:
+- CI **#2275** — PASS;
+- Product Eval **#1514** — PASS.
 
-- `feat/session8-a05b3a-url-source-ingestion-20260925`: post-merge DNS-pinning work is represented by merged PR #323 and current main;
-- `fix/session7-a03-stale-project-selection-20260925`: the only post-merge delta is formatter alignment already superseded by current-main formatting;
-- `pe/pe-03-trigger-control-plane-20260919`: the only post-merge delta is an older closure-candidate document superseded by the current CLOSED / PASS record;
-- `security/f6-e06-immutable-node-toolchain-20260918`: the only post-merge delta is an expected line-number adjustment superseded by the current test.
+Staging:
 
-Stage 3 therefore promotes **19** more branches:
+- Staging Deploy **#1321** — gate PASS / deploy SKIPPED;
+- Staging Deploy **#1322** — actual deploy PASS.
 
-- 3 ancestor-of-retained-branch;
-- 12 explicit PR-history supersession;
-- 4 post-merge deltas superseded by merged/current-main content.
+Actual #1322 runtime proof:
 
-Final Stage-3 classification:
+- exact host SHA `a1991f1fd1e321ecbe32f997d0ef87982fc0b20a`;
+- image `staging-a1991f1fd1e3`;
+- public/auth smoke PASS;
+- MCP protected-resource metadata + unauthenticated challenge PASS;
+- Operations healthy;
+- no unhealthy services;
+- no non-running configured services;
+- clean exact-host worktree;
+- **25.01 GiB** stabilized free disk.
 
-- **373 SAFE-DELETE candidates**;
-- **20 RETAINED branches** with unresolved unique provenance.
+## 5. Actual Stage-2 cleanup execution
 
-## 5. Why the remaining 20 are held
+The destructive cleanup was executed after Stage 2 from the one-time branch:
 
-Every remaining branch still carries commits outside audited main and lacks sufficient proof that those commits are preserved elsewhere or intentionally disposable.
+```text
+ops/branch-hygiene-exec-20260927
+```
 
-The retained set includes:
+Canonical evidence:
 
-- implementation/probe branches with no PR mapping;
-- divergent alternative attempts;
-- the explicitly retained Brain grounded-assistant reference;
-- the unlanded Temporal timeout change;
-- diagnostic/runtime branches whose versioned names do not form a proven ancestry chain.
+`docs/verification/branch-hygiene-execution-2026-09-27.md`
 
-No retained branch should be deleted merely because its name looks old or a newer-looking sibling exists.
+Execution summary:
 
-## 6. Cleanup tool
+- Branch Hygiene One-Time #1 — **FAIL before deletion** due a PowerShell repository-root scalar/array bug;
+- Branch Hygiene One-Time #2 — **DRY-RUN PASS**;
+- Branch Hygiene One-Time #3 — **APPLY PASS**.
 
-`scripts/cleanup-merged-branches.ps1` is the bounded cleanup executor.
+Dry-run #2:
+
+```text
+allowlisted=354
+would-delete=354
+already-missing=0
+hold=0
+failed=0
+skip=0
+```
+
+Apply #3:
+
+```text
+allowlisted=354
+deleted=354
+already-missing=0
+hold=0
+failed=0
+skip=0
+```
+
+Therefore **354 remote branches were actually deleted** with exact-SHA revalidation and zero drift/failure/skip.
+
+A direct GitHub REST recount during Stage 4 observed **47 remote branches** including `main` and the active Stage-4 branch.
+
+## 6. Stage 4 — current-inventory reconciliation
+
+Stage 4 audits the real 47-branch post-execution inventory rather than the original 394/395-branch baseline.
+
+### 6.1 Ephemeral workflow/probe branches
+
+Twelve branches are promoted because their unique commits are explicitly temporary execution/probe workflows and the underlying product/runtime work is already closed elsewhere.
+
+The group contains:
+
+- two temporary Prettier probe branches;
+- four one-shot W11 installer-build branches;
+- one W11 exact-main installer execution branch;
+- two temporary dynamic-port desktop follow-up branches;
+- one dynamic-port helper branch containing only temporary patch workflows;
+- two temporary W09/W10 port follow-up branches.
+
+Supporting closure paths:
+
+- W09/W10 runtime behavior landed through PRs #103/#104 and closed through PR #107;
+- W11 real Windows installer acceptance closed through PR #124.
+
+### 6.2 Comparative-cache closure salvage
+
+`docs/comparative-cache-fix-closure-20260911` carried a docs-only closure delta that had not been replayed into current main.
+
+Stage 4 salvages that delta into:
+
+`docs/verification/comparative-smoke-cache-defect-2026-09-11.md`
+
+before admitting the branch to cleanup.
+
+The preserved evidence records PR #40 exact-head/post-merge CI success and keeps the important claim boundary that the failed cached smoke is not comparative efficiency evidence.
+
+### 6.3 Branch-hygiene branches created after the baseline
+
+Stage 4 also classifies the hygiene machinery itself:
+
+- PR #356 branch — exact merged head;
+- PR #357 branch — exact merged head;
+- stale PR #358 branch — explicitly superseded by merged PR #357;
+- PR #359 branch — exact merged head;
+- PR #360 branch — exact merged head;
+- `ops/branch-hygiene-exec-20260927` — one-time execution helper whose script fix and execution evidence are preserved by Stage 4.
+
+The active Stage-4 branch is deliberately excluded from its own allowlist.
+
+### 6.4 Stage-4 result
+
+Cumulative machine-readable classification after Stage 4:
+
+- **392 SAFE-DELETE entries**;
+- **7 retained substantive branches**.
+
+Of the 392 cumulative entries, the first **354 are already deleted** by execution run #3. The remaining eligible branches can be processed by a later exact-SHA cleanup pass; already-missing entries are explicitly tolerated by the helper.
+
+Machine-readable evidence:
+
+- `docs/verification/branch-hygiene-allowlist-2026-09-27.json`
+- `docs/verification/branch-hygiene-hold-review-2026-09-27.json`
+- `docs/verification/branch-hygiene-execution-2026-09-27.md`
+
+## 7. The seven retained branches
+
+The remaining seven are intentionally not cleanup-authorized:
+
+1. `agent/a09-space-decomposition-20260926` — four-commit alternative Space decomposition, diverged from merged A-09e PR #348;
+2. `agent/native-multimodal-pipeline-20260910` — 21-commit alternative multimodal implementation, diverged from merged Batch 5 PR #15;
+3. `ci/f6-e03-release-security-acceptance-gate-20260918` — nine-commit candidate diverged from clean merged PR #151;
+4. `feat/session9-a08c-brain-grounded-chat-20260925` — explicitly preserved implementation reference from PR #337;
+5. `fix/flow-temporal-ci-timeout-20260915` — unlanded 30s -> 60s Temporal-test timeout change from PR #91;
+6. `fix/w18-one-call-diagnostic-v2-20260917` — alternate diagnostic implementation diverged from merged PR #129;
+7. `fix/w18-openrouter-routing-metadata-20260917` — alternate routing-metadata implementation diverged from merged PR #132.
+
+These branches require an explicit product/provenance decision, not age- or name-based deletion.
+
+## 8. Cleanup helper
+
+`scripts/cleanup-merged-branches.ps1` remains the bounded executor.
 
 Safety properties:
 
 - dry-run by default;
-- requires explicit `-Apply` for deletion;
-- fetches/prunes before evaluation;
-- loads only the committed exact-SHA allowlist;
+- explicit `-Apply` required;
+- fetch/prune before evaluation;
+- exact allowlist only;
 - refuses `main`;
-- skips the currently checked-out local branch;
-- re-reads each remote branch SHA with `git ls-remote`;
-- deletes only when the current remote SHA still equals the allowlisted expected SHA;
-- if a branch moved after this audit, it is automatically skipped;
-- branches already deleted are reported, not treated as failures;
-- writes an execution report locally.
+- skips the current local branch;
+- re-reads each remote ref with `git ls-remote`;
+- deletes only on exact SHA match;
+- branch movement becomes `hold`;
+- missing already-deleted branches become `already-missing`;
+- writes a JSON execution report.
 
-This means a later branch mutation cannot silently inherit an old deletion decision.
+Stage 4 also brings the successful execution-branch root-resolution fix into canonical source:
 
-## 7. Destructive boundary
+- normalize `Invoke-Git rev-parse --show-toplevel` to an array;
+- require at least one line;
+- cast the first line to string before `.Trim()`.
 
-This audit **does not authorize deletion of the 20 retained branches**.
+## 9. Destructive boundary
 
-A later content/provenance audit is required for them. That review should determine whether each held branch is:
+The seven retained branches are **not authorized for deletion**.
 
-- an ancestor/checkpoint already represented by current `main`;
-- superseded by another merged PR;
-- uniquely carrying commits or tree state;
-- useful recovery provenance;
-- disposable test/probe state.
+Branch hygiene also does not authorize:
 
-## 8. Stage-2 merge + runtime proof
-
-Stage 2 merged through PR **#357**.
-
-Exact reviewed PR head:
-
-```text
-8cddeb0f6bb4b81001faccabbeed8440317087a5
-```
-
-Exact-head gates:
-
-- CI **#2268** — PASS;
-- Product Eval **#1507** — PASS.
-
-Squash-merged `main`:
-
-```text
-97a34c3582917745dc4ecfb7f175b77cc3598148
-```
-
-Merged-main gates:
-
-- CI **#2269** — PASS;
-- Product Eval **#1508** — PASS.
-
-Staging delivery:
-
-- Staging Deploy **#1309** — gate PASS, deploy SKIPPED;
-- Staging Deploy **#1310** — gate PASS, deploy PASS.
-
-Actual deploy #1310 proved exact host SHA `97a34c3582917745dc4ecfb7f175b77cc3598148`, clean worktree, preserved public/auth + MCP boundaries, healthy Operations with no unhealthy services, no non-running configured services, and **27.81 GiB** stabilized free space.
-
-PR #358 was later closed **without merge** because it duplicated Stage-2 containment work after PR #357 had already merged. Its stale branch is not authority.
-
-The retained-branch evidence follow-up then merged through PR **#359** as `23188ca5a4268e121841b167932b984d95102386`. Exact-head CI #2270 + Product Eval #1509 passed; merged-main CI #2271 + Product Eval #1510 passed; Staging Deploy #1313 was gate-only and actual Staging Deploy #1314 passed on exact merge SHA with preserved auth/MCP boundaries, healthy Operations, clean exact-host identity, no non-running configured services, and **26.44 GiB** stabilized free space.
-
-## 9. Execution limitation in this session
-
-The repo-side audit and safe cleanup tooling are complete. Actual remote deletion requires an authenticated git client capable of `git push origin --delete`.
-
-The authorized desktop connector was offline during this audit, and the available GitHub connector does not expose a remote-branch deletion mutation. Therefore no branch deletion is claimed in this record.
-
-When an authenticated local git client is available, run the cleanup script in dry-run mode first, inspect the result, then use `-Apply`.
+- runtime feature changes;
+- DR-2 external-target selection;
+- native Google Drive work;
+- hosted-provider spend;
+- production cutover;
+- credential mutation.
 
 ## 10. Safe resume
 
-1. Do not recompute the **373** allowlisted branches by branch-name pattern alone.
-2. Use the committed JSON allowlist and exact-SHA revalidation.
-3. Run dry-run first.
-4. Apply deletion only to branches still matching their audited SHA.
-5. Recount branches after cleanup.
-6. Keep the **20 retained branches** unless a later supersession/provenance audit proves where their unique commits are preserved or that they are intentionally disposable.
-7. Preserve PR #337's Brain implementation reference and PR #91's unlanded Temporal timeout change unless a later explicit decision supersedes them.
-8. Do not touch `main`, Issue #277/DR-2 scope, staging credentials, production cutover, or runtime code as part of branch cleanup.
+1. Merge Stage 4 only after exact-head CI + Product Eval PASS.
+2. Verify merged-main CI + Product Eval and actual staging deployment on the exact merge SHA.
+3. Use the updated allowlist from merged main for the next dry-run.
+4. Expect historical Stage-2 entries to report `already-missing`, not failure.
+5. Delete only still-present entries whose remote SHA exactly matches the allowlist.
+6. Recount remote branches after apply.
+7. Keep all seven retained branches unless a later explicit product/provenance decision resolves them.
+8. After Stage-4 merge, its own branch may be separately admitted/deleted using the exact merged PR head; do not create an infinite documentation loop just to self-delete audit branches.
