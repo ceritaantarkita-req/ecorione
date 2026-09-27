@@ -326,17 +326,6 @@ async function hydrateArtifact(
   };
 }
 
-interface ConnectCompletionResult {
-  readonly reply: string;
-  readonly provider: string;
-  readonly model: string;
-  readonly responseModel: string;
-  readonly modelIdentity: string;
-  readonly modelIdentityPinned: boolean;
-  readonly cacheHit: boolean;
-  readonly routeReason: string;
-}
-
 async function hydratePacket(
   input: EcxHydrateRequest,
   ledger: HistoryLedger,
