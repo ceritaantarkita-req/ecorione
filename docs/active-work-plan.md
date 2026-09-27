@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-27**
 
-Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 NEXT-NOT-STARTED / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 ACTIVE-SAFE-WIP / A-11 CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 + Batch 4 CLOSED / Batch 5 next
+## ECX Recipient Execution roadmap — Batch 1 + Batch 2 + Batch 3 + Batch 4 CLOSED / Batch 5 ACTIVE
 
 **Batch 1 is CLOSED / PASS.** PR #363 reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286 + Product Eval #1525 + MCP #1131 and merged as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287 + Product Eval #1526 + MCP #1132 passed; Staging Deploy #1345 was gate-only and #1346 executed successfully.
 
@@ -16,7 +16,14 @@ The completed boundary is intentionally narrow: single-recipient runtime binding
 
 **Batch 4 — Security, isolation, result integration is CLOSED / PASS.** PR #370 exact head `bba68607227a67080a26d4a000cf9dc73deadaef` passed CI #2314 + Product Eval #1553 + MCP #1153 and merged as `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`. Merged-main CI #2315 + Product Eval #1554 + MCP #1154 passed; Staging Deploy #1402 was gate-only and #1403 executed successfully with exact SHA match, public/auth + MCP smoke PASS, healthy Operations, 15/15 services running, and 29.94 GiB stabilized free disk.
 
-**Next queued slice: Batch 5 — End-to-end observability, quality, economics. It is NOT STARTED.** Resume from [verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md). Do not reopen Batch 4, and do not silently pull fan-out, external A2A, new UI, Flow/Temporal long-running execution, or Historical Ledger retention/compaction into Batch 5 unless its accepted scope explicitly authorizes them.
+**Batch 5 — End-to-end observability, quality, economics is ACTIVE / SAFE WIP.** Resume from [verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md).
+
+Current bounded sequence:
+1. **5.1 telemetry contract** — preserve Connect token/cost evidence in ECX responses; add Hub process-lifetime timing/outcome/ref/retry metrics without a telemetry database;
+2. **5.2 comparative harness** — compare full-context single-agent vs real single-recipient ECX A -> B -> A with deterministic quality scoring and zero required paid-hosted spend;
+3. **5.3 measured evidence + closure** — run the accepted evidence lane, record limitations honestly, pass repository/staging gates, then close Batch 5.
+
+Do not add fan-out/aggregation, external A2A, learned routing, large/new UI, Flow/Temporal long-running execution, or Historical Ledger retention/compaction under Batch 5.
 
 ## Branch-hygiene final closure — 2026-09-27
 

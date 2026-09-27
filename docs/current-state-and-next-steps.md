@@ -2,13 +2,21 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-27 ECX Execution — Batch 5 ACTIVE safe checkpoint
+
+Batch 5 — **End-to-end observability, quality, economics** is ACTIVE on branch `agent/ecx-observability-economics-b5-20260927`. The bounded scope measures the already closed single-recipient path rather than reopening W17/W18: plan/selection/hydration/recipient execution/handback latency, Connect-reported token and cost accounting, selected/omitted and denial-event evidence, retry/failure outcomes, and deterministic quality comparison between a full-context single-agent baseline and the real ECX A -> B -> A round-trip.
+
+Batch 5.1 telemetry code and focused tests are committed but **not yet validated by repository gates**. No PASS/closure claim is authorized yet. Batch 5.2 comparative harness and Batch 5.3 measured evidence/closure remain pending.
+
+Safe-resume checkpoint: [verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b5-wip-checkpoint-2026-09-27.md). **Do not restart Batches 1–4, W17/W18, branch hygiene, Historical Ledger core, or earlier selector/economics audits.**
 
 ## 2026-09-27 ECX Execution — Batch 4 closure
 
