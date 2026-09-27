@@ -1090,7 +1090,6 @@ function replayRoundTrip(
   );
 }
 
-
 function deterministicFanoutId(
   input: ReturnType<typeof EcxFanoutRoundTripRequestSchema.parse>,
 ): EventId {
@@ -1977,21 +1976,18 @@ export function registerExchangeRoutes(
     recordRoundTripSuccessTelemetry(metrics, response, performance.now() - roundTripStartedAt);
     return response;
   });
-  app.get<{ Params: { fanoutId: string } }>(
-    "/v1/exchange/fanouts/:fanoutId",
-    async (req) => {
-      const fanoutId = parseOrBadRequest(EventIdSchema, req.params.fanoutId);
-      const query = parseOrBadRequest(EcxExecutionLookupQuerySchema, req.query);
-      try {
-        return fanouts.get(fanoutId, query.workspaceId);
-      } catch (error) {
-        if (error instanceof EcxFanoutNotFoundError) {
-          throw new NotFoundError(error.message);
-        }
-        throw error;
+  app.get<{ Params: { fanoutId: string } }>("/v1/exchange/fanouts/:fanoutId", async (req) => {
+    const fanoutId = parseOrBadRequest(EventIdSchema, req.params.fanoutId);
+    const query = parseOrBadRequest(EcxExecutionLookupQuerySchema, req.query);
+    try {
+      return fanouts.get(fanoutId, query.workspaceId);
+    } catch (error) {
+      if (error instanceof EcxFanoutNotFoundError) {
+        throw new NotFoundError(error.message);
       }
-    },
-  );
+      throw error;
+    }
+  });
 
   app.post("/v1/exchange/fanout-round-trip", async (req) => {
     const fanoutStartedAt = performance.now();
@@ -2059,11 +2055,9 @@ export function registerExchangeRoutes(
     const prior = replayFanout(ledger, begun);
     if (prior !== null) {
       metrics.addCounter("ecorione_ecx_fanout_replays_total");
-      metrics.observe(
-        "ecorione_ecx_fanout_duration_ms",
-        performance.now() - fanoutStartedAt,
-        { outcome: "replay" },
-      );
+      metrics.observe("ecorione_ecx_fanout_duration_ms", performance.now() - fanoutStartedAt, {
+        outcome: "replay",
+      });
       return prior;
     }
 
@@ -2099,7 +2093,13 @@ export function registerExchangeRoutes(
         const child = children[index]!;
         const childInput = fanoutChildInput(input, input.packets[index]!);
         const returned = validatedReturnedResult(childInput, child);
-        await assertHostedParentResultIsolation(childInput, child, parent.target, ledger, options);
+        await assertHostedParentResultIsolation(
+          childInput,
+          child,
+          parent.target,
+          ledger,
+          options,
+        );
         returnedResults.push(returned);
       }
     } catch (error) {
@@ -2240,12 +2240,9 @@ export function registerExchangeRoutes(
       "ecorione_ecx_fanout_returned_bytes_total",
       aggregateEvidence.replyBytes,
     );
-    metrics.observe(
-      "ecorione_ecx_fanout_duration_ms",
-      performance.now() - fanoutStartedAt,
-      { outcome: "success" },
-    );
+    metrics.observe("ecorione_ecx_fanout_duration_ms", performance.now() - fanoutStartedAt, {
+      outcome: "success",
+    });
     return response;
   });
-
 }
