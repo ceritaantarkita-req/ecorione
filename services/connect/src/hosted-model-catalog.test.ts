@@ -15,6 +15,9 @@ describe("hosted model catalog", () => {
       "gpt-5.6-terra",
       "gpt-5.6-sol",
     ]);
+    expect(hostedModelCatalog("nvidia").map((model) => model.id)).toEqual([
+      "z-ai/glm-5.3",
+    ]);
   });
 
   it("always permits governed routing and rejects cross-provider model pairs", () => {
@@ -22,5 +25,8 @@ describe("hosted model catalog", () => {
     expect(hostedModelSupported("openrouter", "claude-sonnet-4-5-20250929")).toBe(true);
     expect(hostedModelSupported("openrouter", "gpt-5.6-terra")).toBe(false);
     expect(hostedModelSupported("openai", "claude-sonnet-4-5-20250929")).toBe(false);
+    expect(hostedModelSupported("nvidia", GOVERNED_HOSTED_MODEL)).toBe(true);
+    expect(hostedModelSupported("nvidia", "z-ai/glm-5.3")).toBe(true);
+    expect(hostedModelSupported("nvidia", "gpt-5.6-terra")).toBe(false);
   });
 });
