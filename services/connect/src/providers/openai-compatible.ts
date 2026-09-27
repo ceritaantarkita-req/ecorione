@@ -17,7 +17,7 @@ export interface OpenAiCompatibleProviderRouting {
 
 export interface OpenAiCompatibleHostedInput {
   readonly endpoint: string;
-  readonly providerName: "OpenAI" | "OpenRouter";
+  readonly providerName: "OpenAI" | "OpenRouter" | "NVIDIA";
   readonly apiKey: string;
   /** Runtime provider model slug, not the ledger/cost identity. */
   readonly runtimeModel: string;
