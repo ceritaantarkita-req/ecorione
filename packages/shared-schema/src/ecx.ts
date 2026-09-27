@@ -283,16 +283,14 @@ export const EcxExecutionTokenUsageSchema = z
   .strict();
 export type EcxExecutionTokenUsage = z.infer<typeof EcxExecutionTokenUsageSchema>;
 
-export const EcxExecutionCostSchema = z
-  .object({
-    actualUsd: z.number().finite().nonnegative(),
-    naiveUsd: z.number().finite().nonnegative(),
-    savedUsd: z.number().finite(),
-    savedPct: z.number().finite(),
-    optimizerOverheadMs: z.number().finite().nonnegative(),
-    baselineUsage: EcxExecutionTokenUsageSchema,
-  })
-  .strict();
+export const EcxExecutionCostSchema = z.object({
+  actualUsd: z.number().finite().nonnegative(),
+  naiveUsd: z.number().finite().nonnegative(),
+  savedUsd: z.number().finite(),
+  savedPct: z.number().finite(),
+  optimizerOverheadMs: z.number().finite().nonnegative(),
+  baselineUsage: EcxExecutionTokenUsageSchema.optional(),
+});
 export type EcxExecutionCost = z.infer<typeof EcxExecutionCostSchema>;
 
 export const EcxExecutionCompletionSchema = z.object({

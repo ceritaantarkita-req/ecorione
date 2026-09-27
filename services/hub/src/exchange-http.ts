@@ -1344,6 +1344,15 @@ export function registerExchangeRoutes(
         metrics.addCounter("ecorione_ecx_execution_replays_total", 1, {
           target: binding.target,
         });
+        metrics.addCounter("ecorione_ecx_execution_outcomes_total", 1, {
+          target: binding.target,
+          outcome: "replay",
+        });
+        metrics.observe(
+          "ecorione_ecx_execution_duration_ms",
+          Math.max(0, performance.now() - executionStartedAtMs),
+          { target: binding.target, outcome: "replay" },
+        );
         return retry;
       }
       throw new HttpError(
@@ -1594,6 +1603,19 @@ export function registerExchangeRoutes(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       roundTrips.fail(input.packet.packetId, message, nowIso());
+      metrics.addCounter("ecorione_ecx_round_trip_outcomes_total", 1, {
+        response_mode: input.packet.responseMode,
+        outcome: "result_rejected",
+      });
+      metrics.observe(
+        "ecorione_ecx_round_trip_duration_ms",
+        Math.max(0, performance.now() - roundTripStartedAtMs),
+        {
+          response_mode: input.packet.responseMode,
+          parent_target: parent.target,
+          outcome: "result_rejected",
+        },
+      );
       throw error;
     }
 
@@ -1609,6 +1631,15 @@ export function registerExchangeRoutes(
           response_mode: input.packet.responseMode,
           outcome: "isolation_denied",
         });
+        metrics.observe(
+          "ecorione_ecx_round_trip_duration_ms",
+          Math.max(0, performance.now() - roundTripStartedAtMs),
+          {
+            response_mode: input.packet.responseMode,
+            parent_target: parent.target,
+            outcome: "isolation_denied",
+          },
+        );
       }
       throw error;
     }
