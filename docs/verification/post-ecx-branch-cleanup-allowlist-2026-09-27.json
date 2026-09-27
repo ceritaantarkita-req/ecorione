@@ -121,5 +121,13 @@
       "canonical_merge_sha": "2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370",
       "evidence_kind": "merged_pr_exact_head"
     }
-  ]
+  ],
+  "revalidated_after_pr378_merge": {
+    "at": "2026-09-27",
+    "main_sha": "5b43ab8494c2104ca4e325843e33554d8ed3f1f1",
+    "checked": 15,
+    "exact_matches": 15,
+    "moved_or_missing": 0,
+    "deletion_executed": false
+  }
 }
