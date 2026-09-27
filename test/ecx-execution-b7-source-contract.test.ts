@@ -44,7 +44,9 @@ describe("ECX execution Batch 7 source contract", () => {
     expect(route).toContain(
       "assertHostedParentResultIsolation(childInput, child, parent.target, ledger, options)",
     );
-    expect(route).toContain("authorizeResultReceive(authority, firstChildInput, continuationId)");
+    expect(route).toContain(
+      "authorizeResultReceive(authority, firstChildInput, continuationId)",
+    );
   });
 
   it("bounds and hashes the aggregate before parent dispatch", () => {
