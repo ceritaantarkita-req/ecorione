@@ -52,6 +52,7 @@ describe("assertPinnedModel (ADR-14)", () => {
     expect(assertPinnedModel("gpt-5.6-sol")).toBe("gpt-5.6-sol");
     expect(assertPinnedModel("gpt-5.6-terra")).toBe("gpt-5.6-terra");
     expect(assertPinnedModel("gpt-5.6-luna")).toBe("gpt-5.6-luna");
+    expect(assertPinnedModel("z-ai/glm-5.3")).toBe("z-ai/glm-5.3");
   });
 
   it("menolak model yang tidak ada di tabel harga", () => {
@@ -104,6 +105,15 @@ describe("tabel harga", () => {
       outputPerMTok: 1.2,
       cacheWritePerMTok: 0.25,
       cacheReadPerMTok: 0.02,
+    });
+  });
+
+  it("NVIDIA GLM-5.3 free prototype identity records zero provider-token cost", () => {
+    expect(priceFor("z-ai/glm-5.3")).toEqual({
+      inputPerMTok: 0,
+      outputPerMTok: 0,
+      cacheWritePerMTok: 0,
+      cacheReadPerMTok: 0,
     });
   });
 
