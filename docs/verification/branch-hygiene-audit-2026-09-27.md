@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **STAGE-4 AUDIT COMPLETE / STAGE-2 CLEANUP EXECUTED PASS / 392 CUMULATIVE SAFE-DELETE / 7 RETAINED / STAGE-4 MERGE PENDING**
+Status: **STAGE-4 CLOSED / PASS / 354 DELETED / 39 CLEANUP-READY / 7 RETAINED**
 
 Audited repository:
 
@@ -250,18 +250,62 @@ The active Stage-4 branch is deliberately excluded from its own allowlist.
 
 ### 6.4 Stage-4 result
 
-Cumulative machine-readable classification after Stage 4:
+Cumulative classification after Stage 4 merge and checkpoint reconciliation:
 
-- **392 SAFE-DELETE entries**;
+- **393 SAFE-DELETE entries**;
 - **7 retained substantive branches**.
 
-Of the 392 cumulative entries, the first **354 are already deleted** by execution run #3. The remaining eligible branches can be processed by a later exact-SHA cleanup pass; already-missing entries are explicitly tolerated by the helper.
+Of the 393 cumulative entries:
+
+- **354 are already deleted** by execution run #3;
+- **39 are cleanup-ready and still present** at the pre-checkpoint remote inventory;
+- **7 retained branches remain present and are not deletion-authorized**;
+- `main` remains excluded.
+
+The extra safe-delete entry is the now-merged Stage-4 branch itself: PR #361 exact head `316ba052baec2a4b7509e3761dd151a7fcf03f1c`.
 
 Machine-readable evidence:
 
 - `docs/verification/branch-hygiene-allowlist-2026-09-27.json`
 - `docs/verification/branch-hygiene-hold-review-2026-09-27.json`
 - `docs/verification/branch-hygiene-execution-2026-09-27.md`
+
+### 6.5 Stage-4 merge and runtime closure
+
+Stage 4 merged through PR **#361**.
+
+Exact reviewed head:
+
+```text
+316ba052baec2a4b7509e3761dd151a7fcf03f1c
+```
+
+Exact-head gates:
+
+- CI **#2276** — PASS;
+- Product Eval **#1515** — PASS.
+
+Squash-merged current main:
+
+```text
+9e621680661f7128b9cfea930fd470472ed94381
+```
+
+Merged-main gates:
+
+- CI **#2277** — PASS;
+- Product Eval **#1516** — PASS.
+
+Staging:
+
+- Staging Deploy **#1325** — gate PASS / deploy SKIPPED;
+- Staging Deploy **#1326** — actual deploy PASS.
+
+Actual #1326 proved exact host SHA `9e621680661f7128b9cfea930fd470472ed94381`, image `staging-9e621680661f`, clean detached worktree, preserved public/auth + MCP boundaries, Operations `healthy: true` with zero unhealthy services, **15/15** configured services running, zero non-running services, and **29.92 GiB** stabilized free disk.
+
+Pre-checkpoint direct GitHub enumeration returned **47 branches total**: `main`, 38 previously allowlisted present branches, seven retained branches, and the merged Stage-4 branch. Admitting that merged Stage-4 branch produces a complete no-gap classification of **39 present cleanup-ready + 7 retained + main**.
+
+Safe checkpoint: [branch-hygiene-safe-checkpoint-2026-09-27.md](branch-hygiene-safe-checkpoint-2026-09-27.md).
 
 ## 7. The seven retained branches
 
@@ -316,11 +360,11 @@ Branch hygiene also does not authorize:
 
 ## 10. Safe resume
 
-1. Merge Stage 4 only after exact-head CI + Product Eval PASS.
-2. Verify merged-main CI + Product Eval and actual staging deployment on the exact merge SHA.
-3. Use the updated allowlist from merged main for the next dry-run.
-4. Expect historical Stage-2 entries to report `already-missing`, not failure.
-5. Delete only still-present entries whose remote SHA exactly matches the allowlist.
-6. Recount remote branches after apply.
-7. Keep all seven retained branches unless a later explicit product/provenance decision resolves them.
-8. After Stage-4 merge, its own branch may be separately admitted/deleted using the exact merged PR head; do not create an infinite documentation loop just to self-delete audit branches.
+1. Start from the Stage-4 closed state and current safe checkpoint; do not rerun Stages 1–4 from zero.
+2. Use the committed **393-entry** allowlist from merged/current docs for the next dry-run.
+3. Expect the **354 already-deleted** historical entries to report `already-missing`, not failure.
+4. Delete only still-present entries whose remote SHA exactly matches the allowlist; the expected pre-checkpoint present cleanup-ready set is **39 branches**.
+5. Recount remote branches after apply.
+6. Keep all seven retained branches unless a later explicit product/provenance decision resolves them.
+7. Do not touch `main`, Issue #277/DR-2 scope, staging credentials, production cutover, or runtime code as part of branch cleanup.
+8. The safe-checkpoint branch itself is bookkeeping; do not create an infinite documentation loop solely to classify/delete bookkeeping branches.
