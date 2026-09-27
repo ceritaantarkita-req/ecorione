@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import {
+  ECX_RETURNED_RESULT_MAX_BYTES,
   EcxRoundTripStatusSchema,
   type EcxAgentId,
   type EcxRoundTripResponse,
@@ -45,6 +47,41 @@ export class EcxRoundTripNotFoundError extends Error {
   }
 }
 
+function resultEvidenceFromRow(
+  row: RoundTripRow,
+): { replyBytes: number; replySha256: string } | null {
+  if (row.result_json === null) return null;
+  try {
+    const parsed = JSON.parse(row.result_json) as {
+      returnedResult?: { evidence?: { replyBytes?: unknown; replySha256?: unknown } };
+      child?: { completion?: { reply?: unknown } };
+    };
+    const evidence = parsed.returnedResult?.evidence;
+    if (
+      typeof evidence?.replyBytes === "number" &&
+      evidence.replyBytes >= 0 &&
+      evidence.replyBytes <= ECX_RETURNED_RESULT_MAX_BYTES &&
+      typeof evidence.replySha256 === "string" &&
+      /^[a-f0-9]{64}$/.test(evidence.replySha256)
+    ) {
+      return {
+        replyBytes: evidence.replyBytes,
+        replySha256: evidence.replySha256,
+      };
+    }
+    const reply = parsed.child?.completion?.reply;
+    if (typeof reply !== "string") return null;
+    const replyBytes = Buffer.byteLength(reply, "utf8");
+    if (replyBytes > ECX_RETURNED_RESULT_MAX_BYTES) return null;
+    return {
+      replyBytes,
+      replySha256: createHash("sha256").update(reply, "utf8").digest("hex"),
+    };
+  } catch {
+    return null;
+  }
+}
+
 function statusFromRow(row: RoundTripRow): EcxRoundTripStatus {
   return EcxRoundTripStatusSchema.parse({
     packetId: row.packet_id,
@@ -59,6 +96,7 @@ function statusFromRow(row: RoundTripRow): EcxRoundTripStatus {
     state: row.state,
     error: row.error,
     resultAvailable: row.result_json !== null,
+    resultEvidence: resultEvidenceFromRow(row),
     startedAt: row.started_at,
     updatedAt: row.updated_at,
     completedAt: row.completed_at,
