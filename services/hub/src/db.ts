@@ -113,6 +113,29 @@ CREATE INDEX IF NOT EXISTS idx_ecx_execution_receipts_operation
 CREATE INDEX IF NOT EXISTS idx_ecx_execution_receipts_workspace
   ON ecx_execution_receipts(workspace_id, updated_at DESC, packet_id);
 
+CREATE TABLE IF NOT EXISTS ecx_round_trip_receipts (
+  packet_id TEXT PRIMARY KEY,
+  operation_id TEXT NOT NULL,
+  continuation_operation_id TEXT NOT NULL,
+  workspace_id TEXT NOT NULL,
+  sender TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  response_mode TEXT NOT NULL CHECK(response_mode IN ('delta','full')),
+  parent_target TEXT NOT NULL CHECK(parent_target IN ('local','hosted')),
+  history_session_id TEXT,
+  fingerprint TEXT NOT NULL,
+  state TEXT NOT NULL CHECK(state IN ('STARTED','SUCCEEDED','FAILED','UNCERTAIN')),
+  error TEXT,
+  result_json TEXT,
+  started_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  completed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ecx_round_trip_receipts_operation
+  ON ecx_round_trip_receipts(operation_id, packet_id);
+CREATE INDEX IF NOT EXISTS idx_ecx_round_trip_receipts_workspace
+  ON ecx_round_trip_receipts(workspace_id, updated_at DESC, packet_id);
+
 CREATE TRIGGER IF NOT EXISTS history_events_no_update
 BEFORE UPDATE ON history_events
 BEGIN

@@ -2,13 +2,19 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 CLOSED-PASS / BATCH 3 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 CLOSED-PASS / BATCH 3 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
 The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
+
+## 2026-09-27 ECX Execution — Batch 3 ACTIVE safe checkpoint
+
+Batch 3 — **Real Agent A -> Agent B round trip** is ACTIVE on branch `agent/ecx-round-trip-b3-20260927`. The bounded implementation composes strictly above the closed Batch 1/2 single-recipient execution primitive: `delta` executes Agent B then one governed Agent A continuation; `full` returns Agent B's standalone answer directly to the sender boundary without a second parent model call. A durable round-trip receipt prevents duplicate parent continuation dispatch and records bounded result provenance without storing full replies in Historical Ledger.
+
+Safe-resume checkpoint: [verification/ecx-execution-b3-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b3-wip-checkpoint-2026-09-27.md). **Do not restart Batch 1, Batch 2, or historical ECX audits.**
 
 ## 2026-09-27 ECX Execution — Batch 2 closure
 

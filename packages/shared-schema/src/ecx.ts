@@ -263,6 +263,15 @@ export const EcxExecuteRequestSchema = z
   });
 export type EcxExecuteRequest = z.infer<typeof EcxExecuteRequestSchema>;
 
+export const EcxRoundTripRequestSchema = EcxExecuteRequestSchema.refine(
+  (value) => value.packet.sender !== value.packet.recipient,
+  {
+    message: "Round trip membutuhkan sender dan recipient yang berbeda.",
+    path: ["packet", "recipient"],
+  },
+);
+export type EcxRoundTripRequest = z.infer<typeof EcxRoundTripRequestSchema>;
+
 export const EcxExecutionCompletionSchema = z.object({
   reply: z.string(),
   provider: z.string().min(1),
@@ -322,3 +331,60 @@ export const EcxExecuteResponseSchema = z
   })
   .strict();
 export type EcxExecuteResponse = z.infer<typeof EcxExecuteResponseSchema>;
+
+export const EcxRoundTripStateSchema = EcxExecutionStateSchema;
+export type EcxRoundTripState = z.infer<typeof EcxRoundTripStateSchema>;
+
+export const EcxRoundTripStatusSchema = z
+  .object({
+    packetId: EventIdSchema,
+    operationId: OperationIdSchema,
+    continuationOperationId: OperationIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    sender: EcxAgentIdSchema,
+    recipient: EcxAgentIdSchema,
+    responseMode: z.enum(["delta", "full"]),
+    parentTarget: EcxRuntimeTargetSchema,
+    historySessionId: SessionIdSchema.nullable(),
+    state: EcxRoundTripStateSchema,
+    error: z.string().nullable(),
+    resultAvailable: z.boolean(),
+    startedAt: TimestampSchema,
+    updatedAt: TimestampSchema,
+    completedAt: TimestampSchema.nullable(),
+  })
+  .strict();
+export type EcxRoundTripStatus = z.infer<typeof EcxRoundTripStatusSchema>;
+
+export const EcxRoundTripHandbackSchema = z
+  .object({
+    parentContinued: z.boolean(),
+    parentTarget: EcxRuntimeTargetSchema,
+    finalSource: z.enum(["recipient", "sender"]),
+    finalReply: z.string(),
+    parentCompletion: EcxExecutionCompletionSchema.nullable(),
+  })
+  .strict();
+export type EcxRoundTripHandback = z.infer<typeof EcxRoundTripHandbackSchema>;
+
+export const EcxRoundTripResponseSchema = z
+  .object({
+    packetId: EventIdSchema,
+    operationId: OperationIdSchema,
+    continuationOperationId: OperationIdSchema,
+    sender: EcxAgentIdSchema,
+    recipient: EcxAgentIdSchema,
+    responseMode: z.enum(["delta", "full"]),
+    state: z.literal("SUCCEEDED"),
+    replayed: z.boolean(),
+    child: EcxExecuteResponseSchema,
+    handback: EcxRoundTripHandbackSchema,
+    history: z
+      .object({
+        returnedEventId: EventIdSchema.nullable(),
+        continuationEventId: EventIdSchema.nullable(),
+      })
+      .strict(),
+  })
+  .strict();
+export type EcxRoundTripResponse = z.infer<typeof EcxRoundTripResponseSchema>;
