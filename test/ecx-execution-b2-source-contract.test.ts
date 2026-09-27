@@ -37,9 +37,14 @@ describe("ECX execution Batch 2 source contract", () => {
 
   it("keeps the Batch 2 execution primitive single-recipient while later batches compose above it", () => {
     const exchange = source("services/hub/src/exchange-http.ts");
-    expect(exchange).toContain("const executeRecipient = async");
-    expect(exchange).toContain("executions.claimDispatch");
-    expect(exchange).not.toContain("Promise.all(input.packets");
+    const start = exchange.indexOf("const executeRecipient = async");
+    const end = exchange.indexOf('app.post("/v1/exchange/execute"', start);
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    const primitive = exchange.slice(start, end);
+    expect(primitive).toContain("executions.claimDispatch");
+    expect(primitive).not.toContain("Promise.allSettled");
+    expect(primitive).not.toContain("fanouts.");
     expect(exchange).not.toContain("/v1/exchange/aggregate");
     expect(exchange).not.toContain("agent.result.merge");
   });
