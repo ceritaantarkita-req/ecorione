@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HOSTED_PROVIDER_IDS } from "./provider-types.js";
+import { HOSTED_PROVIDER_IDS, providerCredentialLabel } from "./provider-types.js";
 import {
   AI_PROVIDER_IDS,
   CREDENTIAL_PROVIDER_IDS,
@@ -44,6 +44,7 @@ describe("provider catalog", () => {
       connectionTestReady: true,
     });
     expect(nvidia?.hostedModels.map((model) => model.id)).toEqual(["z-ai/glm-5.3"]);
+    expect(providerCredentialLabel("nvidia")).toBe("NVIDIA_API_KEY");
   });
 
   it("MCP dan webhook tetap integration credentials dan bukan AI routing providers", () => {
