@@ -671,10 +671,7 @@ function roundTripFingerprint(
     .digest("hex");
 }
 
-function roundTripReturnContext(
-  packet: EcxPacket,
-  child: EcxExecuteResponse,
-): string {
+function roundTripReturnContext(packet: EcxPacket, child: EcxExecuteResponse): string {
   return [
     "<untrusted_ecx_return>",
     JSON.stringify({
@@ -855,25 +852,14 @@ function replayRoundTrip(
     return EcxRoundTripResponseSchema.parse({ ...prior, replayed: true });
   }
   if (status.responseMode === "delta") {
-    const startedEventId = appendRoundTripContinuationStarted(
-      ledger,
-      status,
-      returnedEventId,
-    );
+    const startedEventId = appendRoundTripContinuationStarted(ledger, status, returnedEventId);
     if (!continuationPending) {
-      appendRoundTripContinuationOutcome(
-        ledger,
-        status,
-        startedEventId,
-        begun.priorResult,
-      );
+      appendRoundTripContinuationOutcome(ledger, status, startedEventId, begun.priorResult);
     }
   }
   throw new HttpError(
     409,
-    status.state === "FAILED"
-      ? "ECX_ROUND_TRIP_FAILED"
-      : "ECX_ROUND_TRIP_UNCERTAIN",
+    status.state === "FAILED" ? "ECX_ROUND_TRIP_FAILED" : "ECX_ROUND_TRIP_UNCERTAIN",
     status.state === "FAILED"
       ? "Parent continuation sebelumnya gagal definitif; gunakan packet/operation baru untuk retry."
       : "Parent continuation sebelumnya sudah/mungkin didispatch; dispatch kedua diblokir.",
@@ -1290,12 +1276,7 @@ export function registerExchangeRoutes(
       return prior;
     }
 
-    const returnedEventId = appendRoundTripReturned(
-      ledger,
-      begun.status,
-      input.packet,
-      child,
-    );
+    const returnedEventId = appendRoundTripReturned(ledger, begun.status, input.packet, child);
 
     if (input.packet.responseMode === "full") {
       const response = EcxRoundTripResponseSchema.parse({
@@ -1391,11 +1372,7 @@ export function registerExchangeRoutes(
           { packetId: status.packetId, state: status.state },
         );
       }
-      const status = roundTrips.noteUncertain(
-        input.packet.packetId,
-        message,
-        failedAt,
-      );
+      const status = roundTrips.noteUncertain(input.packet.packetId, message, failedAt);
       appendRoundTripContinuationOutcome(ledger, status, startedEventId, null);
       throw new HttpError(
         502,
@@ -1431,22 +1408,12 @@ export function registerExchangeRoutes(
         continuationEventId,
       },
     });
-    const completed = roundTrips.succeed(
-      input.packet.packetId,
-      response,
-      nowIso(),
-    );
-    appendRoundTripContinuationOutcome(
-      ledger,
-      completed,
-      startedEventId,
-      response,
-    );
+    const completed = roundTrips.succeed(input.packet.packetId, response, nowIso());
+    appendRoundTripContinuationOutcome(ledger, completed, startedEventId, response);
     metrics.addCounter("ecorione_ecx_round_trips_total", 1, {
       response_mode: "delta",
       parent_continued: "true",
     });
     return response;
   });
-
 }

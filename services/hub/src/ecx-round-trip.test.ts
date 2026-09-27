@@ -1,7 +1,4 @@
-import {
-  CapabilityGrantRequestSchema,
-  assertId,
-} from "@ecorione/shared-schema";
+import { CapabilityGrantRequestSchema, assertId } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
 import { getGlobalDispatcher, MockAgent, setGlobalDispatcher } from "undici";
 import { CapabilityRegistry } from "./capability-registry.js";
@@ -149,9 +146,7 @@ describe("ECX Batch 3 round trip", () => {
     return (response.json() as { packets: unknown[] }).packets[0];
   }
 
-  it(
-    "runs delta as child then parent continuation and replays without redispatch",
-    async () => {
+  it("runs delta as child then parent continuation and replays without redispatch", async () => {
     const { ledger, app } = setup();
     const sessionId = "sess_b3delta001";
     createSession(ledger, sessionId);
@@ -172,35 +167,29 @@ describe("ECX Batch 3 round trip", () => {
     const mock = new MockAgent();
     mock.disableNetConnect();
     const connect = mock.get("http://connect.invalid");
-    connect
-      .intercept({ path: "/v1/complete", method: "POST" })
-      .reply(200, (opts) => {
+    connect.intercept({ path: "/v1/complete", method: "POST" }).reply(200, (opts) => {
       const body = JSON.parse(String(opts.body)) as {
         prefix: { systemPrompt: string };
         userMessage: string;
       };
-        expect(body.prefix.systemPrompt).toContain(
-          "Return only the concise delegated contribution",
-        );
-        expect(body.userMessage).toContain("Review the change");
-        return localCompletion("CHILD_DELTA");
-      });
-    connect
-      .intercept({ path: "/v1/complete", method: "POST" })
-      .reply(200, (opts) => {
+      expect(body.prefix.systemPrompt).toContain(
+        "Return only the concise delegated contribution",
+      );
+      expect(body.userMessage).toContain("Review the change");
+      return localCompletion("CHILD_DELTA");
+    });
+    connect.intercept({ path: "/v1/complete", method: "POST" }).reply(200, (opts) => {
       const body = JSON.parse(String(opts.body)) as {
         operationId: string;
         prefix: { systemPrompt: string };
         dynamicText: string;
       };
-        expect(body.operationId).toMatch(/^op_/);
-        expect(body.prefix.systemPrompt).toContain(
-          "Continue as the sender/parent agent",
-        );
-        expect(body.dynamicText).toContain("<untrusted_ecx_return>");
-        expect(body.dynamicText).toContain("CHILD_DELTA");
-        return localCompletion("PARENT_FINAL");
-      });
+      expect(body.operationId).toMatch(/^op_/);
+      expect(body.prefix.systemPrompt).toContain("Continue as the sender/parent agent");
+      expect(body.dynamicText).toContain("<untrusted_ecx_return>");
+      expect(body.dynamicText).toContain("CHILD_DELTA");
+      return localCompletion("PARENT_FINAL");
+    });
     setGlobalDispatcher(mock);
 
     const payload = {
@@ -245,8 +234,7 @@ describe("ECX Batch 3 round trip", () => {
       const packetId = (first.json() as { packetId: string }).packetId;
       const status = await app.inject({
         method: "GET",
-        url:
-          "/v1/exchange/round-trips/" + packetId + "?workspaceId=ws_personal",
+        url: "/v1/exchange/round-trips/" + packetId + "?workspaceId=ws_personal",
       });
       expect(status.statusCode).toBe(200);
       expect(status.json()).toMatchObject({
@@ -278,25 +266,16 @@ describe("ECX Batch 3 round trip", () => {
         "agent.continuation.started",
         "agent.continuation.succeeded",
       ]);
-      expect(
-        ledger.getSession(assertId("session", sessionId))?.nextSeq,
-      ).toBe(6);
-      expect(JSON.stringify(range.events[3]?.payload)).not.toContain(
-        "CHILD_DELTA",
-      );
-      expect(JSON.stringify(range.events[5]?.payload)).not.toContain(
-        "PARENT_FINAL",
-      );
-      } finally {
-        setGlobalDispatcher(original);
-        await mock.close();
-      }
-    },
-  );
+      expect(ledger.getSession(assertId("session", sessionId))?.nextSeq).toBe(6);
+      expect(JSON.stringify(range.events[3]?.payload)).not.toContain("CHILD_DELTA");
+      expect(JSON.stringify(range.events[5]?.payload)).not.toContain("PARENT_FINAL");
+    } finally {
+      setGlobalDispatcher(original);
+      await mock.close();
+    }
+  });
 
-  it(
-    "runs full with one child call and hands the standalone child answer back directly",
-    async () => {
+  it("runs full with one child call and hands the standalone child answer back directly", async () => {
     const { ledger, app } = setup();
     const sessionId = "sess_b3full001";
     createSession(ledger, sessionId);
@@ -322,9 +301,7 @@ describe("ECX Batch 3 round trip", () => {
         const body = JSON.parse(String(opts.body)) as {
           prefix: { systemPrompt: string };
         };
-        expect(body.prefix.systemPrompt).toContain(
-          "Return a standalone complete answer",
-        );
+        expect(body.prefix.systemPrompt).toContain("Return a standalone complete answer");
         return localCompletion("CHILD_FULL_FINAL");
       });
     setGlobalDispatcher(mock);
@@ -376,16 +353,13 @@ describe("ECX Batch 3 round trip", () => {
         "agent.execution.succeeded",
         "agent.result.returned",
       ]);
-      } finally {
-        setGlobalDispatcher(original);
-        await mock.close();
-      }
-    },
-  );
+    } finally {
+      setGlobalDispatcher(original);
+      await mock.close();
+    }
+  });
 
-  it(
-    "marks ambiguous parent continuation UNCERTAIN and blocks automatic redispatch",
-    async () => {
+  it("marks ambiguous parent continuation UNCERTAIN and blocks automatic redispatch", async () => {
     const { ledger, app } = setup();
     const sessionId = "sess_b3uncertain001";
     createSession(ledger, sessionId);
@@ -440,8 +414,7 @@ describe("ECX Batch 3 round trip", () => {
       const packetId = (packet as { packetId: string }).packetId;
       const status = await app.inject({
         method: "GET",
-        url:
-          "/v1/exchange/round-trips/" + packetId + "?workspaceId=ws_personal",
+        url: "/v1/exchange/round-trips/" + packetId + "?workspaceId=ws_personal",
       });
       expect(status.statusCode).toBe(200);
       expect(status.json()).toMatchObject({
@@ -467,10 +440,9 @@ describe("ECX Batch 3 round trip", () => {
         "agent.continuation.started",
         "agent.continuation.uncertain",
       ]);
-      } finally {
-        setGlobalDispatcher(original);
-        await mock.close();
-      }
-    },
-  );
+    } finally {
+      setGlobalDispatcher(original);
+      await mock.close();
+    }
+  });
 });
