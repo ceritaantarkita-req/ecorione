@@ -192,13 +192,9 @@ The current reconciliation branch itself is separate temporary bookkeeping and s
 
 There is **no active product/runtime implementation scope**.
 
-The only current repository work is bounded housekeeping:
+This reconciliation closes the current/canonical documentation drift without changing runtime behavior. The only remaining repository housekeeping is exact-SHA cleanup of the post-ECX branch delta when deletion tooling is available.
 
-- reconcile current/canonical docs with actual `main` + staging;
-- preserve historical evidence rather than rewriting it;
-- exact-SHA clean the post-ECX branch delta when deletion tooling is available.
-
-This housekeeping does not alter runtime behavior or open a new roadmap.
+No new roadmap is opened.
 
 ## Explicit deferred / separately selectable future scopes
 
