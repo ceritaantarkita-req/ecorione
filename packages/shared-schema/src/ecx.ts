@@ -455,7 +455,6 @@ export const EcxRoundTripResponseSchema = z
   .strict();
 export type EcxRoundTripResponse = z.infer<typeof EcxRoundTripResponseSchema>;
 
-
 export const EcxFanoutRoundTripRequestSchema = z
   .object({
     packets: z.array(EcxPacketSchema).min(2).max(8),
@@ -561,9 +560,7 @@ export const EcxFanoutAggregateEvidenceSchema = z
     resultSetSha256: z.string().regex(/^[a-f0-9]{64}$/),
   })
   .strict();
-export type EcxFanoutAggregateEvidence = z.infer<
-  typeof EcxFanoutAggregateEvidenceSchema
->;
+export type EcxFanoutAggregateEvidence = z.infer<typeof EcxFanoutAggregateEvidenceSchema>;
 
 export const EcxFanoutStatusSchema = z
   .object({
@@ -619,6 +616,4 @@ export const EcxFanoutRoundTripResponseSchema = z
       });
     }
   });
-export type EcxFanoutRoundTripResponse = z.infer<
-  typeof EcxFanoutRoundTripResponseSchema
->;
+export type EcxFanoutRoundTripResponse = z.infer<typeof EcxFanoutRoundTripResponseSchema>;
