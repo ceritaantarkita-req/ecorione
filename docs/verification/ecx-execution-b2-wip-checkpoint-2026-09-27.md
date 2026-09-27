@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **ACTIVE / SAFE WIP — NOT CLOSED**
+Status: **HISTORICAL WIP / SUPERSEDED BY FINAL BATCH 2 CLOSURE**
 
 ## Resume identity
 
@@ -15,7 +15,7 @@ hardening  = dec7aa310fd67dce997d718679238e4fec785754
 tests      = 2f8c63353a35eb5c22ab99459d1684b52effea30
 ```
 
-This checkpoint is intentionally written before PR gates. It is a safe-resume pointer, not a PASS claim.
+This checkpoint was intentionally written before PR gates. It remains historical WIP evidence and is superseded by [ecx-execution-b2-safe-checkpoint-2026-09-27.md](ecx-execution-b2-safe-checkpoint-2026-09-27.md). Do not use this file as the current resume pointer.
 
 ## Implemented so far
 
@@ -61,15 +61,9 @@ Focused coverage now targets:
 - ambiguous Connect 5xx -> UNCERTAIN + no automatic retry;
 - bounded source-contract checks preserving Batch 2 scope.
 
-## Still required before closure
+## Historical closure follow-up
 
-1. open PR from this branch;
-2. run formatting/lint/typecheck/full tests through CI;
-3. fix any compile/test defects on the same branch;
-4. pass Product Eval and any other triggered gates;
-5. merge only after green exact-head gates;
-6. verify merged-main gates and governed staging delivery;
-7. replace ACTIVE/WIP wording with CLOSED/PASS and write the final Batch 2 checkpoint.
+All closure requirements listed in the original WIP checkpoint were subsequently completed through PR #365 / merge `851d58788075e1f11735b4c23e947edf3304eabe`. Exact-head and merged-main CI/Product Eval/MCP gates passed, and actual Staging Deploy #1362 passed. Current resume pointer: [ecx-execution-b2-safe-checkpoint-2026-09-27.md](ecx-execution-b2-safe-checkpoint-2026-09-27.md).
 
 ## Explicit non-scope
 
