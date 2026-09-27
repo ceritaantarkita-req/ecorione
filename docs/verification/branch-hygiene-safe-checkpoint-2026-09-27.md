@@ -1,82 +1,82 @@
-# Branch hygiene safe checkpoint — 2026-09-27
+# Branch hygiene final safe checkpoint — 2026-09-27
 
 Date: **2026-09-27**
 
-Status: **SAFE / RESUMABLE — STAGE 4 CLOSED / CLEANUP PARTIALLY EXECUTED**
+Status: **FINAL / CLOSED / LOCKED — CLEANUP COMPLETE**
 
-Current repository main proven at this checkpoint:
+Execution baseline main proven immediately before this final documentation lock:
 
 ```text
-9e621680661f7128b9cfea930fd470472ed94381
+c52564a31bbd2d5ed9f988525c78ff1f6da8c09f
 ```
 
-## 1. What is already complete
+This document is the canonical branch-hygiene closure checkpoint. The documentation-lock commit that contains this file intentionally advances `main` by docs only; it does not change product/runtime behavior.
 
-Repository/documentation reconciliation is already CLOSED / PASS.
+## 1. What is complete
 
-Branch hygiene then progressed through four bounded stages:
+Repository/documentation reconciliation and branch hygiene are complete.
+
+The bounded branch-hygiene stages were:
 
 - Stage 1: exact merged-PR-head classification;
 - Stage 2: main-ancestry classification and first destructive cleanup;
 - Stage 3: supersession / retained-branch ancestry review;
-- Stage 4: reconciliation against the real post-cleanup inventory, salvage of missing docs-only evidence, and classification of temporary execution/probe branches.
+- Stage 4: reconciliation against the real post-cleanup inventory, salvage of missing docs-only evidence, and classification of temporary execution/probe branches;
+- Cleanup pass 2: exact-SHA revalidation and deletion of the final 39 cleanup-ready branches.
 
 Stage 4 merged through PR **#361 — `docs: reconcile executed branch cleanup and stage 4`**.
 
-Exact reviewed Stage-4 PR head:
+Stage-4 reviewed head:
 
 ```text
 316ba052baec2a4b7509e3761dd151a7fcf03f1c
 ```
 
-Stage-4 squash merge / current implementation-doc state:
+Stage-4 merge:
 
 ```text
 9e621680661f7128b9cfea930fd470472ed94381
 ```
 
-## 2. Stage-4 gates
+The safe-checkpoint documentation PR **#362 — `docs: add branch hygiene safe checkpoint`** merged as:
 
-Exact-head PR #361 gates:
+```text
+c52564a31bbd2d5ed9f988525c78ff1f6da8c09f
+```
 
-- CI **#2276** — PASS;
-- Product Eval **#1515** — PASS.
+## 2. Proven pre-cleanup runtime state
 
-Merged-main gates:
+Stage-4 exact-head and merged-main gates passed:
 
-- CI **#2277** — PASS;
-- Product Eval **#1516** — PASS.
-
-Staging delivery:
-
-- Staging Deploy **#1325** — gate PASS / deploy SKIPPED;
-- Staging Deploy **#1326** — actual deploy PASS.
+- CI #2276 — PASS;
+- Product Eval #1515 — PASS;
+- merged-main CI #2277 — PASS;
+- merged-main Product Eval #1516 — PASS.
 
 Actual Staging Deploy #1326 proved:
 
 - exact target/host SHA `9e621680661f7128b9cfea930fd470472ed94381`;
 - image `staging-9e621680661f`;
 - clean detached staging worktree;
-- root unauthenticated bootstrap `302 -> /login`;
-- `/login`, `/ops`, `/settings`, representative Ai/API reads, and chat/forget mutations fail closed with `401 + Basic challenge`;
-- MCP protected-resource metadata 200;
-- MCP unauthenticated OAuth challenge 401;
+- auth + MCP smoke PASS;
 - Operations `healthy: true`;
 - Operations unhealthy services: **0**;
 - configured services: **15**;
 - running services: **15**;
 - non-running services: **0**;
-- stabilized free disk after retention: **29.92 GiB**.
+- stabilized free disk: **29.92 GiB**.
 
-## 3. Destructive cleanup already executed
+PR #362 final reviewed head `b957ae98ccdbeb2db2d13614c03ec8c06289b1ba` also passed exact-head CI/Product Eval, post-merge CI/Product Eval, and actual Staging Deploy #1332. That deploy proved exact-host identity, preserved auth/MCP boundaries, healthy Operations, **15/15** configured services running, and **28.78 GiB** stabilized free disk.
 
-The first destructive branch cleanup was executed from the one-time execution branch and is preserved in:
+## 3. First destructive cleanup
+
+The first destructive cleanup is preserved in:
 
 `docs/verification/branch-hygiene-execution-2026-09-27.md`
 
-Execution history:
+Historical execution:
 
-- Branch Hygiene One-Time #1 — FAIL **before deletion** because of a PowerShell repository-root scalar/array bug;
+- Branch Hygiene One-Time #1 — FAIL before deletion because of a PowerShell repository-root scalar/array bug;
 - Branch Hygiene One-Time #2 — DRY-RUN PASS;
 - Branch Hygiene One-Time #3 — APPLY PASS.
 
@@ -102,38 +102,98 @@ failed=0
 skip=0
 ```
 
-Therefore **354 remote branches have already been deleted** with exact-SHA revalidation.
+Therefore the first cleanup deleted **354 remote branches** with exact-SHA revalidation.
 
-## 4. Current real GitHub branch state
+## 4. Cleanup pass 2 — final destructive cleanup
 
-Before opening this safe-checkpoint branch, direct GitHub enumeration returned:
+Cleanup pass 2 used the committed exact-SHA allowlist:
+
+`docs/verification/branch-hygiene-allowlist-2026-09-27.json`
+
+Before APPLY, all 39 still-present cleanup-ready branches were independently revalidated against their committed expected SHA.
+
+One-time execution:
+
+- workflow: **Branch Hygiene Pass 2 One-Time**;
+- Actions run ID: **36294553329**;
+- execution head: `ac13919d2ff9b7723038b22afd0b8111fdac8c25`;
+- result: **PASS**.
+
+Dry-run:
 
 ```text
-47 total remote branches
-= 1 main
-+ 38 already-allowlisted cleanup-ready branches
-+ 7 retained branches
-+ 1 merged Stage-4 audit branch
+allowlisted=393
+would-delete=39
+already-missing=354
+hold=0
+failed=0
+skip=0
 ```
 
-PR #361's Stage-4 branch is now itself proven safe by exact merged-PR-head evidence and has been added to the allowlist.
+APPLY:
 
-The current durable classification therefore becomes:
+```text
+allowlisted=393
+deleted=39
+already-missing=354
+hold=0
+failed=0
+skip=0
+```
+
+Final workflow verification:
+
+```text
+FINAL_REMOTE_BRANCH_COUNT=9
+BRANCH_HYGIENE_PASS2=PASS
+```
+
+The temporary pass-2 execution branch self-deleted after the exact final inventory check.
+
+Cumulative destructive result:
 
 ```text
 393 cumulative SAFE-DELETE entries
-354 already deleted
-39 cleanup-ready branches still present
-7 retained branches
-1 main
-0 unclassified branches
+393 deleted / absent
+0 SAFE-DELETE entries still present
+0 SHA-drift holds during cleanup
+0 deletion failures
+0 protected/current-branch skips
 ```
 
-The present checkpoint branch `docs/branch-hygiene-safe-checkpoint-20260927` is intentionally excluded from its own classification. Do not create an infinite documentation loop merely to classify/delete bookkeeping branches.
+## 5. Final remote branch inventory
 
-## 5. Seven retained branches
+Post-cleanup remote GitHub inventory is exactly:
 
-These seven are **not authorized for deletion**:
+```text
+9 total remote branches
+= 1 main
++ 7 retained branches
++ 1 final checkpoint branch
+```
+
+Final branch set:
+
+1. `main`
+2. `agent/a09-space-decomposition-20260926`
+3. `agent/native-multimodal-pipeline-20260910`
+4. `ci/f6-e03-release-security-acceptance-gate-20260918`
+5. `feat/session9-a08c-brain-grounded-chat-20260925`
+6. `fix/flow-temporal-ci-timeout-20260915`
+7. `fix/w18-one-call-diagnostic-v2-20260917`
+8. `fix/w18-openrouter-routing-metadata-20260917`
+9. `docs/branch-hygiene-safe-checkpoint-20260927`
+
+Reconciliation against the committed allowlist proved:
+
+- SAFE-DELETE entries still present: **0 / 393**;
+- retained branches present: **7 / 7**;
+- unexpected branches: **0**;
+- open PRs at final remote verification: **0**.
+
+## 6. Seven retained branches
+
+These seven remain **not authorized for deletion**:
 
 1. `agent/a09-space-decomposition-20260926`
 2. `agent/native-multimodal-pipeline-20260910`
@@ -143,70 +203,54 @@ These seven are **not authorized for deletion**:
 6. `fix/w18-one-call-diagnostic-v2-20260917`
 7. `fix/w18-openrouter-routing-metadata-20260917`
 
-Important protected cases:
+All seven were post-cleanup reverified at their checkpoint SHA with exact identity (`identical`, ahead 0, behind 0).
 
-- Brain grounded chat remains an explicit implementation reference from PR #337;
-- Flow Temporal timeout contains a 30s -> 60s test-timeout change that is still not present on current main.
+Important protected cases remain unchanged:
 
-The other retained branches also still carry substantive/divergent or unlanded provenance and require a separate product/content decision before deletion.
+- Brain grounded chat is an explicit implementation reference from PR #337;
+- Flow Temporal timeout contains a 30s -> 60s test-timeout change still not present on the execution-baseline main;
+- the other retained branches preserve substantive/divergent or unlanded provenance pending separate product/content decisions.
 
-## 6. Current GitHub state
+The final checkpoint branch `docs/branch-hygiene-safe-checkpoint-20260927` is bookkeeping evidence and remains intentionally retained. Do not create another documentation-only loop solely to classify/delete it.
 
-At the start of this checkpoint:
+## 7. Deferred scopes remain separate
+
+Branch hygiene does not open or resolve unrelated deferred scopes.
+
+At closure:
 
 - open PRs: **0**;
-- open issues: **Issue #277 only**;
 - Issue #277 remains the deferred DR-2 physical-independence tracker;
 - public production cutover remains deferred;
 - native Google Drive remains deferred;
 - hosted-provider spend remains deferred;
-- no A-series, PE, PCS, or product implementation batch is implicitly opened.
+- no A-series, PE, PCS, or product/runtime implementation batch is implicitly opened.
 
-## 7. Next safe action
-
-The next branch-hygiene action is **not another audit from zero**.
-
-Resume from the committed exact-SHA allowlist:
-
-`docs/verification/branch-hygiene-allowlist-2026-09-27.json`
-
-The next destructive cleanup pass may target only the **39 currently present cleanup-ready branches** and must:
-
-1. run the cleanup helper in dry-run mode first;
-2. revalidate each remote branch SHA immediately before deletion;
-3. tolerate already-missing branches;
-4. skip/hold any branch whose SHA moved;
-5. never delete `main`;
-6. never delete the seven retained branches;
-7. recount GitHub branches after apply;
-8. write sanitized execution evidence;
-9. do not create another documentation-only loop solely to self-delete the checkpoint branch.
-
-## 8. Safe checkpoint
+## 8. Final locked checkpoint
 
 ```text
-branch hygiene: STAGE 4 CLOSED / PASS
-current proven main: 9e621680661f7128b9cfea930fd470472ed94381
+branch hygiene: FINAL / CLOSED / LOCKED
+execution baseline main: c52564a31bbd2d5ed9f988525c78ff1f6da8c09f
 Stage-4 PR: #361
-Stage-4 reviewed head: 316ba052baec2a4b7509e3761dd151a7fcf03f1c
-exact-head CI #2276: PASS
-exact-head Product Eval #1515: PASS
-merged-main CI #2277: PASS
-merged-main Product Eval #1516: PASS
-actual staging deploy #1326: PASS
-staging services: 15/15 running
-Operations unhealthy services: 0
-stabilized staging free disk: 29.92 GiB
+safe-checkpoint PR: #362
+cleanup pass-2 Actions run: 36294553329
+cleanup pass-2 execution head: ac13919d2ff9b7723038b22afd0b8111fdac8c25
 
 cumulative safe-delete evidence: 393 branches
-already deleted: 354 branches
-cleanup-ready and still present: 39 branches
+first cleanup deleted: 354 branches
+second cleanup deleted: 39 branches
+safe-delete branches still present: 0
 retained / not authorized for deletion: 7 branches
-unclassified remote branches at checkpoint baseline: 0
-open PRs at checkpoint start: 0
-open issue: #277 only
+final checkpoint bookkeeping branch: 1
+main: 1
+final remote branch count: 9
+unexpected remote branches: 0
+open PRs at final verification: 0
+
 DR-2 checkpoint 2: deferred
 native Google Drive: deferred
 hosted-provider spend: deferred
 production cutover: deferred
 ```
+
+Branch hygiene is closed. Do not rerun Stages 1–4 or repeat historical branch classification unless future remote branch changes create genuinely new work.
