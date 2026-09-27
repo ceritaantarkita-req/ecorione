@@ -2,7 +2,9 @@
 
 Date: **2026-09-27**
 
-Status: **BATCH 7 ACTIVE — BOUNDED IMPLEMENTATION IN PROGRESS**
+Status: **HISTORICAL / SUPERSEDED — BATCH 7 CLOSED / PASS**
+
+This WIP checkpoint is preserved as historical implementation-boundary evidence only. Batch 7 subsequently closed through PR #376 / merge `e49af9225194d36e2ed8cbefeb7b4cf5c09dc485`; use [ecx-execution-b7-safe-checkpoint-2026-09-27.md](ecx-execution-b7-safe-checkpoint-2026-09-27.md) as the canonical resume/closure record.
 
 ## Purpose
 
