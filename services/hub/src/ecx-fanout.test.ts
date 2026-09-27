@@ -412,6 +412,83 @@ describe("ECX Batch 7 fan-out round trip", () => {
     }
   });
 
+  it("rejects an oversized aggregate before parent dispatch", async () => {
+    const { ledger, app } = setup();
+    const sessionId = "sess_b7fanout004";
+    createSession(ledger, sessionId);
+
+    await bind(app, "agent:parent-size-b7", "compose", "parent004");
+    await bind(app, "agent:child-size-a-b7", "review", "childsizea004");
+    await bind(app, "agent:child-size-b-b7", "review", "childsizeb004");
+    await bind(app, "agent:child-size-c-b7", "review", "childsizec004");
+    grantLocal("agent:parent-size-b7", "parent004");
+    grantResultReceive("agent:parent-size-b7", "parent004");
+    grantLocal("agent:child-size-a-b7", "childsizea004");
+    grantLocal("agent:child-size-b-b7", "childsizeb004");
+    grantLocal("agent:child-size-c-b7", "childsizec004");
+
+    const planned = await plan(app, {
+      sessionId,
+      operationId: "op_b7fanout004",
+      sender: "agent:parent-size-b7",
+      recipients: [
+        "agent:child-size-a-b7",
+        "agent:child-size-b-b7",
+        "agent:child-size-c-b7",
+      ],
+    });
+
+    const original = getGlobalDispatcher();
+    const mock = new MockAgent();
+    mock.disableNetConnect();
+    const connect = mock.get("http://connect.invalid");
+    let calls = 0;
+    for (const marker of ["A", "B", "C"]) {
+      connect.intercept({ path: "/v1/complete", method: "POST" }).reply(200, () => {
+        calls += 1;
+        return localCompletion(marker.repeat(45_000));
+      });
+    }
+    setGlobalDispatcher(mock);
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/v1/exchange/fanout-round-trip",
+        payload: {
+          packets: planned.packets,
+          workspaceId: "ws_personal",
+          scope: "personal",
+          maxSensitivity: "INTERNAL",
+          requestedAt: NOW,
+        },
+      });
+      expect(response.statusCode).toBe(413);
+      expect(response.body).toContain("ECX_FANOUT_AGGREGATE_TOO_LARGE");
+      expect(calls).toBe(3);
+
+      const range = ledger.readRange({
+        sessionId: assertId("session", sessionId),
+        afterSeq: -1,
+        limit: 40,
+        grant: {
+          scope: "personal",
+          maxSensitivity: "INTERNAL",
+          hostedEligible: true,
+        },
+      });
+      expect(
+        range.events.some((event) => event.eventType === "agent.continuation.started"),
+      ).toBe(false);
+      expect(range.events.some((event) => event.eventType === "agent.result.returned")).toBe(
+        false,
+      );
+    } finally {
+      setGlobalDispatcher(original);
+      await mock.close();
+    }
+  });
+
   it("rejects non-delta fan-out before any child dispatch", async () => {
     const { ledger, app } = setup();
     const sessionId = "sess_b7fanout003";
