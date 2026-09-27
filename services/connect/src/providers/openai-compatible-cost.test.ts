@@ -172,6 +172,36 @@ describe("OpenAI-compatible billed-cost authority", () => {
     expect(result.providerReportedActualUsd).toBe(0.00123);
   });
 
+  it("accepts NVIDIA free endpoint responses without usage.cost", async () => {
+    const agent = new MockAgent();
+    agent.disableNetConnect();
+    setGlobalDispatcher(agent);
+    agent
+      .get("https://integrate.api.nvidia.com")
+      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .reply(200, {
+        model: "z-ai/glm-5.3",
+        choices: [{ message: { content: "ok" } }],
+        usage: { prompt_tokens: 10, completion_tokens: 2 },
+      });
+
+    const result = await callOpenAiCompatibleHosted({
+      endpoint: "https://integrate.api.nvidia.com/v1/chat/completions",
+      providerName: "NVIDIA",
+      apiKey: "nvapi-test-placeholder",
+      runtimeModel: "z-ai/glm-5.3",
+      costModel: "z-ai/glm-5.3",
+      prefix,
+      dynamicText: "fixture",
+      userMessage: "reply",
+      maxTokensField: "max_tokens",
+    });
+
+    expect(result.reply).toBe("ok");
+    expect(result.model).toBe("z-ai/glm-5.3");
+    expect(result.providerReportedActualUsd).toBeUndefined();
+  });
+
   it("retains pricing-snapshot fallback for direct OpenAI when cost is not reported", async () => {
     const agent = new MockAgent();
     agent.disableNetConnect();
