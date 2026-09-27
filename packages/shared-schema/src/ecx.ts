@@ -273,14 +273,40 @@ export const EcxRoundTripRequestSchema = EcxExecuteRequestSchema.refine(
 );
 export type EcxRoundTripRequest = z.infer<typeof EcxRoundTripRequestSchema>;
 
+export const EcxExecutionTokenUsageSchema = z
+  .object({
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    cacheReadTokens: z.number().int().nonnegative(),
+    cacheWriteTokens: z.number().int().nonnegative(),
+  })
+  .strict();
+export type EcxExecutionTokenUsage = z.infer<typeof EcxExecutionTokenUsageSchema>;
+
+export const EcxExecutionCostSchema = z
+  .object({
+    actualUsd: z.number().finite().nonnegative(),
+    naiveUsd: z.number().finite().nonnegative(),
+    savedUsd: z.number().finite(),
+    savedPct: z.number().finite(),
+    optimizerOverheadMs: z.number().finite().nonnegative(),
+    baselineUsage: EcxExecutionTokenUsageSchema,
+  })
+  .strict();
+export type EcxExecutionCost = z.infer<typeof EcxExecutionCostSchema>;
+
 export const EcxExecutionCompletionSchema = z.object({
   reply: z.string(),
   provider: z.string().min(1),
   model: z.string().min(1),
+  pricingModel: z.string().min(1).optional(),
   responseModel: z.string().min(1),
   modelIdentity: z.string().min(1),
   modelIdentityPinned: z.boolean(),
+  modelIdentityProvenance: z.string().min(1).optional(),
   cacheHit: z.boolean(),
+  usage: EcxExecutionTokenUsageSchema.optional(),
+  cost: EcxExecutionCostSchema.optional(),
   routeReason: z.string().min(1),
 });
 export type EcxExecutionCompletion = z.infer<typeof EcxExecutionCompletionSchema>;
@@ -389,6 +415,25 @@ export const EcxRoundTripHandbackSchema = z
   .strict();
 export type EcxRoundTripHandback = z.infer<typeof EcxRoundTripHandbackSchema>;
 
+export const EcxRoundTripTelemetrySchema = z
+  .object({
+    totalLatencyMs: z.number().finite().nonnegative(),
+    childLatencyMs: z.number().finite().nonnegative(),
+    continuationLatencyMs: z.number().finite().nonnegative().nullable(),
+    accountedModelCalls: z.number().int().nonnegative(),
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    cacheReadTokens: z.number().int().nonnegative(),
+    cacheWriteTokens: z.number().int().nonnegative(),
+    actualUsd: z.number().finite().nonnegative(),
+    naiveUsd: z.number().finite().nonnegative(),
+    refCandidateCount: z.number().int().nonnegative(),
+    refSelectedCount: z.number().int().nonnegative(),
+    refOmittedCount: z.number().int().nonnegative(),
+  })
+  .strict();
+export type EcxRoundTripTelemetry = z.infer<typeof EcxRoundTripTelemetrySchema>;
+
 export const EcxRoundTripResponseSchema = z
   .object({
     packetId: EventIdSchema,
@@ -401,6 +446,7 @@ export const EcxRoundTripResponseSchema = z
     replayed: z.boolean(),
     child: EcxExecuteResponseSchema,
     returnedResult: EcxReturnedResultSchema,
+    telemetry: EcxRoundTripTelemetrySchema.optional(),
     handback: EcxRoundTripHandbackSchema,
     history: z
       .object({

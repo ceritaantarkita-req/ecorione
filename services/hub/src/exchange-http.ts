@@ -699,6 +699,82 @@ function roundTripReturnContext(packet: EcxPacket, returnedResult: EcxReturnedRe
   ].join("\n");
 }
 
+function completionTelemetry(completion: ReturnType<typeof EcxExecutionCompletionSchema.parse>) {
+  const usage = completion.usage ?? {
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+  };
+  const cost = completion.cost ?? {
+    actualUsd: 0,
+    naiveUsd: 0,
+    savedUsd: 0,
+    savedPct: 0,
+    optimizerOverheadMs: 0,
+    baselineUsage: usage,
+  };
+  return { usage, cost };
+}
+
+function roundTripTelemetry(input: {
+  startedAtMs: number;
+  childLatencyMs: number;
+  continuationLatencyMs: number | null;
+  packet: EcxPacket;
+  child: EcxExecuteResponse;
+  parentCompletion: ReturnType<typeof EcxExecutionCompletionSchema.parse> | null;
+}) {
+  const child = completionTelemetry(input.child.completion);
+  const parent =
+    input.parentCompletion === null
+      ? null
+      : completionTelemetry(input.parentCompletion);
+  const refCandidateCount = input.packet.refs.length;
+  const refSelectedCount = input.child.selectedRefIndexes.length;
+  return {
+    totalLatencyMs: Math.max(0, performance.now() - input.startedAtMs),
+    childLatencyMs: input.childLatencyMs,
+    continuationLatencyMs: input.continuationLatencyMs,
+    accountedModelCalls: parent === null ? 1 : 2,
+    inputTokens: child.usage.inputTokens + (parent?.usage.inputTokens ?? 0),
+    outputTokens: child.usage.outputTokens + (parent?.usage.outputTokens ?? 0),
+    cacheReadTokens: child.usage.cacheReadTokens + (parent?.usage.cacheReadTokens ?? 0),
+    cacheWriteTokens: child.usage.cacheWriteTokens + (parent?.usage.cacheWriteTokens ?? 0),
+    actualUsd: child.cost.actualUsd + (parent?.cost.actualUsd ?? 0),
+    naiveUsd: child.cost.naiveUsd + (parent?.cost.naiveUsd ?? 0),
+    refCandidateCount,
+    refSelectedCount,
+    refOmittedCount: Math.max(0, refCandidateCount - refSelectedCount),
+  };
+}
+
+function recordRoundTripTelemetry(
+  metrics: ReturnType<typeof observabilityFor>,
+  telemetry: ReturnType<typeof roundTripTelemetry>,
+  labels: { response_mode: "delta" | "full"; parent_target: "local" | "hosted" },
+): void {
+  metrics.observe("ecorione_ecx_round_trip_duration_ms", telemetry.totalLatencyMs, labels);
+  metrics.observe("ecorione_ecx_child_execution_duration_ms", telemetry.childLatencyMs, labels);
+  if (telemetry.continuationLatencyMs !== null) {
+    metrics.observe(
+      "ecorione_ecx_parent_continuation_duration_ms",
+      telemetry.continuationLatencyMs,
+      labels,
+    );
+  }
+  metrics.addCounter(
+    "ecorione_ecx_round_trip_selected_refs_total",
+    telemetry.refSelectedCount,
+    labels,
+  );
+  metrics.addCounter(
+    "ecorione_ecx_round_trip_omitted_refs_total",
+    telemetry.refOmittedCount,
+    labels,
+  );
+}
+
 function assertRoundTripHistoryBoundary(
   input: ReturnType<typeof EcxRoundTripRequestSchema.parse>,
   ledger: HistoryLedger,
@@ -998,6 +1074,7 @@ export function registerExchangeRoutes(
 ): void {
   const metrics = observabilityFor(app);
   app.post("/v1/exchange/plan", async (req) => {
+    const startedAtMs = performance.now();
     const input = parseOrBadRequest(EcxPlanRequestSchema, req.body);
     const response = planEcx(input);
     if (input.historySessionId !== undefined) {
@@ -1035,6 +1112,10 @@ export function registerExchangeRoutes(
     metrics.addCounter("ecorione_ecx_candidates_total", response.metrics.candidateCount);
     metrics.addCounter("ecorione_ecx_packets_total", response.metrics.recipientCount);
     metrics.addCounter("ecorione_ecx_packet_bytes_total", response.metrics.packetBytes);
+    metrics.observe(
+      "ecorione_ecx_plan_duration_ms",
+      Math.max(0, performance.now() - startedAtMs),
+    );
     return EcxPlanResponseSchema.parse(response);
   });
 
@@ -1066,6 +1147,7 @@ export function registerExchangeRoutes(
   });
 
   app.post("/v1/exchange/hydrate", async (req) => {
+    const startedAtMs = performance.now();
     const input = parseOrBadRequest(EcxHydrateRequestSchema, req.body);
     const automatic = input.selection !== undefined;
     if (automatic) {
@@ -1075,13 +1157,33 @@ export function registerExchangeRoutes(
         input.packet.refs.length,
       );
     }
-    const response = await hydratePacket(input, ledger, options);
+    let response: EcxHydrateResponse;
+    try {
+      response = await hydratePacket(input, ledger, options);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        metrics.addCounter("ecorione_ecx_reference_denial_events_total", 1, {
+          phase: automatic ? "selection" : "hydration",
+        });
+      }
+      metrics.observe(
+        "ecorione_ecx_hydration_duration_ms",
+        Math.max(0, performance.now() - startedAtMs),
+        { outcome: "error", mode: automatic ? "automatic" : "explicit" },
+      );
+      throw error;
+    }
     if (automatic) {
       metrics.addCounter("ecorione_ecx_auto_selected_refs_total", response.items.length);
     }
     metrics.addCounter("ecorione_ecx_hydrations_total");
     metrics.addCounter("ecorione_ecx_hydrated_items_total", response.items.length);
     metrics.addCounter("ecorione_ecx_hydration_bytes_total", response.hydratedBytes);
+    metrics.observe(
+      "ecorione_ecx_hydration_duration_ms",
+      Math.max(0, performance.now() - startedAtMs),
+      { outcome: "success", mode: automatic ? "automatic" : "explicit" },
+    );
     return response;
   });
 
@@ -1104,6 +1206,7 @@ export function registerExchangeRoutes(
   const executeRecipient = async (
     input: ReturnType<typeof EcxExecuteRequestSchema.parse>,
   ): Promise<EcxExecuteResponse> => {
+    const executionStartedAtMs = performance.now();
     const binding = agents.get(input.workspaceId, input.packet.recipient);
     if (binding === null) {
       throw new NotFoundError(
@@ -1157,18 +1260,36 @@ export function registerExchangeRoutes(
         items: [],
       });
     } else {
-      hydration = await hydratePacket(
-        EcxHydrateRequestSchema.parse({
-          packet: input.packet,
-          ...(input.refIndexes === undefined ? {} : { refIndexes: input.refIndexes }),
-          ...(input.selection === undefined ? {} : { selection: input.selection }),
-          scope: input.scope,
-          maxSensitivity: input.maxSensitivity,
-          hostedEligible: binding.target === "hosted",
-        }),
-        ledger,
-        options,
-      );
+      try {
+        hydration = await hydratePacket(
+          EcxHydrateRequestSchema.parse({
+            packet: input.packet,
+            ...(input.refIndexes === undefined ? {} : { refIndexes: input.refIndexes }),
+            ...(input.selection === undefined ? {} : { selection: input.selection }),
+            scope: input.scope,
+            maxSensitivity: input.maxSensitivity,
+            hostedEligible: binding.target === "hosted",
+          }),
+          ledger,
+          options,
+        );
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          metrics.addCounter("ecorione_ecx_reference_denial_events_total", 1, {
+            phase: "recipient_hydration",
+          });
+        }
+        metrics.addCounter("ecorione_ecx_execution_outcomes_total", 1, {
+          target: binding.target,
+          outcome: "hydration_error",
+        });
+        metrics.observe(
+          "ecorione_ecx_execution_duration_ms",
+          Math.max(0, performance.now() - executionStartedAtMs),
+          { target: binding.target, outcome: "hydration_error" },
+        );
+        throw error;
+      }
     }
 
     let begun: ReturnType<EcxExecutionStore["begin"]>;
@@ -1198,6 +1319,15 @@ export function registerExchangeRoutes(
       metrics.addCounter("ecorione_ecx_execution_replays_total", 1, {
         target: binding.target,
       });
+      metrics.addCounter("ecorione_ecx_execution_outcomes_total", 1, {
+        target: binding.target,
+        outcome: "replay",
+      });
+      metrics.observe(
+        "ecorione_ecx_execution_duration_ms",
+        Math.max(0, performance.now() - executionStartedAtMs),
+        { target: binding.target, outcome: "replay" },
+      );
       return prior;
     }
 
@@ -1259,6 +1389,15 @@ export function registerExchangeRoutes(
       ) {
         const status = executions.fail(input.packet.packetId, message, failedAt);
         appendExecutionOutcome(ledger, status, input.packet, null);
+        metrics.addCounter("ecorione_ecx_execution_outcomes_total", 1, {
+          target: binding.target,
+          outcome: "failed",
+        });
+        metrics.observe(
+          "ecorione_ecx_execution_duration_ms",
+          Math.max(0, performance.now() - executionStartedAtMs),
+          { target: binding.target, outcome: "failed" },
+        );
         throw new HttpError(
           error.statusCode,
           "ECX_EXECUTION_FAILED",
@@ -1268,6 +1407,15 @@ export function registerExchangeRoutes(
       }
       const status = executions.noteUncertain(input.packet.packetId, message, failedAt);
       appendExecutionOutcome(ledger, status, input.packet, null);
+      metrics.addCounter("ecorione_ecx_execution_outcomes_total", 1, {
+        target: binding.target,
+        outcome: "uncertain",
+      });
+      metrics.observe(
+        "ecorione_ecx_execution_duration_ms",
+        Math.max(0, performance.now() - executionStartedAtMs),
+        { target: binding.target, outcome: "uncertain" },
+      );
       throw new HttpError(
         502,
         "ECX_EXECUTION_UNCERTAIN",
@@ -1304,6 +1452,23 @@ export function registerExchangeRoutes(
     metrics.addCounter("ecorione_ecx_execution_hydrated_bytes_total", hydration.hydratedBytes, {
       target: binding.target,
     });
+    metrics.addCounter("ecorione_ecx_execution_selected_refs_total", response.selectedRefIndexes.length, {
+      target: binding.target,
+    });
+    metrics.addCounter(
+      "ecorione_ecx_execution_omitted_refs_total",
+      Math.max(0, input.packet.refs.length - response.selectedRefIndexes.length),
+      { target: binding.target },
+    );
+    metrics.addCounter("ecorione_ecx_execution_outcomes_total", 1, {
+      target: binding.target,
+      outcome: "success",
+    });
+    metrics.observe(
+      "ecorione_ecx_execution_duration_ms",
+      Math.max(0, performance.now() - executionStartedAtMs),
+      { target: binding.target, outcome: "success" },
+    );
     return response;
   };
 
@@ -1329,6 +1494,7 @@ export function registerExchangeRoutes(
   );
 
   app.post("/v1/exchange/round-trip", async (req) => {
+    const roundTripStartedAtMs = performance.now();
     const input = parseOrBadRequest(EcxRoundTripRequestSchema, req.body);
     assertRoundTripHistoryBoundary(input, ledger);
     const parent = agents.get(input.workspaceId, input.packet.sender);
@@ -1366,7 +1532,27 @@ export function registerExchangeRoutes(
       }
     }
 
-    const child = await executeRecipient(input);
+    const childStartedAtMs = performance.now();
+    let child: EcxExecuteResponse;
+    try {
+      child = await executeRecipient(input);
+    } catch (error) {
+      metrics.addCounter("ecorione_ecx_round_trip_outcomes_total", 1, {
+        response_mode: input.packet.responseMode,
+        outcome: "child_error",
+      });
+      metrics.observe(
+        "ecorione_ecx_round_trip_duration_ms",
+        Math.max(0, performance.now() - roundTripStartedAtMs),
+        {
+          response_mode: input.packet.responseMode,
+          parent_target: parent.target,
+          outcome: "child_error",
+        },
+      );
+      throw error;
+    }
+    const childLatencyMs = Math.max(0, performance.now() - childStartedAtMs);
 
     let begun: ReturnType<EcxRoundTripStore["begin"]>;
     try {
@@ -1395,6 +1581,10 @@ export function registerExchangeRoutes(
       metrics.addCounter("ecorione_ecx_round_trip_replays_total", 1, {
         response_mode: input.packet.responseMode,
       });
+      metrics.addCounter("ecorione_ecx_round_trip_outcomes_total", 1, {
+        response_mode: input.packet.responseMode,
+        outcome: "replay",
+      });
       return prior;
     }
 
@@ -1412,6 +1602,13 @@ export function registerExchangeRoutes(
     } catch (error) {
       if (error instanceof HttpError && error.type === "ECX_RESULT_HOSTED_ISOLATION_DENIED") {
         roundTrips.fail(input.packet.packetId, error.message, nowIso());
+        metrics.addCounter("ecorione_ecx_reference_denial_events_total", 1, {
+          phase: "hosted_parent_recheck",
+        });
+        metrics.addCounter("ecorione_ecx_round_trip_outcomes_total", 1, {
+          response_mode: input.packet.responseMode,
+          outcome: "isolation_denied",
+        });
       }
       throw error;
     }
@@ -1430,6 +1627,14 @@ export function registerExchangeRoutes(
         replayed: false,
         child,
         returnedResult,
+        telemetry: roundTripTelemetry({
+          startedAtMs: roundTripStartedAtMs,
+          childLatencyMs,
+          continuationLatencyMs: null,
+          packet: input.packet,
+          child,
+          parentCompletion: null,
+        }),
         handback: {
           parentContinued: false,
           parentTarget: parent.target,
@@ -1447,6 +1652,16 @@ export function registerExchangeRoutes(
         response_mode: "full",
         parent_continued: "false",
       });
+      metrics.addCounter("ecorione_ecx_round_trip_outcomes_total", 1, {
+        response_mode: "full",
+        outcome: "success",
+      });
+      if (response.telemetry !== undefined) {
+        recordRoundTripTelemetry(metrics, response.telemetry, {
+          response_mode: "full",
+          parent_target: parent.target,
+        });
+      }
       return response;
     }
 
@@ -1473,6 +1688,7 @@ export function registerExchangeRoutes(
     }
 
     let parentCompletion: ReturnType<typeof EcxExecutionCompletionSchema.parse>;
+    const continuationStartedAtMs = performance.now();
     try {
       parentCompletion = EcxExecutionCompletionSchema.parse(
         await httpJson<unknown>(`${options.connectUrl}/v1/complete`, {
@@ -1507,6 +1723,15 @@ export function registerExchangeRoutes(
       ) {
         const status = roundTrips.fail(input.packet.packetId, message, failedAt);
         appendRoundTripContinuationOutcome(ledger, status, startedEventId, null);
+        metrics.addCounter("ecorione_ecx_round_trip_outcomes_total", 1, {
+          response_mode: "delta",
+          outcome: "failed",
+        });
+        metrics.observe(
+          "ecorione_ecx_round_trip_duration_ms",
+          Math.max(0, performance.now() - roundTripStartedAtMs),
+          { response_mode: "delta", parent_target: parent.target, outcome: "failed" },
+        );
         throw new HttpError(
           error.statusCode,
           "ECX_ROUND_TRIP_FAILED",
@@ -1516,6 +1741,15 @@ export function registerExchangeRoutes(
       }
       const status = roundTrips.noteUncertain(input.packet.packetId, message, failedAt);
       appendRoundTripContinuationOutcome(ledger, status, startedEventId, null);
+      metrics.addCounter("ecorione_ecx_round_trip_outcomes_total", 1, {
+        response_mode: "delta",
+        outcome: "uncertain",
+      });
+      metrics.observe(
+        "ecorione_ecx_round_trip_duration_ms",
+        Math.max(0, performance.now() - roundTripStartedAtMs),
+        { response_mode: "delta", parent_target: parent.target, outcome: "uncertain" },
+      );
       throw new HttpError(
         502,
         "ECX_ROUND_TRIP_UNCERTAIN",
@@ -1539,6 +1773,14 @@ export function registerExchangeRoutes(
       replayed: false,
       child,
       returnedResult,
+      telemetry: roundTripTelemetry({
+        startedAtMs: roundTripStartedAtMs,
+        childLatencyMs,
+        continuationLatencyMs: Math.max(0, performance.now() - continuationStartedAtMs),
+        packet: input.packet,
+        child,
+        parentCompletion,
+      }),
       handback: {
         parentContinued: true,
         parentTarget: parent.target,
@@ -1557,6 +1799,16 @@ export function registerExchangeRoutes(
       response_mode: "delta",
       parent_continued: "true",
     });
+    metrics.addCounter("ecorione_ecx_round_trip_outcomes_total", 1, {
+      response_mode: "delta",
+      outcome: "success",
+    });
+    if (response.telemetry !== undefined) {
+      recordRoundTripTelemetry(metrics, response.telemetry, {
+        response_mode: "delta",
+        parent_target: parent.target,
+      });
+    }
     return response;
   });
 }
