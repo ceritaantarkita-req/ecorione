@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 CLOSED-PASS / BATCH 4 ACTIVE-SAFE-WIP / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1 + BATCH 2 + BATCH 3 + BATCH 4 CLOSED-PASS / BATCH 5 NEXT-NOT-STARTED / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Current verdict
 
@@ -10,11 +10,17 @@ The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through
 
 **PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
 
-## 2026-09-27 ECX Execution — Batch 4 ACTIVE safe checkpoint
+## 2026-09-27 ECX Execution — Batch 4 closure
 
-Batch 4 — **Security, isolation, result integration** is ACTIVE on branch `agent/ecx-security-integration-b4-20260927`. The bounded implementation hardens only the proven Batch 3 single-recipient handback path: sender result receipt now requires explicit `agent.result.receive` authority; returned results are byte-bounded and carry SHA-256 integrity evidence; delegated result text is escaped inside an untrusted envelope before parent continuation; provenance history sessions are checked against Workspace/scope/sensitivity; and a hosted parent must re-prove the exact local-child source refs as hosted-eligible before receiving derived result content.
+Batch 4 — **Security, isolation, result integration is CLOSED / PASS** through PR #370. Exact reviewed head `bba68607227a67080a26d4a000cf9dc73deadaef` passed CI #2314, Product Eval #1553, and MCP External HTTPS Acceptance #1153, then squash-merged to `main` as `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`. Merged-main CI #2315, Product Eval #1554, and MCP #1154 passed. Staging Deploy #1402 was gate-only; actual Staging Deploy #1403 deployed the exact merged SHA successfully as `staging-77986ccd1e4a`.
 
-Safe-resume checkpoint: [verification/ecx-execution-b4-wip-checkpoint-2026-09-27.md](verification/ecx-execution-b4-wip-checkpoint-2026-09-27.md). **Do not restart Batches 1–3, branch hygiene, Historical Ledger core, or historical ECX selector/economics audits.**
+The closed boundary adds explicit sender `agent.result.receive` authority before result handback, a 65,536-byte returned-result integration cap, trust/sensitivity metadata plus SHA-256/byte evidence, escaped untrusted result framing before parent continuation, exact owner-backed hosted-eligibility rechecks for the local child's selected refs before a hosted parent receives derived result content, and Workspace/scope/sensitivity checks for round-trip provenance sessions. Existing Batch 1/2 execution ownership and Batch 3 single-recipient `delta/full` semantics remain intact; legacy successful receipts without the Batch 4 envelope are not silently reinterpreted or re-dispatched.
+
+Runtime proof on Staging Deploy #1403 matched exact SHA `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`; public/auth and MCP smoke passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **29.94 GiB free**.
+
+Batch 4 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. **Batch 5 — End-to-end observability, quality, economics is NEXT / NOT STARTED.**
+
+Canonical safe-resume checkpoint: [verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–4, branch hygiene, Historical Ledger core, or historical ECX selector/economics audits.**
 
 ## 2026-09-27 ECX Execution — Batch 3 closure
 
@@ -22,7 +28,7 @@ Batch 3 — **Real Agent A -> Agent B round trip is CLOSED / PASS** through PR #
 
 The closed boundary proves the first real single-recipient Agent A -> Agent B -> Agent A handback path above the Batch 1/2 primitive. `responseMode: delta` executes Agent B and then exactly one governed parent continuation through Connect; `responseMode: full` returns Agent B's standalone result directly to the sender boundary without a second parent provider call. Durable round-trip receipts preserve replay/idempotency, parent continuation duplicate-dispatch protection, Workspace-scoped status lookup, and bounded Historical Ledger result/continuation provenance without copying full reply text into operational events.
 
-Batch 3 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. **Batch 4 — Security, isolation, result integration is NEXT / NOT STARTED.**
+Batch 3 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. At the Batch 3 checkpoint, Batch 4 was **NEXT / NOT STARTED**; that historical handoff is superseded by the Batch 4 closure above.
 
 Canonical safe-resume checkpoint: [verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md). **Do not restart Batch 1, Batch 2, Batch 3, or historical ECX selector/economics audits.**
 

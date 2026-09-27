@@ -2,7 +2,7 @@
 
 Date: **2026-09-27**
 
-Status: **ACTIVE / SAFE WIP — NOT CLOSED**
+Status: **HISTORICAL WIP / SUPERSEDED BY FINAL BATCH 4 CLOSURE**
 
 ## Resume identity
 
@@ -15,7 +15,7 @@ hardening   = c62defb5df2ef4579634af7cbecaeef2f6dd164f
 tests       = ee8b798c95bb40894274df0013e0fe221a6280eb
 ```
 
-This checkpoint is a safe resume pointer before CI/PR closure. It is **not** a PASS claim.
+This checkpoint was the safe resume pointer before CI/PR closure. It is preserved as historical WIP evidence and superseded by [ecx-execution-b4-safe-checkpoint-2026-09-27.md](ecx-execution-b4-safe-checkpoint-2026-09-27.md). Do not use this file as the current resume pointer.
 
 ## Batch 4 bounded contract
 
@@ -95,18 +95,9 @@ Focused tests cover:
 - Batch 3 regression tests updated only to add explicit parent result-receive grants;
 - source-contract preservation of single-recipient scope.
 
-## Still required before closure
+## Historical closure follow-up
 
-1. open PR from this branch;
-2. run format/lint/typecheck/full tests;
-3. fix compile/test defects on this same branch;
-4. pass Product Eval and other exact-head gates;
-5. merge only after exact-head green;
-6. verify merged-main gates;
-7. verify governed staging delivery;
-8. replace ACTIVE/WIP docs with CLOSED/PASS;
-9. write final Batch 4 safe checkpoint;
-10. advance roadmap to Batch 5 only after Batch 4 closure.
+All closure requirements listed in the original WIP checkpoint were subsequently completed through PR #370 / merge `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`. Exact-head CI #2314 + Product Eval #1553 + MCP #1153 passed; merged-main CI #2315 + Product Eval #1554 + MCP #1154 passed; Staging Deploy #1402 was gate-only and actual Staging Deploy #1403 passed with exact SHA match, public/auth + MCP smoke PASS, healthy Operations, 15/15 configured services running, and 29.94 GiB stabilized free disk. Current resume pointer: [ecx-execution-b4-safe-checkpoint-2026-09-27.md](ecx-execution-b4-safe-checkpoint-2026-09-27.md).
 
 ## Explicit non-scope
 
