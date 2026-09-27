@@ -35,8 +35,10 @@ describe("ECX execution Batch 2 source contract", () => {
     expect(exchange).not.toContain("reply: response.completion.reply");
   });
 
-  it("does not open Batch 3+ scopes", () => {
+  it("keeps the Batch 2 execution primitive single-recipient while later batches compose above it", () => {
     const exchange = source("services/hub/src/exchange-http.ts");
+    expect(exchange).toContain("const executeRecipient = async");
+    expect(exchange).toContain("executions.claimDispatch");
     expect(exchange).not.toContain("Promise.all(input.packets");
     expect(exchange).not.toContain("/v1/exchange/aggregate");
     expect(exchange).not.toContain("agent.result.merge");
