@@ -4,11 +4,30 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-> **Current status — 2026-09-27:** the original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, repository/documentation reconciliation, and **branch-hygiene Stage 4** are CLOSED / PASS at their documented boundaries. Branch hygiene has already deleted **354/354** exact-SHA branches; current evidence classifies **393 cumulative safe-delete branches**, with **39 cleanup-ready still present** and **7 retained**. PR **#361** merged as `9e621680661f7128b9cfea930fd470472ed94381`; merged-main CI **#2277**, Product Eval **#1516**, and actual Staging Deploy **#1326** passed. Staging proved auth/MCP boundaries, healthy Operations, **15/15** configured services running, clean exact-host identity, and **29.92 GiB** stabilized free disk. **DR-2 physical independence remains DEFERRED at checkpoint 2.** SumoPod remains staging; production cutover, native Google Drive, hosted-provider spend, broader multi-user identity, and AutoClick remain separate/deferred decisions.
+## Current status — 2026-09-27
+
+The current repository and governed SumoPod staging runtime are converged on:
+
+```text
+main / staging = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+image          = staging-2c2e3c8ad1b4
+```
+
+Latest merged-main proof:
+
+- CI **#2352** — PASS;
+- Product Eval **#1591** — PASS;
+- actual Staging Deploy **#1475** — PASS;
+- Operations `healthy: true`;
+- **15/15** configured services running;
+- exact host SHA matched expected SHA;
+- final stabilized free disk: **26.31 GiB**.
+
+The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
+
+There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**.
 
 **Start here:** [docs/README.md](docs/README.md).
-
-> **Security/audit reconciliation — 2026-09-26:** the 2026-09-24 CRITICAL general-Ai human-authentication finding and the later HIGH/MEDIUM/product-gap follow-ups selected from that audit are now closed at their bounded implemented/staging boundaries. The general Ai browser/API surface is private-by-default behind the staging operator Basic-Auth boundary; MCP discovery/OAuth remains separate. This is still a single-credential staging gate, **not** a final multi-user identity/RBAC design and **not** production authorization. See [docs/verification/current-main-staging-audit-2026-09-24.md](docs/verification/current-main-staging-audit-2026-09-24.md) and the latest A-11 closure evidence.
 
 ## What exists today
 
@@ -24,7 +43,7 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 | Sandbox | Governed execution boundary |
 | RnD | Trace/eval and dataset-governance foundation |
 | Sync | Local/self-host bridge and hosted MCP reachability boundary |
-| Production ops | Compose/Caddy baseline, metrics/traces, backup/recovery and release tooling |
+| Operations | Compose/Caddy staging, health, metrics/traces, backup/recovery and governed release tooling |
 
 ## Current architecture
 
@@ -40,11 +59,42 @@ Ai
     -> RnD
 ```
 
-Core rules remain: no cross-service DB access; Hub owns authority/policy; Context owns memory; Artifact owns raw bytes; Connect owns providers/credentials/spend; Flow uses Temporal for durability; side effects remain governed/idempotent.
+Core ownership rules:
 
-## Product model and completed evolution
+- no cross-service database access;
+- Hub owns authority, policy, approvals, audit and ECX coordination;
+- Connect owns providers, credentials, runtime invocation and hosted-spend authority;
+- Context owns memory semantics;
+- Artifact owns raw bytes;
+- Flow + Temporal own durable workflow execution;
+- Space stores composition/references rather than copying owner data;
+- side effects remain governed and idempotent.
 
-Canonical model:
+## ECX Recipient Execution
+
+The bounded ECX Recipient Execution roadmap **Batch 1–7 is CLOSED / PASS**.
+
+Current implementation includes:
+
+- governed single-recipient Hub -> Connect execution;
+- durable execution receipts, request-fingerprint conflict protection and replay/no-redispatch;
+- real Agent A -> Agent B -> Agent A round-trip behavior;
+- explicit `agent.result.receive` authority;
+- bounded/hash-evidenced returned-result integration;
+- hosted-parent source isolation;
+- end-to-end usage/cost observability and deterministic offline quality/economics evidence;
+- Historical Ledger hot-retention + immutable gzip archive compaction with transparent replay;
+- deterministic **2–8 recipient `delta` fan-out**;
+- **65,536-byte** per-child result limit;
+- **131,072-byte** aggregate result-material limit;
+- durable fan-out receipts and exactly one parent aggregation continuation.
+
+Canonical ECX closure:
+[docs/verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](docs/verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md).
+
+Batch 7 does not imply external A2A, recursive agent graphs, Flow/Temporal fan-out orchestration, `full` multi-recipient merge semantics, broad ECX UI, paid-provider reruns, DR-2, or production promotion.
+
+## Product model
 
 ```text
 Project = WHERE
@@ -55,29 +105,43 @@ Agent   = WHO/WHAT executes
 Run     = WHAT HAPPENED
 ```
 
-Roadmap:
+Product Evolution PE-00..PE-08 and PCS-00..PCS-10 are historical closed roadmaps, not current work queues.
 
-```text
-PE-00 Architecture lock
-PE-01 Project foundation
-PE-02 Project Sources
-PE-03 Trigger control plane
-PE-04 Work + Schedule + Runs
-PE-05 Event/Webhook automation
-PE-06 Brain V1
-PE-07 Brain + Context + ECX
-PE-08 Product closure
-```
+See:
 
-Read [docs/product-evolution-architecture.md](docs/product-evolution-architecture.md), [docs/product-evolution-roadmap.md](docs/product-evolution-roadmap.md), and [docs/product-evolution-agent-guide.md](docs/product-evolution-agent-guide.md).
+- [docs/product-evolution-architecture.md](docs/product-evolution-architecture.md)
+- [docs/product-evolution-roadmap.md](docs/product-evolution-roadmap.md)
+- [docs/post-closure-product-staging-roadmap.md](docs/post-closure-product-staging-roadmap.md)
 
-PE-08 Product closure is CLOSED / PASS on PR #180. Product Evolution PE-00 through PE-08 is complete at the documented boundaries; no Batch 13 is opened. Native Windows portability hardening was merged through PR #182 after Windows-local verification plus CI #1477 and Product Eval #716 passed. Clean-checkout reproducibility then closed on PR #183: canonical formatting is committed and CI now validates source without a pre-format mutation; exact closure head passed CI #1482 and Product Eval #721. Fresh-clone Windows EOL closure then completed on PR #185: the three `.cmd` blobs were renormalized to canonical LF in Git while `.gitattributes` preserves CRLF in Windows working trees; PR CI #1486, Product Eval #725, Desktop Installer #76, and post-merge main CI #1487 / Product Eval #726 all passed.
+## Current separate / deferred boundaries
 
-The follow-on PCS-00..PCS-10 roadmap is also CLOSED / PASS. It delivered persistent Project chat/history, provider/model onboarding, Local runtime resilience, product visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, governed GitHub-to-staging CD, real-host hardening/reboot/backup/observability evidence, and final documentation convergence. Historical staging/DR revisions remain preserved in dated evidence. The repository/documentation reconciliation later closed through PR #354; actual Staging Deploy #1298 proved exact reconciliation merge `265a28d4c53cc482af8ea33a6362a21e640d30e5` on SumoPod. Later docs-only merges may advance the Git/staging SHA without changing the application/service/package trees. No new PE/PCS batch is active.
+The following remain separate explicit decisions:
+
+- **DR-2 checkpoint 2** physical-independence target selection and proof;
+- public production promotion/cutover;
+- native Google Drive integration;
+- broader Workspace registry / multi-user identity / final RBAC;
+- hosted-provider paid reruns / W18 freshness;
+- external A2A interoperability;
+- recursive agent graphs;
+- Flow/Temporal long-running ECX fan-out orchestration;
+- `full` multi-recipient merge semantics;
+- broad ECX/History UI;
+- automatic destructive Historical Ledger purge scheduling;
+- AutoClick / L4 autonomy.
+
+SumoPod is **verified staging, not production**.
+
+## Repository hygiene
+
+The original branch-hygiene program deleted its full historical **393/393** exact-SHA safe-delete set. Subsequent ECX work created a new bounded branch delta. That post-ECX delta is classified separately and must be exact-SHA revalidated before deletion; do not reuse the historical 9-branch inventory as a current claim.
+
+Current reconciliation:
+[docs/verification/repository-truth-reconciliation-2026-09-27.md](docs/verification/repository-truth-reconciliation-2026-09-27.md).
 
 ## Local development
 
-Requires Node 22.20.0 (from `.node-version`) and pnpm 10.28.0. Repository text is normalized by `.gitattributes` to LF, with `.cmd`/`.bat` kept CRLF.
+Requires Node 22.20.0 (from `.node-version`) and pnpm 10.28.0.
 
 ```bash
 pnpm install
@@ -86,9 +150,15 @@ cp .env.example .env
 pnpm dev
 ```
 
-## Production/self-host
+Repository text is normalized by `.gitattributes` to LF, with `.cmd` / `.bat` materialized as CRLF on Windows.
 
-Repository-side production/self-host tooling is ready and the SumoPod **remote staging** boundary is verified. The original total-SumoPod-host-loss Off-host DR drill is also CLOSED / PASS at its documented boundary, including independent retrieval, 12-volume restore, 15-service recovery, semantic canary checks, changed-boot-ID persistence, and final RPO/RTO closure evidence. **DR-2** remains the deferred follow-up for stronger physical-host/storage independence for the backup target and replacement compute. Public production promotion, final public edge/domain posture, provider/account-wide DR, and long-term telemetry retention remain separate explicit gates. See the staging, DR, production, and release runbooks under `docs/`.
+## Production / self-host
+
+Repository-side production/self-host tooling exists, but the proven runtime boundary is still **SumoPod staging**.
+
+The original total-SumoPod-host-loss Off-host DR drill is CLOSED / PASS at its documented boundary. **DR-2 physical independence is not yet proven** and public production promotion remains a separate explicit gate.
+
+See the staging, release, production, and DR runbooks under [docs/](docs/).
 
 ## License
 
