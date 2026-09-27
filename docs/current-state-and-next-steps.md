@@ -2,585 +2,235 @@
 
 Last updated: **2026-09-27**
 
-Status: **CURRENT / ECX RECIPIENT EXECUTION BATCH 1–7 CLOSED-PASS / A-11 + REPOSITORY RECONCILIATION CLOSED-PASS / BRANCH HYGIENE FINAL-CLOSED-LOCKED / DR-2 PHYSICAL INDEPENDENCE DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / REPOSITORY+STAGING CONVERGED / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Current verdict
-
-The original Batch/W/F6 baseline remains closed. Product Evolution PE-00 through PE-08 is also closed at the documented boundaries.
-
-**PE-00 through PE-08 are CLOSED / PASS. No Product Evolution batch is active.**
-
-## 2026-09-27 ECX Execution — Batch 7 closure
-
-Batch 7 — **Advanced execution/productization is CLOSED / PASS** through canonical PR #376. Exact reviewed head `198b46fa0eeb679dc7bfee78492f4c8739a7ed99` passed CI #2349, Product Eval #1588, and MCP External HTTPS Acceptance #1175, then merged to `main` as `e49af9225194d36e2ed8cbefeb7b4cf5c09dc485`. Merged-main CI #2350, Product Eval #1589, and MCP #1176 passed. Staging Deploy #1470 was gate-only; actual Staging Deploy #1471 deployed the exact merged SHA successfully as `staging-e49af9225194`.
-
-The closed boundary adds one coherent 2–8-recipient `delta` fan-out path. Child dispatch composes the existing Batch 2 execution receipt/idempotency primitive, Batch 3 handback semantics, and Batch 4 authority/result-isolation protections. Successful child results are validated and deterministically ordered, aggregate reply material is capped at **131,072 bytes** and hash-evidenced, hosted-parent eligibility is rechecked for every contributing local child, and the sender/parent is invoked **exactly once** for the aggregate continuation. A durable fan-out receipt provides replay/no-redispatch semantics and Workspace-scoped status, while Historical Ledger records bounded aggregate-return and parent-continuation provenance without becoming a second execution store.
-
-Runtime proof on Staging Deploy #1471 matched exact SHA `e49af9225194d36e2ed8cbefeb7b4cf5c09dc485`; public auth bootstrap and protected-route checks passed, MCP metadata/challenge checks passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **27.68 GiB free**.
-
-Batch 7 deliberately does **not** add external A2A interoperability, recursive agent graphs, Flow/Temporal fan-out orchestration, `full` multi-recipient merge semantics, default broadcast, a broad ECX/History UI, automatic Ledger purge scheduling, paid-provider/W18 reruns, DR-2, or production cutover. The **ECX Recipient Execution Batch 1–7 roadmap is CLOSED / PASS** at its documented boundaries; **no Batch 8 is implicitly opened**.
-
-Canonical final checkpoint: [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–7 unless a new explicitly authorized scope requires it.**
-
-## 2026-09-27 ECX Execution — Batch 6 closure
-
-Batch 6 — **Historical Ledger retention/compaction/migration is CLOSED / PASS** through canonical PR #374. Exact reviewed head `0ca40cd5f703b950997392967bd505e8271049be` passed CI #2338 and Product Eval #1577, then squash-merged to `main` as `32534adf140f66d3c97e47a0dd8162be2112800c`. Merged-main CI #2339 and Product Eval #1578 passed. Staging Deploy #1448 was gate-only; actual Staging Deploy #1449 deployed the exact merged SHA successfully as `staging-32534adf140f`.
-
-The closed boundary adds additive/restart-safe Hub DB lifecycle migration for Historical Ledger archive state, immutable gzip archive segments + EventId index, transparent archive+hot replay, preserved sequence/hash/EventId semantics, and fail-closed archive verification. Physical compaction moves only a verified contiguous old prefix under one immediate SQLite transaction while retaining the requested recent suffix hot; it does not rewrite logical history.
-
-Runtime proof on Staging Deploy #1449 matched exact SHA `32534adf140f66d3c97e47a0dd8162be2112800c`; public/auth and MCP smoke passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **29.89 GiB free**.
-
-Batch 6 deliberately does **not** add destructive logical-history expiration, automatic time-based purge scheduling, a new History/ECX UI, fan-out/A2A, Flow/Temporal long-running execution, Batch 5 metrics retention, or paid-provider benchmark work. **Batch 7 — Advanced execution/productization is NEXT / NOT STARTED.**
-
-Canonical safe-resume checkpoint: [verification/ecx-execution-b6-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b6-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–6, Historical Ledger core audits, branch hygiene, or historical W17/W18 evidence.**
-
-## 2026-09-27 ECX Execution — Batch 5 closure
-
-Batch 5 — **End-to-end observability, quality, economics is CLOSED / PASS** through canonical PR #371. Exact reviewed head `98fdf004e421778874a68be032fc69af9e48fad4` passed CI #2328, Product Eval #1567, MCP External HTTPS Acceptance #1166, and Desktop Installer #259, then squash-merged to `main` as `5b29c15b8878549ed47d6acf2349364f6ce4fc4a`. Merged-main CI #2329, Product Eval #1568, and MCP #1167 passed. Staging Deploy #1430 was gate-only; actual Staging Deploy #1431 deployed the exact merged SHA successfully as `staging-5b29c15b8878`. Alternate PR #372 was closed unmerged and introduced no second source of truth.
-
-The closed boundary preserves Connect-owned completion usage/cost/budget telemetry through ECX execution, projects real single-recipient round-trip model-call/token/actual-cost/byte/duration metrics through the existing Hub process-lifetime observability boundary, and adds deterministic offline quality/economics evidence over previously captured round-trip responses using the established exact JSON quality scorer. Successful replay does not double-count model-call/token/cost counters. The evidence path requires pinned model identity plus usage/actual-cost telemetry, rejects unsettled budget evidence when present, and deliberately does not infer savings from ECX packet/hydration byte reduction.
-
-Runtime proof on Staging Deploy #1431 matched exact SHA `5b29c15b8878549ed47d6acf2349364f6ce4fc4a`; public/auth and MCP smoke passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **27.72 GiB free**.
-
-Batch 5 deliberately does **not** add a durable observability/time-series database, rerun paid W18 for freshness, convert historical W18 into current-production claims, claim universal model quality/latency/savings, or open fan-out/A2A/new ECX UI/Flow-Temporal/retention scope. **Batch 6 — Historical Ledger retention/compaction/migration is NEXT / NOT STARTED.**
-
-Canonical safe-resume checkpoint: [verification/ecx-execution-b5-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b5-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–5, Historical Ledger core audits, branch hygiene, or historical W17/W18 evidence.**
-
-## 2026-09-27 ECX Execution — Batch 4 closure
-
-Batch 4 — **Security, isolation, result integration is CLOSED / PASS** through PR #370. Exact reviewed head `bba68607227a67080a26d4a000cf9dc73deadaef` passed CI #2314, Product Eval #1553, and MCP External HTTPS Acceptance #1153, then squash-merged to `main` as `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`. Merged-main CI #2315, Product Eval #1554, and MCP #1154 passed. Staging Deploy #1402 was gate-only; actual Staging Deploy #1403 deployed the exact merged SHA successfully as `staging-77986ccd1e4a`.
-
-The closed boundary adds explicit sender `agent.result.receive` authority before result handback, a 65,536-byte returned-result integration cap, trust/sensitivity metadata plus SHA-256/byte evidence, escaped untrusted result framing before parent continuation, exact owner-backed hosted-eligibility rechecks for the local child's selected refs before a hosted parent receives derived result content, and Workspace/scope/sensitivity checks for round-trip provenance sessions. Existing Batch 1/2 execution ownership and Batch 3 single-recipient `delta/full` semantics remain intact; legacy successful receipts without the Batch 4 envelope are not silently reinterpreted or re-dispatched.
-
-Runtime proof on Staging Deploy #1403 matched exact SHA `77986ccd1e4ab4dcc2f648478ea4e0e6f86ea4e1`; public/auth and MCP smoke passed, Operations reported `healthy: true` with zero unhealthy services, all **15/15** configured services were running, and post-deploy capacity stabilized at **29.94 GiB free**.
-
-Batch 4 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. At the Batch 4 checkpoint, Batch 5 was **NEXT / NOT STARTED**; that historical handoff is superseded by the Batch 5 closure above.
-
-Canonical safe-resume checkpoint: [verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b4-safe-checkpoint-2026-09-27.md). **Do not restart Batches 1–4, branch hygiene, Historical Ledger core, or historical ECX selector/economics audits.**
-
-## 2026-09-27 ECX Execution — Batch 3 closure
-
-Batch 3 — **Real Agent A -> Agent B round trip is CLOSED / PASS** through PR #368. Exact reviewed head `92f76e547c45c89f01f19159e7e373e101a592a0` passed CI #2304, Product Eval #1543, and MCP External HTTPS Acceptance #1145, then merged to `main` as `e784dde4ed891020e3c88712d4e660548a0e04c7`. Merged-main CI #2305, Product Eval #1544, and MCP #1146 passed. Staging Deploy #1382 was gate-only; actual Staging Deploy #1383 executed the exact reviewed main successfully.
-
-The closed boundary proves the first real single-recipient Agent A -> Agent B -> Agent A handback path above the Batch 1/2 primitive. `responseMode: delta` executes Agent B and then exactly one governed parent continuation through Connect; `responseMode: full` returns Agent B's standalone result directly to the sender boundary without a second parent provider call. Durable round-trip receipts preserve replay/idempotency, parent continuation duplicate-dispatch protection, Workspace-scoped status lookup, and bounded Historical Ledger result/continuation provenance without copying full reply text into operational events.
-
-Batch 3 deliberately does **not** implement multi-recipient fan-out/aggregation, external A2A interoperability, new ECX UI, Flow/Temporal long-running execution, Historical Ledger retention/compaction/migration, or universal quality/latency/cost claims. At the Batch 3 checkpoint, Batch 4 was **NEXT / NOT STARTED**; that historical handoff is superseded by the Batch 4 closure above.
-
-Canonical safe-resume checkpoint: [verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b3-safe-checkpoint-2026-09-27.md). **Do not restart Batch 1, Batch 2, Batch 3, or historical ECX selector/economics audits.**
-
-## 2026-09-27 ECX Execution — Batch 2 closure
-
-Batch 2 — **Execution Contract + Idempotency + Provenance is CLOSED / PASS** through PR #365. Exact reviewed head `890030465570826eaca9c21f27aa13b0eb821e76` passed CI #2294, Product Eval #1533, and MCP External HTTPS Acceptance #1137, then merged to `main` as `851d58788075e1f11735b4c23e947edf3304eabe`. Merged-main CI #2295, Product Eval #1534, and MCP #1138 passed. Staging Deploy #1361 was gate-only; Staging Deploy #1362 executed the exact reviewed main successfully.
-
-The closed boundary adds durable single-recipient execution receipts, request-fingerprint conflict detection, `STARTED | SUCCEEDED | FAILED | UNCERTAIN` lifecycle state, one-claim dispatch protection, successful-result replay without a second Connect call, fail-closed retry behavior for FAILED/UNCERTAIN receipts, Workspace-scoped status lookup, packet-linked `historySessionId`, and deterministic Historical Ledger execution lifecycle provenance. Historical Ledger remains chronological/replay evidence; Connect remains provider/runtime owner; the receipt is a bounded dispatch guard and not a second event store.
-
-Batch 2 deliberately does **not** implement multi-recipient/fan-out execution, result/delta merge into a parent agent, a full Agent A -> Agent B -> Agent A product round trip, long-running Flow/Temporal execution, A2A, new UI, or Ledger retention/compaction. **Batch 3 — Real Agent A -> Agent B round trip is NEXT / NOT STARTED.**
-
-Canonical safe-resume checkpoint: [verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b2-safe-checkpoint-2026-09-27.md). **Do not restart Batch 1, Batch 2, or historical ECX selector/economics audits.**
-
-## 2026-09-27 ECX Recipient Execution — Batch 1 closure
-
-ECX Recipient Execution **Batch 1 is CLOSED / PASS** through PR #363. Exact reviewed head `b82214a4487b4ed9e7c82ff7dadb507c0a08ae37` passed CI #2286, Product Eval #1525, and MCP External HTTPS Acceptance #1131, then merged to `main` as `82e9b4b887157b08abfdf04bc2793550e86d1b3e`. Merged-main CI #2287, Product Eval #1526, and MCP External HTTPS Acceptance #1132 passed. Staging Deploy #1345 was gate-only; Staging Deploy #1346 executed the deploy job successfully for the exact reviewed main SHA.
-
-The bounded implementation adds a Hub-owned durable ECX agent runtime-binding registry, first-class `agent` capability-authority subjects, binding-driven `model.invoke.local` / `model.invoke.hosted` declarations, binding list/upsert APIs, and `POST /v1/exchange/execute`. Execution resolves the recipient binding, verifies capability overlap, performs exact Hub authority authorization, derives hosted hydration eligibility from the binding rather than caller input, hydrates only through existing owner boundaries, and dispatches model inference through existing Connect `/v1/complete`. Connect remains provider/runtime owner and no new service or parallel execution authority was introduced.
-
-Batch 1 deliberately does **not** claim durable execution idempotency, execution lifecycle receipts, Historical Ledger execution-result events, multi-recipient execution, fan-out/aggregation, result merge semantics, or retention/compaction. Those remain outside this closure. The next approved roadmap slice is **Batch 2 — Execution Contract + Idempotency + Provenance**, but Batch 2 is **NOT STARTED** in this checkpoint.
-
-Canonical safe-resume record: [verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md](verification/ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md).
-
-## 2026-09-26 current repository + staging convergence
-
-Repository/documentation reconciliation is **CLOSED / PASS through PR #354**. Exact reviewed head `f356f00d643b017d0e9870142c71c597d281872f` passed CI #2262 + Product Eval #1501, then squash-merged as `265a28d4c53cc482af8ea33a6362a21e640d30e5`. Merged-main CI #2263 + Product Eval #1502 passed. Staging Deploy #1297 was gate-only; actual Staging Deploy #1298 deployed exact merge `265a28d4...` as `staging-265a28d4c53c`, with public/auth + MCP smoke PASS, Operations `healthy: true` and no unhealthy owner services, all 15 configured services running, clean detached exact-host identity, and final capacity stabilization at 25.11 GiB free.
-
-The A-series audit-follow-up sequence selected from the 2026-09-24 audit is closed through A-11, and the repository/documentation reconciliation is also closed. There is no active Product Evolution or A-series implementation batch and no automatically opened next audit scope. Issue #277 remains the deliberately deferred DR-2 tracker. The post-merge inventory immediately after PR #354 had 0 open PRs, 973 tracked files, 251 files under `docs/`, and 393 branch names including `main`; that historical inventory is superseded by the final branch-hygiene closure below.
-
-The sections below preserve chronological closure evidence. Older paragraphs that say “current runtime” refer to their dated checkpoint unless this top section explicitly supersedes them.
-
-Repository/documentation reconciliation evidence: [verification/repository-documentation-reconciliation-2026-09-26.md](verification/repository-documentation-reconciliation-2026-09-26.md).
-
-## 2026-09-27 branch hygiene final closure
-
-Branch hygiene is **FINAL / CLOSED / LOCKED**. Stage 1/2 deleted the first **354/354** exact-SHA branches; Stages 3–4 completed classification and retained-branch reconciliation; cleanup pass 2 then dry-ran and deleted the final **39/39** cleanup-ready branches with exact-SHA revalidation. The cumulative safe-delete set is now **393/393 absent**, with **7 retained branches** preserved.
-
-PR #361 exact head `316ba052baec2a4b7509e3761dd151a7fcf03f1c` passed CI #2276 + Product Eval #1515 and merged as `9e621680661f7128b9cfea930fd470472ed94381`. Merged-main CI #2277 + Product Eval #1516 passed. Staging Deploy #1325 was gate-only; actual Staging Deploy #1326 deployed exact `9e621680...` with public/auth + MCP smoke PASS, Operations healthy with zero unhealthy services, **15/15** configured services running, clean exact-host identity, and **29.92 GiB** stabilized free disk.
-
-Cleanup pass 2 ran as GitHub Actions run **36294553329** from execution head `ac13919d2ff9b7723038b22afd0b8111fdac8c25`: dry-run proved `would-delete=39`, `already-missing=354`, `hold=0`, `failed=0`, `skip=0`; APPLY proved `deleted=39`, `already-missing=354`, `hold=0`, `failed=0`, `skip=0`. Final remote inventory is exactly **9 branches = `main` + 7 retained + 1 checkpoint branch**, with **0 unexpected branches** and **0 safe-delete branches still present**.
-
-Canonical closure: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md). **No branch-hygiene work remains active. Do not rerun Stages 1–4 or repeat historical classification unless future remote branch changes create genuinely new work.**
-
-## 2026-09-24 current-main + staging parity audit
-
-The requested repository/product and repository-versus-staging audit is complete. No implementation scope was opened and no staging mutation occurred. Exact Git-tree comparison proves `apps/`, `services/`, and `packages/` are byte-tree identical between historical staging `52046db35e403babdda934881773c46bf2c57b68`, original-DR source `b27c1e5833be0a0fccf3f525d82ae8853cd22113`, and repository `main` at the audit baseline `4143adf2185e82d5c8713dc6c148ba828b104d07`. The audit therefore found no pending product-code deployment drift; later repository drift is operational DR tooling/docs/tests.
-
-The audit identified one CRITICAL source-level authentication defect plus several lower-priority findings. The CRITICAL general-Ai human-authentication gap is now **CLOSED / PASS at the SumoPod staging boundary** through PRs #293–#295. Final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0` passed CI run `35967561614`, Product Eval run `35967561587`, and governed Staging Deploy run `35967881224`. Real public acceptance proved the unauthenticated root redirects to a protected login bootstrap, representative Project/history/Brain/Space reads and chat/forget mutations fail with HTTP 401 + Basic challenge, MCP protected-resource metadata remains reachable, unauthenticated MCP remains OAuth-challenged, authenticated Operations is healthy, and exact-host evidence matches the deployed SHA. Closure evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
-
-Session 4 has now closed both remaining HIGH findings from that audit. A-12 (owner remote-bind without required authentication material) is CLOSED / PASS through PR #308 / merge `e4810e0d7980682028be67634fa430090fe9bf92`; A-01 (unbounded internal owner/service HTTP calls) is CLOSED / PASS through PR #309 / merge `2ee12fd454ade78ce1bf732390334726980e0451`. The current runtime is exact `2ee12fd...` after automatic Staging Deploy #821, with private-edge/MCP smoke PASS, healthy Operations, exact-host SHA match, all 15 configured services running, and post-retention capacity stabilization to `25.11 GiB` free. There are no remaining open CRITICAL/HIGH findings from the 2026-09-24 audit. The subsequently selected MEDIUM/product-gap follow-ups are also closed through A-11 at their documented bounded scopes; deferred provider-specific, multi-user, DR-2, hosted-spend, and production work remains separate.
-
-Original audit evidence remains preserved at [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md), with the pre-fix safe discussion boundary retained at [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md).
-
-### 2026-09-24 staging capacity recovery — SESSION 1 CLOSED
-
-The Docker-filesystem exhaustion incident is now recovered at the bounded host-recovery scope. The dirty worktree was backed up before reset, only reproducible BuildKit cache was pruned, root free space increased from about 11 GiB to about 20 GiB by `df -h`, the staging checkout was restored clean to the actual running reviewed SHA `b73e885d51e82716d5b29b3b31d207aae5ec95d0`, and current `origin/main` was fetched without moving the running runtime. The installed privileged deploy helper was refreshed from reviewed main and its SHA-256 matches the repository helper exactly.
-
-Runtime revalidation passed: public auth negative paths remain fail-closed, MCP/OAuth behavior remains correct, authenticated Operations reports `healthy: true` with no unhealthy services, and exact host evidence reports the expected reviewed SHA, detached clean worktree, all 15 configured services running, and the expected staging volumes present. Exact host evidence measured 19.2 GiB available, so the repository 20 GiB capacity guard remains mandatory for the next deployment and may still refuse a build if headroom falls below its exact threshold.
-
-The Session 1 closure handed off to Session 2 with staging CD disabled; that historical stop is preserved in the recovery evidence. Recovery closure: [verification/staging-capacity-recovery-closure-2026-09-24.md](verification/staging-capacity-recovery-closure-2026-09-24.md). Historical failure/safe-stop evidence remains preserved at [verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md](verification/staging-capacity-recovery-safe-checkpoint-2026-09-24.md).
-
-### 2026-09-24 Session 2 controlled convergence
-
-Session 2 has completed the controlled convergence half of the auto-deploy restoration scope. Exact current reviewed main `fad170645ba612b746453487dc97cc0e03cb05e7` deployed successfully to SumoPod staging as `staging-fad170645ba6` through the reviewed privileged deploy helper. Public auth negative paths, MCP/OAuth behavior, authenticated Operations, exact-host identity, all 15 configured services, and disk headroom (`27.51 GiB`) all passed.
-
-The repository variable is restored to `ECORIONE_STAGING_CD_ENABLED=1`. Governed workflow-dispatch run `35999280717` first proved the restricted SSH deploy path; automatic run `36000222819` then exposed a transient post-startup Operations-readiness race and correctly rolled back. PR #302 added bounded Operations-health readiness, the installed privileged helper was refreshed from reviewed main, and controlled convergence passed. Final true post-merge proof is now **CLOSED / PASS**: PR #303 merged as `59e86b5cf0269348b8db572da488e0c846f71a86`, merged-main CI #1997 and Product Eval #1236 passed, and automatic Staging Deploy run `36008243369` / #761 executed the deploy job through the least-privilege SSH path. Public/MCP checks passed, Operations was healthy with no unhealthy services, exact-host identity matched the reviewed SHA, all 15 configured services were running, and disk headroom was `24.03 GiB`. Session 2 is closed; GitHub -> SumoPod automatic staging deployment is restored. Evidence: [verification/staging-auto-deploy-restore-2026-09-24.md](verification/staging-auto-deploy-restore-2026-09-24.md).
-
-### 2026-09-24 Session 3 deployment pipeline audit
-
-Session 2 is CLOSED / PASS and automatic staging delivery is live. Session 3 source audit is complete and found five actionable pipeline hardening gaps: historical staging image accumulation, duplicate shared-image build/export work, weaker rollback verification than forward deployment, missing release-receipt/runtime identity consistency checks before mutation, and no steady-state post-deploy capacity target. A documentation drift finding is also being corrected. The dual CI/Product Eval workflow-run trigger is intentionally retained because it safely waits for whichever peer gate finishes second.
-
-The hardening merged in PR #305 as `53cd5d61dc87cf221b90fdde9a7b77d582e42ce0`. With automatic CD temporarily disabled, the privileged helper was refreshed from that exact reviewed main and controlled rollout passed: one shared image build, all 15 services running, public/MCP smoke PASS, Operations healthy, exact-host SHA match, current+rollback image retention, stale-image removal, bounded BuildKit cleanup, and 30.00 GiB post-deploy free space. The final true automatic post-merge proof is PASS: PR #306 merged as `977db6f4bb72acfb6f4601372de6dc82b9200995`, CI #2007 and Product Eval #1246 passed, and automatic Staging Deploy #781 executed the restricted SSH deploy job successfully. Exact-host identity matched, all 15 services were running, Operations was healthy, retention preserved current+rollback only, and final capacity stabilization reported 28.87 GiB free. Session 3 is CLOSED / PASS. Backup freshness per deployment remains a separately recorded deferred policy question rather than an implicit claim. Audit: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
-
-### 2026-09-25 Session 4 HIGH findings closure
-
-**Session 4 is CLOSED / PASS.** PR #308 closed A-12 by making non-loopback owner-service startup fail closed when `ECORIONE_INTERNAL_TOKEN` is absent. PR #309 closed A-01 by establishing a default 10-second internal HTTP deadline while preserving tighter caller-owned signals and adding deterministic stalled-upstream coverage.
-
-Exact safe runtime baseline was `2ee12fd454ade78ce1bf732390334726980e0451`. Merged-main CI #2027, Product Eval #1266, MCP External HTTPS #1030 and automatic Staging Deploy #821 passed. Runtime validation reported healthy Operations, no unhealthy required services, exact-host identity match, clean worktree, all 15 configured services running, and `25.11 GiB` free after retention/capacity stabilization.
-
-Safe resumable checkpoint: [verification/session-4-high-findings-safe-checkpoint-2026-09-25.md](verification/session-4-high-findings-safe-checkpoint-2026-09-25.md).
-
-### 2026-09-25 Session 5 A-13 closure
-
-**Session 5 is CLOSED / PASS.** PR #312 corrected Space's standalone/default Flow owner URL from `17029` to canonical `17028`, centralized the fallback in one resolver, preserved explicit overrides, and added deterministic owner-port contract coverage without changing the downstream Flow-linked/AI-linked resolution path or Compose configuration.
-
-Exact reviewed PR head `51a8a46c33dedd8d92b075b857ab21d47ad10325` passed CI #2032 and Product Eval #1271. Merge `d8d2a113c917cee87f2d43a5a2243eda2e4d2173` passed merged-main CI #2033 and Product Eval #1272. Automatic Staging Deploy #833 executed the real deploy job and passed on exact `d8d2a113...`: public/private auth and MCP checks passed, Operations reported healthy with no unhealthy services, exact-host identity matched with a clean worktree, no configured service was non-running, and final capacity stabilization reported `28.86 GiB` free.
-
-Safe resumable checkpoint: [verification/session-5-a13-safe-checkpoint-2026-09-25.md](verification/session-5-a13-safe-checkpoint-2026-09-25.md).
-
-### 2026-09-25 Session 6 A-02 closure
-
-**Session 6 is CLOSED / PASS.** PR #314 made the virtual Projects **All** entry functional as an aggregate metadata surface without creating a synthetic Project or weakening Project memory/source isolation. The same-origin history route now permits omitted `projectId` for workspace aggregate metadata, while explicit invalid Project IDs still fail closed. Recent conversations from All route through their owning real Project; unassigned/unavailable rows remain metadata-only.
-
-Exact reviewed PR head `ec8388df4361a94fee7eb63926e580a25e1acd4b` passed CI #2041, Product Eval #1280 and PCS-06 Integrated Browser Acceptance #41. Merge `591b54131c2d0b53532f33e08b878c15a0617951` passed merged-main CI #2042 and Product Eval #1281. Automatic Staging Deploy #851 deployed exact `591b5413...`: auth/MCP smoke passed, Operations reported healthy with no unhealthy services, exact-host identity matched, no configured service was non-running, and final capacity stabilization reported `27.81 GiB` free.
-
-Safe resumable checkpoint: [verification/session-6-a02-safe-checkpoint-2026-09-25.md](verification/session-6-a02-safe-checkpoint-2026-09-25.md).
-
-### 2026-09-25 Session 7 A-03 closure
-
-**Session 7 is CLOSED / PASS.** PR #316 reconciles persisted/query Project selection against the active Project list before Ai/Work/Brain bind owner state. Archived/missing candidates now fall back to active Personal, or the first active Project when Personal is unavailable. Ai drops a stale explicit session binding when Project correction occurs; Work and Brain wait for Project readiness before owner reads. The reconciled Project is persisted back to `ecorione.projectId` without merging Project memory/source scopes.
-
-Exact reviewed PR head `5d72d7455f1a8f945c904b4847659233e2240003` passed CI #2050, Product Eval #1289 and PCS-06 Integrated Browser Acceptance #47. The browser regression explicitly seeded `prj_archived` and passed reconciliation across Ai/Work/Brain without stale owner requests. Merge `8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e` passed merged-main CI #2051 and Product Eval #1290. Automatic Staging Deploy #869 executed the real deploy job on exact `8bbaf855...`: auth/MCP smoke passed, Operations reported healthy with no unhealthy services, exact-host identity matched, no configured service was non-running, and final capacity stabilization reported `25.10 GiB` free.
-
-Safe resumable checkpoint: [verification/session-7-a03-safe-checkpoint-2026-09-25.md](verification/session-7-a03-safe-checkpoint-2026-09-25.md).
-
-### 2026-09-25 Session 8 — Project settings + source onboarding
-
-**Session 8 is CLOSED / PASS at the implemented boundary.** A-04 Project settings and the currently authorized A-05 source slices are merged and live on staging.
-
-The sequence is PR #318 (Project settings), #319 (owner-backed source picker), #320 (direct file ingestion), #321 (Project-scoped extraction), #322 (URL snapshot ingestion), #323 (DNS-pinned URL-fetch hardening), and #324 (generic MCP/connector resource browse + snapshot ingestion). Final implementation main is `3dd350e938d3651e75fc81ac30e9ef751c477ca5`.
-
-PR #324 exact head `3d4ab01ad5ac42c6317567f0ef122e1c46a0ab11` passed CI `36107141520`, Product Eval `36107141692`, MCP External HTTPS `36107141555`, and PCS-06 Integrated Browser Acceptance `36107141502`. Merged main passed CI `36109640813`, Product Eval `36109640801`, and MCP External HTTPS `36109640848`. Automatic Staging Deploy `36109914350` executed the deploy job and successfully deployed exact reviewed main `3dd350e938d3651e75fc81ac30e9ef751c477ca5`.
-
-Current Project source behavior now supports owner-backed bindings, direct Artifact upload, separate Project-scoped extraction, hardened HTTPS URL snapshots, and browsing/ingesting concrete resources from a Project-bound MCP server. Connector snapshots remain `RESTRICTED + LOCAL_ONLY`; exact MCP resource reads require explicit `mcp.resource.read / mcp.read` authority and are audited. Project does not become byte storage owner and the ingestion paths do not synthesize chat/history.
-
-Safe resumable checkpoint: [verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md](verification/session-8-a05b3b-safe-checkpoint-2026-09-25.md).
-
-**A-05 closure decision is now explicit.** Generic MCP-resource ingestion is accepted as the Project connector boundary for this roadmap. Native Google Drive OAuth/onboarding is deferred as a separate future integration; recursive folder auto-ingestion is intentionally not introduced. Schedule A-06 is therefore the next authorized product scope, starting from the existing Trigger/Temporal backend rather than a scheduler rewrite. Evidence: [verification/session-9-a05-closure-decision-2026-09-25.md](verification/session-9-a05-closure-decision-2026-09-25.md).
-
-**A-06 Schedule is CLOSED / PASS.** A-06a closed calendar/navigation through PR #327 / merge `3b1abefd18263f7441d139e3435b064f83b142ea`. A-06b closed the remainder through PR #329 / merge `d182c5ec06be14de068b7c3911a0decffcc94d41`: searchable/autocomplete Project selection, inline `+ New Project`, and local AI-assisted natural-language Schedule create/edit drafting. The assistant only proposes a validated draft; Flow remains Trigger-definition owner, Temporal remains schedule truth, and explicit Save is still the mutation boundary.
-
-A-06b exact-head CI `36124634778`, Product Eval `36124634690`, PCS-06 rendered-browser `36124634717`, and MCP External HTTPS `36124634826` passed. Merged-main CI `36125055447`, Product Eval `36125055440`, and MCP External HTTPS `36125055159` passed. Staging Deploy `36125427040` then deployed exact implementation main `d182c5ec06be14de068b7c3911a0decffcc94d41` successfully with exact-SHA match, healthy Operations, preserved auth/MCP boundaries, and stabilized capacity.
-
-Safe resumable checkpoint: [verification/session-9-a06b-schedule-closure-2026-09-25.md](verification/session-9-a06b-schedule-closure-2026-09-25.md).
-
-**A-07 Brain scalable layout is CLOSED / PASS.** PR #331 / merge `13775e3903a74732162658292a8dd350a068de6b` replaces fixed-height lane compression with deterministic dynamic canvas height, preserves >=64px center spacing through the 50-Run boundary, adds contained pan/drag/zoom/reset controls, and keeps Brain a rebuildable projection of canonical owners. Exact-head CI `36131738117`, Product Eval `36131738109`, and PCS-06 `36131738174` passed; merged-main CI `36132291003` and Product Eval `36132290871` passed; automatic Staging Deploy `36132607599` deployed exact reviewed main successfully.
-
-Safe resumable checkpoint: [verification/session-9-a07-brain-scalable-layout-closure-2026-09-25.md](verification/session-9-a07-brain-scalable-layout-closure-2026-09-25.md).
-
-**A-08a richer canonical-owner Brain projection is CLOSED / PASS.** PR #333 / merge `461a9665584b5e3a47396663cd4220f21c62027c` adds first-class Artifact and Page nodes from already-authorized Project Source views. Source remains the binding node; canonical Artifact/Page IDs remain owned by Artifact/Space; Brain stays rebuildable and does not copy canonical state or create model-authored relationships. Exact-head CI `36141048119`, Product Eval `36141048146`, PCS-06 `36141048129`, and MCP External HTTPS `36141048157` passed; merged-main CI `36141655282`, Product Eval `36141655343`, and MCP External HTTPS `36141655291` passed; Staging Deploy `36142092154` deployed exact reviewed main.
-
-Safe resumable checkpoint: [verification/session-9-a08a-brain-owner-resources-closure-2026-09-25.md](verification/session-9-a08a-brain-owner-resources-closure-2026-09-25.md).
-
-**A-08b Context Fact projection is CLOSED / PASS.** PR #335 / merge `bc5601602e401bb0f4d19f567b4dd10c6388f94d` adds first-class Context-owned Fact nodes using stable `MemoryFact.id`. Hub authorizes the exact Project before Context reads; Context reads are bounded to `maxSensitivity=RESTRICTED` and max 40; sibling-Project Facts fail closed; Brain remains rebuildable and read-only. Exact-head CI `36147793139`, Product Eval `36147793105`, PCS-06 `36147793042`, and MCP External HTTPS `36147793068` passed. Merged-main CI `36148568175`, Product Eval `36148568188`, and MCP External HTTPS `36148568214` passed. Staging Deploy `36149034797` deployed exact reviewed main successfully.
-
-Safe resumable checkpoint: [verification/session-9-a08b-brain-context-facts-closure-2026-09-25.md](verification/session-9-a08b-brain-context-facts-closure-2026-09-25.md).
-
-**A-08c Fact provenance projection is CLOSED / PASS.** PR #338 / merge `0a36a041a4077e185cbc934723d7ca195c5f5fc5` adds deterministic `GENERATED_FROM` edges from Context Fact to Artifact only when `sourceUri` is an exact schema-valid `artifact:<ArtifactId>` and the corresponding Artifact node is already present from authorized Project Source state. No graph store, inference, semantic relationship guessing, or owner mutation was added. Exact-head CI `36156486474`, Product Eval `36156486661`, MCP External HTTPS `36156486439`, and PCS-06 `36156486530` passed; merged-main CI `36157146397`, Product Eval `36157146459`, and MCP External HTTPS `36157146498` passed; Staging Deploy `36157615400` deployed exact reviewed main.
-
-Safe resumable checkpoint: [verification/session-9-a08c-brain-fact-provenance-closure-2026-09-25.md](verification/session-9-a08c-brain-fact-provenance-closure-2026-09-25.md).
-
-**A-08d Embedded Brain grounded assistant is CLOSED / PASS.** PR #341 / merge `1f25f32cdbb0bfd6dc043491f7668df6bc1795cb` adds a local-only selected-node Brain assistant by reusing the canonical Ai -> Hub -> Context -> Connect chat path. Exact authorized Fact IDs and URL Source URIs narrow Context candidates only after normal authorization; grounded turns do not silently fall back to wider Project Core Memory or broad Artifact pointers; no second chat/history system or direct Brain model endpoint was added. PR-head CI #2199, Product Eval #1438, PCS-06 #155, and MCP #1120 passed; merged-main CI #2200, Product Eval #1439, and MCP #1121 passed. The actual post-gate Staging Deploy #1172 deployed exact `1f25f32...` successfully with healthy Operations, all 15 configured services running, exact-SHA match, preserved auth/MCP checks, and 25.03 GiB free. Safe closure evidence: [verification/session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md](verification/session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md).
-
-**A-08 is CLOSED / PASS at its implemented boundary, with the two remaining speculative expansions explicitly DEFERRED.** Connector/resource hierarchy is deferred because the current Connect/MCP resource contract exposes stable authorized resource `uri` values but no canonical parent/child relationship. Core Memory Brain representation is deferred because Context exposes label/project lookup semantics but no canonical Core Memory block ID. Brain therefore does not infer URI hierarchy or invent IDs from labels/text. Evidence: [verification/session-9-a08-remainder-closure-decision-2026-09-26.md](verification/session-9-a08-remainder-closure-decision-2026-09-26.md).
-
-**A-09 frontend maintainability/decomposition is CLOSED / PASS.** PRs #344–#348 established explicit decomposition boundaries across Flow, Ai chat, Settings, Work, and Space. Owner/API orchestration remains in the owning page/controller boundary; extracted presentation/model modules are regression-guarded against becoming hidden owner/API layers. Final product main and proven staging runtime are `3c9279a21ec441ab9fe5ec95583c946a238ccc43`. Merged-main CI #2228 and Product Eval #1467 passed. Staging Deploy #1227 was gate-only with deploy skipped; actual Staging Deploy #1228 deployed the exact SHA and passed public/auth + MCP smoke, healthy Operations, exact-host identity, 15/15 configured services running, and 27.69 GiB stabilized free space. There is no unmerged product implementation work. Safe A-09 closure evidence: [verification/session-9-a09-frontend-decomposition-closure-2026-09-26.md](verification/session-9-a09-frontend-decomposition-closure-2026-09-26.md).
-
-**A-10 Compose readiness/health is CLOSED / PASS.** PR #350 merged as exact implementation main `710127d66218e4d2e8ed23ddbc485b80b8769f6b`. Existing owner `/healthz` contracts plus a shallow Ai `/api/healthz` probe are now represented in production/desktop Compose; Temporal readiness uses its canonical cluster-health `SERVING` probe; required dependency edges wait on `service_healthy` without introducing a readiness cycle or a worker health owner. Final reviewed head passed CI #2233, Product Eval #1472, PCS-06 #177, and Desktop Installer #246. Merged-main CI #2234 and Product Eval #1473 passed. Actual Staging Deploy #1240 proved exact-SHA rollout with health-aware startup sequencing, healthy Operations, zero unhealthy services, 15/15 configured services running, clean exact-host identity, preserved auth/MCP boundaries, and 29.88 GiB stabilized free space. **A-11 remains separate and is not opened automatically.** Safe closure evidence: [verification/session-10-a10-compose-readiness-closure-2026-09-26.md](verification/session-10-a10-compose-readiness-closure-2026-09-26.md).
-
-**A-11 personal-workspace-first limitation is CLOSED / PASS.** PR #352 removed page/controller-owned Personal Workspace decisions behind one validated browser Workspace context while retaining Personal as the V1 compatibility default. Final reviewed head `173ba037182ca999f93c22942c564cff08d8ab6c` passed CI #2255, Product Eval #1494, and PCS-06 #195. Squash-merged implementation main `38fa0b8563a0f73fb44b1705e4f0e1418d8a23c5` passed merged-main CI #2256 and Product Eval #1495. Staging Deploy #1283 was the expected gate-only run; actual Staging Deploy #1284 deployed exact implementation main and passed public/auth + MCP smoke, healthy Operations with zero unhealthy services, exact-host clean-detached identity, 15/15 configured services running, and 27.66 GiB stabilized free space. This closes the browser assumption only; Workspace registry/switcher, provisioning, memberships, multi-user identity/auth redesign, new ownership/persistence, native Drive, hosted spend, DR-2, and production cutover remain separate. Safe closure evidence: [verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md](verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md).
-
-**Operator-observed mobile staging note:** on 2026-09-26, an iPhone browser session could authenticate but leave the root `/` bootstrap visually blank, while opening the protected `/flow` route directly with the same Basic-Auth credential loaded the application successfully. This is recorded as a bounded staging UX observation, not yet a generalized browser root-cause claim. No auth/runtime code change is authorized by this documentation reconciliation.
-
-## DR-2 physical independence — CHECKPOINT 1 CLOSED / CHECKPOINT 2 DEFERRED
-
-Issue #277 opens a new additive infrastructure scope after the original Off-host DR runtime closure. The closed Issue #266 claim remains unchanged: total loss of the tested SumoPod staging host is recoverable at its documented boundary.
-
-DR-2 addresses the remaining caveat that the previous backup-target WSL distro and replacement-host WSL distro shared one physical Windows machine. Checkpoint 1 repository foundation is now CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca8454511405a68424f0b7`, with exact-head CI #1913, Product Eval #1152, MCP External HTTPS #1011, and Desktop Installer #197 PASS, followed by merged-main CI #1914, Product Eval #1153, and MCP External HTTPS #1012 PASS.
-
-Checkpoint 2 is now deliberately deferred by operator decision. No external target has been selected or contacted; no paid infrastructure, fresh-generation export, or new recovery drill has started. The interim backup posture is local backup only. An encrypted Google Drive copy is allowed later as an optional secondary off-device copy, but it is not yet a selected/validated DR-2 target.
-
-The repository-side checkpoint-2 selection package is prepared and records eligible/ineligible target classes, the required non-secret operator decision, strict SSH custody/trust acceptance, and the safe stop boundary. This preparation does **not** select a target and does not close checkpoint 2. It remains the safe resume point if DR-2 is restarted later. Evidence: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md).
-
-Plan: [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md).
-
-Safe checkpoint: [verification/offhost-dr2-safe-checkpoint-2026-09-23.md](verification/offhost-dr2-safe-checkpoint-2026-09-23.md). This records the exact resumable repository state after PR #283/#284, with DR-2 checkpoint 2 deferred and no external/runtime mutation in flight.
-
-## Off-host DR runtime checkpoint — 2026-09-22
-
-Real-host execution has moved beyond repository-only preparation.
-
-The governed staging source selected for the now-closed original DR drill was exact SHA `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`. Three real encrypted off-host generations for that identity are retained on the independent SSH target; the fixed retained-generation audit reports `complete_generations=3`, `incomplete_generations=0`, and `retention_ready=1`.
-
-The audit evidence path itself exposed one runtime tooling bug: SSH inside the manifest `while read` loop consumed the loop stdin. PR #267 fixed that with `ssh -n`; the fix was exercised from an isolated worktree and proved all three retained generations complete without moving the application runtime.
-
-A genuinely clean replacement environment now exists as the separate WSL2 distro `ecorione-recovery`. It has native Docker/Compose, Node 22, Git, an initially empty Docker inventory, the pinned PostgreSQL helper image, and a clean detached checkout at exact source SHA `b27c1e...`. A dedicated recovery SSH key with pinned target host trust passes strict access to the independent backup target. The RSA DR private key and required deployment/operator secrets were recovered from separate operator-controlled sources and installed only on the clean recovery host as mode-0600 inputs.
-
-Generation `ecorione-dr-20260922152938-b27c1e5833be.receipt.env` is selected for the drill. Its immutable loss marker was created at `2026-09-22T16:21:58.074Z`. From that marker onward the SumoPod source is treated as unavailable for this drill.
-
-The first marker-bound fetch exposed a second repository tooling bug: the fetch helper shell-quoted a remote path even though modern OpenSSH `scp` uses SFTP by default, causing literal quote characters to be interpreted as part of the filename. Independent target inventory and a direct strict-SCP probe proved generation #3 is present and readable. PR #268 fixed the SFTP-safe path and made artifact fetch failures fail fast; exact head `df6381783d00a5b607438032c22afb3775a6a9d7` passed CI #1881 + Product Eval #1120 and merged as `bfca380ec12d30fe833b02011494e18988ec8807`; merged-main CI #1882 and Product Eval #1121 also passed.
-
-The exact-source application checkout must remain at `b27c1e...`. The newer fetch compatibility fix may be run only from an isolated temporary worktree; it does not change the recorded application source identity.
-
-The full off-host DR runtime drill is now **CLOSED / PASS** at the documented SumoPod host-loss boundary. Marker-bound independent retrieval, isolated decrypt/content verification, clean-host preflight, all 12 real project-volume restores, exact-source 15-service loopback startup, semantic canary, protected-route/MCP smoke, authenticated Operations, exact-host evidence, changed Linux boot ID, preserved project volumes/Connect fingerprints after reboot, and final marker-bound closure evidence all passed. Final measured drill values are `conservativeRpoSeconds=3147`, `retrievalReadyRtoSeconds=3138`, `dataReadyRtoSeconds=5582`, `applicationReadyRtoSeconds=30042`, and `finalRecoveryRtoSeconds=71523`. These are one-drill measurements, not an SLA. The tested recovery target and replacement compute were separate WSL distros on the same Windows machine, so physical-machine/disk independence is not claimed.
-
-Runtime checkpoint evidence: [verification/offhost-dr-runtime-checkpoint-2026-09-22.md](verification/offhost-dr-runtime-checkpoint-2026-09-22.md).
-
-## Latest-main staging convergence closure — 2026-09-22
-
-The bounded latest-main staging-convergence scope is CLOSED / PASS at the runtime boundary.
-
-Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as `staging-52046db35e40`. Both workflow jobs passed. Public smoke, authenticated Operations health, MCP protection checks, sanitized exact-host identity, and final PCS-08 deploy validation passed. The host evidence reported `headSha == expectedSha`, `healthy: true`, and no unhealthy owner services.
-
-That convergence checkpoint established `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40` at the time. It is now historical: subsequent governed DR runtime activation established exact staging source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, which became the source identity selected by the later, now-closed original recovery drill.
-
-The reviewed deploy orchestrator writes the non-secret release receipt only after public/Ops/exact-host validation succeeds and emits its final PASS after that write, so the successful run proves the receipt path completed for the deployed SHA/tag.
-
-This convergence did not rerun the full VPS reboot or same-host cold-backup acceptance on the new SHA. That statement is historical: the later Off-host DR runtime drill subsequently CLOSED / PASS for total SumoPod staging-host loss at its documented boundary. DR-2 physical independence is now the separate deferred follow-up scope; production promotion, public-edge activation, paid-provider evidence, and long-term external telemetry retention remain separate deferred boundaries.
-
-Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
-
-## Off-host Backup & DR — CLOSED / PASS
-
-Checkpoint 1 repository foundation is CLOSED / PASS through PR #250 / merge `3c5417dd44099f6c74f0bc832f4631e3fa295c8d`. Exact merged-main CI #1766, Product Eval #1005, and MCP External HTTPS #922 passed. Staging Deploy #308/#309 passed their gates and skipped deployment because activation remained disabled.
-
-Checkpoint 2 is CLOSED / PASS at the repository execution/recovery-tooling boundary through PR #251 / merge `768c0f617064343f0bfc569d52212c80a03f0b83`. Checkpoint 3 is CLOSED / PASS at the repository boundary through PR #252 / merge `9e522e62212b5a4170ad4947c4bdd75c28f34464`; it adds a standalone replacement-host boundary with clean-host preflight, loopback-only Caddy policy edge, local MCP/security smoke, loopback authenticated Operations, and post-reboot repeat evidence without relying on SumoPod Traefik, public DNS, or public TLS.
-
-Checkpoint 4 adds two read-only pre-mutation gates: source-host readiness binds the active release receipt, exact Git/image identity, PCS-09 strict inventory, running services, volume footprint, and local backup headroom; independent-target readiness binds strict SSH trust/custody plus a remote free-space floor derived from that exact source footprint. Neither gate creates a backup or uploads an artifact.
-
-Checkpoint 4 repository implementation is CLOSED / PASS through PR #254 exact head `5245be4a7f0874d57b9b89e4e587aa79db90f8cf` and merge `2d0ce4f871eb828d421d87bf15b244542a661246`. Exact-head CI #1843, Product Eval #1082, MCP #991, and Desktop Installer #180 passed. Merged-main CI #1844, Product Eval #1083, and MCP #992 passed. Staging Deploy #456/#457 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
-
-The source host still needs only an RSA-3072+ public key for the later export. The private DR key stays out-of-band and is required only on the recovery side.
-
-Checkpoint 5 adds a read-only remote generation audit and a deterministic sanitized closure-evidence generator. The target audit verifies retained manifest/artifact modes, stems and remote hashes without upload/delete/rename; checkpoint 6 then replaces checkpoint 5's free-form loss-time input with an immutable mode-0600 loss-marker receipt bound to the selected retained generation. Final closure evidence computes conservative RPO plus retrieval/data/application/final RTO milestones from that marker-bound receipt chain.
-
-Checkpoint 5 repository implementation is CLOSED / PASS through PR #256 exact head `7c1c8948022fc81e0c640fff7a8bcb7e4e689db3` and merge `941cb8c9ed237a5417550449c7d73e712b10ba72`. Exact-head CI #1850, Product Eval #1089, MCP #996, and Desktop Installer #184 passed. Merged-main CI #1851, Product Eval #1090, and MCP #997 passed. Staging Deploy #468/#469 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
-
-Checkpoint 6 removes the free-form timing input from DR closure. A mode-0600 immutable loss-marker receipt now records current recovery-host UTC time, drill UUID, and selected export-manifest filename before fetch; closure evidence must bind to that marker and records its SHA-256.
-
-Checkpoint 7 moves that marker from a final-evidence-only input into the actual recovery gate. Independent fetch now requires the exact marker before the first SCP, writes marker identity/hash plus retrieval-start time into the retrieval receipt, restore rejects unbound retrieval evidence, acceptance propagates the same chain, and final closure cross-checks all receipts against the actual marker file.
-
-Checkpoint 7 repository implementation is CLOSED / PASS through PR #263 exact head `ba7ef7d6922c0177be582d5734095ed154f72622` and merge `cf8921f19a5c78db2d3d2fd075ac232983a0bbb4`. Exact-head CI #1870 and Product Eval #1109 passed. Merged-main CI #1871 and Product Eval #1110 passed. Staging Deploy #504/#505 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
-
-Checkpoint 6 repository implementation is CLOSED / PASS through PR #258 exact head `b8379a2c756e2e4ea3e00424c360072b6a910829` and merge `cb043b47a2c899e3c0585b06db4992fcc727c723`. Exact-head CI #1857, Product Eval #1096, MCP #1001, and Desktop Installer #188 passed. Merged-main CI #1858, Product Eval #1097, and MCP #1002 passed. Staging Deploy #480/#481 kept deploy skipped, so repository closure did not move the proven SumoPod runtime.
-
-The repository-only checkpoint non-claims above are now superseded by real runtime closure at the documented boundary: source/target readiness, three-generation retention, immutable marker, independent retrieval, isolated verification, 12-volume restore, exact-source startup, pre/post-reboot acceptance, changed-boot-ID persistence, and sanitized closure timing evidence all passed. Total loss of the SumoPod staging host is therefore proven recoverable for this tested generation and topology, subject to the documented same-Windows-host and secret-custody caveats.
-
-Runbook: [offhost-dr-recovery.md](offhost-dr-recovery.md).  
-Checkpoint 1 evidence: [verification/offhost-dr-checkpoint-1-2026-09-22.md](verification/offhost-dr-checkpoint-1-2026-09-22.md).  
-Checkpoint 2 evidence: [verification/offhost-dr-checkpoint-2-2026-09-22.md](verification/offhost-dr-checkpoint-2-2026-09-22.md).  
-Checkpoint 3 evidence: [verification/offhost-dr-checkpoint-3-2026-09-22.md](verification/offhost-dr-checkpoint-3-2026-09-22.md).  
-Checkpoint 4 evidence: [verification/offhost-dr-checkpoint-4-2026-09-22.md](verification/offhost-dr-checkpoint-4-2026-09-22.md).  
-Checkpoint 5 evidence: [verification/offhost-dr-checkpoint-5-2026-09-22.md](verification/offhost-dr-checkpoint-5-2026-09-22.md).  
-Checkpoint 6 evidence: [verification/offhost-dr-checkpoint-6-2026-09-22.md](verification/offhost-dr-checkpoint-6-2026-09-22.md).  
-Checkpoint 7 evidence: [verification/offhost-dr-checkpoint-7-2026-09-22.md](verification/offhost-dr-checkpoint-7-2026-09-22.md).
-
-## Historical operator decision that opened PCS — 2026-09-20
-
-The operator approved a post-closure scope after real browser use on a clean local checkout. That scope is now fully closed through PCS-10; this section preserves what was authorized and does not describe an active queue. It did not reopen PE-00..PE-08 and was not Batch 13.
-
-The now-closed scope is documented in [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md) and covered:
-
-- persistent Ai conversation/session history across navigation;
-- simpler provider/API-key onboarding with technical controls moved behind Advanced surfaces;
-- OpenRouter user-facing model selection plus a governed/recommended pinned route;
-- local AI reachability detection with Ollama remaining optional rather than required;
-- product-wide visual/information-architecture cleanup;
-- closure of observed Flow runtime/query/authority failures;
-- integrated real-browser regression;
-- operator-owned SumoPod deployment as **remote development/staging**;
-- GitHub `main` as source of truth with verified GitHub-to-staging deployment, health checks, and rollback;
-- staging persistence, HTTPS/auth, backup, and observability before any production-promotion decision.
-
-Production public cutover remains a separate gate. Remote staging approval must not be mislabeled as production evidence.
-
-## PCS-00 baseline lock — CLOSED / PASS
-
-PCS-00 starts from synchronized reviewed `main` commit `93c5312d73289305d3e16ff79c5457a5010d0b19`, the merge of PR #188. Its reviewed roadmap head `c4088bd04298d42809b7b012b353d2e977e7a931` passed CI #1490 and Product Eval #729.
-
-The baseline preserves the closed owner/security architecture and makes exact-head verification mandatory for subsequent PCS product changes. PR #189 exact head `f58311ae30beef877f0c38962bcf4b1aefe91917` passed CI #1492 + Product Eval #731 and merged as `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`. PCS-00 is **CLOSED / PASS**. Evidence: [verification/pcs-00-baseline-lock-2026-09-20.md](verification/pcs-00-baseline-lock-2026-09-20.md).
-
-## PCS-01 chat continuity/history — CLOSED / PASS
-
-PR #191 exact head `9445b30c659628e1d551191219d0b7cd5ccf2f7c` passed CI #1505 + Product Eval #744 and merged as `ee363c055944b27b549a2f061105eea35fa25f9e`.
-
-Ai now preserves active sessions per Project, reopens exact canonical Historical Ledger conversations, exposes explicit New chat/history navigation, and enforces Workspace + Project binding on single-session History reads. No parallel history database was added. Integrated live-browser regression subsequently closed under PCS-06.
-
-Evidence: [verification/pcs-01-chat-continuity-2026-09-20.md](verification/pcs-01-chat-continuity-2026-09-20.md).
-
-## PCS-02 provider onboarding + hosted model choice — CLOSED / PASS
-
-PR #193 exact head `45dbe9365b23dfa3398a4726a26f9a245bd09e9d` passed CI #1516 + Product Eval #755 and merged as `0fba6842f4c39f2742eb6d518e63c90d1a4883db`.
-
-Settings now provides provider cards, transient key testing before encrypted save, automatic route activation, verified hosted model selection, and an explicit Governed / Recommended choice. Technical runtime/Vault/MCP controls remain behind Advanced settings. Connect remains the sole provider credential/runtime/model authority; RESTRICTED routing can still override user model choice according to policy.
-
-Evidence: [verification/pcs-02-provider-onboarding-2026-09-20.md](verification/pcs-02-provider-onboarding-2026-09-20.md).
-
-## PCS-03 Local AI resilience/runtime discovery — CLOSED / PASS
-
-PR #195 exact head `5be1c68f7b345d5e7d433a9eed302000ffe552a1` passed CI #1525 + Product Eval #764 and merged as `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`.
-
-Connect now exposes explicit Local runtime/model readiness, transient candidate discovery before persistence, optional runtime-backed digest resolution, and fail-closed identity mismatch handling. Settings treats no local runtime as a supported state and keeps Ollama optional. Ai blocks a Local route already known to be unavailable rather than sending a predictable 502, and does not silently fall back to Hosted.
-
-Evidence: [verification/pcs-03-local-ai-resilience-2026-09-20.md](verification/pcs-03-local-ai-resilience-2026-09-20.md).
-
-## PCS-04 Product visual + information-architecture cleanup — CLOSED / PASS
-
-PR #197 exact head `ec4ed1508cb7ab72fb9d86f15ec3541c2caf80f5` passed CI #1529 + Product Eval #768 and merged as `8a328ae0c0abeb039866ac40068a9053c4796659`.
-
-The product navigation now distinguishes Core, Workspace, and Advanced surfaces; shared control/native-select behavior is more consistent; Projects/Work/Brain use a clearer hierarchy; advanced surfaces have improved technical-text readability; and Ai exposes concrete route/provider/model state instead of only abstract Local/Hosted labels. Backend ownership and routing semantics were unchanged.
-
-Evidence: [verification/pcs-04-visual-ia-closure-2026-09-20.md](verification/pcs-04-visual-ia-closure-2026-09-20.md).
-
-## PCS-05 Flow runtime defect closure — CLOSED / PASS
-
-PR #199 exact head `d7eb37e8b5e97da07895fcd050621e563a47359b` passed CI #1537 + Product Eval #776 and merged as `f58923b8261104c8aec331f506a68f8cf5fe5e7e`.
-
-Flow now registers graph-state query/signal handlers before its first awaited lifecycle activity, preflights exact `node.execute` standing authority before Temporal start, and exposes an explicit version-bound **Prepare authority** flow backed by the existing Hub `POLICY_ADMIN` durable approval path. Missing authority fails before Temporal start with an actionable error, while runtime execution still re-authorizes each node and therefore remains fail-closed after grant revocation. No auto-grant or second execution/authority plane was introduced.
-
-Evidence: [verification/pcs-05-flow-runtime-closure-2026-09-20.md](verification/pcs-05-flow-runtime-closure-2026-09-20.md).
-
-## PCS-06 Integrated browser/regression acceptance — CLOSED / PASS
-
-PR #201 exact head `0dfdda92e0bef800ca9a7563223b7423aa9b1299` passed CI #1553 + Product Eval #792 + PCS-06 Integrated Browser Acceptance #13 and merged as `0a8f7619567500acaec0758c400d529367baf0e5`.
-
-The production Next.js UI is now exercised in Chromium across Ai, Projects, Work, Brain, Space, Flow, Operations, and Settings. The acceptance covers canonical conversation replay/continuity, explicit Local-unavailable state, provider onboarding/model selection, theme and narrow layout behavior, console/page-error and page-overflow checks, and Flow Save -> governed authority preparation -> explicit approval -> Run -> completed state. API/provider responses are deterministic same-origin fixtures and external HTTP(S) requests fail the gate, so this evidence does not claim live provider quality, latency, or staging behavior.
-
-Evidence: [verification/pcs-06-integrated-browser-closure-2026-09-20.md](verification/pcs-06-integrated-browser-closure-2026-09-20.md).
-
-## PCS-07 SumoPod remote staging deployment — CLOSED / PASS
-
-The actual SumoPod staging host is deployed and healthy at reviewed SHA `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`. All configured staging services are running in the isolated `ecorione-staging` Compose project; sanitized host evidence matched the expected SHA with a clean worktree and mode-0600 deployment env. Public HTTPS home returned 200, `/ops` and `/settings` remain 401 without operator credentials, authenticated `/api/ops` reported `healthy: true` with no unhealthy required services, MCP protected-resource metadata returned 200, and a valid unauthenticated MCP request returned the expected 401 Bearer challenge. PR #208 then corrected the malformed public-smoke verifier and merged as `59430c4b72a704d1fd6c6176d12b13fa27ddf674` after CI #1581 + Product Eval #820.
-
-The final real-browser governed staging journey also passed: the browser exposed the Flow authority requirements, explicit approvals moved the graph to Execution authority ready, and the final Trigger-only v2 revision ran with `core/trigger/v1` granted, Trigger `SUCCEEDED`, and run `COMPLETED` without a paid provider call. PCS-07 is therefore CLOSED / PASS at the staging-deployment boundary. Evidence: [verification/pcs-07-sumopod-host-closure-2026-09-20.md](verification/pcs-07-sumopod-host-closure-2026-09-20.md).
-
-## PCS-08 GitHub -> staging continuous deployment — CLOSED / PASS
-
-The merged PR #210 repository implementation provides a least-privilege GitHub-to-SumoPod path: exact current `main` must have successful CI + Product Eval push runs, then a protected `staging` Environment may invoke a dedicated SSH key whose server-side forced command accepts only `deploy <40-char SHA>`. The host independently verifies that SHA against freshly fetched `origin/main`, serializes deploys, runs preflight, deploys a unique immutable staging image tag, requires all configured services running, public HTTPS smoke, authenticated `/api/ops`, and exact-host evidence, then records current/previous SHA + image tag. A failed post-deploy gate attempts runtime rollback and still leaves the GitHub deployment failed.
-
-The deploy account is not added to the Docker group, the workflow uses strict known-host verification rather than `ssh-keyscan`, and there is no blind polling `git pull` loop. Repository runbook: [staging-continuous-deployment.md](staging-continuous-deployment.md). PR #210 exact head `4a5fa9d9d776eae3895a8e0b8e6b73013e3f476f` passed CI #1613 + Product Eval #852 and merged as `652588e00dca5a04c8b39081fb6574a3db508ba1`. Repository-preparation evidence: [verification/pcs-08-repository-preparation-2026-09-20.md](verification/pcs-08-repository-preparation-2026-09-20.md). At that repository-preparation checkpoint, PCS-08 remained ACTIVE. The real SumoPod host bootstrap now passes from reviewed `main` merge `74c76fa2685333db3a59b04d0ca34554f8e9fcf0`: dedicated `ecorione-deploy` exists, is not in the Docker group, the sudoers policy parses, control files are root-owned, the known-good live checkout remained `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae`, and public home/`/ops` remained 200/401. The dedicated key now also passes a fail-closed workstation test: interactive/no-command SSH and arbitrary `whoami` were both denied by the forced-command boundary with exit code 126. The protected GitHub `staging` Environment is now configured. First governed deploy run #35529468459 exercised the real mutation/rollback path against exact `main` `38d1bc057827ddd702d603d49bc0cad629d90c5f`: the target image built and services recreated, but an immediate public smoke saw transient 502 before the edge was ready; rollback recreated the prior `99523b0...` runtime, whose immediate one-shot verification hit the same transient 502. Independent host verification afterwards proved recovery at `99523b0...`, 15/15 services, home 200/TLS 0, and `/ops` 401. Activation returned to `0`. PR #214 added bounded public-edge readiness waiting, passed CI #1628 + Product Eval #867, merged as `0b50a426ca2b14202eba769297af6c15a579b09f`, and its main push passed CI #1629 + Product Eval #868. The host deploy control was refreshed from exact reviewed merge `0b50a426ca2b14202eba769297af6c15a579b09f` without moving the live checkout. Controlled retry run #35531374454 then PASSed end-to-end: readiness attempts 1–3 observed transient home 502 while `/ops` was already 401, attempt 4 reached home 200 + `/ops` 401, full public smoke passed, authenticated `/api/ops` reported healthy with no unhealthy required services, and exact-host evidence matched `0b50a426...` with all 15 services running and a clean detached worktree. The release receipt matched the successful exact-main deploy. A deliberate controlled rollback then PASSed to `99523b0bb29ce11a74ec61c0e364ef5b6dd543ae` / `staging-99523b0`: readiness reached home 200 + `/ops` 401 on attempt 5, all 15 services ran, authenticated `/api/ops` was healthy, and exact-host evidence matched the rollback SHA with a clean detached worktree. Because that historical checkout contains the known pre-PR-208 malformed MCP smoke request, rollback public verification used the reviewed current smoke verifier from exact `0b50a426...` without changing the rolled-back runtime; it passed the valid MCP 401 challenge. No data rollback was performed or claimed. Restore run #35553612685 then PASSed through the same governed GitHub CD path back to exact `main` `0b50a426ca2b14202eba769297af6c15a579b09f`: public readiness reached home 200 + `/ops` 401 on attempt 5, full public smoke passed, authenticated ops health remained healthy, exact-host evidence matched the restored SHA, and all 15 configured services were running. Automatic CD was then frozen to `0`. Final independent host verification matched the restored release receipt (`0b50a426...` / `staging-0b50a426ca2b`), exact HEAD and runtime image, 15/15 running services, home 200/TLS 0, `/ops` 401, clean worktree, and exact-host evidence PASS. PCS-08 is therefore **CLOSED / PASS**. Restart persistence, backup/restore, SSH hardening, and staging observability subsequently closed under PCS-09.
-
-## PCS-09 staging persistence/security/backup/observability — CLOSED / PASS
-
-PR #216 exact head `0bf1414859d4bf573f1ebc46ad6286b125ca1f38` passed CI #1664 + Product Eval #903 and squash-merged as `acd050139f8d5db0dcdadeb8c072ab6432100f0f`. Exact merged-main CI #1665 + Product Eval #904 + MCP External HTTPS Acceptance #894 passed. Automatic Staging Deploy gates #106/#107 passed while the deploy job stayed skipped because activation remained disabled.
-
-At the PCS-09 repository-preparation checkpoint, the merged repository contained a sanitized real-host inventory, actual VPS reboot persistence verifier, guarded key-only SSH hardening helper, same-host cold-volume backup with isolated restore-content verification, deterministic source-contract coverage, and an operator runbook. At that point no VPS hardening/reboot/backup mutation had yet been performed; the real-host acceptance recorded immediately below subsequently completed those mutations.
-
-Exact reviewed `main` `0f332c73dc7b363bffecdeecae921d805d5ae131` was deployed through governed run #35563423107 and passed public smoke, authenticated Ops, exact-host evidence, and 15/15 service checks. The first real PCS-09 non-strict host inventory then passed runtime/network/disk/memory/boot checks and identified exactly two hardening blockers: SSH password authentication still enabled and root login still permitted. Connect runtime/Vault/budget durable files are absent in this staging state, so no persistence claim is made for absent data. Guarded SSH hardening has now been applied: effective `PermitRootLogin no`, `PasswordAuthentication no`, `KbdInteractiveAuthentication no`, `PubkeyAuthentication yes`, and `PermitEmptyPasswords no`. A second fresh Windows PowerShell SSH session then connected successfully as `ubuntu` with the operator key, and `sudo -n true` passed. The original session was kept open until that proof succeeded. Strict PCS-09 host inventory then PASSed with `blockers=[]` and `closureReady=true`: 15/15 services, no published staging ports, Docker boot enablement, UFW, key-only SSH posture, disk/memory thresholds, and public 200/401 boundary all passed. The controlled VPS reboot baseline is now captured at boot ID `38133aa8-fcd7-41b5-8729-4c6dabb0206a`, exact SHA `0f332c73...`, image tag `staging-0f332c73dc7b`, and 15 running services. The controlled full VPS reboot is now proven: Linux `boot_id` changed from `38133aa8-fcd7-41b5-8729-4c6dabb0206a` to `c523f1d5-9ec5-4cf5-b560-9ec06a4be637`, exact source/image identity stayed on `0f332c73...` / `staging-0f332c73dc7b`, 15/15 services returned, all project volumes were preserved, and public smoke + authenticated Ops + exact-host evidence all PASSed. Same-host cold backup + isolated restore verification is now PASS: all 12 ECORIONE staging volumes were archived and independently restored/fingerprint-checked, staging recovered to home 200 / ops 401, and the verified backup is stored under `/var/lib/ecorione-staging/backups/backup-20260921T054802Z-0f332c73dc7b`. This remains same-host evidence only, not off-host DR. Final credentialed Operations evidence is also PASS: `healthy=true`, 9/9 owner entries healthy, 8 trace groups, live HTTP request counters/request-duration histograms, and owner RSS; final strict host inventory remains `blockers=[]`, `closureReady=true`, 15/15 services, 15.99 GiB available disk, and 4261 MiB available memory. Specialized model/cost/Flow telemetry is instrumented but is not claimed as a non-zero live workload in this final snapshot; no paid call was created merely for evidence. All real-host PCS-09 acceptance gates completed. Closure PR #218 exact head `ece59440d742f59252046562cf3ba86e7911b46f` passed CI #1678 + Product Eval #917 and squash-merged as `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918 passed. Staging Deploy #135/#136 each passed the gate and skipped deploy because activation remained disabled, so the proven runtime stayed on `0f332c73dc7b363bffecdeecae921d805d5ae131`. PCS-09 is CLOSED / PASS.
-
-## PCS-10 closure/documentation convergence — CLOSED / PASS
-
-PCS-10 converged the current-state, active-work, staging, hardening/backup, documentation-map, decision-log, and deployment guidance onto the proven PCS-09 boundary. Stale statements that PCS-08 is active, PCS-09 is pending, or SumoPod staging is still deferred are removed. The SumoPod staging runbook is also de-duplicated and repaired so its operator commands match the actual host toolchain.
-
-Closure PR #219 exact head `c84f76face60d203592d8bc6e1a51acccfec5004` passed CI #1684 + Product Eval #923 and merged to `main` as `6058aa0ff294218147a91ee0fc7b77f32d1be80d`. PCS-10 is therefore CLOSED / PASS on `main`. This documentation-only closure did not authorize production promotion or open a new implementation scope.
-
-No runtime, provider, DNS, firewall, or production-promotion mutation is authorized by PCS-10. ECORIONE has a verified remote staging topology; **public production cutover remains a separate explicit operator decision**.
-
-There is no active PCS implementation queue after PCS-10. Future work requires a new explicit scope/decision rather than silently creating PCS-11, PE-09, or Batch 13. Evidence: [verification/pcs-10-documentation-convergence-2026-09-21.md](verification/pcs-10-documentation-convergence-2026-09-21.md).
-
-## Post-closure repository hardening
-
-Native Windows portability was repaired and merged through PR #182:
+## Current repository identity
 
 ```text
-PR                              #182
-reviewed head                   108781b5d53034462393f06d5e9cb36e9c5d5cf5
-PR CI                           #1477 PASS
-PR Product Eval                 #716 PASS
-merge main                      3461951414f72c8f183527e3d28eec20dd383d45
-Windows local normal suite      191 files PASS + 1 skipped
-Windows local tests             990 PASS + 3 skipped
-Windows production-shell check  5/5 PASS with explicit MSYS Bash
+repository      = ceritaantarkita-req/ecorione
+default branch  = main
+current main    = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
 ```
 
-The hardening adds deterministic line-ending policy, platform-independent desktop path assertions, Node-native Tier-0 `pwd`/`ls`/`cat`, and an explicit `ECORIONE_BASH` override for Bash syntax validation on Windows. This does not reopen Product Evolution or change owner/security architecture.
+The current `main` commit is the Batch 7 closure documentation merge.
 
-Evidence: [verification/windows-native-portability-closure-2026-09-20.md](verification/windows-native-portability-closure-2026-09-20.md).
-
-Clean-checkout reproducibility hardening is also CLOSED / PASS on PR #183. The implementation/evidence head `8b4bdc3793557dccf329a4aee19bec43ab8fb9bb` passed CI #1479 + Product Eval #718; the final closure head `451c3b45366ca42004d6c5af53f59c475e911e6f` passed CI #1482 + Product Eval #721 and merged to `main` as `4980b3ceb149be58788467d2e11769de12977d5a`. CI no longer rewrites those three historical PE test files before `format:check`.
-
-Fresh-clone Windows EOL reproducibility is now also CLOSED / PASS. A clean Windows clone passed the pinned Node 22.20.0 / pnpm 10.28.0 toolchain, `pnpm verify` (191 test files PASS + 1 skipped; 990 tests PASS + 3 skipped; 0 failures), secret scan, and production build. That clean clone exposed one remaining hygiene defect: the three tracked `.cmd` blobs were still stored as CRLF in the Git index, producing a false dirty working tree even though semantic diff was zero. PR #185 renormalized them to canonical index LF while `.gitattributes` continues to materialize CRLF in Windows working trees (`i/lf w/crlf attr/text eol=crlf`). PR head `600f459fbe2671e7e4297e60da725b005b6f9533` passed CI #1486, Product Eval #725, and Desktop Installer #76; it merged as `4194e89a2b0611897969eaca2cb9c2b4b360c774`. Post-merge main then passed CI #1487 and Product Eval #726.
-
-## Product Evolution status
-
-| Batch | State |
-|---|---:|
-| PE-00 Architecture lock | **CLOSED / PASS** |
-| PE-01 Project foundation | **CLOSED / PASS** |
-| PE-02 Project Sources | **CLOSED / PASS** |
-| PE-03 Trigger control plane | **CLOSED / PASS** |
-| PE-04 Work + Schedule + Runs | **CLOSED / PASS** |
-| PE-05 Event/Webhook automation | **CLOSED / PASS** |
-| PE-06 Brain V1 | **CLOSED / PASS** |
-| PE-07 Brain + Context + ECX | **CLOSED / PASS** |
-| PE-08 Product closure | **CLOSED / PASS** |
-
-## PE-02 delivered boundary
-
-- Hub owns Project binding metadata only.
-- Artifact sources are authorized through the existing Context/Artifact boundary.
-- Space pages are validated in the same Workspace.
-- Flow graphs are validated in the same Workspace and may be explicitly reused across Projects.
-- outbound MCP servers must be visible to the same Workspace through Connect.
-- URL sources are HTTPS references only; no remote content is copied.
-- owner deletion/revocation produces an unavailable source state without deleting canonical owner data.
-- attach/detach is audited.
-- Ai Project detail includes Sources attach/list/detach UI.
-- Project A/B and cross-Workspace negative paths are covered.
-
-Acceptance: [product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md).
-
-## PE-02 reviewed evidence
+At the latest audit boundary before the current reconciliation branch was created:
 
 ```text
-PR #171
-implementation head a6167df469cf491015b232aff8a192b32a25c569
-CI #1223 PASS
-Product Eval #462 PASS
-MCP External HTTPS Acceptance #628 PASS
+open PRs        = 0
+open issues     = 1 (#277 DR-2)
+remote branches = 24
+tracked files   = 1,011
+docs files      = 269
+verification    = 161 files
 ```
 
-PR #171 is merged to `main` as `c734f00eaa791077c99557e6e89579534c43d651`; PE-02 remains CLOSED / PASS.
+The old branch-hygiene checkpoint's 9-branch inventory is historical. Fifteen ECX implementation/closure branches were created after that checkpoint.
 
-## PE-03 closed boundary
+## Current runtime / staging truth
 
-PE-03 closed on PR #172 exact head `74730e26321cac06c31243baeeafe29d5f4d75f0` and merged as `c739c09014d8aa20ca8e1b83c5b6be39b4ee649c`. Trigger metadata remains Flow-owned, Temporal remains schedule/runtime truth, and Hub remains authority/policy owner. See [verification/pe-03-trigger-control-plane-closure-2026-09-19.md](verification/pe-03-trigger-control-plane-closure-2026-09-19.md).
+Current governed SumoPod staging is deployed from the same exact revision as repository `main`:
 
-## PE-04 closed boundary
+```text
+SHA   = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+image = staging-2c2e3c8ad1b4
+```
 
-PE-04 closed on PR #173 after implementation head `c2cacbbcbee15f46ac4c5e9e43c955f5c952af43` and closure head `94936fa0704991d3536667bb8c947e9d751c813e` passed the required gates. It merged as `c08581a00a20dc6016c570a1fbb777d81e391699`. Work now exposes Project-scoped Schedule, Flow links, and an `operationId`-keyed Run read projection without a Task domain or second execution database. See [verification/pe-04-work-schedule-runs-closure-2026-09-19.md](verification/pe-04-work-schedule-runs-closure-2026-09-19.md).
+Latest proof:
 
-## PE-05 closed boundary
+| Gate / runtime | Result |
+|---|---|
+| CI #2352 | PASS |
+| Product Eval #1591 | PASS |
+| Staging Deploy #1474 | gate-only PASS |
+| Staging Deploy #1475 | actual deploy PASS |
+| expected host SHA | matched |
+| Operations | `healthy: true` |
+| unhealthy services | 0 |
+| configured/running services | 15 / 15 |
+| non-running services | 0 |
+| stabilized free disk | 26.31 GiB |
 
-PE-05 closed on PR #174 after implementation head `b3fa55e689548b5a72c47b331682285eb8fb6eb2` and closure head `3d082f555a0c701eb9911d5caa71f7cf250f5710` passed the required gates. It merged as `84defe934bf6b7d0b8868bd04c8c113e70193fc6`. Non-time Trigger delivery now uses Connect-verified webhook ingress, Flow-owned normalization/routing/dedupe, existing Hub authority, Temporal execution, and operationId-keyed Run evidence without a polling daemon, second queue, or second execution authority. See [verification/pe-05-event-webhook-closure-2026-09-19.md](verification/pe-05-event-webhook-closure-2026-09-19.md).
+SumoPod remains **staging, not production**.
 
-## PE-06 closed boundary
+## Current architecture
 
-PE-06 closed on PR #176 after implementation head `66c7909572a1410095916843f8f46a385ecb628b` and closure head `25508dd1cef5d8ebb8846448c7732ddde7866a59` passed the required gates. It merged as `d54ad62c303847b23634ba33aead4749f21bf1d0`. Brain now exposes a Project-scoped deterministic projection over Project, Source, Flow, Trigger, and Run owner contracts with authorization-before-disclosure, sibling-Project isolation, rebuildability proof, and no graph database/canonical Brain store. See [verification/pe-06-brain-v1-closure-2026-09-19.md](verification/pe-06-brain-v1-closure-2026-09-19.md).
+```text
+Ai
+ -> Hub
+    -> Context
+    -> Connect -> local/hosted models + MCP
+    -> Artifact
+    -> Space
+    -> Flow -> Temporal
+    -> Sandbox
+    -> RnD
+```
 
-## PE-07 closed boundary
+Current ownership remains:
 
-PE-07 closed on PR #178 after implementation head `892726c20ac95dded26fdc3fd2000ad4bb56363d` and closure head `e443a6e9d10b24b7c1de7bcb315b038cf6425a45` passed the required CI, Product Eval, and MCP gates. It merged as `15e31ed4b03f5be5bc6a7104fc14bb1dd0917743`. The bounded deterministic evidence measured 66.67% median candidate reduction across three fixtures while retaining 100% of required references/provenance and admitting zero unauthorized refs. See [verification/pe-07-brain-context-ecx-closure-2026-09-19.md](verification/pe-07-brain-context-ecx-closure-2026-09-19.md).
+- Hub: policy, approvals, capability authority, audit, orchestration, Historical Ledger and ECX coordination;
+- Connect: provider/runtime invocation, credentials/Vault, MCP runtime state and hosted-spend authority;
+- Context: memory/retrieval semantics;
+- Artifact: raw artifact bytes;
+- Flow + Temporal: durable workflow execution/timers/retry/recovery;
+- Space: composition/references without duplicating owner data;
+- Sandbox: governed execution;
+- RnD: trace/eval and dataset-governance foundation.
 
-## PE-08 closed boundary
+No ECX Batch 1–7 work introduced a new service or changed these ownership boundaries.
 
-PE-08 was the final Product Evolution closure batch. Its closure matrix covered migration/reopen behavior, Project isolation, Source binding persistence, Context policy intersections, Flow/Trigger Project boundaries, owner backup/restore, derived Brain rebuild, UX/navigation/responsive source guards, and Windows installer specification. The integrated DR test restores Hub + Context + Flow canonical state after deliberate post-backup mutation and rebuilds Brain from the restored owners instead of persisting Brain.
+## Closed roadmap families
 
-Reviewed implementation head `33f9e891c3152a82304d5f1e31693604c855d94c` passed CI #1469 and Product Eval #708. Closure head `5d1b1c80168a26ae38af33d862a6fa26b019802c` passed CI #1473 and Product Eval #712. PR #180 merged as `b32d57022344ad08a59b6b7d163507c5530a7ca6`. Product Eval ran 36 files / 148 tests; normal CI ran 191 files PASS + 1 skipped and 991 tests PASS + 2 skipped, plus Phase 4 3/3, production-ops, security/toolchain/container reviews, Windows installer specification/acceptance tests, and production build.
+| Scope | State |
+|---|---|
+| Original Batch 1–12 / W / F6 | CLOSED at documented boundaries |
+| Product Evolution PE-00..PE-08 | CLOSED / PASS |
+| PCS-00..PCS-10 | CLOSED / PASS |
+| Original Off-host DR | CLOSED / PASS at documented boundary |
+| 2026-09-24 audit follow-ups through A-11 | CLOSED / PASS |
+| Repository/documentation reconciliation through PR #354 | CLOSED / PASS |
+| Historical 393-branch hygiene program | CLOSED / PASS |
+| ECX Recipient Execution Batch 1–7 | CLOSED / PASS |
 
-PE-08 is not a feature expansion batch. Production VPS/Cloudflare, rendered local browser walkthrough, AutoClick, paid hosted evidence, L4 autonomy, graph persistence, and unrelated redesign remain outside scope.
+There is **no active Product Evolution, PCS, A-series, or ECX numbered batch**.
 
-Acceptance: [product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md).
+There is **no implicit Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation**.
 
-## Post-closure maintenance checkpoint — 2026-09-21
+## ECX Recipient Execution — current capability
 
-A bounded repository audit after PE/PCS closure repaired concrete maintenance defects without opening a new roadmap. The implementation checkpoint immediately before this documentation convergence is `1618b45e3c0837a84e17d258182cd73cad3f0591`.
+The final bounded Batch 1–7 implementation includes:
 
-Closed maintenance through PR #232 includes:
+1. governed single-recipient Hub -> Connect agent execution;
+2. durable execution receipts and request-fingerprint conflict protection;
+3. one-claim dispatch and success replay without provider redispatch;
+4. real Agent A -> Agent B -> Agent A round-trip behavior;
+5. single-recipient `delta` parent continuation and `full` standalone handback;
+6. explicit `agent.result.receive` authority;
+7. returned-result trust/sensitivity/byte/hash evidence;
+8. **65,536-byte** per-child returned-result integration cap;
+9. hosted-parent owner-backed source eligibility rechecks;
+10. Connect completion usage/cost/budget telemetry preservation;
+11. replay-safe model-call/token/cost process metrics;
+12. deterministic offline quality/economics evidence;
+13. Historical Ledger hot-retention + immutable gzip archive compaction;
+14. transparent logical replay across archive + hot suffix;
+15. archived EventId retry/conflict preservation and fail-closed archive integrity;
+16. deterministic **2–8 recipient `delta` fan-out**;
+17. per-child Batch 2–4 execution/security semantics;
+18. **131,072-byte** aggregate returned-material cap;
+19. aggregate SHA-256 evidence;
+20. durable fan-out receipts and Workspace-scoped status;
+21. exactly one sender/parent aggregation continuation;
+22. bounded Historical Ledger aggregate-return/continuation provenance.
 
-- W18 cleanup state preservation while Hosted remains forced OFF;
-- redirect fail-closed hardening across internal/owner, hosted-provider, multimodal, local-runtime, and JWKS fetch boundaries;
-- bounded JWKS key-rotation refresh with cooldown against fetch amplification;
-- correct MCP auth error semantics: malformed/invalid tokens remain caller auth failures while JWKS dependency outages remain upstream failures;
-- preservation of JWKS outage classification during unknown-`kid` refresh cooldown;
-- Local multimodal endpoint scope validation aligned with the existing Local privacy boundary;
-- correction of one stale PCS-09 preparation sentence without rewriting historical evidence.
+Canonical final checkpoint:
+[verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md).
 
-This is maintenance, not PE-09, PCS-11, Batch 13, or a production-promotion scope. The repository changes also do **not** by themselves prove a newer SumoPod runtime revision. The previously proven staging application revision remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless later deployment evidence proves otherwise.
+### ECX explicit non-claims
 
-Evidence: [verification/post-closure-maintenance-checkpoint-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2026-09-21.md).
+Current ECX does **not** implement or prove:
 
-## Follow-up post-closure maintenance checkpoint — 2026-09-21
+- external A2A interoperability;
+- arbitrary recursive agent graphs;
+- Flow/Temporal long-running ECX fan-out orchestration;
+- `full` multi-recipient merge semantics;
+- default broadcast;
+- broad ECX/History product UI;
+- automatic destructive Historical Ledger purge scheduling;
+- paid-provider/W18 freshness;
+- universal quality, latency or savings superiority;
+- DR-2 physical independence;
+- production promotion/cutover.
 
-A second bounded maintenance slice continued from the earlier PR #232 checkpoint and is now closed through PR #237 at the repository boundary. The implementation checkpoint immediately before this documentation convergence is `443ed254f7b4c5c3880387872e882e954602452b`.
+## Current security / identity boundary
 
-Closed follow-up maintenance includes:
+The general Ai staging surface is private-by-default behind the existing operator Basic-Auth boundary while MCP discovery/OAuth remains separate.
 
-- PR #234: Sync public MCP bridge failures are timeout-bounded, redirect-fail-closed, malformed upstream JSON maps to explicit `502`, and internal network diagnostics are not leaked;
-- PR #235: Connect credential-vault mutations are serialized with an exclusive filesystem lock and contention is exposed as retryable `503 CREDENTIAL_VAULT_BUSY`;
-- PR #236: Sandbox execution with the same idempotency key is serialized before authority/effect execution, with active contention exposed as `409 SANDBOX_EXECUTION_BUSY`;
-- PR #237: default MCP JWKS retrieval is timeout-bounded while preserving redirect fail-closed behavior and `502` dependency-failure semantics.
+This is a bounded staging human gate. It is **not** final multi-user identity/RBAC and must not be described as production authorization.
 
-This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
+The 2026-09-24 selected audit follow-ups through A-11 remain closed at their documented scopes.
 
-Repository source state and remote runtime state remain separate evidence boundaries. The repository `main` may advance without proving that SumoPod staging was redeployed. The previously proven staging application revision therefore remains `0f332c73dc7b363bffecdeecae921d805d5ae131` / image `staging-0f332c73dc7b` unless later deployment evidence proves a newer runtime.
+## Backup / DR
 
-Evidence: [verification/post-closure-maintenance-checkpoint-2-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2-2026-09-21.md).
+The original total-SumoPod-host-loss Off-host DR drill is **CLOSED / PASS** at its documented boundary.
 
-## Post-closure maintenance checkpoint 3 — 2026-09-21
+DR-2 is additive and remains **DEFERRED at checkpoint 2** before genuinely external target selection.
 
-A third bounded maintenance slice is now closed through PR #240 at the repository boundary. The implementation checkpoint immediately before this documentation convergence is `eb4ac86da19bc006009e1a2260f14c119e7997e5`.
+Current facts:
 
-Closed maintenance in this slice includes:
+- Issue #277 is the only open issue at the audit boundary;
+- DR-2 physical independence is **not yet proven**;
+- local backup remains the interim posture;
+- an encrypted Google Drive copy may be considered later but is not currently a validated DR-2 target.
 
-- PR #239: Sandbox Hub/RnD control-plane calls are timeout-bounded, preventing a stalled owner service from holding an idempotency lease indefinitely;
-- PR #240: verified Connect webhook forwarding to Flow is timeout-bounded; transport/timeout failures map to sanitized `502 UPSTREAM_UNAVAILABLE`, and retry with the same provider-stable `deliveryId` remains compatible with Flow dedupe.
+Do not downgrade or rewrite the original DR closure merely because DR-2 remains deferred.
 
-This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
+## Repository / branch hygiene
 
-At this historical maintenance checkpoint, repository source state and remote runtime state remained separate evidence boundaries and the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`. Later governed staging convergence and DR activation superseded that runtime identity.
+The historical branch-hygiene program deleted its complete 393-entry exact-SHA safe-delete set and was correctly CLOSED / PASS at that time.
 
-Evidence: [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
+Subsequent ECX work created a new bounded branch delta.
 
-## Post-closure maintenance checkpoint 4 — 2026-09-21
+Before this reconciliation branch:
 
-A fourth bounded maintenance slice is now closed through PR #242 at the repository boundary. The implementation checkpoint immediately before this documentation convergence is `47cbeaa8760debbfde87cff7cb7a828037a2829b`.
+```text
+remote branches = 24
+historical baseline after prior cleanup = 9
+new post-checkpoint delta = 15
+```
 
-PR #242 bounds the Ai server-side Flow owner proxy to 10 seconds by default. A stalled Flow response now resolves through the existing sanitized `502 UPSTREAM_UNAVAILABLE` transport boundary instead of keeping the Ai route pending indefinitely. Redirect fail-closed behavior, Flow response semantics, owner authority, and Temporal execution ownership are unchanged.
+Those 15 pre-reconciliation ECX branches are classified in:
 
-The authoritative implementation head `db8a8f6068a40e47187a2142e6801e975e749276` passed CI #1743, Product Eval #982, and PCS-06 Integrated Browser Acceptance #18. The earlier candidate `7b21c96e6a18b46e333e145b8820381234b8c0bf` failed only the Prettier check in CI #1742 and was not merged.
+[verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json](verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json).
 
-This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
+They must not be reported as deleted until the existing cleanup script runs with exact-SHA revalidation.
 
-At this historical maintenance checkpoint, repository source state and remote runtime state remained separate evidence boundaries and the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`. Later governed staging convergence and DR activation superseded that runtime identity.
+The current reconciliation branch itself is separate temporary bookkeeping and should also be removed after merge when deletion tooling is available.
 
-Evidence: [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
+## Current active work
 
-## Post-closure maintenance checkpoint 5 — 2026-09-21
+There is **no active product/runtime implementation scope**.
 
-A fifth bounded maintenance slice is now closed through PR #244 at the repository boundary. The implementation checkpoint immediately before this documentation convergence is `3114354ab44894ef80e75b9983fceac64babc2e0`.
+The only current repository work is bounded housekeeping:
 
-PR #244 repairs Sandbox receipt-lock acquisition failure cleanup. When exclusive lock creation succeeds but metadata initialization fails before a lease is returned, the just-created descriptor and lock file are cleaned before the original error is rethrown. This prevents a pre-effect infrastructure failure from turning the same idempotency key into a persistent false-busy state.
+- reconcile current/canonical docs with actual `main` + staging;
+- preserve historical evidence rather than rewriting it;
+- exact-SHA clean the post-ECX branch delta when deletion tooling is available.
 
-The authoritative implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` passed CI #1747 and Product Eval #986. Successful lease semantics, receipt format, authority/effect ordering, and idempotency behavior are otherwise unchanged.
+This housekeeping does not alter runtime behavior or open a new roadmap.
 
-This remains maintenance only. It does **not** open PE-09, PCS-11, Batch 13, a new F6 item, paid W18 evidence, production promotion, or Cloudflare/public-edge activation.
+## Explicit deferred / separately selectable future scopes
 
-At this historical maintenance checkpoint, repository source state and remote runtime state remained separate evidence boundaries and the then-latest proven SumoPod staging runtime was `0f332c73dc7b363bffecdeecae921d805d5ae131` / `staging-0f332c73dc7b`. Later governed staging convergence and DR activation superseded that runtime identity.
+Any of the following requires a new explicit operator decision and its own bounded scope:
 
-Evidence: [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
+- DR-2 checkpoint 2 external target selection and later runtime proof;
+- public production promotion/cutover;
+- native Google Drive integration;
+- Workspace registry/switcher;
+- broader multi-user identity/final RBAC;
+- paid hosted-provider/W18 reruns;
+- external A2A interoperability;
+- recursive agent graphs;
+- Flow/Temporal long-running ECX execution;
+- `full` multi-recipient merge semantics;
+- broad ECX/History UI;
+- automatic destructive Historical Ledger purge;
+- AutoClick / L4 autonomy.
 
-## Current work state and deferred boundaries
+## Resume instructions
 
-- Active implementation/operational scope — **NONE**. The 2026-09-24 audit is complete and no finding is authorized for implementation yet. DR-2 checkpoint 2 is deferred/safe-paused. The original Off-host DR runtime drill, latest-main staging convergence, PE-00..PE-08, and PCS-00..PCS-10 remain closed at their documented boundaries.
-- Post-closure product/UX + SumoPod remote staging — **CLOSED / PASS**; see `post-closure-product-staging-roadmap.md`.
-- Public production cutover — **DEFERRED / SEPARATE EXPLICIT GATE**. Staging, remote persistence, security, same-host backup verification, observability, and operator acceptance are already proven at the documented staging boundary; they do not automatically authorize production.
-- Cloudflare named Tunnel/public-edge choice — optional/pending operator hostname/edge decision.
-- AutoClick — deferred by design.
-- paid W18 rerun — closed/not authorized.
+For a new session/agent:
+
+1. read [README.md](../README.md);
+2. read this file;
+3. read [active-work-plan.md](active-work-plan.md);
+4. read [../AGENTS.md](../AGENTS.md);
+5. inspect exact current `main`;
+6. open only the explicitly authorized new scope;
+7. use dated verification files as evidence, not as the current queue.
+
+Latest repository truth reconciliation:
+[verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md).
+
+Do not restart closed roadmap work merely for freshness.
