@@ -6,7 +6,10 @@ import {
   type Interceptable,
 } from "undici";
 import { callHostedProvider, estimateHostedReservationUsd } from "./hosted.js";
-import { NVIDIA_FREE_ENDPOINT_MIN_RESERVATION_USD, nvidiaRuntimeModel } from "./nvidia.js";
+import {
+  NVIDIA_FREE_ENDPOINT_MIN_RESERVATION_USD,
+  nvidiaRuntimeModel,
+} from "./nvidia.js";
 import { openAiRuntimeModel } from "./openai.js";
 import { openRouterRuntimeModel } from "./openrouter.js";
 import { prefix } from "../test-helpers.js";
