@@ -13,9 +13,13 @@ contracts   = 560208e2b7d3c96d6186367473c723a5c4c24e8b
 runtime     = 2ac2c131d7aa6bc9080e40e56733176711cfe659
 hardening   = c555742e7ef2504bac1f97bc931c88c69d7c8fe1
 tests       = 669cd507a2f35b644fe22a3e4c78b57ec0849320
+pending-fix = d2d91fd96c01de026c5e496d6a0f4b9fc82814ff
+format      = 2f778ba1215d75367d9ba7246896c3024ad19c3f
 ```
 
 This checkpoint is a safe resume pointer before CI/PR closure. It is **not** a PASS claim.
+
+The latest hardening also suppresses a premature `agent.continuation.uncertain` Ledger outcome while the one claimed parent continuation is still in-flight; only a real ambiguous failure records the immutable UNCERTAIN outcome.
 
 ## Batch 3 contract
 
