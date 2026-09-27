@@ -39,6 +39,8 @@ function hostedModel(provider: HostedProviderId, sensitivity: Sensitivity): Pinn
         : "claude-sonnet-4-5-20250929";
     case "openai":
       return sensitivity === "RESTRICTED" ? "gpt-5.6-sol" : "gpt-5.6-terra";
+    case "nvidia":
+      return "z-ai/glm-5.3";
   }
 }
 
