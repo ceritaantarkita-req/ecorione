@@ -1,7 +1,4 @@
-import {
-  CapabilityGrantRequestSchema,
-  assertId,
-} from "@ecorione/shared-schema";
+import { CapabilityGrantRequestSchema, assertId } from "@ecorione/shared-schema";
 import { afterEach, describe, expect, it } from "vitest";
 import { getGlobalDispatcher, MockAgent, setGlobalDispatcher } from "undici";
 import { CapabilityRegistry } from "./capability-registry.js";
@@ -158,9 +155,7 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
         refs: [],
         budget: { maxHydratedBytes: 4096 },
         responseMode: input.responseMode,
-        candidates: [
-          { agentId: input.recipient, capabilities: ["review"], estimatedCost: 0 },
-        ],
+        candidates: [{ agentId: input.recipient, capabilities: ["review"], estimatedCost: 0 }],
       },
     });
     expect(response.statusCode).toBe(200);
@@ -168,7 +163,8 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
   }
 
   function counter(snapshot: unknown, name: string): number {
-    const counters = (snapshot as { counters?: Array<{ name: string; value: number }> }).counters;
+    const counters = (snapshot as { counters?: Array<{ name: string; value: number }> })
+      .counters;
     return (counters ?? [])
       .filter((item) => item.name === name)
       .reduce((sum, item) => sum + item.value, 0);
@@ -176,9 +172,11 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
 
   function histogram(snapshot: unknown, name: string) {
     return (
-      (snapshot as {
-        histograms?: Array<{ name: string; count: number; min: number; max: number }>;
-      }).histograms ?? []
+      (
+        snapshot as {
+          histograms?: Array<{ name: string; count: number; min: number; max: number }>;
+        }
+      ).histograms ?? []
     ).find((item) => item.name === name);
   }
 
@@ -236,13 +234,12 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
       expect(counter(firstSnapshot, "ecorione_ecx_round_trip_model_calls_total")).toBe(1);
       expect(counter(firstSnapshot, "ecorione_ecx_round_trip_input_tokens_total")).toBe(12);
       expect(counter(firstSnapshot, "ecorione_ecx_round_trip_output_tokens_total")).toBe(4);
-      expect(counter(firstSnapshot, "ecorione_ecx_round_trip_actual_cost_usd_total")).toBeCloseTo(
-        0.002,
-        12,
-      );
-      expect(counter(firstSnapshot, "ecorione_ecx_round_trip_returned_bytes_total")).toBeGreaterThan(
-        0,
-      );
+      expect(
+        counter(firstSnapshot, "ecorione_ecx_round_trip_actual_cost_usd_total"),
+      ).toBeCloseTo(0.002, 12);
+      expect(
+        counter(firstSnapshot, "ecorione_ecx_round_trip_returned_bytes_total"),
+      ).toBeGreaterThan(0);
       expect(histogram(firstSnapshot, "ecorione_ecx_round_trip_duration_ms")?.count).toBe(1);
 
       const replay = await app.inject({
@@ -257,10 +254,9 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
       const replaySnapshot = replayOps.json();
       expect(counter(replaySnapshot, "ecorione_ecx_round_trip_model_calls_total")).toBe(1);
       expect(counter(replaySnapshot, "ecorione_ecx_round_trip_input_tokens_total")).toBe(12);
-      expect(counter(replaySnapshot, "ecorione_ecx_round_trip_actual_cost_usd_total")).toBeCloseTo(
-        0.002,
-        12,
-      );
+      expect(
+        counter(replaySnapshot, "ecorione_ecx_round_trip_actual_cost_usd_total"),
+      ).toBeCloseTo(0.002, 12);
       expect(counter(replaySnapshot, "ecorione_ecx_round_trip_replays_total")).toBe(1);
       expect(histogram(replaySnapshot, "ecorione_ecx_round_trip_duration_ms")?.count).toBe(2);
     } finally {
