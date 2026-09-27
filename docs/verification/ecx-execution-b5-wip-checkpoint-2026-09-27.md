@@ -13,9 +13,13 @@ telemetry    = f9a4b8728084a506ec1b1de6479b30bb39b5773b
 evidence     = 0fb98b4dd5c3fe079ac0176360fa07706e658bd7
 tests        = 63884db142be2b568220c172235609f45ca3aa70
 compile-fix  = 7896f5561feb2cfc18c75dd24fd87e7db579ad61
+format/lint  = 16b490f0d1212b8bbb7f265153028827fca6ac16
+test-fix     = 7c0ccd876c541fa673881bdbd9f937b6ebdb4ef7
+canonical PR = #371
+duplicate PR = #372 CLOSED UNMERGED
 ```
 
-This is a safe resume pointer before Batch 5 CI/PR closure. It is **not** a PASS claim.
+This is the canonical safe resume pointer before Batch 5 CI/PR closure. It is **not** a PASS claim. Continue only from PR #371; PR #372 is an abandoned alternate path and must not be merged or used as a second source of truth.
 
 ## Why this scope
 
@@ -88,6 +92,32 @@ It does **not**:
 - claim universal model quality, latency, or savings;
 - create durable telemetry retention inside owner databases.
 
+## Current gate state / latest defect resolution
+
+Canonical PR: **#371**.
+
+Latest reviewed functional head before this checkpoint refresh: `7c0ccd876c541fa673881bdbd9f937b6ebdb4ef7`.
+
+Known gate state before rerun from that fix:
+
+- Product Eval #1563 — PASS on prior head;
+- MCP External HTTPS Acceptance #1162 — PASS on prior head;
+- Desktop Installer #255 bundle — PASS; installer continuation was still running;
+- CI #2324 Format — PASS;
+- CI #2324 Lint — PASS;
+- CI #2324 Typecheck — PASS;
+- CI #2324 Test — FAILED only in `services/hub/src/ecx-b5-observability.test.ts`.
+
+The CI failure was a **test harness assumption**, not a runtime Batch 5 behavior defect:
+
+- the test built Hub without an internal token;
+- ADR-32 correctly registers `/v1/ops/observability` only for tokenized internal services;
+- the test therefore read a 404 body and interpreted absent counters as zero.
+
+Fix `7c0ccd876c541fa673881bdbd9f937b6ebdb4ef7` imports `observabilityFor(app)` and reads the already-attached Hub `OperationalMetrics.snapshot()` directly inside the unit test. Production auth/telemetry endpoint registration is unchanged.
+
+Alternate PR #372 was closed unmerged after this diagnosis. Do not reopen it unless PR #371 is explicitly abandoned.
+
 ## Focused tests
 
 Coverage added for:
@@ -106,11 +136,11 @@ Coverage added for:
 
 ## Still required before closure
 
-1. open draft PR;
-2. run exact-head format/lint/typecheck/full tests;
-3. fix defects on this same branch;
-4. pass Product Eval and MCP acceptance if triggered;
-5. merge only exact reviewed head;
+1. rerun exact-head CI from the observability-test harness fix;
+2. pass full CI plus Product Eval, MCP acceptance, and Desktop Installer if triggered;
+3. fix any remaining defects on this same canonical PR #371 branch;
+4. mark #371 ready only after exact-head gates are green;
+5. merge only the exact reviewed head;
 6. verify merged-main gates;
 7. verify governed staging delivery;
 8. replace ACTIVE/WIP docs with CLOSED/PASS;
