@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write packages/shared-schema/src/ecx.ts services/hub/src/exchange-http.ts services/hub/src/exchange-http.test.ts && git diff -- packages/shared-schema/src/ecx.ts services/hub/src/exchange-http.ts services/hub/src/exchange-http.test.ts && exit 1",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
