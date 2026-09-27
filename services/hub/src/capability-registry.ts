@@ -28,6 +28,7 @@ import type { HubDatabase } from "./db.js";
 const BASELINE_OPERATION = "op_authoritybaseline" as OperationId;
 const PERSONAL_WORKSPACE = "ws_personal" as WorkspaceId;
 const BASELINE_KEY = "batch4-baseline-v1";
+const AGENT_RESULT_RECEIVE_DECLARATION_KEY = "ecx-agent-result-receive-v1";
 const BASELINE_AT = "2026-09-09T00:00:00.000Z" as Timestamp;
 
 function actionPermission(
@@ -207,6 +208,22 @@ export const BUILTIN_CAPABILITIES: readonly CapabilityDefinition[] = [
     ],
   }),
   CapabilityDefinitionSchema.parse({
+    id: "agent.result.receive",
+    description:
+      "Menerima hasil delegated agent ke sender boundary setelah ECX security/integration checks.",
+    permissions: [
+      {
+        id: "agent.result.receive",
+        actionClass: "READ",
+        resource: "data",
+        access: "read",
+        sideEffect: false,
+        description:
+          "Menerima bounded result dari delegated agent pada Workspace/scope yang sama.",
+      },
+    ],
+  }),
+  CapabilityDefinitionSchema.parse({
     id: "tool.invoke",
     description: "Generic governed tool invocation contract untuk tool/node pack berikutnya.",
     permissions: [
@@ -347,6 +364,7 @@ export class CapabilityRegistry {
   constructor(private readonly db: HubDatabase) {
     this.bootstrapDefinitions();
     this.bootstrapCompatibilityBaseline();
+    this.bootstrapAgentResultReceiveDeclarations();
   }
 
   listDefinitions(): CapabilityDefinition[] {
@@ -614,15 +632,20 @@ export class CapabilityRegistry {
     now: Timestamp,
   ): void {
     const subject: AuthoritySubject = { kind: "agent", id: input.agentId };
-    const capabilityId = (
+    const runtimeCapabilityId = (
       input.target === "hosted" ? "model.invoke.hosted" : "model.invoke.local"
     ) as CapabilityId;
-    const definition = BUILTIN_CAPABILITIES.find((item) => item.id === capabilityId);
-    if (definition === undefined) {
-      throw new CapabilityUnknownError(
-        `Capability runtime agent tidak ditemukan: ${capabilityId}.`,
-      );
-    }
+    const capabilityIds = [
+      runtimeCapabilityId,
+      "agent.result.receive" as CapabilityId,
+    ] as const;
+    const definitions = capabilityIds.map((capabilityId) => {
+      const definition = BUILTIN_CAPABILITIES.find((item) => item.id === capabilityId);
+      if (definition === undefined) {
+        throw new CapabilityUnknownError(`Capability agent tidak ditemukan: ${capabilityId}.`);
+      }
+      return definition;
+    });
 
     const tx = this.db.raw.transaction(() => {
       this.db.raw
@@ -638,20 +661,22 @@ export class CapabilityRegistry {
             resource,access,side_effect,description,source_ref,updated_at
           ) VALUES(?,'agent',?,?,?,?,?,?,?,?,?,?)`,
         );
-        for (const permission of definition.permissions) {
-          insert.run(
-            input.workspaceId,
-            input.agentId,
-            capabilityId,
-            permission.id,
-            permission.actionClass,
-            permission.resource,
-            permission.access,
-            permission.sideEffect ? 1 : 0,
-            permission.description,
-            `ecx-agent-binding:${input.target}`,
-            now,
-          );
+        for (const definition of definitions) {
+          for (const permission of definition.permissions) {
+            insert.run(
+              input.workspaceId,
+              input.agentId,
+              definition.id,
+              permission.id,
+              permission.actionClass,
+              permission.resource,
+              permission.access,
+              permission.sideEffect ? 1 : 0,
+              permission.description,
+              `ecx-agent-binding:${input.target}`,
+              now,
+            );
+          }
         }
       }
 
@@ -674,11 +699,15 @@ export class CapabilityRegistry {
         eventType: "DECLARATIONS_SYNCED",
         workspaceId: input.workspaceId,
         subject,
-        capabilityId: input.enabled ? capabilityId : null,
-        permissionIds: input.enabled ? definition.permissions.map((item) => item.id) : [],
+        capabilityId: null,
+        permissionIds: input.enabled
+          ? definitions.flatMap((definition) =>
+              definition.permissions.map((permission) => permission.id),
+            )
+          : [],
         operationId: input.operationId,
         reason: input.enabled
-          ? `ECX agent runtime binding synchronized to ${input.target}.`
+          ? `ECX agent runtime + result-receive declarations synchronized to ${input.target}; grants remain explicit.`
           : "ECX agent runtime binding disabled; declarations/grants cleared.",
         now,
       });
@@ -872,6 +901,57 @@ export class CapabilityRegistry {
           BASELINE_AT,
         );
       }
+    });
+    tx();
+  }
+
+  private bootstrapAgentResultReceiveDeclarations(): void {
+    const existing = this.db.raw
+      .prepare("SELECT value FROM authority_meta WHERE key=?")
+      .get(AGENT_RESULT_RECEIVE_DECLARATION_KEY) as { value: string } | undefined;
+    if (existing !== undefined) return;
+    const definition = BUILTIN_CAPABILITIES.find((item) => item.id === "agent.result.receive");
+    if (definition === undefined) {
+      throw new CapabilityUnknownError("Capability agent.result.receive tidak ditemukan.");
+    }
+    const rows = this.db.raw
+      .prepare(
+        "SELECT workspace_id,agent_id,target,operation_id,updated_at FROM ecx_agent_bindings WHERE enabled=1",
+      )
+      .all() as {
+      workspace_id: string;
+      agent_id: string;
+      target: string;
+      operation_id: string;
+      updated_at: string;
+    }[];
+    const tx = this.db.raw.transaction(() => {
+      const insert = this.db.raw.prepare(
+        `INSERT OR IGNORE INTO authority_declarations(
+          workspace_id,subject_kind,subject_id,capability_id,permission_id,action_class,
+          resource,access,side_effect,description,source_ref,updated_at
+        ) VALUES(?,'agent',?,?,?,?,?,?,?,?,?,?)`,
+      );
+      for (const row of rows) {
+        for (const permission of definition.permissions) {
+          insert.run(
+            row.workspace_id,
+            row.agent_id,
+            definition.id,
+            permission.id,
+            permission.actionClass,
+            permission.resource,
+            permission.access,
+            permission.sideEffect ? 1 : 0,
+            permission.description,
+            `ecx-agent-binding:${row.target}`,
+            row.updated_at,
+          );
+        }
+      }
+      this.db.raw
+        .prepare("INSERT INTO authority_meta(key,value) VALUES(?,?)")
+        .run(AGENT_RESULT_RECEIVE_DECLARATION_KEY, BASELINE_AT);
     });
     tx();
   }

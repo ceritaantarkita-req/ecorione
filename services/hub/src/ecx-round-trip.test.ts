@@ -98,6 +98,24 @@ describe("ECX Batch 3 round trip", () => {
     );
   }
 
+  function grantResultReceive(agentId: string, suffix: string) {
+    new CapabilityRegistry(db!).grant(
+      CapabilityGrantRequestSchema.parse({
+        operationId: assertId("operation", "op_b3result" + suffix),
+        workspaceId: "ws_personal",
+        subject: { kind: "agent", id: agentId },
+        capabilityId: "agent.result.receive",
+        permissionIds: ["agent.result.receive"],
+        scope: "personal",
+        maxSensitivity: "INTERNAL",
+        autonomy: "L1",
+        reason: "ECX Batch 3 compatibility result-receive grant.",
+        idempotencyKey: "ecx-b3-result-" + suffix,
+      }),
+      NOW,
+    );
+  }
+
   function createSession(ledger: HistoryLedger, sessionId: string) {
     ledger.createSession({
       id: assertId("session", sessionId),
@@ -153,6 +171,7 @@ describe("ECX Batch 3 round trip", () => {
     await bind(app, "agent:parent-delta", "compose", "parentdelta001");
     await bind(app, "agent:child-delta", "review", "childdelta001");
     grant("agent:parent-delta", "parentdelta001");
+    grantResultReceive("agent:parent-delta", "parentdelta001");
     grant("agent:child-delta", "childdelta001");
     const packet = await plan(app, {
       sessionId,
@@ -281,6 +300,7 @@ describe("ECX Batch 3 round trip", () => {
     createSession(ledger, sessionId);
     await bind(app, "agent:parent-full", "compose", "parentfull001");
     await bind(app, "agent:child-full", "review", "childfull001");
+    grantResultReceive("agent:parent-full", "parentfull001");
     grant("agent:child-full", "childfull001");
     const packet = await plan(app, {
       sessionId,
@@ -366,6 +386,7 @@ describe("ECX Batch 3 round trip", () => {
     await bind(app, "agent:parent-uncertain", "compose", "parentuncertain001");
     await bind(app, "agent:child-uncertain", "review", "childuncertain001");
     grant("agent:parent-uncertain", "parentuncertain001");
+    grantResultReceive("agent:parent-uncertain", "parentuncertain001");
     grant("agent:child-uncertain", "childuncertain001");
     const packet = await plan(app, {
       sessionId,

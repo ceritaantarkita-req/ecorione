@@ -79,7 +79,7 @@ Latest-main staging convergence then CLOSED / PASS at the runtime boundary. Afte
 | Batch 1 — Recipient Execution Foundation | **CLOSED / PASS** |
 | Batch 2 — Execution Contract + Idempotency + Provenance | **CLOSED / PASS** |
 | Batch 3 — Real Agent A -> Agent B round trip | **CLOSED / PASS** |
-| Batch 4 — Security, isolation, result integration | **NEXT / NOT STARTED** |
+| Batch 4 — Security, isolation, result integration | **ACTIVE / SAFE WIP** |
 | Batch 5 — End-to-end observability, quality, economics | **NOT STARTED** |
 | Batch 6 — Historical Ledger retention/compaction/migration | **NOT STARTED** |
 | Batch 7 — Advanced execution/productization | **NOT STARTED** |
