@@ -11,6 +11,7 @@ import {
 } from "./ids.js";
 
 export const ECX_VERSION = 1 as const;
+export const ECX_RETURNED_RESULT_MAX_BYTES = 65_536 as const;
 const TimestampSchema = z.string().datetime({ offset: false });
 export const EcxAgentIdSchema = z
   .string()
@@ -300,6 +301,7 @@ export const EcxExecutionStatusSchema = z
     selectedRefIndexes: z.array(z.number().int().nonnegative()),
     error: z.string().nullable(),
     resultAvailable: z.boolean(),
+    resultEvidence: EcxReturnedResultEvidenceSchema.nullable(),
     startedAt: TimestampSchema,
     updatedAt: TimestampSchema,
     completedAt: TimestampSchema.nullable(),
@@ -334,6 +336,26 @@ export type EcxExecuteResponse = z.infer<typeof EcxExecuteResponseSchema>;
 
 export const EcxRoundTripStateSchema = EcxExecutionStateSchema;
 export type EcxRoundTripState = z.infer<typeof EcxRoundTripStateSchema>;
+
+export const EcxReturnedResultEvidenceSchema = z
+  .object({
+    replyBytes: z.number().int().nonnegative().max(ECX_RETURNED_RESULT_MAX_BYTES),
+    replySha256: z.string().regex(/^[a-f0-9]{64}$/),
+  })
+  .strict();
+export type EcxReturnedResultEvidence = z.infer<typeof EcxReturnedResultEvidenceSchema>;
+
+export const EcxReturnedResultSchema = z
+  .object({
+    sourceAgent: EcxAgentIdSchema,
+    sourceTarget: EcxRuntimeTargetSchema,
+    trust: z.enum(["LOCAL_AGENT", "HOSTED_AGENT"]),
+    sensitivity: SensitivitySchema,
+    reply: z.string(),
+    evidence: EcxReturnedResultEvidenceSchema,
+  })
+  .strict();
+export type EcxReturnedResult = z.infer<typeof EcxReturnedResultSchema>;
 
 export const EcxRoundTripStatusSchema = z
   .object({
@@ -378,6 +400,7 @@ export const EcxRoundTripResponseSchema = z
     state: z.literal("SUCCEEDED"),
     replayed: z.boolean(),
     child: EcxExecuteResponseSchema,
+    returnedResult: EcxReturnedResultSchema,
     handback: EcxRoundTripHandbackSchema,
     history: z
       .object({

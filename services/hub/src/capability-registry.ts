@@ -207,6 +207,21 @@ export const BUILTIN_CAPABILITIES: readonly CapabilityDefinition[] = [
     ],
   }),
   CapabilityDefinitionSchema.parse({
+    id: "agent.result.receive",
+    description:
+      "Menerima hasil delegated agent ke sender boundary setelah ECX security/integration checks.",
+    permissions: [
+      {
+        id: "agent.result.receive",
+        actionClass: "READ",
+        resource: "data",
+        access: "read",
+        sideEffect: false,
+        description: "Menerima bounded result dari delegated agent pada Workspace/scope yang sama.",
+      },
+    ],
+  }),
+  CapabilityDefinitionSchema.parse({
     id: "tool.invoke",
     description: "Generic governed tool invocation contract untuk tool/node pack berikutnya.",
     permissions: [
@@ -614,15 +629,22 @@ export class CapabilityRegistry {
     now: Timestamp,
   ): void {
     const subject: AuthoritySubject = { kind: "agent", id: input.agentId };
-    const capabilityId = (
+    const runtimeCapabilityId = (
       input.target === "hosted" ? "model.invoke.hosted" : "model.invoke.local"
     ) as CapabilityId;
-    const definition = BUILTIN_CAPABILITIES.find((item) => item.id === capabilityId);
-    if (definition === undefined) {
-      throw new CapabilityUnknownError(
-        `Capability runtime agent tidak ditemukan: ${capabilityId}.`,
-      );
-    }
+    const capabilityIds = [
+      runtimeCapabilityId,
+      "agent.result.receive" as CapabilityId,
+    ] as const;
+    const definitions = capabilityIds.map((capabilityId) => {
+      const definition = BUILTIN_CAPABILITIES.find((item) => item.id === capabilityId);
+      if (definition === undefined) {
+        throw new CapabilityUnknownError(
+          `Capability agent tidak ditemukan: ${capabilityId}.`,
+        );
+      }
+      return definition;
+    });
 
     const tx = this.db.raw.transaction(() => {
       this.db.raw
@@ -638,20 +660,22 @@ export class CapabilityRegistry {
             resource,access,side_effect,description,source_ref,updated_at
           ) VALUES(?,'agent',?,?,?,?,?,?,?,?,?,?)`,
         );
-        for (const permission of definition.permissions) {
-          insert.run(
-            input.workspaceId,
-            input.agentId,
-            capabilityId,
-            permission.id,
-            permission.actionClass,
-            permission.resource,
-            permission.access,
-            permission.sideEffect ? 1 : 0,
-            permission.description,
-            `ecx-agent-binding:${input.target}`,
-            now,
-          );
+        for (const definition of definitions) {
+          for (const permission of definition.permissions) {
+            insert.run(
+              input.workspaceId,
+              input.agentId,
+              definition.id,
+              permission.id,
+              permission.actionClass,
+              permission.resource,
+              permission.access,
+              permission.sideEffect ? 1 : 0,
+              permission.description,
+              `ecx-agent-binding:${input.target}`,
+              now,
+            );
+          }
         }
       }
 
@@ -674,11 +698,15 @@ export class CapabilityRegistry {
         eventType: "DECLARATIONS_SYNCED",
         workspaceId: input.workspaceId,
         subject,
-        capabilityId: input.enabled ? capabilityId : null,
-        permissionIds: input.enabled ? definition.permissions.map((item) => item.id) : [],
+        capabilityId: null,
+        permissionIds: input.enabled
+          ? definitions.flatMap((definition) =>
+              definition.permissions.map((permission) => permission.id),
+            )
+          : [],
         operationId: input.operationId,
         reason: input.enabled
-          ? `ECX agent runtime binding synchronized to ${input.target}.`
+          ? `ECX agent runtime + result-receive declarations synchronized to ${input.target}; grants remain explicit.`
           : "ECX agent runtime binding disabled; declarations/grants cleared.",
         now,
       });
