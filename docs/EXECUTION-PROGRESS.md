@@ -4,20 +4,21 @@ Last updated: **2026-09-28**
 
 Status: **CURRENT SUMMARY**
 
-## Audited closure/runtime baseline
+## Audited repository/staging baseline
 
-Immediately before this docs-only reconciliation:
+Runtime compatibility remains the closed Batch 7 implementation. Latest audited docs-only repository/staging convergence before this cleanup-closure pass:
 
 ```text
-closure / staging = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-CI                = #2352 PASS
-Product Eval      = #1591 PASS
-Staging Deploy    = #1475 PASS
-Operations        = healthy
-services          = 15/15 running
+repository / staging = 72d680bfb944cc98f60caddcfc94bbffd45f0653
+CI                   = #2356 PASS
+Product Eval         = #1595 PASS
+Staging Deploy       = #1483 PASS
+Operations           = healthy
+services             = 15/15 running
+free disk            = 28.79 GiB stabilized
 ```
 
-Docs-only successors may advance exact Git/staging identity without changing this compatibility boundary.
+Later docs-only closure commits may advance exact Git/staging identity without changing the Batch 7 runtime compatibility boundary.
 
 ## Closed foundational roadmaps
 
