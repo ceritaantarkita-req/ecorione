@@ -7,6 +7,7 @@ import {
   MemoryFactIdSchema,
   OperationIdSchema,
   SessionIdSchema,
+  WorkspaceIdSchema,
 } from "./ids.js";
 
 export const ECX_VERSION = 1 as const;
@@ -17,6 +18,63 @@ export const EcxAgentIdSchema = z
   .max(96)
   .regex(/^[a-z0-9][a-z0-9:._-]*$/);
 export type EcxAgentId = z.infer<typeof EcxAgentIdSchema>;
+
+export const EcxRuntimeTargetSchema = z.enum(["local", "hosted"]);
+export type EcxRuntimeTarget = z.infer<typeof EcxRuntimeTargetSchema>;
+
+const EcxCapabilityNameSchema = z.string().min(1).max(64);
+
+function uniqueCapabilities(
+  value: { capabilities: readonly string[] },
+  ctx: z.RefinementCtx,
+): void {
+  const seen = new Set<string>();
+  for (const [index, capability] of value.capabilities.entries()) {
+    const normalized = capability.trim().toLowerCase();
+    if (seen.has(normalized)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["capabilities", index],
+        message: `Capability agent duplikat: ${capability}.`,
+      });
+    }
+    seen.add(normalized);
+  }
+}
+
+export const EcxAgentBindingUpsertRequestSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    target: EcxRuntimeTargetSchema,
+    capabilities: z.array(EcxCapabilityNameSchema).min(1).max(64),
+    systemPrompt: z.string().min(1).max(4096),
+    enabled: z.boolean().default(true),
+  })
+  .strict()
+  .superRefine(uniqueCapabilities);
+export type EcxAgentBindingUpsertRequest = z.infer<typeof EcxAgentBindingUpsertRequestSchema>;
+
+export const EcxAgentBindingSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    agentId: EcxAgentIdSchema,
+    target: EcxRuntimeTargetSchema,
+    capabilities: z.array(EcxCapabilityNameSchema).min(1).max(64),
+    systemPrompt: z.string().min(1).max(4096),
+    enabled: z.boolean(),
+    updatedAt: TimestampSchema,
+  })
+  .strict()
+  .superRefine(uniqueCapabilities);
+export type EcxAgentBinding = z.infer<typeof EcxAgentBindingSchema>;
+
+export const EcxAgentBindingListQuerySchema = z
+  .object({
+    workspaceId: WorkspaceIdSchema,
+  })
+  .strict();
 
 export const EcxHistoryRefSchema = z
   .object({
@@ -159,3 +217,69 @@ export const EcxHydrateResponseSchema = z.object({
   items: z.array(EcxHydratedItemSchema),
 });
 export type EcxHydrateResponse = z.infer<typeof EcxHydrateResponseSchema>;
+
+export const EcxExecuteRequestSchema = z
+  .object({
+    packet: EcxPacketSchema,
+    workspaceId: WorkspaceIdSchema,
+    refIndexes: z.array(z.number().int().nonnegative()).min(1).max(32).optional(),
+    selection: EcxReferenceSelectionSchema.optional(),
+    scope: ScopeSchema,
+    maxSensitivity: SensitivitySchema,
+    requestedAt: TimestampSchema,
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    const explicit = value.refIndexes !== undefined;
+    const automatic = value.selection !== undefined;
+    if (value.packet.refs.length === 0) {
+      if (explicit || automatic) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Packet tanpa refs tidak menerima refIndexes/selection.",
+          path: ["refIndexes"],
+        });
+      }
+      return;
+    }
+    if (explicit === automatic) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Pilih tepat satu: refIndexes atau selection.",
+        path: ["refIndexes"],
+      });
+    }
+    if (
+      value.refIndexes !== undefined &&
+      new Set(value.refIndexes).size !== value.refIndexes.length
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "refIndexes tidak boleh duplikat.",
+        path: ["refIndexes"],
+      });
+    }
+  });
+export type EcxExecuteRequest = z.infer<typeof EcxExecuteRequestSchema>;
+
+export const EcxExecuteResponseSchema = z
+  .object({
+    packetId: EventIdSchema,
+    operationId: OperationIdSchema,
+    recipient: EcxAgentIdSchema,
+    target: EcxRuntimeTargetSchema,
+    hydratedBytes: z.number().int().nonnegative(),
+    selectedRefIndexes: z.array(z.number().int().nonnegative()),
+    completion: z.object({
+      reply: z.string(),
+      provider: z.string().min(1),
+      model: z.string().min(1),
+      responseModel: z.string().min(1),
+      modelIdentity: z.string().min(1),
+      modelIdentityPinned: z.boolean(),
+      cacheHit: z.boolean(),
+      routeReason: z.string().min(1),
+    }),
+  })
+  .strict();
+export type EcxExecuteResponse = z.infer<typeof EcxExecuteResponseSchema>;

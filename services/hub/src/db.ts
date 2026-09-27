@@ -76,6 +76,21 @@ CREATE TABLE IF NOT EXISTS history_events (
 );
 CREATE INDEX IF NOT EXISTS idx_history_events_operation ON history_events(operation_id);
 CREATE INDEX IF NOT EXISTS idx_history_events_recorded_at ON history_events(recorded_at);
+
+CREATE TABLE IF NOT EXISTS ecx_agent_bindings (
+  workspace_id TEXT NOT NULL,
+  agent_id TEXT NOT NULL,
+  target TEXT NOT NULL CHECK(target IN ('local','hosted')),
+  capabilities_json TEXT NOT NULL,
+  system_prompt TEXT NOT NULL,
+  enabled INTEGER NOT NULL CHECK(enabled IN (0,1)),
+  operation_id TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(workspace_id, agent_id)
+);
+CREATE INDEX IF NOT EXISTS idx_ecx_agent_bindings_workspace
+  ON ecx_agent_bindings(workspace_id, enabled, agent_id);
+
 CREATE TRIGGER IF NOT EXISTS history_events_no_update
 BEFORE UPDATE ON history_events
 BEGIN

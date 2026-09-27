@@ -22,6 +22,7 @@ export const AUTHORITY_SUBJECT_KINDS = [
   "extension",
   "mcp-tool",
   "sandbox",
+  "agent",
   "model",
   "tool",
   "node",

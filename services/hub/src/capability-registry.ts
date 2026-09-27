@@ -13,6 +13,8 @@ import {
   type CapabilityGrantView,
   type CapabilityId,
   type CapabilityRevokeRequest,
+  type EcxAgentId,
+  type EcxRuntimeTarget,
   type ExtensionManifest,
   type OperationId,
   type PermissionAccess,
@@ -601,6 +603,89 @@ export class CapabilityRegistry {
     this.clearSubject(workspaceId, { kind: "extension", id: extensionId }, now);
   }
 
+  syncAgentBinding(
+    input: {
+      workspaceId: WorkspaceId;
+      agentId: EcxAgentId;
+      target: EcxRuntimeTarget;
+      enabled: boolean;
+      operationId: OperationId;
+    },
+    now: Timestamp,
+  ): void {
+    const subject: AuthoritySubject = { kind: "agent", id: input.agentId };
+    const capabilityId = (
+      input.target === "hosted" ? "model.invoke.hosted" : "model.invoke.local"
+    ) as CapabilityId;
+    const definition = BUILTIN_CAPABILITIES.find((item) => item.id === capabilityId);
+    if (definition === undefined) {
+      throw new CapabilityUnknownError(
+        `Capability runtime agent tidak ditemukan: ${capabilityId}.`,
+      );
+    }
+
+    const tx = this.db.raw.transaction(() => {
+      this.db.raw
+        .prepare(
+          "DELETE FROM authority_declarations WHERE workspace_id=? AND subject_kind='agent' AND subject_id=?",
+        )
+        .run(input.workspaceId, input.agentId);
+
+      if (input.enabled) {
+        const insert = this.db.raw.prepare(
+          `INSERT INTO authority_declarations(
+            workspace_id,subject_kind,subject_id,capability_id,permission_id,action_class,
+            resource,access,side_effect,description,source_ref,updated_at
+          ) VALUES(?,'agent',?,?,?,?,?,?,?,?,?,?)`,
+        );
+        for (const permission of definition.permissions) {
+          insert.run(
+            input.workspaceId,
+            input.agentId,
+            capabilityId,
+            permission.id,
+            permission.actionClass,
+            permission.resource,
+            permission.access,
+            permission.sideEffect ? 1 : 0,
+            permission.description,
+            `ecx-agent-binding:${input.target}`,
+            now,
+          );
+        }
+      }
+
+      this.db.raw
+        .prepare(
+          `DELETE FROM authority_grants
+           WHERE workspace_id=? AND subject_kind='agent' AND subject_id=?
+             AND NOT EXISTS (
+               SELECT 1 FROM authority_declarations d
+               WHERE d.workspace_id=authority_grants.workspace_id
+                 AND d.subject_kind=authority_grants.subject_kind
+                 AND d.subject_id=authority_grants.subject_id
+                 AND d.capability_id=authority_grants.capability_id
+                 AND d.permission_id=authority_grants.permission_id
+             )`,
+        )
+        .run(input.workspaceId, input.agentId);
+
+      this.appendSimpleEvent({
+        eventType: "DECLARATIONS_SYNCED",
+        workspaceId: input.workspaceId,
+        subject,
+        capabilityId: input.enabled ? capabilityId : null,
+        permissionIds: input.enabled ? definition.permissions.map((item) => item.id) : [],
+        operationId: input.operationId,
+        reason: input.enabled
+          ? `ECX agent runtime binding synchronized to ${input.target}.`
+          : "ECX agent runtime binding disabled; declarations/grants cleared.",
+        now,
+      });
+    });
+    tx();
+  }
+
   clearSubject(workspaceId: WorkspaceId, subject: AuthoritySubject, now: Timestamp): void {
     const tx = this.db.raw.transaction(() => {
       this.db.raw
@@ -632,7 +717,7 @@ export class CapabilityRegistry {
     subject: AuthoritySubject,
     capabilityId: CapabilityId,
   ): Map<PermissionId, RequirementRow> {
-    if (subject.kind === "extension" || subject.kind === "node") {
+    if (subject.kind === "extension" || subject.kind === "node" || subject.kind === "agent") {
       const rows = this.db.raw
         .prepare(
           `SELECT permission_id,action_class,resource,access,side_effect,description
