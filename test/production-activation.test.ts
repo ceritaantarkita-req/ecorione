@@ -229,6 +229,7 @@ describe("production activation scripts", () => {
               { provider: "anthropic" },
               { provider: "openrouter" },
               { provider: "openai" },
+              { provider: "nvidia" },
             ],
           });
           return;
@@ -262,6 +263,7 @@ describe("production activation scripts", () => {
         expect(result.stdout).toContain("PASS provider=anthropic");
         expect(result.stdout).toContain("PASS provider=openrouter");
         expect(result.stdout).toContain("PASS provider=openai");
+        expect(result.stdout).toContain("PASS provider=nvidia");
         expect(result.stdout).toContain("restored original runtime settings");
         expect(current).toEqual(original);
       },
