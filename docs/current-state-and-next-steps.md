@@ -4,15 +4,15 @@ Last updated: **2026-09-27**
 
 Status: **CURRENT / REPOSITORY+STAGING CONVERGED / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
-## Current repository identity
+## Repository identity
 
 ```text
 repository      = ceritaantarkita-req/ecorione
 default branch  = main
-current main    = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+audited closure = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
 ```
 
-The current `main` commit is the Batch 7 closure documentation merge.
+`2c2e3c8...` is the exact audited Batch 7 closure/runtime baseline immediately before this docs-only reconciliation. The reconciliation itself may advance the Git/staging SHA without changing application/service/package behavior; inspect live `main` for the newest exact Git revision.
 
 At the latest audit boundary before the current reconciliation branch was created:
 
@@ -29,7 +29,7 @@ The old branch-hygiene checkpoint's 9-branch inventory is historical. Fifteen EC
 
 ## Current runtime / staging truth
 
-Current governed SumoPod staging is deployed from the same exact revision as repository `main`:
+At the audit boundary immediately before this docs-only reconciliation, governed SumoPod staging was deployed from the same exact revision as repository `main`:
 
 ```text
 SHA   = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
