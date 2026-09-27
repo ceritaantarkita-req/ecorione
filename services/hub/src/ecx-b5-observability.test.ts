@@ -172,13 +172,19 @@ describe("ECX Batch 5 end-to-end observability/economics", () => {
   }
 
   function histogram(snapshot: unknown, name: string) {
-    return (
+    const matching = (
       (
         snapshot as {
           histograms?: Array<{ name: string; count: number; min: number; max: number }>;
         }
       ).histograms ?? []
-    ).find((item) => item.name === name);
+    ).filter((item) => item.name === name);
+    if (matching.length === 0) return undefined;
+    return {
+      count: matching.reduce((sum, item) => sum + item.count, 0),
+      min: Math.min(...matching.map((item) => item.min)),
+      max: Math.max(...matching.map((item) => item.max)),
+    };
   }
 
   it("preserves full handback usage/cost and does not double-count economics on replay", async () => {
