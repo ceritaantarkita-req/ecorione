@@ -218,7 +218,8 @@ export const BUILTIN_CAPABILITIES: readonly CapabilityDefinition[] = [
         resource: "data",
         access: "read",
         sideEffect: false,
-        description: "Menerima bounded result dari delegated agent pada Workspace/scope yang sama.",
+        description:
+          "Menerima bounded result dari delegated agent pada Workspace/scope yang sama.",
       },
     ],
   }),
@@ -641,9 +642,7 @@ export class CapabilityRegistry {
     const definitions = capabilityIds.map((capabilityId) => {
       const definition = BUILTIN_CAPABILITIES.find((item) => item.id === capabilityId);
       if (definition === undefined) {
-        throw new CapabilityUnknownError(
-          `Capability agent tidak ditemukan: ${capabilityId}.`,
-        );
+        throw new CapabilityUnknownError(`Capability agent tidak ditemukan: ${capabilityId}.`);
       }
       return definition;
     });
@@ -911,9 +910,7 @@ export class CapabilityRegistry {
       .prepare("SELECT value FROM authority_meta WHERE key=?")
       .get(AGENT_RESULT_RECEIVE_DECLARATION_KEY) as { value: string } | undefined;
     if (existing !== undefined) return;
-    const definition = BUILTIN_CAPABILITIES.find(
-      (item) => item.id === "agent.result.receive",
-    );
+    const definition = BUILTIN_CAPABILITIES.find((item) => item.id === "agent.result.receive");
     if (definition === undefined) {
       throw new CapabilityUnknownError("Capability agent.result.receive tidak ditemukan.");
     }
