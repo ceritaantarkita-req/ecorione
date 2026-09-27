@@ -804,6 +804,102 @@ async function assertHostedParentResultIsolation(
   }
 }
 
+type EcxCompletionTelemetry = ReturnType<typeof EcxExecutionCompletionSchema.parse>;
+
+function recordRoundTripCompletionTelemetry(
+  metrics: ReturnType<typeof observabilityFor>,
+  input: {
+    responseMode: "delta" | "full";
+    leg: "child" | "parent";
+    target: "local" | "hosted";
+    completion: EcxCompletionTelemetry;
+  },
+): void {
+  const labels = {
+    response_mode: input.responseMode,
+    leg: input.leg,
+    target: input.target,
+    provider: input.completion.provider,
+  };
+  metrics.addCounter("ecorione_ecx_round_trip_model_calls_total", 1, labels);
+  const usage = input.completion.usage;
+  if (usage !== undefined) {
+    metrics.addCounter(
+      "ecorione_ecx_round_trip_input_tokens_total",
+      usage.inputTokens,
+      labels,
+    );
+    metrics.addCounter(
+      "ecorione_ecx_round_trip_output_tokens_total",
+      usage.outputTokens,
+      labels,
+    );
+    metrics.addCounter(
+      "ecorione_ecx_round_trip_cache_read_tokens_total",
+      usage.cacheReadTokens,
+      labels,
+    );
+    metrics.addCounter(
+      "ecorione_ecx_round_trip_cache_write_tokens_total",
+      usage.cacheWriteTokens,
+      labels,
+    );
+  }
+  if (input.completion.cost !== undefined) {
+    metrics.addCounter(
+      "ecorione_ecx_round_trip_actual_cost_usd_total",
+      input.completion.cost.actualUsd,
+      labels,
+    );
+  }
+  if (input.completion.budget !== undefined) {
+    metrics.addCounter("ecorione_ecx_round_trip_budget_settlements_total", 1, {
+      ...labels,
+      settlement: input.completion.budget.settlement,
+    });
+  }
+}
+
+function recordRoundTripSuccessTelemetry(
+  metrics: ReturnType<typeof observabilityFor>,
+  response: EcxRoundTripResponse,
+  durationMs: number,
+): void {
+  const labels = {
+    response_mode: response.responseMode,
+    parent_continued: response.handback.parentContinued ? "true" : "false",
+  };
+  metrics.addCounter("ecorione_ecx_round_trips_total", 1, labels);
+  metrics.addCounter(
+    "ecorione_ecx_round_trip_hydrated_bytes_total",
+    response.child.hydratedBytes,
+    labels,
+  );
+  metrics.addCounter(
+    "ecorione_ecx_round_trip_returned_bytes_total",
+    response.returnedResult.evidence.replyBytes,
+    labels,
+  );
+  metrics.observe("ecorione_ecx_round_trip_duration_ms", durationMs, {
+    ...labels,
+    outcome: "success",
+  });
+  recordRoundTripCompletionTelemetry(metrics, {
+    responseMode: response.responseMode,
+    leg: "child",
+    target: response.child.target,
+    completion: response.child.completion,
+  });
+  if (response.handback.parentCompletion !== null) {
+    recordRoundTripCompletionTelemetry(metrics, {
+      responseMode: response.responseMode,
+      leg: "parent",
+      target: response.handback.parentTarget,
+      completion: response.handback.parentCompletion,
+    });
+  }
+}
+
 function replyEvidence(reply: string): {
   replyBytes: number;
   replySha256: string;
@@ -1329,6 +1425,7 @@ export function registerExchangeRoutes(
   );
 
   app.post("/v1/exchange/round-trip", async (req) => {
+    const roundTripStartedAt = performance.now();
     const input = parseOrBadRequest(EcxRoundTripRequestSchema, req.body);
     assertRoundTripHistoryBoundary(input, ledger);
     const parent = agents.get(input.workspaceId, input.packet.sender);
@@ -1395,6 +1492,15 @@ export function registerExchangeRoutes(
       metrics.addCounter("ecorione_ecx_round_trip_replays_total", 1, {
         response_mode: input.packet.responseMode,
       });
+      metrics.observe(
+        "ecorione_ecx_round_trip_duration_ms",
+        performance.now() - roundTripStartedAt,
+        {
+          response_mode: input.packet.responseMode,
+          parent_continued: prior.handback.parentContinued ? "true" : "false",
+          outcome: "replay",
+        },
+      );
       return prior;
     }
 
@@ -1443,10 +1549,7 @@ export function registerExchangeRoutes(
         },
       });
       roundTrips.succeed(input.packet.packetId, response, nowIso());
-      metrics.addCounter("ecorione_ecx_round_trips_total", 1, {
-        response_mode: "full",
-        parent_continued: "false",
-      });
+      recordRoundTripSuccessTelemetry(metrics, response, performance.now() - roundTripStartedAt);
       return response;
     }
 
@@ -1553,10 +1656,7 @@ export function registerExchangeRoutes(
     });
     const completed = roundTrips.succeed(input.packet.packetId, response, nowIso());
     appendRoundTripContinuationOutcome(ledger, completed, startedEventId, response);
-    metrics.addCounter("ecorione_ecx_round_trips_total", 1, {
-      response_mode: "delta",
-      parent_continued: "true",
-    });
+    recordRoundTripSuccessTelemetry(metrics, response, performance.now() - roundTripStartedAt);
     return response;
   });
 }
