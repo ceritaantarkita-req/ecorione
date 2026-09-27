@@ -91,6 +91,28 @@ CREATE TABLE IF NOT EXISTS ecx_agent_bindings (
 CREATE INDEX IF NOT EXISTS idx_ecx_agent_bindings_workspace
   ON ecx_agent_bindings(workspace_id, enabled, agent_id);
 
+CREATE TABLE IF NOT EXISTS ecx_execution_receipts (
+  packet_id TEXT PRIMARY KEY,
+  operation_id TEXT NOT NULL,
+  workspace_id TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  target TEXT NOT NULL CHECK(target IN ('local','hosted')),
+  history_session_id TEXT,
+  fingerprint TEXT NOT NULL,
+  state TEXT NOT NULL CHECK(state IN ('STARTED','SUCCEEDED','FAILED','UNCERTAIN')),
+  hydrated_bytes INTEGER NOT NULL CHECK(hydrated_bytes >= 0),
+  selected_ref_indexes_json TEXT NOT NULL,
+  error TEXT,
+  result_json TEXT,
+  started_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  completed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ecx_execution_receipts_operation
+  ON ecx_execution_receipts(operation_id, packet_id);
+CREATE INDEX IF NOT EXISTS idx_ecx_execution_receipts_workspace
+  ON ecx_execution_receipts(workspace_id, updated_at DESC, packet_id);
+
 CREATE TRIGGER IF NOT EXISTS history_events_no_update
 BEFORE UPDATE ON history_events
 BEGIN
