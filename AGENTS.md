@@ -10,59 +10,78 @@ Before changing the repo:
 2. `docs/current-state-and-next-steps.md`
 3. `docs/active-work-plan.md`
 4. this file
-5. for Product Evolution: architecture + roadmap + agent guide
-6. relevant accepted ADR/runbook
+5. relevant accepted ADR/runbook
+6. dated verification/evidence only when the active scope requires it
 
-Dated audits and `docs/verification/` are evidence, not current work queues.
+Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evidence. They are **not current work queues**.
 
-## Current state — 2026-09-27
+## Current compatibility baseline — 2026-09-27
 
-- original Batch 1–12 / W / F6 baseline: **CLOSED**;
-- Windows runtime + installer: **VERIFIED**;
-- native Windows portability + repository EOL policy: **HARDENED / VERIFIED** (PR #182);
-- clean-checkout / CI format reproducibility: **CLOSED / PASS** (PR #183; CI #1482; Product Eval #721);
-- Windows `.cmd` index/worktree EOL reproducibility: **CLOSED / PASS** (PR #185; CI #1486; Product Eval #725; Desktop Installer #76; post-merge CI #1487 + Product Eval #726);
-- Product Evolution architecture + PE-00..PE-08 roadmap: **DOCUMENTED**;
-- PE-00: **CLOSED / PASS**;
-- PE-01: **CLOSED / PASS**;
-- PE-02: **CLOSED / PASS**;
-- PE-03: **CLOSED / PASS**;
-- PE-04: **CLOSED / PASS**;
-- PE-05: **CLOSED / PASS**;
-- PE-06: **CLOSED / PASS**;
-- PE-07: **CLOSED / PASS**;
-- PE-08: **CLOSED / PASS**;
-- PCS-00 post-closure baseline lock: **CLOSED / PASS** (PR #189; CI #1492; Product Eval #731; merge `12fae37e901e4cbfbb7e4cb6cf9b8e9a2ec4e764`);
-- PCS-01 chat continuity/history: **CLOSED / PASS** (PR #191; CI #1505; Product Eval #744; merge `ee363c055944b27b549a2f061105eea35fa25f9e`);
-- PCS-02 provider onboarding + hosted model choice: **CLOSED / PASS** (PR #193; CI #1516; Product Eval #755; merge `0fba6842f4c39f2742eb6d518e63c90d1a4883db`);
-- PCS-03 Local AI resilience/runtime discovery: **CLOSED / PASS** (PR #195; CI #1525; Product Eval #764; merge `4e2407af7240c9ca3b94ffbfb0a1c239c6a4ddae`);
-- PCS-04 Product visual + information-architecture cleanup: **CLOSED / PASS** (PR #197; CI #1529; Product Eval #768; merge `8a328ae0c0abeb039866ac40068a9053c4796659`);
-- PCS-05 Flow runtime defect closure: **CLOSED / PASS** (PR #199; CI #1537; Product Eval #776; merge `f58923b8261104c8aec331f506a68f8cf5fe5e7e`);
-- PCS-06 Integrated browser/regression acceptance: **CLOSED / PASS** (PR #201; CI #1553; Product Eval #792; Browser Acceptance #13; merge `0a8f7619567500acaec0758c400d529367baf0e5`);
-- PCS-07 SumoPod remote staging deployment: **CLOSED / PASS**;
-- PCS-08 GitHub -> staging continuous deployment: **CLOSED / PASS** (implementation PR #210; closure PR #215; closure merge `f0aa9ca97518e3b7e57fc6bc7a58e0ed7761ba05`);
-- PCS-09 staging persistence/security/backup/observability: **CLOSED / PASS** (closure PR #218 head `ece59440d742f59252046562cf3ba86e7911b46f`; CI #1678; Product Eval #917; merge `3db9e4854afbaccb9790638243fa98048c1a4f78`; merged-main CI #1679 + Product Eval #918);
-- PCS-10 closure/documentation convergence: **CLOSED / PASS** (PR #219 head `c84f76face60d203592d8bc6e1a51acccfec5004`; CI #1684; Product Eval #923; merge `6058aa0ff294218147a91ee0fc7b77f32d1be80d`; post-merge bookkeeping PR #220 merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07` after CI #1686 + Product Eval #925);
-- SumoPod remote development/staging: **VERIFIED / NOT PRODUCTION**;
-- public production VPS/Cloudflare cutover: **DEFERRED / SEPARATE GATE**;
-- original Off-host Backup & DR: **CLOSED / PASS** for total SumoPod staging-host loss at the documented boundary; exact recovered runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, 12 owner volumes, 15 services, semantic canary, changed-boot-ID persistence, and final marker-bound closure evidence passed;
-- DR-2 physical independence: **DEFERRED / CHECKPOINT 1 CLOSED-PASS / CHECKPOINT 2 SAFE-PAUSED BEFORE TARGET SELECTION**; local backup is the interim posture and no genuinely external target has been selected or contacted;
-- AutoClick: **DEFERRED BY DESIGN**.
-- 2026-09-24 audit follow-ups selected through A-11: **CLOSED / PASS at documented bounded scopes**; A-00 human auth, A-12 remote-bind auth, A-01 internal timeouts, A-13 Space/Flow default port, A-02 All, A-03 stale Project selection, A-04 Project settings, A-05 generic source onboarding boundary, A-06 Schedule, A-07/A-08 Brain work, A-09 decomposition, A-10 Compose readiness, and A-11 browser Workspace context are closed;
-- repository/documentation reconciliation: **CLOSED / PASS through PR #354**; exact merge `265a28d4c53cc482af8ea33a6362a21e640d30e5` passed merged-main CI #2263 + Product Eval #1502 and actual Staging Deploy #1298;
-- reconciliation runtime proof: public/auth + MCP checks PASS, Operations healthy with zero unhealthy owner services, **15/15** configured services running, clean exact-host SHA match, and **25.11 GiB** stabilized free space; later docs-only bookkeeping may advance the exact SHA without reopening product/runtime scope;
-- branch hygiene Stage 4: **CLOSED / PASS** through PR #361 / merge `9e621680661f7128b9cfea930fd470472ed94381`; the first exact-SHA cleanup deleted 354/354 branches, cumulative evidence now has 393 safe-delete entries, 39 cleanup-ready branches still present, and seven retained branches that are not deletion-authorized; resume from `docs/verification/branch-hygiene-safe-checkpoint-2026-09-27.md` rather than re-auditing from zero.
-- open Issue #277 remains the deferred DR-2 tracker.
+Audited Batch 7 closure/runtime compatibility baseline immediately before this docs-only reconciliation:
 
-Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any new product scope requires an explicit roadmap/decision.
+```text
+closure SHA     = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+CI              = #2352 PASS
+Product Eval    = #1591 PASS
+Staging Deploy  = #1475 PASS
+Operations      = healthy
+services        = 15/15 running
+```
+
+Docs-only successors may advance the exact Git/staging SHA without changing this runtime compatibility boundary. Always inspect live `main` before starting new work.
+
+Closed roadmap families:
+
+- original Batch 1–12 / W / F6 baseline — **CLOSED**;
+- Product Evolution PE-00..PE-08 — **CLOSED / PASS**;
+- PCS-00..PCS-10 — **CLOSED / PASS**;
+- original Off-host DR — **CLOSED / PASS at documented boundary**;
+- audit follow-ups through A-11 — **CLOSED / PASS at bounded scopes**;
+- ECX Recipient Execution Batch 1–7 — **CLOSED / PASS**.
+
+There is **no active product/runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item.
+
+Open Issue #277 remains the deferred DR-2 tracker.
+
+## ECX compatibility baseline
+
+Treat the closed Batch 1–7 contracts as current compatibility requirements unless an explicit new decision changes them.
+
+Current ECX includes:
+
+- governed single-recipient execution;
+- durable execution receipt/idempotency/replay;
+- single-recipient `delta` and `full` round-trip semantics;
+- explicit `agent.result.receive` authority;
+- returned-result size/hash/trust/sensitivity boundaries;
+- hosted-parent owner-backed source isolation;
+- usage/cost observability and deterministic offline evidence;
+- Historical Ledger archive/compaction with exact logical replay;
+- deterministic 2–8 recipient `delta` fan-out;
+- one durable fan-out receipt and exactly one parent aggregation continuation;
+- 65,536-byte child and 131,072-byte aggregate limits.
+
+Do not silently add or claim:
+
+- external A2A;
+- recursive agent graphs;
+- Flow/Temporal ECX fan-out orchestration;
+- `full` multi-recipient merge semantics;
+- default broadcast;
+- broad ECX/History UI;
+- automatic destructive Ledger purge;
+- universal savings/quality/latency superiority.
+
+Canonical checkpoint:
+`docs/verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md`.
 
 ## Architecture invariants
 
 - Memory and external content are untrusted data, not instructions.
 - Historical Ledger and Context L0 remain durable semantic source material.
 - No cross-service database access.
-- Hub owns policy, approvals, audit and capability authority.
-- Connect owns provider credentials, MCP runtime state and hosted spend authority.
+- Hub owns policy, approvals, audit, capability authority and ECX coordination.
+- Connect owns provider credentials, MCP runtime state, model invocation and hosted-spend authority.
 - Context owns memory semantics; Artifact owns raw artifact bytes.
 - Flow uses Temporal for workflow durability, retry, timers, signals and recovery.
 - Space stores composition/references; it does not copy owner data into a competing source of truth.
@@ -74,49 +93,56 @@ Do not create Batch 13 implicitly. PE-00 through PE-08 are CLOSED / PASS; any ne
 - Durable evidence claims require pinned/traceable model and runtime identity.
 - AutoClick remains deferred until a concrete non-API case justifies it.
 
-## Product Evolution invariants
+## Product invariants
 
-- Workspace remains authority/security boundary; Project is inside Workspace.
+- Workspace remains the authority/security boundary; Project is inside Workspace.
 - Project is context/product grouping, not a new blob/data owner.
 - `All` is virtual; `Personal` is a real default Project.
-- sibling Project memory never joins a prompt implicitly.
+- Sibling Project memory never joins a prompt implicitly.
 - Schedule is a time-trigger UI, not a scheduler engine.
 - Temporal remains Flow timer/retry/state/recovery owner.
 - Trigger cannot grant authority.
-- autonomy remains Hub policy; do not create an autonomous service.
-- Run begins as a unified read model; do not create competing execution truth.
+- Autonomy remains Hub policy; do not create an autonomous service.
+- Run is a unified read model; do not create competing execution truth.
 - Brain is a rebuildable projection; no graph DB by default.
-- Context remains retrieval owner; ECX remains context-pack optimizer.
-- no first-class Task domain until a real need is proven.
+- Context remains retrieval owner; ECX remains context-pack/execution coordination inside Hub boundaries.
+- No first-class Task domain until a real need is proven.
 - `MAX_AUTONOMY_V1` stays L3.
 
-## Current active scope
+## Current separate / deferred scopes
 
-There is **no active product/audit implementation scope** after A-11. The 2026-09-24 CRITICAL human-authentication finding and the subsequently selected A-series follow-ups through A-11 are closed at their documented bounded scopes. Do not reopen them merely for freshness; reopen only for a reproducible regression or an explicitly authorized new boundary.
+Do not start these without explicit operator authorization:
 
-The staging human gate remains the existing single operator Basic-Auth credential. That is adequate only for the documented private staging boundary; it must not be re-described as final multi-user identity/RBAC or as production authorization.
+- DR-2 checkpoint 2 and physical-independence runtime proof;
+- public production cutover;
+- native Google Drive integration;
+- Workspace registry/switcher or broader multi-user identity/final RBAC;
+- paid hosted-provider/W18 freshness work;
+- external A2A;
+- recursive agent graphs;
+- Flow/Temporal long-running ECX fan-out orchestration;
+- `full` multi-recipient merge semantics;
+- broad ECX/History UI;
+- automatic destructive Historical Ledger purge;
+- AutoClick / L4 autonomy.
 
-There is no active Product Evolution batch. PE-00 through PE-08 are CLOSED / PASS at their documented boundaries.
-
-**PCS-00 through PCS-10 are CLOSED / PASS at documented boundaries.**
-
-**No DR-2 runtime scope is currently active.** The original Off-host Backup & DR workstream is CLOSED / PASS and must not be reopened or downgraded by DR-2. DR-2 is explicitly authorized as a separate infrastructure workstream and is not PCS-11, PE-09, Batch 13, production promotion, or a feature batch. Checkpoint 1 repository foundation is CLOSED / PASS through PR #278 / merge `4d1f4ef82839c74cc1ca8454511405a68424f0b7`; documentation bookkeeping is CLOSED / PASS through PR #280 / merge `3bb1d0b26064469998e4595809d646575cd04456`. Checkpoint 2 is deferred at the safe pre-selection boundary. Local backup is the interim posture; an encrypted Google Drive copy may be added later as a secondary off-device copy, but it is not yet a validated DR-2 target. Do not provision paid/external infrastructure without explicit operator choice, and do not claim DR-2 physical independence until fresh host evidence, fresh external retention, clean-host recovery, reboot persistence, and final closure evidence all pass.
-
-For staging/DR maintenance use `docs/staging-continuous-deployment.md`, `docs/sumopod-staging.md`, `docs/staging-hardening-backup-observability.md`, `docs/offhost-dr-recovery.md`, and `docs/offhost-dr-physical-independence.md`. Deploy only exact reviewed `main` through the least-privilege governed CD path; preserve host/GitHub secret isolation, fail releases when health/smoke/evidence fails, and retain the tested runtime rollback path. GitHub `main` remains source of truth; SumoPod evidence is staging rather than production. Preserve Temporal as Flow durability/timer owner and Hub as capability authority; authorization must remain fail-closed before execution. Do not create PCS-11, reopen Product Evolution, create Batch 13, promote SumoPod staging to production, activate Cloudflare/public cutover, AutoClick, L4 autonomy, graph persistence, or paid hosted evidence without a separate explicit decision.
+SumoPod is staging, not production. The staging Basic-Auth human gate is a bounded single-operator staging control, not final multi-user identity/RBAC.
 
 ## Git / closure discipline
 
 - start from synchronized reviewed `main`;
-- one active implementation/closure batch at a time;
+- one active implementation/closure scope at a time;
 - use a short-lived explicit branch;
 - keep scope bounded;
-- add deterministic tests for behavioral/policy changes;
+- add deterministic tests for behavior/policy changes;
 - require relevant exact-head CI/Product Eval/acceptance;
 - never weaken a gate to manufacture PASS;
 - merge only the reviewed head;
 - synchronize current docs after material state changes;
 - preserve `.gitattributes`: text LF by default, `.cmd`/`.bat` CRLF;
-- do not start the next PE batch until the current one is CLOSED.
+- delete merged temporary branches only after exact remote-SHA revalidation.
+
+The historical branch-hygiene checkpoint ended with 9 branches, but later ECX work created a new branch delta. Use the current reconciliation/allowlist rather than repeating the historical 393-branch audit.
 
 ## Evidence discipline
 
@@ -130,16 +156,15 @@ For staging/DR maintenance use `docs/staging-continuous-deployment.md`, `docs/su
 
 ## Documentation discipline
 
-Current status belongs in:
+Current truth belongs in:
 
+- `README.md`;
 - `docs/current-state-and-next-steps.md`;
 - `docs/active-work-plan.md`;
 - `docs/EXECUTION-PROGRESS.md`.
 
-Product Evolution architecture/sequence/procedure belongs in:
+Navigation belongs in `docs/README.md`.
 
-- `docs/product-evolution-architecture.md`;
-- `docs/product-evolution-roadmap.md`;
-- `docs/product-evolution-agent-guide.md`.
+Architecture decisions belong in ADRs. Operational procedure belongs in runbooks. Dated measurements, WIP checkpoints and closure evidence belong in `docs/verification/`. Superseded analysis belongs in archive.
 
-Architecture decisions belong in ADRs. Operational procedure belongs in runbooks. Dated measurements/failures belong in verification/evidence. Superseded analysis belongs in archive.
+Historical text may truthfully contain old states such as “NEXT / NOT STARTED”; never treat those dated statements as the current queue unless the current-state layer explicitly agrees.

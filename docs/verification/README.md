@@ -2,69 +2,96 @@
 
 This directory contains **dated evidence**, not current planning.
 
-It intentionally preserves:
+Use current repository state from:
 
-- closure records;
-- failed attempts and defect ledgers;
-- exact-head CI/runtime evidence;
-- bounded benchmark measurements;
-- reconciliation records.
+1. `../current-state-and-next-steps.md`
+2. `../active-work-plan.md`
+3. `../../AGENTS.md`
 
-Use [../current-state-and-next-steps.md](../current-state-and-next-steps.md) for current status and [../active-work-plan.md](../active-work-plan.md) for the current work queue. DR-2 checkpoint 2 external-target selection is currently deferred at a safe pre-selection boundary; PE/PCS/original Off-host DR implementation scopes remain closed.
+Historical evidence may contain statements that were correct at the time but are no longer current. Preserve those statements; do not reinterpret them as the active queue.
 
-Do not “clean up” a historical failure by rewriting its original result. If later work fixes the issue, record that in a later verification file and in the current-state docs.
+## Latest repository truth
 
-W18 paid evidence is closed; do not rerun it merely to produce a newer dated record.
+- [repository-truth-reconciliation-2026-09-27.md](repository-truth-reconciliation-2026-09-27.md) — latest audit/reconciliation of current `main`, staging, docs drift and post-ECX branch delta.
+- [post-ecx-branch-cleanup-allowlist-2026-09-27.json](post-ecx-branch-cleanup-allowlist-2026-09-27.json) — exact-SHA cleanup candidates for the 15 pre-reconciliation ECX branches; deletion is not claimed until execution.
+- [branch-hygiene-safe-checkpoint-2026-09-27.md](branch-hygiene-safe-checkpoint-2026-09-27.md) — historical final checkpoint for the earlier 393-branch cleanup. Its 9-branch inventory is correct for that checkpoint but is not the current inventory after later ECX work.
 
-Latest ECX execution closure checkpoint: [ecx-execution-b7-safe-checkpoint-2026-09-27.md](ecx-execution-b7-safe-checkpoint-2026-09-27.md). Batch 1 through Batch 7 are CLOSED / PASS at their canonical boundaries; the ECX Recipient Execution roadmap is closed and no Batch 8 is implicitly opened. The earlier [Batch 7 WIP checkpoint](ecx-execution-b7-wip-checkpoint-2026-09-27.md) is historical and superseded.
+## ECX Recipient Execution
 
-Latest bounded post-closure maintenance checkpoint: [post-closure-maintenance-checkpoint-5-2026-09-21.md](post-closure-maintenance-checkpoint-5-2026-09-21.md). The fourth checkpoint through PR #242 remains preserved in [post-closure-maintenance-checkpoint-4-2026-09-21.md](post-closure-maintenance-checkpoint-4-2026-09-21.md), the third checkpoint through PR #240 remains preserved in [post-closure-maintenance-checkpoint-3-2026-09-21.md](post-closure-maintenance-checkpoint-3-2026-09-21.md), the second checkpoint through PR #237 remains preserved in [post-closure-maintenance-checkpoint-2-2026-09-21.md](post-closure-maintenance-checkpoint-2-2026-09-21.md), and the earlier checkpoint through PR #232 remains preserved in [post-closure-maintenance-checkpoint-2026-09-21.md](post-closure-maintenance-checkpoint-2026-09-21.md). Historical repository-wide documentation audits: [repository-documentation-reconciliation-2026-09-21.md](repository-documentation-reconciliation-2026-09-21.md) and [repository-documentation-reconciliation-2026-09-23.md](repository-documentation-reconciliation-2026-09-23.md). Latest reconciliation: [repository-documentation-reconciliation-2026-09-26.md](repository-documentation-reconciliation-2026-09-26.md). Latest roadmap closure evidence: [pcs-10-documentation-convergence-2026-09-21.md](pcs-10-documentation-convergence-2026-09-21.md). Real-host staging evidence is recorded in [pcs-09-repository-preparation-2026-09-21.md](pcs-09-repository-preparation-2026-09-21.md). Native-Windows portability closure remains in [windows-native-portability-closure-2026-09-20.md](windows-native-portability-closure-2026-09-20.md).
+Canonical final checkpoint:
 
+- [ecx-execution-b7-safe-checkpoint-2026-09-27.md](ecx-execution-b7-safe-checkpoint-2026-09-27.md) — Batch 7 CLOSED / PASS; ECX Recipient Execution B1–B7 roadmap CLOSED / PASS; no implicit Batch 8.
 
-Historical latest-main staging-convergence evidence: [latest-main-staging-convergence-closure-2026-09-22.md](latest-main-staging-convergence-closure-2026-09-22.md). It records governed Staging Deploy #293 / run `35627920447` PASS for exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` / `staging-52046db35e40`. That runtime was later superseded by the governed original-DR staging runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`; the older checkpoints remain historical evidence.
+Earlier final checkpoints:
 
-Latest original Off-host DR runtime closure: [offhost-dr-runtime-closure-2026-09-23.md](offhost-dr-runtime-closure-2026-09-23.md). It records total SumoPod staging-host-loss recovery PASS at the documented boundary on exact source `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / `staging-b27c1e5833be`, with 12 restored volumes, 15 services, semantic canary, changed-boot-ID persistence, and final marker-bound RPO/RTO evidence.
+- [ecx-execution-b6-safe-checkpoint-2026-09-27.md](ecx-execution-b6-safe-checkpoint-2026-09-27.md)
+- [ecx-execution-b5-safe-checkpoint-2026-09-27.md](ecx-execution-b5-safe-checkpoint-2026-09-27.md)
+- [ecx-execution-b4-safe-checkpoint-2026-09-27.md](ecx-execution-b4-safe-checkpoint-2026-09-27.md)
+- [ecx-execution-b3-safe-checkpoint-2026-09-27.md](ecx-execution-b3-safe-checkpoint-2026-09-27.md)
+- [ecx-execution-b2-safe-checkpoint-2026-09-27.md](ecx-execution-b2-safe-checkpoint-2026-09-27.md)
+- [ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md](ecx-recipient-execution-b1-safe-checkpoint-2026-09-27.md)
 
-Latest DR-2 foundation evidence: [offhost-dr2-checkpoint-1-2026-09-23.md](offhost-dr2-checkpoint-1-2026-09-23.md). Checkpoint 1 repository foundation is CLOSED / PASS; checkpoint 2 external-target selection is now deferred and no physical-independence runtime claim exists.
+Files named `*-wip-checkpoint-*` are preserved implementation evidence and are explicitly superseded by the corresponding final checkpoint. Do not use them as resume pointers.
 
-DR-2 checkpoint 2 safe selection package: [offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](offhost-dr2-checkpoint-2-selection-package-2026-09-23.md). It prepares the operator decision and strict-SSH custody/trust boundary without selecting or mutating any external target; checkpoint 2 is now DEFERRED until an explicit operator decision resumes target selection.
+## Repository / branch hygiene
 
-DR-2 checkpoint 2 deferment: [offhost-dr2-checkpoint-2-deferment-2026-09-23.md](offhost-dr2-checkpoint-2-deferment-2026-09-23.md). The operator postponed external-target selection; local backup is the interim posture and Google Drive is only an optional future encrypted secondary copy, not a validated DR-2 target.
+- [repository-documentation-reconciliation-2026-09-26.md](repository-documentation-reconciliation-2026-09-26.md) — prior repository/docs reconciliation before the later branch-hygiene and ECX work.
+- [branch-hygiene-audit-2026-09-27.md](branch-hygiene-audit-2026-09-27.md) — historical classification work.
+- [branch-hygiene-execution-2026-09-27.md](branch-hygiene-execution-2026-09-27.md) — destructive cleanup execution evidence.
+- [branch-hygiene-safe-checkpoint-2026-09-27.md](branch-hygiene-safe-checkpoint-2026-09-27.md) — historical closure of the 393-entry cleanup set.
+- [repository-truth-reconciliation-2026-09-27.md](repository-truth-reconciliation-2026-09-27.md) — current post-ECX reconciliation.
 
-DR-2 safe resumable checkpoint: [offhost-dr2-safe-checkpoint-2026-09-23.md](offhost-dr2-safe-checkpoint-2026-09-23.md). It records exact repository main, merged-main gates, local-backup posture, no external mutation, and the resume sequence.
+Do not rerun the historical 393-branch classification from zero. New branch work must be handled as a delta against current Git state.
 
-Current-main + staging parity audit: [current-main-staging-audit-2026-09-24.md](current-main-staging-audit-2026-09-24.md). It preserves the original audit baseline and discovery text while recording later closure updates. The CRITICAL/HIGH findings and all subsequently selected bounded follow-ups through A-11 are now closed at their documented boundaries; deferred provider-specific/multi-user/DR/production scopes remain separate.
+## Audit follow-up closure
 
-Current-main audit safe/resumable checkpoint: [current-main-audit-safe-checkpoint-2026-09-24.md](current-main-audit-safe-checkpoint-2026-09-24.md). It records the exact pre-fix audit merge, prioritized findings, and original no-mutation boundary.
+Latest bounded A-series checkpoint:
 
-Ai human-authentication closure: [ai-human-auth-closure-2026-09-24.md](ai-human-auth-closure-2026-09-24.md). It closes the CRITICAL Issue #287 finding at the SumoPod staging boundary through PRs #293–#295, final reviewed main `b73e885d51e82716d5b29b3b31d207aae5ec95d0`, green CI/Product Eval, governed staging deploy, representative unauthenticated Ai read/mutation failures, preserved MCP/OAuth behavior, healthy Operations, and exact-host evidence.
+- [session-10-a11-browser-workspace-context-closure-2026-09-26.md](session-10-a11-browser-workspace-context-closure-2026-09-26.md)
 
-Historical staging capacity safe stop: [staging-capacity-recovery-safe-checkpoint-2026-09-24.md](staging-capacity-recovery-safe-checkpoint-2026-09-24.md). It preserves the Docker-filesystem exhaustion incident and the pre-recovery stop boundary.
+The earlier current-main/staging audit remains the source of historical findings:
 
-Latest staging capacity recovery closure: [staging-capacity-recovery-closure-2026-09-24.md](staging-capacity-recovery-closure-2026-09-24.md). It records Session 1 host recovery PASS: BuildKit-only cleanup, clean reviewed runtime checkout, refreshed privileged deploy helper, private-edge/Ops/exact-host revalidation, and the deliberate `ECORIONE_STAGING_CD_ENABLED=0` handoff into controlled Session 2 convergence.
-Latest staging auto-deploy restoration closure: [staging-auto-deploy-restore-2026-09-24.md](staging-auto-deploy-restore-2026-09-24.md). Session 2 is CLOSED / PASS: the restricted GitHub -> SumoPod deploy path, bounded Operations readiness, exact reviewed SHA deployment, public/MCP checks, Operations health, and true post-merge automatic workflow-run were proven end to end.
-Deployment pipeline audit closure: [deployment-pipeline-audit-2026-09-24.md](deployment-pipeline-audit-2026-09-24.md). Session 3 is CLOSED / PASS: single-image build, release/runtime identity consistency, full rollback validation, current+rollback retention, post-deploy capacity stabilization, and a true automatic post-merge deployment were proven end to end.
-Session 4 HIGH-findings safe checkpoint: [session-4-high-findings-safe-checkpoint-2026-09-25.md](session-4-high-findings-safe-checkpoint-2026-09-25.md). It records A-12 closure via PR #308, A-01 closure via PR #309, exact staging runtime `2ee12fd454ade78ce1bf732390334726980e0451`, healthy 15-service acceptance, capacity stabilization, and the bounded Session 5 A-13 resume scope.
-Session 5 A-13 safe checkpoint: [session-5-a13-safe-checkpoint-2026-09-25.md](session-5-a13-safe-checkpoint-2026-09-25.md). It records PR #312 / merge `d8d2a113c917cee87f2d43a5a2243eda2e4d2173`, canonical Space -> Flow standalone port `17028`, deterministic port-map regression coverage, merged-main CI/Product Eval PASS, automatic Staging Deploy #833 PASS, exact-host runtime identity, preserved auth/MCP boundaries, healthy Operations, and the Project UX safe-resume boundary.
-Session 6 A-02 safe checkpoint: [session-6-a02-safe-checkpoint-2026-09-25.md](session-6-a02-safe-checkpoint-2026-09-25.md). It records PR #314 / merge `591b54131c2d0b53532f33e08b878c15a0617951`, functional virtual All aggregate behavior without synthetic Project memory scope, deterministic route/source/browser regression coverage, merged-main CI/Product Eval PASS, automatic Staging Deploy #851 PASS, exact-host runtime identity, preserved auth/MCP boundaries, healthy Operations, and the A-03 safe-resume boundary.
-Session 7 A-03 safe checkpoint: [session-7-a03-safe-checkpoint-2026-09-25.md](session-7-a03-safe-checkpoint-2026-09-25.md). It records PR #316 / merge `8bbaf855b4f415afbe09eb9b6d16f9c1df6e1f8e`, shared active-Project reconciliation across Ai/Work/Brain, stale-selection unit/source/browser regression coverage, merged-main CI/Product Eval PASS, automatic Staging Deploy #869 PASS, exact-host runtime identity, preserved auth/MCP boundaries, healthy Operations, and the next scope-decision boundary.
-Session 8 Project settings/source-ingestion safe checkpoint: [session-8-a05b3b-safe-checkpoint-2026-09-25.md](session-8-a05b3b-safe-checkpoint-2026-09-25.md). It records PRs #318–#324, A-04 Project settings closure, A-05a picker, A-05b direct file ingestion, Project-scoped extraction, hardened URL snapshots, generic MCP/connector resource browse+snapshot ingestion, final implementation main `3dd350e938d3651e75fc81ac30e9ef751c477ca5`, merged-main CI/Product Eval/MCP PASS, automatic Staging Deploy run `36109914350` PASS, and the remaining native Google Drive/folder-semantics decision before Schedule A-06.
-Session 9 A-05 closure decision: [session-9-a05-closure-decision-2026-09-25.md](session-9-a05-closure-decision-2026-09-25.md). It accepts generic MCP-resource ingestion as the A-05 connector boundary, defers native Google Drive OAuth/onboarding as a separate future integration, rejects unbounded recursive folder auto-ingestion, and explicitly unblocks Schedule A-06.
-Session 9 A-06a Schedule safe checkpoint: [session-9-a06a-schedule-safe-checkpoint-2026-09-25.md](session-9-a06a-schedule-safe-checkpoint-2026-09-25.md). It records PR #327 / merge `3b1abefd18263f7441d139e3435b064f83b142ea`, calendar cursor + day/week/month/year projections, preserved Trigger/Temporal authority, exact-head CI/Product Eval/PCS-06 PASS, merged-main CI/Product Eval PASS, automatic Staging Deploy `36114495464` PASS, and the bounded A-06b remainder before Brain work.
+- [current-main-staging-audit-2026-09-24.md](current-main-staging-audit-2026-09-24.md)
 
-Session 9 A-06b Schedule closure: [session-9-a06b-schedule-closure-2026-09-25.md](session-9-a06b-schedule-closure-2026-09-25.md). It records PR #329 / merge `d182c5ec06be14de068b7c3911a0decffcc94d41`, searchable/autocomplete Project selection, inline `+ New Project`, governed local AI-assisted Schedule create/edit drafting, explicit-Save-only Trigger mutation, exact-head CI/Product Eval/PCS-06/MCP PASS, merged-main CI/Product Eval/MCP PASS, automatic Staging Deploy `36125427040` PASS on the exact reviewed SHA, healthy Operations, preserved auth/MCP boundaries, and global A-06 CLOSED / PASS without opening Brain A-07/A-08.
+Selected follow-ups through A-11 are closed at their documented scopes. Do not reopen them for freshness alone.
 
-Session 9 A-07 Brain scalable-layout closure: [session-9-a07-brain-scalable-layout-closure-2026-09-25.md](session-9-a07-brain-scalable-layout-closure-2026-09-25.md).
-Session 9 A-08a Brain owner-resource closure: [session-9-a08a-brain-owner-resources-closure-2026-09-25.md](session-9-a08a-brain-owner-resources-closure-2026-09-25.md).
-Session 9 A-08b Brain Context Fact closure: [session-9-a08b-brain-context-facts-closure-2026-09-25.md](session-9-a08b-brain-context-facts-closure-2026-09-25.md). It records PR #335 / merge `bc5601602e401bb0f4d19f567b4dd10c6388f94d`, Hub-first Project authorization, bounded Context Fact reads, sibling-Project fail-closed isolation, exact-head CI/Product Eval/PCS-06/MCP PASS, merged-main CI/Product Eval/MCP PASS, and exact-SHA staging deploy `36149034797` PASS. It records PR #333 / merge `461a9665584b5e3a47396663cd4220f21c62027c`, first-class Artifact/Page owner nodes, preserved rebuildable Brain architecture, exact-head CI/Product Eval/PCS-06/MCP PASS, merged-main CI/Product Eval/MCP PASS, exact Staging Deploy `36142092154` PASS, and A-08b Context Facts as the next audited narrow candidate. It records PR #331 / merge `13775e3903a74732162658292a8dd350a068de6b`, deterministic dynamic canvas spacing, pan/drag/zoom/reset, 50-Run rendered-browser proof, merged-main CI/Product Eval PASS, and exact-SHA Staging Deploy `36132607599` PASS.
-Session 9 A-08c Brain Fact provenance closure: [session-9-a08c-brain-fact-provenance-closure-2026-09-25.md](session-9-a08c-brain-fact-provenance-closure-2026-09-25.md). It records PR #338 / merge `0a36a041a4077e185cbc934723d7ca195c5f5fc5`, schema-valid authorized Fact -> Artifact `GENERATED_FROM` projection, exact-head CI/Product Eval/MCP/PCS-06 PASS, merged-main CI/Product Eval/MCP PASS, and exact-SHA Staging Deploy `36157615400` PASS.
-Session 9 post-A-08c safe checkpoint: [session-9-post-a08c-safe-checkpoint-2026-09-25.md](session-9-post-a08c-safe-checkpoint-2026-09-25.md). It records canonical repository/staging revision `807b6f42683a910d106a3176f95442145807cf97`, last product-code main `0a36a041a4077e185cbc934723d7ca195c5f5fc5`, merged-main CI `36160149549` + Product Eval `36160149558` PASS, Staging Deploy `36160532772` exact-SHA PASS, closure of stale PRs #337/#310 without merge, zero open PRs, and the remaining A-08 discussion boundary before A-09/A-10.
-Session 9 A-08d Embedded Brain grounded assistant closure: [session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md](session-9-a08d-brain-grounded-assistant-closure-2026-09-25.md). It records PR #341 / merge `1f25f32cdbb0bfd6dc043491f7668df6bc1795cb`, local-only selected-node grounding through the existing Ai -> Hub -> Context -> Connect path, exact authorized Fact/URL narrowing, fail-closed suppression of wider Project memory/artifact fallback, preserved A-08c provenance, exact-head CI/Product Eval/PCS-06/MCP PASS, merged-main CI/Product Eval/MCP PASS, and actual Staging Deploy #1172 exact-SHA PASS with 15/15 configured services running and 25.03 GiB free.
-Session 9 final A-08 remainder closure decision: [session-9-a08-remainder-closure-decision-2026-09-26.md](session-9-a08-remainder-closure-decision-2026-09-26.md). It explicitly defers connector hierarchy because current Connect/MCP exposes stable authorized resource URIs but no canonical parent/child relationship, and defers Core Memory Brain nodes because Context exposes no canonical block ID. No synthetic URI hierarchy or label-derived identity is introduced; A-08 is closed at the proven owner-backed boundary and A-09/A-10 remain separately selectable.
-Session 9 A-09 frontend decomposition closure: [session-9-a09-frontend-decomposition-closure-2026-09-26.md](session-9-a09-frontend-decomposition-closure-2026-09-26.md). It records PRs #344–#348 across Flow, Ai chat, Settings, Work, and Space; explicit page/controller + domain-local presentation/model boundaries; fetch-free extracted presentation/model regression contracts where applicable; final product main `3c9279a21ec441ab9fe5ec95583c946a238ccc43`; merged-main CI #2228 + Product Eval #1467 PASS; and actual Staging Deploy #1228 exact-SHA PASS with healthy Operations, 15/15 configured services running, preserved auth/MCP checks, exact-host match, and 27.69 GiB free. A-09 is CLOSED / PASS; at that historical checkpoint A-10 became the next eligible boundary and is subsequently closed by Session 10 below.
-Session 10 A-10 Compose readiness closure: [session-10-a10-compose-readiness-closure-2026-09-26.md](session-10-a10-compose-readiness-closure-2026-09-26.md). It records PR #350, final reviewed head `5fcdf0e4d2ce0a52e5e0197e71ee942a4f5842ba`, implementation/staging SHA `710127d66218e4d2e8ed23ddbc485b80b8769f6b`, exact-head CI/Product Eval/PCS-06/Desktop Installer PASS, merged-main CI/Product Eval PASS, and actual Staging Deploy #1240 PASS. The deploy log directly proves health-aware dependency sequencing, zero unhealthy Operations services, 15/15 configured services running, exact-host match, preserved auth/MCP boundaries, and 29.88 GiB stabilized free space. A-10 is CLOSED / PASS; A-11 is not opened automatically.
-Session 10 A-11 browser Workspace-context closure: [session-10-a11-browser-workspace-context-closure-2026-09-26.md](session-10-a11-browser-workspace-context-closure-2026-09-26.md). It records PR #352, final reviewed head `173ba037182ca999f93c22942c564cff08d8ab6c`, implementation/staging SHA `38fa0b8563a0f73fb44b1705e4f0e1418d8a23c5`, exact-head CI #2255 + Product Eval #1494 + PCS-06 #195 PASS, merged-main CI #2256 + Product Eval #1495 PASS, and actual Staging Deploy #1284 PASS. Runtime evidence proves exact-host identity, preserved public/auth + MCP boundaries, healthy Operations with zero unhealthy services, 15/15 configured services running, and 27.66 GiB stabilized free space. A-11 is CLOSED / PASS at the bounded browser-context layer; broader Workspace/multi-user scope is not implicitly opened.
+## Staging / deployment
 
-Latest repository/documentation reconciliation: [repository-documentation-reconciliation-2026-09-26.md](repository-documentation-reconciliation-2026-09-26.md). It is CLOSED / PASS through PR #354 / merge `265a28d4c53cc482af8ea33a6362a21e640d30e5`, exact-head CI #2262 + Product Eval #1501, merged-main CI #2263 + Product Eval #1502, and actual Staging Deploy #1298. It records repository inventory, branch sprawl, documentation precedence, corrected current-doc contradictions, and the docs-only scope boundary after A-11.
+Use current operational runbooks in `docs/` for procedure.
 
-Branch-hygiene audit: [branch-hygiene-audit-2026-09-27.md](branch-hygiene-audit-2026-09-27.md). Stage 1/2 produced 354 exact-SHA candidates and the first [execution record](branch-hygiene-execution-2026-09-27.md) proves **354/354 remote branches were deleted** after a 354/354 dry-run. Stages 3–4 expanded the cumulative allowlist to **393 safe-delete entries** while preserving **7 retained branches**. Cleanup pass 2 then ran through Actions run **36294553329** and deleted the remaining **39/39** exact-SHA cleanup-ready branches; final reconciliation proves **393/393 safe-delete entries absent**, **7 retained**, one checkpoint branch, and `main` = **9 remote branches total**, with zero unexpected branches. Branch hygiene is **FINAL / CLOSED / LOCKED**. Canonical closure: [branch-hygiene-safe-checkpoint-2026-09-27.md](branch-hygiene-safe-checkpoint-2026-09-27.md).
+Important dated proof includes:
+
+- governed GitHub -> SumoPod staging deployment evidence;
+- staging capacity recovery and auto-deploy restoration;
+- deployment-pipeline hardening;
+- A-series exact-SHA staging acceptance;
+- ECX Batch 1–7 staging deliveries;
+- current exact closure staging proof at Staging Deploy #1475.
+
+Current exact staging identity is recorded in the repository truth reconciliation rather than inferred from an older deployment document.
+
+## Off-host DR
+
+Canonical original runtime closure:
+
+- [offhost-dr-runtime-closure-2026-09-23.md](offhost-dr-runtime-closure-2026-09-23.md)
+
+DR-2 checkpoint material remains separate:
+
+- [offhost-dr2-safe-checkpoint-2026-09-23.md](offhost-dr2-safe-checkpoint-2026-09-23.md)
+- [offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](offhost-dr2-checkpoint-2-selection-package-2026-09-23.md)
+- [offhost-dr2-checkpoint-2-deferment-2026-09-23.md](offhost-dr2-checkpoint-2-deferment-2026-09-23.md)
+
+Original DR is CLOSED / PASS at its documented boundary. DR-2 physical independence is not yet proven.
+
+## Evidence rules
+
+- preserve failed evidence;
+- preserve superseded WIP evidence when it explains implementation history;
+- do not edit old evidence just to make it read like current state;
+- keep raw/private runtime data out of Git;
+- commit sanitized summaries only;
+- claims must stay within the exact tested boundary;
+- staging evidence is not production proof;
+- one-drill timing evidence is not an SLA;
+- paid-provider evidence is not rerun merely for freshness.

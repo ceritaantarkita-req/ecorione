@@ -2,41 +2,19 @@
 
 Last updated: **2026-09-27**
 
-This file is the single navigation entry point for repository documentation. If two documents appear to disagree, use the precedence below.
-
-## Read these first
-
-1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current state and explicit deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — canonical active-work queue; DR-2 checkpoint 2 is currently deferred at a safe pre-selection boundary.
-3. **[post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)** — CLOSED PCS-00..PCS-10 product/UX + SumoPod staging roadmap.
-4. **[product-evolution-architecture.md](product-evolution-architecture.md)** — closed PE product model and ownership rules.
-5. **[product-evolution-roadmap.md](product-evolution-roadmap.md)** — closed PE-00 through PE-08 batch plan.
-6. **[product-evolution-migration-matrix.md](product-evolution-migration-matrix.md)** — PE-01 ownership + migration contract.
-7. **[product-evolution-pe01-acceptance.md](product-evolution-pe01-acceptance.md)** — closed PE-01 acceptance.
-8. **[product-evolution-pe02-acceptance.md](product-evolution-pe02-acceptance.md)** — closed PE-02 acceptance.
-9. **[product-evolution-pe03-acceptance.md](product-evolution-pe03-acceptance.md)** — closed PE-03 acceptance.
-10. **[product-evolution-pe04-acceptance.md](product-evolution-pe04-acceptance.md)** — closed PE-04 acceptance.
-11. **[product-evolution-pe05-acceptance.md](product-evolution-pe05-acceptance.md)** — closed PE-05 acceptance.
-12. **[product-evolution-pe06-acceptance.md](product-evolution-pe06-acceptance.md)** — closed PE-06 acceptance.
-13. **[product-evolution-pe07-acceptance.md](product-evolution-pe07-acceptance.md)** — closed PE-07 acceptance.
-14. **[product-evolution-pe08-acceptance.md](product-evolution-pe08-acceptance.md)** — closed PE-08 acceptance.
-15. **[product-evolution-agent-guide.md](product-evolution-agent-guide.md)** — procedure/reference for historical PE work.
-16. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone status.
-17. **[../AGENTS.md](../AGENTS.md)** — repository invariants.
+This is the single navigation entry point for repository documentation.
 
 ## Source-of-truth precedence
 
-When wording conflicts:
+When wording conflicts, use:
 
 ```text
 current code + tests
   > current-state-and-next-steps.md
   > active-work-plan.md
+  > AGENTS.md
   > accepted ADRs
   > owner runbooks
-  > closed post-closure-product-staging-roadmap.md
-  > product-evolution-architecture.md
-  > product-evolution-roadmap.md
   > EXECUTION-PROGRESS.md
   > dated verification/evidence
   > archive
@@ -44,50 +22,54 @@ current code + tests
 
 Accepted ADRs override roadmap prose when they address the same architectural decision.
 
-## Product Evolution
+Historical verification is intentionally preserved even when it contains an older state that was true at the time. Do not treat a dated “NEXT / NOT STARTED” statement as current unless the current-state layer agrees.
 
-The old Batch 1–12 / W / F6 baseline is closed. The completed Product Evolution roadmap used **PE** identifiers so it could not be confused with Batch 13.
+## Read these first
 
-As of 2026-09-19:
+1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current repository/runtime truth and deferred boundaries.
+2. **[active-work-plan.md](active-work-plan.md)** — current queue; currently no active product/runtime implementation scope.
+3. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
+4. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
+5. **[verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md)** — latest repository/docs reconciliation evidence.
 
-- Product Evolution architecture: **DOCUMENTED**;
-- PE-00: **CLOSED / PASS**;
-- PE-01: **CLOSED / PASS**;
-- PE-02: **CLOSED / PASS**;
-- PE-03: **CLOSED / PASS**;
-- PE-04: **CLOSED / PASS**;
-- PE-05: **CLOSED / PASS**;
-- PE-06: **CLOSED / PASS**;
-- PE-07: **CLOSED / PASS**;
-- PE-08: **CLOSED / PASS**.
+## Current ECX baseline
 
-PE-08 Product closure is CLOSED / PASS. Product Evolution PE-00 through PE-08 is closed; there is no active Product Evolution implementation queue.
+ECX Recipient Execution **Batch 1–7 is CLOSED / PASS**.
 
-### Post-closure Product + Remote Staging
+Canonical final ECX checkpoint:
 
-The operator-approved separate roadmap, **PCS-00..PCS-10**, covers Ai conversation continuity, provider/model onboarding, local-runtime resilience, visual/IA cleanup, Flow defect closure, integrated browser acceptance, SumoPod remote staging, GitHub-to-staging delivery, staging hardening, and documentation convergence. PCS-00 through PCS-10 are now closed at their documented boundaries. See [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md). This does not reopen PE and does not imply production is live. Post-closure native-Windows portability hardening is merged via PR #182. Clean-checkout/CI reproducibility is CLOSED / PASS via PR #183. Fresh-clone Windows EOL reproducibility is CLOSED / PASS via PR #185 (CI #1486, Product Eval #725, Desktop Installer #76; post-merge CI #1487 + Product Eval #726). These are repository hardening, not a new PE batch. PCS-10 documentation convergence evidence: [verification/pcs-10-documentation-convergence-2026-09-21.md](verification/pcs-10-documentation-convergence-2026-09-21.md).
+- [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md)
 
-PCS-10 closure PR #219 passed CI #1684 + Product Eval #923 and merged as `6058aa0ff294218147a91ee0fc7b77f32d1be80d`. Post-merge documentation bookkeeping PR #220 then passed CI #1686 + Product Eval #925 and merged as `fa55e530615e9eb3a35d646e39bbbb3bf34d8a07`.
+Earlier Batch 1–6 final checkpoints and WIP records remain under [verification/](verification/) as historical evidence. WIP files marked superseded are not resume pointers.
 
-## Architecture and product reference
+No Batch 8 is implicitly opened.
 
-- [prd.md](prd.md) — original product/design baseline; not a current work queue.
-- [blueprint.md](blueprint.md) — original phase blueprint; not a current work queue.
-- [research.md](research.md) — technical research/source rationale.
+## Closed roadmap references
+
+These are historical completed roadmaps, not current queues:
+
+- [product-evolution-architecture.md](product-evolution-architecture.md)
+- [product-evolution-roadmap.md](product-evolution-roadmap.md)
+- [product-evolution-agent-guide.md](product-evolution-agent-guide.md)
+- [post-closure-product-staging-roadmap.md](post-closure-product-staging-roadmap.md)
+- [prd.md](prd.md)
+- [blueprint.md](blueprint.md)
+
+Current closure state:
+
+- original Batch 1–12 / W / F6 — CLOSED at documented boundaries;
+- PE-00..PE-08 — CLOSED / PASS;
+- PCS-00..PCS-10 — CLOSED / PASS;
+- audit follow-ups through A-11 — CLOSED / PASS;
+- ECX Recipient Execution B1–B7 — CLOSED / PASS.
+
+## Architecture / decisions
+
 - [adr/README.md](adr/README.md) — accepted architecture decisions.
 - [DECISIONS.md](DECISIONS.md) — chronological decision log.
 - [design.md](design.md) — visual/product design system.
 - [LICENSING.md](LICENSING.md) — licensing boundary.
 - [developer-sdk.md](developer-sdk.md) — developer integration reference.
-
-## Implemented phase contracts
-
-Historical implemented contracts:
-
-- [api-fase1.md](api-fase1.md)
-- [api-fase2.md](api-fase2.md)
-- [api-fase3.md](api-fase3.md)
-- [api-fase4.md](api-fase4.md)
 
 ## Operating runbooks
 
@@ -96,7 +78,9 @@ Use the owner-specific runbook when touching its subsystem:
 - [production-activation.md](production-activation.md)
 - [production-operations.md](production-operations.md)
 - [release-operations.md](release-operations.md)
-- [cloudflare-free-deployment.md](cloudflare-free-deployment.md)
+- [staging-continuous-deployment.md](staging-continuous-deployment.md)
+- [sumopod-staging.md](sumopod-staging.md)
+- [staging-hardening-backup-observability.md](staging-hardening-backup-observability.md)
 - [security-review.md](security-review.md)
 - [capability-permission-operations.md](capability-permission-operations.md)
 - [spend-budget-operations.md](spend-budget-operations.md)
@@ -104,82 +88,52 @@ Use the owner-specific runbook when touching its subsystem:
 - [extension-operations.md](extension-operations.md)
 - [data-rebuild-operations.md](data-rebuild-operations.md)
 - [data-governance-dr-operations.md](data-governance-dr-operations.md)
-- [offhost-dr-recovery.md](offhost-dr-recovery.md) — CLOSED / PASS original total-SumoPod-host-loss recovery runbook and evidence boundary.
-- [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md) — DEFERRED DR-2 follow-up; checkpoint 1 is closed and checkpoint 2 is safe-paused before any external target selection.
-  - safe resumable checkpoint: [verification/offhost-dr2-safe-checkpoint-2026-09-23.md](verification/offhost-dr2-safe-checkpoint-2026-09-23.md).
-  - checkpoint-2 safe selection package: [verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md](verification/offhost-dr2-checkpoint-2-selection-package-2026-09-23.md); no target selected yet.
+- [offhost-dr-recovery.md](offhost-dr-recovery.md)
+- [offhost-dr-physical-independence.md](offhost-dr-physical-independence.md)
 - [multimodal-operations.md](multimodal-operations.md)
 - [voice-operations.md](voice-operations.md)
 - [webhook-operations.md](webhook-operations.md)
 - [node-registry-flow-canvas-operations.md](node-registry-flow-canvas-operations.md)
 - [space-block-runtime-operations.md](space-block-runtime-operations.md)
 
-## Evidence
+## Current staging / DR truth
 
-[verification/](verification/) contains dated closure records, failed attempts, runtime measurements, exact-head evidence, and bounded audits. It is not a work queue.
+The exact audited Batch 7 closure/runtime baseline immediately before this docs-only reconciliation was:
 
-Latest bounded repository/product + staging-parity audit: [verification/current-main-staging-audit-2026-09-24.md](verification/current-main-staging-audit-2026-09-24.md). It preserves the original findings while recording their later closure updates. The CRITICAL/HIGH findings and every subsequently selected bounded follow-up through A-11 are now CLOSED / PASS at their documented boundaries; native Google Drive, broader Workspace/multi-user identity, DR-2 checkpoint 2, hosted-provider spend, and production cutover remain separate/deferred scopes.
+```text
+2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
+```
 
-Latest safe product/audit checkpoint: [verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md](verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md). The older [verification/current-main-audit-safe-checkpoint-2026-09-24.md](verification/current-main-audit-safe-checkpoint-2026-09-24.md) is historical pre-fix evidence, not the current resume point.
+Merged-main CI #2352, Product Eval #1591, and actual Staging Deploy #1475 all passed; staging reported healthy Operations, 15/15 services running, exact-SHA match, and 26.31 GiB stabilized free disk. Docs-only successors may advance Git/staging revision identity without changing that runtime compatibility boundary.
+
+SumoPod remains **staging, not production**.
+
+Original Off-host DR is CLOSED / PASS at its documented total-SumoPod-host-loss boundary. DR-2 physical independence remains a separate deferred follow-up at checkpoint 2.
+
+## Repository hygiene
+
+The historical branch-hygiene work completed its 393-branch exact-SHA safe-delete set. Later ECX work created a new bounded branch delta, so the historical 9-branch inventory must not be used as current repository truth.
+
+Current post-ECX cleanup classification:
+
+- [verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json](verification/post-ecx-branch-cleanup-allowlist-2026-09-27.json)
+
+Deletion is only valid after exact remote-SHA revalidation.
+
+## Verification / evidence
+
+[verification/](verification/) contains dated audits, WIP checkpoints, closure records, runtime measurements, failed attempts, branch evidence, and safe-resume records.
+
+Use [verification/README.md](verification/README.md) for the evidence index.
+
+Important current pointers:
+
+- repository truth reconciliation: [verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md)
+- ECX B7 final checkpoint: [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md)
+- original branch-hygiene closure: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md)
+- A-11 closure: [verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md](verification/session-10-a11-browser-workspace-context-closure-2026-09-26.md)
+- original Off-host DR closure: [verification/offhost-dr-runtime-closure-2026-09-23.md](verification/offhost-dr-runtime-closure-2026-09-23.md)
 
 ## Archive
 
-[archive/](archive/) contains superseded audits/plans/snapshots. Do not use it to choose current work.
-
-## Current operating/deferred boundaries
-
-- active operational scope — **NONE for DR-2 runtime**; DR-2 checkpoint 2 is deferred at the safe pre-selection boundary. Interim backup posture is local backup; optional encrypted Google Drive copy is not yet a validated DR-2 target.
-- original Off-host Backup & DR — **CLOSED / PASS** for total SumoPod staging-host loss at the documented boundary; exact recovered runtime `b27c1e5833be0a0fccf3f525d82ae8853cd22113` / image `staging-b27c1e5833be`.
-- SumoPod remote development/staging — **VERIFIED / NOT PRODUCTION**; latest branch-hygiene Stage-4 merge `9e621680661f7128b9cfea930fd470472ed94381` passed merged-main CI #2277 + Product Eval #1516 and actual Staging Deploy #1326 as `staging-9e621680661f`, with public/auth + MCP checks PASS, Operations healthy with zero unhealthy services, 15/15 configured services running, clean exact-host identity, and 29.92 GiB stabilized free disk. Historical runtime identities remain evidence for their dated boundaries; later docs-only bookkeeping may advance the exact SHA without reopening runtime scope.
-- public production cutover — **deferred pending a separate explicit operator promotion decision**; staging evidence is complete but is not production evidence.
-- Cloudflare named Tunnel/public edge — optional/pending operator hostname/edge decision.
-- AutoClick — deferred by design.
-- paid W18 rerun — closed/not authorized for freshness.
-
-## Post-closure maintenance checkpoint — 2026-09-21
-
-A bounded maintenance pass after PE/PCS closure fixed concrete correctness/security/privacy defects through PR #232 without opening a new roadmap. It covers W18 cleanup state preservation, fail-closed redirect boundaries, JWKS trust/rotation/error semantics, and Local multimodal endpoint privacy.
-
-The repository boundary and the remote staging runtime boundary remain distinct: maintenance merges do not by themselves prove a newer SumoPod deployment. See [verification/post-closure-maintenance-checkpoint-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2026-09-21.md).
-
-## Follow-up post-closure maintenance checkpoint — 2026-09-21
-
-A second bounded maintenance slice is closed through PR #237. It covers Sync public-MCP failure bounding/sanitization, serialized Connect credential-vault mutations, serialized Sandbox idempotency races, and timeout-bounded default JWKS retrieval.
-
-This is still maintenance rather than a new roadmap. Repository source advancement is not evidence that SumoPod staging was redeployed. See [verification/post-closure-maintenance-checkpoint-2-2026-09-21.md](verification/post-closure-maintenance-checkpoint-2-2026-09-21.md).
-
-## Third post-closure maintenance checkpoint — 2026-09-21
-
-A third bounded maintenance slice is closed through PR #240. It covers timeout-bounded Sandbox control-plane owner calls and timeout-bounded verified Connect webhook forwarding to Flow with sanitized upstream failure semantics and stable-delivery retry compatibility.
-
-This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-3-2026-09-21.md](verification/post-closure-maintenance-checkpoint-3-2026-09-21.md).
-
-## Fourth post-closure maintenance checkpoint — 2026-09-21
-
-A fourth bounded maintenance slice is closed through PR #242. It bounds the Ai server-side Flow owner proxy to 10 seconds by default while preserving redirect fail-closed behavior and sanitized `502 UPSTREAM_UNAVAILABLE` transport semantics.
-
-PR #242 exact implementation head `db8a8f6068a40e47187a2142e6801e975e749276` passed CI #1743, Product Eval #982, and PCS-06 Integrated Browser Acceptance #18 before merge as `47cbeaa8760debbfde87cff7cb7a828037a2829b`.
-
-This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-4-2026-09-21.md](verification/post-closure-maintenance-checkpoint-4-2026-09-21.md).
-
-## Fifth post-closure maintenance checkpoint — 2026-09-21
-
-A fifth bounded maintenance slice is closed through PR #244. It repairs Sandbox receipt-lock acquisition cleanup so a metadata-write failure after exclusive lock creation cannot leave a stale lock that permanently blocks the same idempotency key.
-
-PR #244 exact implementation head `462c9418078baefc7cd00eed79dd85dac4ee1bf9` passed CI #1747 and Product Eval #986 before merge as `3114354ab44894ef80e75b9983fceac64babc2e0`.
-
-This remains repository maintenance, not a new roadmap or staging deployment claim. See [verification/post-closure-maintenance-checkpoint-5-2026-09-21.md](verification/post-closure-maintenance-checkpoint-5-2026-09-21.md).
-
-## Latest-main staging convergence — CLOSED / PASS
-
-The bounded latest-main staging-convergence scope is CLOSED / PASS at the runtime boundary. Governed Staging Deploy #293 / run `35627920447` deployed exact reviewed `main` `52046db35e403babdda934881773c46bf2c57b68` as `staging-52046db35e40`. Public smoke, authenticated Ops health, MCP protection checks, exact-host SHA evidence, and final PCS-08 deploy validation all passed. Earlier checkpoint files remain preserved as historical evidence.
-
-Closure evidence: [verification/latest-main-staging-convergence-closure-2026-09-22.md](verification/latest-main-staging-convergence-closure-2026-09-22.md).
-
-## Repository-wide documentation reconciliation — 2026-09-26
-
-The audited pre-reconciliation baseline contained **250 tracked files under `docs/`** at `65bf8d2ce0b832bd12b0b279ccf9df0384a07c47`; this reconciliation adds one new verification record, so its post-merge tree contains **251** tracked files under `docs/`. Current/canonical documents are reconciled to the closed PE/PCS/original-DR state, the closed audit follow-ups through A-11, and the deferred DR-2 checkpoint-2 boundary. Accepted ADRs remain architectural records; `verification/` and `archive/` intentionally preserve dated status, failed attempts, superseded runtime identities, and historical next-step wording. A historical file saying `ACTIVE`, `PENDING`, `next scope`, or naming an older staging SHA is not current authority unless the current-state documents above explicitly reopen that scope.
-
-Historical reconciliation records remain [verification/repository-documentation-reconciliation-2026-09-21.md](verification/repository-documentation-reconciliation-2026-09-21.md) and [verification/repository-documentation-reconciliation-2026-09-23.md](verification/repository-documentation-reconciliation-2026-09-23.md). The latest reconciliation is [verification/repository-documentation-reconciliation-2026-09-26.md](verification/repository-documentation-reconciliation-2026-09-26.md).
-
-Latest branch-hygiene safe checkpoint: [verification/branch-hygiene-safe-checkpoint-2026-09-27.md](verification/branch-hygiene-safe-checkpoint-2026-09-27.md). It records the executed 354/354 exact-SHA cleanup, PR #361 Stage-4 closure, exact staging proof, **393 cumulative safe-delete entries**, **39 cleanup-ready branches still present**, and **7 retained branches** that are not deletion-authorized.
+Superseded analysis and old execution summaries belong under [archive/](archive/). Archive content is provenance, not current instruction.
