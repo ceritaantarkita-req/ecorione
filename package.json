@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write . && git diff --exit-code -- apps/ai/app/settings/page.tsx scripts/pcs06-browser-acceptance.mjs services/connect/src/control-http.test.ts services/connect/src/openrouter-model-discovery.test.ts",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
