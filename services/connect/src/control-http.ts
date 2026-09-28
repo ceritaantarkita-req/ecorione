@@ -110,9 +110,7 @@ export function registerConnectControlRoutes(
     try {
       const result = await openRouterModelDiscovery.list({
         ...(query.q === undefined ? {} : { q: query.q }),
-        ...(query.sourceProvider === undefined
-          ? {}
-          : { sourceProvider: query.sourceProvider }),
+        ...(query.sourceProvider === undefined ? {} : { sourceProvider: query.sourceProvider }),
         limit: query.limit,
         forceRefresh: query.refresh === "1",
       });
