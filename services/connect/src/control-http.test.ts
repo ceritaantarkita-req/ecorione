@@ -358,7 +358,8 @@ describe("Connect Control Center boundary", () => {
     expect(response.json().error).toMatchObject({
       type: "OPENROUTER_MODEL_NOT_SELECTABLE",
     });
-    expect(runtime.get().settings.openRouterModelSelection).toBe("governed");
+    expect(runtime.get().revision).toBe(0);
+    expect(runtime.get().settings.openRouterModelSelection).toBeUndefined();
   });
 
   it("mengaktifkan static verified OpenRouter model tanpa bergantung pada live catalog", async () => {
