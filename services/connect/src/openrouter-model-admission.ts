@@ -1,7 +1,4 @@
-import {
-  isTargetOpenRouterModelFamily,
-  type HostedModelFamily,
-} from "./hosted-model-family.js";
+import { isTargetOpenRouterModelFamily, type HostedModelFamily } from "./hosted-model-family.js";
 
 export const OPENROUTER_ADMISSION_FAILURES = [
   "duplicate-runtime-id",
