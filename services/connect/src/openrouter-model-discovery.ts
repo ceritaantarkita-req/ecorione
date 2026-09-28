@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { z } from "zod";
 import {
   executableHostedModelRegistryEntry,
@@ -7,18 +8,19 @@ import {
 export const OPENROUTER_MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models";
 export const DEFAULT_OPENROUTER_DISCOVERY_TTL_MS = 10 * 60 * 1_000;
 export const DEFAULT_OPENROUTER_DISCOVERY_TIMEOUT_MS = 8_000;
+export const MAX_OPENROUTER_CATALOG_BYTES = 8 * 1024 * 1024;
 
 const OpenRouterPricingSchema = z
   .object({
-    prompt: z.string().optional(),
-    completion: z.string().optional(),
+    prompt: z.string().max(64).optional(),
+    completion: z.string().max(64).optional(),
   })
   .passthrough();
 
 const OpenRouterArchitectureSchema = z
   .object({
-    input_modalities: z.array(z.string()).optional(),
-    output_modalities: z.array(z.string()).optional(),
+    input_modalities: z.array(z.string().max(64)).max(16).optional(),
+    output_modalities: z.array(z.string().max(64)).max(16).optional(),
   })
   .passthrough();
 
@@ -30,13 +32,13 @@ const OpenRouterUpstreamModelSchema = z
     context_length: z.number().int().nonnegative().nullable().optional(),
     architecture: OpenRouterArchitectureSchema.optional(),
     pricing: OpenRouterPricingSchema.optional(),
-    supported_parameters: z.array(z.string()).optional(),
+    supported_parameters: z.array(z.string().max(128)).max(128).optional(),
   })
   .passthrough();
 
 const OpenRouterUpstreamResponseSchema = z
   .object({
-    data: z.array(OpenRouterUpstreamModelSchema),
+    data: z.array(OpenRouterUpstreamModelSchema).max(5_000),
   })
   .passthrough();
 
@@ -205,8 +207,16 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
 
       let raw: unknown;
       try {
-        raw = await response.json();
-      } catch {
+        const text = await response.text();
+        if (Buffer.byteLength(text, "utf8") > MAX_OPENROUTER_CATALOG_BYTES) {
+          throw new OpenRouterModelDiscoveryError(
+            "invalid-response",
+            "OpenRouter model catalog melewati batas ukuran discovery ECORIONE.",
+          );
+        }
+        raw = JSON.parse(text) as unknown;
+      } catch (error) {
+        if (error instanceof OpenRouterModelDiscoveryError) throw error;
         throw new OpenRouterModelDiscoveryError(
           "invalid-response",
           "OpenRouter model catalog mengembalikan JSON yang tidak valid.",
