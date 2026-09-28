@@ -191,7 +191,7 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
           redirect: "error",
           signal: controller.signal,
         });
-      } catch (error) {
+      } catch {
         const reason = controller.signal.aborted ? "timeout" : "network error";
         throw new OpenRouterModelDiscoveryError(
           "unreachable",
