@@ -29,8 +29,6 @@ export default function SettingsPage() {
     openRouterDiscovery,
     openRouterQuery,
     openRouterSourceProvider,
-    mcpLoading,
-    mutableLocalModel,
     pendingAction,
     discoverOpenRouterModels,
     providerViews,
