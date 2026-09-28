@@ -77,9 +77,7 @@ export function reviewNodeWorkflowContent(path, content) {
 
 export function reviewDockerfile(content, expectedVersion) {
   const findings = [];
-  const matches = [
-    ...content.matchAll(/^FROM\s+node:([^\s]+)(?:\s+AS\s+\S+)?\s*$/gim),
-  ];
+  const matches = [...content.matchAll(/^FROM\s+node:([^\s]+)(?:\s+AS\s+\S+)?\s*$/gim)];
   if (matches.length === 0) {
     findings.push("Dockerfile harus memakai base image node:<exact-version>-<variant>");
     return findings;
