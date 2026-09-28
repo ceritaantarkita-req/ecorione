@@ -30,7 +30,8 @@ Historical verification is intentionally preserved even when it contains an olde
 2. **[active-work-plan.md](active-work-plan.md)** — current queue; currently no active product/runtime implementation scope.
 3. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
 4. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
-5. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — latest safe checkpoint for current runtime/staging identity and NVIDIA hosted-provider trial closure.
+5. **[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md)** — current overall safe-resume pointer; use this before opening any new scope.
+6. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — underlying runtime/staging identity and NVIDIA hosted-provider trial closure.
 
 ## Current ECX baseline
 
@@ -143,6 +144,7 @@ Use [verification/README.md](verification/README.md) for the evidence index.
 
 Important current pointers:
 
+- current overall safe-resume checkpoint: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md)
 - current NVIDIA/runtime safe checkpoint: [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 - repository truth reconciliation: [verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md)
 - post-ECX branch cleanup: [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
