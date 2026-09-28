@@ -1,5 +1,7 @@
 # Verification evidence
 
+Current overall resume pointer: [ecorione-safe-resume-checkpoint-2026-09-28.md](ecorione-safe-resume-checkpoint-2026-09-28.md).
+
 This directory contains **dated evidence**, not current planning.
 
 Use current repository state from:
