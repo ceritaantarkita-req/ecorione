@@ -1,16 +1,27 @@
-FROM node:22.20.0-bookworm-slim@sha256:b21fe589dfbe5cc39365d0544b9be3f1f33f55f3c86c87a76ff65a02f8f5848e
+FROM node:22.20.0-bookworm-slim@sha256:b21fe589dfbe5cc39365d0544b9be3f1f33f55f3c86c87a76ff65a02f8f5848e AS build
 
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 RUN pnpm install --frozen-lockfile && pnpm run build
 RUN test -d services/context/dist/migrations \
   && find services/context/dist/migrations -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .
+
+FROM node:22.20.0-bookworm-slim@sha256:b21fe589dfbe5cc39365d0544b9be3f1f33f55f3c86c87a76ff65a02f8f5848e AS runtime
+
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
+COPY --from=build /app /app
 RUN mkdir -p /app/data && chown node:node /app/data
 
-ENV NODE_ENV=production
 USER node
 CMD ["pnpm", "--filter", "@ecorione/ai", "start"]
