@@ -17,18 +17,33 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 
 ## Current compatibility baseline — 2026-09-28
 
-Audited Batch 7 closure/runtime compatibility baseline immediately before this docs-only reconciliation:
+Latest audited repository/staging runtime:
 
 ```text
-closure SHA     = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-CI              = #2352 PASS
-Product Eval    = #1591 PASS
-Staging Deploy  = #1475 PASS
+main / staging  = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image           = staging-0f86a34cde66
+CI              = #2380 PASS
+Product Eval    = #1619 PASS
+Staging Deploy  = #1525 PASS
 Operations      = healthy
 services        = 15/15 running
+free disk       = 29.89 GiB stabilized
 ```
 
-Docs-only successors may advance the exact Git/staging SHA without changing this runtime compatibility boundary. Latest audited docs-only repository/staging convergence before the final cleanup-closure pass is `72d680bfb944cc98f60caddcfc94bbffd45f0653` with CI #2356, Product Eval #1595, and actual Staging Deploy #1483 PASS. Always inspect live `main` before starting new work.
+NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
+
+- provider id `nvidia`;
+- Vault scope `nvidia/messages`;
+- endpoint `https://integrate.api.nvidia.com/v1`;
+- pinned model `z-ai/glm-5.3`;
+- no silent fallback;
+- cost kill switch and durable spend controls remain authoritative;
+- staging hosted calls are enabled under a finite spend policy.
+
+The user's actual NVIDIA secret has not been stored or validated by repository work. Do not claim a real user-key GLM-5.3 completion until the operator enters the key in Settings, passes the credential test, saves/activates it, and observes a real Ai completion.
+
+Canonical safe checkpoint:
+`docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
 Closed roadmap families:
 
@@ -37,7 +52,8 @@ Closed roadmap families:
 - PCS-00..PCS-10 — **CLOSED / PASS**;
 - original Off-host DR — **CLOSED / PASS at documented boundary**;
 - audit follow-ups through A-11 — **CLOSED / PASS at bounded scopes**;
-- ECX Recipient Execution Batch 1–7 — **CLOSED / PASS**.
+- ECX Recipient Execution Batch 1–7 — **CLOSED / PASS**;
+- NVIDIA hosted-provider trial implementation + staging activation + Docker build hardening — **CLOSED / PASS**.
 
 There is **no active product/runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item.
 
@@ -142,7 +158,7 @@ SumoPod is staging, not production. The staging Basic-Auth human gate is a bound
 - preserve `.gitattributes`: text LF by default, `.cmd`/`.bat` CRLF;
 - delete merged temporary branches only after exact remote-SHA revalidation.
 
-The historical 393-branch cleanup and the later post-ECX cleanup are both closed. The post-ECX one-time run deleted 17 targeted branches, self-deleted its helper, and restored the exact retained remote inventory to 9 branches. Do not rerun either historical classification merely for freshness; future branch growth must be handled as a new exact-SHA delta.
+The historical 393-branch cleanup, post-ECX cleanup, and NVIDIA trial branch cleanup are closed. NVIDIA cleanup run `36368987090` exact-SHA deleted three merged work branches, self-deleted its helper, and restored the retained inventory to 9 branches. Do not rerun old classifications merely for freshness; future branch growth must be handled as a new exact-SHA delta.
 
 ## Evidence discipline
 
