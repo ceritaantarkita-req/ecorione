@@ -7,7 +7,11 @@ export type HostedPricingAuthority = "snapshot" | "provider-reported";
 
 export interface HostedModelPricingMetadata {
   /** Pinned ECORIONE accounting identity used for pre-dispatch reservation/evidence. */
-  readonly costModel: PinnedModelId;
+  /**
+   * Null means the model is catalogued but not executable yet. A provider-reported price
+   * alone is not enough: pre-dispatch spend admission still needs an admitted cost boundary.
+   */
+  readonly costModel: PinnedModelId | null;
   /**
    * OpenRouter reports authoritative billed usage.cost after a call; direct providers use
    * the pinned ECORIONE pricing snapshot until a stronger provider-billing signal exists.
@@ -18,8 +22,8 @@ export interface HostedModelPricingMetadata {
 
 export interface HostedModelRegistryEntry {
   readonly provider: HostedProviderId;
-  /** Stable ECORIONE model preference / pricing identity. */
-  readonly id: PinnedModelId;
+  /** Stable registry selection id. It is intentionally not coupled to the pricing enum. */
+  readonly id: string;
   readonly displayName: string;
   /** Exact runtime slug sent to the configured provider gateway. */
   readonly providerRuntime: string;
@@ -30,8 +34,8 @@ export interface HostedModelRegistryEntry {
   /** Capabilities ECORIONE has actually admitted at this checkpoint. */
   readonly capabilities: readonly HostedModelCapability[];
   readonly pricing: HostedModelPricingMetadata;
-  readonly verification: "verified";
-  readonly catalogSource: "static-verified";
+  readonly verification: "verified" | "discovered";
+  readonly catalogSource: "static-verified" | "openrouter-discovery";
   /** Null means this static registry has no external freshness timestamp yet. */
   readonly verifiedAt: string | null;
 }
@@ -171,8 +175,8 @@ for (const entry of HOSTED_MODEL_REGISTRY) {
   const key = registryKey(entry);
   if (seen.has(key)) throw new Error(`Duplicate hosted model registry entry: ${key}`);
   seen.add(key);
-  if (entry.id !== entry.pricing.costModel) {
-    throw new Error(`Hosted model pricing identity mismatch: ${key}`);
+  if (entry.verification === "verified" && entry.pricing.costModel === null) {
+    throw new Error(`Verified hosted model lacks admitted pricing identity: ${key}`);
   }
 }
 Object.freeze(HOSTED_MODEL_REGISTRY);
@@ -192,6 +196,26 @@ export function hostedModelRegistryEntry(
   );
 }
 
-export function registeredHostedModelIds(): readonly PinnedModelId[] {
+export type ExecutableHostedModelRegistryEntry = HostedModelRegistryEntry & {
+  readonly verification: "verified";
+  readonly pricing: HostedModelPricingMetadata & { readonly costModel: PinnedModelId };
+};
+
+export function executableHostedModelRegistryEntry(
+  provider: HostedProviderId,
+  model: string,
+): ExecutableHostedModelRegistryEntry | undefined {
+  const entry = hostedModelRegistryEntry(provider, model);
+  if (
+    entry === undefined ||
+    entry.verification !== "verified" ||
+    entry.pricing.costModel === null
+  ) {
+    return undefined;
+  }
+  return entry as ExecutableHostedModelRegistryEntry;
+}
+
+export function registeredHostedModelIds(): readonly string[] {
   return [...new Set(HOSTED_MODEL_REGISTRY.map((entry) => entry.id))];
 }
