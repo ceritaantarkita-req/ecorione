@@ -3,6 +3,7 @@ import type { Sensitivity } from "@ecorione/shared-schema";
 import type { PinnedModelId } from "@ecorione/shared-telemetry";
 import {
   GOVERNED_HOSTED_MODEL,
+  hostedModelCatalogEntry,
   hostedModelSupported,
   type HostedModelPreference,
 } from "./hosted-model-catalog.js";
@@ -69,7 +70,11 @@ export function route(req: RouteRequest): RouteDecision {
     };
   }
   if (preference !== GOVERNED_HOSTED_MODEL) {
-    return { model: preference, routeReason: "selected-hosted" };
+    const selected = hostedModelCatalogEntry(provider, preference);
+    if (selected === undefined) {
+      throw new Error(`Model ${preference} belum diverifikasi untuk provider ${provider}.`);
+    }
+    return { model: selected.id, routeReason: "selected-hosted" };
   }
   return { model: hostedModel(provider, req.sensitivity), routeReason: "default-hosted" };
 }
