@@ -21,9 +21,13 @@ import {
   OpenRouterModelDiscoveryError,
   type OpenRouterModelDiscoveryReader,
 } from "./openrouter-model-discovery.js";
+import { executableHostedModelRegistryEntry } from "./hosted-model-registry.js";
 
 const CredentialParamsSchema = z.object({ provider: z.enum(CREDENTIAL_PROVIDERS) });
 const CredentialBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
+const OpenRouterModelSelectionBodySchema = z
+  .object({ selectionId: z.string().trim().min(1).max(256) })
+  .strict();
 const OpenRouterDiscoveryQuerySchema = z
   .object({
     q: z.string().trim().max(120).optional(),
@@ -87,6 +91,13 @@ export function registerConnectControlRoutes(
   app.get("/v1/settings/runtime", async () => runtime().get());
   app.put("/v1/settings/runtime", async (req) => {
     const patch = parseOrBadRequest(RuntimeSettingsPatchSchema, req.body);
+    if (patch.openRouterModelSelection !== undefined) {
+      throw new HttpError(
+        400,
+        "OPENROUTER_SELECTION_REQUIRES_ADMISSION",
+        "OpenRouter model selection harus melewati admission endpoint.",
+      );
+    }
     let result;
     try {
       result = runtime().update(patch);
@@ -135,6 +146,121 @@ export function registerConnectControlRoutes(
       }
       throw error;
     }
+  });
+
+  app.put("/v1/settings/providers/openrouter/model-selection", async (req) => {
+    const { selectionId } = parseOrBadRequest(OpenRouterModelSelectionBodySchema, req.body);
+
+    if (selectionId === "governed") {
+      const result = runtime().update({
+        hostedProvider: "openrouter",
+        hostedModel: "governed",
+        openRouterModelSelection: "governed",
+        hostedCallsEnabled: true,
+        defaultChatTarget: "hosted",
+      });
+      metrics.addCounter("ecorione_control_changes_total", 1, {
+        surface: "openrouter-model-selection",
+        admission: "governed",
+        executable: "true",
+      });
+      return {
+        runtime: result,
+        selection: {
+          id: selectionId,
+          admission: "governed",
+          executable: true,
+          active:
+            result.settings.hostedProvider === "openrouter" &&
+            result.settings.hostedModel === "governed" &&
+            result.settings.hostedCallsEnabled,
+          unavailableReason: null,
+        },
+      };
+    }
+
+    const executable = executableHostedModelRegistryEntry("openrouter", selectionId);
+    if (executable !== undefined) {
+      const result = runtime().update({
+        hostedProvider: "openrouter",
+        hostedModel: selectionId,
+        openRouterModelSelection: selectionId,
+        hostedCallsEnabled: true,
+        defaultChatTarget: "hosted",
+      });
+      metrics.addCounter("ecorione_control_changes_total", 1, {
+        surface: "openrouter-model-selection",
+        admission: "verified-executable",
+        executable: "true",
+      });
+      return {
+        runtime: result,
+        selection: {
+          id: selectionId,
+          admission: "verified-executable",
+          executable: true,
+          active:
+            result.settings.hostedProvider === "openrouter" &&
+            result.settings.hostedModel === selectionId &&
+            result.settings.hostedCallsEnabled,
+          unavailableReason: null,
+        },
+      };
+    }
+
+    let discovery;
+    try {
+      discovery = await openRouterModelDiscovery.list({ q: selectionId, limit: 100 });
+    } catch (error) {
+      if (error instanceof OpenRouterModelDiscoveryError) {
+        throw new HttpError(
+          error.kind === "unreachable" ? 503 : 502,
+          error.kind === "unreachable"
+            ? "OPENROUTER_CATALOG_UNAVAILABLE"
+            : "OPENROUTER_CATALOG_INVALID",
+          error.message,
+        );
+      }
+      throw error;
+    }
+
+    const candidate = discovery.models.find(
+      (model) => model.selectionId === selectionId && model.selectable,
+    );
+    if (candidate === undefined) {
+      const rejected = discovery.models.find(
+        (model) => model.id === selectionId || model.selectionId === selectionId,
+      );
+      const reason = rejected?.unavailableReason ?? "not-admitted";
+      throw new HttpError(
+        409,
+        "OPENROUTER_MODEL_NOT_SELECTABLE",
+        `Model ${selectionId} tidak selectable pada snapshot OpenRouter saat ini (${reason}).`,
+      );
+    }
+
+    const result = runtime().update({
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      openRouterModelSelection: selectionId,
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    });
+    metrics.addCounter("ecorione_control_changes_total", 1, {
+      surface: "openrouter-model-selection",
+      admission: candidate.admission,
+      executable: "false",
+    });
+    return {
+      runtime: result,
+      selection: {
+        id: selectionId,
+        admission: candidate.admission,
+        executable: false,
+        active: false,
+        unavailableReason: null,
+      },
+    };
   });
 
   app.get("/v1/settings/credentials", async () => ({
