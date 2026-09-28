@@ -1,5 +1,6 @@
 import { PRICE_CURRENCY, type PinnedModelId } from "@ecorione/shared-telemetry";
 import type { HostedProviderId } from "./provider-types.js";
+import type { HostedModelFamily } from "./hosted-model-family.js";
 
 export const HOSTED_MODEL_CAPABILITIES = ["text", "tools", "reasoning"] as const;
 export type HostedModelCapability = (typeof HOSTED_MODEL_CAPABILITIES)[number];
@@ -28,6 +29,7 @@ export interface HostedModelRegistryEntry {
   readonly providerRuntime: string;
   /** Model author/origin, not necessarily the OpenRouter serving endpoint. */
   readonly sourceProvider: string;
+  readonly family: HostedModelFamily;
   /** Provider-published context window when captured; null means intentionally unclaimed. */
   readonly contextWindowTokens: number | null;
   /** Capabilities ECORIONE has actually admitted at this checkpoint. */
@@ -50,6 +52,7 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "Claude Sonnet 4.5",
     providerRuntime: "claude-sonnet-4-5-20250929",
     sourceProvider: "anthropic",
+    family: "other",
     contextWindowTokens: null,
     capabilities: TEXT_ONLY,
     pricing: {
@@ -67,6 +70,7 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "Claude Opus 4.1",
     providerRuntime: "claude-opus-4-1-20250805",
     sourceProvider: "anthropic",
+    family: "other",
     contextWindowTokens: null,
     capabilities: TEXT_ONLY,
     pricing: {
@@ -84,6 +88,7 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "Claude Sonnet 4.5",
     providerRuntime: "anthropic/claude-sonnet-4.5",
     sourceProvider: "anthropic",
+    family: "other",
     contextWindowTokens: null,
     capabilities: TEXT_ONLY,
     pricing: {
@@ -101,6 +106,7 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "Claude Opus 4.1",
     providerRuntime: "anthropic/claude-opus-4.1",
     sourceProvider: "anthropic",
+    family: "other",
     contextWindowTokens: null,
     capabilities: TEXT_ONLY,
     pricing: {
@@ -118,6 +124,7 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "GPT-5.6 Terra",
     providerRuntime: "gpt-5.6-terra",
     sourceProvider: "openai",
+    family: "gpt",
     contextWindowTokens: null,
     capabilities: TEXT_ONLY,
     pricing: {
@@ -135,6 +142,7 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "GPT-5.6 Sol",
     providerRuntime: "gpt-5.6-sol",
     sourceProvider: "openai",
+    family: "gpt",
     contextWindowTokens: null,
     capabilities: TEXT_ONLY,
     pricing: {
@@ -152,6 +160,7 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "GLM-5.3",
     providerRuntime: "z-ai/glm-5.3",
     sourceProvider: "z-ai",
+    family: "glm",
     contextWindowTokens: null,
     capabilities: TEXT_ONLY,
     pricing: {
