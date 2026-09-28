@@ -1,4 +1,7 @@
-import { isTargetOpenRouterModelFamily, type HostedModelFamily } from "./hosted-model-family.js";
+import {
+  isTargetOpenRouterModelFamily,
+  type HostedModelFamily,
+} from "./hosted-model-family.js";
 
 export const OPENROUTER_ADMISSION_FAILURES = [
   "duplicate-runtime-id",
@@ -13,7 +16,8 @@ export const OPENROUTER_ADMISSION_FAILURES = [
   "stale-catalog",
 ] as const;
 
-export type OpenRouterAdmissionFailure = (typeof OPENROUTER_ADMISSION_FAILURES)[number];
+export type OpenRouterAdmissionFailure =
+  (typeof OPENROUTER_ADMISSION_FAILURES)[number];
 
 export type OpenRouterAdmissionStatus =
   | "verified-executable"
