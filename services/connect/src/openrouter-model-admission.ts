@@ -16,14 +16,10 @@ export const OPENROUTER_ADMISSION_FAILURES = [
   "stale-catalog",
 ] as const;
 
-export type OpenRouterAdmissionFailure =
-  (typeof OPENROUTER_ADMISSION_FAILURES)[number];
+export type OpenRouterAdmissionFailure = (typeof OPENROUTER_ADMISSION_FAILURES)[number];
 
 export type OpenRouterAdmissionStatus =
-  | "verified-executable"
-  | "verified-selectable"
-  | "unavailable"
-  | "discovered-only";
+  "verified-executable" | "verified-selectable" | "unavailable" | "discovered-only";
 
 export interface OpenRouterAdmissionCandidate {
   readonly id: string;
