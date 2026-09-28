@@ -211,6 +211,191 @@ describe("Connect Control Center boundary", () => {
     });
   });
 
+  it("menolak bypass OpenRouter picker melalui generic runtime mutation", async () => {
+    const { app } = fixture();
+    const response = await app.inject({
+      method: "PUT",
+      url: "/v1/settings/runtime",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { openRouterModelSelection: "qwen/qwen3.8-max" },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toMatchObject({
+      type: "OPENROUTER_SELECTION_REQUIRES_ADMISSION",
+    });
+  });
+
+  it("menyimpan verified-selectable OpenRouter preference tetapi mematikan hosted execution", async () => {
+    let received: unknown;
+    const { app, runtime } = fixture({
+      openRouterModelDiscovery: {
+        async list(query) {
+          received = query;
+          return {
+            source: "openrouter:/api/v1/models",
+            families: [
+              { id: "gpt", displayName: "GPT" },
+              { id: "gemini", displayName: "Gemini" },
+              { id: "qwen", displayName: "Qwen" },
+              { id: "deepseek", displayName: "DeepSeek" },
+              { id: "kimi", displayName: "Kimi" },
+              { id: "glm", displayName: "GLM" },
+            ],
+            cache: "hit",
+            stale: false,
+            fetchedAt: "2026-09-28T10:00:00.000Z",
+            expiresAt: "2026-09-28T10:10:00.000Z",
+            total: 1,
+            returned: 1,
+            models: [
+              {
+                id: "qwen/qwen3.8-max",
+                displayName: "Qwen: Qwen3.8 Max",
+                sourceProvider: "qwen",
+                family: "qwen",
+                contextWindowTokens: 1_000_000,
+                inputModalities: ["text"],
+                outputModalities: ["text"],
+                supportedParameters: ["max_tokens"],
+                promptPricePerToken: "0.000002",
+                completionPricePerToken: "0.000006",
+                mutableAlias: false,
+                admission: "verified-selectable",
+                selectable: true,
+                executable: false,
+                selectionId: "qwen/qwen3.8-max",
+                unavailableReason: null,
+              },
+            ],
+          };
+        },
+      },
+    });
+
+    const response = await app.inject({
+      method: "PUT",
+      url: "/v1/settings/providers/openrouter/model-selection",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { selectionId: "qwen/qwen3.8-max" },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(received).toEqual({ q: "qwen/qwen3.8-max", limit: 100 });
+    expect(response.json()).toMatchObject({
+      runtime: {
+        settings: {
+          hostedProvider: "openrouter",
+          hostedModel: "governed",
+          openRouterModelSelection: "qwen/qwen3.8-max",
+          hostedCallsEnabled: false,
+          defaultChatTarget: "local",
+        },
+      },
+      selection: {
+        id: "qwen/qwen3.8-max",
+        admission: "verified-selectable",
+        executable: false,
+        active: false,
+      },
+    });
+    expect(runtime.get().settings.openRouterModelSelection).toBe("qwen/qwen3.8-max");
+  });
+
+  it("menolak OpenRouter candidate yang sudah tidak selectable", async () => {
+    const { app, runtime } = fixture({
+      openRouterModelDiscovery: {
+        async list() {
+          return {
+            source: "openrouter:/api/v1/models",
+            families: [
+              { id: "gpt", displayName: "GPT" },
+              { id: "gemini", displayName: "Gemini" },
+              { id: "qwen", displayName: "Qwen" },
+              { id: "deepseek", displayName: "DeepSeek" },
+              { id: "kimi", displayName: "Kimi" },
+              { id: "glm", displayName: "GLM" },
+            ],
+            cache: "stale",
+            stale: true,
+            fetchedAt: "2026-09-28T09:00:00.000Z",
+            expiresAt: "2026-09-28T09:10:00.000Z",
+            total: 1,
+            returned: 1,
+            models: [
+              {
+                id: "qwen/qwen3.8-max",
+                displayName: "Qwen: Qwen3.8 Max",
+                sourceProvider: "qwen",
+                family: "qwen",
+                contextWindowTokens: 1_000_000,
+                inputModalities: ["text"],
+                outputModalities: ["text"],
+                supportedParameters: ["max_tokens"],
+                promptPricePerToken: "0.000002",
+                completionPricePerToken: "0.000006",
+                mutableAlias: false,
+                admission: "unavailable",
+                selectable: false,
+                executable: false,
+                selectionId: null,
+                unavailableReason: "stale-catalog",
+              },
+            ],
+          };
+        },
+      },
+    });
+
+    const response = await app.inject({
+      method: "PUT",
+      url: "/v1/settings/providers/openrouter/model-selection",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { selectionId: "qwen/qwen3.8-max" },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error).toMatchObject({
+      type: "OPENROUTER_MODEL_NOT_SELECTABLE",
+    });
+    expect(runtime.get().settings.openRouterModelSelection).toBe("governed");
+  });
+
+  it("mengaktifkan static verified OpenRouter model tanpa bergantung pada live catalog", async () => {
+    const { app } = fixture({
+      openRouterModelDiscovery: {
+        async list() {
+          throw new Error("static executable selection must not require discovery");
+        },
+      },
+    });
+
+    const response = await app.inject({
+      method: "PUT",
+      url: "/v1/settings/providers/openrouter/model-selection",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { selectionId: "claude-sonnet-4-5-20250929" },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      runtime: {
+        settings: {
+          hostedProvider: "openrouter",
+          hostedModel: "claude-sonnet-4-5-20250929",
+          openRouterModelSelection: "claude-sonnet-4-5-20250929",
+          hostedCallsEnabled: true,
+          defaultChatTarget: "hosted",
+        },
+      },
+      selection: {
+        admission: "verified-executable",
+        executable: true,
+        active: true,
+      },
+    });
+  });
+
   it("menolak query discovery OpenRouter di luar kontrak", async () => {
     const { app } = fixture({
       openRouterModelDiscovery: {
