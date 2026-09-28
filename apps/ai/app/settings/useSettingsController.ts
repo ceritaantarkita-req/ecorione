@@ -7,11 +7,13 @@ import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-he
 
 export type HostedProviderId = "anthropic" | "openrouter" | "openai" | "nvidia";
 export type HostedModelPreference = string;
+type ModelFamily = "gpt" | "gemini" | "qwen" | "deepseek" | "kimi" | "glm" | "other";
 type HostedModelCatalogEntry = {
   id: string;
   displayName: string;
   providerRuntime: string;
   sourceProvider?: string;
+  family?: ModelFamily;
   verification?: "verified" | "discovered";
   catalogSource?: "static-verified" | "openrouter-discovery";
   verifiedAt?: string | null;
@@ -44,6 +46,7 @@ type OpenRouterDiscoveredModel = {
   id: string;
   displayName: string;
   sourceProvider: string;
+  family: ModelFamily;
   contextWindowTokens: number | null;
   inputModalities: string[];
   outputModalities: string[];
