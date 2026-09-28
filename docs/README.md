@@ -31,8 +31,9 @@ Historical verification is intentionally preserved even when it contains an olde
 3. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
 4. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
 5. **[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md)** — current overall safe-resume pointer; use this before opening any new scope.
-6. **[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)** — latest OpenRouter model-registry foundation closure.
-7. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — underlying NVIDIA hosted-provider rollout closure.
+6. **[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)** — current OpenRouter live-discovery closure.
+7. **[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter governed registry closure.
+8. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — underlying NVIDIA hosted-provider rollout closure.
 
 ## Current ECX baseline
 
@@ -103,15 +104,18 @@ Use the owner-specific runbook when touching its subsystem:
 Latest audited runtime/staging identity:
 
 ```text
-SHA   = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
-image = staging-9f19b40cea4b
+SHA   = af2ef8f61f26058178e56b0d6490248c1898976e
+image = staging-af2ef8f61f26
 ```
 
-CI #2429, Product Eval #1668, and actual Staging Deploy #1619 passed. Staging reported healthy Operations, 15/15 services running, exact-SHA match, and 29.90 GiB stabilized free disk.
+CI #2457, Product Eval #1696, and actual Staging Deploy #1675 passed. Staging reported healthy Operations, 15/15 services running, exact-SHA match, and 25.33 GiB stabilized free disk.
 
 NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging operator kill switch is open under bounded spend controls; the runtime hosted toggle is activated through normal Settings/provider activation. The user's actual NVIDIA secret has not been stored or tested by repository work.
 
-Canonical evidence:
+Current OpenRouter evidence:
+[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md).
+
+Underlying NVIDIA evidence:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 SumoPod remains **staging, not production**.
@@ -146,7 +150,8 @@ Use [verification/README.md](verification/README.md) for the evidence index.
 Important current pointers:
 
 - current overall safe-resume checkpoint: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md)
-- current OpenRouter Session 2 checkpoint: [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)
+- current OpenRouter Session 3 checkpoint: [verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)
+- underlying OpenRouter Session 2 checkpoint: [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)
 - current NVIDIA/runtime safe checkpoint: [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 - repository truth reconciliation: [verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md)
 - post-ECX branch cleanup: [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)

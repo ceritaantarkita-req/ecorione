@@ -14,7 +14,8 @@ Historical evidence may contain statements that were correct at the time but are
 
 ## Latest repository truth
 
-- [openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md) — latest FINAL / CLOSED / PASS runtime checkpoint: extensible fail-closed hosted-model registry deployed at `9f19b40...` / `staging-9f19b40cea4b`; current OpenRouter selectable set remains the two verified Claude models.
+- [openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md) — latest FINAL / CLOSED / PASS runtime checkpoint: bounded OpenRouter live discovery/search/filter/cache deployed at `af2ef8f...` / `staging-af2ef8f61f26`; discovered-only models remain non-executable and the selectable set remains the two verified Claude models.
+- [openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md) — underlying Session 2 registry checkpoint: extensible fail-closed hosted-model registry and admitted pricing/execution boundary.
 - [nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md) — latest FINAL / CLOSED / PASS runtime checkpoint: NVIDIA credential/canary testing is bounded and failure-explicit; PR #387 is deployed at `59961422...` / `staging-59961422e11d`.
 - [nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](nvidia-hosted-provider-safe-checkpoint-2026-09-28.md) — underlying provider rollout checkpoint: NVIDIA provider live, staging operator hosted gate bounded/open, Docker native-build defect closed, and the prior runtime baseline converged at `0f86a34c...`.
 - [repository-truth-reconciliation-2026-09-27.md](repository-truth-reconciliation-2026-09-27.md) — prior audit/reconciliation of `main`, staging, docs drift and post-ECX branch delta.
@@ -75,9 +76,9 @@ Important dated proof includes:
 - ECX Batch 1–7 staging deliveries;
 - NVIDIA provider implementation and rollout;
 - failed Staging Deploy #1505 with successful rollback evidence;
-- current exact staging proof at Staging Deploy #1619.
+- current exact staging proof at Staging Deploy #1675.
 
-Current exact staging identity is recorded in [openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md), not inferred from older deployment documents.
+Current exact runtime/staging identity is recorded in [openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md), not inferred from older deployment documents.
 
 ## Off-host DR
 
