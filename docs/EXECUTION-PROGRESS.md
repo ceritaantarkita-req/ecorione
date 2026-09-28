@@ -1,6 +1,6 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-09-28**
+Last updated: **2026-09-29**
 
 Status: **CURRENT SUMMARY**
 
@@ -9,17 +9,17 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = fd921d81136433bd871a466498a283fc5bfb760e (PR #396)
-image                   = staging-fd921d811364
-CI                      = #2484 PASS
-Product Eval            = #1723 PASS
-Staging Deploy          = #1729 PASS
+runtime / staging       = c65926de418046494d2e961af10662d2eadca37c (PR #398)
+image                   = staging-c65926de4180
+CI                      = #2492 PASS
+Product Eval            = #1731 PASS
+Staging Deploy          = #1745 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 27.44 GiB stabilized
+free disk               = 29.93 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter registry foundation (Session 2), bounded live discovery/search/cache (Session 3), six-family model foundation (Session 4A), and automatic target-family admission (Session 4B).
+This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter registry foundation (Session 2), bounded live discovery/search/cache (Session 3), six-family model foundation (Session 4A), automatic target-family admission (Session 4B), and the governed Settings model picker (Session 4C).
 
 ## Closed foundational roadmaps
 
