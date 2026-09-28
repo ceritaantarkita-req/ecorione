@@ -91,7 +91,11 @@ export function registerConnectControlRoutes(
   app.get("/v1/settings/runtime", async () => runtime().get());
   app.put("/v1/settings/runtime", async (req) => {
     const patch = parseOrBadRequest(RuntimeSettingsPatchSchema, req.body);
-    if (patch.openRouterModelSelection !== undefined) {
+    if (
+      patch.openRouterModelSelection !== undefined &&
+      patch.openRouterModelSelection !==
+        (runtime().get().settings.openRouterModelSelection ?? "governed")
+    ) {
       throw new HttpError(
         400,
         "OPENROUTER_SELECTION_REQUIRES_ADMISSION",
