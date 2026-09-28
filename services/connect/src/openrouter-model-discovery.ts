@@ -132,7 +132,7 @@ function sourceProviderFromId(id: string): string {
 }
 
 function isMutableAlias(id: string): boolean {
-  return id.startsWith("~");
+  return id.startsWith("~") || /(?:^|[-:@/])latest$/iu.test(id);
 }
 
 function normalizeModel(
@@ -173,8 +173,17 @@ function normalizeModel(
       }
     : verifyOpenRouterModelAdmission(candidate);
   return {
+    id: candidate.id,
     displayName: model.name,
-    ...candidate,
+    sourceProvider: candidate.sourceProvider,
+    family: candidate.family,
+    contextWindowTokens: candidate.contextWindowTokens,
+    inputModalities: candidate.inputModalities,
+    outputModalities: candidate.outputModalities,
+    supportedParameters: candidate.supportedParameters,
+    promptPricePerToken: candidate.promptPricePerToken,
+    completionPricePerToken: candidate.completionPricePerToken,
+    mutableAlias: candidate.mutableAlias,
     admission: admission.admission,
     selectable: admission.selectable,
     executable,
