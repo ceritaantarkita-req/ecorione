@@ -30,7 +30,7 @@ Historical verification is intentionally preserved even when it contains an olde
 2. **[active-work-plan.md](active-work-plan.md)** — current queue; currently no active product/runtime implementation scope.
 3. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
 4. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
-5. **[verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md)** — latest repository/docs reconciliation evidence.
+5. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — latest safe checkpoint for current runtime/staging identity and NVIDIA hosted-provider trial closure.
 
 ## Current ECX baseline
 
@@ -98,13 +98,19 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current staging / DR truth
 
-Runtime compatibility remains the closed Batch 7 implementation. The latest audited docs-only repository/staging convergence before this cleanup-closure pass is:
+Latest audited runtime/staging identity:
 
 ```text
-72d680bfb944cc98f60caddcfc94bbffd45f0653
+SHA   = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image = staging-0f86a34cde66
 ```
 
-CI #2356, Product Eval #1595, and actual Staging Deploy #1483 passed; staging reported healthy Operations, 15/15 services running, exact-SHA match, and 28.79 GiB stabilized free disk. Later docs-only closure commits may advance exact Git/staging identity without changing the Batch 7 runtime compatibility boundary.
+CI #2380, Product Eval #1619, and actual Staging Deploy #1525 passed. Staging reported healthy Operations, 15/15 services running, exact-SHA match, and 29.89 GiB stabilized free disk.
+
+NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging hosted gate is enabled under bounded spend controls, but the user's actual NVIDIA secret has not been stored or tested by repository work.
+
+Canonical evidence:
+[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 SumoPod remains **staging, not production**.
 
@@ -122,6 +128,8 @@ Post-ECX cleanup execution:
 - final remote inventory: **9 branches**;
 - unexpected branches: **0**.
 
+The later NVIDIA trial work also closed its branch delta: cleanup run `36368987090` exact-SHA deleted 3 merged work branches, self-deleted its helper, and again proved a final **9-branch** retained inventory.
+
 Evidence:
 
 - [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
@@ -135,6 +143,7 @@ Use [verification/README.md](verification/README.md) for the evidence index.
 
 Important current pointers:
 
+- current NVIDIA/runtime safe checkpoint: [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 - repository truth reconciliation: [verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md)
 - post-ECX branch cleanup: [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - ECX B7 final checkpoint: [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md)
