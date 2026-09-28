@@ -101,14 +101,14 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current staging / DR truth
 
-Latest audited runtime/staging identity:
+Latest audited **runtime-changing compatibility baseline**:
 
 ```text
 SHA   = af2ef8f61f26058178e56b0d6490248c1898976e
 image = staging-af2ef8f61f26
 ```
 
-CI #2457, Product Eval #1696, and actual Staging Deploy #1675 passed. Staging reported healthy Operations, 15/15 services running, exact-SHA match, and 25.33 GiB stabilized free disk.
+CI #2457, Product Eval #1696, and actual Staging Deploy #1675 passed. Staging reported healthy Operations, 15/15 services running, exact runtime-SHA match, and 25.33 GiB stabilized free disk. Docs-only merges may advance the exact Git/staging revision without changing this compatibility baseline; use the latest deploy receipt when exact live identity is required.
 
 NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging operator kill switch is open under bounded spend controls; the runtime hosted toggle is activated through normal Settings/provider activation. The user's actual NVIDIA secret has not been stored or tested by repository work.
 
