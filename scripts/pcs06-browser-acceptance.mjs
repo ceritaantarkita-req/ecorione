@@ -1272,7 +1272,9 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
     await page.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
     await page.getByText("Discovered only", { exact: true }).waitFor();
-    if ((await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 0) {
+    if (
+      (await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 0
+    ) {
       throw new Error("desktop-settings: discovered model must not become selectable");
     }
 
