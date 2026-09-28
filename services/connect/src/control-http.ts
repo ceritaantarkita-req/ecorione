@@ -16,13 +16,31 @@ import {
   RuntimeSettingsPatchSchema,
   type RuntimeSettingsAdmin,
 } from "./runtime-settings.js";
+import {
+  OpenRouterModelDiscovery,
+  OpenRouterModelDiscoveryError,
+  type OpenRouterModelDiscoveryReader,
+} from "./openrouter-model-discovery.js";
 
 const CredentialParamsSchema = z.object({ provider: z.enum(CREDENTIAL_PROVIDERS) });
 const CredentialBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
+const OpenRouterDiscoveryQuerySchema = z
+  .object({
+    q: z.string().trim().max(120).optional(),
+    sourceProvider: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9][a-z0-9._-]{0,63}$/u)
+      .optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(50),
+    refresh: z.enum(["0", "1"]).default("0"),
+  })
+  .strict();
 
 export interface ConnectControlOptions {
   readonly runtimeSettings?: RuntimeSettingsAdmin | undefined;
   readonly credentialVault?: CredentialVaultAdmin | undefined;
+  readonly openRouterModelDiscovery?: OpenRouterModelDiscoveryReader | undefined;
 }
 
 function credentialMutation<T>(fn: () => T): T {
@@ -45,6 +63,8 @@ export function registerConnectControlRoutes(
   options: ConnectControlOptions,
 ): void {
   const metrics = observabilityFor(app);
+  const openRouterModelDiscovery =
+    options.openRouterModelDiscovery ?? new OpenRouterModelDiscovery();
   const runtime = (): RuntimeSettingsAdmin => {
     if (options.runtimeSettings === undefined)
       throw new HttpError(
@@ -84,6 +104,40 @@ export function registerConnectControlRoutes(
   app.get("/v1/settings/providers", async () => ({
     providers: PROVIDER_CATALOG,
   }));
+
+  app.get("/v1/settings/providers/openrouter/models", async (req) => {
+    const query = parseOrBadRequest(OpenRouterDiscoveryQuerySchema, req.query);
+    try {
+      const result = await openRouterModelDiscovery.list({
+        ...(query.q === undefined ? {} : { q: query.q }),
+        ...(query.sourceProvider === undefined
+          ? {}
+          : { sourceProvider: query.sourceProvider }),
+        limit: query.limit,
+        forceRefresh: query.refresh === "1",
+      });
+      metrics.addCounter("ecorione_openrouter_model_discovery_total", 1, {
+        outcome: "pass",
+        cache: result.cache,
+        stale: result.stale ? "true" : "false",
+      });
+      return result;
+    } catch (error) {
+      metrics.addCounter("ecorione_openrouter_model_discovery_total", 1, {
+        outcome: "error",
+      });
+      if (error instanceof OpenRouterModelDiscoveryError) {
+        throw new HttpError(
+          error.kind === "unreachable" ? 503 : 502,
+          error.kind === "unreachable"
+            ? "OPENROUTER_CATALOG_UNAVAILABLE"
+            : "OPENROUTER_CATALOG_INVALID",
+          error.message,
+        );
+      }
+      throw error;
+    }
+  });
 
   app.get("/v1/settings/credentials", async () => ({
     available: options.credentialVault !== undefined,
