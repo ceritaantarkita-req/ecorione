@@ -132,66 +132,66 @@ describe("Connect Control Center boundary", () => {
   it(
     "mengekspos OpenRouter discovery dengan filter/cache metadata tanpa membuat model discovered executable",
     async () => {
-    let received: unknown;
-    const discovery: OpenRouterModelDiscoveryReader = {
-      async list(query) {
-        received = query;
-        return {
-          source: "openrouter:/api/v1/models",
-          cache: "hit",
-          stale: false,
-          fetchedAt: "2026-09-28T10:00:00.000Z",
-          expiresAt: "2026-09-28T10:10:00.000Z",
-          total: 1,
-          returned: 1,
-          models: [
-            {
-              id: "qwen/qwen3.8-max",
-              displayName: "Qwen: Qwen3.8 Max",
-              sourceProvider: "qwen",
-              contextWindowTokens: 1_000_000,
-              inputModalities: ["text", "image"],
-              outputModalities: ["text"],
-              supportedParameters: ["tools", "reasoning_effort"],
-              promptPricePerToken: "0.000002",
-              completionPricePerToken: "0.000006",
-              mutableAlias: false,
-              admission: "discovered-only",
-              executable: false,
-              selectionId: null,
-            },
-          ],
-        };
-      },
-    };
-    const { app } = fixture({ openRouterModelDiscovery: discovery });
+      let received: unknown;
+      const discovery: OpenRouterModelDiscoveryReader = {
+        async list(query) {
+          received = query;
+          return {
+            source: "openrouter:/api/v1/models",
+            cache: "hit",
+            stale: false,
+            fetchedAt: "2026-09-28T10:00:00.000Z",
+            expiresAt: "2026-09-28T10:10:00.000Z",
+            total: 1,
+            returned: 1,
+            models: [
+              {
+                id: "qwen/qwen3.8-max",
+                displayName: "Qwen: Qwen3.8 Max",
+                sourceProvider: "qwen",
+                contextWindowTokens: 1_000_000,
+                inputModalities: ["text", "image"],
+                outputModalities: ["text"],
+                supportedParameters: ["tools", "reasoning_effort"],
+                promptPricePerToken: "0.000002",
+                completionPricePerToken: "0.000006",
+                mutableAlias: false,
+                admission: "discovered-only",
+                executable: false,
+                selectionId: null,
+              },
+            ],
+          };
+        },
+      };
+      const { app } = fixture({ openRouterModelDiscovery: discovery });
 
-    const response = await app.inject({
-      method: "GET",
-      url:
-        "/v1/settings/providers/openrouter/models?q=qwen&sourceProvider=qwen&limit=20&refresh=1",
-      headers: auth,
-    });
+      const response = await app.inject({
+        method: "GET",
+        url:
+          "/v1/settings/providers/openrouter/models?q=qwen&sourceProvider=qwen&limit=20&refresh=1",
+        headers: auth,
+      });
 
-    expect(response.statusCode).toBe(200);
-    expect(received).toEqual({
-      q: "qwen",
-      sourceProvider: "qwen",
-      limit: 20,
-      forceRefresh: true,
-    });
-    expect(response.json()).toMatchObject({
-      cache: "hit",
-      stale: false,
-      models: [
-        expect.objectContaining({
-          id: "qwen/qwen3.8-max",
-          admission: "discovered-only",
-          executable: false,
-          selectionId: null,
-        }),
-      ],
-    });
+      expect(response.statusCode).toBe(200);
+      expect(received).toEqual({
+        q: "qwen",
+        sourceProvider: "qwen",
+        limit: 20,
+        forceRefresh: true,
+      });
+      expect(response.json()).toMatchObject({
+        cache: "hit",
+        stale: false,
+        models: [
+          expect.objectContaining({
+            id: "qwen/qwen3.8-max",
+            admission: "discovered-only",
+            executable: false,
+            selectionId: null,
+          }),
+        ],
+      });
     },
   );
 
