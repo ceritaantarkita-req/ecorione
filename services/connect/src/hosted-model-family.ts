@@ -7,8 +7,7 @@ export const TARGET_OPENROUTER_MODEL_FAMILIES = [
   "glm",
 ] as const;
 
-export type TargetOpenRouterModelFamily =
-  (typeof TARGET_OPENROUTER_MODEL_FAMILIES)[number];
+export type TargetOpenRouterModelFamily = (typeof TARGET_OPENROUTER_MODEL_FAMILIES)[number];
 export type HostedModelFamily = TargetOpenRouterModelFamily | "other";
 
 export interface OpenRouterModelFamilyDefinition {
@@ -62,10 +61,7 @@ export const OPENROUTER_MODEL_FAMILY_DEFINITIONS = [
   },
 ] as const satisfies readonly OpenRouterModelFamilyDefinition[];
 
-const familyBySourceProvider = new Map<
-  string,
-  readonly OpenRouterModelFamilyDefinition[]
->();
+const familyBySourceProvider = new Map<string, readonly OpenRouterModelFamilyDefinition[]>();
 
 for (const definition of OPENROUTER_MODEL_FAMILY_DEFINITIONS) {
   for (const sourceProvider of definition.sourceProviders) {
@@ -85,11 +81,7 @@ function normalizedSourceProvider(sourceProvider: string): string {
 }
 
 function familyTokenMatches(value: string, prefix: string): boolean {
-  return (
-    value === prefix ||
-    value.startsWith(`${prefix}-`) ||
-    value.startsWith(`${prefix}_`)
-  );
+  return value === prefix || value.startsWith(`${prefix}-`) || value.startsWith(`${prefix}_`);
 }
 
 export interface OpenRouterModelFamilyCandidate {
@@ -130,9 +122,7 @@ export function isTargetOpenRouterModelFamily(
 export function openRouterModelFamilyDefinition(
   family: TargetOpenRouterModelFamily,
 ): OpenRouterModelFamilyDefinition {
-  const definition = OPENROUTER_MODEL_FAMILY_DEFINITIONS.find(
-    (entry) => entry.id === family,
-  );
+  const definition = OPENROUTER_MODEL_FAMILY_DEFINITIONS.find((entry) => entry.id === family);
   if (definition === undefined) {
     throw new Error(`Unknown OpenRouter model family: ${family}`);
   }
