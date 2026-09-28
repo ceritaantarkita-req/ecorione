@@ -28,6 +28,7 @@ export default function SettingsPage() {
     mcpLoading,
     mutableLocalModel,
     openRouterDiscovery,
+    openRouterPickerModels,
     openRouterQuery,
     openRouterSourceProvider,
     pendingAction,
@@ -67,6 +68,26 @@ export default function SettingsPage() {
     workspaceId,
     workspaceIdRef,
   } = useSettingsController(activeWorkspaceId);
+
+  const selectedModelPreference =
+    runtime?.settings.hostedProvider === "openrouter"
+      ? (runtime.settings.openRouterModelSelection ?? "governed")
+      : (runtime?.settings.hostedModel ?? "governed");
+  const selectedOpenRouterModel =
+    runtime?.settings.hostedProvider === "openrouter"
+      ? (openRouterPickerModels.find((model) => model.id === selectedModelPreference) ?? null)
+      : null;
+  const selectedModelDisplayName =
+    selectedModelPreference === "governed"
+      ? "Governed / Recommended"
+      : runtime?.settings.hostedProvider === "openrouter"
+        ? (selectedOpenRouterModel?.displayName ?? selectedModelPreference)
+        : (activeHostedModels.find((model) => model.id === selectedModelPreference)?.displayName ??
+          selectedModelPreference);
+  const selectedModelExecutable =
+    selectedModelPreference === "governed" ||
+    runtime?.settings.hostedProvider !== "openrouter" ||
+    selectedOpenRouterModel?.executable === true;
 
   return (
     <main className={styles.page}>
@@ -419,38 +440,47 @@ export default function SettingsPage() {
             <label>
               Model
               <select
-                value={runtime.settings.hostedModel}
+                value={selectedModelPreference}
                 disabled={pendingAction !== null}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const selected = event.target.value as HostedModelPreference;
                   setRuntime({
                     ...runtime,
                     settings: {
                       ...runtime.settings,
-                      hostedModel: event.target.value as HostedModelPreference,
+                      ...(runtime.settings.hostedProvider === "openrouter"
+                        ? { openRouterModelSelection: selected }
+                        : { hostedModel: selected }),
                     },
-                  })
-                }
+                  });
+                }}
               >
                 <option value="governed">Governed / Recommended</option>
-                {activeHostedModels.map((model) => (
+                {(runtime.settings.hostedProvider === "openrouter"
+                  ? openRouterPickerModels
+                  : activeHostedModels.map((model) => ({
+                      id: model.id,
+                      displayName: model.displayName,
+                      executable: true,
+                    }))
+                ).map((model) => (
                   <option key={model.id} value={model.id}>
                     {model.displayName}
+                    {runtime.settings.hostedProvider === "openrouter" && !model.executable
+                      ? " · Selectable"
+                      : ""}
                   </option>
                 ))}
               </select>
             </label>
             <div className={styles.defaultModelSummary}>
-              <strong>
-                {runtime.settings.hostedModel === "governed"
-                  ? "Governed / Recommended"
-                  : (activeHostedModels.find(
-                      (model) => model.id === runtime.settings.hostedModel,
-                    )?.displayName ?? runtime.settings.hostedModel)}
-              </strong>
+              <strong>{selectedModelDisplayName}</strong>
               <span>
-                {runtime.settings.hostedModel === "governed"
+                {selectedModelPreference === "governed"
                   ? "Policy dapat memilih pinned model yang sesuai sensitivity dan evidence."
-                  : "Pilihan ini dipakai untuk hosted chat normal. RESTRICTED tetap boleh di-override oleh policy."}
+                  : runtime.settings.hostedProvider === "openrouter" && !selectedModelExecutable
+                    ? "Selectable untuk preference Settings, tetapi belum executable. Save akan menyimpan pilihan dan menonaktifkan hosted execution; tidak ada silent fallback."
+                    : "Pilihan ini executable untuk hosted chat normal. RESTRICTED tetap boleh di-override oleh policy."}
               </span>
             </div>
             <button
