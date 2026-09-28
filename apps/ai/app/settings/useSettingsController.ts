@@ -258,7 +258,8 @@ export function useSettingsController(initialWorkspaceId: string) {
       models.push({ id: model.id, displayName: model.displayName, executable: true });
     }
     for (const model of openRouterDiscovery?.models ?? []) {
-      if (!model.selectable || model.selectionId === null || seen.has(model.selectionId)) continue;
+      if (!model.selectable || model.selectionId === null || seen.has(model.selectionId))
+        continue;
       seen.add(model.selectionId);
       models.push({
         id: model.selectionId,
