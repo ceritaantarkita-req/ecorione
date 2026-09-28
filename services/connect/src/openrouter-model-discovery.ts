@@ -5,8 +5,10 @@ import {
   hostedModelRegistry,
 } from "./hosted-model-registry.js";
 import {
+  OPENROUTER_MODEL_FAMILY_DEFINITIONS,
   classifyOpenRouterModelFamily,
   type HostedModelFamily,
+  type TargetOpenRouterModelFamily,
 } from "./hosted-model-family.js";
 
 export const OPENROUTER_MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models";
@@ -70,8 +72,14 @@ export interface OpenRouterDiscoveryQuery {
   readonly forceRefresh?: boolean | undefined;
 }
 
+export interface OpenRouterDiscoveryFamily {
+  readonly id: TargetOpenRouterModelFamily;
+  readonly displayName: string;
+}
+
 export interface OpenRouterDiscoverySnapshot {
   readonly source: "openrouter:/api/v1/models";
+  readonly families: readonly OpenRouterDiscoveryFamily[];
   readonly cache: "hit" | "refreshed" | "stale";
   readonly stale: boolean;
   readonly fetchedAt: string;
@@ -301,6 +309,10 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
     const models = filtered.slice(0, limit);
     return {
       source: "openrouter:/api/v1/models",
+      families: OPENROUTER_MODEL_FAMILY_DEFINITIONS.map(({ id, displayName }) => ({
+        id,
+        displayName,
+      })),
       cache: cacheState,
       stale,
       fetchedAt: new Date(catalog.fetchedAtMs).toISOString(),
