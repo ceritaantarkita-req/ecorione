@@ -6,17 +6,15 @@ import { credentialSaveReady, type CredentialTestStamp } from "../../lib/credent
 import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
 
 export type HostedProviderId = "anthropic" | "openrouter" | "openai" | "nvidia";
-export type HostedModelPreference =
-  | "governed"
-  | "claude-sonnet-4-5-20250929"
-  | "claude-opus-4-1-20250805"
-  | "gpt-5.6-terra"
-  | "gpt-5.6-sol"
-  | "z-ai/glm-5.3";
+export type HostedModelPreference = string;
 type HostedModelCatalogEntry = {
-  id: Exclude<HostedModelPreference, "governed">;
+  id: string;
   displayName: string;
   providerRuntime: string;
+  sourceProvider?: string;
+  verification?: "verified" | "discovered";
+  catalogSource?: "static-verified" | "openrouter-discovery";
+  verifiedAt?: string | null;
 };
 export type RuntimeSnapshot = {
   revision: number;
@@ -41,6 +39,31 @@ type ProviderCatalogEntry = {
   routingReady: boolean;
   connectionTestReady: boolean;
   hostedModels: HostedModelCatalogEntry[];
+};
+type OpenRouterDiscoveredModel = {
+  id: string;
+  displayName: string;
+  sourceProvider: string;
+  contextWindowTokens: number | null;
+  inputModalities: string[];
+  outputModalities: string[];
+  supportedParameters: string[];
+  promptPricePerToken: string | null;
+  completionPricePerToken: string | null;
+  mutableAlias: boolean;
+  admission: "verified-executable" | "discovered-only";
+  executable: boolean;
+  selectionId: string | null;
+};
+type OpenRouterDiscoverySnapshot = {
+  source: "openrouter:/api/v1/models";
+  cache: "hit" | "refreshed" | "stale";
+  stale: boolean;
+  fetchedAt: string;
+  expiresAt: string;
+  total: number;
+  returned: number;
+  models: OpenRouterDiscoveredModel[];
 };
 type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "timeout" | "error";
 type LocalRuntimeStatus = {
@@ -81,6 +104,11 @@ export function useSettingsController(initialWorkspaceId: string) {
   const [credentialTest, setCredentialTest] = useState<CredentialTestStamp | null>(null);
   const [connectProviderId, setConnectProviderId] = useState<HostedProviderId | null>(null);
   const [localStatus, setLocalStatus] = useState<LocalRuntimeStatus | null>(null);
+  const [openRouterDiscovery, setOpenRouterDiscovery] =
+    useState<OpenRouterDiscoverySnapshot | null>(null);
+  const [openRouterQuery, setOpenRouterQuery] = useState("");
+  const [openRouterSourceProvider, setOpenRouterSourceProvider] = useState("");
+
   const [localSetupOpen, setLocalSetupOpen] = useState(false);
   const [mcpJson, setMcpJson] = useState("");
   const [status, setStatus] = useState("");
@@ -256,6 +284,37 @@ export function useSettingsController(initialWorkspaceId: string) {
         ? hostedHealth.status
         : undefined,
   });
+
+  async function discoverOpenRouterModels(forceRefresh = false): Promise<void> {
+    if (!beginAction("openrouter-discovery")) return;
+    setStatus(
+      forceRefresh
+        ? "Refreshing OpenRouter model catalog…"
+        : "Searching OpenRouter model catalog…",
+    );
+    try {
+      const params = new URLSearchParams();
+      const q = openRouterQuery.trim();
+      const sourceProvider = openRouterSourceProvider.trim().toLowerCase();
+      if (q.length > 0) params.set("q", q);
+      if (sourceProvider.length > 0) params.set("sourceProvider", sourceProvider);
+      params.set("limit", "40");
+      if (forceRefresh) params.set("refresh", "1");
+      const result = await json<OpenRouterDiscoverySnapshot>(
+        `/api/settings/settings/providers/openrouter/models?${params.toString()}`,
+      );
+      setOpenRouterDiscovery(result);
+      setStatus(
+        `OpenRouter catalog: ${String(result.returned)} shown / ${String(result.total)} matched · ${result.cache}${
+          result.stale ? " (stale fallback)" : ""
+        }.`,
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
 
   async function saveRuntime() {
     if (runtime === null || !beginAction("runtime")) return;
@@ -629,6 +688,9 @@ export function useSettingsController(initialWorkspaceId: string) {
     hostedProviderOptions,
     localSetupOpen,
     localStatus,
+    openRouterDiscovery,
+    openRouterQuery,
+    openRouterSourceProvider,
     mcpJson,
     mcpLoading,
     mutableLocalModel,
@@ -636,6 +698,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     providerViews,
     refreshMcp,
     removeCredential,
+    discoverOpenRouterModels,
     runCanary,
     runtime,
     saveCredential,
@@ -654,6 +717,8 @@ export function useSettingsController(initialWorkspaceId: string) {
     setHostedHealth,
     setLocalSetupOpen,
     setLocalStatus,
+    setOpenRouterQuery,
+    setOpenRouterSourceProvider,
     setMcpJson,
     setRuntime,
     setSecret,

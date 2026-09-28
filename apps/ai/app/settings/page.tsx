@@ -1,6 +1,7 @@
 "use client";
 
 import { useWorkspace } from "../WorkspaceProvider";
+import { OpenRouterDiscoveryPanel } from "./OpenRouterDiscoveryPanel";
 import styles from "./Settings.module.css";
 import {
   useSettingsController,
@@ -26,7 +27,11 @@ export default function SettingsPage() {
     mcpJson,
     mcpLoading,
     mutableLocalModel,
+    openRouterDiscovery,
+    openRouterQuery,
+    openRouterSourceProvider,
     pendingAction,
+    discoverOpenRouterModels,
     providerViews,
     refreshMcp,
     removeCredential,
@@ -49,6 +54,8 @@ export default function SettingsPage() {
     setLocalSetupOpen,
     setLocalStatus,
     setMcpJson,
+    setOpenRouterQuery,
+    setOpenRouterSourceProvider,
     setRuntime,
     setSecret,
     setSecretProvider,
@@ -455,6 +462,18 @@ export default function SettingsPage() {
             </button>
           </div>
         )}
+
+        {runtime?.settings.hostedProvider === "openrouter" ? (
+          <OpenRouterDiscoveryPanel
+            discovery={openRouterDiscovery}
+            query={openRouterQuery}
+            sourceProvider={openRouterSourceProvider}
+            pendingAction={pendingAction}
+            onQueryChange={setOpenRouterQuery}
+            onSourceProviderChange={setOpenRouterSourceProvider}
+            onDiscover={(forceRefresh) => void discoverOpenRouterModels(forceRefresh)}
+          />
+        ) : null}
       </section>
 
       <details className={styles.advanced} id="advanced-settings">

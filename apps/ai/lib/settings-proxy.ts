@@ -8,6 +8,7 @@ type Method = "GET" | "POST" | "PUT" | "DELETE";
 const ALLOWED = [
   /^\/v1\/settings\/runtime$/,
   /^\/v1\/settings\/providers$/,
+  /^\/v1\/settings\/providers\/openrouter\/models$/,
   /^\/v1\/settings\/local-runtime\/status$/,
   /^\/v1\/settings\/credentials(?:\/[a-z0-9][a-z0-9-]{0,63}(?:\/test)?)?$/,
   /^\/v1\/settings\/mcp\/servers(?:\/[a-z0-9][a-z0-9._-]*)?(?:\/tools\/[A-Za-z0-9._-]+)?$/,
@@ -30,6 +31,31 @@ function allowedSettingsPath(path: string, method: Method): string | null {
     ) {
       return null;
     }
+  } else if (normalized.pathname === "/v1/settings/providers/openrouter/models") {
+    if (method !== "GET") return null;
+    const allowedKeys = new Set(["q", "sourceProvider", "limit", "refresh"]);
+    const keys = [...normalized.searchParams.keys()];
+    if (keys.some((key) => !allowedKeys.has(key))) return null;
+    for (const key of allowedKeys) {
+      if (normalized.searchParams.getAll(key).length > 1) return null;
+    }
+    const q = normalized.searchParams.get("q");
+    if (q !== null && q.trim().length > 120) return null;
+    const sourceProvider = normalized.searchParams.get("sourceProvider");
+    if (
+      sourceProvider !== null &&
+      !/^[a-z0-9][a-z0-9._-]{0,63}$/u.test(sourceProvider.trim())
+    ) {
+      return null;
+    }
+    const limit = normalized.searchParams.get("limit");
+    if (limit !== null) {
+      if (!/^\d{1,3}$/u.test(limit)) return null;
+      const parsedLimit = Number(limit);
+      if (parsedLimit < 1 || parsedLimit > 100) return null;
+    }
+    const refresh = normalized.searchParams.get("refresh");
+    if (refresh !== null && refresh !== "0" && refresh !== "1") return null;
   } else if (normalized.search.length > 0) {
     return null;
   }
