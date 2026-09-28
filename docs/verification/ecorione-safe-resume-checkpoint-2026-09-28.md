@@ -4,47 +4,48 @@ Status: **CURRENT / SAFE TO RESUME / NO ACTIVE PRODUCT-RUNTIME BATCH**
 
 ## Purpose
 
-Freeze the exact safe handoff point after the closed ECX Batch 1–7 work, NVIDIA hosted-provider rollout and connection-test hardening, OpenRouter model-registry Session 2, and OpenRouter live-discovery Session 3.
+Freeze the exact safe handoff point after the closed ECX Batch 1–7 work, NVIDIA hosted-provider rollout and connection-test hardening, OpenRouter registry Session 2, live-discovery Session 3, and model-family foundation Session 4A.
 
 This is the preferred resume pointer for the next ECORIONE session. Do **not** restart completed roadmaps or reconstruct the project from old planning notes.
 
 ## Repository audit boundary
 
 ```text
-repository                         = ceritaantarkita-req/ecorione
-audited runtime main               = af2ef8f61f26058178e56b0d6490248c1898976e
-latest runtime closure             = PR #391
-PR #391 reviewed head              = f487600ff29ab5a64a514b03c91384729938b545
-PR #391 merge SHA                  = af2ef8f61f26058178e56b0d6490248c1898976e
-PR #391 exact-head CI              = #2456 PASS
-PR #391 exact-head Product Eval    = #1695 PASS
-PR #391 browser acceptance         = #265 PASS
-merged-main CI                     = #2457 PASS
-merged-main Product Eval           = #1696 PASS
-open pull requests at runtime close= 0
-live remote branches at runtime close = 13
-open issue at audit boundary       = #277 DR-2 physical independence
+repository                           = ceritaantarkita-req/ecorione
+audited runtime main                 = 29446ad0e140d1486bd3914bb087a552409e464c
+latest runtime closure               = PR #394
+PR #394 reviewed head                = 90ba75a1a1016110ac278909208ec2c7eede15df
+PR #394 merge SHA                    = 29446ad0e140d1486bd3914bb087a552409e464c
+PR #394 exact-head CI                = #2467 PASS
+PR #394 exact-head Product Eval      = #1706 PASS
+PR #394 browser acceptance           = #271 PASS
+merged-main CI                       = #2468 PASS
+merged-main Product Eval             = #1707 PASS
+open pull requests at runtime close  = 0
+live remote branches at runtime close= 16
+open issue at audit boundary         = #277 DR-2 physical independence
 ```
 
-The documentation branch used to update this pointer is bookkeeping only and does not open a product/runtime scope.
+The Session 4A documentation-closure branch is bookkeeping only and does not open a product/runtime scope.
 
 ## Runtime / staging compatibility baseline
 
 The latest audited runtime-changing merge is:
 
 ```text
-runtime-changing baseline = af2ef8f61f26058178e56b0d6490248c1898976e
-staging image             = staging-af2ef8f61f26
-Staging Deploy gate       = #1674 PASS / deploy skipped
-actual Staging Deploy     = #1675 PASS
+runtime-changing baseline = 29446ad0e140d1486bd3914bb087a552409e464c
+staging image             = staging-29446ad0e140
+Staging Deploy gate       = #1696 PASS / deploy skipped
+actual Staging Deploy     = #1697 PASS
 public/auth smoke         = PASS
 Operations                = healthy
 configured/running        = 15 / 15
 non-running               = 0
-stabilized free disk      = 25.33 GiB
+host evidence free disk   = 23.97 GiB
+stabilized free disk      = 25.31 GiB
 ```
 
-Staging Deploy #1675 deployed the exact merge SHA through the governed least-privilege staging path and passed public/auth smoke, Operations, exact-host evidence, and capacity checks.
+Staging Deploy #1697 deployed the exact merge SHA through the governed least-privilege staging path and passed public/auth smoke, Operations, exact-host evidence, and capacity checks.
 
 SumoPod remains **staging, not production**.
 
@@ -65,17 +66,18 @@ The following are closed at their documented boundaries:
 - Docker native dependency build hardening;
 - NVIDIA connection-test Session 1;
 - OpenRouter model-registry Session 2;
-- OpenRouter live-discovery Session 3.
+- OpenRouter live-discovery Session 3;
+- OpenRouter model-family Session 4A.
 
 There is no implicit Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or automatic later provider session.
 
-## OpenRouter Sessions 2–3 state
+## OpenRouter Sessions 2–3 + 4A state
 
-Sessions 2 and 3 are **CLOSED / PASS / STAGING VERIFIED** at their documented boundaries.
+Sessions 2, 3, and 4A are **CLOSED / PASS / STAGING VERIFIED** at their documented boundaries.
 
-Session 2 established the extensible governed model registry. The hosted model boundary can represent provider/runtime identity, source provider, optional discovery metadata, pricing authority, verification state, catalog provenance, and freshness.
+Session 2 established the extensible governed model registry.
 
-Session 3 adds bounded live discovery against the OpenRouter catalog:
+Session 3 added bounded live discovery against the OpenRouter catalog:
 
 ```text
 catalog endpoint      = https://openrouter.ai/api/v1/models
@@ -87,16 +89,45 @@ manual refresh        = supported
 stale fallback        = explicit after prior successful snapshot
 ```
 
-Search/filter runs against the normalized cached full catalog. The read-only Settings path exposes exact model ids, source provider, context/input metadata when returned, mutable alias state, and admission status.
+Session 4A adds one Connect-owned, version-agnostic target-family vocabulary:
 
-Execution remains fail-closed. A discovered model is not executable merely because it appears in OpenRouter.
+```text
+gpt      -> GPT
+gemini   -> Gemini
+qwen     -> Qwen
+deepseek -> DeepSeek
+kimi     -> Kimi
+glm      -> GLM
+```
+
+Expected source-provider namespaces are:
+
+```text
+openai                 -> GPT
+google                 -> Gemini
+qwen                   -> Qwen
+deepseek / deepseek-ai -> DeepSeek
+moonshotai             -> Kimi
+z-ai                   -> GLM
+```
+
+The classifier requires the expected source namespace plus a family-shaped slug/name. Unrelated models under the same vendor remain `other`.
+
+The family layer is intentionally version-agnostic. Compact slugs such as `qwen3...` can be classified without pinning a particular Qwen version. Mutable aliases may also be classified for discovery/presentation, but alias or family classification never grants execution authority.
+
+Registry entries and discovered models now carry `family`, and discovery responses expose the canonical six-family catalog so later admission/picker work does not need a second hard-coded family list.
+
+Execution remains fail-closed:
 
 ```text
 remote catalog presence
-  -> normalize as discovered model
-  -> exact existing verified registry mapping?
-       yes -> verified-executable
-       no  -> discovered-only / executable=false / selectionId=null
+  != executable admission
+
+family classification
+  != executable admission
+
+verified executable registry entry + required pricing/evidence
+  -> routing may proceed
 ```
 
 Current OpenRouter executable/selectable models remain:
@@ -106,12 +137,11 @@ Claude Sonnet 4.5 -> anthropic/claude-sonnet-4.5
 Claude Opus 4.1   -> anthropic/claude-opus-4.1
 ```
 
-GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, and other catalog models may be discoverable when OpenRouter returns them, but none is claimed selectable without a separate explicit admission/verification scope.
-
-Integrated browser acceptance proves a discovered Qwen entry can be visible as **Discovered only** while remaining absent from the selectable model dropdown.
+GPT, Gemini, Qwen, DeepSeek, Kimi, GLM, and other catalog models are **not** claimed selectable merely because they can now be family-classified.
 
 Canonical OpenRouter evidence:
 
+- [openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)
 - [openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)
 - [openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)
 
@@ -130,8 +160,6 @@ timeout error                    = PROVIDER_TEST_TIMEOUT
 ```
 
 The user's actual NVIDIA secret is not repository state and is not claimed validated.
-
-The older Session 1 checkpoint contains intermediate 30-second / 512-token wording; current code and this checkpoint supersede those figures.
 
 Latest NVIDIA evidence:
 
@@ -167,21 +195,19 @@ Product Evolution PE-00..PE-08 is already closed. Any future change to these sur
 
 The historical cleanup boundary remains 9 branches.
 
-At Session 3 runtime closure:
+At Session 4A runtime closure:
 
 ```text
-live remote branch count         = 13
-known bookkeeping ref            = docs/current-safe-resume-20260928
-known merged Session 1 ref       = fix/nvidia-credential-test-timeout-20260928
-known merged Session 2 ref       = feat/openrouter-model-registry-session2-20260928
-known merged Session 3 ref       = feat/openrouter-model-discovery-session3-20260928
+live remote branch count         = 16
+historical cleanup boundary      = 9
+known post-cleanup refs          = 7
 unexpected active work refs      = 0
 open pull requests               = 0
 ```
 
-The temporary docs-closure branch created after this runtime checkpoint is bookkeeping for current-state convergence and is not a product/runtime implementation scope.
+The seven post-cleanup refs are known bookkeeping/provenance refs created by NVIDIA and OpenRouter Sessions 1–4A. Their presence does not mean those closed scopes remain active.
 
-These later refs are known bookkeeping/provenance refs, not active implementation scopes.
+The temporary Session 4A docs-closure branch created after this runtime checkpoint is bookkeeping only.
 
 Future branch growth must be handled as an exact-SHA delta. Do not rerun historical cleanup classifications simply for freshness.
 
@@ -189,7 +215,11 @@ Future branch growth must be handled as an exact-SHA delta. Do not rerun histori
 
 None of these is active:
 
-- selected OpenRouter discovered-model admission/verification;
+- **Session 4B — selected OpenRouter model automatic verification/admission across GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM**;
+- Session 4C Settings model picker;
+- Session 4D Ai chat quick-switch;
+- Session 4E real multi-family OpenRouter validation;
+- Session 4F final polish/closure;
 - DR-2 checkpoint 2 external-target selection and physical-independence proof;
 - public production promotion/cutover;
 - native Google Drive integration;
@@ -206,7 +236,7 @@ None of these is active:
 
 Issue #277 remains the deferred DR-2 tracker.
 
-A later OpenRouter model-admission scope must be selected explicitly and must verify models individually. Catalog presence, catalog pricing strings, a mutable alias, or marketing capability metadata must not silently become execution authority.
+Session 4B must keep family classification, catalog presence, pricing metadata, and mutable aliases separate from execution authority. New executable models must pass the explicit verification/admission boundary; no silent fallback or bulk auto-admission is authorized by Session 4A.
 
 ## Safe resume procedure
 
@@ -217,12 +247,15 @@ For the next session or agent:
 3. read `docs/active-work-plan.md`;
 4. read `AGENTS.md`;
 5. read this checkpoint;
-6. use the Session 3 + Session 2 OpenRouter checkpoints, NVIDIA checkpoints, and ECX checkpoint as supporting evidence;
-7. open exactly one new scope only after explicit operator authorization;
-8. do not infer a next numbered batch/session from historical documents.
+6. use Session 4A as the family-foundation boundary;
+7. use Session 3 as the discovery boundary and Session 2 as the registry/admission compatibility boundary;
+8. start Session 4B only after explicit operator authorization;
+9. do not infer any other numbered batch/session from historical documents.
 
 ## Bottom line
 
-ECORIONE is at a clean handoff point: OpenRouter Session 3 is closed, staging verified, and the current runtime is healthy. Live discovery is available without widening executable admission.
+ECORIONE is at a clean handoff point: OpenRouter Session 4A is closed, deployed, and staging verified.
 
-There is **no active product/runtime implementation batch**. A future selected-model admission/verification scope is only eligible after explicit authorization; no Session 4 is active implicitly.
+The system now has one version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM without widening the executable model set.
+
+There is **no active product/runtime implementation batch**. Session 4B is the agreed next eligible OpenRouter scope, but it is not active until explicitly authorized.
