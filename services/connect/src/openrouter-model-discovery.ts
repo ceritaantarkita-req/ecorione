@@ -168,7 +168,7 @@ function normalizeModel(
     ? {
         admission: "verified-executable" as const,
         selectable: true,
-        selectionId: verified.id,
+        selectionId: verified?.id ?? null,
         unavailableReason: null,
       }
     : verifyOpenRouterModelAdmission(candidate);
