@@ -2,18 +2,18 @@
 
 Last updated: **2026-09-28**
 
-Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSION 2 CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository               = ceritaantarkita-req/ecorione
 default branch           = main
-runtime-changing baseline= 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
-staging image            = staging-9f19b40cea4b
+runtime-changing baseline= af2ef8f61f26058178e56b0d6490248c1898976e
+staging image            = staging-af2ef8f61f26
 ```
 
-`9f19b40...` is the latest audited runtime-changing merge and the merge commit of PR #389. It is deployed on governed staging. Docs-only checkpoint commits may advance live Git revision later without changing this runtime compatibility baseline; inspect live `main` for the newest exact repository revision.
+`9f19b40...` is the latest audited runtime-changing merge and the merge commit of PR #391. It is deployed on governed staging. Docs-only checkpoint commits may advance live Git revision later without changing this runtime compatibility baseline; inspect live `main` for the newest exact repository revision.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
@@ -25,25 +25,25 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
-image = staging-9f19b40cea4b
+SHA   = af2ef8f61f26058178e56b0d6490248c1898976e
+image = staging-af2ef8f61f26
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| CI #2429 | PASS |
-| Product Eval #1668 | PASS |
-| Staging Deploy #1618 | gate-only PASS |
-| Staging Deploy #1619 | actual deploy PASS |
+| CI #2457 | PASS |
+| Product Eval #1696 | PASS |
+| Staging Deploy #1674 | gate-only PASS |
+| Staging Deploy #1675 | actual deploy PASS |
 | native `better-sqlite3` fallback build | PASS |
 | expected host SHA | matched |
 | Operations | `healthy: true` |
 | unhealthy services | 0 |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| stabilized free disk | 29.90 GiB |
+| stabilized free disk | 25.33 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -101,16 +101,21 @@ Latest Session 1 checkpoint:
 Underlying provider rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
-## OpenRouter model registry — Session 2 CLOSED / PASS
+## OpenRouter registry + live discovery — Sessions 2–3 CLOSED / PASS
 
-Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation.
+Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 adds bounded live catalog fetch/search/filter/cache without changing execution admission.
 
 Current behavior:
 
 - model preferences are string-shaped for future extensibility;
 - execution remains fail-closed against an executable verified provider/model registry entry;
-- registry metadata separates provider runtime identity, source provider, pricing authority, verification state, catalog source, and optional freshness/discovery fields;
-- a discovered/catalogued model is not automatically executable;
+- Connect fetches the OpenRouter model catalog through a bounded 8-second / 8 MiB discovery path;
+- normalized full-catalog snapshots are cached for 10 minutes and reused for local search/filter;
+- explicit refresh is supported;
+- stale cache is surfaced explicitly if a later refresh fails after a prior successful snapshot;
+- mutable `~...` aliases are labeled;
+- discovered/catalogued state remains distinct from executable/admitted state;
+- a discovered-only model remains absent from the selectable execution dropdown;
 - OpenRouter billed `usage.cost` remains authoritative for actual billed cost;
 - existing pricing identities remain required for pre-dispatch spend admission/evidence.
 
@@ -119,9 +124,12 @@ Current selectable OpenRouter models remain only:
 - Claude Sonnet 4.5;
 - Claude Opus 4.1.
 
-Session 2 does **not** yet make GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other OpenRouter models selectable.
+Other catalog families can now be discovered in Settings but are **not** claimed executable merely because OpenRouter returns them.
 
-Canonical checkpoint:
+Current Session 3 checkpoint:
+[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md).
+
+Underlying Session 2 checkpoint:
 [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
 ## Closed roadmap families
@@ -139,6 +147,7 @@ Canonical checkpoint:
 | NVIDIA hosted-provider trial + staging activation + Docker hardening | CLOSED / PASS |
 | NVIDIA connection-test Session 1 hardening | CLOSED / PASS |
 | OpenRouter model-registry Session 2 | CLOSED / PASS |
+| OpenRouter live-discovery Session 3 | CLOSED / PASS |
 
 There is **no active Product Evolution, PCS, A-series, or ECX numbered batch**.
 
@@ -244,7 +253,7 @@ unexpected branches = 0
 
 The completed cleanup boundary retained 9 branches: `main`, seven retained substantive/provenance branches, and the historical branch-hygiene checkpoint branch.
 
-The live inventory after Session 2 runtime closure is **12 branches**: the 9-branch cleanup boundary plus `docs/current-safe-resume-20260928`, `fix/nvidia-credential-test-timeout-20260928`, and `feat/openrouter-model-registry-session2-20260928`. Unexpected active work refs remain **0**.
+The live inventory after Session 3 runtime closure is **13 branches**: the 9-branch cleanup boundary plus `docs/current-safe-resume-20260928`, `fix/nvidia-credential-test-timeout-20260928`, `feat/openrouter-model-registry-session2-20260928`, and `feat/openrouter-model-discovery-session3-20260928`. Unexpected active work refs remain **0** before the temporary docs-closure branch.
 
 Evidence:
 
@@ -253,7 +262,7 @@ Evidence:
 
 ## Current active work
 
-There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 3 discovery is an eligible next scope but is not active.
+There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 3 is closed and staging verified.
 
 Current docs are reconciled, the post-ECX branch delta is cleaned, and no new roadmap is opened.
 
@@ -261,7 +270,7 @@ Current docs are reconciled, the post-ECX branch delta is cleaned, and no new ro
 
 Any of the following requires a new explicit operator decision and its own bounded scope:
 
-- OpenRouter Session 3 live model discovery/search/cache and discovered-vs-admitted state;
+- selected OpenRouter discovered-model admission/verification;
 - DR-2 checkpoint 2 external target selection and later runtime proof;
 - public production promotion/cutover;
 - native Google Drive integration;
