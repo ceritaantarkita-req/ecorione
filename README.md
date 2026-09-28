@@ -17,7 +17,7 @@ That exact runtime merge passed CI **#2457**, Product Eval **#1696**, and actual
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
-Repository hygiene remains bounded: the historical cleanup boundary is **9 retained branches**; the current live inventory is **12 branches**, with the three additional refs known as docs/Session 1/Session 2 bookkeeping or provenance and no unexpected active work refs.
+Repository hygiene remains bounded: the historical cleanup boundary is **9 retained branches**; the Session 3 runtime-closure inventory is **13 branches**, with four additional refs known as docs/Session 1/Session 2/Session 3 bookkeeping or provenance and no unexpected active work refs before the temporary docs-closure branch.
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
