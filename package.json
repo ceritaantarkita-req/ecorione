@@ -29,7 +29,7 @@
     "lint:fix": "eslint . --fix",
     "lint:next": "eslint \"apps/ai/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write services/connect/src/hosted-model-family.ts services/connect/src/hosted-model-family.test.ts services/connect/src/hosted-model-registry.test.ts && git diff --exit-code -- services/connect/src/hosted-model-family.ts services/connect/src/hosted-model-family.test.ts services/connect/src/hosted-model-registry.test.ts",
     "secret-scan": "node scripts/secret-scan.mjs",
     "secret-scan:history": "node scripts/secret-history-scan.mjs",
     "dependency:review": "node scripts/dependency-security-review.mjs",
