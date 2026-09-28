@@ -59,10 +59,6 @@ if (( free_kib < min_free_kib )); then
 fi
 
 mkdir -p data/release-receipts
-if [[ "$COMPOSE_PROJECT" == "ecorione-staging" ]]; then
-  ECORIONE_COMPOSE_PROJECT="$COMPOSE_PROJECT" \
-    bash scripts/staging-hosted-trial-bootstrap-once.sh "$ENV_FILE"
-fi
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 printf '%s
 ' "pre-upgrade backup must be verified per docs/data-rebuild-operations.md before this command" > "data/release-receipts/$STAMP.pre-upgrade.txt"
