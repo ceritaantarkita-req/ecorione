@@ -4,7 +4,7 @@ Status: **CURRENT / SAFE TO RESUME / NO ACTIVE PRODUCT-RUNTIME BATCH**
 
 ## Purpose
 
-Freeze the exact safe handoff point after the closed ECX Batch 1–7 work, repository-truth reconciliation and branch cleanup, NVIDIA hosted-provider rollout, bounded staging activation, Docker native-build hardening, and the documentation closure in PR #384.
+Freeze the exact safe handoff point after the closed ECX Batch 1–7 work, NVIDIA hosted-provider rollout, bounded staging activation, Docker native-build hardening, and the bounded NVIDIA connection-test hardening closed in PR #387.
 
 This is the preferred resume pointer for the next ECORIONE session. Do **not** restart completed roadmaps or reconstruct the project from old planning notes.
 
@@ -12,38 +12,39 @@ This is the preferred resume pointer for the next ECORIONE session. Do **not** r
 
 ```text
 repository                    = ceritaantarkita-req/ecorione
-audited live main             = 9820af44ab2c2905303eea897ff6233204a8c419
-latest docs closure           = PR #384
-PR #384 reviewed head         = 5acb4c465051b0333c785f0dde72b54970434725
-PR #384 merge SHA             = 9820af44ab2c2905303eea897ff6233204a8c419
-PR #384 exact-head CI         = PASS
-PR #384 exact-head Product Eval = PASS
+audited runtime main          = 59961422e11d126baa0b2ff957dd7abf8e063f08
+latest runtime closure        = PR #387
+PR #387 reviewed head         = c7ab5a3052a311b7361afe7aa6f0b4100ec8229e
+PR #387 merge SHA             = 59961422e11d126baa0b2ff957dd7abf8e063f08
+PR #387 exact-head CI         = #2402 PASS
+PR #387 exact-head Product Eval = #1641 PASS
+PR #387 exact-head PCS-06 Browser = #218 PASS
 open pull requests            = 0
-retained remote branches      = 9
+live remote branches          = 11
 open issue at audit boundary  = #277 DR-2 physical independence
 ```
 
 The branch used to author this checkpoint is documentation-only bookkeeping and does not open a new product/runtime scope.
 
-After PR #385 merged, the live repository inventory became **10 branches** because `docs/current-safe-resume-20260928` remained as the explicit checkpoint branch. This is a known bookkeeping ref, not an unexpected work branch. Do not create an infinite cleanup/documentation loop solely to delete this checkpoint ref.
+The live inventory at Session 1 runtime closure is **11 branches**: the prior 9-branch cleanup boundary plus the known bookkeeping ref `docs/current-safe-resume-20260928` and the merged Session 1 provenance ref `fix/nvidia-credential-test-timeout-20260928`. Neither is an unexpected active work branch.
 
 ## Runtime / staging compatibility baseline
 
-The latest audited **runtime-changing** merge remains:
+The latest audited **runtime-changing** merge is:
 
 ```text
-runtime-changing baseline = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-staging image             = staging-0f86a34cde66
-CI                        = #2380 PASS
-Product Eval              = #1619 PASS
-Staging Deploy            = #1525 PASS
+runtime-changing baseline = 59961422e11d126baa0b2ff957dd7abf8e063f08
+staging image             = staging-59961422e11d
+CI                        = #2403 PASS
+Product Eval              = #1642 PASS
+Staging Deploy            = #1567 PASS
 Operations                = healthy
 configured/running        = 15 / 15
 non-running               = 0
-stabilized free disk      = 29.89 GiB
+stabilized free disk      = 27.42 GiB
 ```
 
-The later PR #384 is documentation/evidence closure only. It does not change the runtime compatibility baseline above.
+PR #387 adds only bounded NVIDIA credential/canary-test robustness to the already closed provider architecture; it does not reopen the earlier NVIDIA rollout scope.
 
 SumoPod remains **staging, not production**.
 
@@ -63,7 +64,8 @@ The following are closed at their documented boundaries:
 - bounded staging hosted-trial operator-gate activation;
 - Docker native dependency build hardening;
 - NVIDIA work-branch cleanup;
-- PR #384 documentation closure.
+- PR #384 documentation closure;
+- NVIDIA connection-test Session 1 hardening through PR #387.
 
 There is no implicit Batch 8, PE-09, PCS-11, Batch 13, A-12 continuation, or other numbered follow-on.
 
@@ -93,7 +95,7 @@ UI label         = Hosted · NVIDIA · GLM-5.3
 operator gate    = OPEN under bounded spend controls
 ```
 
-The user's actual NVIDIA secret is not repository state and was not validated by the repository rollout.
+The user's actual NVIDIA secret is not repository state and is **not claimed validated** by Session 1. The repository now guarantees that credential/canary testing is bounded and returns an explicit timeout instead of waiting indefinitely.
 
 A real user-key completion is still an **operator/user validation step**, not a new implementation batch:
 
@@ -107,7 +109,11 @@ Settings
  -> confirm Hosted · NVIDIA · GLM-5.3
 ```
 
-Canonical provider/runtime evidence:
+Latest NVIDIA test/runtime evidence:
+
+- [nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md)
+
+Underlying provider rollout evidence:
 
 - [nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
@@ -138,13 +144,14 @@ open PRs        = 0
 unexpected      = 0
 ```
 
-After PR #385 merged:
+At Session 1 runtime closure:
 
 ```text
-main merge SHA             = ef2377d486fb9bc6b2ca2fcd07be9eed4307825b
-live remote branch count   = 10
-known bookkeeping addition = docs/current-safe-resume-20260928
-unexpected work branches   = 0
+runtime main SHA            = 59961422e11d126baa0b2ff957dd7abf8e063f08
+live remote branch count    = 11
+known bookkeeping ref       = docs/current-safe-resume-20260928
+known merged Session 1 ref  = fix/nvidia-credential-test-timeout-20260928
+unexpected work branches    = 0
 ```
 
 The retained branch set was:
