@@ -9,6 +9,7 @@ const ALLOWED = [
   /^\/v1\/settings\/runtime$/,
   /^\/v1\/settings\/providers$/,
   /^\/v1\/settings\/providers\/openrouter\/models$/,
+  /^\/v1\/settings\/providers\/openrouter\/model-selection$/,
   /^\/v1\/settings\/local-runtime\/status$/,
   /^\/v1\/settings\/credentials(?:\/[a-z0-9][a-z0-9-]{0,63}(?:\/test)?)?$/,
   /^\/v1\/settings\/mcp\/servers(?:\/[a-z0-9][a-z0-9._-]*)?(?:\/tools\/[A-Za-z0-9._-]+)?$/,
@@ -56,6 +57,8 @@ function allowedSettingsPath(path: string, method: Method): string | null {
     }
     const refresh = normalized.searchParams.get("refresh");
     if (refresh !== null && refresh !== "0" && refresh !== "1") return null;
+  } else if (normalized.pathname === "/v1/settings/providers/openrouter/model-selection") {
+    if (method !== "PUT" || normalized.search.length > 0) return null;
   } else if (normalized.search.length > 0) {
     return null;
   }
