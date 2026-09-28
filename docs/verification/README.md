@@ -12,7 +12,8 @@ Historical evidence may contain statements that were correct at the time but are
 
 ## Latest repository truth
 
-- [repository-truth-reconciliation-2026-09-27.md](repository-truth-reconciliation-2026-09-27.md) — latest audit/reconciliation of current `main`, staging, docs drift and post-ECX branch delta.
+- [nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](nvidia-hosted-provider-safe-checkpoint-2026-09-28.md) — latest FINAL / CLOSED / PASS safe checkpoint: NVIDIA provider live, hosted staging gate bounded/open, Docker native-build defect closed, exact main/staging converged at `0f86a34c...`, and final branch inventory restored to 9.
+- [repository-truth-reconciliation-2026-09-27.md](repository-truth-reconciliation-2026-09-27.md) — prior audit/reconciliation of `main`, staging, docs drift and post-ECX branch delta.
 - [post-ecx-branch-cleanup-execution-2026-09-28.md](post-ecx-branch-cleanup-execution-2026-09-28.md) — FINAL / CLOSED / PASS execution record for the post-ECX branch delta; 17 targeted branches were deleted, the helper self-deleted, and final remote inventory returned to 9 branches.
 - [post-ecx-branch-cleanup-allowlist-2026-09-27.json](post-ecx-branch-cleanup-allowlist-2026-09-27.json) — exact-SHA classification/revalidation source for the 15 ECX branches, now paired with completed execution evidence.
 - [branch-hygiene-safe-checkpoint-2026-09-27.md](branch-hygiene-safe-checkpoint-2026-09-27.md) — historical final checkpoint for the earlier 393-branch cleanup. Its 9-branch inventory is correct for that checkpoint but is not the current inventory after later ECX work.
@@ -68,9 +69,11 @@ Important dated proof includes:
 - deployment-pipeline hardening;
 - A-series exact-SHA staging acceptance;
 - ECX Batch 1–7 staging deliveries;
-- current exact closure staging proof at Staging Deploy #1475.
+- NVIDIA provider implementation and rollout;
+- failed Staging Deploy #1505 with successful rollback evidence;
+- current exact staging proof at Staging Deploy #1525.
 
-Current exact staging identity is recorded in the repository truth reconciliation rather than inferred from an older deployment document.
+Current exact staging identity is recorded in [nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](nvidia-hosted-provider-safe-checkpoint-2026-09-28.md), not inferred from older deployment documents.
 
 ## Off-host DR
 
