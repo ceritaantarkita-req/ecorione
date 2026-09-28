@@ -5,10 +5,14 @@ import { join } from "node:path";
 import { createServer } from "@ecorione/shared-server";
 import { describe, expect, it } from "vitest";
 import { registerConnectControlRoutes } from "./control-http.js";
+import {
+  OpenRouterModelDiscoveryError,
+  type OpenRouterModelDiscoveryReader,
+} from "./openrouter-model-discovery.js";
 import { FileCredentialVault } from "./credential-vault.js";
 import { FileRuntimeSettings } from "./runtime-settings.js";
 
-function fixture() {
+function fixture(options: { openRouterModelDiscovery?: OpenRouterModelDiscoveryReader } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "ecorione-control-"));
   const runtime = new FileRuntimeSettings(join(dir, "settings.json"), {
     hostedProvider: "anthropic",
@@ -20,7 +24,11 @@ function fixture() {
   const vaultPath = join(dir, "vault.json");
   const vault = new FileCredentialVault(vaultPath, randomBytes(32));
   const app = createServer({ name: "connect-test", token: "internal-secret" });
-  registerConnectControlRoutes(app, { runtimeSettings: runtime, credentialVault: vault });
+  registerConnectControlRoutes(app, {
+    runtimeSettings: runtime,
+    credentialVault: vault,
+    openRouterModelDiscovery: options.openRouterModelDiscovery,
+  });
   return { app, runtime, vault, vaultPath };
 }
 
@@ -117,6 +125,104 @@ describe("Connect Control Center boundary", () => {
         }),
       ]),
     );
+  });
+
+  it("mengekspos OpenRouter discovery dengan filter/cache metadata tanpa membuat model discovered executable", async () => {
+    let received: unknown;
+    const discovery: OpenRouterModelDiscoveryReader = {
+      async list(query) {
+        received = query;
+        return {
+          source: "openrouter:/api/v1/models",
+          cache: "hit",
+          stale: false,
+          fetchedAt: "2026-09-28T10:00:00.000Z",
+          expiresAt: "2026-09-28T10:10:00.000Z",
+          total: 1,
+          returned: 1,
+          models: [
+            {
+              id: "qwen/qwen3.8-max",
+              displayName: "Qwen: Qwen3.8 Max",
+              sourceProvider: "qwen",
+              contextWindowTokens: 1_000_000,
+              inputModalities: ["text", "image"],
+              outputModalities: ["text"],
+              supportedParameters: ["tools", "reasoning_effort"],
+              promptPricePerToken: "0.000002",
+              completionPricePerToken: "0.000006",
+              mutableAlias: false,
+              admission: "discovered-only",
+              executable: false,
+              selectionId: null,
+            },
+          ],
+        };
+      },
+    };
+    const { app } = fixture({ openRouterModelDiscovery: discovery });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/settings/providers/openrouter/models?q=qwen&sourceProvider=qwen&limit=20&refresh=1",
+      headers: auth,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(received).toEqual({
+      q: "qwen",
+      sourceProvider: "qwen",
+      limit: 20,
+      forceRefresh: true,
+    });
+    expect(response.json()).toMatchObject({
+      cache: "hit",
+      stale: false,
+      models: [
+        expect.objectContaining({
+          id: "qwen/qwen3.8-max",
+          admission: "discovered-only",
+          executable: false,
+          selectionId: null,
+        }),
+      ],
+    });
+  });
+
+  it("menolak query discovery OpenRouter di luar kontrak", async () => {
+    const { app } = fixture({
+      openRouterModelDiscovery: { async list() { throw new Error("must not run"); } },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/settings/providers/openrouter/models?limit=500&admin=true",
+      headers: auth,
+    });
+
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("memetakan kegagalan catalog OpenRouter ke error eksplisit", async () => {
+    const { app } = fixture({
+      openRouterModelDiscovery: {
+        async list() {
+          throw new OpenRouterModelDiscoveryError("unreachable", "catalog offline");
+        },
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/settings/providers/openrouter/models",
+      headers: auth,
+    });
+
+    expect(response.statusCode).toBe(503);
+    expect(response.json().error).toMatchObject({
+      type: "OPENROUTER_CATALOG_UNAVAILABLE",
+      message: "catalog offline",
+    });
   });
 
   it("mengklasifikasikan contention credential vault sebagai 503 yang retryable", async () => {
