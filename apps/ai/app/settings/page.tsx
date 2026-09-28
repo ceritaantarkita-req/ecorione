@@ -23,6 +23,9 @@ export default function SettingsPage() {
     hostedProviderOptions,
     localSetupOpen,
     localStatus,
+    openRouterDiscovery,
+    openRouterQuery,
+    openRouterSourceProvider,
     mcpJson,
     mcpLoading,
     mutableLocalModel,
@@ -30,6 +33,7 @@ export default function SettingsPage() {
     providerViews,
     refreshMcp,
     removeCredential,
+    discoverOpenRouterModels,
     runCanary,
     runtime,
     saveCredential,
@@ -48,6 +52,8 @@ export default function SettingsPage() {
     setHostedHealth,
     setLocalSetupOpen,
     setLocalStatus,
+    setOpenRouterQuery,
+    setOpenRouterSourceProvider,
     setMcpJson,
     setRuntime,
     setSecret,
@@ -455,6 +461,117 @@ export default function SettingsPage() {
             </button>
           </div>
         )}
+
+        {runtime?.settings.hostedProvider === "openrouter" ? (
+          <div className={styles.discoveryPanel}>
+            <div className={styles.discoveryHeader}>
+              <div>
+                <span className={styles.eyebrow}>OpenRouter discovery</span>
+                <h3>Find models</h3>
+              </div>
+              {openRouterDiscovery === null ? null : (
+                <span className={openRouterDiscovery.stale ? styles.statusBadge : styles.activeBadge}>
+                  {openRouterDiscovery.stale ? "Stale cache" : openRouterDiscovery.cache}
+                </span>
+              )}
+            </div>
+            <p className={styles.muted}>
+              Discovery membaca katalog OpenRouter dan cache di Connect. Model yang ditemukan
+              belum otomatis bisa dipilih; activation tetap butuh verification + pricing
+              admission pada sesi berikutnya.
+            </p>
+            <div className={styles.discoveryFilters}>
+              <label className={styles.connectField}>
+                Search model
+                <input
+                  value={openRouterQuery}
+                  disabled={pendingAction !== null}
+                  placeholder="qwen, kimi, deepseek, gemini…"
+                  onChange={(event) => setOpenRouterQuery(event.target.value)}
+                />
+              </label>
+              <label className={styles.connectField}>
+                Source provider
+                <input
+                  value={openRouterSourceProvider}
+                  disabled={pendingAction !== null}
+                  placeholder="qwen"
+                  onChange={(event) => setOpenRouterSourceProvider(event.target.value)}
+                />
+              </label>
+            </div>
+            <div className={styles.actions}>
+              <button
+                type="button"
+                disabled={pendingAction !== null}
+                onClick={() => void discoverOpenRouterModels(false)}
+              >
+                {pendingAction === "openrouter-discovery" ? "Loading…" : "Search catalog"}
+              </button>
+              <button
+                type="button"
+                className={styles.secondary}
+                disabled={pendingAction !== null}
+                onClick={() => void discoverOpenRouterModels(true)}
+              >
+                Refresh from OpenRouter
+              </button>
+            </div>
+            {openRouterDiscovery === null ? (
+              <p className={styles.discoveryEmpty}>
+                Catalog belum dimuat. Search pertama akan mengambil snapshot live lalu
+                pencarian berikutnya memakai cache sampai TTL habis.
+              </p>
+            ) : (
+              <>
+                <p className={styles.discoveryMeta}>
+                  {openRouterDiscovery.returned} shown / {openRouterDiscovery.total} matched ·
+                  fetched {new Date(openRouterDiscovery.fetchedAt).toLocaleString()} · cache{" "}
+                  {openRouterDiscovery.cache}
+                  {openRouterDiscovery.stale ? " · stale fallback" : ""}
+                </p>
+                <div className={styles.discoveryResults}>
+                  {openRouterDiscovery.models.length === 0 ? (
+                    <p className={styles.discoveryEmpty}>Tidak ada model yang cocok.</p>
+                  ) : (
+                    openRouterDiscovery.models.map((model) => (
+                      <article className={styles.discoveryModel} key={model.id}>
+                        <div className={styles.discoveryModelTop}>
+                          <div>
+                            <strong>{model.displayName}</strong>
+                            <code>{model.id}</code>
+                          </div>
+                          <span
+                            className={
+                              model.executable ? styles.activeBadge : styles.statusBadge
+                            }
+                          >
+                            {model.executable ? "Verified · selectable" : "Discovered only"}
+                          </span>
+                        </div>
+                        <div className={styles.discoveryFacts}>
+                          <span>source {model.sourceProvider}</span>
+                          <span>
+                            context{" "}
+                            {model.contextWindowTokens === null
+                              ? "unknown"
+                              : model.contextWindowTokens.toLocaleString()}
+                          </span>
+                          <span>
+                            input {model.inputModalities.length > 0
+                              ? model.inputModalities.join(", ")
+                              : "unknown"}
+                          </span>
+                          {model.mutableAlias ? <span>mutable alias</span> : null}
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
       </section>
 
       <details className={styles.advanced} id="advanced-settings">
