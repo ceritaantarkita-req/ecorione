@@ -6,10 +6,10 @@ Status: **CURRENT SUMMARY**
 
 ## Audited repository/staging baseline
 
-Latest audited runtime:
+Latest audited runtime-changing baseline:
 
 ```text
-repository / staging = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+runtime / staging = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
 image                = staging-0f86a34cde66
 CI                   = #2380 PASS
 Product Eval         = #1619 PASS
