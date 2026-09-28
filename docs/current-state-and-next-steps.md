@@ -13,14 +13,14 @@ runtime-changing baseline= af2ef8f61f26058178e56b0d6490248c1898976e
 staging image            = staging-af2ef8f61f26
 ```
 
-`af2ef8f...` is the latest audited runtime-changing merge and the merge commit of PR #391. It is deployed on governed staging. Docs-only checkpoint commits may advance live Git revision later without changing this runtime compatibility baseline; inspect live `main` for the newest exact repository revision.
+`af2ef8f...` is the latest audited runtime-changing merge and the merge commit of PR #391. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
-## Current runtime / staging truth
+## Current runtime compatibility baseline
 
 Latest audited runtime-changing repository/staging convergence:
 
