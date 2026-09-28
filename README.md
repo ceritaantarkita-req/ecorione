@@ -9,19 +9,19 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest audited **runtime-changing** repository/staging baseline is:
 
 ```text
-runtime baseline = 29446ad0e140d1486bd3914bb087a552409e464c
-image            = staging-29446ad0e140
+runtime baseline = fd921d81136433bd871a466498a283fc5bfb760e
+image            = staging-fd921d811364
 ```
 
-That exact runtime merge passed CI **#2468**, Product Eval **#1707**, and actual Staging Deploy **#1697**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **25.31 GiB free**.
+That exact runtime merge passed CI **#2484**, Product Eval **#1723**, and actual Staging Deploy **#1729**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **27.44 GiB free**.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
-Repository hygiene remains bounded: the historical cleanup boundary is **9 retained branches**; the Session 4A runtime-closure inventory is **16 branches**, with seven later bookkeeping/provenance refs and no unexpected active work refs before the temporary Session 4A docs-closure branch.
+Repository hygiene remains bounded: the historical cleanup boundary is **9 retained branches**. Session 4B runtime closure had **18 remote branches and 0 open PRs** before its temporary docs-closure branch; the reviewed 4B implementation branch remains as known provenance, not active work.
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, and 4A are closed; Session 4B is not active implicitly.
+There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, and 4B are closed; Session 4C is the next eligible OpenRouter scope but is not active implicitly.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -68,13 +68,14 @@ Core ownership rules:
 
 ## OpenRouter hosted-model foundation
 
-OpenRouter model selection resolves through an extensible governed registry. Session 3 added bounded live catalog discovery/search/filter/cache, and Session 4A adds one Connect-owned, version-agnostic family vocabulary for **GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM**.
+OpenRouter model selection resolves through an extensible governed registry. Session 3 added bounded live catalog discovery/search/filter/cache, Session 4A added one Connect-owned version-agnostic family vocabulary for **GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM**, and Session 4B adds automatic fail-closed admission for those six families.
 
-Discovered models now carry family metadata, and discovery responses expose the canonical six-family catalog for later picker/admission work. Family classification remains descriptive metadata only; it does not grant execution authority.
+Fresh target-family candidates that pass the 4B metadata gate are exposed as **Selectable**; failed candidates are **Unavailable** with a stable reason. This selection eligibility is deliberately separate from runtime execution proof: newly admitted models remain `executable=false`, and the current runtime execution dropdown still contains **Claude Sonnet 4.5** and **Claude Opus 4.1** until the later picker/execution sessions.
 
-Current selectable OpenRouter models remain **Claude Sonnet 4.5** and **Claude Opus 4.1**. Other returned catalog models may be visible and family-classified as **Discovered only** but are not yet claimed selectable.
+Current Session 4B checkpoint:
+[docs/verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](docs/verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md).
 
-Current Session 4A checkpoint:
+Underlying Session 4A checkpoint:
 [docs/verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](docs/verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md).
 
 Underlying discovery checkpoint:
