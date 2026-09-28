@@ -52,7 +52,7 @@ describe("route", () => {
         target: "hosted",
         sensitivity: "PUBLIC",
         hostedProvider: "openrouter",
-        hostedModel: "z-ai/glm-5.3",
+        hostedModel: "gpt-5.6-terra",
       }),
     ).toEqual({
       model: "gpt-5.6-terra",
@@ -106,7 +106,7 @@ describe("route", () => {
         target: "hosted",
         sensitivity: "INTERNAL",
         hostedProvider: "openrouter",
-        hostedModel: "gpt-5.6-terra",
+        hostedModel: "z-ai/glm-5.3",
       }),
     ).toThrow(/belum diverifikasi/u);
   });
