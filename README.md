@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest audited **runtime-changing** repository/staging baseline is:
 
 ```text
-runtime baseline = fd921d81136433bd871a466498a283fc5bfb760e
-image            = staging-fd921d811364
+runtime baseline = c65926de418046494d2e961af10662d2eadca37c
+image            = staging-c65926de4180
 ```
 
-That exact runtime merge passed CI **#2484**, Product Eval **#1723**, and actual Staging Deploy **#1729**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **27.44 GiB free**.
+That exact runtime merge passed CI **#2484**, Product Eval **#1723**, and actual Staging Deploy **#1729**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **29.93 GiB free**.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -21,7 +21,7 @@ Repository hygiene remains bounded: the historical cleanup boundary is **9 retai
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, and 4B are closed; Session 4C is the next eligible OpenRouter scope but is not active implicitly.
+There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, 4B, and 4C are closed; Session 4D is the next eligible OpenRouter scope but is not active implicitly.
 
 **Start here:** [docs/README.md](docs/README.md).
 
