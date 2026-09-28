@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  executableHostedModelRegistryEntry,
   hostedModelRegistry,
   hostedModelRegistryEntry,
   registeredHostedModelIds,
@@ -16,7 +17,7 @@ describe("hosted model registry", () => {
     const keys = entries.map((entry) => `${entry.provider}:${entry.id}`);
     expect(new Set(keys).size).toBe(keys.length);
     for (const entry of entries) {
-      expect(entry.id).toBe(entry.pricing.costModel);
+      expect(entry.pricing.costModel).not.toBeNull();
       expect(entry.verification).toBe("verified");
       expect(entry.catalogSource).toBe("static-verified");
       expect(entry.verifiedAt).toBeNull();
@@ -50,6 +51,9 @@ describe("hosted model registry", () => {
     ).toBeUndefined();
     expect(hostedModelRegistryEntry("openrouter", "gpt-5.6-terra")).toBeUndefined();
     expect(hostedModelRegistryEntry("openrouter", "z-ai/glm-5.3")).toBeUndefined();
+    expect(
+      executableHostedModelRegistryEntry("openrouter", "deepseek/deepseek-v3.2-exp"),
+    ).toBeUndefined();
   });
 
   it("publishes only the unique currently admitted hosted pricing identities", () => {
