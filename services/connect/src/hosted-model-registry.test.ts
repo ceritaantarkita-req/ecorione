@@ -33,10 +33,7 @@ describe("hosted model registry", () => {
   });
 
   it("tags current direct-provider registry entries without widening OpenRouter admission", () => {
-    expect(hostedModelRegistry("openai").map((entry) => entry.family)).toEqual([
-      "gpt",
-      "gpt",
-    ]);
+    expect(hostedModelRegistry("openai").map((entry) => entry.family)).toEqual(["gpt", "gpt"]);
     expect(hostedModelRegistry("nvidia").map((entry) => entry.family)).toEqual(["glm"]);
     expect(hostedModelRegistry("openrouter").map((entry) => entry.family)).toEqual([
       "other",
