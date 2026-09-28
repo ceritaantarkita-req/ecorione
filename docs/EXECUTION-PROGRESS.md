@@ -126,11 +126,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = fd921d81136433bd871a466498a283fc5bfb760e
-image = staging-fd921d811364
+SHA   = c65926de418046494d2e961af10662d2eadca37c
+image = staging-c65926de4180
 ```
 
-Actual Staging Deploy #1729 proved:
+Actual Staging Deploy #1745 proved:
 
 - native builder installed `python3 make g++`;
 - `better-sqlite3` fallback installation completed;
@@ -140,8 +140,8 @@ Actual Staging Deploy #1729 proved:
 - 0 unhealthy services;
 - 15 configured / 15 running;
 - exact SHA match;
-- 26.12 GiB free at sanitized host evidence;
-- 27.44 GiB stabilized free disk.
+- 21.86 GiB free at sanitized host evidence;
+- 29.93 GiB stabilized free disk.
 
 The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
 
@@ -165,10 +165,14 @@ This is staging evidence, not production promotion.
 | Session 3 — OpenRouter live discovery/search/cache | CLOSED / PASS / STAGING VERIFIED |
 | Session 4A — OpenRouter model-family foundation | CLOSED / PASS / STAGING VERIFIED |
 | Session 4B — OpenRouter automatic target-family admission | CLOSED / PASS / STAGING VERIFIED |
+| Session 4C — OpenRouter Settings model picker | CLOSED / PASS / STAGING VERIFIED |
 
-Session 3 adds bounded live catalog discovery, Session 4A adds one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM, and Session 4B turns fresh qualifying target-family metadata into explicit `verified-selectable` admission. Newly admitted models remain `executable=false`; the current runtime execution dropdown remains the two static Claude models until later picker/execution sessions.
+Session 3 adds bounded live catalog discovery, Session 4A adds one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM, Session 4B turns fresh qualifying target-family metadata into explicit `verified-selectable` admission, and Session 4C exposes those admitted candidates through the governed Settings picker. Newly admitted dynamic models remain `executable=false`; current executable OpenRouter authority remains the two static Claude models.
 
-Canonical Session 4B checkpoint:
+Canonical Session 4C checkpoint:
+[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
+
+Underlying Session 4B checkpoint:
 [verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md).
 
 Underlying Session 4A checkpoint:
@@ -199,7 +203,7 @@ Issue #277 remains the DR-2 tracker.
 | Historical 393-entry exact-SHA cleanup | CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | Cleanup-boundary retained inventory | 9 branches |
-| Current live inventory after Session 4A runtime closure | 16 branches (7 known bookkeeping/provenance refs beyond cleanup boundary) |
+| Current live inventory | exact count is bookkeeping-only; inspect GitHub when a new hygiene scope is explicitly opened |
 
 Post-ECX Actions run `36338085729` dry-ran 15/15 allowlisted branches with zero hold/fail/skip, deleted all 15, exact-validated and deleted 2 reconciliation branches, self-deleted its helper, and proved:
 
@@ -226,12 +230,15 @@ Evidence:
 | NVIDIA connection-test Session 1 | CLOSED / PASS |
 | OpenRouter model-registry Session 2 | CLOSED / PASS |
 | OpenRouter live-discovery Session 3 | CLOSED / PASS / STAGING VERIFIED |
+| OpenRouter model-family Session 4A | CLOSED / PASS / STAGING VERIFIED |
+| OpenRouter automatic-admission Session 4B | CLOSED / PASS / STAGING VERIFIED |
+| OpenRouter Settings model-picker Session 4C | CLOSED / PASS / STAGING VERIFIED |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
 
 Latest overall safe-resume checkpoint:
-[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
+[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
 
 Underlying NVIDIA/runtime evidence:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
