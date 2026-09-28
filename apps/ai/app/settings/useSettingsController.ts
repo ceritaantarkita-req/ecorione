@@ -54,7 +54,11 @@ type OpenRouterDiscoveredModel = {
   promptPricePerToken: string | null;
   completionPricePerToken: string | null;
   mutableAlias: boolean;
-  admission: "verified-executable" | "verified-selectable" | "unavailable" | "discovered-only";
+  admission:
+    | "verified-executable"
+    | "verified-selectable"
+    | "unavailable"
+    | "discovered-only";
   selectable: boolean;
   executable: boolean;
   selectionId: string | null;
