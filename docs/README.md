@@ -107,7 +107,7 @@ image = staging-0f86a34cde66
 
 CI #2380, Product Eval #1619, and actual Staging Deploy #1525 passed. Staging reported healthy Operations, 15/15 services running, exact-SHA match, and 29.89 GiB stabilized free disk.
 
-NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging hosted gate is enabled under bounded spend controls, but the user's actual NVIDIA secret has not been stored or tested by repository work.
+NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging operator kill switch is open under bounded spend controls; the runtime hosted toggle is activated through normal Settings/provider activation. The user's actual NVIDIA secret has not been stored or tested by repository work.
 
 Canonical evidence:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
