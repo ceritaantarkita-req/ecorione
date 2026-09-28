@@ -52,6 +52,20 @@ describe("providerHealth", () => {
   it("maps machine-readable canary errors without parsing messages", () => {
     expect(canaryStatusFromErrorCode("PROVIDER_INVALID_CREDENTIAL")).toBe("invalid-key");
     expect(canaryStatusFromErrorCode("PROVIDER_UNREACHABLE")).toBe("unreachable");
+    expect(canaryStatusFromErrorCode("PROVIDER_TEST_TIMEOUT")).toBe("timeout");
     expect(canaryStatusFromErrorCode("PROVIDER_UPSTREAM_ERROR")).toBe("error");
+
+    expect(
+      providerHealth({
+        hasCredential: true,
+        routingReady: true,
+        isCurrentHostedProvider: true,
+        hostedCallsEnabled: true,
+        canaryStatus: "timeout",
+      }),
+    ).toEqual({
+      status: "timeout",
+      label: "Timeout · provider did not answer before the test deadline.",
+    });
   });
 });

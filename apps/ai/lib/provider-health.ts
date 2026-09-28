@@ -6,6 +6,7 @@ export type ProviderHealthStatus =
   | "connected"
   | "invalid-key"
   | "unreachable"
+  | "timeout"
   | "error";
 
 export interface ProviderHealthInput {
@@ -13,7 +14,8 @@ export interface ProviderHealthInput {
   readonly routingReady: boolean;
   readonly isCurrentHostedProvider: boolean;
   readonly hostedCallsEnabled: boolean;
-  readonly canaryStatus?: "connected" | "invalid-key" | "unreachable" | "error" | undefined;
+  readonly canaryStatus?:
+    "connected" | "invalid-key" | "unreachable" | "timeout" | "error" | undefined;
 }
 
 export interface ProviderHealthView {
@@ -29,6 +31,8 @@ export function canaryStatusFromErrorCode(
       return "invalid-key";
     case "PROVIDER_UNREACHABLE":
       return "unreachable";
+    case "PROVIDER_TEST_TIMEOUT":
+      return "timeout";
     case "PROVIDER_CREDENTIAL_MISSING":
       return undefined;
     default:
@@ -64,6 +68,11 @@ export function providerHealth(input: ProviderHealthInput): ProviderHealthView {
       };
     case "unreachable":
       return { status: "unreachable", label: "Unreachable · provider could not be contacted." };
+    case "timeout":
+      return {
+        status: "timeout",
+        label: "Timeout · provider did not answer before the test deadline.",
+      };
     case "error":
       return { status: "error", label: "Unavailable · provider test failed." };
     default:

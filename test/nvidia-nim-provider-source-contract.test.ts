@@ -5,6 +5,7 @@ describe("NVIDIA NIM provider source contract", () => {
   const providerTypes = readFileSync("services/connect/src/provider-types.ts", "utf8");
   const catalog = readFileSync("services/connect/src/hosted-model-catalog.ts", "utf8");
   const adapter = readFileSync("services/connect/src/providers/nvidia.ts", "utf8");
+  const http = readFileSync("services/connect/src/http.ts", "utf8");
   const hosted = readFileSync("services/connect/src/providers/hosted.ts", "utf8");
   const controller = readFileSync("apps/ai/app/settings/useSettingsController.ts", "utf8");
   const chat = readFileSync("apps/ai/app/page.tsx", "utf8");
@@ -23,6 +24,13 @@ describe("NVIDIA NIM provider source contract", () => {
     expect(adapter).toContain("NVIDIA_FREE_ENDPOINT_MIN_RESERVATION_USD");
     expect(adapter).toContain("0.000001");
     expect(adapter).toContain("estimateOpenAiCompatibleReservationUsd");
+  });
+
+  it("bounds NVIDIA credential and canary probes instead of allowing indefinite tests", () => {
+    expect(adapter).toContain("NVIDIA_PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 1024");
+    expect(http).toContain("DEFAULT_CREDENTIAL_TEST_TIMEOUT_MS = 60_000");
+    expect(http).toContain('"PROVIDER_TEST_TIMEOUT"');
+    expect(http).toContain('hostedReasoningEffort: "low"');
   });
 
   it("exposes NVIDIA through normal Settings and Ai route labels", () => {
