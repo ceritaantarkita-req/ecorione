@@ -8,6 +8,10 @@ This checkpoint closes the bounded Session 1 requested after the Settings screen
 
 Session 1 changed only provider-test robustness. It does **not** start the OpenRouter multi-model registry work.
 
+## Current-source correction
+
+This dated record preserves intermediate Session 1 figures below. The final current source/tests later converged on **60-second** default credential/canary deadlines, a **1024-token** NVIDIA health-probe cap, and `reasoning_effort=low`. Current code + the overall safe-resume checkpoint supersede the earlier 30-second / 512-token figures for operational use.
+
 ## Closed behavior
 
 The Connect Settings validation path now has:
