@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { HostedProviderId } from "./provider-types.js";
 import {
+  executableHostedModelRegistryEntry,
   hostedModelRegistry,
   hostedModelRegistryEntry,
   registeredHostedModelIds,
@@ -34,7 +35,7 @@ export function hostedModelSupported(
   preference: HostedModelPreference,
 ): boolean {
   if (preference === GOVERNED_HOSTED_MODEL) return true;
-  return hostedModelRegistryEntry(provider, preference) !== undefined;
+  return executableHostedModelRegistryEntry(provider, preference) !== undefined;
 }
 
 export function hostedModelCatalogEntry(
