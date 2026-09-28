@@ -69,6 +69,74 @@ describe("proxyToConnectSettings", () => {
     });
   });
 
+  it("meneruskan query discovery OpenRouter yang dibatasi allowlist", async () => {
+    pool
+      .intercept({
+        path: "/v1/settings/providers/openrouter/models?q=qwen&sourceProvider=qwen&limit=20&refresh=1",
+        method: "GET",
+      })
+      .reply(200, {
+        source: "openrouter:/api/v1/models",
+        cache: "refreshed",
+        stale: false,
+        fetchedAt: "2026-09-28T10:00:00.000Z",
+        expiresAt: "2026-09-28T10:10:00.000Z",
+        total: 1,
+        returned: 1,
+        models: [
+          {
+            id: "qwen/qwen3.8-max",
+            displayName: "Qwen: Qwen3.8 Max",
+            sourceProvider: "qwen",
+            admission: "discovered-only",
+            executable: false,
+            selectionId: null,
+          },
+        ],
+      });
+
+    const response = await proxyToConnectSettings(
+      request("GET"),
+      "/v1/settings/providers/openrouter/models?q=qwen&sourceProvider=qwen&limit=20&refresh=1",
+      "GET",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      cache: "refreshed",
+      models: [
+        expect.objectContaining({
+          id: "qwen/qwen3.8-max",
+          admission: "discovered-only",
+          executable: false,
+        }),
+      ],
+    });
+  });
+
+  it("menolak query discovery OpenRouter yang tidak diizinkan", async () => {
+    const unknown = await proxyToConnectSettings(
+      request("GET"),
+      "/v1/settings/providers/openrouter/models?admin=true",
+      "GET",
+    );
+    expect(unknown.status).toBe(400);
+
+    const duplicate = await proxyToConnectSettings(
+      request("GET"),
+      "/v1/settings/providers/openrouter/models?q=qwen&q=glm",
+      "GET",
+    );
+    expect(duplicate.status).toBe(400);
+
+    const invalidLimit = await proxyToConnectSettings(
+      request("GET"),
+      "/v1/settings/providers/openrouter/models?limit=500",
+      "GET",
+    );
+    expect(invalidLimit.status).toBe(400);
+  });
+
   it("meneruskan status Local AI tanpa membuka path Connect lain", async () => {
     pool.intercept({ path: "/v1/settings/local-runtime/status", method: "GET" }).reply(200, {
       runtime: "openai-compatible",
