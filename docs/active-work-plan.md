@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-28**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / NVIDIA HOSTED TRIAL CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
+Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / NVIDIA SESSION 1 CLOSED-PASS / NVIDIA HOSTED TRIAL CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
 
-Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md). The audited live `main` immediately before this docs-only refresh was `9820af44ab2c2905303eea897ff6233204a8c419`.
+Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md). The latest audited runtime-changing `main` is `59961422e11d126baa0b2ff957dd7abf8e063f08` from PR #387.
 
 ## Current queue
 
@@ -18,7 +18,8 @@ Closed current baselines:
 - selected 2026-09-24 audit follow-ups through A-11 — CLOSED / PASS;
 - original Off-host DR — CLOSED / PASS at documented boundary;
 - ECX Recipient Execution Batch 1–7 — CLOSED / PASS;
-- NVIDIA hosted-provider trial + staging activation + Docker native-build hardening — CLOSED / PASS.
+- NVIDIA hosted-provider trial + staging activation + Docker native-build hardening — CLOSED / PASS;
+- NVIDIA connection-test Session 1 hardening — CLOSED / PASS.
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
 
@@ -42,7 +43,7 @@ Evidence:
 - [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
-The completed cleanup runs each ended at 9 retained branches. The current safe-resume checkpoint adds one intentional bookkeeping ref, `docs/current-safe-resume-20260928`, making the live post-PR-#385 inventory 10 branches with no unexpected work branch. There is no active repository-hygiene queue; do not create one solely to delete the checkpoint branch.
+The completed cleanup runs each ended at 9 retained branches. The live Session 1 closure inventory is 11 branches: the prior bookkeeping ref `docs/current-safe-resume-20260928` plus the merged provenance ref `fix/nvidia-credential-test-timeout-20260928`. There is no unexpected active work branch and no active repository-hygiene queue.
 
 Future non-bookkeeping branch growth must be handled as a new exact-SHA delta, not by rerunning historical cleanups.
 
@@ -71,12 +72,17 @@ Current proven boundary:
 - pinned hosted model is `z-ai/glm-5.3`;
 - staging operator hosted kill switch is open under bounded spend controls; runtime hosted activation still follows the normal Settings/provider activation path;
 - Docker native dependency fallback is hardened and proven on SumoPod;
-- the latest runtime-changing merge and staging are converged at `0f86a34cde66dd541dae9a830ae8cc155e1efe6b`; later docs-only checkpoint commits may advance live Git/staging SHA without changing runtime behavior;
-- user NVIDIA secret has not yet been stored/tested.
+- the latest runtime-changing merge and staging are converged at `59961422e11d126baa0b2ff957dd7abf8e063f08` / `staging-59961422e11d`;
+- credential test deadline is 30 seconds and NVIDIA credential/canary probes use a bounded 512-token output cap;
+- provider-canary latency deadlines are now enforced;
+- user NVIDIA secret has not been stored and is not claimed validated.
 
 User-level validation is not a new implementation batch. It is a normal Settings action: enter key -> Test API key -> Save & activate -> send one Ai message.
 
-Provider/runtime checkpoint:
+Latest Session 1 checkpoint:
+[verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md).
+
+Underlying provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Overall safe-resume checkpoint:
