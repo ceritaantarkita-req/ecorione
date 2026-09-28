@@ -129,7 +129,9 @@ describe("Connect Control Center boundary", () => {
     );
   });
 
-  it("mengekspos OpenRouter discovery dengan filter/cache metadata tanpa membuat model discovered executable", async () => {
+  it(
+    "mengekspos OpenRouter discovery dengan filter/cache metadata tanpa membuat model discovered executable",
+    async () => {
     let received: unknown;
     const discovery: OpenRouterModelDiscoveryReader = {
       async list(query) {
@@ -166,7 +168,8 @@ describe("Connect Control Center boundary", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: "/v1/settings/providers/openrouter/models?q=qwen&sourceProvider=qwen&limit=20&refresh=1",
+      url:
+        "/v1/settings/providers/openrouter/models?q=qwen&sourceProvider=qwen&limit=20&refresh=1",
       headers: auth,
     });
 
@@ -189,7 +192,8 @@ describe("Connect Control Center boundary", () => {
         }),
       ],
     });
-  });
+    },
+  );
 
   it("menolak query discovery OpenRouter di luar kontrak", async () => {
     const { app } = fixture({
