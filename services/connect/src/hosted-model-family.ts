@@ -81,7 +81,7 @@ function normalizedSourceProvider(sourceProvider: string): string {
 }
 
 function familyTokenMatches(value: string, prefix: string): boolean {
-  return value === prefix || value.startsWith(`${prefix}-`) || value.startsWith(`${prefix}_`);
+  return value.startsWith(prefix);
 }
 
 export interface OpenRouterModelFamilyCandidate {
