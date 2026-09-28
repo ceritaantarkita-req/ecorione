@@ -287,7 +287,11 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   async function discoverOpenRouterModels(forceRefresh = false): Promise<void> {
     if (!beginAction("openrouter-discovery")) return;
-    setStatus(forceRefresh ? "Refreshing OpenRouter model catalog…" : "Searching OpenRouter model catalog…");
+    setStatus(
+      forceRefresh
+        ? "Refreshing OpenRouter model catalog…"
+        : "Searching OpenRouter model catalog…",
+    );
     try {
       const params = new URLSearchParams();
       const q = openRouterQuery.trim();
@@ -301,7 +305,9 @@ export function useSettingsController(initialWorkspaceId: string) {
       );
       setOpenRouterDiscovery(result);
       setStatus(
-        `OpenRouter catalog: ${String(result.returned)} shown / ${String(result.total)} matched · ${result.cache}${result.stale ? " (stale fallback)" : ""}.`,
+        `OpenRouter catalog: ${String(result.returned)} shown / ${String(result.total)} matched · ${result.cache}${
+          result.stale ? " (stale fallback)" : ""
+        }.`,
       );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
