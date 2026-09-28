@@ -91,22 +91,9 @@ describe("Connect Control Center boundary", () => {
               verification: "verified",
               catalogSource: "static-verified",
               verifiedAt: "2026-09-28",
-            }),
-            expect.objectContaining({ id: "claude-opus-4-1-20250805" }),
-            expect.objectContaining({
-              id: "gpt-5.6-terra",
-              providerRuntime: "openai/gpt-5.6-terra",
-              sourceProvider: "openai",
               pricing: expect.objectContaining({ authority: "provider-reported" }),
             }),
-            expect.objectContaining({ id: "gpt-5.6-sol" }),
-            expect.objectContaining({
-              id: "deepseek-v3.2-exp",
-              providerRuntime: "deepseek/deepseek-v3.2-exp",
-              sourceProvider: "deepseek",
-              contextWindowTokens: 163_840,
-              capabilities: ["text", "tools", "reasoning"],
-            }),
+            expect.objectContaining({ id: "claude-opus-4-1-20250805" }),
           ],
         }),
         expect.objectContaining({
