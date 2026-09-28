@@ -6,19 +6,20 @@ Status: **CURRENT SUMMARY**
 
 ## Audited repository/staging baseline
 
-Runtime compatibility remains the closed Batch 7 implementation. Latest audited docs-only repository/staging convergence before this cleanup-closure pass:
+Latest audited runtime:
 
 ```text
-repository / staging = 72d680bfb944cc98f60caddcfc94bbffd45f0653
-CI                   = #2356 PASS
-Product Eval         = #1595 PASS
-Staging Deploy       = #1483 PASS
+repository / staging = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image                = staging-0f86a34cde66
+CI                   = #2380 PASS
+Product Eval         = #1619 PASS
+Staging Deploy       = #1525 PASS
 Operations           = healthy
 services             = 15/15 running
-free disk            = 28.79 GiB stabilized
+free disk            = 29.89 GiB stabilized
 ```
 
-Later docs-only closure commits may advance exact Git/staging identity without changing the Batch 7 runtime compatibility boundary.
+This includes the NVIDIA hosted-provider capability and permanent multi-stage Docker native-build hardening.
 
 ## Closed foundational roadmaps
 
@@ -122,22 +123,31 @@ No Batch 8 is active or implied.
 
 ## Staging
 
-Audited exact runtime immediately before the docs-only reconciliation:
+Current exact runtime:
 
 ```text
-SHA   = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-image = staging-2c2e3c8ad1b4
+SHA   = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image = staging-0f86a34cde66
 ```
 
-Actual Staging Deploy #1475 passed with:
+Actual Staging Deploy #1525 proved:
 
+- native builder installed `python3 make g++`;
+- `better-sqlite3` fallback installation completed;
 - auth/protected-route checks PASS;
 - MCP metadata/challenge checks PASS;
 - Operations healthy;
 - 0 unhealthy services;
 - 15 configured / 15 running;
 - exact SHA match;
-- 26.31 GiB stabilized free disk.
+- 29.89 GiB stabilized free disk.
+
+The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
+
+NVIDIA / NIM is live with pinned `z-ai/glm-5.3`; the user's actual API key has not yet been stored/tested.
+
+Canonical checkpoint:
+[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 This is staging evidence, not production promotion.
 
@@ -170,7 +180,9 @@ POST_ECX_BRANCH_CLEANUP=PASS
 ```
 
 Evidence:
-[verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md).
+
+- [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
+- [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
 ## Current work state
 
@@ -179,9 +191,11 @@ Evidence:
 | Product/runtime implementation | NONE ACTIVE |
 | Repository truth/docs reconciliation | CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
+| NVIDIA hosted-provider trial | CLOSED / PASS |
+| NVIDIA work-branch cleanup | CLOSED / PASS |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
 
-Latest reconciliation evidence:
-[verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md).
+Latest safe checkpoint:
+[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
