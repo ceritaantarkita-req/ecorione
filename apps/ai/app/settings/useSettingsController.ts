@@ -60,6 +60,7 @@ type OpenRouterDiscoveredModel = {
 };
 type OpenRouterDiscoverySnapshot = {
   source: "openrouter:/api/v1/models";
+  families: Array<{ id: Exclude<ModelFamily, "other">; displayName: string }>;
   cache: "hit" | "refreshed" | "stale";
   stale: boolean;
   fetchedAt: string;
