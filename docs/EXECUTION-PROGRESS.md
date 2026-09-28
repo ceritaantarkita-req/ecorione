@@ -9,17 +9,17 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = 29446ad0e140d1486bd3914bb087a552409e464c (PR #394)
-image                   = staging-29446ad0e140
-CI                      = #2468 PASS
-Product Eval            = #1707 PASS
-Staging Deploy          = #1697 PASS
+runtime / staging       = fd921d81136433bd871a466498a283fc5bfb760e (PR #396)
+image                   = staging-fd921d811364
+CI                      = #2484 PASS
+Product Eval            = #1723 PASS
+Staging Deploy          = #1729 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 25.31 GiB stabilized
+free disk               = 27.44 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter registry foundation (Session 2), bounded live discovery/search/cache (Session 3), and the six-family model foundation (Session 4A).
+This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter registry foundation (Session 2), bounded live discovery/search/cache (Session 3), six-family model foundation (Session 4A), and automatic target-family admission (Session 4B).
 
 ## Closed foundational roadmaps
 
@@ -126,11 +126,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = 29446ad0e140d1486bd3914bb087a552409e464c
-image = staging-29446ad0e140
+SHA   = fd921d81136433bd871a466498a283fc5bfb760e
+image = staging-fd921d811364
 ```
 
-Actual Staging Deploy #1697 proved:
+Actual Staging Deploy #1729 proved:
 
 - native builder installed `python3 make g++`;
 - `better-sqlite3` fallback installation completed;
@@ -140,7 +140,8 @@ Actual Staging Deploy #1697 proved:
 - 0 unhealthy services;
 - 15 configured / 15 running;
 - exact SHA match;
-- 25.31 GiB stabilized free disk.
+- 26.12 GiB free at sanitized host evidence;
+- 27.44 GiB stabilized free disk.
 
 The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
 
@@ -163,10 +164,14 @@ This is staging evidence, not production promotion.
 | Session 2 — OpenRouter extensible model registry foundation | CLOSED / PASS |
 | Session 3 — OpenRouter live discovery/search/cache | CLOSED / PASS / STAGING VERIFIED |
 | Session 4A — OpenRouter model-family foundation | CLOSED / PASS / STAGING VERIFIED |
+| Session 4B — OpenRouter automatic target-family admission | CLOSED / PASS / STAGING VERIFIED |
 
-Session 3 adds bounded live catalog discovery while preserving Session 2 admission rules. Session 4A adds one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM. The current OpenRouter selectable set remains Claude Sonnet 4.5 and Claude Opus 4.1; other catalog models remain discovery-only until separately admitted.
+Session 3 adds bounded live catalog discovery, Session 4A adds one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM, and Session 4B turns fresh qualifying target-family metadata into explicit `verified-selectable` admission. Newly admitted models remain `executable=false`; the current runtime execution dropdown remains the two static Claude models until later picker/execution sessions.
 
-Canonical Session 4A checkpoint:
+Canonical Session 4B checkpoint:
+[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md).
+
+Underlying Session 4A checkpoint:
 [verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md).
 
 Underlying Session 3 checkpoint:
