@@ -212,7 +212,9 @@ final remote branch count = 9
 unexpected branches = 0
 ```
 
-The retained 9-branch set is `main`, seven retained substantive/provenance branches, and the historical branch-hygiene checkpoint branch.
+The completed cleanup boundary retained 9 branches: `main`, seven retained substantive/provenance branches, and the historical branch-hygiene checkpoint branch.
+
+The current safe-resume documentation work intentionally leaves one additional bookkeeping ref, `docs/current-safe-resume-20260928`, so the live inventory after PR #385 is **10 branches** with **0 unexpected work branches**. Do not open a cleanup loop solely for this checkpoint ref.
 
 Evidence:
 
