@@ -26,7 +26,19 @@ describe("hosted model registry", () => {
       expect(entry.capabilities).toEqual(["text"]);
       expect(entry.providerRuntime.length).toBeGreaterThan(0);
       expect(entry.sourceProvider.length).toBeGreaterThan(0);
+      expect(["gpt", "gemini", "qwen", "deepseek", "kimi", "glm", "other"]).toContain(
+        entry.family,
+      );
     }
+  });
+
+  it("tags current direct-provider registry entries without widening OpenRouter admission", () => {
+    expect(hostedModelRegistry("openai").map((entry) => entry.family)).toEqual(["gpt", "gpt"]);
+    expect(hostedModelRegistry("nvidia").map((entry) => entry.family)).toEqual(["glm"]);
+    expect(hostedModelRegistry("openrouter").map((entry) => entry.family)).toEqual([
+      "other",
+      "other",
+    ]);
   });
 
   it("preserves the legacy OpenRouter models as registry entries", () => {

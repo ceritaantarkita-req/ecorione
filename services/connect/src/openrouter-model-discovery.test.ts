@@ -67,6 +67,14 @@ describe("OpenRouter model discovery", () => {
 
     expect(result).toMatchObject({
       source: "openrouter:/api/v1/models",
+      families: [
+        { id: "gpt", displayName: "GPT" },
+        { id: "gemini", displayName: "Gemini" },
+        { id: "qwen", displayName: "Qwen" },
+        { id: "deepseek", displayName: "DeepSeek" },
+        { id: "kimi", displayName: "Kimi" },
+        { id: "glm", displayName: "GLM" },
+      ],
       cache: "refreshed",
       stale: false,
       total: 1,
@@ -76,6 +84,7 @@ describe("OpenRouter model discovery", () => {
       id: "qwen/qwen3.8-max",
       displayName: "Qwen: Qwen3.8 Max",
       sourceProvider: "qwen",
+      family: "qwen",
       contextWindowTokens: 1_000_000,
       inputModalities: ["text", "image"],
       outputModalities: ["text"],
@@ -97,6 +106,7 @@ describe("OpenRouter model discovery", () => {
     expect(result.models).toHaveLength(1);
     expect(result.models[0]).toMatchObject({
       id: "anthropic/claude-sonnet-4.5",
+      family: "other",
       admission: "verified-executable",
       executable: true,
       selectionId: "claude-sonnet-4-5-20250929",
@@ -123,6 +133,7 @@ describe("OpenRouter model discovery", () => {
 
     expect(result.models[0]).toMatchObject({
       id: "~deepseek/deepseek-v4-flash-latest",
+      family: "deepseek",
       mutableAlias: true,
       admission: "discovered-only",
       executable: false,
