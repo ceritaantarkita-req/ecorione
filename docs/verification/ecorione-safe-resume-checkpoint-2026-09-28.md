@@ -23,7 +23,9 @@ retained remote branches      = 9
 open issue at audit boundary  = #277 DR-2 physical independence
 ```
 
-The branch used to author this checkpoint is documentation-only and temporary. Its existence while this document is under review does not open a new product/runtime scope.
+The branch used to author this checkpoint is documentation-only bookkeeping and does not open a new product/runtime scope.
+
+After PR #385 merged, the live repository inventory became **10 branches** because `docs/current-safe-resume-20260928` remained as the explicit checkpoint branch. This is a known bookkeeping ref, not an unexpected work branch. Do not create an infinite cleanup/documentation loop solely to delete this checkpoint ref.
 
 ## Runtime / staging compatibility baseline
 
@@ -134,6 +136,15 @@ At the audit boundary before this docs-only checkpoint branch was created:
 remote branches = 9
 open PRs        = 0
 unexpected      = 0
+```
+
+After PR #385 merged:
+
+```text
+main merge SHA             = ef2377d486fb9bc6b2ca2fcd07be9eed4307825b
+live remote branch count   = 10
+known bookkeeping addition = docs/current-safe-resume-20260928
+unexpected work branches   = 0
 ```
 
 The retained branch set was:
