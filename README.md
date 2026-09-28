@@ -9,19 +9,19 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest audited **runtime-changing** repository/staging baseline is:
 
 ```text
-runtime baseline = 59961422e11d126baa0b2ff957dd7abf8e063f08
-image            = staging-59961422e11d
+runtime baseline = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
+image            = staging-9f19b40cea4b
 ```
 
-That exact runtime merge passed CI **#2403**, Product Eval **#1642**, and actual Staging Deploy **#1567**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **27.42 GiB free**.
+That exact runtime merge passed CI **#2429**, Product Eval **#1668**, and actual Staging Deploy **#1619**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **29.90 GiB free**.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
-Repository hygiene remains clean: the NVIDIA implementation/activation/fix branches were exact-SHA deleted by cleanup run `36368987090`, returning the remote inventory to **9 retained branches**.
+Repository hygiene remains bounded: the historical cleanup boundary is **9 retained branches**; the current live inventory is **12 branches**, with the three additional refs known as docs/Session 1/Session 2 bookkeeping or provenance and no unexpected active work refs.
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**.
+There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Session 2 is closed; Session 3 discovery is only an eligible next scope.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -65,6 +65,15 @@ Core ownership rules:
 - Flow + Temporal own durable workflow execution;
 - Space stores composition/references rather than copying owner data;
 - side effects remain governed and idempotent.
+
+## OpenRouter hosted-model registry
+
+OpenRouter model selection now resolves through an extensible governed registry rather than a separate Claude-only mapping table. Persistence is ready for future discovered model ids, while execution remains fail-closed to verified pricing-bound provider/model entries.
+
+Current selectable OpenRouter models remain **Claude Sonnet 4.5** and **Claude Opus 4.1**. Additional model families are not yet claimed selectable.
+
+Session 2 checkpoint:
+[docs/verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](docs/verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
 ## NVIDIA hosted provider
 

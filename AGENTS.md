@@ -20,17 +20,17 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = 59961422e11d126baa0b2ff957dd7abf8e063f08
-image            = staging-59961422e11d
-CI               = #2403 PASS
-Product Eval     = #1642 PASS
-Staging Deploy   = #1567 PASS
+runtime baseline = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
+image            = staging-9f19b40cea4b
+CI               = #2429 PASS
+Product Eval     = #1668 PASS
+Staging Deploy   = #1619 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 27.42 GiB stabilized
+free disk        = 29.90 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #387 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #389 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
 
 Current overall safe-resume pointer:
 `docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md`.
@@ -45,7 +45,7 @@ NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Con
 - cost kill switch and durable spend controls remain authoritative;
 - the staging **operator hosted kill switch is open** under a finite spend policy; the persisted runtime toggle is still activated through normal Settings/provider activation.
 
-Session 1 hardened NVIDIA credential/canary validation: credential tests have a 30-second default deadline, canary latency limits are enforced, NVIDIA health probes cap output at 512 tokens, and timeout is explicit as `PROVIDER_TEST_TIMEOUT`. Normal hosted chat retains its 4096-token baseline.
+Current NVIDIA credential/canary validation uses 60-second default deadlines, caps NVIDIA health probes at 1024 output tokens with low reasoning effort, and returns `PROVIDER_TEST_TIMEOUT` on deadline. The user's actual key is still not claimed validated.
 
 The user's actual NVIDIA secret has not been stored or validated by repository work. Do not claim a real user-key GLM-5.3 completion until the operator enters the key in Settings, passes the bounded credential test, saves/activates it, and observes a real Ai completion.
 
@@ -66,11 +66,31 @@ Closed roadmap families:
 - audit follow-ups through A-11 — **CLOSED / PASS at bounded scopes**;
 - ECX Recipient Execution Batch 1–7 — **CLOSED / PASS**;
 - NVIDIA hosted-provider trial implementation + staging activation + Docker build hardening — **CLOSED / PASS**;
-- NVIDIA connection-test Session 1 hardening — **CLOSED / PASS**.
+- NVIDIA connection-test Session 1 hardening — **CLOSED / PASS**;
+- OpenRouter model-registry Session 2 — **CLOSED / PASS**.
 
 There is **no active product/runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item.
 
 Open Issue #277 remains the deferred DR-2 tracker.
+
+## OpenRouter registry working boundary
+
+Session 2 is **CLOSED / PASS**.
+
+Current invariants:
+
+- hosted model preferences may be string-shaped for future discovery;
+- a string is not executable unless it resolves to an executable verified provider/model registry entry;
+- executable hosted entries require an admitted pricing identity;
+- OpenRouter runtime slugs resolve from the registry;
+- provider-reported OpenRouter billed cost remains authoritative for actual cost;
+- current OpenRouter selectable models remain Claude Sonnet 4.5 and Claude Opus 4.1 only;
+- discovered/catalogued state must remain distinct from executable/admitted state.
+
+Do not add GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other OpenRouter models by hard-coding them as verified. That belongs to a separately authorized discovery/verification scope.
+
+Canonical checkpoint:
+`docs/verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md`.
 
 ## ECX compatibility baseline
 
