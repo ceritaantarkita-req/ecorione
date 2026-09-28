@@ -165,7 +165,7 @@ SumoPod is staging, not production. The staging Basic-Auth human gate is a bound
 - preserve `.gitattributes`: text LF by default, `.cmd`/`.bat` CRLF;
 - delete merged temporary branches only after exact remote-SHA revalidation.
 
-The historical 393-branch cleanup, post-ECX cleanup, and NVIDIA trial branch cleanup are closed. NVIDIA cleanup run `36368987090` exact-SHA deleted three merged work branches, self-deleted its helper, and restored the retained inventory to 9 branches. Do not rerun old classifications merely for freshness; future branch growth must be handled as a new exact-SHA delta.
+The historical 393-branch cleanup, post-ECX cleanup, and NVIDIA trial branch cleanup are closed. NVIDIA cleanup run `36368987090` exact-SHA deleted three merged work branches, self-deleted its helper, and restored the cleanup-boundary inventory to 9 branches. The current safe-resume checkpoint intentionally retains `docs/current-safe-resume-20260928` as one bookkeeping ref, so the live post-PR-#385 inventory is 10 branches with no unexpected work branch. Do not create an infinite cleanup/docs loop solely for that checkpoint ref. Future non-bookkeeping branch growth must be handled as a new exact-SHA delta.
 
 ## Evidence discipline
 
