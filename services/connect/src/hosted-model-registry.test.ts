@@ -45,7 +45,9 @@ describe("hosted model registry", () => {
   });
 
   it("does not auto-admit future/cross-vendor model strings", () => {
-    expect(hostedModelRegistryEntry("openrouter", "deepseek/deepseek-v3.2-exp")).toBeUndefined();
+    expect(
+      hostedModelRegistryEntry("openrouter", "deepseek/deepseek-v3.2-exp"),
+    ).toBeUndefined();
     expect(hostedModelRegistryEntry("openrouter", "gpt-5.6-terra")).toBeUndefined();
     expect(hostedModelRegistryEntry("openrouter", "z-ai/glm-5.3")).toBeUndefined();
   });
