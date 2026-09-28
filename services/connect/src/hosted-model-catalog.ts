@@ -1,79 +1,32 @@
-import type { PinnedModelId } from "@ecorione/shared-telemetry";
 import { z } from "zod";
 import type { HostedProviderId } from "./provider-types.js";
+import {
+  hostedModelRegistry,
+  hostedModelRegistryEntry,
+  registeredHostedModelIds,
+  type HostedModelRegistryEntry,
+} from "./hosted-model-registry.js";
 
 export const GOVERNED_HOSTED_MODEL = "governed" as const;
 
-export const SELECTABLE_HOSTED_MODEL_IDS = [
-  "claude-sonnet-4-5-20250929",
-  "claude-opus-4-1-20250805",
-  "gpt-5.6-terra",
-  "gpt-5.6-sol",
-  "z-ai/glm-5.3",
-] as const satisfies readonly PinnedModelId[];
-
-export const HostedModelPreferenceSchema = z.enum([
-  GOVERNED_HOSTED_MODEL,
-  ...SELECTABLE_HOSTED_MODEL_IDS,
-]);
+/**
+ * Runtime settings deliberately store a string preference rather than a compile-time enum.
+ * The provider/model pair is still fail-closed by hostedModelSupported() against the
+ * governed registry. This keeps the persistence/API shape ready for later catalog discovery
+ * without weakening current verification.
+ */
+export const HostedModelPreferenceSchema = z.string().trim().min(1).max(256);
 export type HostedModelPreference = z.infer<typeof HostedModelPreferenceSchema>;
 
-export interface HostedModelCatalogEntry {
-  readonly id: PinnedModelId;
-  readonly displayName: string;
-  readonly providerRuntime: string;
-}
+export type HostedModelCatalogEntry = HostedModelRegistryEntry;
 
-const VERIFIED_HOSTED_MODELS = {
-  anthropic: [
-    {
-      id: "claude-sonnet-4-5-20250929",
-      displayName: "Claude Sonnet 4.5",
-      providerRuntime: "claude-sonnet-4-5-20250929",
-    },
-    {
-      id: "claude-opus-4-1-20250805",
-      displayName: "Claude Opus 4.1",
-      providerRuntime: "claude-opus-4-1-20250805",
-    },
-  ],
-  openrouter: [
-    {
-      id: "claude-sonnet-4-5-20250929",
-      displayName: "Claude Sonnet 4.5",
-      providerRuntime: "anthropic/claude-sonnet-4.5",
-    },
-    {
-      id: "claude-opus-4-1-20250805",
-      displayName: "Claude Opus 4.1",
-      providerRuntime: "anthropic/claude-opus-4.1",
-    },
-  ],
-  openai: [
-    {
-      id: "gpt-5.6-terra",
-      displayName: "GPT-5.6 Terra",
-      providerRuntime: "gpt-5.6-terra",
-    },
-    {
-      id: "gpt-5.6-sol",
-      displayName: "GPT-5.6 Sol",
-      providerRuntime: "gpt-5.6-sol",
-    },
-  ],
-  nvidia: [
-    {
-      id: "z-ai/glm-5.3",
-      displayName: "GLM-5.3",
-      providerRuntime: "z-ai/glm-5.3",
-    },
-  ],
-} as const satisfies Readonly<Record<HostedProviderId, readonly HostedModelCatalogEntry[]>>;
+/** Compatibility export for callers/tests that need the currently admitted identities. */
+export const SELECTABLE_HOSTED_MODEL_IDS = registeredHostedModelIds();
 
 export function hostedModelCatalog(
   provider: HostedProviderId,
 ): readonly HostedModelCatalogEntry[] {
-  return VERIFIED_HOSTED_MODELS[provider];
+  return hostedModelRegistry(provider);
 }
 
 export function hostedModelSupported(
@@ -81,5 +34,13 @@ export function hostedModelSupported(
   preference: HostedModelPreference,
 ): boolean {
   if (preference === GOVERNED_HOSTED_MODEL) return true;
-  return VERIFIED_HOSTED_MODELS[provider].some((entry) => entry.id === preference);
+  return hostedModelRegistryEntry(provider, preference) !== undefined;
+}
+
+export function hostedModelCatalogEntry(
+  provider: HostedProviderId,
+  preference: HostedModelPreference,
+): HostedModelCatalogEntry | undefined {
+  if (preference === GOVERNED_HOSTED_MODEL) return undefined;
+  return hostedModelRegistryEntry(provider, preference);
 }
