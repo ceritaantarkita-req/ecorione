@@ -77,6 +77,14 @@ describe("proxyToConnectSettings", () => {
       })
       .reply(200, {
         source: "openrouter:/api/v1/models",
+        families:         [
+                  { id: "gpt", displayName: "GPT" },
+                  { id: "gemini", displayName: "Gemini" },
+                  { id: "qwen", displayName: "Qwen" },
+                  { id: "deepseek", displayName: "DeepSeek" },
+                  { id: "kimi", displayName: "Kimi" },
+                  { id: "glm", displayName: "GLM" },
+                ],
         cache: "refreshed",
         stale: false,
         fetchedAt: "2026-09-28T10:00:00.000Z",
@@ -104,6 +112,14 @@ describe("proxyToConnectSettings", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
+      families: expect.arrayContaining([
+        { id: "gpt", displayName: "GPT" },
+        { id: "gemini", displayName: "Gemini" },
+        { id: "qwen", displayName: "Qwen" },
+        { id: "deepseek", displayName: "DeepSeek" },
+        { id: "kimi", displayName: "Kimi" },
+        { id: "glm", displayName: "GLM" },
+      ]),
       cache: "refreshed",
       models: [
         expect.objectContaining({
