@@ -1356,7 +1356,9 @@ async function runDesktopJourney() {
     await defaultSelects.nth(0).selectOption("openrouter");
     await defaultSelects.nth(1).selectOption("governed");
     await defaultSection.getByRole("button", { name: "Save default", exact: true }).click();
-    await page.getByText("Default OpenRouter model saved and active.", { exact: true }).waitFor();
+    await page
+      .getByText("Default OpenRouter model saved and active.", { exact: true })
+      .waitFor();
     if ((await defaultSelects.nth(1).inputValue()) !== "governed") {
       throw new Error("desktop-settings: governed model selection was not retained");
     }
