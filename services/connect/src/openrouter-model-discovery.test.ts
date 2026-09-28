@@ -16,7 +16,10 @@ const response = {
       id: "anthropic/claude-sonnet-4.5",
       name: "Claude Sonnet 4.5",
       context_length: 1_000_000,
-      architecture: { input_modalities: ["text", "image"], output_modalities: ["text"] },
+      architecture: {
+        input_modalities: ["text", "image"],
+        output_modalities: ["text"],
+      },
       pricing: { prompt: "0.000003", completion: "0.000015" },
       supported_parameters: ["max_tokens", "tools", "reasoning"],
     },
@@ -24,7 +27,10 @@ const response = {
       id: "qwen/qwen3.8-max",
       name: "Qwen: Qwen3.8 Max",
       context_length: 1_000_000,
-      architecture: { input_modalities: ["text", "image"], output_modalities: ["text"] },
+      architecture: {
+        input_modalities: ["text", "image"],
+        output_modalities: ["text"],
+      },
       pricing: { prompt: "0.000002", completion: "0.000006" },
       supported_parameters: ["max_tokens", "tools", "reasoning_effort"],
     },
@@ -79,7 +85,9 @@ describe("OpenRouter model discovery", () => {
     });
   });
 
-  it("marks an existing verified runtime slug separately from discovery-only models", async () => {
+  it(
+    "marks an existing verified runtime slug separately from discovery-only models",
+    async () => {
     pool.intercept({ path: "/api/v1/models", method: "GET" }).reply(200, response);
     const discovery = new OpenRouterModelDiscovery();
 
@@ -92,7 +100,8 @@ describe("OpenRouter model discovery", () => {
       executable: true,
       selectionId: "claude-sonnet-4-5-20250929",
     });
-  });
+    },
+  );
 
   it("reuses the full cached catalog across search/filter requests", async () => {
     pool.intercept({ path: "/api/v1/models", method: "GET" }).reply(200, response);
