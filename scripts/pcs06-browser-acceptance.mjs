@@ -703,6 +703,24 @@ async function installApiMocks(context) {
           unavailableReason: null,
         },
         {
+          id: "~deepseek/deepseek-v4-flash-latest",
+          displayName: "DeepSeek V4 Flash Latest",
+          sourceProvider: "deepseek",
+          family: "deepseek",
+          contextWindowTokens: 1_048_576,
+          inputModalities: ["text"],
+          outputModalities: ["text"],
+          supportedParameters: ["max_tokens", "reasoning"],
+          promptPricePerToken: "0.00000008",
+          completionPricePerToken: "0.00000018",
+          mutableAlias: true,
+          admission: "unavailable",
+          selectable: false,
+          executable: false,
+          selectionId: null,
+          unavailableReason: "mutable-alias",
+        },
+        {
           id: "anthropic/claude-sonnet-4.5",
           displayName: "Claude Sonnet 4.5",
           sourceProvider: "anthropic",
@@ -1290,6 +1308,11 @@ async function runDesktopJourney() {
         "desktop-settings: Session 4B admission must not pre-empt the Session 4C runtime picker",
       );
     }
+    await openRouterSearch.fill("deepseek");
+    await page.getByRole("button", { name: "Search catalog", exact: true }).click();
+    await page.getByText("DeepSeek V4 Flash Latest", { exact: true }).waitFor();
+    await page.getByText("Unavailable", { exact: true }).waitFor();
+    await page.getByText(/reason alias mutable/).waitFor();
 
     const selectedModelLabel = await defaultSelects
       .nth(1)
