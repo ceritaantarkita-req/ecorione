@@ -6,16 +6,16 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 
 ## Current status — 2026-09-28
 
-The latest audited repository/staging runtime is:
+The latest audited **runtime-changing** repository/staging baseline is:
 
 ```text
-repository/staging = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-image              = staging-0f86a34cde66
+runtime baseline = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image            = staging-0f86a34cde66
 ```
 
-That exact `main` passed CI **#2380**, Product Eval **#1619**, and actual Staging Deploy **#1525**. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **29.89 GiB free**.
+That exact runtime merge passed CI **#2380**, Product Eval **#1619**, and actual Staging Deploy **#1525**. Docs-only checkpoint commits may advance live Git/staging SHA without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **29.89 GiB free**.
 
-NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging hosted gate was opened under bounded spend controls; the user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
+NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
 Repository hygiene remains clean: the NVIDIA implementation/activation/fix branches were exact-SHA deleted by cleanup run `36368987090`, returning the remote inventory to **9 retained branches**.
 
