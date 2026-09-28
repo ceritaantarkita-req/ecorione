@@ -85,6 +85,7 @@ const RuntimeSettingsObjectSchema = z
   .object({
     hostedProvider: HostedProviderIdSchema,
     hostedModel: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
+    openRouterModelSelection: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
     localRuntime: LocalRuntimeIdSchema,
     localBaseUrl: LocalBaseUrlSchema,
     localModelTag: z.string().min(1).max(256),
@@ -106,7 +107,11 @@ export const RuntimeSettingsSchema = RuntimeSettingsObjectSchema.superRefine(
 );
 
 type ParsedRuntimeSettings = z.infer<typeof RuntimeSettingsSchema>;
-export type RuntimeSettings = Omit<ParsedRuntimeSettings, "localModelDigest"> & {
+export type RuntimeSettings = Omit<
+  ParsedRuntimeSettings,
+  "localModelDigest" | "openRouterModelSelection"
+> & {
+  readonly openRouterModelSelection?: HostedModelPreference | undefined;
   readonly localModelDigest?: LocalModelDigest | null | undefined;
 };
 
@@ -146,6 +151,7 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
     defaults: {
       hostedProvider: HostedProviderId;
       hostedModel?: HostedModelPreference | undefined;
+      openRouterModelSelection?: HostedModelPreference | undefined;
       localRuntime: LocalRuntimeId;
       localBaseUrl: string;
       localModelTag: string;
