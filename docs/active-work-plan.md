@@ -42,7 +42,9 @@ Evidence:
 - [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
-There is no active repository-hygiene queue. Future branch growth must be handled as a new exact-SHA delta, not by rerunning historical cleanups.
+The completed cleanup runs each ended at 9 retained branches. The current safe-resume checkpoint adds one intentional bookkeeping ref, `docs/current-safe-resume-20260928`, making the live post-PR-#385 inventory 10 branches with no unexpected work branch. There is no active repository-hygiene queue; do not create one solely to delete the checkpoint branch.
+
+Future non-bookkeeping branch growth must be handled as a new exact-SHA delta, not by rerunning historical cleanups.
 
 ## ECX Recipient Execution baseline — CLOSED / PASS
 
