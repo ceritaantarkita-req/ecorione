@@ -206,7 +206,7 @@ SumoPod is staging, not production. The staging Basic-Auth human gate is a bound
 - preserve `.gitattributes`: text LF by default, `.cmd`/`.bat` CRLF;
 - delete merged temporary branches only after exact remote-SHA revalidation.
 
-The historical 393-branch cleanup, post-ECX cleanup, and NVIDIA trial branch cleanup are closed. The cleanup-boundary inventory remains 9 branches. The cleanup boundary remains 9 retained branches. Runtime closure after Session 3 has four known later bookkeeping/provenance refs: `docs/current-safe-resume-20260928`, `fix/nvidia-credential-test-timeout-20260928`, `feat/openrouter-model-registry-session2-20260928`, and `feat/openrouter-model-discovery-session3-20260928`, for a live inventory of 13 with zero unexpected active work branches before this docs branch. Future non-bookkeeping branch growth must be handled as a new exact-SHA delta.
+The historical 393-branch cleanup, post-ECX cleanup, and NVIDIA trial branch cleanup are closed. The cleanup boundary remains 9 retained branches. Runtime closure after Session 4A has seven known later bookkeeping/provenance refs beyond that boundary, for a live inventory of 16 with zero unexpected active work branches before the temporary Session 4A docs-closure branch. Future non-bookkeeping branch growth must be handled as a new exact-SHA delta.
 
 ## Evidence discipline
 
