@@ -189,7 +189,6 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
           method: "GET",
           headers: { accept: "application/json" },
           redirect: "error",
-          cache: "no-store",
           signal: controller.signal,
         });
       } catch (error) {
