@@ -4,6 +4,10 @@ import {
   executableHostedModelRegistryEntry,
   hostedModelRegistry,
 } from "./hosted-model-registry.js";
+import {
+  classifyOpenRouterModelFamily,
+  type HostedModelFamily,
+} from "./hosted-model-family.js";
 
 export const OPENROUTER_MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models";
 export const DEFAULT_OPENROUTER_DISCOVERY_TTL_MS = 10 * 60 * 1_000;
@@ -46,6 +50,7 @@ export interface OpenRouterDiscoveredModel {
   readonly id: string;
   readonly displayName: string;
   readonly sourceProvider: string;
+  readonly family: HostedModelFamily;
   readonly contextWindowTokens: number | null;
   readonly inputModalities: readonly string[];
   readonly outputModalities: readonly string[];
@@ -117,6 +122,12 @@ function isMutableAlias(id: string): boolean {
 function normalizeModel(
   model: z.infer<typeof OpenRouterUpstreamModelSchema>,
 ): OpenRouterDiscoveredModel {
+  const sourceProvider = sourceProviderFromId(model.id);
+  const family = classifyOpenRouterModelFamily({
+    id: model.id,
+    displayName: model.name,
+    sourceProvider,
+  });
   const verified = hostedModelRegistry("openrouter").find(
     (entry) => entry.providerRuntime === model.id,
   );
@@ -126,7 +137,8 @@ function normalizeModel(
   return {
     id: model.id,
     displayName: model.name,
-    sourceProvider: sourceProviderFromId(model.id),
+    sourceProvider,
+    family,
     contextWindowTokens: model.context_length ?? null,
     inputModalities: [...(model.architecture?.input_modalities ?? [])],
     outputModalities: [...(model.architecture?.output_modalities ?? [])],
