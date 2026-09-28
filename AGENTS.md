@@ -20,17 +20,17 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = af2ef8f61f26058178e56b0d6490248c1898976e
-image            = staging-af2ef8f61f26
-CI               = #2457 PASS
-Product Eval     = #1696 PASS
-Staging Deploy   = #1675 PASS
+runtime baseline = 29446ad0e140d1486bd3914bb087a552409e464c
+image            = staging-29446ad0e140
+CI               = #2468 PASS
+Product Eval     = #1707 PASS
+Staging Deploy   = #1697 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 25.33 GiB stabilized
+free disk        = 25.31 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #391 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #394 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
 
 Current overall safe-resume pointer:
 `docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md`.
@@ -68,15 +68,16 @@ Closed roadmap families:
 - NVIDIA hosted-provider trial implementation + staging activation + Docker build hardening — **CLOSED / PASS**;
 - NVIDIA connection-test Session 1 hardening — **CLOSED / PASS**;
 - OpenRouter model-registry Session 2 — **CLOSED / PASS**;
-- OpenRouter live-discovery Session 3 — **CLOSED / PASS / STAGING VERIFIED**.
+- OpenRouter live-discovery Session 3 — **CLOSED / PASS / STAGING VERIFIED**;
+- OpenRouter model-family Session 4A — **CLOSED / PASS / STAGING VERIFIED**.
 
 There is **no active product/runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item.
 
 Open Issue #277 remains the deferred DR-2 tracker.
 
-## OpenRouter registry + discovery working boundary
+## OpenRouter registry + discovery + family working boundary
 
-Sessions 2 and 3 are **CLOSED / PASS**.
+Sessions 2, 3, and 4A are **CLOSED / PASS**.
 
 Current invariants:
 
@@ -89,11 +90,17 @@ Current invariants:
 - live OpenRouter discovery/search/filter/cache exists through Connect;
 - discovered/catalogued state must remain distinct from executable/admitted state;
 - a discovered-only model must remain absent from the selectable execution dropdown until separately admitted;
-- stale discovery cache may be shown explicitly, but stale/catalog presence never grants execution.
+- stale discovery cache may be shown explicitly, but stale/catalog presence never grants execution;
+- Connect owns the canonical six-family vocabulary: GPT, Gemini, Qwen, DeepSeek, Kimi, GLM;
+- family classification is version-agnostic descriptive metadata, not execution authority;
+- unrelated models sharing an author namespace must remain `other` unless their slug/name matches the family.
 
 Do not add GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other OpenRouter models by hard-coding them as verified. Any new executable model belongs to a separately authorized admission/verification scope.
 
 Current checkpoint:
+`docs/verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md`.
+
+Underlying discovery checkpoint:
 `docs/verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md`.
 
 Underlying registry checkpoint:
@@ -169,7 +176,7 @@ Canonical checkpoint:
 
 Do not start these without explicit operator authorization:
 
-- selected OpenRouter discovered-model admission/verification;
+- Session 4B selected OpenRouter model verification/admission across the six target families;
 - DR-2 checkpoint 2 and physical-independence runtime proof;
 - public production cutover;
 - native Google Drive integration;
