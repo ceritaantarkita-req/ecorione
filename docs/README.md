@@ -30,8 +30,9 @@ Historical verification is intentionally preserved even when it contains an olde
 2. **[active-work-plan.md](active-work-plan.md)** — current queue; currently no active product/runtime implementation scope.
 3. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
 4. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
-5. **[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md)** — current overall safe-resume pointer; use this before opening any new scope.
-6. **[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)** — current OpenRouter automatic-admission closure.
+5. **[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)** — current overall safe-resume pointer; use this before opening any new scope.
+6. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — current OpenRouter Settings model-picker closure.
+7. **[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter automatic-admission closure.
 7. **[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter six-family foundation closure.
 8. **[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter live-discovery closure.
 9. **[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter governed registry closure.
@@ -106,15 +107,18 @@ Use the owner-specific runbook when touching its subsystem:
 Latest audited **runtime-changing compatibility baseline**:
 
 ```text
-SHA   = fd921d81136433bd871a466498a283fc5bfb760e
-image = staging-fd921d811364
+SHA   = c65926de418046494d2e961af10662d2eadca37c
+image = staging-c65926de4180
 ```
 
-CI #2484, Product Eval #1723, and actual Staging Deploy #1729 passed. Staging reported healthy Operations, 15/15 services running, exact runtime-SHA match, 26.12 GiB free at host evidence, and 27.44 GiB stabilized free disk. Docs-only merges may advance the exact Git/staging revision without changing this compatibility baseline; use the latest deploy receipt when exact live identity is required.
+CI #2492, Product Eval #1731, and actual Staging Deploy #1745 passed. Staging reported healthy Operations, 15/15 services running, exact runtime-SHA match, 21.86 GiB free at host evidence, and 29.93 GiB stabilized free disk. Docs-only merges may advance the exact Git/staging revision without changing this compatibility baseline; use the latest deploy receipt when exact live identity is required.
 
 NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging operator kill switch is open under bounded spend controls; the runtime hosted toggle is activated through normal Settings/provider activation. The user's actual NVIDIA secret has not been stored or tested by repository work.
 
 Current OpenRouter evidence:
+[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
+
+Underlying admission evidence:
 [verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md).
 
 Underlying family evidence:
@@ -157,8 +161,9 @@ Use [verification/README.md](verification/README.md) for the evidence index.
 
 Important current pointers:
 
-- current overall safe-resume checkpoint: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md)
-- current OpenRouter Session 4B checkpoint: [verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)
+- current overall safe-resume checkpoint: [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)
+- current OpenRouter Session 4C checkpoint: [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)
+- underlying OpenRouter Session 4B checkpoint: [verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)
 - underlying OpenRouter Session 4A checkpoint: [verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)
 - underlying OpenRouter Session 3 checkpoint: [verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)
 - underlying OpenRouter Session 2 checkpoint: [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)
