@@ -475,7 +475,9 @@ export default function SettingsPage() {
                     openRouterDiscovery.stale ? styles.statusBadge : styles.activeBadge
                   }
                 >
-                  {openRouterDiscovery.stale ? "Stale cache" : openRouterDiscovery.cache}
+                  {openRouterDiscovery.stale
+                    ? "Stale cache"
+                    : openRouterDiscovery.cache}
                 </span>
               )}
             </div>
@@ -510,7 +512,9 @@ export default function SettingsPage() {
                 disabled={pendingAction !== null}
                 onClick={() => void discoverOpenRouterModels(false)}
               >
-                {pendingAction === "openrouter-discovery" ? "Loading…" : "Search catalog"}
+                {pendingAction === "openrouter-discovery"
+                  ? "Loading…"
+                  : "Search catalog"}
               </button>
               <button
                 type="button"
@@ -550,7 +554,9 @@ export default function SettingsPage() {
                               model.executable ? styles.activeBadge : styles.statusBadge
                             }
                           >
-                            {model.executable ? "Verified · selectable" : "Discovered only"}
+                            {model.executable
+                              ? "Verified · selectable"
+                              : "Discovered only"}
                           </span>
                         </div>
                         <div className={styles.discoveryFacts}>
