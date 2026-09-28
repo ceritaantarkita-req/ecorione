@@ -9,11 +9,7 @@ type DiscoveredModel = {
   contextWindowTokens: number | null;
   inputModalities: string[];
   mutableAlias: boolean;
-  admission:
-    | "verified-executable"
-    | "verified-selectable"
-    | "unavailable"
-    | "discovered-only";
+  admission: "verified-executable" | "verified-selectable" | "unavailable" | "discovered-only";
   selectable: boolean;
   executable: boolean;
   unavailableReason: string | null;
