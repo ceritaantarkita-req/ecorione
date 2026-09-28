@@ -9,18 +9,17 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-repository docs closure = 9820af44ab2c2905303eea897ff6233204a8c419 (PR #384)
-runtime / staging       = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-image                   = staging-0f86a34cde66
-CI                   = #2380 PASS
-Product Eval         = #1619 PASS
-Staging Deploy       = #1525 PASS
-Operations           = healthy
-services             = 15/15 running
-free disk            = 29.89 GiB stabilized
+runtime / staging       = 59961422e11d126baa0b2ff957dd7abf8e063f08 (PR #387)
+image                   = staging-59961422e11d
+CI                      = #2403 PASS
+Product Eval            = #1642 PASS
+Staging Deploy          = #1567 PASS
+Operations              = healthy
+services                = 15/15 running
+free disk               = 27.42 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability and permanent multi-stage Docker native-build hardening.
+This includes the NVIDIA hosted-provider capability, permanent multi-stage Docker native-build hardening, and bounded NVIDIA credential/canary-test robustness from Session 1.
 
 ## Closed foundational roadmaps
 
@@ -127,11 +126,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-image = staging-0f86a34cde66
+SHA   = 59961422e11d126baa0b2ff957dd7abf8e063f08
+image = staging-59961422e11d
 ```
 
-Actual Staging Deploy #1525 proved:
+Actual Staging Deploy #1567 proved:
 
 - native builder installed `python3 make g++`;
 - `better-sqlite3` fallback installation completed;
@@ -141,13 +140,16 @@ Actual Staging Deploy #1525 proved:
 - 0 unhealthy services;
 - 15 configured / 15 running;
 - exact SHA match;
-- 29.89 GiB stabilized free disk.
+- 27.42 GiB stabilized free disk.
 
 The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
 
-NVIDIA / NIM is live with pinned `z-ai/glm-5.3`; the user's actual API key has not yet been stored/tested.
+NVIDIA / NIM is live with pinned `z-ai/glm-5.3`. Session 1 adds a 30-second credential-test deadline, enforced provider-canary timeout, bounded 512-token NVIDIA probe output, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
-Canonical checkpoint:
+Latest checkpoint:
+[verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md).
+
+Underlying rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 This is staging evidence, not production promotion.
@@ -171,7 +173,7 @@ Issue #277 remains the DR-2 tracker.
 | Historical 393-entry exact-SHA cleanup | CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | Cleanup-boundary retained inventory | 9 branches |
-| Current live inventory after safe-resume checkpoint | 10 branches (1 known bookkeeping checkpoint ref) |
+| Current live inventory after Session 1 runtime closure | 11 branches (2 known bookkeeping/provenance refs beyond cleanup boundary) |
 
 Post-ECX Actions run `36338085729` dry-ran 15/15 allowlisted branches with zero hold/fail/skip, deleted all 15, exact-validated and deleted 2 reconciliation branches, self-deleted its helper, and proved:
 
@@ -195,6 +197,7 @@ Evidence:
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | NVIDIA hosted-provider trial | CLOSED / PASS |
 | NVIDIA work-branch cleanup | CLOSED / PASS |
+| NVIDIA connection-test Session 1 | CLOSED / PASS |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
