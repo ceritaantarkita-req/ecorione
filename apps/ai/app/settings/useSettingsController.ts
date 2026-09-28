@@ -16,12 +16,12 @@ type HostedModelCatalogEntry = {
   contextWindowTokens: number | null;
   capabilities: Array<"text" | "tools" | "reasoning">;
   pricing: {
-    costModel: string;
+    costModel: string | null;
     authority: "snapshot" | "provider-reported";
     currency: "USD";
   };
-  verification: "verified";
-  catalogSource: "static-verified";
+  verification: "verified" | "discovered";
+  catalogSource: "static-verified" | "openrouter-discovery";
   verifiedAt: string | null;
 };
 export type RuntimeSnapshot = {
