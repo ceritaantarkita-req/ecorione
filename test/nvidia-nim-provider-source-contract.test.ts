@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 describe("NVIDIA NIM provider source contract", () => {
   const providerTypes = readFileSync("services/connect/src/provider-types.ts", "utf8");
   const catalog = readFileSync("services/connect/src/hosted-model-catalog.ts", "utf8");
+  const registry = readFileSync("services/connect/src/hosted-model-registry.ts", "utf8");
   const adapter = readFileSync("services/connect/src/providers/nvidia.ts", "utf8");
   const http = readFileSync("services/connect/src/http.ts", "utf8");
   const hosted = readFileSync("services/connect/src/providers/hosted.ts", "utf8");
@@ -16,7 +17,10 @@ describe("NVIDIA NIM provider source contract", () => {
     expect(providerTypes).toContain('"NVIDIA_API_KEY"');
     expect(adapter).toContain("https://integrate.api.nvidia.com/v1/chat/completions");
     expect(adapter).toContain('"z-ai/glm-5.3"');
-    expect(catalog).toContain('displayName: "GLM-5.3"');
+    expect(catalog).toContain("hostedModelRegistry");
+    expect(registry).toContain('provider: "nvidia"');
+    expect(registry).toContain('displayName: "GLM-5.3"');
+    expect(registry).toContain('providerRuntime: "z-ai/glm-5.3"');
     expect(hosted).toContain('case "nvidia"');
   });
 
@@ -36,7 +40,8 @@ describe("NVIDIA NIM provider source contract", () => {
   it("exposes NVIDIA through normal Settings and Ai route labels", () => {
     expect(controller).toContain('| "nvidia"');
     expect(controller).toContain('provider.id === "nvidia"');
-    expect(controller).toContain('"z-ai/glm-5.3"');
+    expect(controller).toContain("hostedModels: HostedModelCatalogEntry[]");
+    expect(registry).toContain('id: "z-ai/glm-5.3"');
     expect(chat).toContain('case "nvidia"');
     expect(chat).toContain('return "NVIDIA"');
     expect(chat).toContain('return "GLM-5.3"');
