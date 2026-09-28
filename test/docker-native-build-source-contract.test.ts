@@ -14,7 +14,9 @@ describe("Docker native dependency build contract", () => {
     expect(dockerfile).toContain(
       "apt-get install -y --no-install-recommends python3 make g++",
     );
-    expect(dockerfile).toContain("pnpm install --frozen-lockfile && pnpm run build");
+    expect(dockerfile).toContain(
+      "pnpm install --frozen-lockfile && pnpm run build",
+    );
     expect(dockerfile.indexOf("python3 make g++")).toBeLessThan(runtimeIndex);
   });
 
