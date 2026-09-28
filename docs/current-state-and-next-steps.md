@@ -13,7 +13,10 @@ runtime-changing baseline= 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
 staging image            = staging-0f86a34cde66
 ```
 
-`0f86a34c...` is the latest audited runtime-changing merge. Docs-only checkpoint commits may advance live Git/staging SHA without changing runtime behavior; inspect live `main` for the newest exact repository revision.
+`0f86a34c...` is the latest audited runtime-changing merge. The audited live repository state immediately before this docs-only refresh was `9820af44ab2c2905303eea897ff6233204a8c419`, the merge commit of PR #384. Docs-only checkpoint commits may advance live Git/staging SHA without changing runtime behavior; inspect live `main` for the newest exact repository revision.
+
+Current safe-resume checkpoint:
+[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -252,7 +255,10 @@ For a new session/agent:
 6. open only the explicitly authorized new scope;
 7. use dated verification files as evidence, not as the current queue.
 
-Latest safe runtime/provider checkpoint:
+Current safe-resume checkpoint:
+[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
+
+Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Prior repository truth reconciliation:
