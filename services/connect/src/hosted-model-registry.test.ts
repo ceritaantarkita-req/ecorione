@@ -19,8 +19,8 @@ describe("hosted model registry", () => {
       expect(entry.id).toBe(entry.pricing.costModel);
       expect(entry.verification).toBe("verified");
       expect(entry.catalogSource).toBe("static-verified");
-      expect(entry.verifiedAt).toBe("2026-09-28");
-      expect(entry.capabilities).toContain("text");
+      expect(entry.verifiedAt).toBeNull();
+      expect(entry.capabilities).toEqual(["text"]);
       expect(entry.providerRuntime.length).toBeGreaterThan(0);
       expect(entry.sourceProvider.length).toBeGreaterThan(0);
     }
