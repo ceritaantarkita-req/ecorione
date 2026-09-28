@@ -15,25 +15,25 @@ Before changing the repo:
 
 Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evidence. They are **not current work queues**.
 
-## Current compatibility baseline — 2026-09-28
+## Current compatibility baseline — 2026-09-29
 
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = fd921d81136433bd871a466498a283fc5bfb760e
-image            = staging-fd921d811364
-CI               = #2484 PASS
-Product Eval     = #1723 PASS
-Staging Deploy   = #1729 PASS
+runtime baseline = c65926de418046494d2e961af10662d2eadca37c
+image            = staging-c65926de4180
+CI               = #2492 PASS
+Product Eval     = #1731 PASS
+Staging Deploy   = #1745 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 27.44 GiB stabilized
+free disk        = 29.93 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #396 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #398 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
 
 Current overall safe-resume pointer:
-`docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md`.
+`docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md`.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
@@ -55,7 +55,7 @@ Latest NVIDIA test/runtime checkpoint:
 Underlying provider rollout checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
-Use `docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md` as the overall handoff pointer before opening a new scope.
+Use `docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md` as the overall handoff pointer before opening a new scope.
 
 Closed roadmap families:
 
