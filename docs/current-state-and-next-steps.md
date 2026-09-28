@@ -7,11 +7,13 @@ Status: **CURRENT / REPOSITORY+STAGING CONVERGED / NVIDIA HOSTED PROVIDER CLOSED
 ## Repository identity
 
 ```text
-repository     = ceritaantarkita-req/ecorione
-default branch = main
-main           = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-staging image  = staging-0f86a34cde66
+repository               = ceritaantarkita-req/ecorione
+default branch           = main
+runtime-changing baseline= 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+staging image            = staging-0f86a34cde66
 ```
+
+`0f86a34c...` is the latest audited runtime-changing merge. Docs-only checkpoint commits may advance live Git/staging SHA without changing runtime behavior; inspect live `main` for the newest exact repository revision.
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -78,7 +80,8 @@ provider       = nvidia / NVIDIA / NIM
 Vault scope    = nvidia/messages
 endpoint       = https://integrate.api.nvidia.com/v1
 pinned model   = z-ai/glm-5.3
-staging hosted = enabled under bounded spend controls
+operator gate  = OPEN under bounded spend controls
+runtime hosted = activated through normal Settings/provider activation
 ```
 
 The route reuses the existing OpenAI-compatible adapter, keeps no-silent-fallback behavior, keeps the operator cost kill switch authoritative, and keeps durable spend admission/reservation semantics.
