@@ -27,9 +27,7 @@ describe("OpenRouter model registry adapter", () => {
     );
     expect(openRouterRuntimeModel("gpt-5.6-terra")).toBe("openai/gpt-5.6-terra");
     expect(openRouterRuntimeModel("gpt-5.6-sol")).toBe("openai/gpt-5.6-sol");
-    expect(openRouterRuntimeModel("deepseek-v3.2-exp")).toBe(
-      "deepseek/deepseek-v3.2-exp",
-    );
+    expect(openRouterRuntimeModel("deepseek-v3.2-exp")).toBe("deepseek/deepseek-v3.2-exp");
     expect(() => openRouterRuntimeModel("z-ai/glm-5.3")).toThrow(/belum terdaftar/u);
   });
 
