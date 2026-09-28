@@ -118,7 +118,9 @@ export function OpenRouterDiscoveryPanel({
                       <strong>{model.displayName}</strong>
                       <code>{model.id}</code>
                     </div>
-                    <span className={model.executable ? styles.activeBadge : styles.statusBadge}>
+                    <span
+                      className={model.executable ? styles.activeBadge : styles.statusBadge}
+                    >
                       {model.executable ? "Verified · selectable" : "Discovered only"}
                     </span>
                   </div>
