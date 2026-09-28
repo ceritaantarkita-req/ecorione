@@ -1,6 +1,6 @@
 # ECORIONE — GitHub to SumoPod Staging Continuous Deployment
 
-Last updated: **2026-09-26**
+Last updated: **2026-09-28**
 
 Status: **PCS-08 CLOSED / PASS**
 
@@ -8,7 +8,13 @@ PCS-08 automates deployment of the current reviewed GitHub `main` revision to th
 
 **2026-09-24 auth closure:** the public smoke contract now includes the general Ai human-authentication boundary. Final governed staging acceptance on `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved the protected login bootstrap, representative unauthenticated Ai read/mutation failures, the separate MCP/OAuth boundary, healthy authenticated Operations, and exact-host identity. This remains staging evidence, not production promotion. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
-**Current CD state:** Session 1 capacity recovery, Session 2 auto-deploy restoration, and Session 3 pipeline hardening are all CLOSED / PASS. The governed post-merge path remains active/proven. Repository/documentation reconciliation PR #354 merged as `265a28d4c53cc482af8ea33a6362a21e640d30e5`; CI #2263 + Product Eval #1502 passed and Staging Deploy #1298 executed the deploy job successfully. The host matched the target SHA, all 15 configured services were running, Operations was healthy with zero unhealthy owner services, public/auth + MCP smoke passed, and capacity stabilized at 25.11 GiB free. Later docs-only merges may advance the release SHA while leaving application/service/package trees unchanged. Audit evidence: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md); current reconciliation: [verification/repository-documentation-reconciliation-2026-09-26.md](verification/repository-documentation-reconciliation-2026-09-26.md).
+**Current CD state:** the governed post-merge path remains active/proven. Current exact `main` `0f86a34cde66dd541dae9a830ae8cc155e1efe6b` passed CI #2380 + Product Eval #1619; Staging Deploy #1524 was the expected gate-only run and #1525 performed the actual deployment. The host matched the target SHA, all 15 configured services were running, Operations was healthy, public/auth + MCP smoke passed, and capacity stabilized at 29.89 GiB free.
+
+The root Dockerfile now uses a pinned multi-stage build. The builder installs `python3 make g++` so native dependency fallback compilation does not depend on a prebuilt binary being reachable; the final runtime stage remains the pinned slim Node image without the compiler toolchain. #1525 proved this path on SumoPod with `better-sqlite3 install: Done`.
+
+Staging Deploy #1505 remains important failed evidence: a one-time hosted-trial host migration completed successfully, the previous slim builder failed due missing Python, and the deployment orchestrator rolled back/revalidated the known-good image. Do not remove that failure from operational history.
+
+Current safe evidence: [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md). Historical pipeline audit: [verification/deployment-pipeline-audit-2026-09-24.md](verification/deployment-pipeline-audit-2026-09-24.md).
 
 ## Deployment model
 
@@ -21,7 +27,8 @@ PR
  -> restricted SSH command: deploy <40-char SHA>
  -> SumoPod exact origin/main verification
  -> preflight
- -> build / apply exact SHA
+ -> pinned multi-stage build (native toolchain only in builder)
+ -> apply exact SHA
  -> running-service check
  -> public smoke
  -> authenticated /api/ops snapshot
