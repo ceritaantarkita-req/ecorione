@@ -9,8 +9,9 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-image                = staging-0f86a34cde66
+repository docs closure = 9820af44ab2c2905303eea897ff6233204a8c419 (PR #384)
+runtime / staging       = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image                   = staging-0f86a34cde66
 CI                   = #2380 PASS
 Product Eval         = #1619 PASS
 Staging Deploy       = #1525 PASS
@@ -197,5 +198,8 @@ Evidence:
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
 
-Latest safe checkpoint:
+Latest overall safe-resume checkpoint:
+[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
+
+Underlying NVIDIA/runtime evidence:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
