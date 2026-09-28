@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getGlobalDispatcher, MockAgent, setGlobalDispatcher, type Interceptable } from "undici";
-import {
-  OpenRouterModelDiscovery,
-  OpenRouterModelDiscoveryError,
-} from "./openrouter-model-discovery.js";
+import { OpenRouterModelDiscovery } from "./openrouter-model-discovery.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let pool: Interceptable;
@@ -142,7 +139,7 @@ describe("OpenRouter model discovery", () => {
     pool.intercept({ path: "/api/v1/models", method: "GET" }).reply(200, { unexpected: [] });
     const discovery = new OpenRouterModelDiscovery();
 
-    await expect(discovery.list()).rejects.toMatchObject<OpenRouterModelDiscoveryError>({
+    await expect(discovery.list()).rejects.toMatchObject({
       kind: "invalid-response",
     });
   });
