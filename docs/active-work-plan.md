@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-28**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / CURRENT DOC LAYER RECONCILED / POST-ECX BRANCH CLEANUP CLOSED-PASS**
+Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / NVIDIA HOSTED TRIAL CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
 
 ## Current queue
 
@@ -15,7 +15,8 @@ Closed current baselines:
 - PCS-00..PCS-10 — CLOSED / PASS;
 - selected 2026-09-24 audit follow-ups through A-11 — CLOSED / PASS;
 - original Off-host DR — CLOSED / PASS at documented boundary;
-- ECX Recipient Execution Batch 1–7 — CLOSED / PASS.
+- ECX Recipient Execution Batch 1–7 — CLOSED / PASS;
+- NVIDIA hosted-provider trial + staging activation + Docker native-build hardening — CLOSED / PASS.
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
 
@@ -23,21 +24,23 @@ No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically open
 
 Repository/documentation reconciliation and the post-ECX branch cleanup are both **CLOSED / PASS**.
 
-Latest hygiene execution:
+Latest hygiene executions:
 
 ```text
-Actions run                  = 36338085729
-post-ECX allowlist deleted   = 15
-reconciliation refs deleted  = 2
-helper self-deleted          = yes
+post-ECX cleanup run         = 36338085729
+NVIDIA trial cleanup run     = 36368987090
+NVIDIA work branches deleted = 3
+helpers self-deleted         = yes
 final remote branch count    = 9
 unexpected branches          = 0
 ```
 
 Evidence:
-[verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md).
 
-There is no active repository-hygiene queue. Future branch growth must be handled as a new exact-SHA delta, not by rerunning the historical 393-branch or post-ECX cleanup.
+- [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
+- [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
+
+There is no active repository-hygiene queue. Future branch growth must be handled as a new exact-SHA delta, not by rerunning historical cleanups.
 
 ## ECX Recipient Execution baseline — CLOSED / PASS
 
@@ -55,6 +58,22 @@ Canonical final checkpoint:
 [verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md](verification/ecx-execution-b7-safe-checkpoint-2026-09-27.md).
 
 Do not restart B1–B7 for freshness.
+
+## NVIDIA hosted-provider trial — CLOSED / PASS
+
+Current proven boundary:
+
+- provider `nvidia` / NVIDIA / NIM is live in Settings and Connect;
+- pinned hosted model is `z-ai/glm-5.3`;
+- staging operator hosted kill switch is open under bounded spend controls; runtime hosted activation still follows the normal Settings/provider activation path;
+- Docker native dependency fallback is hardened and proven on SumoPod;
+- the latest runtime-changing merge and staging are converged at `0f86a34cde66dd541dae9a830ae8cc155e1efe6b`; later docs-only checkpoint commits may advance live Git/staging SHA without changing runtime behavior;
+- user NVIDIA secret has not yet been stored/tested.
+
+User-level validation is not a new implementation batch. It is a normal Settings action: enter key -> Test API key -> Save & activate -> send one Ai message.
+
+Checkpoint:
+[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 ## DR-2
 

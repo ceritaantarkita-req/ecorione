@@ -6,16 +6,18 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 
 ## Current status — 2026-09-28
 
-The runtime compatibility baseline remains the closed ECX Batch 7 implementation. The latest audited docs-only repository/staging convergence before this cleanup-closure pass is:
+The latest audited **runtime-changing** repository/staging baseline is:
 
 ```text
-repository/staging = 72d680bfb944cc98f60caddcfc94bbffd45f0653
-image              = staging-72d680bfb944
+runtime baseline = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image            = staging-0f86a34cde66
 ```
 
-That docs-only closure passed CI **#2356**, Product Eval **#1595**, and actual Staging Deploy **#1483**; Operations was `healthy: true`, **15/15** configured services were running, exact host SHA matched, and capacity stabilized at **28.79 GiB free**.
+That exact runtime merge passed CI **#2380**, Product Eval **#1619**, and actual Staging Deploy **#1525**. Docs-only checkpoint commits may advance live Git/staging SHA without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **29.89 GiB free**.
 
-The post-ECX branch delta has also been cleaned with exact-SHA revalidation: **17 targeted branches deleted**, the one-time execution helper self-deleted, and the remote inventory returned to **9 branches**.
+NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
+
+Repository hygiene remains clean: the NVIDIA implementation/activation/fix branches were exact-SHA deleted by cleanup run `36368987090`, returning the remote inventory to **9 retained branches**.
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
@@ -63,6 +65,25 @@ Core ownership rules:
 - Flow + Temporal own durable workflow execution;
 - Space stores composition/references rather than copying owner data;
 - side effects remain governed and idempotent.
+
+## NVIDIA hosted provider
+
+Current verified provider boundary:
+
+- provider: `nvidia` / **NVIDIA / NIM**;
+- Connect Vault scope: `nvidia/messages`;
+- development fallback variable: `NVIDIA_API_KEY`;
+- hosted base URL: `https://integrate.api.nvidia.com/v1`;
+- pinned model: `z-ai/glm-5.3`;
+- UI route label: **Hosted · NVIDIA · GLM-5.3**;
+- staged free-prototype provider-token accounting: USD 0, while existing spend admission/reservation semantics remain enforced.
+
+The supported free-prototype boundary does not imply partner/self-hosted/production NVIDIA pricing or arbitrary NVIDIA model support.
+
+Canonical checkpoint:
+[docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
+
+The user's actual NVIDIA API key is not repository state. It must be entered locally in Settings, pass `Test API key`, then be encrypted/saved in Connect Vault before a real user-key completion can be claimed.
 
 ## ECX Recipient Execution
 
@@ -140,6 +161,8 @@ Final cleanup execution:
 
 Evidence:
 [docs/verification/post-ecx-branch-cleanup-execution-2026-09-28.md](docs/verification/post-ecx-branch-cleanup-execution-2026-09-28.md).
+
+The later NVIDIA trial work also returned to the same retained 9-branch inventory after exact-SHA cleanup run `36368987090`; see the NVIDIA safe checkpoint above.
 
 ## Local development
 

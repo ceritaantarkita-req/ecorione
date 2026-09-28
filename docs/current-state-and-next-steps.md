@@ -2,42 +2,45 @@
 
 Last updated: **2026-09-28**
 
-Status: **CURRENT / REPOSITORY+STAGING CONVERGED / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / REPOSITORY+STAGING CONVERGED / NVIDIA HOSTED PROVIDER CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
-repository              = ceritaantarkita-req/ecorione
-default branch          = main
-runtime compatibility   = 2c2e3c8ad1b4a961251d57ff1e0a7d8f2414e370
-latest audited docs SHA = 72d680bfb944cc98f60caddcfc94bbffd45f0653
+repository               = ceritaantarkita-req/ecorione
+default branch           = main
+runtime-changing baseline= 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+staging image            = staging-0f86a34cde66
 ```
 
-`2c2e3c8...` remains the exact closed Batch 7 runtime compatibility baseline. The later reconciliation commits are docs/evidence only.
+`0f86a34c...` is the latest audited runtime-changing merge. Docs-only checkpoint commits may advance live Git/staging SHA without changing runtime behavior; inspect live `main` for the newest exact repository revision.
+
+The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
 ## Current runtime / staging truth
 
-Latest audited docs-only repository/staging convergence before this cleanup-closure pass:
+Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = 72d680bfb944cc98f60caddcfc94bbffd45f0653
-image = staging-72d680bfb944
+SHA   = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image = staging-0f86a34cde66
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| CI #2356 | PASS |
-| Product Eval #1595 | PASS |
-| Staging Deploy #1482 | gate PASS |
-| Staging Deploy #1483 | actual deploy PASS |
+| CI #2380 | PASS |
+| Product Eval #1619 | PASS |
+| Staging Deploy #1524 | gate-only PASS |
+| Staging Deploy #1525 | actual deploy PASS |
+| native `better-sqlite3` fallback build | PASS |
 | expected host SHA | matched |
 | Operations | `healthy: true` |
 | unhealthy services | 0 |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| stabilized free disk | 28.79 GiB |
+| stabilized free disk | 29.89 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -68,6 +71,28 @@ Current ownership remains:
 
 No ECX Batch 1–7 work introduced a new service or changed these ownership boundaries.
 
+## NVIDIA hosted provider — current capability
+
+NVIDIA API Catalog / NIM is implemented and live through Connect's existing hosted-provider framework:
+
+```text
+provider       = nvidia / NVIDIA / NIM
+Vault scope    = nvidia/messages
+endpoint       = https://integrate.api.nvidia.com/v1
+pinned model   = z-ai/glm-5.3
+operator gate  = OPEN under bounded spend controls
+runtime hosted = activated through normal Settings/provider activation
+```
+
+The route reuses the existing OpenAI-compatible adapter, keeps no-silent-fallback behavior, keeps the operator cost kill switch authoritative, and keeps durable spend admission/reservation semantics.
+
+The free-prototype USD-0 pricing snapshot applies only to the supported NVIDIA API Catalog prototype route. It does not claim partner/self-hosted/production NVIDIA pricing.
+
+The user's real NVIDIA API key is **not repository state and has not yet been validated**. The next user action for this capability is: Settings -> NVIDIA / NIM -> paste key -> `Test API key` -> `Save & activate` -> send one real Ai message and confirm `Hosted · NVIDIA · GLM-5.3`.
+
+Canonical safe checkpoint:
+[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
+
 ## Closed roadmap families
 
 | Scope | State |
@@ -80,6 +105,7 @@ No ECX Batch 1–7 work introduced a new service or changed these ownership boun
 | Repository/documentation reconciliation through PR #354 | CLOSED / PASS |
 | Historical 393-branch hygiene program | CLOSED / PASS |
 | ECX Recipient Execution Batch 1–7 | CLOSED / PASS |
+| NVIDIA hosted-provider trial + staging activation + Docker hardening | CLOSED / PASS |
 
 There is **no active Product Evolution, PCS, A-series, or ECX numbered batch**.
 
@@ -174,10 +200,21 @@ final remote branch count = 9
 unexpected branches = 0
 ```
 
+NVIDIA trial cleanup (Actions run `36368987090`):
+
+```text
+3 exact merged work branches deleted
+1 temporary helper self-deleted
+final remote branch count = 9
+unexpected branches = 0
+```
+
 The retained 9-branch set is `main`, seven retained substantive/provenance branches, and the historical branch-hygiene checkpoint branch.
 
-Execution evidence:
-[verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md).
+Evidence:
+
+- [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
+- [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
 ## Current active work
 
@@ -215,7 +252,10 @@ For a new session/agent:
 6. open only the explicitly authorized new scope;
 7. use dated verification files as evidence, not as the current queue.
 
-Latest repository truth reconciliation:
+Latest safe runtime/provider checkpoint:
+[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
+
+Prior repository truth reconciliation:
 [verification/repository-truth-reconciliation-2026-09-27.md](verification/repository-truth-reconciliation-2026-09-27.md).
 
 Do not restart closed roadmap work merely for freshness.
