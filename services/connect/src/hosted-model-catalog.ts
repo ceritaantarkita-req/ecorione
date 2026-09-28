@@ -1,10 +1,10 @@
 import { z } from "zod";
 import type { HostedProviderId } from "./provider-types.js";
 import {
+  executableHostedModelIds,
   executableHostedModelRegistryEntry,
   hostedModelRegistry,
   hostedModelRegistryEntry,
-  registeredHostedModelIds,
   type HostedModelRegistryEntry,
 } from "./hosted-model-registry.js";
 
@@ -22,12 +22,14 @@ export type HostedModelPreference = z.infer<typeof HostedModelPreferenceSchema>;
 export type HostedModelCatalogEntry = HostedModelRegistryEntry;
 
 /** Compatibility export for callers/tests that need the currently admitted identities. */
-export const SELECTABLE_HOSTED_MODEL_IDS = registeredHostedModelIds();
+export const SELECTABLE_HOSTED_MODEL_IDS = executableHostedModelIds();
 
 export function hostedModelCatalog(
   provider: HostedProviderId,
 ): readonly HostedModelCatalogEntry[] {
-  return hostedModelRegistry(provider);
+  return hostedModelRegistry(provider).filter(
+    (entry) => executableHostedModelRegistryEntry(provider, entry.id) !== undefined,
+  );
 }
 
 export function hostedModelSupported(
