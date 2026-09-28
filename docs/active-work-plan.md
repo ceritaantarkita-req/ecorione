@@ -2,7 +2,9 @@
 
 Last updated: **2026-09-28**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / NVIDIA HOSTED TRIAL CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
+Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / NVIDIA HOSTED TRIAL CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
+
+Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md). The audited live `main` immediately before this docs-only refresh was `9820af44ab2c2905303eea897ff6233204a8c419`.
 
 ## Current queue
 
@@ -72,8 +74,11 @@ Current proven boundary:
 
 User-level validation is not a new implementation batch. It is a normal Settings action: enter key -> Test API key -> Save & activate -> send one Ai message.
 
-Checkpoint:
+Provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
+
+Overall safe-resume checkpoint:
+[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
 
 ## DR-2
 
