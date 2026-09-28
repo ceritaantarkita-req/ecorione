@@ -53,8 +53,8 @@ export function HostedModelPicker({
       ? "Governed / Recommended"
       : runtime.settings.hostedProvider === "openrouter"
         ? (selectedOpenRouterModel?.displayName ?? selectedModelPreference)
-        : (activeHostedModels.find((model) => model.id === selectedModelPreference)?.displayName ??
-          selectedModelPreference);
+        : (activeHostedModels.find((model) => model.id === selectedModelPreference)
+            ?.displayName ?? selectedModelPreference);
   const selectedModelExecutable =
     selectedModelPreference === "governed" ||
     runtime.settings.hostedProvider !== "openrouter" ||
