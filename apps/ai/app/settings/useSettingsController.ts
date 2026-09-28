@@ -21,6 +21,8 @@ type HostedModelCatalogEntry = {
     currency: "USD";
   };
   verification: "verified";
+  catalogSource: "static-verified";
+  verifiedAt: string;
 };
 export type RuntimeSnapshot = {
   revision: number;
