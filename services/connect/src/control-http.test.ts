@@ -90,7 +90,7 @@ describe("Connect Control Center boundary", () => {
               sourceProvider: "anthropic",
               verification: "verified",
               catalogSource: "static-verified",
-              verifiedAt: "2026-09-28",
+              verifiedAt: null,
               pricing: expect.objectContaining({ authority: "provider-reported" }),
             }),
             expect.objectContaining({ id: "claude-opus-4-1-20250805" }),
