@@ -59,7 +59,7 @@ beforeEach(() => {
 afterEach(() => setGlobalDispatcher(originalDispatcher));
 
 describe("OpenRouter model discovery", () => {
-  it("fetches live catalog metadata and keeps discovered models non-executable", async () => {
+  it("automatically admits valid target-family metadata for selection without claiming execution", async () => {
     pool.intercept({ path: "/api/v1/models", method: "GET" }).reply(200, response);
     const discovery = new OpenRouterModelDiscovery();
 
@@ -91,9 +91,11 @@ describe("OpenRouter model discovery", () => {
       promptPricePerToken: "0.000002",
       completionPricePerToken: "0.000006",
       mutableAlias: false,
-      admission: "discovered-only",
+      admission: "verified-selectable",
+      selectable: true,
       executable: false,
-      selectionId: null,
+      selectionId: "qwen/qwen3.8-max",
+      unavailableReason: null,
     });
   });
 
@@ -108,8 +110,10 @@ describe("OpenRouter model discovery", () => {
       id: "anthropic/claude-sonnet-4.5",
       family: "other",
       admission: "verified-executable",
+      selectable: true,
       executable: true,
       selectionId: "claude-sonnet-4-5-20250929",
+      unavailableReason: null,
     });
   });
 
@@ -135,8 +139,11 @@ describe("OpenRouter model discovery", () => {
       id: "~deepseek/deepseek-v4-flash-latest",
       family: "deepseek",
       mutableAlias: true,
-      admission: "discovered-only",
+      admission: "unavailable",
+      selectable: false,
       executable: false,
+      selectionId: null,
+      unavailableReason: "mutable-alias",
     });
   });
 
@@ -158,6 +165,38 @@ describe("OpenRouter model discovery", () => {
     expect(stale.cache).toBe("stale");
     expect(stale.stale).toBe(true);
     expect(stale.returned).toBe(3);
+    expect(stale.models.find((model) => model.id === "qwen/qwen3.8-max")).toMatchObject({
+      admission: "unavailable",
+      selectable: false,
+      selectionId: null,
+      unavailableReason: "stale-catalog",
+    });
+    expect(
+      stale.models.find((model) => model.id === "anthropic/claude-sonnet-4.5"),
+    ).toMatchObject({
+      admission: "verified-executable",
+      selectable: true,
+      executable: true,
+    });
+  });
+
+  it("deduplicates repeated runtime ids and marks the candidate unavailable", async () => {
+    pool.intercept({ path: "/api/v1/models", method: "GET" }).reply(200, {
+      data: [response.data[1], response.data[1]],
+    });
+    const discovery = new OpenRouterModelDiscovery();
+
+    const result = await discovery.list({ sourceProvider: "qwen" });
+
+    expect(result.total).toBe(1);
+    expect(result.returned).toBe(1);
+    expect(result.models[0]).toMatchObject({
+      id: "qwen/qwen3.8-max",
+      admission: "unavailable",
+      selectable: false,
+      selectionId: null,
+      unavailableReason: "duplicate-runtime-id",
+    });
   });
 
   it("fails clearly when no cache exists and the upstream response is invalid", async () => {

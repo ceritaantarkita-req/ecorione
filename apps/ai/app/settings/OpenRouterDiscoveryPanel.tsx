@@ -9,7 +9,10 @@ type DiscoveredModel = {
   contextWindowTokens: number | null;
   inputModalities: string[];
   mutableAlias: boolean;
+  admission: "verified-executable" | "verified-selectable" | "unavailable" | "discovered-only";
+  selectable: boolean;
   executable: boolean;
+  unavailableReason: string | null;
 };
 
 type DiscoverySnapshot = {
@@ -29,6 +32,26 @@ interface OpenRouterDiscoveryPanelProps {
   readonly onQueryChange: (value: string) => void;
   readonly onSourceProviderChange: (value: string) => void;
   readonly onDiscover: (forceRefresh: boolean) => void;
+}
+
+const admissionReasonLabels: Readonly<Record<string, string>> = {
+  "duplicate-runtime-id": "runtime id duplikat",
+  "mutable-alias": "alias mutable",
+  "invalid-runtime-slug": "runtime slug tidak valid",
+  "missing-context-window": "context window tidak tersedia",
+  "text-input-unsupported": "text input tidak didukung",
+  "text-output-unsupported": "text output tidak didukung",
+  "max-tokens-unsupported": "max_tokens tidak didukung",
+  "missing-pricing": "pricing belum lengkap",
+  "invalid-pricing": "pricing tidak valid",
+  "stale-catalog": "catalog stale; refresh diperlukan",
+};
+
+function admissionLabel(model: DiscoveredModel): string {
+  if (model.executable) return "Verified · selectable";
+  if (model.selectable) return "Selectable";
+  if (model.admission === "unavailable") return "Unavailable";
+  return "Discovered only";
 }
 
 export function OpenRouterDiscoveryPanel({
@@ -54,9 +77,10 @@ export function OpenRouterDiscoveryPanel({
         )}
       </div>
       <p className={styles.muted}>
-        Discovery membaca katalog OpenRouter dan cache di Connect. Model yang ditemukan belum
-        otomatis bisa dipilih; activation tetap butuh verification + pricing admission pada sesi
-        berikutnya.
+        Discovery membaca katalog OpenRouter dan cache di Connect. Kandidat GPT, Gemini, Qwen,
+        DeepSeek, Kimi, dan GLM diverifikasi otomatis: yang lolos menjadi Selectable, sedangkan
+        yang gagal menjadi Unavailable dengan alasan singkat. Status ini tidak otomatis mengubah
+        model aktif.
       </p>
       <div className={styles.discoveryFilters}>
         <label className={styles.connectField}>
@@ -119,9 +143,9 @@ export function OpenRouterDiscoveryPanel({
                       <code>{model.id}</code>
                     </div>
                     <span
-                      className={model.executable ? styles.activeBadge : styles.statusBadge}
+                      className={model.selectable ? styles.activeBadge : styles.statusBadge}
                     >
-                      {model.executable ? "Verified · selectable" : "Discovered only"}
+                      {admissionLabel(model)}
                     </span>
                   </div>
                   <div className={styles.discoveryFacts}>
@@ -139,6 +163,13 @@ export function OpenRouterDiscoveryPanel({
                         : "unknown"}
                     </span>
                     {model.mutableAlias ? <span>mutable alias</span> : null}
+                    {model.unavailableReason ? (
+                      <span>
+                        reason{" "}
+                        {admissionReasonLabels[model.unavailableReason] ??
+                          model.unavailableReason}
+                      </span>
+                    ) : null}
                   </div>
                 </article>
               ))

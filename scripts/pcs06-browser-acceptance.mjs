@@ -692,13 +692,33 @@ async function installApiMocks(context) {
           contextWindowTokens: 1_000_000,
           inputModalities: ["text", "image"],
           outputModalities: ["text"],
-          supportedParameters: ["tools", "reasoning_effort"],
+          supportedParameters: ["max_tokens", "tools", "reasoning_effort"],
           promptPricePerToken: "0.000002",
           completionPricePerToken: "0.000006",
           mutableAlias: false,
-          admission: "discovered-only",
+          admission: "verified-selectable",
+          selectable: true,
+          executable: false,
+          selectionId: "qwen/qwen3.8-max",
+          unavailableReason: null,
+        },
+        {
+          id: "~deepseek/deepseek-v4-flash-latest",
+          displayName: "DeepSeek V4 Flash Latest",
+          sourceProvider: "deepseek",
+          family: "deepseek",
+          contextWindowTokens: 1_048_576,
+          inputModalities: ["text"],
+          outputModalities: ["text"],
+          supportedParameters: ["max_tokens", "reasoning"],
+          promptPricePerToken: "0.00000008",
+          completionPricePerToken: "0.00000018",
+          mutableAlias: true,
+          admission: "unavailable",
+          selectable: false,
           executable: false,
           selectionId: null,
+          unavailableReason: "mutable-alias",
         },
         {
           id: "anthropic/claude-sonnet-4.5",
@@ -713,8 +733,10 @@ async function installApiMocks(context) {
           completionPricePerToken: "0.000015",
           mutableAlias: false,
           admission: "verified-executable",
+          selectable: true,
           executable: true,
           selectionId: "claude-sonnet-4-5-20250929",
+          unavailableReason: null,
         },
       ].filter(
         (model) =>
@@ -1278,12 +1300,19 @@ async function runDesktopJourney() {
     await openRouterSearch.fill("qwen");
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
     await page.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
-    await page.getByText("Discovered only", { exact: true }).waitFor();
+    await page.getByText("Selectable", { exact: true }).waitFor();
     if (
       (await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 0
     ) {
-      throw new Error("desktop-settings: discovered model must not become selectable");
+      throw new Error(
+        "desktop-settings: Session 4B admission must not pre-empt the Session 4C runtime picker",
+      );
     }
+    await openRouterSearch.fill("deepseek");
+    await page.getByRole("button", { name: "Search catalog", exact: true }).click();
+    await page.getByText("DeepSeek V4 Flash Latest", { exact: true }).waitFor();
+    await page.getByText("Unavailable", { exact: true }).waitFor();
+    await page.getByText(/reason alias mutable/).waitFor();
 
     const selectedModelLabel = await defaultSelects
       .nth(1)

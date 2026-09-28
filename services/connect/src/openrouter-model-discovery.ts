@@ -10,6 +10,12 @@ import {
   type HostedModelFamily,
   type TargetOpenRouterModelFamily,
 } from "./hosted-model-family.js";
+import {
+  staleOpenRouterAdmission,
+  verifyOpenRouterModelAdmission,
+  type OpenRouterAdmissionFailure,
+  type OpenRouterAdmissionStatus,
+} from "./openrouter-model-admission.js";
 
 export const OPENROUTER_MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models";
 export const DEFAULT_OPENROUTER_DISCOVERY_TTL_MS = 10 * 60 * 1_000;
@@ -60,9 +66,11 @@ export interface OpenRouterDiscoveredModel {
   readonly promptPricePerToken: string | null;
   readonly completionPricePerToken: string | null;
   readonly mutableAlias: boolean;
-  readonly admission: "verified-executable" | "discovered-only";
+  readonly admission: OpenRouterAdmissionStatus;
+  readonly selectable: boolean;
   readonly executable: boolean;
   readonly selectionId: string | null;
+  readonly unavailableReason: OpenRouterAdmissionFailure | null;
 }
 
 export interface OpenRouterDiscoveryQuery {
@@ -124,11 +132,12 @@ function sourceProviderFromId(id: string): string {
 }
 
 function isMutableAlias(id: string): boolean {
-  return id.startsWith("~");
+  return id.startsWith("~") || /(?:^|[-:@/])latest$/iu.test(id);
 }
 
 function normalizeModel(
   model: z.infer<typeof OpenRouterUpstreamModelSchema>,
+  duplicateRuntimeId = false,
 ): OpenRouterDiscoveredModel {
   const sourceProvider = sourceProviderFromId(model.id);
   const family = classifyOpenRouterModelFamily({
@@ -142,9 +151,8 @@ function normalizeModel(
   const executable =
     verified !== undefined &&
     executableHostedModelRegistryEntry("openrouter", verified.id) !== undefined;
-  return {
+  const candidate = {
     id: model.id,
-    displayName: model.name,
     sourceProvider,
     family,
     contextWindowTokens: model.context_length ?? null,
@@ -154,9 +162,64 @@ function normalizeModel(
     promptPricePerToken: model.pricing?.prompt ?? null,
     completionPricePerToken: model.pricing?.completion ?? null,
     mutableAlias: isMutableAlias(model.id),
-    admission: executable ? "verified-executable" : "discovered-only",
+    duplicateRuntimeId,
+  };
+  const admission = executable
+    ? {
+        admission: "verified-executable" as const,
+        selectable: true,
+        selectionId: verified?.id ?? null,
+        unavailableReason: null,
+      }
+    : verifyOpenRouterModelAdmission(candidate);
+  return {
+    id: candidate.id,
+    displayName: model.name,
+    sourceProvider: candidate.sourceProvider,
+    family: candidate.family,
+    contextWindowTokens: candidate.contextWindowTokens,
+    inputModalities: candidate.inputModalities,
+    outputModalities: candidate.outputModalities,
+    supportedParameters: candidate.supportedParameters,
+    promptPricePerToken: candidate.promptPricePerToken,
+    completionPricePerToken: candidate.completionPricePerToken,
+    mutableAlias: candidate.mutableAlias,
+    admission: admission.admission,
+    selectable: admission.selectable,
     executable,
-    selectionId: executable ? (verified?.id ?? null) : null,
+    selectionId: admission.selectionId,
+    unavailableReason: admission.unavailableReason,
+  };
+}
+
+function normalizeCatalog(
+  models: readonly z.infer<typeof OpenRouterUpstreamModelSchema>[],
+): readonly OpenRouterDiscoveredModel[] {
+  const counts = new Map<string, number>();
+  for (const model of models) counts.set(model.id, (counts.get(model.id) ?? 0) + 1);
+
+  const seen = new Set<string>();
+  const normalized: OpenRouterDiscoveredModel[] = [];
+  for (const model of models) {
+    if (seen.has(model.id)) continue;
+    seen.add(model.id);
+    normalized.push(normalizeModel(model, (counts.get(model.id) ?? 0) > 1));
+  }
+  return normalized;
+}
+
+function applyFreshness(
+  model: OpenRouterDiscoveredModel,
+  stale: boolean,
+): OpenRouterDiscoveredModel {
+  if (!stale || model.admission !== "verified-selectable") return model;
+  const admission = staleOpenRouterAdmission();
+  return {
+    ...model,
+    admission: admission.admission,
+    selectable: admission.selectable,
+    selectionId: admission.selectionId,
+    unavailableReason: admission.unavailableReason,
   };
 }
 
@@ -253,7 +316,7 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
       }
 
       const fetchedAtMs = this.now();
-      const models = parsed.data.data.map(normalizeModel);
+      const models = normalizeCatalog(parsed.data.data);
       return {
         models,
         fetchedAtMs,
@@ -306,7 +369,7 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
 
     const filtered = filterCatalog(catalog.models, query);
     const limit = Math.min(Math.max(query.limit ?? 50, 1), 100);
-    const models = filtered.slice(0, limit);
+    const models = filtered.slice(0, limit).map((model) => applyFreshness(model, stale));
     return {
       source: "openrouter:/api/v1/models",
       families: OPENROUTER_MODEL_FAMILY_DEFINITIONS.map(({ id, displayName }) => ({

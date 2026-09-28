@@ -127,7 +127,7 @@ describe("Connect Control Center boundary", () => {
     );
   });
 
-  it("mengekspos OpenRouter discovery dengan filter/cache metadata tanpa membuat model discovered executable", async () => {
+  it("mengekspos OpenRouter discovery dengan automatic admission tanpa menyamakan selectable dengan executable", async () => {
     let received: unknown;
     const discovery: OpenRouterModelDiscoveryReader = {
       async list(query) {
@@ -161,9 +161,11 @@ describe("Connect Control Center boundary", () => {
               promptPricePerToken: "0.000002",
               completionPricePerToken: "0.000006",
               mutableAlias: false,
-              admission: "discovered-only",
+              admission: "verified-selectable",
+              selectable: true,
               executable: false,
-              selectionId: null,
+              selectionId: "qwen/qwen3.8-max",
+              unavailableReason: null,
             },
           ],
         };
@@ -199,9 +201,11 @@ describe("Connect Control Center boundary", () => {
         expect.objectContaining({
           id: "qwen/qwen3.8-max",
           family: "qwen",
-          admission: "discovered-only",
+          admission: "verified-selectable",
+          selectable: true,
           executable: false,
-          selectionId: null,
+          selectionId: "qwen/qwen3.8-max",
+          unavailableReason: null,
         }),
       ],
     });

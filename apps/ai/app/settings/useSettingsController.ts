@@ -54,9 +54,22 @@ type OpenRouterDiscoveredModel = {
   promptPricePerToken: string | null;
   completionPricePerToken: string | null;
   mutableAlias: boolean;
-  admission: "verified-executable" | "discovered-only";
+  admission: "verified-executable" | "verified-selectable" | "unavailable" | "discovered-only";
+  selectable: boolean;
   executable: boolean;
   selectionId: string | null;
+  unavailableReason:
+    | "duplicate-runtime-id"
+    | "mutable-alias"
+    | "invalid-runtime-slug"
+    | "missing-context-window"
+    | "text-input-unsupported"
+    | "text-output-unsupported"
+    | "max-tokens-unsupported"
+    | "missing-pricing"
+    | "invalid-pricing"
+    | "stale-catalog"
+    | null;
 };
 type OpenRouterDiscoverySnapshot = {
   source: "openrouter:/api/v1/models";
