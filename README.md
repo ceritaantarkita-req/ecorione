@@ -150,7 +150,10 @@ See:
 
 The following remain separate explicit decisions:
 
-- Session 4B selected OpenRouter model verification/admission across GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM;
+- Session 4C Settings model picker;
+- Session 4D Ai chat quick-switch;
+- Session 4E real multi-family OpenRouter execution validation;
+- Session 4F final OpenRouter polish/closure;
 - **DR-2 checkpoint 2** physical-independence target selection and proof;
 - public production promotion/cutover;
 - native Google Drive integration;
