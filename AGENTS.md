@@ -17,18 +17,20 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 
 ## Current compatibility baseline — 2026-09-28
 
-Latest audited repository/staging runtime:
+Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-main / staging  = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-image           = staging-0f86a34cde66
-CI              = #2380 PASS
-Product Eval    = #1619 PASS
-Staging Deploy  = #1525 PASS
-Operations      = healthy
-services        = 15/15 running
-free disk       = 29.89 GiB stabilized
+runtime baseline = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+image            = staging-0f86a34cde66
+CI               = #2380 PASS
+Product Eval     = #1619 PASS
+Staging Deploy   = #1525 PASS
+Operations       = healthy
+services         = 15/15 running
+free disk        = 29.89 GiB stabilized
 ```
+
+Docs-only checkpoint commits may advance live Git/staging revision identity without changing this runtime compatibility baseline. Always inspect live `main` before opening new work.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
@@ -38,7 +40,7 @@ NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Con
 - pinned model `z-ai/glm-5.3`;
 - no silent fallback;
 - cost kill switch and durable spend controls remain authoritative;
-- staging hosted calls are enabled under a finite spend policy.
+- the staging **operator hosted kill switch is open** under a finite spend policy; the persisted runtime toggle is still activated through normal Settings/provider activation.
 
 The user's actual NVIDIA secret has not been stored or validated by repository work. Do not claim a real user-key GLM-5.3 completion until the operator enters the key in Settings, passes the credential test, saves/activates it, and observes a real Ai completion.
 
