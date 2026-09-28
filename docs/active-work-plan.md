@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-28**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / OPENROUTER SESSIONS 2–3 CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
+Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / OPENROUTER SESSIONS 2–3 + 4A CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
 
-Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md). The latest audited runtime-changing `main` is `af2ef8f61f26058178e56b0d6490248c1898976e` from PR #391.
+Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md). The latest audited runtime-changing `main` is `29446ad0e140d1486bd3914bb087a552409e464c` from PR #394.
 
 ## Current queue
 
@@ -21,7 +21,8 @@ Closed current baselines:
 - NVIDIA hosted-provider trial + staging activation + Docker native-build hardening — CLOSED / PASS;
 - NVIDIA connection-test Session 1 hardening — CLOSED / PASS;
 - OpenRouter model-registry Session 2 — CLOSED / PASS;
-- OpenRouter live-discovery Session 3 — CLOSED / PASS / STAGING VERIFIED.
+- OpenRouter live-discovery Session 3 — CLOSED / PASS / STAGING VERIFIED;
+- OpenRouter model-family Session 4A — CLOSED / PASS / STAGING VERIFIED.
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
 
@@ -45,7 +46,7 @@ Evidence:
 - [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
-The completed cleanup runs each ended at 9 retained branches. The live Session 3 runtime-closure inventory is 13 branches: the 9-branch cleanup boundary plus known bookkeeping/provenance refs `docs/current-safe-resume-20260928`, `fix/nvidia-credential-test-timeout-20260928`, `feat/openrouter-model-registry-session2-20260928`, and `feat/openrouter-model-discovery-session3-20260928`. There is no unexpected active work branch before this temporary docs-closure branch and no active repository-hygiene queue.
+The completed cleanup runs each ended at 9 retained branches. The live Session 4A runtime-closure inventory is 16 branches: the 9-branch cleanup boundary plus seven known bookkeeping/provenance refs. There is no unexpected active work branch before this temporary Session 4A docs-closure branch and no active repository-hygiene queue.
 
 Future non-bookkeeping branch growth must be handled as a new exact-SHA delta, not by rerunning historical cleanups.
 
@@ -74,7 +75,7 @@ Current proven boundary:
 - pinned hosted model is `z-ai/glm-5.3`;
 - staging operator hosted kill switch is open under bounded spend controls; runtime hosted activation still follows the normal Settings/provider activation path;
 - Docker native dependency fallback is hardened and proven on SumoPod;
-- the latest runtime-changing merge and staging are converged at `af2ef8f61f26058178e56b0d6490248c1898976e` / `staging-af2ef8f61f26`;
+- the latest runtime-changing merge and staging are converged at `29446ad0e140d1486bd3914bb087a552409e464c` / `staging-29446ad0e140`;
 - current credential/canary default deadlines are 60 seconds; NVIDIA health probes use a bounded 1024-token output cap with low reasoning effort;
 - provider-canary latency deadlines are now enforced;
 - user NVIDIA secret has not been stored and is not claimed validated.
@@ -90,7 +91,7 @@ Underlying provider/runtime checkpoint:
 Overall safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
 
-## OpenRouter Sessions 2–3 — CLOSED / PASS
+## OpenRouter Sessions 2–3 + 4A — CLOSED / PASS
 
 Current proven boundary:
 
@@ -100,15 +101,20 @@ Current proven boundary:
 - discovery query keys and result counts are bounded at both Connect and the Ai Settings proxy;
 - discovered-only models remain non-executable and absent from the selectable execution dropdown;
 - current selectable OpenRouter set remains Claude Sonnet 4.5 + Claude Opus 4.1;
-- no additional OpenRouter model is claimed selectable merely because it is present in the remote catalog.
+- no additional OpenRouter model is claimed selectable merely because it is present in the remote catalog;
+- Session 4A adds one version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM;
+- family metadata flows through registry/discovery but remains descriptive, not executable authority.
 
 Current checkpoint:
+[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md).
+
+Underlying discovery checkpoint:
 [verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md).
 
 Underlying registry checkpoint:
 [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
-A later selected-model admission/verification scope is separately selectable and is not active.
+The agreed next eligible scope is Session 4B selected-model verification/admission across the six target families. It is separately selectable and is not active.
 
 ## DR-2
 
@@ -136,7 +142,7 @@ Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence 
 
 The following are eligible only through an explicit new decision; none is current work:
 
-- selected OpenRouter discovered-model admission/verification;
+- Session 4B selected OpenRouter model verification/admission across GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM;
 - DR-2 checkpoint 2;
 - production cutover;
 - native Google Drive integration;
