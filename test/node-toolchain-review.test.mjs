@@ -40,10 +40,29 @@ steps:
     ]);
   });
 
-  it("requires Dockerfile Node base to match the exact pinned version", () => {
+  it("requires every Dockerfile Node stage to match the exact pinned version", () => {
     expect(reviewDockerfile("FROM node:22.20.0-bookworm-slim\n", "22.20.0")).toEqual([]);
-    expect(reviewDockerfile("FROM node:22-bookworm-slim\n", "22.20.0")).toEqual([
-      "Dockerfile Node base harus selaras dengan .node-version=22.20.0, ditemukan node:22-bookworm-slim",
+    expect(
+      reviewDockerfile(
+        [
+          "FROM node:22.20.0-bookworm-slim@sha256:abc AS build",
+          "FROM node:22.20.0-bookworm-slim@sha256:def AS runtime",
+          "",
+        ].join("\n"),
+        "22.20.0",
+      ),
+    ).toEqual([]);
+    expect(
+      reviewDockerfile(
+        [
+          "FROM node:22.20.0-bookworm-slim@sha256:abc AS build",
+          "FROM node:22-bookworm-slim@sha256:def AS runtime",
+          "",
+        ].join("\n"),
+        "22.20.0",
+      ),
+    ).toEqual([
+      "Dockerfile Node base harus selaras dengan .node-version=22.20.0, ditemukan node:22-bookworm-slim@sha256:def",
     ]);
   });
 });
