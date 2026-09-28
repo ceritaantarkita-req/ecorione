@@ -681,6 +681,56 @@ async function installApiMocks(context) {
       };
       return json(route, runtime);
     }
+    if (path === "/api/settings/settings/providers/openrouter/models" && method === "GET") {
+      const query = new URL(request.url()).searchParams.get("q")?.toLowerCase() ?? "";
+      const discovered = [
+        {
+          id: "qwen/qwen3.8-max",
+          displayName: "Qwen: Qwen3.8 Max",
+          sourceProvider: "qwen",
+          contextWindowTokens: 1_000_000,
+          inputModalities: ["text", "image"],
+          outputModalities: ["text"],
+          supportedParameters: ["tools", "reasoning_effort"],
+          promptPricePerToken: "0.000002",
+          completionPricePerToken: "0.000006",
+          mutableAlias: false,
+          admission: "discovered-only",
+          executable: false,
+          selectionId: null,
+        },
+        {
+          id: "anthropic/claude-sonnet-4.5",
+          displayName: "Claude Sonnet 4.5",
+          sourceProvider: "anthropic",
+          contextWindowTokens: 1_000_000,
+          inputModalities: ["text", "image"],
+          outputModalities: ["text"],
+          supportedParameters: ["tools"],
+          promptPricePerToken: "0.000003",
+          completionPricePerToken: "0.000015",
+          mutableAlias: false,
+          admission: "verified-executable",
+          executable: true,
+          selectionId: "claude-sonnet-4-5-20250929",
+        },
+      ].filter(
+        (model) =>
+          query.length === 0 ||
+          model.id.toLowerCase().includes(query) ||
+          model.displayName.toLowerCase().includes(query),
+      );
+      return json(route, {
+        source: "openrouter:/api/v1/models",
+        cache: "hit",
+        stale: false,
+        fetchedAt: now,
+        expiresAt: now,
+        total: discovered.length,
+        returned: discovered.length,
+        models: discovered,
+      });
+    }
     if (path === "/api/settings/settings/providers" && method === "GET") {
       return json(route, { providers });
     }
@@ -1214,6 +1264,15 @@ async function runDesktopJourney() {
     if ((await defaultSelects.nth(1).inputValue()) !== "governed") {
       throw new Error("desktop-settings: governed model selection was not retained");
     }
+    const openRouterSearch = page.getByLabel("Search model", { exact: true });
+    await openRouterSearch.fill("qwen");
+    await page.getByRole("button", { name: "Search catalog", exact: true }).click();
+    await page.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
+    await page.getByText("Discovered only", { exact: true }).waitFor();
+    if ((await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 0) {
+      throw new Error("desktop-settings: discovered model must not become selectable");
+    }
+
     const selectedModelLabel = await defaultSelects
       .nth(1)
       .locator("option:checked")
