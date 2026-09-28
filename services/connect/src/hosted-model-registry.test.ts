@@ -26,43 +26,36 @@ describe("hosted model registry", () => {
     }
   });
 
-  it("admits cross-vendor OpenRouter models without changing direct-provider catalogs", () => {
-    expect(hostedModelRegistry("openrouter").map((entry) => entry.sourceProvider)).toEqual([
-      "anthropic",
-      "anthropic",
-      "openai",
-      "openai",
-      "deepseek",
-    ]);
-    expect(hostedModelRegistry("anthropic").map((entry) => entry.id)).toEqual([
+  it("preserves the legacy OpenRouter models as registry entries", () => {
+    expect(hostedModelRegistry("openrouter").map((entry) => entry.id)).toEqual([
       "claude-sonnet-4-5-20250929",
       "claude-opus-4-1-20250805",
     ]);
-    expect(hostedModelRegistry("openai").map((entry) => entry.id)).toEqual([
-      "gpt-5.6-terra",
-      "gpt-5.6-sol",
+    expect(hostedModelRegistry("openrouter").map((entry) => entry.sourceProvider)).toEqual([
+      "anthropic",
+      "anthropic",
     ]);
   });
 
-  it("uses provider-reported billing authority for every OpenRouter entry", () => {
+  it("uses provider-reported billing authority for every admitted OpenRouter entry", () => {
     for (const entry of hostedModelRegistry("openrouter")) {
       expect(entry.pricing.authority).toBe("provider-reported");
       expect(entry.pricing.currency).toBe("USD");
     }
   });
 
-  it("returns undefined for an unregistered provider/model pair", () => {
+  it("does not auto-admit future/cross-vendor model strings", () => {
+    expect(hostedModelRegistryEntry("openrouter", "deepseek/deepseek-v3.2-exp")).toBeUndefined();
+    expect(hostedModelRegistryEntry("openrouter", "gpt-5.6-terra")).toBeUndefined();
     expect(hostedModelRegistryEntry("openrouter", "z-ai/glm-5.3")).toBeUndefined();
-    expect(hostedModelRegistryEntry("nvidia", "deepseek-v3.2-exp")).toBeUndefined();
   });
 
-  it("publishes the unique admitted hosted pricing identities", () => {
+  it("publishes only the unique currently admitted hosted pricing identities", () => {
     expect(registeredHostedModelIds()).toEqual([
       "claude-sonnet-4-5-20250929",
       "claude-opus-4-1-20250805",
       "gpt-5.6-terra",
       "gpt-5.6-sol",
-      "deepseek-v3.2-exp",
       "z-ai/glm-5.3",
     ]);
   });
