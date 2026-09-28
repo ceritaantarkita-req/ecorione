@@ -13,6 +13,7 @@ import { OPERATION_ID, prefix } from "./test-helpers.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let anthropicPool: Interceptable;
+let nvidiaPool: Interceptable;
 let localPool: Interceptable;
 
 beforeEach(() => {
@@ -21,6 +22,7 @@ beforeEach(() => {
   agent.disableNetConnect();
   setGlobalDispatcher(agent);
   anthropicPool = agent.get("https://api.anthropic.com");
+  nvidiaPool = agent.get("https://integrate.api.nvidia.com");
   localPool = agent.get("http://127.0.0.1:11434");
 });
 
@@ -329,6 +331,119 @@ describe("/healthz", () => {
     });
     const res = await app.inject({ method: "GET", url: "/healthz" });
     expect(res.json()).toEqual({ status: "ok", service: "connect" });
+    await app.close();
+  });
+});
+
+describe("provider credential test robustness", () => {
+  it("NVIDIA credential probe membatasi output dan tetap tidak menyimpan secret", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    nvidiaPool
+      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .reply(200, (opts) => {
+        requestBody = JSON.parse(String(opts.body)) as Record<string, unknown>;
+        return {
+          model: "z-ai/glm-5.3",
+          choices: [{ finish_reason: "stop", message: { content: "ECORIONE_CREDENTIAL_OK" } }],
+          usage: { prompt_tokens: 12, completion_tokens: 4 },
+        };
+      });
+
+    const app = buildConnectServer({
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
+    });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/settings/credentials/nvidia/test",
+      payload: { secret: "synthetic-nvidia-placeholder-not-real" },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      pass: true,
+      persisted: false,
+      provider: "nvidia",
+      model: "z-ai/glm-5.3",
+    });
+    expect(requestBody?.max_tokens).toBe(1024);
+    expect(requestBody?.reasoning_effort).toBe("low");
+    expect(response.body).not.toContain("synthetic-nvidia-placeholder-not-real");
+    await app.close();
+  });
+
+  it("NVIDIA hosted canary memakai probe output bounded yang sama", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    nvidiaPool
+      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .reply(200, (opts) => {
+        requestBody = JSON.parse(String(opts.body)) as Record<string, unknown>;
+        return {
+          model: "z-ai/glm-5.3",
+          choices: [{ finish_reason: "stop", message: { content: "ECORIONE_CANARY_OK" } }],
+          usage: { prompt_tokens: 10, completion_tokens: 3 },
+        };
+      });
+
+    const app = buildConnectServer({
+      hostedProvider: "nvidia",
+      nvidiaApiKey: "synthetic-nvidia-placeholder-not-real",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
+    });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/ops/provider-canary",
+      payload: { target: "hosted", maxLatencyMs: 1_000 },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      pass: true,
+      provider: "nvidia",
+      model: "z-ai/glm-5.3",
+    });
+    expect(requestBody?.max_tokens).toBe(1024);
+    expect(requestBody?.reasoning_effort).toBe("low");
+    await app.close();
+  });
+
+  it("NVIDIA credential probe timeout gagal jelas dan tidak menggantung", async () => {
+    nvidiaPool
+      .intercept({ path: "/v1/chat/completions", method: "POST" })
+      .reply(200, {
+        model: "z-ai/glm-5.3",
+        choices: [{ message: { content: "late" } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1 },
+      })
+      .delay(250);
+
+    const app = buildConnectServer({
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
+      credentialTestTimeoutMs: 25,
+    });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/settings/credentials/nvidia/test",
+      payload: { secret: "synthetic-nvidia-timeout-placeholder" },
+    });
+
+    expect(response.statusCode).toBe(504);
+    expect(response.json().error).toMatchObject({
+      type: "PROVIDER_TEST_TIMEOUT",
+    });
+    expect(response.json().error.message).toContain("timeout");
+    expect(response.body).not.toContain("synthetic-nvidia-timeout-placeholder");
     await app.close();
   });
 });

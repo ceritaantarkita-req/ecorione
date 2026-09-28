@@ -27,6 +27,9 @@ export interface OpenAiCompatibleHostedInput {
   readonly dynamicText: string;
   readonly userMessage: string;
   readonly maxTokensField: "max_tokens" | "max_completion_tokens";
+  /** Optional trusted probe cap; normal chat keeps the 4096-token baseline. */
+  readonly maxOutputTokens?: number | undefined;
+  readonly reasoningEffort?: "low" | "high" | "max" | undefined;
   readonly extraHeaders?: Readonly<Record<string, string>> | undefined;
   readonly providerRouting?: OpenAiCompatibleProviderRouting | undefined;
 }
@@ -89,6 +92,7 @@ function buildTools(prefix: StablePrefix) {
 export function buildOpenAiCompatibleRequestBody(
   input: Omit<OpenAiCompatibleHostedInput, "endpoint" | "providerName" | "apiKey">,
 ): Record<string, unknown> {
+  const maxOutputTokens = input.maxOutputTokens ?? OPENAI_COMPAT_MAX_OUTPUT_TOKENS;
   return {
     model: input.runtimeModel,
     messages: [
@@ -97,7 +101,8 @@ export function buildOpenAiCompatibleRequestBody(
       { role: "user", content: userContent(input) },
     ],
     tools: buildTools(input.prefix),
-    [input.maxTokensField]: OPENAI_COMPAT_MAX_OUTPUT_TOKENS,
+    [input.maxTokensField]: maxOutputTokens,
+    ...(input.reasoningEffort === undefined ? {} : { reasoning_effort: input.reasoningEffort }),
     ...(input.providerRouting === undefined ? {} : { provider: input.providerRouting }),
   };
 }
@@ -116,9 +121,9 @@ export function estimateOpenAiCompatibleReservationUsd(
     price.cacheWritePerMTok,
     price.cacheReadPerMTok,
   );
+  const maxOutputTokens = input.maxOutputTokens ?? OPENAI_COMPAT_MAX_OUTPUT_TOKENS;
   const rawUsd =
-    (promptTokenCeiling * promptPerMTok +
-      OPENAI_COMPAT_MAX_OUTPUT_TOKENS * price.outputPerMTok) /
+    (promptTokenCeiling * promptPerMTok + maxOutputTokens * price.outputPerMTok) /
     TOKENS_PER_PRICE_UNIT;
   return Math.ceil(rawUsd * USD_RESERVATION_PRECISION) / USD_RESERVATION_PRECISION;
 }

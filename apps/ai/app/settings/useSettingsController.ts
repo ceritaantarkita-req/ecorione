@@ -42,7 +42,7 @@ type ProviderCatalogEntry = {
   connectionTestReady: boolean;
   hostedModels: HostedModelCatalogEntry[];
 };
-type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "error";
+type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "timeout" | "error";
 type LocalRuntimeStatus = {
   runtime: "openai-compatible";
   state: "connected" | "model-missing" | "identity-mismatch" | "unreachable" | "unsupported";

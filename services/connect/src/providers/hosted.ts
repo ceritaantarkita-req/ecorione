@@ -13,6 +13,9 @@ export interface HostedCallInput {
   readonly prefix: StablePrefix;
   readonly dynamicText: string;
   readonly userMessage: string;
+  /** Internal probe-only override. Normal hosted completions leave this undefined. */
+  readonly maxOutputTokens?: number | undefined;
+  readonly reasoningEffort?: "low" | "high" | "max" | undefined;
 }
 
 export interface HostedCallResult {
@@ -51,6 +54,8 @@ export function callHostedProvider(
     prefix: input.prefix,
     dynamicText: input.dynamicText,
     userMessage: input.userMessage,
+    ...(input.maxOutputTokens === undefined ? {} : { maxOutputTokens: input.maxOutputTokens }),
+    ...(input.reasoningEffort === undefined ? {} : { reasoningEffort: input.reasoningEffort }),
   };
   switch (input.provider) {
     case "anthropic":

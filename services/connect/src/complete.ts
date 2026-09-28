@@ -50,6 +50,9 @@ export interface CompleteDeps {
   readonly openrouterApiKey?: string | undefined;
   readonly openaiApiKey?: string | undefined;
   readonly nvidiaApiKey?: string | undefined;
+  /** Internal health/credential-probe cap; normal chat leaves this undefined. */
+  readonly hostedMaxOutputTokens?: number | undefined;
+  readonly hostedReasoningEffort?: "low" | "high" | "max" | undefined;
   /** Local inference is protocol-based; Ollama is only one possible implementation. */
   readonly localRuntime?: LocalRuntimeId | undefined;
   readonly localBaseUrl: string;
@@ -246,6 +249,12 @@ export async function complete(
       prefix: input.prefix,
       dynamicText: input.dynamicText,
       userMessage: input.userMessage,
+      ...(deps.hostedMaxOutputTokens === undefined
+        ? {}
+        : { maxOutputTokens: deps.hostedMaxOutputTokens }),
+      ...(deps.hostedReasoningEffort === undefined
+        ? {}
+        : { reasoningEffort: deps.hostedReasoningEffort }),
     };
     if (deps.spendBudget !== undefined) {
       spendReservation = deps.spendBudget.reserve({

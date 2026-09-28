@@ -16,6 +16,11 @@ const NVIDIA_RUNTIME_MODELS = new Set<PinnedModelId>(["z-ai/glm-5.3"]);
  * and ambiguous-failure semantics with the smallest supported reservation unit.
  */
 export const NVIDIA_FREE_ENDPOINT_MIN_RESERVATION_USD = 0.000001;
+/**
+ * Credential/canary probes only need a tiny deterministic reply. Keep this materially below
+ * normal chat output so a free-endpoint health check cannot burn a 4096-token generation.
+ */
+export const NVIDIA_PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 1024;
 
 export interface NvidiaCallInput {
   readonly apiKey: string;
@@ -23,6 +28,8 @@ export interface NvidiaCallInput {
   readonly prefix: StablePrefix;
   readonly dynamicText: string;
   readonly userMessage: string;
+  readonly maxOutputTokens?: number | undefined;
+  readonly reasoningEffort?: "low" | "high" | "max" | undefined;
 }
 
 export function nvidiaRuntimeModel(model: PinnedModelId): string {
@@ -40,6 +47,8 @@ function adapterInput(input: Omit<NvidiaCallInput, "apiKey">) {
     dynamicText: input.dynamicText,
     userMessage: input.userMessage,
     maxTokensField: "max_tokens" as const,
+    ...(input.maxOutputTokens === undefined ? {} : { maxOutputTokens: input.maxOutputTokens }),
+    ...(input.reasoningEffort === undefined ? {} : { reasoningEffort: input.reasoningEffort }),
   };
 }
 

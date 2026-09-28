@@ -36,6 +36,7 @@ import {
   HostedProviderIdSchema,
   type HostedProviderId,
 } from "./provider-types.js";
+import { NVIDIA_PROVIDER_PROBE_MAX_OUTPUT_TOKENS } from "./providers/nvidia.js";
 import {
   LocalBaseUrlSchema,
   type ChatTargetPreference,
@@ -59,6 +60,7 @@ import {
 import { registerConnectWebhookRoutes } from "./webhook-http.js";
 
 export const DEFAULT_MULTIMODAL_BODY_LIMIT_BYTES = 32 * 1024 * 1024;
+export const DEFAULT_CREDENTIAL_TEST_TIMEOUT_MS = 60_000;
 
 function toHttpError(err: unknown, detailedProviderHealth = false): unknown {
   if (err instanceof CostKillSwitchError)
@@ -115,7 +117,7 @@ const ProviderCanaryBodySchema = z
     prompt: z.string().min(1).max(2_000).default("Reply exactly ECORIONE_CANARY_OK"),
     expectedSubstring: z.string().min(1).max(256).default("ECORIONE_CANARY_OK"),
     minOutputChars: z.number().int().min(1).max(10_000).default(10),
-    maxLatencyMs: z.number().int().min(100).max(120_000).default(15_000),
+    maxLatencyMs: z.number().int().min(100).max(120_000).default(60_000),
   })
   .strict();
 
@@ -161,6 +163,8 @@ export interface BuildConnectServerOptions {
   /** Development-only fallback when the encrypted vault is not configured. */
   readonly webhookRootSecret?: string | undefined;
   readonly webhookForwardTimeoutMs?: number | undefined;
+  /** Test-only override; production defaults to a bounded 60-second credential probe. */
+  readonly credentialTestTimeoutMs?: number | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -173,6 +177,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
   });
   const metrics = observabilityFor(app);
   const cache = options.cache ?? new ExactMatchCache();
+  const credentialTestTimeoutMs =
+    options.credentialTestTimeoutMs ?? DEFAULT_CREDENTIAL_TEST_TIMEOUT_MS;
   const defaults: RuntimeSettings = {
     hostedProvider: options.hostedProvider ?? DEFAULT_HOSTED_PROVIDER,
     hostedModel: options.hostedModel ?? GOVERNED_HOSTED_MODEL,
@@ -327,6 +333,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       };
       const body = probeBody("hosted", "Reply exactly ECORIONE_CREDENTIAL_OK");
       const started = performance.now();
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), credentialTestTimeoutMs);
       try {
         const result = await complete(
           {
@@ -338,8 +346,15 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
             }),
             credentialVault: transientCredential,
             cache: new ExactMatchCache(),
+            ...(provider === "nvidia"
+              ? {
+                  hostedMaxOutputTokens: NVIDIA_PROVIDER_PROBE_MAX_OUTPUT_TOKENS,
+                  hostedReasoningEffort: "low",
+                }
+              : {}),
           },
           body,
+          controller.signal,
         );
         const latencyMs = performance.now() - started;
         recordCompletion(body, result);
@@ -363,11 +378,24 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
           cost: result.cost,
         };
       } catch (err) {
+        if (controller.signal.aborted) {
+          metrics.addCounter("ecorione_provider_credential_test_total", 1, {
+            provider,
+            outcome: "timeout",
+          });
+          throw new HttpError(
+            504,
+            "PROVIDER_TEST_TIMEOUT",
+            `Test ${provider} timeout setelah ${String(credentialTestTimeoutMs)}ms. API key belum disimpan; coba lagi.`,
+          );
+        }
         metrics.addCounter("ecorione_provider_credential_test_total", 1, {
           provider,
           outcome: "error",
         });
         throw toHttpError(err, true);
+      } finally {
+        clearTimeout(timeout);
       }
     },
   );
@@ -377,10 +405,22 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const runtime = currentRuntime();
     const started = performance.now();
     const completeBody = probeBody(body.target, body.prompt);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), body.maxLatencyMs);
     try {
       const result = await complete(
-        { ...currentDeps(runtime), cache: new ExactMatchCache() },
+        {
+          ...currentDeps(runtime),
+          cache: new ExactMatchCache(),
+          ...(body.target === "hosted" && runtime.hostedProvider === "nvidia"
+            ? {
+                hostedMaxOutputTokens: NVIDIA_PROVIDER_PROBE_MAX_OUTPUT_TOKENS,
+                hostedReasoningEffort: "low",
+              }
+            : {}),
+        },
         completeBody,
+        controller.signal,
       );
       const latencyMs = performance.now() - started;
       recordCompletion(completeBody, result);
@@ -415,12 +455,26 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         cost: result.cost,
       };
     } catch (err) {
+      if (controller.signal.aborted) {
+        metrics.addCounter("ecorione_provider_canary_total", 1, {
+          provider: body.target === "local" ? "local" : runtime.hostedProvider,
+          model: body.target === "local" ? runtime.localModelTag : "configured",
+          outcome: "timeout",
+        });
+        throw new HttpError(
+          504,
+          "PROVIDER_TEST_TIMEOUT",
+          `Provider canary timeout setelah ${String(body.maxLatencyMs)}ms.`,
+        );
+      }
       metrics.addCounter("ecorione_provider_canary_total", 1, {
         provider: body.target === "local" ? "local" : runtime.hostedProvider,
         model: body.target === "local" ? runtime.localModelTag : "configured",
         outcome: "error",
       });
       throw toHttpError(err, true);
+    } finally {
+      clearTimeout(timeout);
     }
   });
 
