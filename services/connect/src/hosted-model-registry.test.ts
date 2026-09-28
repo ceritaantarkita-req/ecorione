@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  executableHostedModelIds,
   executableHostedModelRegistryEntry,
   hostedModelRegistry,
   hostedModelRegistryEntry,
@@ -18,6 +19,7 @@ describe("hosted model registry", () => {
     expect(new Set(keys).size).toBe(keys.length);
     for (const entry of entries) {
       expect(entry.pricing.costModel).not.toBeNull();
+      expect(entry.id).toBe(entry.pricing.costModel);
       expect(entry.verification).toBe("verified");
       expect(entry.catalogSource).toBe("static-verified");
       expect(entry.verifiedAt).toBeNull();
@@ -56,13 +58,15 @@ describe("hosted model registry", () => {
     ).toBeUndefined();
   });
 
-  it("publishes only the unique currently admitted hosted pricing identities", () => {
-    expect(registeredHostedModelIds()).toEqual([
+  it("separates registered ids from executable ids without changing current compatibility", () => {
+    const current = [
       "claude-sonnet-4-5-20250929",
       "claude-opus-4-1-20250805",
       "gpt-5.6-terra",
       "gpt-5.6-sol",
       "z-ai/glm-5.3",
-    ]);
+    ];
+    expect(registeredHostedModelIds()).toEqual(current);
+    expect(executableHostedModelIds()).toEqual(current);
   });
 });
