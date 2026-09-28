@@ -27,18 +27,18 @@ export interface HostedModelRegistryEntry {
   readonly sourceProvider: string;
   /** Provider-published context window when captured; null means intentionally unclaimed. */
   readonly contextWindowTokens: number | null;
-  /** Capabilities ECORIONE has admitted for this registry entry. */
+  /** Capabilities ECORIONE has actually admitted at this checkpoint. */
   readonly capabilities: readonly HostedModelCapability[];
   readonly pricing: HostedModelPricingMetadata;
   readonly verification: "verified";
   readonly catalogSource: "static-verified";
-  /** Date this provider/runtime mapping was rechecked for the governed registry. */
-  readonly verifiedAt: string;
+  /** Null means this static registry has no external freshness timestamp yet. */
+  readonly verifiedAt: string | null;
 }
 
 const SNAPSHOT = "snapshot" as const;
 const PROVIDER_REPORTED = "provider-reported" as const;
-const TEXT_TOOLS_REASONING = ["text", "tools", "reasoning"] as const;
+const TEXT_ONLY = ["text"] as const;
 
 const HOSTED_MODEL_REGISTRY = [
   {
@@ -47,8 +47,8 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "Claude Sonnet 4.5",
     providerRuntime: "claude-sonnet-4-5-20250929",
     sourceProvider: "anthropic",
-    contextWindowTokens: 1_000_000,
-    capabilities: TEXT_TOOLS_REASONING,
+    contextWindowTokens: null,
+    capabilities: TEXT_ONLY,
     pricing: {
       costModel: "claude-sonnet-4-5-20250929",
       authority: SNAPSHOT,
@@ -56,7 +56,7 @@ const HOSTED_MODEL_REGISTRY = [
     },
     verification: "verified",
     catalogSource: "static-verified",
-    verifiedAt: "2026-09-28",
+    verifiedAt: null,
   },
   {
     provider: "anthropic",
@@ -64,8 +64,8 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "Claude Opus 4.1",
     providerRuntime: "claude-opus-4-1-20250805",
     sourceProvider: "anthropic",
-    contextWindowTokens: 200_000,
-    capabilities: TEXT_TOOLS_REASONING,
+    contextWindowTokens: null,
+    capabilities: TEXT_ONLY,
     pricing: {
       costModel: "claude-opus-4-1-20250805",
       authority: SNAPSHOT,
@@ -73,7 +73,7 @@ const HOSTED_MODEL_REGISTRY = [
     },
     verification: "verified",
     catalogSource: "static-verified",
-    verifiedAt: "2026-09-28",
+    verifiedAt: null,
   },
   {
     provider: "openrouter",
@@ -81,8 +81,8 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "Claude Sonnet 4.5",
     providerRuntime: "anthropic/claude-sonnet-4.5",
     sourceProvider: "anthropic",
-    contextWindowTokens: 1_000_000,
-    capabilities: TEXT_TOOLS_REASONING,
+    contextWindowTokens: null,
+    capabilities: TEXT_ONLY,
     pricing: {
       costModel: "claude-sonnet-4-5-20250929",
       authority: PROVIDER_REPORTED,
@@ -90,7 +90,7 @@ const HOSTED_MODEL_REGISTRY = [
     },
     verification: "verified",
     catalogSource: "static-verified",
-    verifiedAt: "2026-09-28",
+    verifiedAt: null,
   },
   {
     provider: "openrouter",
@@ -98,8 +98,8 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "Claude Opus 4.1",
     providerRuntime: "anthropic/claude-opus-4.1",
     sourceProvider: "anthropic",
-    contextWindowTokens: 200_000,
-    capabilities: TEXT_TOOLS_REASONING,
+    contextWindowTokens: null,
+    capabilities: TEXT_ONLY,
     pricing: {
       costModel: "claude-opus-4-1-20250805",
       authority: PROVIDER_REPORTED,
@@ -107,7 +107,7 @@ const HOSTED_MODEL_REGISTRY = [
     },
     verification: "verified",
     catalogSource: "static-verified",
-    verifiedAt: "2026-09-28",
+    verifiedAt: null,
   },
   {
     provider: "openai",
@@ -115,8 +115,8 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "GPT-5.6 Terra",
     providerRuntime: "gpt-5.6-terra",
     sourceProvider: "openai",
-    contextWindowTokens: 1_050_000,
-    capabilities: TEXT_TOOLS_REASONING,
+    contextWindowTokens: null,
+    capabilities: TEXT_ONLY,
     pricing: {
       costModel: "gpt-5.6-terra",
       authority: SNAPSHOT,
@@ -124,7 +124,7 @@ const HOSTED_MODEL_REGISTRY = [
     },
     verification: "verified",
     catalogSource: "static-verified",
-    verifiedAt: "2026-09-28",
+    verifiedAt: null,
   },
   {
     provider: "openai",
@@ -132,8 +132,8 @@ const HOSTED_MODEL_REGISTRY = [
     displayName: "GPT-5.6 Sol",
     providerRuntime: "gpt-5.6-sol",
     sourceProvider: "openai",
-    contextWindowTokens: 1_050_000,
-    capabilities: TEXT_TOOLS_REASONING,
+    contextWindowTokens: null,
+    capabilities: TEXT_ONLY,
     pricing: {
       costModel: "gpt-5.6-sol",
       authority: SNAPSHOT,
@@ -141,7 +141,7 @@ const HOSTED_MODEL_REGISTRY = [
     },
     verification: "verified",
     catalogSource: "static-verified",
-    verifiedAt: "2026-09-28",
+    verifiedAt: null,
   },
   {
     provider: "nvidia",
@@ -158,7 +158,7 @@ const HOSTED_MODEL_REGISTRY = [
     },
     verification: "verified",
     catalogSource: "static-verified",
-    verifiedAt: "2026-09-28",
+    verifiedAt: null,
   },
 ] as const satisfies readonly HostedModelRegistryEntry[];
 
