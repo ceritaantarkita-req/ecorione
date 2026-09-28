@@ -37,14 +37,11 @@ describe("OpenRouter model-family foundation", () => {
     ["moonshotai/kimi-k3", "Kimi K3", "moonshotai", "kimi"],
     ["~z-ai/glm-latest", "GLM Latest", "z-ai", "glm"],
     ["z-ai/glm-5.3", "GLM 5.3", "z-ai", "glm"],
-  ] as const)(
-    "classifies %s as %s",
-    (id, displayName, sourceProvider, expectedFamily) => {
-      expect(
-        classifyOpenRouterModelFamily({ id, displayName, sourceProvider }),
-      ).toBe(expectedFamily);
-    },
-  );
+  ] as const)("classifies %s as %s", (id, displayName, sourceProvider, expectedFamily) => {
+    expect(classifyOpenRouterModelFamily({ id, displayName, sourceProvider })).toBe(
+      expectedFamily,
+    );
+  });
 
   it("does not classify unrelated models just because the author namespace matches", () => {
     expect(
