@@ -32,9 +32,7 @@ describe("OpenRouter automatic admission", () => {
     ["moonshotai/kimi-k3", "moonshotai", "kimi"],
     ["z-ai/glm-5.3", "z-ai", "glm"],
   ] as const)("admits a stable %s candidate as selectable", (id, sourceProvider, family) => {
-    expect(
-      verifyOpenRouterModelAdmission(candidate({ id, sourceProvider, family })),
-    ).toEqual({
+    expect(verifyOpenRouterModelAdmission(candidate({ id, sourceProvider, family }))).toEqual({
       admission: "verified-selectable",
       selectable: true,
       selectionId: id,
