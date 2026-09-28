@@ -2,18 +2,18 @@
 
 Last updated: **2026-09-28**
 
-Status: **CURRENT / REPOSITORY+STAGING CONVERGED / NVIDIA HOSTED PROVIDER CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / REPOSITORY+STAGING CONVERGED / NVIDIA SESSION 1 CLOSED-PASS / NVIDIA HOSTED PROVIDER CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository               = ceritaantarkita-req/ecorione
 default branch           = main
-runtime-changing baseline= 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-staging image            = staging-0f86a34cde66
+runtime-changing baseline= 59961422e11d126baa0b2ff957dd7abf8e063f08
+staging image            = staging-59961422e11d
 ```
 
-`0f86a34c...` is the latest audited runtime-changing merge. The audited live repository state immediately before this docs-only refresh was `9820af44ab2c2905303eea897ff6233204a8c419`, the merge commit of PR #384. Docs-only checkpoint commits may advance live Git/staging SHA without changing runtime behavior; inspect live `main` for the newest exact repository revision.
+`59961422...` is the latest audited runtime-changing merge and the merge commit of PR #387. It is deployed on governed staging. Docs-only checkpoint commits may advance live Git revision later without changing this runtime compatibility baseline; inspect live `main` for the newest exact repository revision.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
@@ -25,25 +25,25 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-image = staging-0f86a34cde66
+SHA   = 59961422e11d126baa0b2ff957dd7abf8e063f08
+image = staging-59961422e11d
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| CI #2380 | PASS |
-| Product Eval #1619 | PASS |
-| Staging Deploy #1524 | gate-only PASS |
-| Staging Deploy #1525 | actual deploy PASS |
+| CI #2403 | PASS |
+| Product Eval #1642 | PASS |
+| Staging Deploy #1566 | gate-only PASS |
+| Staging Deploy #1567 | actual deploy PASS |
 | native `better-sqlite3` fallback build | PASS |
 | expected host SHA | matched |
 | Operations | `healthy: true` |
 | unhealthy services | 0 |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| stabilized free disk | 29.89 GiB |
+| stabilized free disk | 27.42 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -91,9 +91,14 @@ The route reuses the existing OpenAI-compatible adapter, keeps no-silent-fallbac
 
 The free-prototype USD-0 pricing snapshot applies only to the supported NVIDIA API Catalog prototype route. It does not claim partner/self-hosted/production NVIDIA pricing.
 
-The user's real NVIDIA API key is **not repository state and has not yet been validated**. The next user action for this capability is: Settings -> NVIDIA / NIM -> paste key -> `Test API key` -> `Save & activate` -> send one real Ai message and confirm `Hosted · NVIDIA · GLM-5.3`.
+NVIDIA credential and provider-canary testing is now hardened by Session 1: credential tests have a 30-second default deadline, provider canary enforces its latency deadline, NVIDIA test probes are capped at 512 output tokens, and timeout is returned explicitly as `PROVIDER_TEST_TIMEOUT`. Normal hosted chat keeps the existing 4096-token output ceiling.
 
-Canonical safe checkpoint:
+The user's real NVIDIA API key is **not repository state and is not claimed validated**. The next user action is: Settings -> NVIDIA / NIM -> paste key -> `Test API key` -> observe PASS or a bounded explicit error -> `Save & activate` only after PASS -> send one real Ai message.
+
+Latest Session 1 checkpoint:
+[verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md).
+
+Underlying provider rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 ## Closed roadmap families
@@ -109,6 +114,7 @@ Canonical safe checkpoint:
 | Historical 393-branch hygiene program | CLOSED / PASS |
 | ECX Recipient Execution Batch 1–7 | CLOSED / PASS |
 | NVIDIA hosted-provider trial + staging activation + Docker hardening | CLOSED / PASS |
+| NVIDIA connection-test Session 1 hardening | CLOSED / PASS |
 
 There is **no active Product Evolution, PCS, A-series, or ECX numbered batch**.
 
@@ -214,7 +220,7 @@ unexpected branches = 0
 
 The completed cleanup boundary retained 9 branches: `main`, seven retained substantive/provenance branches, and the historical branch-hygiene checkpoint branch.
 
-The current safe-resume documentation work intentionally leaves one additional bookkeeping ref, `docs/current-safe-resume-20260928`, so the live inventory after PR #385 is **10 branches** with **0 unexpected work branches**. Do not open a cleanup loop solely for this checkpoint ref.
+The live inventory after Session 1 runtime closure is **11 branches**: the 9-branch cleanup boundary plus `docs/current-safe-resume-20260928` and the merged Session 1 provenance ref `fix/nvidia-credential-test-timeout-20260928`. Unexpected work branches remain **0**.
 
 Evidence:
 
