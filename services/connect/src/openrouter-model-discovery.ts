@@ -114,7 +114,9 @@ function isMutableAlias(id: string): boolean {
   return id.startsWith("~");
 }
 
-function normalizeModel(model: z.infer<typeof OpenRouterUpstreamModelSchema>): OpenRouterDiscoveredModel {
+function normalizeModel(
+  model: z.infer<typeof OpenRouterUpstreamModelSchema>,
+): OpenRouterDiscoveredModel {
   const verified = hostedModelRegistry("openrouter").find(
     (entry) => entry.providerRuntime === model.id,
   );
