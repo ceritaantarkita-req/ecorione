@@ -194,7 +194,7 @@ Issue #277 remains the DR-2 tracker.
 | Historical 393-entry exact-SHA cleanup | CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | Cleanup-boundary retained inventory | 9 branches |
-| Current live inventory after Session 3 runtime closure | 13 branches (4 known bookkeeping/provenance refs beyond cleanup boundary) |
+| Current live inventory after Session 4A runtime closure | 16 branches (7 known bookkeeping/provenance refs beyond cleanup boundary) |
 
 Post-ECX Actions run `36338085729` dry-ran 15/15 allowlisted branches with zero hold/fail/skip, deleted all 15, exact-validated and deleted 2 reconciliation branches, self-deleted its helper, and proved:
 
