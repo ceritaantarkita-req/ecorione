@@ -724,6 +724,14 @@ async function installApiMocks(context) {
       );
       return json(route, {
         source: "openrouter:/api/v1/models",
+        families: [
+          { id: "gpt", displayName: "GPT" },
+          { id: "gemini", displayName: "Gemini" },
+          { id: "qwen", displayName: "Qwen" },
+          { id: "deepseek", displayName: "DeepSeek" },
+          { id: "kimi", displayName: "Kimi" },
+          { id: "glm", displayName: "GLM" },
+        ],
         cache: "hit",
         stale: false,
         fetchedAt: now,
