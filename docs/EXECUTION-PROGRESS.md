@@ -9,17 +9,17 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = 59961422e11d126baa0b2ff957dd7abf8e063f08 (PR #387)
-image                   = staging-59961422e11d
-CI                      = #2403 PASS
-Product Eval            = #1642 PASS
-Staging Deploy          = #1567 PASS
+runtime / staging       = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5 (PR #389)
+image                   = staging-9f19b40cea4b
+CI                      = #2429 PASS
+Product Eval            = #1668 PASS
+Staging Deploy          = #1619 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 27.42 GiB stabilized
+free disk               = 29.90 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability, permanent multi-stage Docker native-build hardening, and bounded NVIDIA credential/canary-test robustness from Session 1.
+This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter extensible model-registry foundation from Session 2.
 
 ## Closed foundational roadmaps
 
@@ -126,11 +126,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = 59961422e11d126baa0b2ff957dd7abf8e063f08
-image = staging-59961422e11d
+SHA   = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
+image = staging-9f19b40cea4b
 ```
 
-Actual Staging Deploy #1567 proved:
+Actual Staging Deploy #1619 proved:
 
 - native builder installed `python3 make g++`;
 - `better-sqlite3` fallback installation completed;
@@ -140,11 +140,11 @@ Actual Staging Deploy #1567 proved:
 - 0 unhealthy services;
 - 15 configured / 15 running;
 - exact SHA match;
-- 27.42 GiB stabilized free disk.
+- 29.90 GiB stabilized free disk.
 
 The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
 
-NVIDIA / NIM is live with pinned `z-ai/glm-5.3`. Session 1 adds a 30-second credential-test deadline, enforced provider-canary timeout, bounded 512-token NVIDIA probe output, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
+NVIDIA / NIM remains live with pinned `z-ai/glm-5.3`. Current source uses 60-second default credential/canary deadlines, a 1024-token NVIDIA health-probe cap with low reasoning effort, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
 Latest checkpoint:
 [verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md).
@@ -153,6 +153,20 @@ Underlying rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 This is staging evidence, not production promotion.
+
+
+## OpenRouter provider foundation
+
+| Scope | State |
+|---|---|
+| Session 1 — NVIDIA connection-test hardening | CLOSED / PASS |
+| Session 2 — OpenRouter extensible model registry foundation | CLOSED / PASS |
+| Session 3 — OpenRouter live discovery/search/cache | NOT ACTIVE / SEPARATELY SELECTABLE |
+
+Session 2 keeps the current OpenRouter selectable set at Claude Sonnet 4.5 and Claude Opus 4.1. New model families are not admitted until later discovery/verification work.
+
+Canonical Session 2 checkpoint:
+[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
 ## DR
 
@@ -173,7 +187,7 @@ Issue #277 remains the DR-2 tracker.
 | Historical 393-entry exact-SHA cleanup | CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | Cleanup-boundary retained inventory | 9 branches |
-| Current live inventory after Session 1 runtime closure | 11 branches (2 known bookkeeping/provenance refs beyond cleanup boundary) |
+| Current live inventory after Session 2 runtime closure | 12 branches (3 known bookkeeping/provenance refs beyond cleanup boundary) |
 
 Post-ECX Actions run `36338085729` dry-ran 15/15 allowlisted branches with zero hold/fail/skip, deleted all 15, exact-validated and deleted 2 reconciliation branches, self-deleted its helper, and proved:
 
@@ -198,6 +212,7 @@ Evidence:
 | NVIDIA hosted-provider trial | CLOSED / PASS |
 | NVIDIA work-branch cleanup | CLOSED / PASS |
 | NVIDIA connection-test Session 1 | CLOSED / PASS |
+| OpenRouter model-registry Session 2 | CLOSED / PASS |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
