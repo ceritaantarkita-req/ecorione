@@ -23,6 +23,7 @@ export type RuntimeSnapshot = {
   settings: {
     hostedProvider: HostedProviderId;
     hostedModel: HostedModelPreference;
+    openRouterModelSelection?: HostedModelPreference;
     localRuntime: "openai-compatible";
     localBaseUrl: string;
     localModelTag: string;
@@ -247,6 +248,34 @@ export function useSettingsController(initialWorkspaceId: string) {
           (provider) => provider.id === runtime.settings.hostedProvider,
         ) ?? null);
   const activeHostedModels = activeHostedProvider?.hostedModels ?? [];
+  const openRouterPickerModels = (() => {
+    if (runtime?.settings.hostedProvider !== "openrouter") return [];
+    const seen = new Set<string>();
+    const models: Array<{ id: string; displayName: string; executable: boolean }> = [];
+    for (const model of activeHostedModels) {
+      if (seen.has(model.id)) continue;
+      seen.add(model.id);
+      models.push({ id: model.id, displayName: model.displayName, executable: true });
+    }
+    for (const model of openRouterDiscovery?.models ?? []) {
+      if (!model.selectable || model.selectionId === null || seen.has(model.selectionId)) continue;
+      seen.add(model.selectionId);
+      models.push({
+        id: model.selectionId,
+        displayName: model.displayName,
+        executable: model.executable,
+      });
+    }
+    const saved = runtime.settings.openRouterModelSelection?.trim();
+    if (saved && saved !== "governed" && !seen.has(saved)) {
+      models.push({
+        id: saved,
+        displayName: saved,
+        executable: runtime.settings.hostedModel === saved,
+      });
+    }
+    return models;
+  })();
   const connectProvider =
     connectProviderId === null
       ? null
@@ -444,6 +473,34 @@ export function useSettingsController(initialWorkspaceId: string) {
     if (runtime === null || !beginAction("default-provider-model")) return;
     setStatus("Saving default provider/model…");
     try {
+      if (runtime.settings.hostedProvider === "openrouter") {
+        const selectionId = runtime.settings.openRouterModelSelection ?? "governed";
+        const result = await json<{
+          runtime: RuntimeSnapshot;
+          selection: {
+            id: string;
+            admission: string;
+            executable: boolean;
+            active: boolean;
+            unavailableReason: string | null;
+          };
+        }>("/api/settings/settings/providers/openrouter/model-selection", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ selectionId }),
+        });
+        setRuntime(result.runtime);
+        setHostedHealth(null);
+        setStatus(
+          result.selection.executable
+            ? result.selection.active
+              ? "Default OpenRouter model saved and active."
+              : "Default OpenRouter model saved, tetapi hosted tetap OFF karena operator gate sedang tertutup."
+            : "OpenRouter model selection saved. Hosted execution is disabled until this model has separate executable validation.",
+        );
+        return;
+      }
+
       const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
         method: "PUT",
         headers: { "content-type": "application/json" },
@@ -706,6 +763,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     localSetupOpen,
     localStatus,
     openRouterDiscovery,
+    openRouterPickerModels,
     openRouterQuery,
     openRouterSourceProvider,
     mcpJson,
