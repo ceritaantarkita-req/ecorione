@@ -102,11 +102,11 @@ Use the owner-specific runbook when touching its subsystem:
 Latest audited runtime/staging identity:
 
 ```text
-SHA   = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-image = staging-0f86a34cde66
+SHA   = 59961422e11d126baa0b2ff957dd7abf8e063f08
+image = staging-59961422e11d
 ```
 
-CI #2380, Product Eval #1619, and actual Staging Deploy #1525 passed. Staging reported healthy Operations, 15/15 services running, exact-SHA match, and 29.89 GiB stabilized free disk.
+CI #2403, Product Eval #1642, and actual Staging Deploy #1567 passed. Staging reported healthy Operations, 15/15 services running, exact-SHA match, and 27.42 GiB stabilized free disk.
 
 NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging operator kill switch is open under bounded spend controls; the runtime hosted toggle is activated through normal Settings/provider activation. The user's actual NVIDIA secret has not been stored or tested by repository work.
 

@@ -20,17 +20,17 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-image            = staging-0f86a34cde66
-CI               = #2380 PASS
-Product Eval     = #1619 PASS
-Staging Deploy   = #1525 PASS
+runtime baseline = 59961422e11d126baa0b2ff957dd7abf8e063f08
+image            = staging-59961422e11d
+CI               = #2403 PASS
+Product Eval     = #1642 PASS
+Staging Deploy   = #1567 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 29.89 GiB stabilized
+free disk        = 27.42 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git/staging revision identity without changing this runtime compatibility baseline. The audited live repository state immediately before the current safe-resume refresh was `9820af44ab2c2905303eea897ff6233204a8c419` from PR #384. Always inspect live `main` before opening new work.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #387 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
 
 Current overall safe-resume pointer:
 `docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md`.
@@ -45,9 +45,14 @@ NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Con
 - cost kill switch and durable spend controls remain authoritative;
 - the staging **operator hosted kill switch is open** under a finite spend policy; the persisted runtime toggle is still activated through normal Settings/provider activation.
 
-The user's actual NVIDIA secret has not been stored or validated by repository work. Do not claim a real user-key GLM-5.3 completion until the operator enters the key in Settings, passes the credential test, saves/activates it, and observes a real Ai completion.
+Session 1 hardened NVIDIA credential/canary validation: credential tests have a 30-second default deadline, canary latency limits are enforced, NVIDIA health probes cap output at 512 tokens, and timeout is explicit as `PROVIDER_TEST_TIMEOUT`. Normal hosted chat retains its 4096-token baseline.
 
-Canonical provider/runtime checkpoint:
+The user's actual NVIDIA secret has not been stored or validated by repository work. Do not claim a real user-key GLM-5.3 completion until the operator enters the key in Settings, passes the bounded credential test, saves/activates it, and observes a real Ai completion.
+
+Latest NVIDIA test/runtime checkpoint:
+`docs/verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md`.
+
+Underlying provider rollout checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
 Use `docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md` as the overall handoff pointer before opening a new scope.
@@ -60,7 +65,8 @@ Closed roadmap families:
 - original Off-host DR — **CLOSED / PASS at documented boundary**;
 - audit follow-ups through A-11 — **CLOSED / PASS at bounded scopes**;
 - ECX Recipient Execution Batch 1–7 — **CLOSED / PASS**;
-- NVIDIA hosted-provider trial implementation + staging activation + Docker build hardening — **CLOSED / PASS**.
+- NVIDIA hosted-provider trial implementation + staging activation + Docker build hardening — **CLOSED / PASS**;
+- NVIDIA connection-test Session 1 hardening — **CLOSED / PASS**.
 
 There is **no active product/runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item.
 
@@ -165,7 +171,7 @@ SumoPod is staging, not production. The staging Basic-Auth human gate is a bound
 - preserve `.gitattributes`: text LF by default, `.cmd`/`.bat` CRLF;
 - delete merged temporary branches only after exact remote-SHA revalidation.
 
-The historical 393-branch cleanup, post-ECX cleanup, and NVIDIA trial branch cleanup are closed. NVIDIA cleanup run `36368987090` exact-SHA deleted three merged work branches, self-deleted its helper, and restored the cleanup-boundary inventory to 9 branches. The current safe-resume checkpoint intentionally retains `docs/current-safe-resume-20260928` as one bookkeeping ref, so the live post-PR-#385 inventory is 10 branches with no unexpected work branch. Do not create an infinite cleanup/docs loop solely for that checkpoint ref. Future non-bookkeeping branch growth must be handled as a new exact-SHA delta.
+The historical 393-branch cleanup, post-ECX cleanup, and NVIDIA trial branch cleanup are closed. The cleanup-boundary inventory remains 9 branches. Session 1 closure currently leaves two known additional refs: `docs/current-safe-resume-20260928` for bookkeeping and `fix/nvidia-credential-test-timeout-20260928` as merged Session 1 provenance, for a live inventory of 11 with zero unexpected active work branches. Future non-bookkeeping branch growth must be handled as a new exact-SHA delta.
 
 ## Evidence discipline
 
