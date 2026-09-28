@@ -289,6 +289,84 @@
   justify-self: start;
 }
 
+.discoveryPanel {
+  grid-column: 1 / -1;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+}
+
+.discoveryHeader,
+.discoveryModelTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.discoveryHeader h3 {
+  margin: 3px 0 0;
+  font-size: 17px;
+}
+
+.discoveryFilters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.discoveryMeta,
+.discoveryEmpty {
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  line-height: 1.55;
+}
+
+.discoveryResults {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.discoveryModel {
+  min-width: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.discoveryModelTop strong,
+.discoveryModelTop code {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.discoveryModelTop strong {
+  font-size: 12px;
+}
+
+.discoveryModelTop code {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+}
+
+.discoveryFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 9px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
 .advanced {
   margin-top: 26px;
   border: 1px solid var(--border);
@@ -577,7 +655,8 @@
 
   .providerGrid,
   .defaultModelPanel,
-  .localSetupGrid {
+  .localSetupGrid,
+  .discoveryFilters {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -587,11 +666,14 @@
   }
 
   .providerCardTop,
-  .connectPanelHeader {
+  .connectPanelHeader,
+  .discoveryHeader,
+  .discoveryModelTop {
     align-items: flex-start;
   }
 
-  .defaultModelSummary {
+  .defaultModelSummary,
+  .discoveryPanel {
     grid-column: auto;
   }
 
