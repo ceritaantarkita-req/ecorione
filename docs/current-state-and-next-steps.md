@@ -13,7 +13,7 @@ runtime-changing baseline= af2ef8f61f26058178e56b0d6490248c1898976e
 staging image            = staging-af2ef8f61f26
 ```
 
-`9f19b40...` is the latest audited runtime-changing merge and the merge commit of PR #391. It is deployed on governed staging. Docs-only checkpoint commits may advance live Git revision later without changing this runtime compatibility baseline; inspect live `main` for the newest exact repository revision.
+`af2ef8f...` is the latest audited runtime-changing merge and the merge commit of PR #391. It is deployed on governed staging. Docs-only checkpoint commits may advance live Git revision later without changing this runtime compatibility baseline; inspect live `main` for the newest exact repository revision.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
