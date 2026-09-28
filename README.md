@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest audited **runtime-changing** repository/staging baseline is:
 
 ```text
-runtime baseline = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
-image            = staging-9f19b40cea4b
+runtime baseline = af2ef8f61f26058178e56b0d6490248c1898976e
+image            = staging-af2ef8f61f26
 ```
 
-That exact runtime merge passed CI **#2429**, Product Eval **#1668**, and actual Staging Deploy **#1619**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **29.90 GiB free**.
+That exact runtime merge passed CI **#2457**, Product Eval **#1696**, and actual Staging Deploy **#1675**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **25.33 GiB free**.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -21,7 +21,7 @@ Repository hygiene remains bounded: the historical cleanup boundary is **9 retai
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Session 2 is closed; Session 3 discovery is only an eligible next scope.
+There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2 and 3 are closed; no later provider session is active implicitly.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -68,11 +68,14 @@ Core ownership rules:
 
 ## OpenRouter hosted-model registry
 
-OpenRouter model selection now resolves through an extensible governed registry rather than a separate Claude-only mapping table. Persistence is ready for future discovered model ids, while execution remains fail-closed to verified pricing-bound provider/model entries.
+OpenRouter model selection resolves through an extensible governed registry rather than a separate Claude-only mapping table. Session 3 adds bounded live catalog fetch/search/filter/cache while keeping catalog presence distinct from executable admission.
 
-Current selectable OpenRouter models remain **Claude Sonnet 4.5** and **Claude Opus 4.1**. Additional model families are not yet claimed selectable.
+Current selectable OpenRouter models remain **Claude Sonnet 4.5** and **Claude Opus 4.1**. Other returned catalog models may be visible as **Discovered only** but are not yet claimed selectable.
 
-Session 2 checkpoint:
+Current Session 3 checkpoint:
+[docs/verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](docs/verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md).
+
+Underlying Session 2 registry checkpoint:
 [docs/verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](docs/verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
 ## NVIDIA hosted provider
@@ -141,6 +144,7 @@ See:
 
 The following remain separate explicit decisions:
 
+- selected OpenRouter discovered-model admission/verification;
 - **DR-2 checkpoint 2** physical-independence target selection and proof;
 - public production promotion/cutover;
 - native Google Drive integration;
