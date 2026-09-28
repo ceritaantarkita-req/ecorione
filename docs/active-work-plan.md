@@ -67,7 +67,7 @@ Current proven boundary:
 - pinned hosted model is `z-ai/glm-5.3`;
 - staging operator hosted kill switch is open under bounded spend controls; runtime hosted activation still follows the normal Settings/provider activation path;
 - Docker native dependency fallback is hardened and proven on SumoPod;
-- exact current `main` and staging are converged at `0f86a34cde66dd541dae9a830ae8cc155e1efe6b`;
+- the latest runtime-changing merge and staging are converged at `0f86a34cde66dd541dae9a830ae8cc155e1efe6b`; later docs-only checkpoint commits may advance live Git/staging SHA without changing runtime behavior;
 - user NVIDIA secret has not yet been stored/tested.
 
 User-level validation is not a new implementation batch. It is a normal Settings action: enter key -> Test API key -> Save & activate -> send one Ai message.
