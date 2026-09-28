@@ -31,6 +31,9 @@ export interface HostedModelRegistryEntry {
   readonly capabilities: readonly HostedModelCapability[];
   readonly pricing: HostedModelPricingMetadata;
   readonly verification: "verified";
+  readonly catalogSource: "static-verified";
+  /** Date this provider/runtime mapping was rechecked for the governed registry. */
+  readonly verifiedAt: string;
 }
 
 const SNAPSHOT = "snapshot" as const;
@@ -52,6 +55,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "anthropic",
@@ -67,6 +72,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "openrouter",
@@ -82,6 +89,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "openrouter",
@@ -97,6 +106,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "openrouter",
@@ -112,6 +123,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "openrouter",
@@ -127,6 +140,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "openrouter",
@@ -142,6 +157,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "openai",
@@ -157,6 +174,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "openai",
@@ -172,6 +191,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
   {
     provider: "nvidia",
@@ -187,6 +208,8 @@ const HOSTED_MODEL_REGISTRY = [
       currency: PRICE_CURRENCY,
     },
     verification: "verified",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-28",
   },
 ] as const satisfies readonly HostedModelRegistryEntry[];
 
