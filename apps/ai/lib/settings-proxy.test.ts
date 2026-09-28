@@ -88,6 +88,7 @@ describe("proxyToConnectSettings", () => {
             id: "qwen/qwen3.8-max",
             displayName: "Qwen: Qwen3.8 Max",
             sourceProvider: "qwen",
+            family: "qwen",
             admission: "discovered-only",
             executable: false,
             selectionId: null,
@@ -107,6 +108,7 @@ describe("proxyToConnectSettings", () => {
       models: [
         expect.objectContaining({
           id: "qwen/qwen3.8-max",
+          family: "qwen",
           admission: "discovered-only",
           executable: false,
         }),
