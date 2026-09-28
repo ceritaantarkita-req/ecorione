@@ -19,7 +19,7 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 
 ## Current runtime / staging truth
 
-Latest audited repository/staging convergence:
+Latest audited runtime-changing repository/staging convergence:
 
 ```text
 SHA   = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
