@@ -2,18 +2,18 @@
 
 Last updated: **2026-09-28**
 
-Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 + 4A CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository               = ceritaantarkita-req/ecorione
 default branch           = main
-runtime-changing baseline= af2ef8f61f26058178e56b0d6490248c1898976e
-staging image            = staging-af2ef8f61f26
+runtime-changing baseline= 29446ad0e140d1486bd3914bb087a552409e464c
+staging image            = staging-29446ad0e140
 ```
 
-`af2ef8f...` is the latest audited runtime-changing merge and the merge commit of PR #391. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
+`29446ad0...` is the latest audited runtime-changing merge and the merge commit of PR #394. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
@@ -25,25 +25,25 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = af2ef8f61f26058178e56b0d6490248c1898976e
-image = staging-af2ef8f61f26
+SHA   = 29446ad0e140d1486bd3914bb087a552409e464c
+image = staging-29446ad0e140
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| CI #2457 | PASS |
-| Product Eval #1696 | PASS |
-| Staging Deploy #1674 | gate-only PASS |
-| Staging Deploy #1675 | actual deploy PASS |
+| CI #2468 | PASS |
+| Product Eval #1707 | PASS |
+| Staging Deploy #1696 | gate-only PASS |
+| Staging Deploy #1697 | actual deploy PASS |
 | native `better-sqlite3` fallback build | PASS |
 | expected host SHA | matched |
 | Operations | `healthy: true` |
 | unhealthy services | 0 |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| stabilized free disk | 25.33 GiB |
+| stabilized free disk | 25.31 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -101,7 +101,7 @@ Latest Session 1 checkpoint:
 Underlying provider rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
-## OpenRouter registry + live discovery — Sessions 2–3 CLOSED / PASS
+## OpenRouter registry + live discovery + family foundation — Sessions 2–3 + 4A CLOSED / PASS
 
 Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 adds bounded live catalog fetch/search/filter/cache without changing execution admission.
 
@@ -116,6 +116,10 @@ Current behavior:
 - mutable `~...` aliases are labeled;
 - discovered/catalogued state remains distinct from executable/admitted state;
 - a discovered-only model remains absent from the selectable execution dropdown;
+- Session 4A defines one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM;
+- every discovered model now carries a family classification, while non-target models remain `other`;
+- discovery responses expose the canonical family catalog for later admission/picker work;
+- family classification does not grant execution authority;
 - OpenRouter billed `usage.cost` remains authoritative for actual billed cost;
 - existing pricing identities remain required for pre-dispatch spend admission/evidence.
 
@@ -126,7 +130,10 @@ Current selectable OpenRouter models remain only:
 
 Other catalog families can now be discovered in Settings but are **not** claimed executable merely because OpenRouter returns them.
 
-Current Session 3 checkpoint:
+Current Session 4A checkpoint:
+[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md).
+
+Underlying Session 3 checkpoint:
 [verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md).
 
 Underlying Session 2 checkpoint:
@@ -148,6 +155,7 @@ Underlying Session 2 checkpoint:
 | NVIDIA connection-test Session 1 hardening | CLOSED / PASS |
 | OpenRouter model-registry Session 2 | CLOSED / PASS |
 | OpenRouter live-discovery Session 3 | CLOSED / PASS |
+| OpenRouter model-family Session 4A | CLOSED / PASS |
 
 There is **no active Product Evolution, PCS, A-series, or ECX numbered batch**.
 
@@ -253,7 +261,7 @@ unexpected branches = 0
 
 The completed cleanup boundary retained 9 branches: `main`, seven retained substantive/provenance branches, and the historical branch-hygiene checkpoint branch.
 
-The live inventory after Session 3 runtime closure is **13 branches**: the 9-branch cleanup boundary plus `docs/current-safe-resume-20260928`, `fix/nvidia-credential-test-timeout-20260928`, `feat/openrouter-model-registry-session2-20260928`, and `feat/openrouter-model-discovery-session3-20260928`. Unexpected active work refs remain **0** before the temporary docs-closure branch.
+The live inventory after Session 4A runtime closure is **16 branches**: the 9-branch cleanup boundary plus seven known bookkeeping/provenance refs. Unexpected active work refs remain **0** before the temporary Session 4A docs-closure branch.
 
 Evidence:
 
@@ -270,7 +278,7 @@ Current docs are reconciled, the post-ECX branch delta is cleaned, and no new ro
 
 Any of the following requires a new explicit operator decision and its own bounded scope:
 
-- selected OpenRouter discovered-model admission/verification;
+- Session 4B selected OpenRouter model verification/admission across GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM;
 - DR-2 checkpoint 2 external target selection and later runtime proof;
 - public production promotion/cutover;
 - native Google Drive integration;

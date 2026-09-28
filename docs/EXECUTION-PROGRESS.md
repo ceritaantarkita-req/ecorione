@@ -9,17 +9,17 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = af2ef8f61f26058178e56b0d6490248c1898976e (PR #391)
-image                   = staging-af2ef8f61f26
-CI                      = #2457 PASS
-Product Eval            = #1696 PASS
-Staging Deploy          = #1675 PASS
+runtime / staging       = 29446ad0e140d1486bd3914bb087a552409e464c (PR #394)
+image                   = staging-29446ad0e140
+CI                      = #2468 PASS
+Product Eval            = #1707 PASS
+Staging Deploy          = #1697 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 25.33 GiB stabilized
+free disk               = 25.31 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter extensible model-registry foundation from Session 2 and bounded live discovery/search/cache from Session 3.
+This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter registry foundation (Session 2), bounded live discovery/search/cache (Session 3), and the six-family model foundation (Session 4A).
 
 ## Closed foundational roadmaps
 
@@ -126,11 +126,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = af2ef8f61f26058178e56b0d6490248c1898976e
-image = staging-af2ef8f61f26
+SHA   = 29446ad0e140d1486bd3914bb087a552409e464c
+image = staging-29446ad0e140
 ```
 
-Actual Staging Deploy #1675 proved:
+Actual Staging Deploy #1697 proved:
 
 - native builder installed `python3 make g++`;
 - `better-sqlite3` fallback installation completed;
@@ -140,7 +140,7 @@ Actual Staging Deploy #1675 proved:
 - 0 unhealthy services;
 - 15 configured / 15 running;
 - exact SHA match;
-- 25.33 GiB stabilized free disk.
+- 25.31 GiB stabilized free disk.
 
 The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
 
@@ -162,10 +162,14 @@ This is staging evidence, not production promotion.
 | Session 1 — NVIDIA connection-test hardening | CLOSED / PASS |
 | Session 2 — OpenRouter extensible model registry foundation | CLOSED / PASS |
 | Session 3 — OpenRouter live discovery/search/cache | CLOSED / PASS / STAGING VERIFIED |
+| Session 4A — OpenRouter model-family foundation | CLOSED / PASS / STAGING VERIFIED |
 
-Session 3 adds bounded live catalog discovery while preserving Session 2 admission rules. The current OpenRouter selectable set remains Claude Sonnet 4.5 and Claude Opus 4.1; other catalog models are discovery-only until separately admitted.
+Session 3 adds bounded live catalog discovery while preserving Session 2 admission rules. Session 4A adds one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM. The current OpenRouter selectable set remains Claude Sonnet 4.5 and Claude Opus 4.1; other catalog models remain discovery-only until separately admitted.
 
-Canonical Session 3 checkpoint:
+Canonical Session 4A checkpoint:
+[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md).
+
+Underlying Session 3 checkpoint:
 [verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md).
 
 Underlying Session 2 checkpoint:
@@ -190,7 +194,7 @@ Issue #277 remains the DR-2 tracker.
 | Historical 393-entry exact-SHA cleanup | CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | Cleanup-boundary retained inventory | 9 branches |
-| Current live inventory after Session 3 runtime closure | 13 branches (4 known bookkeeping/provenance refs beyond cleanup boundary) |
+| Current live inventory after Session 4A runtime closure | 16 branches (7 known bookkeeping/provenance refs beyond cleanup boundary) |
 
 Post-ECX Actions run `36338085729` dry-ran 15/15 allowlisted branches with zero hold/fail/skip, deleted all 15, exact-validated and deleted 2 reconciliation branches, self-deleted its helper, and proved:
 
