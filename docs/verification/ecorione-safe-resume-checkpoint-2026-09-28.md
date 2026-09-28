@@ -4,51 +4,49 @@ Status: **CURRENT / SAFE TO RESUME / NO ACTIVE PRODUCT-RUNTIME BATCH**
 
 ## Purpose
 
-Freeze the exact safe handoff point after the closed ECX Batch 1–7 work, NVIDIA hosted-provider rollout, bounded staging activation, Docker native-build hardening, and the bounded NVIDIA connection-test hardening closed in PR #387.
+Freeze the exact safe handoff point after the closed ECX Batch 1–7 work, NVIDIA hosted-provider rollout and connection-test hardening, and OpenRouter model-registry Session 2.
 
 This is the preferred resume pointer for the next ECORIONE session. Do **not** restart completed roadmaps or reconstruct the project from old planning notes.
 
 ## Repository audit boundary
 
 ```text
-repository                    = ceritaantarkita-req/ecorione
-audited runtime main          = 59961422e11d126baa0b2ff957dd7abf8e063f08
-latest runtime closure        = PR #387
-PR #387 reviewed head         = c7ab5a3052a311b7361afe7aa6f0b4100ec8229e
-PR #387 merge SHA             = 59961422e11d126baa0b2ff957dd7abf8e063f08
-PR #387 exact-head CI         = #2402 PASS
-PR #387 exact-head Product Eval = #1641 PASS
-PR #387 exact-head PCS-06 Browser = #218 PASS
-open pull requests            = 0
-live remote branches          = 11
-open issue at audit boundary  = #277 DR-2 physical independence
+repository                       = ceritaantarkita-req/ecorione
+audited runtime main             = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
+latest runtime closure           = PR #389
+PR #389 reviewed head            = 203775e1b37237994a48b232f4184facb8fec1ea
+PR #389 merge SHA                = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
+PR #389 exact-head CI            = #2428 PASS
+PR #389 exact-head Product Eval  = #1667 PASS
+merged-main CI                   = #2429 PASS
+merged-main Product Eval         = #1668 PASS
+open pull requests               = 0
+live remote branches             = 12
+open issue at audit boundary     = #277 DR-2 physical independence
 ```
 
-The branch used to author this checkpoint is documentation-only bookkeeping and does not open a new product/runtime scope.
-
-The live inventory at Session 1 runtime closure is **11 branches**: the prior 9-branch cleanup boundary plus the known bookkeeping ref `docs/current-safe-resume-20260928` and the merged Session 1 provenance ref `fix/nvidia-credential-test-timeout-20260928`. Neither is an unexpected active work branch.
+The documentation branch used to maintain this pointer is bookkeeping only and does not open a product/runtime scope.
 
 ## Runtime / staging compatibility baseline
 
-The latest audited **runtime-changing** merge is:
+The latest audited runtime-changing merge is:
 
 ```text
-runtime-changing baseline = 59961422e11d126baa0b2ff957dd7abf8e063f08
-staging image             = staging-59961422e11d
-CI                        = #2403 PASS
-Product Eval              = #1642 PASS
-Staging Deploy            = #1567 PASS
+runtime-changing baseline = 9f19b40cea4b9f6266caba6f8997a5c2bae67df5
+staging image             = staging-9f19b40cea4b
+Staging Deploy gate       = #1618 PASS
+actual Staging Deploy     = #1619 PASS
 Operations                = healthy
 configured/running        = 15 / 15
 non-running               = 0
-stabilized free disk      = 27.42 GiB
+stabilized free disk      = 29.90 GiB
 ```
 
-PR #387 adds only bounded NVIDIA credential/canary-test robustness to the already closed provider architecture; it does not reopen the earlier NVIDIA rollout scope.
+Staging Deploy #1619 built and deployed the exact merge SHA and passed the protected-route, MCP, Operations, host-evidence, and capacity checks.
 
 SumoPod remains **staging, not production**.
 
-## Completed work that must not be restarted
+## Closed work that must not be restarted
 
 The following are closed at their documented boundaries:
 
@@ -60,20 +58,61 @@ The following are closed at their documented boundaries:
 - repository/documentation reconciliation;
 - historical and post-ECX branch cleanup;
 - ECX Recipient Execution Batch 1–7;
-- NVIDIA / NIM hosted-provider implementation;
-- bounded staging hosted-trial operator-gate activation;
+- NVIDIA / NIM hosted-provider rollout;
+- bounded staging hosted-trial activation;
 - Docker native dependency build hardening;
-- NVIDIA work-branch cleanup;
-- PR #384 documentation closure;
-- NVIDIA connection-test Session 1 hardening through PR #387.
+- NVIDIA connection-test Session 1;
+- OpenRouter model-registry Session 2.
 
-There is no implicit Batch 8, PE-09, PCS-11, Batch 13, A-12 continuation, or other numbered follow-on.
+There is no implicit Batch 8, PE-09, PCS-11, Batch 13, A-12 continuation, or automatic provider Session 3.
+
+## OpenRouter Session 2 state
+
+Session 2 is **CLOSED / PASS / STAGING VERIFIED**.
+
+The hosted model boundary now has an extensible registry that can represent provider/runtime identity, source provider, optional discovery metadata, pricing authority, verification state, catalog provenance, and freshness.
+
+The runtime preference schema is string-shaped for future extensibility, but execution is still fail-closed. A provider/model pair must resolve to an executable verified registry entry with an admitted pricing identity before routing can proceed.
+
+Current OpenRouter executable/selectable models remain:
+
+```text
+Claude Sonnet 4.5 -> anthropic/claude-sonnet-4.5
+Claude Opus 4.1   -> anthropic/claude-opus-4.1
+```
+
+No GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other OpenRouter model is claimed selectable yet.
+
+Canonical Session 2 evidence:
+
+- [openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)
+
+## NVIDIA current source truth
+
+NVIDIA API Catalog / NIM remains implemented as a first-class Connect provider with pinned `z-ai/glm-5.3`.
+
+Current source + tests establish:
+
+```text
+credential-test default deadline = 60 seconds
+provider-canary default deadline = 60 seconds
+NVIDIA probe output cap          = 1024 tokens
+NVIDIA probe reasoning effort    = low
+timeout error                    = PROVIDER_TEST_TIMEOUT
+```
+
+The user's actual NVIDIA secret is not repository state and is not claimed validated.
+
+The older Session 1 checkpoint contains intermediate 30-second / 512-token wording; current code and this checkpoint supersede those figures.
+
+Latest NVIDIA evidence:
+
+- [nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md)
+- [nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
 ## ECX state
 
 ECX Batch 1–7 is **CLOSED / PASS** and remains a compatibility baseline.
-
-Current bounded capability includes governed single-recipient execution, durable idempotency/replay, Agent A -> Agent B -> Agent A round trips, result-receive authority, returned-result security boundaries, usage/cost evidence, Historical Ledger archive/compaction, and deterministic 2–8 recipient `delta` fan-out with bounded aggregate continuation.
 
 Canonical ECX evidence:
 
@@ -81,47 +120,9 @@ Canonical ECX evidence:
 
 Do not reopen B1–B7 merely for freshness.
 
-## NVIDIA hosted-provider state
-
-NVIDIA API Catalog / NIM is implemented as a first-class Connect provider:
-
-```text
-provider id      = nvidia
-display name     = NVIDIA / NIM
-Vault scope      = nvidia/messages
-endpoint         = https://integrate.api.nvidia.com/v1
-pinned model     = z-ai/glm-5.3
-UI label         = Hosted · NVIDIA · GLM-5.3
-operator gate    = OPEN under bounded spend controls
-```
-
-The user's actual NVIDIA secret is not repository state and is **not claimed validated** by Session 1. The repository now guarantees that credential/canary testing is bounded and returns an explicit timeout instead of waiting indefinitely.
-
-A real user-key completion is still an **operator/user validation step**, not a new implementation batch:
-
-```text
-Settings
- -> NVIDIA / NIM
- -> enter key
- -> Test API key
- -> Save & activate
- -> send one Ai message
- -> confirm Hosted · NVIDIA · GLM-5.3
-```
-
-Latest NVIDIA test/runtime evidence:
-
-- [nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md)
-
-Underlying provider rollout evidence:
-
-- [nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
-
 ## Product-state interpretation
 
 Project, Schedule/Trigger, Work, Brain, Flow, Run, and related product surfaces must be read from the **current code + accepted Product Evolution architecture**, not reconstructed from older brainstorming.
-
-The current product model remains:
 
 ```text
 Project = WHERE
@@ -136,36 +137,28 @@ Product Evolution PE-00..PE-08 is already closed. Any future change to these sur
 
 ## Repository hygiene
 
-At the audit boundary before this docs-only checkpoint branch was created:
+The historical cleanup boundary remains 9 branches.
+
+At Session 2 runtime closure:
 
 ```text
-remote branches = 9
-open PRs        = 0
-unexpected      = 0
+live remote branch count       = 12
+known bookkeeping ref          = docs/current-safe-resume-20260928
+known merged Session 1 ref     = fix/nvidia-credential-test-timeout-20260928
+known merged Session 2 ref     = feat/openrouter-model-registry-session2-20260928
+unexpected active work refs    = 0
+open pull requests             = 0
 ```
 
-At Session 1 runtime closure:
+These later refs are known bookkeeping/provenance refs, not active implementation scopes.
 
-```text
-runtime main SHA            = 59961422e11d126baa0b2ff957dd7abf8e063f08
-live remote branch count    = 11
-known bookkeeping ref       = docs/current-safe-resume-20260928
-known merged Session 1 ref  = fix/nvidia-credential-test-timeout-20260928
-unexpected work branches    = 0
-```
-
-The retained branch set was:
-
-- `main`;
-- seven retained substantive/provenance branches;
-- `docs/branch-hygiene-safe-checkpoint-20260927`.
-
-Future branch growth must be handled as a new exact-SHA delta. Do not rerun historical branch classifications simply for freshness.
+Future branch growth must be handled as an exact-SHA delta. Do not rerun historical cleanup classifications simply for freshness.
 
 ## Deferred / separately selectable scopes
 
 None of these is active:
 
+- **OpenRouter Session 3 — live model discovery/search/cache and discovered-vs-admitted model state**;
 - DR-2 checkpoint 2 external-target selection and physical-independence proof;
 - public production promotion/cutover;
 - native Google Drive integration;
@@ -191,12 +184,12 @@ For the next session or agent:
 3. read `docs/active-work-plan.md`;
 4. read `AGENTS.md`;
 5. read this checkpoint;
-6. use the NVIDIA and ECX dated checkpoints only as supporting evidence;
+6. use the Session 2, NVIDIA, and ECX dated checkpoints as supporting evidence;
 7. open exactly one new scope only after explicit operator authorization;
-8. do not infer a next numbered batch from historical documents.
+8. do not infer a next numbered batch/session from historical documents.
 
 ## Bottom line
 
-ECORIONE is at a clean handoff point: the latest runtime-changing staging baseline is healthy and closed, the latest documentation closure is merged, repository hygiene is clean at the audited boundary, and there is **no active product/runtime implementation batch**.
+ECORIONE is at a clean handoff point: OpenRouter Session 2 is closed and deployed, the current runtime is healthy, no pull request is open, and there is **no active product/runtime implementation batch**.
 
-The next implementation must start from current `main`, preserve the closed compatibility contracts, and be driven by a new explicit scope rather than by old backlog numbering.
+The next eligible provider scope is Session 3 discovery, but it is not active until explicitly authorized.
