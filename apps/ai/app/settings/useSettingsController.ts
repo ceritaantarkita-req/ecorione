@@ -22,7 +22,7 @@ type HostedModelCatalogEntry = {
   };
   verification: "verified";
   catalogSource: "static-verified";
-  verifiedAt: string;
+  verifiedAt: string | null;
 };
 export type RuntimeSnapshot = {
   revision: number;
