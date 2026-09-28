@@ -88,6 +88,19 @@ describe("FileRuntimeSettings", () => {
     expect(store.update({ hostedModel: "z-ai/glm-5.3" }).settings.hostedModel).toBe(
       "z-ai/glm-5.3",
     );
+
+    const openrouter = store.update({ hostedProvider: "openrouter" });
+    expect(openrouter.settings).toMatchObject({
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+    });
+    expect(store.update({ hostedModel: "claude-opus-4-1-20250805" }).settings.hostedModel).toBe(
+      "claude-opus-4-1-20250805",
+    );
+    expect(() => store.update({ hostedModel: "deepseek-v3.2-exp" })).toThrow(
+      /belum diverifikasi/u,
+    );
+    expect(() => store.update({ hostedModel: "gpt-5.6-terra" })).toThrow(/belum diverifikasi/u);
   });
 
   it("menolak credential/fragment dan protocol non-http pada local runtime URL", () => {

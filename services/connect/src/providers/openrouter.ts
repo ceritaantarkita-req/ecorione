@@ -1,5 +1,6 @@
 import type { StablePrefix } from "@ecorione/context-assembly";
 import type { PinnedModelId } from "@ecorione/shared-telemetry";
+import { hostedModelRegistryEntry } from "../hosted-model-registry.js";
 import { ProviderResponseError } from "./errors.js";
 import {
   callOpenAiCompatibleHosted,
@@ -11,11 +12,6 @@ import {
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
 const OPENROUTER_PROVIDER_ONLY_ENV = "ECORIONE_OPENROUTER_PROVIDER_ONLY";
 
-const OPENROUTER_RUNTIME_MODELS: Partial<Record<PinnedModelId, string>> = {
-  "claude-sonnet-4-5-20250929": "anthropic/claude-sonnet-4.5",
-  "claude-opus-4-1-20250805": "anthropic/claude-opus-4.1",
-};
-
 export interface OpenRouterCallInput {
   readonly apiKey: string;
   readonly model: PinnedModelId;
@@ -26,11 +22,11 @@ export interface OpenRouterCallInput {
 }
 
 export function openRouterRuntimeModel(model: PinnedModelId): string {
-  const runtime = OPENROUTER_RUNTIME_MODELS[model];
-  if (runtime === undefined) {
-    throw new Error(`Pinned model belum punya mapping OpenRouter: ${model}.`);
+  const entry = hostedModelRegistryEntry("openrouter", model);
+  if (entry === undefined) {
+    throw new Error(`Pinned model belum terdaftar untuk OpenRouter: ${model}.`);
   }
-  return runtime;
+  return entry.providerRuntime;
 }
 
 function normalizeProviderOnly(values: readonly string[]): string[] {

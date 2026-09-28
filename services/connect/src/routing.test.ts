@@ -35,7 +35,7 @@ describe("route", () => {
     });
   });
 
-  it("menghormati model verified pilihan user untuk hosted non-RESTRICTED", () => {
+  it("menghormati model registry pilihan user untuk hosted non-RESTRICTED", () => {
     expect(
       route({
         target: "hosted",

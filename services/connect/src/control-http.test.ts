@@ -85,7 +85,14 @@ describe("Connect Control Center boundary", () => {
           id: "openrouter",
           routingReady: true,
           hostedModels: [
-            expect.objectContaining({ id: "claude-sonnet-4-5-20250929" }),
+            expect.objectContaining({
+              id: "claude-sonnet-4-5-20250929",
+              sourceProvider: "anthropic",
+              verification: "verified",
+              catalogSource: "static-verified",
+              verifiedAt: null,
+              pricing: expect.objectContaining({ authority: "provider-reported" }),
+            }),
             expect.objectContaining({ id: "claude-opus-4-1-20250805" }),
           ],
         }),
