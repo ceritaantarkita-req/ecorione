@@ -77,17 +77,19 @@ export function reviewNodeWorkflowContent(path, content) {
 
 export function reviewDockerfile(content, expectedVersion) {
   const findings = [];
-  const match = content.match(/^FROM\s+node:([^\s]+)$/m);
-  if (!match) {
+  const matches = [...content.matchAll(/^FROM\s+node:([^\s]+)(?:\s+AS\s+\S+)?\s*$/gim)];
+  if (matches.length === 0) {
     findings.push("Dockerfile harus memakai base image node:<exact-version>-<variant>");
     return findings;
   }
 
-  const tag = match[1];
-  if (!tag.startsWith(`${expectedVersion}-`)) {
-    findings.push(
-      `Dockerfile Node base harus selaras dengan ${NODE_VERSION_FILE}=${expectedVersion}, ditemukan node:${tag}`,
-    );
+  for (const match of matches) {
+    const tag = match[1];
+    if (!tag.startsWith(`${expectedVersion}-`)) {
+      findings.push(
+        `Dockerfile Node base harus selaras dengan ${NODE_VERSION_FILE}=${expectedVersion}, ditemukan node:${tag}`,
+      );
+    }
   }
   return findings;
 }
