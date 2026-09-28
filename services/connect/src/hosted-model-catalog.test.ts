@@ -39,8 +39,8 @@ describe("hosted model catalog", () => {
       displayName: "Claude Sonnet 4.5",
       providerRuntime: "anthropic/claude-sonnet-4.5",
       sourceProvider: "anthropic",
-      contextWindowTokens: 1_000_000,
-      capabilities: ["text", "tools", "reasoning"],
+      contextWindowTokens: null,
+      capabilities: ["text"],
       pricing: {
         costModel: "claude-sonnet-4-5-20250929",
         authority: "provider-reported",
@@ -48,7 +48,7 @@ describe("hosted model catalog", () => {
       },
       verification: "verified",
       catalogSource: "static-verified",
-      verifiedAt: "2026-09-28",
+      verifiedAt: null,
     });
     expect(SELECTABLE_HOSTED_MODEL_IDS).not.toContain("deepseek-v3.2-exp");
   });
