@@ -137,6 +137,63 @@ describe("proxyToConnectSettings", () => {
     });
   });
 
+  it("meneruskan mutation OpenRouter model selection hanya ke endpoint admission", async () => {
+    let sawBody = "";
+    pool
+      .intercept({
+        path: "/v1/settings/providers/openrouter/model-selection",
+        method: "PUT",
+      })
+      .reply(200, (opts) => {
+        sawBody = String(opts.body ?? "");
+        return {
+          runtime: {
+            revision: 2,
+            settings: {
+              hostedProvider: "openrouter",
+              hostedModel: "governed",
+              openRouterModelSelection: "qwen/qwen3.8-max",
+              hostedCallsEnabled: false,
+              defaultChatTarget: "local",
+            },
+          },
+          selection: {
+            id: "qwen/qwen3.8-max",
+            admission: "verified-selectable",
+            executable: false,
+            active: false,
+            unavailableReason: null,
+          },
+        };
+      });
+
+    const response = await proxyToConnectSettings(
+      request("PUT", JSON.stringify({ selectionId: "qwen/qwen3.8-max" })),
+      "/v1/settings/providers/openrouter/model-selection",
+      "PUT",
+    );
+
+    expect(response.status).toBe(200);
+    expect(JSON.parse(sawBody)).toEqual({ selectionId: "qwen/qwen3.8-max" });
+    expect(await response.json()).toMatchObject({
+      selection: { executable: false, active: false },
+    });
+
+    const get = await proxyToConnectSettings(
+      request("GET"),
+      "/v1/settings/providers/openrouter/model-selection",
+      "GET",
+    );
+    expect(get.status).toBe(400);
+
+    const query = await proxyToConnectSettings(
+      request("PUT", JSON.stringify({ selectionId: "qwen/qwen3.8-max" })),
+      "/v1/settings/providers/openrouter/model-selection?admin=true",
+      "PUT",
+    );
+    expect(query.status).toBe(400);
+  });
+
   it("menolak query discovery OpenRouter yang tidak diizinkan", async () => {
     const unknown = await proxyToConnectSettings(
       request("GET"),

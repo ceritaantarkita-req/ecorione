@@ -1,14 +1,10 @@
 "use client";
 
 import { useWorkspace } from "../WorkspaceProvider";
+import { HostedModelPicker } from "./HostedModelPicker";
 import { OpenRouterDiscoveryPanel } from "./OpenRouterDiscoveryPanel";
 import styles from "./Settings.module.css";
-import {
-  useSettingsController,
-  type HostedModelPreference,
-  type HostedProviderId,
-  type RuntimeSnapshot,
-} from "./useSettingsController";
+import { useSettingsController, type RuntimeSnapshot } from "./useSettingsController";
 
 export default function SettingsPage() {
   const { workspaceId: activeWorkspaceId } = useWorkspace();
@@ -28,6 +24,7 @@ export default function SettingsPage() {
     mcpLoading,
     mutableLocalModel,
     openRouterDiscovery,
+    openRouterPickerModels,
     openRouterQuery,
     openRouterSourceProvider,
     pendingAction,
@@ -390,77 +387,36 @@ export default function SettingsPage() {
         {runtime === null ? (
           <p className={styles.muted}>Runtime state is loading.</p>
         ) : (
-          <div className={styles.defaultModelPanel}>
-            <label>
-              Provider
-              <select
-                value={runtime.settings.hostedProvider}
-                disabled={pendingAction !== null}
-                onChange={(event) => {
-                  const provider = event.target.value as HostedProviderId;
-                  setHostedHealth(null);
-                  setRuntime({
-                    ...runtime,
-                    settings: {
-                      ...runtime.settings,
-                      hostedProvider: provider,
-                      hostedModel: "governed",
-                    },
-                  });
-                }}
-              >
-                {hostedProviderOptions.map((provider) => (
-                  <option key={provider.id} value={provider.id}>
-                    {provider.displayName}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Model
-              <select
-                value={runtime.settings.hostedModel}
-                disabled={pendingAction !== null}
-                onChange={(event) =>
-                  setRuntime({
-                    ...runtime,
-                    settings: {
-                      ...runtime.settings,
-                      hostedModel: event.target.value as HostedModelPreference,
-                    },
-                  })
-                }
-              >
-                <option value="governed">Governed / Recommended</option>
-                {activeHostedModels.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.displayName}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className={styles.defaultModelSummary}>
-              <strong>
-                {runtime.settings.hostedModel === "governed"
-                  ? "Governed / Recommended"
-                  : (activeHostedModels.find(
-                      (model) => model.id === runtime.settings.hostedModel,
-                    )?.displayName ?? runtime.settings.hostedModel)}
-              </strong>
-              <span>
-                {runtime.settings.hostedModel === "governed"
-                  ? "Policy dapat memilih pinned model yang sesuai sensitivity dan evidence."
-                  : "Pilihan ini dipakai untuk hosted chat normal. RESTRICTED tetap boleh di-override oleh policy."}
-              </span>
-            </div>
-            <button
-              type="button"
-              disabled={pendingAction !== null}
-              onClick={() => void saveDefaultProviderModel()}
-            >
-              {pendingAction === "default-provider-model" ? "Saving…" : "Save default"}
-            </button>
-          </div>
+          <HostedModelPicker
+            runtime={runtime}
+            hostedProviderOptions={hostedProviderOptions}
+            activeHostedModels={activeHostedModels}
+            openRouterPickerModels={openRouterPickerModels}
+            pendingAction={pendingAction}
+            onProviderChange={(provider) => {
+              setHostedHealth(null);
+              setRuntime({
+                ...runtime,
+                settings: {
+                  ...runtime.settings,
+                  hostedProvider: provider,
+                  hostedModel: "governed",
+                },
+              });
+            }}
+            onModelChange={(selected) =>
+              setRuntime({
+                ...runtime,
+                settings: {
+                  ...runtime.settings,
+                  ...(runtime.settings.hostedProvider === "openrouter"
+                    ? { openRouterModelSelection: selected }
+                    : { hostedModel: selected }),
+                },
+              })
+            }
+            onSave={() => void saveDefaultProviderModel()}
+          />
         )}
 
         {runtime?.settings.hostedProvider === "openrouter" ? (

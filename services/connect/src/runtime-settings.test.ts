@@ -103,6 +103,45 @@ describe("FileRuntimeSettings", () => {
     expect(() => store.update({ hostedModel: "gpt-5.6-terra" })).toThrow(/belum diverifikasi/u);
   });
 
+  it("tidak mengarang picker default yang menutupi legacy OpenRouter runtime selection", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
+    const path = join(dir, "settings.json");
+    writeFileSync(
+      path,
+      JSON.stringify({
+        version: 1,
+        revision: 5,
+        settings: {
+          ...defaults,
+          hostedProvider: "openrouter",
+          hostedModel: "claude-opus-4-1-20250805",
+        },
+      }),
+      "utf8",
+    );
+
+    const store = new FileRuntimeSettings(path, defaults);
+    expect(store.get().settings).toMatchObject({
+      hostedProvider: "openrouter",
+      hostedModel: "claude-opus-4-1-20250805",
+    });
+    expect(store.get().settings.openRouterModelSelection).toBeUndefined();
+  });
+
+  it("menyimpan OpenRouter picker preference terpisah dari executable runtime model", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
+    const store = new FileRuntimeSettings(join(dir, "settings.json"), defaults);
+
+    store.update({ hostedProvider: "openrouter" });
+    const selected = store.update({ openRouterModelSelection: "qwen/qwen3.8-max" });
+
+    expect(selected.settings).toMatchObject({
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      openRouterModelSelection: "qwen/qwen3.8-max",
+    });
+  });
+
   it("menolak credential/fragment dan protocol non-http pada local runtime URL", () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
     const store = new FileRuntimeSettings(join(dir, "settings.json"), defaults);

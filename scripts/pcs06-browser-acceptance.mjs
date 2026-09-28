@@ -75,6 +75,7 @@ let runtime = {
   settings: {
     hostedProvider: "openrouter",
     hostedModel: "gpt-5.6-sol",
+    openRouterModelSelection: "governed",
     localRuntime: "openai-compatible",
     localBaseUrl: "http://127.0.0.1:11434/v1",
     localModelTag: "qwen3.5:9b",
@@ -680,6 +681,69 @@ async function installApiMocks(context) {
         settings: { ...runtime.settings, ...body },
       };
       return json(route, runtime);
+    }
+    if (
+      path === "/api/settings/settings/providers/openrouter/model-selection" &&
+      method === "PUT"
+    ) {
+      const body = request.postDataJSON();
+      const selectionId = body.selectionId;
+      if (selectionId === "governed") {
+        runtime = {
+          revision: runtime.revision + 1,
+          settings: {
+            ...runtime.settings,
+            hostedProvider: "openrouter",
+            hostedModel: "governed",
+            openRouterModelSelection: "governed",
+            hostedCallsEnabled: true,
+            defaultChatTarget: "hosted",
+          },
+        };
+        return json(route, {
+          runtime,
+          selection: {
+            id: selectionId,
+            admission: "governed",
+            executable: true,
+            active: true,
+            unavailableReason: null,
+          },
+        });
+      }
+      if (selectionId === "qwen/qwen3.8-max") {
+        runtime = {
+          revision: runtime.revision + 1,
+          settings: {
+            ...runtime.settings,
+            hostedProvider: "openrouter",
+            hostedModel: "governed",
+            openRouterModelSelection: selectionId,
+            hostedCallsEnabled: false,
+            defaultChatTarget: "local",
+          },
+        };
+        return json(route, {
+          runtime,
+          selection: {
+            id: selectionId,
+            admission: "verified-selectable",
+            executable: false,
+            active: false,
+            unavailableReason: null,
+          },
+        });
+      }
+      return json(
+        route,
+        {
+          error: {
+            type: "OPENROUTER_MODEL_NOT_SELECTABLE",
+            message: `Model ${String(selectionId)} is not selectable.`,
+          },
+        },
+        409,
+      );
     }
     if (path === "/api/settings/settings/providers/openrouter/models" && method === "GET") {
       const query = new URL(request.url()).searchParams.get("q")?.toLowerCase() ?? "";
@@ -1292,7 +1356,9 @@ async function runDesktopJourney() {
     await defaultSelects.nth(0).selectOption("openrouter");
     await defaultSelects.nth(1).selectOption("governed");
     await defaultSection.getByRole("button", { name: "Save default", exact: true }).click();
-    await page.getByText("Default hosted provider/model saved.", { exact: true }).waitFor();
+    await page
+      .getByText("Default OpenRouter model saved and active.", { exact: true })
+      .waitFor();
     if ((await defaultSelects.nth(1).inputValue()) !== "governed") {
       throw new Error("desktop-settings: governed model selection was not retained");
     }
@@ -1302,25 +1368,51 @@ async function runDesktopJourney() {
     await page.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
     await page.getByText("Selectable", { exact: true }).waitFor();
     if (
-      (await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 0
+      (await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 1
     ) {
       throw new Error(
-        "desktop-settings: Session 4B admission must not pre-empt the Session 4C runtime picker",
+        "desktop-settings: Session 4C picker must include admitted Qwen selection",
       );
     }
+    await defaultSelects.nth(1).selectOption("qwen/qwen3.8-max");
+    await defaultSection.getByRole("button", { name: "Save default", exact: true }).click();
+    await page
+      .getByText(
+        "OpenRouter model selection saved. Hosted execution is disabled until this model has separate executable validation.",
+        { exact: true },
+      )
+      .waitFor();
+    if (runtime.settings.openRouterModelSelection !== "qwen/qwen3.8-max") {
+      throw new Error("desktop-settings: admitted Qwen selection was not persisted");
+    }
+    if (
+      runtime.settings.hostedCallsEnabled !== false ||
+      runtime.settings.defaultChatTarget !== "local" ||
+      runtime.settings.hostedModel !== "governed"
+    ) {
+      throw new Error(
+        "desktop-settings: non-executable OpenRouter selection must fail closed instead of silently routing",
+      );
+    }
+
     await openRouterSearch.fill("deepseek");
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
     await page.getByText("DeepSeek V4 Flash Latest", { exact: true }).waitFor();
     await page.getByText("Unavailable", { exact: true }).waitFor();
     await page.getByText(/reason alias mutable/).waitFor();
+    if (
+      (await defaultSelects
+        .nth(1)
+        .locator('option[value="~deepseek/deepseek-v4-flash-latest"]')
+        .count()) !== 0
+    ) {
+      throw new Error("desktop-settings: unavailable model leaked into Session 4C picker");
+    }
 
-    const selectedModelLabel = await defaultSelects
-      .nth(1)
-      .locator("option:checked")
-      .textContent();
-    if (selectedModelLabel?.trim() !== "Governed / Recommended") {
+    const selectedModelValue = await defaultSelects.nth(1).inputValue();
+    if (selectedModelValue !== "qwen/qwen3.8-max") {
       throw new Error(
-        `desktop-settings: expected Governed / Recommended, got ${selectedModelLabel ?? "null"}`,
+        `desktop-settings: expected persisted Qwen selection, got ${selectedModelValue}`,
       );
     }
 
