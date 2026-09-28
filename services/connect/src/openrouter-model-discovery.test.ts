@@ -67,6 +67,14 @@ describe("OpenRouter model discovery", () => {
 
     expect(result).toMatchObject({
       source: "openrouter:/api/v1/models",
+      families: [
+        { id: "gpt", displayName: "GPT" },
+        { id: "gemini", displayName: "Gemini" },
+        { id: "qwen", displayName: "Qwen" },
+        { id: "deepseek", displayName: "DeepSeek" },
+        { id: "kimi", displayName: "Kimi" },
+        { id: "glm", displayName: "GLM" },
+      ],
       cache: "refreshed",
       stale: false,
       total: 1,
