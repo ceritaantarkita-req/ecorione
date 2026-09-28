@@ -18,7 +18,7 @@ interface OpenRouterPickerModel extends HostedModelOption {
 
 interface HostedModelPickerProps {
   readonly runtime: RuntimeSnapshot;
-  readonly hostedProviderOptions: readonly Array<{
+  readonly hostedProviderOptions: ReadonlyArray<{
     readonly id: HostedProviderId;
     readonly displayName: string;
   }>;
@@ -42,7 +42,7 @@ export function HostedModelPicker({
 }: HostedModelPickerProps) {
   const selectedModelPreference =
     runtime.settings.hostedProvider === "openrouter"
-      ? (runtime.settings.openRouterModelSelection ?? "governed")
+      ? (runtime.settings.openRouterModelSelection ?? runtime.settings.hostedModel)
       : runtime.settings.hostedModel;
   const selectedOpenRouterModel =
     runtime.settings.hostedProvider === "openrouter"
