@@ -41,21 +41,10 @@ describe("route", () => {
         target: "hosted",
         sensitivity: "INTERNAL",
         hostedProvider: "openrouter",
-        hostedModel: "deepseek-v3.2-exp",
+        hostedModel: "claude-opus-4-1-20250805",
       }),
     ).toEqual({
-      model: "deepseek-v3.2-exp",
-      routeReason: "selected-hosted",
-    });
-    expect(
-      route({
-        target: "hosted",
-        sensitivity: "PUBLIC",
-        hostedProvider: "openrouter",
-        hostedModel: "gpt-5.6-terra",
-      }),
-    ).toEqual({
-      model: "gpt-5.6-terra",
+      model: "claude-opus-4-1-20250805",
       routeReason: "selected-hosted",
     });
   });
@@ -106,7 +95,7 @@ describe("route", () => {
         target: "hosted",
         sensitivity: "INTERNAL",
         hostedProvider: "openrouter",
-        hostedModel: "z-ai/glm-5.3",
+        hostedModel: "gpt-5.6-terra",
       }),
     ).toThrow(/belum diverifikasi/u);
   });
