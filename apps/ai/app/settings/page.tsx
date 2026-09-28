@@ -23,17 +23,19 @@ export default function SettingsPage() {
     hostedProviderOptions,
     localSetupOpen,
     localStatus,
-    openRouterDiscovery,
-    openRouterQuery,
-    openRouterSourceProvider,
     mcpJson,
     mcpLoading,
     mutableLocalModel,
+    openRouterDiscovery,
+    openRouterQuery,
+    openRouterSourceProvider,
+    mcpLoading,
+    mutableLocalModel,
     pendingAction,
+    discoverOpenRouterModels,
     providerViews,
     refreshMcp,
     removeCredential,
-    discoverOpenRouterModels,
     runCanary,
     runtime,
     saveCredential,
@@ -52,9 +54,9 @@ export default function SettingsPage() {
     setHostedHealth,
     setLocalSetupOpen,
     setLocalStatus,
+    setMcpJson,
     setOpenRouterQuery,
     setOpenRouterSourceProvider,
-    setMcpJson,
     setRuntime,
     setSecret,
     setSecretProvider,
@@ -470,7 +472,11 @@ export default function SettingsPage() {
                 <h3>Find models</h3>
               </div>
               {openRouterDiscovery === null ? null : (
-                <span className={openRouterDiscovery.stale ? styles.statusBadge : styles.activeBadge}>
+                <span
+                  className={
+                    openRouterDiscovery.stale ? styles.statusBadge : styles.activeBadge
+                  }
+                >
                   {openRouterDiscovery.stale ? "Stale cache" : openRouterDiscovery.cache}
                 </span>
               )}
@@ -558,7 +564,8 @@ export default function SettingsPage() {
                               : model.contextWindowTokens.toLocaleString()}
                           </span>
                           <span>
-                            input {model.inputModalities.length > 0
+                            input{" "}
+                            {model.inputModalities.length > 0
                               ? model.inputModalities.join(", ")
                               : "unknown"}
                           </span>
