@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+// Keep native build fallback available without carrying the compiler toolchain into runtime.
 describe("Docker native dependency build contract", () => {
   const dockerfile = readFileSync("Dockerfile", "utf8");
   const runtimeStage =
