@@ -681,7 +681,10 @@ async function installApiMocks(context) {
       };
       return json(route, runtime);
     }
-    if (path === "/api/settings/settings/providers/openrouter/models" && method === "GET") {
+    if (
+      path === "/api/settings/settings/providers/openrouter/models" &&
+      method === "GET"
+    ) {
       const query = new URL(request.url()).searchParams.get("q")?.toLowerCase() ?? "";
       const discovered = [
         {
