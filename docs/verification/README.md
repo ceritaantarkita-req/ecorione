@@ -14,6 +14,7 @@ Historical evidence may contain statements that were correct at the time but are
 
 ## Latest repository truth
 
+- [openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md) — latest FINAL / CLOSED / PASS runtime checkpoint: version-agnostic GPT/Gemini/Qwen/DeepSeek/Kimi/GLM family foundation deployed at `29446ad0...` / `staging-29446ad0e140`; family classification remains non-authoritative for execution and the selectable OpenRouter set remains the two verified Claude models.
 - [openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md) — latest FINAL / CLOSED / PASS runtime checkpoint: bounded OpenRouter live discovery/search/filter/cache deployed at `af2ef8f...` / `staging-af2ef8f61f26`; discovered-only models remain non-executable and the selectable set remains the two verified Claude models.
 - [openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md) — underlying Session 2 registry checkpoint: extensible fail-closed hosted-model registry and admitted pricing/execution boundary.
 - [nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md) — latest FINAL / CLOSED / PASS runtime checkpoint: NVIDIA credential/canary testing is bounded and failure-explicit; PR #387 is deployed at `59961422...` / `staging-59961422e11d`.
@@ -76,9 +77,9 @@ Important dated proof includes:
 - ECX Batch 1–7 staging deliveries;
 - NVIDIA provider implementation and rollout;
 - failed Staging Deploy #1505 with successful rollback evidence;
-- current exact staging proof at Staging Deploy #1675.
+- current exact staging proof at Staging Deploy #1697.
 
-Current exact runtime/staging identity is recorded in [openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md), not inferred from older deployment documents.
+Current exact runtime/staging identity is recorded in [openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md), not inferred from older deployment documents.
 
 ## Off-host DR
 
