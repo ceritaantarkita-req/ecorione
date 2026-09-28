@@ -1,6 +1,6 @@
 # ECORIONE — SumoPod Remote Staging Runbook
 
-Last updated: **2026-09-26**
+Last updated: **2026-09-28**
 
 Status: **REMOTE STAGING VERIFIED / PCS-07..PCS-09 CLOSED / PASS / NOT PRODUCTION**
 
@@ -31,7 +31,13 @@ PCS-07 proved the initial remote staging deployment and basic runtime reachabili
 
 **2026-09-26 mobile observation:** one iPhone session authenticated successfully but the root `/` bootstrap could remain visually blank, while direct access to protected `/flow` with the same cached Basic-Auth credential loaded the application. Treat this as a bounded staging UX observation pending a separately selected reproducible browser bugfix; do not weaken the auth boundary as a workaround.
 
-**Current operational state:** capacity recovery, auto-deploy restoration, and deployment-pipeline hardening are CLOSED / PASS. Repository/documentation reconciliation PR #354 merged as `265a28d4c53cc482af8ea33a6362a21e640d30e5`; governed Staging Deploy #1298 deployed `staging-265a28d4c53c`. The host worktree matched clean/detached, public/auth + MCP checks passed, Operations was healthy with zero unhealthy owner services, all 15 configured services were running, and capacity stabilized at 25.11 GiB free. Automatic GitHub -> SumoPod deployment is restored/proven; later docs-only bookkeeping may advance the exact SHA without changing application/service/package trees. Historical capacity-recovery state remains in [verification/staging-capacity-recovery-closure-2026-09-24.md](verification/staging-capacity-recovery-closure-2026-09-24.md).
+**Current operational state:** governed staging is converged at exact `main` `0f86a34cde66dd541dae9a830ae8cc155e1efe6b` / image `staging-0f86a34cde66`. CI #2380 + Product Eval #1619 passed and Staging Deploy #1525 executed the deploy job successfully. Public/auth + MCP checks passed, Operations was healthy with zero unhealthy services, all 15 configured services were running, exact host SHA matched, and capacity stabilized at 29.89 GiB free.
+
+NVIDIA / NIM is now available as a first-class hosted provider with pinned `z-ai/glm-5.3`. A one-time staging-only migration opened hosted calls under finite spend controls; the migration code was removed after execution so future emergency kill-switch ownership remains with the operator. The user's actual NVIDIA API key is not stored in repository state and must still be entered/tested through Settings.
+
+Staging Deploy #1505 is intentionally preserved as failed evidence: the host migration passed, the old Docker builder then failed when `better-sqlite3` needed native compilation without Python, and governed rollback fully revalidated. The permanent Dockerfile now uses a pinned multi-stage build with `python3 make g++` only in the build stage; #1525 proved `better-sqlite3 install: Done` on SumoPod.
+
+Canonical current evidence: [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 ## Secret and host rules
 
