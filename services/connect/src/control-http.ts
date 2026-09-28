@@ -91,10 +91,15 @@ export function registerConnectControlRoutes(
   app.get("/v1/settings/runtime", async () => runtime().get());
   app.put("/v1/settings/runtime", async (req) => {
     const patch = parseOrBadRequest(RuntimeSettingsPatchSchema, req.body);
+    const currentSettings = runtime().get().settings;
+    const currentOpenRouterSelection =
+      currentSettings.openRouterModelSelection ??
+      (currentSettings.hostedProvider === "openrouter"
+        ? currentSettings.hostedModel
+        : "governed");
     if (
       patch.openRouterModelSelection !== undefined &&
-      patch.openRouterModelSelection !==
-        (runtime().get().settings.openRouterModelSelection ?? "governed")
+      patch.openRouterModelSelection !== currentOpenRouterSelection
     ) {
       throw new HttpError(
         400,
