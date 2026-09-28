@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-28**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / NVIDIA SESSION 1 CLOSED-PASS / NVIDIA HOSTED TRIAL CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
+Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / OPENROUTER SESSION 2 CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
 
-Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md). The latest audited runtime-changing `main` is `59961422e11d126baa0b2ff957dd7abf8e063f08` from PR #387.
+Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md). The latest audited runtime-changing `main` is `9f19b40cea4b9f6266caba6f8997a5c2bae67df5` from PR #389.
 
 ## Current queue
 
@@ -19,7 +19,8 @@ Closed current baselines:
 - original Off-host DR — CLOSED / PASS at documented boundary;
 - ECX Recipient Execution Batch 1–7 — CLOSED / PASS;
 - NVIDIA hosted-provider trial + staging activation + Docker native-build hardening — CLOSED / PASS;
-- NVIDIA connection-test Session 1 hardening — CLOSED / PASS.
+- NVIDIA connection-test Session 1 hardening — CLOSED / PASS;
+- OpenRouter model-registry Session 2 — CLOSED / PASS.
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
 
@@ -43,7 +44,7 @@ Evidence:
 - [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
-The completed cleanup runs each ended at 9 retained branches. The live Session 1 closure inventory is 11 branches: the prior bookkeeping ref `docs/current-safe-resume-20260928` plus the merged provenance ref `fix/nvidia-credential-test-timeout-20260928`. There is no unexpected active work branch and no active repository-hygiene queue.
+The completed cleanup runs each ended at 9 retained branches. The live Session 2 closure inventory is 12 branches: the 9-branch cleanup boundary plus known bookkeeping/provenance refs `docs/current-safe-resume-20260928`, `fix/nvidia-credential-test-timeout-20260928`, and `feat/openrouter-model-registry-session2-20260928`. There is no unexpected active work branch and no active repository-hygiene queue.
 
 Future non-bookkeeping branch growth must be handled as a new exact-SHA delta, not by rerunning historical cleanups.
 
@@ -72,8 +73,8 @@ Current proven boundary:
 - pinned hosted model is `z-ai/glm-5.3`;
 - staging operator hosted kill switch is open under bounded spend controls; runtime hosted activation still follows the normal Settings/provider activation path;
 - Docker native dependency fallback is hardened and proven on SumoPod;
-- the latest runtime-changing merge and staging are converged at `59961422e11d126baa0b2ff957dd7abf8e063f08` / `staging-59961422e11d`;
-- credential test deadline is 30 seconds and NVIDIA credential/canary probes use a bounded 512-token output cap;
+- the latest runtime-changing merge and staging are converged at `9f19b40cea4b9f6266caba6f8997a5c2bae67df5` / `staging-9f19b40cea4b`;
+- current credential/canary default deadlines are 60 seconds; NVIDIA health probes use a bounded 1024-token output cap with low reasoning effort;
 - provider-canary latency deadlines are now enforced;
 - user NVIDIA secret has not been stored and is not claimed validated.
 
@@ -87,6 +88,23 @@ Underlying provider/runtime checkpoint:
 
 Overall safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
+
+## OpenRouter model-registry Session 2 — CLOSED / PASS
+
+Current proven boundary:
+
+- hosted model identity now resolves through one governed registry;
+- preference persistence is extensible without making arbitrary model strings executable;
+- executable admission remains verified + pricing-bound + provider/model specific;
+- OpenRouter adapter runtime slugs resolve from the registry instead of a separate Claude mapping;
+- current selectable OpenRouter set remains Claude Sonnet 4.5 + Claude Opus 4.1;
+- live OpenRouter discovery/search/cache is **not implemented yet**;
+- no additional OpenRouter model is claimed selectable merely from a known slug.
+
+Checkpoint:
+[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
+
+Session 3 discovery is a separately selectable next scope and is not active.
 
 ## DR-2
 
@@ -114,6 +132,7 @@ Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence 
 
 The following are eligible only through an explicit new decision; none is current work:
 
+- OpenRouter Session 3 live discovery/search/cache;
 - DR-2 checkpoint 2;
 - production cutover;
 - native Google Drive integration;
