@@ -8,20 +8,22 @@ Record the first-class NVIDIA API Catalog / NIM hosted-provider integration, the
 
 This checkpoint is the resume pointer for the NVIDIA hosted-provider trial work. Do not restart the implementation from scratch unless a new explicit scope changes the provider/model/runtime boundary.
 
-## Final repository/runtime identity
+## Final audited runtime identity
 
 ```text
-repository       = ceritaantarkita-req/ecorione
-main             = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
-staging image    = staging-0f86a34cde66
-open PRs         = 0
-remote branches  = 9
-runtime status   = healthy
-configured       = 15 services
-running          = 15 services
-non-running      = 0
-final free disk  = 29.89 GiB
+repository              = ceritaantarkita-req/ecorione
+runtime-changing merge  = 0f86a34cde66dd541dae9a830ae8cc155e1efe6b
+staging image           = staging-0f86a34cde66
+open PRs at audit       = 0
+retained branch baseline= 9
+runtime status          = healthy
+configured              = 15 services
+running                 = 15 services
+non-running             = 0
+final free disk         = 29.89 GiB
 ```
+
+The temporary checkpoint branch itself makes the live remote count one higher until this documentation is merged and that branch is exact-SHA deleted. Docs-only closure commits may also advance live Git/staging SHA without changing the runtime compatibility baseline above.
 
 SumoPod remains **staging, not production**.
 
@@ -164,7 +166,7 @@ staging-41fdedf9b13d
 
 Rollback revalidation passed public auth, MCP metadata/challenge, Operations health, exact-host evidence, and capacity checks.
 
-The host-only migration had already completed before the image build failure, so the finite hosted-trial configuration remained on the host while runtime stayed on the previously healthy NVIDIA-capable image.
+The host-only migration had already completed before the image build failure, so the operator cost kill switch was open under a finite spend policy while runtime stayed on the previously healthy NVIDIA-capable image. This does **not** prove the persisted runtime `hostedCallsEnabled` toggle was already true; that activation remains part of the normal Settings/provider activation flow.
 
 Do not erase or reinterpret this failed run; it is valid rollout evidence.
 
@@ -276,7 +278,8 @@ NVIDIA provider implementation = CLOSED / PASS
 NVIDIA UI onboarding          = IMPLEMENTED / LIVE
 NVIDIA Vault path             = IMPLEMENTED / LIVE
 NVIDIA pinned model           = z-ai/glm-5.3
-staging hosted gate           = ENABLED UNDER BOUNDED SPEND
+staging operator gate         = OPEN UNDER BOUNDED SPEND
+runtime hosted toggle         = NOT CLAIMED ENABLED UNTIL SETTINGS ACTIVATION
 actual user NVIDIA key        = NOT STORED / NOT TESTED BY THIS CHECKPOINT
 real user-key completion      = NOT YET PROVEN
 Docker native build defect    = CLOSED / PASS
