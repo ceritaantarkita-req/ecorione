@@ -6,23 +6,17 @@ import { credentialSaveReady, type CredentialTestStamp } from "../../lib/credent
 import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
 
 export type HostedProviderId = "anthropic" | "openrouter" | "openai" | "nvidia";
-export type HostedModelPreference = string;
+export type HostedModelPreference =
+  | "governed"
+  | "claude-sonnet-4-5-20250929"
+  | "claude-opus-4-1-20250805"
+  | "gpt-5.6-terra"
+  | "gpt-5.6-sol"
+  | "z-ai/glm-5.3";
 type HostedModelCatalogEntry = {
-  id: string;
+  id: Exclude<HostedModelPreference, "governed">;
   displayName: string;
   providerRuntime: string;
-  provider: HostedProviderId;
-  sourceProvider: string;
-  contextWindowTokens: number | null;
-  capabilities: Array<"text" | "tools" | "reasoning">;
-  pricing: {
-    costModel: string | null;
-    authority: "snapshot" | "provider-reported";
-    currency: "USD";
-  };
-  verification: "verified" | "discovered";
-  catalogSource: "static-verified" | "openrouter-discovery";
-  verifiedAt: string | null;
 };
 export type RuntimeSnapshot = {
   revision: number;
