@@ -279,7 +279,7 @@ Evidence:
 
 There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 4B is closed and staging verified.
 
-Current docs are being reconciled to that runtime truth; Session 4C is eligible only after an explicit operator decision.
+Current docs are reconciled to that runtime truth; Session 4C is eligible only after an explicit operator decision.
 
 ## Explicit deferred / separately selectable future scopes
 
