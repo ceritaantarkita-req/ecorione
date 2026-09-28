@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getGlobalDispatcher, MockAgent, setGlobalDispatcher, type Interceptable } from "undici";
+import {
+  getGlobalDispatcher,
+  MockAgent,
+  setGlobalDispatcher,
+  type Interceptable,
+} from "undici";
 import { OpenRouterModelDiscovery } from "./openrouter-model-discovery.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
@@ -136,7 +141,9 @@ describe("OpenRouter model discovery", () => {
   });
 
   it("fails clearly when no cache exists and the upstream response is invalid", async () => {
-    pool.intercept({ path: "/api/v1/models", method: "GET" }).reply(200, { unexpected: [] });
+    pool
+      .intercept({ path: "/api/v1/models", method: "GET" })
+      .reply(200, { unexpected: [] });
     const discovery = new OpenRouterModelDiscovery();
 
     await expect(discovery.list()).rejects.toMatchObject({
