@@ -85,7 +85,7 @@ const RuntimeSettingsObjectSchema = z
   .object({
     hostedProvider: HostedProviderIdSchema,
     hostedModel: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
-    openRouterModelSelection: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
+    openRouterModelSelection: HostedModelPreferenceSchema.optional(),
     localRuntime: LocalRuntimeIdSchema,
     localBaseUrl: LocalBaseUrlSchema,
     localModelTag: z.string().min(1).max(256),
