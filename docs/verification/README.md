@@ -1,6 +1,6 @@
 # Verification evidence
 
-Current overall resume pointer: [ecorione-safe-resume-checkpoint-2026-09-28.md](ecorione-safe-resume-checkpoint-2026-09-28.md).
+Current overall resume pointer: [ecorione-safe-resume-checkpoint-2026-09-29.md](ecorione-safe-resume-checkpoint-2026-09-29.md).
 
 This directory contains **dated evidence**, not current planning.
 
@@ -14,7 +14,8 @@ Historical evidence may contain statements that were correct at the time but are
 
 ## Latest repository truth
 
-- [openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md) — latest FINAL / CLOSED / PASS runtime checkpoint: automatic fail-closed target-family admission deployed at `fd921d81...` / `staging-fd921d811364`; qualifying fresh candidates can be `verified-selectable` while remaining `executable=false`.
+- [openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md) — latest FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: governed Settings picker deployed at `c65926de...` / `staging-c65926de4180`; dynamic `verified-selectable` preferences remain non-executable and fail closed on save.
+- [openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md) — underlying automatic fail-closed target-family admission checkpoint.
 - [openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md) — underlying Session 4A family checkpoint: version-agnostic GPT/Gemini/Qwen/DeepSeek/Kimi/GLM classification foundation.
 - [openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md) — underlying Session 3 discovery checkpoint: bounded OpenRouter live discovery/search/filter/cache deployed at `af2ef8f...` / `staging-af2ef8f61f26`; discovered-only models remain non-executable and the selectable set remains the two verified Claude models.
 - [openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md) — underlying Session 2 registry checkpoint: extensible fail-closed hosted-model registry and admitted pricing/execution boundary.
@@ -78,9 +79,9 @@ Important dated proof includes:
 - ECX Batch 1–7 staging deliveries;
 - NVIDIA provider implementation and rollout;
 - failed Staging Deploy #1505 with successful rollback evidence;
-- current exact staging proof at Staging Deploy #1729.
+- current exact staging proof at Staging Deploy #1745.
 
-Current exact runtime/staging identity is recorded in [openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md), not inferred from older deployment documents.
+Current exact runtime/staging identity is recorded in [openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md), not inferred from older deployment documents.
 
 ## Off-host DR
 

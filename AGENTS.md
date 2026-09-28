@@ -15,25 +15,25 @@ Before changing the repo:
 
 Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evidence. They are **not current work queues**.
 
-## Current compatibility baseline — 2026-09-28
+## Current compatibility baseline — 2026-09-29
 
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = fd921d81136433bd871a466498a283fc5bfb760e
-image            = staging-fd921d811364
-CI               = #2484 PASS
-Product Eval     = #1723 PASS
-Staging Deploy   = #1729 PASS
+runtime baseline = c65926de418046494d2e961af10662d2eadca37c
+image            = staging-c65926de4180
+CI               = #2492 PASS
+Product Eval     = #1731 PASS
+Staging Deploy   = #1745 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 27.44 GiB stabilized
+free disk        = 29.93 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #396 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #398 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
 
 Current overall safe-resume pointer:
-`docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md`.
+`docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md`.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
@@ -55,7 +55,7 @@ Latest NVIDIA test/runtime checkpoint:
 Underlying provider rollout checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
-Use `docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md` as the overall handoff pointer before opening a new scope.
+Use `docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md` as the overall handoff pointer before opening a new scope.
 
 Closed roadmap families:
 
@@ -70,7 +70,8 @@ Closed roadmap families:
 - OpenRouter model-registry Session 2 — **CLOSED / PASS**;
 - OpenRouter live-discovery Session 3 — **CLOSED / PASS / STAGING VERIFIED**;
 - OpenRouter model-family Session 4A — **CLOSED / PASS / STAGING VERIFIED**;
-- OpenRouter automatic-admission Session 4B — **CLOSED / PASS / STAGING VERIFIED**.
+- OpenRouter automatic-admission Session 4B — **CLOSED / PASS / STAGING VERIFIED**;
+- OpenRouter Settings model-picker Session 4C — **CLOSED / PASS / STAGING VERIFIED**.
 
 There is **no active product/runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item.
 
@@ -78,7 +79,7 @@ Open Issue #277 remains the deferred DR-2 tracker.
 
 ## OpenRouter registry + discovery + family + admission working boundary
 
-Sessions 2, 3, 4A, and 4B are **CLOSED / PASS**.
+Sessions 2, 3, 4A, 4B, and 4C are **CLOSED / PASS**.
 
 Current invariants:
 
@@ -87,7 +88,7 @@ Current invariants:
 - executable hosted entries require an admitted pricing identity;
 - OpenRouter runtime slugs resolve from the registry;
 - provider-reported OpenRouter billed cost remains authoritative for actual cost;
-- the current **runtime execution dropdown** remains Claude Sonnet 4.5 and Claude Opus 4.1 only;
+- current OpenRouter executable authority remains Claude Sonnet 4.5 and Claude Opus 4.1 only; Session 4C may additionally show non-executable `verified-selectable` preferences in Settings;
 - live OpenRouter discovery/search/filter/cache exists through Connect;
 - discovered/catalogued state, selection eligibility, and executable authority are distinct;
 - Session 4B may mark a fresh six-family candidate `verified-selectable` / `selectable=true` while `executable=false`;
@@ -98,9 +99,12 @@ Current invariants:
 - unrelated models sharing an author namespace remain `other` and discovery-only;
 - remote catalog pricing is admission evidence only; it must not silently create a `PinnedModelId`, weaken spend reservation, or become runtime execution authority.
 
-Do not hard-code newly discovered GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other OpenRouter models as verified executable. Session 4C may consume 4B selection eligibility, but runtime execution remains fail-closed until separately implemented and proven.
+Do not hard-code newly discovered GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other OpenRouter models as verified executable. Session 4C consumes 4B selection eligibility through a dedicated Connect-owned picker mutation; dynamic selections remain fail-closed and non-executable until separately implemented and proven.
 
 Current checkpoint:
+`docs/verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md`.
+
+Underlying admission checkpoint:
 `docs/verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md`.
 
 Underlying family checkpoint:
@@ -182,7 +186,6 @@ Canonical checkpoint:
 
 Do not start these without explicit operator authorization:
 
-- Session 4C Settings model picker;
 - Session 4D Ai chat quick-switch;
 - Session 4E real multi-family OpenRouter execution validation;
 - Session 4F final OpenRouter polish/closure;

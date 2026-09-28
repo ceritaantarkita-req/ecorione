@@ -1,22 +1,22 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-28**
+Last updated: **2026-09-29**
 
-Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 + 4A–4B CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 + 4A–4C CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository               = ceritaantarkita-req/ecorione
 default branch           = main
-runtime-changing baseline= fd921d81136433bd871a466498a283fc5bfb760e
-staging image            = staging-fd921d811364
+runtime-changing baseline= c65926de418046494d2e961af10662d2eadca37c
+staging image            = staging-c65926de4180
 ```
 
-`fd921d81...` is the latest audited runtime-changing merge and the merge commit of PR #396. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
+`c65926de...` is the latest audited runtime-changing merge and the merge commit of PR #398. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
 
 Current safe-resume checkpoint:
-[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
+[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -25,26 +25,26 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = fd921d81136433bd871a466498a283fc5bfb760e
-image = staging-fd921d811364
+SHA   = c65926de418046494d2e961af10662d2eadca37c
+image = staging-c65926de4180
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| CI #2484 | PASS |
-| Product Eval #1723 | PASS |
-| Staging Deploy #1728 | gate-only PASS |
-| Staging Deploy #1729 | actual deploy PASS |
+| CI #2492 | PASS |
+| Product Eval #1731 | PASS |
+| Staging Deploy #1744 | gate-only PASS |
+| Staging Deploy #1745 | actual deploy PASS |
 | native `better-sqlite3` fallback build | PASS |
 | expected host SHA | matched |
 | Operations | `healthy: true` |
 | unhealthy services | 0 |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| host evidence free disk | 26.12 GiB |
-| stabilized free disk | 27.44 GiB |
+| host evidence free disk | 21.86 GiB |
+| stabilized free disk | 29.93 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -102,9 +102,9 @@ Latest Session 1 checkpoint:
 Underlying provider rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
-## OpenRouter registry + live discovery + family + automatic admission — Sessions 2–3 + 4A–4B CLOSED / PASS
+## OpenRouter registry + discovery + family + admission + Settings picker — Sessions 2–3 + 4A–4C CLOSED / PASS
 
-Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 added bounded live catalog fetch/search/filter/cache. Session 4A added the six-family vocabulary, and Session 4B adds bounded automatic selection admission without changing executable authority.
+Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 added bounded live catalog fetch/search/filter/cache. Session 4A added the six-family vocabulary, Session 4B added bounded automatic selection admission, and Session 4C adds the governed Settings picker without changing executable authority.
 
 Current behavior:
 
@@ -124,16 +124,22 @@ Current behavior:
 - stale discovery withdraws dynamic selectability rather than granting authority;
 - family classification and remote catalog pricing do not grant execution authority;
 - OpenRouter billed `usage.cost` remains authoritative for actual billed cost;
-- existing governed pricing identities remain required for executable pre-dispatch spend admission/evidence.
+- existing governed pricing identities remain required for executable pre-dispatch spend admission/evidence;
+- Session 4C persists `openRouterModelSelection` separately from executable `hostedModel`;
+- a dynamic `verified-selectable` choice is revalidated on save, persists as preference, and forces hosted execution OFF with default chat routing back to local;
+- unavailable/stale/non-admitted candidates fail closed and cannot be saved through the dedicated selection endpoint.
 
-The current **runtime execution dropdown** remains only:
+Current OpenRouter **executable authority** remains only:
 
 - Claude Sonnet 4.5;
 - Claude Opus 4.1.
 
-Other target-family models can now be discovery-admitted as **Selectable**, but Session 4B does not make them executable or activate them.
+The Settings picker may additionally show fresh target-family models admitted as **Selectable**, but Session 4C does not make them executable or activate hosted routing for them.
 
-Current Session 4B checkpoint:
+Current Session 4C checkpoint:
+[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
+
+Underlying Session 4B checkpoint:
 [verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md).
 
 Underlying Session 4A checkpoint:
@@ -163,6 +169,7 @@ Underlying Session 2 checkpoint:
 | OpenRouter live-discovery Session 3 | CLOSED / PASS |
 | OpenRouter model-family Session 4A | CLOSED / PASS |
 | OpenRouter automatic-admission Session 4B | CLOSED / PASS / STAGING VERIFIED |
+| OpenRouter Settings model-picker Session 4C | CLOSED / PASS / STAGING VERIFIED |
 
 There is **no active Product Evolution, PCS, A-series, or ECX numbered batch**.
 
@@ -277,15 +284,14 @@ Evidence:
 
 ## Current active work
 
-There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 4B is closed and staging verified.
+There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 4C is closed and staging verified.
 
-Current docs are reconciled to that runtime truth; Session 4C is eligible only after an explicit operator decision.
+Current docs are reconciled to that runtime truth; Session 4D is eligible only after an explicit operator decision.
 
 ## Explicit deferred / separately selectable future scopes
 
 Any of the following requires a new explicit operator decision and its own bounded scope:
 
-- Session 4C Settings model picker;
 - Session 4D Ai chat quick-switch;
 - Session 4E real multi-family OpenRouter execution validation;
 - Session 4F final OpenRouter polish/closure;
@@ -316,7 +322,7 @@ For a new session/agent:
 7. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/ecorione-safe-resume-checkpoint-2026-09-28.md](verification/ecorione-safe-resume-checkpoint-2026-09-28.md).
+[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
