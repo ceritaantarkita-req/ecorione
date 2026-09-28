@@ -6,7 +6,6 @@ export type HostedModelCapability = (typeof HOSTED_MODEL_CAPABILITIES)[number];
 export type HostedPricingAuthority = "snapshot" | "provider-reported";
 
 export interface HostedModelPricingMetadata {
-  /** Pinned ECORIONE accounting identity used for pre-dispatch reservation/evidence. */
   /**
    * Null means the model is catalogued but not executable yet. A provider-reported price
    * alone is not enough: pre-dispatch spend admission still needs an admitted cost boundary.
@@ -154,7 +153,7 @@ const HOSTED_MODEL_REGISTRY = [
     providerRuntime: "z-ai/glm-5.3",
     sourceProvider: "z-ai",
     contextWindowTokens: null,
-    capabilities: ["text", "reasoning"],
+    capabilities: TEXT_ONLY,
     pricing: {
       costModel: "z-ai/glm-5.3",
       authority: SNAPSHOT,
@@ -175,8 +174,15 @@ for (const entry of HOSTED_MODEL_REGISTRY) {
   const key = registryKey(entry);
   if (seen.has(key)) throw new Error(`Duplicate hosted model registry entry: ${key}`);
   seen.add(key);
-  if (entry.verification === "verified" && entry.pricing.costModel === null) {
-    throw new Error(`Verified hosted model lacks admitted pricing identity: ${key}`);
+  if (entry.verification === "verified") {
+    if (entry.pricing.costModel === null) {
+      throw new Error(`Verified hosted model lacks admitted pricing identity: ${key}`);
+    }
+    if (entry.id !== entry.pricing.costModel) {
+      throw new Error(
+        `Executable hosted model still requires registry id == pricing id: ${key}`,
+      );
+    }
   }
 }
 Object.freeze(HOSTED_MODEL_REGISTRY);
@@ -209,7 +215,8 @@ export function executableHostedModelRegistryEntry(
   if (
     entry === undefined ||
     entry.verification !== "verified" ||
-    entry.pricing.costModel === null
+    entry.pricing.costModel === null ||
+    entry.id !== entry.pricing.costModel
   ) {
     return undefined;
   }
@@ -218,4 +225,14 @@ export function executableHostedModelRegistryEntry(
 
 export function registeredHostedModelIds(): readonly string[] {
   return [...new Set(HOSTED_MODEL_REGISTRY.map((entry) => entry.id))];
+}
+
+export function executableHostedModelIds(): readonly string[] {
+  return [
+    ...new Set(
+      HOSTED_MODEL_REGISTRY.filter(
+        (entry) => executableHostedModelRegistryEntry(entry.provider, entry.id) !== undefined,
+      ).map((entry) => entry.id),
+    ),
+  ];
 }
