@@ -12,7 +12,9 @@ import {
 import { FileCredentialVault } from "./credential-vault.js";
 import { FileRuntimeSettings } from "./runtime-settings.js";
 
-function fixture(options: { openRouterModelDiscovery?: OpenRouterModelDiscoveryReader } = {}) {
+function fixture(
+  options: { openRouterModelDiscovery?: OpenRouterModelDiscoveryReader } = {},
+) {
   const dir = mkdtempSync(join(tmpdir(), "ecorione-control-"));
   const runtime = new FileRuntimeSettings(join(dir, "settings.json"), {
     hostedProvider: "anthropic",
@@ -191,7 +193,11 @@ describe("Connect Control Center boundary", () => {
 
   it("menolak query discovery OpenRouter di luar kontrak", async () => {
     const { app } = fixture({
-      openRouterModelDiscovery: { async list() { throw new Error("must not run"); } },
+      openRouterModelDiscovery: {
+        async list() {
+          throw new Error("must not run");
+        },
+      },
     });
 
     const response = await app.inject({
