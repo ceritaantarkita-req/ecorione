@@ -16,8 +16,7 @@ export const OPENROUTER_ADMISSION_FAILURES = [
   "stale-catalog",
 ] as const;
 
-export type OpenRouterAdmissionFailure =
-  (typeof OPENROUTER_ADMISSION_FAILURES)[number];
+export type OpenRouterAdmissionFailure = (typeof OPENROUTER_ADMISSION_FAILURES)[number];
 
 export type OpenRouterAdmissionStatus =
   | "verified-executable"
@@ -46,10 +45,8 @@ export interface OpenRouterAdmissionDecision {
   readonly unavailableReason: OpenRouterAdmissionFailure | null;
 }
 
-const RUNTIME_SLUG =
-  /^[a-z0-9][a-z0-9._-]{0,63}\/[a-z0-9][a-z0-9._:@+/-]{0,191}$/iu;
-const DECIMAL_PRICE =
-  /^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/iu;
+const RUNTIME_SLUG = /^[a-z0-9][a-z0-9._-]{0,63}\/[a-z0-9][a-z0-9._:@+/-]{0,191}$/iu;
+const DECIMAL_PRICE = /^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/iu;
 
 function unavailable(reason: OpenRouterAdmissionFailure): OpenRouterAdmissionDecision {
   return {
