@@ -85,9 +85,7 @@ const PRICE_TABLE = {
     cacheReadPerMTok: 0.1,
   },
 
-  // --- DeepSeek pinned identity retained for replay and admitted by the governed
-  // OpenRouter registry. This snapshot stays conservative for pre-dispatch reservation;
-  // OpenRouter usage.cost remains authoritative for actual billed cost.
+  // --- DeepSeek historical pricing identity retained for experiments/replay. ---
   "deepseek-v3.2-exp": {
     inputPerMTok: 0.28,
     outputPerMTok: 0.42,
