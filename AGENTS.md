@@ -30,7 +30,10 @@ services         = 15/15 running
 free disk        = 29.89 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git/staging revision identity without changing this runtime compatibility baseline. Always inspect live `main` before opening new work.
+Docs-only checkpoint commits may advance live Git/staging revision identity without changing this runtime compatibility baseline. The audited live repository state immediately before the current safe-resume refresh was `9820af44ab2c2905303eea897ff6233204a8c419` from PR #384. Always inspect live `main` before opening new work.
+
+Current overall safe-resume pointer:
+`docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md`.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
@@ -44,8 +47,10 @@ NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Con
 
 The user's actual NVIDIA secret has not been stored or validated by repository work. Do not claim a real user-key GLM-5.3 completion until the operator enters the key in Settings, passes the credential test, saves/activates it, and observes a real Ai completion.
 
-Canonical safe checkpoint:
+Canonical provider/runtime checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
+
+Use `docs/verification/ecorione-safe-resume-checkpoint-2026-09-28.md` as the overall handoff pointer before opening a new scope.
 
 Closed roadmap families:
 
