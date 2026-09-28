@@ -97,9 +97,11 @@ describe("proxyToConnectSettings", () => {
             displayName: "Qwen: Qwen3.8 Max",
             sourceProvider: "qwen",
             family: "qwen",
-            admission: "discovered-only",
+            admission: "verified-selectable",
+            selectable: true,
             executable: false,
-            selectionId: null,
+            selectionId: "qwen/qwen3.8-max",
+            unavailableReason: null,
           },
         ],
       });
@@ -125,8 +127,11 @@ describe("proxyToConnectSettings", () => {
         expect.objectContaining({
           id: "qwen/qwen3.8-max",
           family: "qwen",
-          admission: "discovered-only",
+          admission: "verified-selectable",
+          selectable: true,
           executable: false,
+          selectionId: "qwen/qwen3.8-max",
+          unavailableReason: null,
         }),
       ],
     });
