@@ -94,7 +94,7 @@ Underlying provider/runtime checkpoint:
 Overall safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
 
-## OpenRouter Sessions 2–3 + 4A–4C — CLOSED / PASS
+## OpenRouter Sessions 2–3 + 4A–4D — CLOSED / PASS
 
 Current proven boundary:
 
@@ -108,11 +108,15 @@ Current proven boundary:
 - failed target candidates become `unavailable` with stable reasons; non-target families remain `discovered-only`;
 - stale discovery withdraws dynamic selectability;
 - Session 4C exposes admitted OpenRouter candidates in Settings and persists `openRouterModelSelection` separately from executable `hostedModel`;
+- Session 4D exposes the same governed selection semantics in the Ai chat quick-switch without creating a second authority;
 - dynamic `verified-selectable` choices save as preferences but force hosted execution OFF and the default route back to local;
 - current executable OpenRouter authority remains Claude Sonnet 4.5 + Claude Opus 4.1;
 - no remote pricing or catalog metadata silently becomes a runtime pricing identity or executable authority.
 
 Current checkpoint:
+[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
+
+Underlying Settings-selection checkpoint:
 [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
 
 Underlying admission checkpoint:
