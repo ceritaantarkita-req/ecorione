@@ -102,9 +102,9 @@ Latest Session 1 checkpoint:
 Underlying provider rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
-## OpenRouter registry + discovery + family + admission + Settings picker — Sessions 2–3 + 4A–4C CLOSED / PASS
+## OpenRouter registry + discovery + family + admission + Settings/Ai selection — Sessions 2–3 + 4A–4D CLOSED / PASS
 
-Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 added bounded live catalog fetch/search/filter/cache. Session 4A added the six-family vocabulary, Session 4B added bounded automatic selection admission, and Session 4C adds the governed Settings picker without changing executable authority.
+Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 added bounded live catalog fetch/search/filter/cache. Session 4A added the six-family vocabulary, Session 4B added bounded automatic selection admission, Session 4C added the governed Settings picker, and Session 4D added the governed Ai chat quick-switch without changing executable authority.
 
 Current behavior:
 
@@ -126,6 +126,7 @@ Current behavior:
 - OpenRouter billed `usage.cost` remains authoritative for actual billed cost;
 - existing governed pricing identities remain required for executable pre-dispatch spend admission/evidence;
 - Session 4C persists `openRouterModelSelection` separately from executable `hostedModel`;
+- Session 4D reuses that same Connect-owned selection authority from the Ai chat composer;
 - a dynamic `verified-selectable` choice is revalidated on save, persists as preference, and forces hosted execution OFF with default chat routing back to local;
 - unavailable/stale/non-admitted candidates fail closed and cannot be saved through the dedicated selection endpoint.
 
@@ -282,6 +283,9 @@ Evidence:
 
 - [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
+
+Canonical Session 4D checkpoint:
+[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
 
 ## Current active work
 
