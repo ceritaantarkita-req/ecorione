@@ -1142,7 +1142,7 @@ async function runDesktopJourney() {
   try {
     await goto(page, `/?project=prj_personal&session=${historySession.id}`, "desktop-ai");
     await page.getByText("Earlier hosted reply", { exact: true }).waitFor();
-    const modelSelect = page.getByRole("combobox", { name: "Model" });
+    const modelSelect = page.getByRole("combobox", { name: "Model", exact: true });
     if ((await modelSelect.inputValue()) !== "hosted") {
       throw new Error("desktop-ai: replayed hosted conversation did not restore Hosted route");
     }
