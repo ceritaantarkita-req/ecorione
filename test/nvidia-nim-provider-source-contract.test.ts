@@ -9,7 +9,7 @@ describe("NVIDIA NIM provider source contract", () => {
   const http = readFileSync("services/connect/src/http.ts", "utf8");
   const hosted = readFileSync("services/connect/src/providers/hosted.ts", "utf8");
   const controller = readFileSync("apps/ai/app/settings/useSettingsController.ts", "utf8");
-  const chat = readFileSync("apps/ai/app/page.tsx", "utf8");
+  const chatRouting = readFileSync("apps/ai/lib/chat-model-routing.ts", "utf8");
   const secretScan = readFileSync("scripts/secret-scan.mjs", "utf8");
 
   it("pins NVIDIA to the intended hosted API Catalog boundary", () => {
@@ -42,9 +42,9 @@ describe("NVIDIA NIM provider source contract", () => {
     expect(controller).toContain('provider.id === "nvidia"');
     expect(controller).toContain("hostedModels: HostedModelCatalogEntry[]");
     expect(registry).toContain('id: "z-ai/glm-5.3"');
-    expect(chat).toContain('case "nvidia"');
-    expect(chat).toContain('return "NVIDIA"');
-    expect(chat).toContain('return "GLM-5.3"');
+    expect(chatRouting).toContain('case "nvidia"');
+    expect(chatRouting).toContain('return "NVIDIA"');
+    expect(chatRouting).toContain('return "GLM-5.3"');
   });
 
   it("extends committed-secret protection to NVIDIA API keys", () => {
