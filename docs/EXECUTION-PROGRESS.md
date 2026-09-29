@@ -130,7 +130,7 @@ SHA   = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
 image = staging-9bc4cfd1bbfb
 ```
 
-Actual Staging Deploy #1745 proved:
+Actual Staging Deploy #1779 proved:
 
 - native builder installed `python3 make g++`;
 - `better-sqlite3` fallback installation completed;
@@ -140,8 +140,8 @@ Actual Staging Deploy #1745 proved:
 - 0 unhealthy services;
 - 15 configured / 15 running;
 - exact SHA match;
-- 21.86 GiB free at sanitized host evidence;
-- 29.93 GiB stabilized free disk.
+- 24.02 GiB free at sanitized host evidence;
+- 25.36 GiB stabilized free disk.
 
 The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
 
