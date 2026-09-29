@@ -46,6 +46,7 @@ import {
   FileIcon,
   FolderIcon,
   MemoryPanel,
+  OpenRouterModelQuickSwitch,
   PanelToggleIcon,
   PencilIcon,
   PhotoIcon,
@@ -55,24 +56,7 @@ import {
   XIcon,
 } from "./ChatPageSections";
 import { useWorkspace } from "./WorkspaceProvider";
-
-type RuntimeSnapshot = {
-  settings?: {
-    hostedCallsEnabled?: boolean;
-    hostedProvider?: "anthropic" | "openrouter" | "openai" | "nvidia";
-    hostedModel?: string;
-    defaultChatTarget?: ChatTarget;
-  };
-};
-type CredentialSnapshot = {
-  credentials?: Array<{ provider: string }>;
-};
-type LocalRuntimeStatus = {
-  ready: boolean;
-  state: "connected" | "model-missing" | "unreachable" | "unsupported";
-  configuredModel: string;
-  message: string;
-};
+import { useChatModelRouting } from "./useChatModelRouting";
 type ConversationReplay = {
   readonly session: HistorySession;
   readonly range: HistoryRange;
@@ -91,43 +75,6 @@ function nextAttachmentId(): string {
   attachmentCounter += 1;
   return `att-${attachmentCounter}`;
 }
-function hostedProviderLabel(
-  provider: "anthropic" | "openrouter" | "openai" | "nvidia" | undefined,
-): string {
-  switch (provider) {
-    case "anthropic":
-      return "Anthropic";
-    case "openrouter":
-      return "OpenRouter";
-    case "openai":
-      return "OpenAI";
-    case "nvidia":
-      return "NVIDIA";
-    default:
-      return "Hosted";
-  }
-}
-
-function hostedModelLabel(model: string | undefined): string {
-  switch (model) {
-    case undefined:
-    case "governed":
-      return "Recommended";
-    case "claude-sonnet-4-5-20250929":
-      return "Claude Sonnet 4.5";
-    case "claude-opus-4-1-20250805":
-      return "Claude Opus 4.1";
-    case "gpt-5.6-terra":
-      return "GPT-5.6 Terra";
-    case "gpt-5.6-sol":
-      return "GPT-5.6 Sol";
-    case "z-ai/glm-5.3":
-      return "GLM-5.3";
-    default:
-      return model;
-  }
-}
-
 const subscribeHydration = (): (() => void) => () => undefined;
 const getClientHydrationSnapshot = (): boolean => true;
 const getServerHydrationSnapshot = (): boolean => false;
@@ -152,10 +99,11 @@ export default function ChatPage() {
   const [historyFeedback, setHistoryFeedback] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
-  const [defaultTarget, setDefaultTarget] = useState<ChatTarget>("local");
-  const [hostedAvailable, setHostedAvailable] = useState<boolean | null>(null);
-  const [hostedRouteLabel, setHostedRouteLabel] = useState("Hosted");
-  const [localRuntimeStatus, setLocalRuntimeStatus] = useState<LocalRuntimeStatus | null>(null);
+  const modelRouting = useChatModelRouting();
+  const defaultTarget = modelRouting.defaultTarget;
+  const hostedAvailable = modelRouting.hostedAvailable;
+  const hostedRouteLabel = modelRouting.hostedRouteLabel;
+  const localRuntimeStatus = modelRouting.localRuntimeStatus;
   const [sending, setSending] = useState(false);
   const [preparingAttachments, setPreparingAttachments] = useState(false);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
@@ -410,70 +358,8 @@ export default function ChatPage() {
   ]);
 
   useEffect(() => {
-    let cancelled = false;
-    void Promise.all([
-      fetch("/api/settings/settings/runtime", { cache: "no-store" }),
-      fetch("/api/settings/settings/credentials", { cache: "no-store" }),
-      fetch("/api/settings/settings/local-runtime/status", { cache: "no-store" }),
-    ])
-      .then(async ([runtimeResponse, credentialResponse, localResponse]) => {
-        if (!runtimeResponse.ok) throw new Error(`HTTP ${String(runtimeResponse.status)}`);
-        const runtimeSnapshot = (await runtimeResponse.json()) as RuntimeSnapshot;
-        const credentialSnapshot = credentialResponse.ok
-          ? ((await credentialResponse.json()) as CredentialSnapshot)
-          : { credentials: [] };
-        const localStatus = localResponse.ok
-          ? ((await localResponse.json()) as LocalRuntimeStatus)
-          : {
-              ready: false,
-              state: "unreachable" as const,
-              configuredModel: "",
-              message: "Local AI · Not connected.",
-            };
-        return { runtimeSnapshot, credentialSnapshot, localStatus };
-      })
-      .then(({ runtimeSnapshot, credentialSnapshot, localStatus }) => {
-        if (cancelled) return;
-        const hostedProvider = runtimeSnapshot.settings?.hostedProvider;
-        const hasHostedCredential =
-          hostedProvider !== undefined &&
-          (credentialSnapshot.credentials ?? []).some(
-            (credential) => credential.provider === hostedProvider,
-          );
-        const hostedReady =
-          runtimeSnapshot.settings?.hostedCallsEnabled === true && hasHostedCredential;
-        setHostedAvailable(hostedReady);
-        setHostedRouteLabel(
-          `Hosted · ${hostedProviderLabel(hostedProvider)} · ${hostedModelLabel(
-            runtimeSnapshot.settings?.hostedModel,
-          )}`,
-        );
-        setLocalRuntimeStatus(localStatus);
-        const nextDefault =
-          runtimeSnapshot.settings?.defaultChatTarget === "hosted" && hostedReady
-            ? "hosted"
-            : "local";
-        setDefaultTarget(nextDefault);
-        if (!routeLockedRef.current) setTarget(nextDefault);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setHostedAvailable(false);
-          setHostedRouteLabel("Hosted · Not connected");
-          setLocalRuntimeStatus({
-            ready: false,
-            state: "unreachable",
-            configuredModel: "",
-            message: "Local AI · Not connected.",
-          });
-          setDefaultTarget("local");
-          if (!routeLockedRef.current) setTarget("local");
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (!routeLockedRef.current) setTarget(defaultTarget);
+  }, [defaultTarget]);
 
   useEffect(() => {
     if (!hydrated || turns.length === 0) return;
@@ -837,6 +723,21 @@ export default function ChatPage() {
     window.history.replaceState(null, "", nextUrl);
   }
 
+  async function handleOpenRouterModelSwitch(selectionId: string): Promise<void> {
+    if (routeLockedRef.current) return;
+    const nextTarget = await modelRouting.switchOpenRouterModel(selectionId);
+    if (nextTarget !== null && !routeLockedRef.current) setTarget(nextTarget);
+  }
+
+  const modelControlsLocked =
+    !hydrated ||
+    !sessionReady ||
+    historyLoading ||
+    sending ||
+    preparingAttachments ||
+    modelRouting.switching ||
+    turns.length > 0 ||
+    attachments.length > 0;
   const routeReady =
     target === "local" ? localRuntimeStatus?.ready === true : hostedAvailable === true;
   const routeHint =
@@ -982,6 +883,14 @@ export default function ChatPage() {
               </div>
             ) : null}
 
+            {modelRouting.feedback !== null ? (
+              <p
+                className={`ai-model-switch-status ai-model-switch-status--${modelRouting.feedback.kind}`}
+                role={modelRouting.feedback.kind === "error" ? "alert" : "status"}
+              >
+                {modelRouting.feedback.message}
+              </p>
+            ) : null}
             {!routeReady ? (
               <p className="ai-route-status" role="status">
                 {target === "local"
@@ -1082,32 +991,35 @@ export default function ChatPage() {
                 <input ref={folderInputRef} type="file" hidden onChange={handleFolderChange} />
               </div>
 
-              <div className="ai-model-select" title={routeHint}>
-                <select
-                  id="chat-target"
-                  aria-label="Model"
-                  value={target}
-                  onChange={(e) => setTarget(e.target.value as ChatTarget)}
-                  disabled={
-                    !hydrated ||
-                    !sessionReady ||
-                    historyLoading ||
-                    sending ||
-                    preparingAttachments ||
-                    turns.length > 0 ||
-                    attachments.length > 0
-                  }
-                >
-                  <option value="local" disabled={localRuntimeStatus?.ready !== true}>
-                    {localRuntimeStatus?.ready === true
-                      ? `Local · ${localRuntimeStatus.configuredModel}`
-                      : "Local · Not connected"}
-                  </option>
-                  <option value="hosted" disabled={hostedAvailable !== true}>
-                    {hostedAvailable === true ? hostedRouteLabel : "Hosted · Not connected"}
-                  </option>
-                </select>
-                <ChevronIcon />
+              <div className="ai-model-controls">
+                <div className="ai-model-select ai-model-select--route" title={routeHint}>
+                  <select
+                    id="chat-target"
+                    aria-label="Model"
+                    value={target}
+                    onChange={(e) => setTarget(e.target.value as ChatTarget)}
+                    disabled={modelControlsLocked}
+                  >
+                    <option value="local" disabled={localRuntimeStatus?.ready !== true}>
+                      {localRuntimeStatus?.ready === true
+                        ? `Local · ${localRuntimeStatus.configuredModel}`
+                        : "Local · Not connected"}
+                    </option>
+                    <option value="hosted" disabled={hostedAvailable !== true}>
+                      {hostedAvailable === true ? hostedRouteLabel : "Hosted · Not connected"}
+                    </option>
+                  </select>
+                  <ChevronIcon />
+                </div>
+                {modelRouting.hostedProvider === "openrouter" ? (
+                  <OpenRouterModelQuickSwitch
+                    models={modelRouting.openRouterModels}
+                    value={modelRouting.openRouterSelection}
+                    disabled={modelControlsLocked}
+                    switching={modelRouting.switching}
+                    onChange={(selectionId) => void handleOpenRouterModelSwitch(selectionId)}
+                  />
+                ) : null}
               </div>
 
               <button
