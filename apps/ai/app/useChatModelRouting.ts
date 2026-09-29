@@ -70,8 +70,9 @@ export function useChatModelRouting() {
   const [providers, setProviders] = useState<ChatProviderCatalogEntry[]>([]);
   const [openRouterDiscovery, setOpenRouterDiscovery] =
     useState<ChatOpenRouterDiscovery | null>(null);
-  const [localRuntimeStatus, setLocalRuntimeStatus] =
-    useState<ChatLocalRuntimeStatus | null>(null);
+  const [localRuntimeStatus, setLocalRuntimeStatus] = useState<ChatLocalRuntimeStatus | null>(
+    null,
+  );
   const [switching, setSwitching] = useState(false);
   const [feedback, setFeedback] = useState<ModelSwitchFeedback | null>(null);
   const switchInFlightRef = useRef(false);
@@ -174,8 +175,7 @@ export function useChatModelRouting() {
       if (!result.selection.executable) {
         setFeedback({
           kind: "warning",
-          message:
-            `${displayName} disimpan sebagai preference. Model belum executable; chat tetap Local.`,
+          message: `${displayName} disimpan sebagai preference. Model belum executable; chat tetap Local.`,
         });
       } else if (result.selection.active && nextRouting.hostedAvailable) {
         setFeedback({
