@@ -14,7 +14,8 @@ Historical evidence may contain statements that were correct at the time but are
 
 ## Latest repository truth
 
-- [openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md) — latest FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: governed Settings picker deployed at `c65926de...` / `staging-c65926de4180`; dynamic `verified-selectable` preferences remain non-executable and fail closed on save.
+- [openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md) — latest FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: governed Ai chat quick-switch deployed at `9bc4cfd1...` / `staging-9bc4cfd1bbfb`; dynamic `verified-selectable` preferences remain non-executable and force chat back to Local.
+- [openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md) — underlying governed Settings picker checkpoint; dynamic `verified-selectable` preferences remain non-executable and fail closed on save.
 - [openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md) — underlying automatic fail-closed target-family admission checkpoint.
 - [openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md) — underlying Session 4A family checkpoint: version-agnostic GPT/Gemini/Qwen/DeepSeek/Kimi/GLM classification foundation.
 - [openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md) — underlying Session 3 discovery checkpoint: bounded OpenRouter live discovery/search/filter/cache deployed at `af2ef8f...` / `staging-af2ef8f61f26`; discovered-only models remain non-executable and the selectable set remains the two verified Claude models.
@@ -79,9 +80,9 @@ Important dated proof includes:
 - ECX Batch 1–7 staging deliveries;
 - NVIDIA provider implementation and rollout;
 - failed Staging Deploy #1505 with successful rollback evidence;
-- current exact staging proof at Staging Deploy #1745.
+- current exact staging proof at Staging Deploy #1779.
 
-Current exact runtime/staging identity is recorded in [openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md), not inferred from older deployment documents.
+Current exact runtime/staging identity is recorded in [openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md), not inferred from older deployment documents.
 
 ## Off-host DR
 
