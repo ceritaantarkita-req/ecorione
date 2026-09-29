@@ -1225,6 +1225,12 @@ async function runDesktopJourney() {
       );
     }
     await assertNoPageOverflow(page, "desktop-ai-quick-switch");
+    await goto(
+      page,
+      `/?project=prj_personal&session=${historySession.id}`,
+      "desktop-ai-quick-switch-restore",
+    );
+    await page.getByText("PCS06_HOSTED_OK", { exact: true }).waitFor();
 
     await page.getByRole("link", { name: "Projects", exact: true }).click();
     await page.getByRole("heading", { name: "Projects", exact: true }).waitFor();
