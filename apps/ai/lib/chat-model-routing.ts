@@ -113,7 +113,7 @@ export function buildOpenRouterQuickSwitchModels(
   }
 
   for (const model of discovery?.models ?? []) {
-    if (!model.selectable || model.selectionId === null || seen.has(model.selectionId)) continue;
+    if (!model.selectable || model.selectionId === null || seen.has(model.selectionId))\n      continue;
     seen.add(model.selectionId);
     models.push({
       id: model.selectionId,
