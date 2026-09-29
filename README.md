@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest audited **runtime-changing** repository/staging baseline is:
 
 ```text
-runtime baseline = c65926de418046494d2e961af10662d2eadca37c
-image            = staging-c65926de4180
+runtime baseline = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
+image            = staging-9bc4cfd1bbfb
 ```
 
-That exact runtime merge passed CI **#2492**, Product Eval **#1731**, and actual Staging Deploy **#1745**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **29.93 GiB free**.
+That exact runtime merge passed CI **#2509**, Product Eval **#1748**, and actual Staging Deploy **#1779**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **25.36 GiB free**.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -21,7 +21,7 @@ Repository hygiene remains bounded: the historical cleanup boundary is **9 retai
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, 4B, and 4C are closed; Session 4D is the next eligible OpenRouter scope but is not active implicitly.
+There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, 4B, 4C, and 4D are closed; Session 4E is the next eligible OpenRouter scope but is not active implicitly.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -68,11 +68,14 @@ Core ownership rules:
 
 ## OpenRouter hosted-model foundation
 
-OpenRouter model selection resolves through an extensible governed registry. Session 3 added bounded live catalog discovery/search/filter/cache, Session 4A added one Connect-owned version-agnostic family vocabulary for **GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM**, Session 4B added automatic fail-closed admission for those six families, and Session 4C added the governed Settings model picker.
+OpenRouter model selection resolves through an extensible governed registry. Session 3 added bounded live catalog discovery/search/filter/cache, Session 4A added one Connect-owned version-agnostic family vocabulary for **GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM**, Session 4B added automatic fail-closed admission for those six families, Session 4C added the governed Settings model picker, and Session 4D added the governed Ai chat quick-switch.
 
 Fresh target-family candidates that pass the 4B metadata gate are exposed as **Selectable**; failed candidates are **Unavailable** with a stable reason. Session 4C can persist those admitted candidates as Settings preferences, but dynamic selections remain `executable=false`; saving one disables hosted execution and routes chat back to local. Current OpenRouter executable authority remains **Claude Sonnet 4.5** and **Claude Opus 4.1** until the later execution-validation scope.
 
-Current Session 4C checkpoint:
+Current Session 4D checkpoint:
+[docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
+
+Underlying Session 4C checkpoint:
 [docs/verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](docs/verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
 
 Underlying Session 4B checkpoint:
@@ -153,7 +156,6 @@ See:
 
 The following remain separate explicit decisions:
 
-- Session 4D Ai chat quick-switch;
 - Session 4E real multi-family OpenRouter execution validation;
 - Session 4F final OpenRouter polish/closure;
 - **DR-2 checkpoint 2** physical-independence target selection and proof;
