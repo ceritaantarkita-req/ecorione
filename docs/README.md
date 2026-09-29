@@ -107,15 +107,18 @@ Use the owner-specific runbook when touching its subsystem:
 Latest audited **runtime-changing compatibility baseline**:
 
 ```text
-SHA   = c65926de418046494d2e961af10662d2eadca37c
-image = staging-c65926de4180
+SHA   = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
+image = staging-9bc4cfd1bbfb
 ```
 
-CI #2492, Product Eval #1731, and actual Staging Deploy #1745 passed. Staging reported healthy Operations, 15/15 services running, exact runtime-SHA match, 21.86 GiB free at host evidence, and 29.93 GiB stabilized free disk. Docs-only merges may advance the exact Git/staging revision without changing this compatibility baseline; use the latest deploy receipt when exact live identity is required.
+CI #2509, Product Eval #1748, and actual Staging Deploy #1779 passed. Staging reported healthy Operations, 15/15 services running, exact runtime-SHA match, 24.02 GiB free at host evidence, and 25.36 GiB stabilized free disk. Docs-only merges may advance the exact Git/staging revision without changing this compatibility baseline; use the latest deploy receipt when exact live identity is required.
 
 NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging operator kill switch is open under bounded spend controls; the runtime hosted toggle is activated through normal Settings/provider activation. The user's actual NVIDIA secret has not been stored or tested by repository work.
 
 Current OpenRouter evidence:
+[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
+
+Underlying Settings-selection evidence:
 [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
 
 Underlying admission evidence:
