@@ -2,18 +2,18 @@
 
 Last updated: **2026-09-29**
 
-Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 + 4A–4C CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 + 4A–4D CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository               = ceritaantarkita-req/ecorione
 default branch           = main
-runtime-changing baseline= c65926de418046494d2e961af10662d2eadca37c
-staging image            = staging-c65926de4180
+runtime-changing baseline= 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
+staging image            = staging-9bc4cfd1bbfb
 ```
 
-`c65926de...` is the latest audited runtime-changing merge and the merge commit of PR #398. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
+`9bc4cfd1...` is the latest audited runtime-changing merge and the merge commit of PR #400. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
@@ -25,26 +25,26 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = c65926de418046494d2e961af10662d2eadca37c
-image = staging-c65926de4180
+SHA   = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
+image = staging-9bc4cfd1bbfb
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| CI #2492 | PASS |
-| Product Eval #1731 | PASS |
-| Staging Deploy #1744 | gate-only PASS |
-| Staging Deploy #1745 | actual deploy PASS |
+| CI #2509 | PASS |
+| Product Eval #1748 | PASS |
+| Staging Deploy #1778 | gate-only PASS |
+| Staging Deploy #1779 | actual deploy PASS |
 | native `better-sqlite3` fallback build | PASS |
 | expected host SHA | matched |
 | Operations | `healthy: true` |
 | unhealthy services | 0 |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| host evidence free disk | 21.86 GiB |
-| stabilized free disk | 29.93 GiB |
+| host evidence free disk | 24.02 GiB |
+| stabilized free disk | 25.36 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -102,9 +102,9 @@ Latest Session 1 checkpoint:
 Underlying provider rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
-## OpenRouter registry + discovery + family + admission + Settings picker — Sessions 2–3 + 4A–4C CLOSED / PASS
+## OpenRouter registry + discovery + family + admission + Settings/Ai selection — Sessions 2–3 + 4A–4D CLOSED / PASS
 
-Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 added bounded live catalog fetch/search/filter/cache. Session 4A added the six-family vocabulary, Session 4B added bounded automatic selection admission, and Session 4C adds the governed Settings picker without changing executable authority.
+Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 added bounded live catalog fetch/search/filter/cache. Session 4A added the six-family vocabulary, Session 4B added bounded automatic selection admission, Session 4C added the governed Settings picker, and Session 4D added the governed Ai chat quick-switch without changing executable authority.
 
 Current behavior:
 
@@ -126,6 +126,7 @@ Current behavior:
 - OpenRouter billed `usage.cost` remains authoritative for actual billed cost;
 - existing governed pricing identities remain required for executable pre-dispatch spend admission/evidence;
 - Session 4C persists `openRouterModelSelection` separately from executable `hostedModel`;
+- Session 4D reuses that same Connect-owned selection authority from the Ai chat composer;
 - a dynamic `verified-selectable` choice is revalidated on save, persists as preference, and forces hosted execution OFF with default chat routing back to local;
 - unavailable/stale/non-admitted candidates fail closed and cannot be saved through the dedicated selection endpoint.
 
@@ -170,6 +171,7 @@ Underlying Session 2 checkpoint:
 | OpenRouter model-family Session 4A | CLOSED / PASS |
 | OpenRouter automatic-admission Session 4B | CLOSED / PASS / STAGING VERIFIED |
 | OpenRouter Settings model-picker Session 4C | CLOSED / PASS / STAGING VERIFIED |
+| OpenRouter Ai chat quick-switch Session 4D | CLOSED / PASS / STAGING VERIFIED |
 
 There is **no active Product Evolution, PCS, A-series, or ECX numbered batch**.
 
@@ -282,17 +284,19 @@ Evidence:
 - [verification/post-ecx-branch-cleanup-execution-2026-09-28.md](verification/post-ecx-branch-cleanup-execution-2026-09-28.md)
 - [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)
 
+Canonical Session 4D checkpoint:
+[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
+
 ## Current active work
 
-There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 4C is closed and staging verified.
+There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 4D is closed and staging verified.
 
-Current docs are reconciled to that runtime truth; Session 4D is eligible only after an explicit operator decision.
+Current docs are reconciled to that runtime truth; Session 4E is eligible only after an explicit operator decision.
 
 ## Explicit deferred / separately selectable future scopes
 
 Any of the following requires a new explicit operator decision and its own bounded scope:
 
-- Session 4D Ai chat quick-switch;
 - Session 4E real multi-family OpenRouter execution validation;
 - Session 4F final OpenRouter polish/closure;
 - DR-2 checkpoint 2 external target selection and later runtime proof;

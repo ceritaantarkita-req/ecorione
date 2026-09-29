@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-29**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / OPENROUTER SESSIONS 2–3 + 4A–4C CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
+Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / OPENROUTER SESSIONS 2–3 + 4A–4D CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
 
-Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md). The latest audited runtime-changing `main` is `c65926de418046494d2e961af10662d2eadca37c` from PR #398.
+Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md). The latest audited runtime-changing `main` is `9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7` from PR #400.
 
 ## Current queue
 
@@ -24,7 +24,8 @@ Closed current baselines:
 - OpenRouter live-discovery Session 3 — CLOSED / PASS / STAGING VERIFIED;
 - OpenRouter model-family Session 4A — CLOSED / PASS / STAGING VERIFIED;
 - OpenRouter automatic-admission Session 4B — CLOSED / PASS / STAGING VERIFIED;
-- OpenRouter Settings model-picker Session 4C — CLOSED / PASS / STAGING VERIFIED.
+- OpenRouter Settings model-picker Session 4C — CLOSED / PASS / STAGING VERIFIED;
+- OpenRouter Ai chat quick-switch Session 4D — CLOSED / PASS / STAGING VERIFIED.
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
 
@@ -77,7 +78,7 @@ Current proven boundary:
 - pinned hosted model is `z-ai/glm-5.3`;
 - staging operator hosted kill switch is open under bounded spend controls; runtime hosted activation still follows the normal Settings/provider activation path;
 - Docker native dependency fallback is hardened and proven on SumoPod;
-- the latest runtime-changing merge and staging are converged at `c65926de418046494d2e961af10662d2eadca37c` / `staging-c65926de4180`;
+- the latest runtime-changing merge and staging are converged at `9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7` / `staging-9bc4cfd1bbfb`;
 - current credential/canary default deadlines are 60 seconds; NVIDIA health probes use a bounded 1024-token output cap with low reasoning effort;
 - provider-canary latency deadlines are now enforced;
 - user NVIDIA secret has not been stored and is not claimed validated.
@@ -93,7 +94,7 @@ Underlying provider/runtime checkpoint:
 Overall safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
 
-## OpenRouter Sessions 2–3 + 4A–4C — CLOSED / PASS
+## OpenRouter Sessions 2–3 + 4A–4D — CLOSED / PASS
 
 Current proven boundary:
 
@@ -107,11 +108,15 @@ Current proven boundary:
 - failed target candidates become `unavailable` with stable reasons; non-target families remain `discovered-only`;
 - stale discovery withdraws dynamic selectability;
 - Session 4C exposes admitted OpenRouter candidates in Settings and persists `openRouterModelSelection` separately from executable `hostedModel`;
+- Session 4D exposes the same governed selection semantics in the Ai chat quick-switch without creating a second authority;
 - dynamic `verified-selectable` choices save as preferences but force hosted execution OFF and the default route back to local;
 - current executable OpenRouter authority remains Claude Sonnet 4.5 + Claude Opus 4.1;
 - no remote pricing or catalog metadata silently becomes a runtime pricing identity or executable authority.
 
 Current checkpoint:
+[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
+
+Underlying Settings-selection checkpoint:
 [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
 
 Underlying admission checkpoint:
@@ -126,7 +131,7 @@ Underlying discovery checkpoint:
 Underlying registry checkpoint:
 [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
-The agreed next eligible OpenRouter scope is Session 4D Ai chat quick-switch. It is separately selectable and is not active; Sessions 4E–4F remain later independent scopes.
+Session 4D Ai chat quick-switch is CLOSED / PASS / STAGING VERIFIED. The agreed next eligible OpenRouter scope is Session 4E real multi-family execution validation. It is separately selectable and is not active; Session 4F remains a later independent scope.
 
 ## DR-2
 
@@ -154,7 +159,6 @@ Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence 
 
 The following are eligible only through an explicit new decision; none is current work:
 
-- Session 4D Ai chat quick-switch;
 - Session 4E real multi-family OpenRouter execution validation;
 - Session 4F final OpenRouter polish/closure;
 - DR-2 checkpoint 2;

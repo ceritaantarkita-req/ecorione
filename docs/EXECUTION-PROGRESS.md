@@ -9,17 +9,17 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = c65926de418046494d2e961af10662d2eadca37c (PR #398)
-image                   = staging-c65926de4180
-CI                      = #2492 PASS
-Product Eval            = #1731 PASS
-Staging Deploy          = #1745 PASS
+runtime / staging       = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7 (PR #400)
+image                   = staging-9bc4cfd1bbfb
+CI                      = #2509 PASS
+Product Eval            = #1748 PASS
+Staging Deploy          = #1779 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 29.93 GiB stabilized
+free disk               = 25.36 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter registry foundation (Session 2), bounded live discovery/search/cache (Session 3), six-family model foundation (Session 4A), automatic target-family admission (Session 4B), and the governed Settings model picker (Session 4C).
+This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter registry foundation (Session 2), bounded live discovery/search/cache (Session 3), six-family model foundation (Session 4A), automatic target-family admission (Session 4B), the governed Settings model picker (Session 4C), and the governed Ai chat quick-switch (Session 4D).
 
 ## Closed foundational roadmaps
 
@@ -126,11 +126,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = c65926de418046494d2e961af10662d2eadca37c
-image = staging-c65926de4180
+SHA   = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
+image = staging-9bc4cfd1bbfb
 ```
 
-Actual Staging Deploy #1745 proved:
+Actual Staging Deploy #1779 proved:
 
 - native builder installed `python3 make g++`;
 - `better-sqlite3` fallback installation completed;
@@ -140,8 +140,8 @@ Actual Staging Deploy #1745 proved:
 - 0 unhealthy services;
 - 15 configured / 15 running;
 - exact SHA match;
-- 21.86 GiB free at sanitized host evidence;
-- 29.93 GiB stabilized free disk.
+- 24.02 GiB free at sanitized host evidence;
+- 25.36 GiB stabilized free disk.
 
 The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
 
@@ -166,10 +166,14 @@ This is staging evidence, not production promotion.
 | Session 4A — OpenRouter model-family foundation | CLOSED / PASS / STAGING VERIFIED |
 | Session 4B — OpenRouter automatic target-family admission | CLOSED / PASS / STAGING VERIFIED |
 | Session 4C — OpenRouter Settings model picker | CLOSED / PASS / STAGING VERIFIED |
+| Session 4D — OpenRouter Ai chat quick-switch | CLOSED / PASS / STAGING VERIFIED |
 
-Session 3 adds bounded live catalog discovery, Session 4A adds one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM, Session 4B turns fresh qualifying target-family metadata into explicit `verified-selectable` admission, and Session 4C exposes those admitted candidates through the governed Settings picker. Newly admitted dynamic models remain `executable=false`; current executable OpenRouter authority remains the two static Claude models.
+Session 3 adds bounded live catalog discovery, Session 4A adds one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM, Session 4B turns fresh qualifying target-family metadata into explicit `verified-selectable` admission, Session 4C exposes those admitted candidates through the governed Settings picker, and Session 4D reuses the same selection authority in the Ai chat quick-switch. Newly admitted dynamic models remain `executable=false`; current executable OpenRouter authority remains the two static Claude models.
 
-Canonical Session 4C checkpoint:
+Canonical Session 4D checkpoint:
+[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
+
+Underlying Session 4C checkpoint:
 [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
 
 Underlying Session 4B checkpoint:
@@ -233,6 +237,7 @@ Evidence:
 | OpenRouter model-family Session 4A | CLOSED / PASS / STAGING VERIFIED |
 | OpenRouter automatic-admission Session 4B | CLOSED / PASS / STAGING VERIFIED |
 | OpenRouter Settings model-picker Session 4C | CLOSED / PASS / STAGING VERIFIED |
+| OpenRouter Ai chat quick-switch Session 4D | CLOSED / PASS / STAGING VERIFIED |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |

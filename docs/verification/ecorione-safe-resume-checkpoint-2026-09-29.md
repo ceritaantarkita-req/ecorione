@@ -4,7 +4,7 @@ Status: **CURRENT / SAFE TO RESUME / NO ACTIVE PRODUCT-RUNTIME BATCH**
 
 ## Purpose
 
-Freeze the exact safe handoff after OpenRouter Session 4C completed the governed Settings model picker on top of the already-closed registry, discovery, family, and automatic-admission foundations.
+Freeze the exact safe handoff after OpenRouter Session 4D completed the governed Ai chat quick-switch on top of the already-closed registry, discovery, family, automatic-admission, and Settings-selection foundations.
 
 Do not restart completed roadmaps from older planning notes.
 
@@ -12,19 +12,19 @@ Do not restart completed roadmaps from older planning notes.
 
 ```text
 repository                         = ceritaantarkita-req/ecorione
-latest runtime-changing merge      = c65926de418046494d2e961af10662d2eadca37c
-runtime PR                         = #398
-reviewed implementation head       = 2407d00f03f0f29422da9e78bc07aff675f846d2
-exact-head CI                      = #2491 PASS
-exact-head Product Eval            = #1730 PASS
-exact-head browser acceptance      = #289 PASS
-merged-main CI                     = #2492 PASS
-merged-main Product Eval           = #1731 PASS
-actual Staging Deploy              = #1745 PASS
-staging image                      = staging-c65926de4180
+latest runtime-changing merge      = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
+runtime PR                         = #400
+reviewed implementation head       = 005c1fc6f20c4aec0a8ef2b0f6ea984603032bf0
+exact-head CI                      = #2508 PASS
+exact-head Product Eval            = #1747 PASS
+exact-head browser acceptance      = #303 PASS
+merged-main CI                     = #2509 PASS
+merged-main Product Eval           = #1748 PASS
+actual Staging Deploy              = #1779 PASS
+staging image                      = staging-9bc4cfd1bbfb
 ```
 
-The preceding Staging Deploy #1744 was a successful prerequisite gate with the deploy job skipped. #1745 performed the actual deployment after both merged-main prerequisites were green.
+The preceding Staging Deploy #1778 was a successful prerequisite gate with the deploy job skipped. #1779 performed the actual deployment after both merged-main prerequisites were green.
 
 ## Staging truth
 
@@ -35,8 +35,8 @@ configured/running       = 15 / 15
 non-running              = 0
 host SHA match           = true
 clean worktree           = true
-host evidence free disk  = 21.86 GiB
-stabilized free disk     = 29.93 GiB
+host evidence free disk  = 24.02 GiB
+stabilized free disk     = 25.36 GiB
 ```
 
 SumoPod remains **staging, not production**.
@@ -49,14 +49,16 @@ The following scopes are closed at their documented boundaries:
 - Session 3 — bounded live OpenRouter discovery/search/filter/cache;
 - Session 4A — Connect-owned six-family classification;
 - Session 4B — automatic fail-closed selection admission;
-- Session 4C — governed Settings model picker.
+- Session 4C — governed Settings model picker;
+- Session 4D — governed Ai chat quick-switch.
 
-Canonical Session 4C evidence:
+Canonical Session 4D evidence:
 
-- [openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)
+- [openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md)
 
 Underlying evidence:
 
+- [openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)
 - [openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)
 - [openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)
 - [openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)
@@ -64,7 +66,7 @@ Underlying evidence:
 
 ## Current OpenRouter model-state contract
 
-The important distinction is:
+The important distinction remains:
 
 ```text
 discovered
@@ -82,15 +84,15 @@ selectable = true
 executable = false
 ```
 
-Session 4C may then persist that candidate as:
+Session 4C may persist that candidate as:
 
 ```text
 openRouterModelSelection = <selection id>
 ```
 
-but it does not promote the candidate into executable `hostedModel` authority.
+Session 4D may expose the same governed selection in the Ai chat composer, but it still does not promote the candidate into executable `hostedModel` authority.
 
-For a dynamic non-executable selection, Session 4C intentionally converges runtime state to:
+For a dynamic non-executable selection, Sessions 4C/4D intentionally converge runtime state to:
 
 ```text
 hostedProvider     = openrouter
@@ -99,7 +101,7 @@ hostedCallsEnabled = false
 defaultChatTarget  = local
 ```
 
-There is no silent fallback to the previously executable OpenRouter model.
+There is no silent fallback to a previously executable OpenRouter model.
 
 ## Current OpenRouter executable boundary
 
@@ -112,23 +114,19 @@ Claude Sonnet 4.5 -> anthropic/claude-sonnet-4.5
 Claude Opus 4.1   -> anthropic/claude-opus-4.1
 ```
 
-Dynamic GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM candidates may be discovered, classified, automatically admitted as selectable, and chosen in Settings, but are not executable until a later explicit execution-validation boundary admits them.
+Dynamic GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM candidates may be discovered, classified, automatically admitted as selectable, and chosen in Settings or Ai chat, but are not executable until a later explicit execution-validation boundary admits them.
 
-## Session 4C mutation boundary
+## Shared selection authority
 
-OpenRouter picker changes are Connect-owned.
-
-The dedicated path is:
+Settings and Ai chat use the same Connect-owned selection mutation:
 
 ```text
 PUT /v1/settings/providers/openrouter/model-selection
 ```
 
-The generic runtime endpoint cannot be used to change `openRouterModelSelection` to a different value.
+A dynamic selection is revalidated against current admission state before persistence. Stale, unavailable, or non-admitted candidates fail closed.
 
-A dynamic selection is revalidated against the current admission snapshot on save. Stale/unavailable/non-admitted candidates fail closed.
-
-The field is optional in persisted runtime settings so older installations that already store an executable OpenRouter `hostedModel` remain backward compatible.
+The Ai chat quick-switch does not create a second model authority.
 
 ## Other closed work
 
@@ -148,7 +146,7 @@ Open Issue #277 remains the deferred DR-2 physical-independence tracker; it is n
 
 ## Current active work
 
-There is **no active product/runtime implementation scope** after the Session 4C runtime merge and staging proof.
+There is **no active product/runtime implementation scope** after the Session 4D runtime merge and staging proof.
 
 The documentation-closure branch is bookkeeping only.
 
@@ -156,8 +154,7 @@ The documentation-closure branch is bookkeeping only.
 
 None of these is active implicitly:
 
-- **Session 4D — Ai chat quick-switch**;
-- Session 4E — real multi-family OpenRouter execution validation;
+- **Session 4E — real multi-family OpenRouter execution validation**;
 - Session 4F — final OpenRouter polish / closure;
 - DR-2 checkpoint 2 / physical-independence runtime proof;
 - public production promotion/cutover;
@@ -171,19 +168,20 @@ None of these is active implicitly:
 
 ## Session ordering rule
 
-Session 4D must not smuggle Session 4E into scope.
+Session 4E remains separate from the now-closed selection surfaces.
 
-A quick-switch may only surface the governed selection semantics already established by Session 4C. It must preserve:
+It must not infer executable authority from Session 4B selectability or Session 4C/4D user preference.
+
+Any future multi-family execution work must preserve:
 
 - `verified-selectable != verified-executable`;
-- Connect ownership of admission/selection validation;
-- no dynamic `PinnedModelId` creation;
+- Connect ownership of model/runtime authority;
+- no unproven dynamic `PinnedModelId`;
+- admitted pricing identity before execution;
 - pre-dispatch spend authority;
 - RESTRICTED routing;
 - provider credential ownership;
 - explicit fail-closed behavior.
-
-Real multi-family OpenRouter execution remains Session 4E.
 
 ## Safe resume instructions
 
@@ -193,18 +191,18 @@ For a new session or agent:
 2. read [../current-state-and-next-steps.md](../current-state-and-next-steps.md);
 3. read [../active-work-plan.md](../active-work-plan.md);
 4. read [../../AGENTS.md](../../AGENTS.md);
-5. read the Session 4C checkpoint linked above;
+5. read the Session 4D checkpoint linked above;
 6. treat all older dated checkpoints as evidence, not as an active queue;
-7. open Session 4D only after explicit operator authorization.
+7. open Session 4E only after explicit operator authorization.
 
 ## Bottom line
 
 The safe current state is:
 
 ```text
-Sessions 2 / 3 / 4A / 4B / 4C = CLOSED / PASS
-Session 4C staging              = VERIFIED
-Session 4D                     = next eligible, NOT active
-dynamic selectable model       = preference-capable, NOT executable
-production cutover             = NOT authorized
+Sessions 2 / 3 / 4A / 4B / 4C / 4D = CLOSED / PASS
+Session 4D staging                    = VERIFIED
+Session 4E                            = next eligible, NOT active
+dynamic selectable model             = preference-capable, NOT executable
+production cutover                   = NOT authorized
 ```
