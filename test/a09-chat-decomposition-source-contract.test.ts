@@ -19,12 +19,17 @@ describe("A-09 Ai chat frontend decomposition contract", () => {
     expect(sections).toContain("MemoryPanel");
   });
 
-  it("keeps Settings-backed model selection orchestration out of extracted presentation", () => {
-    expect(modelRouting).toContain("/api/settings/settings/runtime");
-    expect(modelRouting).toContain("/api/settings/settings/providers/openrouter/model-selection");
-    expect(modelRouting).not.toContain("/api/chat");
-    expect(sections).toContain("OpenRouterModelQuickSwitch");
-  });
+  it(
+    "keeps Settings-backed model selection orchestration out of extracted presentation",
+    () => {
+      expect(modelRouting).toContain("/api/settings/settings/runtime");
+      expect(modelRouting).toContain(
+        "/api/settings/settings/providers/openrouter/model-selection",
+      );
+      expect(modelRouting).not.toContain("/api/chat");
+      expect(sections).toContain("OpenRouterModelQuickSwitch");
+    },
+  );
 
   it("keeps session, Project, send, and forget orchestration in the page boundary", () => {
     expect(page).toContain("resolveActiveProjectId(candidate, activeProjects(body.projects))");
