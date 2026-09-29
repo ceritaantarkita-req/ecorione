@@ -1163,9 +1163,7 @@ async function runDesktopJourney() {
       name: "OpenRouter model quick switch",
     });
     await quickSwitch.waitFor();
-    if (
-      (await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1
-    ) {
+    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1) {
       throw new Error("desktop-ai: Session 4D quick-switch must expose admitted Qwen");
     }
     if (
@@ -1184,7 +1182,9 @@ async function runDesktopJourney() {
       )
       .waitFor();
     if ((await modelSelect.inputValue()) !== "local") {
-      throw new Error("desktop-ai: dynamic OpenRouter preference must converge chat route to Local");
+      throw new Error(
+        "desktop-ai: dynamic OpenRouter preference must converge chat route to Local",
+      );
     }
     if (
       runtime.settings.openRouterModelSelection !== "qwen/qwen3.8-max" ||
@@ -1197,7 +1197,9 @@ async function runDesktopJourney() {
       );
     }
     if (!(await modelSelect.locator('option[value="hosted"]').isDisabled())) {
-      throw new Error("desktop-ai: Hosted route must stay disabled for non-executable selection");
+      throw new Error(
+        "desktop-ai: Hosted route must stay disabled for non-executable selection",
+      );
     }
 
     await quickSwitch.selectOption("governed");
@@ -1213,10 +1215,14 @@ async function runDesktopJourney() {
       runtime.settings.hostedCallsEnabled !== true ||
       runtime.settings.defaultChatTarget !== "hosted"
     ) {
-      throw new Error("desktop-ai: governed quick-switch did not restore governed runtime state");
+      throw new Error(
+        "desktop-ai: governed quick-switch did not restore governed runtime state",
+      );
     }
     if (await modelSelect.locator('option[value="hosted"]').isDisabled()) {
-      throw new Error("desktop-ai: Hosted route should be available after governed reactivation");
+      throw new Error(
+        "desktop-ai: Hosted route should be available after governed reactivation",
+      );
     }
     await assertNoPageOverflow(page, "desktop-ai-quick-switch");
 
