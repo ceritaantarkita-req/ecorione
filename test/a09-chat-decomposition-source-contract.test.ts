@@ -4,10 +4,12 @@ import { describe, expect, it } from "vitest";
 describe("A-09 Ai chat frontend decomposition contract", () => {
   const page = readFileSync("apps/ai/app/page.tsx", "utf8");
   const sections = readFileSync("apps/ai/app/ChatPageSections.tsx", "utf8");
+  const modelRouting = readFileSync("apps/ai/app/useChatModelRouting.ts", "utf8");
 
   it("keeps the Ai orchestration page below its audited concentration baseline", () => {
     expect(page.length).toBeLessThan(40_000);
     expect(page).toContain('from "./ChatPageSections"');
+    expect(page).toContain('from "./useChatModelRouting"');
   });
 
   it("keeps extracted presentation free of owner API calls", () => {
@@ -15,6 +17,15 @@ describe("A-09 Ai chat frontend decomposition contract", () => {
     expect(sections).not.toContain("/api/");
     expect(sections).toContain("TurnView");
     expect(sections).toContain("MemoryPanel");
+  });
+
+  it("keeps Settings-backed model selection orchestration out of extracted presentation", () => {
+    expect(modelRouting).toContain("/api/settings/settings/runtime");
+    expect(modelRouting).toContain(
+      "/api/settings/settings/providers/openrouter/model-selection",
+    );
+    expect(modelRouting).not.toContain("/api/chat");
+    expect(sections).toContain("OpenRouterModelQuickSwitch");
   });
 
   it("keeps session, Project, send, and forget orchestration in the page boundary", () => {

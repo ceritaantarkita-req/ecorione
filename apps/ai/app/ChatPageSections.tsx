@@ -94,6 +94,53 @@ export function ChevronIcon() {
   );
 }
 
+export type OpenRouterQuickSwitchModel = {
+  readonly id: string;
+  readonly displayName: string;
+  readonly executable: boolean;
+};
+
+export function OpenRouterModelQuickSwitch({
+  models,
+  value,
+  disabled,
+  switching,
+  onChange,
+}: {
+  models: readonly OpenRouterQuickSwitchModel[];
+  value: string;
+  disabled: boolean;
+  switching: boolean;
+  onChange: (selectionId: string) => void;
+}) {
+  if (models.length === 0) return null;
+  const selected = models.find((model) => model.id === value);
+  const title =
+    selected !== undefined && !selected.executable
+      ? "Preference only · belum executable · memilih ini membuat chat tetap Local."
+      : "Quick-switch OpenRouter memakai selection authority yang sama dengan Settings.";
+
+  return (
+    <div className="ai-model-select ai-model-select--quick" title={title}>
+      <select
+        aria-label="OpenRouter model quick switch"
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {models.map((model) => (
+          <option key={model.id} value={model.id}>
+            {model.id === "governed" ? "OpenRouter · Recommended" : model.displayName}
+            {!model.executable ? " · Selectable only" : ""}
+          </option>
+        ))}
+      </select>
+      <ChevronIcon />
+      {switching ? <span className="ai-model-select__pending">Saving…</span> : null}
+    </div>
+  );
+}
+
 export function SendIcon() {
   return (
     <svg className="ai-send-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">

@@ -1142,7 +1142,7 @@ async function runDesktopJourney() {
   try {
     await goto(page, `/?project=prj_personal&session=${historySession.id}`, "desktop-ai");
     await page.getByText("Earlier hosted reply", { exact: true }).waitFor();
-    const modelSelect = page.getByRole("combobox", { name: "Model" });
+    const modelSelect = page.getByRole("combobox", { name: "Model", exact: true });
     if ((await modelSelect.inputValue()) !== "hosted") {
       throw new Error("desktop-ai: replayed hosted conversation did not restore Hosted route");
     }
@@ -1157,6 +1157,80 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "Kirim pesan" }).click();
     await page.getByText("PCS06_HOSTED_OK", { exact: true }).waitFor();
     await page.screenshot({ path: `${outDir}/desktop-ai.png`, fullPage: true });
+
+    await page.getByRole("button", { name: "+ Percakapan baru", exact: true }).click();
+    const quickSwitch = page.getByRole("combobox", {
+      name: "OpenRouter model quick switch",
+    });
+    await quickSwitch.waitFor();
+    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1) {
+      throw new Error("desktop-ai: Session 4D quick-switch must expose admitted Qwen");
+    }
+    if (
+      (await quickSwitch
+        .locator('option[value="~deepseek/deepseek-v4-flash-latest"]')
+        .count()) !== 0
+    ) {
+      throw new Error("desktop-ai: unavailable DeepSeek alias leaked into quick-switch");
+    }
+
+    await quickSwitch.selectOption("qwen/qwen3.8-max");
+    await page
+      .getByText(
+        "Qwen: Qwen3.8 Max disimpan sebagai preference. Model belum executable; chat tetap Local.",
+        { exact: true },
+      )
+      .waitFor();
+    if ((await modelSelect.inputValue()) !== "local") {
+      throw new Error(
+        "desktop-ai: dynamic OpenRouter preference must converge chat route to Local",
+      );
+    }
+    if (
+      runtime.settings.openRouterModelSelection !== "qwen/qwen3.8-max" ||
+      runtime.settings.hostedModel !== "governed" ||
+      runtime.settings.hostedCallsEnabled !== false ||
+      runtime.settings.defaultChatTarget !== "local"
+    ) {
+      throw new Error(
+        "desktop-ai: Session 4D dynamic quick-switch must preserve Session 4C fail-closed runtime semantics",
+      );
+    }
+    if (!(await modelSelect.locator('option[value="hosted"]').isDisabled())) {
+      throw new Error(
+        "desktop-ai: Hosted route must stay disabled for non-executable selection",
+      );
+    }
+
+    await quickSwitch.selectOption("governed");
+    await page
+      .getByText("Governed / Recommended aktif untuk Hosted chat.", { exact: true })
+      .waitFor();
+    if ((await modelSelect.inputValue()) !== "hosted") {
+      throw new Error("desktop-ai: governed quick-switch must restore Hosted route when ready");
+    }
+    if (
+      runtime.settings.openRouterModelSelection !== "governed" ||
+      runtime.settings.hostedModel !== "governed" ||
+      runtime.settings.hostedCallsEnabled !== true ||
+      runtime.settings.defaultChatTarget !== "hosted"
+    ) {
+      throw new Error(
+        "desktop-ai: governed quick-switch did not restore governed runtime state",
+      );
+    }
+    if (await modelSelect.locator('option[value="hosted"]').isDisabled()) {
+      throw new Error(
+        "desktop-ai: Hosted route should be available after governed reactivation",
+      );
+    }
+    await assertNoPageOverflow(page, "desktop-ai-quick-switch");
+    await goto(
+      page,
+      `/?project=prj_personal&session=${historySession.id}`,
+      "desktop-ai-quick-switch-restore",
+    );
+    await page.getByText("PCS06_HOSTED_OK", { exact: true }).waitFor();
 
     await page.getByRole("link", { name: "Projects", exact: true }).click();
     await page.getByRole("heading", { name: "Projects", exact: true }).waitFor();

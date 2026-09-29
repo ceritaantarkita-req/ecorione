@@ -513,7 +513,8 @@ hr {
   backdrop-filter: blur(14px);
 }
 
-.ai-route-status {
+.ai-route-status,
+.ai-model-switch-status {
   margin: 0 0 8px;
   padding: 8px 10px;
   border-left: 1px solid var(--warning);
@@ -521,6 +522,16 @@ hr {
   color: var(--text-muted);
   font-size: 11px;
   line-height: 1.45;
+}
+
+.ai-model-switch-status--success {
+  border-left-color: var(--success);
+  background: color-mix(in srgb, var(--success) 7%, transparent);
+}
+
+.ai-model-switch-status--error {
+  border-left-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 7%, transparent);
 }
 
 .ai-composer__field {
@@ -638,16 +649,36 @@ hr {
   stroke-linejoin: round;
 }
 
+.ai-model-controls {
+  min-width: 0;
+  margin-left: auto;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 .ai-model-select {
   position: relative;
-  margin-left: auto;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
 }
 
+.ai-model-select--route {
+  flex: 0 1 220px;
+}
+
+.ai-model-select--quick {
+  flex: 1 1 240px;
+  max-width: 320px;
+}
+
 .ai-model-select select {
   appearance: none;
-  max-width: min(420px, 48vw);
+  width: 100%;
+  max-width: min(320px, 34vw);
   min-height: var(--control-height-sm);
   padding: 0 24px 0 11px;
   overflow: hidden;
@@ -666,6 +697,16 @@ hr {
 .ai-model-select select:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.ai-model-select__pending {
+  position: absolute;
+  right: 24px;
+  padding-left: 6px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 9px;
+  pointer-events: none;
 }
 
 .ai-model-select__chevron {
@@ -1045,6 +1086,25 @@ hr {
   .ai-composer {
     margin-inline: -6px;
     padding-inline: 6px;
+  }
+
+  .ai-model-controls {
+    gap: 4px;
+  }
+
+  .ai-model-select--route {
+    flex-basis: 112px;
+  }
+
+  .ai-model-select--quick {
+    flex-basis: 150px;
+    max-width: none;
+  }
+
+  .ai-model-select select {
+    max-width: none;
+    padding-left: 9px;
+    font-size: 10.5px;
   }
 
   .ai-send-btn,
