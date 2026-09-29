@@ -174,7 +174,7 @@ export function useChatModelRouting() {
       if (!result.selection.executable) {
         setFeedback({
           kind: "warning",
-          message: `${displayName} disimpan sebagai preference. Model belum executable; chat tetap Local.`,
+          message:\n            `${displayName} disimpan sebagai preference. Model belum executable; chat tetap Local.`,
         });
       } else if (result.selection.active && nextRouting.hostedAvailable) {
         setFeedback({
