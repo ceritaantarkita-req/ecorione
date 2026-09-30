@@ -2,7 +2,7 @@
 
 Last updated: **2026-09-30**
 
-Status: **CURRENT / LAST ACTUAL STAGING-VERIFIED OPENROUTER BASELINE = SESSION 4D / POST-402 MAIN STABILIZED VIA PR #405 / PRE-4E AI PROVIDER+MODEL UX CONTRACT ACCEPTED / NO ACTIVE 4E RUNTIME IMPLEMENTATION / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / POST-402 MAIN STABILIZED + STAGING VERIFIED VIA PR #405 / PRE-4E AI PROVIDER+MODEL UX CONTRACT ACCEPTED / NO ACTIVE 4E RUNTIME IMPLEMENTATION / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
@@ -11,11 +11,11 @@ repository                = ceritaantarkita-req/ecorione
 default branch            = main
 current main              = d32527cb21e3b7209b28b109083be00671464b2b (PR #405 squash merge)
 post-402 stabilized head   = 32daed745625c9ede012912a19b8b77d5f89ec90 (PR #405 head)
-last staging-verified run  = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7 (PR #400 merge)
-staging image             = staging-9bc4cfd1bbfb
+staging-verified runtime   = d32527cb21e3b7209b28b109083be00671464b2b
+staging image              = staging-d32527cb21e3
 ```
 
-`9bc4cfd1...` remains the latest **actual staging-verified** runtime merge and the merge commit of PR #400. The post-#402 repository state was stabilized by PR #405: exact head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 Integrated Browser Acceptance #328, then merged to `main` as `d32527cb21e3b7209b28b109083be00671464b2b`. The follow-up Staging Deploy workflow #1834 gated successfully but its deploy job was skipped, so no new actual staging deployment is claimed.
+The post-#402 repository state is now both stabilized and actual staging-verified. PR #405 exact head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 Integrated Browser Acceptance #328, then merged to `main` as `d32527cb21e3b7209b28b109083be00671464b2b`. Merged-main CI #2540 and Product Eval #1779 passed, and Staging Deploy #1835 deployed exact SHA `d32527cb...` with image `staging-d32527cb21e3`, public smoke PASS, Operations `healthy: true`, **15/15** configured services running, and **27.41 GiB** free disk.
 
 PR #402 introduced a user-facing `Search → Test & Enable → Certified/Ready` direction for dynamic OpenRouter models. PR #405 makes that code path stable enough to be a clean starting point, but the flow remains an **interim implementation**, not the accepted final product UX. The accepted pre-4E contract is [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
 
