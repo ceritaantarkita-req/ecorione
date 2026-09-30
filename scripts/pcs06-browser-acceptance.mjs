@@ -1522,7 +1522,7 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
     await page.getByText("DeepSeek V4 Flash Latest", { exact: true }).waitFor();
     await page.getByText("Unavailable", { exact: true }).waitFor();
-    await page.getByText(/reason alias mutable/).waitFor();
+    await page.getByText(/alasan alias mutable/).waitFor();
     if (
       (await defaultSelects
         .nth(1)
