@@ -1117,16 +1117,8 @@ export default function ChatPage() {
         </aside>
       </main>
       <AiProviderConnectDialog
-        open={providerOnboarding.open}
-        providers={modelRouting.onboardingProviders}
-        providerId={providerOnboarding.providerId}
-        secret={providerOnboarding.secret}
-        pending={providerOnboarding.pending}
-        status={providerOnboarding.dialogStatus}
-        onProviderChange={providerOnboarding.setProviderId}
-        onSecretChange={providerOnboarding.setSecret}
+        controller={providerOnboarding}
         onConnect={() => void handleDirectProviderConnect()}
-        onClose={providerOnboarding.closeDialog}
       />
     </div>
   );
