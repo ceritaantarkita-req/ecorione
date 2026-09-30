@@ -103,6 +103,7 @@ describe("Ai provider/model selector routing", () => {
       { id: "local", displayName: "Local", available: true },
       { id: "openrouter", displayName: "OpenRouter", available: true },
       { id: "anthropic", displayName: "Anthropic", available: true },
+      { id: "openai", displayName: "OpenAI", available: false },
     ]);
   });
 
