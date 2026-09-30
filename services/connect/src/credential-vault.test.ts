@@ -178,7 +178,7 @@ describe("FileCredentialVault", () => {
     const nonce = Buffer.alloc(12, 3);
     const cipher = createCipheriv("aes-256-gcm", key, nonce, { authTagLength: 16 });
     cipher.setAAD(
-      Buffer.from("ecorione-credential-v1\0openai\0messages\01", "utf8"),
+      Buffer.from("ecorione-credential-v1\0openai\0messages\0" + "1", "utf8"),
     );
     const ciphertext = Buffer.concat([
       cipher.update("legacy-openai-secret", "utf8"),
