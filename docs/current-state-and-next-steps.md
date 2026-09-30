@@ -2,25 +2,25 @@
 
 Last updated: **2026-09-30**
 
-Status: **CURRENT / SESSION 4E ACTIVE-PARTIAL / DIRECT + TAMBAH AI SLICE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 4E ACTIVE-PARTIAL / MULTI-CREDENTIAL SLICE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository                = ceritaantarkita-req/ecorione
 default branch            = main
-runtime-changing main     = 2c223ea8c54045de3dc5e6b15971bdb2a898e2fe (PR #411 merge)
-session 4E reviewed head   = 011ac87b07d12608c7da3906ccbbc064d7701b3c (PR #411 head)
-staging-verified runtime   = 2c223ea8c54045de3dc5e6b15971bdb2a898e2fe
-staging image              = staging-2c223ea8c540
+runtime-changing main     = 15dc2a131778c2fe1249dda34e3291f9a3c8beae (PR #415 merge)
+session 4E reviewed head   = 83f0481b84b705ee8a310c2aa8df798353d49e7a (PR #415 head)
+staging-verified runtime   = 15dc2a131778c2fe1249dda34e3291f9a3c8beae
+staging image              = staging-15dc2a131778
 ```
 
-Session 4E has three runtime slices CLOSED / PASS / STAGING VERIFIED. PR #407 closed compatible OpenRouter auto-execution + visible catalog pricing; PR #409 closed the canonical provider/source + provider-specific model selector surface; PR #411 closed direct `+ Tambah AI` onboarding from Ai. Exact PR #411 head `011ac87b07d12608c7da3906ccbbc064d7701b3c` passed CI #2585, Product Eval #1824, and PCS-06 Integrated Browser Acceptance #365. It merged to `main` as `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe`; merged-main CI #2586 and Product Eval #1825 passed, and Staging Deploy #1922 deployed exact SHA `2c223ea8...` as image `staging-2c223ea8c540`. Public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, and capacity stabilized at **27.35 GiB free** after bounded rollback-set cleanup.
+Session 4E has four runtime slices CLOSED / PASS / STAGING VERIFIED. PR #407 closed compatible OpenRouter auto-execution + visible catalog pricing; PR #409 closed the canonical provider/source + provider-specific model selector surface; PR #411 closed direct `+ Tambah AI` onboarding; PR #415 closed the multi-credential AI Connection foundation. Exact PR #415 head `83f0481b84b705ee8a310c2aa8df798353d49e7a` passed CI #2595, Product Eval #1834, MCP External HTTPS Acceptance #1199, and PCS-06 Integrated Browser Acceptance #370. It merged to `main` as `15dc2a131778c2fe1249dda34e3291f9a3c8beae`; merged-main CI #2597, Product Eval #1836, and MCP External HTTPS Acceptance #1201 passed, and Staging Deploy #1942 deployed exact SHA `15dc2a13...` as image `staging-15dc2a131778`. Public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, and capacity stabilized at **27.33 GiB free** after bounded rollback-set cleanup.
 
-The Ai composer uses adjacent `[Provider / Source ▼] [Model ▼]` controls, and direct `+ Tambah AI` onboarding is now implemented from the Ai page. The primary flow validates the API key through Connect before Vault persistence, activates the provider, refreshes provider/model choices, and preserves the same conversation without a Settings detour. The accepted product contract remains [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md), but Session 4E is **not fully closed**: multi-credential routing, bounded Local↔Cloud context handoff, and custom-provider onboarding remain open.
+The Ai composer uses adjacent `[Provider / Source ▼] [Model ▼]` controls with direct `+ Tambah AI` onboarding. One logical provider may now own multiple encrypted AI Connections/API keys, Settings can enable/disable/re-prioritize/remove them, and Connect performs bounded priority failover while preserving provider/model choice and non-secret connection provenance. The accepted product contract remains [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md), but Session 4E is **not fully closed**: `Lainnya` / custom-provider onboarding and bounded Local↔Cloud context handoff remain open.
 
 Current safe-resume checkpoint:
-[verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
+[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -29,30 +29,32 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = 2c223ea8c54045de3dc5e6b15971bdb2a898e2fe
-image = staging-2c223ea8c540
+SHA   = 15dc2a131778c2fe1249dda34e3291f9a3c8beae
+image = staging-15dc2a131778
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| PR #411 reviewed head | `011ac87b07d12608c7da3906ccbbc064d7701b3c` |
-| PR-head CI #2585 | PASS |
-| PR-head Product Eval #1824 | PASS |
-| PR-head PCS-06 browser #365 | PASS |
-| merged-main CI #2586 | PASS |
-| merged-main Product Eval #1825 | PASS |
-| Staging Deploy #1921 | gate-only PASS / deploy skipped |
-| Staging Deploy #1922 | actual deploy PASS |
+| PR #415 reviewed head | `83f0481b84b705ee8a310c2aa8df798353d49e7a` |
+| PR-head CI #2595 | PASS |
+| PR-head Product Eval #1834 | PASS |
+| PR-head MCP HTTPS #1199 | PASS |
+| PR-head PCS-06 browser #370 | PASS |
+| merged-main CI #2597 | PASS |
+| merged-main Product Eval #1836 | PASS |
+| merged-main MCP HTTPS #1201 | PASS |
+| Staging Deploy #1941 | gate-only PASS / deploy skipped |
+| Staging Deploy #1942 | actual deploy PASS |
 | expected host SHA | matched |
-| staging image | `staging-2c223ea8c540` |
+| staging image | `staging-15dc2a131778` |
 | public smoke | PASS |
 | Operations | `healthy: true` |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| host evidence free disk before cleanup | 26.03 GiB |
-| stabilized free disk after rollback-set cleanup | 27.35 GiB |
+| host evidence free disk before cleanup | 26 GiB |
+| stabilized free disk after rollback-set cleanup | 27.33 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -176,7 +178,7 @@ Still open inside Session 4E:
 - add broader end-to-end live cross-provider completion evidence where real credentials/providers are available.
 
 Current Session 4E checkpoint:
-[verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
+[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
 
 Prior checkpoints remain historical evidence:
 
@@ -330,17 +332,19 @@ Closed runtime slices that must not be redone:
 
 - compatible OpenRouter auto-execution + visible catalog pricing — PR #407;
 - canonical `[Provider / Source ▼] [Model ▼]` controls — PR #409;
-- direct `+ Tambah AI` onboarding from Ai — PR #411.
+- direct `+ Tambah AI` onboarding from Ai — PR #411;
+- multi-credential AI Connections + priority/bounded failover — PR #415.
 
-The next bounded Session 4E implementation slice is the multi-credential provider foundation:
+The next bounded Session 4E implementation slice is `+ Tambah AI → Lainnya` custom provider onboarding:
 
-1. allow multiple AI Connections/API keys under one logical provider;
-2. keep all secrets exclusively under Connect/Vault ownership;
-3. add stable connection identity, label, enabled state, and priority/order;
-4. choose the highest-priority usable connection for dispatch;
-5. allow failover only for bounded availability/auth/provider failures, never around policy/spend/sensitivity/operator denial;
-6. preserve one logical provider row in Ai while retaining per-attempt non-secret connection provenance;
-7. do not yet combine custom-provider generalization or broad Local↔Cloud handoff redesign unless required by a failing invariant.
+1. default to an OpenAI-compatible protocol;
+2. collect Name, Base URL, API key, and model/model-discovery information;
+3. keep secrets in Connect Vault only;
+4. run bounded validation before activation;
+5. preserve network/SSRF, spend, sensitivity, Project/history, and operator boundaries;
+6. expose one logical custom provider/source after connection;
+7. keep advanced headers/auth/discovery details behind progressive disclosure;
+8. do not yet combine broad Local↔Cloud context-handoff redesign.
 
 There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
@@ -377,7 +381,7 @@ For a new session/agent:
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
+[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).

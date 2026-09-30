@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-30**
 
-Status: **SESSION 4E ACTIVE-PARTIAL / DIRECT + TAMBAH AI SLICE CLOSED-PASS-STAGING VERIFIED / NEXT SLICE = MULTI-CREDENTIAL PROVIDER FOUNDATION / NVIDIA SESSION 1 CLOSED-PASS / BRANCH HYGIENE CLOSED-PASS**
+Status: **SESSION 4E ACTIVE-PARTIAL / MULTI-CREDENTIAL SLICE CLOSED-PASS-STAGING VERIFIED / NEXT SLICE = CUSTOM OPENAI-COMPATIBLE PROVIDER / NVIDIA SESSION 1 CLOSED-PASS / BRANCH HYGIENE CLOSED-PASS**
 
-Current resume pointer: [verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md). The latest audited runtime-changing `main` is `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe` from PR #411, staging image `staging-2c223ea8c540`.
+Current resume pointer: [verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md). The latest audited runtime-changing `main` is `15dc2a131778c2fe1249dda34e3291f9a3c8beae` from PR #415, staging image `staging-15dc2a131778`.
 
 ## Current queue
 
@@ -28,7 +28,8 @@ Closed current baselines:
 - OpenRouter Ai chat quick-switch Session 4D — CLOSED / PASS / STAGING VERIFIED;
 - Session 4E slice 1 — compatible OpenRouter auto-execution + visible catalog pricing — CLOSED / PASS / STAGING VERIFIED through PR #407;
 - Session 4E slice 2 — canonical provider/source + provider-specific model selectors — CLOSED / PASS / STAGING VERIFIED through PR #409;
-- Session 4E slice 3 — direct `+ Tambah AI` onboarding — CLOSED / PASS / STAGING VERIFIED through PR #411.
+- Session 4E slice 3 — direct `+ Tambah AI` onboarding — CLOSED / PASS / STAGING VERIFIED through PR #411;
+- Session 4E slice 4 — multi-credential AI Connections + bounded failover — CLOSED / PASS / STAGING VERIFIED through PR #415.
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
 
@@ -140,20 +141,20 @@ Canonical checkpoint:
 
 ### Current Session 4E queue
 
-The next bounded implementation slice is the **multi-credential provider foundation**:
+The next bounded implementation slice is **`+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding**:
 
-1. replace the one-slot-per-provider credential assumption with multiple AI Connections/API keys beneath one logical provider;
-2. preserve Connect/Vault as the only credential owner;
-3. give each connection a stable non-secret identifier, display label, enabled state, and explicit priority/order;
-4. select the highest-priority usable connection for hosted dispatch;
-5. fail over only for bounded provider/credential availability failures; never fail over around policy, spend, sensitivity, or operator denial;
-6. record which connection handled each attempt without exposing plaintext secrets;
-7. keep the Ai provider selector logical — one provider row, not one row per key;
-8. do not mix custom-provider generalization or broad Local↔Cloud context-handoff redesign into this foundation slice unless an invariant requires it.
+1. collect Name, Base URL, API key, and model/model-discovery information from Ai;
+2. keep secrets exclusively under Connect/Vault ownership;
+3. validate endpoint, credential, and model through a bounded Connect-owned probe before activation;
+4. reject credential-bearing URLs and preserve existing SSRF/network-policy boundaries;
+5. preserve spend governance; unknown providers must not silently bypass cost admission;
+6. surface the custom provider as one logical provider/source after successful onboarding;
+7. keep advanced custom headers/auth/discovery options behind progressive disclosure;
+8. do not mix broad Local↔Cloud context-handoff redesign into this slice unless an invariant requires it.
 
-The auto-execution, canonical selector, and direct `+ Tambah AI` slices are already CLOSED / PASS / STAGING VERIFIED through PR #407, #409, and #411 and must not be redone.
+The auto-execution, canonical selector, direct `+ Tambah AI`, and multi-credential slices are already CLOSED / PASS / STAGING VERIFIED through PR #407, #409, #411, and #415 and must not be redone.
 
-After the multi-credential foundation, remaining Session 4E work includes bounded Local↔Cloud context handoff, the `Lainnya` / custom-provider path, and broader live cross-provider completion evidence where real credentials/providers are available.
+After custom-provider onboarding, remaining Session 4E work includes bounded Local↔Cloud context handoff and broader live cross-provider completion evidence where real credentials/providers are available.
 
 Session 4F remains a later independent closure/polish scope.
 
@@ -181,7 +182,7 @@ Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence 
 
 ## Separately selectable future scopes
 
-The following remain outside the active Session 4E multi-credential foundation slice unless explicitly opened:
+The following remain outside the active Session 4E custom-provider slice unless explicitly opened:
 
 - Session 4F final OpenRouter polish/closure after Session 4E is complete;
 - DR-2 checkpoint 2;
