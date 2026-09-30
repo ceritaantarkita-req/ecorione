@@ -538,6 +538,123 @@ describe("Connect Control Center boundary", () => {
     expect(response.body).not.toContain(vaultPath);
   });
 
+  it("mengelola beberapa AI Connection tanpa meng-echo secret", async () => {
+    const { app, vault } = fixture();
+    const firstSecret = "openrouter-primary-private";
+    const secondSecret = "openrouter-backup-private";
+
+    const first = await app.inject({
+      method: "POST",
+      url: "/v1/settings/credentials/openrouter/connections",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { secret: firstSecret, label: "Primary", priority: 100 },
+    });
+    expect(first.statusCode).toBe(200);
+    expect(first.body).not.toContain(firstSecret);
+    const firstBody = first.json();
+    expect(firstBody).toMatchObject({
+      provider: "openrouter",
+      purpose: "messages",
+      label: "Primary",
+      enabled: true,
+      priority: 100,
+      generation: 1,
+    });
+
+    const second = await app.inject({
+      method: "POST",
+      url: "/v1/settings/credentials/openrouter/connections",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { secret: secondSecret, label: "Backup", priority: 200 },
+    });
+    expect(second.statusCode).toBe(200);
+    expect(second.body).not.toContain(secondSecret);
+    const secondBody = second.json();
+    expect(secondBody.connectionId).not.toBe(firstBody.connectionId);
+    expect(vault.candidates("openrouter", "messages").map((item) => item.secret)).toEqual([
+      firstSecret,
+      secondSecret,
+    ]);
+
+    const reprioritized = await app.inject({
+      method: "PATCH",
+      url: `/v1/settings/credentials/openrouter/connections/${secondBody.connectionId}`,
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { priority: 50, label: "Backup promoted" },
+    });
+    expect(reprioritized.statusCode).toBe(200);
+    expect(reprioritized.json()).toMatchObject({
+      connectionId: secondBody.connectionId,
+      label: "Backup promoted",
+      priority: 50,
+      generation: 2,
+    });
+    expect(vault.get("openrouter", "messages")).toBe(secondSecret);
+
+    const disabled = await app.inject({
+      method: "PATCH",
+      url: `/v1/settings/credentials/openrouter/connections/${secondBody.connectionId}`,
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { enabled: false },
+    });
+    expect(disabled.statusCode).toBe(200);
+    expect(vault.get("openrouter", "messages")).toBe(firstSecret);
+
+    const removed = await app.inject({
+      method: "DELETE",
+      url: `/v1/settings/credentials/openrouter/connections/${firstBody.connectionId}`,
+      headers: auth,
+    });
+    expect(removed.statusCode).toBe(200);
+    expect(removed.json()).toEqual({ removed: true });
+
+    const listed = await app.inject({
+      method: "GET",
+      url: "/v1/settings/credentials",
+      headers: auth,
+    });
+    expect(listed.body).not.toContain(firstSecret);
+    expect(listed.body).not.toContain(secondSecret);
+    expect(listed.json().credentials).toEqual([
+      expect.objectContaining({
+        provider: "openrouter",
+        connectionId: secondBody.connectionId,
+        enabled: false,
+        priority: 50,
+      }),
+    ]);
+  });
+
+  it("menolak mutation AI Connection yang invalid atau tidak ditemukan", async () => {
+    const { app } = fixture();
+
+    const integration = await app.inject({
+      method: "POST",
+      url: "/v1/settings/credentials/mcp/connections",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { secret: "token-secret" },
+    });
+    expect(integration.statusCode).toBe(400);
+    expect(integration.json().error.type).toBe("CREDENTIAL_CONNECTION_UNSUPPORTED");
+
+    const missing = await app.inject({
+      method: "PATCH",
+      url: "/v1/settings/credentials/openai/connections/missing",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { priority: 10 },
+    });
+    expect(missing.statusCode).toBe(404);
+    expect(missing.json().error.type).toBe("CREDENTIAL_CONNECTION_NOT_FOUND");
+
+    const emptyPatch = await app.inject({
+      method: "PATCH",
+      url: "/v1/settings/credentials/openai/connections/missing",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: {},
+    });
+    expect(emptyPatch.statusCode).toBe(400);
+  });
+
   it("menerima plaintext credential sekali, menyimpan terenkripsi, dan tidak meng-echo secret", async () => {
     const { app, vault } = fixture();
     const secret = "provider-secret-value-that-must-not-echo";
