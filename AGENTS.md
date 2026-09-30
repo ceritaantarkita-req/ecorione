@@ -21,17 +21,17 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
-image            = staging-9bc4cfd1bbfb
-CI               = #2509 PASS
-Product Eval     = #1748 PASS
-Staging Deploy   = #1779 PASS
+runtime baseline = d32527cb21e3b7209b28b109083be00671464b2b
+image            = staging-d32527cb21e3
+CI               = #2540 PASS
+Product Eval     = #1779 PASS
+Staging Deploy   = #1835 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 25.36 GiB stabilized
+free disk        = 27.41 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #400 remains the latest **actual staging-verified** OpenRouter runtime merge. The post-#402 repository state was stabilized by PR #405 and is now on `main` at `d32527cb21e3b7209b28b109083be00671464b2b`; exact PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 #328. Treat #405 as repository stabilization, **not** as Session 4E closure and **not** as proof of a new actual staging deployment.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. The post-#402 repository state was stabilized by PR #405 and is now the latest **actual staging-verified** runtime baseline on `main` at `d32527cb21e3b7209b28b109083be00671464b2b`. Exact PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 #328; merged-main CI #2540, Product Eval #1779, and Staging Deploy #1835 also passed. Treat #405 as repository stabilization, **not** as Session 4E closure.
 
 Current overall safe-resume pointer:
 `docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md`.
