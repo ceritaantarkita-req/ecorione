@@ -1,3 +1,6 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import type { FastifyInstance } from "fastify";
 import {
@@ -8,11 +11,13 @@ import {
 } from "undici";
 import { CredentialVaultIntegrityError } from "./credential-vault.js";
 import { buildConnectServer } from "./http.js";
+import { FileRuntimeSettings } from "./runtime-settings.js";
 import { SpendBudgetBusyError, SpendBudgetExceededError } from "./spend-budget.js";
 import { OPERATION_ID, prefix } from "./test-helpers.js";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let anthropicPool: Interceptable;
+let openrouterPool: Interceptable;
 let nvidiaPool: Interceptable;
 let localPool: Interceptable;
 
@@ -22,6 +27,7 @@ beforeEach(() => {
   agent.disableNetConnect();
   setGlobalDispatcher(agent);
   anthropicPool = agent.get("https://api.anthropic.com");
+  openrouterPool = agent.get("https://openrouter.ai");
   nvidiaPool = agent.get("https://integrate.api.nvidia.com");
   localPool = agent.get("http://127.0.0.1:11434");
 });
@@ -300,6 +306,183 @@ describe("POST /v1/complete", () => {
     expect(settledActual).toBeGreaterThan(0);
     expect(res.json().budget.settlement).toBe("settled");
     expect(res.json().budget.actualUsd).toBe(settledActual);
+    await app.close();
+  });
+
+  it("Session 4E mengeksekusi exact dynamic OpenRouter model dari fresh compatible catalog", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-openrouter-4e-"));
+    const runtime = new FileRuntimeSettings(join(dir, "settings.json"), {
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      localRuntime: "openai-compatible",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+    runtime.activateOpenRouterModel!("qwen/qwen3.8-max");
+
+    let requestBody: Record<string, unknown> | undefined;
+    openrouterPool
+      .intercept({ path: "/api/v1/chat/completions", method: "POST" })
+      .reply(200, (opts) => {
+        requestBody = JSON.parse(String(opts.body)) as Record<string, unknown>;
+        return {
+          model: "qwen/qwen3.8-max",
+          choices: [{ message: { content: "QWEN_4E_OK" }, finish_reason: "stop" }],
+          usage: {
+            prompt_tokens: 20,
+            completion_tokens: 5,
+            cost: 0.0012,
+          },
+        };
+      });
+
+    const app = buildConnectServer({
+      runtimeSettings: runtime,
+      openrouterApiKey: "synthetic-openrouter-key",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
+      openRouterModelDiscovery: {
+        async list(query) {
+          expect(query).toEqual({ q: "qwen/qwen3.8-max", limit: 100 });
+          return {
+            source: "openrouter:/api/v1/models",
+            families: [
+              { id: "gpt", displayName: "GPT" },
+              { id: "gemini", displayName: "Gemini" },
+              { id: "qwen", displayName: "Qwen" },
+              { id: "deepseek", displayName: "DeepSeek" },
+              { id: "kimi", displayName: "Kimi" },
+              { id: "glm", displayName: "GLM" },
+            ],
+            cache: "hit",
+            stale: false,
+            fetchedAt: "2026-09-30T08:00:00.000Z",
+            expiresAt: "2026-09-30T08:10:00.000Z",
+            total: 1,
+            returned: 1,
+            models: [
+              {
+                id: "qwen/qwen3.8-max",
+                displayName: "Qwen: Qwen3.8 Max",
+                sourceProvider: "qwen",
+                family: "qwen",
+                contextWindowTokens: 1_000_000,
+                inputModalities: ["text"],
+                outputModalities: ["text"],
+                supportedParameters: ["max_tokens"],
+                promptPricePerToken: "0.000002",
+                completionPricePerToken: "0.000006",
+                mutableAlias: false,
+                admission: "verified-selectable",
+                selectable: true,
+                executable: false,
+                selectionId: "qwen/qwen3.8-max",
+                unavailableReason: null,
+              },
+            ],
+          };
+        },
+      },
+    });
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/complete",
+      payload: baseBody({ operationId: "op_session4e_dynamic" }),
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      reply: "QWEN_4E_OK",
+      provider: "openrouter",
+      model: "qwen/qwen3.8-max",
+      pricingModel: "qwen/qwen3.8-max",
+      responseModel: "qwen/qwen3.8-max",
+      routeReason: "selected-hosted",
+      cost: { actualUsd: 0.0012 },
+    });
+    expect(requestBody?.model).toBe("qwen/qwen3.8-max");
+    expect(requestBody?.provider).toMatchObject({ allow_fallbacks: false });
+    await app.close();
+  });
+
+  it("Session 4E fail-closed bila trusted dynamic selection kehilangan fresh compatible catalog", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-openrouter-4e-stale-"));
+    const runtime = new FileRuntimeSettings(join(dir, "settings.json"), {
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      localRuntime: "openai-compatible",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+    runtime.activateOpenRouterModel!("qwen/qwen3.8-max");
+
+    const app = buildConnectServer({
+      runtimeSettings: runtime,
+      openrouterApiKey: "synthetic-openrouter-key",
+      localBaseUrl: "http://127.0.0.1:11434/v1",
+      localModelTag: "qwen3:8b-instruct-q4_K_M",
+      hostedCallsEnabled: true,
+      hostedSpendUnlimited: true,
+      openRouterModelDiscovery: {
+        async list() {
+          return {
+            source: "openrouter:/api/v1/models",
+            families: [
+              { id: "gpt", displayName: "GPT" },
+              { id: "gemini", displayName: "Gemini" },
+              { id: "qwen", displayName: "Qwen" },
+              { id: "deepseek", displayName: "DeepSeek" },
+              { id: "kimi", displayName: "Kimi" },
+              { id: "glm", displayName: "GLM" },
+            ],
+            cache: "stale",
+            stale: true,
+            fetchedAt: "2026-09-30T07:00:00.000Z",
+            expiresAt: "2026-09-30T07:10:00.000Z",
+            total: 1,
+            returned: 1,
+            models: [
+              {
+                id: "qwen/qwen3.8-max",
+                displayName: "Qwen: Qwen3.8 Max",
+                sourceProvider: "qwen",
+                family: "qwen",
+                contextWindowTokens: 1_000_000,
+                inputModalities: ["text"],
+                outputModalities: ["text"],
+                supportedParameters: ["max_tokens"],
+                promptPricePerToken: "0.000002",
+                completionPricePerToken: "0.000006",
+                mutableAlias: false,
+                admission: "unavailable",
+                selectable: false,
+                executable: false,
+                selectionId: null,
+                unavailableReason: "stale-catalog",
+              },
+            ],
+          };
+        },
+      },
+    });
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/complete",
+      payload: baseBody({ operationId: "op_session4e_stale" }),
+    });
+
+    expect(res.statusCode).toBe(409);
+    expect(res.json().error).toMatchObject({
+      type: "OPENROUTER_SELECTION_STALE_OR_INVALID",
+    });
     await app.close();
   });
 
