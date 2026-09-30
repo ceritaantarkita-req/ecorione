@@ -1300,7 +1300,10 @@ async function runDesktopJourney() {
       name: "Provider AI baru",
       exact: true,
     });
-    if (await directProvider.locator('option[value="openrouter"]').isEnabled()) {
+    const connectedOpenRouterDisabled = await directProvider
+      .locator('option[value="openrouter"]')
+      .evaluate((option) => option.disabled);
+    if (!connectedOpenRouterDisabled) {
       throw new Error(
         "desktop-ai: already-connected OpenRouter must not be replaceable from + Tambah AI",
       );
