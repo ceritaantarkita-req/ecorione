@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-29**
+Last updated: **2026-09-30**
 
 This is the single navigation entry point for repository documentation.
 
@@ -27,16 +27,17 @@ Historical verification is intentionally preserved even when it contains an olde
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current repository/runtime truth and deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — current queue; currently no active product/runtime implementation scope.
+2. **[active-work-plan.md](active-work-plan.md)** — current queue; pre-4E product contract is selected, but Session 4E runtime implementation has not started.
 3. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
 4. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
-5. **[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)** — current overall safe-resume pointer; use this before opening any new scope.
-6. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — current OpenRouter Settings model-picker closure.
-7. **[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter automatic-admission closure.
-8. **[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter six-family foundation closure.
-9. **[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter live-discovery closure.
-10. **[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter governed registry closure.
-11. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — underlying NVIDIA hosted-provider rollout closure.
+5. **[design.md §12](design.md#12-pre-session-4e-ai-connection--model-ux-contract--2026-09-30)** — accepted pre-Session 4E Ai provider/model/connection UX contract.
+6. **[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)** — historical last fully reconciled safe-resume pointer before PR #402; use with current-state rather than as proof that current `main` is green.
+7. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — current OpenRouter Settings model-picker closure.
+8. **[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter automatic-admission closure.
+9. **[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter six-family foundation closure.
+10. **[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter live-discovery closure.
+11. **[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter governed registry closure.
+12. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — underlying NVIDIA hosted-provider rollout closure.
 
 ## Current ECX baseline
 
@@ -112,6 +113,8 @@ image = staging-9bc4cfd1bbfb
 ```
 
 CI #2509, Product Eval #1748, and actual Staging Deploy #1779 passed. Staging reported healthy Operations, 15/15 services running, exact runtime-SHA match, 24.02 GiB free at host evidence, and 25.36 GiB stabilized free disk. Docs-only merges may advance the exact Git/staging revision without changing this compatibility baseline; use the latest deploy receipt when exact live identity is required.
+
+Current repository `main` is later than that accepted staging baseline: PR #402 merged as `8db1dfd7536f93edbe8f59f1b2f5d6402ae2f96b`, but its required checks were not all green. Treat PR #402 as current repository state requiring repair/reconciliation, **not** as Session 4E closure or a new verified staging baseline.
 
 NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging operator kill switch is open under bounded spend controls; the runtime hosted toggle is activated through normal Settings/provider activation. The user's actual NVIDIA secret has not been stored or tested by repository work.
 
