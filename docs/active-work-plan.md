@@ -2,9 +2,9 @@
 
 Last updated: **2026-09-30**
 
-Status: **SESSION 4E ACTIVE-PARTIAL / OPENROUTER AUTO-EXECUTION SLICE CLOSED-PASS-STAGING VERIFIED / NEXT SLICE = CANONICAL PROVIDER+MODEL SELECTORS / NVIDIA SESSION 1 CLOSED-PASS / BRANCH HYGIENE CLOSED-PASS**
+Status: **SESSION 4E ACTIVE-PARTIAL / SELECTOR SLICE CLOSED-PASS-STAGING VERIFIED / NEXT SLICE = DIRECT + TAMBAH AI ONBOARDING / NVIDIA SESSION 1 CLOSED-PASS / BRANCH HYGIENE CLOSED-PASS**
 
-Current resume pointer: [verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md). The latest audited runtime-changing `main` is `bb2983d59dbe292c510fbc28aae297bcb23487c4` from PR #407, staging image `staging-bb2983d59dbe`.
+Current resume pointer: [verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md). The latest audited runtime-changing `main` is `e21f6f943fff9c0c2afdc71a45b05d6ab38eff76` from PR #409, staging image `staging-e21f6f943fff`.
 
 ## Current queue
 
@@ -26,7 +26,8 @@ Closed current baselines:
 - OpenRouter automatic-admission Session 4B — CLOSED / PASS / STAGING VERIFIED;
 - OpenRouter Settings model-picker Session 4C — CLOSED / PASS / STAGING VERIFIED;
 - OpenRouter Ai chat quick-switch Session 4D — CLOSED / PASS / STAGING VERIFIED;
-- Session 4E first runtime slice — compatible OpenRouter auto-execution + visible catalog pricing — CLOSED / PASS / STAGING VERIFIED through PR #407.
+- Session 4E slice 1 — compatible OpenRouter auto-execution + visible catalog pricing — CLOSED / PASS / STAGING VERIFIED through PR #407;
+- Session 4E slice 2 — canonical provider/source + provider-specific model selectors — CLOSED / PASS / STAGING VERIFIED through PR #409.
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
 
@@ -138,16 +139,18 @@ Canonical checkpoint:
 
 ### Current Session 4E queue
 
-The next bounded implementation slice is the **canonical Ai provider/model selector surface**:
+The next bounded implementation slice is **direct `+ Tambah AI` onboarding from the Ai page**:
 
-1. change the current technical Local/Hosted route selector into `[Provider / Source ▼]`;
-2. place `[Model ▼]` beside it and make the model list provider-specific;
-3. preserve same-conversation / next-message switching semantics;
-4. list Local and configured first-class providers without exposing governance vocabulary;
-5. preserve all existing routing, credential, spend, sensitivity, history, and Project boundaries;
-6. do not mix multi-credential persistence or broad context-handoff redesign into this selector slice unless an invariant requires it.
+1. expose `+ Tambah AI` from the provider/source control;
+2. open a lightweight connection flow without forcing a Settings detour;
+3. reuse Connect-owned provider credential test/save authority rather than duplicating Vault logic in Ai;
+4. after successful connection, refresh provider/model choices and return to the same conversation;
+5. preserve all existing credential, spend, sensitivity, history, and Project boundaries;
+6. do not mix multi-credential persistence, custom-provider generalization, or broad Local↔Cloud context-handoff redesign into this slice unless an invariant requires it.
 
-After that selector slice, remaining Session 4E work includes direct `+ Tambah AI` onboarding, broader provider switching completion, bounded Local↔Cloud context handoff product behavior, and multi-credential AI Connections with priority/failover.
+The canonical `[Provider / Source ▼] [Model ▼]` selector slice is already CLOSED / PASS / STAGING VERIFIED through PR #409 and must not be redone.
+
+After direct onboarding, remaining Session 4E work includes bounded Local↔Cloud context handoff product behavior, multi-credential AI Connections with priority/failover, and the `Lainnya` / custom-provider path. Broader live cross-provider completion evidence should be added only where real credentials/providers are available.
 
 Session 4F remains a later independent closure/polish scope.
 
@@ -175,7 +178,7 @@ Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence 
 
 ## Separately selectable future scopes
 
-The following remain outside the active Session 4E selector slice unless explicitly opened:
+The following remain outside the active Session 4E direct-onboarding slice unless explicitly opened:
 
 - Session 4F final OpenRouter polish/closure after Session 4E is complete;
 - DR-2 checkpoint 2;
