@@ -68,10 +68,7 @@ export type OpenRouterQuickSwitchModel = ChatModelOption;
 
 function isHostedProviderId(value: string): value is HostedProviderId {
   return (
-    value === "anthropic" ||
-    value === "openrouter" ||
-    value === "openai" ||
-    value === "nvidia"
+    value === "anthropic" || value === "openrouter" || value === "openai" || value === "nvidia"
   );
 }
 

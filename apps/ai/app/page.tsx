@@ -753,7 +753,9 @@ export default function ChatPage() {
       : modelRouting.hostedModelSelection;
   const selectedHostedModel =
     target === "hosted"
-      ? modelRouting.hostedModels.find((model) => model.id === modelRouting.hostedModelSelection)
+      ? modelRouting.hostedModels.find(
+          (model) => model.id === modelRouting.hostedModelSelection,
+        )
       : undefined;
 
   const modelControlsLocked =

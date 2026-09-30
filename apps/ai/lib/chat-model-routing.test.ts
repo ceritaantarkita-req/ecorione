@@ -38,18 +38,14 @@ const providers: ChatProviderCatalogEntry[] = [
     displayName: "Claude / Anthropic",
     category: "ai",
     routingReady: true,
-    hostedModels: [
-      { id: "claude-sonnet-4-5-20250929", displayName: "Claude Sonnet 4.5" },
-    ],
+    hostedModels: [{ id: "claude-sonnet-4-5-20250929", displayName: "Claude Sonnet 4.5" }],
   },
   {
     id: "openai",
     displayName: "OpenAI / ChatGPT API",
     category: "ai",
     routingReady: true,
-    hostedModels: [
-      { id: "gpt-5.6-sol", displayName: "GPT-5.6 Sol" },
-    ],
+    hostedModels: [{ id: "gpt-5.6-sol", displayName: "GPT-5.6 Sol" }],
   },
 ];
 

@@ -159,7 +159,9 @@ export function useChatModelRouting() {
   const openRouterSelection = currentOpenRouterPreference(runtime);
   const hostedProvider: HostedProviderId | undefined = runtime?.settings.hostedProvider;
 
-  async function activateHostedProvider(provider: HostedProviderId): Promise<ChatRuntimeSnapshot> {
+  async function activateHostedProvider(
+    provider: HostedProviderId,
+  ): Promise<ChatRuntimeSnapshot> {
     if (provider === "openrouter") {
       const selectionId =
         runtime?.settings.openRouterModelSelection ??
@@ -232,7 +234,9 @@ export function useChatModelRouting() {
       setFeedback({
         kind: "error",
         message:
-          error instanceof Error ? error.message : "Provider gagal diubah dan runtime tidak diubah.",
+          error instanceof Error
+            ? error.message
+            : "Provider gagal diubah dan runtime tidak diubah.",
       });
       return null;
     } finally {
@@ -344,7 +348,9 @@ export function useChatModelRouting() {
       setFeedback({
         kind: "error",
         message:
-          error instanceof Error ? error.message : "Model gagal diubah dan runtime tidak diubah.",
+          error instanceof Error
+            ? error.message
+            : "Model gagal diubah dan runtime tidak diubah.",
       });
       return null;
     } finally {
