@@ -1,6 +1,6 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-29**
+Last updated: **2026-09-30**
 
 Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / OPENROUTER SESSIONS 2–3 + 4A–4D CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
 
@@ -96,6 +96,8 @@ Overall safe-resume checkpoint:
 
 ## OpenRouter Sessions 2–3 + 4A–4D — CLOSED / PASS
 
+> **Pre-4E UX contract:** [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md). Normal users must not be forced through model-by-model `Test & Enable` certification. The machine may retain internal governance/evidence checks while the product surface stays provider/model centric.
+
 Current proven boundary:
 
 - Session 2 established the governed extensible registry and fail-closed executable admission;
@@ -131,7 +133,11 @@ Underlying discovery checkpoint:
 Underlying registry checkpoint:
 [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
-Session 4D Ai chat quick-switch is CLOSED / PASS / STAGING VERIFIED. The agreed next eligible OpenRouter scope is Session 4E real multi-family execution validation. It is separately selectable and is not active; Session 4F remains a later independent scope.
+Session 4D Ai chat quick-switch remains CLOSED / PASS / STAGING VERIFIED and is the last proven OpenRouter runtime boundary. Current `main` also contains merged PR #402, but #402 is **not accepted as CLOSED / PASS** because its required CI/Product Eval/browser evidence is not green.
+
+Before Session 4E runtime implementation, the accepted product contract is [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md). Session 4E must implement toward the two-selector `[Provider ▼] [Model ▼]` Ai UX, direct `+ Tambah AI` onboarding, per-message provider/model switching, compatible OpenRouter catalog availability without normal-user per-model certification, visible input/output pricing, bounded Local↔Cloud context handoff, and the documented multi-credential AI Connection direction.
+
+Session 4E is separately selectable and is not active until PR #402 is stabilized or explicitly superseded and the operator opens the runtime scope. Session 4F remains a later independent scope.
 
 ## DR-2
 
@@ -159,7 +165,7 @@ Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence 
 
 The following are eligible only through an explicit new decision; none is current work:
 
-- Session 4E real multi-family OpenRouter execution validation;
+- Session 4E implementation under the accepted AI Provider + Model UX contract;
 - Session 4F final OpenRouter polish/closure;
 - DR-2 checkpoint 2;
 - production cutover;
@@ -181,7 +187,7 @@ When the operator selects the next real scope:
 
 1. start from exact synchronized `main`;
 2. name the scope explicitly;
-3. define accepted behavior and non-goals before coding;
+3. for Session 4E, treat [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md) as the accepted behavior contract before coding;
 4. keep service ownership unchanged unless an explicit architecture decision says otherwise;
 5. add deterministic tests for new behavior;
 6. require exact-head gates;
