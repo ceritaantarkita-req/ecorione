@@ -9,28 +9,29 @@ Before changing the repo:
 1. `docs/README.md`
 2. `docs/current-state-and-next-steps.md`
 3. `docs/active-work-plan.md`
-4. this file
-5. relevant accepted ADR/runbook
-6. dated verification/evidence only when the active scope requires it
+4. `docs/ai-provider-model-ux-contract.md` before any Session 4E / Ai provider-model work
+5. this file
+6. relevant accepted ADR/runbook
+7. dated verification/evidence only when the active scope requires it
 
 Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evidence. They are **not current work queues**.
 
-## Current compatibility baseline — 2026-09-29
+## Current compatibility baseline — 2026-09-30
 
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
-image            = staging-9bc4cfd1bbfb
-CI               = #2509 PASS
-Product Eval     = #1748 PASS
-Staging Deploy   = #1779 PASS
+runtime baseline = d32527cb21e3b7209b28b109083be00671464b2b
+image            = staging-d32527cb21e3
+CI               = #2540 PASS
+Product Eval     = #1779 PASS
+Staging Deploy   = #1835 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 25.36 GiB stabilized
+free disk        = 27.41 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. PR #400 is the latest audited runtime-changing merge. Always inspect live `main` before opening new work.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. The post-#402 repository state was stabilized by PR #405 and is now the latest **actual staging-verified** runtime baseline on `main` at `d32527cb21e3b7209b28b109083be00671464b2b`. Exact PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 #328; merged-main CI #2540, Product Eval #1779, and Staging Deploy #1835 also passed. Treat #405 as repository stabilization, **not** as Session 4E closure.
 
 Current overall safe-resume pointer:
 `docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md`.
@@ -74,11 +75,13 @@ Closed roadmap families:
 - OpenRouter Settings model-picker Session 4C — **CLOSED / PASS / STAGING VERIFIED**;
 - OpenRouter Ai chat quick-switch Session 4D — **CLOSED / PASS / STAGING VERIFIED**.
 
-There is **no active product/runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item.
+There is **no active Session 4E runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted pre-4E product contract is `docs/ai-provider-model-ux-contract.md`.
 
 Open Issue #277 remains the deferred DR-2 tracker.
 
 ## OpenRouter registry + discovery + family + admission working boundary
+
+Before changing OpenRouter/Ai provider-model UX, read `docs/ai-provider-model-ux-contract.md`. The target normal-user surface is `[Provider ▼] [Model ▼]`, direct `+ Tambah AI` onboarding, per-message switching, visible pricing, and machine-managed governance. Do not scale user-facing model-by-model `Test & Enable` certification as the product direction.
 
 Sessions 2, 3, 4A, 4B, 4C, and 4D are **CLOSED / PASS**.
 
@@ -190,7 +193,7 @@ Canonical checkpoint:
 
 Do not start these without explicit operator authorization:
 
-- Session 4E real multi-family OpenRouter execution validation;
+- Session 4E implementation under `docs/ai-provider-model-ux-contract.md`;
 - Session 4F final OpenRouter polish/closure;
 - DR-2 checkpoint 2 and physical-independence runtime proof;
 - public production cutover;
