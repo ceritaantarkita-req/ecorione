@@ -1,6 +1,6 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-09-29**
+Last updated: **2026-09-30**
 
 Status: **CURRENT SUMMARY**
 
@@ -9,17 +9,19 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7 (PR #400)
-image                   = staging-9bc4cfd1bbfb
-CI                      = #2509 PASS
-Product Eval            = #1748 PASS
-Staging Deploy          = #1779 PASS
+runtime / staging       = bb2983d59dbe292c510fbc28aae297bcb23487c4 (PR #407)
+image                   = staging-bb2983d59dbe
+CI                      = #2556 PASS
+Product Eval            = #1795 PASS
+Staging Deploy          = #1863 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 25.36 GiB stabilized
+free disk               = 29.89 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability and connection-test hardening plus the OpenRouter registry foundation (Session 2), bounded live discovery/search/cache (Session 3), six-family model foundation (Session 4A), automatic target-family admission (Session 4B), the governed Settings model picker (Session 4C), and the governed Ai chat quick-switch (Session 4D).
+This includes the NVIDIA hosted-provider capability and connection-test hardening; OpenRouter Sessions 2–4D; post-#402 stabilization; and the first Session 4E runtime slice. Session 4E now allows fresh compatible OpenRouter catalog models to be selected/executed without normal-user model-by-model certification, exposes catalog input/output pricing in Ai, and re-checks fresh catalog compatibility/pricing inside Connect before paid dynamic dispatch.
+
+Session 4E is **ACTIVE / PARTIAL**. The first auto-execution/pricing slice is closed; the next bounded slice is the canonical adjacent `[Provider / Source ▼] [Model ▼]` Ai control surface.
 
 ## Closed foundational roadmaps
 
@@ -126,37 +128,34 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
-image = staging-9bc4cfd1bbfb
+SHA   = bb2983d59dbe292c510fbc28aae297bcb23487c4
+image = staging-bb2983d59dbe
 ```
 
-Actual Staging Deploy #1779 proved:
+Actual Staging Deploy #1863 proved:
 
-- native builder installed `python3 make g++`;
-- `better-sqlite3` fallback installation completed;
-- auth/protected-route checks PASS;
+- exact target/host SHA match;
+- clean detached staging worktree;
+- public auth/protected-route smoke PASS;
 - MCP metadata/challenge checks PASS;
 - Operations healthy;
 - 0 unhealthy services;
 - 15 configured / 15 running;
-- exact SHA match;
-- 24.02 GiB free at sanitized host evidence;
-- 25.36 GiB stabilized free disk.
+- image `staging-bb2983d59dbe`;
+- 21.81 GiB free at sanitized host evidence before cleanup;
+- bounded BuildKit cache pruning ran because capacity was below the 25 GiB target;
+- 29.89 GiB stabilized free disk.
 
-The preceding Staging Deploy #1505 is preserved as valid failed evidence: the one-time hosted-trial host migration passed, image build failed because the old slim builder lacked Python, and governed rollback to `41fdedf...` fully revalidated.
+Staging Deploy #1862 is preserved as valid gate-only evidence; its deploy job was skipped and it is not runtime deployment proof.
 
 NVIDIA / NIM remains live with pinned `z-ai/glm-5.3`. Current source uses 60-second default credential/canary deadlines, a 1024-token NVIDIA health-probe cap with low reasoning effort, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
-Latest checkpoint:
-[verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md](verification/nvidia-connection-test-session1-safe-checkpoint-2026-09-28.md).
-
-Underlying rollout checkpoint:
-[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
+Current Session 4E checkpoint:
+[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
 
 This is staging evidence, not production promotion.
 
-
-## OpenRouter provider foundation
+## OpenRouter provider foundation / Session 4E
 
 | Scope | State |
 |---|---|
@@ -167,26 +166,35 @@ This is staging evidence, not production promotion.
 | Session 4B — OpenRouter automatic target-family admission | CLOSED / PASS / STAGING VERIFIED |
 | Session 4C — OpenRouter Settings model picker | CLOSED / PASS / STAGING VERIFIED |
 | Session 4D — OpenRouter Ai chat quick-switch | CLOSED / PASS / STAGING VERIFIED |
+| Session 4E slice 1 — compatible auto-execution + catalog pricing | CLOSED / PASS / STAGING VERIFIED |
+| Session 4E overall | ACTIVE / PARTIAL |
 
-Session 3 adds bounded live catalog discovery, Session 4A adds one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM, Session 4B turns fresh qualifying target-family metadata into explicit `verified-selectable` admission, Session 4C exposes those admitted candidates through the governed Settings picker, and Session 4D reuses the same selection authority in the Ai chat quick-switch. Newly admitted dynamic models remain `executable=false`; current executable OpenRouter authority remains the two static Claude models.
+Session 4E slice 1 closed through PR #407. Exact reviewed head `5b9a29085287db035c2c52dd6ea783c2d93ceac4` passed CI #2555, Product Eval #1794, and PCS-06 #341; merged main `bb2983d59dbe292c510fbc28aae297bcb23487c4` passed CI #2556 + Product Eval #1795; actual Staging Deploy #1863 passed.
 
-Canonical Session 4D checkpoint:
+Current behavior:
+
+- fresh qualifying OpenRouter models can be selected and used without normal-user model-by-model `Test & Enable`;
+- dynamic execution authority is minted only by the trusted Connect admission path;
+- dispatch re-checks the exact selected model against fresh selectable catalog metadata and valid input/output pricing;
+- catalog input/output price per 1M tokens is visible in Ai;
+- provider-reported billed cost remains authoritative when supplied;
+- mutable aliases, stale/incompatible models, and invalid/missing pricing remain fail-closed;
+- generic runtime PATCH cannot grant dynamic execution authority.
+
+Next bounded Session 4E slice:
+
+- replace the technical Local/Hosted route selector with `[Provider / Source ▼]`;
+- place provider-specific `[Model ▼]` beside it;
+- preserve next-message switching inside the same conversation;
+- preserve credential, spend, sensitivity, Project/history, and Connect authority boundaries.
+
+Direct `+ Tambah AI` onboarding, bounded Local↔Cloud handoff product behavior, and multi-credential priority/failover remain later Session 4E work.
+
+Canonical Session 4E checkpoint:
+[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+
+Prior Session 4D checkpoint:
 [verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
-
-Underlying Session 4C checkpoint:
-[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
-
-Underlying Session 4B checkpoint:
-[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md).
-
-Underlying Session 4A checkpoint:
-[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md).
-
-Underlying Session 3 checkpoint:
-[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md).
-
-Underlying Session 2 checkpoint:
-[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
 ## DR
 
