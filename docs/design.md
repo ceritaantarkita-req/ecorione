@@ -164,3 +164,149 @@ Real browser use after PE-08 showed that the approved visual identity is still v
 - keep the current restrained premium identity rather than replacing it with a colorful dashboard aesthetic.
 
 This addendum was the visual baseline for PCS-04 and related PCS-01..PCS-03 product surfaces. That implementation is now CLOSED / PASS at the documented PCS boundaries, with integrated rendered-browser regression closed under PCS-06. Any new visual redesign requires a new explicit scope rather than reopening this addendum.
+ 
+---
+
+## 12. Pre-Session 4E Ai Connection + Model UX Contract — 2026-09-30
+
+This contract is the accepted product direction before Session 4E implementation. It **supersedes the normal-user UX assumption that every OpenRouter model must be manually tested/certified before use**, while preserving Hub/Connect ownership, credential security, spend controls, auditability, and explicit failure behavior underneath.
+
+### 12.1 Canonical Ai composer controls
+
+The normal Ai surface uses **two adjacent selectors**:
+
+```text
+[ Provider / source ▼ ]   [ Model ▼ ]
+```
+
+Examples:
+
+```text
+[ Local ▼ ]        [ Qwen 3.5 9B ▼ ]
+[ OpenRouter ▼ ]   [ DeepSeek 4 Pro ▼ ]
+[ OpenAI ▼ ]       [ GPT-5.6 ▼ ]
+[ Claude ▼ ]       [ Claude Sonnet 4.5 ▼ ]
+[ NVIDIA ▼ ]       [ GLM ... ▼ ]
+```
+
+The **left selector** answers “AI dari mana?” and contains connected sources/providers such as:
+
+- Local;
+- Claude / Anthropic;
+- OpenAI;
+- NVIDIA;
+- OpenRouter;
+- `+ Tambah AI`.
+
+The **right selector** contains only models available through the selected provider/source. Changing the provider immediately refreshes the model list. Normal users do not need to understand the internal `local` vs `hosted` route abstraction.
+
+### 12.2 Add AI without a Settings detour
+
+`+ Tambah AI` is a first-class action from the provider selector. It opens a compact connection flow instead of forcing the user to navigate to Settings first:
+
+```text
+Tambah AI
+  -> pilih OpenRouter / OpenAI / Claude / NVIDIA / Lainnya
+  -> masukkan API key (dan endpoint/model only when needed)
+  -> Hubungkan
+  -> credential validation + secure save + model discovery
+  -> provider becomes available in Ai
+```
+
+For normal users, **Connect/Hubungkan is the test**. A separate mandatory “Test connection” step is not required before the provider can be used. Failure must return one clear actionable error; success returns the user to Ai with the connection available.
+
+Settings remains the management/advanced surface for connections, budget, privacy, local runtime, credential rotation, and operator detail. It is not a required stop in the normal onboarding path.
+
+### 12.3 OpenRouter model availability
+
+The target experience is that **OpenRouter models compatible with the requested ECORIONE mode are directly selectable from the live/catalog snapshot without manual per-model user certification**.
+
+Normal model rows may expose useful facts such as:
+
+- model name;
+- input price per 1M tokens;
+- output price per 1M tokens;
+- context window;
+- capability badges when relevant.
+
+Normal users should not have to operate states such as `Test & Enable`, `Certified`, `Executable`, or `Governed` for each model. Internal health, capability, provider identity, pricing snapshot, spend admission, and failure evidence may remain machine-governed underneath.
+
+This does **not** mean every OpenRouter catalog entry is valid for every request. A model that cannot satisfy the active mode/capability may be filtered/disabled with an explicit reason. Provider/runtime failures remain explicit; ECORIONE must not silently switch to a different model.
+
+### 12.4 Provider/model switching inside one conversation
+
+Provider and model choice applies to the **next message**, not to the lifetime of the conversation. A single Historical Ledger session may therefore contain turns from Local, OpenRouter, OpenAI, Claude, NVIDIA, or other supported connections.
+
+Example:
+
+```text
+turn 1 -> OpenRouter / Claude Sonnet 4.5
+turn 2 -> OpenAI / GPT-5.6
+turn 3 -> Local / Qwen 3.5 9B
+```
+
+The conversation remains one session. Each assistant turn must retain sufficient provenance to explain at least the provider/source, model, operation identity, and available usage/cost evidence. The UI may show compact per-turn metadata instead of exposing routing internals globally.
+
+Session 4E acceptance must explicitly define context handoff when switching Local <-> Cloud so continuity does not become an implicit privacy downgrade. No provider switch may silently widen data disclosure.
+
+### 12.5 AI Connection replaces the one-slot-per-provider mental model
+
+The current credential scope `<provider>/messages` effectively allows one active credential slot per provider. The accepted target is a **multi-connection model**:
+
+```text
+OpenRouter
+  - Personal #1
+  - Personal #2
+  - Work
+  - Backup #1
+  - Backup #2
+
+OpenAI
+  - Personal
+  - Work
+  - Backup
+```
+
+Each connection needs a stable identity independent from the provider itself, conceptually including:
+
+```text
+connectionId
+provider
+label
+credentialRef / encrypted secret ownership
+status
+priority
+createdAt
+lastUsedAt
+optional connection-level policy metadata
+```
+
+The main Ai provider selector still shows **OpenRouter**, not five separate keys. Multi-key management belongs in Settings -> AI Connections. Initial automatic credential routing should be simple and explainable: configured priority plus failover for credential/rate-limit/unavailability conditions. Switching credentials must never silently switch the requested model.
+
+### 12.6 “Lainnya” / custom AI connection
+
+`+ Tambah AI -> Lainnya` provides an extensible path for providers not hard-coded in the primary catalog. The default custom protocol is OpenAI-compatible and may ask for:
+
+- connection name;
+- base URL;
+- API key/auth material;
+- model identifier or discovery endpoint where applicable.
+
+Advanced headers/auth/protocol options remain progressive disclosure rather than normal onboarding fields.
+
+### 12.7 Governance stays underneath
+
+This UX simplification does not remove existing architecture boundaries:
+
+- Connect remains the provider/runtime/credential owner;
+- secrets remain encrypted and never appear in normal chat state;
+- Hub policy/approval boundaries remain authoritative where applicable;
+- spend limits/kill switches remain enforceable;
+- Historical Ledger/audit provenance remains canonical;
+- no silent model fallback;
+- no new provider is granted arbitrary host execution;
+- advanced/operator diagnostics remain available without becoming mandatory user workflow.
+
+### 12.8 Session 4E implementation boundary
+
+This document locks the **target product contract** before Session 4E code begins. The next runtime scope must start from a green/reconciled main and define acceptance tests against this contract. It must not treat the current per-model manual certification UX as the desired end state merely because that path exists in the current implementation.

@@ -1,19 +1,22 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-29**
+Last updated: **2026-09-30**
 
-Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 + 4A–4D CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / OPENROUTER SESSIONS 2–3 + 4A–4D CLOSED-PASS / PRE-4E PRODUCT CONTRACT LOCKED / PR #402 MERGED BUT NOT ACCEPTED AS CLOSURE / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO SESSION 4E RUNTIME IMPLEMENTATION YET / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository               = ceritaantarkita-req/ecorione
 default branch           = main
-runtime-changing baseline= 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
+current main             = 8db1dfd7536f93edbe8f59f1b2f5d6402ae2f96b (PR #402 merge)
+audited staging baseline = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
 staging image            = staging-9bc4cfd1bbfb
 ```
 
 `9bc4cfd1...` is the latest audited runtime-changing merge and the merge commit of PR #400. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
+
+`main` has since advanced through PR #402 (`8db1dfd7...`, `feat: validate OpenRouter models with bounded spend`). That merge is **repository state, but not an accepted closure baseline**: its exact PR checks included a CI format failure, a Product Eval contract failure, and an integrated-browser failure. Therefore do not describe PR #402 as CLOSED/PASS, staging-converged, or Session 4E completion. Its useful implementation ideas may be repaired/reworked under the newly locked pre-4E product contract.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
@@ -152,6 +155,29 @@ Underlying Session 3 checkpoint:
 Underlying Session 2 checkpoint:
 [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
+## Pre-Session 4E product decision — AI connections + model switching
+
+The operator has accepted a simpler end-user contract before Session 4E runtime work begins. Canonical UX detail is in [design.md](design.md#12-pre-session-4e-ai-connection--model-ux-contract--2026-09-30).
+
+Locked direction:
+
+- Ai uses two adjacent selectors: `[Provider/source ▼] [Model ▼]`;
+- provider/source choices include Local, Claude/Anthropic, OpenAI, NVIDIA, OpenRouter, and `+ Tambah AI`;
+- the model selector is filtered by the selected provider/source;
+- `+ Tambah AI` opens a direct connection modal; normal users are not forced through Settings;
+- one Connect/Hubungkan action performs credential validation + secure save + model discovery;
+- OpenRouter models compatible with the active request should be selectable without mandatory manual per-model certification by the user;
+- model rows should expose practical catalog facts such as input/output price per 1M tokens rather than governance terminology;
+- provider/model may change between messages inside the **same conversation/session**; selection applies to the next message;
+- each turn retains provider/model/operation/cost provenance in the existing history/audit path;
+- one provider may own multiple independently identified AI Connections/API keys; chat shows the provider, while key management lives in Settings -> AI Connections;
+- initial multi-key behavior should use explicit priority + failover, never silent model fallback;
+- `Lainnya` supports custom/OpenAI-compatible providers through progressive disclosure;
+- governance, spend, security, and audit remain underneath rather than becoming mandatory normal-user workflow;
+- Local <-> Cloud context handoff/privacy behavior must be explicit in Session 4E acceptance before code is considered complete.
+
+This is a **target contract**, not a claim that current `main` already implements it. The current per-model test/certification flow is an implementation state to simplify, not the desired final UX.
+
 ## Closed roadmap families
 
 | Scope | State |
@@ -289,15 +315,15 @@ Canonical Session 4D checkpoint:
 
 ## Current active work
 
-There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 4D is closed and staging verified.
+There is **no Session 4E runtime implementation active yet** and no active repository-hygiene scope. OpenRouter Session 4D remains closed and staging verified.
 
-Current docs are reconciled to that runtime truth; Session 4E is eligible only after an explicit operator decision.
+The operator has now explicitly selected and documented the **pre-4E Ai connection/model UX contract**. Before Session 4E code starts, PR #402/main must be reconciled to a green trustworthy baseline and the 4E acceptance scope must use the newly locked contract rather than the old manual per-model certification UX.
 
 ## Explicit deferred / separately selectable future scopes
 
 Any of the following requires a new explicit operator decision and its own bounded scope:
 
-- Session 4E real multi-family OpenRouter execution validation;
+- Session 4E implementation of the accepted Ai connection/model-routing contract, including practical multi-family OpenRouter execution without mandatory per-model user certification;
 - Session 4F final OpenRouter polish/closure;
 - DR-2 checkpoint 2 external target selection and later runtime proof;
 - public production promotion/cutover;

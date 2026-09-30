@@ -1,10 +1,10 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-29**
+Last updated: **2026-09-30**
 
-Status: **NO ACTIVE PRODUCT/RUNTIME IMPLEMENTATION / SAFE RESUME CHECKPOINT LOCKED / OPENROUTER SESSIONS 2–3 + 4A–4D CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / CURRENT DOC LAYER RECONCILED / BRANCH HYGIENE CLOSED-PASS**
+Status: **PRE-4E PRODUCT CONTRACT LOCKED / NO SESSION 4E RUNTIME IMPLEMENTATION YET / PR #402 MERGED BUT REPAIR+REGRESSION RECONCILIATION REQUIRED / OPENROUTER SESSIONS 2–3 + 4A–4D CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / BRANCH HYGIENE CLOSED-PASS**
 
-Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md). The latest audited runtime-changing `main` is `9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7` from PR #400.
+Current historical safe-resume pointer remains [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md). Current `main` is `8db1dfd7536f93edbe8f59f1b2f5d6402ae2f96b` from PR #402, but the latest **accepted audited staging baseline** remains `9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7` from PR #400 because PR #402 did not close its required gates.
 
 ## Current queue
 
@@ -28,6 +28,31 @@ Closed current baselines:
 - OpenRouter Ai chat quick-switch Session 4D — CLOSED / PASS / STAGING VERIFIED.
 
 No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
+### Selected pre-4E product contract
+
+The operator has explicitly selected the next product direction, but **this docs change does not start Session 4E runtime implementation**. Before code, treat [design.md §12](design.md#12-pre-session-4e-ai-connection--model-ux-contract--2026-09-30) as the product contract.
+
+Required direction:
+
+1. Ai primary control is `[Provider/source ▼] [Model ▼]`, not one opaque Local/Hosted route selector.
+2. Provider/source menu includes Local, Claude/Anthropic, OpenAI, NVIDIA, OpenRouter, and `+ Tambah AI`.
+3. `+ Tambah AI` performs fast onboarding in-place: provider -> API key -> Hubungkan; successful connect validates/saves/discovers without a mandatory Settings detour.
+4. OpenRouter compatible models should be usable from catalog/discovery without forcing users through per-model Test/Certified/Executable workflow; show practical pricing/capability facts instead.
+5. Provider/model selection is **per next message** and can change within one conversation while Historical Ledger keeps turn provenance.
+6. Credential storage must evolve from one effective `<provider>/messages` slot to stable multi-connection identities so one provider can hold multiple API keys.
+7. Main chat hides individual keys; Settings -> AI Connections manages labels, priority, health, rotation, and failover.
+8. Initial key routing is explicit priority + failover; requested model must not silently change.
+9. `Lainnya` provides a custom/OpenAI-compatible connection path.
+10. Governance/spend/security remain authoritative underneath and Local <-> Cloud context handoff/privacy must be specified before 4E closure.
+
+### Required sequence before Session 4E implementation
+
+1. repair/reconcile current PR #402/main failures so baseline verification is trustworthy;
+2. confirm the exact 4E acceptance matrix from the contract above;
+3. only then implement runtime/schema/UI changes;
+4. require exact-head CI/Product Eval/browser evidence before merge;
+5. update current docs after actual runtime truth is known.
+
 
 ## Repository housekeeping
 
@@ -131,7 +156,7 @@ Underlying discovery checkpoint:
 Underlying registry checkpoint:
 [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
-Session 4D Ai chat quick-switch is CLOSED / PASS / STAGING VERIFIED. The agreed next eligible OpenRouter scope is Session 4E real multi-family execution validation. It is separately selectable and is not active; Session 4F remains a later independent scope.
+Session 4D Ai chat quick-switch is CLOSED / PASS / STAGING VERIFIED. The previously phrased “Session 4E real multi-family execution validation” is now constrained by the accepted pre-4E product contract above: 4E must make practical provider/model choice simpler for end users rather than preserve manual per-model certification as the target UX. Session 4E runtime work has not started in this docs change; Session 4F remains a later independent scope.
 
 ## DR-2
 
@@ -159,7 +184,7 @@ Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence 
 
 The following are eligible only through an explicit new decision; none is current work:
 
-- Session 4E real multi-family OpenRouter execution validation;
+- Session 4E implementation of the accepted Ai connection/model-routing contract, with practical multi-family OpenRouter execution and no mandatory per-model user certification;
 - Session 4F final OpenRouter polish/closure;
 - DR-2 checkpoint 2;
 - production cutover;

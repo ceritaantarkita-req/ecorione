@@ -4,7 +4,7 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-## Current status — 2026-09-29
+## Current status — 2026-09-30
 
 The latest audited **runtime-changing** repository/staging baseline is:
 
@@ -21,7 +21,7 @@ Repository hygiene remains bounded: the historical cleanup boundary is **9 retai
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-There is **no active product/runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, 4B, 4C, and 4D are closed; Session 4E is the next eligible OpenRouter scope but is not active implicitly.
+There is **no Session 4E runtime implementation active yet** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, 4B, 4C, and 4D are closed. Current `main` has advanced through PR #402 (`8db1dfd7...`), but that merge is not an accepted closure/staging baseline because its required gates were not green. The pre-4E Ai connection/model UX contract is now explicitly selected and documented before the next runtime scope begins.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -71,6 +71,20 @@ Core ownership rules:
 OpenRouter model selection resolves through an extensible governed registry. Session 3 added bounded live catalog discovery/search/filter/cache, Session 4A added one Connect-owned version-agnostic family vocabulary for **GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM**, Session 4B added automatic fail-closed admission for those six families, Session 4C added the governed Settings model picker, and Session 4D added the governed Ai chat quick-switch.
 
 Fresh target-family candidates that pass the 4B metadata gate are exposed as **Selectable**; failed candidates are **Unavailable** with a stable reason. Session 4C can persist those admitted candidates as Settings preferences, but dynamic selections remain `executable=false`; saving one disables hosted execution and routes chat back to local. Current OpenRouter executable authority remains **Claude Sonnet 4.5** and **Claude Opus 4.1** until the later execution-validation scope.
+
+### Pre-Session 4E product contract
+
+Before Session 4E implementation, the accepted end-user model is now:
+
+```text
+[ Provider/source ▼ ]   [ Model ▼ ]
+```
+
+The provider/source menu includes Local, Claude/Anthropic, OpenAI, NVIDIA, OpenRouter, and `+ Tambah AI`; the model menu is provider-filtered. `+ Tambah AI` should connect a provider directly without forcing a Settings detour. Compatible OpenRouter catalog models should be selectable without mandatory per-model user certification, with practical pricing/capability information shown instead. Provider/model choice applies to the next message and may change inside one conversation. The credential model is intended to evolve to multiple stable AI Connections/API keys per provider while keeping individual keys out of the main chat UI.
+
+Governance, spend control, provider ownership, encrypted credentials, audit/provenance, and no-silent-model-fallback remain underneath. Exact Local <-> Cloud context handoff/privacy semantics are a required Session 4E acceptance item.
+
+Canonical UX contract: [docs/design.md §12](docs/design.md#12-pre-session-4e-ai-connection--model-ux-contract--2026-09-30).
 
 Current Session 4D checkpoint:
 [docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
@@ -156,7 +170,7 @@ See:
 
 The following remain separate explicit decisions:
 
-- Session 4E real multi-family OpenRouter execution validation;
+- Session 4E implementation of the accepted Ai connection/model-routing contract and practical multi-family OpenRouter execution;
 - Session 4F final OpenRouter polish/closure;
 - **DR-2 checkpoint 2** physical-independence target selection and proof;
 - public production promotion/cutover;
