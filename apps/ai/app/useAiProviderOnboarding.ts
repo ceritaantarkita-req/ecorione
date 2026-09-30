@@ -188,6 +188,7 @@ export function useAiProviderOnboarding(
   }
 
   return {
+    providers,
     open,
     providerId,
     secret,
