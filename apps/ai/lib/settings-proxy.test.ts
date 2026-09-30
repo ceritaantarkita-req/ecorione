@@ -316,6 +316,103 @@ describe("proxyToConnectSettings", () => {
     expect(JSON.parse(sawBody)).toEqual({ secret: "transient-secret" });
   });
 
+  it("meneruskan add/update/remove AI Connection dengan method yang tepat", async () => {
+    let addBody = "";
+    pool
+      .intercept({
+        path: "/v1/settings/credentials/openrouter/connections",
+        method: "POST",
+      })
+      .reply(200, (opts) => {
+        addBody = String(opts.body ?? "");
+        return {
+          provider: "openrouter",
+          connectionId: "conn_second",
+          label: "Secondary",
+          enabled: true,
+          priority: 200,
+        };
+      });
+
+    const added = await proxyToConnectSettings(
+      request("POST", JSON.stringify({ secret: "second-key", label: "Secondary" })),
+      "/v1/settings/credentials/openrouter/connections",
+      "POST",
+    );
+    expect(added.status).toBe(200);
+    expect(JSON.parse(addBody)).toEqual({ secret: "second-key", label: "Secondary" });
+
+    let patchBody = "";
+    pool
+      .intercept({
+        path: "/v1/settings/credentials/openrouter/connections/conn_second",
+        method: "PATCH",
+      })
+      .reply(200, (opts) => {
+        patchBody = String(opts.body ?? "");
+        return {
+          provider: "openrouter",
+          connectionId: "conn_second",
+          label: "Secondary",
+          enabled: false,
+          priority: 200,
+        };
+      });
+
+    const patched = await proxyToConnectSettings(
+      request("PATCH", JSON.stringify({ enabled: false })),
+      "/v1/settings/credentials/openrouter/connections/conn_second",
+      "PATCH",
+    );
+    expect(patched.status).toBe(200);
+    expect(JSON.parse(patchBody)).toEqual({ enabled: false });
+
+    pool
+      .intercept({
+        path: "/v1/settings/credentials/openrouter/connections/conn_second",
+        method: "DELETE",
+      })
+      .reply(200, { removed: true });
+
+    const removed = await proxyToConnectSettings(
+      request("DELETE"),
+      "/v1/settings/credentials/openrouter/connections/conn_second",
+      "DELETE",
+    );
+    expect(removed.status).toBe(200);
+    expect(await removed.json()).toEqual({ removed: true });
+  });
+
+  it("menolak method/path AI Connection di luar kontrak", async () => {
+    expect(
+      (
+        await proxyToConnectSettings(
+          request("GET"),
+          "/v1/settings/credentials/openrouter/connections",
+          "GET",
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await proxyToConnectSettings(
+          request("PUT", JSON.stringify({ enabled: false })),
+          "/v1/settings/credentials/openrouter/connections/conn_second",
+          "PUT",
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await proxyToConnectSettings(
+          request("PATCH", JSON.stringify({ enabled: false })),
+          "/v1/settings/credentials/openrouter/connections/../ops",
+          "PATCH",
+        )
+      ).status,
+    ).toBe(400);
+  });
+
   it("membatasi path credential ke namespace aman dan membiarkan Connect memvalidasi provider id", async () => {
     pool
       .intercept({ path: "/v1/settings/credentials/unknown-provider", method: "PUT" })
