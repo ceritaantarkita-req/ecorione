@@ -2,25 +2,25 @@
 
 Last updated: **2026-09-30**
 
-Status: **CURRENT / SESSION 4E ACTIVE-PARTIAL / OPENROUTER AUTO-EXECUTION SLICE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 4E ACTIVE-PARTIAL / PROVIDER+MODEL SELECTOR SLICE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository                = ceritaantarkita-req/ecorione
 default branch            = main
-current main              = bb2983d59dbe292c510fbc28aae297bcb23487c4 (PR #407 squash merge)
-session 4E reviewed head   = 5b9a29085287db035c2c52dd6ea783c2d93ceac4 (PR #407 head)
-staging-verified runtime   = bb2983d59dbe292c510fbc28aae297bcb23487c4
-staging image              = staging-bb2983d59dbe
+runtime-changing main     = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76 (PR #409 squash merge)
+session 4E reviewed head   = 2efc0b56b9cc97f7ccdd11a13f7a4b979204945b (PR #409 head)
+staging-verified runtime   = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76
+staging image              = staging-e21f6f943fff
 ```
 
-Session 4E has now begun. Its first runtime slice is CLOSED / PASS / STAGING VERIFIED through PR #407. Exact PR head `5b9a29085287db035c2c52dd6ea783c2d93ceac4` passed CI #2555, Product Eval #1794, and PCS-06 Integrated Browser Acceptance #341. It merged to `main` as `bb2983d59dbe292c510fbc28aae297bcb23487c4`; merged-main CI #2556 and Product Eval #1795 passed, and Staging Deploy #1863 deployed exact SHA `bb2983d5...` as image `staging-bb2983d59dbe`. Public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, and capacity stabilized at **29.89 GiB free** after bounded BuildKit pruning.
+Session 4E has two runtime slices CLOSED / PASS / STAGING VERIFIED. PR #407 closed compatible OpenRouter auto-execution + visible catalog pricing. PR #409 then closed the canonical provider/source + provider-specific model selector surface. Exact PR #409 head `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b` passed CI #2571, Product Eval #1810, and PCS-06 Integrated Browser Acceptance #354. It merged to `main` as `e21f6f943fff9c0c2afdc71a45b05d6ab38eff76`; merged-main CI #2572 and Product Eval #1811 passed, and Staging Deploy #1893 deployed exact SHA `e21f6f94...` as image `staging-e21f6f943fff`. Public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, and capacity stabilized at **25.26 GiB free** after bounded stale-image cleanup.
 
-The first Session 4E slice removes the normal-user per-model `Test & Enable` requirement for fresh compatible OpenRouter catalog models. Compatible models appear directly in Ai, catalog input/output pricing is visible, and Connect re-checks the exact fresh catalog model, capability admission, and pricing before paid execution. Mutable aliases, stale/incompatible candidates, and invalid pricing remain fail-closed. The accepted product contract remains [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md), but Session 4E is **not fully closed**: the canonical provider/source selector, direct `+ Tambah AI` onboarding, cross-provider switching, bounded Local↔Cloud context handoff work, and multi-credential routing remain open.
+The Ai composer now uses adjacent `[Provider / Source ▼] [Model ▼]` controls. Local and first-class hosted providers are represented directly, unavailable choices remain disabled/fail-closed, model choices are provider-specific, OpenRouter pricing remains visible, and provider/model changes apply to the next message without creating a new conversation. The accepted product contract remains [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md), but Session 4E is **not fully closed**: direct `+ Tambah AI` onboarding, bounded Local↔Cloud context handoff, multi-credential routing, and custom-provider onboarding remain open.
 
 Current safe-resume checkpoint:
-[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -112,7 +112,7 @@ Underlying provider rollout checkpoint:
 
 ## OpenRouter Sessions 2–4E — Session 4E ACTIVE / PARTIAL
 
-Sessions 2, 3, 4A, 4B, 4C, and 4D remain CLOSED / PASS at their documented boundaries. Session 4E is now active, and its first runtime slice is CLOSED / PASS / STAGING VERIFIED through PR #407.
+Sessions 2, 3, 4A, 4B, 4C, and 4D remain CLOSED / PASS at their documented boundaries. Session 4E is active; slice 1 (auto-execution/pricing) and slice 2 (canonical provider/model selectors) are both CLOSED / PASS / STAGING VERIFIED through PR #407 and PR #409 respectively.
 
 Current implemented OpenRouter behavior:
 
@@ -139,21 +139,21 @@ PR #407 proof:
 - merged-main CI #2556 PASS;
 - merged-main Product Eval #1795 PASS;
 - actual Staging Deploy #1863 PASS;
-- exact host SHA matched, image `staging-bb2983d59dbe`, public smoke PASS, Operations healthy, 15/15 configured services running, 29.89 GiB stabilized free disk.
+- exact host SHA matched, image `staging-e21f6f943fff`, public smoke PASS, Operations healthy, 15/15 configured services running, 25.26 GiB stabilized free disk.
 
 Accepted Session 4E product contract:
 [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
 
 Still open inside Session 4E:
 
-- replace the technical Local/Hosted route selector with the canonical adjacent `[Provider / Source ▼] [Model ▼]` controls;
 - provide direct `+ Tambah AI` onboarding from the Ai page;
-- make provider switching across Local / Anthropic / OpenAI / NVIDIA / OpenRouter a normal per-message control rather than a Settings-first operation;
+- add broader end-to-end live cross-provider completion evidence where real credentials/providers are available;
 - complete the bounded Local↔Cloud context-handoff product path without silently uploading all local-only history;
-- implement the multi-credential AI Connection model with priority/failover beneath one logical provider.
+- implement the multi-credential AI Connection model with priority/failover beneath one logical provider;
+- implement the `Lainnya` / custom OpenAI-compatible onboarding path.
 
 Current Session 4E checkpoint:
-[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
 
 Prior checkpoints remain historical evidence:
 
@@ -305,14 +305,16 @@ Session 4E is **ACTIVE / PARTIAL** under the accepted [AI Provider + Model UX co
 
 The first runtime slice — compatible OpenRouter auto-execution + visible catalog pricing — is CLOSED / PASS / STAGING VERIFIED through PR #407 and must not be redone.
 
-The next bounded Session 4E implementation slice is the canonical Ai control surface:
+The second runtime slice — canonical `[Provider / Source ▼] [Model ▼]` controls with provider-specific models and same-conversation next-message switching — is CLOSED / PASS / STAGING VERIFIED through PR #409 and must not be redone.
 
-1. replace the technical Local/Hosted route selector with adjacent `[Provider / Source ▼] [Model ▼]` controls;
-2. preserve next-message semantics inside the same conversation;
-3. list Local plus configured first-class cloud providers;
-4. keep model lists provider-specific;
+The next bounded Session 4E implementation slice is direct Ai onboarding:
+
+1. expose `+ Tambah AI` from the provider/source control;
+2. reuse Connect-owned credential validation/save authority;
+3. return to the same Ai conversation with refreshed provider/model options after successful connection;
+4. keep Settings as management/Advanced rather than a required onboarding detour;
 5. preserve existing governance, credential, spend, sensitivity, and history boundaries;
-6. do not yet combine multi-credential storage or broad context-handoff redesign into this selector slice unless required by a failing invariant.
+6. do not yet combine multi-credential storage/failover, custom-provider generalization, or broad context-handoff redesign unless required by a failing invariant.
 
 There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
