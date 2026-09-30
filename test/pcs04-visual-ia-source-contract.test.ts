@@ -37,8 +37,8 @@ describe("PCS-04 visual and information architecture source contract", () => {
     expect(chat).toContain("hostedRouteLabel");
     expect(chatRouting).toContain("Hosted ·");
     expect(chatRouting).toContain("Recommended");
-    expect(chat).toContain("Local");
-    expect(chat).toContain("Not connected");
+    expect(chatSections).toContain("Local");
+    expect(chatSections).toContain("Not connected");
   });
 
   it("keeps primary page copy task-oriented instead of PE/internal labels", () => {
