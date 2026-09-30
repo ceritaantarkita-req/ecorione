@@ -142,7 +142,8 @@ export function buildOpenRouterQuickSwitchModels(
   for (const model of discovery?.models ?? []) {
     // Session 4E normal UX exposes every fresh compatible catalog candidate directly.
     // Connect re-checks capability + price metadata again at selection and dispatch.
-    if (!model.selectable || model.selectionId === null || seen.has(model.selectionId)) continue;
+    if (!model.selectable || model.selectionId === null || seen.has(model.selectionId))
+      continue;
 
     const inputUsdPerMTok =
       model.promptPricePerToken == null
@@ -207,7 +208,9 @@ export function deriveChatRoutingState(
     hostedAvailable,
     hostedBlockedByOpenRouterPreference,
     hostedRouteLabel: `Hosted · ${hostedProviderLabel(provider)} · ${hostedModelLabel(
-      provider === "openrouter" ? currentOpenRouterPreference(runtime) : runtime.settings.hostedModel,
+      provider === "openrouter"
+        ? currentOpenRouterPreference(runtime)
+        : runtime.settings.hostedModel,
     )}`,
     defaultTarget:
       runtime.settings.defaultChatTarget === "hosted" && hostedAvailable ? "hosted" : "local",

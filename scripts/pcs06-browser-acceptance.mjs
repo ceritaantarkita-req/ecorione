@@ -1206,15 +1206,14 @@ async function runDesktopJourney() {
     });
     await quickSwitch.waitFor();
     if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1) {
-      throw new Error("desktop-ai: compatible Qwen must appear directly in the Session 4E picker");
+      throw new Error(
+        "desktop-ai: compatible Qwen must appear directly in the Session 4E picker",
+      );
     }
     const qwenOptionText = await quickSwitch
       .locator('option[value="qwen/qwen3.8-max"]')
       .textContent();
-    if (
-      !qwenOptionText?.includes("$2.00/M in") ||
-      !qwenOptionText.includes("$6.00/M out")
-    ) {
+    if (!qwenOptionText?.includes("$2.00/M in") || !qwenOptionText.includes("$6.00/M out")) {
       throw new Error("desktop-ai: compatible Qwen pricing is not visible in the picker");
     }
     if (
