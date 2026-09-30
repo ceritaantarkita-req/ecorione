@@ -997,3 +997,5 @@ export function useSettingsController(initialWorkspaceId: string) {
     workspaceIdRef,
   };
 }
+
+export type SettingsController = ReturnType<typeof useSettingsController>;
