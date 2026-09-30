@@ -41,6 +41,7 @@ import {
   resolveActiveProjectId,
 } from "../lib/project-selection";
 import { isClientSessionId, makeSessionId, projectSessionStorageKey } from "../lib/session";
+import { AiProviderConnectDialog } from "./AiProviderConnectDialog";
 import {
   ChatProviderModelSelectors,
   FileIcon,
@@ -56,6 +57,7 @@ import {
 } from "./ChatPageSections";
 import type { ChatProviderSource } from "../lib/chat-model-routing";
 import { useWorkspace } from "./WorkspaceProvider";
+import { useAiProviderOnboarding } from "./useAiProviderOnboarding";
 import { useChatModelRouting } from "./useChatModelRouting";
 type ConversationReplay = {
   readonly session: HistorySession;
@@ -100,6 +102,10 @@ export default function ChatPage() {
   const [draft, setDraft] = useState("");
   const [target, setTarget] = useState<ChatTarget>("local");
   const modelRouting = useChatModelRouting();
+  const providerOnboarding = useAiProviderOnboarding(
+    modelRouting.onboardingProviders,
+    modelRouting.refreshRouting,
+  );
   const defaultTarget = modelRouting.defaultTarget;
   const hostedAvailable = modelRouting.hostedAvailable;
   const hostedBlockedByOpenRouterPreference = modelRouting.hostedBlockedByOpenRouterPreference;
@@ -745,6 +751,12 @@ export default function ChatPage() {
     if (nextTarget !== null) setTarget(nextTarget);
   }
 
+  async function handleDirectProviderConnect(): Promise<void> {
+    if (sending || preparingAttachments) return;
+    const nextTarget = await providerOnboarding.connect();
+    if (nextTarget !== null) setTarget(nextTarget);
+  }
+
   const providerSelection: ChatProviderSource =
     target === "local" ? "local" : (modelRouting.hostedProvider ?? "local");
   const modelSelection =
@@ -765,6 +777,7 @@ export default function ChatPage() {
     sending ||
     preparingAttachments ||
     modelRouting.switching ||
+    providerOnboarding.pending ||
     attachments.length > 0;
   const routeReady =
     target === "local" ? localRuntimeStatus?.ready === true : hostedAvailable === true;
@@ -776,7 +789,7 @@ export default function ChatPage() {
         : target === "hosted" && hostedAvailable !== true
           ? hostedBlockedByOpenRouterPreference
             ? "Model OpenRouter yang dipilih tidak lagi tersedia untuk Cloud. Refresh katalog atau pilih model lain."
-            : "Hosted belum aktif. Hubungkan provider di Settings."
+            : "Hosted belum aktif. Gunakan + Tambah AI dari pilihan Provider / Source."
           : "Berlaku untuk pesan berikutnya. Setiap balasan menyimpan model dan biaya yang dipakai.";
   const modelHint =
     selectedHostedModel?.inputUsdPerMTok !== undefined &&
@@ -792,6 +805,7 @@ export default function ChatPage() {
     !historyLoading &&
     !sending &&
     !modelRouting.switching &&
+    !providerOnboarding.pending &&
     !preparingAttachments &&
     attachmentsReadyForSend(attachments) &&
     (draft.trim().length > 0 || attachments.length > 0);
@@ -917,6 +931,14 @@ export default function ChatPage() {
               </div>
             ) : null}
 
+            {providerOnboarding.feedback !== null ? (
+              <p
+                className={`ai-model-switch-status ai-model-switch-status--${providerOnboarding.feedback.kind}`}
+                role={providerOnboarding.feedback.kind === "error" ? "alert" : "status"}
+              >
+                {providerOnboarding.feedback.message}
+              </p>
+            ) : null}
             {modelRouting.feedback !== null ? (
               <p
                 className={`ai-model-switch-status ai-model-switch-status--${modelRouting.feedback.kind}`}
@@ -931,7 +953,7 @@ export default function ChatPage() {
                   ? (localRuntimeStatus?.message ?? "Local AI \u00b7 Checking connection\u2026")
                   : hostedBlockedByOpenRouterPreference
                     ? "Model OpenRouter yang dipilih tidak lagi tersedia untuk Cloud. Refresh katalog atau pilih model lain."
-                    : "Hosted AI belum aktif. Hubungkan provider di Settings -> AI & Connections."
+                    : "Hosted AI belum aktif. Gunakan + Tambah AI di pilihan Provider / Source."
                 : target === "local"
                   ? `Pesan berikutnya: Local \u00b7 ${localRuntimeStatus?.configuredModel ?? "model lokal"}. Model dan biaya dicatat per balasan.`
                   : `Pesan berikutnya: Cloud \u00b7 ${hostedRouteLabel}. Riwayat Local-only tidak dikirim ke Cloud; model dan biaya dicatat per balasan.`}
@@ -1042,6 +1064,7 @@ export default function ChatPage() {
                 routeHint={routeHint}
                 modelHint={modelHint}
                 onProviderChange={(source) => void handleProviderSwitch(source)}
+                onAddProvider={providerOnboarding.openDialog}
                 onModelChange={(modelId) => void handleHostedModelSwitch(modelId)}
               />
 
@@ -1097,6 +1120,18 @@ export default function ChatPage() {
           </div>
         </aside>
       </main>
+      <AiProviderConnectDialog
+        open={providerOnboarding.open}
+        providers={modelRouting.onboardingProviders}
+        providerId={providerOnboarding.providerId}
+        secret={providerOnboarding.secret}
+        pending={providerOnboarding.pending}
+        status={providerOnboarding.dialogStatus}
+        onProviderChange={providerOnboarding.setProviderId}
+        onSecretChange={providerOnboarding.setSecret}
+        onConnect={() => void handleDirectProviderConnect()}
+        onClose={providerOnboarding.closeDialog}
+      />
     </div>
   );
 }
