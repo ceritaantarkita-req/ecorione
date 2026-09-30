@@ -36,7 +36,16 @@ export type RuntimeSnapshot = {
     defaultChatTarget: "local" | "hosted";
   };
 };
-type Credential = { provider: string; purpose: string; generation: number; updatedAt: string };
+type Credential = {
+  provider: string;
+  purpose: string;
+  connectionId: string;
+  label: string;
+  enabled: boolean;
+  priority: number;
+  generation: number;
+  updatedAt: string;
+};
 type ProviderCatalogEntry = {
   id: string;
   displayName: string;
@@ -342,7 +351,11 @@ export function useSettingsController(initialWorkspaceId: string) {
       ? null
       : (hostedProviderOptions.find((provider) => provider.id === connectProviderId) ?? null);
   const providerViews = hostedProviderOptions.map((provider) => {
-    const credential = credentials.find((item) => item.provider === provider.id) ?? null;
+    const providerCredentials = credentials
+      .filter((item) => item.provider === provider.id)
+      .sort((a, b) => a.priority - b.priority || a.connectionId.localeCompare(b.connectionId));
+    const credential =
+      providerCredentials.find((item) => item.enabled) ?? providerCredentials[0] ?? null;
     const canaryStatus =
       hostedHealth !== null && hostedHealth.provider === provider.id
         ? hostedHealth.status
@@ -350,10 +363,11 @@ export function useSettingsController(initialWorkspaceId: string) {
     return {
       provider,
       credential,
+      credentials: providerCredentials,
       active:
         runtime?.settings.hostedProvider === provider.id && runtime.settings.hostedCallsEnabled,
       health: providerHealth({
-        hasCredential: credential !== null,
+        hasCredential: providerCredentials.some((item) => item.enabled),
         routingReady: provider.routingReady,
         isCurrentHostedProvider: runtime?.settings.hostedProvider === provider.id,
         hostedCallsEnabled: runtime?.settings.hostedCallsEnabled ?? false,
@@ -736,11 +750,14 @@ export function useSettingsController(initialWorkspaceId: string) {
     if (!beginAction("credential")) return;
     setStatus("Encrypting credentialÃ¢â‚¬Â¦");
     try {
-      await json(`/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ secret }),
-      });
+      await json(
+        `/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}/connections`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ secret }),
+        },
+      );
       setSecret("");
       setSecretRevision((current) => current + 1);
       setCredentialTest(null);
@@ -764,6 +781,53 @@ export function useSettingsController(initialWorkspaceId: string) {
       } else {
         setStatus("Credential encrypted in Connect vault. Plaintext was not returned.");
       }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
+  async function updateCredentialConnection(
+    provider: HostedProviderId,
+    connectionId: string,
+    patch: { label?: string; enabled?: boolean; priority?: number },
+  ): Promise<void> {
+    if (!beginAction("credential-connection")) return;
+    setStatus("Updating AI Connection…");
+    try {
+      await json(
+        `/api/settings/settings/credentials/${encodeURIComponent(provider)}/connections/${encodeURIComponent(connectionId)}`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(patch),
+        },
+      );
+      setHostedHealth((current) => (current?.provider === provider ? null : current));
+      await refreshCredentials();
+      setStatus("AI Connection updated. Priority/failover berlaku untuk request berikutnya.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
+  async function removeCredentialConnection(
+    provider: HostedProviderId,
+    connectionId: string,
+  ): Promise<void> {
+    if (!beginAction("credential-connection")) return;
+    setStatus("Removing AI Connection…");
+    try {
+      await json(
+        `/api/settings/settings/credentials/${encodeURIComponent(provider)}/connections/${encodeURIComponent(connectionId)}`,
+        { method: "DELETE" },
+      );
+      setHostedHealth((current) => (current?.provider === provider ? null : current));
+      await refreshCredentials();
+      setStatus("AI Connection removed. Provider lain/key lain tidak diubah.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     } finally {
@@ -964,6 +1028,8 @@ export function useSettingsController(initialWorkspaceId: string) {
     providerViews,
     refreshMcp,
     removeCredential,
+    removeCredentialConnection,
+    updateCredentialConnection,
     discoverOpenRouterModels,
     validateOpenRouterModel,
     runCanary,
