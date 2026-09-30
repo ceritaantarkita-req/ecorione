@@ -1492,8 +1492,12 @@ async function runDesktopJourney() {
     const openRouterSearch = page.getByLabel("Search model", { exact: true });
     await openRouterSearch.fill("qwen");
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
-    await page.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
-    await page.getByText("Compatible", { exact: true }).waitFor();
+    const qwenDiscoveryCard = page
+      .locator("article")
+      .filter({ hasText: "qwen/qwen3.8-max" })
+      .first();
+    await qwenDiscoveryCard.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
+    await qwenDiscoveryCard.getByText("Compatible", { exact: true }).waitFor();
     if (
       (await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 1
     ) {
