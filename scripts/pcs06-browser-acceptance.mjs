@@ -1452,12 +1452,13 @@ async function runDesktopJourney() {
 
     const anthropicCard = page.locator("article").filter({ hasText: "Anthropic" }).first();
     await anthropicCard.getByRole("button", { name: "Connect", exact: true }).click();
-    await page.getByRole("heading", { name: "Connect Anthropic", exact: true }).waitFor();
-    await page.getByPlaceholder("Paste API key").fill("stub-credential-pcs06");
-    await page.getByRole("button", { name: "Test API key", exact: true }).click();
-    await page.getByText(/Credential test PASS:/).waitFor();
-    await page.getByRole("button", { name: "Save & activate", exact: true }).click();
-    await page.getByText(/API key terverifikasi, terenkripsi/).waitFor();
+    const connectDialog = page.getByRole("dialog", { name: "Connect Anthropic", exact: true });
+    await connectDialog.waitFor();
+    await connectDialog.getByPlaceholder("Paste API key").fill("stub-credential-pcs06");
+    await connectDialog.getByRole("button", { name: "Test API key", exact: true }).click();
+    await connectDialog.getByText(/Credential test PASS:/).waitFor();
+    await connectDialog.getByRole("button", { name: "Save & activate", exact: true }).click();
+    await page.getByText(/API key terverifikasi, terenkripsi/).first().waitFor();
 
     const defaultSection = page
       .getByRole("heading", { name: "Default provider & model", exact: true })
