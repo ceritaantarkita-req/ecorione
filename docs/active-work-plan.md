@@ -94,7 +94,7 @@ Underlying provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Overall safe-resume checkpoint:
-[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
 
 ## OpenRouter Sessions 2–4E — 4E ACTIVE / PARTIAL
 
