@@ -319,11 +319,12 @@ export async function complete(
     }
 
     let terminalError: unknown;
-    for (let index = 0; index < credentialCandidates.length; index += 1) {
-      const candidate = credentialCandidates[index];
-      if (candidate === undefined) continue;
+    let hostedResult: Awaited<ReturnType<typeof callHostedProvider>> | undefined;
+    let selectedCredentialConnectionId: string | undefined;
+
+    for (const [index, candidate] of credentialCandidates.entries()) {
       try {
-        const result = await callHostedProvider(
+        hostedResult = await callHostedProvider(
           {
             provider: hostedProvider,
             apiKey: candidate.secret,
@@ -331,15 +332,7 @@ export async function complete(
           },
           signal,
         );
-        reply = result.reply;
-        responseModel = result.model;
-        routingProvider = result.routingProvider;
-        credentialConnectionId = candidate.connectionId;
-        usage = result.usage;
-        baselineUsage = usage;
-        providerReportedActualUsd = result.providerReportedActualUsd;
-        deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
-        cacheHit = false;
+        selectedCredentialConnectionId = candidate.connectionId;
         terminalError = undefined;
         break;
       } catch (error) {
@@ -356,11 +349,14 @@ export async function complete(
       }
     }
 
-    if (terminalError !== undefined) {
+    if (hostedResult === undefined) {
+      const error =
+        terminalError ??
+        new MissingCredentialError(`Connect vault ${hostedProvider}/messages usable connection`);
       if (spendReservation !== undefined && deps.spendBudget !== undefined) {
         const authoritativeBilledUsd =
-          terminalError instanceof ProviderResponseError
-            ? terminalError.diagnostics.providerReportedActualUsd
+          error instanceof ProviderResponseError
+            ? error.diagnostics.providerReportedActualUsd
             : undefined;
         if (authoritativeBilledUsd !== undefined) {
           try {
@@ -382,8 +378,18 @@ export async function complete(
           }
         }
       }
-      throw terminalError;
+      throw error;
     }
+
+    reply = hostedResult.reply;
+    responseModel = hostedResult.model;
+    routingProvider = hostedResult.routingProvider;
+    credentialConnectionId = selectedCredentialConnectionId;
+    usage = hostedResult.usage;
+    baselineUsage = usage;
+    providerReportedActualUsd = hostedResult.providerReportedActualUsd;
+    deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
+    cacheHit = false;
   }
 
   const cost = recordCall({
