@@ -175,7 +175,7 @@ export function useChatModelRouting() {
       if (!result.selection.executable) {
         setFeedback({
           kind: "warning",
-          message: `${displayName} disimpan sebagai preference. Model belum executable; chat tetap Local.`,
+          message: `${displayName} tidak tersedia untuk Cloud saat ini. Pilih model lain.`,
         });
       } else if (result.selection.active && nextRouting.hostedAvailable) {
         setFeedback({
