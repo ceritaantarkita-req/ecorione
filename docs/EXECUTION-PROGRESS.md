@@ -9,14 +9,14 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76 (PR #409)
-image                   = staging-e21f6f943fff
-CI                      = #2572 PASS
-Product Eval            = #1811 PASS
-Staging Deploy          = #1893 PASS
+runtime / staging       = 2c223ea8c54045de3dc5e6b15971bdb2a898e2fe (PR #409)
+image                   = staging-2c223ea8c540
+CI                      = #2586 PASS
+Product Eval            = #1825 PASS
+Staging Deploy          = #1922 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 25.26 GiB stabilized
+free disk               = 27.35 GiB stabilized
 ```
 
 This includes the NVIDIA hosted-provider capability and connection-test hardening; OpenRouter Sessions 2–4D; post-#402 stabilization; and two Session 4E runtime slices. Session 4E now allows fresh compatible OpenRouter catalog models to be selected/executed without normal-user model-by-model certification and exposes the canonical adjacent `[Provider / Source ▼] [Model ▼]` composer controls with provider-specific model choices.
@@ -128,11 +128,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76
-image = staging-e21f6f943fff
+SHA   = 2c223ea8c54045de3dc5e6b15971bdb2a898e2fe
+image = staging-2c223ea8c540
 ```
 
-Actual Staging Deploy #1893 proved:
+Actual Staging Deploy #1922 proved:
 
 - exact target/host SHA match;
 - clean detached staging worktree;
@@ -141,17 +141,17 @@ Actual Staging Deploy #1893 proved:
 - Operations healthy;
 - 0 unhealthy services;
 - 15 configured / 15 running;
-- image `staging-e21f6f943fff`;
+- image `staging-2c223ea8c540`;
 - 23.91 GiB free at sanitized host evidence before cleanup;
 - stale staging image cleanup completed while retaining the new and previous rollback-set images;
-- 25.26 GiB stabilized free disk.
+- 27.35 GiB stabilized free disk.
 
 Staging Deploy #1892 is preserved as valid gate-only evidence; its deploy job was skipped and it is not runtime deployment proof.
 
 NVIDIA / NIM remains live with pinned `z-ai/glm-5.3`. Current source uses 60-second default credential/canary deadlines, a 1024-token NVIDIA health-probe cap with low reasoning effort, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
 Current Session 4E checkpoint:
-[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
+[verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
 
 This is staging evidence, not production promotion.
 
@@ -168,9 +168,10 @@ This is staging evidence, not production promotion.
 | Session 4D — OpenRouter Ai chat quick-switch | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E slice 1 — compatible auto-execution + catalog pricing | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E slice 2 — canonical provider/model selectors | CLOSED / PASS / STAGING VERIFIED |
+| Session 4E slice 3 — direct + Tambah AI onboarding | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E overall | ACTIVE / PARTIAL |
 
-Session 4E slice 2 closed through PR #409. Exact reviewed head `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b` passed CI #2571, Product Eval #1810, and PCS-06 #354; merged main `e21f6f943fff9c0c2afdc71a45b05d6ab38eff76` passed CI #2572 + Product Eval #1811; actual Staging Deploy #1893 passed.
+Session 4E slice 2 closed through PR #409. Exact reviewed head `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b` passed CI #2571, Product Eval #1810, and PCS-06 #354; merged main `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe` passed CI #2586 + Product Eval #1825; actual Staging Deploy #1922 passed.
 
 Current behavior:
 
@@ -184,15 +185,17 @@ Current behavior:
 
 Next bounded Session 4E slice:
 
-- expose direct `+ Tambah AI` onboarding from the provider/source control;
-- reuse Connect-owned credential validation/save authority;
-- refresh provider/model choices and return to the same conversation after successful connection;
-- preserve credential, spend, sensitivity, Project/history, and Connect authority boundaries.
+- implement multiple AI Connections/API keys beneath one logical provider;
+- preserve Connect/Vault as sole credential owner;
+- add stable connection identity, enabled state, priority/order, and non-secret per-attempt provenance;
+- choose the highest-priority usable connection and use bounded failover only for availability/auth/provider failures;
+- never fail over around policy, spend, sensitivity, or operator denial;
+- keep one logical provider row in Ai.
 
-Bounded Local↔Cloud handoff product behavior, multi-credential priority/failover, and custom-provider onboarding remain later Session 4E work.
+Bounded Local↔Cloud handoff behavior and custom-provider onboarding remain later Session 4E work.
 
 Canonical Session 4E checkpoint:
-[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
+[verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
 
 Prior Session 4D checkpoint:
 [verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
