@@ -52,7 +52,7 @@ afterEach(async () => {
   db.close();
 });
 
-function mockHappyPathContextAndConnect(): void {
+function mockHappyPathContextOnly(): void {
   contextPool
     .intercept({
       path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=1",
@@ -82,6 +82,10 @@ function mockHappyPathContextAndConnect(): void {
     .intercept({ path: "/v1/episodes", method: "POST" })
     .reply(201, { id: "epi_assistant" })
     .times(1);
+}
+
+function mockHappyPathContextAndConnect(): void {
+  mockHappyPathContextOnly();
   connectPool.intercept({ path: "/v1/complete", method: "POST" }).reply(200, {
     reply: "baik!",
     model: "claude-sonnet-4-5-20250929",
@@ -104,6 +108,40 @@ describe("POST /v1/chat", () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json().reply).toBe("baik!");
+  });
+  it("meneruskan blokir budget dari Connect agar bisa ditindak pengguna", async () => {
+    mockHappyPathContextOnly();
+    connectPool.intercept({ path: "/v1/complete", method: "POST" }).reply(503, {
+      error: {
+        type: "SPEND_BUDGET_NOT_CONFIGURED",
+        message: "Atur budget Cloud di Settings sebelum melanjutkan.",
+        detail: { internalOnly: "jangan diteruskan" },
+      },
+    });
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/chat",
+      payload: { sessionId: "sess_abc", message: "halo" },
+    });
+    expect(res.statusCode).toBe(503);
+    expect(res.json().error).toEqual({
+      type: "SPEND_BUDGET_NOT_CONFIGURED",
+      message: "Atur budget Cloud di Settings sebelum melanjutkan.",
+    });
+  });
+
+  it("tetap menyembunyikan error 500 provider dari Connect", async () => {
+    mockHappyPathContextOnly();
+    connectPool.intercept({ path: "/v1/complete", method: "POST" }).reply(500, {
+      error: { type: "UPSTREAM_RAW", message: "secret upstream detail" },
+    });
+    const res = await app.inject({
+      method: "POST",
+      url: "/v1/chat",
+      payload: { sessionId: "sess_abc", message: "halo" },
+    });
+    expect(res.statusCode).toBe(502);
+    expect(res.body).not.toContain("secret upstream detail");
   });
   it("Context down → 502", async () => {
     contextPool

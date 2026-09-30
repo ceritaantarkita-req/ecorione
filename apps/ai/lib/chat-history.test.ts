@@ -107,4 +107,30 @@ describe("historyEventsToTurns", () => {
     ];
     expect(historyEventsToTurns(events)).toEqual([]);
   });
+  it("restores the most recent route when one conversation used more than one model route", () => {
+    const events: HistoryEvent[] = [
+      {
+        ...BASE,
+        id: USER_EVENT_ID,
+        sessionId: SESSION_ID,
+        seq: 0,
+        eventType: "user.message",
+        actor: "user",
+        parentEventId: null,
+        payload: { text: "local first", target: "local" },
+      },
+      {
+        ...BASE,
+        id: assertId("event", "evt_user_hosted"),
+        sessionId: SESSION_ID,
+        seq: 1,
+        eventType: "user.message",
+        actor: "user",
+        parentEventId: null,
+        payload: { text: "hosted next", target: "hosted" },
+      },
+    ];
+
+    expect(historyChatTarget(events)).toBe("hosted");
+  });
 });

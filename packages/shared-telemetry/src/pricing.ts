@@ -93,6 +93,22 @@ const PRICE_TABLE = {
     cacheReadPerMTok: 0.028,
   },
 
+  // --- OpenRouter Session 4E execution-validation snapshots, verified 2026-09-29. ---
+  // These identities are explicit candidates only. They remain non-executable until a
+  // fresh catalog match and a real bounded provider completion are both recorded.
+  "qwen/qwen3.8-27b": {
+    inputPerMTok: 0.0449,
+    outputPerMTok: 4.4,
+    cacheWritePerMTok: 0.0449,
+    cacheReadPerMTok: 0.0359,
+  },
+  "deepseek/deepseek-v4-pro": {
+    inputPerMTok: 0.9553,
+    outputPerMTok: 1.911,
+    cacheWritePerMTok: 1.911,
+    cacheReadPerMTok: 0.9553,
+  },
+
   /**
    * NVIDIA-hosted NIM API Catalog free prototype endpoint snapshot, verified 2026-09-28.
    * This zero provider-token price applies only to ECORIONE's fixed

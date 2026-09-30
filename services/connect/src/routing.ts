@@ -16,11 +16,13 @@ export interface RouteRequest {
   readonly sensitivity: Sensitivity;
   readonly hostedProvider?: HostedProviderId | undefined;
   readonly hostedModel?: HostedModelPreference | undefined;
+  /** Dynamic OpenRouter model backed by a durable passed validation record. */
+  readonly certifiedOpenRouterModel?: string | undefined;
 }
 
 export interface RouteDecision {
   /** Pinned pricing identity, not necessarily the provider runtime slug. */
-  readonly model: PinnedModelId;
+  readonly model: string;
   readonly routeReason:
     "local-consolidation" | "sensitivity-restricted" | "default-hosted" | "selected-hosted";
 }
@@ -68,6 +70,8 @@ export function route(req: RouteRequest): RouteDecision {
       model: hostedModel(provider, req.sensitivity),
       routeReason: "sensitivity-restricted",
     };
+  }  if (provider === "openrouter" && req.certifiedOpenRouterModel !== undefined) {
+    return { model: req.certifiedOpenRouterModel, routeReason: "selected-hosted" };
   }
   if (preference !== GOVERNED_HOSTED_MODEL) {
     const selected = executableHostedModelRegistryEntry(provider, preference);

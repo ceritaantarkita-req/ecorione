@@ -1,8 +1,9 @@
 import { z } from "zod";
 import type { StablePrefix } from "@ecorione/context-assembly";
 import { callLocal, type LocalCallResult } from "./local.js";
+import { callOllama } from "./ollama.js";
 
-export const LOCAL_RUNTIME_IDS = ["openai-compatible"] as const;
+export const LOCAL_RUNTIME_IDS = ["openai-compatible", "ollama"] as const;
 export const LocalRuntimeIdSchema = z.enum(LOCAL_RUNTIME_IDS);
 export type LocalRuntimeId = z.infer<typeof LocalRuntimeIdSchema>;
 
@@ -21,9 +22,8 @@ export interface LocalRuntimeCallInput {
 }
 
 /**
- * Local runtime is protocol-based, not Ollama-based. Ollama, llama.cpp server, LM Studio,
- * vLLM, or another implementation is acceptable when it exposes the configured
- * OpenAI-compatible chat-completions endpoint.
+ * OpenAI-compatible remains the portable local contract. Ollama may be selected explicitly
+ * when its native endpoint is required for a model's thinking/output controls.
  */
 export function callLocalRuntime(
   input: LocalRuntimeCallInput,
@@ -32,5 +32,7 @@ export function callLocalRuntime(
   switch (input.runtime) {
     case "openai-compatible":
       return callLocal(input, signal);
+    case "ollama":
+      return callOllama(input, signal);
   }
 }

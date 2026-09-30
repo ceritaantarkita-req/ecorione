@@ -5,6 +5,7 @@ import {
   resolveRepoRuntimePath,
 } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
+import { FileOpenRouterCertificationStore } from "./openrouter-certification-store.js";
 import { buildConnectServer, type BuildConnectServerOptions } from "./http.js";
 import { parseOptionalLocalModelDigest } from "./local-model-identity.js";
 import { VaultMcpCredentialReader } from "./mcp-client/credentials.js";
@@ -22,6 +23,7 @@ import { FileRuntimeSettings } from "./runtime-settings.js";
 import { FileSpendBudget, parseOptionalBudgetUsd } from "./spend-budget.js";
 
 const REPO_ROOT = resolve(import.meta.dirname, "../../..");
+
 const port = Number(process.env.ECORIONE_CONNECT_PORT ?? "17023");
 const token = process.env.ECORIONE_INTERNAL_TOKEN || undefined;
 const host = bindHostForAuthenticatedService(token);
@@ -69,6 +71,28 @@ const localBaseUrl = process.env.ECORIONE_LOCAL_BASE_URL ?? "http://127.0.0.1:11
 const localModelTag = process.env.ECORIONE_LOCAL_MODEL ?? "qwen3:8b-instruct-q4_K_M";
 const localModelDigest = parseOptionalLocalModelDigest(process.env.ECORIONE_LOCAL_MODEL_DIGEST);
 const hostedCallsAllowedByOperator = process.env.ECORIONE_COST_KILL_SWITCH !== "1";
+const spendDailyUsd = parseOptionalBudgetUsd(
+  "ECORIONE_SPEND_DAILY_USD",
+  process.env.ECORIONE_SPEND_DAILY_USD,
+);
+const spendMonthlyUsd = parseOptionalBudgetUsd(
+  "ECORIONE_SPEND_MONTHLY_USD",
+  process.env.ECORIONE_SPEND_MONTHLY_USD,
+);
+const hostedSpendUnlimited = process.env.ECORIONE_SPEND_UNLIMITED === "1";
+const spendBudgetPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_SPEND_BUDGET_PATH,
+  "data/connect-spend-budget.json",
+);
+
+const openRouterCertificationPath = resolveRepoRuntimePath(
+  REPO_ROOT,
+  process.env.ECORIONE_OPENROUTER_CERTIFICATION_PATH,
+  "data/connect-openrouter-certifications.json",
+);
+const openRouterCertificationStore = new FileOpenRouterCertificationStore(openRouterCertificationPath);
+
 const runtimeSettingsPath = resolveRepoRuntimePath(
   REPO_ROOT,
   process.env.ECORIONE_CONNECT_SETTINGS_PATH,
@@ -81,39 +105,32 @@ const runtimeSettingsStore = new FileRuntimeSettings(runtimeSettingsPath, {
   localModelTag,
   localModelDigest,
   hostedCallsEnabled: hostedCallsAllowedByOperator,
+  spendDailyUsd: spendDailyUsd ?? null,
+  spendMonthlyUsd: spendMonthlyUsd ?? null,
+  spendUnlimited: hostedSpendUnlimited,
 });
 const runtimeSettings = withHostedOperatorGate(
   runtimeSettingsStore,
   hostedCallsAllowedByOperator,
 );
 
-const spendDailyUsd = parseOptionalBudgetUsd(
-  "ECORIONE_SPEND_DAILY_USD",
-  process.env.ECORIONE_SPEND_DAILY_USD,
-);
-const spendMonthlyUsd = parseOptionalBudgetUsd(
-  "ECORIONE_SPEND_MONTHLY_USD",
-  process.env.ECORIONE_SPEND_MONTHLY_USD,
-);
-const spendBudgetPath = resolveRepoRuntimePath(
-  REPO_ROOT,
-  process.env.ECORIONE_SPEND_BUDGET_PATH,
-  "data/connect-spend-budget.json",
-);
-const spendBudget =
-  spendDailyUsd === undefined && spendMonthlyUsd === undefined
-    ? undefined
-    : new FileSpendBudget(spendBudgetPath, {
-        dailyUsd: spendDailyUsd,
-        monthlyUsd: spendMonthlyUsd,
-      });
-/**
- * ADR-21: dispatch hosted tunduk pada kill switch DAN plafon kumulatif. Tanpa plafon
- * terkonfigurasi, Connect menolak hosted (`SPEND_BUDGET_NOT_CONFIGURED`) alih-alih
- * berjalan tanpa admission control sama sekali. Operator yang memang menginginkan
- * tanpa-plafon harus menyatakannya, bukan mendapatkannya karena lupa mengisi env.
- */
-const hostedSpendUnlimited = process.env.ECORIONE_SPEND_UNLIMITED === "1";
+function spendBudgetFor(settings: {
+  spendDailyUsd?: number | null | undefined;
+  spendMonthlyUsd?: number | null | undefined;
+  spendUnlimited?: boolean | undefined;
+}) {
+  if (settings.spendUnlimited === true) return undefined;
+  const dailyUsd =
+    settings.spendDailyUsd === undefined
+      ? spendDailyUsd
+      : (settings.spendDailyUsd ?? undefined);
+  const monthlyUsd =
+    settings.spendMonthlyUsd === undefined
+      ? spendMonthlyUsd
+      : (settings.spendMonthlyUsd ?? undefined);
+  if (dailyUsd === undefined && monthlyUsd === undefined) return undefined;
+  return new FileSpendBudget(spendBudgetPath, { dailyUsd, monthlyUsd });
+}
 
 /**
  * Identitas model lokal diselesaikan lewat boundary provider, bukan dipercaya dari
@@ -174,6 +191,8 @@ const app = buildConnectServer({
   logger: true,
   credentialVault,
   credentialVaultAdmin: credentialVault,
+  openRouterCertificationReader: openRouterCertificationStore,
+  openRouterCertificationAdmin: openRouterCertificationStore,
   runtimeSettings,
   hostedProvider,
   anthropicApiKey,
@@ -185,8 +204,13 @@ const app = buildConnectServer({
   localModelTag,
   localModelDigest,
   hostedCallsEnabled: hostedCallsAllowedByOperator,
-  spendBudget,
-  hostedSpendUnlimited,
+  spendDailyUsd,
+  spendMonthlyUsd,
+  spendBudgetFactory: spendBudgetFor,
+  hostedSpendUnlimitedResolver: (settings) =>
+    settings.spendUnlimited === undefined
+      ? hostedSpendUnlimited
+      : settings.spendUnlimited === true,
   resolveLocalProvenance,
   mcpManager,
   localMultimodalAdapter,

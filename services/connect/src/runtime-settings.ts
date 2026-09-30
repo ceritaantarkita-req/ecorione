@@ -16,6 +16,7 @@ import {
   hostedModelSupported,
   type HostedModelPreference,
 } from "./hosted-model-catalog.js";
+import { executableHostedModelRegistryEntry } from "./hosted-model-registry.js";
 import { LocalModelDigestSchema, type LocalModelDigest } from "./local-model-identity.js";
 import { HostedProviderIdSchema, type HostedProviderId } from "./provider-types.js";
 import { LocalRuntimeIdSchema, type LocalRuntimeId } from "./providers/local-runtime.js";
@@ -86,11 +87,16 @@ const RuntimeSettingsObjectSchema = z
     hostedProvider: HostedProviderIdSchema,
     hostedModel: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
     openRouterModelSelection: HostedModelPreferenceSchema.optional(),
+    /** Dedicated validation evidence, never writable through generic runtime PATCH. */
+    openRouterCertifiedModelId: HostedModelPreferenceSchema.optional(),
     localRuntime: LocalRuntimeIdSchema,
     localBaseUrl: LocalBaseUrlSchema,
     localModelTag: z.string().min(1).max(256),
     localModelDigest: LocalModelDigestSchema.nullable().default(null),
     hostedCallsEnabled: z.boolean(),
+    spendDailyUsd: z.number().finite().positive().nullable().optional(),
+    spendMonthlyUsd: z.number().finite().positive().nullable().optional(),
+    spendUnlimited: z.boolean().optional(),
     defaultChatTarget: ChatTargetPreferenceSchema.default("local"),
   })
   .strict();
@@ -109,13 +115,14 @@ export const RuntimeSettingsSchema = RuntimeSettingsObjectSchema.superRefine(
 type ParsedRuntimeSettings = z.infer<typeof RuntimeSettingsSchema>;
 export type RuntimeSettings = Omit<
   ParsedRuntimeSettings,
-  "localModelDigest" | "openRouterModelSelection"
+  "localModelDigest" | "openRouterModelSelection" | "openRouterCertifiedModelId"
 > & {
   readonly openRouterModelSelection?: HostedModelPreference | undefined;
+  readonly openRouterCertifiedModelId?: HostedModelPreference | undefined;
   readonly localModelDigest?: LocalModelDigest | null | undefined;
 };
 
-export const RuntimeSettingsPatchSchema = RuntimeSettingsObjectSchema.partial().strict();
+export const RuntimeSettingsPatchSchema = RuntimeSettingsObjectSchema.omit({ openRouterCertifiedModelId: true }).partial().strict();
 export type RuntimeSettingsPatch = z.infer<typeof RuntimeSettingsPatchSchema>;
 
 export interface RuntimeSettingsSnapshot {
@@ -129,6 +136,8 @@ export interface RuntimeSettingsReader {
 
 export interface RuntimeSettingsAdmin extends RuntimeSettingsReader {
   update(patch: RuntimeSettingsPatch): RuntimeSettingsSnapshot;
+  /** Dedicated trusted mutation after a bounded OpenRouter model validation passes. */
+  certifyOpenRouterModel?: (modelId: HostedModelPreference) => RuntimeSettingsSnapshot;
 }
 
 const RuntimeSettingsFileSchema = z.object({
@@ -143,6 +152,38 @@ function cloneSettings(settings: RuntimeSettings): RuntimeSettings {
   return { ...settings };
 }
 
+/**
+ * A discovered OpenRouter preference is intentionally not execution authority. The
+ * admission endpoint is the only place that can make an OpenRouter model executable.
+ *
+ * Older Settings mutations could retain a dynamic selection while re-enabling Hosted.
+ * Repair that contradictory state at the durable owner boundary so a refresh, a generic
+ * runtime save, or a future caller cannot accidentally turn a preference into a paid
+ * dispatch path.
+ */
+export function normalizeOpenRouterRuntimeSettings<T extends RuntimeSettings>(settings: T): T {
+  if (settings.hostedProvider !== "openrouter") return settings;
+
+  const selection = settings.openRouterModelSelection ?? settings.hostedModel;
+  const executable =
+    selection === GOVERNED_HOSTED_MODEL ||
+    executableHostedModelRegistryEntry("openrouter", selection) !== undefined ||
+    settings.openRouterCertifiedModelId === selection;
+
+  if (executable) return settings;
+
+  return {
+    ...settings,
+    hostedModel: GOVERNED_HOSTED_MODEL,
+    hostedCallsEnabled: false,
+    defaultChatTarget: "local",
+  } as T;
+}
+
+function settingsEqual(left: RuntimeSettings, right: RuntimeSettings): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export class FileRuntimeSettings implements RuntimeSettingsAdmin {
   private readonly defaults: RuntimeSettings;
 
@@ -152,15 +193,19 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
       hostedProvider: HostedProviderId;
       hostedModel?: HostedModelPreference | undefined;
       openRouterModelSelection?: HostedModelPreference | undefined;
+      openRouterCertifiedModelId?: HostedModelPreference | undefined;
       localRuntime: LocalRuntimeId;
       localBaseUrl: string;
       localModelTag: string;
       localModelDigest?: LocalModelDigest | null | undefined;
       hostedCallsEnabled: boolean;
+      spendDailyUsd?: number | null | undefined;
+      spendMonthlyUsd?: number | null | undefined;
+      spendUnlimited?: boolean | undefined;
       defaultChatTarget?: ChatTargetPreference | undefined;
     },
   ) {
-    this.defaults = RuntimeSettingsSchema.parse(defaults);
+    this.defaults = normalizeOpenRouterRuntimeSettings(RuntimeSettingsSchema.parse(defaults));
     // Konfigurasi proses yang alias-mutable digagalkan saat boot, bukan dibiarkan
     // menghasilkan evidence dengan nama model yang tidak berarti apa-apa.
     assertLocalModelTagWritable(this.defaults);
@@ -170,9 +215,29 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
     if (!existsSync(this.path)) {
       return { version: 1, revision: 0, settings: RuntimeSettingsSchema.parse(this.defaults) };
     }
-    return RuntimeSettingsFileSchema.parse(
+    const persisted = RuntimeSettingsFileSchema.parse(
       JSON.parse(readFileSync(this.path, "utf8")) as unknown,
     );
+    const normalizedSettings = normalizeOpenRouterRuntimeSettings(persisted.settings);
+    if (settingsEqual(persisted.settings, normalizedSettings)) return persisted;
+
+    // One-time self-healing migration for a state created by the prior broad Settings
+    // mutation. The revision advances so every client reload observes the repaired state.
+    const repaired: RuntimeSettingsFile = {
+      version: 1,
+      revision: persisted.revision + 1,
+      settings: normalizedSettings,
+    };
+    this.persist(repaired);
+    return repaired;
+  }
+
+  private persist(next: RuntimeSettingsFile): void {
+    mkdirSync(dirname(this.path), { recursive: true });
+    const tmp = `${this.path}.tmp-${String(process.pid)}`;
+    writeFileSync(tmp, `${JSON.stringify(next, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+    renameSync(tmp, this.path);
+    chmodSync(this.path, 0o600);
   }
 
   get(): RuntimeSettingsSnapshot {
@@ -190,7 +255,7 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
         normalized.localBaseUrl !== prior.settings.localBaseUrl) ||
       (normalized.localModelTag !== undefined &&
         normalized.localModelTag !== prior.settings.localModelTag);
-    const settings = RuntimeSettingsSchema.parse({
+    const parsed = RuntimeSettingsSchema.parse({
       ...prior.settings,
       ...normalized,
       ...(normalized.hostedProvider !== undefined &&
@@ -201,18 +266,38 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
       ...(identityBoundaryChanged && normalized.localModelDigest === undefined
         ? { localModelDigest: null }
         : {}),
+      ...(normalized.openRouterModelSelection !== undefined &&
+      normalized.openRouterModelSelection !== prior.settings.openRouterModelSelection
+        ? { openRouterCertifiedModelId: undefined }
+        : {}),
     });
+    const settings = normalizeOpenRouterRuntimeSettings(parsed);
     assertLocalModelTagWritable(settings);
     const next: RuntimeSettingsFile = {
       version: 1,
       revision: prior.revision + 1,
       settings,
     };
-    mkdirSync(dirname(this.path), { recursive: true });
-    const tmp = `${this.path}.tmp-${String(process.pid)}`;
-    writeFileSync(tmp, `${JSON.stringify(next, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
-    renameSync(tmp, this.path);
-    chmodSync(this.path, 0o600);
+    this.persist(next);
+    return { revision: next.revision, settings: cloneSettings(next.settings) };
+  }
+  certifyOpenRouterModel(modelId: HostedModelPreference): RuntimeSettingsSnapshot {
+    const certified = HostedModelPreferenceSchema.parse(modelId);
+    if (certified === GOVERNED_HOSTED_MODEL) {
+      throw new Error("Model governed tidak memerlukan sertifikasi OpenRouter.");
+    }
+    const prior = this.read();
+    const settings = RuntimeSettingsSchema.parse({
+      ...prior.settings,
+      hostedProvider: "openrouter",
+      hostedModel: GOVERNED_HOSTED_MODEL,
+      openRouterModelSelection: certified,
+      openRouterCertifiedModelId: certified,
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+    const next: RuntimeSettingsFile = { revision: prior.revision + 1, version: 1, settings };
+    this.persist(next);
     return { revision: next.revision, settings: cloneSettings(next.settings) };
   }
 }

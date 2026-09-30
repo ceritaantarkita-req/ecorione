@@ -25,6 +25,8 @@ import {
   type ProviderCredentialReader,
 } from "./credential-vault.js";
 import { registerConnectControlRoutes } from "./control-http.js";
+import { OpenRouterModelDiscovery, OpenRouterModelDiscoveryError, type OpenRouterModelDiscoveryReader } from "./openrouter-model-discovery.js";
+import type { OpenRouterCertificationAdmin, OpenRouterCertificationReader } from "./openrouter-certification-store.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { GOVERNED_HOSTED_MODEL, type HostedModelPreference } from "./hosted-model-catalog.js";
@@ -52,7 +54,7 @@ import {
 } from "./providers/errors.js";
 import { LocalModelDigestMismatchError } from "./providers/local-model-provenance.js";
 import { LocalRuntimeIdSchema, type LocalRuntimeId } from "./providers/local-runtime.js";
-import { SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
+import { FileSpendBudget, SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 import {
   registerExternalSourceFetchRoutes,
   registerMcpResourceSourceFetchRoutes,
@@ -150,9 +152,14 @@ export interface BuildConnectServerOptions {
   readonly localModelTag: string;
   readonly localModelDigest?: LocalModelDigest | null | undefined;
   readonly hostedCallsEnabled?: boolean | undefined;
+  readonly spendDailyUsd?: number | null | undefined;
+  readonly spendMonthlyUsd?: number | null | undefined;
   readonly defaultChatTarget?: ChatTargetPreference | undefined;
   readonly spendBudget?: CompleteDeps["spendBudget"] | undefined;
+  readonly spendBudgetFactory?:
+    ((runtime: RuntimeSettings) => CompleteDeps["spendBudget"]) | undefined;
   readonly hostedSpendUnlimited?: boolean | undefined;
+  readonly hostedSpendUnlimitedResolver?: ((runtime: RuntimeSettings) => boolean) | undefined;
   readonly resolveLocalProvenance?: CompleteDeps["resolveLocalProvenance"] | undefined;
   readonly cache?: ExactMatchCache | undefined;
   readonly mcpManager?: McpManager | undefined;
@@ -165,6 +172,9 @@ export interface BuildConnectServerOptions {
   readonly webhookForwardTimeoutMs?: number | undefined;
   /** Test-only override; production defaults to a bounded 60-second credential probe. */
   readonly credentialTestTimeoutMs?: number | undefined;
+  readonly openRouterModelDiscovery?: OpenRouterModelDiscoveryReader | undefined;
+  readonly openRouterCertificationReader?: OpenRouterCertificationReader | undefined;
+  readonly openRouterCertificationAdmin?: OpenRouterCertificationAdmin | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -177,6 +187,9 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
   });
   const metrics = observabilityFor(app);
   const cache = options.cache ?? new ExactMatchCache();
+  const openRouterModelDiscovery =
+    options.openRouterModelDiscovery ??
+    new OpenRouterModelDiscovery({ certificationReader: options.openRouterCertificationReader });
   const credentialTestTimeoutMs =
     options.credentialTestTimeoutMs ?? DEFAULT_CREDENTIAL_TEST_TIMEOUT_MS;
   const defaults: RuntimeSettings = {
@@ -187,14 +200,34 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localModelTag: options.localModelTag,
     localModelDigest: options.localModelDigest ?? null,
     hostedCallsEnabled: options.hostedCallsEnabled ?? true,
+    spendDailyUsd: options.spendDailyUsd ?? null,
+    spendMonthlyUsd: options.spendMonthlyUsd ?? null,
+    spendUnlimited: options.hostedSpendUnlimited ?? false,
     defaultChatTarget: options.defaultChatTarget ?? "local",
   };
   const currentRuntime = (): RuntimeSettings =>
     options.runtimeSettings?.get().settings ?? defaults;
-  const currentDeps = (runtime = currentRuntime()): CompleteDeps => ({
+  const currentDeps = (runtime = currentRuntime()): CompleteDeps => {
+    const selection = runtime.openRouterModelSelection;
+    const certification =
+      runtime.hostedProvider === "openrouter" &&
+      selection !== undefined &&
+      runtime.openRouterCertifiedModelId === selection
+        ? options.openRouterCertificationReader?.get(selection)
+        : undefined;
+    return {
     credentialVault: options.credentialVault,
     hostedProvider: runtime.hostedProvider,
     hostedModel: runtime.hostedModel,
+    ...(certification === undefined
+      ? {}
+      : {
+          certifiedOpenRouterModel: {
+            id: certification.modelId,
+            promptPricePerToken: certification.promptPricePerToken,
+            completionPricePerToken: certification.completionPricePerToken,
+          },
+        }),
     anthropicApiKey: options.anthropicApiKey,
     openrouterApiKey: options.openrouterApiKey,
     openaiApiKey: options.openaiApiKey,
@@ -205,19 +238,213 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     localModelDigest: runtime.localModelDigest,
     cache,
     hostedCallsEnabled: runtime.hostedCallsEnabled,
-    spendBudget: options.spendBudget,
-    hostedSpendUnlimited: options.hostedSpendUnlimited,
+    spendBudget: options.spendBudgetFactory?.(runtime) ?? options.spendBudget,
+    hostedSpendUnlimited:
+      options.hostedSpendUnlimitedResolver?.(runtime) ?? options.hostedSpendUnlimited,
     resolveLocalProvenance: options.resolveLocalProvenance,
-  });
+  };
+  };
+
+  // Dynamic OpenRouter certificates bind to the exact catalog pricing identity.
+  // Re-check the shared catalog before each paid completion; stale/unreachable
+  // discovery must fail closed instead of running a model under old evidence.
+  const currentCompletionDeps = async (): Promise<CompleteDeps> => {
+    const runtime = currentRuntime();
+    const selection = runtime.openRouterModelSelection;
+    const hasDynamicCertificate =
+      runtime.hostedProvider === "openrouter" &&
+      selection !== undefined &&
+      runtime.openRouterCertifiedModelId === selection;
+    if (!hasDynamicCertificate) return currentDeps(runtime);
+
+    let discovery;
+    try {
+      discovery = await openRouterModelDiscovery.list({ q: selection, limit: 100 });
+    } catch (error) {
+      if (error instanceof OpenRouterModelDiscoveryError) {
+        throw new HttpError(
+          error.kind === "unreachable" ? 503 : 502,
+          error.kind === "unreachable"
+            ? "OPENROUTER_CATALOG_UNAVAILABLE"
+            : "OPENROUTER_CATALOG_INVALID",
+          error.message,
+        );
+      }
+      throw error;
+    }
+    const model = discovery.models.find(
+      (candidate) => candidate.id === selection && candidate.executable,
+    );
+    const promptPricePerToken = model?.promptPricePerToken;
+    const completionPricePerToken = model?.completionPricePerToken;
+    if (
+      discovery.stale ||
+      model === undefined ||
+      promptPricePerToken === null ||
+      promptPricePerToken === undefined ||
+      completionPricePerToken === null ||
+      completionPricePerToken === undefined
+    ) {
+      throw new HttpError(
+        409,
+        "OPENROUTER_CERTIFICATION_STALE_OR_INVALID",
+        "Model OpenRouter dinamis harus memiliki katalog segar dan bukti Ready dengan harga yang sama sebelum dipakai. Refresh lalu test ulang model ini.",
+      );
+    }
+    return {
+      ...currentDeps(runtime),
+      certifiedOpenRouterModel: {
+        id: model.id,
+        promptPricePerToken,
+        completionPricePerToken,
+      },
+    };
+  };
 
   if (options.mcpManager !== undefined) {
     registerOutboundMcpRoutes(app, options.mcpManager);
     registerMcpResourceSourceFetchRoutes(app, options.mcpManager);
   }
   registerExternalSourceFetchRoutes(app);
+  async function validateOpenRouterModel(selectionId: string): Promise<unknown> {
+    if (
+      options.openRouterCertificationAdmin === undefined ||
+      options.runtimeSettings?.certifyOpenRouterModel === undefined
+    ) {
+      throw new HttpError(
+        503,
+        "OPENROUTER_VALIDATION_UNAVAILABLE",
+        "Penyimpanan bukti validasi OpenRouter belum dikonfigurasi.",
+      );
+    }
+    let discovery;
+    try {
+      discovery = await openRouterModelDiscovery.list({ q: selectionId, limit: 100, forceRefresh: true });
+    } catch (error) {
+      if (error instanceof OpenRouterModelDiscoveryError) {
+        throw new HttpError(
+          error.kind === "unreachable" ? 503 : 502,
+          error.kind === "unreachable" ? "OPENROUTER_CATALOG_UNAVAILABLE" : "OPENROUTER_CATALOG_INVALID",
+          error.message,
+        );
+      }
+      throw error;
+    }
+    const candidate = discovery.models.find(
+      (model) => model.selectionId === selectionId && model.selectable,
+    );
+    if (candidate === undefined || candidate.validationPlan === null || candidate.validationPlan === undefined) {
+      throw new HttpError(
+        409,
+        "OPENROUTER_MODEL_NOT_VALIDATABLE",
+        "Model tidak memiliki harga atau kontrak text yang cukup untuk test aman saat ini.",
+      );
+    }
+    const runtime = currentRuntime();
+    const body = probeBody("hosted", "Reply exactly ECORIONE_MODEL_VALIDATION_OK");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), credentialTestTimeoutMs);
+    const started = performance.now();
+    try {
+      const result = await complete(
+        {
+          ...currentDeps({
+            ...runtime,
+            hostedProvider: "openrouter",
+            hostedModel: GOVERNED_HOSTED_MODEL,
+            openRouterModelSelection: selectionId,
+            openRouterCertifiedModelId: undefined,
+          }),
+          certifiedOpenRouterModel: {
+            id: candidate.id,
+            promptPricePerToken: candidate.promptPricePerToken!,
+            completionPricePerToken: candidate.completionPricePerToken!,
+          },
+          cache: new ExactMatchCache(),
+          hostedMaxOutputTokens: candidate.validationPlan.maxOutputTokens,
+          hostedReservationUsdOverride: candidate.validationPlan.reservationUsd,
+        },
+        body,
+        controller.signal,
+      );
+      if (result.responseModel !== candidate.id || !result.reply.includes("ECORIONE_MODEL_VALIDATION_OK")) {
+        throw new HttpError(
+          502,
+          "OPENROUTER_MODEL_VALIDATION_FAILED",
+          "Respons test tidak membuktikan model yang dipilih; model tidak diaktifkan.",
+        );
+      }
+      options.openRouterCertificationAdmin.record({
+        modelId: candidate.id,
+        certifiedAt: nowIso(),
+        catalogFetchedAt: discovery.fetchedAt,
+        responseModel: result.responseModel,
+        ...(result.routingProvider === undefined ? {} : { routingProvider: result.routingProvider }),
+        latencyMs: performance.now() - started,
+        billedCostUsd: result.cost.actualUsd,
+        promptPricePerToken: candidate.promptPricePerToken!,
+        completionPricePerToken: candidate.completionPricePerToken!,
+      });
+      const activeRuntime = options.runtimeSettings.certifyOpenRouterModel(candidate.id);
+      recordCompletion(body, result);
+      metrics.addCounter("ecorione_openrouter_model_validation_total", 1, { outcome: "pass" });
+      return {
+        pass: true,
+        selectionId: candidate.id,
+        ready: true,
+        test: {
+          capUsd: candidate.validationPlan.capUsd,
+          reservedUsd: result.budget?.reservedUsd ?? candidate.validationPlan.reservationUsd,
+          actualUsd: result.cost.actualUsd,
+          latencyMs: performance.now() - started,
+          responseModel: result.responseModel,
+        },
+        ...(activeRuntime === undefined ? {} : { runtime: activeRuntime }),
+      };
+    } catch (error) {
+      metrics.addCounter("ecorione_openrouter_model_validation_total", 1, {
+        outcome: controller.signal.aborted ? "timeout" : "error",
+      });
+      if (controller.signal.aborted) {
+        throw new HttpError(
+          504,
+          "PROVIDER_TEST_TIMEOUT",
+          `Test model OpenRouter timeout setelah ${String(credentialTestTimeoutMs)}ms; model belum diaktifkan.`,
+        );
+      }
+      throw toHttpError(error, true);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   registerConnectControlRoutes(app, {
     runtimeSettings: options.runtimeSettings,
     credentialVault: options.credentialVaultAdmin,
+    openRouterModelDiscovery,
+    validateOpenRouterModel,
+    spendStatus: () => {
+      const runtime = currentRuntime();
+      const budget = options.spendBudgetFactory?.(runtime) ?? options.spendBudget;
+      return {
+        policy: {
+          dailyUsd:
+            budget instanceof FileSpendBudget
+              ? (budget.policy.dailyUsd ?? null)
+              : (runtime.spendDailyUsd ?? null),
+          monthlyUsd:
+            budget instanceof FileSpendBudget
+              ? (budget.policy.monthlyUsd ?? null)
+              : (runtime.spendMonthlyUsd ?? null),
+          unlimited:
+            options.hostedSpendUnlimitedResolver?.(runtime) ??
+            runtime.spendUnlimited ??
+            options.hostedSpendUnlimited ??
+            false,
+        },
+        budget: budget instanceof FileSpendBudget ? budget.summary(nowIso()) : null,
+      };
+    },
   });
   registerConnectWebhookRoutes(app, {
     flowUrl: options.flowUrl ?? "http://127.0.0.1:17028",
@@ -310,7 +537,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const abort = (): void => controller.abort();
     req.raw.once("aborted", abort);
     try {
-      const result = await complete(currentDeps(), body, controller.signal);
+      const result = await complete(await currentCompletionDeps(), body, controller.signal);
       recordCompletion(body, result);
       return result;
     } catch (err) {
@@ -346,12 +573,10 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
             }),
             credentialVault: transientCredential,
             cache: new ExactMatchCache(),
-            ...(provider === "nvidia"
-              ? {
-                  hostedMaxOutputTokens: NVIDIA_PROVIDER_PROBE_MAX_OUTPUT_TOKENS,
-                  hostedReasoningEffort: "low",
-                }
-              : {}),
+            // Credential verification has a strict small-output cap so low spend budgets work.
+            hostedMaxOutputTokens:
+              provider === "nvidia" ? NVIDIA_PROVIDER_PROBE_MAX_OUTPUT_TOKENS : 512,
+            ...(provider === "nvidia" ? { hostedReasoningEffort: "low" } : {}),
           },
           body,
           controller.signal,
@@ -480,6 +705,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
 
   app.post("/v1/multimodal/infer", async (req) => {
     const body = parseOrBadRequest(MultimodalInferRequestSchema, req.body);
+    const runtime = currentRuntime();
     const controller = new AbortController();
     const abort = (): void => controller.abort();
     req.raw.once("aborted", abort);
@@ -488,10 +714,11 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         {
           localAdapter: options.localMultimodalAdapter,
           hostedAdapter: options.hostedMultimodalAdapter,
-          hostedProvider: currentRuntime().hostedProvider,
-          hostedCallsEnabled: currentRuntime().hostedCallsEnabled,
-          spendBudget: options.spendBudget,
-          hostedSpendUnlimited: options.hostedSpendUnlimited,
+          hostedProvider: runtime.hostedProvider,
+          hostedCallsEnabled: runtime.hostedCallsEnabled,
+          spendBudget: options.spendBudgetFactory?.(runtime) ?? options.spendBudget,
+          hostedSpendUnlimited:
+            options.hostedSpendUnlimitedResolver?.(runtime) ?? options.hostedSpendUnlimited,
         },
         body,
         nowIso(),

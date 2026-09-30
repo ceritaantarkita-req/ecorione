@@ -32,4 +32,21 @@ describe("OpenRouter model registry adapter", () => {
     });
     expect(reserved).toBeGreaterThan(0);
   });
+  it("honors a bounded credential-probe output cap when reserving spend", () => {
+    const normal = estimateOpenRouterReservationUsd({
+      model: "claude-sonnet-4-5-20250929",
+      prefix,
+      dynamicText: "fixture",
+      userMessage: "reply",
+    });
+    const probe = estimateOpenRouterReservationUsd({
+      model: "claude-sonnet-4-5-20250929",
+      prefix,
+      dynamicText: "fixture",
+      userMessage: "reply",
+      maxOutputTokens: 512,
+    });
+    expect(probe).toBeLessThan(normal);
+    expect(probe).toBeLessThan(0.02);
+  });
 });

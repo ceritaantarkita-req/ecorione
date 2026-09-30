@@ -114,4 +114,22 @@ describe("route", () => {
       routeReason: "sensitivity-restricted",
     });
   });
+  it("uses a certified dynamic OpenRouter model only for non-RESTRICTED hosted chat", () => {
+    expect(
+      route({
+        target: "hosted",
+        sensitivity: "INTERNAL",
+        hostedProvider: "openrouter",
+        certifiedOpenRouterModel: "google/gemini-3.8-flash",
+      }),
+    ).toEqual({ model: "google/gemini-3.8-flash", routeReason: "selected-hosted" });
+    expect(
+      route({
+        target: "hosted",
+        sensitivity: "RESTRICTED",
+        hostedProvider: "openrouter",
+        certifiedOpenRouterModel: "google/gemini-3.8-flash",
+      }),
+    ).toEqual({ model: "claude-opus-4-1-20250805", routeReason: "sensitivity-restricted" });
+  });
 });

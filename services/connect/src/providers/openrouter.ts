@@ -1,5 +1,5 @@
 import type { StablePrefix } from "@ecorione/context-assembly";
-import type { PinnedModelId } from "@ecorione/shared-telemetry";
+import type { ModelPrice } from "@ecorione/shared-telemetry";
 import { hostedModelRegistryEntry } from "../hosted-model-registry.js";
 import { ProviderResponseError } from "./errors.js";
 import {
@@ -14,19 +14,26 @@ const OPENROUTER_PROVIDER_ONLY_ENV = "ECORIONE_OPENROUTER_PROVIDER_ONLY";
 
 export interface OpenRouterCallInput {
   readonly apiKey: string;
-  readonly model: PinnedModelId;
+  readonly model: string;
   readonly prefix: StablePrefix;
   readonly dynamicText: string;
   readonly userMessage: string;
+  /** Internal probe-only override. Normal chat keeps the 4096-token baseline. */
+  readonly maxOutputTokens?: number | undefined;
+  readonly reasoningEffort?: "low" | "high" | "max" | undefined;
   readonly providerOnly?: readonly string[] | undefined;
+  /** Validation explicitly disables upstream provider fallback. */
+  readonly allowFallbacks?: boolean | undefined;
+  readonly priceOverride?: ModelPrice | undefined;
 }
 
-export function openRouterRuntimeModel(model: PinnedModelId): string {
+export function openRouterRuntimeModel(model: string): string {
   const entry = hostedModelRegistryEntry("openrouter", model);
-  if (entry === undefined) {
-    throw new Error(`Pinned model belum terdaftar untuk OpenRouter: ${model}.`);
+  if (entry !== undefined) return entry.providerRuntime;
+  if (!/^[a-z0-9][a-z0-9._:/-]{0,255}$/u.test(model)) {
+    throw new Error(`OpenRouter runtime model tidak valid: ${model}.`);
   }
-  return entry.providerRuntime;
+  return model;
 }
 
 function normalizeProviderOnly(values: readonly string[]): string[] {
@@ -43,13 +50,14 @@ function normalizeProviderOnly(values: readonly string[]): string[] {
 }
 
 export function openRouterProviderRouting(
-  input: Pick<OpenRouterCallInput, "providerOnly">,
+  input: Pick<OpenRouterCallInput, "providerOnly" | "allowFallbacks">,
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): OpenAiCompatibleProviderRouting | undefined {
   const explicit = input.providerOnly;
   if (explicit !== undefined) {
     return { only: normalizeProviderOnly(explicit), allow_fallbacks: false };
   }
+  if (input.allowFallbacks === false) return { allow_fallbacks: false };
 
   const configured = env[OPENROUTER_PROVIDER_ONLY_ENV]?.trim();
   if (!configured) return undefined;
@@ -63,10 +71,13 @@ function adapterInput(input: Omit<OpenRouterCallInput, "apiKey">) {
   return {
     runtimeModel: openRouterRuntimeModel(input.model),
     costModel: input.model,
+    ...(input.priceOverride === undefined ? {} : { priceOverride: input.priceOverride }),
     prefix: input.prefix,
     dynamicText: input.dynamicText,
     userMessage: input.userMessage,
     maxTokensField: "max_tokens" as const,
+    ...(input.maxOutputTokens === undefined ? {} : { maxOutputTokens: input.maxOutputTokens }),
+    ...(input.reasoningEffort === undefined ? {} : { reasoningEffort: input.reasoningEffort }),
     providerRouting: openRouterProviderRouting(input),
   };
 }

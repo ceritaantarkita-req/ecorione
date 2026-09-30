@@ -10,6 +10,7 @@ export * from "./http.js";
 export * from "./provider-types.js";
 export * from "./routing.js";
 export * from "./runtime-settings.js";
+export * from "./openrouter-certification-store.js";
 export * from "./spend-budget.js";
 export * from "./mcp-client/types.js";
 export * from "./mcp-client/registry.js";

@@ -87,18 +87,27 @@ function buildContextContent(input: LocalCallInput): string {
   if (input.dynamicText.length > 0) parts.push(input.dynamicText);
   return parts.join("\n\n");
 }
+
+export function localChatMessages(
+  input: LocalCallInput,
+): Array<{ role: "system" | "user"; content: string }> {
+  const contextContent = buildContextContent(input);
+  return [
+    { role: "system", content: `${input.prefix.systemPrompt} ${LIVE_REQUEST_NOTE}` },
+    ...(contextContent.length === 0
+      ? []
+      : [{ role: "user" as const, content: contextContent }]),
+    { role: "user", content: input.userMessage },
+  ];
+}
+
 export async function callLocal(
   input: LocalCallInput,
   signal?: AbortSignal,
 ): Promise<LocalCallResult> {
-  const contextContent = buildContextContent(input);
   const body = {
     model: input.modelTag,
-    messages: [
-      { role: "system", content: `${input.prefix.systemPrompt} ${LIVE_REQUEST_NOTE}` },
-      ...(contextContent.length === 0 ? [] : [{ role: "user", content: contextContent }]),
-      { role: "user", content: input.userMessage },
-    ],
+    messages: localChatMessages(input),
     ...localGenerationControls(),
   };
   let res: Response;

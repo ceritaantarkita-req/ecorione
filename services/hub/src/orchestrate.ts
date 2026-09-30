@@ -22,7 +22,7 @@ import {
   type SyncClass,
   type Timestamp,
 } from "@ecorione/shared-schema";
-import { httpJson } from "@ecorione/shared-server";
+import { DEFAULT_INTERNAL_HTTP_TIMEOUT_MS, httpJson } from "@ecorione/shared-server";
 import {
   buildGenAiSpan,
   type CallCostRecord,
@@ -50,6 +50,13 @@ const EPISODE_LIMIT = 6;
 const ARTIFACT_LIMIT = 5;
 const EPISODE_TEXT_CHAR_LIMIT = 300;
 const SESSION_TITLE_CHAR_LIMIT = 96;
+const LOCAL_CONNECT_COMPLETION_TIMEOUT_MS = 60_000;
+
+export function connectCompletionTimeoutMs(target: "local" | "hosted"): number {
+  return target === "local"
+    ? LOCAL_CONNECT_COMPLETION_TIMEOUT_MS
+    : DEFAULT_INTERNAL_HTTP_TIMEOUT_MS;
+}
 
 function chatSessionTitle(message: string): string {
   const normalized = message.trim().replace(/\s+/g, " ");
@@ -59,12 +66,14 @@ function chatSessionTitle(message: string): string {
 
 export class UpstreamError extends Error {
   readonly service: string;
+  readonly upstream: unknown;
   constructor(service: string, cause: unknown) {
     super(
       `Layanan "${service}" tidak bisa dihubungi: ${cause instanceof Error ? cause.message : String(cause)}`,
     );
     this.name = "UpstreamError";
     this.service = service;
+    this.upstream = cause;
   }
 }
 export class CapabilityAuthorityDeniedError extends Error {
@@ -326,6 +335,7 @@ export async function chat(
         operationId,
         now,
       },
+      timeoutMs: connectCompletionTimeoutMs(target),
       ...(options.signal === undefined ? {} : { signal: options.signal }),
     });
   } catch (err) {

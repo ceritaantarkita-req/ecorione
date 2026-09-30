@@ -12,6 +12,7 @@ import { HistoryLedger } from "./history-ledger.js";
 import {
   CapabilityAuthorityDeniedError,
   chat,
+  connectCompletionTimeoutMs,
   hubPrefixDigest,
   UpstreamError,
   type OrchestrateDeps,
@@ -43,6 +44,13 @@ function cost(usage = USAGE) {
     optimizerOverheadMs: 0.25,
   };
 }
+
+describe("Connect completion deadlines", () => {
+  it("gives local inference a bounded longer deadline without changing hosted", () => {
+    expect(connectCompletionTimeoutMs("local")).toBe(60_000);
+    expect(connectCompletionTimeoutMs("hosted")).toBe(10_000);
+  });
+});
 
 beforeEach(() => {
   originalDispatcher = getGlobalDispatcher();
@@ -161,6 +169,97 @@ describe("chat", () => {
     expect(range.events[2]?.parentEventId).toBe(range.events[1]?.id);
   });
 
+  it("mengizinkan Local lalu Hosted di satu sesi tanpa mengirim riwayat Local ke Cloud", async () => {
+    const sessionId = "sess_route_switch001" as never;
+    const local = {
+      sessionId,
+      message: "rahasia lokal tidak boleh keluar",
+      scope: "personal" as const,
+      maxSensitivity: "INTERNAL" as const,
+      autonomy: "L1" as const,
+      target: "local" as const,
+    };
+    const hosted = { ...local, message: "pesan cloud berikutnya", target: "hosted" as const };
+
+    for (const hostedEligible of ["0", "1"]) {
+      contextPool
+        .intercept({
+          path: `/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=${hostedEligible}`,
+          method: "GET",
+        })
+        .reply(200, CORE_MEMORY);
+      contextPool.intercept({ path: "/v1/retrieve", method: "POST" }).reply(200, {
+        hits: [],
+        diagnostics: {},
+      });
+      contextPool
+        .intercept({
+          path: `/v1/episodes?sessionId=sess_route_switch001&projectId=prj_personal&limit=6&hostedEligible=${hostedEligible}`,
+          method: "GET",
+        })
+        .reply(200, { episodes: [] });
+      contextPool
+        .intercept({
+          path: `/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=${hostedEligible}`,
+          method: "GET",
+        })
+        .reply(200, { pointers: [] });
+    }
+    contextPool
+      .intercept({ path: "/v1/episodes", method: "POST" })
+      .reply(201, { id: "epi" })
+      .times(4);
+
+    connectPool
+      .intercept({ path: "/v1/complete", method: "POST" })
+      .reply(200, (opts) => {
+        const body = JSON.parse(String(opts.body)) as {
+          target: string;
+          dynamicText: string;
+          userMessage: string;
+        };
+        if (body.target === "hosted") {
+          expect(body.dynamicText).not.toContain("rahasia lokal tidak boleh keluar");
+          expect(body.userMessage).toBe("pesan cloud berikutnya");
+        }
+        return {
+          reply: `${body.target} reply`,
+          provider: body.target === "local" ? "local" : "openrouter",
+          model: body.target === "local" ? "qwen3.5:9b" : "claude-sonnet-4-5-20250929",
+          pricingModel: body.target === "local" ? "qwen3.5:9b" : "claude-sonnet-4-5-20250929",
+          responseModel: body.target === "local" ? "qwen3.5:9b" : "claude-sonnet-4-5-20250929",
+          cacheHit: false,
+          usage: USAGE,
+          cost: {
+            ...cost(),
+            model: body.target === "local" ? "qwen3.5:9b" : "claude-sonnet-4-5-20250929",
+            naiveModel: body.target === "local" ? "qwen3.5:9b" : "claude-sonnet-4-5-20250929",
+            actualUsd: body.target === "local" ? 0 : 0.001,
+            naiveUsd: body.target === "local" ? 0 : 0.002,
+          },
+          routeReason: body.target,
+        };
+      })
+      .times(2);
+    rndPool
+      .intercept({ path: "/v1/traces", method: "POST" })
+      .reply(201, { id: "span" })
+      .times(2);
+
+    expect((await chat(deps, local, NOW)).reply).toBe("local reply");
+    expect((await chat(deps, hosted, "2026-09-08T10:31:00.000Z" as Timestamp)).reply).toBe(
+      "hosted reply",
+    );
+    expect(deps.history.getSession(sessionId)?.syncClass).toBe("LOCAL_ONLY");
+    expect(() =>
+      deps.history.readRange({
+        sessionId,
+        afterSeq: -1,
+        limit: 10,
+        grant: { scope: "personal", maxSensitivity: "RESTRICTED", hostedEligible: true },
+      }),
+    ).toThrow(/tidak tersedia/);
+  });
   it("authority deny stops hosted chat before Context or Connect egress", async () => {
     const deniedProject = deps.projects.create(
       {

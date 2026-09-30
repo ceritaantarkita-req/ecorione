@@ -104,8 +104,8 @@ export function HostedModelPicker({
           {selectedModelPreference === "governed"
             ? "Policy dapat memilih pinned model yang sesuai sensitivity dan evidence."
             : runtime.settings.hostedProvider === "openrouter" && !selectedModelExecutable
-              ? "Selectable untuk preference Settings, tetapi belum executable. Save akan menyimpan pilihan dan menonaktifkan hosted execution; tidak ada silent fallback."
-              : "Pilihan ini executable untuk hosted chat normal. RESTRICTED tetap boleh di-override oleh policy."}
+              ? "Model ini masih disiapkan dan belum bisa dipakai. Pilih Recommended atau model Ready."
+              : "Model ini Ready untuk hosted chat. RESTRICTED tetap boleh di-override oleh policy."}
         </span>
       </div>
       <button type="button" disabled={pendingAction !== null} onClick={onSave}>
