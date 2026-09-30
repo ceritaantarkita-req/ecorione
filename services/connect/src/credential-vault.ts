@@ -30,6 +30,11 @@ export type CredentialProvider = CredentialProviderId;
 export const CREDENTIAL_PURPOSES = ["messages", "tokens"] as const;
 export type CredentialPurpose = CatalogCredentialPurpose;
 
+const LEGACY_CONNECTION_ID = "default";
+const LEGACY_CONNECTION_LABEL = "Primary";
+const DEFAULT_PRIORITY = 100;
+const PRIORITY_STEP = 100;
+
 function assertCredentialScope(provider: CredentialProvider, purpose: CredentialPurpose): void {
   if (credentialPurposeForProvider(provider) !== purpose) {
     throw new CredentialVaultFormatError(
@@ -38,31 +43,100 @@ function assertCredentialScope(provider: CredentialProvider, purpose: Credential
   }
 }
 
+export interface CredentialCandidate {
+  readonly provider: CredentialProvider;
+  readonly purpose: CredentialPurpose;
+  readonly connectionId: string;
+  readonly label: string;
+  readonly priority: number;
+  readonly generation: number;
+  readonly secret: string;
+}
+
 export interface ProviderCredentialReader {
+  /**
+   * Compatibility accessor. For multi-connection scopes this resolves the highest-priority
+   * enabled connection.
+   */
   get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined;
+  /**
+   * Multi-connection dispatch surface. Older reader implementations may omit this and callers
+   * must fall back to `get`.
+   */
+  candidates?(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+  ): readonly CredentialCandidate[];
+}
+
+export interface CredentialConnectionPatch {
+  readonly label?: string | undefined;
+  readonly enabled?: boolean | undefined;
+  readonly priority?: number | undefined;
+}
+
+export interface AddCredentialConnectionOptions {
+  readonly connectionId?: string | undefined;
+  readonly label?: string | undefined;
+  readonly enabled?: boolean | undefined;
+  readonly priority?: number | undefined;
 }
 
 export interface CredentialVaultAdmin extends ProviderCredentialReader {
   list(): readonly CredentialMetadata[];
+  /** Compatibility mutation for the provider's primary connection. */
   set(
     provider: CredentialProvider,
     purpose: CredentialPurpose,
     secret: string,
     updatedAt: string,
   ): CredentialMetadata;
+  /** Compatibility disconnect: removes every connection for this provider/purpose. */
   remove(provider: CredentialProvider, purpose: CredentialPurpose): boolean;
+  addConnection(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+    secret: string,
+    updatedAt: string,
+    options?: AddCredentialConnectionOptions,
+  ): CredentialMetadata;
+  updateConnection(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+    connectionId: string,
+    patch: CredentialConnectionPatch,
+    updatedAt: string,
+  ): CredentialMetadata;
+  removeConnection(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+    connectionId: string,
+  ): boolean;
 }
 
 export interface CredentialMetadata {
   readonly provider: CredentialProvider;
   readonly purpose: CredentialPurpose;
+  readonly connectionId: string;
+  readonly label: string;
+  readonly enabled: boolean;
+  /** Lower number means higher dispatch priority. */
+  readonly priority: number;
   readonly generation: number;
   readonly updatedAt: string;
 }
 
 const TimestampSchema = z.string().datetime({ offset: false });
 const EncodedBytesSchema = z.string().regex(/^[A-Za-z0-9_-]+$/);
-const VaultEntrySchema = z.object({
+const ConnectionIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/);
+const ConnectionLabelSchema = z.string().trim().min(1).max(80);
+const PrioritySchema = z.number().int().min(0).max(1_000_000);
+
+const VaultEntryV1Schema = z.object({
   provider: z.enum(CREDENTIAL_PROVIDERS),
   purpose: z.enum(CREDENTIAL_PURPOSES),
   generation: z.number().int().positive(),
@@ -71,16 +145,35 @@ const VaultEntrySchema = z.object({
   ciphertext: EncodedBytesSchema,
   authTag: EncodedBytesSchema,
 });
-type VaultEntry = z.infer<typeof VaultEntrySchema>;
+type VaultEntryV1 = z.infer<typeof VaultEntryV1Schema>;
 
-const VaultFileSchema = z.object({
+const VaultEntryV2Schema = VaultEntryV1Schema.extend({
+  connectionId: ConnectionIdSchema,
+  label: ConnectionLabelSchema,
+  enabled: z.boolean(),
+  priority: PrioritySchema,
+});
+type VaultEntryV2 = z.infer<typeof VaultEntryV2Schema>;
+
+const VaultFileV1Schema = z.object({
   version: z.literal(1),
   revision: z.number().int().nonnegative(),
-  entries: z.array(VaultEntrySchema),
+  entries: z.array(VaultEntryV1Schema),
 });
-type VaultFile = z.infer<typeof VaultFileSchema>;
+const VaultFileV2Schema = z.object({
+  version: z.literal(2),
+  revision: z.number().int().nonnegative(),
+  entries: z.array(VaultEntryV2Schema),
+});
+type VaultFileV2 = z.infer<typeof VaultFileV2Schema>;
 
-const EMPTY_VAULT: VaultFile = { version: 1, revision: 0, entries: [] };
+type NormalizedVaultEntry = VaultEntryV2 & { readonly sourceVersion: 1 | 2 };
+interface NormalizedVault {
+  readonly revision: number;
+  readonly entries: NormalizedVaultEntry[];
+}
+
+const EMPTY_VAULT: NormalizedVault = { revision: 0, entries: [] };
 const CIPHER = "aes-256-gcm";
 const NONCE_BYTES = 12;
 const AUTH_TAG_BYTES = 16;
@@ -113,6 +206,17 @@ export class CredentialVaultBusyError extends CredentialVaultError {
   }
 }
 
+export class CredentialConnectionNotFoundError extends CredentialVaultError {
+  constructor(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+    connectionId: string,
+  ) {
+    super(`AI Connection tidak ditemukan: ${provider}/${purpose}/${connectionId}.`);
+    this.name = "CredentialConnectionNotFoundError";
+  }
+}
+
 export function parseVaultMasterKey(encoded: string): Buffer {
   if (!/^[A-Za-z0-9_-]+$/.test(encoded)) {
     throw new CredentialVaultFormatError("master key harus base64url tanpa padding.");
@@ -128,9 +232,40 @@ function scopeKey(provider: CredentialProvider, purpose: CredentialPurpose): str
   return `${provider}:${purpose}`;
 }
 
-function aad(entry: Pick<VaultEntry, "provider" | "purpose" | "generation">): Buffer {
+function connectionKey(
+  provider: CredentialProvider,
+  purpose: CredentialPurpose,
+  connectionId: string,
+): string {
+  return `${scopeKey(provider, purpose)}:${connectionId}`;
+}
+
+function legacyAad(
+  entry: Pick<VaultEntryV1, "provider" | "purpose" | "generation">,
+): Buffer {
   return Buffer.from(
     `ecorione-credential-v1\0${entry.provider}\0${entry.purpose}\0${String(entry.generation)}`,
+    "utf8",
+  );
+}
+
+function connectionAad(
+  entry: Pick<
+    VaultEntryV2,
+    "provider" | "purpose" | "connectionId" | "label" | "enabled" | "priority" | "generation"
+  >,
+): Buffer {
+  return Buffer.from(
+    [
+      "ecorione-credential-v2",
+      entry.provider,
+      entry.purpose,
+      entry.connectionId,
+      entry.label,
+      entry.enabled ? "enabled" : "disabled",
+      String(entry.priority),
+      String(entry.generation),
+    ].join("\0"),
     "utf8",
   );
 }
@@ -138,22 +273,30 @@ function aad(entry: Pick<VaultEntry, "provider" | "purpose" | "generation">): Bu
 function encryptEntry(input: {
   provider: CredentialProvider;
   purpose: CredentialPurpose;
+  connectionId: string;
+  label: string;
+  enabled: boolean;
+  priority: number;
   generation: number;
   updatedAt: string;
   secret: string;
   key: Buffer;
-}): VaultEntry {
-  const nonce = randomBytes(NONCE_BYTES);
-  const cipher = createCipheriv(CIPHER, input.key, nonce, { authTagLength: AUTH_TAG_BYTES });
+}): VaultEntryV2 {
   const metadata = {
     provider: input.provider,
     purpose: input.purpose,
+    connectionId: ConnectionIdSchema.parse(input.connectionId),
+    label: ConnectionLabelSchema.parse(input.label),
+    enabled: input.enabled,
+    priority: PrioritySchema.parse(input.priority),
     generation: input.generation,
   };
-  cipher.setAAD(aad(metadata));
+  const nonce = randomBytes(NONCE_BYTES);
+  const cipher = createCipheriv(CIPHER, input.key, nonce, { authTagLength: AUTH_TAG_BYTES });
+  cipher.setAAD(connectionAad(metadata));
   const ciphertext = Buffer.concat([cipher.update(input.secret, "utf8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  return VaultEntrySchema.parse({
+  return VaultEntryV2Schema.parse({
     ...metadata,
     updatedAt: input.updatedAt,
     nonce: nonce.toString("base64url"),
@@ -162,12 +305,12 @@ function encryptEntry(input: {
   });
 }
 
-function decryptEntry(entry: VaultEntry, key: Buffer): string {
+function decryptEntry(entry: NormalizedVaultEntry, key: Buffer): string {
   try {
     const decipher = createDecipheriv(CIPHER, key, Buffer.from(entry.nonce, "base64url"), {
       authTagLength: AUTH_TAG_BYTES,
     });
-    decipher.setAAD(aad(entry));
+    decipher.setAAD(entry.sourceVersion === 1 ? legacyAad(entry) : connectionAad(entry));
     decipher.setAuthTag(Buffer.from(entry.authTag, "base64url"));
     const plaintext = Buffer.concat([
       decipher.update(Buffer.from(entry.ciphertext, "base64url")),
@@ -179,7 +322,35 @@ function decryptEntry(entry: VaultEntry, key: Buffer): string {
   }
 }
 
-function readVault(path: string): VaultFile {
+function normalizeV1Entry(entry: VaultEntryV1): NormalizedVaultEntry {
+  return {
+    ...entry,
+    connectionId: LEGACY_CONNECTION_ID,
+    label: LEGACY_CONNECTION_LABEL,
+    enabled: true,
+    priority: DEFAULT_PRIORITY,
+    sourceVersion: 1,
+  };
+}
+
+function normalizeV2Entry(entry: VaultEntryV2): NormalizedVaultEntry {
+  return { ...entry, sourceVersion: 2 };
+}
+
+function validateNormalizedVault(vault: NormalizedVault): NormalizedVault {
+  const connections = new Set<string>();
+  for (const entry of vault.entries) {
+    assertCredentialScope(entry.provider, entry.purpose);
+    const key = connectionKey(entry.provider, entry.purpose, entry.connectionId);
+    if (connections.has(key)) {
+      throw new CredentialVaultFormatError(`AI Connection duplikat: ${key}.`);
+    }
+    connections.add(key);
+  }
+  return vault;
+}
+
+function readVault(path: string): NormalizedVault {
   if (!existsSync(path)) return { ...EMPTY_VAULT, entries: [] };
   let parsed: unknown;
   try {
@@ -189,18 +360,35 @@ function readVault(path: string): VaultFile {
       error instanceof Error ? error.message : String(error),
     );
   }
+
   try {
-    const vault = VaultFileSchema.parse(parsed);
-    const scopes = new Set<string>();
-    for (const entry of vault.entries) {
-      assertCredentialScope(entry.provider, entry.purpose);
-      const scope = scopeKey(entry.provider, entry.purpose);
-      if (scopes.has(scope)) {
-        throw new CredentialVaultFormatError(`scope duplikat: ${scope}.`);
+    const version =
+      typeof parsed === "object" && parsed !== null && "version" in parsed
+        ? (parsed as { version?: unknown }).version
+        : undefined;
+    if (version === 1) {
+      const vault = VaultFileV1Schema.parse(parsed);
+      const scopes = new Set<string>();
+      for (const entry of vault.entries) {
+        const scope = scopeKey(entry.provider, entry.purpose);
+        if (scopes.has(scope)) {
+          throw new CredentialVaultFormatError(`scope duplikat: ${scope}.`);
+        }
+        scopes.add(scope);
       }
-      scopes.add(scope);
+      return validateNormalizedVault({
+        revision: vault.revision,
+        entries: vault.entries.map(normalizeV1Entry),
+      });
     }
-    return vault;
+    if (version === 2) {
+      const vault = VaultFileV2Schema.parse(parsed);
+      return validateNormalizedVault({
+        revision: vault.revision,
+        entries: vault.entries.map(normalizeV2Entry),
+      });
+    }
+    throw new CredentialVaultFormatError("version harus 1 atau 2.");
   } catch (error) {
     if (error instanceof CredentialVaultFormatError) throw error;
     throw new CredentialVaultFormatError(
@@ -209,7 +397,7 @@ function readVault(path: string): VaultFile {
   }
 }
 
-function writeVault(path: string, vault: VaultFile): void {
+function writeVault(path: string, vault: VaultFileV2): void {
   mkdirSync(dirname(path), { recursive: true });
   const tmpPath = `${path}.tmp-${String(process.pid)}`;
   writeFileSync(tmpPath, `${JSON.stringify(vault, null, 2)}\n`, {
@@ -246,11 +434,72 @@ function withVaultLock<T>(path: string, fn: () => T): T {
   }
 }
 
+function metadata(entry: NormalizedVaultEntry | VaultEntryV2): CredentialMetadata {
+  return {
+    provider: entry.provider,
+    purpose: entry.purpose,
+    connectionId: entry.connectionId,
+    label: entry.label,
+    enabled: entry.enabled,
+    priority: entry.priority,
+    generation: entry.generation,
+    updatedAt: entry.updatedAt,
+  };
+}
+
+function compareEntries(a: Pick<VaultEntryV2, "provider" | "purpose" | "priority" | "connectionId">, b: Pick<VaultEntryV2, "provider" | "purpose" | "priority" | "connectionId">): number {
+  return (
+    scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)) ||
+    a.priority - b.priority ||
+    a.connectionId.localeCompare(b.connectionId)
+  );
+}
+
+function normalizedTimestamp(updatedAt: string): string {
+  try {
+    return TimestampSchema.parse(updatedAt);
+  } catch (error) {
+    throw new CredentialVaultFormatError(
+      error instanceof Error ? error.message : String(error),
+    );
+  }
+}
+
+function nextConnectionId(entries: readonly NormalizedVaultEntry[]): string {
+  const used = new Set(entries.map((entry) => entry.connectionId));
+  for (let attempt = 0; attempt < 16; attempt += 1) {
+    const candidate = `conn_${randomBytes(9).toString("base64url")}`;
+    if (!used.has(candidate)) return candidate;
+  }
+  throw new CredentialVaultError("Gagal membuat identifier AI Connection yang unik.");
+}
+
+function materializeEntries(
+  vault: NormalizedVault,
+  key: Buffer,
+): VaultEntryV2[] {
+  return vault.entries.map((entry) =>
+    encryptEntry({
+      provider: entry.provider,
+      purpose: entry.purpose,
+      connectionId: entry.connectionId,
+      label: entry.label,
+      enabled: entry.enabled,
+      priority: entry.priority,
+      generation: entry.generation,
+      updatedAt: entry.updatedAt,
+      secret: decryptEntry(entry, key),
+      key,
+    }),
+  );
+}
+
 /**
  * Connect-owned encrypted credential store.
  *
  * The master key is supplied out-of-band and is never persisted in the vault file.
- * Reads reload the file so provider-secret rotation can take effect without a process restart.
+ * Version 1 single-slot files remain readable. The first mutation atomically writes version 2,
+ * where one provider may own multiple authenticated AI Connection entries.
  */
 export class FileCredentialVault implements ProviderCredentialReader {
   private masterKey: Buffer;
@@ -268,21 +517,28 @@ export class FileCredentialVault implements ProviderCredentialReader {
   }
 
   get(provider: CredentialProvider, purpose: CredentialPurpose): string | undefined {
+    return this.candidates(provider, purpose)[0]?.secret;
+  }
+
+  candidates(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+  ): readonly CredentialCandidate[] {
     assertCredentialScope(provider, purpose);
-    const vault = readVault(this.path);
-    const entry = vault.entries.find(
-      (candidate) => candidate.provider === provider && candidate.purpose === purpose,
-    );
-    return entry === undefined ? undefined : decryptEntry(entry, this.masterKey);
+    return readVault(this.path).entries
+      .filter(
+        (entry) =>
+          entry.provider === provider && entry.purpose === purpose && entry.enabled,
+      )
+      .sort(compareEntries)
+      .map((entry) => ({
+        ...metadata(entry),
+        secret: decryptEntry(entry, this.masterKey),
+      }));
   }
 
   list(): readonly CredentialMetadata[] {
-    return readVault(this.path).entries.map(({ provider, purpose, generation, updatedAt }) => ({
-      provider,
-      purpose,
-      generation,
-      updatedAt,
-    }));
+    return readVault(this.path).entries.sort(compareEntries).map(metadata);
   }
 
   set(
@@ -293,36 +549,48 @@ export class FileCredentialVault implements ProviderCredentialReader {
   ): CredentialMetadata {
     assertCredentialScope(provider, purpose);
     if (secret.length === 0) throw new CredentialVaultFormatError("secret tidak boleh kosong.");
-    let normalizedUpdatedAt: string;
-    try {
-      normalizedUpdatedAt = TimestampSchema.parse(updatedAt);
-    } catch (error) {
-      throw new CredentialVaultFormatError(
-        error instanceof Error ? error.message : String(error),
-      );
-    }
+    const timestamp = normalizedTimestamp(updatedAt);
+
     return withVaultLock(this.path, () => {
       const vault = readVault(this.path);
-      const prior = vault.entries.find(
-        (candidate) => candidate.provider === provider && candidate.purpose === purpose,
+      const scoped = vault.entries.filter(
+        (entry) => entry.provider === provider && entry.purpose === purpose,
       );
+      const prior =
+        scoped.find((entry) => entry.connectionId === LEGACY_CONNECTION_ID) ??
+        [...scoped].sort(compareEntries)[0];
+      const connectionId = prior?.connectionId ?? LEGACY_CONNECTION_ID;
       const generation = (prior?.generation ?? 0) + 1;
-      const next = encryptEntry({
+      const replacement = encryptEntry({
         provider,
         purpose,
+        connectionId,
+        label: prior?.label ?? LEGACY_CONNECTION_LABEL,
+        enabled: prior?.enabled ?? true,
+        priority: prior?.priority ?? DEFAULT_PRIORITY,
         generation,
-        updatedAt: normalizedUpdatedAt,
+        updatedAt: timestamp,
         secret,
         key: this.masterKey,
       });
-      const entries = vault.entries
-        .filter((entry) => !(entry.provider === provider && entry.purpose === purpose))
-        .concat(next)
-        .sort((a, b) =>
-          scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)),
-        );
-      writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
-      return { provider, purpose, generation, updatedAt: normalizedUpdatedAt };
+      const entries = materializeEntries(
+        {
+          revision: vault.revision,
+          entries: vault.entries.filter(
+            (entry) =>
+              !(
+                entry.provider === provider &&
+                entry.purpose === purpose &&
+                entry.connectionId === connectionId
+              ),
+          ),
+        },
+        this.masterKey,
+      )
+        .concat(replacement)
+        .sort(compareEntries);
+      writeVault(this.path, { version: 2, revision: vault.revision + 1, entries });
+      return metadata(replacement);
     });
   }
 
@@ -330,11 +598,166 @@ export class FileCredentialVault implements ProviderCredentialReader {
     assertCredentialScope(provider, purpose);
     return withVaultLock(this.path, () => {
       const vault = readVault(this.path);
-      const entries = vault.entries.filter(
+      const remaining = vault.entries.filter(
         (entry) => !(entry.provider === provider && entry.purpose === purpose),
       );
-      if (entries.length === vault.entries.length) return false;
-      writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
+      if (remaining.length === vault.entries.length) return false;
+      const entries = materializeEntries(
+        { revision: vault.revision, entries: remaining },
+        this.masterKey,
+      ).sort(compareEntries);
+      writeVault(this.path, { version: 2, revision: vault.revision + 1, entries });
+      return true;
+    });
+  }
+
+  addConnection(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+    secret: string,
+    updatedAt: string,
+    options: AddCredentialConnectionOptions = {},
+  ): CredentialMetadata {
+    assertCredentialScope(provider, purpose);
+    if (purpose !== "messages") {
+      throw new CredentialVaultFormatError(
+        "multi-connection hanya didukung untuk credential AI messages.",
+      );
+    }
+    if (secret.length === 0) throw new CredentialVaultFormatError("secret tidak boleh kosong.");
+    const timestamp = normalizedTimestamp(updatedAt);
+
+    return withVaultLock(this.path, () => {
+      const vault = readVault(this.path);
+      const scoped = vault.entries.filter(
+        (entry) => entry.provider === provider && entry.purpose === purpose,
+      );
+      const connectionId = ConnectionIdSchema.parse(
+        options.connectionId ?? nextConnectionId(vault.entries),
+      );
+      if (scoped.some((entry) => entry.connectionId === connectionId)) {
+        throw new CredentialVaultFormatError(
+          `AI Connection duplikat: ${connectionKey(provider, purpose, connectionId)}.`,
+        );
+      }
+      const priority =
+        options.priority ??
+        (scoped.length === 0
+          ? DEFAULT_PRIORITY
+          : Math.min(
+              1_000_000,
+              Math.max(...scoped.map((entry) => entry.priority)) + PRIORITY_STEP,
+            ));
+      const entry = encryptEntry({
+        provider,
+        purpose,
+        connectionId,
+        label:
+          options.label ??
+          (scoped.length === 0 ? LEGACY_CONNECTION_LABEL : `Connection ${scoped.length + 1}`),
+        enabled: options.enabled ?? true,
+        priority,
+        generation: 1,
+        updatedAt: timestamp,
+        secret,
+        key: this.masterKey,
+      });
+      const entries = materializeEntries(vault, this.masterKey)
+        .concat(entry)
+        .sort(compareEntries);
+      writeVault(this.path, { version: 2, revision: vault.revision + 1, entries });
+      return metadata(entry);
+    });
+  }
+
+  updateConnection(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+    connectionId: string,
+    patch: CredentialConnectionPatch,
+    updatedAt: string,
+  ): CredentialMetadata {
+    assertCredentialScope(provider, purpose);
+    const id = ConnectionIdSchema.parse(connectionId);
+    const timestamp = normalizedTimestamp(updatedAt);
+    if (
+      patch.label === undefined &&
+      patch.enabled === undefined &&
+      patch.priority === undefined
+    ) {
+      throw new CredentialVaultFormatError("patch AI Connection kosong.");
+    }
+
+    return withVaultLock(this.path, () => {
+      const vault = readVault(this.path);
+      const prior = vault.entries.find(
+        (entry) =>
+          entry.provider === provider &&
+          entry.purpose === purpose &&
+          entry.connectionId === id,
+      );
+      if (prior === undefined) {
+        throw new CredentialConnectionNotFoundError(provider, purpose, id);
+      }
+      const secret = decryptEntry(prior, this.masterKey);
+      const replacement = encryptEntry({
+        provider,
+        purpose,
+        connectionId: id,
+        label:
+          patch.label === undefined ? prior.label : ConnectionLabelSchema.parse(patch.label),
+        enabled: patch.enabled ?? prior.enabled,
+        priority:
+          patch.priority === undefined ? prior.priority : PrioritySchema.parse(patch.priority),
+        generation: prior.generation + 1,
+        updatedAt: timestamp,
+        secret,
+        key: this.masterKey,
+      });
+      const entries = materializeEntries(
+        {
+          revision: vault.revision,
+          entries: vault.entries.filter(
+            (entry) =>
+              !(
+                entry.provider === provider &&
+                entry.purpose === purpose &&
+                entry.connectionId === id
+              ),
+          ),
+        },
+        this.masterKey,
+      )
+        .concat(replacement)
+        .sort(compareEntries);
+      writeVault(this.path, { version: 2, revision: vault.revision + 1, entries });
+      return metadata(replacement);
+    });
+  }
+
+  removeConnection(
+    provider: CredentialProvider,
+    purpose: CredentialPurpose,
+    connectionId: string,
+  ): boolean {
+    assertCredentialScope(provider, purpose);
+    const id = ConnectionIdSchema.parse(connectionId);
+    return withVaultLock(this.path, () => {
+      const vault = readVault(this.path);
+      const remaining = vault.entries.filter(
+        (entry) =>
+          !(
+            entry.provider === provider &&
+            entry.purpose === purpose &&
+            entry.connectionId === id
+          ),
+      );
+      if (remaining.length === vault.entries.length) return false;
+      const entries = materializeEntries(
+        { revision: vault.revision, entries: remaining },
+        this.masterKey,
+      ).sort(compareEntries);
+      writeVault(this.path, { version: 2, revision: vault.revision + 1, entries });
       return true;
     });
   }
@@ -349,21 +772,23 @@ export class FileCredentialVault implements ProviderCredentialReader {
     }
     withVaultLock(this.path, () => {
       const vault = readVault(this.path);
-      const plaintext = vault.entries.map((entry) => ({
-        entry,
-        secret: decryptEntry(entry, this.masterKey),
-      }));
-      const entries = plaintext.map(({ entry, secret }) =>
-        encryptEntry({
-          provider: entry.provider,
-          purpose: entry.purpose,
-          generation: entry.generation,
-          updatedAt: entry.updatedAt,
-          secret,
-          key: nextKey,
-        }),
-      );
-      writeVault(this.path, { version: 1, revision: vault.revision + 1, entries });
+      const entries = vault.entries
+        .map((entry) =>
+          encryptEntry({
+            provider: entry.provider,
+            purpose: entry.purpose,
+            connectionId: entry.connectionId,
+            label: entry.label,
+            enabled: entry.enabled,
+            priority: entry.priority,
+            generation: entry.generation,
+            updatedAt: entry.updatedAt,
+            secret: decryptEntry(entry, this.masterKey),
+            key: nextKey,
+          }),
+        )
+        .sort(compareEntries);
+      writeVault(this.path, { version: 2, revision: vault.revision + 1, entries });
       this.masterKey.fill(0);
       this.masterKey = nextKey;
     });
