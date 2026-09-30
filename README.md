@@ -68,7 +68,7 @@ Core ownership rules:
 
 ## OpenRouter hosted-model foundation
 
-Accepted pre-4E product contract: [docs/ai-provider-model-ux-contract.md](docs/ai-provider-model-ux-contract.md).
+Accepted Session 4E product contract: [docs/ai-provider-model-ux-contract.md](docs/ai-provider-model-ux-contract.md).
 
 The target normal-user Ai control is **two adjacent selectors** — `[Provider ▼] [Model ▼]` — with `+ Tambah AI` inside the provider selector. Provider/model choices may change inside one conversation and apply to the next message. Normal OpenRouter use should expose compatible catalog models without requiring model-by-model user certification; input/output token pricing should be visible while governance remains internal.
 
@@ -76,7 +76,10 @@ OpenRouter model selection resolves through an extensible governed registry. Ses
 
 PR #407 implements the first Session 4E runtime slice on top of the stabilized post-#402 baseline: fresh compatible OpenRouter models are directly available for normal-user selection/execution, catalog input/output pricing is visible, and Connect re-checks fresh catalog identity/capability/pricing before paid dispatch. Mutable aliases, stale/incompatible models, and invalid pricing remain fail-closed. The legacy per-model certification path may remain as internal/advanced evidence, but it is no longer required by the normal Ai selection flow. Session 4E remains **partial** until the accepted provider/source selector, direct onboarding, cross-provider switching, bounded context handoff, and multi-credential direction are implemented.
 
-Current Session 4D checkpoint:
+Current Session 4E checkpoint:
+[docs/verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](docs/verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+
+Prior Session 4D checkpoint:
 [docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
 
 Underlying Session 4C checkpoint:
@@ -156,12 +159,13 @@ See:
 - [docs/product-evolution-roadmap.md](docs/product-evolution-roadmap.md)
 - [docs/post-closure-product-staging-roadmap.md](docs/post-closure-product-staging-roadmap.md)
 
-## Current separate / deferred boundaries
+## Current active / separate boundaries
+
+Session 4E is **active / partial**. The current bounded next slice is the canonical adjacent `[Provider / Source ▼] [Model ▼]` Ai control surface documented in the active work plan. The already proven OpenRouter auto-execution slice must not be redone.
 
 The following remain separate explicit decisions:
 
-- Session 4E implementation under the accepted AI Provider + Model UX contract;
-- Session 4F final OpenRouter polish/closure;
+- Session 4F final OpenRouter polish/closure after Session 4E is complete;
 - **DR-2 checkpoint 2** physical-independence target selection and proof;
 - public production promotion/cutover;
 - native Google Drive integration;
