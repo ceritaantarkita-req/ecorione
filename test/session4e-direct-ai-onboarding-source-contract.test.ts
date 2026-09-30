@@ -35,9 +35,7 @@ describe("Session 4E direct Ai provider onboarding source contract", () => {
   });
 
   it("activates through the existing provider runtime boundaries", () => {
-    expect(onboarding).toContain(
-      "/api/settings/settings/providers/openrouter/model-selection",
-    );
+    expect(onboarding).toContain("/api/settings/settings/providers/openrouter/model-selection");
     expect(onboarding).toContain("/api/settings/settings/runtime");
     expect(onboarding).toContain('hostedModel: "governed"');
     expect(onboarding).toContain("refreshRouting()");
