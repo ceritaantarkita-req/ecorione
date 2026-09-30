@@ -177,6 +177,44 @@ describe("FileRuntimeSettings", () => {
     });
   });
 
+  it("mengaktifkan dynamic OpenRouter hanya lewat trusted admission dan mencabut authority saat selection berubah", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
+    const path = join(dir, "settings.json");
+    const store = new FileRuntimeSettings(path, defaults);
+
+    store.update({ hostedProvider: "openrouter" });
+    const active = store.activateOpenRouterModel!("qwen/qwen3.8-max");
+
+    expect(active.settings).toMatchObject({
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      openRouterModelSelection: "qwen/qwen3.8-max",
+      openRouterCertifiedModelId: "qwen/qwen3.8-max",
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+    expect(new FileRuntimeSettings(path, defaults).get()).toMatchObject({
+      revision: active.revision,
+      settings: {
+        openRouterCertifiedModelId: "qwen/qwen3.8-max",
+        hostedCallsEnabled: true,
+        defaultChatTarget: "hosted",
+      },
+    });
+
+    const changed = store.update({
+      openRouterModelSelection: "google/gemini-3.8-flash",
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+    expect(changed.settings.openRouterCertifiedModelId).toBeUndefined();
+    expect(changed.settings).toMatchObject({
+      openRouterModelSelection: "google/gemini-3.8-flash",
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    });
+  });
+
   it("mempertahankan Hosted aktif setelah reload bila OpenRouter memakai Recommended executable", () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
     const path = join(dir, "settings.json");
