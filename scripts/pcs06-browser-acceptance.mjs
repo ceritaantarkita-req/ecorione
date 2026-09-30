@@ -729,6 +729,29 @@ async function installApiMocks(context) {
           },
         });
       }
+      if (selectionId === "claude-sonnet-4-5-20250929") {
+        runtime = {
+          revision: runtime.revision + 1,
+          settings: {
+            ...runtime.settings,
+            hostedProvider: "openrouter",
+            hostedModel: selectionId,
+            openRouterModelSelection: selectionId,
+            hostedCallsEnabled: true,
+            defaultChatTarget: "hosted",
+          },
+        };
+        return json(route, {
+          runtime,
+          selection: {
+            id: selectionId,
+            admission: "validated-executable",
+            executable: true,
+            active: true,
+            unavailableReason: null,
+          },
+        });
+      }
       if (selectionId === "qwen/qwen3.8-max") {
         runtime = {
           revision: runtime.revision + 1,
@@ -1181,8 +1204,13 @@ async function runDesktopJourney() {
       name: "OpenRouter model quick switch",
     });
     await quickSwitch.waitFor();
-    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1) {
-      throw new Error("desktop-ai: Session 4D quick-switch must expose admitted Qwen");
+    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 0) {
+      throw new Error("desktop-ai: non-Ready Qwen must stay out of the post-402 quick-switch");
+    }
+    if (
+      (await quickSwitch.locator('option[value="claude-sonnet-4-5-20250929"]').count()) !== 1
+    ) {
+      throw new Error("desktop-ai: validated executable Claude must appear in quick-switch");
     }
     if (
       (await quickSwitch
@@ -1192,31 +1220,21 @@ async function runDesktopJourney() {
       throw new Error("desktop-ai: unavailable DeepSeek alias leaked into quick-switch");
     }
 
-    await quickSwitch.selectOption("qwen/qwen3.8-max");
+    await quickSwitch.selectOption("claude-sonnet-4-5-20250929");
     await page
-      .getByText(
-        "Qwen: Qwen3.8 Max disimpan sebagai preference. Model belum executable; chat tetap Local.",
-        { exact: true },
-      )
+      .getByText("Claude Sonnet 4.5 aktif untuk Hosted chat.", { exact: true })
       .waitFor();
-    if ((await modelSelect.inputValue()) !== "local") {
-      throw new Error(
-        "desktop-ai: dynamic OpenRouter preference must converge chat route to Local",
-      );
+    if ((await modelSelect.inputValue()) !== "hosted") {
+      throw new Error("desktop-ai: validated executable selection must keep Hosted active");
     }
     if (
-      runtime.settings.openRouterModelSelection !== "qwen/qwen3.8-max" ||
-      runtime.settings.hostedModel !== "governed" ||
-      runtime.settings.hostedCallsEnabled !== false ||
-      runtime.settings.defaultChatTarget !== "local"
+      runtime.settings.openRouterModelSelection !== "claude-sonnet-4-5-20250929" ||
+      runtime.settings.hostedModel !== "claude-sonnet-4-5-20250929" ||
+      runtime.settings.hostedCallsEnabled !== true ||
+      runtime.settings.defaultChatTarget !== "hosted"
     ) {
       throw new Error(
-        "desktop-ai: Session 4D dynamic quick-switch must preserve Session 4C fail-closed runtime semantics",
-      );
-    }
-    if (!(await modelSelect.locator('option[value="hosted"]').isDisabled())) {
-      throw new Error(
-        "desktop-ai: Hosted route must stay disabled for non-executable selection",
+        "desktop-ai: validated executable quick-switch did not activate exact model",
       );
     }
 
