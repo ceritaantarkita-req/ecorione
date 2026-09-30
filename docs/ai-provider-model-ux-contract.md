@@ -1,8 +1,29 @@
-# AI Provider + Model UX Contract — pre-Session 4E
+# AI Provider + Model UX Contract — Session 4E
 
 **Status:** ACCEPTED PRODUCT CONTRACT · 2026-09-30  
 **Scope:** Ai provider/model UX, OpenRouter execution entry, multi-credential direction, and Local↔Cloud context handoff.  
-**Implementation state:** documentation only. This file does **not** claim that the behavior below is implemented yet.
+**Implementation state:** **PARTIAL / ACTIVE**. PR #407 implements the compatible OpenRouter auto-execution + catalog-pricing slice; the full contract is not yet complete.
+
+## Implementation progress — 2026-09-30
+
+Closed / staging-verified through PR #407:
+
+- fresh compatible OpenRouter catalog models can be selected and used without normal-user per-model `Test & Enable`;
+- catalog input/output pricing is visible in the Ai OpenRouter model picker;
+- Connect re-checks fresh catalog identity, compatibility, and pricing before paid dynamic dispatch;
+- stale/incompatible models, mutable aliases, invalid pricing, generic-settings authority bypass, and no-credential/spend boundaries remain fail-closed;
+- exact runtime baseline `bb2983d59dbe292c510fbc28aae297bcb23487c4` passed merged-main CI #2556, Product Eval #1795, and actual Staging Deploy #1863.
+
+Still open in this contract:
+
+- canonical adjacent `[Provider / Source ▼] [Model ▼]` composer controls;
+- direct `+ Tambah AI` onboarding from Ai;
+- normal cross-provider switching within one conversation;
+- bounded Local↔Cloud context handoff product path;
+- multi-credential AI Connections with priority/failover.
+
+Canonical evidence:
+[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
 
 ## 1. Why this contract exists
 
