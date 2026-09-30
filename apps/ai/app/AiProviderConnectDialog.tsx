@@ -1,6 +1,23 @@
 "use client";
 
 import type { ChatOnboardingProviderOption, HostedProviderId } from "../lib/chat-model-routing";
+import type { AiProviderOnboardingFeedback as Feedback } from "./useAiProviderOnboarding";
+
+export function AiProviderOnboardingFeedback({
+  feedback,
+}: {
+  feedback: Feedback | null;
+}) {
+  if (feedback === null) return null;
+  return (
+    <p
+      className={`ai-model-switch-status ai-model-switch-status--${feedback.kind}`}
+      role={feedback.kind === "error" ? "alert" : "status"}
+    >
+      {feedback.message}
+    </p>
+  );
+}
 
 export function AiProviderConnectDialog({
   open,
