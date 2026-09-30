@@ -82,6 +82,30 @@ describe("hosted provider adapters", () => {
     ).rejects.toThrow(/usage.cost/);
   });
 
+  it("OpenRouter exact dynamic execution menolak response model yang berbeda", async () => {
+    openrouterPool.intercept({ path: "/api/v1/chat/completions", method: "POST" }).reply(200, {
+      model: "openai/gpt-5.6-sol",
+      choices: [{ message: { content: "wrong model" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 20, completion_tokens: 4, cost: 0.002 },
+    });
+
+    await expect(
+      callHostedProvider({
+        provider: "openrouter",
+        apiKey: "router-test-key",
+        model: "qwen/qwen3.8-max",
+        openRouterPriceOverride: {
+          inputPerMTok: 2,
+          outputPerMTok: 6,
+          cacheWritePerMTok: 2,
+          cacheReadPerMTok: 2,
+        },
+        openRouterAllowFallbacks: false,
+        ...base,
+      }),
+    ).rejects.toThrow(/exact model/u);
+  });
+
   it("OpenRouter menolak zero billed cost untuk pinned paid model", async () => {
     openrouterPool.intercept({ path: "/api/v1/chat/completions", method: "POST" }).reply(200, {
       model: "anthropic/claude-sonnet-4.5",
