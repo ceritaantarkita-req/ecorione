@@ -1,5 +1,9 @@
 import { Buffer } from "node:buffer";
-import { openRouterCertificationStatus, openRouterValidationPlan, type OpenRouterValidationPlan } from "./openrouter-model-certification.js";
+import {
+  openRouterCertificationStatus,
+  openRouterValidationPlan,
+  type OpenRouterValidationPlan,
+} from "./openrouter-model-certification.js";
 import type { OpenRouterCertificationReader } from "./openrouter-certification-store.js";
 import { z } from "zod";
 import {
@@ -172,7 +176,9 @@ function normalizeModel(
   const certification = certificationReader?.get(candidate.id);
   const certificationStatus = openRouterCertificationStatus({
     id: candidate.id,
-    admission: executable ? "verified-executable" : verifyOpenRouterModelAdmission(candidate).admission,
+    admission: executable
+      ? "verified-executable"
+      : verifyOpenRouterModelAdmission(candidate).admission,
     executable,
     promptPricePerToken: candidate.promptPricePerToken,
     completionPricePerToken: candidate.completionPricePerToken,
@@ -229,7 +235,9 @@ function normalizeCatalog(
   for (const model of models) {
     if (seen.has(model.id)) continue;
     seen.add(model.id);
-    normalized.push(normalizeModel(model, (counts.get(model.id) ?? 0) > 1, certificationReader));
+    normalized.push(
+      normalizeModel(model, (counts.get(model.id) ?? 0) > 1, certificationReader),
+    );
   }
   return normalized;
 }

@@ -1,6 +1,11 @@
 /** Shared OpenAI-compatible chat adapter for OpenAI and OpenRouter. */
 import { renderCoreMemoryData, type StablePrefix } from "@ecorione/context-assembly";
-import { priceFor, TOKENS_PER_PRICE_UNIT, type ModelPrice, type TokenUsage } from "@ecorione/shared-telemetry";
+import {
+  priceFor,
+  TOKENS_PER_PRICE_UNIT,
+  type ModelPrice,
+  type TokenUsage,
+} from "@ecorione/shared-telemetry";
 import { ProviderError, ProviderResponseError } from "./errors.js";
 
 export const OPENAI_COMPAT_MAX_OUTPUT_TOKENS = 4096;

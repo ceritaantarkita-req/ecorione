@@ -17,10 +17,11 @@ describe("OpenRouter model registry adapter", () => {
     );
   });
 
-  it("fails closed for pinned identities not yet admitted to OpenRouter", () => {
-    expect(() => openRouterRuntimeModel("gpt-5.6-terra")).toThrow(/belum terdaftar/u);
-    expect(() => openRouterRuntimeModel("deepseek-v3.2-exp")).toThrow(/belum terdaftar/u);
-    expect(() => openRouterRuntimeModel("z-ai/glm-5.3")).toThrow(/belum terdaftar/u);
+  it("passes through explicit canonical runtime slugs for dynamic OpenRouter models", () => {
+    expect(openRouterRuntimeModel("gpt-5.6-terra")).toBe("gpt-5.6-terra");
+    expect(openRouterRuntimeModel("deepseek/deepseek-v4-pro")).toBe("deepseek/deepseek-v4-pro");
+    expect(openRouterRuntimeModel("z-ai/glm-5.3")).toBe("z-ai/glm-5.3");
+    expect(() => openRouterRuntimeModel("~deepseek/latest")).toThrow(/tidak valid/u);
   });
 
   it("keeps the existing conservative reservation path intact", () => {

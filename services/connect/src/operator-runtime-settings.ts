@@ -48,7 +48,10 @@ export function withHostedOperatorGate(
       ? {}
       : {
           certifyOpenRouterModel(modelId) {
-            return applyOperatorGate(runtimeSettings.certifyOpenRouterModel!(modelId), hostedCallsAllowed);
+            return applyOperatorGate(
+              runtimeSettings.certifyOpenRouterModel!(modelId),
+              hostedCallsAllowed,
+            );
           },
         }),
   };

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 describe("PCS-03 Local AI resilience source contract", () => {
   const settings = [
     readFileSync("apps/ai/app/settings/page.tsx", "utf8"),
+    readFileSync("apps/ai/app/settings/SettingsProviderSection.tsx", "utf8"),
     readFileSync("apps/ai/app/settings/useSettingsController.ts", "utf8"),
   ].join("\n");
   const chat = readFileSync("apps/ai/app/page.tsx", "utf8");
@@ -14,7 +15,7 @@ describe("PCS-03 Local AI resilience source contract", () => {
     expect(settings).toContain("Not connected");
     expect(settings).toContain("/api/settings/settings/local-runtime/status");
     expect(settings).toContain("OpenAI-compatible runtime");
-    expect(settings).toContain("ECORIONE tidak mewajibkan Ollama");
+    expect(settings).toContain("Ollama native runtime");
   });
 
   it("discovers a candidate before saving and keeps identity controls governed", () => {

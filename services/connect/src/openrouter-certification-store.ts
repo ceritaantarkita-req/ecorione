@@ -1,4 +1,11 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname } from "node:path";
 import { z } from "zod";
 
@@ -18,7 +25,11 @@ const RecordSchema = z
 export type OpenRouterCertificationRecord = z.infer<typeof RecordSchema>;
 
 const StoreSchema = z
-  .object({ version: z.literal(1), revision: z.number().int().nonnegative(), records: z.array(RecordSchema) })
+  .object({
+    version: z.literal(1),
+    revision: z.number().int().nonnegative(),
+    records: z.array(RecordSchema),
+  })
   .strict();
 
 type Store = z.infer<typeof StoreSchema>;
@@ -52,9 +63,10 @@ export class FileOpenRouterCertificationStore implements OpenRouterCertification
   record(input: OpenRouterCertificationRecord): void {
     const record = RecordSchema.parse(input);
     const prior = this.read();
-    const records = [...prior.records.filter((item) => item.modelId !== record.modelId), record].sort(
-      (left, right) => left.modelId.localeCompare(right.modelId),
-    );
+    const records = [
+      ...prior.records.filter((item) => item.modelId !== record.modelId),
+      record,
+    ].sort((left, right) => left.modelId.localeCompare(right.modelId));
     const next = { version: 1 as const, revision: prior.revision + 1, records };
     mkdirSync(dirname(this.path), { recursive: true });
     const tmp = `${this.path}.tmp-${String(process.pid)}`;

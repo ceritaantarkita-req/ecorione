@@ -25,8 +25,15 @@ import {
   type ProviderCredentialReader,
 } from "./credential-vault.js";
 import { registerConnectControlRoutes } from "./control-http.js";
-import { OpenRouterModelDiscovery, OpenRouterModelDiscoveryError, type OpenRouterModelDiscoveryReader } from "./openrouter-model-discovery.js";
-import type { OpenRouterCertificationAdmin, OpenRouterCertificationReader } from "./openrouter-certification-store.js";
+import {
+  OpenRouterModelDiscovery,
+  OpenRouterModelDiscoveryError,
+  type OpenRouterModelDiscoveryReader,
+} from "./openrouter-model-discovery.js";
+import type {
+  OpenRouterCertificationAdmin,
+  OpenRouterCertificationReader,
+} from "./openrouter-certification-store.js";
 import { registerOutboundMcpRoutes } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { GOVERNED_HOSTED_MODEL, type HostedModelPreference } from "./hosted-model-catalog.js";
@@ -189,7 +196,9 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
   const cache = options.cache ?? new ExactMatchCache();
   const openRouterModelDiscovery =
     options.openRouterModelDiscovery ??
-    new OpenRouterModelDiscovery({ certificationReader: options.openRouterCertificationReader });
+    new OpenRouterModelDiscovery({
+      certificationReader: options.openRouterCertificationReader,
+    });
   const credentialTestTimeoutMs =
     options.credentialTestTimeoutMs ?? DEFAULT_CREDENTIAL_TEST_TIMEOUT_MS;
   const defaults: RuntimeSettings = {
@@ -216,33 +225,33 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         ? options.openRouterCertificationReader?.get(selection)
         : undefined;
     return {
-    credentialVault: options.credentialVault,
-    hostedProvider: runtime.hostedProvider,
-    hostedModel: runtime.hostedModel,
-    ...(certification === undefined
-      ? {}
-      : {
-          certifiedOpenRouterModel: {
-            id: certification.modelId,
-            promptPricePerToken: certification.promptPricePerToken,
-            completionPricePerToken: certification.completionPricePerToken,
-          },
-        }),
-    anthropicApiKey: options.anthropicApiKey,
-    openrouterApiKey: options.openrouterApiKey,
-    openaiApiKey: options.openaiApiKey,
-    nvidiaApiKey: options.nvidiaApiKey,
-    localRuntime: runtime.localRuntime,
-    localBaseUrl: runtime.localBaseUrl,
-    localModelTag: runtime.localModelTag,
-    localModelDigest: runtime.localModelDigest,
-    cache,
-    hostedCallsEnabled: runtime.hostedCallsEnabled,
-    spendBudget: options.spendBudgetFactory?.(runtime) ?? options.spendBudget,
-    hostedSpendUnlimited:
-      options.hostedSpendUnlimitedResolver?.(runtime) ?? options.hostedSpendUnlimited,
-    resolveLocalProvenance: options.resolveLocalProvenance,
-  };
+      credentialVault: options.credentialVault,
+      hostedProvider: runtime.hostedProvider,
+      hostedModel: runtime.hostedModel,
+      ...(certification === undefined
+        ? {}
+        : {
+            certifiedOpenRouterModel: {
+              id: certification.modelId,
+              promptPricePerToken: certification.promptPricePerToken,
+              completionPricePerToken: certification.completionPricePerToken,
+            },
+          }),
+      anthropicApiKey: options.anthropicApiKey,
+      openrouterApiKey: options.openrouterApiKey,
+      openaiApiKey: options.openaiApiKey,
+      nvidiaApiKey: options.nvidiaApiKey,
+      localRuntime: runtime.localRuntime,
+      localBaseUrl: runtime.localBaseUrl,
+      localModelTag: runtime.localModelTag,
+      localModelDigest: runtime.localModelDigest,
+      cache,
+      hostedCallsEnabled: runtime.hostedCallsEnabled,
+      spendBudget: options.spendBudgetFactory?.(runtime) ?? options.spendBudget,
+      hostedSpendUnlimited:
+        options.hostedSpendUnlimitedResolver?.(runtime) ?? options.hostedSpendUnlimited,
+      resolveLocalProvenance: options.resolveLocalProvenance,
+    };
   };
 
   // Dynamic OpenRouter certificates bind to the exact catalog pricing identity.
@@ -319,12 +328,18 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     }
     let discovery;
     try {
-      discovery = await openRouterModelDiscovery.list({ q: selectionId, limit: 100, forceRefresh: true });
+      discovery = await openRouterModelDiscovery.list({
+        q: selectionId,
+        limit: 100,
+        forceRefresh: true,
+      });
     } catch (error) {
       if (error instanceof OpenRouterModelDiscoveryError) {
         throw new HttpError(
           error.kind === "unreachable" ? 503 : 502,
-          error.kind === "unreachable" ? "OPENROUTER_CATALOG_UNAVAILABLE" : "OPENROUTER_CATALOG_INVALID",
+          error.kind === "unreachable"
+            ? "OPENROUTER_CATALOG_UNAVAILABLE"
+            : "OPENROUTER_CATALOG_INVALID",
           error.message,
         );
       }
@@ -333,7 +348,11 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const candidate = discovery.models.find(
       (model) => model.selectionId === selectionId && model.selectable,
     );
-    if (candidate === undefined || candidate.validationPlan === null || candidate.validationPlan === undefined) {
+    if (
+      candidate === undefined ||
+      candidate.validationPlan === null ||
+      candidate.validationPlan === undefined
+    ) {
       throw new HttpError(
         409,
         "OPENROUTER_MODEL_NOT_VALIDATABLE",
@@ -367,7 +386,10 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         body,
         controller.signal,
       );
-      if (result.responseModel !== candidate.id || !result.reply.includes("ECORIONE_MODEL_VALIDATION_OK")) {
+      if (
+        result.responseModel !== candidate.id ||
+        !result.reply.includes("ECORIONE_MODEL_VALIDATION_OK")
+      ) {
         throw new HttpError(
           502,
           "OPENROUTER_MODEL_VALIDATION_FAILED",
@@ -379,7 +401,9 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
         certifiedAt: nowIso(),
         catalogFetchedAt: discovery.fetchedAt,
         responseModel: result.responseModel,
-        ...(result.routingProvider === undefined ? {} : { routingProvider: result.routingProvider }),
+        ...(result.routingProvider === undefined
+          ? {}
+          : { routingProvider: result.routingProvider }),
         latencyMs: performance.now() - started,
         billedCostUsd: result.cost.actualUsd,
         promptPricePerToken: candidate.promptPricePerToken!,

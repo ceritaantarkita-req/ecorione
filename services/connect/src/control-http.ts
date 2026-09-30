@@ -185,7 +185,11 @@ export function registerConnectControlRoutes(
       parseOrBadRequest(OpenRouterModelValidationBodySchema, req.body);
       const selectionId = z.string().trim().min(1).max(256).parse(req.params.selectionId);
       if (options.validateOpenRouterModel === undefined) {
-        throw new HttpError(503, "OPENROUTER_VALIDATION_UNAVAILABLE", "Validasi model OpenRouter belum dikonfigurasi.");
+        throw new HttpError(
+          503,
+          "OPENROUTER_VALIDATION_UNAVAILABLE",
+          "Validasi model OpenRouter belum dikonfigurasi.",
+        );
       }
       return options.validateOpenRouterModel(selectionId);
     },

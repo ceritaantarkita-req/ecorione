@@ -671,6 +671,24 @@ async function installApiMocks(context) {
       });
     }
 
+    if (path === "/api/settings/settings/spend-status" && method === "GET") {
+      return json(route, {
+        operatorGateOpen: true,
+        policy: {
+          dailyUsd: 0.1,
+          monthlyUsd: 1,
+          unlimited: false,
+        },
+        budget: {
+          dailyLimitUsd: 0.1,
+          monthlyLimitUsd: 1,
+          dailyCommittedUsd: 0,
+          monthlyCommittedUsd: 0,
+          unsettledReservations: 0,
+        },
+      });
+    }
+
     if (path === "/api/settings/settings/runtime" && method === "GET") {
       return json(route, runtime);
     }
@@ -705,6 +723,29 @@ async function installApiMocks(context) {
           selection: {
             id: selectionId,
             admission: "governed",
+            executable: true,
+            active: true,
+            unavailableReason: null,
+          },
+        });
+      }
+      if (selectionId === "claude-sonnet-4-5-20250929") {
+        runtime = {
+          revision: runtime.revision + 1,
+          settings: {
+            ...runtime.settings,
+            hostedProvider: "openrouter",
+            hostedModel: selectionId,
+            openRouterModelSelection: selectionId,
+            hostedCallsEnabled: true,
+            defaultChatTarget: "hosted",
+          },
+        };
+        return json(route, {
+          runtime,
+          selection: {
+            id: selectionId,
+            admission: "validated-executable",
             executable: true,
             active: true,
             unavailableReason: null,
@@ -1146,8 +1187,8 @@ async function runDesktopJourney() {
     if ((await modelSelect.inputValue()) !== "hosted") {
       throw new Error("desktop-ai: replayed hosted conversation did not restore Hosted route");
     }
-    if (!(await modelSelect.isDisabled())) {
-      throw new Error("desktop-ai: route selector must stay locked after replayed turns");
+    if (await modelSelect.isDisabled()) {
+      throw new Error("desktop-ai: route selector must remain switchable after replayed turns");
     }
     const localOption = modelSelect.locator('option[value="local"]');
     if (!(await localOption.isDisabled())) {
@@ -1163,8 +1204,13 @@ async function runDesktopJourney() {
       name: "OpenRouter model quick switch",
     });
     await quickSwitch.waitFor();
-    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1) {
-      throw new Error("desktop-ai: Session 4D quick-switch must expose admitted Qwen");
+    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 0) {
+      throw new Error("desktop-ai: non-Ready Qwen must stay out of the post-402 quick-switch");
+    }
+    if (
+      (await quickSwitch.locator('option[value="claude-sonnet-4-5-20250929"]').count()) !== 1
+    ) {
+      throw new Error("desktop-ai: validated executable Claude must appear in quick-switch");
     }
     if (
       (await quickSwitch
@@ -1174,31 +1220,21 @@ async function runDesktopJourney() {
       throw new Error("desktop-ai: unavailable DeepSeek alias leaked into quick-switch");
     }
 
-    await quickSwitch.selectOption("qwen/qwen3.8-max");
+    await quickSwitch.selectOption("claude-sonnet-4-5-20250929");
     await page
-      .getByText(
-        "Qwen: Qwen3.8 Max disimpan sebagai preference. Model belum executable; chat tetap Local.",
-        { exact: true },
-      )
+      .getByText("Claude Sonnet 4.5 aktif untuk Hosted chat.", { exact: true })
       .waitFor();
-    if ((await modelSelect.inputValue()) !== "local") {
-      throw new Error(
-        "desktop-ai: dynamic OpenRouter preference must converge chat route to Local",
-      );
+    if ((await modelSelect.inputValue()) !== "hosted") {
+      throw new Error("desktop-ai: validated executable selection must keep Hosted active");
     }
     if (
-      runtime.settings.openRouterModelSelection !== "qwen/qwen3.8-max" ||
-      runtime.settings.hostedModel !== "governed" ||
-      runtime.settings.hostedCallsEnabled !== false ||
-      runtime.settings.defaultChatTarget !== "local"
+      runtime.settings.openRouterModelSelection !== "claude-sonnet-4-5-20250929" ||
+      runtime.settings.hostedModel !== "claude-sonnet-4-5-20250929" ||
+      runtime.settings.hostedCallsEnabled !== true ||
+      runtime.settings.defaultChatTarget !== "hosted"
     ) {
       throw new Error(
-        "desktop-ai: Session 4D dynamic quick-switch must preserve Session 4C fail-closed runtime semantics",
-      );
-    }
-    if (!(await modelSelect.locator('option[value="hosted"]').isDisabled())) {
-      throw new Error(
-        "desktop-ai: Hosted route must stay disabled for non-executable selection",
+        "desktop-ai: validated executable quick-switch did not activate exact model",
       );
     }
 
@@ -1416,12 +1452,19 @@ async function runDesktopJourney() {
 
     const anthropicCard = page.locator("article").filter({ hasText: "Anthropic" }).first();
     await anthropicCard.getByRole("button", { name: "Connect", exact: true }).click();
-    await page.getByRole("heading", { name: "Anthropic", exact: true }).waitFor();
-    await page.getByPlaceholder("Paste API key").fill("stub-credential-pcs06");
-    await page.getByRole("button", { name: "Test API key", exact: true }).click();
-    await page.getByText(/Credential test PASS:/).waitFor();
-    await page.getByRole("button", { name: "Save & activate", exact: true }).click();
-    await page.getByText(/API key terverifikasi, terenkripsi/).waitFor();
+    const connectDialog = page.getByRole("dialog", {
+      name: "Connect Anthropic",
+      exact: true,
+    });
+    await connectDialog.waitFor();
+    await connectDialog.getByPlaceholder("Paste API key").fill("stub-credential-pcs06");
+    await connectDialog.getByRole("button", { name: "Test API key", exact: true }).click();
+    await connectDialog.getByText(/Credential test PASS:/).waitFor();
+    await connectDialog.getByRole("button", { name: "Save & activate", exact: true }).click();
+    await page
+      .getByText(/API key terverifikasi, terenkripsi/)
+      .first()
+      .waitFor();
 
     const defaultSection = page
       .getByRole("heading", { name: "Default provider & model", exact: true })
@@ -1440,7 +1483,7 @@ async function runDesktopJourney() {
     await openRouterSearch.fill("qwen");
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
     await page.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
-    await page.getByText("Selectable", { exact: true }).waitFor();
+    await page.getByText("Perlu test", { exact: true }).waitFor();
     if (
       (await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 1
     ) {
@@ -1473,7 +1516,7 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
     await page.getByText("DeepSeek V4 Flash Latest", { exact: true }).waitFor();
     await page.getByText("Unavailable", { exact: true }).waitFor();
-    await page.getByText(/reason alias mutable/).waitFor();
+    await page.getByText(/alasan alias mutable/).waitFor();
     if (
       (await defaultSelects
         .nth(1)

@@ -9,7 +9,6 @@ import {
   recordCall,
   tokenUsage,
   type CallCostRecord,
-  type PinnedModelId,
   type TokenUsage,
   type ModelPrice,
 } from "@ecorione/shared-telemetry";
@@ -52,11 +51,13 @@ export interface CompleteDeps {
   readonly openaiApiKey?: string | undefined;
   readonly nvidiaApiKey?: string | undefined;
   /** A dynamic OpenRouter model may execute only when Connect resolved durable validation evidence. */
-  readonly certifiedOpenRouterModel?: {
-    readonly id: string;
-    readonly promptPricePerToken: string;
-    readonly completionPricePerToken: string;
-  } | undefined;
+  readonly certifiedOpenRouterModel?:
+    | {
+        readonly id: string;
+        readonly promptPricePerToken: string;
+        readonly completionPricePerToken: string;
+      }
+    | undefined;
   /** Exact test reservation derived from current catalog price; never used by normal chat. */
   readonly hostedReservationUsdOverride?: number | undefined;
   /** Internal health/credential-probe cap; normal chat leaves this undefined. */
@@ -257,13 +258,15 @@ export async function complete(
     }
 
     const openRouterPriceOverride: ModelPrice | undefined =
-      hostedProvider === "openrouter" &&
-      deps.certifiedOpenRouterModel?.id === decision.model
+      hostedProvider === "openrouter" && deps.certifiedOpenRouterModel?.id === decision.model
         ? {
             inputPerMTok: Number(deps.certifiedOpenRouterModel.promptPricePerToken) * 1_000_000,
-            outputPerMTok: Number(deps.certifiedOpenRouterModel.completionPricePerToken) * 1_000_000,
-            cacheWritePerMTok: Number(deps.certifiedOpenRouterModel.promptPricePerToken) * 1_000_000,
-            cacheReadPerMTok: Number(deps.certifiedOpenRouterModel.promptPricePerToken) * 1_000_000,
+            outputPerMTok:
+              Number(deps.certifiedOpenRouterModel.completionPricePerToken) * 1_000_000,
+            cacheWritePerMTok:
+              Number(deps.certifiedOpenRouterModel.promptPricePerToken) * 1_000_000,
+            cacheReadPerMTok:
+              Number(deps.certifiedOpenRouterModel.promptPricePerToken) * 1_000_000,
           }
         : undefined;
     const providerInput = {

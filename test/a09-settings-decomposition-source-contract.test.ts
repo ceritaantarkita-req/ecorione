@@ -4,6 +4,10 @@ import { describe, expect, it } from "vitest";
 describe("A-09 Settings frontend decomposition contract", () => {
   const page = readFileSync("apps/ai/app/settings/page.tsx", "utf8");
   const controller = readFileSync("apps/ai/app/settings/useSettingsController.ts", "utf8");
+  const providerSection = readFileSync(
+    "apps/ai/app/settings/SettingsProviderSection.tsx",
+    "utf8",
+  );
 
   it("keeps the Settings presentation page below its audited concentration baseline", () => {
     expect(page.length).toBeLessThan(30_000);
@@ -20,7 +24,7 @@ describe("A-09 Settings frontend decomposition contract", () => {
   });
 
   it("keeps product sections in the presentation boundary", () => {
-    expect(page).toContain("<h2>AI Providers</h2>");
+    expect(providerSection).toContain("<h2>AI Providers</h2>");
     expect(page).toContain("<h2>Default provider & model</h2>");
     expect(page).toContain("<h2>Credential vault</h2>");
     expect(page).toContain("<h2>MCP servers</h2>");

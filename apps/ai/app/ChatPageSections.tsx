@@ -131,9 +131,7 @@ export function OpenRouterModelQuickSwitch({
         {models.map((model) => (
           <option key={model.id} value={model.id}>
             {model.id === "governed" ? "OpenRouter \u00b7 Recommended" : model.displayName}
-            {!model.executable
-              ? " \u00b7 Perlu test di Settings"
-              : " \u00b7 Siap Cloud"}
+            {!model.executable ? " \u00b7 Perlu test di Settings" : " \u00b7 Siap Cloud"}
           </option>
         ))}
       </select>

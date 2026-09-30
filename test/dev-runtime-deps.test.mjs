@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const packageJson = JSON.parse(
   await readFile(new URL("../package.json", import.meta.url), "utf8"),
 );
+const devEntrypoint = await readFile(new URL("../scripts/dev.mjs", import.meta.url), "utf8");
 
 describe("local dev runtime dependency bootstrap", () => {
   it("builds compiled workspace dependencies before every local dev entrypoint", () => {
@@ -13,7 +14,10 @@ describe("local dev runtime dependency bootstrap", () => {
       "tsc --build packages/shared-schema packages/shared-telemetry packages/context-assembly packages/shared-server packages/shared-ui",
     );
 
-    for (const scriptName of ["dev", "dev:phase2", "dev:phase3", "dev:phase4"]) {
+    expect(packageJson.scripts?.dev).toBe("node --env-file=.env scripts/dev.mjs");
+    expect(devEntrypoint).toContain('run(["run", "build:runtime-deps"])');
+
+    for (const scriptName of ["dev:phase2", "dev:phase3", "dev:phase4"]) {
       expect(packageJson.scripts?.[scriptName]).toMatch(/^pnpm run build:runtime-deps && /);
     }
   });

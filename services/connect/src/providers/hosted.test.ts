@@ -164,8 +164,9 @@ describe("hosted provider adapters", () => {
     );
   });
 
-  it("unsupported provider/model mapping gagal eksplisit", () => {
-    expect(() => openRouterRuntimeModel("z-ai/glm-5.3")).toThrow(/OpenRouter/);
+  it("keeps direct-provider mappings strict while OpenRouter accepts canonical slugs", () => {
+    expect(openRouterRuntimeModel("z-ai/glm-5.3")).toBe("z-ai/glm-5.3");
+    expect(() => openRouterRuntimeModel("~z-ai/latest")).toThrow(/tidak valid/u);
     expect(() => openAiRuntimeModel("claude-sonnet-4-5-20250929")).toThrow(/mapping OpenAI/);
     expect(() => nvidiaRuntimeModel("gpt-5.6-terra")).toThrow(/mapping NVIDIA NIM/);
   });
