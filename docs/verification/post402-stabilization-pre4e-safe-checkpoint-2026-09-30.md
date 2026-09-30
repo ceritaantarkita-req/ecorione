@@ -28,11 +28,11 @@ After merge to `main` as `d32527cb...`:
 
 - Product Eval #1779 — PASS;
 - CI #2540 — PASS;
-- Staging Deploy #1835 was triggered after the green gates.
+- Staging Deploy #1835 — PASS.
 
-At the time this checkpoint text was authored, the actual deploy job in #1835 was still running. Therefore this document does **not** claim a new staging deployment until that job is confirmed PASS.
+Staging Deploy #1835 deployed exact SHA `d32527cb21e3b7209b28b109083be00671464b2b` as image `staging-d32527cb21e3`. Public smoke passed, Operations reported `healthy: true`, all **15/15** configured services were running, the host SHA matched exactly, and capacity stabilized at **27.41 GiB free**.
 
-The previous actual staging-verified OpenRouter runtime remains PR #400 / `9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7` until superseded by explicit deploy proof.
+The current actual staging-verified runtime baseline is therefore `d32527cb...`.
 
 ## Product direction after stabilization
 
