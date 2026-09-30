@@ -8,6 +8,7 @@ import {
 } from "./hosted-model-catalog.js";
 import { executableHostedModelRegistryEntry } from "./hosted-model-registry.js";
 import { DEFAULT_HOSTED_PROVIDER, type HostedProviderId } from "./provider-types.js";
+import { CustomProviderPolicyError } from "./providers/errors.js";
 
 export type RouteTarget = "hosted" | "local";
 
@@ -44,6 +45,10 @@ function hostedModel(provider: HostedProviderId, sensitivity: Sensitivity): Pinn
       return sensitivity === "RESTRICTED" ? "gpt-5.6-sol" : "gpt-5.6-terra";
     case "nvidia":
       return "z-ai/glm-5.3";
+    case "custom-openai":
+      throw new CustomProviderPolicyError(
+        "Custom provider tidak memiliki governed default model.",
+      );
   }
 }
 
@@ -62,6 +67,19 @@ export function route(req: RouteRequest): RouteDecision {
   }
   const provider = req.hostedProvider ?? DEFAULT_HOSTED_PROVIDER;
   const preference = req.hostedModel ?? GOVERNED_HOSTED_MODEL;
+  if (provider === "custom-openai") {
+    if (req.sensitivity === "RESTRICTED") {
+      throw new CustomProviderPolicyError(
+        "Data RESTRICTED tidak boleh dikirim ke custom provider pada Session 4E.",
+      );
+    }
+    if (preference === GOVERNED_HOSTED_MODEL) {
+      throw new CustomProviderPolicyError(
+        "Custom provider belum memiliki model tervalidasi.",
+      );
+    }
+    return { model: preference, routeReason: "selected-hosted" };
+  }
   if (!hostedModelSupported(provider, preference)) {
     throw new Error(`Model ${preference} belum diverifikasi untuk provider ${provider}.`);
   }
