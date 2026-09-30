@@ -97,9 +97,9 @@ export function OpenRouterDiscoveryPanel({
         )}
       </div>
       <p className={styles.muted}>
-        Harga input dan output berasal dari katalog OpenRouter per 1 juta token. Model baru
-        baru menjadi Ready setelah test yang kamu konfirmasi. Test memakai reservasi maksimal
-        USD 0.07 dan tetap memakai budget Cloud AI kamu.
+        Harga input dan output berasal dari katalog OpenRouter per 1 juta token. Model baru baru
+        menjadi Ready setelah test yang kamu konfirmasi. Test memakai reservasi maksimal USD
+        0.07 dan tetap memakai budget Cloud AI kamu.
       </p>
       <div className={styles.discoveryFilters}>
         <label className={styles.connectField}>
@@ -122,7 +122,11 @@ export function OpenRouterDiscoveryPanel({
         </label>
       </div>
       <div className={styles.actions}>
-        <button type="button" disabled={pendingAction !== null} onClick={() => onDiscover(false)}>
+        <button
+          type="button"
+          disabled={pendingAction !== null}
+          onClick={() => onDiscover(false)}
+        >
           {pendingAction === "openrouter-discovery" ? "Loading…" : "Search catalog"}
         </button>
         <button
@@ -164,7 +168,9 @@ export function OpenRouterDiscoveryPanel({
                         <strong>{model.displayName}</strong>
                         <code>{model.id}</code>
                       </div>
-                      <span className={model.executable ? styles.activeBadge : styles.statusBadge}>
+                      <span
+                        className={model.executable ? styles.activeBadge : styles.statusBadge}
+                      >
                         {admissionLabel(model)}
                       </span>
                     </div>
@@ -193,7 +199,9 @@ export function OpenRouterDiscoveryPanel({
                       {model.mutableAlias ? <span>mutable alias</span> : null}
                       {model.unavailableReason ? (
                         <span>
-                          alasan {admissionReasonLabels[model.unavailableReason] ?? model.unavailableReason}
+                          alasan{" "}
+                          {admissionReasonLabels[model.unavailableReason] ??
+                            model.unavailableReason}
                         </span>
                       ) : null}
                     </div>
@@ -204,7 +212,8 @@ export function OpenRouterDiscoveryPanel({
                           disabled={pendingAction !== null}
                           onClick={() => onValidate(model.selectionId!)}
                         >
-                          Test &amp; enable (maks. USD {model.validationPlan!.capUsd.toFixed(2)})
+                          Test &amp; enable (maks. USD {model.validationPlan!.capUsd.toFixed(2)}
+                          )
                         </button>
                       </div>
                     ) : null}

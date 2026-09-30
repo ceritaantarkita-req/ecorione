@@ -91,7 +91,9 @@ const openRouterCertificationPath = resolveRepoRuntimePath(
   process.env.ECORIONE_OPENROUTER_CERTIFICATION_PATH,
   "data/connect-openrouter-certifications.json",
 );
-const openRouterCertificationStore = new FileOpenRouterCertificationStore(openRouterCertificationPath);
+const openRouterCertificationStore = new FileOpenRouterCertificationStore(
+  openRouterCertificationPath,
+);
 
 const runtimeSettingsPath = resolveRepoRuntimePath(
   REPO_ROOT,

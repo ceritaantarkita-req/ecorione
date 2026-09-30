@@ -131,7 +131,12 @@ export function buildOpenRouterQuickSwitchModels(
 
   for (const model of discovery?.models ?? []) {
     // Chat only lists models already proven Ready. Models that are merely catalogued are tested from Settings first.
-    if (!model.selectable || !model.executable || model.selectionId === null || seen.has(model.selectionId))
+    if (
+      !model.selectable ||
+      !model.executable ||
+      model.selectionId === null ||
+      seen.has(model.selectionId)
+    )
       continue;
     seen.add(model.selectionId);
     models.push({

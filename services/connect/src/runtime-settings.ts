@@ -122,7 +122,11 @@ export type RuntimeSettings = Omit<
   readonly localModelDigest?: LocalModelDigest | null | undefined;
 };
 
-export const RuntimeSettingsPatchSchema = RuntimeSettingsObjectSchema.omit({ openRouterCertifiedModelId: true }).partial().strict();
+export const RuntimeSettingsPatchSchema = RuntimeSettingsObjectSchema.omit({
+  openRouterCertifiedModelId: true,
+})
+  .partial()
+  .strict();
 export type RuntimeSettingsPatch = z.infer<typeof RuntimeSettingsPatchSchema>;
 
 export interface RuntimeSettingsSnapshot {

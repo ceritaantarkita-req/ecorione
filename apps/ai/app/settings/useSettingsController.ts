@@ -430,7 +430,9 @@ export function useSettingsController(initialWorkspaceId: string) {
       `Test ${candidate.displayName}? Reservasi maksimum USD ${candidate.validationPlan.reservationUsd.toFixed(2)} (batas test USD ${candidate.validationPlan.capUsd.toFixed(2)}). Biaya aktual OpenRouter dan budget akan dicatat.`,
     );
     if (!confirmed || !beginAction("openrouter-model-validation")) return;
-    setStatus(`Testing ${candidate.displayName} dengan batas USD ${candidate.validationPlan.capUsd.toFixed(2)}…`);
+    setStatus(
+      `Testing ${candidate.displayName} dengan batas USD ${candidate.validationPlan.capUsd.toFixed(2)}…`,
+    );
     try {
       const result = await json<{
         pass: boolean;
@@ -785,7 +787,9 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   async function runCanary(target: "local" | "hosted") {
     if (!beginAction(`canary-${target}`)) return;
-    setStatus(target === "local" ? "Running local canaryÃ¢â‚¬Â¦" : "Running hosted canaryÃ¢â‚¬Â¦");
+    setStatus(
+      target === "local" ? "Running local canaryÃ¢â‚¬Â¦" : "Running hosted canaryÃ¢â‚¬Â¦",
+    );
     const testedProvider = runtime?.settings.hostedProvider;
     try {
       const result = await json<{

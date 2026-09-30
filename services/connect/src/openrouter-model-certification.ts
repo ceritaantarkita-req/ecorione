@@ -2,7 +2,8 @@ import { priceFor } from "@ecorione/shared-telemetry";
 import { hostedModelRegistryEntry } from "./hosted-model-registry.js";
 import type { OpenRouterAdmissionStatus } from "./openrouter-model-admission.js";
 
-export type OpenRouterCertificationStatus = "ready" | "preparing" | "unavailable" | "discovered";
+export type OpenRouterCertificationStatus =
+  "ready" | "preparing" | "unavailable" | "discovered";
 
 /** Maximum pre-dispatch reservation shown to the user for one explicit model validation. */
 export const OPENROUTER_MODEL_VALIDATION_CAP_USD = 0.07;
@@ -29,7 +30,9 @@ export class OpenRouterValidationPlanError extends Error {
 function decimalPrice(value: string | null): number {
   const parsed = value === null ? Number.NaN : Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) {
-    throw new OpenRouterValidationPlanError("Harga input/output OpenRouter tidak valid untuk model ini.");
+    throw new OpenRouterValidationPlanError(
+      "Harga input/output OpenRouter tidak valid untuk model ini.",
+    );
   }
   return parsed;
 }
@@ -92,21 +95,33 @@ export function openRouterCertificationStatus(input: {
   readonly executable: boolean;
   readonly promptPricePerToken: string | null;
   readonly completionPricePerToken: string | null;
-  readonly certification?: {
-    readonly modelId: string;
-    readonly promptPricePerToken: string;
-    readonly completionPricePerToken: string;
-  } | undefined;
+  readonly certification?:
+    | {
+        readonly modelId: string;
+        readonly promptPricePerToken: string;
+        readonly completionPricePerToken: string;
+      }
+    | undefined;
 }): OpenRouterCertificationStatus {
   if (input.executable) return "ready";
   if (
     input.certification?.modelId === input.id &&
-    samePrice(Number(input.certification.promptPricePerToken), Number(input.promptPricePerToken)) &&
-    samePrice(Number(input.certification.completionPricePerToken), Number(input.completionPricePerToken))
-  ) return "ready";
+    samePrice(
+      Number(input.certification.promptPricePerToken),
+      Number(input.promptPricePerToken),
+    ) &&
+    samePrice(
+      Number(input.certification.completionPricePerToken),
+      Number(input.completionPricePerToken),
+    )
+  )
+    return "ready";
   if (input.admission === "unavailable") return "unavailable";
   const candidate = hostedModelRegistryEntry("openrouter", input.id);
-  if (candidate?.verification !== "execution-candidate" || candidate.pricing.costModel === null) {
+  if (
+    candidate?.verification !== "execution-candidate" ||
+    candidate.pricing.costModel === null
+  ) {
     return "discovered";
   }
   const price = priceFor(candidate.pricing.costModel);

@@ -69,12 +69,11 @@ describe("OpenRouter certification status", () => {
   });
 
   it("refuses a model that cannot produce even the minimum validation reply within the cap", () => {
-    expect(
-      () =>
-        openRouterValidationPlan({
-          promptPricePerToken: "0.000003",
-          completionPricePerToken: "0.01",
-        }),
+    expect(() =>
+      openRouterValidationPlan({
+        promptPricePerToken: "0.000003",
+        completionPricePerToken: "0.01",
+      }),
     ).toThrow(/USD 0.07/u);
   });
   it("reports Ready only when stored validation evidence matches the current catalog price", () => {

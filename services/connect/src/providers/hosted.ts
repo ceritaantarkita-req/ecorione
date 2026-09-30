@@ -59,8 +59,12 @@ export function callHostedProvider(
     userMessage: input.userMessage,
     ...(input.maxOutputTokens === undefined ? {} : { maxOutputTokens: input.maxOutputTokens }),
     ...(input.reasoningEffort === undefined ? {} : { reasoningEffort: input.reasoningEffort }),
-    ...(input.openRouterPriceOverride === undefined ? {} : { priceOverride: input.openRouterPriceOverride }),
-    ...(input.openRouterAllowFallbacks === undefined ? {} : { allowFallbacks: input.openRouterAllowFallbacks }),
+    ...(input.openRouterPriceOverride === undefined
+      ? {}
+      : { priceOverride: input.openRouterPriceOverride }),
+    ...(input.openRouterAllowFallbacks === undefined
+      ? {}
+      : { allowFallbacks: input.openRouterAllowFallbacks }),
   };
   switch (input.provider) {
     case "anthropic":

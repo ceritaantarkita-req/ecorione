@@ -70,7 +70,8 @@ export function route(req: RouteRequest): RouteDecision {
       model: hostedModel(provider, req.sensitivity),
       routeReason: "sensitivity-restricted",
     };
-  }  if (provider === "openrouter" && req.certifiedOpenRouterModel !== undefined) {
+  }
+  if (provider === "openrouter" && req.certifiedOpenRouterModel !== undefined) {
     return { model: req.certifiedOpenRouterModel, routeReason: "selected-hosted" };
   }
   if (preference !== GOVERNED_HOSTED_MODEL) {

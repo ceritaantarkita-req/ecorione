@@ -12,7 +12,12 @@ import {
 import { FileCredentialVault } from "./credential-vault.js";
 import { FileRuntimeSettings } from "./runtime-settings.js";
 
-function fixture(options: { openRouterModelDiscovery?: OpenRouterModelDiscoveryReader; validateOpenRouterModel?: (selectionId: string) => Promise<unknown> } = {}) {
+function fixture(
+  options: {
+    openRouterModelDiscovery?: OpenRouterModelDiscoveryReader;
+    validateOpenRouterModel?: (selectionId: string) => Promise<unknown>;
+  } = {},
+) {
   const dir = mkdtempSync(join(tmpdir(), "ecorione-control-"));
   const runtime = new FileRuntimeSettings(join(dir, "settings.json"), {
     hostedProvider: "anthropic",
