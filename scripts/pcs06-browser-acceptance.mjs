@@ -1452,7 +1452,7 @@ async function runDesktopJourney() {
 
     const anthropicCard = page.locator("article").filter({ hasText: "Anthropic" }).first();
     await anthropicCard.getByRole("button", { name: "Connect", exact: true }).click();
-    await page.getByRole("heading", { name: "Anthropic", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Connect Anthropic", exact: true }).waitFor();
     await page.getByPlaceholder("Paste API key").fill("stub-credential-pcs06");
     await page.getByRole("button", { name: "Test API key", exact: true }).click();
     await page.getByText(/Credential test PASS:/).waitFor();
@@ -1476,7 +1476,7 @@ async function runDesktopJourney() {
     await openRouterSearch.fill("qwen");
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
     await page.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
-    await page.getByText("Selectable", { exact: true }).waitFor();
+    await page.getByText("Perlu test", { exact: true }).waitFor();
     if (
       (await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 1
     ) {
