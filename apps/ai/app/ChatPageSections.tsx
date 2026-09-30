@@ -112,6 +112,7 @@ export function ChatProviderModelSelectors({
   routeHint,
   modelHint,
   onProviderChange,
+  onAddProvider,
   onModelChange,
 }: {
   providerOptions: readonly ChatProviderOption[];
@@ -126,6 +127,7 @@ export function ChatProviderModelSelectors({
   routeHint: string;
   modelHint: string;
   onProviderChange: (source: ChatProviderSource) => void;
+  onAddProvider: () => void;
   onModelChange: (modelId: string) => void;
 }) {
   return (
@@ -135,7 +137,13 @@ export function ChatProviderModelSelectors({
           id="chat-provider"
           aria-label="Provider / Source"
           value={providerValue}
-          onChange={(event) => onProviderChange(event.target.value as ChatProviderSource)}
+          onChange={(event) => {
+            if (event.target.value === "__add_ai__") {
+              onAddProvider();
+              return;
+            }
+            onProviderChange(event.target.value as ChatProviderSource);
+          }}
           disabled={disabled}
         >
           {providerOptions.map((provider) => (
@@ -147,6 +155,10 @@ export function ChatProviderModelSelectors({
                 : provider.displayName}
             </option>
           ))}
+          <option value="__provider_separator__" disabled>
+            ────────────
+          </option>
+          <option value="__add_ai__">+ Tambah AI</option>
         </select>
         <ChevronIcon />
       </div>
