@@ -28,7 +28,8 @@ describe("Session 4E direct Ai provider onboarding source contract", () => {
     expect(testPath).toBeGreaterThan(0);
     expect(savePath).toBeGreaterThan(testPath);
     expect(onboarding).toContain('method: "POST"');
-    expect(onboarding).toContain('method: "PUT"');
+    expect(onboarding).toContain("/connections");
+    expect(onboarding).toContain('method: "POST"');
     expect(onboarding).toContain("test.persisted === true");
     expect(onboarding).toContain('setSecret("")');
     expect(dialog).not.toContain("Test API key");
@@ -42,9 +43,10 @@ describe("Session 4E direct Ai provider onboarding source contract", () => {
     expect(onboarding).not.toContain("/api/chat");
   });
 
-  it("keeps custom-provider and multi-credential scope deferred", () => {
+  it("keeps custom provider deferred while allowing another key for connected providers", () => {
     expect(dialog).toContain("Lainnya · Segera");
-    expect(dialog).toContain("Sudah terhubung");
-    expect(dialog).toContain("disabled={provider.connected || !provider.connectReady}");
+    expect(dialog).toContain("Tambah lagi");
+    expect(dialog).toContain("disabled={!provider.connectReady}");
+    expect(dialog).not.toContain("disabled={provider.connected || !provider.connectReady}");
   });
 });
