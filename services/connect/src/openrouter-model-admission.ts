@@ -1,7 +1,4 @@
-import {
-  isTargetOpenRouterModelFamily,
-  type HostedModelFamily,
-} from "./hosted-model-family.js";
+import type { HostedModelFamily } from "./hosted-model-family.js";
 
 export const OPENROUTER_ADMISSION_FAILURES = [
   "duplicate-runtime-id",
@@ -59,7 +56,7 @@ function positivePrice(value: string | null): "missing" | "invalid" | "valid" {
   const normalized = value.trim();
   if (!DECIMAL_PRICE.test(normalized)) return "invalid";
   const parsed = Number(normalized);
-  return Number.isFinite(parsed) && parsed > 0 ? "valid" : "invalid";
+  return Number.isFinite(parsed) && parsed >= 0 ? "valid" : "invalid";
 }
 
 function hasValue(values: readonly string[], expected: string): boolean {
@@ -80,14 +77,9 @@ function runtimeSlugValid(candidate: OpenRouterAdmissionCandidate): boolean {
 export function verifyOpenRouterModelAdmission(
   candidate: OpenRouterAdmissionCandidate,
 ): OpenRouterAdmissionDecision {
-  if (!isTargetOpenRouterModelFamily(candidate.family)) {
-    return {
-      admission: "discovered-only",
-      selectable: false,
-      selectionId: null,
-      unavailableReason: null,
-    };
-  }
+  // Family metadata is descriptive only. Any stable OpenRouter text model with
+  // complete catalog pricing may be explicitly validated; no family whitelist
+  // itself grants execution.
   if (candidate.duplicateRuntimeId === true) return unavailable("duplicate-runtime-id");
   if (candidate.mutableAlias) return unavailable("mutable-alias");
   if (!runtimeSlugValid(candidate)) return unavailable("invalid-runtime-slug");

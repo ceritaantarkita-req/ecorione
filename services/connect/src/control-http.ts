@@ -25,6 +25,7 @@ import { executableHostedModelRegistryEntry } from "./hosted-model-registry.js";
 
 const CredentialParamsSchema = z.object({ provider: z.enum(CREDENTIAL_PROVIDERS) });
 const CredentialBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
+const OpenRouterModelValidationBodySchema = z.object({ confirmed: z.literal(true) }).strict();
 const OpenRouterModelSelectionBodySchema = z
   .object({ selectionId: z.string().trim().min(1).max(256) })
   .strict();
@@ -45,6 +46,20 @@ export interface ConnectControlOptions {
   readonly runtimeSettings?: RuntimeSettingsAdmin | undefined;
   readonly credentialVault?: CredentialVaultAdmin | undefined;
   readonly openRouterModelDiscovery?: OpenRouterModelDiscoveryReader | undefined;
+  /** Performs a bounded, explicitly confirmed provider test and records non-secret evidence. */
+  readonly validateOpenRouterModel?: ((selectionId: string) => Promise<unknown>) | undefined;
+  readonly spendStatus?:
+    | (() => {
+        policy: { dailyUsd: number | null; monthlyUsd: number | null; unlimited: boolean };
+        budget: {
+          dailyLimitUsd: number | null;
+          monthlyLimitUsd: number | null;
+          dailyCommittedUsd: number;
+          monthlyCommittedUsd: number;
+          unsettledReservations: number;
+        } | null;
+      })
+    | undefined;
 }
 
 function credentialMutation<T>(fn: () => T): T {
@@ -88,6 +103,13 @@ export function registerConnectControlRoutes(
     return options.credentialVault;
   };
 
+  app.get("/v1/settings/spend-status", async () => ({
+    operatorGateOpen: runtime().get().settings.hostedCallsEnabled,
+    ...(options.spendStatus?.() ?? {
+      policy: { dailyUsd: null, monthlyUsd: null, unlimited: false },
+      budget: null,
+    }),
+  }));
   app.get("/v1/settings/runtime", async () => runtime().get());
   app.put("/v1/settings/runtime", async (req) => {
     const patch = parseOrBadRequest(RuntimeSettingsPatchSchema, req.body);
@@ -156,6 +178,18 @@ export function registerConnectControlRoutes(
       throw error;
     }
   });
+
+  app.post<{ Params: { selectionId: string } }>(
+    "/v1/settings/providers/openrouter/models/:selectionId/validate",
+    async (req) => {
+      parseOrBadRequest(OpenRouterModelValidationBodySchema, req.body);
+      const selectionId = z.string().trim().min(1).max(256).parse(req.params.selectionId);
+      if (options.validateOpenRouterModel === undefined) {
+        throw new HttpError(503, "OPENROUTER_VALIDATION_UNAVAILABLE", "Validasi model OpenRouter belum dikonfigurasi.");
+      }
+      return options.validateOpenRouterModel(selectionId);
+    },
+  );
 
   app.put("/v1/settings/providers/openrouter/model-selection", async (req) => {
     const { selectionId } = parseOrBadRequest(OpenRouterModelSelectionBodySchema, req.body);
@@ -246,6 +280,33 @@ export function registerConnectControlRoutes(
         "OPENROUTER_MODEL_NOT_SELECTABLE",
         `Model ${selectionId} tidak selectable pada snapshot OpenRouter saat ini (${reason}).`,
       );
+    }
+
+    if (candidate.executable) {
+      const settingsAdmin = runtime();
+      if (settingsAdmin.certifyOpenRouterModel === undefined) {
+        throw new HttpError(
+          503,
+          "OPENROUTER_VALIDATION_UNAVAILABLE",
+          "Penyimpanan status Ready OpenRouter belum dikonfigurasi.",
+        );
+      }
+      const result = settingsAdmin.certifyOpenRouterModel(candidate.id);
+      metrics.addCounter("ecorione_control_changes_total", 1, {
+        surface: "openrouter-model-selection",
+        admission: "validated-executable",
+        executable: "true",
+      });
+      return {
+        runtime: result,
+        selection: {
+          id: candidate.id,
+          admission: "validated-executable",
+          executable: true,
+          active: result.settings.hostedCallsEnabled,
+          unavailableReason: null,
+        },
+      };
     }
 
     const result = runtime().update({

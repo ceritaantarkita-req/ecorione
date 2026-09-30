@@ -12,7 +12,7 @@ import {
 import { FileCredentialVault } from "./credential-vault.js";
 import { FileRuntimeSettings } from "./runtime-settings.js";
 
-function fixture(options: { openRouterModelDiscovery?: OpenRouterModelDiscoveryReader } = {}) {
+function fixture(options: { openRouterModelDiscovery?: OpenRouterModelDiscoveryReader; validateOpenRouterModel?: (selectionId: string) => Promise<unknown> } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "ecorione-control-"));
   const runtime = new FileRuntimeSettings(join(dir, "settings.json"), {
     hostedProvider: "anthropic",
@@ -28,6 +28,7 @@ function fixture(options: { openRouterModelDiscovery?: OpenRouterModelDiscoveryR
     runtimeSettings: runtime,
     credentialVault: vault,
     openRouterModelDiscovery: options.openRouterModelDiscovery,
+    validateOpenRouterModel: options.validateOpenRouterModel,
   });
   return { app, runtime, vault, vaultPath };
 }
@@ -50,6 +51,9 @@ describe("Connect Control Center boundary", () => {
       payload: {
         hostedProvider: "openai",
         hostedCallsEnabled: false,
+        spendDailyUsd: 0.1,
+        spendMonthlyUsd: 1,
+        spendUnlimited: false,
         defaultChatTarget: "hosted",
       },
     });
@@ -59,11 +63,16 @@ describe("Connect Control Center boundary", () => {
       settings: {
         hostedProvider: "openai",
         hostedCallsEnabled: false,
+        spendDailyUsd: 0.1,
+        spendMonthlyUsd: 1,
+        spendUnlimited: false,
         defaultChatTarget: "hosted",
       },
     });
     expect(runtime.get().settings.hostedProvider).toBe("openai");
     expect(runtime.get().settings.defaultChatTarget).toBe("hosted");
+    expect(runtime.get().settings.spendDailyUsd).toBe(0.1);
+    expect(runtime.get().settings.spendMonthlyUsd).toBe(1);
   });
 
   it("mengekspos provider catalog metadata tanpa credential plaintext", async () => {
@@ -211,6 +220,35 @@ describe("Connect Control Center boundary", () => {
     });
   });
 
+  it("hanya menjalankan test model OpenRouter setelah konfirmasi eksplisit", async () => {
+    const received: string[] = [];
+    const { app } = fixture({
+      validateOpenRouterModel: async (selectionId) => {
+        received.push(selectionId);
+        return { pass: true, ready: true, selectionId };
+      },
+    });
+
+    const rejected = await app.inject({
+      method: "POST",
+      url: "/v1/settings/providers/openrouter/models/qwen%2Fqwen3.8-max/validate",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: {},
+    });
+    expect(rejected.statusCode).toBe(400);
+    expect(received).toEqual([]);
+
+    const accepted = await app.inject({
+      method: "POST",
+      url: "/v1/settings/providers/openrouter/models/qwen%2Fqwen3.8-max/validate",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { confirmed: true },
+    });
+    expect(accepted.statusCode).toBe(200);
+    expect(accepted.json()).toMatchObject({ pass: true, ready: true });
+    expect(received).toEqual(["qwen/qwen3.8-max"]);
+  });
+
   it("menolak bypass OpenRouter picker melalui generic runtime mutation", async () => {
     const { app } = fixture();
     const response = await app.inject({
@@ -300,6 +338,43 @@ describe("Connect Control Center boundary", () => {
       },
     });
     expect(runtime.get().settings.openRouterModelSelection).toBe("qwen/qwen3.8-max");
+  });
+
+  it("tidak membuka lagi Hosted lewat generic runtime save sesudah preference dynamic dipilih", async () => {
+    const { app, runtime } = fixture();
+    runtime.update({
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      openRouterModelSelection: "qwen/qwen3.8-max",
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    });
+
+    const response = await app.inject({
+      method: "PUT",
+      url: "/v1/settings/runtime",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { hostedCallsEnabled: true, defaultChatTarget: "hosted" },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      settings: {
+        hostedProvider: "openrouter",
+        hostedModel: "governed",
+        openRouterModelSelection: "qwen/qwen3.8-max",
+        hostedCallsEnabled: false,
+        defaultChatTarget: "local",
+      },
+    });
+    const reloaded = await app.inject({
+      method: "GET",
+      url: "/v1/settings/runtime",
+      headers: auth,
+    });
+    expect(reloaded.json()).toMatchObject({
+      settings: { hostedCallsEnabled: false, defaultChatTarget: "local" },
+    });
   });
 
   it("menolak OpenRouter candidate yang sudah tidak selectable", async () => {

@@ -72,7 +72,8 @@ function replayCost(event: HistoryEvent | undefined): ChatCost | undefined {
 }
 
 export function historyChatTarget(events: readonly HistoryEvent[]): ChatTarget | undefined {
-  for (const event of events) {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index];
     if (event.eventType !== "user.message") continue;
     const payload = asRecord(event.payload);
     const target = payload?.target;

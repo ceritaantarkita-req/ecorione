@@ -7,6 +7,7 @@ type Method = "GET" | "POST" | "PUT" | "DELETE";
 
 const ALLOWED = [
   /^\/v1\/settings\/runtime$/,
+  /^\/v1\/settings\/spend-status$/,
   /^\/v1\/settings\/providers$/,
   /^\/v1\/settings\/providers\/openrouter\/models$/,
   /^\/v1\/settings\/providers\/openrouter\/model-selection$/,
@@ -22,7 +23,9 @@ function allowedSettingsPath(path: string, method: Method): string | null {
     return null;
   }
 
-  if (normalized.pathname === "/v1/settings/mcp/servers" && method === "GET") {
+  if (normalized.pathname === "/v1/settings/spend-status") {
+    if (method !== "GET" || normalized.search.length > 0) return null;
+  } else if (normalized.pathname === "/v1/settings/mcp/servers" && method === "GET") {
     const keys = [...normalized.searchParams.keys()];
     const workspaceIds = normalized.searchParams.getAll("workspaceId");
     if (

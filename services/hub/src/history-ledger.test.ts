@@ -173,7 +173,7 @@ describe("Historical Ledger", () => {
     ).toBe("SENSITIVE");
   });
 
-  it("does not let ensureSession cross scope or sync boundaries", () => {
+  it("does not let ensureSession cross scope or workspace boundaries", () => {
     db = openHubDatabase(":memory:");
     const ledger = new HistoryLedger(db);
     const sessionId = assertId("session", "sess_ensureboundary001");
@@ -194,15 +194,37 @@ describe("Historical Ledger", () => {
         syncClass: "CLOUD_ALLOWED",
       }),
     ).toThrow(HistorySessionConflictError);
+  });
+
+  it("meringkas perubahan route sebagai batas sesi paling restriktif", () => {
+    db = openHubDatabase(":memory:");
+    const ledger = new HistoryLedger(db);
+    const sessionId = assertId("session", "sess_ensureroute001");
+    ledger.ensureSession({
+      id: sessionId,
+      createdAt: NOW,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "CLOUD_ALLOWED",
+    });
+
+    const switched = ledger.ensureSession({
+      id: sessionId,
+      createdAt: "2026-09-09T00:01:00.000Z",
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+    });
+
+    expect(switched.syncClass).toBe("LOCAL_ONLY");
     expect(() =>
-      ledger.ensureSession({
-        id: sessionId,
-        createdAt: NOW,
-        scope: "personal",
-        sensitivity: "INTERNAL",
-        syncClass: "LOCAL_ONLY",
+      ledger.readRange({
+        sessionId,
+        afterSeq: -1,
+        limit: 10,
+        grant: { scope: "personal", maxSensitivity: "RESTRICTED", hostedEligible: true },
       }),
-    ).toThrow(HistorySessionConflictError);
+    ).toThrow(/tidak tersedia/);
   });
 
   it("commits a batch atomically and makes a committed retry idempotent", () => {

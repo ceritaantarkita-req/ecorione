@@ -209,6 +209,7 @@ export function useChatModelRouting() {
     runtime,
     hostedProvider,
     hostedAvailable: routing.hostedAvailable,
+    hostedBlockedByOpenRouterPreference: routing.hostedBlockedByOpenRouterPreference,
     hostedRouteLabel: routing.hostedRouteLabel,
     defaultTarget: routing.defaultTarget,
     localRuntimeStatus,

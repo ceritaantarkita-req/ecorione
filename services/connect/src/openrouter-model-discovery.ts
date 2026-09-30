@@ -1,4 +1,6 @@
 import { Buffer } from "node:buffer";
+import { openRouterCertificationStatus, openRouterValidationPlan, type OpenRouterValidationPlan } from "./openrouter-model-certification.js";
+import type { OpenRouterCertificationReader } from "./openrouter-certification-store.js";
 import { z } from "zod";
 import {
   executableHostedModelRegistryEntry,
@@ -71,6 +73,7 @@ export interface OpenRouterDiscoveredModel {
   readonly executable: boolean;
   readonly selectionId: string | null;
   readonly unavailableReason: OpenRouterAdmissionFailure | null;
+  readonly validationPlan?: OpenRouterValidationPlan | null;
 }
 
 export interface OpenRouterDiscoveryQuery {
@@ -123,6 +126,7 @@ export interface OpenRouterModelDiscoveryOptions {
   readonly timeoutMs?: number | undefined;
   readonly now?: (() => number) | undefined;
   readonly fetcher?: typeof fetch | undefined;
+  readonly certificationReader?: OpenRouterCertificationReader | undefined;
 }
 
 function sourceProviderFromId(id: string): string {
@@ -138,6 +142,7 @@ function isMutableAlias(id: string): boolean {
 function normalizeModel(
   model: z.infer<typeof OpenRouterUpstreamModelSchema>,
   duplicateRuntimeId = false,
+  certificationReader?: OpenRouterCertificationReader | undefined,
 ): OpenRouterDiscoveredModel {
   const sourceProvider = sourceProviderFromId(model.id);
   const family = classifyOpenRouterModelFamily({
@@ -164,6 +169,16 @@ function normalizeModel(
     mutableAlias: isMutableAlias(model.id),
     duplicateRuntimeId,
   };
+  const certification = certificationReader?.get(candidate.id);
+  const certificationStatus = openRouterCertificationStatus({
+    id: candidate.id,
+    admission: executable ? "verified-executable" : verifyOpenRouterModelAdmission(candidate).admission,
+    executable,
+    promptPricePerToken: candidate.promptPricePerToken,
+    completionPricePerToken: candidate.completionPricePerToken,
+    ...(certification === undefined ? {} : { certification }),
+  });
+  const runtimeExecutable = executable || certificationStatus === "ready";
   const admission = executable
     ? {
         admission: "verified-executable" as const,
@@ -186,14 +201,25 @@ function normalizeModel(
     mutableAlias: candidate.mutableAlias,
     admission: admission.admission,
     selectable: admission.selectable,
-    executable,
+    executable: runtimeExecutable,
     selectionId: admission.selectionId,
     unavailableReason: admission.unavailableReason,
+    validationPlan:
+      admission.selectable && !runtimeExecutable
+        ? (() => {
+            try {
+              return openRouterValidationPlan(candidate);
+            } catch {
+              return null;
+            }
+          })()
+        : null,
   };
 }
 
 function normalizeCatalog(
   models: readonly z.infer<typeof OpenRouterUpstreamModelSchema>[],
+  certificationReader?: OpenRouterCertificationReader | undefined,
 ): readonly OpenRouterDiscoveredModel[] {
   const counts = new Map<string, number>();
   for (const model of models) counts.set(model.id, (counts.get(model.id) ?? 0) + 1);
@@ -203,7 +229,7 @@ function normalizeCatalog(
   for (const model of models) {
     if (seen.has(model.id)) continue;
     seen.add(model.id);
-    normalized.push(normalizeModel(model, (counts.get(model.id) ?? 0) > 1));
+    normalized.push(normalizeModel(model, (counts.get(model.id) ?? 0) > 1, certificationReader));
   }
   return normalized;
 }
@@ -220,6 +246,10 @@ function applyFreshness(
     selectable: admission.selectable,
     selectionId: admission.selectionId,
     unavailableReason: admission.unavailableReason,
+    // Harga/keberadaan dynamic model tidak boleh dipercaya dari katalog stale.
+    // Static registry tidak masuk cabang ini karena admission-nya verified-executable.
+    executable: false,
+    validationPlan: null,
   };
 }
 
@@ -251,6 +281,7 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
   private readonly timeoutMs: number;
   private readonly now: () => number;
   private readonly fetcher: typeof fetch;
+  private readonly certificationReader: OpenRouterCertificationReader | undefined;
   private cache: CachedCatalog | null = null;
   private refreshInFlight: Promise<CachedCatalog> | null = null;
 
@@ -260,6 +291,7 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
     this.timeoutMs = options.timeoutMs ?? DEFAULT_OPENROUTER_DISCOVERY_TIMEOUT_MS;
     this.now = options.now ?? Date.now;
     this.fetcher = options.fetcher ?? fetch;
+    this.certificationReader = options.certificationReader;
   }
 
   private async fetchCatalog(): Promise<CachedCatalog> {
@@ -316,7 +348,7 @@ export class OpenRouterModelDiscovery implements OpenRouterModelDiscoveryReader 
       }
 
       const fetchedAtMs = this.now();
-      const models = normalizeCatalog(parsed.data.data);
+      const models = normalizeCatalog(parsed.data.data, this.certificationReader);
       return {
         models,
         fetchedAtMs,

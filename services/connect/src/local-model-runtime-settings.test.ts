@@ -15,6 +15,12 @@ describe("local model runtime identity settings", () => {
     expect(RuntimeSettingsSchema.parse(BASE).localModelDigest).toBeNull();
   });
 
+  it("accepts the explicit native Ollama runtime", () => {
+    expect(RuntimeSettingsSchema.parse({ ...BASE, localRuntime: "ollama" }).localRuntime).toBe(
+      "ollama",
+    );
+  });
+
   it("normalizes a configured SHA-256 digest", () => {
     const digest = "B".repeat(64);
     expect(

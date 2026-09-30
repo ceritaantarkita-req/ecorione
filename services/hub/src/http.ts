@@ -74,8 +74,47 @@ import {
   RespondNotAllowedError,
 } from "./repository.js";
 
+const ACTIONABLE_CONNECT_503 = new Set([
+  "COST_KILL_SWITCH_ACTIVE",
+  "SPEND_BUDGET_NOT_CONFIGURED",
+  "SPEND_BUDGET_EXCEEDED",
+  "SPEND_BUDGET_UNAVAILABLE",
+  "CREDENTIAL_VAULT_BUSY",
+  "CREDENTIAL_VAULT_UNAVAILABLE",
+]);
+
+function remoteErrorToHttpError(service: string, err: unknown): HttpError | null {
+  if (!(err instanceof RemoteServiceError)) return null;
+  const body = err.body;
+  const errorField =
+    typeof body === "object" && body !== null && "error" in body
+      ? (body as { error: unknown }).error
+      : undefined;
+  if (typeof errorField !== "object" || errorField === null) return null;
+
+  const e = errorField as { type?: unknown; message?: unknown; detail?: unknown };
+  const type = typeof e.type === "string" ? e.type : "BAD_REQUEST";
+  const forward =
+    (err.statusCode >= 400 && err.statusCode < 500) ||
+    (service === "Connect" && err.statusCode === 503 && ACTIONABLE_CONNECT_503.has(type));
+  if (!forward) return null;
+
+  return new HttpError(
+    err.statusCode,
+    type,
+    typeof e.message === "string" ? e.message : err.message,
+    err.statusCode < 500 && typeof e.detail === "object" && e.detail !== null
+      ? (e.detail as Record<string, unknown>)
+      : undefined,
+  );
+}
+
 function toHttpError(err: unknown): unknown {
-  if (err instanceof UpstreamError) return new BadGatewayError(err.message);
+  if (err instanceof UpstreamError) {
+    return (
+      remoteErrorToHttpError(err.service, err.upstream) ?? new BadGatewayError(err.message)
+    );
+  }
   if (err instanceof PolicyEngineBugError) return err;
   if (err instanceof CapabilityAuthorityDeniedError) {
     return new HttpError(403, "CAPABILITY_DENIED", err.message);
@@ -91,25 +130,7 @@ function toHttpError(err: unknown): unknown {
   return err;
 }
 function forwardOrUpstreamError(service: string, err: unknown): unknown {
-  if (err instanceof RemoteServiceError && err.statusCode >= 400 && err.statusCode < 500) {
-    const body = err.body;
-    const errorField =
-      typeof body === "object" && body !== null && "error" in body
-        ? (body as { error: unknown }).error
-        : undefined;
-    if (typeof errorField === "object" && errorField !== null) {
-      const e = errorField as { type?: unknown; message?: unknown; detail?: unknown };
-      return new HttpError(
-        err.statusCode,
-        typeof e.type === "string" ? e.type : "BAD_REQUEST",
-        typeof e.message === "string" ? e.message : err.message,
-        typeof e.detail === "object" && e.detail !== null
-          ? (e.detail as Record<string, unknown>)
-          : undefined,
-      );
-    }
-  }
-  return toHttpError(new UpstreamError(service, err));
+  return remoteErrorToHttpError(service, err) ?? toHttpError(new UpstreamError(service, err));
 }
 function makeIdempotencyKey(req: Pick<ActionRequest, "module" | "tool" | "args">): string {
   return createHash("sha256").update(idempotencyPayload(req)).digest("hex");

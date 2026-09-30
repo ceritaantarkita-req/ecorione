@@ -11,6 +11,7 @@ import {
   type CallCostRecord,
   type PinnedModelId,
   type TokenUsage,
+  type ModelPrice,
 } from "@ecorione/shared-telemetry";
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import type { ProviderCredentialReader } from "./credential-vault.js";
@@ -50,6 +51,14 @@ export interface CompleteDeps {
   readonly openrouterApiKey?: string | undefined;
   readonly openaiApiKey?: string | undefined;
   readonly nvidiaApiKey?: string | undefined;
+  /** A dynamic OpenRouter model may execute only when Connect resolved durable validation evidence. */
+  readonly certifiedOpenRouterModel?: {
+    readonly id: string;
+    readonly promptPricePerToken: string;
+    readonly completionPricePerToken: string;
+  } | undefined;
+  /** Exact test reservation derived from current catalog price; never used by normal chat. */
+  readonly hostedReservationUsdOverride?: number | undefined;
   /** Internal health/credential-probe cap; normal chat leaves this undefined. */
   readonly hostedMaxOutputTokens?: number | undefined;
   readonly hostedReasoningEffort?: "low" | "high" | "max" | undefined;
@@ -103,7 +112,7 @@ export interface CompleteResult {
   /** Runtime model requested from the selected provider/runtime. */
   readonly model: string;
   /** Pinned identity used only for auditable cost calculation. */
-  readonly pricingModel: PinnedModelId;
+  readonly pricingModel: string;
   /** Runtime identity reported by provider/runtime. */
   readonly responseModel: string;
   /** Safe OpenRouter-selected provider label when available. */
@@ -150,6 +159,9 @@ export async function complete(
     sensitivity: input.sensitivity,
     hostedProvider,
     hostedModel: deps.hostedModel,
+    ...(deps.certifiedOpenRouterModel === undefined
+      ? {}
+      : { certifiedOpenRouterModel: deps.certifiedOpenRouterModel.id }),
   });
 
   if (decision.routeReason !== "local-consolidation") {
@@ -244,11 +256,24 @@ export async function complete(
       );
     }
 
+    const openRouterPriceOverride: ModelPrice | undefined =
+      hostedProvider === "openrouter" &&
+      deps.certifiedOpenRouterModel?.id === decision.model
+        ? {
+            inputPerMTok: Number(deps.certifiedOpenRouterModel.promptPricePerToken) * 1_000_000,
+            outputPerMTok: Number(deps.certifiedOpenRouterModel.completionPricePerToken) * 1_000_000,
+            cacheWritePerMTok: Number(deps.certifiedOpenRouterModel.promptPricePerToken) * 1_000_000,
+            cacheReadPerMTok: Number(deps.certifiedOpenRouterModel.promptPricePerToken) * 1_000_000,
+          }
+        : undefined;
     const providerInput = {
       model: decision.model,
       prefix: input.prefix,
       dynamicText: input.dynamicText,
       userMessage: input.userMessage,
+      ...(openRouterPriceOverride === undefined
+        ? {}
+        : { openRouterPriceOverride, openRouterAllowFallbacks: false }),
       ...(deps.hostedMaxOutputTokens === undefined
         ? {}
         : { maxOutputTokens: deps.hostedMaxOutputTokens }),
@@ -261,7 +286,9 @@ export async function complete(
         operationId: input.operationId,
         provider: hostedProvider,
         model: decision.model,
-        reservedUsd: estimateHostedReservationUsd(hostedProvider, providerInput),
+        reservedUsd:
+          deps.hostedReservationUsdOverride ??
+          estimateHostedReservationUsd(hostedProvider, providerInput),
         now: input.now,
       });
     }

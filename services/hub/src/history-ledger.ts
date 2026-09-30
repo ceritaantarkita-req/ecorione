@@ -233,6 +233,20 @@ function sameDraft(actual: HistoryEvent, expected: HistoryEventDraft): boolean {
   );
 }
 
+const SYNC_CLASS_BY_RESTRICTIVENESS: readonly SyncClass[] = [
+  "LOCAL_ONLY",
+  "SYNC_ENCRYPTED",
+  "CLOUD_ALLOWED",
+  "PUBLIC",
+];
+
+function mostRestrictiveSyncClass(left: SyncClass, right: SyncClass): SyncClass {
+  return SYNC_CLASS_BY_RESTRICTIVENESS.indexOf(left) <=
+    SYNC_CLASS_BY_RESTRICTIVENESS.indexOf(right)
+    ? left
+    : right;
+}
+
 function assertGrant(session: HistorySession, grant: HistoryGrant): void {
   if (session.scope !== grant.scope) throw new HistoryAccessDeniedError();
   if (sensitivityRank(session.sensitivity) > sensitivityRank(grant.maxSensitivity)) {
@@ -331,24 +345,36 @@ export class HistoryLedger {
           : null);
       if (
         existing.scope !== input.scope ||
-        existing.syncClass !== input.syncClass ||
         existing.workspaceId !== requestedWorkspace ||
         existing.projectId !== requestedProject
       ) {
         throw new HistorySessionConflictError(input.id);
       }
-      if (sensitivityRank(input.sensitivity) > sensitivityRank(existing.sensitivity)) {
-        const updatedAt = input.updatedAt ?? input.createdAt;
-        this.db.raw
-          .prepare("UPDATE history_sessions SET sensitivity=?,updated_at=? WHERE id=?")
-          .run(input.sensitivity, updatedAt, input.id);
-        return HistorySessionSchema.parse({
-          ...existing,
-          sensitivity: input.sensitivity,
-          updatedAt,
-        });
+
+      // Context owns per-turn egress filtering. The chronological ledger keeps the
+      // most restrictive session summary, so a route change can never broaden a
+      // previously Local-only session into hosted-readable history.
+      const sensitivity =
+        sensitivityRank(input.sensitivity) > sensitivityRank(existing.sensitivity)
+          ? input.sensitivity
+          : existing.sensitivity;
+      const syncClass = mostRestrictiveSyncClass(existing.syncClass, input.syncClass);
+      if (sensitivity === existing.sensitivity && syncClass === existing.syncClass) {
+        return existing;
       }
-      return existing;
+
+      const updatedAt = input.updatedAt ?? input.createdAt;
+      this.db.raw
+        .prepare(
+          "UPDATE history_sessions SET sensitivity=?,sync_class=?,updated_at=? WHERE id=?",
+        )
+        .run(sensitivity, syncClass, updatedAt, input.id);
+      return HistorySessionSchema.parse({
+        ...existing,
+        sensitivity,
+        syncClass,
+        updatedAt,
+      });
     });
     return transaction.immediate();
   }

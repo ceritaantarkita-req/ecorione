@@ -35,7 +35,7 @@ export interface HostedModelRegistryEntry {
   /** Capabilities ECORIONE has actually admitted at this checkpoint. */
   readonly capabilities: readonly HostedModelCapability[];
   readonly pricing: HostedModelPricingMetadata;
-  readonly verification: "verified" | "discovered";
+  readonly verification: "verified" | "execution-candidate" | "discovered";
   readonly catalogSource: "static-verified" | "openrouter-discovery";
   /** Null means this static registry has no external freshness timestamp yet. */
   readonly verifiedAt: string | null;
@@ -117,6 +117,42 @@ const HOSTED_MODEL_REGISTRY = [
     verification: "verified",
     catalogSource: "static-verified",
     verifiedAt: null,
+  },
+  {
+    provider: "openrouter",
+    id: "qwen/qwen3.8-27b",
+    displayName: "Qwen3.8 27B",
+    providerRuntime: "qwen/qwen3.8-27b",
+    sourceProvider: "qwen",
+    family: "qwen",
+    contextWindowTokens: 1_000_000,
+    capabilities: TEXT_ONLY,
+    pricing: {
+      costModel: "qwen/qwen3.8-27b",
+      authority: PROVIDER_REPORTED,
+      currency: PRICE_CURRENCY,
+    },
+    verification: "execution-candidate",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-29",
+  },
+  {
+    provider: "openrouter",
+    id: "deepseek/deepseek-v4-pro",
+    displayName: "DeepSeek V4 Pro 0423",
+    providerRuntime: "deepseek/deepseek-v4-pro",
+    sourceProvider: "deepseek",
+    family: "deepseek",
+    contextWindowTokens: 1_000_000,
+    capabilities: TEXT_ONLY,
+    pricing: {
+      costModel: "deepseek/deepseek-v4-pro",
+      authority: PROVIDER_REPORTED,
+      currency: PRICE_CURRENCY,
+    },
+    verification: "execution-candidate",
+    catalogSource: "static-verified",
+    verifiedAt: "2026-09-29",
   },
   {
     provider: "openai",
@@ -215,6 +251,12 @@ export type ExecutableHostedModelRegistryEntry = HostedModelRegistryEntry & {
   readonly verification: "verified";
   readonly pricing: HostedModelPricingMetadata & { readonly costModel: PinnedModelId };
 };
+
+export function openRouterExecutionCandidates(): readonly HostedModelRegistryEntry[] {
+  return hostedModelRegistry("openrouter").filter(
+    (entry) => entry.verification === "execution-candidate",
+  );
+}
 
 export function executableHostedModelRegistryEntry(
   provider: HostedProviderId,

@@ -92,6 +92,23 @@ export function currentOpenRouterPreference(runtime: ChatRuntimeSnapshot | null)
   return runtime.settings.openRouterModelSelection ?? runtime.settings.hostedModel;
 }
 
+/**
+ * A discovered OpenRouter selection may be saved as a preference before it has
+ * executable admission. Static and governed selections mirror `hostedModel`;
+ * dynamic preferences deliberately leave `hostedModel` as `governed`.
+ *
+ * Keep this client-side guard even though Connect repairs the durable state. It
+ * makes a stale or legacy snapshot fail closed while the page is loading.
+ */
+export function hasNonExecutableOpenRouterPreference(
+  runtime: ChatRuntimeSnapshot | null,
+): boolean {
+  if (runtime?.settings.hostedProvider !== "openrouter") return false;
+
+  const selection = currentOpenRouterPreference(runtime);
+  return selection !== "governed" && runtime.settings.hostedModel !== selection;
+}
+
 export function buildOpenRouterQuickSwitchModels(
   runtime: ChatRuntimeSnapshot | null,
   providers: readonly ChatProviderCatalogEntry[],
@@ -113,7 +130,8 @@ export function buildOpenRouterQuickSwitchModels(
   }
 
   for (const model of discovery?.models ?? []) {
-    if (!model.selectable || model.selectionId === null || seen.has(model.selectionId))
+    // Chat only lists models already proven Ready. Models that are merely catalogued are tested from Settings first.
+    if (!model.selectable || !model.executable || model.selectionId === null || seen.has(model.selectionId))
       continue;
     seen.add(model.selectionId);
     models.push({
@@ -140,12 +158,14 @@ export function deriveChatRoutingState(
   credentials: ChatCredentialSnapshot,
 ): {
   hostedAvailable: boolean;
+  hostedBlockedByOpenRouterPreference: boolean;
   hostedRouteLabel: string;
   defaultTarget: ChatTarget;
 } {
   if (runtime === null) {
     return {
       hostedAvailable: false,
+      hostedBlockedByOpenRouterPreference: false,
       hostedRouteLabel: "Hosted",
       defaultTarget: "local",
     };
@@ -154,9 +174,14 @@ export function deriveChatRoutingState(
   const hasCredential = credentials.credentials.some(
     (credential) => credential.provider === provider,
   );
-  const hostedAvailable = runtime.settings.hostedCallsEnabled && hasCredential;
+  const hostedBlockedByOpenRouterPreference = hasNonExecutableOpenRouterPreference(runtime);
+  const hostedAvailable =
+    runtime.settings.hostedCallsEnabled &&
+    hasCredential &&
+    !hostedBlockedByOpenRouterPreference;
   return {
     hostedAvailable,
+    hostedBlockedByOpenRouterPreference,
     hostedRouteLabel: `Hosted · ${hostedProviderLabel(provider)} · ${hostedModelLabel(
       runtime.settings.hostedModel,
     )}`,

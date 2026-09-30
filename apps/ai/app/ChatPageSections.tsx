@@ -117,8 +117,8 @@ export function OpenRouterModelQuickSwitch({
   const selected = models.find((model) => model.id === value);
   const title =
     selected !== undefined && !selected.executable
-      ? "Preference only · belum executable · memilih ini membuat chat tetap Local."
-      : "Quick-switch OpenRouter memakai selection authority yang sama dengan Settings.";
+      ? "Model ini belum Ready. Test dulu dari Settings sebelum dipakai untuk chat Cloud."
+      : "Pilih model untuk pesan berikutnya. Setiap balasan tetap menyimpan model dan biaya yang dipakai.";
 
   return (
     <div className="ai-model-select ai-model-select--quick" title={title}>
@@ -130,8 +130,10 @@ export function OpenRouterModelQuickSwitch({
       >
         {models.map((model) => (
           <option key={model.id} value={model.id}>
-            {model.id === "governed" ? "OpenRouter · Recommended" : model.displayName}
-            {!model.executable ? " · Selectable only" : ""}
+            {model.id === "governed" ? "OpenRouter \u00b7 Recommended" : model.displayName}
+            {!model.executable
+              ? " \u00b7 Perlu test di Settings"
+              : " \u00b7 Siap Cloud"}
           </option>
         ))}
       </select>

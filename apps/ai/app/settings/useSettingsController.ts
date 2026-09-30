@@ -24,11 +24,14 @@ export type RuntimeSnapshot = {
     hostedProvider: HostedProviderId;
     hostedModel: HostedModelPreference;
     openRouterModelSelection?: HostedModelPreference;
-    localRuntime: "openai-compatible";
+    localRuntime: "openai-compatible" | "ollama";
     localBaseUrl: string;
     localModelTag: string;
     localModelDigest: string | null;
     hostedCallsEnabled: boolean;
+    spendDailyUsd?: number | null;
+    spendMonthlyUsd?: number | null;
+    spendUnlimited?: boolean;
     defaultChatTarget: "local" | "hosted";
   };
 };
@@ -59,6 +62,13 @@ type OpenRouterDiscoveredModel = {
   selectable: boolean;
   executable: boolean;
   selectionId: string | null;
+  validationPlan?: {
+    capUsd: number;
+    inputUsdPerMTok: number;
+    outputUsdPerMTok: number;
+    maxOutputTokens: number;
+    reservationUsd: number;
+  } | null;
   unavailableReason:
     | "duplicate-runtime-id"
     | "mutable-alias"
@@ -83,9 +93,19 @@ type OpenRouterDiscoverySnapshot = {
   returned: number;
   models: OpenRouterDiscoveredModel[];
 };
+type OpenRouterSelectionResult = {
+  runtime: RuntimeSnapshot;
+  selection: {
+    id: string;
+    admission: string;
+    executable: boolean;
+    active: boolean;
+    unavailableReason: string | null;
+  };
+};
 type HostedCanaryStatus = "connected" | "invalid-key" | "unreachable" | "timeout" | "error";
 type LocalRuntimeStatus = {
-  runtime: "openai-compatible";
+  runtime: "openai-compatible" | "ollama";
   state: "connected" | "model-missing" | "identity-mismatch" | "unreachable" | "unsupported";
   reachable: boolean;
   ready: boolean;
@@ -95,6 +115,21 @@ type LocalRuntimeStatus = {
   identityProvenance: "verified" | "resolved" | "declared-unverified" | "unverified";
   identitySource: string;
   message: string;
+};
+type SpendStatus = {
+  operatorGateOpen: boolean;
+  policy: {
+    dailyUsd: number | null;
+    monthlyUsd: number | null;
+    unlimited: boolean;
+  };
+  budget: null | {
+    dailyLimitUsd: number | null;
+    monthlyLimitUsd: number | null;
+    dailyCommittedUsd: number;
+    monthlyCommittedUsd: number;
+    unsettledReservations: number;
+  };
 };
 type McpServer = {
   id: string;
@@ -110,12 +145,24 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
   return readJson<T>(response);
 }
 
+function openRouterPreferenceNeedsExecution(runtime: RuntimeSnapshot | null): boolean {
+  if (runtime?.settings.hostedProvider !== "openrouter") return false;
+  const selection = runtime.settings.openRouterModelSelection ?? runtime.settings.hostedModel;
+  return selection !== "governed" && runtime.settings.hostedModel !== selection;
+}
+
 export function useSettingsController(initialWorkspaceId: string) {
   const [runtime, setRuntime] = useState<RuntimeSnapshot | null>(null);
   const [providers, setProviders] = useState<ProviderCatalogEntry[]>([]);
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [workspaceId, setWorkspaceId] = useState(initialWorkspaceId);
   const [servers, setServers] = useState<McpServer[]>([]);
+  const [spendStatus, setSpendStatus] = useState<SpendStatus | null>(null);
+  const [spendDraft, setSpendDraft] = useState({
+    dailyUsd: "",
+    monthlyUsd: "",
+    unlimited: false,
+  });
   const [secret, setSecret] = useState("");
   const [secretRevision, setSecretRevision] = useState(0);
   const [secretProvider, setSecretProvider] = useState("anthropic");
@@ -159,14 +206,21 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   const refresh = useCallback(async () => {
     try {
-      const [runtimeResult, providerResult, credentialResult] = await Promise.all([
+      const [runtimeResult, providerResult, credentialResult, spendResult] = await Promise.all([
         json<RuntimeSnapshot>("/api/settings/settings/runtime"),
         json<{ providers: ProviderCatalogEntry[] }>("/api/settings/settings/providers"),
         json<{ credentials: Credential[] }>("/api/settings/settings/credentials"),
+        json<SpendStatus>("/api/settings/settings/spend-status"),
       ]);
       setRuntime(runtimeResult);
       setProviders(providerResult.providers);
       setCredentials(credentialResult.credentials);
+      setSpendStatus(spendResult);
+      setSpendDraft({
+        dailyUsd: spendResult.policy.dailyUsd?.toString() ?? "",
+        monthlyUsd: spendResult.policy.monthlyUsd?.toString() ?? "",
+        unlimited: spendResult.policy.unlimited,
+      });
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -224,7 +278,7 @@ export function useSettingsController(initialWorkspaceId: string) {
         modelDigest: null,
         identityProvenance: "unverified",
         identitySource: "none",
-        message: "Local AI · Not connected.",
+        message: "Local AI Ã‚Â· Not connected.",
       });
     });
   }, [refresh, refreshLocalStatus]);
@@ -331,13 +385,14 @@ export function useSettingsController(initialWorkspaceId: string) {
         ? hostedHealth.status
         : undefined,
   });
+  const openRouterPreferenceRequiresExecution = openRouterPreferenceNeedsExecution(runtime);
 
   async function discoverOpenRouterModels(forceRefresh = false): Promise<void> {
     if (!beginAction("openrouter-discovery")) return;
     setStatus(
       forceRefresh
-        ? "Refreshing OpenRouter model catalog…"
-        : "Searching OpenRouter model catalog…",
+        ? "Refreshing OpenRouter model catalogÃ¢â‚¬Â¦"
+        : "Searching OpenRouter model catalogÃ¢â‚¬Â¦",
     );
     try {
       const params = new URLSearchParams();
@@ -352,9 +407,63 @@ export function useSettingsController(initialWorkspaceId: string) {
       );
       setOpenRouterDiscovery(result);
       setStatus(
-        `OpenRouter catalog: ${String(result.returned)} shown / ${String(result.total)} matched · ${result.cache}${
+        `OpenRouter catalog: ${String(result.returned)} shown / ${String(result.total)} matched Ã‚Â· ${result.cache}${
           result.stale ? " (stale fallback)" : ""
         }.`,
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
+  async function validateOpenRouterModel(selectionId: string): Promise<void> {
+    const candidate = openRouterDiscovery?.models.find(
+      (model) => model.selectionId === selectionId,
+    );
+    if (candidate?.validationPlan === null || candidate?.validationPlan === undefined) {
+      setStatus("Model ini belum memiliki rencana test yang aman dari catalog OpenRouter.");
+      return;
+    }
+    const confirmed = window.confirm(
+      `Test ${candidate.displayName}? Reservasi maksimum USD ${candidate.validationPlan.reservationUsd.toFixed(2)} (batas test USD ${candidate.validationPlan.capUsd.toFixed(2)}). Biaya aktual OpenRouter dan budget akan dicatat.`,
+    );
+    if (!confirmed || !beginAction("openrouter-model-validation")) return;
+    setStatus(`Testing ${candidate.displayName} dengan batas USD ${candidate.validationPlan.capUsd.toFixed(2)}…`);
+    try {
+      const result = await json<{
+        pass: boolean;
+        ready: boolean;
+        selectionId: string;
+        runtime?: RuntimeSnapshot;
+        test: { actualUsd: number; reservedUsd: number; latencyMs: number };
+      }>(
+        `/api/settings/settings/providers/openrouter/models/${encodeURIComponent(selectionId)}/validate`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ confirmed: true }),
+        },
+      );
+      if (result.runtime !== undefined) setRuntime(result.runtime);
+      setOpenRouterDiscovery((current) =>
+        current === null
+          ? current
+          : {
+              ...current,
+              models: current.models.map((model) =>
+                model.selectionId === result.selectionId
+                  ? { ...model, executable: true, validationPlan: null }
+                  : model,
+              ),
+            },
+      );
+      setHostedHealth(null);
+      setStatus(
+        result.pass && result.ready
+          ? `${candidate.displayName} Ready. Test ${result.test.latencyMs.toFixed(0)}ms; biaya aktual USD ${result.test.actualUsd.toFixed(6)} (reservasi USD ${result.test.reservedUsd.toFixed(6)}).`
+          : `${candidate.displayName} belum menjadi Ready.`,
       );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
@@ -366,7 +475,7 @@ export function useSettingsController(initialWorkspaceId: string) {
   async function saveRuntime() {
     if (runtime === null || !beginAction("runtime")) return;
     const requestedHosted = runtime.settings.hostedCallsEnabled;
-    setStatus("Saving runtime settings…");
+    setStatus("Saving runtime settingsÃ¢â‚¬Â¦");
     try {
       const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
         method: "PUT",
@@ -377,10 +486,75 @@ export function useSettingsController(initialWorkspaceId: string) {
       setHostedHealth(null);
       if (requestedHosted && !result.settings.hostedCallsEnabled) {
         setStatus(
-          `Runtime revision ${String(result.revision)} saved. Hosted remains OFF because the operator gate is closed.`,
+          openRouterPreferenceNeedsExecution(result)
+            ? `Runtime revision ${String(result.revision)} saved. Model OpenRouter ini belum executable, jadi Cloud AI tetap OFF.`
+            : `Runtime revision ${String(result.revision)} saved. Hosted remains OFF because the operator gate is closed.`,
         );
       } else {
         setStatus(`Runtime settings saved at revision ${String(result.revision)}.`);
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      finishAction();
+    }
+  }
+
+  async function saveSpendPolicy() {
+    if (runtime === null || !beginAction("spend-policy")) return;
+    const parseBudget = (label: string, value: string): number | null => {
+      if (value.trim() === "") return null;
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        throw new Error(label + " harus berupa angka USD positif.");
+      }
+      return parsed;
+    };
+
+    setStatus("Menyimpan pengaturan Cloud AI dan budget...");
+    try {
+      const dailyUsd = parseBudget("Budget harian", spendDraft.dailyUsd);
+      const monthlyUsd = parseBudget("Budget bulanan", spendDraft.monthlyUsd);
+      if (!spendDraft.unlimited && dailyUsd === null && monthlyUsd === null) {
+        throw new Error(
+          "Isi minimal budget harian atau bulanan, atau aktifkan mode tanpa batas secara eksplisit.",
+        );
+      }
+
+      const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          hostedCallsEnabled: runtime.settings.hostedCallsEnabled,
+          defaultChatTarget: runtime.settings.hostedCallsEnabled
+            ? runtime.settings.defaultChatTarget
+            : "local",
+          spendDailyUsd: dailyUsd,
+          spendMonthlyUsd: monthlyUsd,
+          spendUnlimited: spendDraft.unlimited,
+        }),
+      });
+      const nextSpendStatus = await json<SpendStatus>("/api/settings/settings/spend-status");
+      setRuntime(result);
+      setSpendStatus(nextSpendStatus);
+      setSpendDraft({
+        dailyUsd: nextSpendStatus.policy.dailyUsd?.toString() ?? "",
+        monthlyUsd: nextSpendStatus.policy.monthlyUsd?.toString() ?? "",
+        unlimited: nextSpendStatus.policy.unlimited,
+      });
+      setHostedHealth(null);
+      if (runtime.settings.hostedCallsEnabled && !result.settings.hostedCallsEnabled) {
+        setStatus(
+          openRouterPreferenceNeedsExecution(result)
+            ? "Budget tersimpan. Cloud AI tetap mati karena model OpenRouter yang dipilih belum executable."
+            : "Budget tersimpan, tetapi Cloud AI tetap mati karena emergency kill switch operator tertutup.",
+        );
+      } else {
+        setStatus(
+          nextSpendStatus.policy.unlimited
+            ? "Cloud AI disimpan dalam mode tanpa batas."
+            : "Budget Cloud AI berhasil disimpan dan langsung aktif.",
+        );
       }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
@@ -403,7 +577,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     const provider = secretProvider;
     const revision = secretRevision;
     setCredentialTest(null);
-    setStatus(`Testing ${selectedProviderOption.displayName} credential without saving…`);
+    setStatus(`Testing ${selectedProviderOption.displayName} credential without savingÃ¢â‚¬Â¦`);
     try {
       const result = await json<{
         pass: boolean;
@@ -442,25 +616,43 @@ export function useSettingsController(initialWorkspaceId: string) {
     setStatus("");
   }
 
+  async function activateProviderRuntime(provider: HostedProviderId): Promise<RuntimeSnapshot> {
+    if (provider === "openrouter") {
+      const result = await json<OpenRouterSelectionResult>(
+        "/api/settings/settings/providers/openrouter/model-selection",
+        {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ selectionId: "governed" }),
+        },
+      );
+      return result.runtime;
+    }
+
+    return json<RuntimeSnapshot>("/api/settings/settings/runtime", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        hostedProvider: provider,
+        hostedModel: "governed",
+        hostedCallsEnabled: true,
+        defaultChatTarget: "hosted",
+      }),
+    });
+  }
+
   async function activateStoredProvider(provider: HostedProviderId): Promise<void> {
     if (runtime === null || !beginAction("activate-provider")) return;
-    setStatus(`Activating ${provider}…`);
+    setStatus(`Activating ${provider}Ã¢â‚¬Â¦`);
     try {
-      const result = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          hostedProvider: provider,
-          hostedModel: "governed",
-          hostedCallsEnabled: true,
-          defaultChatTarget: "hosted",
-        }),
-      });
+      const result = await activateProviderRuntime(provider);
       setRuntime(result);
       setHostedHealth(null);
       setStatus(
         result.settings.hostedCallsEnabled
-          ? "Provider aktif. Jalankan test provider bila ingin memverifikasi koneksi saat ini."
+          ? provider === "openrouter"
+            ? "OpenRouter aktif menggunakan Recommended. Jalankan test provider bila ingin memverifikasi koneksi saat ini."
+            : "Provider aktif. Jalankan test provider bila ingin memverifikasi koneksi saat ini."
           : "Provider tersimpan, tetapi hosted tetap OFF karena operator gate sedang tertutup.",
       );
     } catch (error) {
@@ -472,24 +664,18 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   async function saveDefaultProviderModel(): Promise<void> {
     if (runtime === null || !beginAction("default-provider-model")) return;
-    setStatus("Saving default provider/model…");
+    setStatus("Saving default provider/modelÃ¢â‚¬Â¦");
     try {
       if (runtime.settings.hostedProvider === "openrouter") {
         const selectionId = runtime.settings.openRouterModelSelection ?? "governed";
-        const result = await json<{
-          runtime: RuntimeSnapshot;
-          selection: {
-            id: string;
-            admission: string;
-            executable: boolean;
-            active: boolean;
-            unavailableReason: string | null;
-          };
-        }>("/api/settings/settings/providers/openrouter/model-selection", {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ selectionId }),
-        });
+        const result = await json<OpenRouterSelectionResult>(
+          "/api/settings/settings/providers/openrouter/model-selection",
+          {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ selectionId }),
+          },
+        );
         setRuntime(result.runtime);
         setHostedHealth(null);
         setStatus(
@@ -540,7 +726,7 @@ export function useSettingsController(initialWorkspaceId: string) {
       return;
     }
     if (!beginAction("credential")) return;
-    setStatus("Encrypting credential…");
+    setStatus("Encrypting credentialÃ¢â‚¬Â¦");
     try {
       await json(`/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`, {
         method: "PUT",
@@ -554,16 +740,7 @@ export function useSettingsController(initialWorkspaceId: string) {
       await refreshCredentials();
       if (selectedProviderOption.routingReady && runtime !== null) {
         const provider = secretProvider as HostedProviderId;
-        const activated = await json<RuntimeSnapshot>("/api/settings/settings/runtime", {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            hostedProvider: provider,
-            hostedModel: "governed",
-            hostedCallsEnabled: true,
-            defaultChatTarget: "hosted",
-          }),
-        });
+        const activated = await activateProviderRuntime(provider);
         setRuntime(activated);
         setHostedHealth(
           activated.settings.hostedCallsEnabled ? { provider, status: "connected" } : null,
@@ -571,7 +748,9 @@ export function useSettingsController(initialWorkspaceId: string) {
         setConnectProviderId(null);
         setStatus(
           activated.settings.hostedCallsEnabled
-            ? "API key terverifikasi, terenkripsi di Connect Vault, dan provider sudah aktif."
+            ? provider === "openrouter"
+              ? "API key terverifikasi, terenkripsi di Connect Vault, dan OpenRouter Recommended sudah aktif."
+              : "API key terverifikasi, terenkripsi di Connect Vault, dan provider sudah aktif."
             : "API key terverifikasi dan tersimpan, tetapi hosted tetap OFF karena operator gate.",
         );
       } else {
@@ -586,7 +765,7 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   async function removeCredential() {
     if (selectedCredential === null || !beginAction("remove-credential")) return;
-    setStatus("Removing credential…");
+    setStatus("Removing credentialÃ¢â‚¬Â¦");
     try {
       await json(`/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`, {
         method: "DELETE",
@@ -606,7 +785,7 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   async function runCanary(target: "local" | "hosted") {
     if (!beginAction(`canary-${target}`)) return;
-    setStatus(target === "local" ? "Running local canary…" : "Running hosted canary…");
+    setStatus(target === "local" ? "Running local canaryÃ¢â‚¬Â¦" : "Running hosted canaryÃ¢â‚¬Â¦");
     const testedProvider = runtime?.settings.hostedProvider;
     try {
       const result = await json<{
@@ -629,13 +808,13 @@ export function useSettingsController(initialWorkspaceId: string) {
         });
       }
       // Provenance ditampilkan apa adanya: `declared-unverified` berarti operator
-      // menyatakan digest tapi runtime tidak bisa mengonfirmasinya — itu bukan PINNED.
+      // menyatakan digest tapi runtime tidak bisa mengonfirmasinya Ã¢â‚¬â€ itu bukan PINNED.
       const provenance =
         result.modelIdentityProvenance === undefined
           ? ""
           : ` (${result.modelIdentityProvenance})`;
       setStatus(
-        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms · identity ${result.modelIdentityPinned ? "PINNED" : "UNPINNED"}${provenance}`,
+        `Canary ${result.pass ? "PASS" : "FAIL"}: ${result.provider}/${result.model} ${result.latencyMs.toFixed(1)}ms Ã‚Â· identity ${result.modelIdentityPinned ? "PINNED" : "UNPINNED"}${provenance}`,
       );
     } catch (error) {
       if (target === "hosted" && testedProvider !== undefined) {
@@ -667,7 +846,7 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   async function saveLocalSetup(): Promise<void> {
     if (runtime === null || !beginAction("local-setup")) return;
-    setStatus("Checking Local AI configuration before saving…");
+    setStatus("Checking Local AI configuration before savingÃ¢â‚¬Â¦");
     try {
       const discovered = await json<LocalRuntimeStatus>(
         "/api/settings/settings/local-runtime/status",
@@ -675,7 +854,7 @@ export function useSettingsController(initialWorkspaceId: string) {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            localRuntime: "openai-compatible",
+            localRuntime: runtime.settings.localRuntime,
             localBaseUrl: runtime.settings.localBaseUrl,
             localModelTag: runtime.settings.localModelTag,
           }),
@@ -698,7 +877,7 @@ export function useSettingsController(initialWorkspaceId: string) {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          localRuntime: "openai-compatible",
+          localRuntime: runtime.settings.localRuntime,
           localBaseUrl: runtime.settings.localBaseUrl,
           localModelTag: runtime.settings.localModelTag,
           localModelDigest: discovered.modelDigest,
@@ -719,7 +898,7 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   async function checkLocalStatus(): Promise<void> {
     if (!beginAction("local-discovery")) return;
-    setStatus("Checking Local AI…");
+    setStatus("Checking Local AIÃ¢â‚¬Â¦");
     try {
       const discovered = await refreshLocalStatus();
       setStatus(discovered.message);
@@ -732,7 +911,7 @@ export function useSettingsController(initialWorkspaceId: string) {
 
   async function saveMcpServer() {
     if (!beginAction("mcp")) return;
-    setStatus("Validating and saving MCP server…");
+    setStatus("Validating and saving MCP serverÃ¢â‚¬Â¦");
     try {
       const parsed = JSON.parse(mcpJson) as McpServer;
       await json(`/api/settings/settings/mcp/servers/${encodeURIComponent(parsed.id)}`, {
@@ -767,6 +946,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     openRouterPickerModels,
     openRouterQuery,
     openRouterSourceProvider,
+    openRouterPreferenceRequiresExecution,
     mcpJson,
     mcpLoading,
     mutableLocalModel,
@@ -775,6 +955,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     refreshMcp,
     removeCredential,
     discoverOpenRouterModels,
+    validateOpenRouterModel,
     runCanary,
     runtime,
     saveCredential,
@@ -782,12 +963,15 @@ export function useSettingsController(initialWorkspaceId: string) {
     saveLocalSetup,
     saveMcpServer,
     saveRuntime,
+    saveSpendPolicy,
     secret,
     secretProvider,
     selectedCredential,
     selectedProviderHealth,
     selectedProviderOption,
     servers,
+    spendDraft,
+    spendStatus,
     setConnectProviderId,
     setCredentialTest,
     setHostedHealth,
@@ -800,6 +984,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     setSecret,
     setSecretProvider,
     setSecretRevision,
+    setSpendDraft,
     setStatus,
     setWorkspaceId,
     status,

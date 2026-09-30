@@ -49,7 +49,7 @@ describe("OpenRouter automatic admission", () => {
     [{ outputModalities: ["image"] }, "text-output-unsupported"],
     [{ supportedParameters: ["tools"] }, "max-tokens-unsupported"],
     [{ promptPricePerToken: null }, "missing-pricing"],
-    [{ completionPricePerToken: "0" }, "invalid-pricing"],
+    [{ completionPricePerToken: "tidak-angka" }, "invalid-pricing"],
   ] as const)("fails closed with %s", (overrides, unavailableReason) => {
     expect(
       verifyOpenRouterModelAdmission(
@@ -63,19 +63,31 @@ describe("OpenRouter automatic admission", () => {
     });
   });
 
-  it("keeps non-target families discovery-only", () => {
+  it("admits a free text model when the catalog explicitly prices both sides at zero", () => {
+    expect(
+      verifyOpenRouterModelAdmission(
+        candidate({ promptPricePerToken: "0", completionPricePerToken: "0" }),
+      ),
+    ).toMatchObject({
+      admission: "verified-selectable",
+      selectable: true,
+      unavailableReason: null,
+    });
+  });
+
+  it("admits a stable text model outside the named six families for explicit validation", () => {
     expect(
       verifyOpenRouterModelAdmission(
         candidate({
-          id: "anthropic/claude-sonnet-4.5",
-          sourceProvider: "anthropic",
+          id: "perplexity/sonar-pro",
+          sourceProvider: "perplexity",
           family: "other",
         }),
       ),
     ).toEqual({
-      admission: "discovered-only",
-      selectable: false,
-      selectionId: null,
+      admission: "verified-selectable",
+      selectable: true,
+      selectionId: "perplexity/sonar-pro",
       unavailableReason: null,
     });
   });

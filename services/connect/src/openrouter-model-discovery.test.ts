@@ -156,6 +156,23 @@ describe("OpenRouter model discovery", () => {
     const discovery = new OpenRouterModelDiscovery({
       ttlMs: 10,
       now: () => now,
+      certificationReader: {
+        get(modelId) {
+          return modelId === "qwen/qwen3.8-max"
+            ? {
+                modelId,
+                certifiedAt: "2026-09-30T00:00:00.000Z",
+                catalogFetchedAt: "2026-09-30T00:00:00.000Z",
+                responseModel: modelId,
+                latencyMs: 10,
+                billedCostUsd: 0.001,
+                promptPricePerToken: "0.000002",
+                completionPricePerToken: "0.000006",
+              }
+            : undefined;
+        },
+        list: () => [],
+      },
     });
 
     await discovery.list();
@@ -169,6 +186,7 @@ describe("OpenRouter model discovery", () => {
       admission: "unavailable",
       selectable: false,
       selectionId: null,
+      executable: false,
       unavailableReason: "stale-catalog",
     });
     expect(

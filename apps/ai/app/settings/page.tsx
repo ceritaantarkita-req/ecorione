@@ -25,10 +25,12 @@ export default function SettingsPage() {
     mutableLocalModel,
     openRouterDiscovery,
     openRouterPickerModels,
+    openRouterPreferenceRequiresExecution,
     openRouterQuery,
     openRouterSourceProvider,
     pendingAction,
     discoverOpenRouterModels,
+    validateOpenRouterModel,
     providerViews,
     refreshMcp,
     removeCredential,
@@ -39,12 +41,15 @@ export default function SettingsPage() {
     saveLocalSetup,
     saveMcpServer,
     saveRuntime,
+    saveSpendPolicy,
     secret,
     secretProvider,
     selectedCredential,
     selectedProviderHealth,
     selectedProviderOption,
     servers,
+    spendDraft,
+    spendStatus,
     setConnectProviderId,
     setCredentialTest,
     setHostedHealth,
@@ -57,6 +62,7 @@ export default function SettingsPage() {
     setSecret,
     setSecretProvider,
     setSecretRevision,
+    setSpendDraft,
     setStatus,
     setWorkspaceId,
     status,
@@ -64,6 +70,21 @@ export default function SettingsPage() {
     workspaceId,
     workspaceIdRef,
   } = useSettingsController(activeWorkspaceId);
+
+  const statusIsWarning = /SPEND_BUDGET|spend budget|plafon spend|COST_KILL_SWITCH/i.test(
+    status,
+  );
+  const cloudAiEnabled =
+    spendStatus?.operatorGateOpen === true &&
+    runtime?.settings.hostedCallsEnabled === true &&
+    !openRouterPreferenceRequiresExecution;
+
+  const closeProviderConnect = () => {
+    setConnectProviderId(null);
+    setSecret("");
+    setCredentialTest(null);
+    setStatus("");
+  };
 
   return (
     <main className={styles.page}>
@@ -78,7 +99,11 @@ export default function SettingsPage() {
       </header>
 
       {status ? (
-        <p className={styles.status} aria-live="polite" role="status">
+        <p
+          className={`${styles.status}${statusIsWarning ? ` ${styles.statusWarning}` : ""}`}
+          aria-live="assertive"
+          role="alert"
+        >
           {status}
         </p>
       ) : null}
@@ -124,14 +149,24 @@ export default function SettingsPage() {
                     Connect
                   </button>
                 ) : active ? (
-                  <button
-                    type="button"
-                    className={styles.secondary}
-                    disabled={pendingAction !== null || !runtime?.settings.hostedCallsEnabled}
-                    onClick={() => void runCanary("hosted")}
-                  >
-                    {pendingAction === "canary-hosted" ? "Testing…" : "Test connection"}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className={styles.secondary}
+                      disabled={pendingAction !== null || !runtime?.settings.hostedCallsEnabled}
+                      onClick={() => void runCanary("hosted")}
+                    >
+                      {pendingAction === "canary-hosted" ? "Testing..." : "Test connection"}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondary}
+                      disabled={pendingAction !== null}
+                      onClick={() => beginProviderConnect(provider.id)}
+                    >
+                      Replace API key
+                    </button>
+                  </>
                 ) : (
                   <>
                     <button
@@ -159,7 +194,11 @@ export default function SettingsPage() {
             <div className={styles.providerCardTop}>
               <div>
                 <strong>Local AI</strong>
-                <span className={styles.providerMeta}>OpenAI-compatible runtime</span>
+                <span className={styles.providerMeta}>
+                  {runtime?.settings.localRuntime === "ollama"
+                    ? "Ollama native runtime"
+                    : "OpenAI-compatible runtime"}
+                </span>
               </div>
               <span className={localStatus?.ready ? styles.activeBadge : styles.statusBadge}>
                 {localStatus === null
@@ -208,13 +247,157 @@ export default function SettingsPage() {
             </div>
           </article>
         </div>
+        {spendStatus && runtime ? (
+          <section className={styles.spendPanel} aria-labelledby="cloud-budget-heading">
+            <div className={styles.spendHeader}>
+              <div>
+                <span className={styles.eyebrow}>Cloud AI & Budget</span>
+                <h3 id="cloud-budget-heading">Atur batas biaya</h3>
+                <p>
+                  Angka ini tersimpan lokal dan langsung dipakai untuk semua panggilan AI
+                  hosted.
+                </p>
+              </div>
+              <span className={cloudAiEnabled ? styles.activeBadge : styles.statusBadge}>
+                {openRouterPreferenceRequiresExecution
+                  ? "Pilih model Ready"
+                  : cloudAiEnabled
+                    ? "Cloud AI aktif"
+                    : "Cloud AI mati"}
+              </span>
+            </div>
+
+            <div className={styles.spendControls}>
+              <label className={styles.spendToggle}>
+                <input
+                  type="checkbox"
+                  checked={runtime.settings.hostedCallsEnabled}
+                  disabled={pendingAction !== null || openRouterPreferenceRequiresExecution}
+                  onChange={(event) => {
+                    const enabled = event.target.checked;
+                    setHostedHealth(null);
+                    setRuntime({
+                      ...runtime,
+                      settings: {
+                        ...runtime.settings,
+                        hostedCallsEnabled: enabled,
+                        defaultChatTarget: enabled
+                          ? runtime.settings.defaultChatTarget
+                          : "local",
+                      },
+                    });
+                  }}
+                />
+                <span>
+                  <strong>Aktifkan Cloud AI</strong>
+                  <small>
+                    {openRouterPreferenceRequiresExecution
+                      ? "Model OpenRouter yang dipilih baru preference. Pilih Recommended atau model Ready untuk mengaktifkan Cloud AI."
+                      : "Matikan untuk memblokir semua pemakaian provider berbayar."}
+                  </small>
+                </span>
+              </label>
+
+              <label className={styles.spendField}>
+                Budget harian (USD)
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="Contoh: 0.10"
+                  value={spendDraft.dailyUsd}
+                  disabled={pendingAction !== null || spendDraft.unlimited}
+                  onChange={(event) =>
+                    setSpendDraft((current) => ({ ...current, dailyUsd: event.target.value }))
+                  }
+                />
+              </label>
+
+              <label className={styles.spendField}>
+                Budget bulanan (USD)
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="Contoh: 1.00"
+                  value={spendDraft.monthlyUsd}
+                  disabled={pendingAction !== null || spendDraft.unlimited}
+                  onChange={(event) =>
+                    setSpendDraft((current) => ({ ...current, monthlyUsd: event.target.value }))
+                  }
+                />
+              </label>
+
+              <label className={[styles.spendToggle, styles.spendUnlimited].join(" ")}>
+                <input
+                  type="checkbox"
+                  checked={spendDraft.unlimited}
+                  disabled={pendingAction !== null}
+                  onChange={(event) => {
+                    const unlimited = event.target.checked;
+                    if (
+                      unlimited &&
+                      !window.confirm(
+                        "Mode tanpa batas menonaktifkan plafon biaya harian dan bulanan. Lanjutkan?",
+                      )
+                    ) {
+                      return;
+                    }
+                    setSpendDraft((current) => ({ ...current, unlimited }));
+                  }}
+                />
+                <span>
+                  <strong>Tanpa batas biaya</strong>
+                  <small>
+                    Berisiko. Budget harian dan bulanan tidak akan membatasi penggunaan.
+                  </small>
+                </span>
+              </label>
+            </div>
+
+            <div className={styles.spendFooter}>
+              <div className={styles.spendUsage}>
+                {spendStatus.policy.unlimited ? (
+                  <p>Mode tanpa batas sedang aktif.</p>
+                ) : spendStatus.budget ? (
+                  <p>
+                    Terpakai hari ini {"$"}
+                    {spendStatus.budget.dailyCommittedUsd.toFixed(4)} / {"$"}
+                    {spendStatus.budget.dailyLimitUsd?.toFixed(2) ?? "—"} · bulan ini {"$"}
+                    {spendStatus.budget.monthlyCommittedUsd.toFixed(4)} / {"$"}
+                    {spendStatus.budget.monthlyLimitUsd?.toFixed(2) ?? "—"}
+                  </p>
+                ) : (
+                  <p>Belum ada budget aktif. Cloud AI akan ditolak sampai budget disimpan.</p>
+                )}
+                <small>
+                  Emergency kill switch milik operator sistem tetap menang dan tidak bisa dibuka
+                  dari halaman ini.
+                </small>
+              </div>
+              <button
+                type="button"
+                disabled={pendingAction !== null}
+                onClick={() => void saveSpendPolicy()}
+              >
+                {pendingAction === "spend-policy" ? "Menyimpan..." : "Simpan pengaturan"}
+              </button>
+            </div>
+          </section>
+        ) : null}
 
         {localSetupOpen && runtime !== null ? (
           <div className={styles.connectPanel}>
             <div className={styles.connectPanelHeader}>
               <div>
                 <span className={styles.eyebrow}>Local AI setup</span>
-                <h3>OpenAI-compatible runtime</h3>
+                <h3>
+                  {runtime.settings.localRuntime === "ollama"
+                    ? "Ollama native runtime"
+                    : "OpenAI-compatible runtime"}
+                </h3>
               </div>
               <button
                 type="button"
@@ -226,10 +409,33 @@ export default function SettingsPage() {
               </button>
             </div>
             <p className={styles.muted}>
-              Ollama, LM Studio, llama.cpp, vLLM, atau runtime lain boleh dipakai selama
-              menyediakan API OpenAI-compatible. ECORIONE tidak mewajibkan Ollama.
+              Pilih Ollama native untuk model yang membutuhkan kontrol thinking/output Ollama.
+              Pilih OpenAI-compatible untuk LM Studio, llama.cpp, vLLM, atau runtime kompatibel
+              lain.
             </p>
             <div className={styles.localSetupGrid}>
+              <label className={styles.connectField}>
+                Runtime
+                <select
+                  value={runtime.settings.localRuntime}
+                  disabled={pendingAction !== null}
+                  onChange={(event) => {
+                    setLocalStatus(null);
+                    setRuntime({
+                      ...runtime,
+                      settings: {
+                        ...runtime.settings,
+                        localRuntime: event.target
+                          .value as RuntimeSnapshot["settings"]["localRuntime"],
+                        localModelDigest: null,
+                      },
+                    });
+                  }}
+                >
+                  <option value="ollama">Ollama (native API · recommended)</option>
+                  <option value="openai-compatible">OpenAI-compatible</option>
+                </select>
+              </label>
               <label className={styles.connectField}>
                 Endpoint
                 <input
@@ -292,7 +498,7 @@ export default function SettingsPage() {
               </a>
             </div>
             <p className={styles.muted}>
-              Discovery checks the OpenAI-compatible model catalog without running inference. If
+              Discovery checks the selected runtime model catalog without running inference. If
               the runtime also exposes verifiable model identity, ECORIONE can pin the digest
               automatically. An explicit canary remains separate.
             </p>
@@ -300,75 +506,97 @@ export default function SettingsPage() {
         ) : null}
 
         {connectProvider !== null ? (
-          <div className={styles.connectPanel}>
-            <div className={styles.connectPanelHeader}>
-              <div>
-                <span className={styles.eyebrow}>Connect provider</span>
-                <h3>{connectProvider.displayName}</h3>
+          <div
+            className={styles.connectOverlay}
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget && pendingAction === null)
+                closeProviderConnect();
+            }}
+          >
+            <section
+              className={`${styles.connectPanel} ${styles.connectDialog}`}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="connect-provider-title"
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && pendingAction === null) closeProviderConnect();
+              }}
+            >
+              <div className={styles.connectPanelHeader}>
+                <div>
+                  <span className={styles.eyebrow}>Connect provider</span>
+                  <h3 id="connect-provider-title">Connect {connectProvider.displayName}</h3>
+                </div>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  disabled={pendingAction !== null}
+                  onClick={closeProviderConnect}
+                >
+                  Cancel
+                </button>
               </div>
-              <button
-                type="button"
-                className={styles.secondary}
-                disabled={pendingAction !== null}
-                onClick={() => {
-                  setConnectProviderId(null);
-                  setSecret("");
-                  setCredentialTest(null);
-                  setStatus("");
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-            <label className={styles.connectField}>
-              API key
-              <input
-                type="password"
-                autoComplete="new-password"
-                placeholder="Paste API key"
-                value={secret}
-                disabled={pendingAction !== null}
-                onChange={(event) => {
-                  setSecret(event.target.value);
-                  setSecretRevision((current) => current + 1);
-                  setCredentialTest(null);
-                }}
-              />
-            </label>
-            <div className={styles.connectSteps}>
-              <span className={credentialTestPassed ? styles.stepDone : styles.step}>
-                1. Test key
-              </span>
-              <span className={credentialTestPassed ? styles.step : styles.stepMuted}>
-                2. Encrypt, save & activate
-              </span>
-            </div>
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.secondary}
-                disabled={
-                  secret.length === 0 ||
-                  pendingAction !== null ||
-                  !connectProvider.connectionTestReady
-                }
-                onClick={() => void testCredential()}
-              >
-                {pendingAction === "test-credential" ? "Testing…" : "Test API key"}
-              </button>
-              <button
-                type="button"
-                disabled={!credentialReadyToSave || pendingAction !== null}
-                onClick={() => void saveCredential()}
-              >
-                {pendingAction === "credential" ? "Saving…" : "Save & activate"}
-              </button>
-            </div>
-            <p className={styles.muted}>
-              {credentialTestPassed
-                ? "Test PASS. Key belum disimpan sampai Save & activate ditekan."
-                : "Test memakai real provider call tanpa menyimpan plaintext."}
-            </p>
+              {status ? (
+                <p
+                  className={`${styles.dialogStatus}${statusIsWarning ? ` ${styles.statusWarning}` : ""}`}
+                  aria-live="assertive"
+                  role="alert"
+                >
+                  {status}
+                </p>
+              ) : null}
+              <label className={styles.connectField}>
+                API key
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  autoFocus
+                  placeholder="Paste API key"
+                  value={secret}
+                  disabled={pendingAction !== null}
+                  onChange={(event) => {
+                    setSecret(event.target.value);
+                    setSecretRevision((current) => current + 1);
+                    setCredentialTest(null);
+                  }}
+                />
+              </label>
+              <div className={styles.connectSteps}>
+                <span className={credentialTestPassed ? styles.stepDone : styles.step}>
+                  1. Test key
+                </span>
+                <span className={credentialTestPassed ? styles.step : styles.stepMuted}>
+                  2. Encrypt, save & activate
+                </span>
+              </div>
+              <div className={styles.actions}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  disabled={
+                    secret.length === 0 ||
+                    pendingAction !== null ||
+                    !connectProvider.connectionTestReady
+                  }
+                  onClick={() => void testCredential()}
+                >
+                  {pendingAction === "test-credential" ? "Testing…" : "Test API key"}
+                </button>
+                <button
+                  type="button"
+                  disabled={!credentialReadyToSave || pendingAction !== null}
+                  onClick={() => void saveCredential()}
+                >
+                  {pendingAction === "credential" ? "Saving…" : "Save & activate"}
+                </button>
+              </div>
+              <p className={styles.muted}>
+                {credentialTestPassed
+                  ? "Test PASS. Key belum disimpan sampai Save & activate ditekan."
+                  : "Test memakai real provider call tanpa menyimpan plaintext."}
+              </p>
+            </section>
           </div>
         ) : null}
       </section>
@@ -401,20 +629,35 @@ export default function SettingsPage() {
                   ...runtime.settings,
                   hostedProvider: provider,
                   hostedModel: "governed",
+                  ...(provider === "openrouter"
+                    ? { openRouterModelSelection: "governed" }
+                    : {}),
                 },
               });
             }}
-            onModelChange={(selected) =>
+            onModelChange={(selected) => {
+              const openRouterModel = openRouterPickerModels.find(
+                (model) => model.id === selected,
+              );
+              const preferenceNeedsExecution =
+                runtime.settings.hostedProvider === "openrouter" &&
+                selected !== "governed" &&
+                openRouterModel?.executable !== true;
               setRuntime({
                 ...runtime,
                 settings: {
                   ...runtime.settings,
                   ...(runtime.settings.hostedProvider === "openrouter"
-                    ? { openRouterModelSelection: selected }
+                    ? {
+                        openRouterModelSelection: selected,
+                        ...(preferenceNeedsExecution
+                          ? { hostedCallsEnabled: false, defaultChatTarget: "local" }
+                          : {}),
+                      }
                     : { hostedModel: selected }),
                 },
-              })
-            }
+              });
+            }}
             onSave={() => void saveDefaultProviderModel()}
           />
         )}
@@ -428,6 +671,7 @@ export default function SettingsPage() {
             onQueryChange={setOpenRouterQuery}
             onSourceProviderChange={setOpenRouterSourceProvider}
             onDiscover={(forceRefresh) => void discoverOpenRouterModels(forceRefresh)}
+            onValidate={(selectionId) => void validateOpenRouterModel(selectionId)}
           />
         ) : null}
       </section>
@@ -458,9 +702,36 @@ export default function SettingsPage() {
                     }
                   >
                     <option value="local">Local AI</option>
-                    <option value="hosted" disabled={!runtime.settings.hostedCallsEnabled}>
+                    <option
+                      value="hosted"
+                      disabled={
+                        !runtime.settings.hostedCallsEnabled ||
+                        openRouterPreferenceRequiresExecution
+                      }
+                    >
                       Hosted AI
                     </option>
+                  </select>
+                </label>
+                <label>
+                  Local runtime
+                  <select
+                    value={runtime.settings.localRuntime}
+                    disabled={pendingAction !== null}
+                    onChange={(event) =>
+                      setRuntime({
+                        ...runtime,
+                        settings: {
+                          ...runtime.settings,
+                          localRuntime: event.target
+                            .value as RuntimeSnapshot["settings"]["localRuntime"],
+                          localModelDigest: null,
+                        },
+                      })
+                    }
+                  >
+                    <option value="ollama">Ollama native</option>
+                    <option value="openai-compatible">OpenAI-compatible</option>
                   </select>
                 </label>
                 <label>
@@ -519,7 +790,7 @@ export default function SettingsPage() {
                   <input
                     type="checkbox"
                     checked={runtime.settings.hostedCallsEnabled}
-                    disabled={pendingAction !== null}
+                    disabled={pendingAction !== null || openRouterPreferenceRequiresExecution}
                     onChange={(event) => {
                       setHostedHealth(null);
                       setRuntime({
@@ -536,6 +807,12 @@ export default function SettingsPage() {
                   />
                   Hosted calls enabled
                 </label>
+                {openRouterPreferenceRequiresExecution ? (
+                  <p className={`${styles.warning} ${styles.wide}`}>
+                    Model OpenRouter yang dipilih masih preference dan belum executable. Pilih
+                    Recommended atau model Ready sebelum mengaktifkan Hosted.
+                  </p>
+                ) : null}
                 {mutableLocalModel ? (
                   <p className={`${styles.warning} ${styles.wide}`}>
                     Local model memakai alias mutable{" "}
@@ -577,7 +854,11 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     className={styles.secondary}
-                    disabled={pendingAction !== null || !runtime.settings.hostedCallsEnabled}
+                    disabled={
+                      pendingAction !== null ||
+                      !runtime.settings.hostedCallsEnabled ||
+                      openRouterPreferenceRequiresExecution
+                    }
                     onClick={() => void runCanary("hosted")}
                   >
                     {pendingAction === "canary-hosted" ? "Running…" : "Test hosted provider"}
@@ -614,6 +895,7 @@ export default function SettingsPage() {
               <input
                 type="password"
                 autoComplete="new-password"
+                autoFocus
                 placeholder={selectedCredential === null ? "New secret" : "Replace secret"}
                 aria-label="New credential secret"
                 value={secret}

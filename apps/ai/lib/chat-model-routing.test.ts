@@ -43,6 +43,13 @@ const discovery: ChatOpenRouterDiscovery = {
       selectionId: "qwen/qwen3.8-max",
     },
     {
+      id: "google/gemini-3.8-flash",
+      displayName: "Gemini 3.8 Flash",
+      selectable: true,
+      executable: false,
+      selectionId: "google/gemini-3.8-flash",
+    },
+    {
       id: "~deepseek/deepseek-v4-flash-latest",
       displayName: "DeepSeek V4 Flash Latest",
       selectable: false,
@@ -53,7 +60,7 @@ const discovery: ChatOpenRouterDiscovery = {
 };
 
 describe("Ai chat OpenRouter quick-switch routing", () => {
-  it("shows governed, static executable, and admitted dynamic models but excludes unavailable discovery", () => {
+  it("shows governed and Ready models only, while untested catalog entries stay in Settings", () => {
     const models = buildOpenRouterQuickSwitchModels(runtime, providers, discovery);
     expect(models.map((model) => model.id)).toEqual([
       "governed",
@@ -61,10 +68,7 @@ describe("Ai chat OpenRouter quick-switch routing", () => {
       "claude-opus-4-1-20250805",
       "qwen/qwen3.8-max",
     ]);
-    expect(models.find((model) => model.id === "qwen/qwen3.8-max")).toMatchObject({
-      executable: false,
-      displayName: "Qwen: Qwen3.8 Max",
-    });
+    expect(models.some((model) => model.id === "google/gemini-3.8-flash")).toBe(false);
     expect(models.some((model) => model.id.includes("deepseek"))).toBe(false);
   });
 
@@ -110,6 +114,26 @@ describe("Ai chat OpenRouter quick-switch routing", () => {
       }),
     ).toMatchObject({
       hostedAvailable: false,
+      defaultTarget: "local",
+    });
+  });
+  it("fails closed for a legacy dynamic preference snapshot that incorrectly says Hosted is on", () => {
+    const contradictoryRuntime: ChatRuntimeSnapshot = {
+      ...runtime,
+      settings: {
+        ...runtime.settings,
+        hostedCallsEnabled: true,
+        defaultChatTarget: "hosted",
+      },
+    };
+
+    expect(
+      deriveChatRoutingState(contradictoryRuntime, {
+        credentials: [{ provider: "openrouter" }],
+      }),
+    ).toMatchObject({
+      hostedAvailable: false,
+      hostedBlockedByOpenRouterPreference: true,
       defaultTarget: "local",
     });
   });

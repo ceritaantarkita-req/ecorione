@@ -142,6 +142,104 @@ describe("FileRuntimeSettings", () => {
     });
   });
 
+  it("tetap fail-closed ketika generic runtime save mencoba membuka preference OpenRouter non-executable", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
+    const path = join(dir, "settings.json");
+    const store = new FileRuntimeSettings(path, defaults);
+
+    const selected = store.update({
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      openRouterModelSelection: "qwen/qwen3.8-max",
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    });
+    expect(selected.settings).toMatchObject({
+      openRouterModelSelection: "qwen/qwen3.8-max",
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    });
+
+    const reopened = store.update({
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+    expect(reopened.settings).toMatchObject({
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      openRouterModelSelection: "qwen/qwen3.8-max",
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    });
+    expect(new FileRuntimeSettings(path, defaults).get().settings).toMatchObject({
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    });
+  });
+
+  it("mempertahankan Hosted aktif setelah reload bila OpenRouter memakai Recommended executable", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
+    const path = join(dir, "settings.json");
+    const store = new FileRuntimeSettings(path, defaults);
+
+    const active = store.update({
+      hostedProvider: "openrouter",
+      hostedModel: "governed",
+      openRouterModelSelection: "governed",
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+    expect(active.settings).toMatchObject({
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+
+    expect(new FileRuntimeSettings(path, defaults).get()).toMatchObject({
+      revision: active.revision,
+      settings: {
+        hostedProvider: "openrouter",
+        openRouterModelSelection: "governed",
+        hostedCallsEnabled: true,
+        defaultChatTarget: "hosted",
+      },
+    });
+  });
+
+  it("memperbaiki state legacy OpenRouter dynamic yang sebelumnya tersimpan kontradiktif", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
+    const path = join(dir, "settings.json");
+    writeFileSync(
+      path,
+      JSON.stringify({
+        version: 1,
+        revision: 7,
+        settings: {
+          ...defaults,
+          hostedProvider: "openrouter",
+          hostedModel: "governed",
+          openRouterModelSelection: "google/gemini-3.7-flash",
+          hostedCallsEnabled: true,
+          defaultChatTarget: "hosted",
+        },
+      }),
+      "utf8",
+    );
+
+    const repaired = new FileRuntimeSettings(path, defaults).get();
+    expect(repaired).toMatchObject({
+      revision: 8,
+      settings: {
+        openRouterModelSelection: "google/gemini-3.7-flash",
+        hostedCallsEnabled: false,
+        defaultChatTarget: "local",
+      },
+    });
+    expect(JSON.parse(readFileSync(path, "utf8"))).toMatchObject({
+      revision: 8,
+      settings: { hostedCallsEnabled: false, defaultChatTarget: "local" },
+    });
+  });
+
   it("menolak credential/fragment dan protocol non-http pada local runtime URL", () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
     const store = new FileRuntimeSettings(join(dir, "settings.json"), defaults);
@@ -231,5 +329,28 @@ describe("FileRuntimeSettings", () => {
       if (prior === undefined) delete process.env.ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC;
       else process.env.ECORIONE_LOCAL_BASE_URL_ALLOW_PUBLIC = prior;
     }
+  });
+  it("menyimpan kebijakan budget hosted yang diubah dari Settings", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-settings-"));
+    const path = join(dir, "settings.json");
+    const store = new FileRuntimeSettings(path, defaults);
+
+    const saved = store.update({
+      spendDailyUsd: 0.1,
+      spendMonthlyUsd: 1,
+      spendUnlimited: false,
+    });
+
+    expect(saved.settings).toMatchObject({
+      spendDailyUsd: 0.1,
+      spendMonthlyUsd: 1,
+      spendUnlimited: false,
+    });
+    expect(new FileRuntimeSettings(path, defaults).get().settings).toMatchObject({
+      spendDailyUsd: 0.1,
+      spendMonthlyUsd: 1,
+      spendUnlimited: false,
+    });
+    expect(() => store.update({ spendDailyUsd: 0 })).toThrow();
   });
 });

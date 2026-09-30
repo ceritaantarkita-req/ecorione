@@ -102,6 +102,7 @@ export default function ChatPage() {
   const modelRouting = useChatModelRouting();
   const defaultTarget = modelRouting.defaultTarget;
   const hostedAvailable = modelRouting.hostedAvailable;
+  const hostedBlockedByOpenRouterPreference = modelRouting.hostedBlockedByOpenRouterPreference;
   const hostedRouteLabel = modelRouting.hostedRouteLabel;
   const localRuntimeStatus = modelRouting.localRuntimeStatus;
   const [sending, setSending] = useState(false);
@@ -362,6 +363,12 @@ export default function ChatPage() {
   }, [defaultTarget]);
 
   useEffect(() => {
+    if (hostedBlockedByOpenRouterPreference && target === "hosted") {
+      setTarget("local");
+    }
+  }, [hostedBlockedByOpenRouterPreference, target]);
+
+  useEffect(() => {
     if (!hydrated || turns.length === 0) return;
     threadEndRef.current?.scrollIntoView({ block: "nearest" });
   }, [hydrated, sending, turns.length]);
@@ -392,6 +399,7 @@ export default function ChatPage() {
       !sessionReady ||
       trimmed.length === 0 ||
       sending ||
+      modelRouting.switching ||
       sendInFlightRef.current
     )
       return false;
@@ -413,7 +421,9 @@ export default function ChatPage() {
         {
           kind: "error",
           id: nextTurnId(),
-          message: "Hosted sedang nonaktif. Aktifkan provider hosted di Settings.",
+          message: hostedBlockedByOpenRouterPreference
+            ? "Model OpenRouter ini baru tersimpan sebagai preference, belum bisa dipakai untuk Cloud. Pilih OpenRouter Recommended atau model Ready."
+            : "Hosted sedang nonaktif. Aktifkan provider hosted di Settings.",
         },
       ]);
       return false;
@@ -724,9 +734,9 @@ export default function ChatPage() {
   }
 
   async function handleOpenRouterModelSwitch(selectionId: string): Promise<void> {
-    if (routeLockedRef.current) return;
+    if (sending || preparingAttachments) return;
     const nextTarget = await modelRouting.switchOpenRouterModel(selectionId);
-    if (nextTarget !== null && !routeLockedRef.current) setTarget(nextTarget);
+    if (nextTarget !== null) setTarget(nextTarget);
   }
 
   const modelControlsLocked =
@@ -736,20 +746,19 @@ export default function ChatPage() {
     sending ||
     preparingAttachments ||
     modelRouting.switching ||
-    turns.length > 0 ||
     attachments.length > 0;
   const routeReady =
     target === "local" ? localRuntimeStatus?.ready === true : hostedAvailable === true;
   const routeHint =
-    turns.length > 0
-      ? "Terkunci untuk sesi ini."
-      : attachments.length > 0
-        ? "Terkunci selama lampiran dipakai di sesi ini."
-        : target === "local" && localRuntimeStatus?.ready !== true
-          ? "Local AI belum terhubung. Setup tersedia di Settings."
-          : target === "hosted" && hostedAvailable !== true
-            ? "Hosted belum aktif. Hubungkan provider di Settings."
-            : "Terkunci setelah pesan pertama.";
+    attachments.length > 0
+      ? "Terkunci selama lampiran dipakai di sesi ini."
+      : target === "local" && localRuntimeStatus?.ready !== true
+        ? "Local AI belum terhubung. Setup tersedia di Settings."
+        : target === "hosted" && hostedAvailable !== true
+          ? hostedBlockedByOpenRouterPreference
+            ? "Model OpenRouter ini belum executable. Pilih OpenRouter Recommended atau model Ready untuk Cloud."
+            : "Hosted belum aktif. Hubungkan provider di Settings."
+          : "Berlaku untuk pesan berikutnya. Setiap balasan menyimpan model dan biaya yang dipakai.";
 
   const canSend =
     projectReady &&
@@ -758,6 +767,7 @@ export default function ChatPage() {
     routeReady &&
     !historyLoading &&
     !sending &&
+    !modelRouting.switching &&
     !preparingAttachments &&
     attachmentsReadyForSend(attachments) &&
     (draft.trim().length > 0 || attachments.length > 0);
@@ -891,13 +901,17 @@ export default function ChatPage() {
                 {modelRouting.feedback.message}
               </p>
             ) : null}
-            {!routeReady ? (
-              <p className="ai-route-status" role="status">
-                {target === "local"
-                  ? (localRuntimeStatus?.message ?? "Local AI · Checking connection…")
-                  : "Hosted AI belum aktif. Hubungkan provider di Settings → AI & Connections."}
-              </p>
-            ) : null}
+            <p className="ai-route-status" role="status">
+              {!routeReady
+                ? target === "local"
+                  ? (localRuntimeStatus?.message ?? "Local AI \u00b7 Checking connection\u2026")
+                  : hostedBlockedByOpenRouterPreference
+                    ? "Model OpenRouter ini belum executable. Pilih OpenRouter Recommended atau model Ready untuk Cloud."
+                    : "Hosted AI belum aktif. Hubungkan provider di Settings -> AI & Connections."
+                : target === "local"
+                  ? `Pesan berikutnya: Local \u00b7 ${localRuntimeStatus?.configuredModel ?? "model lokal"}. Model dan biaya dicatat per balasan.`
+                  : `Pesan berikutnya: Cloud \u00b7 ${hostedRouteLabel}. Riwayat Local-only tidak dikirim ke Cloud; model dan biaya dicatat per balasan.`}
+            </p>
 
             <textarea
               className="ai-composer__field"
@@ -1006,7 +1020,11 @@ export default function ChatPage() {
                         : "Local · Not connected"}
                     </option>
                     <option value="hosted" disabled={hostedAvailable !== true}>
-                      {hostedAvailable === true ? hostedRouteLabel : "Hosted · Not connected"}
+                      {hostedAvailable === true
+                        ? hostedRouteLabel
+                        : hostedBlockedByOpenRouterPreference
+                          ? "Hosted — pilih model Ready"
+                          : "Hosted · Not connected"}
                     </option>
                   </select>
                   <ChevronIcon />
