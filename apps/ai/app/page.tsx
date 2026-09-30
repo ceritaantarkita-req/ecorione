@@ -41,7 +41,10 @@ import {
   resolveActiveProjectId,
 } from "../lib/project-selection";
 import { isClientSessionId, makeSessionId, projectSessionStorageKey } from "../lib/session";
-import { AiProviderConnectDialog } from "./AiProviderConnectDialog";
+import {
+  AiProviderConnectDialog,
+  AiProviderOnboardingFeedback,
+} from "./AiProviderConnectDialog";
 import {
   ChatProviderModelSelectors,
   FileIcon,
@@ -931,14 +934,7 @@ export default function ChatPage() {
               </div>
             ) : null}
 
-            {providerOnboarding.feedback !== null ? (
-              <p
-                className={`ai-model-switch-status ai-model-switch-status--${providerOnboarding.feedback.kind}`}
-                role={providerOnboarding.feedback.kind === "error" ? "alert" : "status"}
-              >
-                {providerOnboarding.feedback.message}
-              </p>
-            ) : null}
+            <AiProviderOnboardingFeedback feedback={providerOnboarding.feedback} />
             {modelRouting.feedback !== null ? (
               <p
                 className={`ai-model-switch-status ai-model-switch-status--${modelRouting.feedback.kind}`}
