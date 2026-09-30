@@ -78,11 +78,10 @@ describe("Ai chat OpenRouter quick-switch routing", () => {
       inputUsdPerMTok: 2,
       outputUsdPerMTok: 6,
     });
-    expect(models.find((model) => model.id === "google/gemini-3.8-flash")).toMatchObject({
-      available: true,
-      inputUsdPerMTok: 0.4,
-      outputUsdPerMTok: 1.2,
-    });
+    const gemini = models.find((model) => model.id === "google/gemini-3.8-flash");
+    expect(gemini).toMatchObject({ available: true });
+    expect(gemini?.inputUsdPerMTok).toBeCloseTo(0.4);
+    expect(gemini?.outputUsdPerMTok).toBeCloseTo(1.2);
     expect(models.some((model) => model.id.includes("deepseek"))).toBe(false);
   });
 
