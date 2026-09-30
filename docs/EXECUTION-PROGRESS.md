@@ -21,7 +21,7 @@ free disk               = 27.35 GiB stabilized
 
 This includes the NVIDIA hosted-provider capability and connection-test hardening; OpenRouter Sessions 2–4D; post-#402 stabilization; and two Session 4E runtime slices. Session 4E now allows fresh compatible OpenRouter catalog models to be selected/executed without normal-user model-by-model certification and exposes the canonical adjacent `[Provider / Source ▼] [Model ▼]` composer controls with provider-specific model choices.
 
-Session 4E is **ACTIVE / PARTIAL**. Auto-execution/pricing and canonical selectors are closed; the next bounded slice is direct `+ Tambah AI` onboarding from Ai.
+Session 4E is **ACTIVE / PARTIAL**. Auto-execution/pricing, canonical selectors, and direct `+ Tambah AI` onboarding are closed; the next bounded slice is the multi-credential provider foundation with priority/failover.
 
 ## Closed foundational roadmaps
 
