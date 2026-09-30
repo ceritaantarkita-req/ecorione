@@ -50,7 +50,7 @@ export interface CompleteDeps {
   readonly openrouterApiKey?: string | undefined;
   readonly openaiApiKey?: string | undefined;
   readonly nvidiaApiKey?: string | undefined;
-  /** A dynamic OpenRouter model may execute only when Connect resolved durable validation evidence. */
+  /** A dynamic OpenRouter model may execute only with Connect-resolved trusted admission metadata. */
   readonly certifiedOpenRouterModel?:
     | {
         readonly id: string;
