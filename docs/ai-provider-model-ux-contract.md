@@ -2,28 +2,31 @@
 
 **Status:** ACCEPTED PRODUCT CONTRACT · 2026-09-30  
 **Scope:** Ai provider/model UX, OpenRouter execution entry, multi-credential direction, and Local↔Cloud context handoff.  
-**Implementation state:** **PARTIAL / ACTIVE**. PR #407 implements the compatible OpenRouter auto-execution + catalog-pricing slice; the full contract is not yet complete.
+**Implementation state:** **PARTIAL / ACTIVE**. PR #407 implements compatible OpenRouter auto-execution + catalog pricing; PR #409 implements the canonical provider/source + provider-specific model selectors. The full contract is not yet complete.
 
 ## Implementation progress — 2026-09-30
 
-Closed / staging-verified through PR #407:
+Closed / staging-verified through PR #409:
 
 - fresh compatible OpenRouter catalog models can be selected and used without normal-user per-model `Test & Enable`;
 - catalog input/output pricing is visible in the Ai OpenRouter model picker;
 - Connect re-checks fresh catalog identity, compatibility, and pricing before paid dynamic dispatch;
-- stale/incompatible models, mutable aliases, invalid pricing, generic-settings authority bypass, and no-credential/spend boundaries remain fail-closed;
-- exact runtime baseline `bb2983d59dbe292c510fbc28aae297bcb23487c4` passed merged-main CI #2556, Product Eval #1795, and actual Staging Deploy #1863.
+- the composer uses adjacent `[Provider / Source ▼] [Model ▼]` controls;
+- Local plus first-class hosted providers are represented directly, with unavailable providers disabled/fail-closed;
+- model choices are provider-specific;
+- provider/model changes apply to the next message inside the same conversation;
+- exact runtime baseline `e21f6f943fff9c0c2afdc71a45b05d6ab38eff76` passed merged-main CI #2572, Product Eval #1811, and actual Staging Deploy #1893.
 
 Still open in this contract:
 
-- canonical adjacent `[Provider / Source ▼] [Model ▼]` composer controls;
 - direct `+ Tambah AI` onboarding from Ai;
-- normal cross-provider switching within one conversation;
+- broader live cross-provider completion evidence where real credentials/providers are available;
 - bounded Local↔Cloud context handoff product path;
-- multi-credential AI Connections with priority/failover.
+- multi-credential AI Connections with priority/failover;
+- `Lainnya` / custom OpenAI-compatible provider onboarding.
 
 Canonical evidence:
-[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
 
 ## 1. Why this contract exists
 
@@ -312,26 +315,28 @@ The key product change is:
 
 ## 12. Session 4E implementation boundary
 
-Pre-4E readiness as of 2026-09-30:
+Current implementation state as of 2026-09-30:
 
-1. **SATISFIED** — the post-#402 repository state was stabilized by PR #405 and merged to `main` as `d32527cb21e3b7209b28b109083be00671464b2b`;
-2. **SATISFIED** — PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 #328; merged-main CI #2540, Product Eval #1779, and actual Staging Deploy #1835 also passed for `d32527cb...`;
-3. **STILL REQUIRED** — Session 4E must be explicitly opened before runtime implementation;
-4. **STILL REQUIRED** — Session 4E must use this document as the product contract.
+1. **SATISFIED** — post-#402 stabilization is closed through PR #405;
+2. **SATISFIED** — compatible OpenRouter auto-execution + visible catalog pricing is closed/staging-verified through PR #407;
+3. **SATISFIED** — canonical adjacent `[Provider / Source ▼] [Model ▼]` controls, provider-specific model lists, and same-conversation next-message switching are closed/staging-verified through PR #409;
+4. **ACTIVE NEXT** — direct `+ Tambah AI` onboarding from Ai using Connect-owned credential authority;
+5. **LATER IN 4E** — bounded Local↔Cloud handoff, multi-credential priority/failover, and the custom-provider path.
 
-Staging Deploy #1835 proved exact SHA `d32527cb...`, image `staging-d32527cb21e3`, public smoke PASS, Operations healthy, 15/15 configured services running, and 27.41 GiB free disk.
+Staging Deploy #1893 proved exact SHA `e21f6f943fff9c0c2afdc71a45b05d6ab38eff76`, image `staging-e21f6f943fff`, public smoke PASS, Operations healthy, 15/15 configured services running, and 25.26 GiB stabilized free disk.
 
-Session 4E should **not** merely expand the current `Search → Test & Enable → Certified` end-user workflow to more model families.
+Session 4E must continue following this contract rather than reintroducing user-facing certification vocabulary or Settings-first onboarding.
 
-Session 4E should instead move OpenRouter toward the accepted model-selector behavior while preserving internal safety, pricing transparency, spend controls, and auditability.
+The current selector surface establishes the normal product control plane. Live completion support still depends on each provider's existing Connect implementation, valid credential, spend admission, and runtime availability.
 
-Multi-credential AI Connections may require its own bounded implementation sub-scope if it is too large to complete safely inside the first 4E execution slice. The target data model and UX are nevertheless locked here so 4E must not deepen the existing single-slot credential assumption.
+Multi-credential AI Connections may require its own bounded implementation sub-scope. The target data model and UX remain locked so the direct-onboarding slice must not deepen the existing one-slot-per-provider assumption.
+
 
 ## 13. Explicit non-goals of this docs checkpoint
 
-This documentation change does not:
+This contract does not by itself:
 
-- implement Session 4E;
+- complete all of Session 4E;
 - change the credential Vault schema;
 - remove Hub/Connect authority;
 - enable arbitrary incompatible OpenRouter models;
