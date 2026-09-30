@@ -9,19 +9,19 @@ Status: **CURRENT SUMMARY**
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = bb2983d59dbe292c510fbc28aae297bcb23487c4 (PR #407)
-image                   = staging-bb2983d59dbe
-CI                      = #2556 PASS
-Product Eval            = #1795 PASS
-Staging Deploy          = #1863 PASS
+runtime / staging       = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76 (PR #409)
+image                   = staging-e21f6f943fff
+CI                      = #2572 PASS
+Product Eval            = #1811 PASS
+Staging Deploy          = #1893 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 29.89 GiB stabilized
+free disk               = 25.26 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability and connection-test hardening; OpenRouter Sessions 2–4D; post-#402 stabilization; and the first Session 4E runtime slice. Session 4E now allows fresh compatible OpenRouter catalog models to be selected/executed without normal-user model-by-model certification, exposes catalog input/output pricing in Ai, and re-checks fresh catalog compatibility/pricing inside Connect before paid dynamic dispatch.
+This includes the NVIDIA hosted-provider capability and connection-test hardening; OpenRouter Sessions 2–4D; post-#402 stabilization; and two Session 4E runtime slices. Session 4E now allows fresh compatible OpenRouter catalog models to be selected/executed without normal-user model-by-model certification and exposes the canonical adjacent `[Provider / Source ▼] [Model ▼]` composer controls with provider-specific model choices.
 
-Session 4E is **ACTIVE / PARTIAL**. The first auto-execution/pricing slice is closed; the next bounded slice is the canonical adjacent `[Provider / Source ▼] [Model ▼]` Ai control surface.
+Session 4E is **ACTIVE / PARTIAL**. Auto-execution/pricing and canonical selectors are closed; the next bounded slice is direct `+ Tambah AI` onboarding from Ai.
 
 ## Closed foundational roadmaps
 
@@ -151,7 +151,7 @@ Staging Deploy #1862 is preserved as valid gate-only evidence; its deploy job wa
 NVIDIA / NIM remains live with pinned `z-ai/glm-5.3`. Current source uses 60-second default credential/canary deadlines, a 1024-token NVIDIA health-probe cap with low reasoning effort, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
 Current Session 4E checkpoint:
-[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
 
 This is staging evidence, not production promotion.
 
@@ -167,9 +167,10 @@ This is staging evidence, not production promotion.
 | Session 4C — OpenRouter Settings model picker | CLOSED / PASS / STAGING VERIFIED |
 | Session 4D — OpenRouter Ai chat quick-switch | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E slice 1 — compatible auto-execution + catalog pricing | CLOSED / PASS / STAGING VERIFIED |
+| Session 4E slice 2 — canonical provider/model selectors | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E overall | ACTIVE / PARTIAL |
 
-Session 4E slice 1 closed through PR #407. Exact reviewed head `5b9a29085287db035c2c52dd6ea783c2d93ceac4` passed CI #2555, Product Eval #1794, and PCS-06 #341; merged main `bb2983d59dbe292c510fbc28aae297bcb23487c4` passed CI #2556 + Product Eval #1795; actual Staging Deploy #1863 passed.
+Session 4E slice 2 closed through PR #409. Exact reviewed head `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b` passed CI #2571, Product Eval #1810, and PCS-06 #354; merged main `e21f6f943fff9c0c2afdc71a45b05d6ab38eff76` passed CI #2572 + Product Eval #1811; actual Staging Deploy #1893 passed.
 
 Current behavior:
 
@@ -183,12 +184,12 @@ Current behavior:
 
 Next bounded Session 4E slice:
 
-- replace the technical Local/Hosted route selector with `[Provider / Source ▼]`;
-- place provider-specific `[Model ▼]` beside it;
-- preserve next-message switching inside the same conversation;
+- expose direct `+ Tambah AI` onboarding from the provider/source control;
+- reuse Connect-owned credential validation/save authority;
+- refresh provider/model choices and return to the same conversation after successful connection;
 - preserve credential, spend, sensitivity, Project/history, and Connect authority boundaries.
 
-Direct `+ Tambah AI` onboarding, bounded Local↔Cloud handoff product behavior, and multi-credential priority/failover remain later Session 4E work.
+Bounded Local↔Cloud handoff product behavior, multi-credential priority/failover, and custom-provider onboarding remain later Session 4E work.
 
 Canonical Session 4E checkpoint:
 [verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
