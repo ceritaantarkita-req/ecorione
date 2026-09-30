@@ -85,7 +85,16 @@ let runtime = {
   },
 };
 let credentials = [
-  { provider: "openrouter", purpose: "tokens", generation: 1, updatedAt: now },
+  {
+    provider: "openrouter",
+    purpose: "messages",
+    connectionId: "openrouter-primary",
+    label: "Primary",
+    enabled: true,
+    priority: 100,
+    generation: 1,
+    updatedAt: now,
+  },
 ];
 const providers = [
   {
@@ -892,18 +901,44 @@ async function installApiMocks(context) {
         model: provider === "anthropic" ? "claude-sonnet-4-5-20250929" : "gpt-5.6-sol",
       });
     }
+    if (
+      path.startsWith("/api/settings/settings/credentials/") &&
+      path.endsWith("/connections") &&
+      method === "POST"
+    ) {
+      const provider = decodeURIComponent(path.split("/").at(-2));
+      const existingCount = credentials.filter((item) => item.provider === provider).length;
+      const connectionId = `${provider}-connection-${String(existingCount + 1)}`;
+      const metadata = {
+        provider,
+        purpose: "messages",
+        connectionId,
+        label: existingCount === 0 ? "Primary" : `Connection ${String(existingCount + 1)}`,
+        enabled: true,
+        priority: (existingCount + 1) * 100,
+        generation: 1,
+        updatedAt: now,
+      };
+      credentials = [...credentials, metadata];
+      return json(route, metadata);
+    }
     if (path.startsWith("/api/settings/settings/credentials/") && method === "PUT") {
       const provider = decodeURIComponent(path.split("/").at(-1));
+      const metadata = {
+        provider,
+        purpose: "messages",
+        connectionId: "default",
+        label: "Primary",
+        enabled: true,
+        priority: 100,
+        generation: 1,
+        updatedAt: now,
+      };
       credentials = [
         ...credentials.filter((item) => item.provider !== provider),
-        {
-          provider,
-          purpose: provider === "anthropic" ? "messages" : "tokens",
-          generation: 1,
-          updatedAt: now,
-        },
+        metadata,
       ];
-      return json(route, { provider, generation: 1, updatedAt: now });
+      return json(route, metadata);
     }
     if (path === "/api/settings/settings/mcp/servers" && method === "GET") {
       return json(route, { servers: [] });
@@ -1303,9 +1338,17 @@ async function runDesktopJourney() {
     const connectedOpenRouterDisabled = await directProvider
       .locator('option[value="openrouter"]')
       .evaluate((option) => option.disabled);
-    if (!connectedOpenRouterDisabled) {
+    if (connectedOpenRouterDisabled) {
       throw new Error(
-        "desktop-ai: already-connected OpenRouter must not be replaceable from + Tambah AI",
+        "desktop-ai: connected OpenRouter must remain available for adding another API key",
+      );
+    }
+    const connectedOpenRouterText = await directProvider
+      .locator('option[value="openrouter"]')
+      .textContent();
+    if (!connectedOpenRouterText?.includes("1 key") || !connectedOpenRouterText.includes("Tambah lagi")) {
+      throw new Error(
+        "desktop-ai: connected OpenRouter did not expose its connection count / add-another-key affordance",
       );
     }
     await directProvider.selectOption("openai");
@@ -1318,7 +1361,7 @@ async function runDesktopJourney() {
     await addAiDialog.getByRole("button", { name: "Connect", exact: true }).click();
     await addAiDialog.waitFor({ state: "detached" });
     await page
-      .getByText("OpenAI terhubung dan aktif untuk pesan berikutnya.", { exact: true })
+      .getByText("OpenAI · API key baru terhubung dan aktif untuk pesan berikutnya.", { exact: true })
       .waitFor();
     if (!credentials.some((credential) => credential.provider === "openai")) {
       throw new Error("desktop-ai: direct onboarding did not persist OpenAI credential");
