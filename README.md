@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest **staging-verified runtime-changing** baseline is:
 
 ```text
-runtime baseline = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
-image            = staging-9bc4cfd1bbfb
+runtime baseline = d32527cb21e3b7209b28b109083be00671464b2b
+image            = staging-d32527cb21e3
 ```
 
-That exact runtime merge passed CI **#2509**, Product Eval **#1748**, and actual Staging Deploy **#1779**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline. Operations is `healthy: true`, **15/15** configured services are running, exact host SHA matched, and capacity stabilized at **25.36 GiB free**.
+That exact runtime revision passed merged-main CI **#2540**, Product Eval **#1779**, and actual Staging Deploy **#1835**. The staging host matched exact SHA `d32527cb...`, public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, image tag `staging-d32527cb21e3` was active, and capacity stabilized at **27.41 GiB free**. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -21,7 +21,7 @@ Repository hygiene remains bounded: the historical cleanup boundary is **9 retai
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-There is **no active Session 4E runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, 4B, 4C, and 4D are closed/staging-verified at their documented boundary. The post-#402 repository baseline was stabilized through PR #405 and merged to `main` as `d32527cb21e3b7209b28b109083be00671464b2b`. Exact PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 Integrated Browser Acceptance #328. This does **not** make the #402 `Test & Enable` UX the accepted final direction, and it does not replace the last actual staging-verified runtime baseline until a real deploy proves that revision. Session 4E remains a separate explicit scope.
+There is **no active Session 4E runtime implementation batch** and **no implicit Batch 8, PE-09, PCS-11, or Batch 13**. OpenRouter Sessions 2, 3, 4A, 4B, 4C, and 4D are closed/staging-verified at their documented boundary. The post-#402 repository baseline was stabilized through PR #405 and merged to `main` as `d32527cb21e3b7209b28b109083be00671464b2b`. Exact PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 Integrated Browser Acceptance #328. This does **not** make the #402 `Test & Enable` UX the accepted final direction. The stabilized revision is now also actual staging-verified through Staging Deploy #1835. Session 4E remains a separate explicit scope.
 
 **Start here:** [docs/README.md](docs/README.md).
 
