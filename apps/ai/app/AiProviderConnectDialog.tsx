@@ -1,7 +1,10 @@
 "use client";
 
 import type { ChatOnboardingProviderOption, HostedProviderId } from "../lib/chat-model-routing";
-import type { AiProviderOnboardingFeedback as Feedback } from "./useAiProviderOnboarding";
+import type {
+  AiProviderOnboardingController,
+  AiProviderOnboardingFeedback as Feedback,
+} from "./useAiProviderOnboarding";
 
 export function AiProviderOnboardingFeedback({
   feedback,
@@ -20,28 +23,23 @@ export function AiProviderOnboardingFeedback({
 }
 
 export function AiProviderConnectDialog({
-  open,
-  providers,
-  providerId,
-  secret,
-  pending,
-  status,
-  onProviderChange,
-  onSecretChange,
+  controller,
   onConnect,
-  onClose,
 }: {
-  open: boolean;
-  providers: readonly ChatOnboardingProviderOption[];
-  providerId: HostedProviderId | null;
-  secret: string;
-  pending: boolean;
-  status: string | null;
-  onProviderChange: (provider: HostedProviderId) => void;
-  onSecretChange: (secret: string) => void;
+  controller: AiProviderOnboardingController;
   onConnect: () => void;
-  onClose: () => void;
 }) {
+  const {
+    open,
+    providerId,
+    secret,
+    pending,
+    dialogStatus: status,
+    closeDialog: onClose,
+    setProviderId: onProviderChange,
+    setSecret: onSecretChange,
+  } = controller;
+
   if (!open) return null;
 
   return (
@@ -92,7 +90,7 @@ export function AiProviderConnectDialog({
             <option value="" disabled>
               Pilih provider
             </option>
-            {providers.map((provider) => (
+            {controller.providers.map((provider) => (
               <option
                 key={provider.id}
                 value={provider.id}
