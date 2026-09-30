@@ -146,7 +146,7 @@ Actual Staging Deploy #1922 proved:
 - stale staging image cleanup completed while retaining the new and previous rollback-set images;
 - 27.35 GiB stabilized free disk.
 
-Staging Deploy #1892 is preserved as valid gate-only evidence; its deploy job was skipped and it is not runtime deployment proof.
+Staging Deploy #1921 is preserved as valid gate-only evidence; its deploy job was skipped and it is not runtime deployment proof.
 
 NVIDIA / NIM remains live with pinned `z-ai/glm-5.3`. Current source uses 60-second default credential/canary deadlines, a 1024-token NVIDIA health-probe cap with low reasoning effort, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
@@ -171,7 +171,7 @@ This is staging evidence, not production promotion.
 | Session 4E slice 3 — direct + Tambah AI onboarding | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E overall | ACTIVE / PARTIAL |
 
-Session 4E slice 2 closed through PR #409. Exact reviewed head `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b` passed CI #2571, Product Eval #1810, and PCS-06 #354; merged main `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe` passed CI #2586 + Product Eval #1825; actual Staging Deploy #1922 passed.
+Session 4E slice 3 closed through PR #411. Exact reviewed head `011ac87b07d12608c7da3906ccbbc064d7701b3c` passed CI #2585, Product Eval #1824, and PCS-06 #365; merged main `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe` passed CI #2586 + Product Eval #1825; actual Staging Deploy #1922 passed.
 
 Current behavior:
 
@@ -238,7 +238,7 @@ Evidence:
 
 | Scope | State |
 |---|---|
-| Product/runtime implementation | NONE ACTIVE |
+| Product/runtime implementation | SESSION 4E MULTI-CREDENTIAL PROVIDER FOUNDATION ACTIVE |
 | Repository truth/docs reconciliation | CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | NVIDIA hosted-provider trial | CLOSED / PASS |
@@ -255,7 +255,7 @@ Evidence:
 | Production cutover | DEFERRED |
 
 Latest overall safe-resume checkpoint:
-[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
+[verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
 
 Underlying NVIDIA/runtime evidence:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
