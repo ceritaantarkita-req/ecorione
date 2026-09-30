@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest **staging-verified runtime-changing** baseline is:
 
 ```text
-runtime baseline = 2c223ea8c54045de3dc5e6b15971bdb2a898e2fe
-image            = staging-2c223ea8c540
+runtime baseline = 15dc2a131778c2fe1249dda34e3291f9a3c8beae
+image            = staging-15dc2a131778
 ```
 
-That exact runtime revision passed merged-main CI **#2586**, Product Eval **#1825**, and actual Staging Deploy **#1922**. The staging host matched exact SHA `2c223ea8...`, public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, image tag `staging-2c223ea8c540` was active, and capacity stabilized at **27.35 GiB free** after bounded rollback-set cleanup. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline.
+That exact runtime revision passed merged-main CI **#2597**, Product Eval **#1836**, MCP External HTTPS Acceptance **#1201**, and actual Staging Deploy **#1942**. The staging host matched exact SHA `15dc2a13...`, public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, image tag `staging-15dc2a131778` was active, and capacity stabilized at **27.33 GiB free** after bounded rollback-set cleanup. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -21,7 +21,7 @@ Repository hygiene remains bounded: the historical cleanup boundary is **9 retai
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-Session 4E is **ACTIVE / PARTIAL** with three runtime slices now CLOSED / PASS / STAGING VERIFIED. PR #407 closed compatible OpenRouter auto-execution + catalog pricing; PR #409 closed the canonical adjacent `[Provider / Source ▼] [Model ▼]` composer surface; PR #411 closed direct `+ Tambah AI` onboarding from Ai. Exact PR #411 head `011ac87b07d12608c7da3906ccbbc064d7701b3c` passed CI #2585, Product Eval #1824, and PCS-06 #365; merge `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe` passed CI #2586, Product Eval #1825, and actual Staging Deploy #1922. Multi-credential routing, bounded Local↔Cloud handoff, and custom-provider onboarding remain open Session 4E scope. There is still **no implicit Batch 8, PE-09, PCS-11, or Batch 13**.
+Session 4E is **ACTIVE / PARTIAL** with four runtime slices now CLOSED / PASS / STAGING VERIFIED. PR #407 closed compatible OpenRouter auto-execution + catalog pricing; PR #409 closed the canonical provider/model selector surface; PR #411 closed direct `+ Tambah AI` onboarding; PR #415 closed the multi-credential AI Connection foundation. Exact PR #415 head `83f0481b84b705ee8a310c2aa8df798353d49e7a` passed CI #2595, Product Eval #1834, MCP External HTTPS Acceptance #1199, and PCS-06 #370; merge `15dc2a131778c2fe1249dda34e3291f9a3c8beae` passed CI #2597, Product Eval #1836, MCP External HTTPS Acceptance #1201, and actual Staging Deploy #1942. Custom-provider onboarding and bounded Local↔Cloud handoff remain open Session 4E scope. There is still **no implicit Batch 8, PE-09, PCS-11, or Batch 13**.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -74,10 +74,10 @@ The normal-user Ai control now uses **two adjacent selectors** — `[Provider / 
 
 OpenRouter model selection resolves through an extensible governed registry. Session 3 added bounded live catalog discovery/search/filter/cache, Session 4A added one Connect-owned version-agnostic family vocabulary for **GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM**, Session 4B added automatic fail-closed admission for those six families, Session 4C added the governed Settings model picker, and Session 4D added the governed Ai chat quick-switch.
 
-PR #407 implements compatible OpenRouter auto-execution + catalog pricing. PR #409 implements the canonical provider/source + provider-specific model selectors. PR #411 implements direct `+ Tambah AI` onboarding that validates through Connect before Vault persistence, activates the provider, refreshes routing/model choices, and preserves the same conversation. Session 4E remains **partial** until multi-credential routing, bounded Local↔Cloud context handoff, and the custom-provider path are implemented.
+PR #407 implements compatible OpenRouter auto-execution + catalog pricing. PR #409 implements the canonical provider/source + provider-specific model selectors. PR #411 implements direct `+ Tambah AI` onboarding. PR #415 implements multiple encrypted AI Connections/API keys beneath one logical provider, priority ordering, bounded invalid-credential/unreachable failover, per-connection Settings management, and non-secret connection provenance. Session 4E remains **partial** until the custom-provider path and bounded Local↔Cloud context handoff are implemented.
 
 Current Session 4E checkpoint:
-[docs/verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](docs/verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
+[docs/verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](docs/verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
 
 Prior Session 4D checkpoint:
 [docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
@@ -161,7 +161,7 @@ See:
 
 ## Current active / separate boundaries
 
-Session 4E is **active / partial**. Auto-execution, canonical provider/model selectors, and direct `+ Tambah AI` onboarding are closed and staging-verified. The current bounded next slice is the multi-credential provider foundation with priority/failover. The already proven slices must not be redone.
+Session 4E is **active / partial**. Auto-execution, canonical provider/model selectors, direct `+ Tambah AI` onboarding, and the multi-credential provider foundation are closed and staging-verified. The current bounded next slice is `+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding. The already proven slices must not be redone.
 
 The following remain separate explicit decisions:
 
