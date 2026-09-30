@@ -1285,6 +1285,56 @@ async function runDesktopJourney() {
         "desktop-ai: governed model switch did not restore governed runtime state",
       );
     }
+
+    const sessionBeforeDirectOnboarding = await page
+      .locator(".ai-session-tag")
+      .getAttribute("title");
+    if ((await providerSelect.locator('option[value="__add_ai__"]').count()) !== 1) {
+      throw new Error("desktop-ai: + Tambah AI is missing from Provider / Source");
+    }
+    await providerSelect.selectOption("__add_ai__");
+    const addAiDialog = page.getByRole("dialog", { name: "Tambah AI", exact: true });
+    await addAiDialog.waitFor();
+    const directProvider = addAiDialog.getByRole("combobox", {
+      name: "Provider AI baru",
+      exact: true,
+    });
+    if (await directProvider.locator('option[value="openrouter"]').isEnabled()) {
+      throw new Error(
+        "desktop-ai: already-connected OpenRouter must not be replaceable from + Tambah AI",
+      );
+    }
+    await directProvider.selectOption("openai");
+    await addAiDialog
+      .getByRole("textbox", { name: "API key provider", exact: true })
+      .fill("stub-direct-openai-credential");
+    if ((await addAiDialog.getByRole("button", { name: "Test API key" }).count()) !== 0) {
+      throw new Error("desktop-ai: direct onboarding must not expose a separate test step");
+    }
+    await addAiDialog.getByRole("button", { name: "Connect", exact: true }).click();
+    await addAiDialog.waitFor({ state: "detached" });
+    await page
+      .getByText("OpenAI terhubung dan aktif untuk pesan berikutnya.", { exact: true })
+      .waitFor();
+    if (!credentials.some((credential) => credential.provider === "openai")) {
+      throw new Error("desktop-ai: direct onboarding did not persist OpenAI credential");
+    }
+    if ((await providerSelect.inputValue()) !== "openai") {
+      throw new Error("desktop-ai: direct onboarding did not activate OpenAI in the same chat");
+    }
+    if (await providerSelect.locator('option[value="openai"]').isDisabled()) {
+      throw new Error("desktop-ai: connected OpenAI remained disabled after routing refresh");
+    }
+    if ((await modelSelect.locator('option[value="gpt-5.6-sol"]').count()) !== 1) {
+      throw new Error("desktop-ai: OpenAI provider-specific model list did not refresh");
+    }
+    const sessionAfterDirectOnboarding = await page
+      .locator(".ai-session-tag")
+      .getAttribute("title");
+    if (sessionAfterDirectOnboarding !== sessionBeforeDirectOnboarding) {
+      throw new Error("desktop-ai: + Tambah AI unexpectedly created a new conversation");
+    }
+
     await assertNoPageOverflow(page, "desktop-ai-provider-model-selectors");
     await goto(
       page,
