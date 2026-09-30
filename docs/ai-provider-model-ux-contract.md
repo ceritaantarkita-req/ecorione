@@ -2,11 +2,11 @@
 
 **Status:** ACCEPTED PRODUCT CONTRACT · 2026-09-30  
 **Scope:** Ai provider/model UX, OpenRouter execution entry, multi-credential direction, and Local↔Cloud context handoff.  
-**Implementation state:** **PARTIAL / ACTIVE**. PR #407 implements compatible OpenRouter auto-execution + catalog pricing; PR #409 implements the canonical provider/source + provider-specific model selectors; PR #411 implements direct `+ Tambah AI` onboarding from Ai. The full contract is not yet complete.
+**Implementation state:** **PARTIAL / ACTIVE**. PR #407 implements compatible OpenRouter auto-execution + catalog pricing; PR #409 implements the canonical provider/source + provider-specific model selectors; PR #411 implements direct `+ Tambah AI` onboarding; PR #415 implements multi-credential AI Connections with priority and bounded failover. The full contract is not yet complete.
 
 ## Implementation progress — 2026-09-30
 
-Closed / staging-verified through PR #411:
+Closed / staging-verified through PR #415:
 
 - fresh compatible OpenRouter catalog models can be selected and used without normal-user per-model `Test & Enable`;
 - catalog input/output pricing is visible in the Ai OpenRouter model picker;
@@ -18,17 +18,20 @@ Closed / staging-verified through PR #411:
 - `+ Tambah AI` opens a lightweight Ai-owned onboarding flow without requiring a Settings detour;
 - one `Connect` action performs the existing Connect credential test before persistence;
 - successful onboarding persists through Connect Vault, activates the provider, refreshes choices, and preserves the same conversation;
-- exact runtime baseline `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe` passed merged-main CI #2586, Product Eval #1825, and actual Staging Deploy #1922.
+- one logical provider can own multiple encrypted AI Connections/API keys with stable ids, labels, enabled state, and explicit priority;
+- Settings can enable/disable, make-primary, and remove individual AI Connections;
+- hosted dispatch uses priority order and bounded invalid-credential/unreachable failover without changing the requested provider/model or bypassing policy/spend/sensitivity/operator denial;
+- successful completion preserves non-secret credential-connection provenance;
+- exact runtime baseline `15dc2a131778c2fe1249dda34e3291f9a3c8beae` passed merged-main CI #2597, Product Eval #1836, MCP HTTPS #1201, and actual Staging Deploy #1942.
 
 Still open in this contract:
 
-- multi-credential AI Connections with priority/failover;
 - bounded Local↔Cloud context handoff product path;
 - `Lainnya` / custom OpenAI-compatible provider onboarding;
 - broader live cross-provider completion evidence where real credentials/providers are available.
 
 Canonical evidence:
-[verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
+[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
 
 ## 1. Why this contract exists
 
@@ -323,14 +326,15 @@ Current implementation state as of 2026-09-30:
 2. **SATISFIED** — compatible OpenRouter auto-execution + visible catalog pricing is closed/staging-verified through PR #407;
 3. **SATISFIED** — canonical adjacent `[Provider / Source ▼] [Model ▼]` controls, provider-specific model lists, and same-conversation next-message switching are closed/staging-verified through PR #409;
 4. **SATISFIED** — direct `+ Tambah AI` onboarding from Ai using Connect-owned credential validation/Vault authority is closed/staging-verified through PR #411;
-5. **ACTIVE NEXT** — multi-credential AI Connections beneath one logical provider, with explicit priority and bounded failover;
-6. **LATER IN 4E** — bounded Local↔Cloud handoff and the custom-provider path.
+5. **SATISFIED** — multi-credential AI Connections beneath one logical provider, explicit priority, bounded failover, Settings management, and non-secret connection provenance are closed/staging-verified through PR #415;
+6. **ACTIVE NEXT** — `+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding;
+7. **LATER IN 4E** — bounded Local↔Cloud context handoff and broader live provider evidence.
 
-Staging Deploy #1922 proved exact SHA `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe`, image `staging-2c223ea8c540`, public smoke PASS, Operations healthy, 15/15 configured services running, and 27.35 GiB stabilized free disk.
+Staging Deploy #1942 proved exact SHA `15dc2a131778c2fe1249dda34e3291f9a3c8beae`, image `staging-15dc2a131778`, public smoke PASS, Operations healthy, 15/15 configured services running, and 27.33 GiB stabilized free disk.
 
-The multi-credential slice must preserve the product abstraction: the user chooses one logical provider/model, while Connect chooses among that provider's configured AI Connections. Failover must never bypass policy, spend, sensitivity, or operator denial.
+The multi-credential product abstraction is now implemented: the user chooses one logical provider/model while Connect selects among that provider's enabled AI Connections in priority order. Bounded failover does not bypass policy, spend, sensitivity, operator denial, or requested model identity.
 
-The one-slot-per-provider storage assumption is no longer the target contract and must not be deepened by later work.
+The custom-provider slice must preserve these boundaries and must not turn arbitrary URLs into an unrestricted network egress mechanism.
 
 
 ## 13. Explicit non-goals of this docs checkpoint
@@ -338,11 +342,10 @@ The one-slot-per-provider storage assumption is no longer the target contract an
 This contract does not by itself:
 
 - complete all of Session 4E;
-- change the credential Vault schema;
+- further change the credential Vault schema outside the active custom-provider need;
 - remove Hub/Connect authority;
 - enable arbitrary incompatible OpenRouter models;
 - disable spend limits;
-- treat multi-key failover as already complete;
 - implement custom providers;
 - deploy anything to staging/production;
 - treat PR #402 or PR #405 as Session 4E closure or as the accepted final end-user UX.
