@@ -760,8 +760,9 @@ async function installApiMocks(context) {
             hostedProvider: "openrouter",
             hostedModel: "governed",
             openRouterModelSelection: selectionId,
-            hostedCallsEnabled: false,
-            defaultChatTarget: "local",
+            openRouterCertifiedModelId: selectionId,
+            hostedCallsEnabled: true,
+            defaultChatTarget: "hosted",
           },
         };
         return json(route, {
@@ -769,8 +770,8 @@ async function installApiMocks(context) {
           selection: {
             id: selectionId,
             admission: "verified-selectable",
-            executable: false,
-            active: false,
+            executable: true,
+            active: true,
             unavailableReason: null,
           },
         });
@@ -1204,8 +1205,17 @@ async function runDesktopJourney() {
       name: "OpenRouter model quick switch",
     });
     await quickSwitch.waitFor();
-    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 0) {
-      throw new Error("desktop-ai: non-Ready Qwen must stay out of the post-402 quick-switch");
+    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1) {
+      throw new Error("desktop-ai: compatible Qwen must appear directly in the Session 4E picker");
+    }
+    const qwenOptionText = await quickSwitch
+      .locator('option[value="qwen/qwen3.8-max"]')
+      .textContent();
+    if (
+      !qwenOptionText?.includes("$2.00/M in") ||
+      !qwenOptionText.includes("$6.00/M out")
+    ) {
+      throw new Error("desktop-ai: compatible Qwen pricing is not visible in the picker");
     }
     if (
       (await quickSwitch.locator('option[value="claude-sonnet-4-5-20250929"]').count()) !== 1
@@ -1220,21 +1230,22 @@ async function runDesktopJourney() {
       throw new Error("desktop-ai: unavailable DeepSeek alias leaked into quick-switch");
     }
 
-    await quickSwitch.selectOption("claude-sonnet-4-5-20250929");
+    await quickSwitch.selectOption("qwen/qwen3.8-max");
     await page
-      .getByText("Claude Sonnet 4.5 aktif untuk Hosted chat.", { exact: true })
+      .getByText("Qwen: Qwen3.8 Max aktif untuk Hosted chat.", { exact: true })
       .waitFor();
     if ((await modelSelect.inputValue()) !== "hosted") {
-      throw new Error("desktop-ai: validated executable selection must keep Hosted active");
+      throw new Error("desktop-ai: compatible dynamic selection must keep Hosted active");
     }
     if (
-      runtime.settings.openRouterModelSelection !== "claude-sonnet-4-5-20250929" ||
-      runtime.settings.hostedModel !== "claude-sonnet-4-5-20250929" ||
+      runtime.settings.openRouterModelSelection !== "qwen/qwen3.8-max" ||
+      runtime.settings.hostedModel !== "governed" ||
+      runtime.settings.openRouterCertifiedModelId !== "qwen/qwen3.8-max" ||
       runtime.settings.hostedCallsEnabled !== true ||
       runtime.settings.defaultChatTarget !== "hosted"
     ) {
       throw new Error(
-        "desktop-ai: validated executable quick-switch did not activate exact model",
+        "desktop-ai: compatible dynamic quick-switch did not activate trusted selection",
       );
     }
 
@@ -1483,7 +1494,7 @@ async function runDesktopJourney() {
     await openRouterSearch.fill("qwen");
     await page.getByRole("button", { name: "Search catalog", exact: true }).click();
     await page.getByText("Qwen: Qwen3.8 Max", { exact: true }).waitFor();
-    await page.getByText("Perlu test", { exact: true }).waitFor();
+    await page.getByText("Compatible", { exact: true }).waitFor();
     if (
       (await defaultSelects.nth(1).locator('option[value="qwen/qwen3.8-max"]').count()) !== 1
     ) {
@@ -1494,21 +1505,19 @@ async function runDesktopJourney() {
     await defaultSelects.nth(1).selectOption("qwen/qwen3.8-max");
     await defaultSection.getByRole("button", { name: "Save default", exact: true }).click();
     await page
-      .getByText(
-        "OpenRouter model selection saved. Hosted execution is disabled until this model has separate executable validation.",
-        { exact: true },
-      )
+      .getByText("Default OpenRouter model saved and active.", { exact: true })
       .waitFor();
     if (runtime.settings.openRouterModelSelection !== "qwen/qwen3.8-max") {
       throw new Error("desktop-settings: admitted Qwen selection was not persisted");
     }
     if (
-      runtime.settings.hostedCallsEnabled !== false ||
-      runtime.settings.defaultChatTarget !== "local" ||
-      runtime.settings.hostedModel !== "governed"
+      runtime.settings.hostedCallsEnabled !== true ||
+      runtime.settings.defaultChatTarget !== "hosted" ||
+      runtime.settings.hostedModel !== "governed" ||
+      runtime.settings.openRouterCertifiedModelId !== "qwen/qwen3.8-max"
     ) {
       throw new Error(
-        "desktop-settings: non-executable OpenRouter selection must fail closed instead of silently routing",
+        "desktop-settings: compatible OpenRouter selection did not activate trusted hosted routing",
       );
     }
 
