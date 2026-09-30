@@ -133,7 +133,7 @@ Underlying discovery checkpoint:
 Underlying registry checkpoint:
 [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
 
-Session 4D Ai chat quick-switch remains CLOSED / PASS / STAGING VERIFIED and is the last **actual staging-verified** OpenRouter runtime boundary. The post-#402 repository baseline has now been stabilized by PR #405 and merged to `main` as `d32527cb21e3b7209b28b109083be00671464b2b`. Exact PR #405 head passed CI #2539, Product Eval #1778, and PCS-06 #328; no new actual staging deployment is claimed.
+Session 4D Ai chat quick-switch remains the last CLOSED product-session boundary, while the **current actual staging-verified repository/runtime baseline** is the post-#402 stabilization from PR #405 at `d32527cb21e3b7209b28b109083be00671464b2b`. Exact PR #405 head passed CI #2539, Product Eval #1778, and PCS-06 #328; merged-main CI #2540 + Product Eval #1779 + Staging Deploy #1835 also passed. Staging matched exact SHA, ran 15/15 configured services, reported Operations healthy, and stabilized at 27.41 GiB free.
 
 Before Session 4E runtime implementation, the accepted product contract is [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md). Session 4E must implement toward the two-selector `[Provider ▼] [Model ▼]` Ai UX, direct `+ Tambah AI` onboarding, per-message provider/model switching, compatible OpenRouter catalog availability without normal-user per-model certification, visible input/output pricing, bounded Local↔Cloud context handoff, and the documented multi-credential AI Connection direction.
 
