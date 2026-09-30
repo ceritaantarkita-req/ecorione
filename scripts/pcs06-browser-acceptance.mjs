@@ -1213,7 +1213,7 @@ async function runDesktopJourney() {
     const qwenOptionText = await quickSwitch
       .locator('option[value="qwen/qwen3.8-max"]')
       .textContent();
-    if (!qwenOptionText?.includes("$2.00/M in") || !qwenOptionText.includes("$6.00/M out")) {
+    if (!qwenOptionText?.includes("USD 2.00/M in") || !qwenOptionText.includes("USD 6.00/M out")) {
       throw new Error("desktop-ai: compatible Qwen pricing is not visible in the picker");
     }
     if (
