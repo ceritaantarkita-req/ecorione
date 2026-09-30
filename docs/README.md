@@ -27,10 +27,10 @@ Historical verification is intentionally preserved even when it contains an olde
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current repository/runtime truth and deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — current queue; Session 4E is active/partial and the next bounded slice is the canonical provider/model selector surface.
+2. **[active-work-plan.md](active-work-plan.md)** — current queue; Session 4E is active/partial and the next bounded slice is direct `+ Tambah AI` onboarding from Ai.
 3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted Session 4E product contract and implementation progress.
 4. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
-5. **[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md)** — current safe-resume pointer and exact proof for the first Session 4E runtime slice.
+5. **[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md)** — current safe-resume pointer and exact proof for the canonical provider/model selector slice.
 6. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
 7. **[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md)** — prior Ai quick-switch boundary.
 8. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — underlying Settings picker closure.
@@ -109,11 +109,11 @@ Use the owner-specific runbook when touching its subsystem:
 Latest audited **runtime-changing compatibility baseline**:
 
 ```text
-SHA   = bb2983d59dbe292c510fbc28aae297bcb23487c4
-image = staging-bb2983d59dbe
+SHA   = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76
+image = staging-e21f6f943fff
 ```
 
-Merged-main CI #2556, Product Eval #1795, and actual Staging Deploy #1863 passed. Staging matched exact SHA, public smoke passed, Operations was healthy, all 15 configured services were running, and free disk stabilized at 29.89 GiB after bounded BuildKit pruning.
+Merged-main CI #2572, Product Eval #1811, and actual Staging Deploy #1893 passed. Staging matched exact SHA, public smoke passed, Operations was healthy, all 15 configured services were running, and free disk stabilized at 25.26 GiB after bounded BuildKit pruning.
 
 Session 4E is active/partial. Its first runtime slice is closed and proven by:
 [verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
