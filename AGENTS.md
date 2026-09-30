@@ -21,20 +21,20 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = d32527cb21e3b7209b28b109083be00671464b2b
-image            = staging-d32527cb21e3
-CI               = #2540 PASS
-Product Eval     = #1779 PASS
-Staging Deploy   = #1835 PASS
+runtime baseline = bb2983d59dbe292c510fbc28aae297bcb23487c4
+image            = staging-bb2983d59dbe
+CI               = #2556 PASS
+Product Eval     = #1795 PASS
+Staging Deploy   = #1863 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 27.41 GiB stabilized
+free disk        = 29.89 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. The post-#402 repository state was stabilized by PR #405 and is now the latest **actual staging-verified** runtime baseline on `main` at `d32527cb21e3b7209b28b109083be00671464b2b`. Exact PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 #328; merged-main CI #2540, Product Eval #1779, and Staging Deploy #1835 also passed. Treat #405 as repository stabilization, **not** as Session 4E closure.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. Session 4E is **ACTIVE / PARTIAL**. Its first runtime slice is CLOSED / PASS / STAGING VERIFIED through PR #407: exact PR head `5b9a29085287db035c2c52dd6ea783c2d93ceac4` passed CI #2555, Product Eval #1794, and PCS-06 #341; merged `main` `bb2983d59dbe292c510fbc28aae297bcb23487c4` passed CI #2556, Product Eval #1795, and actual Staging Deploy #1863. Compatible fresh OpenRouter models now execute without normal-user per-model certification, while catalog freshness/capability/pricing remain Connect-owned fail-closed checks. Do **not** treat this slice as full Session 4E closure.
 
 Current overall safe-resume pointer:
-`docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md`.
+`docs/verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md`.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
