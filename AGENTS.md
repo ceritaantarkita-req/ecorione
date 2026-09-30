@@ -85,7 +85,7 @@ Open Issue #277 remains the deferred DR-2 tracker.
 
 Before changing OpenRouter/Ai provider-model UX, read `docs/ai-provider-model-ux-contract.md`. The canonical `[Provider / Source ▼] [Model ▼]` surface and OpenRouter pricing/selection behavior are now implemented; direct `+ Tambah AI` onboarding is the next bounded product slice.
 
-Sessions 2, 3, 4A, 4B, 4C, and 4D are **CLOSED / PASS**. Session 4E is **ACTIVE / PARTIAL**; its first auto-execution/pricing slice is **CLOSED / PASS / STAGING VERIFIED** through PR #407.
+Sessions 2, 3, 4A, 4B, 4C, and 4D are **CLOSED / PASS**. Session 4E is **ACTIVE / PARTIAL**; its auto-execution/pricing slice is **CLOSED / PASS / STAGING VERIFIED** through PR #407 and its canonical provider/model selector slice is **CLOSED / PASS / STAGING VERIFIED** through PR #409.
 
 Current invariants:
 
