@@ -90,13 +90,13 @@ export function AiProviderConnectDialog({
               <option
                 key={provider.id}
                 value={provider.id}
-                disabled={provider.connected || !provider.connectReady}
+                disabled={!provider.connectReady}
               >
                 {provider.displayName}
-                {provider.connected
-                  ? " · Sudah terhubung"
-                  : !provider.connectReady
-                    ? " · Belum tersedia"
+                {!provider.connectReady
+                  ? " · Belum tersedia"
+                  : provider.connectionCount > 0
+                    ? ` · ${String(provider.connectionCount)} key · Tambah lagi`
                     : ""}
               </option>
             ))}
