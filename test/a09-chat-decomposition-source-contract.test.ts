@@ -25,7 +25,9 @@ describe("A-09 Ai chat frontend decomposition contract", () => {
       "/api/settings/settings/providers/openrouter/model-selection",
     );
     expect(modelRouting).not.toContain("/api/chat");
-    expect(sections).toContain("OpenRouterModelQuickSwitch");
+    expect(sections).toContain("ChatProviderModelSelectors");
+    expect(sections).toContain('aria-label="Provider / Source"');
+    expect(sections).toContain('aria-label="Model"');
   });
 
   it("keeps session, Project, send, and forget orchestration in the page boundary", () => {
