@@ -8,6 +8,7 @@ describe("PCS-03 Local AI resilience source contract", () => {
     readFileSync("apps/ai/app/settings/useSettingsController.ts", "utf8"),
   ].join("\n");
   const chat = readFileSync("apps/ai/app/page.tsx", "utf8");
+  const chatRouting = readFileSync("apps/ai/lib/chat-model-routing.ts", "utf8");
   const proxy = readFileSync("apps/ai/lib/settings-proxy.ts", "utf8");
 
   it("surfaces Local AI as an explicit connected/not-connected product state", () => {
@@ -27,7 +28,8 @@ describe("PCS-03 Local AI resilience source contract", () => {
 
   it("blocks known-unavailable Local chat instead of silently falling back to Hosted", () => {
     expect(chat).toContain('target === "local" && localRuntimeStatus?.ready !== true');
-    expect(chat).toContain("disabled={localRuntimeStatus?.ready !== true}");
+    expect(chatRouting).toContain("available: localRuntime?.ready === true");
+    expect(chat).toContain("disabled={!provider.available}");
     expect(chat).toContain("Local AI belum terhubung");
     expect(chat).not.toContain('setTarget("hosted")');
   });
