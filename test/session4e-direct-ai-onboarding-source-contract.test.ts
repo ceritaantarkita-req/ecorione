@@ -14,7 +14,7 @@ describe("Session 4E direct Ai provider onboarding source contract", () => {
     expect(dialog).toContain("Tambah AI");
     expect(dialog).toContain('aria-label="Provider AI baru"');
     expect(dialog).toContain('aria-label="API key provider"');
-    expect(dialog).toContain('>Connect<');
+    expect(dialog).toContain('{pending ? "Menghubungkan…" : "Connect"}');
     expect(page).toContain("providerOnboarding.openDialog");
     expect(page).not.toContain('href="/settings"');
   });
