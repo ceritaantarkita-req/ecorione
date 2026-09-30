@@ -115,6 +115,7 @@ interface CompleteResponse {
   /** Added by post-closure Connect; legacy responses carry it as cost.model. */
   readonly pricingModel?: string;
   readonly responseModel: string;
+  readonly credentialConnectionId?: string | undefined;
   readonly cacheHit: boolean;
   readonly usage: TokenUsage;
   readonly cost: CallCostRecord;
@@ -355,6 +356,9 @@ export async function chat(
       requestModel: complete.model,
       pricingModel: completePricingModel,
       responseModel: complete.responseModel,
+      ...(complete.credentialConnectionId === undefined
+        ? {}
+        : { credentialConnectionId: complete.credentialConnectionId }),
       cacheHit: complete.cacheHit,
       actualUsd: complete.cost.actualUsd,
       naiveUsd: complete.cost.naiveUsd,
@@ -378,6 +382,9 @@ export async function chat(
         requestModel: complete.model,
         pricingModel: completePricingModel,
         responseModel: complete.responseModel,
+        ...(complete.credentialConnectionId === undefined
+          ? {}
+          : { credentialConnectionId: complete.credentialConnectionId }),
         cacheHit: complete.cacheHit,
         usage: complete.usage,
         actualUsd: complete.cost.actualUsd,
