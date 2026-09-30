@@ -94,62 +94,6 @@ export function ChevronIcon() {
   );
 }
 
-export type OpenRouterQuickSwitchModel = {
-  readonly id: string;
-  readonly displayName: string;
-  readonly available: boolean;
-  readonly inputUsdPerMTok?: number;
-  readonly outputUsdPerMTok?: number;
-};
-
-export function OpenRouterModelQuickSwitch({
-  models,
-  value,
-  disabled,
-  switching,
-  onChange,
-}: {
-  models: readonly OpenRouterQuickSwitchModel[];
-  value: string;
-  disabled: boolean;
-  switching: boolean;
-  onChange: (selectionId: string) => void;
-}) {
-  if (models.length === 0) return null;
-  const selected = models.find((model) => model.id === value);
-  const title =
-    selected?.inputUsdPerMTok !== undefined && selected.outputUsdPerMTok !== undefined
-      ? `Harga katalog: USD ${selected.inputUsdPerMTok.toFixed(2)} / 1M input · USD ${selected.outputUsdPerMTok.toFixed(2)} / 1M output. Harga billed provider tetap authoritative.`
-      : "Pilih model untuk pesan berikutnya. Setiap balasan tetap menyimpan model dan biaya yang dipakai.";
-
-  return (
-    <div className="ai-model-select ai-model-select--quick" title={title}>
-      <select
-        aria-label="OpenRouter model quick switch"
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        {models.map((model) => {
-          const pricing =
-            model.inputUsdPerMTok !== undefined && model.outputUsdPerMTok !== undefined
-              ? ` · USD ${model.inputUsdPerMTok.toFixed(2)}/M in · USD ${model.outputUsdPerMTok.toFixed(2)}/M out`
-              : "";
-          return (
-            <option key={model.id} value={model.id} disabled={!model.available}>
-              {model.id === "governed" ? "OpenRouter · Recommended" : model.displayName}
-              {pricing}
-              {!model.available ? " · Unavailable" : ""}
-            </option>
-          );
-        })}
-      </select>
-      <ChevronIcon />
-      {switching ? <span className="ai-model-select__pending">Saving…</span> : null}
-    </div>
-  );
-}
-
 export function SendIcon() {
   return (
     <svg className="ai-send-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
