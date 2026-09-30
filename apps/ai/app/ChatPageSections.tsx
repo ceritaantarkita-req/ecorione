@@ -1,5 +1,10 @@
 import type { ChatCost, MemoryUsed } from "@ecorione/shared-schema";
-import type { ChatTurn } from "../lib/chat-history";
+import type { ChatTarget, ChatTurn } from "../lib/chat-history";
+import type {
+  ChatModelOption,
+  ChatProviderOption,
+  ChatProviderSource,
+} from "../lib/chat-model-routing";
 
 function formatUsd(value: number): string {
   return `$${value.toFixed(4)}`;
@@ -91,6 +96,90 @@ export function ChevronIcon() {
     >
       <path d="M6 8l4 4 4-4" />
     </svg>
+  );
+}
+
+export function ChatProviderModelSelectors({
+  providerOptions,
+  providerValue,
+  modelOptions,
+  modelValue,
+  localModel,
+  localReady,
+  target,
+  disabled,
+  switching,
+  routeHint,
+  modelHint,
+  onProviderChange,
+  onModelChange,
+}: {
+  providerOptions: readonly ChatProviderOption[];
+  providerValue: ChatProviderSource;
+  modelOptions: readonly ChatModelOption[];
+  modelValue: string;
+  localModel: string;
+  localReady: boolean;
+  target: ChatTarget;
+  disabled: boolean;
+  switching: boolean;
+  routeHint: string;
+  modelHint: string;
+  onProviderChange: (source: ChatProviderSource) => void;
+  onModelChange: (modelId: string) => void;
+}) {
+  return (
+    <div className="ai-model-controls">
+      <div className="ai-model-select ai-model-select--route" title={routeHint}>
+        <select
+          id="chat-provider"
+          aria-label="Provider / Source"
+          value={providerValue}
+          onChange={(event) => onProviderChange(event.target.value as ChatProviderSource)}
+          disabled={disabled}
+        >
+          {providerOptions.map((provider) => (
+            <option key={provider.id} value={provider.id} disabled={!provider.available}>
+              {provider.id === "local"
+                ? localReady
+                  ? "Local"
+                  : "Local · Not connected"
+                : provider.displayName}
+            </option>
+          ))}
+        </select>
+        <ChevronIcon />
+      </div>
+      <div className="ai-model-select ai-model-select--quick" title={modelHint}>
+        <select
+          id="chat-model"
+          aria-label="Model"
+          value={modelValue}
+          onChange={(event) => onModelChange(event.target.value)}
+          disabled={disabled || (target === "local" && !localReady)}
+        >
+          {target === "local" ? (
+            <option value={localModel}>{localReady ? localModel : "Not connected"}</option>
+          ) : (
+            modelOptions.map((model) => {
+              const pricing =
+                model.inputUsdPerMTok !== undefined && model.outputUsdPerMTok !== undefined
+                  ? ` · USD ${model.inputUsdPerMTok.toFixed(2)}/M in · USD ${model.outputUsdPerMTok.toFixed(2)}/M out`
+                  : "";
+              return (
+                <option key={model.id} value={model.id} disabled={!model.available}>
+                  {model.displayName}
+                  {pricing}
+                  {!model.available ? " · Unavailable" : ""}
+                </option>
+              );
+            })
+          )}
+        </select>
+        <ChevronIcon />
+        {switching ? <span className="ai-model-select__pending">Saving…</span> : null}
+      </div>
+    </div>
   );
 }
 
