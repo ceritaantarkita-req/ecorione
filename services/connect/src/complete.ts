@@ -347,9 +347,13 @@ export async function complete(
     model: decision.model,
     usage,
     baselineUsage,
-    ...(providerReportedActualUsd === undefined
-      ? {}
-      : { actualUsdOverride: providerReportedActualUsd }),
+    // Exact internal cache hits have zero provider cost. Supplying the zero override also
+    // avoids asking the static telemetry price table to know every dynamic OpenRouter id.
+    ...(cacheHit
+      ? { actualUsdOverride: 0 }
+      : providerReportedActualUsd === undefined
+        ? {}
+        : { actualUsdOverride: providerReportedActualUsd }),
     routeReason: decision.routeReason,
     policyVersion: POLICY_VERSION,
     optimizerOverheadMs,
