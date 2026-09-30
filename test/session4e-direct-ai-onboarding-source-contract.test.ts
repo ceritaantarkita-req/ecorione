@@ -30,7 +30,7 @@ describe("Session 4E direct Ai provider onboarding source contract", () => {
     expect(onboarding).toContain('method: "POST"');
     expect(onboarding).toContain('method: "PUT"');
     expect(onboarding).toContain("test.persisted === true");
-    expect(onboarding).toContain("setSecret(\"\")");
+    expect(onboarding).toContain('setSecret("")');
     expect(dialog).not.toContain("Test API key");
   });
 
