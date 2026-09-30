@@ -6,11 +6,7 @@ import type {
   AiProviderOnboardingFeedback as Feedback,
 } from "./useAiProviderOnboarding";
 
-export function AiProviderOnboardingFeedback({
-  feedback,
-}: {
-  feedback: Feedback | null;
-}) {
+export function AiProviderOnboardingFeedback({ feedback }: { feedback: Feedback | null }) {
   if (feedback === null) return null;
   return (
     <p
