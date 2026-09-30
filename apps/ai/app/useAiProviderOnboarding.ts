@@ -202,3 +202,5 @@ export function useAiProviderOnboarding(
     setSecret,
   };
 }
+
+export type AiProviderOnboardingController = ReturnType<typeof useAiProviderOnboarding>;
