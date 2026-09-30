@@ -145,22 +145,21 @@ export function useChatModelRouting() {
   }, []);
 
   async function refreshRouting(): Promise<ChatRuntimeSnapshot> {
-    const runtimeSnapshot = await getJson<ChatRuntimeSnapshot>("/api/settings/settings/runtime");
+    const runtimeSnapshot = await getJson<ChatRuntimeSnapshot>(
+      "/api/settings/settings/runtime",
+    );
     const [credentialSnapshot, localStatus, providerSnapshot, discoverySnapshot] =
       await Promise.all([
         getOptionalJson<ChatCredentialSnapshot>(
           "/api/settings/settings/credentials",
           EMPTY_CREDENTIALS,
         ),
-        getOptionalJson<ChatLocalRuntimeStatus>(
-          "/api/settings/settings/local-runtime/status",
-          {
-            ready: false,
-            state: "unreachable",
-            configuredModel: "",
-            message: "Local AI · Not connected.",
-          },
-        ),
+        getOptionalJson<ChatLocalRuntimeStatus>("/api/settings/settings/local-runtime/status", {
+          ready: false,
+          state: "unreachable",
+          configuredModel: "",
+          message: "Local AI · Not connected.",
+        }),
         getOptionalJson<{ providers: ChatProviderCatalogEntry[] }>(
           "/api/settings/settings/providers",
           { providers: [] },
