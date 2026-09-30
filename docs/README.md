@@ -12,6 +12,7 @@ When wording conflicts, use:
 current code + tests
   > current-state-and-next-steps.md
   > active-work-plan.md
+  > ai-provider-model-ux-contract.md (for Session 4E / Ai provider-model scope)
   > AGENTS.md
   > accepted ADRs
   > owner runbooks
@@ -31,13 +32,14 @@ Historical verification is intentionally preserved even when it contains an olde
 3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted pre-Session 4E product contract for two-selector provider/model UX, direct Add AI onboarding, per-message switching, pricing visibility, context handoff, and multi-credential direction.
 4. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
 5. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
-12. **[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)** — current overall safe-resume pointer; use this before opening any new scope.
-6. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — current OpenRouter Settings model-picker closure.
-7. **[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter automatic-admission closure.
-8. **[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter six-family foundation closure.
-9. **[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter live-discovery closure.
-10. **[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter governed registry closure.
-11. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — underlying NVIDIA hosted-provider rollout closure.
+6. **[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)** — current overall safe-resume pointer; use this before opening any new scope.
+7. **[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md)** — last closed/staging-verified OpenRouter runtime checkpoint.
+8. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — underlying OpenRouter Settings model-picker closure.
+9. **[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter automatic-admission closure.
+10. **[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter six-family foundation closure.
+11. **[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter live-discovery closure.
+12. **[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter governed registry closure.
+13. **[verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md)** — underlying NVIDIA hosted-provider rollout closure.
 
 ## Current ECX baseline
 
