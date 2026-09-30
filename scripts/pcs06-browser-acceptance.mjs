@@ -1184,33 +1184,42 @@ async function runDesktopJourney() {
   try {
     await goto(page, `/?project=prj_personal&session=${historySession.id}`, "desktop-ai");
     await page.getByText("Earlier hosted reply", { exact: true }).waitFor();
+    const providerSelect = page.getByRole("combobox", {
+      name: "Provider / Source",
+      exact: true,
+    });
     const modelSelect = page.getByRole("combobox", { name: "Model", exact: true });
-    if ((await modelSelect.inputValue()) !== "hosted") {
-      throw new Error("desktop-ai: replayed hosted conversation did not restore Hosted route");
+    if ((await providerSelect.inputValue()) !== "openrouter") {
+      throw new Error(
+        "desktop-ai: replayed hosted conversation did not restore OpenRouter source",
+      );
     }
-    if (await modelSelect.isDisabled()) {
-      throw new Error("desktop-ai: route selector must remain switchable after replayed turns");
+    if (await providerSelect.isDisabled()) {
+      throw new Error(
+        "desktop-ai: provider selector must remain switchable after replayed turns",
+      );
     }
-    const localOption = modelSelect.locator('option[value="local"]');
+    const localOption = providerSelect.locator('option[value="local"]');
     if (!(await localOption.isDisabled())) {
-      throw new Error("desktop-ai: Local unavailable option must be disabled");
+      throw new Error("desktop-ai: unavailable Local source must be disabled");
     }
+    if ((await modelSelect.inputValue()) !== "governed") {
+      throw new Error("desktop-ai: OpenRouter model selector did not restore Recommended");
+    }
+
     await page.getByRole("textbox", { name: "Pesan" }).fill("PCS06 browser continuity");
     await page.getByRole("button", { name: "Kirim pesan" }).click();
     await page.getByText("PCS06_HOSTED_OK", { exact: true }).waitFor();
     await page.screenshot({ path: `${outDir}/desktop-ai.png`, fullPage: true });
 
     await page.getByRole("button", { name: "+ Percakapan baru", exact: true }).click();
-    const quickSwitch = page.getByRole("combobox", {
-      name: "OpenRouter model quick switch",
-    });
-    await quickSwitch.waitFor();
-    if ((await quickSwitch.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1) {
+    await modelSelect.waitFor();
+    if ((await modelSelect.locator('option[value="qwen/qwen3.8-max"]').count()) !== 1) {
       throw new Error(
-        "desktop-ai: compatible Qwen must appear directly in the Session 4E picker",
+        "desktop-ai: compatible Qwen must appear directly in the Session 4E model selector",
       );
     }
-    const qwenOptionText = await quickSwitch
+    const qwenOptionText = await modelSelect
       .locator('option[value="qwen/qwen3.8-max"]')
       .textContent();
     if (
@@ -1220,24 +1229,29 @@ async function runDesktopJourney() {
       throw new Error("desktop-ai: compatible Qwen pricing is not visible in the picker");
     }
     if (
-      (await quickSwitch.locator('option[value="claude-sonnet-4-5-20250929"]').count()) !== 1
+      (await modelSelect.locator('option[value="claude-sonnet-4-5-20250929"]').count()) !== 1
     ) {
-      throw new Error("desktop-ai: validated executable Claude must appear in quick-switch");
+      throw new Error(
+        "desktop-ai: validated executable Claude must appear in the model selector",
+      );
     }
     if (
-      (await quickSwitch
+      (await modelSelect
         .locator('option[value="~deepseek/deepseek-v4-flash-latest"]')
         .count()) !== 0
     ) {
-      throw new Error("desktop-ai: unavailable DeepSeek alias leaked into quick-switch");
+      throw new Error("desktop-ai: unavailable DeepSeek alias leaked into model selector");
     }
 
-    await quickSwitch.selectOption("qwen/qwen3.8-max");
+    await modelSelect.selectOption("qwen/qwen3.8-max");
     await page
-      .getByText("Qwen: Qwen3.8 Max aktif untuk Hosted chat.", { exact: true })
+      .getByText("Qwen: Qwen3.8 Max aktif untuk pesan berikutnya.", { exact: true })
       .waitFor();
-    if ((await modelSelect.inputValue()) !== "hosted") {
-      throw new Error("desktop-ai: compatible dynamic selection must keep Hosted active");
+    if ((await providerSelect.inputValue()) !== "openrouter") {
+      throw new Error("desktop-ai: model switch unexpectedly changed provider source");
+    }
+    if ((await modelSelect.inputValue()) !== "qwen/qwen3.8-max") {
+      throw new Error("desktop-ai: compatible dynamic model selection was not retained");
     }
     if (
       runtime.settings.openRouterModelSelection !== "qwen/qwen3.8-max" ||
@@ -1247,16 +1261,19 @@ async function runDesktopJourney() {
       runtime.settings.defaultChatTarget !== "hosted"
     ) {
       throw new Error(
-        "desktop-ai: compatible dynamic quick-switch did not activate trusted selection",
+        "desktop-ai: compatible dynamic model selection did not activate trusted routing",
       );
     }
 
-    await quickSwitch.selectOption("governed");
+    await modelSelect.selectOption("governed");
     await page
-      .getByText("Governed / Recommended aktif untuk Hosted chat.", { exact: true })
+      .getByText("Governed / Recommended aktif untuk pesan berikutnya.", { exact: true })
       .waitFor();
-    if ((await modelSelect.inputValue()) !== "hosted") {
-      throw new Error("desktop-ai: governed quick-switch must restore Hosted route when ready");
+    if ((await providerSelect.inputValue()) !== "openrouter") {
+      throw new Error("desktop-ai: governed model switch unexpectedly changed provider");
+    }
+    if ((await modelSelect.inputValue()) !== "governed") {
+      throw new Error("desktop-ai: governed model selection was not restored");
     }
     if (
       runtime.settings.openRouterModelSelection !== "governed" ||
@@ -1265,15 +1282,10 @@ async function runDesktopJourney() {
       runtime.settings.defaultChatTarget !== "hosted"
     ) {
       throw new Error(
-        "desktop-ai: governed quick-switch did not restore governed runtime state",
+        "desktop-ai: governed model switch did not restore governed runtime state",
       );
     }
-    if (await modelSelect.locator('option[value="hosted"]').isDisabled()) {
-      throw new Error(
-        "desktop-ai: Hosted route should be available after governed reactivation",
-      );
-    }
-    await assertNoPageOverflow(page, "desktop-ai-quick-switch");
+    await assertNoPageOverflow(page, "desktop-ai-provider-model-selectors");
     await goto(
       page,
       `/?project=prj_personal&session=${historySession.id}`,
