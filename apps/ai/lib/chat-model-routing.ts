@@ -127,8 +127,7 @@ export function buildChatOnboardingProviderOptions(
       id: provider.id,
       displayName: hostedProviderLabel(provider.id),
       connected: connected.has(provider.id),
-      connectReady:
-        provider.credentialReady === true && provider.connectionTestReady === true,
+      connectReady: provider.credentialReady === true && provider.connectionTestReady === true,
     });
   }
   return options;
