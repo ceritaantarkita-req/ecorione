@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildChatProviderOptions,
+  buildHostedProviderModels,
   buildOpenRouterQuickSwitchModels,
+  currentHostedModelPreference,
   currentOpenRouterPreference,
   deriveChatRoutingState,
   type ChatOpenRouterDiscovery,
@@ -28,6 +31,24 @@ const providers: ChatProviderCatalogEntry[] = [
     hostedModels: [
       { id: "claude-sonnet-4-5-20250929", displayName: "Claude Sonnet 4.5" },
       { id: "claude-opus-4-1-20250805", displayName: "Claude Opus 4.1" },
+    ],
+  },
+  {
+    id: "anthropic",
+    displayName: "Claude / Anthropic",
+    category: "ai",
+    routingReady: true,
+    hostedModels: [
+      { id: "claude-sonnet-4-5-20250929", displayName: "Claude Sonnet 4.5" },
+    ],
+  },
+  {
+    id: "openai",
+    displayName: "OpenAI / ChatGPT API",
+    category: "ai",
+    routingReady: true,
+    hostedModels: [
+      { id: "gpt-5.6-sol", displayName: "GPT-5.6 Sol" },
     ],
   },
 ];
@@ -62,6 +83,63 @@ const discovery: ChatOpenRouterDiscovery = {
     },
   ],
 };
+
+describe("Ai provider/model selector routing", () => {
+  it("shows Local plus only connected first-class hosted providers", () => {
+    expect(
+      buildChatProviderOptions(
+        {
+          ready: true,
+          state: "connected",
+          configuredModel: "qwen3.5:9b",
+          message: "Local AI · Connected.",
+        },
+        providers,
+        {
+          credentials: [{ provider: "openrouter" }, { provider: "anthropic" }],
+        },
+      ),
+    ).toEqual([
+      { id: "local", displayName: "Local", available: true },
+      { id: "openrouter", displayName: "OpenRouter", available: true },
+      { id: "anthropic", displayName: "Anthropic", available: true },
+    ]);
+  });
+
+  it("builds provider-specific model choices and keeps OpenRouter catalog pricing", () => {
+    expect(currentHostedModelPreference(runtime)).toBe("qwen/qwen3.8-max");
+    const models = buildHostedProviderModels(runtime, providers, discovery);
+    expect(models.map((model) => model.id)).toEqual([
+      "governed",
+      "claude-sonnet-4-5-20250929",
+      "claude-opus-4-1-20250805",
+      "qwen/qwen3.8-max",
+      "google/gemini-3.8-flash",
+    ]);
+    expect(models.find((model) => model.id === "qwen/qwen3.8-max")).toMatchObject({
+      inputUsdPerMTok: 2,
+      outputUsdPerMTok: 6,
+      available: true,
+    });
+
+    const anthropicRuntime: ChatRuntimeSnapshot = {
+      ...runtime,
+      settings: {
+        ...runtime.settings,
+        hostedProvider: "anthropic",
+        hostedModel: "claude-sonnet-4-5-20250929",
+      },
+    };
+    expect(buildHostedProviderModels(anthropicRuntime, providers, null)).toEqual([
+      { id: "governed", displayName: "Recommended", available: true },
+      {
+        id: "claude-sonnet-4-5-20250929",
+        displayName: "Claude Sonnet 4.5",
+        available: true,
+      },
+    ]);
+  });
+});
 
 describe("Ai chat OpenRouter quick-switch routing", () => {
   it("shows every fresh compatible catalog model directly with provider pricing", () => {
