@@ -9,7 +9,6 @@ import {
   recordCall,
   tokenUsage,
   type CallCostRecord,
-  type PinnedModelId,
   type TokenUsage,
   type ModelPrice,
 } from "@ecorione/shared-telemetry";
