@@ -664,9 +664,11 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), body.maxLatencyMs);
     try {
+      const canaryDeps =
+        body.target === "hosted" ? await currentCompletionDeps() : currentDeps(runtime);
       const result = await complete(
         {
-          ...currentDeps(runtime),
+          ...canaryDeps,
           cache: new ExactMatchCache(),
           ...(body.target === "hosted" && runtime.hostedProvider === "nvidia"
             ? {
