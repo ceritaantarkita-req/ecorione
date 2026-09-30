@@ -87,7 +87,8 @@ export function useAiProviderOnboarding(
   const inFlightRef = useRef(false);
 
   const firstConnectableProvider = useMemo(
-    () => providers.find((provider) => !provider.connected && provider.connectReady) ?? null,
+    () =>
+      providers.find((provider) => !provider.connected && provider.connectReady) ?? null,
     [providers],
   );
 
@@ -169,7 +170,9 @@ export function useAiProviderOnboarding(
         setSecret("");
         await refreshRouting().catch(() => undefined);
         const message =
-          error instanceof Error ? error.message : "Aktivasi provider gagal setelah credential tersimpan.";
+          error instanceof Error
+            ? error.message
+            : "Aktivasi provider gagal setelah credential tersimpan.";
         setFeedback({
           kind: "warning",
           message: `Credential tersimpan di Connect Vault, tetapi provider belum aktif: ${message}`,
@@ -179,7 +182,9 @@ export function useAiProviderOnboarding(
         return null;
       }
 
-      setDialogStatus(error instanceof Error ? error.message : "Provider gagal dihubungkan.");
+      setDialogStatus(
+        error instanceof Error ? error.message : "Provider gagal dihubungkan.",
+      );
       return null;
     } finally {
       inFlightRef.current = false;
