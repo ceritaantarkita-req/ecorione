@@ -1,6 +1,7 @@
 import type { ChatTarget } from "./chat-history";
 
 export type HostedProviderId = "anthropic" | "openrouter" | "openai" | "nvidia";
+export type ChatProviderSource = "local" | HostedProviderId;
 
 export type ChatRuntimeSnapshot = {
   revision: number;
@@ -49,13 +50,54 @@ export type ChatOpenRouterDiscovery = {
   }>;
 };
 
-export type OpenRouterQuickSwitchModel = {
+export type ChatProviderOption = {
+  id: ChatProviderSource;
+  displayName: string;
+  available: boolean;
+};
+
+export type ChatModelOption = {
   id: string;
   displayName: string;
   available: boolean;
   inputUsdPerMTok?: number;
   outputUsdPerMTok?: number;
 };
+
+export type OpenRouterQuickSwitchModel = ChatModelOption;
+
+function isHostedProviderId(value: string): value is HostedProviderId {
+  return (
+    value === "anthropic" || value === "openrouter" || value === "openai" || value === "nvidia"
+  );
+}
+
+export function buildChatProviderOptions(
+  localRuntime: ChatLocalRuntimeStatus | null,
+  providers: readonly ChatProviderCatalogEntry[],
+  credentials: ChatCredentialSnapshot,
+): ChatProviderOption[] {
+  const configured = new Set(credentials.credentials.map((credential) => credential.provider));
+  const options: ChatProviderOption[] = [
+    { id: "local", displayName: "Local", available: localRuntime?.ready === true },
+  ];
+
+  for (const provider of providers) {
+    if (
+      provider.category !== "ai" ||
+      !provider.routingReady ||
+      !isHostedProviderId(provider.id)
+    ) {
+      continue;
+    }
+    options.push({
+      id: provider.id,
+      displayName: hostedProviderLabel(provider.id),
+      available: configured.has(provider.id),
+    });
+  }
+  return options;
+}
 
 export function hostedProviderLabel(provider: HostedProviderId | undefined): string {
   switch (provider) {
@@ -175,6 +217,47 @@ export function buildOpenRouterQuickSwitchModels(
     });
   }
 
+  return models;
+}
+
+export function currentHostedModelPreference(runtime: ChatRuntimeSnapshot | null): string {
+  if (runtime === null) return "governed";
+  return runtime.settings.hostedProvider === "openrouter"
+    ? currentOpenRouterPreference(runtime)
+    : runtime.settings.hostedModel;
+}
+
+export function buildHostedProviderModels(
+  runtime: ChatRuntimeSnapshot | null,
+  providers: readonly ChatProviderCatalogEntry[],
+  discovery: ChatOpenRouterDiscovery | null,
+): ChatModelOption[] {
+  if (runtime === null) return [];
+  if (runtime.settings.hostedProvider === "openrouter") {
+    return buildOpenRouterQuickSwitchModels(runtime, providers, discovery);
+  }
+
+  const provider = providers.find(
+    (entry) =>
+      entry.id === runtime.settings.hostedProvider &&
+      entry.category === "ai" &&
+      entry.routingReady,
+  );
+  const seen = new Set<string>(["governed"]);
+  const models: ChatModelOption[] = [
+    { id: "governed", displayName: "Recommended", available: true },
+  ];
+
+  for (const model of provider?.hostedModels ?? []) {
+    if (seen.has(model.id)) continue;
+    seen.add(model.id);
+    models.push({ id: model.id, displayName: model.displayName, available: true });
+  }
+
+  const saved = runtime.settings.hostedModel.trim();
+  if (saved.length > 0 && !seen.has(saved)) {
+    models.push({ id: saved, displayName: saved, available: false });
+  }
   return models;
 }
 

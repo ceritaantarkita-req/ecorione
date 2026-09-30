@@ -23,7 +23,9 @@ describe("PCS-06 integrated browser acceptance contract", () => {
   it("covers the post-closure user journeys rather than route smoke only", () => {
     expect(harness).toContain("Earlier hosted reply");
     expect(harness).toContain("PCS06_HOSTED_OK");
-    expect(harness).toContain("Local unavailable option must be disabled");
+    expect(harness).toContain("unavailable Local source must be disabled");
+    expect(harness).toContain('name: "Provider / Source"');
+    expect(harness).toContain('name: "Model"');
     expect(harness).toContain('name: "Test API key"');
     expect(harness).toContain('"governed"');
     expect(harness).toContain('name: "Prepare authority"');

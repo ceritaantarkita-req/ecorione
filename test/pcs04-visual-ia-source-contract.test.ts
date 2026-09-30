@@ -32,11 +32,13 @@ describe("PCS-04 visual and information architecture source contract", () => {
   });
 
   it("shows the actual Ai route/provider/model rather than only Local/Hosted jargon", () => {
+    expect(chatSections).toContain('aria-label="Provider / Source"');
+    expect(chatSections).toContain('aria-label="Model"');
     expect(chat).toContain("hostedRouteLabel");
     expect(chatRouting).toContain("Hosted ·");
-    expect(chatSections).toContain("Recommended");
-    expect(chat).toContain("Local ·");
-    expect(chat).toContain("Not connected");
+    expect(chatRouting).toContain("Recommended");
+    expect(chatSections).toContain("Local");
+    expect(chatSections).toContain("Not connected");
   });
 
   it("keeps primary page copy task-oriented instead of PE/internal labels", () => {

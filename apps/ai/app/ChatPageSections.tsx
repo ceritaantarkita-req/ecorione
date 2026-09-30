@@ -1,5 +1,10 @@
 import type { ChatCost, MemoryUsed } from "@ecorione/shared-schema";
-import type { ChatTurn } from "../lib/chat-history";
+import type { ChatTarget, ChatTurn } from "../lib/chat-history";
+import type {
+  ChatModelOption,
+  ChatProviderOption,
+  ChatProviderSource,
+} from "../lib/chat-model-routing";
 
 function formatUsd(value: number): string {
   return `$${value.toFixed(4)}`;
@@ -94,58 +99,86 @@ export function ChevronIcon() {
   );
 }
 
-export type OpenRouterQuickSwitchModel = {
-  readonly id: string;
-  readonly displayName: string;
-  readonly available: boolean;
-  readonly inputUsdPerMTok?: number;
-  readonly outputUsdPerMTok?: number;
-};
-
-export function OpenRouterModelQuickSwitch({
-  models,
-  value,
+export function ChatProviderModelSelectors({
+  providerOptions,
+  providerValue,
+  modelOptions,
+  modelValue,
+  localModel,
+  localReady,
+  target,
   disabled,
   switching,
-  onChange,
+  routeHint,
+  modelHint,
+  onProviderChange,
+  onModelChange,
 }: {
-  models: readonly OpenRouterQuickSwitchModel[];
-  value: string;
+  providerOptions: readonly ChatProviderOption[];
+  providerValue: ChatProviderSource;
+  modelOptions: readonly ChatModelOption[];
+  modelValue: string;
+  localModel: string;
+  localReady: boolean;
+  target: ChatTarget;
   disabled: boolean;
   switching: boolean;
-  onChange: (selectionId: string) => void;
+  routeHint: string;
+  modelHint: string;
+  onProviderChange: (source: ChatProviderSource) => void;
+  onModelChange: (modelId: string) => void;
 }) {
-  if (models.length === 0) return null;
-  const selected = models.find((model) => model.id === value);
-  const title =
-    selected?.inputUsdPerMTok !== undefined && selected.outputUsdPerMTok !== undefined
-      ? `Harga katalog: USD ${selected.inputUsdPerMTok.toFixed(2)} / 1M input · USD ${selected.outputUsdPerMTok.toFixed(2)} / 1M output. Harga billed provider tetap authoritative.`
-      : "Pilih model untuk pesan berikutnya. Setiap balasan tetap menyimpan model dan biaya yang dipakai.";
-
   return (
-    <div className="ai-model-select ai-model-select--quick" title={title}>
-      <select
-        aria-label="OpenRouter model quick switch"
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        {models.map((model) => {
-          const pricing =
-            model.inputUsdPerMTok !== undefined && model.outputUsdPerMTok !== undefined
-              ? ` · USD ${model.inputUsdPerMTok.toFixed(2)}/M in · USD ${model.outputUsdPerMTok.toFixed(2)}/M out`
-              : "";
-          return (
-            <option key={model.id} value={model.id} disabled={!model.available}>
-              {model.id === "governed" ? "OpenRouter · Recommended" : model.displayName}
-              {pricing}
-              {!model.available ? " · Unavailable" : ""}
+    <div className="ai-model-controls">
+      <div className="ai-model-select ai-model-select--route" title={routeHint}>
+        <select
+          id="chat-provider"
+          aria-label="Provider / Source"
+          value={providerValue}
+          onChange={(event) => onProviderChange(event.target.value as ChatProviderSource)}
+          disabled={disabled}
+        >
+          {providerOptions.map((provider) => (
+            <option key={provider.id} value={provider.id} disabled={!provider.available}>
+              {provider.id === "local"
+                ? localReady
+                  ? "Local"
+                  : "Local · Not connected"
+                : provider.displayName}
             </option>
-          );
-        })}
-      </select>
-      <ChevronIcon />
-      {switching ? <span className="ai-model-select__pending">Saving…</span> : null}
+          ))}
+        </select>
+        <ChevronIcon />
+      </div>
+      <div className="ai-model-select ai-model-select--quick" title={modelHint}>
+        <select
+          id="chat-model"
+          aria-label="Model"
+          value={modelValue}
+          onChange={(event) => onModelChange(event.target.value)}
+          disabled={disabled || (target === "local" && !localReady)}
+        >
+          {target === "local" ? (
+            <option value={localModel}>{localReady ? localModel : "Not connected"}</option>
+          ) : (
+            modelOptions.map((model) => {
+              const pricing =
+                model.inputUsdPerMTok !== undefined && model.outputUsdPerMTok !== undefined
+                  ? ` · USD ${model.inputUsdPerMTok.toFixed(2)}/M in · USD ${model.outputUsdPerMTok.toFixed(2)}/M out`
+                  : "";
+              return (
+                <option key={model.id} value={model.id} disabled={!model.available}>
+                  {model.displayName}
+                  {pricing}
+                  {!model.available ? " · Unavailable" : ""}
+                </option>
+              );
+            })
+          )}
+        </select>
+        <ChevronIcon />
+        {switching ? <span className="ai-model-select__pending">Saving…</span> : null}
+      </div>
     </div>
   );
 }

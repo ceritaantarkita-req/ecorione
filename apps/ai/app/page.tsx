@@ -42,11 +42,10 @@ import {
 } from "../lib/project-selection";
 import { isClientSessionId, makeSessionId, projectSessionStorageKey } from "../lib/session";
 import {
-  ChevronIcon,
+  ChatProviderModelSelectors,
   FileIcon,
   FolderIcon,
   MemoryPanel,
-  OpenRouterModelQuickSwitch,
   PanelToggleIcon,
   PencilIcon,
   PhotoIcon,
@@ -55,6 +54,7 @@ import {
   TurnView,
   XIcon,
 } from "./ChatPageSections";
+import type { ChatProviderSource } from "../lib/chat-model-routing";
 import { useWorkspace } from "./WorkspaceProvider";
 import { useChatModelRouting } from "./useChatModelRouting";
 type ConversationReplay = {
@@ -733,11 +733,30 @@ export default function ChatPage() {
     window.history.replaceState(null, "", nextUrl);
   }
 
-  async function handleOpenRouterModelSwitch(selectionId: string): Promise<void> {
+  async function handleProviderSwitch(source: ChatProviderSource): Promise<void> {
     if (sending || preparingAttachments) return;
-    const nextTarget = await modelRouting.switchOpenRouterModel(selectionId);
+    const nextTarget = await modelRouting.switchProvider(source);
     if (nextTarget !== null) setTarget(nextTarget);
   }
+
+  async function handleHostedModelSwitch(selectionId: string): Promise<void> {
+    if (sending || preparingAttachments || target !== "hosted") return;
+    const nextTarget = await modelRouting.switchHostedModel(selectionId);
+    if (nextTarget !== null) setTarget(nextTarget);
+  }
+
+  const providerSelection: ChatProviderSource =
+    target === "local" ? "local" : (modelRouting.hostedProvider ?? "local");
+  const modelSelection =
+    target === "local"
+      ? (localRuntimeStatus?.configuredModel ?? "")
+      : modelRouting.hostedModelSelection;
+  const selectedHostedModel =
+    target === "hosted"
+      ? modelRouting.hostedModels.find(
+          (model) => model.id === modelRouting.hostedModelSelection,
+        )
+      : undefined;
 
   const modelControlsLocked =
     !hydrated ||
@@ -759,6 +778,11 @@ export default function ChatPage() {
             ? "Model OpenRouter yang dipilih tidak lagi tersedia untuk Cloud. Refresh katalog atau pilih model lain."
             : "Hosted belum aktif. Hubungkan provider di Settings."
           : "Berlaku untuk pesan berikutnya. Setiap balasan menyimpan model dan biaya yang dipakai.";
+  const modelHint =
+    selectedHostedModel?.inputUsdPerMTok !== undefined &&
+    selectedHostedModel.outputUsdPerMTok !== undefined
+      ? `Harga katalog: USD ${selectedHostedModel.inputUsdPerMTok.toFixed(2)} / 1M input · USD ${selectedHostedModel.outputUsdPerMTok.toFixed(2)} / 1M output. Harga billed provider tetap authoritative.`
+      : routeHint;
 
   const canSend =
     projectReady &&
@@ -1005,40 +1029,21 @@ export default function ChatPage() {
                 <input ref={folderInputRef} type="file" hidden onChange={handleFolderChange} />
               </div>
 
-              <div className="ai-model-controls">
-                <div className="ai-model-select ai-model-select--route" title={routeHint}>
-                  <select
-                    id="chat-target"
-                    aria-label="Model"
-                    value={target}
-                    onChange={(e) => setTarget(e.target.value as ChatTarget)}
-                    disabled={modelControlsLocked}
-                  >
-                    <option value="local" disabled={localRuntimeStatus?.ready !== true}>
-                      {localRuntimeStatus?.ready === true
-                        ? `Local · ${localRuntimeStatus.configuredModel}`
-                        : "Local · Not connected"}
-                    </option>
-                    <option value="hosted" disabled={hostedAvailable !== true}>
-                      {hostedAvailable === true
-                        ? hostedRouteLabel
-                        : hostedBlockedByOpenRouterPreference
-                          ? "Hosted — refresh katalog / pilih model lain"
-                          : "Hosted · Not connected"}
-                    </option>
-                  </select>
-                  <ChevronIcon />
-                </div>
-                {modelRouting.hostedProvider === "openrouter" ? (
-                  <OpenRouterModelQuickSwitch
-                    models={modelRouting.openRouterModels}
-                    value={modelRouting.openRouterSelection}
-                    disabled={modelControlsLocked}
-                    switching={modelRouting.switching}
-                    onChange={(selectionId) => void handleOpenRouterModelSwitch(selectionId)}
-                  />
-                ) : null}
-              </div>
+              <ChatProviderModelSelectors
+                providerOptions={modelRouting.providerOptions}
+                providerValue={providerSelection}
+                modelOptions={modelRouting.hostedModels}
+                modelValue={modelSelection}
+                localModel={localRuntimeStatus?.configuredModel ?? ""}
+                localReady={localRuntimeStatus?.ready === true}
+                target={target}
+                disabled={modelControlsLocked}
+                switching={modelRouting.switching}
+                routeHint={routeHint}
+                modelHint={modelHint}
+                onProviderChange={(source) => void handleProviderSwitch(source)}
+                onModelChange={(modelId) => void handleHostedModelSwitch(modelId)}
+              />
 
               <button
                 type="submit"
