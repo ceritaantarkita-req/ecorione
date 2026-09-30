@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChatTarget } from "../lib/chat-history";
 import {
+  buildChatOnboardingProviderOptions,
   buildChatProviderOptions,
   buildHostedProviderModels,
   currentHostedModelPreference,
@@ -143,6 +144,39 @@ export function useChatModelRouting() {
     };
   }, []);
 
+  async function refreshRouting(): Promise<ChatRuntimeSnapshot> {
+    const runtimeSnapshot = await getJson<ChatRuntimeSnapshot>(
+      "/api/settings/settings/runtime",
+    );
+    const [credentialSnapshot, localStatus, providerSnapshot, discoverySnapshot] =
+      await Promise.all([
+        getOptionalJson<ChatCredentialSnapshot>(
+          "/api/settings/settings/credentials",
+          EMPTY_CREDENTIALS,
+        ),
+        getOptionalJson<ChatLocalRuntimeStatus>("/api/settings/settings/local-runtime/status", {
+          ready: false,
+          state: "unreachable",
+          configuredModel: "",
+          message: "Local AI · Not connected.",
+        }),
+        getOptionalJson<{ providers: ChatProviderCatalogEntry[] }>(
+          "/api/settings/settings/providers",
+          { providers: [] },
+        ),
+        runtimeSnapshot.settings.hostedProvider === "openrouter"
+          ? fetchOpenRouterDiscovery()
+          : Promise.resolve(null),
+      ]);
+
+    setRuntime(runtimeSnapshot);
+    setCredentials(credentialSnapshot);
+    setLocalRuntimeStatus(localStatus);
+    setProviders(providerSnapshot.providers);
+    setOpenRouterDiscovery(discoverySnapshot);
+    return runtimeSnapshot;
+  }
+
   const routing = useMemo(
     () => deriveChatRoutingState(runtime, credentials),
     [credentials, runtime],
@@ -150,6 +184,10 @@ export function useChatModelRouting() {
   const providerOptions = useMemo(
     () => buildChatProviderOptions(localRuntimeStatus, providers, credentials),
     [credentials, localRuntimeStatus, providers],
+  );
+  const onboardingProviders = useMemo(
+    () => buildChatOnboardingProviderOptions(providers, credentials),
+    [credentials, providers],
   );
   const hostedModels = useMemo(
     () => buildHostedProviderModels(runtime, providers, openRouterDiscovery),
@@ -368,11 +406,13 @@ export function useChatModelRouting() {
     defaultTarget: routing.defaultTarget,
     localRuntimeStatus,
     providerOptions,
+    onboardingProviders,
     hostedModels,
     hostedModelSelection,
     openRouterSelection,
     switching,
     feedback,
+    refreshRouting,
     switchProvider,
     switchHostedModel,
     switchOpenRouterModel,

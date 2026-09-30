@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildChatOnboardingProviderOptions,
   buildChatProviderOptions,
   buildHostedProviderModels,
   buildOpenRouterQuickSwitchModels,
@@ -27,6 +28,8 @@ const providers: ChatProviderCatalogEntry[] = [
     id: "openrouter",
     displayName: "OpenRouter",
     category: "ai",
+    credentialReady: true,
+    connectionTestReady: true,
     routingReady: true,
     hostedModels: [
       { id: "claude-sonnet-4-5-20250929", displayName: "Claude Sonnet 4.5" },
@@ -37,6 +40,8 @@ const providers: ChatProviderCatalogEntry[] = [
     id: "anthropic",
     displayName: "Claude / Anthropic",
     category: "ai",
+    credentialReady: true,
+    connectionTestReady: true,
     routingReady: true,
     hostedModels: [{ id: "claude-sonnet-4-5-20250929", displayName: "Claude Sonnet 4.5" }],
   },
@@ -44,6 +49,8 @@ const providers: ChatProviderCatalogEntry[] = [
     id: "openai",
     displayName: "OpenAI / ChatGPT API",
     category: "ai",
+    credentialReady: true,
+    connectionTestReady: true,
     routingReady: true,
     hostedModels: [{ id: "gpt-5.6-sol", displayName: "GPT-5.6 Sol" }],
   },
@@ -100,6 +107,33 @@ describe("Ai provider/model selector routing", () => {
       { id: "openrouter", displayName: "OpenRouter", available: true },
       { id: "anthropic", displayName: "Anthropic", available: true },
       { id: "openai", displayName: "OpenAI", available: false },
+    ]);
+  });
+
+  it("derives direct onboarding choices without exposing credential internals", () => {
+    expect(
+      buildChatOnboardingProviderOptions(providers, {
+        credentials: [{ provider: "openrouter" }],
+      }),
+    ).toEqual([
+      {
+        id: "openrouter",
+        displayName: "OpenRouter",
+        connected: true,
+        connectReady: true,
+      },
+      {
+        id: "anthropic",
+        displayName: "Anthropic",
+        connected: false,
+        connectReady: true,
+      },
+      {
+        id: "openai",
+        displayName: "OpenAI",
+        connected: false,
+        connectReady: true,
+      },
     ]);
   });
 

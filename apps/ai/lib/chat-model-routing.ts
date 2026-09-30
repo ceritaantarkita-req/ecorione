@@ -30,6 +30,8 @@ export type ChatProviderCatalogEntry = {
   id: string;
   displayName: string;
   category: "ai" | "integration";
+  credentialReady?: boolean;
+  connectionTestReady?: boolean;
   routingReady: boolean;
   hostedModels: Array<{
     id: string;
@@ -64,6 +66,13 @@ export type ChatModelOption = {
   outputUsdPerMTok?: number;
 };
 
+export type ChatOnboardingProviderOption = {
+  id: HostedProviderId;
+  displayName: string;
+  connected: boolean;
+  connectReady: boolean;
+};
+
 export type OpenRouterQuickSwitchModel = ChatModelOption;
 
 function isHostedProviderId(value: string): value is HostedProviderId {
@@ -94,6 +103,31 @@ export function buildChatProviderOptions(
       id: provider.id,
       displayName: hostedProviderLabel(provider.id),
       available: configured.has(provider.id),
+    });
+  }
+  return options;
+}
+
+export function buildChatOnboardingProviderOptions(
+  providers: readonly ChatProviderCatalogEntry[],
+  credentials: ChatCredentialSnapshot,
+): ChatOnboardingProviderOption[] {
+  const connected = new Set(credentials.credentials.map((credential) => credential.provider));
+  const options: ChatOnboardingProviderOption[] = [];
+
+  for (const provider of providers) {
+    if (
+      provider.category !== "ai" ||
+      !provider.routingReady ||
+      !isHostedProviderId(provider.id)
+    ) {
+      continue;
+    }
+    options.push({
+      id: provider.id,
+      displayName: hostedProviderLabel(provider.id),
+      connected: connected.has(provider.id),
+      connectReady: provider.credentialReady === true && provider.connectionTestReady === true,
     });
   }
   return options;
