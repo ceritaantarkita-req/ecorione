@@ -145,9 +145,7 @@ export function useChatModelRouting() {
   }, []);
 
   async function refreshRouting(): Promise<ChatRuntimeSnapshot> {
-    const runtimeSnapshot = await getJson<ChatRuntimeSnapshot>(
-      "/api/settings/settings/runtime",
-    );
+    const runtimeSnapshot = await getJson<ChatRuntimeSnapshot>("/api/settings/settings/runtime");
     const [credentialSnapshot, localStatus, providerSnapshot, discoverySnapshot] =
       await Promise.all([
         getOptionalJson<ChatCredentialSnapshot>(
