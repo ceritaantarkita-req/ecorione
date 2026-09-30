@@ -16,6 +16,7 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
     openRouterPreferenceRequiresExecution,
     pendingAction,
     providerViews,
+    removeCredentialConnection,
     runCanary,
     runtime,
     saveCredential,
@@ -36,6 +37,7 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
     setStatus,
     status,
     testCredential,
+    updateCredentialConnection,
   } = controller;
 
   const statusIsWarning = /SPEND_BUDGET|spend budget|plafon spend|COST_KILL_SWITCH/i.test(
@@ -66,14 +68,20 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
       </div>
 
       <div className={styles.providerGrid}>
-        {providerViews.map(({ provider, credential, active, health }) => (
+        {providerViews.map(({ provider, credential, credentials, active, health }) => {
+          const minimumPriority =
+            credentials.length === 0
+              ? 100
+              : Math.min(...credentials.map((connection) => connection.priority));
+          return (
           <article className={styles.providerCard} key={provider.id}>
             <div className={styles.providerCardTop}>
               <div>
                 <strong>{provider.displayName}</strong>
                 <span className={styles.providerMeta}>
                   {provider.hostedModels.length} verified model
-                  {provider.hostedModels.length === 1 ? "" : "s"}
+                  {provider.hostedModels.length === 1 ? "" : "s"} · {credentials.length} API key
+                  {credentials.length === 1 ? "" : "s"}
                 </span>
               </div>
               <span className={active ? styles.activeBadge : styles.statusBadge}>
@@ -106,7 +114,7 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
                     disabled={pendingAction !== null}
                     onClick={() => beginProviderConnect(provider.id)}
                   >
-                    Replace API key
+                    Add API key
                   </button>
                 </>
               ) : (
@@ -124,13 +132,77 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
                     disabled={pendingAction !== null}
                     onClick={() => beginProviderConnect(provider.id)}
                   >
-                    Replace key
+                    Add API key
                   </button>
                 </>
               )}
             </div>
+            {credentials.length > 0 ? (
+              <div className={styles.connectionList} aria-label={`${provider.displayName} AI Connections`}>
+                {credentials.map((connection, index) => (
+                  <div className={styles.connectionRow} key={connection.connectionId}>
+                    <div className={styles.connectionIdentity}>
+                      <strong>{connection.label}</strong>
+                      <span>
+                        {index === 0 && connection.enabled ? "Primary · " : ""}
+                        priority {connection.priority} · {connection.enabled ? "enabled" : "disabled"}
+                      </span>
+                    </div>
+                    <div className={styles.connectionActions}>
+                      <button
+                        type="button"
+                        className={styles.secondary}
+                        disabled={pendingAction !== null}
+                        onClick={() =>
+                          void updateCredentialConnection(provider.id, connection.connectionId, {
+                            enabled: !connection.enabled,
+                          })
+                        }
+                      >
+                        {connection.enabled ? "Disable" : "Enable"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.secondary}
+                        disabled={
+                          pendingAction !== null ||
+                          connection.priority <= minimumPriority
+                        }
+                        onClick={() =>
+                          void updateCredentialConnection(provider.id, connection.connectionId, {
+                            priority: Math.max(0, minimumPriority - 100),
+                          })
+                        }
+                      >
+                        Make primary
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.secondary}
+                        disabled={pendingAction !== null}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Remove ${connection.label} from ${provider.displayName}?`,
+                            )
+                          ) {
+                            void removeCredentialConnection(
+                              provider.id,
+                              connection.connectionId,
+                            );
+                          }
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </article>
-        ))}
+        );
+        })}
 
         <article className={styles.providerCard}>
           <div className={styles.providerCardTop}>
@@ -464,8 +536,13 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
           >
             <div className={styles.connectPanelHeader}>
               <div>
-                <span className={styles.eyebrow}>Connect provider</span>
-                <h3 id="connect-provider-title">Connect {connectProvider.displayName}</h3>
+                <span className={styles.eyebrow}>AI Connection</span>
+                <h3 id="connect-provider-title">
+                  {providerViews.find((view) => view.provider.id === connectProvider.id)
+                    ?.credentials.length
+                    ? `Add API key · ${connectProvider.displayName}`
+                    : `Connect ${connectProvider.displayName}`}
+                </h3>
               </div>
               <button
                 type="button"
@@ -532,8 +609,8 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
             </div>
             <p className={styles.muted}>
               {credentialTestPassed
-                ? "Test PASS. Key belum disimpan sampai Save & activate ditekan."
-                : "Test memakai real provider call tanpa menyimpan plaintext."}
+                ? "Test PASS. Key baru belum disimpan sampai Save & activate ditekan."
+                : "Test memakai real provider call tanpa menyimpan plaintext. Provider yang sama boleh punya beberapa key."}
             </p>
           </section>
         </div>
