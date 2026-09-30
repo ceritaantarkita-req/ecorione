@@ -120,21 +120,40 @@ describe("Ai provider/model selector routing", () => {
         id: "openrouter",
         displayName: "OpenRouter",
         connected: true,
+        connectionCount: 1,
         connectReady: true,
       },
       {
         id: "anthropic",
         displayName: "Anthropic",
         connected: false,
+        connectionCount: 0,
         connectReady: true,
       },
       {
         id: "openai",
         displayName: "OpenAI",
         connected: false,
+        connectionCount: 0,
         connectReady: true,
       },
     ]);
+  });
+
+  it("counts multiple keys under one logical onboarding provider", () => {
+    expect(
+      buildChatOnboardingProviderOptions(providers, {
+        credentials: [
+          { provider: "openrouter" },
+          { provider: "openrouter" },
+          { provider: "openrouter" },
+        ],
+      }).find((provider) => provider.id === "openrouter"),
+    ).toMatchObject({
+      connected: true,
+      connectionCount: 3,
+      connectReady: true,
+    });
   });
 
   it("builds provider-specific model choices and keeps OpenRouter catalog pricing", () => {

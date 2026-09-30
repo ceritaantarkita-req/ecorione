@@ -87,16 +87,12 @@ export function AiProviderConnectDialog({
               Pilih provider
             </option>
             {controller.providers.map((provider) => (
-              <option
-                key={provider.id}
-                value={provider.id}
-                disabled={provider.connected || !provider.connectReady}
-              >
+              <option key={provider.id} value={provider.id} disabled={!provider.connectReady}>
                 {provider.displayName}
-                {provider.connected
-                  ? " · Sudah terhubung"
-                  : !provider.connectReady
-                    ? " · Belum tersedia"
+                {!provider.connectReady
+                  ? " · Belum tersedia"
+                  : provider.connectionCount > 0
+                    ? ` · ${String(provider.connectionCount)} key · Tambah lagi`
                     : ""}
               </option>
             ))}

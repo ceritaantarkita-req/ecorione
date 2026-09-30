@@ -3,7 +3,9 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import {
   CREDENTIAL_PROVIDERS,
+  CredentialConnectionNotFoundError,
   CredentialVaultBusyError,
+  CredentialVaultFormatError,
   type CredentialVaultAdmin,
 } from "./credential-vault.js";
 import { nowIso } from "./clock.js";
@@ -25,6 +27,33 @@ import { executableHostedModelRegistryEntry } from "./hosted-model-registry.js";
 
 const CredentialParamsSchema = z.object({ provider: z.enum(CREDENTIAL_PROVIDERS) });
 const CredentialBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
+const CredentialConnectionParamsSchema = CredentialParamsSchema.extend({
+  connectionId: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/),
+});
+const CredentialConnectionBodySchema = z
+  .object({
+    secret: z.string().min(1).max(32_768),
+    label: z.string().trim().min(1).max(80).optional(),
+    enabled: z.boolean().optional(),
+    priority: z.number().int().min(0).max(1_000_000).optional(),
+  })
+  .strict();
+const CredentialConnectionPatchSchema = z
+  .object({
+    label: z.string().trim().min(1).max(80).optional(),
+    enabled: z.boolean().optional(),
+    priority: z.number().int().min(0).max(1_000_000).optional(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.label !== undefined || value.enabled !== undefined || value.priority !== undefined,
+    { message: "patch AI Connection kosong." },
+  );
 const OpenRouterModelValidationBodySchema = z.object({ confirmed: z.literal(true) }).strict();
 const OpenRouterModelSelectionBodySchema = z
   .object({ selectionId: z.string().trim().min(1).max(256) })
@@ -72,6 +101,12 @@ function credentialMutation<T>(fn: () => T): T {
         "CREDENTIAL_VAULT_BUSY",
         "Credential vault sedang dipakai; coba lagi.",
       );
+    }
+    if (error instanceof CredentialConnectionNotFoundError) {
+      throw new HttpError(404, "CREDENTIAL_CONNECTION_NOT_FOUND", error.message);
+    }
+    if (error instanceof CredentialVaultFormatError) {
+      throw new HttpError(400, "CREDENTIAL_INVALID", error.message);
     }
     throw error;
   }
@@ -339,6 +374,74 @@ export function registerConnectControlRoutes(
       return metadata;
     },
   );
+  app.post<{ Params: { provider: string } }>(
+    "/v1/settings/credentials/:provider/connections",
+    async (req) => {
+      const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
+      const body = parseOrBadRequest(CredentialConnectionBodySchema, req.body);
+      const purpose = purposeFor(provider);
+      if (purpose !== "messages") {
+        throw new HttpError(
+          400,
+          "CREDENTIAL_CONNECTION_UNSUPPORTED",
+          "Multi-connection hanya didukung untuk credential AI messages.",
+        );
+      }
+      const metadata = credentialMutation(() =>
+        vault().addConnection(provider, purpose, body.secret, nowIso(), {
+          ...(body.label === undefined ? {} : { label: body.label }),
+          ...(body.enabled === undefined ? {} : { enabled: body.enabled }),
+          ...(body.priority === undefined ? {} : { priority: body.priority }),
+        }),
+      );
+      metrics.addCounter("ecorione_control_changes_total", 1, {
+        surface: "credential-connection",
+        provider,
+        action: "add",
+      });
+      return metadata;
+    },
+  );
+
+  app.patch<{ Params: { provider: string; connectionId: string } }>(
+    "/v1/settings/credentials/:provider/connections/:connectionId",
+    async (req) => {
+      const { provider, connectionId } = parseOrBadRequest(
+        CredentialConnectionParamsSchema,
+        req.params,
+      );
+      const patch = parseOrBadRequest(CredentialConnectionPatchSchema, req.body);
+      const metadata = credentialMutation(() =>
+        vault().updateConnection(provider, purposeFor(provider), connectionId, patch, nowIso()),
+      );
+      metrics.addCounter("ecorione_control_changes_total", 1, {
+        surface: "credential-connection",
+        provider,
+        action: "update",
+      });
+      return metadata;
+    },
+  );
+
+  app.delete<{ Params: { provider: string; connectionId: string } }>(
+    "/v1/settings/credentials/:provider/connections/:connectionId",
+    async (req) => {
+      const { provider, connectionId } = parseOrBadRequest(
+        CredentialConnectionParamsSchema,
+        req.params,
+      );
+      const removed = credentialMutation(() =>
+        vault().removeConnection(provider, purposeFor(provider), connectionId),
+      );
+      metrics.addCounter("ecorione_control_changes_total", 1, {
+        surface: "credential-connection",
+        provider,
+        action: "remove",
+      });
+      return { removed };
+    },
+  );
+
   app.delete<{ Params: { provider: string } }>(
     "/v1/settings/credentials/:provider",
     async (req) => {

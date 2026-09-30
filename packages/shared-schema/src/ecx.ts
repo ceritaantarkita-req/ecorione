@@ -317,6 +317,7 @@ export const EcxExecutionCompletionSchema = z.object({
   model: z.string().min(1),
   pricingModel: z.string().min(1).optional(),
   responseModel: z.string().min(1),
+  credentialConnectionId: z.string().min(1).max(64).optional(),
   modelIdentity: z.string().min(1),
   modelIdentityPinned: z.boolean(),
   modelIdentityProvenance: z.string().min(1).optional(),
