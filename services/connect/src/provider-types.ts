@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const HOSTED_PROVIDER_IDS = ["anthropic", "openrouter", "openai", "nvidia"] as const;
+export const HOSTED_PROVIDER_IDS = [
+  "anthropic",
+  "openrouter",
+  "openai",
+  "nvidia",
+  "custom-openai",
+] as const;
 export const HostedProviderIdSchema = z.enum(HOSTED_PROVIDER_IDS);
 export type HostedProviderId = z.infer<typeof HostedProviderIdSchema>;
 
@@ -21,5 +27,7 @@ export function providerCredentialLabel(provider: HostedProviderId): string {
       return "OPENAI_API_KEY";
     case "nvidia":
       return "NVIDIA_API_KEY";
+    case "custom-openai":
+      return "CUSTOM_OPENAI_API_KEY";
   }
 }

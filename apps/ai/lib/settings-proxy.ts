@@ -3,7 +3,7 @@ import { connectUrl, internalToken } from "./env";
 import { normalizeOwnerProxyPath } from "./owner-proxy-path";
 import { jsonError } from "./proxy";
 
-type Method = "GET" | "POST" | "PUT" | "DELETE";
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 const ALLOWED = [
   /^\/v1\/settings\/runtime$/,
@@ -11,8 +11,13 @@ const ALLOWED = [
   /^\/v1\/settings\/providers$/,
   /^\/v1\/settings\/providers\/openrouter\/models$/,
   /^\/v1\/settings\/providers\/openrouter\/model-selection$/,
+  /^\/v1\/settings\/providers\/custom-openai\/connect$/,
   /^\/v1\/settings\/local-runtime\/status$/,
-  /^\/v1\/settings\/credentials(?:\/[a-z0-9][a-z0-9-]{0,63}(?:\/test)?)?$/,
+  /^\/v1\/settings\/credentials$/,
+  /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}$/,
+  /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/test$/,
+  /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/connections$/,
+  /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/connections\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/,
   /^\/v1\/settings\/mcp\/servers(?:\/[a-z0-9][a-z0-9._-]*)?(?:\/tools\/[A-Za-z0-9._-]+)?$/,
   /^\/v1\/ops\/provider-canary$/,
 ];
@@ -23,7 +28,17 @@ function allowedSettingsPath(path: string, method: Method): string | null {
     return null;
   }
 
-  if (normalized.pathname === "/v1/settings/spend-status") {
+  if (normalized.pathname === "/v1/settings/credentials") {
+    if (method !== "GET" || normalized.search.length > 0) return null;
+  } else if (/^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/test$/u.test(normalized.pathname)) {
+    if (method !== "POST" || normalized.search.length > 0) return null;
+  } else if (/^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/connections$/u.test(normalized.pathname)) {
+    if (method !== "POST" || normalized.search.length > 0) return null;
+  } else if (/^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/connections\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(normalized.pathname)) {
+    if ((method !== "PATCH" && method !== "DELETE") || normalized.search.length > 0) return null;
+  } else if (/^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}$/u.test(normalized.pathname)) {
+    if ((method !== "PUT" && method !== "DELETE") || normalized.search.length > 0) return null;
+  } else if (normalized.pathname === "/v1/settings/spend-status") {
     if (method !== "GET" || normalized.search.length > 0) return null;
   } else if (normalized.pathname === "/v1/settings/mcp/servers" && method === "GET") {
     const keys = [...normalized.searchParams.keys()];
@@ -62,6 +77,8 @@ function allowedSettingsPath(path: string, method: Method): string | null {
     if (refresh !== null && refresh !== "0" && refresh !== "1") return null;
   } else if (normalized.pathname === "/v1/settings/providers/openrouter/model-selection") {
     if (method !== "PUT" || normalized.search.length > 0) return null;
+  } else if (normalized.pathname === "/v1/settings/providers/custom-openai/connect") {
+    if (method !== "POST" || normalized.search.length > 0) return null;
   } else if (normalized.search.length > 0) {
     return null;
   }
@@ -81,7 +98,7 @@ export async function proxyToConnectSettings(
   const token = internalToken();
   if (token !== undefined) headers.authorization = `Bearer ${token}`;
   let body: string | undefined;
-  if (method === "POST" || method === "PUT") {
+  if (method === "POST" || method === "PUT" || method === "PATCH") {
     try {
       body = JSON.stringify(await request.json());
       headers["content-type"] = "application/json";

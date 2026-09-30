@@ -58,6 +58,13 @@ export class MissingCredentialError extends Error {
   }
 }
 
+export class CustomProviderPolicyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CustomProviderPolicyError";
+  }
+}
+
 /** Operator mematikan seluruh target hosted sebagai emergency cost-control switch. */
 export class CostKillSwitchError extends Error {
   constructor() {
