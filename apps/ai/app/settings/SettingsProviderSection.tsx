@@ -1,16 +1,9 @@
 "use client";
 
 import styles from "./Settings.module.css";
-import type {
-  RuntimeSnapshot,
-  SettingsController,
-} from "./useSettingsController";
+import type { RuntimeSnapshot, SettingsController } from "./useSettingsController";
 
-export function SettingsProviderSection({
-  controller,
-}: {
-  controller: SettingsController;
-}) {
+export function SettingsProviderSection({ controller }: { controller: SettingsController }) {
   const {
     activateStoredProvider,
     beginProviderConnect,
@@ -84,11 +77,7 @@ export function SettingsProviderSection({
                 </span>
               </div>
               <span className={active ? styles.activeBadge : styles.statusBadge}>
-                {active
-                  ? "Active"
-                  : health.status === "connected"
-                    ? "Connected"
-                    : "Available"}
+                {active ? "Active" : health.status === "connected" ? "Connected" : "Available"}
               </span>
             </div>
             <p className={styles.providerStatus}>{health.label}</p>
@@ -207,8 +196,7 @@ export function SettingsProviderSection({
               <span className={styles.eyebrow}>Cloud AI & Budget</span>
               <h3 id="cloud-budget-heading">Atur batas biaya</h3>
               <p>
-                Angka ini tersimpan lokal dan langsung dipakai untuk semua panggilan AI
-                hosted.
+                Angka ini tersimpan lokal dan langsung dipakai untuk semua panggilan AI hosted.
               </p>
             </div>
             <span className={cloudAiEnabled ? styles.activeBadge : styles.statusBadge}>
@@ -234,9 +222,7 @@ export function SettingsProviderSection({
                     settings: {
                       ...runtime.settings,
                       hostedCallsEnabled: enabled,
-                      defaultChatTarget: enabled
-                        ? runtime.settings.defaultChatTarget
-                        : "local",
+                      defaultChatTarget: enabled ? runtime.settings.defaultChatTarget : "local",
                     },
                   });
                 }}
