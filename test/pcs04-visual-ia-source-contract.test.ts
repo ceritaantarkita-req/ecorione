@@ -6,6 +6,7 @@ describe("PCS-04 visual and information architecture source contract", () => {
   const navCss = readFileSync("apps/ai/app/navigation.css", "utf8");
   const globals = readFileSync("apps/ai/app/globals.css", "utf8");
   const chat = readFileSync("apps/ai/app/page.tsx", "utf8");
+  const chatSections = readFileSync("apps/ai/app/ChatPageSections.tsx", "utf8");
   const chatRouting = readFileSync("apps/ai/lib/chat-model-routing.ts", "utf8");
   const projects = readFileSync("apps/ai/app/projects/page.tsx", "utf8");
   const work = readFileSync("apps/ai/app/work/page.tsx", "utf8");
@@ -31,8 +32,8 @@ describe("PCS-04 visual and information architecture source contract", () => {
   });
 
   it("shows the actual Ai route/provider/model rather than only Local/Hosted jargon", () => {
-    expect(chat).toContain('aria-label="Provider / Source"');
-    expect(chat).toContain('aria-label="Model"');
+    expect(chatSections).toContain('aria-label="Provider / Source"');
+    expect(chatSections).toContain('aria-label="Model"');
     expect(chat).toContain("hostedRouteLabel");
     expect(chatRouting).toContain("Hosted ·");
     expect(chatRouting).toContain("Recommended");
