@@ -1,19 +1,22 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-09-29**
+Last updated: **2026-09-30**
 
-Status: **CURRENT / REPOSITORY+STAGING CONVERGED / OPENROUTER SESSIONS 2–3 + 4A–4D CLOSED-PASS / NVIDIA SESSION 1 CLOSED-PASS / ECX B1–B7 CLOSED-PASS / NO ACTIVE PRODUCT-RUNTIME BATCH / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / LAST STAGING-VERIFIED OPENROUTER BASELINE = SESSION 4D / CURRENT MAIN INCLUDES UNVERIFIED PR #402 / PRE-4E AI PROVIDER+MODEL UX CONTRACT ACCEPTED / NO ACTIVE 4E RUNTIME IMPLEMENTATION / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
-repository               = ceritaantarkita-req/ecorione
-default branch           = main
-runtime-changing baseline= 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
-staging image            = staging-9bc4cfd1bbfb
+repository                = ceritaantarkita-req/ecorione
+default branch            = main
+current main              = 8db1dfd7536f93edbe8f59f1b2f5d6402ae2f96b (PR #402 merge)
+last staging-verified run = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7 (PR #400 merge)
+staging image             = staging-9bc4cfd1bbfb
 ```
 
-`9bc4cfd1...` is the latest audited runtime-changing merge and the merge commit of PR #400. It is deployed on governed staging. Docs-only checkpoint commits may advance the exact live Git/staging revision later without changing this runtime compatibility baseline; inspect live `main` plus the latest successful staging deploy receipt when exact current revision identity is required.
+`9bc4cfd1...` remains the latest **staging-verified** runtime merge and the merge commit of PR #400. Current repository `main` has advanced to PR #402 (`8db1dfd...`), but #402 is **not CLOSED / PASS**: its PR-head CI failed at format checking, Product Eval reported 254/255 tests passing with one stale source-contract expectation, and integrated browser acceptance reported a stale route-lock expectation plus a Settings 503. Therefore #402 must not replace the last proven staging baseline until its chosen implementation is stabilized and all required gates pass.
+
+PR #402 also introduced a user-facing `Search → Test & Enable → Certified/Ready` direction for dynamic OpenRouter models. That is now treated as an **interim implementation**, not the accepted final product UX. The accepted pre-4E contract is [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
@@ -102,7 +105,7 @@ Latest Session 1 checkpoint:
 Underlying provider rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
-## OpenRouter registry + discovery + family + admission + Settings/Ai selection — Sessions 2–3 + 4A–4D CLOSED / PASS
+## OpenRouter registry + discovery + family + admission + Settings/Ai selection — Sessions 2–3 + 4A–4D CLOSED / PASS; post-4D PR #402 unverified
 
 Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 added bounded live catalog fetch/search/filter/cache. Session 4A added the six-family vocabulary, Session 4B added bounded automatic selection admission, Session 4C added the governed Settings picker, and Session 4D added the governed Ai chat quick-switch without changing executable authority.
 
@@ -136,6 +139,11 @@ Current OpenRouter **executable authority** remains only:
 - Claude Opus 4.1.
 
 The Settings picker may additionally show fresh target-family models admitted as **Selectable**, but Session 4C does not make them executable or activate hosted routing for them.
+
+Accepted pre-4E product contract:
+[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
+
+The contract locks the normal Ai UX to two adjacent selectors — `[Provider ▼] [Model ▼]` — with `+ Tambah AI` in the provider selector, direct provider onboarding from Ai, model/provider switching per message inside one conversation, pricing visibility, Local↔Cloud bounded context handoff, and a multi-credential AI Connection direction. Normal OpenRouter use must not require model-by-model user certification.
 
 Current Session 4C checkpoint:
 [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
@@ -289,15 +297,17 @@ Canonical Session 4D checkpoint:
 
 ## Current active work
 
-There is **no active product/runtime implementation scope and no active repository-hygiene scope**. OpenRouter Session 4D is closed and staging verified.
+There is **no active Session 4E runtime implementation and no active repository-hygiene scope**. OpenRouter Session 4D remains the last closed/staging-verified OpenRouter runtime boundary.
 
-Current docs are reconciled to that runtime truth; Session 4E is eligible only after an explicit operator decision.
+A docs-only pre-4E product contract is accepted and must be read before opening 4E: [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
+
+Before 4E coding, current PR #402 behavior must be stabilized or explicitly superseded. The next runtime scope must not simply extend per-model `Test & Enable` certification UX; it must move toward the accepted two-selector provider/model experience while preserving governance underneath.
 
 ## Explicit deferred / separately selectable future scopes
 
 Any of the following requires a new explicit operator decision and its own bounded scope:
 
-- Session 4E real multi-family OpenRouter execution validation;
+- Session 4E implementation under the accepted AI Provider + Model UX contract, including real compatible multi-family OpenRouter execution without normal-user per-model certification;
 - Session 4F final OpenRouter polish/closure;
 - DR-2 checkpoint 2 external target selection and later runtime proof;
 - public production promotion/cutover;
@@ -320,10 +330,11 @@ For a new session/agent:
 1. read [README.md](../README.md);
 2. read this file;
 3. read [active-work-plan.md](active-work-plan.md);
-4. read [../AGENTS.md](../AGENTS.md);
-5. inspect exact current `main`;
-6. open only the explicitly authorized new scope;
-7. use dated verification files as evidence, not as the current queue.
+4. read [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md);
+5. read [../AGENTS.md](../AGENTS.md);
+6. inspect exact current `main`;
+7. open only the explicitly authorized new scope;
+8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
