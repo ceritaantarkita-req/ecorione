@@ -107,6 +107,186 @@ describe("complete", () => {
     expect(result.reply).toBe("dari vault");
   });
 
+  it("multi-credential failover memakai connection prioritas berikutnya untuk invalid key", async () => {
+    anthropicPool
+      .intercept({
+        path: "/v1/messages",
+        method: "POST",
+        headers: { "x-api-key": "bad-primary-key" },
+      })
+      .reply(401, { error: { message: "invalid key" } });
+    anthropicPool
+      .intercept({
+        path: "/v1/messages",
+        method: "POST",
+        headers: { "x-api-key": "good-backup-key" },
+      })
+      .reply(200, {
+        model: "claude-sonnet-4-5-20250929",
+        content: [{ type: "text", text: "backup works" }],
+        usage: { input_tokens: 10, output_tokens: 4 },
+      });
+
+    const result = await complete(
+      deps({
+        anthropicApiKey: "dev-env-key-must-not-be-used",
+        credentialVault: {
+          get: () => "bad-primary-key",
+          candidates(provider, purpose) {
+            expect(provider).toBe("anthropic");
+            expect(purpose).toBe("messages");
+            return [
+              {
+                provider,
+                purpose,
+                connectionId: "primary",
+                label: "Primary",
+                priority: 100,
+                generation: 1,
+                secret: "bad-primary-key",
+              },
+              {
+                provider,
+                purpose,
+                connectionId: "backup",
+                label: "Backup",
+                priority: 200,
+                generation: 1,
+                secret: "good-backup-key",
+              },
+            ];
+          },
+        },
+      }),
+      {
+        target: "hosted",
+        prefix: prefix(),
+        dynamicText: "",
+        userMessage: "credential failover",
+        sensitivity: "INTERNAL",
+        operationId: OPERATION_ID,
+        now: NOW,
+      },
+    );
+
+    expect(result.reply).toBe("backup works");
+    expect(result.credentialConnectionId).toBe("backup");
+  });
+
+  it("multi-credential failover memakai connection berikutnya untuk network unreachable", async () => {
+    anthropicPool
+      .intercept({
+        path: "/v1/messages",
+        method: "POST",
+        headers: { "x-api-key": "offline-primary-key" },
+      })
+      .replyWithError(new Error("socket unavailable"));
+    anthropicPool
+      .intercept({
+        path: "/v1/messages",
+        method: "POST",
+        headers: { "x-api-key": "reachable-backup-key" },
+      })
+      .reply(200, {
+        model: "claude-sonnet-4-5-20250929",
+        content: [{ type: "text", text: "reachable backup" }],
+        usage: { input_tokens: 8, output_tokens: 3 },
+      });
+
+    const result = await complete(
+      deps({
+        credentialVault: {
+          get: () => "offline-primary-key",
+          candidates(provider, purpose) {
+            return [
+              {
+                provider,
+                purpose,
+                connectionId: "primary",
+                label: "Primary",
+                priority: 100,
+                generation: 1,
+                secret: "offline-primary-key",
+              },
+              {
+                provider,
+                purpose,
+                connectionId: "backup",
+                label: "Backup",
+                priority: 200,
+                generation: 1,
+                secret: "reachable-backup-key",
+              },
+            ];
+          },
+        },
+      }),
+      {
+        target: "hosted",
+        prefix: prefix(),
+        dynamicText: "",
+        userMessage: "network failover",
+        sensitivity: "INTERNAL",
+        operationId: OPERATION_ID,
+        now: NOW,
+      },
+    );
+
+    expect(result.reply).toBe("reachable backup");
+    expect(result.credentialConnectionId).toBe("backup");
+  });
+
+  it("upstream ambiguity tidak failover ke key berikutnya", async () => {
+    anthropicPool
+      .intercept({
+        path: "/v1/messages",
+        method: "POST",
+        headers: { "x-api-key": "primary-upstream-key" },
+      })
+      .reply(500, { error: { message: "ambiguous upstream failure" } });
+
+    await expect(
+      complete(
+        deps({
+          credentialVault: {
+            get: () => "primary-upstream-key",
+            candidates(provider, purpose) {
+              return [
+                {
+                  provider,
+                  purpose,
+                  connectionId: "primary",
+                  label: "Primary",
+                  priority: 100,
+                  generation: 1,
+                  secret: "primary-upstream-key",
+                },
+                {
+                  provider,
+                  purpose,
+                  connectionId: "backup",
+                  label: "Backup",
+                  priority: 200,
+                  generation: 1,
+                  secret: "backup-must-not-run",
+                },
+              ];
+            },
+          },
+        }),
+        {
+          target: "hosted",
+          prefix: prefix(),
+          dynamicText: "",
+          userMessage: "no ambiguous retry",
+          sensitivity: "INTERNAL",
+          operationId: OPERATION_ID,
+          now: NOW,
+        },
+      ),
+    ).rejects.toMatchObject({ name: "ProviderError", kind: "upstream" });
+  });
+
   it("vault aktif tapi credential missing tidak fallback ke env", async () => {
     await expect(
       complete(
