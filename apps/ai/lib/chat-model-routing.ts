@@ -70,6 +70,7 @@ export type ChatOnboardingProviderOption = {
   id: HostedProviderId;
   displayName: string;
   connected: boolean;
+  connectionCount: number;
   connectReady: boolean;
 };
 
@@ -112,7 +113,13 @@ export function buildChatOnboardingProviderOptions(
   providers: readonly ChatProviderCatalogEntry[],
   credentials: ChatCredentialSnapshot,
 ): ChatOnboardingProviderOption[] {
-  const connected = new Set(credentials.credentials.map((credential) => credential.provider));
+  const connectionCounts = new Map<string, number>();
+  for (const credential of credentials.credentials) {
+    connectionCounts.set(
+      credential.provider,
+      (connectionCounts.get(credential.provider) ?? 0) + 1,
+    );
+  }
   const options: ChatOnboardingProviderOption[] = [];
 
   for (const provider of providers) {
@@ -126,7 +133,8 @@ export function buildChatOnboardingProviderOptions(
     options.push({
       id: provider.id,
       displayName: hostedProviderLabel(provider.id),
-      connected: connected.has(provider.id),
+      connected: (connectionCounts.get(provider.id) ?? 0) > 0,
+      connectionCount: connectionCounts.get(provider.id) ?? 0,
       connectReady: provider.credentialReady === true && provider.connectionTestReady === true,
     });
   }
