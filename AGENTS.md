@@ -21,20 +21,20 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = d32527cb21e3b7209b28b109083be00671464b2b
-image            = staging-d32527cb21e3
-CI               = #2540 PASS
-Product Eval     = #1779 PASS
-Staging Deploy   = #1835 PASS
+runtime baseline = bb2983d59dbe292c510fbc28aae297bcb23487c4
+image            = staging-bb2983d59dbe
+CI               = #2556 PASS
+Product Eval     = #1795 PASS
+Staging Deploy   = #1863 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 27.41 GiB stabilized
+free disk        = 29.89 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. The post-#402 repository state was stabilized by PR #405 and is now the latest **actual staging-verified** runtime baseline on `main` at `d32527cb21e3b7209b28b109083be00671464b2b`. Exact PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 #328; merged-main CI #2540, Product Eval #1779, and Staging Deploy #1835 also passed. Treat #405 as repository stabilization, **not** as Session 4E closure.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. Session 4E is **ACTIVE / PARTIAL**. Its first runtime slice is CLOSED / PASS / STAGING VERIFIED through PR #407: exact PR head `5b9a29085287db035c2c52dd6ea783c2d93ceac4` passed CI #2555, Product Eval #1794, and PCS-06 #341; merged `main` `bb2983d59dbe292c510fbc28aae297bcb23487c4` passed CI #2556, Product Eval #1795, and actual Staging Deploy #1863. Compatible fresh OpenRouter models now execute without normal-user per-model certification, while catalog freshness/capability/pricing remain Connect-owned fail-closed checks. Do **not** treat this slice as full Session 4E closure.
 
 Current overall safe-resume pointer:
-`docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md`.
+`docs/verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md`.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
@@ -56,7 +56,7 @@ Latest NVIDIA test/runtime checkpoint:
 Underlying provider rollout checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
-Use `docs/verification/ecorione-safe-resume-checkpoint-2026-09-29.md` as the overall handoff pointer before opening a new scope.
+Use `docs/verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md` as the overall handoff pointer for the active Session 4E scope.
 
 Closed roadmap families:
 
@@ -73,39 +73,39 @@ Closed roadmap families:
 - OpenRouter model-family Session 4A — **CLOSED / PASS / STAGING VERIFIED**;
 - OpenRouter automatic-admission Session 4B — **CLOSED / PASS / STAGING VERIFIED**;
 - OpenRouter Settings model-picker Session 4C — **CLOSED / PASS / STAGING VERIFIED**;
-- OpenRouter Ai chat quick-switch Session 4D — **CLOSED / PASS / STAGING VERIFIED**.
+- OpenRouter Ai chat quick-switch Session 4D — **CLOSED / PASS / STAGING VERIFIED**;
+- Session 4E first runtime slice — compatible OpenRouter auto-execution + visible catalog pricing — **CLOSED / PASS / STAGING VERIFIED** through PR #407.
 
-There is **no active Session 4E runtime implementation scope** and no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted pre-4E product contract is `docs/ai-provider-model-ux-contract.md`.
+Session 4E is **ACTIVE / PARTIAL**. The current bounded implementation slice is the canonical adjacent `[Provider / Source ▼] [Model ▼]` Ai control surface. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract is `docs/ai-provider-model-ux-contract.md`.
 
 Open Issue #277 remains the deferred DR-2 tracker.
 
-## OpenRouter registry + discovery + family + admission working boundary
+## OpenRouter registry + discovery + Session 4E working boundary
 
-Before changing OpenRouter/Ai provider-model UX, read `docs/ai-provider-model-ux-contract.md`. The target normal-user surface is `[Provider ▼] [Model ▼]`, direct `+ Tambah AI` onboarding, per-message switching, visible pricing, and machine-managed governance. Do not scale user-facing model-by-model `Test & Enable` certification as the product direction.
+Before changing OpenRouter/Ai provider-model UX, read `docs/ai-provider-model-ux-contract.md`. The target normal-user surface is `[Provider / Source ▼] [Model ▼]`, direct `+ Tambah AI` onboarding, per-message switching, visible pricing, and machine-managed governance.
 
-Sessions 2, 3, 4A, 4B, 4C, and 4D are **CLOSED / PASS**.
+Sessions 2, 3, 4A, 4B, 4C, and 4D are **CLOSED / PASS**. Session 4E is **ACTIVE / PARTIAL**; its first auto-execution/pricing slice is **CLOSED / PASS / STAGING VERIFIED** through PR #407.
 
 Current invariants:
 
-- hosted model preferences may be string-shaped for future discovery;
-- a string is not executable unless it resolves to an executable verified provider/model registry entry;
-- executable hosted entries require an admitted pricing identity;
-- OpenRouter runtime slugs resolve from the registry;
-- provider-reported OpenRouter billed cost remains authoritative for actual cost;
-- current OpenRouter executable authority remains Claude Sonnet 4.5 and Claude Opus 4.1 only; Sessions 4C/4D may additionally show non-executable `verified-selectable` preferences in Settings and Ai chat;
-- live OpenRouter discovery/search/filter/cache exists through Connect;
-- discovered/catalogued state, selection eligibility, and executable authority are distinct;
-- Session 4B may mark a fresh six-family candidate `verified-selectable` / `selectable=true` while `executable=false`;
-- target-family candidates that fail 4B become `unavailable` with a stable reason;
-- stale discovery withdraws dynamic selectability and never grants execution;
-- Connect owns the canonical six-family vocabulary: GPT, Gemini, Qwen, DeepSeek, Kimi, GLM;
-- family classification is version-agnostic descriptive metadata, not execution authority;
-- unrelated models sharing an author namespace remain `other` and discovery-only;
-- remote catalog pricing is admission evidence only; it must not silently create a `PinnedModelId`, weaken spend reservation, or become runtime execution authority.
+- hosted model preferences remain extensible strings, but execution authority is always Connect-owned;
+- static provider/model entries still resolve through the governed executable registry;
+- fresh compatible dynamic OpenRouter selections may execute through the trusted Session 4E activation path without normal-user model-by-model certification;
+- generic runtime PATCH cannot mint dynamic OpenRouter execution authority;
+- before each paid dynamic OpenRouter dispatch, Connect must re-resolve the exact selected model from a fresh catalog snapshot and require the model to remain selectable with valid input/output pricing;
+- mutable aliases, stale catalog entries, invalid runtime ids, incompatible text-I/O/`max_tokens` candidates, and missing/invalid pricing remain fail-closed;
+- Connect owns the canonical target-family vocabulary: GPT, Gemini, Qwen, DeepSeek, Kimi, GLM;
+- family classification is descriptive metadata, not by itself execution authority;
+- unrelated models sharing an author namespace remain `other` / discovery-only unless independently admitted;
+- catalog input/output pricing may be shown to the user and used for bounded pre-dispatch planning, but provider-reported OpenRouter billed cost remains authoritative when supplied;
+- spend budget, kill switch, credential/Vault, sensitivity, Project/history, and no-silent-fallback boundaries remain unchanged.
 
-Do not hard-code newly discovered GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other OpenRouter models as verified executable. Sessions 4C/4D consume 4B selection eligibility through the same dedicated Connect-owned model-selection mutation; dynamic selections remain fail-closed and non-executable until separately implemented and proven.
+Do **not** hard-code newly discovered GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other catalog models into the static verified registry merely to make them executable. Use the dynamic Connect-owned admission/activation path and preserve fresh dispatch-time validation.
 
 Current checkpoint:
+`docs/verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md`.
+
+Prior Ai quick-switch checkpoint:
 `docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md`.
 
 Underlying Settings-selection checkpoint:
@@ -189,12 +189,13 @@ Canonical checkpoint:
 - No first-class Task domain until a real need is proven.
 - `MAX_AUTONOMY_V1` stays L3.
 
-## Current separate / deferred scopes
+## Current active / separate scopes
 
-Do not start these without explicit operator authorization:
+Session 4E is the active bounded product/runtime scope. Continue only the slice named by `docs/active-work-plan.md`; do not widen it implicitly.
 
-- Session 4E implementation under `docs/ai-provider-model-ux-contract.md`;
-- Session 4F final OpenRouter polish/closure;
+Do not start these separate scopes without explicit operator authorization:
+
+- Session 4F final OpenRouter polish/closure after Session 4E is complete;
 - DR-2 checkpoint 2 and physical-independence runtime proof;
 - public production cutover;
 - native Google Drive integration;

@@ -2,25 +2,25 @@
 
 Last updated: **2026-09-30**
 
-Status: **CURRENT / POST-402 MAIN STABILIZED + STAGING VERIFIED VIA PR #405 / PRE-4E AI PROVIDER+MODEL UX CONTRACT ACCEPTED / NO ACTIVE 4E RUNTIME IMPLEMENTATION / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 4E ACTIVE-PARTIAL / OPENROUTER AUTO-EXECUTION SLICE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository                = ceritaantarkita-req/ecorione
 default branch            = main
-current main              = d32527cb21e3b7209b28b109083be00671464b2b (PR #405 squash merge)
-post-402 stabilized head   = 32daed745625c9ede012912a19b8b77d5f89ec90 (PR #405 head)
-staging-verified runtime   = d32527cb21e3b7209b28b109083be00671464b2b
-staging image              = staging-d32527cb21e3
+current main              = bb2983d59dbe292c510fbc28aae297bcb23487c4 (PR #407 squash merge)
+session 4E reviewed head   = 5b9a29085287db035c2c52dd6ea783c2d93ceac4 (PR #407 head)
+staging-verified runtime   = bb2983d59dbe292c510fbc28aae297bcb23487c4
+staging image              = staging-bb2983d59dbe
 ```
 
-The post-#402 repository state is now both stabilized and actual staging-verified. PR #405 exact head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 Integrated Browser Acceptance #328, then merged to `main` as `d32527cb21e3b7209b28b109083be00671464b2b`. Merged-main CI #2540 and Product Eval #1779 passed, and Staging Deploy #1835 deployed exact SHA `d32527cb...` with image `staging-d32527cb21e3`, public smoke PASS, Operations `healthy: true`, **15/15** configured services running, and **27.41 GiB** free disk.
+Session 4E has now begun. Its first runtime slice is CLOSED / PASS / STAGING VERIFIED through PR #407. Exact PR head `5b9a29085287db035c2c52dd6ea783c2d93ceac4` passed CI #2555, Product Eval #1794, and PCS-06 Integrated Browser Acceptance #341. It merged to `main` as `bb2983d59dbe292c510fbc28aae297bcb23487c4`; merged-main CI #2556 and Product Eval #1795 passed, and Staging Deploy #1863 deployed exact SHA `bb2983d5...` as image `staging-bb2983d59dbe`. Public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, and capacity stabilized at **29.89 GiB free** after bounded BuildKit pruning.
 
-PR #402 introduced a user-facing `Search → Test & Enable → Certified/Ready` direction for dynamic OpenRouter models. PR #405 makes that code path stable enough to be a clean starting point, but the flow remains an **interim implementation**, not the accepted final product UX. The accepted pre-4E contract is [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
+The first Session 4E slice removes the normal-user per-model `Test & Enable` requirement for fresh compatible OpenRouter catalog models. Compatible models appear directly in Ai, catalog input/output pricing is visible, and Connect re-checks the exact fresh catalog model, capability admission, and pricing before paid execution. Mutable aliases, stale/incompatible candidates, and invalid pricing remain fail-closed. The accepted product contract remains [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md), but Session 4E is **not fully closed**: the canonical provider/source selector, direct `+ Tambah AI` onboarding, cross-provider switching, bounded Local↔Cloud context handoff work, and multi-credential routing remain open.
 
 Current safe-resume checkpoint:
-[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
+[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -29,26 +29,30 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = 9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7
-image = staging-9bc4cfd1bbfb
+SHA   = bb2983d59dbe292c510fbc28aae297bcb23487c4
+image = staging-bb2983d59dbe
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| CI #2509 | PASS |
-| Product Eval #1748 | PASS |
-| Staging Deploy #1778 | gate-only PASS |
-| Staging Deploy #1779 | actual deploy PASS |
-| native `better-sqlite3` fallback build | PASS |
+| PR #407 reviewed head | `5b9a29085287db035c2c52dd6ea783c2d93ceac4` |
+| PR-head CI #2555 | PASS |
+| PR-head Product Eval #1794 | PASS |
+| PR-head PCS-06 browser #341 | PASS |
+| merged-main CI #2556 | PASS |
+| merged-main Product Eval #1795 | PASS |
+| Staging Deploy #1862 | gate-only PASS / deploy skipped |
+| Staging Deploy #1863 | actual deploy PASS |
 | expected host SHA | matched |
+| staging image | `staging-bb2983d59dbe` |
+| public smoke | PASS |
 | Operations | `healthy: true` |
-| unhealthy services | 0 |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| host evidence free disk | 24.02 GiB |
-| stabilized free disk | 25.36 GiB |
+| host evidence free disk before cleanup | 21.81 GiB |
+| stabilized free disk after bounded BuildKit pruning | 29.89 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -106,60 +110,59 @@ Latest Session 1 checkpoint:
 Underlying provider rollout checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
-## OpenRouter registry + discovery + family + admission + Settings/Ai selection — Sessions 2–3 + 4A–4D CLOSED / PASS; post-4D #402 stabilized via PR #405
+## OpenRouter Sessions 2–4E — Session 4E ACTIVE / PARTIAL
 
-Session 2 replaced the Claude-specific OpenRouter runtime mapping with an extensible governed registry foundation. Session 3 added bounded live catalog fetch/search/filter/cache. Session 4A added the six-family vocabulary, Session 4B added bounded automatic selection admission, Session 4C added the governed Settings picker, and Session 4D added the governed Ai chat quick-switch without changing executable authority.
+Sessions 2, 3, 4A, 4B, 4C, and 4D remain CLOSED / PASS at their documented boundaries. Session 4E is now active, and its first runtime slice is CLOSED / PASS / STAGING VERIFIED through PR #407.
 
-Current behavior:
+Current implemented OpenRouter behavior:
 
-- model preferences are string-shaped for future extensibility;
-- execution remains fail-closed against an executable verified provider/model registry entry;
-- Connect fetches the OpenRouter model catalog through a bounded 8-second / 8 MiB discovery path;
-- normalized full-catalog snapshots are cached for 10 minutes and reused for local search/filter;
-- explicit refresh is supported;
-- stale cache is surfaced explicitly if a later refresh fails after a prior successful snapshot;
-- mutable `~...` aliases are labeled;
-- discovered/catalogued state, selection eligibility, and executable authority remain distinct;
-- Session 4A defines one Connect-owned version-agnostic family vocabulary for GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM;
-- Session 4B automatically evaluates fresh candidates in those six families;
-- a passing target candidate becomes `verified-selectable` with `selectable=true` while `executable=false`;
-- failed target candidates become `unavailable` with stable reason codes;
-- non-target families remain `discovered-only`;
-- stale discovery withdraws dynamic selectability rather than granting authority;
-- family classification and remote catalog pricing do not grant execution authority;
-- OpenRouter billed `usage.cost` remains authoritative for actual billed cost;
-- existing governed pricing identities remain required for executable pre-dispatch spend admission/evidence;
-- Session 4C persists `openRouterModelSelection` separately from executable `hostedModel`;
-- Session 4D reuses that same Connect-owned selection authority from the Ai chat composer;
-- a dynamic `verified-selectable` choice is revalidated on save, persists as preference, and forces hosted execution OFF with default chat routing back to local;
-- unavailable/stale/non-admitted candidates fail closed and cannot be saved through the dedicated selection endpoint.
+- Connect owns bounded live catalog fetch/search/filter/cache with an 8-second / 8 MiB discovery boundary and 10-minute normalized cache;
+- GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM use the Connect-owned family/admission vocabulary;
+- fresh compatible candidates pass capability, runtime-id, text-I/O, `max_tokens`, and positive-pricing checks;
+- mutable aliases, stale snapshots, incompatible candidates, duplicate/invalid runtime identities, and invalid/missing prices remain fail-closed;
+- compatible dynamic catalog models now appear directly in the Ai OpenRouter model picker without a normal-user model-by-model `Test & Enable` step;
+- selecting a compatible dynamic model uses a trusted Connect-owned activation marker; generic runtime PATCH cannot mint that execution authority;
+- before each paid dynamic OpenRouter completion, Connect re-resolves the exact selected catalog id and requires a fresh selectable match with valid input/output pricing;
+- OpenRouter catalog input/output price per 1M tokens is visible in the Ai picker;
+- provider-reported billed cost remains authoritative when supplied;
+- spend budget, kill switch, credential boundary, and no-silent-fallback rules remain unchanged;
+- unavailable models do not leak into the normal picker;
+- a model/provider change still applies to subsequent messages without forcing a new chat session.
 
-Current OpenRouter **executable authority** remains only:
+PR #407 proof:
 
-- Claude Sonnet 4.5;
-- Claude Opus 4.1.
+- reviewed head `5b9a29085287db035c2c52dd6ea783c2d93ceac4`;
+- CI #2555 PASS;
+- Product Eval #1794 PASS;
+- PCS-06 Integrated Browser Acceptance #341 PASS;
+- merged `main` `bb2983d59dbe292c510fbc28aae297bcb23487c4`;
+- merged-main CI #2556 PASS;
+- merged-main Product Eval #1795 PASS;
+- actual Staging Deploy #1863 PASS;
+- exact host SHA matched, image `staging-bb2983d59dbe`, public smoke PASS, Operations healthy, 15/15 configured services running, 29.89 GiB stabilized free disk.
 
-The Settings picker may additionally show fresh target-family models admitted as **Selectable**, but Session 4C does not make them executable or activate hosted routing for them.
-
-Accepted pre-4E product contract:
+Accepted Session 4E product contract:
 [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
 
-The contract locks the normal Ai UX to two adjacent selectors — `[Provider ▼] [Model ▼]` — with `+ Tambah AI` in the provider selector, direct provider onboarding from Ai, model/provider switching per message inside one conversation, pricing visibility, Local↔Cloud bounded context handoff, and a multi-credential AI Connection direction. Normal OpenRouter use must not require model-by-model user certification.
+Still open inside Session 4E:
 
-Current Session 4C checkpoint:
-[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md).
+- replace the technical Local/Hosted route selector with the canonical adjacent `[Provider / Source ▼] [Model ▼]` controls;
+- provide direct `+ Tambah AI` onboarding from the Ai page;
+- make provider switching across Local / Anthropic / OpenAI / NVIDIA / OpenRouter a normal per-message control rather than a Settings-first operation;
+- complete the bounded Local↔Cloud context-handoff product path without silently uploading all local-only history;
+- implement the multi-credential AI Connection model with priority/failover beneath one logical provider.
 
-Underlying Session 4B checkpoint:
-[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md).
+Current Session 4E checkpoint:
+[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
 
-Underlying Session 4A checkpoint:
-[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md).
+Prior checkpoints remain historical evidence:
 
-Underlying Session 3 checkpoint:
-[verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md).
-
-Underlying Session 2 checkpoint:
-[verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md).
+- [verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md)
+- [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)
+- [verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)
+- [verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)
+- [verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md](verification/openrouter-model-discovery-session3-safe-checkpoint-2026-09-28.md)
+- [verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md](verification/openrouter-model-registry-session2-safe-checkpoint-2026-09-28.md)
 
 ## Closed roadmap families
 
@@ -298,18 +301,26 @@ Canonical Session 4D checkpoint:
 
 ## Current active work
 
-There is **no active Session 4E runtime implementation and no active repository-hygiene scope**. OpenRouter Session 4D remains the last closed/staging-verified OpenRouter runtime boundary.
+Session 4E is **ACTIVE / PARTIAL** under the accepted [AI Provider + Model UX contract](ai-provider-model-ux-contract.md).
 
-A docs-only pre-4E product contract is accepted and must be read before opening 4E: [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
+The first runtime slice — compatible OpenRouter auto-execution + visible catalog pricing — is CLOSED / PASS / STAGING VERIFIED through PR #407 and must not be redone.
 
-The post-#402 stabilization prerequisite is now satisfied by PR #405. Session 4E is still **not implicitly active**: the next runtime scope must be explicitly opened and must not simply extend per-model `Test & Enable` certification UX. It must move toward the accepted two-selector provider/model experience while preserving governance underneath.
+The next bounded Session 4E implementation slice is the canonical Ai control surface:
+
+1. replace the technical Local/Hosted route selector with adjacent `[Provider / Source ▼] [Model ▼]` controls;
+2. preserve next-message semantics inside the same conversation;
+3. list Local plus configured first-class cloud providers;
+4. keep model lists provider-specific;
+5. preserve existing governance, credential, spend, sensitivity, and history boundaries;
+6. do not yet combine multi-credential storage or broad context-handoff redesign into this selector slice unless required by a failing invariant.
+
+There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
 ## Explicit deferred / separately selectable future scopes
 
 Any of the following requires a new explicit operator decision and its own bounded scope:
 
-- Session 4E implementation under the accepted AI Provider + Model UX contract, including real compatible multi-family OpenRouter execution without normal-user per-model certification;
-- Session 4F final OpenRouter polish/closure;
+- Session 4F final OpenRouter polish/closure after Session 4E is complete;
 - DR-2 checkpoint 2 external target selection and later runtime proof;
 - public production promotion/cutover;
 - native Google Drive integration;
@@ -338,7 +349,7 @@ For a new session/agent:
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md).
+[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
