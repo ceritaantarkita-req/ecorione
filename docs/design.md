@@ -216,4 +216,4 @@ Rules:
 
 The full accepted contract is [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
 
-This section defines the target product UX. It does not claim the current runtime already implements it.
+This section remains the accepted product UX. The canonical adjacent provider/source + provider-specific model selectors are now implemented and staging-verified through PR #409. Direct `+ Tambah AI` onboarding, bounded Local↔Cloud context handoff, multi-credential routing, and the custom-provider path remain open.
