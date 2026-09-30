@@ -28,6 +28,7 @@ import {
 import {
   CostKillSwitchError,
   MissingCredentialError,
+  ProviderError,
   ProviderResponseError,
   SpendBudgetNotConfiguredError,
 } from "./providers/errors.js";
@@ -118,6 +119,8 @@ export interface CompleteResult {
   readonly responseModel: string;
   /** Safe OpenRouter-selected provider label when available. */
   readonly routingProvider?: string | undefined;
+  /** Non-secret Connect AI Connection identifier that handled the hosted attempt. */
+  readonly credentialConnectionId?: string | undefined;
   /** Stable identity used for durable evidence/cache boundaries. */
   readonly modelIdentity: string;
   /** Local identity is pinned only when the provider boundary confirmed the digest. */
@@ -213,6 +216,7 @@ export async function complete(
   let reply: string;
   let responseModel: string;
   let routingProvider: string | undefined;
+  let credentialConnectionId: string | undefined;
   let usage: TokenUsage;
   let baselineUsage: TokenUsage;
   let cacheHit: boolean;
@@ -244,11 +248,29 @@ export async function complete(
     if (allowExactCache) deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
     cacheHit = false;
   } else {
-    const apiKey =
+    const credentialCandidates =
       deps.credentialVault === undefined
-        ? developmentApiKey(deps, hostedProvider)
-        : deps.credentialVault.get(hostedProvider, "messages");
-    if (apiKey === undefined) {
+        ? (() => {
+            const secret = developmentApiKey(deps, hostedProvider);
+            return secret === undefined
+              ? []
+              : [{ connectionId: "dev-env", secret }];
+          })()
+        : deps.credentialVault.candidates !== undefined
+          ? deps.credentialVault
+              .candidates(hostedProvider, "messages")
+              .map((candidate) => ({
+                connectionId: candidate.connectionId,
+                secret: candidate.secret,
+              }))
+          : (() => {
+              const secret = deps.credentialVault?.get(hostedProvider, "messages");
+              return secret === undefined
+                ? []
+                : [{ connectionId: "default", secret }];
+            })();
+
+    if (credentialCandidates.length === 0) {
       const label = providerCredentialLabel(hostedProvider);
       throw new MissingCredentialError(
         deps.credentialVault === undefined
@@ -296,28 +318,49 @@ export async function complete(
       });
     }
 
-    try {
-      const result = await callHostedProvider(
-        {
-          provider: hostedProvider,
-          apiKey,
-          ...providerInput,
-        },
-        signal,
-      );
-      reply = result.reply;
-      responseModel = result.model;
-      routingProvider = result.routingProvider;
-      usage = result.usage;
-      baselineUsage = usage;
-      providerReportedActualUsd = result.providerReportedActualUsd;
-      deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
-      cacheHit = false;
-    } catch (error) {
+    let terminalError: unknown;
+    for (let index = 0; index < credentialCandidates.length; index += 1) {
+      const candidate = credentialCandidates[index];
+      if (candidate === undefined) continue;
+      try {
+        const result = await callHostedProvider(
+          {
+            provider: hostedProvider,
+            apiKey: candidate.secret,
+            ...providerInput,
+          },
+          signal,
+        );
+        reply = result.reply;
+        responseModel = result.model;
+        routingProvider = result.routingProvider;
+        credentialConnectionId = candidate.connectionId;
+        usage = result.usage;
+        baselineUsage = usage;
+        providerReportedActualUsd = result.providerReportedActualUsd;
+        deps.cache.set(key, { reply, model: responseModel, usage }, nowMs);
+        cacheHit = false;
+        terminalError = undefined;
+        break;
+      } catch (error) {
+        terminalError = error;
+        const hasNext = index + 1 < credentialCandidates.length;
+        const safeCredentialFailover =
+          hasNext &&
+          signal?.aborted !== true &&
+          error instanceof ProviderError &&
+          !(error instanceof ProviderResponseError) &&
+          (error.kind === "invalid-credential" || error.kind === "unreachable");
+        if (safeCredentialFailover) continue;
+        break;
+      }
+    }
+
+    if (terminalError !== undefined) {
       if (spendReservation !== undefined && deps.spendBudget !== undefined) {
         const authoritativeBilledUsd =
-          error instanceof ProviderResponseError
-            ? error.diagnostics.providerReportedActualUsd
+          terminalError instanceof ProviderResponseError
+            ? terminalError.diagnostics.providerReportedActualUsd
             : undefined;
         if (authoritativeBilledUsd !== undefined) {
           try {
@@ -339,7 +382,7 @@ export async function complete(
           }
         }
       }
-      throw error;
+      throw terminalError;
     }
   }
 
@@ -384,6 +427,7 @@ export async function complete(
     pricingModel: decision.model,
     responseModel,
     ...(routingProvider === undefined ? {} : { routingProvider }),
+    ...(credentialConnectionId === undefined ? {} : { credentialConnectionId }),
     modelIdentity,
     modelIdentityPinned,
     modelIdentityProvenance,
