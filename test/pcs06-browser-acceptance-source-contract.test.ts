@@ -26,6 +26,11 @@ describe("PCS-06 integrated browser acceptance contract", () => {
     expect(harness).toContain("unavailable Local source must be disabled");
     expect(harness).toContain('name: "Provider / Source"');
     expect(harness).toContain('name: "Model"');
+    expect(harness).toContain("__add_ai__");
+    expect(harness).toContain('name: "Tambah AI"');
+    expect(harness).toContain('name: "Provider AI baru"');
+    expect(harness).toContain("direct onboarding did not persist OpenAI credential");
+    expect(harness).toContain("unexpectedly created a new conversation");
     expect(harness).toContain('name: "Test API key"');
     expect(harness).toContain('"governed"');
     expect(harness).toContain('name: "Prepare authority"');
