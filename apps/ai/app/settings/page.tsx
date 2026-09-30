@@ -25,7 +25,6 @@ export default function SettingsPage() {
     openRouterSourceProvider,
     pendingAction,
     discoverOpenRouterModels,
-    validateOpenRouterModel,
     refreshMcp,
     removeCredential,
     runCanary,
@@ -154,7 +153,6 @@ export default function SettingsPage() {
             onQueryChange={setOpenRouterQuery}
             onSourceProviderChange={setOpenRouterSourceProvider}
             onDiscover={(forceRefresh) => void discoverOpenRouterModels(forceRefresh)}
-            onValidate={(selectionId) => void validateOpenRouterModel(selectionId)}
           />
         ) : null}
       </section>
@@ -292,8 +290,8 @@ export default function SettingsPage() {
                 </label>
                 {openRouterPreferenceRequiresExecution ? (
                   <p className={`${styles.warning} ${styles.wide}`}>
-                    Model OpenRouter yang dipilih masih preference dan belum executable. Pilih
-                    Recommended atau model Ready sebelum mengaktifkan Hosted.
+                    Model OpenRouter yang dipilih belum punya trusted admission marker. Refresh
+                    katalog atau pilih model lain sebelum mengaktifkan Hosted.
                   </p>
                 ) : null}
                 {mutableLocalModel ? (

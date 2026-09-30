@@ -254,17 +254,19 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     };
   };
 
-  // Dynamic OpenRouter certificates bind to the exact catalog pricing identity.
-  // Re-check the shared catalog before each paid completion; stale/unreachable
-  // discovery must fail closed instead of running a model under old evidence.
+  // Session 4E dynamic OpenRouter execution binds to a fresh compatible catalog
+  // snapshot on every paid completion. The persisted trusted marker only proves that
+  // Connect admitted this exact selection; catalog freshness/capability/pricing are
+  // re-checked here so stale metadata can never become execution authority.
   const currentCompletionDeps = async (): Promise<CompleteDeps> => {
     const runtime = currentRuntime();
     const selection = runtime.openRouterModelSelection;
-    const hasDynamicCertificate =
+    const hasDynamicSelectionAuthority =
       runtime.hostedProvider === "openrouter" &&
       selection !== undefined &&
+      selection !== GOVERNED_HOSTED_MODEL &&
       runtime.openRouterCertifiedModelId === selection;
-    if (!hasDynamicCertificate) return currentDeps(runtime);
+    if (!hasDynamicSelectionAuthority) return currentDeps(runtime);
 
     let discovery;
     try {
@@ -282,7 +284,10 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       throw error;
     }
     const model = discovery.models.find(
-      (candidate) => candidate.id === selection && candidate.executable,
+      (candidate) =>
+        candidate.id === selection &&
+        candidate.selectionId === selection &&
+        candidate.selectable,
     );
     const promptPricePerToken = model?.promptPricePerToken;
     const completionPricePerToken = model?.completionPricePerToken;
@@ -296,12 +301,14 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     ) {
       throw new HttpError(
         409,
-        "OPENROUTER_CERTIFICATION_STALE_OR_INVALID",
-        "Model OpenRouter dinamis harus memiliki katalog segar dan bukti Ready dengan harga yang sama sebelum dipakai. Refresh lalu test ulang model ini.",
+        "OPENROUTER_SELECTION_STALE_OR_INVALID",
+        "Model OpenRouter yang dipilih tidak lagi punya katalog segar, capability yang kompatibel, dan harga valid. Refresh katalog lalu pilih model lagi.",
       );
     }
     return {
       ...currentDeps(runtime),
+      // Legacy CompleteDeps field name retained for compatibility. At this boundary it
+      // carries fresh Connect-resolved execution metadata, not user certification.
       certifiedOpenRouterModel: {
         id: model.id,
         promptPricePerToken,
@@ -657,9 +664,11 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), body.maxLatencyMs);
     try {
+      const canaryDeps =
+        body.target === "hosted" ? await currentCompletionDeps() : currentDeps(runtime);
       const result = await complete(
         {
-          ...currentDeps(runtime),
+          ...canaryDeps,
           cache: new ExactMatchCache(),
           ...(body.target === "hosted" && runtime.hostedProvider === "nvidia"
             ? {

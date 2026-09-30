@@ -43,6 +43,24 @@ function inMemoryRuntime(hostedCallsEnabled: boolean): RuntimeSettingsAdmin {
         settings: { ...snapshot.settings },
       };
     },
+    activateOpenRouterModel: (modelId) => {
+      snapshot = {
+        revision: snapshot.revision + 1,
+        settings: {
+          ...snapshot.settings,
+          hostedProvider: "openrouter",
+          hostedModel: "governed",
+          openRouterModelSelection: modelId,
+          openRouterCertifiedModelId: modelId,
+          hostedCallsEnabled: true,
+          defaultChatTarget: "hosted",
+        },
+      };
+      return {
+        revision: snapshot.revision,
+        settings: { ...snapshot.settings },
+      };
+    },
   };
 }
 
@@ -64,6 +82,28 @@ describe("withHostedOperatorGate", () => {
     expect(result.settings.defaultChatTarget).toBe("local");
     expect(result.settings.hostedProvider).toBe("openai");
     expect(runtime.get().settings.hostedCallsEnabled).toBe(false);
+  });
+
+  it("meneruskan trusted OpenRouter activation tetapi operator gate tetap menang", () => {
+    const blocked = withHostedOperatorGate(inMemoryRuntime(false), false);
+    const blockedResult = blocked.activateOpenRouterModel!("qwen/qwen3.8-max");
+    expect(blockedResult.settings).toMatchObject({
+      hostedProvider: "openrouter",
+      openRouterModelSelection: "qwen/qwen3.8-max",
+      openRouterCertifiedModelId: "qwen/qwen3.8-max",
+      hostedCallsEnabled: false,
+      defaultChatTarget: "local",
+    });
+
+    const allowed = withHostedOperatorGate(inMemoryRuntime(false), true);
+    const allowedResult = allowed.activateOpenRouterModel!("qwen/qwen3.8-max");
+    expect(allowedResult.settings).toMatchObject({
+      hostedProvider: "openrouter",
+      openRouterModelSelection: "qwen/qwen3.8-max",
+      openRouterCertifiedModelId: "qwen/qwen3.8-max",
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
   });
 
   it("membiarkan runtime setting mengontrol hosted saat operator gate terbuka", () => {

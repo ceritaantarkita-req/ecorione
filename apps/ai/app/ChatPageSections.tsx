@@ -97,7 +97,9 @@ export function ChevronIcon() {
 export type OpenRouterQuickSwitchModel = {
   readonly id: string;
   readonly displayName: string;
-  readonly executable: boolean;
+  readonly available: boolean;
+  readonly inputUsdPerMTok?: number;
+  readonly outputUsdPerMTok?: number;
 };
 
 export function OpenRouterModelQuickSwitch({
@@ -116,8 +118,8 @@ export function OpenRouterModelQuickSwitch({
   if (models.length === 0) return null;
   const selected = models.find((model) => model.id === value);
   const title =
-    selected !== undefined && !selected.executable
-      ? "Model ini belum Ready. Test dulu dari Settings sebelum dipakai untuk chat Cloud."
+    selected?.inputUsdPerMTok !== undefined && selected.outputUsdPerMTok !== undefined
+      ? `Harga katalog: USD ${selected.inputUsdPerMTok.toFixed(2)} / 1M input · USD ${selected.outputUsdPerMTok.toFixed(2)} / 1M output. Harga billed provider tetap authoritative.`
       : "Pilih model untuk pesan berikutnya. Setiap balasan tetap menyimpan model dan biaya yang dipakai.";
 
   return (
@@ -128,12 +130,19 @@ export function OpenRouterModelQuickSwitch({
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
       >
-        {models.map((model) => (
-          <option key={model.id} value={model.id}>
-            {model.id === "governed" ? "OpenRouter \u00b7 Recommended" : model.displayName}
-            {!model.executable ? " \u00b7 Perlu test di Settings" : " \u00b7 Siap Cloud"}
-          </option>
-        ))}
+        {models.map((model) => {
+          const pricing =
+            model.inputUsdPerMTok !== undefined && model.outputUsdPerMTok !== undefined
+              ? ` · USD ${model.inputUsdPerMTok.toFixed(2)}/M in · USD ${model.outputUsdPerMTok.toFixed(2)}/M out`
+              : "";
+          return (
+            <option key={model.id} value={model.id} disabled={!model.available}>
+              {model.id === "governed" ? "OpenRouter · Recommended" : model.displayName}
+              {pricing}
+              {!model.available ? " · Unavailable" : ""}
+            </option>
+          );
+        })}
       </select>
       <ChevronIcon />
       {switching ? <span className="ai-model-select__pending">Saving…</span> : null}

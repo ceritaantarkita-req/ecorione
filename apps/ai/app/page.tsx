@@ -422,7 +422,7 @@ export default function ChatPage() {
           kind: "error",
           id: nextTurnId(),
           message: hostedBlockedByOpenRouterPreference
-            ? "Model OpenRouter ini baru tersimpan sebagai preference, belum bisa dipakai untuk Cloud. Pilih OpenRouter Recommended atau model Ready."
+            ? "Model OpenRouter yang dipilih tidak tersedia untuk Cloud saat ini. Refresh katalog atau pilih model lain."
             : "Hosted sedang nonaktif. Aktifkan provider hosted di Settings.",
         },
       ]);
@@ -756,7 +756,7 @@ export default function ChatPage() {
         ? "Local AI belum terhubung. Setup tersedia di Settings."
         : target === "hosted" && hostedAvailable !== true
           ? hostedBlockedByOpenRouterPreference
-            ? "Model OpenRouter ini belum executable. Pilih OpenRouter Recommended atau model Ready untuk Cloud."
+            ? "Model OpenRouter yang dipilih tidak lagi tersedia untuk Cloud. Refresh katalog atau pilih model lain."
             : "Hosted belum aktif. Hubungkan provider di Settings."
           : "Berlaku untuk pesan berikutnya. Setiap balasan menyimpan model dan biaya yang dipakai.";
 
@@ -906,7 +906,7 @@ export default function ChatPage() {
                 ? target === "local"
                   ? (localRuntimeStatus?.message ?? "Local AI \u00b7 Checking connection\u2026")
                   : hostedBlockedByOpenRouterPreference
-                    ? "Model OpenRouter ini belum executable. Pilih OpenRouter Recommended atau model Ready untuk Cloud."
+                    ? "Model OpenRouter yang dipilih tidak lagi tersedia untuk Cloud. Refresh katalog atau pilih model lain."
                     : "Hosted AI belum aktif. Hubungkan provider di Settings -> AI & Connections."
                 : target === "local"
                   ? `Pesan berikutnya: Local \u00b7 ${localRuntimeStatus?.configuredModel ?? "model lokal"}. Model dan biaya dicatat per balasan.`
@@ -1023,7 +1023,7 @@ export default function ChatPage() {
                       {hostedAvailable === true
                         ? hostedRouteLabel
                         : hostedBlockedByOpenRouterPreference
-                          ? "Hosted — pilih model Ready"
+                          ? "Hosted — refresh katalog / pilih model lain"
                           : "Hosted · Not connected"}
                     </option>
                   </select>

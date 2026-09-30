@@ -201,7 +201,7 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
             </div>
             <span className={cloudAiEnabled ? styles.activeBadge : styles.statusBadge}>
               {openRouterPreferenceRequiresExecution
-                ? "Pilih model Ready"
+                ? "Pilih model compatible"
                 : cloudAiEnabled
                   ? "Cloud AI aktif"
                   : "Cloud AI mati"}
@@ -231,7 +231,7 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
                 <strong>Aktifkan Cloud AI</strong>
                 <small>
                   {openRouterPreferenceRequiresExecution
-                    ? "Model OpenRouter yang dipilih baru preference. Pilih Recommended atau model Ready untuk mengaktifkan Cloud AI."
+                    ? "Model OpenRouter yang dipilih belum punya trusted admission. Simpan model compatible atau pilih Recommended."
                     : "Matikan untuk memblokir semua pemakaian provider berbayar."}
                 </small>
               </span>

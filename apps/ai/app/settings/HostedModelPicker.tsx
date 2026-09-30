@@ -92,7 +92,7 @@ export function HostedModelPicker({
             <option key={model.id} value={model.id}>
               {model.displayName}
               {runtime.settings.hostedProvider === "openrouter" && !model.executable
-                ? " · Selectable"
+                ? " · Compatible"
                 : ""}
             </option>
           ))}
@@ -104,8 +104,8 @@ export function HostedModelPicker({
           {selectedModelPreference === "governed"
             ? "Policy dapat memilih pinned model yang sesuai sensitivity dan evidence."
             : runtime.settings.hostedProvider === "openrouter" && !selectedModelExecutable
-              ? "Model ini masih disiapkan dan belum bisa dipakai. Pilih Recommended atau model Ready."
-              : "Model ini Ready untuk hosted chat. RESTRICTED tetap boleh di-override oleh policy."}
+              ? "Model ini tidak tersedia dari snapshot katalog saat ini. Refresh katalog atau pilih model lain."
+              : "Model ini compatible untuk hosted chat. Connect tetap mengecek katalog dan policy sebelum eksekusi."}
         </span>
       </div>
       <button type="button" disabled={pendingAction !== null} onClick={onSave}>

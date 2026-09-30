@@ -286,52 +286,34 @@ export function registerConnectControlRoutes(
       );
     }
 
-    if (candidate.executable) {
-      const settingsAdmin = runtime();
-      if (settingsAdmin.certifyOpenRouterModel === undefined) {
-        throw new HttpError(
-          503,
-          "OPENROUTER_VALIDATION_UNAVAILABLE",
-          "Penyimpanan status Ready OpenRouter belum dikonfigurasi.",
-        );
-      }
-      const result = settingsAdmin.certifyOpenRouterModel(candidate.id);
-      metrics.addCounter("ecorione_control_changes_total", 1, {
-        surface: "openrouter-model-selection",
-        admission: "validated-executable",
-        executable: "true",
-      });
-      return {
-        runtime: result,
-        selection: {
-          id: candidate.id,
-          admission: "validated-executable",
-          executable: true,
-          active: result.settings.hostedCallsEnabled,
-          unavailableReason: null,
-        },
-      };
+    const settingsAdmin = runtime();
+    if (settingsAdmin.activateOpenRouterModel === undefined) {
+      throw new HttpError(
+        503,
+        "OPENROUTER_ADMISSION_UNAVAILABLE",
+        "Penyimpanan admission OpenRouter belum dikonfigurasi.",
+      );
     }
 
-    const result = runtime().update({
-      hostedProvider: "openrouter",
-      hostedModel: "governed",
-      openRouterModelSelection: selectionId,
-      hostedCallsEnabled: false,
-      defaultChatTarget: "local",
-    });
+    // Session 4E: a fresh compatible catalog candidate is enough for normal-user
+    // execution. Connect owns the trusted activation marker; the user no longer has to
+    // run a paid model-by-model validation step first.
+    const result = settingsAdmin.activateOpenRouterModel(candidate.id);
     metrics.addCounter("ecorione_control_changes_total", 1, {
       surface: "openrouter-model-selection",
       admission: candidate.admission,
-      executable: "false",
+      executable: "true",
     });
     return {
       runtime: result,
       selection: {
-        id: selectionId,
+        id: candidate.id,
         admission: candidate.admission,
-        executable: false,
-        active: false,
+        executable: true,
+        active:
+          result.settings.hostedProvider === "openrouter" &&
+          result.settings.openRouterModelSelection === candidate.id &&
+          result.settings.hostedCallsEnabled,
         unavailableReason: null,
       },
     };

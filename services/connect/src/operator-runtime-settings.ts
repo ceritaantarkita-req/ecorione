@@ -44,6 +44,16 @@ export function withHostedOperatorGate(
         : { ...patch, hostedCallsEnabled: false, defaultChatTarget: "local" as const };
       return applyOperatorGate(runtimeSettings.update(safePatch), hostedCallsAllowed);
     },
+    ...(runtimeSettings.activateOpenRouterModel === undefined
+      ? {}
+      : {
+          activateOpenRouterModel(modelId) {
+            return applyOperatorGate(
+              runtimeSettings.activateOpenRouterModel!(modelId),
+              hostedCallsAllowed,
+            );
+          },
+        }),
     ...(runtimeSettings.certifyOpenRouterModel === undefined
       ? {}
       : {

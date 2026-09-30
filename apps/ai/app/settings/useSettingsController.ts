@@ -24,6 +24,7 @@ export type RuntimeSnapshot = {
     hostedProvider: HostedProviderId;
     hostedModel: HostedModelPreference;
     openRouterModelSelection?: HostedModelPreference;
+    openRouterCertifiedModelId?: HostedModelPreference;
     localRuntime: "openai-compatible" | "ollama";
     localBaseUrl: string;
     localModelTag: string;
@@ -148,7 +149,8 @@ async function json<T>(url: string, init?: RequestInit): Promise<T> {
 function openRouterPreferenceNeedsExecution(runtime: RuntimeSnapshot | null): boolean {
   if (runtime?.settings.hostedProvider !== "openrouter") return false;
   const selection = runtime.settings.openRouterModelSelection ?? runtime.settings.hostedModel;
-  return selection !== "governed" && runtime.settings.hostedModel !== selection;
+  if (selection === "governed" || runtime.settings.hostedModel === selection) return false;
+  return runtime.settings.openRouterCertifiedModelId !== selection;
 }
 
 export function useSettingsController(initialWorkspaceId: string) {
@@ -318,7 +320,9 @@ export function useSettingsController(initialWorkspaceId: string) {
       models.push({
         id: model.selectionId,
         displayName: model.displayName,
-        executable: model.executable,
+        // Session 4E: selectable means the model passed the normal compatibility gate.
+        // Connect re-checks the fresh catalog when the selection is activated/used.
+        executable: true,
       });
     }
     const saved = runtime.settings.openRouterModelSelection?.trim();
@@ -326,7 +330,9 @@ export function useSettingsController(initialWorkspaceId: string) {
       models.push({
         id: saved,
         displayName: saved,
-        executable: runtime.settings.hostedModel === saved,
+        executable:
+          runtime.settings.hostedModel === saved ||
+          runtime.settings.openRouterCertifiedModelId === saved,
       });
     }
     return models;
@@ -489,7 +495,7 @@ export function useSettingsController(initialWorkspaceId: string) {
       if (requestedHosted && !result.settings.hostedCallsEnabled) {
         setStatus(
           openRouterPreferenceNeedsExecution(result)
-            ? `Runtime revision ${String(result.revision)} saved. Model OpenRouter ini belum executable, jadi Cloud AI tetap OFF.`
+            ? `Runtime revision ${String(result.revision)} saved. Model OpenRouter ini belum punya trusted admission marker, jadi Cloud AI tetap OFF.`
             : `Runtime revision ${String(result.revision)} saved. Hosted remains OFF because the operator gate is closed.`,
         );
       } else {
@@ -548,7 +554,7 @@ export function useSettingsController(initialWorkspaceId: string) {
       if (runtime.settings.hostedCallsEnabled && !result.settings.hostedCallsEnabled) {
         setStatus(
           openRouterPreferenceNeedsExecution(result)
-            ? "Budget tersimpan. Cloud AI tetap mati karena model OpenRouter yang dipilih belum executable."
+            ? "Budget tersimpan. Cloud AI tetap mati karena model OpenRouter yang dipilih belum punya trusted admission marker."
             : "Budget tersimpan, tetapi Cloud AI tetap mati karena emergency kill switch operator tertutup.",
         );
       } else {
@@ -685,7 +691,7 @@ export function useSettingsController(initialWorkspaceId: string) {
             ? result.selection.active
               ? "Default OpenRouter model saved and active."
               : "Default OpenRouter model saved, tetapi hosted tetap OFF karena operator gate sedang tertutup."
-            : "OpenRouter model selection saved. Hosted execution is disabled until this model has separate executable validation.",
+            : "OpenRouter model selection could not be activated from the current catalog. Refresh and choose another model.",
         );
         return;
       }

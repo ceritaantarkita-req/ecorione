@@ -22,7 +22,7 @@ export interface OpenRouterCallInput {
   readonly maxOutputTokens?: number | undefined;
   readonly reasoningEffort?: "low" | "high" | "max" | undefined;
   readonly providerOnly?: readonly string[] | undefined;
-  /** Validation explicitly disables upstream provider fallback. */
+  /** Exact model execution/validation explicitly disables upstream provider fallback. */
   readonly allowFallbacks?: boolean | undefined;
   readonly priceOverride?: ModelPrice | undefined;
 }
@@ -103,6 +103,22 @@ export async function callOpenRouter(
     signal,
   );
   const billedCostUsd = result.providerReportedActualUsd ?? 0;
+  const expectedRuntimeModel = openRouterRuntimeModel(input.model);
+  if (input.allowFallbacks === false && result.model !== expectedRuntimeModel) {
+    throw new ProviderResponseError(
+      `Respons OpenRouter tidak cocok dengan exact model yang diminta: expected=${expectedRuntimeModel} response=${result.model}.`,
+      {
+        responseModel: result.model,
+        finishReason: result.finishReason,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        ...(result.routingProvider === undefined
+          ? {}
+          : { routingProvider: result.routingProvider }),
+        providerReportedActualUsd: billedCostUsd,
+      },
+    );
+  }
   if (billedCostUsd <= 0) {
     const routingProvider = result.routingProvider ?? "unavailable";
     throw new ProviderResponseError(

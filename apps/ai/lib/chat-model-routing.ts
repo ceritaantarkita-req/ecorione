@@ -9,6 +9,7 @@ export type ChatRuntimeSnapshot = {
     hostedProvider: HostedProviderId;
     hostedModel: string;
     openRouterModelSelection?: string;
+    openRouterCertifiedModelId?: string;
     defaultChatTarget: ChatTarget;
   };
 };
@@ -43,13 +44,17 @@ export type ChatOpenRouterDiscovery = {
     selectable: boolean;
     executable: boolean;
     selectionId: string | null;
+    promptPricePerToken?: string | null;
+    completionPricePerToken?: string | null;
   }>;
 };
 
 export type OpenRouterQuickSwitchModel = {
   id: string;
   displayName: string;
-  executable: boolean;
+  available: boolean;
+  inputUsdPerMTok?: number;
+  outputUsdPerMTok?: number;
 };
 
 export function hostedProviderLabel(provider: HostedProviderId | undefined): string {
@@ -106,7 +111,12 @@ export function hasNonExecutableOpenRouterPreference(
   if (runtime?.settings.hostedProvider !== "openrouter") return false;
 
   const selection = currentOpenRouterPreference(runtime);
-  return selection !== "governed" && runtime.settings.hostedModel !== selection;
+  if (selection === "governed") return false;
+  if (runtime.settings.hostedModel === selection) return false;
+
+  // Legacy persisted field name: on Session 4E this is the Connect-owned trusted
+  // activation marker set only after fresh catalog admission.
+  return runtime.settings.openRouterCertifiedModelId !== selection;
 }
 
 export function buildOpenRouterQuickSwitchModels(
@@ -118,7 +128,7 @@ export function buildOpenRouterQuickSwitchModels(
 
   const seen = new Set<string>(["governed"]);
   const models: OpenRouterQuickSwitchModel[] = [
-    { id: "governed", displayName: "Governed / Recommended", executable: true },
+    { id: "governed", displayName: "Governed / Recommended", available: true },
   ];
   const provider = providers.find(
     (entry) => entry.id === "openrouter" && entry.category === "ai" && entry.routingReady,
@@ -126,23 +136,31 @@ export function buildOpenRouterQuickSwitchModels(
   for (const model of provider?.hostedModels ?? []) {
     if (seen.has(model.id)) continue;
     seen.add(model.id);
-    models.push({ id: model.id, displayName: model.displayName, executable: true });
+    models.push({ id: model.id, displayName: model.displayName, available: true });
   }
 
   for (const model of discovery?.models ?? []) {
-    // Chat only lists models already proven Ready. Models that are merely catalogued are tested from Settings first.
-    if (
-      !model.selectable ||
-      !model.executable ||
-      model.selectionId === null ||
-      seen.has(model.selectionId)
-    )
+    // Session 4E normal UX exposes every fresh compatible catalog candidate directly.
+    // Connect re-checks capability + price metadata again at selection and dispatch.
+    if (!model.selectable || model.selectionId === null || seen.has(model.selectionId))
       continue;
+
+    const inputUsdPerMTok =
+      model.promptPricePerToken == null
+        ? undefined
+        : Number(model.promptPricePerToken) * 1_000_000;
+    const outputUsdPerMTok =
+      model.completionPricePerToken == null
+        ? undefined
+        : Number(model.completionPricePerToken) * 1_000_000;
+
     seen.add(model.selectionId);
     models.push({
       id: model.selectionId,
       displayName: model.displayName,
-      executable: model.executable,
+      available: true,
+      ...(Number.isFinite(inputUsdPerMTok) ? { inputUsdPerMTok } : {}),
+      ...(Number.isFinite(outputUsdPerMTok) ? { outputUsdPerMTok } : {}),
     });
   }
 
@@ -151,7 +169,9 @@ export function buildOpenRouterQuickSwitchModels(
     models.push({
       id: saved,
       displayName: saved,
-      executable: runtime.settings.hostedModel === saved,
+      available:
+        runtime.settings.hostedModel === saved ||
+        runtime.settings.openRouterCertifiedModelId === saved,
     });
   }
 
@@ -188,7 +208,9 @@ export function deriveChatRoutingState(
     hostedAvailable,
     hostedBlockedByOpenRouterPreference,
     hostedRouteLabel: `Hosted · ${hostedProviderLabel(provider)} · ${hostedModelLabel(
-      runtime.settings.hostedModel,
+      provider === "openrouter"
+        ? currentOpenRouterPreference(runtime)
+        : runtime.settings.hostedModel,
     )}`,
     defaultTarget:
       runtime.settings.defaultChatTarget === "hosted" && hostedAvailable ? "hosted" : "local",

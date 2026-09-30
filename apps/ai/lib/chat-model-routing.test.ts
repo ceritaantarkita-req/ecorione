@@ -41,6 +41,8 @@ const discovery: ChatOpenRouterDiscovery = {
       selectable: true,
       executable: false,
       selectionId: "qwen/qwen3.8-max",
+      promptPricePerToken: "0.000002",
+      completionPricePerToken: "0.000006",
     },
     {
       id: "google/gemini-3.8-flash",
@@ -48,6 +50,8 @@ const discovery: ChatOpenRouterDiscovery = {
       selectable: true,
       executable: false,
       selectionId: "google/gemini-3.8-flash",
+      promptPricePerToken: "0.0000004",
+      completionPricePerToken: "0.0000012",
     },
     {
       id: "~deepseek/deepseek-v4-flash-latest",
@@ -60,25 +64,34 @@ const discovery: ChatOpenRouterDiscovery = {
 };
 
 describe("Ai chat OpenRouter quick-switch routing", () => {
-  it("shows governed and Ready models only, while untested catalog entries stay in Settings", () => {
+  it("shows every fresh compatible catalog model directly with provider pricing", () => {
     const models = buildOpenRouterQuickSwitchModels(runtime, providers, discovery);
     expect(models.map((model) => model.id)).toEqual([
       "governed",
       "claude-sonnet-4-5-20250929",
       "claude-opus-4-1-20250805",
       "qwen/qwen3.8-max",
+      "google/gemini-3.8-flash",
     ]);
-    expect(models.some((model) => model.id === "google/gemini-3.8-flash")).toBe(false);
+    expect(models.find((model) => model.id === "qwen/qwen3.8-max")).toMatchObject({
+      available: true,
+      inputUsdPerMTok: 2,
+      outputUsdPerMTok: 6,
+    });
+    const gemini = models.find((model) => model.id === "google/gemini-3.8-flash");
+    expect(gemini).toMatchObject({ available: true });
+    expect(gemini?.inputUsdPerMTok).toBeCloseTo(0.4);
+    expect(gemini?.outputUsdPerMTok).toBeCloseTo(1.2);
     expect(models.some((model) => model.id.includes("deepseek"))).toBe(false);
   });
 
-  it("keeps a saved dynamic preference visible without pretending it is executable", () => {
+  it("keeps a saved dynamic preference visible but unavailable without trusted admission", () => {
     const models = buildOpenRouterQuickSwitchModels(runtime, providers, null);
     expect(currentOpenRouterPreference(runtime)).toBe("qwen/qwen3.8-max");
     expect(models.find((model) => model.id === "qwen/qwen3.8-max")).toEqual({
       id: "qwen/qwen3.8-max",
       displayName: "qwen/qwen3.8-max",
-      executable: false,
+      available: false,
     });
   });
 
@@ -117,6 +130,29 @@ describe("Ai chat OpenRouter quick-switch routing", () => {
       defaultTarget: "local",
     });
   });
+  it("allows an automatically admitted dynamic selection when the trusted marker matches", () => {
+    const admittedRuntime: ChatRuntimeSnapshot = {
+      ...runtime,
+      settings: {
+        ...runtime.settings,
+        openRouterCertifiedModelId: "qwen/qwen3.8-max",
+        hostedCallsEnabled: true,
+        defaultChatTarget: "hosted",
+      },
+    };
+
+    expect(
+      deriveChatRoutingState(admittedRuntime, {
+        credentials: [{ provider: "openrouter" }],
+      }),
+    ).toMatchObject({
+      hostedAvailable: true,
+      hostedBlockedByOpenRouterPreference: false,
+      hostedRouteLabel: "Hosted · OpenRouter · qwen/qwen3.8-max",
+      defaultTarget: "hosted",
+    });
+  });
+
   it("fails closed for a legacy dynamic preference snapshot that incorrectly says Hosted is on", () => {
     const contradictoryRuntime: ChatRuntimeSnapshot = {
       ...runtime,
