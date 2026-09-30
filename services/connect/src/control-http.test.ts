@@ -269,7 +269,7 @@ describe("Connect Control Center boundary", () => {
     });
   });
 
-  it("menyimpan verified-selectable OpenRouter preference tetapi mematikan hosted execution", async () => {
+  it("mengaktifkan fresh compatible OpenRouter candidate tanpa test model manual", async () => {
     let received: unknown;
     const { app, runtime } = fixture({
       openRouterModelDiscovery: {
@@ -331,21 +331,23 @@ describe("Connect Control Center boundary", () => {
           hostedProvider: "openrouter",
           hostedModel: "governed",
           openRouterModelSelection: "qwen/qwen3.8-max",
-          hostedCallsEnabled: false,
-          defaultChatTarget: "local",
+          openRouterCertifiedModelId: "qwen/qwen3.8-max",
+          hostedCallsEnabled: true,
+          defaultChatTarget: "hosted",
         },
       },
       selection: {
         id: "qwen/qwen3.8-max",
         admission: "verified-selectable",
-        executable: false,
-        active: false,
+        executable: true,
+        active: true,
       },
     });
     expect(runtime.get().settings.openRouterModelSelection).toBe("qwen/qwen3.8-max");
+    expect(runtime.get().settings.openRouterCertifiedModelId).toBe("qwen/qwen3.8-max");
   });
 
-  it("tidak membuka lagi Hosted lewat generic runtime save sesudah preference dynamic dipilih", async () => {
+  it("tetap menolak generic runtime save untuk dynamic preference tanpa trusted admission marker", async () => {
     const { app, runtime } = fixture();
     runtime.update({
       hostedProvider: "openrouter",
