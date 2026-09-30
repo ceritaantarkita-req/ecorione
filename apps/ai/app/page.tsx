@@ -1023,7 +1023,7 @@ export default function ChatPage() {
                       {hostedAvailable === true
                         ? hostedRouteLabel
                         : hostedBlockedByOpenRouterPreference
-                          ? "Hosted — pilih model Ready"
+                          ? "Hosted — refresh katalog / pilih model lain"
                           : "Hosted · Not connected"}
                     </option>
                   </select>
