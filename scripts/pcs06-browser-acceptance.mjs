@@ -1457,16 +1457,10 @@ async function runDesktopJourney() {
       exact: true,
     });
     await connectDialog.waitFor();
-    await connectDialog
-      .getByPlaceholder("Paste API key")
-      .fill("stub-credential-pcs06");
-    await connectDialog
-      .getByRole("button", { name: "Test API key", exact: true })
-      .click();
+    await connectDialog.getByPlaceholder("Paste API key").fill("stub-credential-pcs06");
+    await connectDialog.getByRole("button", { name: "Test API key", exact: true }).click();
     await connectDialog.getByText(/Credential test PASS:/).waitFor();
-    await connectDialog
-      .getByRole("button", { name: "Save & activate", exact: true })
-      .click();
+    await connectDialog.getByRole("button", { name: "Save & activate", exact: true }).click();
     await page
       .getByText(/API key terverifikasi, terenkripsi/)
       .first()
