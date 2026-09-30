@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChatOnboardingProviderOption, HostedProviderId } from "../lib/chat-model-routing";
+import type { HostedProviderId } from "../lib/chat-model-routing";
 import type {
   AiProviderOnboardingController,
   AiProviderOnboardingFeedback as Feedback,
