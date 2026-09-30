@@ -72,13 +72,11 @@ describe("FileCredentialVault", () => {
     const path = vaultPath();
     const vault = new FileCredentialVault(path, master(11));
 
-    const primary = vault.addConnection(
-      "openrouter",
-      "messages",
-      "router-key-primary",
-      NOW,
-      { connectionId: "router_primary", label: "Primary", priority: 100 },
-    );
+    const primary = vault.addConnection("openrouter", "messages", "router-key-primary", NOW, {
+      connectionId: "router_primary",
+      label: "Primary",
+      priority: 100,
+    });
     const backup = vault.addConnection(
       "openrouter",
       "messages",
@@ -90,10 +88,9 @@ describe("FileCredentialVault", () => {
     expect(primary.connectionId).toBe("router_primary");
     expect(backup.connectionId).toBe("router_backup");
     expect(vault.get("openrouter", "messages")).toBe("router-key-primary");
-    expect(vault.candidates("openrouter", "messages").map((item) => item.connectionId)).toEqual([
-      "router_primary",
-      "router_backup",
-    ]);
+    expect(vault.candidates("openrouter", "messages").map((item) => item.connectionId)).toEqual(
+      ["router_primary", "router_backup"],
+    );
 
     vault.updateConnection(
       "openrouter",
@@ -124,20 +121,12 @@ describe("FileCredentialVault", () => {
     const path = vaultPath();
     const vault = new FileCredentialVault(path, master(12));
     vault.set("openai", "messages", "primary-v1", NOW);
-    vault.addConnection(
-      "openai",
-      "messages",
-      "backup",
-      "2026-09-09T09:01:00.000Z",
-      { connectionId: "backup", priority: 200 },
-    );
+    vault.addConnection("openai", "messages", "backup", "2026-09-09T09:01:00.000Z", {
+      connectionId: "backup",
+      priority: 200,
+    });
 
-    const updated = vault.set(
-      "openai",
-      "messages",
-      "primary-v2",
-      "2026-09-09T09:02:00.000Z",
-    );
+    const updated = vault.set("openai", "messages", "primary-v2", "2026-09-09T09:02:00.000Z");
     expect(updated.connectionId).toBe("default");
     expect(updated.generation).toBe(2);
     expect(vault.candidates("openai", "messages").map((item) => item.secret)).toEqual([
@@ -152,13 +141,10 @@ describe("FileCredentialVault", () => {
   it("metadata routing v2 ikut AAD sehingga priority tamper gagal tertutup", () => {
     const path = vaultPath();
     const vault = new FileCredentialVault(path, master(13));
-    vault.addConnection(
-      "openrouter",
-      "messages",
-      "tamper-routing-secret",
-      NOW,
-      { connectionId: "route_a", priority: 100 },
-    );
+    vault.addConnection("openrouter", "messages", "tamper-routing-secret", NOW, {
+      connectionId: "route_a",
+      priority: 100,
+    });
     const parsed = JSON.parse(readFileSync(path, "utf8")) as {
       entries: Array<{ priority: number }>;
     };
@@ -167,9 +153,7 @@ describe("FileCredentialVault", () => {
     entry.priority = 1;
     writeFileSync(path, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
 
-    expect(() => vault.get("openrouter", "messages")).toThrow(
-      CredentialVaultIntegrityError,
-    );
+    expect(() => vault.get("openrouter", "messages")).toThrow(CredentialVaultIntegrityError);
   });
 
   it("membaca vault v1 lama dan memigrasikannya atomik saat mutation pertama", () => {
@@ -177,9 +161,7 @@ describe("FileCredentialVault", () => {
     const key = Buffer.alloc(32, 14);
     const nonce = Buffer.alloc(12, 3);
     const cipher = createCipheriv("aes-256-gcm", key, nonce, { authTagLength: 16 });
-    cipher.setAAD(
-      Buffer.from("ecorione-credential-v1\0openai\0messages\0" + "1", "utf8"),
-    );
+    cipher.setAAD(Buffer.from("ecorione-credential-v1\0openai\0messages\0" + "1", "utf8"));
     const ciphertext = Buffer.concat([
       cipher.update("legacy-openai-secret", "utf8"),
       cipher.final(),
@@ -217,13 +199,9 @@ describe("FileCredentialVault", () => {
       priority: 100,
     });
 
-    vault.addConnection(
-      "openai",
-      "messages",
-      "legacy-backup",
-      "2026-09-09T09:04:00.000Z",
-      { connectionId: "backup" },
-    );
+    vault.addConnection("openai", "messages", "legacy-backup", "2026-09-09T09:04:00.000Z", {
+      connectionId: "backup",
+    });
     const migrated = JSON.parse(readFileSync(path, "utf8")) as {
       version: number;
       revision: number;
@@ -298,12 +276,7 @@ describe("FileCredentialVault", () => {
     ).toThrow(CredentialVaultBusyError);
     expect(() => vault.remove("anthropic", "messages")).toThrow(CredentialVaultBusyError);
     expect(() =>
-      vault.addConnection(
-        "anthropic",
-        "messages",
-        "backup",
-        "2026-09-09T09:21:00.000Z",
-      ),
+      vault.addConnection("anthropic", "messages", "backup", "2026-09-09T09:21:00.000Z"),
     ).toThrow(CredentialVaultBusyError);
     expect(() => vault.rotateMasterKey(master(10))).toThrow(CredentialVaultBusyError);
     expect(vault.get("anthropic", "messages")).toBe("stable-secret");

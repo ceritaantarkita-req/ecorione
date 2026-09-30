@@ -51,9 +51,7 @@ const CredentialConnectionPatchSchema = z
   .strict()
   .refine(
     (value) =>
-      value.label !== undefined ||
-      value.enabled !== undefined ||
-      value.priority !== undefined,
+      value.label !== undefined || value.enabled !== undefined || value.priority !== undefined,
     { message: "patch AI Connection kosong." },
   );
 const OpenRouterModelValidationBodySchema = z.object({ confirmed: z.literal(true) }).strict();
@@ -414,13 +412,7 @@ export function registerConnectControlRoutes(
       );
       const patch = parseOrBadRequest(CredentialConnectionPatchSchema, req.body);
       const metadata = credentialMutation(() =>
-        vault().updateConnection(
-          provider,
-          purposeFor(provider),
-          connectionId,
-          patch,
-          nowIso(),
-        ),
+        vault().updateConnection(provider, purposeFor(provider), connectionId, patch, nowIso()),
       );
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential-connection",

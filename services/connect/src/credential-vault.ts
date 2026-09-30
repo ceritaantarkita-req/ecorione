@@ -207,11 +207,7 @@ export class CredentialVaultBusyError extends CredentialVaultError {
 }
 
 export class CredentialConnectionNotFoundError extends CredentialVaultError {
-  constructor(
-    provider: CredentialProvider,
-    purpose: CredentialPurpose,
-    connectionId: string,
-  ) {
+  constructor(provider: CredentialProvider, purpose: CredentialPurpose, connectionId: string) {
     super(`AI Connection tidak ditemukan: ${provider}/${purpose}/${connectionId}.`);
     this.name = "CredentialConnectionNotFoundError";
   }
@@ -240,9 +236,7 @@ function connectionKey(
   return `${scopeKey(provider, purpose)}:${connectionId}`;
 }
 
-function legacyAad(
-  entry: Pick<VaultEntryV1, "provider" | "purpose" | "generation">,
-): Buffer {
+function legacyAad(entry: Pick<VaultEntryV1, "provider" | "purpose" | "generation">): Buffer {
   return Buffer.from(
     `ecorione-credential-v1\0${entry.provider}\0${entry.purpose}\0${String(entry.generation)}`,
     "utf8",
@@ -447,7 +441,10 @@ function metadata(entry: NormalizedVaultEntry | VaultEntryV2): CredentialMetadat
   };
 }
 
-function compareEntries(a: Pick<VaultEntryV2, "provider" | "purpose" | "priority" | "connectionId">, b: Pick<VaultEntryV2, "provider" | "purpose" | "priority" | "connectionId">): number {
+function compareEntries(
+  a: Pick<VaultEntryV2, "provider" | "purpose" | "priority" | "connectionId">,
+  b: Pick<VaultEntryV2, "provider" | "purpose" | "priority" | "connectionId">,
+): number {
   return (
     scopeKey(a.provider, a.purpose).localeCompare(scopeKey(b.provider, b.purpose)) ||
     a.priority - b.priority ||
@@ -474,10 +471,7 @@ function nextConnectionId(entries: readonly NormalizedVaultEntry[]): string {
   throw new CredentialVaultError("Gagal membuat identifier AI Connection yang unik.");
 }
 
-function materializeEntries(
-  vault: NormalizedVault,
-  key: Buffer,
-): VaultEntryV2[] {
+function materializeEntries(vault: NormalizedVault, key: Buffer): VaultEntryV2[] {
   return vault.entries.map((entry) =>
     encryptEntry({
       provider: entry.provider,
@@ -525,10 +519,9 @@ export class FileCredentialVault implements ProviderCredentialReader {
     purpose: CredentialPurpose,
   ): readonly CredentialCandidate[] {
     assertCredentialScope(provider, purpose);
-    return readVault(this.path).entries
-      .filter(
-        (entry) =>
-          entry.provider === provider && entry.purpose === purpose && entry.enabled,
+    return readVault(this.path)
+      .entries.filter(
+        (entry) => entry.provider === provider && entry.purpose === purpose && entry.enabled,
       )
       .sort(compareEntries)
       .map((entry) => ({
@@ -692,9 +685,7 @@ export class FileCredentialVault implements ProviderCredentialReader {
       const vault = readVault(this.path);
       const prior = vault.entries.find(
         (entry) =>
-          entry.provider === provider &&
-          entry.purpose === purpose &&
-          entry.connectionId === id,
+          entry.provider === provider && entry.purpose === purpose && entry.connectionId === id,
       );
       if (prior === undefined) {
         throw new CredentialConnectionNotFoundError(provider, purpose, id);

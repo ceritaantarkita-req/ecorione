@@ -20,9 +20,7 @@ describe("Session 4E multi-credential provider foundation source contract", () =
 
   it("exposes non-secret per-connection control routes while keeping legacy provider routes", () => {
     expect(control).toContain("/v1/settings/credentials/:provider/connections");
-    expect(control).toContain(
-      "/v1/settings/credentials/:provider/connections/:connectionId",
-    );
+    expect(control).toContain("/v1/settings/credentials/:provider/connections/:connectionId");
     expect(control).toContain("/v1/settings/credentials/:provider");
     expect(control).not.toContain("return body.secret");
   });
@@ -41,7 +39,7 @@ describe("Session 4E multi-credential provider foundation source contract", () =
     );
     expect(onboarding).toContain('method: "POST"');
     expect(onboarding).not.toContain(
-      'selected === undefined || selected.connected || !selected.connectReady',
+      "selected === undefined || selected.connected || !selected.connectReady",
     );
   });
 });

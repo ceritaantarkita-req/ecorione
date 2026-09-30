@@ -252,22 +252,16 @@ export async function complete(
       deps.credentialVault === undefined
         ? (() => {
             const secret = developmentApiKey(deps, hostedProvider);
-            return secret === undefined
-              ? []
-              : [{ connectionId: "dev-env", secret }];
+            return secret === undefined ? [] : [{ connectionId: "dev-env", secret }];
           })()
         : deps.credentialVault.candidates !== undefined
-          ? deps.credentialVault
-              .candidates(hostedProvider, "messages")
-              .map((candidate) => ({
-                connectionId: candidate.connectionId,
-                secret: candidate.secret,
-              }))
+          ? deps.credentialVault.candidates(hostedProvider, "messages").map((candidate) => ({
+              connectionId: candidate.connectionId,
+              secret: candidate.secret,
+            }))
           : (() => {
               const secret = deps.credentialVault?.get(hostedProvider, "messages");
-              return secret === undefined
-                ? []
-                : [{ connectionId: "default", secret }];
+              return secret === undefined ? [] : [{ connectionId: "default", secret }];
             })();
 
     if (credentialCandidates.length === 0) {
@@ -352,7 +346,9 @@ export async function complete(
     if (hostedResult === undefined) {
       const error =
         terminalError ??
-        new MissingCredentialError(`Connect vault ${hostedProvider}/messages usable connection`);
+        new MissingCredentialError(
+          `Connect vault ${hostedProvider}/messages usable connection`,
+        );
       if (spendReservation !== undefined && deps.spendBudget !== undefined) {
         const authoritativeBilledUsd =
           error instanceof ProviderResponseError

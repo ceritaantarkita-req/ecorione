@@ -750,8 +750,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     if (!beginAction("credential")) return;
     setStatus("Encrypting credentialÃ¢â‚¬Â¦");
     try {
-      const credentialBase =
-        `/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`;
+      const credentialBase = `/api/settings/settings/credentials/${encodeURIComponent(secretProvider)}`;
       await json(
         selectedProviderOption.credentialPurpose === "messages"
           ? `${credentialBase}/connections`

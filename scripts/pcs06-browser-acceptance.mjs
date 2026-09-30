@@ -934,10 +934,7 @@ async function installApiMocks(context) {
         generation: 1,
         updatedAt: now,
       };
-      credentials = [
-        ...credentials.filter((item) => item.provider !== provider),
-        metadata,
-      ];
+      credentials = [...credentials.filter((item) => item.provider !== provider), metadata];
       return json(route, metadata);
     }
     if (path === "/api/settings/settings/mcp/servers" && method === "GET") {
@@ -1346,7 +1343,10 @@ async function runDesktopJourney() {
     const connectedOpenRouterText = await directProvider
       .locator('option[value="openrouter"]')
       .textContent();
-    if (!connectedOpenRouterText?.includes("1 key") || !connectedOpenRouterText.includes("Tambah lagi")) {
+    if (
+      !connectedOpenRouterText?.includes("1 key") ||
+      !connectedOpenRouterText.includes("Tambah lagi")
+    ) {
       throw new Error(
         "desktop-ai: connected OpenRouter did not expose its connection count / add-another-key affordance",
       );
@@ -1361,7 +1361,9 @@ async function runDesktopJourney() {
     await addAiDialog.getByRole("button", { name: "Connect", exact: true }).click();
     await addAiDialog.waitFor({ state: "detached" });
     await page
-      .getByText("OpenAI · API key baru terhubung dan aktif untuk pesan berikutnya.", { exact: true })
+      .getByText("OpenAI · API key baru terhubung dan aktif untuk pesan berikutnya.", {
+        exact: true,
+      })
       .waitFor();
     if (!credentials.some((credential) => credential.provider === "openai")) {
       throw new Error("desktop-ai: direct onboarding did not persist OpenAI credential");

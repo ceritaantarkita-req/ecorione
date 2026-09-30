@@ -74,134 +74,150 @@ export function SettingsProviderSection({ controller }: { controller: SettingsCo
               ? 100
               : Math.min(...credentials.map((connection) => connection.priority));
           return (
-          <article className={styles.providerCard} key={provider.id}>
-            <div className={styles.providerCardTop}>
-              <div>
-                <strong>{provider.displayName}</strong>
-                <span className={styles.providerMeta}>
-                  {provider.hostedModels.length} verified model
-                  {provider.hostedModels.length === 1 ? "" : "s"} · {credentials.length} API key
-                  {credentials.length === 1 ? "" : "s"}
+            <article className={styles.providerCard} key={provider.id}>
+              <div className={styles.providerCardTop}>
+                <div>
+                  <strong>{provider.displayName}</strong>
+                  <span className={styles.providerMeta}>
+                    {provider.hostedModels.length} verified model
+                    {provider.hostedModels.length === 1 ? "" : "s"} · {credentials.length} API
+                    key
+                    {credentials.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <span className={active ? styles.activeBadge : styles.statusBadge}>
+                  {active
+                    ? "Active"
+                    : health.status === "connected"
+                      ? "Connected"
+                      : "Available"}
                 </span>
               </div>
-              <span className={active ? styles.activeBadge : styles.statusBadge}>
-                {active ? "Active" : health.status === "connected" ? "Connected" : "Available"}
-              </span>
-            </div>
-            <p className={styles.providerStatus}>{health.label}</p>
-            <div className={styles.actions}>
-              {credential === null ? (
-                <button
-                  type="button"
-                  disabled={pendingAction !== null}
-                  onClick={() => beginProviderConnect(provider.id)}
+              <p className={styles.providerStatus}>{health.label}</p>
+              <div className={styles.actions}>
+                {credential === null ? (
+                  <button
+                    type="button"
+                    disabled={pendingAction !== null}
+                    onClick={() => beginProviderConnect(provider.id)}
+                  >
+                    Connect
+                  </button>
+                ) : active ? (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.secondary}
+                      disabled={pendingAction !== null || !runtime?.settings.hostedCallsEnabled}
+                      onClick={() => void runCanary("hosted")}
+                    >
+                      {pendingAction === "canary-hosted" ? "Testing..." : "Test connection"}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondary}
+                      disabled={pendingAction !== null}
+                      onClick={() => beginProviderConnect(provider.id)}
+                    >
+                      Add API key
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      disabled={pendingAction !== null}
+                      onClick={() => void activateStoredProvider(provider.id)}
+                    >
+                      {pendingAction === "activate-provider" ? "Activating…" : "Use provider"}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondary}
+                      disabled={pendingAction !== null}
+                      onClick={() => beginProviderConnect(provider.id)}
+                    >
+                      Add API key
+                    </button>
+                  </>
+                )}
+              </div>
+              {credentials.length > 0 ? (
+                <div
+                  className={styles.connectionList}
+                  aria-label={`${provider.displayName} AI Connections`}
                 >
-                  Connect
-                </button>
-              ) : active ? (
-                <>
-                  <button
-                    type="button"
-                    className={styles.secondary}
-                    disabled={pendingAction !== null || !runtime?.settings.hostedCallsEnabled}
-                    onClick={() => void runCanary("hosted")}
-                  >
-                    {pendingAction === "canary-hosted" ? "Testing..." : "Test connection"}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.secondary}
-                    disabled={pendingAction !== null}
-                    onClick={() => beginProviderConnect(provider.id)}
-                  >
-                    Add API key
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    disabled={pendingAction !== null}
-                    onClick={() => void activateStoredProvider(provider.id)}
-                  >
-                    {pendingAction === "activate-provider" ? "Activating…" : "Use provider"}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.secondary}
-                    disabled={pendingAction !== null}
-                    onClick={() => beginProviderConnect(provider.id)}
-                  >
-                    Add API key
-                  </button>
-                </>
-              )}
-            </div>
-            {credentials.length > 0 ? (
-              <div className={styles.connectionList} aria-label={`${provider.displayName} AI Connections`}>
-                {credentials.map((connection, index) => (
-                  <div className={styles.connectionRow} key={connection.connectionId}>
-                    <div className={styles.connectionIdentity}>
-                      <strong>{connection.label}</strong>
-                      <span>
-                        {index === 0 && connection.enabled ? "Primary · " : ""}
-                        priority {connection.priority} · {connection.enabled ? "enabled" : "disabled"}
-                      </span>
-                    </div>
-                    <div className={styles.connectionActions}>
-                      <button
-                        type="button"
-                        className={styles.secondary}
-                        disabled={pendingAction !== null}
-                        onClick={() =>
-                          void updateCredentialConnection(provider.id, connection.connectionId, {
-                            enabled: !connection.enabled,
-                          })
-                        }
-                      >
-                        {connection.enabled ? "Disable" : "Enable"}
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.secondary}
-                        disabled={
-                          pendingAction !== null ||
-                          connection.priority <= minimumPriority
-                        }
-                        onClick={() =>
-                          void updateCredentialConnection(provider.id, connection.connectionId, {
-                            priority: Math.max(0, minimumPriority - 100),
-                          })
-                        }
-                      >
-                        Make primary
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.secondary}
-                        disabled={pendingAction !== null}
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `Remove ${connection.label} from ${provider.displayName}?`,
-                            )
-                          ) {
-                            void removeCredentialConnection(
+                  {credentials.map((connection, index) => (
+                    <div className={styles.connectionRow} key={connection.connectionId}>
+                      <div className={styles.connectionIdentity}>
+                        <strong>{connection.label}</strong>
+                        <span>
+                          {index === 0 && connection.enabled ? "Primary · " : ""}
+                          priority {connection.priority} ·{" "}
+                          {connection.enabled ? "enabled" : "disabled"}
+                        </span>
+                      </div>
+                      <div className={styles.connectionActions}>
+                        <button
+                          type="button"
+                          className={styles.secondary}
+                          disabled={pendingAction !== null}
+                          onClick={() =>
+                            void updateCredentialConnection(
                               provider.id,
                               connection.connectionId,
-                            );
+                              {
+                                enabled: !connection.enabled,
+                              },
+                            )
                           }
-                        }}
-                      >
-                        Remove
-                      </button>
+                        >
+                          {connection.enabled ? "Disable" : "Enable"}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.secondary}
+                          disabled={
+                            pendingAction !== null || connection.priority <= minimumPriority
+                          }
+                          onClick={() =>
+                            void updateCredentialConnection(
+                              provider.id,
+                              connection.connectionId,
+                              {
+                                priority: Math.max(0, minimumPriority - 100),
+                              },
+                            )
+                          }
+                        >
+                          Make primary
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.secondary}
+                          disabled={pendingAction !== null}
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Remove ${connection.label} from ${provider.displayName}?`,
+                              )
+                            ) {
+                              void removeCredentialConnection(
+                                provider.id,
+                                connection.connectionId,
+                              );
+                            }
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </article>
-        );
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          );
         })}
 
         <article className={styles.providerCard}>
