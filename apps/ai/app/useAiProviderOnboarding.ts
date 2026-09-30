@@ -87,7 +87,10 @@ export function useAiProviderOnboarding(
   const inFlightRef = useRef(false);
 
   const firstConnectableProvider = useMemo(
-    () => providers.find((provider) => !provider.connected && provider.connectReady) ?? null,
+    () =>
+      providers.find((provider) => !provider.connected && provider.connectReady) ??
+      providers.find((provider) => provider.connectReady) ??
+      null,
     [providers],
   );
 
@@ -110,7 +113,7 @@ export function useAiProviderOnboarding(
   async function connect(): Promise<ChatTarget | null> {
     if (inFlightRef.current || providerId === null) return null;
     const selected = providers.find((provider) => provider.id === providerId);
-    if (selected === undefined || selected.connected || !selected.connectReady) {
+    if (selected === undefined || !selected.connectReady) {
       setDialogStatus("Provider ini belum tersedia untuk koneksi baru dari Ai.");
       return null;
     }
@@ -139,9 +142,9 @@ export function useAiProviderOnboarding(
       }
 
       await requestJson(
-        `/api/settings/settings/credentials/${encodeURIComponent(providerId)}`,
+        `/api/settings/settings/credentials/${encodeURIComponent(providerId)}/connections`,
         {
-          method: "PUT",
+          method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ secret }),
         },
@@ -158,7 +161,7 @@ export function useAiProviderOnboarding(
       setFeedback({
         kind: active ? "success" : "warning",
         message: active
-          ? `${selected.displayName} terhubung dan aktif untuk pesan berikutnya.`
+          ? `${selected.displayName} · API key baru terhubung dan aktif untuk pesan berikutnya.`
           : `${selected.displayName} terhubung, tetapi Cloud belum dapat diaktifkan oleh kebijakan runtime.`,
       });
       setOpen(false);
