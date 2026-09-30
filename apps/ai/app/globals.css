@@ -1119,3 +1119,131 @@ hr {
     transition: none;
   }
 }
+
+/* Direct provider onboarding from the Ai composer. Connect still owns
+   credential validation/storage; this surface only keeps the normal flow in Ai. */
+.ai-connect-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.ai-connect-dialog {
+  width: min(520px, 100%);
+  max-height: min(680px, calc(100dvh - 40px));
+  overflow: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 0 18px 60px rgba(10, 9, 6, 0.32);
+}
+
+.ai-connect-dialog__header,
+.ai-connect-dialog__footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ai-connect-dialog__header h2 {
+  margin: 3px 0 0;
+  font-size: 20px;
+}
+
+.ai-connect-dialog__eyebrow {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ai-connect-dialog__copy,
+.ai-connect-dialog__footer small {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ai-connect-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ai-connect-dialog__field select,
+.ai-connect-dialog__field input {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.ai-connect-dialog__field select:focus-visible,
+.ai-connect-dialog__field input:focus-visible {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.ai-connect-dialog__status {
+  margin: 0;
+  padding: 9px 10px;
+  border-left: 1px solid var(--warning);
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.ai-connect-dialog__footer {
+  align-items: center;
+  padding-top: 4px;
+}
+
+.ai-connect-dialog__footer small {
+  max-width: 330px;
+}
+
+@media (max-width: 620px) {
+  .ai-connect-overlay {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .ai-connect-dialog {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    padding: 16px;
+  }
+
+  .ai-connect-dialog__header,
+  .ai-connect-dialog__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ai-connect-dialog__footer .ecr-btn {
+    width: 100%;
+  }
+}
+
