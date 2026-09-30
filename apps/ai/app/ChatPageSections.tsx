@@ -119,7 +119,7 @@ export function OpenRouterModelQuickSwitch({
   const selected = models.find((model) => model.id === value);
   const title =
     selected?.inputUsdPerMTok !== undefined && selected.outputUsdPerMTok !== undefined
-      ? `Harga katalog: ${selected.inputUsdPerMTok.toFixed(2)} / 1M input · ${selected.outputUsdPerMTok.toFixed(2)} / 1M output. Harga billed provider tetap authoritative.`
+      ? `Harga katalog: USD ${selected.inputUsdPerMTok.toFixed(2)} / 1M input · USD ${selected.outputUsdPerMTok.toFixed(2)} / 1M output. Harga billed provider tetap authoritative.`
       : "Pilih model untuk pesan berikutnya. Setiap balasan tetap menyimpan model dan biaya yang dipakai.";
 
   return (
@@ -133,7 +133,7 @@ export function OpenRouterModelQuickSwitch({
         {models.map((model) => {
           const pricing =
             model.inputUsdPerMTok !== undefined && model.outputUsdPerMTok !== undefined
-              ? ` · ${model.inputUsdPerMTok.toFixed(2)}/M in · ${model.outputUsdPerMTok.toFixed(2)}/M out`
+              ? ` · USD ${model.inputUsdPerMTok.toFixed(2)}/M in · USD ${model.outputUsdPerMTok.toFixed(2)}/M out`
               : "";
           return (
             <option key={model.id} value={model.id} disabled={!model.available}>
