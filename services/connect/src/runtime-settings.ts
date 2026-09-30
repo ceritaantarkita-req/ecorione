@@ -87,7 +87,11 @@ const RuntimeSettingsObjectSchema = z
     hostedProvider: HostedProviderIdSchema,
     hostedModel: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
     openRouterModelSelection: HostedModelPreferenceSchema.optional(),
-    /** Dedicated validation evidence, never writable through generic runtime PATCH. */
+    /**
+     * Legacy field name kept for persisted-file compatibility.
+     * This is trusted Connect-owned execution authority for the selected dynamic OpenRouter
+     * model and is never writable through generic runtime PATCH.
+     */
     openRouterCertifiedModelId: HostedModelPreferenceSchema.optional(),
     localRuntime: LocalRuntimeIdSchema,
     localBaseUrl: LocalBaseUrlSchema,
@@ -140,7 +144,12 @@ export interface RuntimeSettingsReader {
 
 export interface RuntimeSettingsAdmin extends RuntimeSettingsReader {
   update(patch: RuntimeSettingsPatch): RuntimeSettingsSnapshot;
-  /** Dedicated trusted mutation after a bounded OpenRouter model validation passes. */
+  /**
+   * Dedicated trusted mutation after Connect has admitted a fresh compatible OpenRouter
+   * catalog entry. Generic runtime PATCH cannot mint this authority.
+   */
+  activateOpenRouterModel?: (modelId: HostedModelPreference) => RuntimeSettingsSnapshot;
+  /** Legacy validation path; kept for explicit operator evidence workflows. */
   certifyOpenRouterModel?: (modelId: HostedModelPreference) => RuntimeSettingsSnapshot;
 }
 
@@ -157,13 +166,12 @@ function cloneSettings(settings: RuntimeSettings): RuntimeSettings {
 }
 
 /**
- * A discovered OpenRouter preference is intentionally not execution authority. The
- * admission endpoint is the only place that can make an OpenRouter model executable.
+ * A raw OpenRouter preference is intentionally not execution authority. Only the
+ * dedicated Connect admission path may bind the selected model to the trusted
+ * openRouterCertifiedModelId marker (legacy field name).
  *
- * Older Settings mutations could retain a dynamic selection while re-enabling Hosted.
- * Repair that contradictory state at the durable owner boundary so a refresh, a generic
- * runtime save, or a future caller cannot accidentally turn a preference into a paid
- * dispatch path.
+ * Generic Settings mutations therefore still fail closed: changing a selection clears the
+ * trusted marker and normalization disables Hosted until Connect re-admits that exact model.
  */
 export function normalizeOpenRouterRuntimeSettings<T extends RuntimeSettings>(settings: T): T {
   if (settings.hostedProvider !== "openrouter") return settings;
@@ -285,23 +293,29 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
     this.persist(next);
     return { revision: next.revision, settings: cloneSettings(next.settings) };
   }
-  certifyOpenRouterModel(modelId: HostedModelPreference): RuntimeSettingsSnapshot {
-    const certified = HostedModelPreferenceSchema.parse(modelId);
-    if (certified === GOVERNED_HOSTED_MODEL) {
-      throw new Error("Model governed tidak memerlukan sertifikasi OpenRouter.");
+  activateOpenRouterModel(modelId: HostedModelPreference): RuntimeSettingsSnapshot {
+    const admitted = HostedModelPreferenceSchema.parse(modelId);
+    if (admitted === GOVERNED_HOSTED_MODEL) {
+      throw new Error("Model governed tidak memerlukan admission OpenRouter dinamis.");
     }
     const prior = this.read();
     const settings = RuntimeSettingsSchema.parse({
       ...prior.settings,
       hostedProvider: "openrouter",
       hostedModel: GOVERNED_HOSTED_MODEL,
-      openRouterModelSelection: certified,
-      openRouterCertifiedModelId: certified,
+      openRouterModelSelection: admitted,
+      // Legacy persisted field name: this marker now means Connect admitted the exact
+      // selection through its trusted fresh-catalog path, not that the user certified it.
+      openRouterCertifiedModelId: admitted,
       hostedCallsEnabled: true,
       defaultChatTarget: "hosted",
     });
     const next: RuntimeSettingsFile = { revision: prior.revision + 1, version: 1, settings };
     this.persist(next);
     return { revision: next.revision, settings: cloneSettings(next.settings) };
+  }
+
+  certifyOpenRouterModel(modelId: HostedModelPreference): RuntimeSettingsSnapshot {
+    return this.activateOpenRouterModel(modelId);
   }
 }
