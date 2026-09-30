@@ -42,7 +42,6 @@ interface OpenRouterDiscoveryPanelProps {
   readonly onQueryChange: (value: string) => void;
   readonly onSourceProviderChange: (value: string) => void;
   readonly onDiscover: (forceRefresh: boolean) => void;
-  readonly onValidate: (selectionId: string) => void;
 }
 
 const admissionReasonLabels: Readonly<Record<string, string>> = {
@@ -68,7 +67,7 @@ function usdPerMTok(value: string | null): string {
 
 function admissionLabel(model: DiscoveredModel): string {
   if (model.executable) return "Ready";
-  if (model.selectable) return "Perlu test";
+  if (model.selectable) return "Compatible";
   if (model.admission === "unavailable") return "Unavailable";
   return "Discovery only";
 }
@@ -81,7 +80,6 @@ export function OpenRouterDiscoveryPanel({
   onQueryChange,
   onSourceProviderChange,
   onDiscover,
-  onValidate,
 }: OpenRouterDiscoveryPanelProps) {
   return (
     <div className={styles.discoveryPanel}>
@@ -97,9 +95,9 @@ export function OpenRouterDiscoveryPanel({
         )}
       </div>
       <p className={styles.muted}>
-        Harga input dan output berasal dari katalog OpenRouter per 1 juta token. Model baru baru
-        menjadi Ready setelah test yang kamu konfirmasi. Test memakai reservasi maksimal USD
-        0.07 dan tetap memakai budget Cloud AI kamu.
+        Harga input dan output berasal dari katalog OpenRouter per 1 juta token. Model berstatus
+        Compatible bisa langsung dipilih; Connect akan mengecek ulang katalog, capability, dan
+        harga sebelum setiap eksekusi berbayar.
       </p>
       <div className={styles.discoveryFilters}>
         <label className={styles.connectField}>
@@ -155,12 +153,6 @@ export function OpenRouterDiscoveryPanel({
               <p className={styles.discoveryEmpty}>Tidak ada model yang cocok.</p>
             ) : (
               discovery.models.map((model) => {
-                const canValidate =
-                  model.selectable &&
-                  !model.executable &&
-                  model.selectionId !== null &&
-                  model.validationPlan !== null &&
-                  model.validationPlan !== undefined;
                 return (
                   <article className={styles.discoveryModel} key={model.id}>
                     <div className={styles.discoveryModelTop}>
@@ -169,7 +161,11 @@ export function OpenRouterDiscoveryPanel({
                         <code>{model.id}</code>
                       </div>
                       <span
-                        className={model.executable ? styles.activeBadge : styles.statusBadge}
+                        className={
+                          model.executable || model.selectable
+                            ? styles.activeBadge
+                            : styles.statusBadge
+                        }
                       >
                         {admissionLabel(model)}
                       </span>
@@ -190,12 +186,6 @@ export function OpenRouterDiscoveryPanel({
                           ? model.inputModalities.join(", ")
                           : "unknown"}
                       </span>
-                      {model.validationPlan ? (
-                        <span>
-                          test: reserve USD {model.validationPlan.reservationUsd.toFixed(2)},
-                          maksimal {model.validationPlan.maxOutputTokens} output token
-                        </span>
-                      ) : null}
                       {model.mutableAlias ? <span>mutable alias</span> : null}
                       {model.unavailableReason ? (
                         <span>
@@ -205,18 +195,6 @@ export function OpenRouterDiscoveryPanel({
                         </span>
                       ) : null}
                     </div>
-                    {canValidate ? (
-                      <div className={styles.actions}>
-                        <button
-                          type="button"
-                          disabled={pendingAction !== null}
-                          onClick={() => onValidate(model.selectionId!)}
-                        >
-                          Test &amp; enable (maks. USD {model.validationPlan!.capUsd.toFixed(2)}
-                          )
-                        </button>
-                      </div>
-                    ) : null}
                   </article>
                 );
               })
