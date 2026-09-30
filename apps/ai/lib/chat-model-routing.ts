@@ -89,15 +89,14 @@ export function buildChatProviderOptions(
     if (
       provider.category !== "ai" ||
       !provider.routingReady ||
-      !isHostedProviderId(provider.id) ||
-      !configured.has(provider.id)
+      !isHostedProviderId(provider.id)
     ) {
       continue;
     }
     options.push({
       id: provider.id,
       displayName: hostedProviderLabel(provider.id),
-      available: true,
+      available: configured.has(provider.id),
     });
   }
   return options;
