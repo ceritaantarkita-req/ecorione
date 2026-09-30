@@ -42,7 +42,7 @@ import {
 } from "../lib/project-selection";
 import { isClientSessionId, makeSessionId, projectSessionStorageKey } from "../lib/session";
 import {
-  ChevronIcon,
+  ChatProviderModelSelectors,
   FileIcon,
   FolderIcon,
   MemoryPanel,
@@ -1029,73 +1029,21 @@ export default function ChatPage() {
                 <input ref={folderInputRef} type="file" hidden onChange={handleFolderChange} />
               </div>
 
-              <div className="ai-model-controls">
-                <div className="ai-model-select ai-model-select--route" title={routeHint}>
-                  <select
-                    id="chat-provider"
-                    aria-label="Provider / Source"
-                    value={providerSelection}
-                    onChange={(event) =>
-                      void handleProviderSwitch(event.target.value as ChatProviderSource)
-                    }
-                    disabled={modelControlsLocked}
-                  >
-                    {modelRouting.providerOptions.map((provider) => (
-                      <option
-                        key={provider.id}
-                        value={provider.id}
-                        disabled={!provider.available}
-                      >
-                        {provider.id === "local"
-                          ? localRuntimeStatus?.ready === true
-                            ? "Local"
-                            : "Local · Not connected"
-                          : provider.displayName}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronIcon />
-                </div>
-                <div className="ai-model-select ai-model-select--quick" title={modelHint}>
-                  <select
-                    id="chat-model"
-                    aria-label="Model"
-                    value={modelSelection}
-                    onChange={(event) => void handleHostedModelSwitch(event.target.value)}
-                    disabled={
-                      modelControlsLocked ||
-                      (target === "local" && localRuntimeStatus?.ready !== true)
-                    }
-                  >
-                    {target === "local" ? (
-                      <option value={localRuntimeStatus?.configuredModel ?? ""}>
-                        {localRuntimeStatus?.ready === true
-                          ? localRuntimeStatus.configuredModel
-                          : "Not connected"}
-                      </option>
-                    ) : (
-                      modelRouting.hostedModels.map((model) => {
-                        const pricing =
-                          model.inputUsdPerMTok !== undefined &&
-                          model.outputUsdPerMTok !== undefined
-                            ? ` · USD ${model.inputUsdPerMTok.toFixed(2)}/M in · USD ${model.outputUsdPerMTok.toFixed(2)}/M out`
-                            : "";
-                        return (
-                          <option key={model.id} value={model.id} disabled={!model.available}>
-                            {model.displayName}
-                            {pricing}
-                            {!model.available ? " · Unavailable" : ""}
-                          </option>
-                        );
-                      })
-                    )}
-                  </select>
-                  <ChevronIcon />
-                  {modelRouting.switching ? (
-                    <span className="ai-model-select__pending">Saving…</span>
-                  ) : null}
-                </div>
-              </div>
+              <ChatProviderModelSelectors
+                providerOptions={modelRouting.providerOptions}
+                providerValue={providerSelection}
+                modelOptions={modelRouting.hostedModels}
+                modelValue={modelSelection}
+                localModel={localRuntimeStatus?.configuredModel ?? ""}
+                localReady={localRuntimeStatus?.ready === true}
+                target={target}
+                disabled={modelControlsLocked}
+                switching={modelRouting.switching}
+                routeHint={routeHint}
+                modelHint={modelHint}
+                onProviderChange={(source) => void handleProviderSwitch(source)}
+                onModelChange={(modelId) => void handleHostedModelSwitch(modelId)}
+              />
 
               <button
                 type="submit"
