@@ -15,7 +15,7 @@ staging-verified runtime   = 2c223ea8c54045de3dc5e6b15971bdb2a898e2fe
 staging image              = staging-2c223ea8c540
 ```
 
-Session 4E has two runtime slices CLOSED / PASS / STAGING VERIFIED. PR #407 closed compatible OpenRouter auto-execution + visible catalog pricing. PR #409 then closed the canonical provider/source + provider-specific model selector surface. Exact PR #409 head `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b` passed CI #2571, Product Eval #1810, and PCS-06 Integrated Browser Acceptance #354. It merged to `main` as `e21f6f943fff9c0c2afdc71a45b05d6ab38eff76`; merged-main CI #2572 and Product Eval #1811 passed, and Staging Deploy #1893 deployed exact SHA `e21f6f94...` as image `staging-e21f6f943fff`. Public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, and capacity stabilized at **25.26 GiB free** after bounded stale-image cleanup.
+Session 4E has three runtime slices CLOSED / PASS / STAGING VERIFIED. PR #407 closed compatible OpenRouter auto-execution + visible catalog pricing; PR #409 closed the canonical provider/source + provider-specific model selector surface; PR #411 closed direct `+ Tambah AI` onboarding from Ai. Exact PR #411 head `011ac87b07d12608c7da3906ccbbc064d7701b3c` passed CI #2585, Product Eval #1824, and PCS-06 Integrated Browser Acceptance #365. It merged to `main` as `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe`; merged-main CI #2586 and Product Eval #1825 passed, and Staging Deploy #1922 deployed exact SHA `2c223ea8...` as image `staging-2c223ea8c540`. Public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, and capacity stabilized at **27.35 GiB free** after bounded rollback-set cleanup.
 
 The Ai composer uses adjacent `[Provider / Source ▼] [Model ▼]` controls, and direct `+ Tambah AI` onboarding is now implemented from the Ai page. The primary flow validates the API key through Connect before Vault persistence, activates the provider, refreshes provider/model choices, and preserves the same conversation without a Settings detour. The accepted product contract remains [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md), but Session 4E is **not fully closed**: multi-credential routing, bounded Local↔Cloud context handoff, and custom-provider onboarding remain open.
 
@@ -29,30 +29,30 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76
-image = staging-e21f6f943fff
+SHA   = 2c223ea8c54045de3dc5e6b15971bdb2a898e2fe
+image = staging-2c223ea8c540
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| PR #409 reviewed head | `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b` |
-| PR-head CI #2571 | PASS |
-| PR-head Product Eval #1810 | PASS |
-| PR-head PCS-06 browser #354 | PASS |
-| merged-main CI #2572 | PASS |
-| merged-main Product Eval #1811 | PASS |
-| Staging Deploy #1892 | gate-only PASS / deploy skipped |
-| Staging Deploy #1893 | actual deploy PASS |
+| PR #411 reviewed head | `011ac87b07d12608c7da3906ccbbc064d7701b3c` |
+| PR-head CI #2585 | PASS |
+| PR-head Product Eval #1824 | PASS |
+| PR-head PCS-06 browser #365 | PASS |
+| merged-main CI #2586 | PASS |
+| merged-main Product Eval #1825 | PASS |
+| Staging Deploy #1921 | gate-only PASS / deploy skipped |
+| Staging Deploy #1922 | actual deploy PASS |
 | expected host SHA | matched |
-| staging image | `staging-e21f6f943fff` |
+| staging image | `staging-2c223ea8c540` |
 | public smoke | PASS |
 | Operations | `healthy: true` |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| host evidence free disk before cleanup | 23.91 GiB |
-| stabilized free disk after stale-image cleanup | 25.26 GiB |
+| host evidence free disk before cleanup | 26.03 GiB |
+| stabilized free disk after rollback-set cleanup | 27.35 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -112,7 +112,7 @@ Underlying provider rollout checkpoint:
 
 ## OpenRouter Sessions 2–4E — Session 4E ACTIVE / PARTIAL
 
-Sessions 2, 3, 4A, 4B, 4C, and 4D remain CLOSED / PASS at their documented boundaries. Session 4E is active; slice 1 (auto-execution/pricing) and slice 2 (canonical provider/model selectors) are both CLOSED / PASS / STAGING VERIFIED through PR #407 and PR #409 respectively.
+Sessions 2, 3, 4A, 4B, 4C, and 4D remain CLOSED / PASS at their documented boundaries. Session 4E is active; slice 1 (auto-execution/pricing), slice 2 (canonical provider/model selectors), and slice 3 (direct `+ Tambah AI` onboarding) are CLOSED / PASS / STAGING VERIFIED through PR #407, PR #409, and PR #411 respectively.
 
 Current implemented OpenRouter behavior:
 
@@ -152,6 +152,18 @@ PR #409 selector proof:
 - merged-main Product Eval #1811 PASS;
 - actual Staging Deploy #1893 PASS;
 - exact host SHA matched, image `staging-e21f6f943fff`, public smoke PASS, Operations healthy, 15/15 configured services running, 25.26 GiB stabilized free disk.
+
+PR #411 direct-onboarding proof:
+
+- reviewed head `011ac87b07d12608c7da3906ccbbc064d7701b3c`;
+- CI #2585 PASS;
+- Product Eval #1824 PASS;
+- PCS-06 Integrated Browser Acceptance #365 PASS;
+- merged `main` `2c223ea8c54045de3dc5e6b15971bdb2a898e2fe`;
+- merged-main CI #2586 PASS;
+- merged-main Product Eval #1825 PASS;
+- actual Staging Deploy #1922 PASS;
+- exact host SHA matched, image `staging-2c223ea8c540`, public smoke PASS, Operations healthy, 15/15 configured services running, 27.35 GiB stabilized free disk.
 
 Accepted Session 4E product contract:
 [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
