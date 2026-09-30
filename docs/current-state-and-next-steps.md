@@ -29,30 +29,30 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = bb2983d59dbe292c510fbc28aae297bcb23487c4
-image = staging-bb2983d59dbe
+SHA   = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76
+image = staging-e21f6f943fff
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| PR #407 reviewed head | `5b9a29085287db035c2c52dd6ea783c2d93ceac4` |
-| PR-head CI #2555 | PASS |
-| PR-head Product Eval #1794 | PASS |
-| PR-head PCS-06 browser #341 | PASS |
-| merged-main CI #2556 | PASS |
-| merged-main Product Eval #1795 | PASS |
-| Staging Deploy #1862 | gate-only PASS / deploy skipped |
-| Staging Deploy #1863 | actual deploy PASS |
+| PR #409 reviewed head | `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b` |
+| PR-head CI #2571 | PASS |
+| PR-head Product Eval #1810 | PASS |
+| PR-head PCS-06 browser #354 | PASS |
+| merged-main CI #2572 | PASS |
+| merged-main Product Eval #1811 | PASS |
+| Staging Deploy #1892 | gate-only PASS / deploy skipped |
+| Staging Deploy #1893 | actual deploy PASS |
 | expected host SHA | matched |
-| staging image | `staging-bb2983d59dbe` |
+| staging image | `staging-e21f6f943fff` |
 | public smoke | PASS |
 | Operations | `healthy: true` |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
-| host evidence free disk before cleanup | 21.81 GiB |
-| stabilized free disk after bounded BuildKit pruning | 29.89 GiB |
+| host evidence free disk before cleanup | 23.91 GiB |
+| stabilized free disk after stale-image cleanup | 25.26 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -139,6 +139,18 @@ PR #407 proof:
 - merged-main CI #2556 PASS;
 - merged-main Product Eval #1795 PASS;
 - actual Staging Deploy #1863 PASS;
+- exact host SHA matched, image `staging-bb2983d59dbe`, public smoke PASS, Operations healthy, 15/15 configured services running, 29.89 GiB stabilized free disk.
+
+PR #409 selector proof:
+
+- reviewed head `2efc0b56b9cc97f7ccdd11a13f7a4b979204945b`;
+- CI #2571 PASS;
+- Product Eval #1810 PASS;
+- PCS-06 Integrated Browser Acceptance #354 PASS;
+- merged `main` `e21f6f943fff9c0c2afdc71a45b05d6ab38eff76`;
+- merged-main CI #2572 PASS;
+- merged-main Product Eval #1811 PASS;
+- actual Staging Deploy #1893 PASS;
 - exact host SHA matched, image `staging-e21f6f943fff`, public smoke PASS, Operations healthy, 15/15 configured services running, 25.26 GiB stabilized free disk.
 
 Accepted Session 4E product contract:
@@ -351,7 +363,7 @@ For a new session/agent:
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
