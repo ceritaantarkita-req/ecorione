@@ -671,6 +671,24 @@ async function installApiMocks(context) {
       });
     }
 
+    if (path === "/api/settings/settings/spend-status" && method === "GET") {
+      return json(route, {
+        operatorGateOpen: true,
+        policy: {
+          dailyUsd: 0.1,
+          monthlyUsd: 1,
+          unlimited: false,
+        },
+        budget: {
+          dailyLimitUsd: 0.1,
+          monthlyLimitUsd: 1,
+          dailyCommittedUsd: 0,
+          monthlyCommittedUsd: 0,
+          unsettledReservations: 0,
+        },
+      });
+    }
+
     if (path === "/api/settings/settings/runtime" && method === "GET") {
       return json(route, runtime);
     }
@@ -1146,8 +1164,8 @@ async function runDesktopJourney() {
     if ((await modelSelect.inputValue()) !== "hosted") {
       throw new Error("desktop-ai: replayed hosted conversation did not restore Hosted route");
     }
-    if (!(await modelSelect.isDisabled())) {
-      throw new Error("desktop-ai: route selector must stay locked after replayed turns");
+    if (await modelSelect.isDisabled()) {
+      throw new Error("desktop-ai: route selector must remain switchable after replayed turns");
     }
     const localOption = modelSelect.locator('option[value="local"]');
     if (!(await localOption.isDisabled())) {
