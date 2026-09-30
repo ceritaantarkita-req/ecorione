@@ -20,9 +20,20 @@ export interface OpenAiCompatibleProviderRouting {
   readonly allow_fallbacks: boolean;
 }
 
+export interface OpenAiCompatibleTransportRequest {
+  readonly endpoint: string;
+  readonly headers: Readonly<Record<string, string>>;
+  readonly body: string;
+  readonly signal?: AbortSignal | undefined;
+}
+
+export type OpenAiCompatibleTransport = (
+  request: OpenAiCompatibleTransportRequest,
+) => Promise<Response>;
+
 export interface OpenAiCompatibleHostedInput {
   readonly endpoint: string;
-  readonly providerName: "OpenAI" | "OpenRouter" | "NVIDIA";
+  readonly providerName: string;
   readonly apiKey: string;
   /** Runtime provider model slug, not the ledger/cost identity. */
   readonly runtimeModel: string;
@@ -39,6 +50,7 @@ export interface OpenAiCompatibleHostedInput {
   readonly reasoningEffort?: "low" | "high" | "max" | undefined;
   readonly extraHeaders?: Readonly<Record<string, string>> | undefined;
   readonly providerRouting?: OpenAiCompatibleProviderRouting | undefined;
+  readonly transport?: OpenAiCompatibleTransport | undefined;
 }
 
 export interface OpenAiCompatibleHostedResult {
@@ -216,17 +228,27 @@ export async function callOpenAiCompatibleHosted(
 ): Promise<OpenAiCompatibleHostedResult> {
   let res: Response;
   try {
-    res = await fetch(input.endpoint, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${input.apiKey}`,
-        "content-type": "application/json",
-        ...input.extraHeaders,
-      },
-      body: JSON.stringify(buildOpenAiCompatibleRequestBody(input)),
-      redirect: "error",
-      ...(signal === undefined ? {} : { signal }),
-    });
+    const headers = {
+      authorization: `Bearer ${input.apiKey}`,
+      "content-type": "application/json",
+      ...input.extraHeaders,
+    };
+    const body = JSON.stringify(buildOpenAiCompatibleRequestBody(input));
+    res =
+      input.transport === undefined
+        ? await fetch(input.endpoint, {
+            method: "POST",
+            headers,
+            body,
+            redirect: "error",
+            ...(signal === undefined ? {} : { signal }),
+          })
+        : await input.transport({
+            endpoint: input.endpoint,
+            headers,
+            body,
+            ...(signal === undefined ? {} : { signal }),
+          });
   } catch (error) {
     throw new ProviderError(
       "hosted",
