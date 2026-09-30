@@ -11,6 +11,7 @@ const ALLOWED = [
   /^\/v1\/settings\/providers$/,
   /^\/v1\/settings\/providers\/openrouter\/models$/,
   /^\/v1\/settings\/providers\/openrouter\/model-selection$/,
+  /^\/v1\/settings\/providers\/custom-openai\/connect$/,
   /^\/v1\/settings\/local-runtime\/status$/,
   /^\/v1\/settings\/credentials$/,
   /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}$/,
@@ -76,6 +77,8 @@ function allowedSettingsPath(path: string, method: Method): string | null {
     if (refresh !== null && refresh !== "0" && refresh !== "1") return null;
   } else if (normalized.pathname === "/v1/settings/providers/openrouter/model-selection") {
     if (method !== "PUT" || normalized.search.length > 0) return null;
+  } else if (normalized.pathname === "/v1/settings/providers/custom-openai/connect") {
+    if (method !== "POST" || normalized.search.length > 0) return null;
   } else if (normalized.search.length > 0) {
     return null;
   }
