@@ -186,8 +186,7 @@ export function registerConnectControlRoutes(
           ? provider
           : {
               ...provider,
-              displayName:
-                settings.customOpenAi?.name ?? "Lainnya / Custom OpenAI-compatible",
+              displayName: settings.customOpenAi?.name ?? "Lainnya / Custom OpenAI-compatible",
               routingReady: settings.customOpenAi !== undefined,
               // Custom provider validation needs endpoint/model/pricing metadata and therefore
               // uses its dedicated Connect-owned onboarding route instead of generic key test.

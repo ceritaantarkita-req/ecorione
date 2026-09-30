@@ -43,8 +43,15 @@ describe("Session 4E direct Ai provider onboarding source contract", () => {
     expect(onboarding).not.toContain("/api/chat");
   });
 
-  it("keeps custom provider deferred while allowing another key for connected providers", () => {
-    expect(dialog).toContain("Lainnya · Segera");
+  it("enables bounded custom provider onboarding while allowing another key for connected providers", () => {
+    expect(dialog).toContain("Lainnya / Custom OpenAI-compatible");
+    expect(dialog).toContain('aria-label="Nama custom provider"');
+    expect(dialog).toContain('aria-label="Base URL custom provider"');
+    expect(dialog).toContain('aria-label="Model custom provider"');
+    expect(dialog).toContain("public HTTPS");
+    expect(onboarding).toContain("/api/settings/settings/providers/custom-openai/connect");
+    expect(onboarding).toContain("inputUsdPerMTok");
+    expect(onboarding).toContain("outputUsdPerMTok");
     expect(dialog).toContain("Tambah lagi");
     expect(dialog).toContain("disabled={!provider.connectReady}");
     expect(dialog).not.toContain("disabled={provider.connected || !provider.connectReady}");

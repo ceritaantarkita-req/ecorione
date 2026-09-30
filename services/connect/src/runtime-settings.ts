@@ -93,12 +93,7 @@ function safeCustomOpenAiBaseUrl(value: string, ctx: z.RefinementCtx): void {
   if (url.protocol !== "https:") {
     ctx.addIssue({ code: "custom", message: "Base URL custom provider wajib HTTPS." });
   }
-  if (
-    url.username !== "" ||
-    url.password !== "" ||
-    url.hash !== "" ||
-    url.search !== ""
-  ) {
+  if (url.username !== "" || url.password !== "" || url.hash !== "" || url.search !== "") {
     ctx.addIssue({
       code: "custom",
       message: "Base URL custom provider tidak boleh memuat credential, query, atau fragment.",
@@ -175,7 +170,8 @@ export const RuntimeSettingsSchema = RuntimeSettingsObjectSchema.superRefine(
         ctx.addIssue({
           code: "custom",
           path: ["hostedModel"],
-          message: "Model custom provider harus sama dengan model yang sudah divalidasi Connect.",
+          message:
+            "Model custom provider harus sama dengan model yang sudah divalidasi Connect.",
         });
       }
       return;

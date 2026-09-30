@@ -74,9 +74,7 @@ export function route(req: RouteRequest): RouteDecision {
       );
     }
     if (preference === GOVERNED_HOSTED_MODEL) {
-      throw new CustomProviderPolicyError(
-        "Custom provider belum memiliki model tervalidasi.",
-      );
+      throw new CustomProviderPolicyError("Custom provider belum memiliki model tervalidasi.");
     }
     return { model: preference, routeReason: "selected-hosted" };
   }

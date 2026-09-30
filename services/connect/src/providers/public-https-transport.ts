@@ -91,9 +91,7 @@ export async function resolvePublicHttpsEndpoint(
   return { url, addresses };
 }
 
-async function readBoundedResponse(
-  response: NodeJS.ReadableStream,
-): Promise<Buffer> {
+async function readBoundedResponse(response: NodeJS.ReadableStream): Promise<Buffer> {
   const chunks: Buffer[] = [];
   let total = 0;
   for await (const raw of response) {
@@ -110,10 +108,12 @@ async function readBoundedResponse(
   return Buffer.concat(chunks, total);
 }
 
-export function createPublicHttpsOpenAiTransport(options: {
-  readonly resolveHost?: PublicHttpsResolveHost | undefined;
-  readonly timeoutMs?: number | undefined;
-} = {}): OpenAiCompatibleTransport {
+export function createPublicHttpsOpenAiTransport(
+  options: {
+    readonly resolveHost?: PublicHttpsResolveHost | undefined;
+    readonly timeoutMs?: number | undefined;
+  } = {},
+): OpenAiCompatibleTransport {
   return async (input: OpenAiCompatibleTransportRequest): Promise<Response> => {
     const resolved = await resolvePublicHttpsEndpoint(
       input.endpoint,
@@ -184,7 +184,9 @@ export function createPublicHttpsOpenAiTransport(options: {
         },
       );
 
-      const abort = (): void => request.destroy(new Error("Custom provider request aborted."));
+      const abort = (): void => {
+        request.destroy(new Error("Custom provider request aborted."));
+      };
       input.signal?.addEventListener("abort", abort, { once: true });
       request.once("timeout", () =>
         request.destroy(new Error(`Custom provider timeout setelah ${String(timeoutMs)}ms.`)),

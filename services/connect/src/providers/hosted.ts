@@ -3,10 +3,7 @@ import type { ModelPrice, PinnedModelId, TokenUsage } from "@ecorione/shared-tel
 import type { HostedProviderId } from "../provider-types.js";
 import type { CustomOpenAiConfig } from "../runtime-settings.js";
 import { callAnthropic, estimateAnthropicReservationUsd } from "./anthropic.js";
-import {
-  callCustomOpenAi,
-  estimateCustomOpenAiReservationUsd,
-} from "./custom-openai.js";
+import { callCustomOpenAi, estimateCustomOpenAiReservationUsd } from "./custom-openai.js";
 import type { OpenAiCompatibleTransport } from "./openai-compatible.js";
 import { callNvidia, estimateNvidiaReservationUsd } from "./nvidia.js";
 import { callOpenAi, estimateOpenAiReservationUsd } from "./openai.js";

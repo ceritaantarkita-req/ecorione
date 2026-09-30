@@ -29,11 +29,21 @@ export function AiProviderConnectDialog({
     open,
     providerId,
     secret,
+    customName,
+    customBaseUrl,
+    customModel,
+    customInputUsdPerMTok,
+    customOutputUsdPerMTok,
     pending,
     dialogStatus: status,
     closeDialog: onClose,
     setProviderId: onProviderChange,
     setSecret: onSecretChange,
+    setCustomName,
+    setCustomBaseUrl,
+    setCustomModel,
+    setCustomInputUsdPerMTok,
+    setCustomOutputUsdPerMTok,
   } = controller;
 
   if (!open) return null;
@@ -81,7 +91,9 @@ export function AiProviderConnectDialog({
             aria-label="Provider AI baru"
             value={providerId ?? ""}
             disabled={pending}
-            onChange={(event) => onProviderChange(event.target.value as HostedProviderId)}
+            onChange={(event) =>
+              onProviderChange(event.target.value as HostedProviderId | "__other__")
+            }
           >
             <option value="" disabled>
               Pilih provider
@@ -96,11 +108,75 @@ export function AiProviderConnectDialog({
                     : ""}
               </option>
             ))}
-            <option value="__other__" disabled>
-              Lainnya · Segera
-            </option>
+            <option value="__other__">Lainnya / Custom OpenAI-compatible</option>
           </select>
         </label>
+
+        {providerId === "__other__" ? (
+          <>
+            <label className="ai-connect-dialog__field">
+              Name
+              <input
+                type="text"
+                aria-label="Nama custom provider"
+                placeholder="Contoh: Provider kantor"
+                value={customName}
+                disabled={pending}
+                onChange={(event) => setCustomName(event.target.value)}
+              />
+            </label>
+            <label className="ai-connect-dialog__field">
+              Base URL
+              <input
+                type="url"
+                aria-label="Base URL custom provider"
+                placeholder="https://api.example.com/v1"
+                value={customBaseUrl}
+                disabled={pending}
+                onChange={(event) => setCustomBaseUrl(event.target.value)}
+              />
+            </label>
+            <label className="ai-connect-dialog__field">
+              Model
+              <input
+                type="text"
+                aria-label="Model custom provider"
+                placeholder="model-id"
+                value={customModel}
+                disabled={pending}
+                onChange={(event) => setCustomModel(event.target.value)}
+              />
+            </label>
+            <label className="ai-connect-dialog__field">
+              Input USD / 1M token
+              <input
+                type="number"
+                min="0"
+                step="0.000001"
+                aria-label="Harga input custom provider"
+                value={customInputUsdPerMTok}
+                disabled={pending}
+                onChange={(event) => setCustomInputUsdPerMTok(event.target.value)}
+              />
+            </label>
+            <label className="ai-connect-dialog__field">
+              Output USD / 1M token
+              <input
+                type="number"
+                min="0"
+                step="0.000001"
+                aria-label="Harga output custom provider"
+                value={customOutputUsdPerMTok}
+                disabled={pending}
+                onChange={(event) => setCustomOutputUsdPerMTok(event.target.value)}
+              />
+            </label>
+            <small className="ai-connect-dialog__copy">
+              Custom provider harus memakai public HTTPS. Connect memvalidasi endpoint, DNS,
+              credential, model, dan pricing sebelum aktivasi.
+            </small>
+          </>
+        ) : null}
 
         <label className="ai-connect-dialog__field">
           API key
@@ -130,7 +206,15 @@ export function AiProviderConnectDialog({
           <button
             type="button"
             className="ecr-btn ecr-btn--primary"
-            disabled={pending || providerId === null || secret.length === 0}
+            disabled={
+              pending ||
+              providerId === null ||
+              secret.length === 0 ||
+              (providerId === "__other__" &&
+                (customName.trim().length === 0 ||
+                  customBaseUrl.trim().length === 0 ||
+                  customModel.trim().length === 0))
+            }
             onClick={onConnect}
           >
             {pending ? "Menghubungkan…" : "Connect"}

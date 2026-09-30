@@ -30,13 +30,26 @@ function allowedSettingsPath(path: string, method: Method): string | null {
 
   if (normalized.pathname === "/v1/settings/credentials") {
     if (method !== "GET" || normalized.search.length > 0) return null;
-  } else if (/^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/test$/u.test(normalized.pathname)) {
+  } else if (
+    /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/test$/u.test(normalized.pathname)
+  ) {
     if (method !== "POST" || normalized.search.length > 0) return null;
-  } else if (/^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/connections$/u.test(normalized.pathname)) {
+  } else if (
+    /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/connections$/u.test(
+      normalized.pathname,
+    )
+  ) {
     if (method !== "POST" || normalized.search.length > 0) return null;
-  } else if (/^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/connections\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(normalized.pathname)) {
-    if ((method !== "PATCH" && method !== "DELETE") || normalized.search.length > 0) return null;
-  } else if (/^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}$/u.test(normalized.pathname)) {
+  } else if (
+    /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}\/connections\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(
+      normalized.pathname,
+    )
+  ) {
+    if ((method !== "PATCH" && method !== "DELETE") || normalized.search.length > 0)
+      return null;
+  } else if (
+    /^\/v1\/settings\/credentials\/[a-z0-9][a-z0-9-]{0,63}$/u.test(normalized.pathname)
+  ) {
     if ((method !== "PUT" && method !== "DELETE") || normalized.search.length > 0) return null;
   } else if (normalized.pathname === "/v1/settings/spend-status") {
     if (method !== "GET" || normalized.search.length > 0) return null;

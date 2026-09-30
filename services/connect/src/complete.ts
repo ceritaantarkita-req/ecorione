@@ -181,8 +181,7 @@ export async function complete(
   if (
     decision.routeReason !== "local-consolidation" &&
     hostedProvider === "custom-openai" &&
-    (deps.customOpenAiConfig === undefined ||
-      deps.customOpenAiConfig.model !== decision.model)
+    (deps.customOpenAiConfig === undefined || deps.customOpenAiConfig.model !== decision.model)
   ) {
     throw new CustomProviderPolicyError(
       "Custom provider belum memiliki konfigurasi/model tervalidasi yang cocok.",

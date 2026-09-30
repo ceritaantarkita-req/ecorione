@@ -672,9 +672,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     });
     const transientCredential: ProviderCredentialReader = {
       get(provider, purpose) {
-        return provider === "custom-openai" && purpose === "messages"
-          ? body.secret
-          : undefined;
+        return provider === "custom-openai" && purpose === "messages" ? body.secret : undefined;
       },
     };
     const probe = probeBody("hosted", "Reply exactly ECORIONE_CUSTOM_PROVIDER_OK");

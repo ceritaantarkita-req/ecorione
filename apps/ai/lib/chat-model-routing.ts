@@ -1,11 +1,7 @@
 import type { ChatTarget } from "./chat-history";
 
 export type HostedProviderId =
-  | "anthropic"
-  | "openrouter"
-  | "openai"
-  | "nvidia"
-  | "custom-openai";
+  "anthropic" | "openrouter" | "openai" | "nvidia" | "custom-openai";
 export type ChatProviderSource = "local" | HostedProviderId;
 
 export type ChatRuntimeSnapshot = {
@@ -119,7 +115,10 @@ export function buildChatProviderOptions(
     }
     options.push({
       id: provider.id,
-      displayName: provider.displayName,
+      displayName:
+        provider.id === "custom-openai"
+          ? provider.displayName
+          : hostedProviderLabel(provider.id),
       available: configured.has(provider.id),
     });
   }

@@ -1,7 +1,4 @@
-import {
-  TOKENS_PER_PRICE_UNIT,
-  type ModelPrice,
-} from "@ecorione/shared-telemetry";
+import { TOKENS_PER_PRICE_UNIT, type ModelPrice } from "@ecorione/shared-telemetry";
 import type { StablePrefix } from "@ecorione/context-assembly";
 import type { CustomOpenAiConfig } from "../runtime-settings.js";
 import {
@@ -47,9 +44,7 @@ function adapterInput(input: Omit<CustomOpenAiCallInput, "apiKey" | "transport">
     dynamicText: input.dynamicText,
     userMessage: input.userMessage,
     maxTokensField: "max_tokens" as const,
-    ...(input.maxOutputTokens === undefined
-      ? {}
-      : { maxOutputTokens: input.maxOutputTokens }),
+    ...(input.maxOutputTokens === undefined ? {} : { maxOutputTokens: input.maxOutputTokens }),
   };
 }
 
