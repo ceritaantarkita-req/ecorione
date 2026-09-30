@@ -886,6 +886,7 @@ async function installApiMocks(context) {
       const provider = path.split("/").at(-2);
       return json(route, {
         pass: true,
+        persisted: false,
         latencyMs: 12.5,
         provider,
         model: provider === "anthropic" ? "claude-sonnet-4-5-20250929" : "gpt-5.6-sol",
@@ -1306,7 +1307,7 @@ async function runDesktopJourney() {
     }
     await directProvider.selectOption("openai");
     await addAiDialog
-      .getByRole("textbox", { name: "API key provider", exact: true })
+      .getByLabel("API key provider", { exact: true })
       .fill("stub-direct-openai-credential");
     if ((await addAiDialog.getByRole("button", { name: "Test API key" }).count()) !== 0) {
       throw new Error("desktop-ai: direct onboarding must not expose a separate test step");
