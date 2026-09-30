@@ -294,11 +294,11 @@ The key product change is:
 Pre-4E readiness as of 2026-09-30:
 
 1. **SATISFIED** — the post-#402 repository state was stabilized by PR #405 and merged to `main` as `d32527cb21e3b7209b28b109083be00671464b2b`;
-2. **SATISFIED for the stabilization head** — PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 #328;
+2. **SATISFIED** — PR #405 head `32daed745625c9ede012912a19b8b77d5f89ec90` passed CI #2539, Product Eval #1778, and PCS-06 #328; merged-main CI #2540, Product Eval #1779, and actual Staging Deploy #1835 also passed for `d32527cb...`;
 3. **STILL REQUIRED** — Session 4E must be explicitly opened before runtime implementation;
 4. **STILL REQUIRED** — Session 4E must use this document as the product contract.
 
-No new actual staging deployment is claimed by this readiness update.
+Staging Deploy #1835 proved exact SHA `d32527cb...`, image `staging-d32527cb21e3`, public smoke PASS, Operations healthy, 15/15 configured services running, and 27.41 GiB free disk.
 
 Session 4E should **not** merely expand the current `Search → Test & Enable → Certified` end-user workflow to more model families.
 
