@@ -128,11 +128,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = bb2983d59dbe292c510fbc28aae297bcb23487c4
-image = staging-bb2983d59dbe
+SHA   = e21f6f943fff9c0c2afdc71a45b05d6ab38eff76
+image = staging-e21f6f943fff
 ```
 
-Actual Staging Deploy #1863 proved:
+Actual Staging Deploy #1893 proved:
 
 - exact target/host SHA match;
 - clean detached staging worktree;
@@ -141,12 +141,12 @@ Actual Staging Deploy #1863 proved:
 - Operations healthy;
 - 0 unhealthy services;
 - 15 configured / 15 running;
-- image `staging-bb2983d59dbe`;
-- 21.81 GiB free at sanitized host evidence before cleanup;
-- bounded BuildKit cache pruning ran because capacity was below the 25 GiB target;
-- 29.89 GiB stabilized free disk.
+- image `staging-e21f6f943fff`;
+- 23.91 GiB free at sanitized host evidence before cleanup;
+- stale staging image cleanup completed while retaining the new and previous rollback-set images;
+- 25.26 GiB stabilized free disk.
 
-Staging Deploy #1862 is preserved as valid gate-only evidence; its deploy job was skipped and it is not runtime deployment proof.
+Staging Deploy #1892 is preserved as valid gate-only evidence; its deploy job was skipped and it is not runtime deployment proof.
 
 NVIDIA / NIM remains live with pinned `z-ai/glm-5.3`. Current source uses 60-second default credential/canary deadlines, a 1024-token NVIDIA health-probe cap with low reasoning effort, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
@@ -192,7 +192,7 @@ Next bounded Session 4E slice:
 Bounded Local↔Cloud handoff product behavior, multi-credential priority/failover, and custom-provider onboarding remain later Session 4E work.
 
 Canonical Session 4E checkpoint:
-[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+[verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md](verification/session4e-provider-model-selectors-safe-checkpoint-2026-09-30.md).
 
 Prior Session 4D checkpoint:
 [verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
