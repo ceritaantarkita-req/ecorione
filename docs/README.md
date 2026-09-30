@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-29**
+Last updated: **2026-09-30**
 
 This is the single navigation entry point for repository documentation.
 
@@ -27,10 +27,11 @@ Historical verification is intentionally preserved even when it contains an olde
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current repository/runtime truth and deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — current queue; currently no active product/runtime implementation scope.
-3. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
-4. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
-5. **[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)** — current overall safe-resume pointer; use this before opening any new scope.
+2. **[active-work-plan.md](active-work-plan.md)** — current queue and the pre-4E stabilization boundary.
+3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted pre-Session 4E product contract for two-selector provider/model UX, direct Add AI onboarding, per-message switching, pricing visibility, context handoff, and multi-credential direction.
+4. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
+5. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
+12. **[verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)** — current overall safe-resume pointer; use this before opening any new scope.
 6. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — current OpenRouter Settings model-picker closure.
 7. **[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter automatic-admission closure.
 8. **[verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)** — underlying OpenRouter six-family foundation closure.
@@ -114,6 +115,9 @@ image = staging-9bc4cfd1bbfb
 CI #2509, Product Eval #1748, and actual Staging Deploy #1779 passed. Staging reported healthy Operations, 15/15 services running, exact runtime-SHA match, 24.02 GiB free at host evidence, and 25.36 GiB stabilized free disk. Docs-only merges may advance the exact Git/staging revision without changing this compatibility baseline; use the latest deploy receipt when exact live identity is required.
 
 NVIDIA / NIM is live as a first-class hosted provider with pinned `z-ai/glm-5.3`. The staging operator kill switch is open under bounded spend controls; the runtime hosted toggle is activated through normal Settings/provider activation. The user's actual NVIDIA secret has not been stored or tested by repository work.
+
+Accepted pre-4E product contract:
+[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
 
 Current OpenRouter evidence:
 [verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
