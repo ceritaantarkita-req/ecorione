@@ -164,3 +164,56 @@ Real browser use after PE-08 showed that the approved visual identity is still v
 - keep the current restrained premium identity rather than replacing it with a colorful dashboard aesthetic.
 
 This addendum was the visual baseline for PCS-04 and related PCS-01..PCS-03 product surfaces. That implementation is now CLOSED / PASS at the documented PCS boundaries, with integrated rendered-browser regression closed under PCS-06. Any new visual redesign requires a new explicit scope rather than reopening this addendum.
+
+---
+
+## 12. Pre-Session 4E Ai Provider + Model Interaction — 2026-09-30
+
+This section supersedes older normal-user wording that centers the Ai composer on a Local/Hosted route selector or exposes model admission terminology directly.
+
+### Canonical composer control
+
+Use two adjacent selectors:
+
+```text
+[ Provider / Source ▼ ]   [ Model ▼ ]
+```
+
+Examples:
+
+```text
+[ Local ▼ ]        [ Qwen 3.5 9B ▼ ]
+[ OpenRouter ▼ ]   [ DeepSeek 4 Pro ▼ ]
+[ OpenAI ▼ ]       [ GPT-5.6 ▼ ]
+[ Claude ▼ ]       [ Claude Sonnet 4.5 ▼ ]
+[ NVIDIA ▼ ]       [ GLM ... ▼ ]
+```
+
+Provider/source menu:
+
+```text
+Local
+Claude
+OpenAI
+NVIDIA
+OpenRouter
+────────────
++ Tambah AI
+```
+
+Rules:
+
+1. the first selector chooses the provider/source;
+2. the second selector chooses a model from that provider/source;
+3. provider/model changes apply to the next message and do not require a new conversation;
+4. `+ Tambah AI` opens a lightweight connection modal from Ai rather than forcing a Settings detour;
+5. normal users do not operate `Selectable`, `Certified`, `Executable`, or `Test & Enable` states;
+6. compatible OpenRouter catalog models should appear directly in the model selector;
+7. hosted model input/output price per 1M tokens should be visible or immediately inspectable;
+8. Settings remains the advanced management surface for AI Connections, multiple credentials, budgets, Local runtime, privacy/policy, and operator diagnostics;
+9. multiple API keys for one provider are represented as underlying AI Connections, not duplicate top-level provider rows in the composer;
+10. Local↔Cloud switching must preserve privacy boundaries and must not silently upload the entire local-only conversation.
+
+The full accepted contract is [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
+
+This section defines the target product UX. It does not claim the current runtime already implements it.
