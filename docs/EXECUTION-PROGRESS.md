@@ -226,8 +226,8 @@ Evidence:
 
 | Scope | State |
 |---|---|
-| Product/runtime implementation | NONE ACTIVE — SESSION 5 CLOSED / PASS / STAGING VERIFIED |
-| Repository truth/docs reconciliation | CLOSING SESSION 5 CURRENT TRUTH |
+| Product/runtime implementation | NONE ACTIVE — SESSION 6 CLOSED / PASS / STAGING VERIFIED |
+| Repository truth/docs reconciliation | SESSION 6 CURRENT TRUTH CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | NVIDIA hosted-provider trial | CLOSED / PASS |
 | NVIDIA work-branch cleanup | CLOSED / PASS |
@@ -240,13 +240,14 @@ Evidence:
 | OpenRouter Ai chat quick-switch Session 4D | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E + 4F final integration | CLOSED / PASS / STAGING VERIFIED |
 | Session 5 Project Source Picker | CLOSED / PASS / STAGING VERIFIED |
-| Session 6 | NOT STARTED / NEXT ONLY IF EXPLICITLY AUTHORIZED |
+| Session 6 External Source Lifecycle | CLOSED / PASS / STAGING VERIFIED |
+| Session 7 | NOT STARTED / ONLY IF EXPLICITLY AUTHORIZED |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
 
 Latest overall safe-resume checkpoint:
-[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
+[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 Underlying NVIDIA/runtime evidence:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
