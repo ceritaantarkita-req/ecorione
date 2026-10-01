@@ -1,10 +1,10 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-10-01**
+Last updated: **2026-10-02**
 
-Status: **SESSION 6 EXTERNAL SOURCE LIFECYCLE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
+Status: **SESSION 7 SCHEDULE PRODUCT CONVERGENCE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
 
-Current resume pointer: [verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md). PR #421 final reviewed head `828368eb6eaa00c991e52b0e4cfeea8d3abbfc35` merged as runtime-changing `main` `15f007c5d248df8319644f2d9a6c4c7905c70681`. Merged-main CI #2610, Product Eval #1849, and MCP External HTTPS Acceptance #1204 passed; Staging Deploy #1968 deployed exact runtime image `staging-15f007c5d248`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, exact-host identity matched, and 27.39 GiB stabilized free disk.
+Current resume pointer: [verification/session7-schedule-product-convergence-closure-2026-10-02.md](verification/session7-schedule-product-convergence-closure-2026-10-02.md). PR #423 final reviewed head `3530412ea7c238338b102db44d0f9ee8f01226c1` merged as runtime-changing `main` `ebf52f190eeded99e4ee68881fd6925f2f0f6523`. PR-head CI #2620, Product Eval #1859, and PCS-06 #377 passed; merged-main CI #2621 and Product Eval #1860 passed; Staging Deploy #1990 deployed exact runtime image `staging-ebf52f190eed`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 configured services running, exact-host identity matched, and 29.91 GiB stabilized free disk.
 
 ## Current queue
 
@@ -34,6 +34,7 @@ Closed current baselines:
 - Session 4F — final provider/model UX polish and closure — CLOSED / PASS / STAGING VERIFIED through PR #417.
 - Session 5 — Project Source Picker productization + local owner-service bootstrap — CLOSED / PASS / STAGING VERIFIED through PR #419;
 - Session 6 — external-source lifecycle / refresh / indexing productization — CLOSED / PASS / STAGING VERIFIED through PR #421.
+- Session 7 — Schedule product convergence (`/schedule`, persistent AI draft composer, Project/Flow/Temporal continuity) — CLOSED / PASS / STAGING VERIFIED through PR #423.
 
 No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 
@@ -100,7 +101,7 @@ Underlying provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Overall safe-resume checkpoint:
-[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
+[verification/session7-schedule-product-convergence-closure-2026-10-02.md](verification/session7-schedule-product-convergence-closure-2026-10-02.md).
 
 ## OpenRouter Sessions 2–4F — CLOSED / PASS / STAGING VERIFIED
 
