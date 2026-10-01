@@ -1,18 +1,18 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-10-01**
+Last updated: **2026-10-02**
 
-Status: **CURRENT / SESSION 6 EXTERNAL SOURCE LIFECYCLE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 7 SCHEDULE PRODUCT CONVERGENCE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository                = ceritaantarkita-req/ecorione
 default branch            = main
-runtime-changing main     = 15f007c5d248df8319644f2d9a6c4c7905c70681 (PR #421 merge)
-session 6 reviewed head   = 828368eb6eaa00c991e52b0e4cfeea8d3abbfc35 (PR #421 head)
-staging-verified runtime  = 15f007c5d248df8319644f2d9a6c4c7905c70681
-staging image             = staging-15f007c5d248
+runtime-changing main     = ebf52f190eeded99e4ee68881fd6925f2f0f6523 (PR #423 merge)
+session 7 reviewed head   = 3530412ea7c238338b102db44d0f9ee8f01226c1 (PR #423 head)
+staging-verified runtime  = ebf52f190eeded99e4ee68881fd6925f2f0f6523
+staging image             = staging-ebf52f190eed
 ```
 
 Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Exact PR head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI #2600, Product Eval #1839, and PCS-06 Integrated Browser Acceptance #371. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI #2601 and Product Eval #1840 passed, and actual Staging Deploy #1950 deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`. Public/auth and MCP smoke passed, Operations reported `healthy: true`, exact-host identity matched with a clean worktree, all **15/15** configured services were running, and capacity stabilized at **29.95 GiB free**.
@@ -23,8 +23,10 @@ Session 5 Project Source Picker is CLOSED / PASS / STAGING VERIFIED through PR #
 
 Session 6 External Source Lifecycle is CLOSED / PASS / STAGING VERIFIED through PR #421. URL/MCP snapshots now have explicit `SNAPSHOT_READY / INDEXED / DETACHED` lifecycle metadata, refresh/index timestamps, content-addressed refresh semantics, direct external-text indexing into Project-scoped Context, and Refresh/Index/Re-index product actions while owner boundaries remain unchanged.
 
+Session 7 Schedule Product Convergence is CLOSED / PASS / STAGING VERIFIED through PR #423. Schedule is now first-class at `/schedule` while `/work` remains a compatibility route; Project-aware list/day/week/month/year views, exact Flow-version links, Runs, and Temporal projections are preserved. The natural-language Schedule AI composer is persistently available at the bottom of the surface and remains draft-only until explicit Save through Flow Trigger ownership into Temporal.
+
 Current safe-resume checkpoint:
-[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
+[verification/session7-schedule-product-convergence-closure-2026-10-02.md](verification/session7-schedule-product-convergence-closure-2026-10-02.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -33,32 +35,30 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = 15f007c5d248df8319644f2d9a6c4c7905c70681
-image = staging-15f007c5d248
+SHA   = ebf52f190eeded99e4ee68881fd6925f2f0f6523
+image = staging-ebf52f190eed
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| PR #421 reviewed head | `828368eb6eaa00c991e52b0e4cfeea8d3abbfc35` |
-| PR-head CI #2609 | PASS |
-| PR-head Product Eval #1848 | PASS |
-| PR-head MCP External HTTPS #1203 | PASS |
-| PR-head PCS-06 browser #374 | PASS |
-| merged-main CI #2610 | PASS |
-| merged-main Product Eval #1849 | PASS |
-| merged-main MCP External HTTPS #1204 | PASS |
-| Staging Deploy #1967 | gate-only PASS / deploy skipped |
-| Staging Deploy #1968 | actual deploy PASS |
-| expected host SHA | matched `15f007c5d248df8319644f2d9a6c4c7905c70681` |
-| staging image | `staging-15f007c5d248` |
+| PR #423 reviewed head | `3530412ea7c238338b102db44d0f9ee8f01226c1` |
+| PR-head CI #2620 | PASS |
+| PR-head Product Eval #1859 | PASS |
+| PR-head PCS-06 browser #377 | PASS |
+| merged-main CI #2621 | PASS |
+| merged-main Product Eval #1860 | PASS |
+| Staging Deploy #1989 | gate-only PASS / deploy skipped while peer gate incomplete |
+| Staging Deploy #1990 | actual deploy PASS |
+| expected host SHA | matched `ebf52f190eeded99e4ee68881fd6925f2f0f6523` |
+| staging image | `staging-ebf52f190eed` |
 | public/auth + MCP smoke | PASS |
 | Operations | `healthy: true`, `unhealthyServices: []` |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
 | exact-host worktree | clean / DETACHED |
-| stabilized free disk after rollback-set cleanup | 27.39 GiB |
+| stabilized free disk after rollback-set cleanup | 29.91 GiB |
 
 SumoPod remains **staging, not production**.
 
