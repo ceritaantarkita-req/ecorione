@@ -2,27 +2,28 @@
 
 Last updated: **2026-10-01**
 
-Status: **CURRENT SUMMARY / SESSION 5 CLOSED / PASS / STAGING VERIFIED**
+Status: **CURRENT SUMMARY / SESSION 6 CLOSED / PASS / STAGING VERIFIED**
 
 ## Audited repository/staging baseline
 
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = 12d62cd436ce69bb57e51cdaaf0894e73def4c03 (PR #419)
-image                   = staging-12d62cd436ce
-CI                      = #2605 PASS
-Product Eval            = #1844 PASS
-PR browser acceptance   = #372 PASS
-Staging Deploy          = #1958 PASS
+runtime / staging       = 15f007c5d248df8319644f2d9a6c4c7905c70681 (PR #421)
+image                   = staging-15f007c5d248
+CI                      = #2610 PASS
+Product Eval            = #1849 PASS
+MCP External HTTPS      = #1204 PASS
+PR browser acceptance   = #374 PASS
+Staging Deploy          = #1968 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 25.27 GiB stabilized
+free disk               = 27.39 GiB stabilized
 ```
 
-This baseline includes closed Sessions 4E/4F plus Session 5 Project Source Picker productization. Session 5 preserves owner-backed Project source references while adding searchable Artifact/Space/Flow/MCP selection, exact attach/detach state, reversible binding UX, and the normal local owner-service/Temporal bootstrap required to exercise those catalogs.
+This baseline includes closed Sessions 4E/4F, Session 5 Project Source Picker productization, and Session 6 External Source Lifecycle. Session 6 adds explicit URL/MCP snapshot lifecycle metadata, content-addressed refresh semantics, direct text indexing into Context, and Refresh/Index/Re-index UX while preserving owner-backed source boundaries.
 
-There is **no active implementation queue**. Session 6 external-source ingestion/indexing/refresh/lifecycle is the next roadmap slot only after explicit operator authorization.
+There is **no active implementation queue**. Session 7 remains unopened until explicit operator authorization.
 
 ## Closed foundational roadmaps
 
@@ -129,11 +130,11 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
-image = staging-12d62cd436ce
+SHA   = 15f007c5d248df8319644f2d9a6c4c7905c70681
+image = staging-15f007c5d248
 ```
 
-Actual Staging Deploy #1958 proved:
+Actual Staging Deploy #1968 proved:
 
 - exact target/host SHA match;
 - clean detached staging worktree;
@@ -141,17 +142,16 @@ Actual Staging Deploy #1958 proved:
 - MCP metadata/challenge checks PASS;
 - Operations healthy with no unhealthy services;
 - 15 configured / 15 running;
-- image `staging-12d62cd436ce`;
-- 23.93 GiB free at sanitized host evidence before cleanup;
+- image `staging-15f007c5d248`;
 - stale staging image cleanup retained the new and previous rollback-set images;
-- 25.27 GiB stabilized free disk.
+- 27.39 GiB stabilized free disk.
 
-Staging Deploy #1957 is preserved as valid gate-only evidence; its deploy job was skipped because peer CI was not green yet, so it is not runtime deployment proof.
+Staging Deploy #1967 is preserved as valid gate-only evidence; #1968 is the actual runtime deployment proof.
 
 NVIDIA / NIM remains live with pinned `z-ai/glm-5.3`. Current source uses 60-second default credential/canary deadlines, a 1024-token NVIDIA health-probe cap with low reasoning effort, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
-Current Session 5 checkpoint:
-[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
+Current Session 6 checkpoint:
+[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 This is staging evidence, not production promotion.
 
@@ -173,14 +173,17 @@ This is staging evidence, not production promotion.
 | Session 4E final integration | CLOSED / PASS / STAGING VERIFIED |
 | Session 4F provider/model UX closure | CLOSED / PASS / STAGING VERIFIED |
 | Session 5 Project Source Picker | CLOSED / PASS / STAGING VERIFIED |
+| Session 6 External Source Lifecycle | CLOSED / PASS / STAGING VERIFIED |
 
 Sessions 4E and 4F are fully closed through PR #417 and their canonical closure checkpoint. Current behavior includes compatible dynamic OpenRouter execution, visible catalog pricing, adjacent provider/model selectors, direct provider onboarding, multi-credential priority/failover, bounded custom OpenAI-compatible onboarding, and Local↔Hosted context isolation. There is no remaining Session 4E/4F implementation queue.
 
 Canonical Session 4E/4F checkpoint:
 [verification/session4ef-closure-2026-10-01.md](verification/session4ef-closure-2026-10-01.md).
 
-Session 5 Project Source Picker is fully closed through PR #419 and Staging Deploy #1958. Canonical Session 5 checkpoint:
-[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
+Session 5 Project Source Picker is fully closed through PR #419 and Staging Deploy #1958.
+
+Session 6 External Source Lifecycle is fully closed through PR #421 and Staging Deploy #1968. Canonical Session 6 checkpoint:
+[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 Prior Session 4D checkpoint:
 [verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
