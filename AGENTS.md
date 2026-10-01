@@ -21,21 +21,22 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Latest audited **runtime-changing** repository/staging baseline:
 
 ```text
-runtime baseline = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
-image            = staging-12d62cd436ce
-CI               = #2605 PASS
-Product Eval     = #1844 PASS
-PCS-06 browser   = #372 PASS on reviewed PR head
-Staging Deploy   = #1958 PASS
+runtime baseline = 15f007c5d248df8319644f2d9a6c4c7905c70681
+image            = staging-15f007c5d248
+CI               = #2610 PASS
+Product Eval     = #1849 PASS
+MCP HTTPS        = #1204 PASS
+PCS-06 browser   = #374 PASS on reviewed PR head
+Staging Deploy   = #1968 PASS
 Operations       = healthy
 services         = 15/15 running
-free disk        = 25.27 GiB stabilized
+free disk        = 27.39 GiB stabilized
 ```
 
-Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Session 5 Project Source Picker is CLOSED / PASS / STAGING VERIFIED through PR #419; its reviewed head `a299e88e52b161fd4246a09aa411bf87357e8b18` passed CI #2604, Product Eval #1843, and PCS-06 #372, merged as `12d62cd436ce69bb57e51cdaaf0894e73def4c03`, then passed merged-main CI #2605, Product Eval #1844, and actual Staging Deploy #1958. Do not reopen those scopes for freshness.
+Docs-only checkpoint commits may advance live Git revision identity without changing this runtime compatibility baseline. Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Session 5 Project Source Picker is CLOSED / PASS / STAGING VERIFIED through PR #419. Session 6 External Source Lifecycle is CLOSED / PASS / STAGING VERIFIED through PR #421; final reviewed head `828368eb6eaa00c991e52b0e4cfeea8d3abbfc35` passed CI #2609, Product Eval #1848, MCP HTTPS #1203, and PCS-06 #374, merged as `15f007c5d248df8319644f2d9a6c4c7905c70681`, then passed merged-main CI #2610, Product Eval #1849, MCP HTTPS #1204, and actual Staging Deploy #1968. Do not reopen Sessions 4E–6 for freshness.
 
 Current overall safe-resume pointer:
-`docs/verification/session5-project-source-picker-closure-2026-10-01.md`.
+`docs/verification/session6-external-source-lifecycle-closure-2026-10-01.md`.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
@@ -57,7 +58,7 @@ Latest NVIDIA test/runtime checkpoint:
 Underlying provider rollout checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
-Use `docs/verification/session5-project-source-picker-closure-2026-10-01.md` as the overall handoff pointer. No implementation session is active until the operator explicitly opens the next scope.
+Use `docs/verification/session6-external-source-lifecycle-closure-2026-10-01.md` as the overall handoff pointer. No implementation session is active until the operator explicitly opens the next scope.
 
 Closed roadmap families:
 
@@ -80,9 +81,10 @@ Closed roadmap families:
 - Session 4E slice 3 — direct `+ Tambah AI` onboarding — **CLOSED / PASS / STAGING VERIFIED** through PR #411;
 - Session 4E slice 4 — multi-credential AI Connections + bounded failover — **CLOSED / PASS / STAGING VERIFIED** through PR #415;
 - Session 4E final integration + Session 4F closure — **CLOSED / PASS / STAGING VERIFIED** through PR #417;
-- Session 5 Project Source Picker + local owner-service bootstrap — **CLOSED / PASS / STAGING VERIFIED** through PR #419.
+- Session 5 Project Source Picker + local owner-service bootstrap — **CLOSED / PASS / STAGING VERIFIED** through PR #419;
+- Session 6 external-source lifecycle / refresh / indexing productization — **CLOSED / PASS / STAGING VERIFIED** through PR #421.
 
-There is no active implementation queue. The next roadmap slot may be Session 6 external-source ingestion/indexing/refresh/lifecycle productization only after explicit operator authorization. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
+There is no active implementation queue. Session 6 external-source ingestion/indexing/refresh/lifecycle productization is closed. Session 7 remains unopened until explicit operator authorization. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
 
 Open Issue #277 remains the deferred DR-2 tracker.
 
@@ -107,7 +109,7 @@ Current invariants:
 Do **not** hard-code newly discovered GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other catalog models into the static verified registry merely to make them executable. Use the dynamic Connect-owned admission/activation path and preserve fresh dispatch-time validation.
 
 Current checkpoint:
-`docs/verification/session5-project-source-picker-closure-2026-10-01.md`.
+`docs/verification/session6-external-source-lifecycle-closure-2026-10-01.md`.
 
 Prior Ai quick-switch checkpoint:
 `docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md`.
@@ -195,7 +197,7 @@ Canonical checkpoint:
 
 ## Current active / separate scopes
 
-Session 4E is the active bounded product/runtime scope. Continue only the slice named by `docs/active-work-plan.md`; do not widen it implicitly.
+No implementation session is active. Sessions 4E, 4F, 5, and 6 are closed at their documented boundaries. Open a new session only when the operator explicitly authorizes it; do not widen prior scopes implicitly.
 
 Do not start these separate scopes without explicit operator authorization:
 
