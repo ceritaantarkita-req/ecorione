@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type {
+  ProjectExternalSourceLifecycle,
   ProjectMcpResourceIngestResponse,
   ProjectSourceExtractResponse,
   ProjectSourceResourceType,
@@ -28,6 +29,21 @@ interface SourceCatalogItem {
   readonly detail: string;
 }
 
+function mcpExternalSourceKey(serverId: string, resourceUri: string): string {
+  return JSON.stringify([serverId, resourceUri]);
+}
+
+function lifecycleLabel(lifecycle: ProjectExternalSourceLifecycle): string {
+  switch (lifecycle.state) {
+    case "SNAPSHOT_READY":
+      return "Snapshot ready";
+    case "INDEXED":
+      return "Indexed";
+    case "DETACHED":
+      return "Snapshot detached";
+  }
+}
+
 interface McpResourceItem {
   readonly uri: string;
   readonly name?: string | undefined;
@@ -48,6 +64,7 @@ export function ProjectSources(props: {
   readonly workspaceId: string;
 }): React.JSX.Element {
   const [sources, setSources] = useState<ProjectSourceView[]>([]);
+  const [lifecycles, setLifecycles] = useState<ProjectExternalSourceLifecycle[]>([]);
   const [sourceCatalog, setSourceCatalog] = useState<SourceCatalogItem[]>([]);
   const [catalogWarnings, setCatalogWarnings] = useState<string[]>([]);
   const [resourceType, setResourceType] = useState<ProjectSourceResourceType>("artifact");
@@ -103,6 +120,16 @@ export function ProjectSources(props: {
     setSources((body as { sources: ProjectSourceView[] }).sources);
   }, [endpoint, props.workspaceId]);
 
+  const loadLifecycle = useCallback(async () => {
+    const response = await fetch(
+      `${endpoint}/lifecycle?workspaceId=${encodeURIComponent(props.workspaceId)}`,
+      { cache: "no-store" },
+    );
+    const body: unknown = await response.json().catch(() => undefined);
+    if (!response.ok) throw new Error(errorMessage(body, "Gagal memuat source lifecycle."));
+    setLifecycles((body as { lifecycles: ProjectExternalSourceLifecycle[] }).lifecycles);
+  }, [endpoint, props.workspaceId]);
+
   const loadCatalog = useCallback(async () => {
     setCatalogLoading(true);
     try {
@@ -122,10 +149,10 @@ export function ProjectSources(props: {
 
   useEffect(() => {
     setFeedback(null);
-    void Promise.all([load(), loadCatalog()]).catch((error: unknown) =>
+    void Promise.all([load(), loadLifecycle(), loadCatalog()]).catch((error: unknown) =>
       setFeedback(error instanceof Error ? error.message : "Gagal memuat Project Sources."),
     );
-  }, [load, loadCatalog]);
+  }, [load, loadCatalog, loadLifecycle]);
 
   async function upload(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -250,9 +277,9 @@ export function ProjectSources(props: {
       if (!response.ok) throw new Error(errorMessage(body, "Gagal mengambil MCP resource."));
       const ingested = body as ProjectMcpResourceIngestResponse;
       setFeedback(
-        `Connector snapshot tersimpan → Artifact ${ingested.artifact.id}. Gunakan Extract pada Artifact untuk derived Project context.`,
+        `Connector snapshot tersimpan → Artifact ${ingested.artifact.id}. Gunakan Index pada Artifact untuk derived Project context.`,
       );
-      await Promise.all([load(), loadCatalog()]);
+      await Promise.all([load(), loadLifecycle(), loadCatalog()]);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal mengambil MCP resource.");
     } finally {
@@ -285,9 +312,9 @@ export function ProjectSources(props: {
       if (!response.ok) throw new Error(errorMessage(body, "Gagal mengambil URL source."));
       const ingested = body as ProjectUrlIngestResponse;
       setFeedback(
-        `URL snapshot tersimpan → Artifact ${ingested.artifact.id}. Gunakan Extract pada Artifact untuk derived Project context.`,
+        `URL snapshot tersimpan → Artifact ${ingested.artifact.id}. Gunakan Index pada Artifact untuk derived Project context.`,
       );
-      await Promise.all([load(), loadCatalog()]);
+      await Promise.all([load(), loadLifecycle(), loadCatalog()]);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal mengambil URL source.");
     } finally {
@@ -320,8 +347,9 @@ export function ProjectSources(props: {
       const extracted = body as ProjectSourceExtractResponse;
       const preview = extracted.result.text.trim().slice(0, 160);
       setFeedback(
-        `Extraction ${extracted.task} selesai → Project context ${extracted.contextEpisodeId}.${preview.length === 0 ? "" : ` ${preview}`}`,
+        `Index ${extracted.task} selesai → Project context ${extracted.contextEpisodeId}.${preview.length === 0 ? "" : ` ${preview}`}`,
       );
+      await loadLifecycle();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal mengekstrak source.");
     } finally {
@@ -351,7 +379,7 @@ export function ProjectSources(props: {
       });
       const body: unknown = await response.json().catch(() => undefined);
       if (!response.ok) throw new Error(errorMessage(body, "Gagal melepas source."));
-      await load();
+      await Promise.all([load(), loadLifecycle()]);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal melepas source.");
     } finally {
@@ -374,7 +402,7 @@ export function ProjectSources(props: {
           type="button"
           disabled={catalogLoading || busyKey !== null}
           onClick={() =>
-            void loadCatalog().catch((error: unknown) =>
+            void Promise.all([loadCatalog(), loadLifecycle()]).catch((error: unknown) =>
               setFeedback(
                 error instanceof Error ? error.message : "Gagal memuat source catalog.",
               ),
@@ -567,6 +595,19 @@ export function ProjectSources(props: {
                 item.resourceType === source.binding.resourceType &&
                 item.resourceId === source.binding.resourceId,
             );
+            const sourceLifecycle =
+              source.binding.resourceType === "url"
+                ? lifecycles.find(
+                    (item) =>
+                      item.sourceType === "url" &&
+                      item.sourceKey === source.binding.resourceId &&
+                      item.role === source.binding.role,
+                  )
+                : source.binding.resourceType === "artifact"
+                  ? lifecycles.find(
+                      (item) => item.latestArtifactId === source.binding.resourceId,
+                    )
+                  : undefined;
             return (
               <li key={key} className={styles.sourceItem}>
                 <div className={styles.sourceInfo}>
@@ -588,37 +629,62 @@ export function ProjectSources(props: {
                     {catalogItem === undefined ? "" : ` · ${catalogItem.detail}`}
                   </small>
                   {source.unavailableReason !== null ? <p>{source.unavailableReason}</p> : null}
+                  {sourceLifecycle !== undefined ? (
+                    <small className={styles.sourceLifecycle}>
+                      {lifecycleLabel(sourceLifecycle)} · refreshed{" "}
+                      {new Date(sourceLifecycle.lastRefreshedAt).toLocaleString()}
+                      {sourceLifecycle.lastIndexedAt === null
+                        ? ""
+                        : ` · indexed ${new Date(sourceLifecycle.lastIndexedAt).toLocaleString()}`}
+                    </small>
+                  ) : null}
                   {source.binding.resourceType === "mcp-server" &&
                   mcpResources[source.binding.resourceId] !== undefined ? (
                     <div className={styles.mcpResourceList}>
                       {mcpResources[source.binding.resourceId]?.length === 0 ? (
                         <small>Tidak ada resource yang diiklankan server ini.</small>
                       ) : (
-                        mcpResources[source.binding.resourceId]?.map((resource) => (
-                          <div key={resource.uri} className={styles.mcpResourceItem}>
-                            <div>
-                              <strong>{resource.name ?? resource.uri}</strong>
-                              <code>{resource.uri}</code>
-                              <small>
-                                {resource.mimeType ?? "mime unknown"}
-                                {resource.description === undefined
-                                  ? ""
-                                  : ` · ${resource.description}`}
-                              </small>
+                        mcpResources[source.binding.resourceId]?.map((resource) => {
+                          const resourceLifecycle = lifecycles.find(
+                            (item) =>
+                              item.sourceType === "mcp-resource" &&
+                              item.sourceKey ===
+                                mcpExternalSourceKey(source.binding.resourceId, resource.uri) &&
+                              item.role === source.binding.role,
+                          );
+                          return (
+                            <div key={resource.uri} className={styles.mcpResourceItem}>
+                              <div>
+                                <strong>{resource.name ?? resource.uri}</strong>
+                                <code>{resource.uri}</code>
+                                <small>
+                                  {resource.mimeType ?? "mime unknown"}
+                                  {resource.description === undefined
+                                    ? ""
+                                    : ` · ${resource.description}`}
+                                </small>
+                                {resourceLifecycle !== undefined ? (
+                                  <small className={styles.sourceLifecycle}>
+                                    {lifecycleLabel(resourceLifecycle)}
+                                  </small>
+                                ) : null}
+                              </div>
+                              <button
+                                className="ecr-btn ecr-btn--primary"
+                                type="button"
+                                disabled={busyKey !== null}
+                                onClick={() => void ingestMcpResource(source, resource)}
+                              >
+                                {busyKey ===
+                                `mcp-ingest:${source.binding.resourceId}:${resource.uri}`
+                                  ? "Refreshing..."
+                                  : resourceLifecycle === undefined
+                                    ? "Ingest"
+                                    : "Refresh"}
+                              </button>
                             </div>
-                            <button
-                              className="ecr-btn ecr-btn--primary"
-                              type="button"
-                              disabled={busyKey !== null}
-                              onClick={() => void ingestMcpResource(source, resource)}
-                            >
-                              {busyKey ===
-                              `mcp-ingest:${source.binding.resourceId}:${resource.uri}`
-                                ? "Ingesting..."
-                                : "Ingest"}
-                            </button>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   ) : null}
@@ -645,8 +711,10 @@ export function ProjectSources(props: {
                     >
                       {busyKey ===
                       `ingest-url:${source.binding.resourceId}:${source.binding.role}`
-                        ? "Ingesting..."
-                        : "Ingest snapshot"}
+                        ? "Refreshing..."
+                        : sourceLifecycle === undefined
+                          ? "Ingest snapshot"
+                          : "Refresh snapshot"}
                     </button>
                   ) : null}
                   {source.binding.resourceType === "artifact" ? (
@@ -657,8 +725,14 @@ export function ProjectSources(props: {
                       onClick={() => void extract(source)}
                     >
                       {busyKey === `extract:${source.binding.resourceId}`
-                        ? "Extracting..."
-                        : "Extract"}
+                        ? sourceLifecycle === undefined
+                          ? "Extracting..."
+                          : "Indexing..."
+                        : sourceLifecycle === undefined
+                          ? "Extract"
+                          : sourceLifecycle.state === "INDEXED"
+                            ? "Re-index"
+                            : "Index"}
                     </button>
                   ) : null}
                   <button

@@ -37,6 +37,6 @@ describe("A-05b.3b Project MCP resource ingestion contract", () => {
     expect(ui).toContain("`${endpoint}/mcp-resources");
     expect(ui).toContain("`${endpoint}/ingest-mcp-resource`");
     expect(ui).toContain('"Browse resources"');
-    expect(ui).toContain("Gunakan Extract pada Artifact");
+    expect(ui).toContain("Gunakan Index pada Artifact");
   });
 });
