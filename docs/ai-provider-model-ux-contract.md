@@ -1,12 +1,12 @@
 # AI Provider + Model UX Contract — Session 4E
 
-**Status:** ACCEPTED PRODUCT CONTRACT · 2026-09-30  
-**Scope:** Ai provider/model UX, OpenRouter execution entry, multi-credential direction, and Local↔Cloud context handoff.  
-**Implementation state:** **PARTIAL / ACTIVE**. PR #407 implements compatible OpenRouter auto-execution + catalog pricing; PR #409 implements the canonical provider/source + provider-specific model selectors; PR #411 implements direct `+ Tambah AI` onboarding; PR #415 implements multi-credential AI Connections with priority and bounded failover. The full contract is not yet complete.
+**Status:** ACCEPTED + FULFILLED PRODUCT CONTRACT · closed 2026-10-01
+**Scope:** Ai provider/model UX, OpenRouter execution entry, multi-credential direction, custom OpenAI-compatible onboarding, and Local↔Hosted context handoff.
+**Implementation state:** **CLOSED / PASS / STAGING VERIFIED**. PRs #407, #409, #411, and #415 delivered the staged foundations; PR #417 closed the remaining custom-provider, Local↔Hosted, and final provider/model UX contract.
 
-## Implementation progress — 2026-09-30
+## Implementation progress — closed 2026-10-01
 
-Closed / staging-verified through PR #415:
+Closed / staging-verified through PR #417:
 
 - fresh compatible OpenRouter catalog models can be selected and used without normal-user per-model `Test & Enable`;
 - catalog input/output pricing is visible in the Ai OpenRouter model picker;
@@ -22,16 +22,14 @@ Closed / staging-verified through PR #415:
 - Settings can enable/disable, make-primary, and remove individual AI Connections;
 - hosted dispatch uses priority order and bounded invalid-credential/unreachable failover without changing the requested provider/model or bypassing policy/spend/sensitivity/operator denial;
 - successful completion preserves non-secret credential-connection provenance;
-- exact runtime baseline `15dc2a131778c2fe1249dda34e3291f9a3c8beae` passed merged-main CI #2597, Product Eval #1836, MCP HTTPS #1201, and actual Staging Deploy #1942.
+- bounded `Lainnya / Custom OpenAI-compatible` onboarding is implemented with Connect-owned validation/Vault persistence and public-HTTPS/SSRF protections;
+- Local↔Hosted continuity preserves Project-scoped hosted-eligible context without silently uploading local-only history;
+- final provider/model selector, loading/error, and connection feedback contracts are closed;
+- arbitrary custom-provider success-path proof remains dependent on a real user-controlled endpoint/credential and is not unfinished product code;
+- final Session 4E/4F runtime baseline `6170ee5d67ee4b105771d8ce2c348afba6cce896` passed merged-main CI #2601, Product Eval #1840, and actual Staging Deploy #1950.
 
-Still open in this contract:
-
-- bounded Local↔Cloud context handoff product path;
-- `Lainnya` / custom OpenAI-compatible provider onboarding;
-- broader live cross-provider completion evidence where real credentials/providers are available.
-
-Canonical evidence:
-[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
+Canonical closure evidence:
+[verification/session4ef-closure-2026-10-01.md](verification/session4ef-closure-2026-10-01.md).
 
 ## 1. Why this contract exists
 
@@ -318,36 +316,53 @@ The key product change is:
 
 > **the machine performs routine governance; the normal user does not approve models one-by-one.**
 
-## 12. Session 4E implementation boundary
+## 12. Session 4E/4F implementation boundary
 
-Current implementation state as of 2026-09-30:
+Final implementation state as of 2026-10-01:
 
 1. **SATISFIED** — post-#402 stabilization is closed through PR #405;
 2. **SATISFIED** — compatible OpenRouter auto-execution + visible catalog pricing is closed/staging-verified through PR #407;
 3. **SATISFIED** — canonical adjacent `[Provider / Source ▼] [Model ▼]` controls, provider-specific model lists, and same-conversation next-message switching are closed/staging-verified through PR #409;
 4. **SATISFIED** — direct `+ Tambah AI` onboarding from Ai using Connect-owned credential validation/Vault authority is closed/staging-verified through PR #411;
 5. **SATISFIED** — multi-credential AI Connections beneath one logical provider, explicit priority, bounded failover, Settings management, and non-secret connection provenance are closed/staging-verified through PR #415;
-6. **ACTIVE NEXT** — `+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding;
-7. **LATER IN 4E** — bounded Local↔Cloud context handoff and broader live provider evidence.
+6. **SATISFIED** — `+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding is closed/staging-verified through PR #417 with bounded public-HTTPS/SSRF/DNS-rebinding protections and Connect-owned validation/Vault persistence;
+7. **SATISFIED** — bounded Local↔Hosted continuity preserves the existing Project-scoped hosted-eligible context boundary and does not silently replay local-only history into hosted prompts;
+8. **SATISFIED** — final provider/model selector, loading/error, connection feedback, and custom-provider presentation are closed through Session 4F in PR #417.
 
-Staging Deploy #1942 proved exact SHA `15dc2a131778c2fe1249dda34e3291f9a3c8beae`, image `staging-15dc2a131778`, public smoke PASS, Operations healthy, 15/15 configured services running, and 27.33 GiB stabilized free disk.
+Final Session 4E/4F runtime proof:
 
-The multi-credential product abstraction is now implemented: the user chooses one logical provider/model while Connect selects among that provider's enabled AI Connections in priority order. Bounded failover does not bypass policy, spend, sensitivity, operator denial, or requested model identity.
+```text
+PR #417 reviewed head = 93c3230b552e479194b756135a5458d8a6fd001e
+PR-head CI            = #2600 PASS
+PR-head Product Eval  = #1839 PASS
+PR-head PCS-06        = #371 PASS
+merged main           = 6170ee5d67ee4b105771d8ce2c348afba6cce896
+merged-main CI        = #2601 PASS
+merged-main Eval      = #1840 PASS
+Staging Deploy        = #1950 PASS
+image                 = staging-6170ee5d67ee
+services              = 15/15 running
+Operations            = healthy
+stabilized free disk  = 29.95 GiB
+```
 
-The custom-provider slice must preserve these boundaries and must not turn arbitrary URLs into an unrestricted network egress mechanism.
+The multi-credential product abstraction is implemented: the user chooses one logical provider/model while Connect selects among that provider's enabled AI Connections in priority order. Bounded failover does not bypass policy, spend, sensitivity, operator denial, or requested model identity.
 
+The custom-provider path remains bounded and must not be broadened into unrestricted credential-bearing network egress.
 
-## 13. Explicit non-goals of this docs checkpoint
+Canonical closure evidence:
+[verification/session4ef-closure-2026-10-01.md](verification/session4ef-closure-2026-10-01.md).
 
-This contract does not by itself:
+## 13. Explicit boundary after closure
 
-- complete all of Session 4E;
-- further change the credential Vault schema outside the active custom-provider need;
-- remove Hub/Connect authority;
-- enable arbitrary incompatible OpenRouter models;
-- disable spend limits;
-- implement custom providers;
-- deploy anything to staging/production;
-- treat PR #402 or PR #405 as Session 4E closure or as the accepted final end-user UX.
+Closing this contract does **not** claim:
 
-Those require runtime work and verification.
+- arbitrary custom-provider success without a real user-controlled endpoint and credential;
+- universal availability of every OpenRouter catalog model for every ECORIONE capability;
+- removal of Hub/Connect authority, spend limits, sensitivity policy, or Vault boundaries;
+- final multi-user identity/RBAC;
+- public production promotion;
+- external A2A interoperability or recursive agent graphs;
+- any new provider/agentic roadmap automatically starts after Session 4F.
+
+Those remain separate evidence or future-scope decisions. Do not reopen Session 4E/4F merely for freshness.

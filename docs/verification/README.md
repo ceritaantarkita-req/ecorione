@@ -1,6 +1,6 @@
 # Verification evidence
 
-Current overall resume pointer: [ecorione-safe-resume-checkpoint-2026-09-29.md](ecorione-safe-resume-checkpoint-2026-09-29.md).
+Current overall resume pointer: [session5-project-source-picker-closure-2026-10-01.md](session5-project-source-picker-closure-2026-10-01.md).
 
 This directory contains **dated evidence**, not current planning.
 
@@ -14,7 +14,10 @@ Historical evidence may contain statements that were correct at the time but are
 
 ## Latest repository truth
 
-- [openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md) — latest FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: governed Ai chat quick-switch deployed at `9bc4cfd1...` / `staging-9bc4cfd1bbfb`; dynamic `verified-selectable` preferences remain non-executable and force chat back to Local.
+- [session5-project-source-picker-closure-2026-10-01.md](session5-project-source-picker-closure-2026-10-01.md) — current FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: PR #419 merged as `12d62cd436ce...`, merged-main CI #2605 and Product Eval #1844 passed, Staging Deploy #1958 deployed `staging-12d62cd436ce`, public/auth + MCP smoke passed, Operations was healthy, 15/15 services were running, and free disk stabilized at 25.27 GiB.
+- [session5-project-source-picker-local-acceptance-checkpoint-2026-10-01.md](session5-project-source-picker-local-acceptance-checkpoint-2026-10-01.md) — pre-merge local acceptance evidence for the searchable Project Source Picker, owner catalogs, reversible Artifact/Space/Flow binding, and healthy-empty MCP registry.
+- [session4ef-closure-2026-10-01.md](session4ef-closure-2026-10-01.md) — prior FINAL / CLOSED / PASS / STAGING VERIFIED closure for Session 4E custom-provider/Local↔Hosted integration and Session 4F provider-model UX.
+- [openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md) — prior FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: governed Ai chat quick-switch deployed at `9bc4cfd1...` / `staging-9bc4cfd1bbfb`; dynamic `verified-selectable` preferences remain non-executable and force chat back to Local.
 - [openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md) — underlying governed Settings picker checkpoint; dynamic `verified-selectable` preferences remain non-executable and fail closed on save.
 - [openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md) — underlying automatic fail-closed target-family admission checkpoint.
 - [openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md) — underlying Session 4A family checkpoint: version-agnostic GPT/Gemini/Qwen/DeepSeek/Kimi/GLM classification foundation.
@@ -80,9 +83,9 @@ Important dated proof includes:
 - ECX Batch 1–7 staging deliveries;
 - NVIDIA provider implementation and rollout;
 - failed Staging Deploy #1505 with successful rollback evidence;
-- current exact staging proof at Staging Deploy #1779.
+- current exact staging proof at Staging Deploy #1958.
 
-Current exact runtime/staging identity is recorded in [openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md), not inferred from older deployment documents.
+Current exact runtime/staging identity is recorded in [session5-project-source-picker-closure-2026-10-01.md](session5-project-source-picker-closure-2026-10-01.md), not inferred from older deployment documents.
 
 ## Off-host DR
 

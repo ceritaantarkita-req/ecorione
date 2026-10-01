@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest **staging-verified runtime-changing** baseline is:
 
 ```text
-runtime baseline = 6170ee5d67ee4b105771d8ce2c348afba6cce896
-image            = staging-6170ee5d67ee
+runtime baseline = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
+image            = staging-12d62cd436ce
 ```
 
-PR #417 exact head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI **#2600**, Product Eval **#1839**, and PCS-06 Integrated Browser Acceptance **#371**. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI **#2601** and Product Eval **#1840** passed. Actual Staging Deploy **#1950** deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`; public/auth and MCP smoke passed, Operations reported `healthy: true`, all **15/15** configured services were running, exact-host identity matched with a clean worktree, and capacity stabilized at **29.95 GiB free**.
+PR #419 exact head `a299e88e52b161fd4246a09aa411bf87357e8b18` passed CI **#2604**, Product Eval **#1843**, and PCS-06 Integrated Browser Acceptance **#372**. It merged to `main` as `12d62cd436ce69bb57e51cdaaf0894e73def4c03`; merged-main CI **#2605** and Product Eval **#1844** passed. Actual Staging Deploy **#1958** deployed exact SHA `12d62cd...` as `staging-12d62cd436ce`; public/auth and MCP smoke passed, Operations reported `healthy: true`, all **15/15** configured services were running, exact-host identity matched with a clean detached worktree, and capacity stabilized at **25.27 GiB free**.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -22,6 +22,8 @@ Repository hygiene remains bounded: the historical cleanup boundary is **9 retai
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
 Sessions 4E and 4F are now **CLOSED / PASS / STAGING VERIFIED** through PR #417. The final package adds bounded `Lainnya / Custom OpenAI-compatible` onboarding, preserves Connect/Vault ownership and multi-credential priority/failover, locks the Local↔Hosted privacy boundary, fixes certified dynamic OpenRouter pricing for normal completions, and closes the provider/model selector polish contract. Local acceptance also proved real OpenRouter model switching with Gemini 3.8 Flash and another dynamic model. Real success-path execution for an arbitrary user-controlled custom endpoint remains credential-dependent evidence, not an open implementation item. There is still **no implicit Batch 8, PE-09, PCS-11, or Batch 13**.
+
+Session 5 — **Project Source Picker** — is also **CLOSED / PASS / STAGING VERIFIED** through PR #419 and Staging Deploy #1958. Projects now expose a searchable owner-backed picker for Artifact, Space page, Flow graph, and MCP server sources while keeping URL/manual upload paths, Source/Reference roles, exact attach state, and owner-data boundaries intact. Local development now starts the owner services plus Temporal/Flow required to exercise those catalogs through one `pnpm dev`. Canonical closure: [docs/verification/session5-project-source-picker-closure-2026-10-01.md](docs/verification/session5-project-source-picker-closure-2026-10-01.md).
 
 **Start here:** [docs/README.md](docs/README.md).
 
