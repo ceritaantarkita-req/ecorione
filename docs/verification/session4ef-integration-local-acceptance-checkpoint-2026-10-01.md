@@ -9,6 +9,7 @@ branch              = feat/session4ef-integration-20261001
 base main           = c3ef2f186f465c2942b552974e47333c797cb4a1
 4E code commit      = 41fe2b12fd0aab7233466f119d7c9324d00f0d17
 4F contract commit  = d48f58c88f359c97780317ecbd82a8ad15097bfe
+OpenRouter fix       = 507186b9e845bdb9cf8b4f206a6a9ba2887a7ea7
 ```
 
 This checkpoint is an **integration-branch acceptance candidate**, not a claim that
@@ -75,6 +76,10 @@ Unix file mode `0600`. On Windows/NTFS the generated file mode is observed as `0
 so the mode assertion fails before later negative-path assertions can run. No Session 4E/4F
 test failed in the final full run. The security test was **not weakened** to manufacture a
 Windows PASS; Linux CI remains the correct authority for the Unix-mode requirement.
+
+## Local acceptance defect fixed
+
+During operator testing, selecting the certified dynamic OpenRouter model `google/gemini-3.8-flash` initially failed in normal `/v1/complete` with `UnknownModelError` even though bounded OpenRouter validation passed. Root cause: the hosted reservation path forwarded `openRouterPriceOverride` for provider calls but did not map it to the OpenRouter estimator's `priceOverride` field. Commit `507186b9e845bdb9cf8b4f206a6a9ba2887a7ea7` fixes that mapping and adds a regression test. Targeted regression suite: 43/43 PASS; typecheck PASS. A live post-fix Gemini completion reached OpenRouter and settled with provider-reported billed cost, proving the dynamic pricing path is executable.
 
 ## Claims deliberately not made
 
