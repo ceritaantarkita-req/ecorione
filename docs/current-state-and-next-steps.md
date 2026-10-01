@@ -2,27 +2,29 @@
 
 Last updated: **2026-10-01**
 
-Status: **CURRENT / SESSION 5 PROJECT SOURCE PICKER CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 6 EXTERNAL SOURCE LIFECYCLE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository                = ceritaantarkita-req/ecorione
 default branch            = main
-runtime-changing main     = 12d62cd436ce69bb57e51cdaaf0894e73def4c03 (PR #419 merge)
-session 5 reviewed head   = a299e88e52b161fd4246a09aa411bf87357e8b18 (PR #419 head)
-staging-verified runtime  = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
-staging image             = staging-12d62cd436ce
+runtime-changing main     = 15f007c5d248df8319644f2d9a6c4c7905c70681 (PR #421 merge)
+session 6 reviewed head   = 828368eb6eaa00c991e52b0e4cfeea8d3abbfc35 (PR #421 head)
+staging-verified runtime  = 15f007c5d248df8319644f2d9a6c4c7905c70681
+staging image             = staging-15f007c5d248
 ```
 
 Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Exact PR head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI #2600, Product Eval #1839, and PCS-06 Integrated Browser Acceptance #371. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI #2601 and Product Eval #1840 passed, and actual Staging Deploy #1950 deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`. Public/auth and MCP smoke passed, Operations reported `healthy: true`, exact-host identity matched with a clean worktree, all **15/15** configured services were running, and capacity stabilized at **29.95 GiB free**.
 
 The Ai composer uses adjacent `[Provider / Source ▼] [Model ▼]` controls with direct `+ Tambah AI` onboarding. One logical provider may own multiple encrypted AI Connections/API keys with priority/failover. `Lainnya / Custom OpenAI-compatible` now has bounded public-HTTPS onboarding and Connect-owned validation/Vault persistence. Local↔Hosted continuity preserves the existing Project-scoped hosted-eligible context boundary rather than silently uploading local-only history. Dynamic certified OpenRouter models now carry their fresh pricing snapshot through reservation and normal completion. Real success-path proof for an arbitrary custom endpoint remains dependent on a user-controlled endpoint/credential and is not an open implementation item.
 
-Session 5 Project Source Picker is CLOSED / PASS / STAGING VERIFIED through PR #419. Projects now expose searchable owner-backed Artifact, Space page, Flow graph, and MCP-server source choices while preserving Source/Reference roles, URL/manual upload paths, owner authority, exact attach/detach state, and unavailable/revoked handling. The local `pnpm dev` bootstrap now starts Artifact, Space, Flow API/worker, and a bounded Temporal dev-server when needed so those catalogs are actually usable in the normal local product.
+Session 5 Project Source Picker is CLOSED / PASS / STAGING VERIFIED through PR #419. Projects expose searchable owner-backed Artifact, Space page, Flow graph, and MCP-server source choices while preserving Source/Reference roles, URL/manual upload paths, owner authority, exact attach/detach state, and unavailable/revoked handling.
+
+Session 6 External Source Lifecycle is CLOSED / PASS / STAGING VERIFIED through PR #421. URL/MCP snapshots now have explicit `SNAPSHOT_READY / INDEXED / DETACHED` lifecycle metadata, refresh/index timestamps, content-addressed refresh semantics, direct external-text indexing into Project-scoped Context, and Refresh/Index/Re-index product actions while owner boundaries remain unchanged.
 
 Current safe-resume checkpoint:
-[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
+[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -31,31 +33,32 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
-image = staging-12d62cd436ce
+SHA   = 15f007c5d248df8319644f2d9a6c4c7905c70681
+image = staging-15f007c5d248
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| PR #419 reviewed head | `a299e88e52b161fd4246a09aa411bf87357e8b18` |
-| PR-head CI #2604 | PASS |
-| PR-head Product Eval #1843 | PASS |
-| PR-head PCS-06 browser #372 | PASS |
-| merged-main CI #2605 | PASS |
-| merged-main Product Eval #1844 | PASS |
-| Staging Deploy #1957 | gate-only PASS / deploy skipped |
-| Staging Deploy #1958 | actual deploy PASS |
-| expected host SHA | matched `12d62cd436ce69bb57e51cdaaf0894e73def4c03` |
-| staging image | `staging-12d62cd436ce` |
+| PR #421 reviewed head | `828368eb6eaa00c991e52b0e4cfeea8d3abbfc35` |
+| PR-head CI #2609 | PASS |
+| PR-head Product Eval #1848 | PASS |
+| PR-head MCP External HTTPS #1203 | PASS |
+| PR-head PCS-06 browser #374 | PASS |
+| merged-main CI #2610 | PASS |
+| merged-main Product Eval #1849 | PASS |
+| merged-main MCP External HTTPS #1204 | PASS |
+| Staging Deploy #1967 | gate-only PASS / deploy skipped |
+| Staging Deploy #1968 | actual deploy PASS |
+| expected host SHA | matched `15f007c5d248df8319644f2d9a6c4c7905c70681` |
+| staging image | `staging-15f007c5d248` |
 | public/auth + MCP smoke | PASS |
 | Operations | `healthy: true`, `unhealthyServices: []` |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
 | exact-host worktree | clean / DETACHED |
-| host evidence free disk before cleanup | 23.93 GiB |
-| stabilized free disk after rollback-set cleanup | 25.27 GiB |
+| stabilized free disk after rollback-set cleanup | 27.39 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -329,7 +332,7 @@ Canonical Session 4D checkpoint:
 
 ## Current active work
 
-There is **no active implementation queue**. Sessions 4E/4F remain CLOSED / PASS / STAGING VERIFIED through PR #417, and Session 5 Project Source Picker is CLOSED / PASS / STAGING VERIFIED through PR #419 and Staging Deploy #1958.
+There is **no active implementation queue**. Sessions 4E/4F, Session 5 Project Source Picker, and Session 6 External Source Lifecycle are CLOSED / PASS / STAGING VERIFIED through PR #417 / #419 / #421 and Staging Deploy #1950 / #1958 / #1968.
 
 Closed current slices that must not be redone:
 
@@ -338,9 +341,10 @@ Closed current slices that must not be redone:
 - direct `+ Tambah AI` onboarding from Ai — PR #411;
 - multi-credential AI Connections + priority/bounded failover — PR #415;
 - custom OpenAI-compatible onboarding + Local↔Hosted handoff proof + final provider/model polish — PR #417;
-- searchable owner-backed Project Source Picker + normal local owner-service/Temporal bootstrap — PR #419.
+- searchable owner-backed Project Source Picker + normal local owner-service/Temporal bootstrap — PR #419;
+- external-source lifecycle / refresh / indexing productization — PR #421.
 
-The next roadmap slot may be Session 6 external-source ingestion/indexing/refresh/lifecycle productization, but it is not active until explicitly authorized. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
+Session 6 is closed. Session 7 remains unopened until explicitly authorized. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
 ## Explicit deferred / separately selectable future scopes
 
@@ -375,7 +379,7 @@ For a new session/agent:
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
+[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).

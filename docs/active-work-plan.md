@@ -2,9 +2,9 @@
 
 Last updated: **2026-10-01**
 
-Status: **SESSION 5 PROJECT SOURCE PICKER CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
+Status: **SESSION 6 EXTERNAL SOURCE LIFECYCLE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
 
-Current resume pointer: [verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md). PR #419 reviewed head `a299e88e52b161fd4246a09aa411bf87357e8b18` merged as runtime-changing `main` `12d62cd436ce69bb57e51cdaaf0894e73def4c03`. Merged-main CI #2605 and Product Eval #1844 passed; Staging Deploy #1958 deployed exact runtime image `staging-12d62cd436ce`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, exact-host identity matched, and 25.27 GiB stabilized free disk.
+Current resume pointer: [verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md). PR #421 final reviewed head `828368eb6eaa00c991e52b0e4cfeea8d3abbfc35` merged as runtime-changing `main` `15f007c5d248df8319644f2d9a6c4c7905c70681`. Merged-main CI #2610, Product Eval #1849, and MCP External HTTPS Acceptance #1204 passed; Staging Deploy #1968 deployed exact runtime image `staging-15f007c5d248`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, exact-host identity matched, and 27.39 GiB stabilized free disk.
 
 ## Current queue
 
@@ -32,7 +32,8 @@ Closed current baselines:
 - Session 4E slice 4 — multi-credential AI Connections + bounded failover — CLOSED / PASS / STAGING VERIFIED through PR #415;
 - Session 4E final integration — custom OpenAI-compatible onboarding + bounded Local↔Hosted handoff proof — CLOSED / PASS / STAGING VERIFIED through PR #417;
 - Session 4F — final provider/model UX polish and closure — CLOSED / PASS / STAGING VERIFIED through PR #417.
-- Session 5 — Project Source Picker productization + local owner-service bootstrap — CLOSED / PASS / STAGING VERIFIED through PR #419.
+- Session 5 — Project Source Picker productization + local owner-service bootstrap — CLOSED / PASS / STAGING VERIFIED through PR #419;
+- Session 6 — external-source lifecycle / refresh / indexing productization — CLOSED / PASS / STAGING VERIFIED through PR #421.
 
 No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 
@@ -99,7 +100,7 @@ Underlying provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Overall safe-resume checkpoint:
-[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
+[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 ## OpenRouter Sessions 2–4F — CLOSED / PASS / STAGING VERIFIED
 

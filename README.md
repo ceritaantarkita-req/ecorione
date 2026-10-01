@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest **staging-verified runtime-changing** baseline is:
 
 ```text
-runtime baseline = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
-image            = staging-12d62cd436ce
+runtime baseline = 15f007c5d248df8319644f2d9a6c4c7905c70681
+image            = staging-15f007c5d248
 ```
 
-PR #419 exact head `a299e88e52b161fd4246a09aa411bf87357e8b18` passed CI **#2604**, Product Eval **#1843**, and PCS-06 Integrated Browser Acceptance **#372**. It merged to `main` as `12d62cd436ce69bb57e51cdaaf0894e73def4c03`; merged-main CI **#2605** and Product Eval **#1844** passed. Actual Staging Deploy **#1958** deployed exact SHA `12d62cd...` as `staging-12d62cd436ce`; public/auth and MCP smoke passed, Operations reported `healthy: true`, all **15/15** configured services were running, exact-host identity matched with a clean detached worktree, and capacity stabilized at **25.27 GiB free**.
+PR #421 final reviewed head `828368eb6eaa00c991e52b0e4cfeea8d3abbfc35` passed CI **#2609**, Product Eval **#1848**, MCP External HTTPS Acceptance **#1203**, and PCS-06 Integrated Browser Acceptance **#374**. It merged to `main` as `15f007c5d248df8319644f2d9a6c4c7905c70681`; merged-main CI **#2610**, Product Eval **#1849**, and MCP External HTTPS Acceptance **#1204** passed. Actual Staging Deploy **#1968** deployed exact SHA `15f007c5...` as `staging-15f007c5d248`; public/auth and MCP smoke passed, Operations reported `healthy: true`, all **15/15** configured services were running, exact-host identity matched with a clean detached worktree, and capacity stabilized at **27.39 GiB free**.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -23,7 +23,9 @@ The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**,
 
 Sessions 4E and 4F are now **CLOSED / PASS / STAGING VERIFIED** through PR #417. The final package adds bounded `Lainnya / Custom OpenAI-compatible` onboarding, preserves Connect/Vault ownership and multi-credential priority/failover, locks the Local↔Hosted privacy boundary, fixes certified dynamic OpenRouter pricing for normal completions, and closes the provider/model selector polish contract. Local acceptance also proved real OpenRouter model switching with Gemini 3.8 Flash and another dynamic model. Real success-path execution for an arbitrary user-controlled custom endpoint remains credential-dependent evidence, not an open implementation item. There is still **no implicit Batch 8, PE-09, PCS-11, or Batch 13**.
 
-Session 5 — **Project Source Picker** — is also **CLOSED / PASS / STAGING VERIFIED** through PR #419 and Staging Deploy #1958. Projects now expose a searchable owner-backed picker for Artifact, Space page, Flow graph, and MCP server sources while keeping URL/manual upload paths, Source/Reference roles, exact attach state, and owner-data boundaries intact. Local development now starts the owner services plus Temporal/Flow required to exercise those catalogs through one `pnpm dev`. Canonical closure: [docs/verification/session5-project-source-picker-closure-2026-10-01.md](docs/verification/session5-project-source-picker-closure-2026-10-01.md).
+Session 5 — **Project Source Picker** — is **CLOSED / PASS / STAGING VERIFIED** through PR #419 and Staging Deploy #1958. Projects expose a searchable owner-backed picker for Artifact, Space page, Flow graph, and MCP server sources while keeping URL/manual upload paths, Source/Reference roles, exact attach state, and owner-data boundaries intact.
+
+Session 6 — **External Source Lifecycle** — is now **CLOSED / PASS / STAGING VERIFIED** through PR #421 and Staging Deploy #1968. URL/MCP snapshots now carry explicit `SNAPSHOT_READY / INDEXED / DETACHED` lifecycle metadata, refresh/index timestamps, content-addressed refresh semantics, direct text indexing into Project-scoped Context, and Refresh/Index/Re-index UI while preserving Artifact/Context/Connect ownership boundaries. Canonical closure: [docs/verification/session6-external-source-lifecycle-closure-2026-10-01.md](docs/verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -163,7 +165,7 @@ See:
 
 ## Current active / separate boundaries
 
-Sessions 4E and 4F are **closed / pass / staging verified** through PR #417 and Staging Deploy #1950. There is no active AI-provider implementation slice; future provider evidence that requires a real user-controlled credential/endpoint is validation work, not an implicit new session.
+Sessions 4E and 4F are **closed / pass / staging verified** through PR #417 and Staging Deploy #1950. Sessions 5 and 6 are also **closed / pass / staging verified** through PR #419 / #421 and Staging Deploy #1958 / #1968. No implementation session is active; any Session 7 work requires explicit operator authorization.
 
 The following remain separate explicit decisions:
 
