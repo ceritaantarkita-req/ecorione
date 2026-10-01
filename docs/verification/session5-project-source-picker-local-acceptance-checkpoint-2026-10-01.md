@@ -1,13 +1,14 @@
 # Session 5 — Project Source Picker Local-Acceptance Checkpoint — 2026-10-01
 
-**Status:** READY FOR LOCAL VISUAL ACCEPTANCE / NOT MERGED / NOT STAGING VERIFIED
+**Status:** LOCAL ACCEPTANCE PASS / READY FOR PR / NOT MERGED / NOT STAGING VERIFIED
 
 ## Exact branch boundary
 
 ```text
 branch      = feat/session5-project-source-picker-20261001
 base main   = 65aee852d6b597ad1fa192bb23554f4347e6fc57
-code commit = a18fc3b9c2dfe403ef9116839dff15242defc1fc
+code commit      = a18fc3b9c2dfe403ef9116839dff15242defc1fc
+local dev fix    = c7fb550b7643bfebae325811f1c432ca57985bb8
 ```
 
 This Session 5 slice productizes the existing Project Sources foundation. It does not create a new source database, owner service, ingestion engine, or duplicate binding registry.
@@ -59,7 +60,7 @@ production build PASS
 
 The only warnings are the existing Next workspace-root and ESLint-plugin warnings.
 
-Chrome headless rendered `/projects` successfully from the local runtime. The local dataset exposed only the virtual All view with no Project selected, so the picker detail could not be visually exercised without creating/modifying user data. No dummy Project was created.
+Chrome headless rendered `/projects` successfully from the local runtime. Operator visual acceptance then exercised real Projects and Artifact bindings in the browser: `Tambah` changed to `Terpasang`, the bound source appeared with `AVAILABLE`, `Lepas` removed it, and the resource became attachable again. No dummy Project was created.
 
 ## Local visual acceptance
 
@@ -77,6 +78,34 @@ On the already checked-out branch:
 10. confirm the bound-source list below shows the binding;
 11. click **Lepas** and confirm it becomes attachable again;
 12. confirm URL/manual and Upload file paths still render normally.
+
+## Owner catalog and reversible binding acceptance
+
+The first visual pass exposed valid runtime warnings because the default `pnpm dev` entrypoint only started RnD, Context, Connect, Hub, and Ai. It did not start Artifact, Space, Flow, or Temporal. Commit `c7fb550b7643bfebae325811f1c432ca57985bb8` fixes the local bootstrap so `pnpm dev` now starts Artifact, Space, Flow API, Flow worker, and a Temporal CLI dev-server when port 7233 is not already reachable.
+
+Live post-fix owner catalog evidence:
+
+```text
+warnings:   none
+artifact:   25
+space-page: 2
+flow-graph: 9
+mcp-server: 0 (healthy empty registry)
+```
+
+Real reversible binding acceptance against Project `mainlagihub`:
+
+```text
+Space page  page_ccfa8d39700f4277b7340012
+attach -> AVAILABLE -> detach  PASS
+
+Flow graph  fg_48c1d632694947db8e39b866
+attach -> AVAILABLE -> detach  PASS
+
+binding count before/after: 2 -> 2
+```
+
+The MCP outbound registry endpoint returned `{"servers":[]}` with no catalog warning. Session 5 therefore treats MCP as healthy-but-empty rather than unavailable; no fake server was created merely to manufacture a positive UI row.
 
 ## Deliberate non-claims
 
