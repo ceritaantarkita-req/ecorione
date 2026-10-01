@@ -19,7 +19,7 @@ const NAV_GROUPS = [
     items: [
       ["Ai", "/", "ai"],
       ["Projects", "/projects", "projects"],
-      ["Work", "/work", "work"],
+      ["Schedule", "/schedule", "work"],
       ["Brain", "/brain", "brain"],
     ],
   },
@@ -43,6 +43,7 @@ type NavIconKey = (typeof NAV_GROUPS)[number]["items"][number][2];
 
 function isActivePath(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
+  if (href === "/schedule" && pathname === "/work") return true;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -86,8 +87,8 @@ function NavIcon({ icon }: { icon: NavIconKey }) {
     case "work":
       return (
         <svg {...shared}>
-          <path d="M3.5 5.5h13v10h-13Z" />
-          <path d="M7 5.5V4h6v1.5M6.2 9.2h7.6M10 9.2v3.6" />
+          <path d="M3.5 4.5h13v12h-13Z" />
+          <path d="M6.5 2.8v3.4M13.5 2.8v3.4M3.5 8h13M6.5 11h2M11.5 11h2M6.5 14h2" />
         </svg>
       );
     case "brain":
