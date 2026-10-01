@@ -37,6 +37,6 @@ describe("A-05b.3a Project URL source ingestion contract", () => {
     expect(ai).not.toContain("/v1/multimodal/infer");
     expect(ui).toContain("`${endpoint}/ingest-url`");
     expect(ui).toContain('"Ingest snapshot"');
-    expect(ui).toContain("Gunakan Extract pada Artifact");
+    expect(ui).toContain("Gunakan Index pada Artifact");
   });
 });

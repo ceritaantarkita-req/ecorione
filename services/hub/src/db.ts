@@ -51,6 +51,23 @@ CREATE TABLE IF NOT EXISTS project_source_bindings (
 CREATE INDEX IF NOT EXISTS idx_project_source_bindings_project
   ON project_source_bindings(workspace_id, project_id, created_at DESC, resource_type, resource_id);
 
+CREATE TABLE IF NOT EXISTS project_external_source_lifecycle (
+  project_id TEXT NOT NULL REFERENCES projects(id),
+  workspace_id TEXT NOT NULL,
+  source_type TEXT NOT NULL CHECK(source_type IN ('url','mcp-resource')),
+  source_key TEXT NOT NULL,
+  role TEXT NOT NULL CHECK(role IN ('source','reference')),
+  latest_artifact_id TEXT NOT NULL,
+  latest_context_episode_id TEXT,
+  state TEXT NOT NULL CHECK(state IN ('SNAPSHOT_READY','INDEXED','DETACHED')),
+  last_refreshed_at TEXT NOT NULL,
+  last_indexed_at TEXT,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY(project_id, source_type, source_key, role)
+);
+CREATE INDEX IF NOT EXISTS idx_project_external_source_lifecycle_project
+  ON project_external_source_lifecycle(workspace_id, project_id, updated_at DESC, source_type, source_key);
+
 CREATE TABLE IF NOT EXISTS history_sessions (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,

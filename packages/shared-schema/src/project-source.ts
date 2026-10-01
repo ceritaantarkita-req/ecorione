@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   ArtifactIdSchema,
+  EpisodeIdSchema,
   OperationIdSchema,
   ProjectIdSchema,
   WorkspaceIdSchema,
@@ -28,6 +29,41 @@ export type ProjectSourceOwner = z.infer<typeof ProjectSourceOwnerSchema>;
 export const PROJECT_SOURCE_ROLES = ["source", "reference"] as const;
 export const ProjectSourceRoleSchema = z.enum(PROJECT_SOURCE_ROLES);
 export type ProjectSourceRole = z.infer<typeof ProjectSourceRoleSchema>;
+
+export const PROJECT_EXTERNAL_SOURCE_TYPES = ["url", "mcp-resource"] as const;
+export const ProjectExternalSourceTypeSchema = z.enum(PROJECT_EXTERNAL_SOURCE_TYPES);
+export type ProjectExternalSourceType = z.infer<typeof ProjectExternalSourceTypeSchema>;
+
+export const PROJECT_EXTERNAL_SOURCE_STATES = [
+  "SNAPSHOT_READY",
+  "INDEXED",
+  "DETACHED",
+] as const;
+export const ProjectExternalSourceStateSchema = z.enum(PROJECT_EXTERNAL_SOURCE_STATES);
+export type ProjectExternalSourceState = z.infer<typeof ProjectExternalSourceStateSchema>;
+
+export const ProjectExternalSourceLifecycleSchema = z
+  .object({
+    projectId: ProjectIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    sourceType: ProjectExternalSourceTypeSchema,
+    sourceKey: z.string().min(1).max(8192),
+    role: ProjectSourceRoleSchema,
+    latestArtifactId: ArtifactIdSchema,
+    latestContextEpisodeId: EpisodeIdSchema.nullable(),
+    state: ProjectExternalSourceStateSchema,
+    lastRefreshedAt: TimestampSchema,
+    lastIndexedAt: TimestampSchema.nullable(),
+    updatedAt: TimestampSchema,
+  })
+  .strict();
+export type ProjectExternalSourceLifecycle = z.infer<
+  typeof ProjectExternalSourceLifecycleSchema
+>;
+
+export const ProjectExternalSourceLifecycleListResponseSchema = z
+  .object({ lifecycles: z.array(ProjectExternalSourceLifecycleSchema) })
+  .strict();
 
 export const McpServerRefSchema = z
   .string()

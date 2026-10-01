@@ -5,6 +5,7 @@ import {
   ExternalUrlFetchResponseSchema,
   MultimodalAdapterResultSchema,
   McpServerRefSchema,
+  ProjectExternalSourceLifecycleListResponseSchema,
   ProjectIdSchema,
   ProjectMcpResourceIngestRequestSchema,
   ProjectMcpResourceIngestResponseSchema,
@@ -20,6 +21,7 @@ import {
   WorkspaceIdSchema,
   makeId,
   projectSourceOwner,
+  type ArtifactId,
   type Episode,
   type MultimodalAdapterResult,
   type ProjectMcpResourceIngestResponse,
@@ -77,6 +79,10 @@ const ArtifactUploadResponseSchema = z.object({
   pointer: ArtifactPointerSchema,
   deduplicated: z.boolean(),
 });
+
+function mcpExternalSourceKey(serverId: string, resourceUri: string): string {
+  return JSON.stringify([serverId, resourceUri]);
+}
 
 export interface ProjectSourceOwnerOptions {
   readonly contextUrl: string;
@@ -238,6 +244,19 @@ export function registerProjectSourceRoutes(
     const bindings = sources.list(id, workspaceId);
     const views = await Promise.all(bindings.map((binding) => viewBinding(binding, options)));
     return ProjectSourceListResponseSchema.parse({ sources: views });
+  });
+
+  app.get<{ Params: { id: string } }>("/v1/projects/:id/sources/lifecycle", async (req) => {
+    const { id } = parseOrBadRequest(ParamsSchema, req.params);
+    const { workspaceId } = parseOrBadRequest(WorkspaceQuerySchema, req.query);
+    try {
+      projects.require(id, workspaceId, true);
+    } catch (error) {
+      throw mapProjectError(error);
+    }
+    return ProjectExternalSourceLifecycleListResponseSchema.parse({
+      lifecycles: sources.listExternalLifecycle(id, workspaceId),
+    });
   });
 
   app.get<{ Params: { id: string } }>("/v1/projects/:id/sources/mcp-resources", async (req) => {
@@ -503,6 +522,15 @@ export function registerProjectSourceRoutes(
         metadata,
         unavailableReason: null,
       });
+      sources.upsertExternalLifecycle({
+        projectId: id,
+        workspaceId: body.workspaceId,
+        sourceType: "mcp-resource",
+        sourceKey: mcpExternalSourceKey(body.serverId, body.resourceUri),
+        role: body.role,
+        latestArtifactId: uploaded.pointer.id,
+        refreshedAt: now as Timestamp,
+      });
       const response = ProjectMcpResourceIngestResponseSchema.parse({
         operationId: body.operationId,
         projectId: id,
@@ -679,6 +707,15 @@ export function registerProjectSourceRoutes(
       state: "READY",
     });
     const now = nowIso();
+    sources.upsertExternalLifecycle({
+      projectId: id,
+      workspaceId: body.workspaceId,
+      sourceType: "url",
+      sourceKey: body.url,
+      role: body.role,
+      latestArtifactId: uploaded.pointer.id,
+      refreshedAt: now as Timestamp,
+    });
     repo.saveIdempotentResult(
       idempotencyKey,
       body.operationId,
@@ -748,49 +785,84 @@ export function registerProjectSourceRoutes(
     const pointer = pointerResult.data;
     const task = analyzeTaskForMimeType(pointer.mimeType);
     const now = nowIso();
+    const externalLifecycle = sources
+      .listExternalLifecycle(id, body.workspaceId)
+      .find((item) => item.latestArtifactId === body.artifactId && item.state !== "DETACHED");
+    const directExternalText =
+      externalLifecycle !== undefined &&
+      pointer.mimeType.trim().toLowerCase().startsWith("text/");
 
-    authorizeInference({
-      authority,
-      repo,
-      workspaceId: body.workspaceId,
-      operationId: body.operationId,
-      routes: ["local"],
-      scope: pointer.scope,
-      sensitivity: pointer.sensitivity,
-      syncClass: pointer.syncClass ?? "LOCAL_ONLY",
-      now,
-    });
+    if (!directExternalText) {
+      authorizeInference({
+        authority,
+        repo,
+        workspaceId: body.workspaceId,
+        operationId: body.operationId,
+        routes: ["local"],
+        scope: pointer.scope,
+        sensitivity: pointer.sensitivity,
+        syncClass: pointer.syncClass ?? "LOCAL_ONLY",
+        now,
+      });
+    }
 
     const contentBase64 = await artifactContentBase64(options, pointer);
     let inferred: MultimodalAdapterResult;
-    try {
-      inferred = MultimodalAdapterResultSchema.parse(
-        await httpJson(`${options.connectUrl}/v1/multimodal/infer`, {
-          method: "POST",
-          token: options.internalToken,
-          body: {
-            operationId: body.operationId,
-            task,
-            route: { preferred: "local", allowHostedFallback: false },
-            syncClass: pointer.syncClass ?? "LOCAL_ONLY",
-            mimeType: pointer.mimeType,
-            contentBase64,
-          },
-        }),
-      );
-    } catch (error) {
-      if (error instanceof RemoteServiceError) {
-        throw new BadGatewayError(`Connect extraction gagal: ${error.message}`);
+    if (directExternalText) {
+      let text: string;
+      try {
+        text = new TextDecoder("utf-8", { fatal: true }).decode(
+          Buffer.from(contentBase64, "base64"),
+        );
+      } catch {
+        throw new BadGatewayError("External text snapshot bukan UTF-8 valid.");
       }
-      throw error;
-    }
-    if (inferred.audioBase64 !== undefined || inferred.audioMimeType !== undefined) {
-      throw new BadGatewayError(
-        "Adapter Project extraction mengembalikan audio yang tidak diminta.",
-      );
+      inferred = MultimodalAdapterResultSchema.parse({
+        routeUsed: "local",
+        adapter: "direct-text",
+        provider: "artifact",
+        model: "utf-8",
+        language: "unknown",
+        text,
+        segments: [],
+        actualUsd: 0,
+        naiveUsd: 0,
+      });
+    } else {
+      try {
+        inferred = MultimodalAdapterResultSchema.parse(
+          await httpJson(`${options.connectUrl}/v1/multimodal/infer`, {
+            method: "POST",
+            token: options.internalToken,
+            body: {
+              operationId: body.operationId,
+              task,
+              route: { preferred: "local", allowHostedFallback: false },
+              syncClass: pointer.syncClass ?? "LOCAL_ONLY",
+              mimeType: pointer.mimeType,
+              contentBase64,
+            },
+          }),
+        );
+      } catch (error) {
+        if (error instanceof RemoteServiceError) {
+          throw new BadGatewayError(`Connect extraction gagal: ${error.message}`);
+        }
+        throw error;
+      }
+      if (inferred.audioBase64 !== undefined || inferred.audioMimeType !== undefined) {
+        throw new BadGatewayError(
+          "Adapter Project extraction mengembalikan audio yang tidak diminta.",
+        );
+      }
     }
 
     const semantic = semanticMultimodalResult(inferred);
+    const contextTrust = directExternalText
+      ? "THIRD_PARTY"
+      : inferred.routeUsed === "hosted"
+        ? "HOSTED_AGENT"
+        : "LOCAL_AGENT";
     let episode: Episode;
     try {
       episode = EpisodeSchema.parse(
@@ -809,7 +881,7 @@ export function registerProjectSourceRoutes(
             scope: pointer.scope,
             sensitivity: pointer.sensitivity,
             syncClass: pointer.syncClass ?? "LOCAL_ONLY",
-            trust: inferred.routeUsed === "hosted" ? "HOSTED_AGENT" : "LOCAL_AGENT",
+            trust: contextTrust,
           },
         }),
       );
@@ -826,7 +898,7 @@ export function registerProjectSourceRoutes(
           scope: pointer.scope,
           sensitivity: pointer.sensitivity,
           syncClass: pointer.syncClass ?? "LOCAL_ONLY",
-          trust: inferred.routeUsed === "hosted" ? "HOSTED_AGENT" : "LOCAL_AGENT",
+          trust: contextTrust,
           createdAt: now,
         },
       });
@@ -847,6 +919,13 @@ export function registerProjectSourceRoutes(
       result: semantic,
       contextEpisodeId: episode.id,
     });
+    const indexedLifecycles = sources.markExternalIndexed(
+      id,
+      body.workspaceId,
+      body.artifactId,
+      episode.id,
+      now as Timestamp,
+    );
     repo.saveIdempotentResult(
       idempotencyKey,
       body.operationId,
@@ -865,6 +944,8 @@ export function registerProjectSourceRoutes(
         contextEpisodeId: episode.id,
         task,
         routeUsed: inferred.routeUsed,
+        indexMode: directExternalText ? "direct-text" : "multimodal",
+        externalLifecycleCount: indexedLifecycles.length,
       },
       now,
     });
@@ -888,6 +969,23 @@ export function registerProjectSourceRoutes(
     });
     if (removed === null) throw new NotFoundError("Project source binding tidak ditemukan.");
     const now = nowIso() as Timestamp;
+    if (removed.resourceType === "artifact") {
+      sources.markExternalDetachedByArtifact(
+        id,
+        body.workspaceId,
+        removed.resourceId as ArtifactId,
+        now,
+      );
+    } else if (removed.resourceType === "url") {
+      sources.markExternalDetachedByOrigin(
+        id,
+        body.workspaceId,
+        "url",
+        removed.resourceId,
+        removed.role,
+        now,
+      );
+    }
     repo.recordAuditEvent({
       type: "PROJECT_SOURCE_DETACHED",
       operationId: makeId("operation"),
