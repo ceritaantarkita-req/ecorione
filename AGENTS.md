@@ -201,7 +201,6 @@ No implementation session is active. Sessions 4E, 4F, 5, and 6 are closed at the
 
 Do not start these separate scopes without explicit operator authorization:
 
-- Session 4F final OpenRouter polish/closure after Session 4E is complete;
 - DR-2 checkpoint 2 and physical-independence runtime proof;
 - public production cutover;
 - native Google Drive integration;
