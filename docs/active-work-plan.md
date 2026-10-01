@@ -2,9 +2,9 @@
 
 Last updated: **2026-10-01**
 
-Status: **SESSION 4E + 4F INTEGRATION CANDIDATE / READY FOR LOCAL ACCEPTANCE / NOT MERGED / MAIN + STAGING UNCHANGED**
+Status: **SESSION 4E + 4F CLOSED / PASS / STAGING VERIFIED / NO ACTIVE AI-PROVIDER IMPLEMENTATION QUEUE**
 
-Current integration resume pointer: [verification/session4ef-integration-local-acceptance-checkpoint-2026-10-01.md](verification/session4ef-integration-local-acceptance-checkpoint-2026-10-01.md). This status applies only to `feat/session4ef-integration-20261001`. Canonical `main` remains `c3ef2f186f465c2942b552974e47333c797cb4a1`; the latest staging-verified runtime baseline remains `15dc2a131778c2fe1249dda34e3291f9a3c8beae` from PR #415, image `staging-15dc2a131778`. Do not claim Session 4E/4F merged or staging-verified until local acceptance, exact-head CI, merge, and staging convergence complete.
+Current resume pointer: [verification/session4ef-closure-2026-10-01.md](verification/session4ef-closure-2026-10-01.md). PR #417 reviewed head `93c3230b552e479194b756135a5458d8a6fd001e` merged as runtime-changing `main` `6170ee5d67ee4b105771d8ce2c348afba6cce896`. Merged-main CI #2601 and Product Eval #1840 passed; Staging Deploy #1950 deployed exact runtime image `staging-6170ee5d67ee`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, exact-host identity matched, and 29.95 GiB stabilized free disk.
 
 ## Current queue
 
@@ -29,9 +29,11 @@ Closed current baselines:
 - Session 4E slice 1 — compatible OpenRouter auto-execution + visible catalog pricing — CLOSED / PASS / STAGING VERIFIED through PR #407;
 - Session 4E slice 2 — canonical provider/source + provider-specific model selectors — CLOSED / PASS / STAGING VERIFIED through PR #409;
 - Session 4E slice 3 — direct `+ Tambah AI` onboarding — CLOSED / PASS / STAGING VERIFIED through PR #411;
-- Session 4E slice 4 — multi-credential AI Connections + bounded failover — CLOSED / PASS / STAGING VERIFIED through PR #415.
+- Session 4E slice 4 — multi-credential AI Connections + bounded failover — CLOSED / PASS / STAGING VERIFIED through PR #415;
+- Session 4E final integration — custom OpenAI-compatible onboarding + bounded Local↔Hosted handoff proof — CLOSED / PASS / STAGING VERIFIED through PR #417;
+- Session 4F — final provider/model UX polish and closure — CLOSED / PASS / STAGING VERIFIED through PR #417.
 
-No Batch 8, PE-09, PCS-11, Batch 13, or next A-series item is automatically opened.
+No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 
 ## Repository housekeeping
 
@@ -96,13 +98,13 @@ Underlying provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Overall safe-resume checkpoint:
-[verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md](verification/session4e-direct-ai-onboarding-safe-checkpoint-2026-09-30.md).
+[verification/session4ef-closure-2026-10-01.md](verification/session4ef-closure-2026-10-01.md).
 
-## OpenRouter Sessions 2–4E — 4E ACTIVE / PARTIAL
+## OpenRouter Sessions 2–4F — CLOSED / PASS / STAGING VERIFIED
 
 > **Accepted UX contract:** [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md).
 
-Sessions 2–4D remain CLOSED / PASS at their documented boundaries. Session 4E is active.
+Sessions 2–4F are CLOSED / PASS at their documented boundaries. PR #417 is the final 4E/4F integration and staging convergence for this roadmap.
 
 ### Session 4E first runtime slice — CLOSED / PASS / STAGING VERIFIED
 
@@ -139,24 +141,20 @@ stabilized free disk  = 29.89 GiB
 Canonical checkpoint:
 [verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
 
-### Current Session 4E queue
+### Session 4E/4F closure
 
-The next bounded implementation slice is **`+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding**:
+PR #417 closes the remaining bounded roadmap:
 
-1. collect Name, Base URL, API key, and model/model-discovery information from Ai;
-2. keep secrets exclusively under Connect/Vault ownership;
-3. validate endpoint, credential, and model through a bounded Connect-owned probe before activation;
-4. reject credential-bearing URLs and preserve existing SSRF/network-policy boundaries;
-5. preserve spend governance; unknown providers must not silently bypass cost admission;
-6. surface the custom provider as one logical provider/source after successful onboarding;
-7. keep advanced custom headers/auth/discovery options behind progressive disclosure;
-8. do not mix broad Local↔Cloud context-handoff redesign into this slice unless an invariant requires it.
+1. `+ Tambah AI → Lainnya / Custom OpenAI-compatible` collects Name, public HTTPS Base URL, API key, exact model, and operator pricing;
+2. Connect owns validation, Vault persistence, credentials, routing and spend boundaries;
+3. custom egress rejects credential-bearing/unsafe/private endpoints and preserves DNS/SSRF, timeout and response-size boundaries;
+4. Local↔Hosted continuity keeps Project-scoped hosted-eligible context and does not silently replay local-only history into hosted prompts;
+5. multi-credential priority/failover remains beneath one logical provider;
+6. Session 4F locks adjacent provider/model selectors, custom-provider presentation, and loading/error/connection feedback;
+7. dynamic certified OpenRouter pricing is carried through reservation and completion, including real local acceptance with Gemini 3.8 Flash;
+8. arbitrary custom-provider success-path proof remains dependent on a real user-controlled endpoint and credential, not an open implementation item.
 
-The auto-execution, canonical selector, direct `+ Tambah AI`, and multi-credential slices are already CLOSED / PASS / STAGING VERIFIED through PR #407, #409, #411, and #415 and must not be redone.
-
-After custom-provider onboarding, remaining Session 4E work includes bounded Local↔Cloud context handoff and broader live cross-provider completion evidence where real credentials/providers are available.
-
-Session 4F remains a later independent closure/polish scope.
+There is no active Session 4E/4F queue. Any next provider/agentic work requires an explicit new scope.
 
 ## DR-2
 
@@ -182,9 +180,9 @@ Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence 
 
 ## Separately selectable future scopes
 
-The following remain outside the active Session 4E custom-provider slice unless explicitly opened:
+The following remain outside the closed Session 4E/4F roadmap unless explicitly opened:
 
-- Session 4F final OpenRouter polish/closure after Session 4E is complete;
+- a newly selected post-4F provider/agentic scope;
 - DR-2 checkpoint 2;
 - production cutover;
 - native Google Drive integration;
@@ -205,7 +203,7 @@ When the operator selects the next real scope:
 
 1. start from exact synchronized `main`;
 2. name the scope explicitly;
-3. for Session 4E, treat [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md) as the accepted behavior contract before coding;
+3. treat [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md) as the closed 4E/4F compatibility contract when touching provider/model UX;
 4. keep service ownership unchanged unless an explicit architecture decision says otherwise;
 5. add deterministic tests for new behavior;
 6. require exact-head gates;
