@@ -1,28 +1,28 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-09-30**
+Last updated: **2026-10-01**
 
-Status: **CURRENT SUMMARY**
+Status: **CURRENT SUMMARY / SESSION 5 CLOSED / PASS / STAGING VERIFIED**
 
 ## Audited repository/staging baseline
 
 Latest audited runtime-changing baseline:
 
 ```text
-runtime / staging       = 15dc2a131778c2fe1249dda34e3291f9a3c8beae (PR #415)
-image                   = staging-15dc2a131778
-CI                      = #2597 PASS
-Product Eval            = #1836 PASS
-MCP HTTPS               = #1201 PASS
-Staging Deploy          = #1942 PASS
+runtime / staging       = 12d62cd436ce69bb57e51cdaaf0894e73def4c03 (PR #419)
+image                   = staging-12d62cd436ce
+CI                      = #2605 PASS
+Product Eval            = #1844 PASS
+PR browser acceptance   = #372 PASS
+Staging Deploy          = #1958 PASS
 Operations              = healthy
 services                = 15/15 running
-free disk               = 27.33 GiB stabilized
+free disk               = 25.27 GiB stabilized
 ```
 
-This includes the NVIDIA hosted-provider capability and connection-test hardening; OpenRouter Sessions 2–4D; post-#402 stabilization; and four Session 4E runtime slices. Session 4E now supports compatible OpenRouter auto-execution, canonical provider/model selectors, direct `+ Tambah AI` onboarding, and multiple encrypted AI Connections/API keys beneath one logical provider with explicit priority and bounded failover.
+This baseline includes closed Sessions 4E/4F plus Session 5 Project Source Picker productization. Session 5 preserves owner-backed Project source references while adding searchable Artifact/Space/Flow/MCP selection, exact attach/detach state, reversible binding UX, and the normal local owner-service/Temporal bootstrap required to exercise those catalogs.
 
-Session 4E is **ACTIVE / PARTIAL**. The next bounded slice is `+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding.
+There is **no active implementation queue**. Session 6 external-source ingestion/indexing/refresh/lifecycle is the next roadmap slot only after explicit operator authorization.
 
 ## Closed foundational roadmaps
 
@@ -129,30 +129,29 @@ No Batch 8 is active or implied.
 Current exact runtime:
 
 ```text
-SHA   = 15dc2a131778c2fe1249dda34e3291f9a3c8beae
-image = staging-15dc2a131778
+SHA   = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
+image = staging-12d62cd436ce
 ```
 
-Actual Staging Deploy #1942 proved:
+Actual Staging Deploy #1958 proved:
 
 - exact target/host SHA match;
 - clean detached staging worktree;
 - public auth/protected-route smoke PASS;
 - MCP metadata/challenge checks PASS;
-- Operations healthy;
-- 0 unhealthy services;
+- Operations healthy with no unhealthy services;
 - 15 configured / 15 running;
-- image `staging-15dc2a131778`;
-- 26 GiB free at sanitized host evidence before cleanup;
-- stale staging image cleanup completed while retaining the new and previous rollback-set images;
-- 27.33 GiB stabilized free disk.
+- image `staging-12d62cd436ce`;
+- 23.93 GiB free at sanitized host evidence before cleanup;
+- stale staging image cleanup retained the new and previous rollback-set images;
+- 25.27 GiB stabilized free disk.
 
-Staging Deploy #1941 is preserved as valid gate-only evidence; its deploy job was skipped and it is not runtime deployment proof.
+Staging Deploy #1957 is preserved as valid gate-only evidence; its deploy job was skipped because peer CI was not green yet, so it is not runtime deployment proof.
 
 NVIDIA / NIM remains live with pinned `z-ai/glm-5.3`. Current source uses 60-second default credential/canary deadlines, a 1024-token NVIDIA health-probe cap with low reasoning effort, and explicit `PROVIDER_TEST_TIMEOUT`. The user's actual API key is not claimed validated.
 
-Current Session 4E checkpoint:
-[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
+Current Session 5 checkpoint:
+[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
 
 This is staging evidence, not production promotion.
 
@@ -171,33 +170,17 @@ This is staging evidence, not production promotion.
 | Session 4E slice 2 — canonical provider/model selectors | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E slice 3 — direct + Tambah AI onboarding | CLOSED / PASS / STAGING VERIFIED |
 | Session 4E slice 4 — multi-credential AI Connections + bounded failover | CLOSED / PASS / STAGING VERIFIED |
-| Session 4E overall | ACTIVE / PARTIAL |
+| Session 4E final integration | CLOSED / PASS / STAGING VERIFIED |
+| Session 4F provider/model UX closure | CLOSED / PASS / STAGING VERIFIED |
+| Session 5 Project Source Picker | CLOSED / PASS / STAGING VERIFIED |
 
-Session 4E slice 4 closed through PR #415. Exact reviewed head `83f0481b84b705ee8a310c2aa8df798353d49e7a` passed CI #2595, Product Eval #1834, MCP HTTPS #1199, and PCS-06 #370; merged main `15dc2a131778c2fe1249dda34e3291f9a3c8beae` passed CI #2597 + Product Eval #1836 + MCP HTTPS #1201; actual Staging Deploy #1942 passed.
+Sessions 4E and 4F are fully closed through PR #417 and their canonical closure checkpoint. Current behavior includes compatible dynamic OpenRouter execution, visible catalog pricing, adjacent provider/model selectors, direct provider onboarding, multi-credential priority/failover, bounded custom OpenAI-compatible onboarding, and Local↔Hosted context isolation. There is no remaining Session 4E/4F implementation queue.
 
-Current behavior:
+Canonical Session 4E/4F checkpoint:
+[verification/session4ef-closure-2026-10-01.md](verification/session4ef-closure-2026-10-01.md).
 
-- fresh qualifying OpenRouter models can be selected and used without normal-user model-by-model `Test & Enable`;
-- dynamic execution authority is minted only by the trusted Connect admission path;
-- dispatch re-checks the exact selected model against fresh selectable catalog metadata and valid input/output pricing;
-- catalog input/output price per 1M tokens is visible in Ai;
-- provider-reported billed cost remains authoritative when supplied;
-- mutable aliases, stale/incompatible models, and invalid/missing pricing remain fail-closed;
-- generic runtime PATCH cannot grant dynamic execution authority.
-
-Next bounded Session 4E slice:
-
-- implement `+ Tambah AI → Lainnya` as a custom OpenAI-compatible provider path;
-- collect Name, Base URL, API key, and model/model-discovery information;
-- preserve Connect/Vault as credential and invocation owner;
-- validate before activation and keep network/SSRF + spend boundaries fail-closed;
-- expose the custom provider as one logical provider/source;
-- keep advanced headers/auth/discovery behind progressive disclosure.
-
-Bounded Local↔Cloud handoff behavior remains later Session 4E work.
-
-Canonical Session 4E checkpoint:
-[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
+Session 5 Project Source Picker is fully closed through PR #419 and Staging Deploy #1958. Canonical Session 5 checkpoint:
+[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
 
 Prior Session 4D checkpoint:
 [verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
@@ -240,8 +223,8 @@ Evidence:
 
 | Scope | State |
 |---|---|
-| Product/runtime implementation | SESSION 4E CUSTOM PROVIDER ONBOARDING ACTIVE |
-| Repository truth/docs reconciliation | CLOSED / PASS |
+| Product/runtime implementation | NONE ACTIVE — SESSION 5 CLOSED / PASS / STAGING VERIFIED |
+| Repository truth/docs reconciliation | CLOSING SESSION 5 CURRENT TRUTH |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | NVIDIA hosted-provider trial | CLOSED / PASS |
 | NVIDIA work-branch cleanup | CLOSED / PASS |
@@ -252,12 +235,15 @@ Evidence:
 | OpenRouter automatic-admission Session 4B | CLOSED / PASS / STAGING VERIFIED |
 | OpenRouter Settings model-picker Session 4C | CLOSED / PASS / STAGING VERIFIED |
 | OpenRouter Ai chat quick-switch Session 4D | CLOSED / PASS / STAGING VERIFIED |
+| Session 4E + 4F final integration | CLOSED / PASS / STAGING VERIFIED |
+| Session 5 Project Source Picker | CLOSED / PASS / STAGING VERIFIED |
+| Session 6 | NOT STARTED / NEXT ONLY IF EXPLICITLY AUTHORIZED |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
 
 Latest overall safe-resume checkpoint:
-[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
+[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
 
 Underlying NVIDIA/runtime evidence:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).

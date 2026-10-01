@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-09-30**
+Last updated: **2026-10-01**
 
 This is the single navigation entry point for repository documentation.
 
@@ -27,10 +27,10 @@ Historical verification is intentionally preserved even when it contains an olde
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current repository/runtime truth and deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — current queue; Session 4E is active/partial and the next bounded slice is `+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding.
-3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted Session 4E product contract and implementation progress.
+2. **[active-work-plan.md](active-work-plan.md)** — current queue and explicit next-scope boundary; no implementation session is active.
+3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted and fulfilled Session 4E/4F provider-model product contract.
 4. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
-5. **[verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md)** — current safe-resume pointer and exact proof for multi-credential AI Connections and bounded failover.
+5. **[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md)** — current safe-resume pointer and exact Session 5 closure/staging proof.
 6. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
 7. **[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md)** — prior Ai quick-switch boundary.
 8. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — underlying Settings picker closure.
@@ -109,14 +109,14 @@ Use the owner-specific runbook when touching its subsystem:
 Latest audited **runtime-changing compatibility baseline**:
 
 ```text
-SHA   = 15dc2a131778c2fe1249dda34e3291f9a3c8beae
-image = staging-15dc2a131778
+SHA   = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
+image = staging-12d62cd436ce
 ```
 
-Merged-main CI #2597, Product Eval #1836, and actual Staging Deploy #1942 passed. Staging matched exact SHA, public smoke passed, Operations was healthy, all 15 configured services were running, and free disk stabilized at 27.33 GiB after bounded BuildKit pruning.
+Merged-main CI #2605, Product Eval #1844, and actual Staging Deploy #1958 passed. Staging matched exact SHA, public/auth and MCP smoke passed, Operations was healthy, all 15 configured services were running, and free disk stabilized at 25.27 GiB after rollback-set cleanup.
 
-Session 4E is active/partial. Its first runtime slice is closed and proven by:
-[verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md](verification/session4e-openrouter-auto-execution-safe-checkpoint-2026-09-30.md).
+Sessions 4E/4F are closed through PR #417. Session 5 Project Source Picker is closed through PR #419 and its current proof is:
+[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
 
 SumoPod remains staging, not production. DR-2 checkpoint 2 remains deferred and physical independence is not claimed.
 
@@ -147,7 +147,7 @@ Use [verification/README.md](verification/README.md) for the evidence index.
 
 Important current pointers:
 
-- current overall safe-resume checkpoint: [verification/ecorione-safe-resume-checkpoint-2026-09-29.md](verification/ecorione-safe-resume-checkpoint-2026-09-29.md)
+- current overall safe-resume checkpoint: [verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md)
 - current OpenRouter Session 4C checkpoint: [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)
 - underlying OpenRouter Session 4B checkpoint: [verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)
 - underlying OpenRouter Session 4A checkpoint: [verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)

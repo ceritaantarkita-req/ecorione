@@ -2,9 +2,9 @@
 
 Last updated: **2026-10-01**
 
-Status: **SESSION 4E + 4F CLOSED / PASS / STAGING VERIFIED / NO ACTIVE AI-PROVIDER IMPLEMENTATION QUEUE**
+Status: **SESSION 5 PROJECT SOURCE PICKER CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
 
-Current resume pointer: [verification/session4ef-closure-2026-10-01.md](verification/session4ef-closure-2026-10-01.md). PR #417 reviewed head `93c3230b552e479194b756135a5458d8a6fd001e` merged as runtime-changing `main` `6170ee5d67ee4b105771d8ce2c348afba6cce896`. Merged-main CI #2601 and Product Eval #1840 passed; Staging Deploy #1950 deployed exact runtime image `staging-6170ee5d67ee`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, exact-host identity matched, and 29.95 GiB stabilized free disk.
+Current resume pointer: [verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md). PR #419 reviewed head `a299e88e52b161fd4246a09aa411bf87357e8b18` merged as runtime-changing `main` `12d62cd436ce69bb57e51cdaaf0894e73def4c03`. Merged-main CI #2605 and Product Eval #1844 passed; Staging Deploy #1958 deployed exact runtime image `staging-12d62cd436ce`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, exact-host identity matched, and 25.27 GiB stabilized free disk.
 
 ## Current queue
 
@@ -32,6 +32,7 @@ Closed current baselines:
 - Session 4E slice 4 — multi-credential AI Connections + bounded failover — CLOSED / PASS / STAGING VERIFIED through PR #415;
 - Session 4E final integration — custom OpenAI-compatible onboarding + bounded Local↔Hosted handoff proof — CLOSED / PASS / STAGING VERIFIED through PR #417;
 - Session 4F — final provider/model UX polish and closure — CLOSED / PASS / STAGING VERIFIED through PR #417.
+- Session 5 — Project Source Picker productization + local owner-service bootstrap — CLOSED / PASS / STAGING VERIFIED through PR #419.
 
 No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 
@@ -98,7 +99,7 @@ Underlying provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Overall safe-resume checkpoint:
-[verification/session4ef-closure-2026-10-01.md](verification/session4ef-closure-2026-10-01.md).
+[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
 
 ## OpenRouter Sessions 2–4F — CLOSED / PASS / STAGING VERIFIED
 
