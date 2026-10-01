@@ -103,4 +103,107 @@ describe("PE-02 ProjectSourceRegistry", () => {
       second.close();
     }
   });
+
+  it("tracks external snapshot refresh, indexing, and detach lifecycle without duplicating rows", () => {
+    const db = openHubDatabase();
+    try {
+      const project = createProject(new ProjectRegistry(db), "Lifecycle");
+      const sources = new ProjectSourceRegistry(db);
+      const sourceKey = "https://example.com/live";
+      const firstArtifact = `art_${"a".repeat(64)}` as never;
+      const secondArtifact = `art_${"b".repeat(64)}` as never;
+      const refreshedAt = "2026-10-01T01:00:00.000Z" as never;
+      const indexedAt = "2026-10-01T02:00:00.000Z" as never;
+      const detachedAt = "2026-10-01T03:00:00.000Z" as never;
+
+      expect(
+        sources.upsertExternalLifecycle({
+          projectId: project.id,
+          workspaceId: project.workspaceId,
+          sourceType: "url",
+          sourceKey,
+          role: "source",
+          latestArtifactId: firstArtifact,
+          refreshedAt: T0,
+        }),
+      ).toMatchObject({
+        sourceType: "url",
+        sourceKey,
+        latestArtifactId: firstArtifact,
+        latestContextEpisodeId: null,
+        state: "SNAPSHOT_READY",
+        lastRefreshedAt: T0,
+        lastIndexedAt: null,
+      });
+
+      expect(
+        sources.upsertExternalLifecycle({
+          projectId: project.id,
+          workspaceId: project.workspaceId,
+          sourceType: "url",
+          sourceKey,
+          role: "source",
+          latestArtifactId: secondArtifact,
+          refreshedAt,
+        }),
+      ).toMatchObject({
+        latestArtifactId: secondArtifact,
+        latestContextEpisodeId: null,
+        state: "SNAPSHOT_READY",
+        lastRefreshedAt: refreshedAt,
+      });
+      expect(sources.listExternalLifecycle(project.id, project.workspaceId)).toHaveLength(1);
+
+      expect(
+        sources.markExternalIndexed(
+          project.id,
+          project.workspaceId,
+          secondArtifact,
+          "epi_session6lifecycle001" as never,
+          indexedAt,
+        ),
+      ).toMatchObject([
+        {
+          state: "INDEXED",
+          latestContextEpisodeId: "epi_session6lifecycle001",
+          lastIndexedAt: indexedAt,
+        },
+      ]);
+
+      const unchangedRefreshAt = "2026-10-01T02:30:00.000Z" as never;
+      expect(
+        sources.upsertExternalLifecycle({
+          projectId: project.id,
+          workspaceId: project.workspaceId,
+          sourceType: "url",
+          sourceKey,
+          role: "source",
+          latestArtifactId: secondArtifact,
+          refreshedAt: unchangedRefreshAt,
+        }),
+      ).toMatchObject({
+        latestArtifactId: secondArtifact,
+        latestContextEpisodeId: "epi_session6lifecycle001",
+        state: "INDEXED",
+        lastRefreshedAt: unchangedRefreshAt,
+        lastIndexedAt: indexedAt,
+      });
+
+      sources.markExternalDetachedByArtifact(
+        project.id,
+        project.workspaceId,
+        secondArtifact,
+        detachedAt,
+      );
+      expect(sources.listExternalLifecycle(project.id, project.workspaceId)).toMatchObject([
+        {
+          state: "DETACHED",
+          latestArtifactId: secondArtifact,
+          updatedAt: detachedAt,
+        },
+      ]);
+    } finally {
+      db.close();
+    }
+  });
 });

@@ -700,6 +700,142 @@ describe("PE-02 Project Sources HTTP", () => {
     );
   });
 
+  it("indexes external text snapshots directly into Context without model inference", async () => {
+    const sourceBytes = Buffer.from("External source text", "utf8");
+    const pointer = {
+      id: ARTIFACT_ID,
+      path: `cas/${ARTIFACT_ID}`,
+      description: "External Project source",
+      mimeType: "text/plain",
+      sizeBytes: sourceBytes.byteLength,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+    };
+
+    context
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, pointer);
+    const attached = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources",
+      payload: sourceBody("artifact", ARTIFACT_ID),
+    });
+    expect(attached.statusCode).toBe(201);
+
+    db.raw
+      .prepare(
+        `INSERT INTO project_external_source_lifecycle
+         (project_id,workspace_id,source_type,source_key,role,latest_artifact_id,
+          latest_context_episode_id,state,last_refreshed_at,last_indexed_at,updated_at)
+         VALUES (?,?,?,?,?,?,NULL,'SNAPSHOT_READY',?,NULL,?)`,
+      )
+      .run(
+        "prj_personal",
+        "ws_personal",
+        "url",
+        "https://example.com/external.txt",
+        "source",
+        ARTIFACT_ID,
+        "2026-10-01T00:00:00.000Z",
+        "2026-10-01T00:00:00.000Z",
+      );
+
+    context
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, pointer);
+    artifact
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/content?scope=personal&maxSensitivity=INTERNAL&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, sourceBytes, { headers: { "content-type": "text/plain" } });
+    context.intercept({ path: "/v1/episodes", method: "POST" }).reply(201, {
+      id: "epi_projectexternal001",
+      ts: "2026-10-01T00:00:00.000Z",
+      rawText: "External source text",
+      projectId: "prj_personal",
+      provenance: {
+        sourceApp: "hub:project-source",
+        toolCallId: "op_projectdirecttext001",
+        sourceUri: `artifact:${ARTIFACT_ID}`,
+      },
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+      trust: "THIRD_PARTY",
+      summary: null,
+      consolidatedAt: null,
+    });
+    context
+      .intercept({ path: "/v1/multimodal/derivations", method: "POST" })
+      .reply(201, { ok: true });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/extract",
+      payload: {
+        operationId: "op_projectdirecttext001",
+        workspaceId: "ws_personal",
+        artifactId: ARTIFACT_ID,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      operationId: "op_projectdirecttext001",
+      task: "ocr",
+      contextEpisodeId: "epi_projectexternal001",
+      result: {
+        routeUsed: "local",
+        adapter: "direct-text",
+        provider: "artifact",
+        model: "utf-8",
+        language: "unknown",
+        text: "External source text",
+        actualUsd: 0,
+        naiveUsd: 0,
+      },
+    });
+
+    const lifecycle = await app.inject({
+      method: "GET",
+      url: "/v1/projects/prj_personal/sources/lifecycle?workspaceId=ws_personal",
+    });
+    expect(lifecycle.statusCode).toBe(200);
+    expect(lifecycle.json()).toMatchObject({
+      lifecycles: [
+        {
+          sourceType: "url",
+          sourceKey: "https://example.com/external.txt",
+          latestArtifactId: ARTIFACT_ID,
+          latestContextEpisodeId: "epi_projectexternal001",
+          state: "INDEXED",
+          lastIndexedAt: expect.any(String),
+        },
+      ],
+    });
+
+    const audit = await app.inject({
+      method: "GET",
+      url: "/v1/audit?operationId=op_projectdirecttext001",
+    });
+    const extracted = audit
+      .json()
+      .events.find((event: { type: string }) => event.type === "PROJECT_SOURCE_EXTRACTED");
+    expect(extracted?.detail).toMatchObject({
+      routeUsed: "local",
+      indexMode: "direct-text",
+      externalLifecycleCount: 1,
+    });
+  });
+
   it("rejects Artifact binding when Context authorization denies access", async () => {
     context
       .intercept({
