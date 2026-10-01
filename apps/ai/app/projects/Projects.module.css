@@ -410,7 +410,86 @@
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr) 130px auto;
   gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sourcePickerInstruction {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.sourcePickerResults {
   margin-bottom: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.sourcePickerSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+}
+
+.sourcePickerGrid {
+  max-height: 300px;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.sourcePickerCard {
+  min-width: 0;
+  padding: 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.sourcePickerCard > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.sourcePickerCard strong {
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+
+.sourcePickerCard small,
+.sourcePickerCard code {
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font-size: 9.5px;
+}
+
+.sourcePickerCard code {
+  font-family: var(--font-mono);
+}
+
+.sourcePickerType {
+  width: fit-content;
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  text-transform: uppercase;
 }
 
 .sourceList {
@@ -548,8 +627,13 @@
   .settingsForm,
   .sourceUpload,
   .sourceUploadForm,
-  .sourceForm {
+  .sourceForm,
+  .sourcePickerGrid {
     grid-template-columns: 1fr;
+  }
+
+  .sourcePickerInstruction {
+    white-space: normal;
   }
 
   .sourceItem,

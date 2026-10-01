@@ -52,6 +52,7 @@ export function ProjectSources(props: {
   const [catalogWarnings, setCatalogWarnings] = useState<string[]>([]);
   const [resourceType, setResourceType] = useState<ProjectSourceResourceType>("artifact");
   const [resourceId, setResourceId] = useState("");
+  const [catalogQuery, setCatalogQuery] = useState("");
   const [role, setRole] = useState<ProjectSourceRole>("source");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadRole, setUploadRole] = useState<ProjectSourceRole>("source");
@@ -68,6 +69,28 @@ export function ProjectSources(props: {
         ? []
         : sourceCatalog.filter((item) => item.resourceType === resourceType),
     [resourceType, sourceCatalog],
+  );
+
+  const filteredCandidates = useMemo(() => {
+    const query = catalogQuery.trim().toLocaleLowerCase();
+    if (query.length === 0) return candidates;
+    return candidates.filter((item) =>
+      [item.label, item.detail, item.resourceId].some((value) =>
+        value.toLocaleLowerCase().includes(query),
+      ),
+    );
+  }, [candidates, catalogQuery]);
+
+  const attachedBindingKeys = useMemo(
+    () =>
+      new Set(
+        sources.map((source) =>
+          [source.binding.resourceType, source.binding.resourceId, source.binding.role].join(
+            ":",
+          ),
+        ),
+      ),
+    [sources],
   );
 
   const load = useCallback(async () => {
@@ -104,13 +127,6 @@ export function ProjectSources(props: {
     );
   }, [load, loadCatalog]);
 
-  useEffect(() => {
-    if (resourceType === "url") return;
-    if (!candidates.some((candidate) => candidate.resourceId === resourceId)) {
-      setResourceId(candidates[0]?.resourceId ?? "");
-    }
-  }, [candidates, resourceId, resourceType]);
-
   async function upload(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     const form = event.currentTarget;
@@ -138,11 +154,15 @@ export function ProjectSources(props: {
     }
   }
 
-  async function attach(event: FormEvent): Promise<void> {
-    event.preventDefault();
-    const normalized = resourceId.trim();
+  async function attachBinding(
+    nextResourceType: ProjectSourceResourceType,
+    nextResourceId: string,
+    nextRole: ProjectSourceRole,
+  ): Promise<void> {
+    const normalized = nextResourceId.trim();
     if (normalized.length === 0 || busyKey !== null) return;
-    setBusyKey("attach");
+    const key = `attach:${nextResourceType}:${normalized}:${nextRole}`;
+    setBusyKey(key);
     setFeedback(null);
     try {
       const response = await fetch(endpoint, {
@@ -150,20 +170,25 @@ export function ProjectSources(props: {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           workspaceId: props.workspaceId,
-          resourceType,
+          resourceType: nextResourceType,
           resourceId: normalized,
-          role,
+          role: nextRole,
         }),
       });
       const body: unknown = await response.json().catch(() => undefined);
       if (!response.ok) throw new Error(errorMessage(body, "Gagal menambahkan source."));
-      if (resourceType === "url") setResourceId("");
+      if (nextResourceType === "url") setResourceId("");
       await load();
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Gagal menambahkan source.");
     } finally {
       setBusyKey(null);
     }
+  }
+
+  async function attach(event: FormEvent): Promise<void> {
+    event.preventDefault();
+    await attachBinding(resourceType, resourceId, role);
   }
 
   async function browseMcpResources(source: ProjectSourceView): Promise<void> {
@@ -334,11 +359,6 @@ export function ProjectSources(props: {
     }
   }
 
-  const selectedCandidate =
-    resourceType === "url"
-      ? undefined
-      : candidates.find((candidate) => candidate.resourceId === resourceId);
-
   return (
     <section className={styles.sources}>
       <div className={styles.sourcesHeader}>
@@ -409,6 +429,7 @@ export function ProjectSources(props: {
             const next = event.target.value as ProjectSourceResourceType;
             setResourceType(next);
             setResourceId("");
+            setCatalogQuery("");
           }}
           aria-label="Tipe source"
         >
@@ -428,25 +449,15 @@ export function ProjectSources(props: {
             aria-label="HTTPS URL source"
           />
         ) : (
-          <select
+          <input
             className="ecr-input"
-            value={resourceId}
-            onChange={(event) => setResourceId(event.target.value)}
-            aria-label="Pilih resource"
+            type="search"
+            value={catalogQuery}
+            onChange={(event) => setCatalogQuery(event.target.value)}
+            placeholder="Cari nama, detail, atau ID source..."
+            aria-label="Cari Project source"
             disabled={catalogLoading || candidates.length === 0}
-          >
-            {candidates.length === 0 ? (
-              <option value="">
-                {catalogLoading ? "Memuat resource..." : "Tidak ada resource tersedia"}
-              </option>
-            ) : (
-              candidates.map((candidate) => (
-                <option key={candidate.resourceId} value={candidate.resourceId}>
-                  {candidate.label} · {candidate.detail}
-                </option>
-              ))
-            )}
-          </select>
+          />
         )}
 
         <select
@@ -458,20 +469,81 @@ export function ProjectSources(props: {
           <option value="source">Source</option>
           <option value="reference">Reference</option>
         </select>
-        <button
-          className="ecr-btn ecr-btn--primary"
-          type="submit"
-          disabled={busyKey !== null || resourceId.trim().length === 0}
-        >
-          Tambah
-        </button>
+        {resourceType === "url" ? (
+          <button
+            className="ecr-btn ecr-btn--primary"
+            type="submit"
+            disabled={busyKey !== null || resourceId.trim().length === 0}
+          >
+            {busyKey?.startsWith("attach:url:") === true ? "Menambahkan..." : "Tambah URL"}
+          </button>
+        ) : (
+          <span className={styles.sourcePickerInstruction}>
+            Pilih source dari daftar di bawah.
+          </span>
+        )}
       </form>
 
-      {selectedCandidate !== undefined ? (
-        <p className={styles.sourcePickerHint}>
-          {selectedCandidate.label} · <code>{selectedCandidate.resourceId}</code> ·{" "}
-          {selectedCandidate.detail}
-        </p>
+      {resourceType !== "url" ? (
+        <div className={styles.sourcePickerResults} aria-live="polite">
+          <div className={styles.sourcePickerSummary}>
+            <span>
+              {catalogLoading
+                ? "Memuat source..."
+                : `${String(filteredCandidates.length)} dari ${String(candidates.length)} resource`}
+            </span>
+            <span>Role: {role === "source" ? "Source" : "Reference"}</span>
+          </div>
+          {filteredCandidates.length === 0 ? (
+            <p className={styles.empty}>
+              {catalogLoading
+                ? "Memuat resource..."
+                : catalogQuery.trim().length > 0
+                  ? "Tidak ada source yang cocok dengan pencarian."
+                  : "Tidak ada resource tersedia untuk tipe ini."}
+            </p>
+          ) : (
+            <ul className={styles.sourcePickerGrid}>
+              {filteredCandidates.map((candidate) => {
+                const bindingKey = [candidate.resourceType, candidate.resourceId, role].join(
+                  ":",
+                );
+                const attached = attachedBindingKeys.has(bindingKey);
+                const attachKey = `attach:${bindingKey}`;
+                return (
+                  <li key={candidate.resourceId} className={styles.sourcePickerCard}>
+                    <div>
+                      <span className={styles.sourcePickerType}>
+                        {RESOURCE_TYPES.find((item) => item.value === candidate.resourceType)
+                          ?.label ?? candidate.resourceType}
+                      </span>
+                      <strong>{candidate.label}</strong>
+                      <small>{candidate.detail}</small>
+                      <code>{candidate.resourceId}</code>
+                    </div>
+                    <button
+                      className={
+                        attached ? "ecr-btn ecr-btn--secondary" : "ecr-btn ecr-btn--primary"
+                      }
+                      type="button"
+                      disabled={busyKey !== null || attached}
+                      aria-label={`${attached ? "Sudah terpasang" : "Tambahkan"} ${candidate.label}`}
+                      onClick={() =>
+                        void attachBinding(candidate.resourceType, candidate.resourceId, role)
+                      }
+                    >
+                      {attached
+                        ? "Terpasang"
+                        : busyKey === attachKey
+                          ? "Menambahkan..."
+                          : "Tambah"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       ) : null}
 
       {catalogWarnings.length > 0 ? (
