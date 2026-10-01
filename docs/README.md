@@ -147,7 +147,7 @@ Use [verification/README.md](verification/README.md) for the evidence index.
 
 Important current pointers:
 
-- current overall safe-resume checkpoint: [verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md)
+- current overall safe-resume checkpoint: [verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md)
 - current OpenRouter Session 4C checkpoint: [verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)
 - underlying OpenRouter Session 4B checkpoint: [verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)
 - underlying OpenRouter Session 4A checkpoint: [verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md](verification/openrouter-model-family-session4a-safe-checkpoint-2026-09-28.md)
