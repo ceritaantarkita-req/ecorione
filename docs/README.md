@@ -30,7 +30,7 @@ Historical verification is intentionally preserved even when it contains an olde
 2. **[active-work-plan.md](active-work-plan.md)** — current queue and explicit next-scope boundary; no implementation session is active.
 3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted and fulfilled Session 4E/4F provider-model product contract.
 4. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
-5. **[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md)** — current safe-resume pointer and exact Session 5 closure/staging proof.
+5. **[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md)** — current safe-resume pointer and exact Session 6 closure/staging proof.
 6. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
 7. **[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md)** — prior Ai quick-switch boundary.
 8. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — underlying Settings picker closure.
@@ -109,14 +109,14 @@ Use the owner-specific runbook when touching its subsystem:
 Latest audited **runtime-changing compatibility baseline**:
 
 ```text
-SHA   = 12d62cd436ce69bb57e51cdaaf0894e73def4c03
-image = staging-12d62cd436ce
+SHA   = 15f007c5d248df8319644f2d9a6c4c7905c70681
+image = staging-15f007c5d248
 ```
 
-Merged-main CI #2605, Product Eval #1844, and actual Staging Deploy #1958 passed. Staging matched exact SHA, public/auth and MCP smoke passed, Operations was healthy, all 15 configured services were running, and free disk stabilized at 25.27 GiB after rollback-set cleanup.
+Merged-main CI #2610, Product Eval #1849, MCP External HTTPS Acceptance #1204, and actual Staging Deploy #1968 passed. Staging matched exact SHA, public/auth and MCP smoke passed, Operations was healthy, all 15 configured services were running, and free disk stabilized at 27.39 GiB after rollback-set cleanup.
 
-Sessions 4E/4F are closed through PR #417. Session 5 Project Source Picker is closed through PR #419 and its current proof is:
-[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
+Sessions 4E/4F are closed through PR #417. Session 5 Project Source Picker is closed through PR #419. Session 6 External Source Lifecycle is closed through PR #421 and its current proof is:
+[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 SumoPod remains staging, not production. DR-2 checkpoint 2 remains deferred and physical independence is not claimed.
 
