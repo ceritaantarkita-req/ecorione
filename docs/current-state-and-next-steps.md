@@ -332,7 +332,7 @@ Canonical Session 4D checkpoint:
 
 ## Current active work
 
-There is **no active implementation queue**. Sessions 4E/4F remain CLOSED / PASS / STAGING VERIFIED through PR #417, and Session 5 Project Source Picker is CLOSED / PASS / STAGING VERIFIED through PR #419 and Staging Deploy #1958.
+There is **no active implementation queue**. Sessions 4E/4F, Session 5 Project Source Picker, and Session 6 External Source Lifecycle are CLOSED / PASS / STAGING VERIFIED through PR #417 / #419 / #421 and Staging Deploy #1950 / #1958 / #1968.
 
 Closed current slices that must not be redone:
 
@@ -379,7 +379,7 @@ For a new session/agent:
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/session5-project-source-picker-closure-2026-10-01.md](verification/session5-project-source-picker-closure-2026-10-01.md).
+[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
