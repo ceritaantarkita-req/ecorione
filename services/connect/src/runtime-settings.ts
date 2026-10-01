@@ -82,10 +82,60 @@ export const ChatTargetPreferenceSchema = z.enum(["local", "hosted"]);
 export type ChatTargetPreference = z.infer<typeof ChatTargetPreferenceSchema>;
 export const LocalBaseUrlSchema = z.string().min(1).max(2048).superRefine(safeBaseUrl);
 
+function safeCustomOpenAiBaseUrl(value: string, ctx: z.RefinementCtx): void {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    ctx.addIssue({ code: "custom", message: "Base URL custom provider harus URL valid." });
+    return;
+  }
+  if (url.protocol !== "https:") {
+    ctx.addIssue({ code: "custom", message: "Base URL custom provider wajib HTTPS." });
+  }
+  if (url.username !== "" || url.password !== "" || url.hash !== "" || url.search !== "") {
+    ctx.addIssue({
+      code: "custom",
+      message: "Base URL custom provider tidak boleh memuat credential, query, atau fragment.",
+    });
+  }
+  if (isLocalReachableHost(url.hostname)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Base URL custom provider wajib memakai host publik.",
+    });
+  }
+}
+
+export const CustomOpenAiBaseUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2048)
+  .superRefine(safeCustomOpenAiBaseUrl);
+export const CustomOpenAiModelSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(256)
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$/u);
+export const CustomOpenAiConfigSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    baseUrl: CustomOpenAiBaseUrlSchema,
+    model: CustomOpenAiModelSchema,
+    inputUsdPerMTok: z.number().finite().nonnegative().max(1_000_000),
+    outputUsdPerMTok: z.number().finite().nonnegative().max(1_000_000),
+    validatedAt: z.string().datetime({ offset: false }),
+  })
+  .strict();
+export type CustomOpenAiConfig = z.infer<typeof CustomOpenAiConfigSchema>;
+
 const RuntimeSettingsObjectSchema = z
   .object({
     hostedProvider: HostedProviderIdSchema,
     hostedModel: HostedModelPreferenceSchema.default(GOVERNED_HOSTED_MODEL),
+    customOpenAi: CustomOpenAiConfigSchema.optional(),
     openRouterModelSelection: HostedModelPreferenceSchema.optional(),
     /**
      * Legacy field name kept for persisted-file compatibility.
@@ -107,6 +157,25 @@ const RuntimeSettingsObjectSchema = z
 
 export const RuntimeSettingsSchema = RuntimeSettingsObjectSchema.superRefine(
   (settings, ctx) => {
+    if (settings.hostedProvider === "custom-openai") {
+      if (settings.customOpenAi === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["customOpenAi"],
+          message: "Custom provider harus melewati validasi Connect sebelum diaktifkan.",
+        });
+        return;
+      }
+      if (settings.hostedModel !== settings.customOpenAi.model) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["hostedModel"],
+          message:
+            "Model custom provider harus sama dengan model yang sudah divalidasi Connect.",
+        });
+      }
+      return;
+    }
     if (hostedModelSupported(settings.hostedProvider, settings.hostedModel)) return;
     ctx.addIssue({
       code: "custom",
@@ -128,6 +197,7 @@ export type RuntimeSettings = Omit<
 
 export const RuntimeSettingsPatchSchema = RuntimeSettingsObjectSchema.omit({
   openRouterCertifiedModelId: true,
+  customOpenAi: true,
 })
   .partial()
   .strict();
@@ -151,6 +221,8 @@ export interface RuntimeSettingsAdmin extends RuntimeSettingsReader {
   activateOpenRouterModel?: (modelId: HostedModelPreference) => RuntimeSettingsSnapshot;
   /** Legacy validation path; kept for explicit operator evidence workflows. */
   certifyOpenRouterModel?: (modelId: HostedModelPreference) => RuntimeSettingsSnapshot;
+  /** Trusted activation after the custom endpoint/model/credential probe passes. */
+  activateCustomOpenAi?: (config: CustomOpenAiConfig) => RuntimeSettingsSnapshot;
 }
 
 const RuntimeSettingsFileSchema = z.object({
@@ -204,6 +276,7 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
     defaults: {
       hostedProvider: HostedProviderId;
       hostedModel?: HostedModelPreference | undefined;
+      customOpenAi?: CustomOpenAiConfig | undefined;
       openRouterModelSelection?: HostedModelPreference | undefined;
       openRouterCertifiedModelId?: HostedModelPreference | undefined;
       localRuntime: LocalRuntimeId;
@@ -273,7 +346,12 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
       ...(normalized.hostedProvider !== undefined &&
       normalized.hostedProvider !== prior.settings.hostedProvider &&
       normalized.hostedModel === undefined
-        ? { hostedModel: GOVERNED_HOSTED_MODEL }
+        ? {
+            hostedModel:
+              normalized.hostedProvider === "custom-openai"
+                ? (prior.settings.customOpenAi?.model ?? GOVERNED_HOSTED_MODEL)
+                : GOVERNED_HOSTED_MODEL,
+          }
         : {}),
       ...(identityBoundaryChanged && normalized.localModelDigest === undefined
         ? { localModelDigest: null }
@@ -317,5 +395,21 @@ export class FileRuntimeSettings implements RuntimeSettingsAdmin {
 
   certifyOpenRouterModel(modelId: HostedModelPreference): RuntimeSettingsSnapshot {
     return this.activateOpenRouterModel(modelId);
+  }
+
+  activateCustomOpenAi(config: CustomOpenAiConfig): RuntimeSettingsSnapshot {
+    const admitted = CustomOpenAiConfigSchema.parse(config);
+    const prior = this.read();
+    const settings = RuntimeSettingsSchema.parse({
+      ...prior.settings,
+      hostedProvider: "custom-openai",
+      hostedModel: admitted.model,
+      customOpenAi: admitted,
+      hostedCallsEnabled: true,
+      defaultChatTarget: "hosted",
+    });
+    const next: RuntimeSettingsFile = { revision: prior.revision + 1, version: 1, settings };
+    this.persist(next);
+    return { revision: next.revision, settings: cloneSettings(next.settings) };
   }
 }

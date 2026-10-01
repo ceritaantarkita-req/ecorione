@@ -178,9 +178,45 @@ export function registerConnectControlRoutes(
     return result;
   });
 
-  app.get("/v1/settings/providers", async () => ({
-    providers: PROVIDER_CATALOG,
-  }));
+  app.get("/v1/settings/providers", async () => {
+    const settings = runtime().get().settings;
+    return {
+      providers: PROVIDER_CATALOG.map((provider) =>
+        provider.id !== "custom-openai"
+          ? provider
+          : {
+              ...provider,
+              displayName: settings.customOpenAi?.name ?? "Lainnya / Custom OpenAI-compatible",
+              routingReady: settings.customOpenAi !== undefined,
+              // Custom provider validation needs endpoint/model/pricing metadata and therefore
+              // uses its dedicated Connect-owned onboarding route instead of generic key test.
+              connectionTestReady: false,
+              hostedModels:
+                settings.customOpenAi === undefined
+                  ? []
+                  : [
+                      {
+                        id: settings.customOpenAi.model,
+                        displayName: settings.customOpenAi.model,
+                        providerRuntime: settings.customOpenAi.model,
+                        sourceProvider: "custom",
+                        family: "other",
+                        contextWindowTokens: null,
+                        capabilities: ["text"],
+                        pricing: {
+                          costModel: null,
+                          authority: "snapshot",
+                          currency: "USD",
+                        },
+                        verification: "verified",
+                        catalogSource: "static-verified",
+                        verifiedAt: settings.customOpenAi.validatedAt,
+                      },
+                    ],
+            },
+      ),
+    };
+  });
 
   app.get("/v1/settings/providers/openrouter/models", async (req) => {
     const query = parseOrBadRequest(OpenRouterDiscoveryQuerySchema, req.query);

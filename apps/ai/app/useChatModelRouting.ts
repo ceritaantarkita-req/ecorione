@@ -218,7 +218,11 @@ export function useChatModelRouting() {
     }
 
     const hostedModel =
-      runtime?.settings.hostedProvider === provider ? runtime.settings.hostedModel : "governed";
+      provider === "custom-openai"
+        ? (runtime?.settings.customOpenAi?.model ?? "governed")
+        : runtime?.settings.hostedProvider === provider
+          ? runtime.settings.hostedModel
+          : "governed";
     return getJson<ChatRuntimeSnapshot>("/api/settings/settings/runtime", {
       method: "PUT",
       headers: { "content-type": "application/json" },

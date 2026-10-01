@@ -1,6 +1,7 @@
 import type { ChatTarget } from "./chat-history";
 
-export type HostedProviderId = "anthropic" | "openrouter" | "openai" | "nvidia";
+export type HostedProviderId =
+  "anthropic" | "openrouter" | "openai" | "nvidia" | "custom-openai";
 export type ChatProviderSource = "local" | HostedProviderId;
 
 export type ChatRuntimeSnapshot = {
@@ -9,6 +10,14 @@ export type ChatRuntimeSnapshot = {
     hostedCallsEnabled: boolean;
     hostedProvider: HostedProviderId;
     hostedModel: string;
+    customOpenAi?: {
+      name: string;
+      baseUrl: string;
+      model: string;
+      inputUsdPerMTok: number;
+      outputUsdPerMTok: number;
+      validatedAt: string;
+    };
     openRouterModelSelection?: string;
     openRouterCertifiedModelId?: string;
     defaultChatTarget: ChatTarget;
@@ -78,7 +87,11 @@ export type OpenRouterQuickSwitchModel = ChatModelOption;
 
 function isHostedProviderId(value: string): value is HostedProviderId {
   return (
-    value === "anthropic" || value === "openrouter" || value === "openai" || value === "nvidia"
+    value === "anthropic" ||
+    value === "openrouter" ||
+    value === "openai" ||
+    value === "nvidia" ||
+    value === "custom-openai"
   );
 }
 
@@ -102,7 +115,10 @@ export function buildChatProviderOptions(
     }
     options.push({
       id: provider.id,
-      displayName: hostedProviderLabel(provider.id),
+      displayName:
+        provider.id === "custom-openai"
+          ? provider.displayName
+          : hostedProviderLabel(provider.id),
       available: configured.has(provider.id),
     });
   }
@@ -126,7 +142,8 @@ export function buildChatOnboardingProviderOptions(
     if (
       provider.category !== "ai" ||
       !provider.routingReady ||
-      !isHostedProviderId(provider.id)
+      !isHostedProviderId(provider.id) ||
+      provider.id === "custom-openai"
     ) {
       continue;
     }
@@ -151,6 +168,8 @@ export function hostedProviderLabel(provider: HostedProviderId | undefined): str
       return "OpenAI";
     case "nvidia":
       return "NVIDIA";
+    case "custom-openai":
+      return "Lainnya / Custom";
     default:
       return "Hosted";
   }
@@ -279,6 +298,20 @@ export function buildHostedProviderModels(
     return buildOpenRouterQuickSwitchModels(runtime, providers, discovery);
   }
 
+  if (runtime.settings.hostedProvider === "custom-openai") {
+    const configured = runtime.settings.customOpenAi;
+    if (configured === undefined) return [];
+    return [
+      {
+        id: configured.model,
+        displayName: configured.model,
+        available: true,
+        inputUsdPerMTok: configured.inputUsdPerMTok,
+        outputUsdPerMTok: configured.outputUsdPerMTok,
+      },
+    ];
+  }
+
   const provider = providers.find(
     (entry) =>
       entry.id === runtime.settings.hostedProvider &&
@@ -332,7 +365,11 @@ export function deriveChatRoutingState(
   return {
     hostedAvailable,
     hostedBlockedByOpenRouterPreference,
-    hostedRouteLabel: `Hosted · ${hostedProviderLabel(provider)} · ${hostedModelLabel(
+    hostedRouteLabel: `Hosted · ${
+      provider === "custom-openai"
+        ? (runtime.settings.customOpenAi?.name ?? hostedProviderLabel(provider))
+        : hostedProviderLabel(provider)
+    } · ${hostedModelLabel(
       provider === "openrouter"
         ? currentOpenRouterPreference(runtime)
         : runtime.settings.hostedModel,

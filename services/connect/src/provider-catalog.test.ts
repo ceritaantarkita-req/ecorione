@@ -22,7 +22,9 @@ describe("provider catalog", () => {
     const testReady = PROVIDER_CATALOG.filter((entry) => entry.connectionTestReady).map(
       (entry) => entry.id,
     );
-    const expectedHosted = [...HOSTED_PROVIDER_IDS].sort();
+    const expectedHosted = HOSTED_PROVIDER_IDS.filter(
+      (provider) => provider !== "custom-openai",
+    ).sort();
     expect([...routingReady].sort()).toEqual(expectedHosted);
     expect([...testReady].sort()).toEqual(expectedHosted);
 

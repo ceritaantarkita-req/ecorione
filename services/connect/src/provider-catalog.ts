@@ -32,7 +32,7 @@ export interface ProviderCatalogEntry {
 const ROUTING_READY = new Set<string>(HOSTED_PROVIDER_IDS);
 
 function aiProvider(id: AiProviderId, displayName: string): ProviderCatalogEntry {
-  const routingReady = ROUTING_READY.has(id);
+  const routingReady = id !== "custom-openai" && ROUTING_READY.has(id);
   return {
     id,
     displayName,

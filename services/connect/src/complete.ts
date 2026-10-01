@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 /** Connect completion pipeline: routing, bounded exact cache, provider, honest cost. */
 import {
   assertPrefixCacheable,
@@ -15,6 +16,8 @@ import {
 import { cacheKey, type ExactMatchCache } from "./cache.js";
 import type { ProviderCredentialReader } from "./credential-vault.js";
 import type { HostedModelPreference } from "./hosted-model-catalog.js";
+import type { CustomOpenAiConfig } from "./runtime-settings.js";
+import type { OpenAiCompatibleTransport } from "./providers/openai-compatible.js";
 import {
   localModelIdentity,
   type LocalIdentityProvenance,
@@ -27,6 +30,7 @@ import {
 } from "./provider-types.js";
 import {
   CostKillSwitchError,
+  CustomProviderPolicyError,
   MissingCredentialError,
   ProviderError,
   ProviderResponseError,
@@ -51,6 +55,10 @@ export interface CompleteDeps {
   readonly openrouterApiKey?: string | undefined;
   readonly openaiApiKey?: string | undefined;
   readonly nvidiaApiKey?: string | undefined;
+  /** Trusted config written only after the bounded custom-provider probe succeeds. */
+  readonly customOpenAiConfig?: CustomOpenAiConfig | undefined;
+  /** Test seam; production custom providers use the DNS-pinned public HTTPS transport. */
+  readonly customOpenAiTransport?: OpenAiCompatibleTransport | undefined;
   /** A dynamic OpenRouter model may execute only with Connect-resolved trusted admission metadata. */
   readonly certifiedOpenRouterModel?:
     | {
@@ -147,6 +155,8 @@ function developmentApiKey(deps: CompleteDeps, provider: HostedProviderId): stri
       return deps.openaiApiKey;
     case "nvidia":
       return deps.nvidiaApiKey;
+    case "custom-openai":
+      return undefined;
   }
 }
 
@@ -167,6 +177,16 @@ export async function complete(
       ? {}
       : { certifiedOpenRouterModel: deps.certifiedOpenRouterModel.id }),
   });
+
+  if (
+    decision.routeReason !== "local-consolidation" &&
+    hostedProvider === "custom-openai" &&
+    (deps.customOpenAiConfig === undefined || deps.customOpenAiConfig.model !== decision.model)
+  ) {
+    throw new CustomProviderPolicyError(
+      "Custom provider belum memiliki konfigurasi/model tervalidasi yang cocok.",
+    );
+  }
 
   if (decision.routeReason !== "local-consolidation") {
     if (!deps.hostedCallsEnabled) throw new CostKillSwitchError();
@@ -196,7 +216,15 @@ export async function complete(
         provenance: provenance?.status,
       })
     : undefined;
-  const modelIdentity = localIdentity?.id ?? `${providerIdentity}:${model}`;
+  const customEndpointDigest =
+    !local && hostedProvider === "custom-openai" && deps.customOpenAiConfig !== undefined
+      ? createHash("sha256").update(deps.customOpenAiConfig.baseUrl).digest("hex").slice(0, 16)
+      : undefined;
+  const modelIdentity =
+    localIdentity?.id ??
+    (customEndpointDigest === undefined
+      ? `${providerIdentity}:${model}`
+      : `${providerIdentity}:${model}:endpoint-${customEndpointDigest}`);
   const modelIdentityPinned = localIdentity?.pinned ?? true;
   const modelIdentityProvenance = localIdentity?.provenance ?? "hosted-pinned";
   const allowExactCache = !local || modelIdentityPinned;
@@ -293,6 +321,14 @@ export async function complete(
       ...(openRouterPriceOverride === undefined
         ? {}
         : { openRouterPriceOverride, openRouterAllowFallbacks: false }),
+      ...(hostedProvider === "custom-openai" && deps.customOpenAiConfig !== undefined
+        ? {
+            customOpenAiConfig: deps.customOpenAiConfig,
+            ...(deps.customOpenAiTransport === undefined
+              ? {}
+              : { customOpenAiTransport: deps.customOpenAiTransport }),
+          }
+        : {}),
       ...(deps.hostedMaxOutputTokens === undefined
         ? {}
         : { maxOutputTokens: deps.hostedMaxOutputTokens }),

@@ -63,6 +63,8 @@ function developmentHostedApiKey(provider = hostedProvider): string | undefined 
       return openaiApiKey;
     case "nvidia":
       return nvidiaApiKey;
+    case "custom-openai":
+      return undefined;
   }
 }
 

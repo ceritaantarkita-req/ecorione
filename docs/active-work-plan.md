@@ -1,10 +1,10 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-09-30**
+Last updated: **2026-10-01**
 
-Status: **SESSION 4E ACTIVE-PARTIAL / MULTI-CREDENTIAL SLICE CLOSED-PASS-STAGING VERIFIED / NEXT SLICE = CUSTOM OPENAI-COMPATIBLE PROVIDER / NVIDIA SESSION 1 CLOSED-PASS / BRANCH HYGIENE CLOSED-PASS**
+Status: **SESSION 4E + 4F INTEGRATION CANDIDATE / READY FOR LOCAL ACCEPTANCE / NOT MERGED / MAIN + STAGING UNCHANGED**
 
-Current resume pointer: [verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md). The latest audited runtime-changing `main` is `15dc2a131778c2fe1249dda34e3291f9a3c8beae` from PR #415, staging image `staging-15dc2a131778`.
+Current integration resume pointer: [verification/session4ef-integration-local-acceptance-checkpoint-2026-10-01.md](verification/session4ef-integration-local-acceptance-checkpoint-2026-10-01.md). This status applies only to `feat/session4ef-integration-20261001`. Canonical `main` remains `c3ef2f186f465c2942b552974e47333c797cb4a1`; the latest staging-verified runtime baseline remains `15dc2a131778c2fe1249dda34e3291f9a3c8beae` from PR #415, image `staging-15dc2a131778`. Do not claim Session 4E/4F merged or staging-verified until local acceptance, exact-head CI, merge, and staging convergence complete.
 
 ## Current queue
 

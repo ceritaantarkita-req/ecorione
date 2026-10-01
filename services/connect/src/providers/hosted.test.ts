@@ -106,6 +106,35 @@ describe("hosted provider adapters", () => {
     ).rejects.toThrow(/exact model/u);
   });
 
+  it("OpenRouter dynamic reservation memakai certified price override untuk model di luar static pricing table", () => {
+    expect(() =>
+      estimateHostedReservationUsd("openrouter", {
+        model: "google/gemini-3.8-flash",
+        openRouterPriceOverride: {
+          inputPerMTok: 0.75,
+          outputPerMTok: 3.75,
+          cacheWritePerMTok: 0.75,
+          cacheReadPerMTok: 0.75,
+        },
+        openRouterAllowFallbacks: false,
+        ...base,
+      }),
+    ).not.toThrow();
+    expect(
+      estimateHostedReservationUsd("openrouter", {
+        model: "google/gemini-3.8-flash",
+        openRouterPriceOverride: {
+          inputPerMTok: 0.75,
+          outputPerMTok: 3.75,
+          cacheWritePerMTok: 0.75,
+          cacheReadPerMTok: 0.75,
+        },
+        openRouterAllowFallbacks: false,
+        ...base,
+      }),
+    ).toBeGreaterThan(0);
+  });
+
   it("OpenRouter menolak zero billed cost untuk pinned paid model", async () => {
     openrouterPool.intercept({ path: "/api/v1/chat/completions", method: "POST" }).reply(200, {
       model: "anthropic/claude-sonnet-4.5",

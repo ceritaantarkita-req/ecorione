@@ -46,7 +46,17 @@ import {
   type HostedProviderId,
 } from "./provider-types.js";
 import { NVIDIA_PROVIDER_PROBE_MAX_OUTPUT_TOKENS } from "./providers/nvidia.js";
+import type { OpenAiCompatibleTransport } from "./providers/openai-compatible.js";
 import {
+  createPublicHttpsOpenAiTransport,
+  PublicHttpsEndpointError,
+  resolvePublicHttpsEndpoint,
+  type PublicHttpsResolveHost,
+} from "./providers/public-https-transport.js";
+import {
+  CustomOpenAiBaseUrlSchema,
+  CustomOpenAiConfigSchema,
+  CustomOpenAiModelSchema,
   LocalBaseUrlSchema,
   type ChatTargetPreference,
   type RuntimeSettings,
@@ -55,6 +65,7 @@ import {
 import { MutableLocalModelTagError } from "./runtime-settings.js";
 import {
   CostKillSwitchError,
+  CustomProviderPolicyError,
   MissingCredentialError,
   ProviderError,
   SpendBudgetNotConfiguredError,
@@ -74,6 +85,8 @@ export const DEFAULT_CREDENTIAL_TEST_TIMEOUT_MS = 60_000;
 function toHttpError(err: unknown, detailedProviderHealth = false): unknown {
   if (err instanceof CostKillSwitchError)
     return new HttpError(503, "COST_KILL_SWITCH_ACTIVE", err.message);
+  if (err instanceof CustomProviderPolicyError)
+    return new HttpError(403, "CUSTOM_PROVIDER_POLICY_DENIED", err.message);
   if (err instanceof SpendBudgetNotConfiguredError)
     return new HttpError(503, "SPEND_BUDGET_NOT_CONFIGURED", err.message);
   if (err instanceof MutableLocalModelTagError)
@@ -132,6 +145,16 @@ const ProviderCanaryBodySchema = z
 
 const CredentialTestParamsSchema = z.object({ provider: HostedProviderIdSchema });
 const CredentialTestBodySchema = z.object({ secret: z.string().min(1).max(32_768) }).strict();
+const CustomOpenAiConnectBodySchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    baseUrl: CustomOpenAiBaseUrlSchema,
+    model: CustomOpenAiModelSchema,
+    secret: z.string().min(1).max(32_768),
+    inputUsdPerMTok: z.number().finite().nonnegative().max(1_000_000),
+    outputUsdPerMTok: z.number().finite().nonnegative().max(1_000_000),
+  })
+  .strict();
 const LocalRuntimeDiscoveryBodySchema = z
   .object({
     localRuntime: LocalRuntimeIdSchema.default("openai-compatible"),
@@ -182,6 +205,9 @@ export interface BuildConnectServerOptions {
   readonly openRouterModelDiscovery?: OpenRouterModelDiscoveryReader | undefined;
   readonly openRouterCertificationReader?: OpenRouterCertificationReader | undefined;
   readonly openRouterCertificationAdmin?: OpenRouterCertificationAdmin | undefined;
+  /** Test seams; production custom providers use DNS-pinned public HTTPS. */
+  readonly customOpenAiTransport?: OpenAiCompatibleTransport | undefined;
+  readonly customOpenAiResolveHost?: PublicHttpsResolveHost | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -241,6 +267,16 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
       openrouterApiKey: options.openrouterApiKey,
       openaiApiKey: options.openaiApiKey,
       nvidiaApiKey: options.nvidiaApiKey,
+      ...(runtime.customOpenAi === undefined
+        ? {}
+        : { customOpenAiConfig: runtime.customOpenAi }),
+      customOpenAiTransport:
+        options.customOpenAiTransport ??
+        createPublicHttpsOpenAiTransport({
+          ...(options.customOpenAiResolveHost === undefined
+            ? {}
+            : { resolveHost: options.customOpenAiResolveHost }),
+        }),
       localRuntime: runtime.localRuntime,
       localBaseUrl: runtime.localBaseUrl,
       localModelTag: runtime.localModelTag,
@@ -578,11 +614,172 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     }
   });
 
+  app.post("/v1/settings/providers/custom-openai/connect", async (req) => {
+    const body = parseOrBadRequest(CustomOpenAiConnectBodySchema, req.body);
+    if (
+      options.credentialVaultAdmin === undefined ||
+      options.runtimeSettings?.activateCustomOpenAi === undefined
+    ) {
+      throw new HttpError(
+        503,
+        "CUSTOM_PROVIDER_ONBOARDING_UNAVAILABLE",
+        "Custom provider onboarding membutuhkan Connect Vault dan runtime settings.",
+      );
+    }
+
+    const existingRuntime = currentRuntime();
+    const existingConfig = existingRuntime.customOpenAi;
+    const existingConnections = options.credentialVaultAdmin
+      .list()
+      .filter((entry) => entry.provider === "custom-openai" && entry.purpose === "messages");
+    if (
+      existingConfig !== undefined &&
+      existingConnections.length > 0 &&
+      (existingConfig.name !== body.name ||
+        existingConfig.baseUrl !== body.baseUrl ||
+        existingConfig.model !== body.model ||
+        existingConfig.inputUsdPerMTok !== body.inputUsdPerMTok ||
+        existingConfig.outputUsdPerMTok !== body.outputUsdPerMTok)
+    ) {
+      throw new HttpError(
+        409,
+        "CUSTOM_PROVIDER_RECONFIG_REQUIRES_MANAGEMENT",
+        "Custom provider yang sudah punya AI Connection tidak boleh diganti diam-diam. Kelola koneksi/config existing dulu.",
+      );
+    }
+
+    try {
+      await resolvePublicHttpsEndpoint(body.baseUrl, options.customOpenAiResolveHost);
+    } catch (error) {
+      if (error instanceof PublicHttpsEndpointError) {
+        throw new HttpError(
+          error.code === "CUSTOM_PROVIDER_DNS_UNAVAILABLE" ? 502 : 400,
+          error.code,
+          error.message,
+        );
+      }
+      throw error;
+    }
+
+    const validatedAt = nowIso();
+    const config = CustomOpenAiConfigSchema.parse({
+      name: body.name,
+      baseUrl: body.baseUrl.replace(/\/+$/u, ""),
+      model: body.model,
+      inputUsdPerMTok: body.inputUsdPerMTok,
+      outputUsdPerMTok: body.outputUsdPerMTok,
+      validatedAt,
+    });
+    const transientCredential: ProviderCredentialReader = {
+      get(provider, purpose) {
+        return provider === "custom-openai" && purpose === "messages" ? body.secret : undefined;
+      },
+    };
+    const probe = probeBody("hosted", "Reply exactly ECORIONE_CUSTOM_PROVIDER_OK");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), credentialTestTimeoutMs);
+    const started = performance.now();
+
+    try {
+      const result = await complete(
+        {
+          ...currentDeps({
+            ...existingRuntime,
+            hostedProvider: "custom-openai",
+            hostedModel: config.model,
+            customOpenAi: config,
+            hostedCallsEnabled:
+              options.hostedCallsEnabled ?? existingRuntime.hostedCallsEnabled,
+          }),
+          credentialVault: transientCredential,
+          customOpenAiConfig: config,
+          cache: new ExactMatchCache(),
+          hostedMaxOutputTokens: 256,
+        },
+        probe,
+        controller.signal,
+      );
+      if (
+        result.responseModel !== config.model ||
+        !result.reply.includes("ECORIONE_CUSTOM_PROVIDER_OK")
+      ) {
+        throw new HttpError(
+          502,
+          "CUSTOM_PROVIDER_VALIDATION_FAILED",
+          "Custom provider tidak membuktikan model dan response contract yang diminta.",
+        );
+      }
+
+      const metadata = options.credentialVaultAdmin.addConnection(
+        "custom-openai",
+        "messages",
+        body.secret,
+        validatedAt,
+      );
+      try {
+        const runtime = options.runtimeSettings.activateCustomOpenAi(config);
+        recordCompletion(probe, result);
+        metrics.addCounter("ecorione_custom_provider_onboarding_total", 1, {
+          outcome: "pass",
+        });
+        return {
+          pass: true,
+          provider: "custom-openai",
+          connection: metadata,
+          runtime,
+          config: {
+            name: config.name,
+            baseUrl: config.baseUrl,
+            model: config.model,
+            inputUsdPerMTok: config.inputUsdPerMTok,
+            outputUsdPerMTok: config.outputUsdPerMTok,
+            validatedAt: config.validatedAt,
+          },
+          latencyMs: performance.now() - started,
+          cost: result.cost,
+        };
+      } catch (error) {
+        try {
+          options.credentialVaultAdmin.removeConnection(
+            "custom-openai",
+            "messages",
+            metadata.connectionId,
+          );
+        } catch {
+          // Preserve the activation failure. The rollback is best-effort and secrets
+          // remain encrypted even if the Vault itself became unavailable.
+        }
+        throw error;
+      }
+    } catch (error) {
+      metrics.addCounter("ecorione_custom_provider_onboarding_total", 1, {
+        outcome: controller.signal.aborted ? "timeout" : "error",
+      });
+      if (controller.signal.aborted) {
+        throw new HttpError(
+          504,
+          "PROVIDER_TEST_TIMEOUT",
+          `Custom provider timeout setelah ${String(credentialTestTimeoutMs)}ms; credential belum disimpan.`,
+        );
+      }
+      throw toHttpError(error, true);
+    } finally {
+      clearTimeout(timeout);
+    }
+  });
+
   app.post<{ Params: { provider: string } }>(
     "/v1/settings/credentials/:provider/test",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialTestParamsSchema, req.params);
       const { secret } = parseOrBadRequest(CredentialTestBodySchema, req.body);
+      if (provider === "custom-openai") {
+        throw new HttpError(
+          400,
+          "CUSTOM_PROVIDER_REQUIRES_CONFIG",
+          "Gunakan endpoint custom provider yang menyertakan Name, Base URL, Model, dan pricing.",
+        );
+      }
       const runtime = currentRuntime();
       const transientCredential: ProviderCredentialReader = {
         get(candidate, purpose) {
