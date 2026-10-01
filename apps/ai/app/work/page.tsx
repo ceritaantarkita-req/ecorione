@@ -57,7 +57,7 @@ export default function WorkPage() {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<string | null>(null);
   const [message, setMessage] = useState(
-    "Work membaca owner state langsung dari Flow, Temporal, Hub, dan RnD.",
+    "Schedule membaca owner state langsung dari Flow, Temporal, Hub, dan RnD.",
   );
   const requestRef = useRef(0);
 
@@ -139,7 +139,7 @@ export default function WorkPage() {
       } catch (reason) {
         if (seq !== requestRef.current) return;
         const detail = reason instanceof Error ? reason.message : String(reason);
-        setMessage(`Work load gagal: ${detail}`);
+        setMessage(`Schedule load gagal: ${detail}`);
         setTriggers([]);
         setGraphs([]);
         setRuns([]);
@@ -184,7 +184,7 @@ export default function WorkPage() {
         setProjects(active);
         if (chosen === null) {
           setProjectReady(false);
-          setMessage("Work tidak menemukan Project aktif.");
+          setMessage("Schedule tidak menemukan Project aktif.");
           return;
         }
         setProjectId(chosen);
@@ -199,7 +199,7 @@ export default function WorkPage() {
         if (cancelled) return;
         setProjects([]);
         setProjectReady(false);
-        setMessage("Work gagal memuat daftar Project aktif.");
+        setMessage("Schedule gagal memuat daftar Project aktif.");
       });
 
     return () => {
@@ -306,6 +306,7 @@ export default function WorkPage() {
         catchupWindowMs: assisted.draft.configuration.catchupWindowMs,
         overlap: assisted.draft.configuration.overlap,
       }));
+      setEditing(true);
       setMessage(`${assisted.summary} Review draft lalu Save untuk mengubah Trigger.`);
     } catch (reason) {
       setMessage(
@@ -418,8 +419,8 @@ export default function WorkPage() {
       <header className={styles.header}>
         <div>
           <span className={styles.eyebrow}>Plan and run</span>
-          <h1>Work</h1>
-          <p>Atur jadwal, Flow, dan hasil eksekusi untuk Project aktif.</p>
+          <h1>Schedule</h1>
+          <p>Atur jadwal otomatis, Flow, dan hasil eksekusi untuk Project aktif.</p>
         </div>
         <ProjectPicker
           workspaceId={workspaceId}
@@ -430,7 +431,7 @@ export default function WorkPage() {
         />
       </header>
 
-      <nav className={styles.tabs} aria-label="Work views">
+      <nav className={styles.tabs} aria-label="Schedule views">
         {(["schedule", "flows", "runs"] as const).map((value) => (
           <button
             type="button"

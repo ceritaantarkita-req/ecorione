@@ -416,7 +416,7 @@ export function buildBrainGraph(
       workspaceId: query.workspaceId,
       projectId: query.projectId,
       availability: "AVAILABLE",
-      href: "/work",
+      href: "/schedule",
       metadata: {
         kind: trigger.kind,
         graphVersion: trigger.graphVersion,
@@ -443,7 +443,7 @@ export function buildBrainGraph(
       workspaceId: query.workspaceId,
       projectId: query.projectId,
       availability: "AVAILABLE",
-      href: "/work",
+      href: "/schedule",
       metadata: {
         status: run.status,
         graphVersion: run.graphVersion,

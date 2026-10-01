@@ -14,13 +14,13 @@ async function source(path: string): Promise<string> {
 }
 
 describe("PE-04 Work source contract", () => {
-  it("exposes Schedule Flows Runs under global Work navigation", async () => {
+  it("exposes Schedule Flows Runs under global Schedule navigation", async () => {
     const [page, model, nav] = await Promise.all([
       source(pagePath),
       source(modelPath),
       source(navPath),
     ]);
-    expect(nav).toContain('["Work", "/work", "work"]');
+    expect(nav).toContain('["Schedule", "/schedule", "work"]');
     expect(model).toContain('export type WorkTab = "schedule" | "flows" | "runs"');
     expect(page).toContain('value === "schedule" ? "Schedule"');
     expect(page).toContain('value === "flows" ? "Flows" : "Runs"');

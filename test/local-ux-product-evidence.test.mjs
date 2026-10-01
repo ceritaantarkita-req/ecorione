@@ -19,11 +19,11 @@ import {
 const DIGEST = `sha256:${"d".repeat(64)}`;
 
 describe("local UX/product evidence guards", () => {
-  it("mewajibkan surface utama termasuk Projects dan Work serta workspace lokal kanonik", () => {
+  it("mewajibkan surface utama termasuk Projects dan Schedule serta workspace lokal kanonik", () => {
     expect(NAV_ROUTES.map(([label]) => label)).toEqual([
       "Ai",
       "Projects",
-      "Work",
+      "Schedule",
       "Brain",
       "Space",
       "Flow",
@@ -33,7 +33,7 @@ describe("local UX/product evidence guards", () => {
     expect(UI_SURFACES.map(([name]) => name)).toEqual([
       "ai",
       "projects",
-      "work",
+      "schedule",
       "brain",
       "space",
       "flow",
