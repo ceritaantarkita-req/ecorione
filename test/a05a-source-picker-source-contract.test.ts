@@ -18,7 +18,7 @@ describe("A-05a Source Picker source contract", () => {
     expect(picker).toContain("/api/projects/source-catalog");
     expect(picker).toContain('resourceType === "url"');
     expect(picker).toContain("sourceCatalog");
-    expect(picker).toContain("Pilih resource");
+    expect(picker).toContain('aria-label="Cari Project source"');
   });
 
   it("keeps authoritative attach verification on the existing Hub route", () => {

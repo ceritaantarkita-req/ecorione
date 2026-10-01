@@ -16,6 +16,11 @@ describe("local dev runtime dependency bootstrap", () => {
 
     expect(packageJson.scripts?.dev).toBe("node --env-file=.env scripts/dev.mjs");
     expect(devEntrypoint).toContain('run(["run", "build:runtime-deps"])');
+    expect(devEntrypoint).toContain("ensureTemporal()");
+    expect(devEntrypoint).toContain("pnpm --filter @ecorione/artifact run dev");
+    expect(devEntrypoint).toContain("pnpm --filter @ecorione/space run dev");
+    expect(devEntrypoint).toContain("pnpm --filter @ecorione/flow run dev");
+    expect(devEntrypoint).toContain("pnpm --filter @ecorione/flow run dev:worker");
 
     for (const scriptName of ["dev:phase2", "dev:phase3", "dev:phase4"]) {
       expect(packageJson.scripts?.[scriptName]).toMatch(/^pnpm run build:runtime-deps && /);
