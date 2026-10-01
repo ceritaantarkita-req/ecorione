@@ -568,9 +568,6 @@ async function installApiMocks(context) {
     if (path === "/api/projects/prj_personal/sources" && method === "GET") {
       return json(route, { sources: [] });
     }
-    if (path === "/api/projects/prj_personal/sources/lifecycle" && method === "GET") {
-      return json(route, { lifecycles: [] });
-    }
     if (path === "/api/chat" && method === "POST") {
       const body = request.postDataJSON();
       if (body.contextConstraint?.source === "brain") {
