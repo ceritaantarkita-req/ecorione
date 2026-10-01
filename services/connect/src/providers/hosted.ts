@@ -44,7 +44,24 @@ export function estimateHostedReservationUsd(
     case "anthropic":
       return estimateAnthropicReservationUsd(input as StaticAdapterInput);
     case "openrouter":
-      return estimateOpenRouterReservationUsd(input);
+      return estimateOpenRouterReservationUsd({
+        model: input.model,
+        prefix: input.prefix,
+        dynamicText: input.dynamicText,
+        userMessage: input.userMessage,
+        ...(input.maxOutputTokens === undefined
+          ? {}
+          : { maxOutputTokens: input.maxOutputTokens }),
+        ...(input.reasoningEffort === undefined
+          ? {}
+          : { reasoningEffort: input.reasoningEffort }),
+        ...(input.openRouterPriceOverride === undefined
+          ? {}
+          : { priceOverride: input.openRouterPriceOverride }),
+        ...(input.openRouterAllowFallbacks === undefined
+          ? {}
+          : { allowFallbacks: input.openRouterAllowFallbacks }),
+      });
     case "openai":
       return estimateOpenAiReservationUsd(input as StaticAdapterInput);
     case "nvidia":
