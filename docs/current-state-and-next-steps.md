@@ -341,9 +341,10 @@ Closed current slices that must not be redone:
 - direct `+ Tambah AI` onboarding from Ai — PR #411;
 - multi-credential AI Connections + priority/bounded failover — PR #415;
 - custom OpenAI-compatible onboarding + Local↔Hosted handoff proof + final provider/model polish — PR #417;
-- searchable owner-backed Project Source Picker + normal local owner-service/Temporal bootstrap — PR #419.
+- searchable owner-backed Project Source Picker + normal local owner-service/Temporal bootstrap — PR #419;
+- external-source lifecycle / refresh / indexing productization — PR #421.
 
-The next roadmap slot may be Session 6 external-source ingestion/indexing/refresh/lifecycle productization, but it is not active until explicitly authorized. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
+Session 6 is closed. Session 7 remains unopened until explicitly authorized. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
 ## Explicit deferred / separately selectable future scopes
 
