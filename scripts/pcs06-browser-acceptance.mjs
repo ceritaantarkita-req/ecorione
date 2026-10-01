@@ -1431,8 +1431,8 @@ async function runDesktopJourney() {
       throw new Error("desktop-theme: dark theme was not restored");
     }
 
-    await goto(page, "/work", "desktop-work");
-    await page.getByRole("heading", { name: "Work", exact: true }).waitFor();
+    await goto(page, "/schedule", "desktop-schedule");
+    await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
 
     const projectSearch = page.getByRole("combobox", { name: "Search Project" });
     await projectSearch.fill("Research");
@@ -1747,14 +1747,14 @@ async function runStaleProjectSelectionJourney() {
     await assertReconciled("/", "stale-project-ai");
     await page.getByRole("textbox", { name: "Pesan" }).waitFor();
 
-    await assertReconciled("/work", "stale-project-work");
-    await page.getByRole("heading", { name: "Work", exact: true }).waitFor();
+    await assertReconciled("/schedule", "stale-project-schedule");
+    await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
 
     await assertReconciled("/brain", "stale-project-brain");
     await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
 
     checked.assertClean();
-    console.log("PASS stale Project selection reconciliation across Ai/Work/Brain");
+    console.log("PASS stale Project selection reconciliation across Ai/Schedule/Brain");
   } finally {
     await page.close();
     await context.close();
@@ -1773,7 +1773,7 @@ async function runNarrowCoverage() {
       "/work",
       "narrow-work",
       async (page) => {
-        await page.getByRole("heading", { name: "Work", exact: true }).waitFor();
+        await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
         await page.getByRole("button", { name: "month", exact: true }).click();
         await page.getByText("Sen", { exact: true }).waitFor();
       },
