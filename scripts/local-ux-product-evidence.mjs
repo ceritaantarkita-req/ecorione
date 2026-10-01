@@ -21,7 +21,7 @@ export const OWNER_HEALTH = [
 export const NAV_ROUTES = [
   ["Ai", "/"],
   ["Projects", "/projects"],
-  ["Work", "/work"],
+  ["Schedule", "/schedule"],
   ["Brain", "/brain"],
   ["Space", "/space"],
   ["Flow", "/flow"],
@@ -34,7 +34,7 @@ export function buildUiSurfaces(baseUrl) {
   return [
     ["ai", `${base}/`, "ecorione — Ai"],
     ["projects", `${base}/projects`, "Projects"],
-    ["work", `${base}/work`, "Work"],
+    ["schedule", `${base}/schedule`, "Schedule"],
     ["brain", `${base}/brain`, "Brain"],
     ["space", `${base}/space`, "Space"],
     ["flow", `${base}/flow`, "Visual workflow builder"],
