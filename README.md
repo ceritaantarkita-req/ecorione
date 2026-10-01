@@ -4,16 +4,16 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-## Current status — 2026-09-30
+## Current status — 2026-10-01
 
 The latest **staging-verified runtime-changing** baseline is:
 
 ```text
-runtime baseline = 15dc2a131778c2fe1249dda34e3291f9a3c8beae
-image            = staging-15dc2a131778
+runtime baseline = 6170ee5d67ee4b105771d8ce2c348afba6cce896
+image            = staging-6170ee5d67ee
 ```
 
-That exact runtime revision passed merged-main CI **#2597**, Product Eval **#1836**, MCP External HTTPS Acceptance **#1201**, and actual Staging Deploy **#1942**. The staging host matched exact SHA `15dc2a13...`, public smoke passed, Operations reported `healthy: true`, **15/15** configured services were running, image tag `staging-15dc2a131778` was active, and capacity stabilized at **27.33 GiB free** after bounded rollback-set cleanup. Docs-only checkpoint commits may advance live Git revision without changing this runtime compatibility baseline.
+PR #417 exact head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI **#2600**, Product Eval **#1839**, and PCS-06 Integrated Browser Acceptance **#371**. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI **#2601** and Product Eval **#1840** passed. Actual Staging Deploy **#1950** deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`; public/auth and MCP smoke passed, Operations reported `healthy: true`, all **15/15** configured services were running, exact-host identity matched with a clean worktree, and capacity stabilized at **29.95 GiB free**.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -21,7 +21,7 @@ Repository hygiene remains bounded: the historical cleanup boundary is **9 retai
 
 The original Batch 1–12 / W / F6 baseline, Product Evolution **PE-00..PE-08**, post-closure **PCS-00..PCS-10**, original Off-host DR drill, audit follow-ups through **A-11**, and **ECX Recipient Execution Batch 1–7** are CLOSED / PASS at their documented boundaries.
 
-Session 4E is **ACTIVE / PARTIAL** with four runtime slices now CLOSED / PASS / STAGING VERIFIED. PR #407 closed compatible OpenRouter auto-execution + catalog pricing; PR #409 closed the canonical provider/model selector surface; PR #411 closed direct `+ Tambah AI` onboarding; PR #415 closed the multi-credential AI Connection foundation. Exact PR #415 head `83f0481b84b705ee8a310c2aa8df798353d49e7a` passed CI #2595, Product Eval #1834, MCP External HTTPS Acceptance #1199, and PCS-06 #370; merge `15dc2a131778c2fe1249dda34e3291f9a3c8beae` passed CI #2597, Product Eval #1836, MCP External HTTPS Acceptance #1201, and actual Staging Deploy #1942. Custom-provider onboarding and bounded Local↔Cloud handoff remain open Session 4E scope. There is still **no implicit Batch 8, PE-09, PCS-11, or Batch 13**.
+Sessions 4E and 4F are now **CLOSED / PASS / STAGING VERIFIED** through PR #417. The final package adds bounded `Lainnya / Custom OpenAI-compatible` onboarding, preserves Connect/Vault ownership and multi-credential priority/failover, locks the Local↔Hosted privacy boundary, fixes certified dynamic OpenRouter pricing for normal completions, and closes the provider/model selector polish contract. Local acceptance also proved real OpenRouter model switching with Gemini 3.8 Flash and another dynamic model. Real success-path execution for an arbitrary user-controlled custom endpoint remains credential-dependent evidence, not an open implementation item. There is still **no implicit Batch 8, PE-09, PCS-11, or Batch 13**.
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -74,10 +74,10 @@ The normal-user Ai control now uses **two adjacent selectors** — `[Provider / 
 
 OpenRouter model selection resolves through an extensible governed registry. Session 3 added bounded live catalog discovery/search/filter/cache, Session 4A added one Connect-owned version-agnostic family vocabulary for **GPT, Gemini, Qwen, DeepSeek, Kimi, and GLM**, Session 4B added automatic fail-closed admission for those six families, Session 4C added the governed Settings model picker, and Session 4D added the governed Ai chat quick-switch.
 
-PR #407 implements compatible OpenRouter auto-execution + catalog pricing. PR #409 implements the canonical provider/source + provider-specific model selectors. PR #411 implements direct `+ Tambah AI` onboarding. PR #415 implements multiple encrypted AI Connections/API keys beneath one logical provider, priority ordering, bounded invalid-credential/unreachable failover, per-connection Settings management, and non-secret connection provenance. Session 4E remains **partial** until the custom-provider path and bounded Local↔Cloud context handoff are implemented.
+PR #407 implements compatible OpenRouter auto-execution + catalog pricing. PR #409 implements the canonical provider/source + provider-specific model selectors. PR #411 implements direct `+ Tambah AI` onboarding. PR #415 implements multiple encrypted AI Connections/API keys beneath one logical provider, priority ordering, bounded invalid-credential/unreachable failover, per-connection Settings management, and non-secret connection provenance. PR #417 closes Session 4E/4F with bounded custom OpenAI-compatible onboarding, Local↔Hosted context-isolation evidence, final provider/model UX contracts, and the dynamic OpenRouter pricing fix required for certified catalog models such as Gemini 3.8 Flash.
 
-Current Session 4E checkpoint:
-[docs/verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md](docs/verification/session4e-multi-credential-safe-checkpoint-2026-09-30.md).
+Canonical Session 4E/4F closure:
+[docs/verification/session4ef-closure-2026-10-01.md](docs/verification/session4ef-closure-2026-10-01.md).
 
 Prior Session 4D checkpoint:
 [docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md).
@@ -161,11 +161,11 @@ See:
 
 ## Current active / separate boundaries
 
-Session 4E is **active / partial**. Auto-execution, canonical provider/model selectors, direct `+ Tambah AI` onboarding, and the multi-credential provider foundation are closed and staging-verified. The current bounded next slice is `+ Tambah AI → Lainnya` custom OpenAI-compatible provider onboarding. The already proven slices must not be redone.
+Sessions 4E and 4F are **closed / pass / staging verified** through PR #417 and Staging Deploy #1950. There is no active AI-provider implementation slice; future provider evidence that requires a real user-controlled credential/endpoint is validation work, not an implicit new session.
 
 The following remain separate explicit decisions:
 
-- Session 4F final OpenRouter polish/closure after Session 4E is complete;
+- any newly selected post-4F provider/agentic scope;
 - **DR-2 checkpoint 2** physical-independence target selection and proof;
 - public production promotion/cutover;
 - native Google Drive integration;
