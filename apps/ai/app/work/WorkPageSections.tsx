@@ -89,30 +89,6 @@ export function ScheduleSection(props: ScheduleSectionProps) {
               Cancel
             </button>
           </div>
-          <div className={styles.scheduleAssistant}>
-            <div>
-              <strong>AI-assisted draft</strong>
-              <small>
-                Describe the create/edit intent. Local AI only proposes fields; Save still
-                writes through Trigger → Flow → Temporal.
-              </small>
-            </div>
-            <textarea
-              value={props.assistIntent}
-              aria-label="Describe schedule"
-              rows={3}
-              maxLength={2000}
-              placeholder="Contoh: jalankan Daily Brief setiap Senin–Jumat jam 08.30 WIB"
-              onChange={(event) => props.onAssistIntentChange(event.target.value)}
-            />
-            <button
-              type="button"
-              disabled={props.pending !== null || props.assistIntent.trim().length < 3}
-              onClick={props.onAssistSchedule}
-            >
-              {props.pending === "assist" ? "Drafting…" : "Draft with local AI"}
-            </button>
-          </div>
           <label>
             Name
             <input
@@ -328,6 +304,35 @@ export function ScheduleSection(props: ScheduleSectionProps) {
           onOpenMonth={props.onOpenMonth}
         />
       )}
+
+      <div className={styles.scheduleAssistant}>
+        <div>
+          <strong>Schedule AI</strong>
+          <small>
+            Chat dengan AI untuk membuat atau mengubah draft Schedule. AI hanya menyusun draft;
+            Save tetap menulis melalui Trigger → Flow → Temporal.
+          </small>
+        </div>
+        <textarea
+          value={props.assistIntent}
+          aria-label="Describe schedule"
+          rows={3}
+          maxLength={2000}
+          placeholder="Contoh: jalankan Daily Brief setiap Senin–Jumat jam 08.30 WIB"
+          onChange={(event) => props.onAssistIntentChange(event.target.value)}
+        />
+        <button
+          type="button"
+          disabled={props.pending !== null || props.assistIntent.trim().length < 3}
+          onClick={props.onAssistSchedule}
+        >
+          {props.pending === "assist"
+            ? "Drafting…"
+            : props.editing
+              ? "Draft with local AI"
+              : "Create draft with local AI"}
+        </button>
+      </div>
     </section>
   );
 }
