@@ -1432,7 +1432,7 @@ async function runDesktopJourney() {
     }
 
     await goto(page, "/schedule", "desktop-schedule");
-    await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Schedule", exact: true, level: 1 }).waitFor();
 
     const projectSearch = page.getByRole("combobox", { name: "Search Project" });
     await projectSearch.fill("Research");
@@ -1748,7 +1748,7 @@ async function runStaleProjectSelectionJourney() {
     await page.getByRole("textbox", { name: "Pesan" }).waitFor();
 
     await assertReconciled("/schedule", "stale-project-schedule");
-    await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Schedule", exact: true, level: 1 }).waitFor();
 
     await assertReconciled("/brain", "stale-project-brain");
     await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
@@ -1773,7 +1773,7 @@ async function runNarrowCoverage() {
       "/work",
       "narrow-work",
       async (page) => {
-        await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
+        await page.getByRole("heading", { name: "Schedule", exact: true, level: 1 }).waitFor();
         await page.getByRole("button", { name: "month", exact: true }).click();
         await page.getByText("Sen", { exact: true }).waitFor();
       },
