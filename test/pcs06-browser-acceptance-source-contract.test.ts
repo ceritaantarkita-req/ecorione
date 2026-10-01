@@ -37,6 +37,8 @@ describe("PCS-06 integrated browser acceptance contract", () => {
     expect(harness).toContain('name: "Approve"');
     expect(harness).toContain("Execution authority ready");
     expect(harness).toContain("graphRunStarted");
+    expect(harness).toContain("sources\\/lifecycle");
+    expect(harness).toContain("{ lifecycles: [] }");
   });
 
   it("covers responsive, theme, overflow and browser-console behavior", () => {
