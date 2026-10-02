@@ -104,6 +104,41 @@ Actual staging evidence for `9bd2b87fc4f3755b837c74d6b42585e0c5181870`:
 
 SumoPod remains staging, not production.
 
+## Post-closure CD hardening
+
+The first docs-only closure merge exposed a deployment-control bug rather than a Session 11 product bug:
+
+- PR #432 merged docs-only `main` `49fe4d26676ab37e4a9cdd5fb7691b9ac3b026a3`;
+- CI #2694 and Product Eval #1933 passed;
+- Staging Deploy #2136 then rebuilt/redeployed the docs-only SHA as `staging-49fe4d26676a`;
+- public/auth + MCP smoke, Operations health, exact-host evidence, and 15/15 service state still passed, but the deployment was unnecessary.
+
+Post-Session-11 CD hardening therefore closed the gap without opening Session 12:
+
+- PR **#433** — `fix: skip docs-only automatic staging deploys`;
+- final reviewed head: `f5d9e631c6c28f8716b2c238df17d28a44be57bf`;
+- PR-head CI #2698 PASS;
+- PR-head Product Eval #1937 PASS;
+- merged `main`: `7130dba720cff37a040ce29620b7902b52691e9c`;
+- merged-main CI #2699 PASS;
+- merged-main Product Eval #1938 PASS;
+- Staging Deploy #2145: gate PASS / deploy skipped while peer CI was incomplete;
+- Staging Deploy #2146: actual deploy PASS;
+- exact host SHA matched `7130dba720cff37a040ce29620b7902b52691e9c`;
+- staging image `staging-7130dba720cf`;
+- public/auth + MCP smoke PASS;
+- Operations `healthy: true`, `unhealthyServices: []`;
+- 15 configured services / 15 running / 0 non-running;
+- stabilized free disk **27.36 GiB**.
+
+The automatic CD rule is now:
+
+- `workflow_run` auto-CD on a current-main commit that changes only `docs/**` => gate records the SHA but deploy is skipped;
+- any non-`docs/**` change => existing current-main + peer-gate + exact-SHA deployment behavior remains active;
+- explicit `workflow_dispatch` remains available and is not blocked by the docs-only auto-skip.
+
+This restores the intended sequence: runtime/control change -> exact-SHA staging proof -> docs closure, without making docs closure itself a new runtime deployment.
+
 ## Explicit non-claims
 
 This closure does **not** claim:

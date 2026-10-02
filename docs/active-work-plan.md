@@ -4,7 +4,7 @@ Last updated: **2026-10-02**
 
 Status: **SESSION 11 MCP ACTION PRODUCT CONVERGENCE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
 
-Current resume pointer: [verification/session11-mcp-action-product-convergence-closure-2026-10-02.md](verification/session11-mcp-action-product-convergence-closure-2026-10-02.md). PR #431 final reviewed head `cd57404e767335e46abbdc8bc629774f32ad2b70` merged as runtime-changing `main` `9bd2b87fc4f3755b837c74d6b42585e0c5181870`. PR-head CI #2691, Product Eval #1930, PCS-06 #436, MCP External HTTPS #1240, and Desktop Installer #306 passed; merged-main CI #2692, Product Eval #1931, and MCP External HTTPS #1241 passed; Staging Deploy #2132 deployed exact runtime image `staging-9bd2b87fc4f3`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 configured services running, exact-host identity matched, and 25.25 GiB stabilized free disk.
+Current resume pointer: [verification/session11-mcp-action-product-convergence-closure-2026-10-02.md](verification/session11-mcp-action-product-convergence-closure-2026-10-02.md). Session 11 product runtime closed through PR #431 (`9bd2b87fc4f3755b837c74d6b42585e0c5181870`). Post-closure CD hardening PR #433 merged as `7130dba720cff37a040ce29620b7902b52691e9c`; PR-head CI #2698 and Product Eval #1937 passed, merged-main CI #2699 and Product Eval #1938 passed, and Staging Deploy #2146 deployed exact image `staging-7130dba720cf` with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, exact-host identity matched, and 27.36 GiB stabilized free disk. Automatic docs-only `docs/**` main commits now skip staging deploy; explicit workflow dispatch remains available.
 
 ## Current queue
 
@@ -39,6 +39,7 @@ Closed current baselines:
 - Session 9 — Automation product convergence (first-class `/automations`, existing event/webhook Triggers, protected token reveal, bounded public webhook ingress) — CLOSED / PASS / STAGING VERIFIED through PR #427.
 - Session 10 — deterministic Condition Trigger convergence (event-driven bounded predicate, false-condition no-op, existing Hub/Temporal authority path, Automation UI) — CLOSED / PASS / STAGING VERIFIED through PR #429.
 - Session 11 — MCP Action product convergence (configured Connect MCP server/tool picker, explicit L0 READ discovery, bounded runtime argument templates, existing Connect/Hub execution governance) — CLOSED / PASS / STAGING VERIFIED through PR #431.
+- Post-Session-11 CD hardening — automatic docs-only `docs/**` main commits skip staging deploy; manual dispatch and non-docs exact-SHA deploys remain intact — CLOSED / PASS / STAGING VERIFIED through PR #433; this does not open Session 12.
 
 No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 
