@@ -19,16 +19,39 @@ export type GraphAuthorityState = {
 
 type NodeRunState = FlowGraphRunState["nodes"][number];
 
+export type McpActionServerOption = {
+  id: string;
+  displayName: string;
+  enabled: boolean;
+  transport: "stdio" | "streamable-http";
+  connected: boolean;
+};
+
+export type McpActionToolOption = {
+  name: string;
+  description?: string;
+  enabled: boolean;
+  actionClass: string | null;
+};
+
 export function QuickNodeSettings({
   node,
   onRename,
   onPatchConfig,
   onAdvanced,
+  mcpServers = [],
+  mcpTools = [],
+  mcpDiscoveryBusy = false,
+  onDiscoverMcpTools,
 }: {
   node: FlowGraphNode;
   onRename: (label: string) => void;
   onPatchConfig: (patch: Record<string, unknown>) => void;
   onAdvanced: () => void;
+  mcpServers?: readonly McpActionServerOption[];
+  mcpTools?: readonly McpActionToolOption[];
+  mcpDiscoveryBusy?: boolean;
+  onDiscoverMcpTools?: (serverId: string) => void;
 }) {
   let primary: ReactNode = null;
   switch (node.kind) {
@@ -57,6 +80,86 @@ export function QuickNodeSettings({
         </>
       );
       break;
+    case "mcp-tool": {
+      const serverId = stringConfig(node, "serverId", "");
+      const tool = stringConfig(node, "tool", "");
+      const serverKnown = mcpServers.some((server) => server.id === serverId);
+      const toolKnown = mcpTools.some((candidate) => candidate.name === tool);
+      primary = (
+        <>
+          <label className={styles.quickField}>
+            <span>MCP server</span>
+            <select
+              className="ecr-input"
+              aria-label="MCP action server"
+              value={serverId}
+              onChange={(event) => {
+                const nextServer = event.target.value;
+                onPatchConfig({ serverId: nextServer, tool: "", arguments: {} });
+                if (nextServer.length > 0) onDiscoverMcpTools?.(nextServer);
+              }}
+            >
+              <option value="">Choose configured server…</option>
+              {!serverKnown && serverId.length > 0 ? (
+                <option value={serverId}>{serverId} · unavailable</option>
+              ) : null}
+              {mcpServers.map((server) => (
+                <option key={server.id} value={server.id} disabled={!server.enabled}>
+                  {server.displayName} · {server.enabled ? server.transport : "disabled"}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.quickField}>
+            <span>MCP tool</span>
+            <select
+              className="ecr-input"
+              aria-label="MCP action tool"
+              value={tool}
+              disabled={serverId.length === 0 || mcpDiscoveryBusy}
+              onChange={(event) => onPatchConfig({ tool: event.target.value })}
+            >
+              <option value="">
+                {mcpDiscoveryBusy ? "Discovering tools…" : "Choose discovered tool…"}
+              </option>
+              {!toolKnown && tool.length > 0 ? (
+                <option value={tool}>{tool} · not discovered</option>
+              ) : null}
+              {mcpTools.map((candidate) => (
+                <option
+                  key={candidate.name}
+                  value={candidate.name}
+                  disabled={!candidate.enabled}
+                >
+                  {candidate.name}
+                  {candidate.enabled
+                    ? candidate.actionClass === null
+                      ? ""
+                      : ` · ${candidate.actionClass}`
+                    : " · disabled"}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className={styles.quickSummary}>
+            <button
+              type="button"
+              className="ecr-btn ecr-btn--secondary"
+              disabled={serverId.length === 0 || mcpDiscoveryBusy}
+              onClick={() => onDiscoverMcpTools?.(serverId)}
+            >
+              {mcpDiscoveryBusy ? "Discovering…" : "Discover tools"}
+            </button>
+            <p>
+              Arguments tetap owner graph config dan boleh memakai template input seperti{" "}
+              <code>{"{{ sender.email }}"}</code>. Connect tetap policy/credential boundary saat
+              tool benar-benar dipanggil.
+            </p>
+          </div>
+        </>
+      );
+      break;
+    }
     case "http":
       primary = (
         <>
