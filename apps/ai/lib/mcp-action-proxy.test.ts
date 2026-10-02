@@ -5,10 +5,7 @@ import {
   setGlobalDispatcher,
   type Interceptable,
 } from "undici";
-import {
-  discoverMcpActionServer,
-  listMcpActionServers,
-} from "./mcp-action-proxy";
+import { discoverMcpActionServer, listMcpActionServers } from "./mcp-action-proxy";
 
 let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
 let pool: Interceptable;
