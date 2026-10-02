@@ -27,7 +27,7 @@ Session 5 — **Project Source Picker** — is **CLOSED / PASS / STAGING VERIFIE
 
 Session 6 — **External Source Lifecycle** — is **CLOSED / PASS / STAGING VERIFIED** through PR #421 and Staging Deploy #1968.
 
-Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED**: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Post-Session-11 CD hardening is extended through PR #437. The expanded `docs/**` + `README.md` + `AGENTS.md` documentation-only boundary is staging-verified at the control layer; this documentation closure is its merged-main live skip proof. There is **no active Session 12**. Current safe-resume checkpoint: [docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md](docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
+Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED**: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Post-Session-11 CD hardening through PR #437 is now **LIVE VERIFIED** by docs-only PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9`: merged-main CI #2709 and Product Eval #1948 passed, while Staging Deploy #2166 and #2167 both gate-passed and skipped deploy. Runtime staging therefore remains `5f1245083047c4014789e90c2ba25b7e16ebe366` / `staging-5f1245083047`. There is **no active Session 12**. Current safe-resume checkpoint: [docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md](docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 **Start here:** [docs/README.md](docs/README.md).
 

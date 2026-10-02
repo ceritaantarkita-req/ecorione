@@ -34,7 +34,7 @@ Session 10 Deterministic Condition Trigger is CLOSED / PASS / STAGING VERIFIED t
 
 Session 11 MCP Action Product Convergence is CLOSED / PASS / STAGING VERIFIED through PR #431. Flow MCP Tool nodes now bind to configured Connect-owned MCP servers/tools through guided product pickers and explicit L0 READ discovery. Browser product routes cannot call remote tools directly; actual external actions still execute only through exact pinned Flow → Connect outbound MCP → Hub governance. Runtime MCP arguments support bounded structured `{{ path }}` binding to Flow input, with exact templates preserving JSON value types and embedded templates remaining text. ADR-40 keeps native Gmail/Telegram adapters, OAuth/subscriptions, polling, L4/AutoClick, and production cutover outside this session.
 
-Post-Session-11 CD hardening remains deployment-control work, not Session 12. PR #436 exposed that the original automatic `docs/**` classifier excluded root `README.md` and `AGENTS.md`, so merged SHA `ca8670209ddd909da4d0c5db782950d85469e1b2` performed a successful but unnecessary staging redeploy. PR #437 expanded the automatic documentation-only allowlist to `docs/**`, `README.md`, and `AGENTS.md` while preserving manual `workflow_dispatch` and non-documentation exact-SHA deployment. PR #437 merged as `5f1245083047c4014789e90c2ba25b7e16ebe366`; merged-main CI #2707, Product Eval #1946, and Staging Deploy #2163 passed. Exact-host identity matched, public/auth + MCP smoke passed, Operations was healthy, 15/15 configured services were running, and free disk stabilized at 29.91 GiB. This documentation closure is the required merged-main live proof of the expanded automatic skip boundary.
+Post-Session-11 CD hardening remains deployment-control work, not Session 12. PR #436 exposed the incomplete original `docs/**` classifier. PR #437 expanded the automatic documentation-only allowlist to `docs/**`, `README.md`, and `AGENTS.md`. PR #438 then live-verified that boundary: merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9` passed CI #2709 and Product Eval #1948; Staging Deploy #2166 and #2167 both gate-passed and explicitly skipped deploy as docs-only. Runtime/control therefore remains `5f1245083047c4014789e90c2ba25b7e16ebe366`, image `staging-5f1245083047`, with the previously verified healthy 15/15 staging services and 29.91 GiB stabilized free disk.
 
 Current safe-resume checkpoint:
 [verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
@@ -72,7 +72,7 @@ Latest proof:
 | non-running services | 0 |
 | exact-host worktree | clean / DETACHED |
 | stabilized free disk | 29.91 GiB |
-| expanded automatic documentation-only allowlist | `docs/**`, `README.md`, `AGENTS.md`; live skip proof = this closure merge |
+| expanded automatic documentation-only allowlist | `docs/**`, `README.md`, `AGENTS.md`; PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9` LIVE VERIFIED via Staging #2166/#2167 deploy SKIPPED |
 | explicit `workflow_dispatch` | still allowed |
 
 SumoPod remains **staging, not production**.
@@ -363,7 +363,7 @@ Closed current slices that must not be redone:
 - Automation product convergence over existing event/webhook Triggers — PR #427;
 - deterministic Condition Trigger activation over normalized events — PR #429;
 - MCP Action product convergence over existing Flow/Connect outbound MCP authority — PR #431.
-- expanded automatic documentation-only staging redeploy prevention — PR #437 (`docs/**`, `README.md`, `AGENTS.md`); this documentation closure supplies the live skip proof.
+- expanded automatic documentation-only staging redeploy prevention — PR #437 implementation, PR #438 live verification (`docs/**`, `README.md`, `AGENTS.md`); Staging #2166/#2167 deploy SKIPPED.
 
 Session 11 is closed. No Session 12 or other numbered continuation is automatically opened. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
