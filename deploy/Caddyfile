@@ -9,6 +9,16 @@
     Permissions-Policy "camera=(), microphone=(self), geolocation=()"
   }
 
+  # Public event ingress is intentionally outside the browser Basic-Auth gate.
+  # Ai only proxies the bounded request; Connect still owns the per-hook token check.
+  handle_path /webhooks/* {
+    request_body {
+      max_size 96KB
+    }
+    rewrite * /api/webhooks{path}
+    reverse_proxy ai:3000
+  }
+
   @operator path /ops* /api/ops* /settings* /api/settings*
   handle @operator {
     basic_auth {
