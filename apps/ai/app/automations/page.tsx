@@ -479,7 +479,11 @@ export default function AutomationsPage() {
               </p>
             </div>
             <div className={styles.actions}>
-              <button type="button" disabled={graphs.length === 0} onClick={() => startCreate("event")}>
+              <button
+                type="button"
+                disabled={graphs.length === 0}
+                onClick={() => startCreate("event")}
+              >
                 New event
               </button>
               <button
@@ -753,7 +757,9 @@ export default function AutomationsPage() {
                         <article>
                           <strong>Webhook token · secret</strong>
                           <code>{token}</code>
-                          <small>Derived by Connect; jangan simpan di Trigger, Flow, docs, atau logs.</small>
+                          <small>
+                            Derived by Connect; jangan simpan di Trigger, Flow, docs, atau logs.
+                          </small>
                         </article>
                       ) : null}
                     </div>
@@ -770,7 +776,9 @@ export default function AutomationsPage() {
                       {trigger.enabled ? "Disable" : "Enable"}
                     </button>
                     <Link
-                      href={`/flow?graph=${encodeURIComponent(trigger.graphId)}&version=${String(trigger.graphVersion)}`}
+                      href={`/flow?graph=${encodeURIComponent(
+                        trigger.graphId,
+                      )}&version=${String(trigger.graphVersion)}`}
                     >
                       Open Flow
                     </Link>
