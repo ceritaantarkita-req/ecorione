@@ -1586,7 +1586,10 @@ async function runDesktopJourney() {
     await page.getByText("POST /webhooks/hook_pcs06_webhook_0001", { exact: true }).waitFor();
     await page.getByRole("button", { name: "Reveal token", exact: true }).click();
     await page.getByText("pcs06-derived-webhook-token", { exact: true }).waitFor();
-    const conditionCard = page.locator("article").filter({ hasText: "PCS-06 Condition" }).first();
+    const conditionCard = page
+      .locator("article")
+      .filter({ hasText: "PCS-06 Condition" })
+      .first();
     await conditionCard.getByText("PCS-06 Condition", { exact: true }).waitFor();
     await conditionCard.getByText("payload.score GTE 80", { exact: true }).waitFor();
     await conditionCard.getByRole("button", { name: "Edit", exact: true }).click();
