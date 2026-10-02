@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 The latest **staging-verified runtime-changing** baseline is:
 
 ```text
-runtime/control baseline = 7130dba720cff37a040ce29620b7902b52691e9c
-staging image            = staging-7130dba720cf
+runtime/control baseline = 5f1245083047c4014789e90c2ba25b7e16ebe366
+staging image            = staging-5f1245083047
 ```
 
-Session 11 product runtime closed through PR #431 at `9bd2b87fc4f3755b837c74d6b42585e0c5181870`. Post-Session-11 CD hardening PR #433 merged as `7130dba720cff37a040ce29620b7902b52691e9c`; merged-main CI **#2699** and Product Eval **#1938** passed, and actual Staging Deploy **#2146** deployed `staging-7130dba720cf` with exact host SHA, public/auth + MCP smoke PASS, Operations healthy, all **15/15** configured services running, and **27.36 GiB** stabilized free disk. Docs-only main commits are now allowed to advance Git history without redeploying staging; current safe-resume evidence is [docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md](docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
+Session 11 product runtime remains closed through PR #431. PR #436 exposed that the original docs-only CD guard covered only `docs/**`, so its root `README.md` and `AGENTS.md` changes caused a successful but unnecessary staging redeploy. PR #437 expanded the documentation-only boundary to `docs/**`, `README.md`, and `AGENTS.md`, then merged as `5f1245083047c4014789e90c2ba25b7e16ebe366`. Merged-main CI #2707, Product Eval #1946, and Staging Deploy #2163 passed. Current staging image is `staging-5f1245083047`; Operations is healthy, 15/15 services are running, and stabilized free disk is 29.91 GiB.
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -27,7 +27,7 @@ Session 5 — **Project Source Picker** — is **CLOSED / PASS / STAGING VERIFIE
 
 Session 6 — **External Source Lifecycle** — is **CLOSED / PASS / STAGING VERIFIED** through PR #421 and Staging Deploy #1968.
 
-Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED**: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Post-Session-11 docs-only CD hardening is closed through PR #433 and live-verified on later docs-only main commits. There is **no active Session 12**. Current safe-resume checkpoint: [docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md](docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
+Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED**: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Post-Session-11 CD hardening is extended through PR #437. The expanded `docs/**` + `README.md` + `AGENTS.md` documentation-only boundary is staging-verified at the control layer; this documentation closure is its merged-main live skip proof. There is **no active Session 12**. Current safe-resume checkpoint: [docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md](docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 **Start here:** [docs/README.md](docs/README.md).
 
