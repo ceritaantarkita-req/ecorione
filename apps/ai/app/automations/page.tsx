@@ -579,8 +579,10 @@ export default function AutomationsPage() {
               <span className={styles.eyebrow}>Flow-owned Trigger</span>
               <h2>Non-time automations</h2>
               <p>
-                Event, webhook, dan condition memakai owner Trigger yang sama. Condition hanya
-                dievaluasi saat event masuk; polling LLM dan L4 autonomy tetap tidak aktif.
+                Event, webhook, dan condition memakai owner Trigger yang sama. External action
+                tetap berada di exact pinned Flow; MCP Tool dikonfigurasi lewat Connect-owned
+                catalog. Condition hanya dievaluasi saat event masuk; polling LLM dan L4 autonomy
+                tetap tidak aktif.
               </p>
             </div>
             <div className={styles.actions}>
