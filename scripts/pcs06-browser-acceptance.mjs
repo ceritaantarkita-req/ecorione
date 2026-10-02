@@ -705,7 +705,8 @@ async function installApiMocks(context) {
     }
 
     if (
-      path === `/api/settings/settings/webhooks/${automationTrigger.configuration.hookId}/token` &&
+      path ===
+        `/api/settings/settings/webhooks/${automationTrigger.configuration.hookId}/token` &&
       method === "GET"
     ) {
       return json(route, {
@@ -1022,10 +1023,7 @@ async function installApiMocks(context) {
         delete automationTrigger.expectedRevision;
         return json(route, automationTrigger);
       }
-      if (
-        path === `/api/flow/triggers/${automationTrigger.id}/disable` &&
-        method === "POST"
-      ) {
+      if (path === `/api/flow/triggers/${automationTrigger.id}/disable` && method === "POST") {
         automationTrigger = {
           ...automationTrigger,
           enabled: false,
@@ -1034,10 +1032,7 @@ async function installApiMocks(context) {
         };
         return json(route, automationTrigger);
       }
-      if (
-        path === `/api/flow/triggers/${automationTrigger.id}/enable` &&
-        method === "POST"
-      ) {
+      if (path === `/api/flow/triggers/${automationTrigger.id}/enable` && method === "POST") {
         automationTrigger = {
           ...automationTrigger,
           enabled: true,
@@ -1562,9 +1557,7 @@ async function runDesktopJourney() {
     await goto(page, "/automations", "desktop-automations");
     await page.getByRole("heading", { name: "Automation", exact: true, level: 1 }).waitFor();
     await page.getByText("PCS-06 Webhook", { exact: true }).waitFor();
-    await page
-      .getByText("POST /webhooks/hook_pcs06_webhook_0001", { exact: true })
-      .waitFor();
+    await page.getByText("POST /webhooks/hook_pcs06_webhook_0001", { exact: true }).waitFor();
     await page.getByRole("button", { name: "Reveal token", exact: true }).click();
     await page.getByText("pcs06-derived-webhook-token", { exact: true }).waitFor();
     await assertNoPageOverflow(page, "desktop-automations");
