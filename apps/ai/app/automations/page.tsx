@@ -23,7 +23,17 @@ import { json } from "../work/work-page-model";
 import styles from "../work/Work.module.css";
 
 type AutomationKind = "event" | "webhook" | "condition";
-type ConditionOperator = "EQ" | "NEQ" | "GT" | "GTE" | "LT" | "LTE" | "CONTAINS" | "EXISTS";
+const CONDITION_OPERATORS = [
+  "EQ",
+  "NEQ",
+  "GT",
+  "GTE",
+  "LT",
+  "LTE",
+  "CONTAINS",
+  "EXISTS",
+] as const;
+type ConditionOperator = (typeof CONDITION_OPERATORS)[number];
 type AutomationTab = "automations" | "runs";
 
 type AutomationDraft = {
@@ -130,7 +140,9 @@ function draftFromTrigger(trigger: TriggerDefinition): AutomationDraft | null {
     trigger.kind !== "event" &&
     trigger.kind !== "webhook" &&
     trigger.kind !== "condition"
-  ) return null;
+  ) {
+    return null;
+  }
   const config = automationConfig(trigger);
   if (config === null) return null;
   return {
@@ -146,11 +158,10 @@ function draftFromTrigger(trigger: TriggerDefinition): AutomationDraft | null {
     eventKind: config.eventKind,
     hookId: "hookId" in config ? config.hookId : "",
     conditionField: "predicate" in config ? config.predicate.field : "payload.status",
-    conditionOperator:
-      "predicate" in config ? config.predicate.operator : "EQ",
+    conditionOperator: "predicate" in config ? config.predicate.operator : "EQ",
     conditionValue:
       "predicate" in config && "value" in config.predicate
-        ? (JSON.stringify(config.predicate.value) ?? "")
+        ? JSON.stringify(config.predicate.value) ?? ""
         : "",
   };
 }
@@ -787,13 +798,11 @@ export default function AutomationsPage() {
                         )
                       }
                     >
-                      {(["EQ", "NEQ", "GT", "GTE", "LT", "LTE", "CONTAINS", "EXISTS"] as const).map(
-                        (operator) => (
-                          <option key={operator} value={operator}>
-                            {operator}
-                          </option>
-                        ),
-                      )}
+                      {CONDITION_OPERATORS.map((operator) => (
+                        <option key={operator} value={operator}>
+                          {operator}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   {draft.conditionOperator !== "EXISTS" ? (
