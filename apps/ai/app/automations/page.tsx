@@ -22,7 +22,8 @@ import { RunsSection } from "../work/WorkPageSections";
 import { json } from "../work/work-page-model";
 import styles from "../work/Work.module.css";
 
-type AutomationKind = "event" | "webhook";
+type AutomationKind = "event" | "webhook" | "condition";
+type ConditionOperator = "EQ" | "NEQ" | "GT" | "GTE" | "LT" | "LTE" | "CONTAINS" | "EXISTS";
 type AutomationTab = "automations" | "runs";
 
 type AutomationDraft = {
@@ -37,6 +38,9 @@ type AutomationDraft = {
   source: string;
   eventKind: string;
   hookId: string;
+  conditionField: string;
+  conditionOperator: ConditionOperator;
+  conditionValue: string;
 };
 
 type EventConfig = {
@@ -47,6 +51,17 @@ type EventConfig = {
 type WebhookConfig = EventConfig & {
   adapter: "generic";
   hookId: string;
+};
+
+type ConditionPrimitive = string | number | boolean | null;
+type ConditionConfig = EventConfig & {
+  predicate:
+    | { field: string; operator: "EXISTS" }
+    | {
+        field: string;
+        operator: Exclude<ConditionOperator, "EXISTS">;
+        value: ConditionPrimitive;
+      };
 };
 
 function emptyDraft(kind: AutomationKind, graph?: FlowGraphSummary): AutomationDraft {
@@ -62,10 +77,15 @@ function emptyDraft(kind: AutomationKind, graph?: FlowGraphSummary): AutomationD
     source: "",
     eventKind: "",
     hookId: "",
+    conditionField: "payload.status",
+    conditionOperator: "EQ",
+    conditionValue: "\"ready\"",
   };
 }
 
-function automationConfig(trigger: TriggerDefinition): EventConfig | WebhookConfig | null {
+function automationConfig(
+  trigger: TriggerDefinition,
+): EventConfig | WebhookConfig | ConditionConfig | null {
   if (trigger.kind === "event") {
     const config = trigger.configuration as Partial<EventConfig>;
     return typeof config.source === "string" && typeof config.eventKind === "string"
@@ -86,11 +106,31 @@ function automationConfig(trigger: TriggerDefinition): EventConfig | WebhookConf
         }
       : null;
   }
+  if (trigger.kind === "condition") {
+    const config = trigger.configuration as Partial<ConditionConfig>;
+    if (
+      typeof config.source !== "string" ||
+      typeof config.eventKind !== "string" ||
+      config.predicate === undefined ||
+      typeof config.predicate.field !== "string"
+    ) {
+      return null;
+    }
+    return {
+      source: config.source,
+      eventKind: config.eventKind,
+      predicate: config.predicate,
+    } as ConditionConfig;
+  }
   return null;
 }
 
 function draftFromTrigger(trigger: TriggerDefinition): AutomationDraft | null {
-  if (trigger.kind !== "event" && trigger.kind !== "webhook") return null;
+  if (
+    trigger.kind !== "event" &&
+    trigger.kind !== "webhook" &&
+    trigger.kind !== "condition"
+  ) return null;
   const config = automationConfig(trigger);
   if (config === null) return null;
   return {
@@ -105,7 +145,37 @@ function draftFromTrigger(trigger: TriggerDefinition): AutomationDraft | null {
     source: config.source,
     eventKind: config.eventKind,
     hookId: "hookId" in config ? config.hookId : "",
+    conditionField: "predicate" in config ? config.predicate.field : "payload.status",
+    conditionOperator:
+      "predicate" in config ? config.predicate.operator : "EQ",
+    conditionValue:
+      "predicate" in config && "value" in config.predicate
+        ? JSON.stringify(config.predicate.value)
+        : "",
   };
+}
+
+function parseConditionValue(raw: string): ConditionPrimitive {
+  const parsed = JSON.parse(raw) as unknown;
+  if (
+    parsed === null ||
+    typeof parsed === "string" ||
+    typeof parsed === "boolean" ||
+    (typeof parsed === "number" && Number.isFinite(parsed))
+  ) {
+    return parsed;
+  }
+  throw new Error("Condition value harus JSON primitive: string, number, boolean, atau null.");
+}
+
+function conditionValueValid(draft: AutomationDraft): boolean {
+  if (draft.kind !== "condition" || draft.conditionOperator === "EXISTS") return true;
+  try {
+    parseConditionValue(draft.conditionValue);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function makeHookId(): string {
@@ -130,12 +200,18 @@ export default function AutomationsPage() {
   const [pending, setPending] = useState<string | null>(null);
   const [revealedTokens, setRevealedTokens] = useState<Record<string, string>>({});
   const [message, setMessage] = useState(
-    "Automation membaca event/webhook Trigger langsung dari Flow; Temporal tetap execution truth.",
+    "Automation membaca event/webhook/condition Trigger langsung dari Flow; Temporal tetap execution truth.",
   );
   const requestRef = useRef(0);
 
   const automationTriggers = useMemo(
-    () => triggers.filter((trigger) => trigger.kind === "event" || trigger.kind === "webhook"),
+    () =>
+      triggers.filter(
+        (trigger) =>
+          trigger.kind === "event" ||
+          trigger.kind === "webhook" ||
+          trigger.kind === "condition",
+      ),
     [triggers],
   );
 
@@ -270,7 +346,9 @@ export default function AutomationsPage() {
     setMessage(
       kind === "webhook"
         ? "Buat webhook automation. Token tetap dimiliki Connect."
-        : "Buat event automation dari normalized connector event.",
+        : kind === "condition"
+          ? "Buat condition automation. Predicate dievaluasi hanya saat event masuk; tidak ada polling."
+          : "Buat event automation dari normalized connector event.",
     );
   }
 
@@ -289,12 +367,28 @@ export default function AutomationsPage() {
       const configuration =
         draft.kind === "event"
           ? { source: draft.source, eventKind: draft.eventKind }
-          : {
-              adapter: "generic" as const,
-              hookId: draft.hookId,
-              source: draft.source,
-              eventKind: draft.eventKind,
-            };
+          : draft.kind === "webhook"
+            ? {
+                adapter: "generic" as const,
+                hookId: draft.hookId,
+                source: draft.source,
+                eventKind: draft.eventKind,
+              }
+            : {
+                source: draft.source,
+                eventKind: draft.eventKind,
+                predicate:
+                  draft.conditionOperator === "EXISTS"
+                    ? {
+                        field: draft.conditionField,
+                        operator: "EXISTS" as const,
+                      }
+                    : {
+                        field: draft.conditionField,
+                        operator: draft.conditionOperator,
+                        value: parseConditionValue(draft.conditionValue),
+                      },
+              };
       const base = {
         workspaceId,
         projectId,
@@ -424,8 +518,8 @@ export default function AutomationsPage() {
           <span className={styles.eyebrow}>Event-driven work</span>
           <h1>Automation</h1>
           <p>
-            Jalankan Flow saat event atau webhook datang, tanpa mengubah Schedule menjadi
-            polling engine.
+            Jalankan Flow saat event, webhook, atau condition deterministik terpenuhi tanpa
+            mengubah Schedule menjadi polling engine.
           </p>
         </div>
         <ProjectPicker
@@ -478,8 +572,8 @@ export default function AutomationsPage() {
               <span className={styles.eyebrow}>Flow-owned Trigger</span>
               <h2>Non-time automations</h2>
               <p>
-                Event dan webhook memakai owner Trigger yang sudah ada. Condition polling dan L4
-                autonomy tetap tidak aktif.
+                Event, webhook, dan condition memakai owner Trigger yang sama. Condition hanya
+                dievaluasi saat event masuk; polling LLM dan L4 autonomy tetap tidak aktif.
               </p>
             </div>
             <div className={styles.actions}>
@@ -496,6 +590,13 @@ export default function AutomationsPage() {
                 onClick={() => startCreate("webhook")}
               >
                 New webhook
+              </button>
+              <button
+                type="button"
+                disabled={graphs.length === 0}
+                onClick={() => startCreate("condition")}
+              >
+                New condition
               </button>
             </div>
           </div>
@@ -529,6 +630,7 @@ export default function AutomationsPage() {
                 >
                   <option value="event">Event</option>
                   <option value="webhook">Webhook</option>
+                  <option value="condition">Condition</option>
                 </select>
               </label>
               <label>
@@ -651,6 +753,69 @@ export default function AutomationsPage() {
                   </span>
                 </label>
               ) : null}
+              {draft.kind === "condition" ? (
+                <>
+                  <label>
+                    Condition field
+                    <input
+                      required
+                      aria-label="Condition field"
+                      placeholder="payload.score atau metadata.priority"
+                      value={draft.conditionField}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          current === null
+                            ? current
+                            : { ...current, conditionField: event.target.value },
+                        )
+                      }
+                    />
+                  </label>
+                  <label>
+                    Operator
+                    <select
+                      aria-label="Condition operator"
+                      value={draft.conditionOperator}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          current === null
+                            ? current
+                            : {
+                                ...current,
+                                conditionOperator: event.target.value as ConditionOperator,
+                              },
+                        )
+                      }
+                    >
+                      {(["EQ", "NEQ", "GT", "GTE", "LT", "LTE", "CONTAINS", "EXISTS"] as const).map(
+                        (operator) => (
+                          <option key={operator} value={operator}>
+                            {operator}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+                  {draft.conditionOperator !== "EXISTS" ? (
+                    <label>
+                      Value (JSON primitive)
+                      <input
+                        required
+                        aria-label="Condition value"
+                        placeholder={'80, true, "important", atau null'}
+                        value={draft.conditionValue}
+                        onChange={(event) =>
+                          setDraft((current) =>
+                            current === null
+                              ? current
+                              : { ...current, conditionValue: event.target.value },
+                          )
+                        }
+                      />
+                    </label>
+                  ) : null}
+                </>
+              ) : null}
               <label>
                 Autonomy request
                 <select
@@ -694,7 +859,9 @@ export default function AutomationsPage() {
                   draft.graphId.length === 0 ||
                   draft.source.trim().length === 0 ||
                   draft.eventKind.trim().length === 0 ||
-                  (draft.kind === "webhook" && draft.hookId.length < 16)
+                  (draft.kind === "webhook" && draft.hookId.length < 16) ||
+                  (draft.kind === "condition" &&
+                    (draft.conditionField.trim().length === 0 || !conditionValueValid(draft)))
                 }
               >
                 {pending === "save" ? "Saving…" : "Save automation"}
@@ -708,6 +875,8 @@ export default function AutomationsPage() {
               const relatedRuns = runs.filter((run) => run.triggerId === trigger.id).length;
               const webhook =
                 trigger.kind === "webhook" && config !== null && "hookId" in config;
+              const condition =
+                trigger.kind === "condition" && config !== null && "predicate" in config;
               const token = revealedTokens[trigger.id];
               return (
                 <article className={styles.card} key={trigger.id}>
@@ -751,6 +920,17 @@ export default function AutomationsPage() {
                       <div>
                         <dt>Hook ID</dt>
                         <dd>{config.hookId}</dd>
+                      </div>
+                    ) : null}
+                    {condition ? (
+                      <div>
+                        <dt>Predicate</dt>
+                        <dd>
+                          {config.predicate.field} {config.predicate.operator}
+                          {"value" in config.predicate
+                            ? ` ${JSON.stringify(config.predicate.value)}`
+                            : ""}
+                        </dd>
                       </div>
                     ) : null}
                   </dl>
@@ -827,8 +1007,8 @@ export default function AutomationsPage() {
             })}
             {!loading && automationTriggers.length === 0 ? (
               <div className={styles.empty}>
-                Belum ada event/webhook automation di Project ini. Schedule tetap khusus time
-                Trigger.
+                Belum ada event/webhook/condition automation di Project ini. Schedule tetap
+                khusus time Trigger.
               </div>
             ) : null}
           </div>
