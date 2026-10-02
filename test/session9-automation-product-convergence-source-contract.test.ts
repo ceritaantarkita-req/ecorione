@@ -50,7 +50,7 @@ describe("Session 9 Automation product convergence", () => {
 
   it("keeps external caller authority out of the automation configuration", () => {
     expect(page).toContain("X-ECORIONE-Webhook-Token");
-    expect(page).toContain("Workspace, Project, Flow, dan autonomy");
+    expect(page).toMatch(/Workspace, Project, Flow, dan\s+autonomy tidak diterima dari caller\./);
     expect(page).toContain('adapter: "generic" as const');
     expect(page).not.toContain("workspaceId: config.");
     expect(page).not.toContain("projectId: config.");
