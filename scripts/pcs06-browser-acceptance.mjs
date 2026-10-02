@@ -1497,10 +1497,11 @@ async function runDesktopJourney() {
     await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
     const brainProjectSearch = page.getByRole("combobox", { name: "Search Project" });
     await brainProjectSearch.fill("Research");
+    await page.getByRole("option").filter({ hasText: "Research" }).waitFor();
+    await page.getByRole("button", { name: "+ New Project", exact: true }).waitFor();
     await page.getByRole("option").filter({ hasText: "Research" }).click();
     await brainProjectSearch.fill("Personal");
     await page.getByRole("option").filter({ hasText: "Personal" }).click();
-    await page.getByRole("button", { name: "+ New Project", exact: true }).waitFor();
 
     const brainAssistant = page.getByLabel("Brain grounded assistant");
     await brainAssistant.waitFor();
