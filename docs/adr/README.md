@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Tiga puluh delapan keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Tiga puluh sembilan keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
@@ -44,6 +44,7 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [36](0036-trigger-temporal-schedule.md) | Trigger dimiliki Flow, Temporal tetap schedule/durability engine |
 | [37](0037-run-read-projection.md) | Run adalah read projection dengan operationId sebagai key v1 |
 | [38](0038-brain-derived-projection.md) | Brain adalah rebuildable authorized projection, bukan graph source-of-truth |
+| [39](0039-condition-trigger-event-predicate.md) | Condition Trigger adalah deterministic predicate atas event masuk, bukan polling engine |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris
