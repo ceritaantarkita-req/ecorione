@@ -4,14 +4,16 @@ import { describe, expect, it } from "vitest";
 describe("Session 11 MCP Action product convergence", () => {
   const flow = readFileSync("apps/ai/app/flow/page.tsx", "utf8");
   const sections = readFileSync("apps/ai/app/flow/FlowPageSections.tsx", "utf8");
+  const catalog = readFileSync("apps/ai/app/flow/useMcpActionCatalog.ts", "utf8");
   const proxy = readFileSync("apps/ai/lib/mcp-action-proxy.ts", "utf8");
   const activities = readFileSync("services/flow/src/graph-activities.ts", "utf8");
   const control = readFileSync("services/flow/src/graph-control.ts", "utf8");
   const adr = readFileSync("docs/adr/0040-mcp-action-flow-connect-boundary.md", "utf8");
 
   it("uses configured Connect MCP servers and explicit discovery instead of raw provider adapters", () => {
-    expect(flow).toContain("/api/mcp-actions/servers?workspaceId=");
-    expect(flow).toContain("/api/mcp-actions/servers/");
+    expect(flow).toContain("useMcpActionCatalog");
+    expect(catalog).toContain("/api/mcp-actions/servers?workspaceId=");
+    expect(catalog).toContain("/api/mcp-actions/servers/");
     expect(sections).toContain('aria-label="MCP action server"');
     expect(sections).toContain('aria-label="MCP action tool"');
     expect(sections).toContain("Discover tools");
