@@ -19,8 +19,6 @@ import {
   QuickNodeSettings,
   type GraphAuthorityRequirement,
   type GraphAuthorityState,
-  type McpActionServerOption,
-  type McpActionToolOption,
 } from "./FlowPageSections";
 import {
   DRAFT_ID,
@@ -34,6 +32,7 @@ import {
   outputOffset,
   parseInput,
 } from "./flow-page-model";
+import { useMcpActionCatalog } from "./useMcpActionCatalog";
 
 type SaveResponse = { version: FlowGraphVersionView; deduplicated: boolean };
 type NodeRunState = FlowGraphRunState["nodes"][number];
@@ -91,17 +90,18 @@ export default function FlowCanvasPage() {
   const [builderCollapsed, setBuilderCollapsed] = useState(false);
   const [expandedNodeId, setExpandedNodeId] = useState<string | null>(null);
   const [mobileMode, setMobileMode] = useState<MobileMode>("stack");
-  const [mcpServers, setMcpServers] = useState<McpActionServerOption[]>([]);
-  const [mcpToolsByServer, setMcpToolsByServer] = useState<
-    Record<string, McpActionToolOption[]>
-  >({});
-  const [mcpDiscoveryServerId, setMcpDiscoveryServerId] = useState<string | null>(null);
   const busyInFlightRef = useRef(false);
   const validationInFlightRef = useRef(false);
   const runInFlightRef = useRef(false);
   const nodeActionInFlightRef = useRef(false);
   const draftRevisionRef = useRef(0);
   const selected = nodes.find((node) => node.id === selectedId) ?? null;
+  const mcpCatalog = useMcpActionCatalog({
+    workspaceId,
+    workspaceReady,
+    scope,
+    sensitivity,
+  });
 
   const definitionsByKind = useMemo(
     () => new Map(definitions.map((item) => [item.kind, item])),
@@ -149,6 +149,10 @@ export default function FlowCanvasPage() {
   }
 
   useEffect(() => {
+    if (mcpCatalog.message !== null) setMessage(mcpCatalog.message);
+  }, [mcpCatalog.message]);
+
+  useEffect(() => {
     void fetch("/api/flow/nodes")
       .then(async (response) => {
         if (!response.ok) throw new Error();
@@ -161,35 +165,6 @@ export default function FlowCanvasPage() {
   useEffect(() => {
     if (selected !== null) setConfigDraft(JSON.stringify(selected.config, null, 2));
   }, [selectedId]);
-
-  useEffect(() => {
-    if (!workspaceReady) return;
-    let cancelled = false;
-    setMcpToolsByServer({});
-    void fetch(`/api/mcp-actions/servers?workspaceId=${encodeURIComponent(workspaceId)}`, {
-      cache: "no-store",
-    })
-      .then(async (response) => {
-        const body = (await response.json().catch(() => null)) as {
-          servers?: McpActionServerOption[];
-        } | null;
-        if (!response.ok || body?.servers === undefined) {
-          throw new Error(errorMessage(body, `MCP server list gagal (${response.status}).`));
-        }
-        if (!cancelled) setMcpServers(body.servers);
-      })
-      .catch((reason) => {
-        if (!cancelled) {
-          setMcpServers([]);
-          setMessage(
-            `MCP action catalog gagal: ${reason instanceof Error ? reason.message : String(reason)}`,
-          );
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [workspaceId, workspaceReady]);
 
   useEffect(() => {
     if (runId === null || run?.status === "COMPLETED" || run?.status === "FAILED") return;
@@ -795,38 +770,6 @@ export default function FlowCanvasPage() {
     }
   }
 
-  async function discoverMcpTools(serverId: string): Promise<void> {
-    if (serverId.length === 0 || mcpDiscoveryServerId !== null || !workspaceReady) {
-      return;
-    }
-    setMcpDiscoveryServerId(serverId);
-    try {
-      const response = await fetch(
-        `/api/mcp-actions/servers/${encodeURIComponent(serverId)}/discover`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ workspaceId, scope, sensitivity }),
-        },
-      );
-      const body = (await response.json().catch(() => null)) as {
-        tools?: McpActionToolOption[];
-        errors?: { tools?: string };
-      } | null;
-      if (!response.ok || body?.tools === undefined) {
-        setMessage(errorMessage(body, `MCP discovery gagal (${response.status}).`));
-        return;
-      }
-      setMcpToolsByServer((current) => ({ ...current, [serverId]: body.tools ?? [] }));
-      const enabled = body.tools.filter((tool) => tool.enabled).length;
-      setMessage(
-        `MCP ${serverId}: ${String(enabled)} enabled tool(s) dari ${String(body.tools.length)} discovered.${body.errors?.tools ? ` Tool discovery warning: ${body.errors.tools}` : ""}`,
-      );
-    } finally {
-      setMcpDiscoveryServerId(null);
-    }
-  }
-
   function quickNodeSettings(node: FlowGraphNode) {
     const serverId =
       node.kind === "mcp-tool" && typeof node.config.serverId === "string"
@@ -835,12 +778,12 @@ export default function FlowCanvasPage() {
     return (
       <QuickNodeSettings
         node={node}
-        mcpServers={mcpServers}
-        mcpTools={serverId.length === 0 ? [] : (mcpToolsByServer[serverId] ?? [])}
-        mcpDiscoveryBusy={mcpDiscoveryServerId === serverId && serverId.length > 0}
-        onDiscoverMcpTools={(nextServerId) =>
-          void runUiAction("MCP discovery gagal", () => discoverMcpTools(nextServerId))
+        mcpServers={mcpCatalog.servers}
+        mcpTools={serverId.length === 0 ? [] : (mcpCatalog.toolsByServer[serverId] ?? [])}
+        mcpDiscoveryBusy={
+          mcpCatalog.discoveryServerId === serverId && serverId.length > 0
         }
+        onDiscoverMcpTools={(nextServerId) => void mcpCatalog.discoverTools(nextServerId)}
         onRename={(nextLabel) => {
           setNodes((current) =>
             current.map((item) => (item.id === node.id ? { ...item, label: nextLabel } : item)),
