@@ -22,7 +22,7 @@ describe("Session 10 deterministic Condition Trigger convergence", () => {
       'trigger.kind === "condition" && !conditionMatchesEvent(trigger, event)',
     );
     expect(http).toContain(
-      'return { response: null, statusCode: 200, conditionMatched: false }',
+      "return { response: null, statusCode: 200, conditionMatched: false }",
     );
     expect(http).toContain("conditionFieldValue");
     expect(http).not.toContain("eval(");
@@ -31,9 +31,7 @@ describe("Session 10 deterministic Condition Trigger convergence", () => {
   });
 
   it("keeps false conditions side-effect free and true conditions on normal authority path", () => {
-    const noMatch = http.indexOf(
-      'trigger.kind === "condition" && !conditionMatchesEvent',
-    );
+    const noMatch = http.indexOf('trigger.kind === "condition" && !conditionMatchesEvent');
     const authority = http.indexOf("await validateAuthority(options, trigger)", noMatch);
     expect(noMatch).toBeGreaterThan(-1);
     expect(authority).toBeGreaterThan(noMatch);
