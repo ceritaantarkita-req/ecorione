@@ -20,6 +20,7 @@ const NAV_GROUPS = [
       ["Ai", "/", "ai"],
       ["Projects", "/projects", "projects"],
       ["Schedule", "/schedule", "work"],
+      ["Automation", "/automations", "automation"],
       ["Brain", "/brain", "brain"],
     ],
   },
@@ -89,6 +90,15 @@ function NavIcon({ icon }: { icon: NavIconKey }) {
         <svg {...shared}>
           <path d="M3.5 4.5h13v12h-13Z" />
           <path d="M6.5 2.8v3.4M13.5 2.8v3.4M3.5 8h13M6.5 11h2M11.5 11h2M6.5 14h2" />
+        </svg>
+      );
+    case "automation":
+      return (
+        <svg {...shared}>
+          <path d="M4 4.5h7.5M4 10h12M4 15.5h7.5" />
+          <circle cx="14.7" cy="4.5" r="1.7" />
+          <circle cx="8.2" cy="15.5" r="1.7" />
+          <path d="M10 6.5v1.7M10 11.8v1.7" />
         </svg>
       );
     case "brain":
