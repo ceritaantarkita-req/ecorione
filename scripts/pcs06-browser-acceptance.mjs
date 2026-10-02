@@ -1047,7 +1047,7 @@ async function installApiMocks(context) {
     if (
       path === "/api/mcp-actions/servers" &&
       method === "GET" &&
-      requestUrl.searchParams.get("workspaceId") === "ws_personal"
+      url.searchParams.get("workspaceId") === "ws_personal"
     ) {
       return json(route, {
         servers: [
