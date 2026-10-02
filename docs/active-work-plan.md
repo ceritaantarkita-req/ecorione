@@ -2,9 +2,9 @@
 
 Last updated: **2026-10-02**
 
-Status: **SESSION 7 SCHEDULE PRODUCT CONVERGENCE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
+Status: **SESSION 8 BRAIN PRODUCT CONVERGENCE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
 
-Current resume pointer: [verification/session7-schedule-product-convergence-closure-2026-10-02.md](verification/session7-schedule-product-convergence-closure-2026-10-02.md). PR #423 final reviewed head `3530412ea7c238338b102db44d0f9ee8f01226c1` merged as runtime-changing `main` `ebf52f190eeded99e4ee68881fd6925f2f0f6523`. PR-head CI #2620, Product Eval #1859, and PCS-06 #377 passed; merged-main CI #2621 and Product Eval #1860 passed; Staging Deploy #1990 deployed exact runtime image `staging-ebf52f190eed`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 configured services running, exact-host identity matched, and 29.91 GiB stabilized free disk.
+Current resume pointer: [verification/session8-brain-product-convergence-closure-2026-10-02.md](verification/session8-brain-product-convergence-closure-2026-10-02.md). PR #425 final reviewed head `b7698c26e876598b8cb93e914efef2dd9d77d65e` merged as runtime-changing `main` `a1b9aa6c85f194fe84d0263c4c42fbc7928b0047`. PR-head CI #2632, Product Eval #1871, and PCS-06 #386 passed; merged-main CI #2633 and Product Eval #1872 passed; Staging Deploy #2014 deployed exact runtime image `staging-a1b9aa6c85f1`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 configured services running, exact-host identity matched, and 25.34 GiB stabilized free disk.
 
 ## Current queue
 
@@ -35,6 +35,7 @@ Closed current baselines:
 - Session 5 — Project Source Picker productization + local owner-service bootstrap — CLOSED / PASS / STAGING VERIFIED through PR #419;
 - Session 6 — external-source lifecycle / refresh / indexing productization — CLOSED / PASS / STAGING VERIFIED through PR #421.
 - Session 7 — Schedule product convergence (`/schedule`, persistent AI draft composer, Project/Flow/Temporal continuity) — CLOSED / PASS / STAGING VERIFIED through PR #423.
+- Session 8 — Brain product convergence (searchable Project picker, connected graph continuity, persistent grounded Brain AI) — CLOSED / PASS / STAGING VERIFIED through PR #425.
 
 No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 
@@ -101,7 +102,7 @@ Underlying provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Overall safe-resume checkpoint:
-[verification/session7-schedule-product-convergence-closure-2026-10-02.md](verification/session7-schedule-product-convergence-closure-2026-10-02.md).
+[verification/session8-brain-product-convergence-closure-2026-10-02.md](verification/session8-brain-product-convergence-closure-2026-10-02.md).
 
 ## OpenRouter Sessions 2–4F — CLOSED / PASS / STAGING VERIFIED
 

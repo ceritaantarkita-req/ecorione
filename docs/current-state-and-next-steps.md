@@ -2,17 +2,17 @@
 
 Last updated: **2026-10-02**
 
-Status: **CURRENT / SESSION 7 SCHEDULE PRODUCT CONVERGENCE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 8 BRAIN PRODUCT CONVERGENCE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository                = ceritaantarkita-req/ecorione
 default branch            = main
-runtime-changing main     = ebf52f190eeded99e4ee68881fd6925f2f0f6523 (PR #423 merge)
-session 7 reviewed head   = 3530412ea7c238338b102db44d0f9ee8f01226c1 (PR #423 head)
-staging-verified runtime  = ebf52f190eeded99e4ee68881fd6925f2f0f6523
-staging image             = staging-ebf52f190eed
+runtime-changing main     = a1b9aa6c85f194fe84d0263c4c42fbc7928b0047 (PR #425 merge)
+session 8 reviewed head   = b7698c26e876598b8cb93e914efef2dd9d77d65e (PR #425 head)
+staging-verified runtime  = a1b9aa6c85f194fe84d0263c4c42fbc7928b0047
+staging image             = staging-a1b9aa6c85f1
 ```
 
 Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Exact PR head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI #2600, Product Eval #1839, and PCS-06 Integrated Browser Acceptance #371. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI #2601 and Product Eval #1840 passed, and actual Staging Deploy #1950 deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`. Public/auth and MCP smoke passed, Operations reported `healthy: true`, exact-host identity matched with a clean worktree, all **15/15** configured services were running, and capacity stabilized at **29.95 GiB free**.
@@ -25,8 +25,10 @@ Session 6 External Source Lifecycle is CLOSED / PASS / STAGING VERIFIED through 
 
 Session 7 Schedule Product Convergence is CLOSED / PASS / STAGING VERIFIED through PR #423. Schedule is now first-class at `/schedule` while `/work` remains a compatibility route; Project-aware list/day/week/month/year views, exact Flow-version links, Runs, and Temporal projections are preserved. The natural-language Schedule AI composer is persistently available at the bottom of the surface and remains draft-only until explicit Save through Flow Trigger ownership into Temporal.
 
+Session 8 Brain Product Convergence is CLOSED / PASS / STAGING VERIFIED through PR #425. Brain now reuses the searchable owner-backed Project picker with inline `+ New Project`, preserves its deterministic Project-scoped connected graph, and exposes grounded local Brain AI as a persistent bottom composer that stays disabled until a connected dot is selected. Canonical Project/Schedule/Flow/Context/Connect ownership remains unchanged.
+
 Current safe-resume checkpoint:
-[verification/session7-schedule-product-convergence-closure-2026-10-02.md](verification/session7-schedule-product-convergence-closure-2026-10-02.md).
+[verification/session8-brain-product-convergence-closure-2026-10-02.md](verification/session8-brain-product-convergence-closure-2026-10-02.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -35,30 +37,30 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = ebf52f190eeded99e4ee68881fd6925f2f0f6523
-image = staging-ebf52f190eed
+SHA   = a1b9aa6c85f194fe84d0263c4c42fbc7928b0047
+image = staging-a1b9aa6c85f1
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| PR #423 reviewed head | `3530412ea7c238338b102db44d0f9ee8f01226c1` |
-| PR-head CI #2620 | PASS |
-| PR-head Product Eval #1859 | PASS |
-| PR-head PCS-06 browser #377 | PASS |
-| merged-main CI #2621 | PASS |
-| merged-main Product Eval #1860 | PASS |
-| Staging Deploy #1989 | gate-only PASS / deploy skipped while peer gate incomplete |
-| Staging Deploy #1990 | actual deploy PASS |
-| expected host SHA | matched `ebf52f190eeded99e4ee68881fd6925f2f0f6523` |
-| staging image | `staging-ebf52f190eed` |
+| PR #425 reviewed head | `b7698c26e876598b8cb93e914efef2dd9d77d65e` |
+| PR-head CI #2632 | PASS |
+| PR-head Product Eval #1871 | PASS |
+| PR-head PCS-06 browser #386 | PASS |
+| merged-main CI #2633 | PASS |
+| merged-main Product Eval #1872 | PASS |
+| Staging Deploy #2013 | gate-only PASS / deploy skipped while peer gate incomplete |
+| Staging Deploy #2014 | actual deploy PASS |
+| expected host SHA | matched `a1b9aa6c85f194fe84d0263c4c42fbc7928b0047` |
+| staging image | `staging-a1b9aa6c85f1` |
 | public/auth + MCP smoke | PASS |
 | Operations | `healthy: true`, `unhealthyServices: []` |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
 | exact-host worktree | clean / DETACHED |
-| stabilized free disk after rollback-set cleanup | 29.91 GiB |
+| stabilized free disk after rollback-set cleanup | 25.34 GiB |
 
 SumoPod remains **staging, not production**.
 
