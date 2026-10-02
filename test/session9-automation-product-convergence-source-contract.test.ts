@@ -30,8 +30,8 @@ describe("Session 9 Automation product convergence", () => {
   it("exposes only the existing Connect-owned per-hook token read to the operator UI", () => {
     expect(page).toContain("/api/settings/settings/webhooks/");
     expect(page).toContain("Reveal token");
-    expect(settingsProxy).toMatch(
-      /\/v1\/settings\/webhooks\\\/[a-z0-9][^\n]*\\\/token/,
+    expect(settingsProxy).toContain(
+      "/^\\/v1\\/settings\\/webhooks\\/[a-z0-9][a-z0-9_-]{15,63}\\/token$/",
     );
     expect(settingsProxy).toContain('method !== "GET"');
     expect(page).toContain("jangan simpan di Trigger");
