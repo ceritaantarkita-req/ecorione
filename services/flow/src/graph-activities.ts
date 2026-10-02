@@ -20,7 +20,7 @@ import {
 } from "@ecorione/shared-schema";
 import { httpJson } from "@ecorione/shared-server";
 import { nowIso } from "./clock.js";
-import { renderGraphTemplate } from "./graph-control.js";
+import { renderGraphTemplate, renderGraphValueTemplates } from "./graph-control.js";
 
 export interface FlowGraphActivityConfig {
   readonly hubUrl: string;
@@ -284,7 +284,10 @@ export function createFlowGraphActivities(
               sensitivity: graph.sensitivity,
               autonomy: execution.autonomy ?? "L2",
               now: nowIso(),
-              arguments: cfg.arguments,
+              arguments: renderGraphValueTemplates(cfg.arguments, input) as Record<
+                string,
+                unknown
+              >,
             },
           },
         );
