@@ -463,6 +463,32 @@ const flowDefinitions = [
     idempotency: "none",
   },
   {
+    id: "core/mcp-tool/v1",
+    kind: "mcp-tool",
+    version: 1,
+    label: "MCP Tool",
+    category: "integration",
+    description: "Remote MCP call melalui Connect MCP manager.",
+    inputPorts: [{ id: "in", label: "Input", valueType: "any" }],
+    outputPorts: [{ id: "out", label: "Output", valueType: "any" }],
+    capabilities: [{ capabilityId: "node.execute", permissionIds: ["node.execute"] }],
+    policyActionClass: null,
+    sideEffect: true,
+    secretRefPolicy: "none",
+    limits: {
+      timeoutMs: 120000,
+      maxOutputBytes: 1048576,
+      maxIterations: 100,
+      maxParallelism: 4,
+    },
+    retry: {
+      maximumAttempts: 3,
+      initialIntervalMs: 1000,
+      maximumIntervalMs: 10000,
+    },
+    idempotency: "required-key",
+  },
+  {
     id: "core/condition/v1",
     kind: "condition",
     version: 1,
@@ -997,7 +1023,65 @@ async function installApiMocks(context) {
       return json(route, metadata);
     }
     if (path === "/api/settings/settings/mcp/servers" && method === "GET") {
-      return json(route, { servers: [] });
+      return json(route, {
+        servers: [
+          {
+            id: "mail",
+            displayName: "Mail MCP",
+            enabled: true,
+            workspaceIds: ["ws_personal"],
+            transport: {
+              type: "streamable-http",
+              url: "https://mcp.example.test",
+            },
+            toolPolicies: [
+              { name: "reply_message", enabled: true, actionClass: "EXTERNAL_SEND" },
+              { name: "delete_everything", enabled: false, actionClass: "IRREVERSIBLE_WRITE" },
+            ],
+            connectTimeoutMs: 10000,
+            requestTimeoutMs: 30000,
+          },
+        ],
+      });
+    }
+    if (
+      path === "/api/mcp-actions/servers" &&
+      method === "GET" &&
+      url.searchParams.get("workspaceId") === "ws_personal"
+    ) {
+      return json(route, {
+        servers: [
+          {
+            id: "mail",
+            displayName: "Mail MCP",
+            enabled: true,
+            transport: "streamable-http",
+            connected: false,
+          },
+        ],
+      });
+    }
+    if (path === "/api/mcp-actions/servers/mail/discover" && method === "POST") {
+      return json(route, {
+        serverId: "mail",
+        protocolEra: "modern",
+        tools: [
+          {
+            name: "reply_message",
+            description: "Reply to a message",
+            enabled: true,
+            actionClass: "EXTERNAL_SEND",
+          },
+          {
+            name: "delete_everything",
+            description: "Dangerous disabled tool",
+            enabled: false,
+            actionClass: "IRREVERSIBLE_WRITE",
+          },
+        ],
+        resources: [],
+        errors: {},
+      });
     }
     if (path === "/api/settings/ops/provider-canary" && method === "POST") {
       const body = request.postDataJSON();
@@ -1806,6 +1890,29 @@ async function runDesktopJourney() {
     await page.screenshot({ path: `${outDir}/desktop-settings.png`, fullPage: true });
 
     await goto(page, "/flow", "desktop-flow");
+    await page.getByRole("button", { name: "Add MCP Tool node", exact: true }).click();
+    const mcpServerSelect = page.getByRole("combobox", { name: "MCP action server" });
+    await mcpServerSelect.waitFor();
+    await mcpServerSelect.selectOption("mail");
+    const mcpToolSelect = page.getByRole("combobox", { name: "MCP action tool" });
+    const replyTool = mcpToolSelect.locator('option[value="reply_message"]');
+    await replyTool.waitFor({ state: "attached" });
+    if (await replyTool.isDisabled()) {
+      throw new Error("desktop-flow: enabled MCP action tool was discovered as disabled");
+    }
+    await mcpToolSelect.selectOption("reply_message");
+    if ((await mcpToolSelect.inputValue()) !== "reply_message") {
+      throw new Error("desktop-flow: MCP action tool picker did not persist discovered tool");
+    }
+    const disabledTool = mcpToolSelect.locator('option[value="delete_everything"]');
+    const disabledToolProperty = await disabledTool.evaluate(
+      (option) => option.disabled === true,
+    );
+    if (!disabledToolProperty) {
+      throw new Error("desktop-flow: disabled MCP tool became selectable");
+    }
+    await page.getByText(/Arguments tetap owner graph config/).waitFor();
+    await page.getByRole("button", { name: "Delete node", exact: true }).click();
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await page.getByText(/Tersimpan sebagai v1/).waitFor();
     const runButton = page.getByRole("button", { name: "Run", exact: true });

@@ -32,6 +32,7 @@ import {
   outputOffset,
   parseInput,
 } from "./flow-page-model";
+import { useMcpActionCatalog } from "./useMcpActionCatalog";
 
 type SaveResponse = { version: FlowGraphVersionView; deduplicated: boolean };
 type NodeRunState = FlowGraphRunState["nodes"][number];
@@ -95,6 +96,12 @@ export default function FlowCanvasPage() {
   const nodeActionInFlightRef = useRef(false);
   const draftRevisionRef = useRef(0);
   const selected = nodes.find((node) => node.id === selectedId) ?? null;
+  const mcpCatalog = useMcpActionCatalog({
+    workspaceId,
+    workspaceReady,
+    scope,
+    sensitivity,
+  });
 
   const definitionsByKind = useMemo(
     () => new Map(definitions.map((item) => [item.kind, item])),
@@ -140,6 +147,10 @@ export default function FlowCanvasPage() {
       setMessage(`${label}: ${detail}`);
     }
   }
+
+  useEffect(() => {
+    if (mcpCatalog.message !== null) setMessage(mcpCatalog.message);
+  }, [mcpCatalog.message]);
 
   useEffect(() => {
     void fetch("/api/flow/nodes")
@@ -760,9 +771,17 @@ export default function FlowCanvasPage() {
   }
 
   function quickNodeSettings(node: FlowGraphNode) {
+    const serverId =
+      node.kind === "mcp-tool" && typeof node.config.serverId === "string"
+        ? node.config.serverId
+        : "";
     return (
       <QuickNodeSettings
         node={node}
+        mcpServers={mcpCatalog.servers}
+        mcpTools={serverId.length === 0 ? [] : (mcpCatalog.toolsByServer[serverId] ?? [])}
+        mcpDiscoveryBusy={mcpCatalog.discoveryServerId === serverId && serverId.length > 0}
+        onDiscoverMcpTools={(nextServerId) => void mcpCatalog.discoverTools(nextServerId)}
         onRename={(nextLabel) => {
           setNodes((current) =>
             current.map((item) => (item.id === node.id ? { ...item, label: nextLabel } : item)),
