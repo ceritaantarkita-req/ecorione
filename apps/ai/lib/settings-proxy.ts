@@ -54,7 +54,9 @@ function allowedSettingsPath(path: string, method: Method): string | null {
     if ((method !== "PUT" && method !== "DELETE") || normalized.search.length > 0) return null;
   } else if (normalized.pathname === "/v1/settings/spend-status") {
     if (method !== "GET" || normalized.search.length > 0) return null;
-  } else if (/^\/v1\/settings\/webhooks\/[a-z0-9][a-z0-9_-]{15,63}\/token$/u.test(normalized.pathname)) {
+  } else if (
+    /^\/v1\/settings\/webhooks\/[a-z0-9][a-z0-9_-]{15,63}\/token$/u.test(normalized.pathname)
+  ) {
     if (method !== "GET" || normalized.search.length > 0) return null;
   } else if (normalized.pathname === "/v1/settings/mcp/servers" && method === "GET") {
     const keys = [...normalized.searchParams.keys()];
