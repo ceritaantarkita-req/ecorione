@@ -2,9 +2,9 @@
 
 Last updated: **2026-10-02**
 
-Status: **SESSION 9 AUTOMATION PRODUCT CONVERGENCE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
+Status: **SESSION 10 DETERMINISTIC CONDITION TRIGGER CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
 
-Current resume pointer: [verification/session9-automation-product-convergence-closure-2026-10-02.md](verification/session9-automation-product-convergence-closure-2026-10-02.md). PR #427 final reviewed head `8f4c91c4e39416abae3eafdaa9e40defecd409f4` merged as runtime-changing `main` `7336a7a71f976c1bd202059b0bf6f0983bf95cfd`. PR-head CI #2651, Product Eval #1890, and PCS-06 #402 passed; merged-main CI #2652 and Product Eval #1891 passed; Staging Deploy #2052 deployed exact runtime image `staging-7336a7a71f97`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 configured services running, exact-host identity matched, and 27.44 GiB stabilized free disk.
+Current resume pointer: [verification/session10-condition-trigger-convergence-closure-2026-10-02.md](verification/session10-condition-trigger-convergence-closure-2026-10-02.md). PR #429 final reviewed head `f5c7ddfa53473e2179be3aad7b453c5adb4060ba` merged as runtime-changing `main` `222b47403a9c6df3f29580a70cca53e2dff40263`. PR-head CI #2671, Product Eval #1910, PCS-06 #419, and MCP External HTTPS #1222 passed; merged-main CI #2672, Product Eval #1911, and MCP External HTTPS #1223 passed; Staging Deploy #2092 deployed exact runtime image `staging-222b47403a9c`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 configured services running, exact-host identity matched, and 29.93 GiB stabilized free disk.
 
 ## Current queue
 
@@ -37,6 +37,7 @@ Closed current baselines:
 - Session 7 — Schedule product convergence (`/schedule`, persistent AI draft composer, Project/Flow/Temporal continuity) — CLOSED / PASS / STAGING VERIFIED through PR #423.
 - Session 8 — Brain product convergence (searchable Project picker, connected graph continuity, persistent grounded Brain AI) — CLOSED / PASS / STAGING VERIFIED through PR #425.
 - Session 9 — Automation product convergence (first-class `/automations`, existing event/webhook Triggers, protected token reveal, bounded public webhook ingress) — CLOSED / PASS / STAGING VERIFIED through PR #427.
+- Session 10 — deterministic Condition Trigger convergence (event-driven bounded predicate, false-condition no-op, existing Hub/Temporal authority path, Automation UI) — CLOSED / PASS / STAGING VERIFIED through PR #429.
 
 No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 
@@ -103,7 +104,7 @@ Underlying provider/runtime checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
 
 Overall safe-resume checkpoint:
-[verification/session9-automation-product-convergence-closure-2026-10-02.md](verification/session9-automation-product-convergence-closure-2026-10-02.md).
+[verification/session10-condition-trigger-convergence-closure-2026-10-02.md](verification/session10-condition-trigger-convergence-closure-2026-10-02.md).
 
 ## OpenRouter Sessions 2–4F — CLOSED / PASS / STAGING VERIFIED
 
