@@ -26,8 +26,11 @@ describe("Session 8 Brain product convergence", () => {
     expect(assistant).toBeGreaterThan(workspace);
     expect(page.slice(workspace, assistant)).toContain("</aside>");
     expect(page).toContain("<strong>Brain AI</strong>");
-    expect(page).toContain('selectedNode === null ? "Pilih connected dot"');
+    expect(page).toContain("selectedNode === null");
+    expect(page).toContain('"Pilih connected dot"');
     expect(page).toContain("disabled={assistantBusy || selectedId === null}");
+    expect(page).toContain('useState("")');
+    expect(page).toContain('setAssistantSessionId(makeId("session"))');
     expect(css).toMatch(/\.assistant\s*\{[\s\S]*?border:\s*1px solid var\(--border\);/);
   });
 
