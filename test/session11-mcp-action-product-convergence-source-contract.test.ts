@@ -26,7 +26,7 @@ describe("Session 11 MCP Action product convergence", () => {
     expect(proxy).toContain("/discover");
     expect(proxy).not.toContain("/tools/");
     expect(proxy).not.toContain("/call");
-    expect(proxy).not.toContain('autonomy: parsed.data');
+    expect(proxy).not.toContain("autonomy: parsed.data");
   });
 
   it("resolves bounded structured templates before Connect sees MCP arguments", () => {
@@ -39,7 +39,9 @@ describe("Session 11 MCP Action product convergence", () => {
   });
 
   it("keeps Connect governance and provider-specific adapters outside this product slice", () => {
-    expect(adr).toContain("Connect tetap satu-satunya outbound MCP runtime/credential boundary");
+    expect(adr).toContain(
+      "Connect tetap satu-satunya outbound MCP runtime/credential boundary",
+    );
     expect(adr).toContain("actual resolved arguments");
     expect(adr).toContain("Provider-specific Gmail/Telegram adapter");
     expect(adr).toContain("tidak:");
