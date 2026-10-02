@@ -50,10 +50,14 @@ jobs:
               docs_only=true
               while IFS= read -r file; do
                 [[ -z "$file" ]] && continue
-                if [[ "$file" != docs/* ]]; then
-                  docs_only=false
-                  break
-                fi
+                case "$file" in
+                  docs/*|README.md|AGENTS.md)
+                    ;;
+                  *)
+                    docs_only=false
+                    break
+                    ;;
+                esac
               done <<< "$changed_files"
 
               if [[ "$docs_only" == "true" ]]; then
