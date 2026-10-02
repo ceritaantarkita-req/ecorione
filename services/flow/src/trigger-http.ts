@@ -283,7 +283,11 @@ function triggerSelectorMatchesEvent(
   trigger: TriggerDefinition,
   event: NormalizedTriggerEvent,
 ): boolean {
-  if (trigger.kind !== "event" && trigger.kind !== "webhook" && trigger.kind !== "condition") {
+  if (
+    trigger.kind !== "event" &&
+    trigger.kind !== "webhook" &&
+    trigger.kind !== "condition"
+  ) {
     return false;
   }
   const config = trigger.configuration as { source: string; eventKind: string };
@@ -543,7 +547,11 @@ export function registerTriggerRoutes(
   > {
     if (trigger.workspaceId !== event.workspaceId) throw new TriggerWorkspaceConflictError();
     if (trigger.projectId !== event.projectId) throw new TriggerProjectConflictError();
-    if (trigger.kind !== "event" && trigger.kind !== "webhook" && trigger.kind !== "condition") {
+    if (
+      trigger.kind !== "event" &&
+      trigger.kind !== "webhook" &&
+      trigger.kind !== "condition"
+    ) {
       throw new TriggerWrongKindError("event");
     }
     if (!trigger.enabled) throw new TriggerDisabledError();
