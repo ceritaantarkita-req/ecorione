@@ -18,11 +18,7 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
   const contentLength = request.headers.get("content-length");
   if (contentLength !== null) {
     const parsedLength = Number(contentLength);
-    if (
-      !Number.isSafeInteger(parsedLength) ||
-      parsedLength < 0 ||
-      parsedLength > MAX_BODY_BYTES
-    ) {
+    if (!Number.isSafeInteger(parsedLength) || parsedLength < 0 || parsedLength > MAX_BODY_BYTES) {
       return tooLarge();
     }
   }
@@ -42,17 +38,14 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
   if (webhookToken !== null) headers["x-ecorione-webhook-token"] = webhookToken;
 
   try {
-    const upstream = await fetch(
-      `${connectUrl()}/v1/webhooks/${encodeURIComponent(hookId)}`,
-      {
-        method: "POST",
-        headers,
-        body,
-        redirect: "error",
-        cache: "no-store",
-        signal: AbortSignal.timeout(FORWARD_TIMEOUT_MS),
-      },
-    );
+    const upstream = await fetch(`${connectUrl()}/v1/webhooks/${encodeURIComponent(hookId)}`, {
+      method: "POST",
+      headers,
+      body,
+      redirect: "error",
+      cache: "no-store",
+      signal: AbortSignal.timeout(FORWARD_TIMEOUT_MS),
+    });
     const text = await upstream.text();
     return new Response(text.length === 0 ? undefined : text, {
       status: upstream.status,
