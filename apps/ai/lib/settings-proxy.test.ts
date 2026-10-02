@@ -217,6 +217,44 @@ describe("proxyToConnectSettings", () => {
     expect(invalidLimit.status).toBe(400);
   });
 
+  it("meneruskan GET token webhook terderivasi dan menolak method/query lain", async () => {
+    const hookId = "hook_pcs06_webhook_0001";
+    let sawAuth: string | undefined;
+    pool
+      .intercept({
+        path: `/v1/settings/webhooks/${hookId}/token`,
+        method: "GET",
+      })
+      .reply(200, (opts) => {
+        sawAuth = (opts.headers as Record<string, string> | undefined)?.authorization;
+        return { hookId, token: "derived-hook-token" };
+      });
+
+    const response = await proxyToConnectSettings(
+      request("GET"),
+      `/v1/settings/webhooks/${hookId}/token`,
+      "GET",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ hookId, token: "derived-hook-token" });
+    expect(sawAuth).toBe("Bearer test-token");
+
+    const post = await proxyToConnectSettings(
+      request("POST", "{}"),
+      `/v1/settings/webhooks/${hookId}/token`,
+      "POST",
+    );
+    expect(post.status).toBe(400);
+
+    const query = await proxyToConnectSettings(
+      request("GET"),
+      `/v1/settings/webhooks/${hookId}/token?admin=true`,
+      "GET",
+    );
+    expect(query.status).toBe(400);
+  });
+
   it("meneruskan status Local AI tanpa membuka path Connect lain", async () => {
     pool.intercept({ path: "/v1/settings/local-runtime/status", method: "GET" }).reply(200, {
       runtime: "openai-compatible",
