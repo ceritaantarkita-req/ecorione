@@ -1021,7 +1021,9 @@ async function installApiMocks(context) {
         return json(route, { nodes: flowDefinitions });
       }
       if (path === "/api/flow/triggers" && method === "GET") {
-        return json(route, { triggers: [scheduleTrigger, automationTrigger, conditionTrigger] });
+        return json(route, {
+          triggers: [scheduleTrigger, automationTrigger, conditionTrigger],
+        });
       }
       if (path === `/api/flow/triggers/${scheduleTrigger.id}` && method === "PATCH") {
         const body = request.postDataJSON();
@@ -1597,7 +1599,7 @@ async function runDesktopJourney() {
       throw new Error("desktop-automations: condition operator default drifted");
     }
     const conditionValue = page.getByRole("textbox", { name: "Condition value" });
-    if ((await conditionValue.inputValue()) !== "\"ready\"") {
+    if ((await conditionValue.inputValue()) !== '"ready"') {
       throw new Error("desktop-automations: condition value draft drifted");
     }
     await page.getByRole("button", { name: "Cancel", exact: true }).click();
