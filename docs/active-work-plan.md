@@ -4,7 +4,7 @@ Last updated: **2026-10-02**
 
 Status: **SESSION 11 MCP ACTION PRODUCT CONVERGENCE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
 
-Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md). Session 11 product runtime closed through PR #431 (`9bd2b87fc4f3755b837c74d6b42585e0c5181870`). Post-closure CD hardening PR #433 merged as `7130dba720cff37a040ce29620b7902b52691e9c`; PR-head CI #2698 and Product Eval #1937 passed, merged-main CI #2699 and Product Eval #1938 passed, and Staging Deploy #2146 deployed exact image `staging-7130dba720cf` with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, exact-host identity matched, and 27.36 GiB stabilized free disk. Automatic docs-only `docs/**` main commits now skip staging deploy; explicit workflow dispatch remains available. Live proof: docs-only `main` `f441d72ddd9978f60218b8099fbd73a0150f27c8` passed Product Eval #1940 and CI #2701 on retry attempt 2 after a transient Temporal restart-test timeout, then Staging Deploy #2151 completed with gate PASS and deploy skipped explicitly because the SHA was docs-only.
+Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md). Session 11 product runtime remains closed through PR #431 (`9bd2b87fc4f3755b837c74d6b42585e0c5181870`). PR #436 exposed an incomplete automatic documentation-only classification because root `README.md` and `AGENTS.md` were outside the original `docs/**` allowlist. PR #437 broadened the allowlist to `docs/**`, `README.md`, and `AGENTS.md`, merged as `5f1245083047c4014789e90c2ba25b7e16ebe366`, and passed merged-main CI #2707, Product Eval #1946, and Staging Deploy #2163 as `staging-5f1245083047`. Public/auth + MCP smoke passed, Operations is healthy, 15/15 services are running, exact-host identity matched, and capacity stabilized at 29.91 GiB. This documentation closure is the required live skip proof.
 
 ## Current queue
 
@@ -39,7 +39,7 @@ Closed current baselines:
 - Session 9 — Automation product convergence (first-class `/automations`, existing event/webhook Triggers, protected token reveal, bounded public webhook ingress) — CLOSED / PASS / STAGING VERIFIED through PR #427.
 - Session 10 — deterministic Condition Trigger convergence (event-driven bounded predicate, false-condition no-op, existing Hub/Temporal authority path, Automation UI) — CLOSED / PASS / STAGING VERIFIED through PR #429.
 - Session 11 — MCP Action product convergence (configured Connect MCP server/tool picker, explicit L0 READ discovery, bounded runtime argument templates, existing Connect/Hub execution governance) — CLOSED / PASS / STAGING VERIFIED through PR #431.
-- Post-Session-11 CD hardening — automatic docs-only `docs/**` main commits skip staging deploy; manual dispatch and non-docs exact-SHA deploys remain intact — CLOSED / PASS / STAGING VERIFIED through PR #433; this does not open Session 12.
+- Post-Session-11 CD hardening — PR #437 expands the automatic documentation-only boundary to `docs/**`, `README.md`, and `AGENTS.md`; manual dispatch and non-docs exact-SHA deployment remain intact — STAGING VERIFIED; this closure supplies the merged-main live skip proof and does not open Session 12.
 
 No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 

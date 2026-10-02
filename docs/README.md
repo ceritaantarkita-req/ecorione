@@ -109,13 +109,13 @@ Use the owner-specific runbook when touching its subsystem:
 Latest audited **runtime-changing compatibility baseline**:
 
 ```text
-runtime/control SHA = 7130dba720cff37a040ce29620b7902b52691e9c
-image               = staging-7130dba720cf
+runtime/control SHA = 5f1245083047c4014789e90c2ba25b7e16ebe366
+image               = staging-5f1245083047
 ```
 
-Post-Session-11 CD hardening PR #433 is the latest runtime/control-changing baseline. Merged-main CI #2699 and Product Eval #1938 passed; actual Staging Deploy #2146 deployed exact SHA `7130dba...` as `staging-7130dba720cf`, with public/auth + MCP smoke PASS, Operations healthy, 15/15 services running, and 27.36 GiB stabilized free disk.
+Post-Session-11 CD hardening is now extended through PR #437. PR #436 exposed that root `README.md` and `AGENTS.md` were outside the original `docs/**` automatic skip boundary and therefore caused a successful but unnecessary redeploy. PR #437 merged as `5f1245083047c4014789e90c2ba25b7e16ebe366`; merged-main CI #2707, Product Eval #1946, and Staging Deploy #2163 passed. Exact staging image is `staging-5f1245083047`, Operations is healthy, 15/15 services are running, and free disk stabilized at 29.91 GiB.
 
-Sessions 4E–11 are closed at their documented boundaries. Later docs-only main commits are allowed to advance Git history without redeploying staging. Current safe-resume proof:
+Sessions 4E–11 remain closed at their documented boundaries. The expanded automatic documentation-only boundary is `docs/**`, `README.md`, and `AGENTS.md`; this documentation closure is the merged-main live skip proof.
 [verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 SumoPod remains staging, not production. DR-2 checkpoint 2 remains deferred and physical independence is not claimed.

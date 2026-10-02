@@ -1,113 +1,123 @@
 # ECORIONE Safe Resume Checkpoint — 2026-10-02
 
-**Status:** SAFE RESUME / NO ACTIVE IMPLEMENTATION SESSION / SESSION 11 + POST-CLOSURE CD HARDENING CLOSED
+**Status:** SAFE RESUME / NO ACTIVE IMPLEMENTATION SESSION / SESSION 11 CLOSED / POST-CHECKPOINT CD HARDENING STAGING VERIFIED
 
 ## Exact repository identity
 
 ```text
 repository                 = ceritaantarkita-req/ecorione
 default branch             = main
-current Git main           = 81fce027e623d833b445659e7457c5765d5108a8
-current main commit        = docs: record live Session 11 CD skip verification
+checkpoint repair base     = 5f1245083047c4014789e90c2ba25b7e16ebe366
+checkpoint repair base PR  = #437
 ```
 
-The current Git `main` is **docs-only** relative to the latest staging runtime/control baseline. Do not assume Git main SHA and staging runtime SHA are the same.
+Session 12 is not active or implied by this checkpoint.
 
 ## Current runtime / staging identity
 
 ```text
 Session 11 product merge   = 9bd2b87fc4f3755b837c74d6b42585e0c5181870
-latest runtime/control SHA = 7130dba720cff37a040ce29620b7902b52691e9c
-staging image              = staging-7130dba720cf
+latest runtime/control SHA = 5f1245083047c4014789e90c2ba25b7e16ebe366
+staging image              = staging-5f1245083047
+CI                         = #2707 PASS
+Product Eval               = #1946 PASS
+Staging Deploy             = #2163 PASS
 Operations                 = healthy
 services                   = 15/15 running
-stabilized free disk       = 27.36 GiB
+stabilized free disk       = 29.91 GiB
 ```
 
-PR #433 is the latest runtime/control-changing merge in this checkpoint. Its actual Staging Deploy #2146 passed with exact host SHA, public/auth + MCP smoke PASS, healthy Operations, 15/15 configured services running, and a clean detached staging worktree.
+Staging Deploy #2163 deployed exact SHA `5f1245083047c4014789e90c2ba25b7e16ebe366`. Public/auth + MCP smoke passed, Operations was healthy, exact-host identity matched, all 15/15 configured services were running, and capacity stabilized at 29.91 GiB free.
 
-## Docs-only CD guard live proof
+## PR #436 checkpoint redeploy incident
 
-The automatic staging CD guard now skips deploy when the current-main commit changes only paths under `docs/**`.
-
-Live proof before this checkpoint:
-
-- docs-only main `f441d72ddd9978f60218b8099fbd73a0150f27c8`;
-- Product Eval #1940 PASS;
-- CI #2701 attempt 1 hit a transient Temporal restart-test timeout;
-- CI #2701 retry attempt 2 PASS on the same SHA without a code change;
-- Staging Deploy #2151 gate PASS / deploy SKIPPED with explicit docs-only reason.
-
-Current Git main `81fce027e623d833b445659e7457c5765d5108a8` also passed:
+PR #436 was intended as documentation-only and merged as:
 
 ```text
-CI #2703            PASS
-Product Eval #1942  PASS
-Staging #2154       gate PASS / deploy SKIPPED
-Staging #2155       gate PASS / deploy SKIPPED
+ca8670209ddd909da4d0c5db782950d85469e1b2
 ```
 
-Therefore this checkpoint does **not** claim a new runtime deploy for `81fce027...`. Runtime staging remains `7130dba720cf...`.
+The CD guard at that point recognized only `docs/**`. PR #436 also changed root `README.md` and `AGENTS.md`, so the merged commit was classified as deployable and triggered a real staging deployment.
+
+That deployment succeeded and established `staging-ca8670209ddd`; this was not an application regression. It exposed an incomplete documentation-only path classification.
+
+## PR #437 CD hardening
+
+PR #437 broadened the automatic documentation-only allowlist to:
+
+```text
+docs/**
+README.md
+AGENTS.md
+```
+
+Reviewed PR head:
+
+```text
+ecb99b266f6854e3a010189ae747a899c3e9826e
+```
+
+Merged main / staging-verified control SHA:
+
+```text
+5f1245083047c4014789e90c2ba25b7e16ebe366
+```
+
+Manual `workflow_dispatch` remains deploy-capable. Changes outside the documentation-only allowlist continue through the current-main, peer-gate, exact-SHA staging deployment path.
+
+The source-contract test passed 12/12 locally before PR creation. PR-head CI and Product Eval passed. Merged-main CI #2707, Product Eval #1946, and Staging Deploy #2163 passed.
+
+Because PR #437 changed deployment-control source and its contract test, the actual deployment of `5f124508...` was expected.
+
+## Expanded docs-only guard live proof
+
+The documentation-only closure that follows this checkpoint repair is the required live proof for the expanded allowlist.
+
+Expected behavior:
+
+- CI PASS;
+- Product Eval PASS;
+- staging gate PASS;
+- deploy job SKIPPED;
+- runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366`;
+- image remains `staging-5f1245083047`.
+
+Until that merged-main proof is observed, do not describe the expanded `README.md` / `AGENTS.md` classification as live-verified.
 
 ## Closed product roadmap through Session 11
 
-The following product sessions are closed at their documented boundaries:
-
-- Sessions 4E/4F — provider/model UX, custom provider, multi-credential, Local↔Hosted boundary;
+- Sessions 4E/4F — provider/model UX, custom provider, multi-credential and Local↔Hosted boundary;
 - Session 5 — Project Source Picker;
 - Session 6 — External Source Lifecycle;
 - Session 7 — Schedule product convergence;
 - Session 8 — Brain product convergence;
 - Session 9 — Automation product convergence;
 - Session 10 — deterministic Condition Trigger;
-- Session 11 — MCP Action product convergence;
-- post-Session-11 automatic docs-only CD hardening.
+- Session 11 — MCP Action product convergence.
 
-No Session 12 is active or implied by this checkpoint.
+The post-Session-11 and post-checkpoint CD work is deployment-control hardening. It does not open Session 12.
 
 ## Current queue
 
 There is **no active implementation session**.
 
-Separate/deferred scopes remain separate unless explicitly authorized, including:
+Deferred/separate scopes still include DR-2 checkpoint 2, production cutover, native Google Drive integration, broader Workspace/final RBAC, provider-specific Gmail/Telegram adapters or OAuth/subscriptions, polling/always-on LLM monitors, L4/AutoClick, and external A2A/recursive agent graphs.
 
-- DR-2 checkpoint 2 / physical-independence proof;
-- public production cutover;
-- native Google Drive integration;
-- broader Workspace registry / final multi-user RBAC;
-- provider-specific Gmail/Telegram native adapters or OAuth/subscription work;
-- polling / always-on LLM monitors;
-- L4 / AutoClick;
-- external A2A / recursive agent graphs.
-
-Open PR #403 remains an old pre-4E documentation PR and is **not** the current implementation queue.
+Open PR #403 remains historical pre-4E documentation and is not the current implementation queue.
 
 ## Local laptop state
 
-Desktop Commander was offline when this checkpoint was written, so **local laptop sync is not claimed**.
-
-First local resume steps after Desktop Commander is online:
-
-```powershell
-cd "C:\Users\Amand\Documents\ChatGPT\ecorione"
-git fetch origin --prune
-git status -sb
-git branch --show-current
-git rev-parse HEAD
-git rev-parse origin/main
-```
-
-Expected remote main at checkpoint creation:
+Local PowerShell verification established a clean repository synchronized with GitHub before this repair branch was opened.
 
 ```text
-81fce027e623d833b445659e7457c5765d5108a8
+base local main  = 5f1245083047c4014789e90c2ba25b7e16ebe366
+base origin/main = 5f1245083047c4014789e90c2ba25b7e16ebe366
+working tree     = clean
 ```
-
-Do not reset, delete, switch, stash, or merge local work until `git status -sb` and branch identity are inspected.
 
 ## Resume rule
 
-Future work must start from **current repository truth**, not from Session 6 or earlier checkpoints.
+Future work must start from current repository truth.
 
 Read in this order:
 
@@ -118,6 +128,6 @@ Read in this order:
 5. relevant accepted ADR/runbook
 6. dated closure evidence only for the scope being changed
 
-If `main` has advanced beyond `81fce027...`, audit the delta first and treat this checkpoint as historical evidence rather than rewriting newer work.
+If `main` advances beyond the checkpoint SHA, audit that delta first.
 
 No implementation session should be opened automatically from this checkpoint.
