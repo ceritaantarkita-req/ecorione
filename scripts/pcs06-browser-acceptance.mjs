@@ -1895,7 +1895,10 @@ async function runDesktopJourney() {
     await mcpServerSelect.waitFor();
     await mcpServerSelect.selectOption("mail");
     const mcpToolSelect = page.getByRole("combobox", { name: "MCP action tool" });
-    await mcpToolSelect.locator('option[value="reply_message"]').waitFor();
+    const replyTool = mcpToolSelect.locator('option[value="reply_message"]');
+    if ((await replyTool.count()) !== 1 || (await replyTool.isDisabled())) {
+      throw new Error("desktop-flow: enabled MCP action tool was not discovered");
+    }
     await mcpToolSelect.selectOption("reply_message");
     if ((await mcpToolSelect.inputValue()) !== "reply_message") {
       throw new Error("desktop-flow: MCP action tool picker did not persist discovered tool");
