@@ -1586,21 +1586,22 @@ async function runDesktopJourney() {
     await page.getByText("POST /webhooks/hook_pcs06_webhook_0001", { exact: true }).waitFor();
     await page.getByRole("button", { name: "Reveal token", exact: true }).click();
     await page.getByText("pcs06-derived-webhook-token", { exact: true }).waitFor();
-    await page.getByText("PCS-06 Condition", { exact: true }).waitFor();
-    await page.getByText("payload.score GTE 80", { exact: true }).waitFor();
-    await page.getByRole("button", { name: "New condition", exact: true }).click();
+    const conditionCard = page.locator("article").filter({ hasText: "PCS-06 Condition" }).first();
+    await conditionCard.getByText("PCS-06 Condition", { exact: true }).waitFor();
+    await conditionCard.getByText("payload.score GTE 80", { exact: true }).waitFor();
+    await conditionCard.getByRole("button", { name: "Edit", exact: true }).click();
     const conditionField = page.getByRole("textbox", { name: "Condition field" });
     await conditionField.waitFor();
-    if ((await conditionField.inputValue()) !== "payload.status") {
-      throw new Error("desktop-automations: condition draft did not use bounded payload path");
+    if ((await conditionField.inputValue()) !== "payload.score") {
+      throw new Error("desktop-automations: condition edit lost its bounded payload path");
     }
     const conditionOperator = page.getByRole("combobox", { name: "Condition operator" });
-    if ((await conditionOperator.inputValue()) !== "EQ") {
-      throw new Error("desktop-automations: condition operator default drifted");
+    if ((await conditionOperator.inputValue()) !== "GTE") {
+      throw new Error("desktop-automations: condition edit lost its operator");
     }
     const conditionValue = page.getByRole("textbox", { name: "Condition value" });
-    if ((await conditionValue.inputValue()) !== '"ready"') {
-      throw new Error("desktop-automations: condition value draft drifted");
+    if ((await conditionValue.inputValue()) !== "80") {
+      throw new Error("desktop-automations: condition edit lost its primitive value");
     }
     await page.getByRole("button", { name: "Cancel", exact: true }).click();
     await assertNoPageOverflow(page, "desktop-automations");
