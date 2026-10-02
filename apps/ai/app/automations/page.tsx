@@ -150,7 +150,7 @@ function draftFromTrigger(trigger: TriggerDefinition): AutomationDraft | null {
       "predicate" in config ? config.predicate.operator : "EQ",
     conditionValue:
       "predicate" in config && "value" in config.predicate
-        ? JSON.stringify(config.predicate.value)
+        ? (JSON.stringify(config.predicate.value) ?? "")
         : "",
   };
 }
