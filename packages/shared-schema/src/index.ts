@@ -14,6 +14,7 @@ export * from "./capabilities.js";
 export * from "./chat.js";
 export * from "./project.js";
 export * from "./project-source.js";
+export * from "./google-drive.js";
 export * from "./brain.js";
 export * from "./trigger.js";
 export * from "./schedule-assist.js";
