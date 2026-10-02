@@ -2,17 +2,17 @@
 
 Last updated: **2026-10-02**
 
-Status: **CURRENT / SESSION 10 DETERMINISTIC CONDITION TRIGGER CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 11 MCP ACTION PRODUCT CONVERGENCE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository                 = ceritaantarkita-req/ecorione
 default branch             = main
-runtime-changing main      = 222b47403a9c6df3f29580a70cca53e2dff40263 (PR #429 merge)
-session 10 reviewed head   = f5c7ddfa53473e2179be3aad7b453c5adb4060ba (PR #429 head)
-staging-verified runtime   = 222b47403a9c6df3f29580a70cca53e2dff40263
-staging image              = staging-222b47403a9c
+runtime-changing main      = 9bd2b87fc4f3755b837c74d6b42585e0c5181870 (PR #431 merge)
+session 11 reviewed head   = cd57404e767335e46abbdc8bc629774f32ad2b70 (PR #431 head)
+staging-verified runtime   = 9bd2b87fc4f3755b837c74d6b42585e0c5181870
+staging image              = staging-9bd2b87fc4f3
 ```
 
 Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Exact PR head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI #2600, Product Eval #1839, and PCS-06 Integrated Browser Acceptance #371. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI #2601 and Product Eval #1840 passed, and actual Staging Deploy #1950 deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`. Public/auth and MCP smoke passed, Operations reported `healthy: true`, exact-host identity matched with a clean worktree, all **15/15** configured services were running, and capacity stabilized at **29.95 GiB free**.
@@ -31,8 +31,10 @@ Session 9 Automation Product Convergence is CLOSED / PASS / STAGING VERIFIED thr
 
 Session 10 Deterministic Condition Trigger is CLOSED / PASS / STAGING VERIFIED through PR #429. The previously reserved `condition` kind is now an event-driven bounded predicate over normalized events: selector mismatch fails closed, predicate false returns a side-effect-free no-op, and predicate true continues through the existing Project + exact pinned Flow + Hub policy/approval/capability + Temporal + Run path. ADR-39 explicitly forbids turning Condition into polling, an always-on LLM monitor, dynamic code, or a second scheduler. `/automations` now supports Condition configuration while Schedule remains time-Trigger-only.
 
+Session 11 MCP Action Product Convergence is CLOSED / PASS / STAGING VERIFIED through PR #431. Flow MCP Tool nodes now bind to configured Connect-owned MCP servers/tools through guided product pickers and explicit L0 READ discovery. Browser product routes cannot call remote tools directly; actual external actions still execute only through exact pinned Flow → Connect outbound MCP → Hub governance. Runtime MCP arguments support bounded structured `{{ path }}` binding to Flow input, with exact templates preserving JSON value types and embedded templates remaining text. ADR-40 keeps native Gmail/Telegram adapters, OAuth/subscriptions, polling, L4/AutoClick, and production cutover outside this session.
+
 Current safe-resume checkpoint:
-[verification/session10-condition-trigger-convergence-closure-2026-10-02.md](verification/session10-condition-trigger-convergence-closure-2026-10-02.md).
+[verification/session11-mcp-action-product-convergence-closure-2026-10-02.md](verification/session11-mcp-action-product-convergence-closure-2026-10-02.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -41,32 +43,33 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = 222b47403a9c6df3f29580a70cca53e2dff40263
-image = staging-222b47403a9c
+SHA   = 9bd2b87fc4f3755b837c74d6b42585e0c5181870
+image = staging-9bd2b87fc4f3
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| PR #429 reviewed head | `f5c7ddfa53473e2179be3aad7b453c5adb4060ba` |
-| PR-head CI #2671 | PASS |
-| PR-head Product Eval #1910 | PASS |
-| PR-head PCS-06 browser #419 | PASS |
-| PR-head MCP External HTTPS #1222 | PASS |
-| merged-main CI #2672 | PASS |
-| merged-main Product Eval #1911 | PASS |
-| merged-main MCP External HTTPS #1223 | PASS |
-| Staging Deploy #2091 | gate PASS / deploy skipped |
-| Staging Deploy #2092 | actual deploy PASS |
-| expected host SHA | matched `222b47403a9c6df3f29580a70cca53e2dff40263` |
-| staging image | `staging-222b47403a9c` |
+| PR #431 reviewed head | `cd57404e767335e46abbdc8bc629774f32ad2b70` |
+| PR-head CI #2691 | PASS |
+| PR-head Product Eval #1930 | PASS |
+| PR-head PCS-06 browser #436 | PASS |
+| PR-head MCP External HTTPS #1240 | PASS |
+| PR-head Desktop Installer #306 | PASS |
+| merged-main CI #2692 | PASS |
+| merged-main Product Eval #1931 | PASS |
+| merged-main MCP External HTTPS #1241 | PASS |
+| Staging Deploy #2131 | gate PASS / deploy skipped |
+| Staging Deploy #2132 | actual deploy PASS |
+| expected host SHA | matched `9bd2b87fc4f3755b837c74d6b42585e0c5181870` |
+| staging image | `staging-9bd2b87fc4f3` |
 | public/auth + MCP smoke | PASS |
 | Operations | `healthy: true`, `unhealthyServices: []` |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
 | exact-host worktree | clean / DETACHED |
-| stabilized free disk after BuildKit-only cleanup | 29.93 GiB |
+| stabilized free disk | 25.25 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -340,7 +343,7 @@ Canonical Session 4D checkpoint:
 
 ## Current active work
 
-There is **no active implementation queue**. Sessions 4E/4F and Sessions 5–10 are CLOSED / PASS / STAGING VERIFIED. Session 10 is closed through runtime PR #429 and Staging Deploy #2092.
+There is **no active implementation queue**. Sessions 4E/4F and Sessions 5–11 are CLOSED / PASS / STAGING VERIFIED. Session 11 is closed through runtime PR #431 and Staging Deploy #2132.
 
 Closed current slices that must not be redone:
 
@@ -354,9 +357,10 @@ Closed current slices that must not be redone:
 - Schedule product convergence — PR #423;
 - Brain product convergence — PR #425;
 - Automation product convergence over existing event/webhook Triggers — PR #427;
-- deterministic Condition Trigger activation over normalized events — PR #429.
+- deterministic Condition Trigger activation over normalized events — PR #429;
+- MCP Action product convergence over existing Flow/Connect outbound MCP authority — PR #431.
 
-Session 10 is closed. No Session 11 or other numbered continuation is automatically opened. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
+Session 11 is closed. No Session 12 or other numbered continuation is automatically opened. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
 ## Explicit deferred / separately selectable future scopes
 
@@ -391,7 +395,7 @@ For a new session/agent:
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/session10-condition-trigger-convergence-closure-2026-10-02.md](verification/session10-condition-trigger-convergence-closure-2026-10-02.md).
+[verification/session11-mcp-action-product-convergence-closure-2026-10-02.md](verification/session11-mcp-action-product-convergence-closure-2026-10-02.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
