@@ -91,6 +91,17 @@ export interface ConnectControlOptions {
     | undefined;
 }
 
+function assertManualCredentialProvider(provider: (typeof CREDENTIAL_PROVIDERS)[number]): void {
+  const entry = PROVIDER_CATALOG.find((candidate) => candidate.id === provider);
+  if (entry?.credentialReady !== true) {
+    throw new HttpError(
+      400,
+      "CREDENTIAL_MANAGED_EXTERNALLY",
+      "Credential provider ini dikelola melalui lifecycle integrasi khusus, bukan manual secret API.",
+    );
+  }
+}
+
 function credentialMutation<T>(fn: () => T): T {
   try {
     return fn();
@@ -398,6 +409,7 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
+      assertManualCredentialProvider(provider);
       const { secret: value } = parseOrBadRequest(CredentialBodySchema, req.body);
       const metadata = credentialMutation(() =>
         vault().set(provider, purposeFor(provider), value, nowIso()),
@@ -414,6 +426,7 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider/connections",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
+      assertManualCredentialProvider(provider);
       const body = parseOrBadRequest(CredentialConnectionBodySchema, req.body);
       const purpose = purposeFor(provider);
       if (purpose !== "messages") {
@@ -446,6 +459,7 @@ export function registerConnectControlRoutes(
         CredentialConnectionParamsSchema,
         req.params,
       );
+      assertManualCredentialProvider(provider);
       const patch = parseOrBadRequest(CredentialConnectionPatchSchema, req.body);
       const metadata = credentialMutation(() =>
         vault().updateConnection(provider, purposeFor(provider), connectionId, patch, nowIso()),
@@ -466,6 +480,7 @@ export function registerConnectControlRoutes(
         CredentialConnectionParamsSchema,
         req.params,
       );
+      assertManualCredentialProvider(provider);
       const removed = credentialMutation(() =>
         vault().removeConnection(provider, purposeFor(provider), connectionId),
       );
@@ -482,6 +497,7 @@ export function registerConnectControlRoutes(
     "/v1/settings/credentials/:provider",
     async (req) => {
       const { provider } = parseOrBadRequest(CredentialParamsSchema, req.params);
+      assertManualCredentialProvider(provider);
       const removed = credentialMutation(() => vault().remove(provider, purposeFor(provider)));
       metrics.addCounter("ecorione_control_changes_total", 1, {
         surface: "credential",
