@@ -18,7 +18,11 @@ export async function POST(request: Request, context: RouteContext): Promise<Res
   const contentLength = request.headers.get("content-length");
   if (contentLength !== null) {
     const parsedLength = Number(contentLength);
-    if (!Number.isSafeInteger(parsedLength) || parsedLength < 0 || parsedLength > MAX_BODY_BYTES) {
+    if (
+      !Number.isSafeInteger(parsedLength) ||
+      parsedLength < 0 ||
+      parsedLength > MAX_BODY_BYTES
+    ) {
       return tooLarge();
     }
   }
