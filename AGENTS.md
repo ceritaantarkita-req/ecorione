@@ -31,7 +31,7 @@ services                 = 15/15 running
 free disk                = 29.91 GiB stabilized
 ```
 
-Documentation-only checkpoint commits may advance Git revision identity without changing product behavior. Sessions 4E–11 remain CLOSED / PASS / STAGING VERIFIED at their documented boundaries. PR #436 exposed that the original `docs/**` classifier did not include root `README.md` and `AGENTS.md`; PR #437 expands the automatic documentation-only allowlist to `docs/**`, `README.md`, and `AGENTS.md`. PR #437 itself correctly deployed because it changed deployment-control source and its contract test. This documentation closure is the required merged-main live proof of the expanded skip boundary. Do not reopen closed sessions for freshness.
+Documentation-only checkpoint commits may advance Git revision identity without changing product behavior. Sessions 4E–11 remain CLOSED / PASS / STAGING VERIFIED at their documented boundaries. PR #436 exposed that the original `docs/**` classifier did not include root `README.md` and `AGENTS.md`; PR #437 expanded the allowlist to `docs/**`, `README.md`, and `AGENTS.md`. The boundary is now live-verified by PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9`: CI #2709 PASS, Product Eval #1948 PASS, and Staging Deploy #2166/#2167 both gate PASS / deploy SKIPPED. Runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366` / `staging-5f1245083047`. Do not reopen closed sessions for freshness.
 
 Current overall safe-resume pointer:
 `docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md`.
@@ -86,7 +86,7 @@ Closed roadmap families:
 - Session 9 Automation product convergence — **CLOSED / PASS / STAGING VERIFIED** through PR #427;
 - Session 10 deterministic Condition Trigger — **CLOSED / PASS / STAGING VERIFIED** through PR #429;
 - Session 11 MCP Action product convergence — **CLOSED / PASS / STAGING VERIFIED** through PR #431;
-- post-Session-11 CD hardening — **STAGING VERIFIED** through PR #437; automatic documentation-only allowlist is `docs/**`, `README.md`, and `AGENTS.md`; this documentation closure supplies the merged-main live skip proof.
+- post-Session-11 CD hardening — **CLOSED / PASS / LIVE VERIFIED** through PR #438; automatic documentation-only allowlist is `docs/**`, `README.md`, and `AGENTS.md`; runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366`.
 
 There is no active implementation queue. Session 12 remains unopened until explicit operator authorization. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
 

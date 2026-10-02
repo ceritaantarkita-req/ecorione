@@ -1,6 +1,6 @@
 # ECORIONE Safe Resume Checkpoint — 2026-10-02
 
-**Status:** SAFE RESUME / NO ACTIVE IMPLEMENTATION SESSION / SESSION 11 CLOSED / POST-CHECKPOINT CD HARDENING STAGING VERIFIED
+**Status:** SAFE RESUME / NO ACTIVE IMPLEMENTATION SESSION / SESSION 11 CLOSED / POST-CHECKPOINT CD HARDENING LIVE VERIFIED
 
 ## Exact repository identity
 
@@ -71,7 +71,7 @@ Because PR #437 changed deployment-control source and its contract test, the act
 
 ## Expanded docs-only guard live proof
 
-The documentation-only closure that follows this checkpoint repair is the required live proof for the expanded allowlist.
+PR #438 merged as `6daea51053ee24ae4aebb5a8c155ff8554da85f9` and provides the required live proof for the expanded documentation-only allowlist. Merged-main CI #2709 and Product Eval #1948 passed; Staging Deploy #2166 and #2167 both gate-passed and skipped deploy.
 
 Expected behavior:
 
@@ -82,7 +82,7 @@ Expected behavior:
 - runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366`;
 - image remains `staging-5f1245083047`.
 
-Until that merged-main proof is observed, do not describe the expanded `README.md` / `AGENTS.md` classification as live-verified.
+The expanded `docs/**`, `README.md`, and `AGENTS.md` classification is now **LIVE VERIFIED**. Runtime staging remained `5f1245083047c4014789e90c2ba25b7e16ebe366` / `staging-5f1245083047`; PR #438 advanced Git `main` only, without a runtime redeploy.
 
 ## Closed product roadmap through Session 11
 

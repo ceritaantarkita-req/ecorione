@@ -115,7 +115,7 @@ image               = staging-5f1245083047
 
 Post-Session-11 CD hardening is now extended through PR #437. PR #436 exposed that root `README.md` and `AGENTS.md` were outside the original `docs/**` automatic skip boundary and therefore caused a successful but unnecessary redeploy. PR #437 merged as `5f1245083047c4014789e90c2ba25b7e16ebe366`; merged-main CI #2707, Product Eval #1946, and Staging Deploy #2163 passed. Exact staging image is `staging-5f1245083047`, Operations is healthy, 15/15 services are running, and free disk stabilized at 29.91 GiB.
 
-Sessions 4E–11 remain closed at their documented boundaries. The expanded automatic documentation-only boundary is `docs/**`, `README.md`, and `AGENTS.md`; this documentation closure is the merged-main live skip proof.
+Sessions 4E–11 remain closed at their documented boundaries. The expanded automatic documentation-only boundary `docs/**`, `README.md`, and `AGENTS.md` is live-verified by PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9`; Staging Deploy #2166 and #2167 both skipped deployment, so runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366` / `staging-5f1245083047`.
 [verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 SumoPod remains staging, not production. DR-2 checkpoint 2 remains deferred and physical independence is not claimed.
