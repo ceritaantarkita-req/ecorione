@@ -180,7 +180,10 @@ export const TriggerConfigurationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("time"), configuration: TimeTriggerConfigurationSchema }),
   z.object({ kind: z.literal("event"), configuration: EventTriggerConfigurationSchema }),
   z.object({ kind: z.literal("webhook"), configuration: WebhookTriggerConfigurationSchema }),
-  z.object({ kind: z.literal("condition"), configuration: ConditionTriggerConfigurationSchema }),
+  z.object({
+    kind: z.literal("condition"),
+    configuration: ConditionTriggerConfigurationSchema,
+  }),
 ]);
 export type TriggerConfiguration = z.infer<typeof TriggerConfigurationSchema>;
 
