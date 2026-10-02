@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type {
-  McpActionServerOption,
-  McpActionToolOption,
-} from "./FlowPageSections";
+import type { McpActionServerOption, McpActionToolOption } from "./FlowPageSections";
 import { errorMessage } from "./flow-page-model";
 
 export function useMcpActionCatalog({
@@ -19,9 +16,7 @@ export function useMcpActionCatalog({
   sensitivity: string;
 }) {
   const [servers, setServers] = useState<McpActionServerOption[]>([]);
-  const [toolsByServer, setToolsByServer] = useState<
-    Record<string, McpActionToolOption[]>
-  >({});
+  const [toolsByServer, setToolsByServer] = useState<Record<string, McpActionToolOption[]>>({});
   const [discoveryServerId, setDiscoveryServerId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
