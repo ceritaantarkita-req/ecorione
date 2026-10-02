@@ -5,6 +5,7 @@ describe("Session 9 Automation product convergence", () => {
   const page = readFileSync("apps/ai/app/automations/page.tsx", "utf8");
   const nav = readFileSync("apps/ai/app/ProductNav.tsx", "utf8");
   const settingsProxy = readFileSync("apps/ai/lib/settings-proxy.ts", "utf8");
+  const webhookProxy = readFileSync("apps/ai/app/api/webhooks/[hookId]/route.ts", "utf8");
   const caddy = readFileSync("deploy/Caddyfile", "utf8");
   const caddyStaging = readFileSync("deploy/Caddyfile.sumopod", "utf8");
 
@@ -37,15 +38,23 @@ describe("Session 9 Automation product convergence", () => {
     expect(page).toContain("jangan simpan di Trigger");
   });
 
-  it("routes public webhook ingress directly to Connect before the browser auth gate", () => {
+  it("routes public webhook ingress through Ai while Connect remains private", () => {
     for (const config of [caddy, caddyStaging]) {
       const ingress = config.indexOf("handle_path /webhooks/*");
       const operator = config.indexOf("@operator path");
       expect(ingress).toBeGreaterThan(-1);
       expect(operator).toBeGreaterThan(ingress);
-      expect(config).toContain("rewrite * /v1/webhooks{path}");
-      expect(config).toContain("reverse_proxy connect:17023");
+      expect(config).toContain("max_size 96KB");
+      expect(config).toContain("rewrite * /api/webhooks{path}");
+      expect(config).toContain("reverse_proxy ai:3000");
+      expect(config).not.toContain("reverse_proxy connect:17023");
     }
+    expect(webhookProxy).toContain("connectUrl()");
+    expect(webhookProxy).toContain("/v1/webhooks/");
+    expect(webhookProxy).toContain("x-ecorione-webhook-token");
+    expect(webhookProxy).toContain("MAX_BODY_BYTES = 96 * 1024");
+    expect(webhookProxy).not.toContain("internalToken");
+    expect(webhookProxy).not.toContain("authorization");
   });
 
   it("keeps external caller authority out of the automation configuration", () => {
