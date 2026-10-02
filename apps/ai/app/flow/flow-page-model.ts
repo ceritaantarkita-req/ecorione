@@ -115,6 +115,8 @@ export function configSummary(node: FlowGraphNode): string {
       return `${stringConfig(node, "target", "local")} · ${stringConfig(node, "message", "message")}`;
     case "http":
       return `${stringConfig(node, "method", "GET")} · ${stringConfig(node, "url", "URL")}`;
+    case "mcp-tool":
+      return `${stringConfig(node, "serverId", "server")} · ${stringConfig(node, "tool", "tool")}`;
     case "delay":
       return `${numberConfig(node, "milliseconds", 1000)} ms`;
     case "condition":
