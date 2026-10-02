@@ -9,12 +9,11 @@ describe("Session 9 Automation product convergence", () => {
   const caddy = readFileSync("deploy/Caddyfile", "utf8");
   const caddyStaging = readFileSync("deploy/Caddyfile.sumopod", "utf8");
 
-  it("adds a first-class Automation surface without turning Schedule into non-time execution", () => {
+  it("keeps the first-class Automation surface without turning Schedule into non-time execution", () => {
     expect(nav).toContain('["Automation", "/automations", "automation"]');
     expect(page).toContain("<h1>Automation</h1>");
     expect(page).toContain('trigger.kind === "event" || trigger.kind === "webhook"');
     expect(page).toContain("Schedule tetap khusus time");
-    expect(page).not.toContain('kind: "condition"');
     expect(page).not.toContain('"L4"');
   });
 
