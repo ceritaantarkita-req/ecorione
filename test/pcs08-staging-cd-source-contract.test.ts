@@ -28,6 +28,14 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
     );
   });
 
+  it("skips automatic docs-only deploys without weakening manual deploys", () => {
+    expect(workflow).toContain('if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]');
+    expect(workflow).toContain('commits/${TARGET_SHA}');
+    expect(workflow).toContain('[[ "$file" != docs/* ]]');
+    expect(workflow).toContain("Skipping docs-only SHA");
+    expect(workflow).toContain("workflow_dispatch:");
+  });
+
   it("keeps staging SSH material in the protected staging environment", () => {
     expect(workflow).toContain("environment: staging");
     expect(workflow).toContain("vars.ECORIONE_STAGING_CD_ENABLED == '1'");
