@@ -89,7 +89,7 @@ function emptyDraft(kind: AutomationKind, graph?: FlowGraphSummary): AutomationD
     hookId: "",
     conditionField: "payload.status",
     conditionOperator: "EQ",
-    conditionValue: "\"ready\"",
+    conditionValue: '"ready"',
   };
 }
 
@@ -136,11 +136,7 @@ function automationConfig(
 }
 
 function draftFromTrigger(trigger: TriggerDefinition): AutomationDraft | null {
-  if (
-    trigger.kind !== "event" &&
-    trigger.kind !== "webhook" &&
-    trigger.kind !== "condition"
-  ) {
+  if (trigger.kind !== "event" && trigger.kind !== "webhook" && trigger.kind !== "condition") {
     return null;
   }
   const config = automationConfig(trigger);
@@ -161,7 +157,7 @@ function draftFromTrigger(trigger: TriggerDefinition): AutomationDraft | null {
     conditionOperator: "predicate" in config ? config.predicate.operator : "EQ",
     conditionValue:
       "predicate" in config && "value" in config.predicate
-        ? JSON.stringify(config.predicate.value) ?? ""
+        ? (JSON.stringify(config.predicate.value) ?? "")
         : "",
   };
 }
