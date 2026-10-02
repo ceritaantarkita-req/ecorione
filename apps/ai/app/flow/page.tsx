@@ -780,9 +780,7 @@ export default function FlowCanvasPage() {
         node={node}
         mcpServers={mcpCatalog.servers}
         mcpTools={serverId.length === 0 ? [] : (mcpCatalog.toolsByServer[serverId] ?? [])}
-        mcpDiscoveryBusy={
-          mcpCatalog.discoveryServerId === serverId && serverId.length > 0
-        }
+        mcpDiscoveryBusy={mcpCatalog.discoveryServerId === serverId && serverId.length > 0}
         onDiscoverMcpTools={(nextServerId) => void mcpCatalog.discoverTools(nextServerId)}
         onRename={(nextLabel) => {
           setNodes((current) =>
