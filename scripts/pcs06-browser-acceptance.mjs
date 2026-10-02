@@ -371,6 +371,30 @@ let automationTrigger = {
   createdAt: now,
   updatedAt: now,
 };
+let conditionTrigger = {
+  id: "trg_pcs06condition",
+  workspaceId: "ws_personal",
+  projectId: "prj_personal",
+  name: "PCS-06 Condition",
+  kind: "condition",
+  graphId: "fg_pcs06schedule",
+  graphVersion: 1,
+  versionPolicy: "PINNED",
+  requestedAutonomy: "L2",
+  enabled: true,
+  configuration: {
+    source: "github",
+    eventKind: "push",
+    predicate: {
+      field: "payload.score",
+      operator: "GTE",
+      value: 80,
+    },
+  },
+  revision: 1,
+  createdAt: now,
+  updatedAt: now,
+};
 let scheduleMutationCount = 0;
 let brainGroundedChatRequested = false;
 const scheduleRuntime = {
@@ -997,7 +1021,7 @@ async function installApiMocks(context) {
         return json(route, { nodes: flowDefinitions });
       }
       if (path === "/api/flow/triggers" && method === "GET") {
-        return json(route, { triggers: [scheduleTrigger, automationTrigger] });
+        return json(route, { triggers: [scheduleTrigger, automationTrigger, conditionTrigger] });
       }
       if (path === `/api/flow/triggers/${scheduleTrigger.id}` && method === "PATCH") {
         const body = request.postDataJSON();
@@ -1560,6 +1584,23 @@ async function runDesktopJourney() {
     await page.getByText("POST /webhooks/hook_pcs06_webhook_0001", { exact: true }).waitFor();
     await page.getByRole("button", { name: "Reveal token", exact: true }).click();
     await page.getByText("pcs06-derived-webhook-token", { exact: true }).waitFor();
+    await page.getByText("PCS-06 Condition", { exact: true }).waitFor();
+    await page.getByText("payload.score GTE 80", { exact: true }).waitFor();
+    await page.getByRole("button", { name: "New condition", exact: true }).click();
+    const conditionField = page.getByRole("textbox", { name: "Condition field" });
+    await conditionField.waitFor();
+    if ((await conditionField.inputValue()) !== "payload.status") {
+      throw new Error("desktop-automations: condition draft did not use bounded payload path");
+    }
+    const conditionOperator = page.getByRole("combobox", { name: "Condition operator" });
+    if ((await conditionOperator.inputValue()) !== "EQ") {
+      throw new Error("desktop-automations: condition operator default drifted");
+    }
+    const conditionValue = page.getByRole("textbox", { name: "Condition value" });
+    if ((await conditionValue.inputValue()) !== "\"ready\"") {
+      throw new Error("desktop-automations: condition value draft drifted");
+    }
+    await page.getByRole("button", { name: "Cancel", exact: true }).click();
     await assertNoPageOverflow(page, "desktop-automations");
     await page.screenshot({ path: `${outDir}/desktop-automations.png`, fullPage: true });
 
