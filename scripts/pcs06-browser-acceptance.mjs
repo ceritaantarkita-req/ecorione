@@ -1905,7 +1905,10 @@ async function runDesktopJourney() {
       throw new Error("desktop-flow: MCP action tool picker did not persist discovered tool");
     }
     const disabledTool = mcpToolSelect.locator('option[value="delete_everything"]');
-    if (!(await disabledTool.isDisabled())) {
+    const disabledToolProperty = await disabledTool.evaluate(
+      (option) => option instanceof HTMLOptionElement && option.disabled,
+    );
+    if (!disabledToolProperty) {
       throw new Error("desktop-flow: disabled MCP tool became selectable");
     }
     await page.getByText(/Arguments tetap owner graph config/).waitFor();
