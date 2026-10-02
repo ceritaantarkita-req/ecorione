@@ -283,11 +283,7 @@ function triggerSelectorMatchesEvent(
   trigger: TriggerDefinition,
   event: NormalizedTriggerEvent,
 ): boolean {
-  if (
-    trigger.kind !== "event" &&
-    trigger.kind !== "webhook" &&
-    trigger.kind !== "condition"
-  ) {
+  if (trigger.kind !== "event" && trigger.kind !== "webhook" && trigger.kind !== "condition") {
     return false;
   }
   const config = trigger.configuration as { source: string; eventKind: string };
@@ -701,7 +697,9 @@ export function registerTriggerRoutes(
         });
         const result = await dispatchNormalizedEvent(trigger, event);
         if (result.response === null) {
-          throw new TriggerFlowMismatchError("Webhook Trigger tidak boleh menghasilkan condition no-op.");
+          throw new TriggerFlowMismatchError(
+            "Webhook Trigger tidak boleh menghasilkan condition no-op.",
+          );
         }
         return reply.code(result.statusCode).send(result.response);
       } catch (error) {
