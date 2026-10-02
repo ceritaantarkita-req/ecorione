@@ -31,6 +31,7 @@ import {
 } from "../../lib/project-selection";
 import { useWorkspace } from "../WorkspaceProvider";
 import { layoutBrainNodes } from "../../lib/brain-layout";
+import { ProjectPicker } from "../work/ProjectPicker";
 import styles from "./Brain.module.css";
 
 const MIN_GRAPH_ZOOM = 0.75;
@@ -114,7 +115,7 @@ export default function BrainPage() {
   const graphScrollRef = useRef<HTMLDivElement>(null);
   const panDragRef = useRef<PanDrag | null>(null);
   const [graphZoom, setGraphZoom] = useState(1);
-  const [assistantSessionId, setAssistantSessionId] = useState(() => makeId("session"));
+  const [assistantSessionId, setAssistantSessionId] = useState("");
   const [assistantQuestion, setAssistantQuestion] = useState("");
   const [assistantTurns, setAssistantTurns] = useState<BrainAssistantTurn[]>([]);
   const [assistantBusy, setAssistantBusy] = useState(false);
@@ -301,6 +302,22 @@ export default function BrainPage() {
     }
   }
 
+  function useCreatedProject(project: Project): void {
+    setProjects((current) => [
+      ...current.filter((candidate) => candidate.id !== project.id),
+      project,
+    ]);
+    setProjectId(project.id);
+    setProjectReady(true);
+    setSelectedId(null);
+    try {
+      window.localStorage.setItem(PROJECT_STORAGE_KEY, project.id);
+    } catch {
+      // Owner selection remains valid for this page without browser persistence.
+    }
+    setMessage(`Project ${project.name} dibuat dan dipilih untuk Brain.`);
+  }
+
   function toggleNodeType(type: BrainNodeType): void {
     setEnabledNodeTypes((current) => {
       const next = new Set(current);
@@ -402,7 +419,6 @@ export default function BrainPage() {
           ),
     [graph, selectedId],
   );
-  const selectedProject = projects.find((project) => project.id === projectId);
 
   return (
     <main className={styles.shell}>
@@ -415,21 +431,13 @@ export default function BrainPage() {
             sumbernya.
           </p>
         </div>
-        <label className={styles.projectPicker}>
-          <span>Project</span>
-          <select value={projectId} onChange={(event) => chooseProject(event.target.value)}>
-            {projects.length === 0 ? (
-              <option value={PERSONAL_PROJECT_ID}>Personal</option>
-            ) : (
-              projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))
-            )}
-          </select>
-          <small>{selectedProject?.id ?? projectId}</small>
-        </label>
+        <ProjectPicker
+          workspaceId={workspaceId}
+          projects={projects}
+          projectId={projectId}
+          onChoose={chooseProject}
+          onCreated={useCreatedProject}
+        />
       </header>
 
       <div className={styles.notice} role="status">
@@ -703,80 +711,80 @@ export default function BrainPage() {
                   <p>Tidak ada relationship pada projection saat ini.</p>
                 ) : null}
               </div>
-
-              <section className={styles.assistant} aria-label="Brain grounded assistant">
-                <div className={styles.assistantHead}>
-                  <div>
-                    <strong>Grounded assistant</strong>
-                    <span>Local only · selected node context</span>
-                  </div>
-                  <code>{assistantSessionId}</code>
-                </div>
-
-                <div className={styles.assistantTurns} aria-live="polite">
-                  {assistantTurns.map((turn) => (
-                    <article key={turn.operationId} className={styles.assistantTurn}>
-                      <div>
-                        <span>You</span>
-                        <p>{turn.question}</p>
-                      </div>
-                      <div>
-                        <span>Ai</span>
-                        <p>{turn.reply}</p>
-                        <small>
-                          {turn.factIds.length > 0
-                            ? `Facts: ${turn.factIds.join(", ")}`
-                            : "No recalled Fact IDs"}
-                        </small>
-                      </div>
-                    </article>
-                  ))}
-                  {assistantTurns.length === 0 ? (
-                    <p className={styles.assistantEmpty}>
-                      Ask hanya menggunakan Fact atau URL Source yang ada di neighborhood node
-                      terpilih. Tidak ada fallback ke memori Project yang lebih luas.
-                    </p>
-                  ) : null}
-                </div>
-
-                <form
-                  className={styles.assistantComposer}
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void askBrain();
-                  }}
-                >
-                  <label htmlFor="brain-grounded-question">
-                    Ask about selected Brain context
-                  </label>
-                  <textarea
-                    id="brain-grounded-question"
-                    value={assistantQuestion}
-                    rows={3}
-                    maxLength={2048}
-                    placeholder="Tanya tentang node yang dipilih…"
-                    disabled={assistantBusy}
-                    onChange={(event) => setAssistantQuestion(event.target.value)}
-                  />
-                  <div>
-                    <small role="status">{assistantStatus}</small>
-                    <button
-                      type="submit"
-                      disabled={
-                        assistantBusy ||
-                        selectedId === null ||
-                        assistantQuestion.trim().length === 0
-                      }
-                    >
-                      {assistantBusy ? "Asking…" : "Ask Brain"}
-                    </button>
-                  </div>
-                </form>
-              </section>
             </>
           )}
         </aside>
       </div>
+
+      <section className={styles.assistant} aria-label="Brain grounded assistant">
+        <div className={styles.assistantHead}>
+          <div>
+            <strong>Brain AI</strong>
+            <span>
+              {selectedNode === null
+                ? "Pilih connected dot"
+                : `${selectedNode.type} · ${selectedNode.label}`}
+            </span>
+          </div>
+          <code>{assistantSessionId}</code>
+        </div>
+
+        <div className={styles.assistantTurns} aria-live="polite">
+          {assistantTurns.map((turn) => (
+            <article key={turn.operationId} className={styles.assistantTurn}>
+              <div>
+                <span>You</span>
+                <p>{turn.question}</p>
+              </div>
+              <div>
+                <span>Ai</span>
+                <p>{turn.reply}</p>
+                <small>
+                  {turn.factIds.length > 0
+                    ? `Facts: ${turn.factIds.join(", ")}`
+                    : "No recalled Fact IDs"}
+                </small>
+              </div>
+            </article>
+          ))}
+          {assistantTurns.length === 0 ? (
+            <p className={styles.assistantEmpty}>
+              Pilih connected dot untuk membatasi chat ke neighborhood Brain yang relevan. Tidak
+              ada fallback ke memori Project yang lebih luas.
+            </p>
+          ) : null}
+        </div>
+
+        <form
+          className={styles.assistantComposer}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void askBrain();
+          }}
+        >
+          <label htmlFor="brain-grounded-question">Ask about selected Brain context</label>
+          <textarea
+            id="brain-grounded-question"
+            value={assistantQuestion}
+            rows={3}
+            maxLength={2048}
+            placeholder="Tanya tentang node yang dipilih…"
+            disabled={assistantBusy || selectedId === null}
+            onChange={(event) => setAssistantQuestion(event.target.value)}
+          />
+          <div>
+            <small role="status">{assistantStatus}</small>
+            <button
+              type="submit"
+              disabled={
+                assistantBusy || selectedId === null || assistantQuestion.trim().length === 0
+              }
+            >
+              {assistantBusy ? "Asking…" : "Ask Brain"}
+            </button>
+          </div>
+        </form>
+      </section>
     </main>
   );
 }

@@ -1495,6 +1495,23 @@ async function runDesktopJourney() {
 
     await goto(page, "/brain", "desktop-brain");
     await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
+    const brainProjectSearch = page.getByRole("combobox", { name: "Search Project" });
+    await brainProjectSearch.fill("Research");
+    await page.getByRole("option").filter({ hasText: "Research" }).waitFor();
+    await page.getByRole("button", { name: "+ New Project", exact: true }).waitFor();
+    await page.getByRole("option").filter({ hasText: "Research" }).click();
+    await brainProjectSearch.fill("Personal");
+    await page.getByRole("option").filter({ hasText: "Personal" }).click();
+
+    const brainAssistant = page.getByLabel("Brain grounded assistant");
+    await brainAssistant.waitFor();
+    const brainQuestion = page.getByRole("textbox", {
+      name: "Ask about selected Brain context",
+    });
+    if (!(await brainQuestion.isDisabled())) {
+      throw new Error("desktop-brain: bottom Brain AI must wait for a selected connected dot");
+    }
+
     const brainSvg = page.locator('svg[aria-label="Connected Brain graph"]');
     await brainSvg.waitFor();
     await page.getByRole("checkbox", { name: "Artifact", exact: true }).waitFor();
@@ -1505,6 +1522,9 @@ async function runDesktopJourney() {
     const brainFact = page.locator('g[aria-label="Fact: PCS-06 canonical fact"]');
     await brainFact.waitFor();
     await brainFact.click();
+    if (await brainQuestion.isDisabled()) {
+      throw new Error("desktop-brain: bottom Brain AI did not unlock after node selection");
+    }
     await page
       .locator("small")
       .filter({ hasText: "PCS-06 canonical fact · GENERATED_FROM · PCS-06 Artifact" })

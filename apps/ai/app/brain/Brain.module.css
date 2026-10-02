@@ -440,10 +440,12 @@
 
 .assistant {
   min-width: 0;
-  border-top: 1px solid var(--border-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   display: grid;
   gap: 10px;
-  padding-top: 12px;
+  background: var(--surface);
+  padding: 12px;
 }
 
 .assistantHead {
