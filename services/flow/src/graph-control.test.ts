@@ -5,6 +5,7 @@ import {
   graphInputFromEdges,
   loopGraphValue,
   renderGraphTemplate,
+  renderGraphValueTemplates,
   transformGraphValue,
 } from "./graph-control.js";
 
@@ -15,6 +16,36 @@ describe("graph control primitives", () => {
       "Halo Rani",
     );
   });
+  it("renders structured MCP argument templates with bounded deterministic semantics", () => {
+    const input = {
+      sender: { email: "rani@example.com" },
+      body: "Halo",
+      score: 91,
+      flags: ["important"],
+    };
+    expect(
+      renderGraphValueTemplates(
+        {
+          to: "{{ sender.email }}",
+          subject: "Reply to {{ sender.email }}",
+          score: "{{ score }}",
+          payload: { text: "{{ body }}", flags: "{{ flags }}" },
+        },
+        input,
+      ),
+    ).toEqual({
+      to: "rani@example.com",
+      subject: "Reply to rani@example.com",
+      score: 91,
+      payload: { text: "Halo", flags: ["important"] },
+    });
+    expect(() => {
+      let nested: unknown = "value";
+      for (let index = 0; index < 18; index += 1) nested = { nested };
+      renderGraphValueTemplates(nested, input);
+    }).toThrow(/kedalaman/);
+  });
+
   it("transforms and routes without eval", () => {
     expect(transformGraphValue({ a: { b: 7 } }, { mode: "pick", path: "a.b" })).toBe(7);
     expect(
