@@ -14,7 +14,7 @@ export const AI_PROVIDER_IDS = [
 ] as const;
 export type AiProviderId = (typeof AI_PROVIDER_IDS)[number];
 
-export const CREDENTIAL_PROVIDER_IDS = [...AI_PROVIDER_IDS, "mcp", "webhook"] as const;
+export const CREDENTIAL_PROVIDER_IDS = [...AI_PROVIDER_IDS, "mcp", "webhook", "google-drive"] as const;
 export type CredentialProviderId = (typeof CREDENTIAL_PROVIDER_IDS)[number];
 export type CredentialPurpose = "messages" | "tokens";
 
@@ -75,10 +75,23 @@ export const PROVIDER_CATALOG: readonly ProviderCatalogEntry[] = [
     connectionTestReady: false,
     hostedModels: [],
   },
+  {
+    id: "google-drive",
+    displayName: "Google Drive",
+    category: "integration",
+    credentialPurpose: "tokens",
+    // OAuth owns this credential lifecycle. Generic manual-secret UI/API must not admit it.
+    credentialReady: false,
+    routingReady: false,
+    connectionTestReady: false,
+    hostedModels: [],
+  },
 ] as const;
 
 export function credentialPurposeForProvider(
   provider: CredentialProviderId,
 ): CredentialPurpose {
-  return provider === "mcp" || provider === "webhook" ? "tokens" : "messages";
+  return provider === "mcp" || provider === "webhook" || provider === "google-drive"
+    ? "tokens"
+    : "messages";
 }
