@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Tiga puluh sembilan keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
+Empat puluh keputusan yang membentuk ecorione, masing-masing dengan angka atau riset yang
 mendukungnya. Alasan lengkap keputusan awal ada di [`../research.md`](../research.md),
 sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 
@@ -45,6 +45,7 @@ sedangkan keputusan fase lanjutan juga merujuk dokumen fase terkait.
 | [37](0037-run-read-projection.md) | Run adalah read projection dengan operationId sebagai key v1 |
 | [38](0038-brain-derived-projection.md) | Brain adalah rebuildable authorized projection, bukan graph source-of-truth |
 | [39](0039-condition-trigger-event-predicate.md) | Condition Trigger adalah deterministic predicate atas event masuk, bukan polling engine |
+| [40](0040-mcp-action-flow-connect-boundary.md) | MCP action binding tetap Flow → Connect-governed; browser hanya list/discover |
 
 Keputusan yang mengubah invarian di [`../../AGENTS.md`](../../AGENTS.md) butuh ADR baru,
 bernomor urut, dengan konteks → keputusan → konsekuensi. Keputusan biasa cukup satu baris
