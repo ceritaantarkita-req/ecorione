@@ -37,7 +37,7 @@ Session 11 MCP Action Product Convergence is CLOSED / PASS / STAGING VERIFIED th
 Post-Session-11 CD hardening is also CLOSED / PASS / STAGING VERIFIED through PR #433. The docs-only Session 11 closure merge had unnecessarily triggered a full staging redeploy (#2136), so automatic staging CD now skips a current-main commit when every changed path is under `docs/**`. Manual `workflow_dispatch` and any non-docs current-main change retain the existing peer-gate and exact-SHA deployment path. PR #433 merged as `7130dba720cff37a040ce29620b7902b52691e9c` and actual Staging Deploy #2146 passed. The rule is live-verified on docs-only `main` `f441d72ddd9978f60218b8099fbd73a0150f27c8`: Product Eval #1940 PASS; CI #2701 attempt 1 hit a transient Temporal restart-test timeout, retry attempt 2 passed without a code change; Staging Deploy #2151 then gate-passed and skipped deploy with the explicit docs-only message. This is deployment-control hardening, not Session 12.
 
 Current safe-resume checkpoint:
-[verification/session11-mcp-action-product-convergence-closure-2026-10-02.md](verification/session11-mcp-action-product-convergence-closure-2026-10-02.md).
+[verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
