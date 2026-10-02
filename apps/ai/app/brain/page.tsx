@@ -115,7 +115,7 @@ export default function BrainPage() {
   const graphScrollRef = useRef<HTMLDivElement>(null);
   const panDragRef = useRef<PanDrag | null>(null);
   const [graphZoom, setGraphZoom] = useState(1);
-  const [assistantSessionId, setAssistantSessionId] = useState(() => makeId("session"));
+  const [assistantSessionId, setAssistantSessionId] = useState("");
   const [assistantQuestion, setAssistantQuestion] = useState("");
   const [assistantTurns, setAssistantTurns] = useState<BrainAssistantTurn[]>([]);
   const [assistantBusy, setAssistantBusy] = useState(false);
