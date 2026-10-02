@@ -350,6 +350,27 @@ let scheduleTrigger = {
   createdAt: now,
   updatedAt: now,
 };
+let automationTrigger = {
+  id: "trg_pcs06webhook",
+  workspaceId: "ws_personal",
+  projectId: "prj_personal",
+  name: "PCS-06 Webhook",
+  kind: "webhook",
+  graphId: "fg_pcs06schedule",
+  graphVersion: 1,
+  versionPolicy: "PINNED",
+  requestedAutonomy: "L2",
+  enabled: true,
+  configuration: {
+    adapter: "generic",
+    hookId: "hook_pcs06_webhook_0001",
+    source: "github",
+    eventKind: "push",
+  },
+  revision: 1,
+  createdAt: now,
+  updatedAt: now,
+};
 let scheduleMutationCount = 0;
 let brainGroundedChatRequested = false;
 const scheduleRuntime = {
@@ -683,6 +704,16 @@ async function installApiMocks(context) {
       });
     }
 
+    if (
+      path === `/api/settings/settings/webhooks/${automationTrigger.configuration.hookId}/token` &&
+      method === "GET"
+    ) {
+      return json(route, {
+        hookId: automationTrigger.configuration.hookId,
+        token: "pcs06-derived-webhook-token",
+      });
+    }
+
     if (path === "/api/settings/settings/spend-status" && method === "GET") {
       return json(route, {
         operatorGateOpen: true,
@@ -965,7 +996,7 @@ async function installApiMocks(context) {
         return json(route, { nodes: flowDefinitions });
       }
       if (path === "/api/flow/triggers" && method === "GET") {
-        return json(route, { triggers: [scheduleTrigger] });
+        return json(route, { triggers: [scheduleTrigger, automationTrigger] });
       }
       if (path === `/api/flow/triggers/${scheduleTrigger.id}` && method === "PATCH") {
         const body = request.postDataJSON();
@@ -979,6 +1010,41 @@ async function installApiMocks(context) {
         };
         delete scheduleTrigger.expectedRevision;
         return json(route, scheduleTrigger);
+      }
+      if (path === `/api/flow/triggers/${automationTrigger.id}` && method === "PATCH") {
+        const body = request.postDataJSON();
+        automationTrigger = {
+          ...automationTrigger,
+          ...body,
+          revision: automationTrigger.revision + 1,
+          updatedAt: now,
+        };
+        delete automationTrigger.expectedRevision;
+        return json(route, automationTrigger);
+      }
+      if (
+        path === `/api/flow/triggers/${automationTrigger.id}/disable` &&
+        method === "POST"
+      ) {
+        automationTrigger = {
+          ...automationTrigger,
+          enabled: false,
+          revision: automationTrigger.revision + 1,
+          updatedAt: now,
+        };
+        return json(route, automationTrigger);
+      }
+      if (
+        path === `/api/flow/triggers/${automationTrigger.id}/enable` &&
+        method === "POST"
+      ) {
+        automationTrigger = {
+          ...automationTrigger,
+          enabled: true,
+          revision: automationTrigger.revision + 1,
+          updatedAt: now,
+        };
+        return json(route, automationTrigger);
       }
       if (path === `/api/flow/triggers/${scheduleTrigger.id}/schedule` && method === "GET") {
         return json(route, scheduleRuntime);
@@ -1493,6 +1559,17 @@ async function runDesktopJourney() {
     await page.getByRole("button", { name: "Runs", exact: true }).click();
     await page.getByRole("heading", { name: "Runs", exact: true }).waitFor();
 
+    await goto(page, "/automations", "desktop-automations");
+    await page.getByRole("heading", { name: "Automation", exact: true, level: 1 }).waitFor();
+    await page.getByText("PCS-06 Webhook", { exact: true }).waitFor();
+    await page
+      .getByText("POST /webhooks/hook_pcs06_webhook_0001", { exact: true })
+      .waitFor();
+    await page.getByRole("button", { name: "Reveal token", exact: true }).click();
+    await page.getByText("pcs06-derived-webhook-token", { exact: true }).waitFor();
+    await assertNoPageOverflow(page, "desktop-automations");
+    await page.screenshot({ path: `${outDir}/desktop-automations.png`, fullPage: true });
+
     await goto(page, "/brain", "desktop-brain");
     await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
     const brainProjectSearch = page.getByRole("combobox", { name: "Search Project" });
@@ -1770,6 +1847,9 @@ async function runStaleProjectSelectionJourney() {
     await assertReconciled("/schedule", "stale-project-schedule");
     await page.getByRole("heading", { name: "Schedule", exact: true, level: 1 }).waitFor();
 
+    await assertReconciled("/automations", "stale-project-automations");
+    await page.getByRole("heading", { name: "Automation", exact: true, level: 1 }).waitFor();
+
     await assertReconciled("/brain", "stale-project-brain");
     await page.getByRole("heading", { name: "Brain", exact: true }).waitFor();
 
@@ -1797,6 +1877,12 @@ async function runNarrowCoverage() {
         await page.getByRole("button", { name: "month", exact: true }).click();
         await page.getByText("Sen", { exact: true }).waitFor();
       },
+    ],
+    [
+      "/automations",
+      "narrow-automations",
+      (page) =>
+        page.getByRole("heading", { name: "Automation", exact: true, level: 1 }).waitFor(),
     ],
     [
       "/brain",
