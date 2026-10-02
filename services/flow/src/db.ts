@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS triggers (
   workspace_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
   name TEXT NOT NULL,
-  kind TEXT NOT NULL CHECK(kind IN ('manual','time','event','webhook')),
+  kind TEXT NOT NULL CHECK(kind IN ('manual','time','event','webhook','condition')),
   graph_id TEXT NOT NULL REFERENCES flow_graphs(id) ON DELETE RESTRICT,
   graph_version INTEGER NOT NULL CHECK(graph_version >= 1),
   version_policy TEXT NOT NULL CHECK(version_policy='PINNED'),
@@ -96,6 +96,21 @@ function triggersSupportPe05(db: SqliteDatabase): boolean {
     .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='triggers'")
     .get() as SqliteMasterRow | undefined;
   return row?.sql?.includes("'event'") === true && row.sql.includes("'webhook'");
+}
+
+function tableExists(db: SqliteDatabase, table: string): boolean {
+  return (
+    db
+      .prepare("SELECT 1 AS present FROM sqlite_master WHERE type='table' AND name=?")
+      .get(table) !== undefined
+  );
+}
+
+function triggersSupportCondition(db: SqliteDatabase): boolean {
+  const row = db
+    .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='triggers'")
+    .get() as SqliteMasterRow | undefined;
+  return row?.sql?.includes("'condition'") === true;
 }
 
 function migratePe05TriggerKinds(db: SqliteDatabase): void {
@@ -169,6 +184,122 @@ function migratePe05TriggerKinds(db: SqliteDatabase): void {
   }
 }
 
+function migrateConditionTriggerKinds(db: SqliteDatabase): void {
+  if (triggersSupportCondition(db)) return;
+
+  const hasEventDeliveries = tableExists(db, "trigger_event_deliveries");
+  db.pragma("foreign_keys = OFF");
+  try {
+    db.transaction(() => {
+      db.exec(`
+        CREATE TABLE triggers_condition (
+          id TEXT PRIMARY KEY,
+          workspace_id TEXT NOT NULL,
+          project_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          kind TEXT NOT NULL CHECK(kind IN ('manual','time','event','webhook','condition')),
+          graph_id TEXT NOT NULL REFERENCES flow_graphs(id) ON DELETE RESTRICT,
+          graph_version INTEGER NOT NULL CHECK(graph_version >= 1),
+          version_policy TEXT NOT NULL CHECK(version_policy='PINNED'),
+          requested_autonomy TEXT NOT NULL CHECK(requested_autonomy IN ('L0','L1','L2','L3')),
+          enabled INTEGER NOT NULL CHECK(enabled IN (0,1)),
+          configuration_json TEXT NOT NULL,
+          temporal_schedule_id TEXT,
+          revision INTEGER NOT NULL CHECK(revision >= 1),
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+
+        INSERT INTO triggers_condition
+        SELECT id,workspace_id,project_id,name,kind,graph_id,graph_version,version_policy,
+               requested_autonomy,enabled,configuration_json,temporal_schedule_id,
+               revision,created_at,updated_at
+        FROM triggers;
+
+        CREATE TABLE trigger_manual_fires_condition (
+          trigger_id TEXT NOT NULL REFERENCES triggers_condition(id) ON DELETE CASCADE,
+          request_id TEXT NOT NULL,
+          workflow_id TEXT NOT NULL,
+          operation_id TEXT NOT NULL,
+          graph_id TEXT NOT NULL,
+          graph_version INTEGER NOT NULL,
+          created_at TEXT NOT NULL,
+          PRIMARY KEY(trigger_id, request_id)
+        );
+
+        INSERT INTO trigger_manual_fires_condition
+        SELECT trigger_id,request_id,workflow_id,operation_id,graph_id,graph_version,created_at
+        FROM trigger_manual_fires;
+      `);
+
+      if (hasEventDeliveries) {
+        db.exec(`
+          CREATE TABLE trigger_event_deliveries_condition (
+            trigger_id TEXT NOT NULL REFERENCES triggers_condition(id) ON DELETE CASCADE,
+            dedupe_key TEXT NOT NULL,
+            event_id TEXT NOT NULL,
+            event_digest TEXT NOT NULL,
+            state TEXT NOT NULL CHECK(state IN ('PENDING','STARTED')),
+            workflow_id TEXT NOT NULL,
+            operation_id TEXT NOT NULL,
+            graph_id TEXT NOT NULL,
+            graph_version INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            PRIMARY KEY(trigger_id, dedupe_key)
+          );
+
+          INSERT INTO trigger_event_deliveries_condition
+          SELECT trigger_id,dedupe_key,event_id,event_digest,state,workflow_id,operation_id,
+                 graph_id,graph_version,created_at
+          FROM trigger_event_deliveries;
+
+          DROP TABLE trigger_event_deliveries;
+        `);
+      }
+
+      db.exec(`
+        DROP TABLE trigger_manual_fires;
+        DROP TABLE triggers;
+        ALTER TABLE triggers_condition RENAME TO triggers;
+        ALTER TABLE trigger_manual_fires_condition RENAME TO trigger_manual_fires;
+      `);
+
+      if (hasEventDeliveries) {
+        db.exec(
+          "ALTER TABLE trigger_event_deliveries_condition RENAME TO trigger_event_deliveries;",
+        );
+      }
+
+      db.exec(`
+        CREATE INDEX idx_triggers_workspace_project_updated
+          ON triggers(workspace_id, project_id, updated_at DESC, id);
+        CREATE INDEX idx_triggers_graph_version
+          ON triggers(graph_id, graph_version, id);
+        CREATE UNIQUE INDEX idx_triggers_temporal_schedule
+          ON triggers(temporal_schedule_id) WHERE temporal_schedule_id IS NOT NULL;
+        CREATE UNIQUE INDEX idx_triggers_webhook_hook_id
+          ON triggers(json_extract(configuration_json,'$.hookId')) WHERE kind='webhook';
+      `);
+
+      if (hasEventDeliveries) {
+        db.exec(`
+          CREATE INDEX idx_trigger_event_deliveries_event
+            ON trigger_event_deliveries(trigger_id, event_id);
+        `);
+      }
+    })();
+
+    const violations = db.pragma("foreign_key_check") as unknown[];
+    if (violations.length > 0) {
+      throw new Error(
+        "Session 10 Condition Trigger migration menghasilkan foreign-key violation.",
+      );
+    }
+  } finally {
+    db.pragma("foreign_keys = ON");
+  }
+}
+
 function ensurePe05EventDeliveryTable(db: SqliteDatabase): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS trigger_event_deliveries (
@@ -205,6 +336,7 @@ export function openFlowDatabase(path: string): FlowDatabase {
   raw.exec(SCHEMA);
   migrateProjectFoundation(raw);
   migratePe05TriggerKinds(raw);
+  migrateConditionTriggerKinds(raw);
   ensurePe05EventDeliveryTable(raw);
   return { raw, path, close: () => raw.close() };
 }

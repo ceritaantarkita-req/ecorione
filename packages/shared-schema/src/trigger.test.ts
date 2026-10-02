@@ -16,8 +16,8 @@ const base = {
   enabled: true,
 };
 
-describe("PE-05 Trigger schema", () => {
-  it("keeps manual/time and activates event/webhook while condition stays reserved", () => {
+describe("PE-05 / Session 10 Trigger schema", () => {
+  it("keeps manual/time/event/webhook and activates deterministic condition", () => {
     expect(
       TriggerCreateRequestSchema.safeParse({
         ...base,
@@ -58,7 +58,29 @@ describe("PE-05 Trigger schema", () => {
       TriggerCreateRequestSchema.safeParse({
         ...base,
         kind: "condition",
-        configuration: {},
+        configuration: {
+          source: "github",
+          eventKind: "push",
+          predicate: {
+            field: "payload.size",
+            operator: "GTE",
+            value: 10,
+          },
+        },
+      }).success,
+    ).toBe(true);
+    expect(
+      TriggerCreateRequestSchema.safeParse({
+        ...base,
+        kind: "condition",
+        configuration: {
+          source: "github",
+          eventKind: "push",
+          predicate: {
+            field: "payload.__proto__.admin",
+            operator: "EXISTS",
+          },
+        },
       }).success,
     ).toBe(false);
   });

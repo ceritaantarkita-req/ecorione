@@ -18,7 +18,7 @@ interface TriggerRow {
   workspace_id: string;
   project_id: string;
   name: string;
-  kind: "manual" | "time" | "event" | "webhook";
+  kind: "manual" | "time" | "event" | "webhook" | "condition";
   graph_id: string;
   graph_version: number;
   version_policy: "PINNED";

@@ -23,6 +23,10 @@ export const PE05_TRIGGER_KINDS = ["manual", "time", "event", "webhook"] as cons
 export const Pe05TriggerKindSchema = z.enum(PE05_TRIGGER_KINDS);
 export type Pe05TriggerKind = z.infer<typeof Pe05TriggerKindSchema>;
 
+export const ACTIVE_TRIGGER_KINDS = [...PE05_TRIGGER_KINDS, "condition"] as const;
+export const ActiveTriggerKindSchema = z.enum(ACTIVE_TRIGGER_KINDS);
+export type ActiveTriggerKind = z.infer<typeof ActiveTriggerKindSchema>;
+
 export const TriggerVersionPolicySchema = z.literal("PINNED");
 export type TriggerVersionPolicy = z.infer<typeof TriggerVersionPolicySchema>;
 
@@ -110,11 +114,76 @@ export const WebhookTriggerConfigurationSchema = z
   .strict();
 export type WebhookTriggerConfiguration = z.infer<typeof WebhookTriggerConfigurationSchema>;
 
+export const CONDITION_OPERATORS = [
+  "EQ",
+  "NEQ",
+  "GT",
+  "GTE",
+  "LT",
+  "LTE",
+  "CONTAINS",
+  "EXISTS",
+] as const;
+export const ConditionOperatorSchema = z.enum(CONDITION_OPERATORS);
+export type ConditionOperator = z.infer<typeof ConditionOperatorSchema>;
+
+const ConditionFieldSchema = z
+  .string()
+  .trim()
+  .min(9)
+  .max(256)
+  .regex(/^(payload|metadata)(\.[A-Za-z0-9_-]{1,64}){1,8}$/)
+  .refine(
+    (value) =>
+      value
+        .split(".")
+        .slice(1)
+        .every((segment) => !["__proto__", "prototype", "constructor"].includes(segment)),
+    { message: "Condition field memakai path yang tidak diizinkan." },
+  );
+
+const ConditionPrimitiveSchema = z.union([
+  z.string().max(4096),
+  z.number().finite(),
+  z.boolean(),
+  z.null(),
+]);
+
+export const ConditionPredicateSchema = z.union([
+  z
+    .object({
+      field: ConditionFieldSchema,
+      operator: z.literal("EXISTS"),
+    })
+    .strict(),
+  z
+    .object({
+      field: ConditionFieldSchema,
+      operator: z.enum(["EQ", "NEQ", "GT", "GTE", "LT", "LTE", "CONTAINS"]),
+      value: ConditionPrimitiveSchema,
+    })
+    .strict(),
+]);
+export type ConditionPredicate = z.infer<typeof ConditionPredicateSchema>;
+
+export const ConditionTriggerConfigurationSchema = z
+  .object({
+    source: EventSourceSchema,
+    eventKind: EventKindSchema,
+    predicate: ConditionPredicateSchema,
+  })
+  .strict();
+export type ConditionTriggerConfiguration = z.infer<typeof ConditionTriggerConfigurationSchema>;
+
 export const TriggerConfigurationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("manual"), configuration: ManualTriggerConfigurationSchema }),
   z.object({ kind: z.literal("time"), configuration: TimeTriggerConfigurationSchema }),
   z.object({ kind: z.literal("event"), configuration: EventTriggerConfigurationSchema }),
   z.object({ kind: z.literal("webhook"), configuration: WebhookTriggerConfigurationSchema }),
+  z.object({
+    kind: z.literal("condition"),
+    configuration: ConditionTriggerConfigurationSchema,
+  }),
 ]);
 export type TriggerConfiguration = z.infer<typeof TriggerConfigurationSchema>;
 
@@ -160,6 +229,13 @@ export const TriggerCreateRequestSchema = z.discriminatedUnion("kind", [
       configuration: WebhookTriggerConfigurationSchema,
     })
     .strict(),
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("condition"),
+      configuration: ConditionTriggerConfigurationSchema,
+    })
+    .strict(),
 ]);
 export type TriggerCreateRequest = z.infer<typeof TriggerCreateRequestSchema>;
 
@@ -167,12 +243,13 @@ export const TriggerDefinitionSchema = z
   .object({
     id: TriggerIdSchema,
     ...TriggerBaseFields,
-    kind: Pe05TriggerKindSchema,
+    kind: ActiveTriggerKindSchema,
     configuration: z.union([
       ManualTriggerConfigurationSchema,
       TimeTriggerConfigurationSchema,
       EventTriggerConfigurationSchema,
       WebhookTriggerConfigurationSchema,
+      ConditionTriggerConfigurationSchema,
     ]),
     temporalScheduleId: z.string().min(1).max(256).nullable(),
     revision: z.number().int().min(1),
@@ -203,12 +280,14 @@ export const TriggerDefinitionSchema = z
       const parsed =
         value.kind === "event"
           ? EventTriggerConfigurationSchema.safeParse(value.configuration)
-          : WebhookTriggerConfigurationSchema.safeParse(value.configuration);
+          : value.kind === "webhook"
+            ? WebhookTriggerConfigurationSchema.safeParse(value.configuration)
+            : ConditionTriggerConfigurationSchema.safeParse(value.configuration);
       if (!parsed.success || value.temporalScheduleId !== null) {
         ctx.addIssue({
           code: "custom",
           path: ["configuration"],
-          message: "Event/Webhook Trigger tidak boleh memiliki Temporal schedule.",
+          message: "Event/Webhook/Condition Trigger tidak boleh memiliki Temporal schedule.",
         });
       }
     }
@@ -245,6 +324,14 @@ export const TriggerUpdateRequestSchema = z.discriminatedUnion("kind", [
       ...TriggerBaseFields,
       kind: z.literal("webhook"),
       configuration: WebhookTriggerConfigurationSchema,
+      expectedRevision: z.number().int().min(1),
+    })
+    .strict(),
+  z
+    .object({
+      ...TriggerBaseFields,
+      kind: z.literal("condition"),
+      configuration: ConditionTriggerConfigurationSchema,
       expectedRevision: z.number().int().min(1),
     })
     .strict(),
