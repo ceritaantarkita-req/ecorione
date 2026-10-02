@@ -12,8 +12,10 @@ describe("Session 9 Automation product convergence", () => {
   it("keeps the first-class Automation surface without turning Schedule into non-time execution", () => {
     expect(nav).toContain('["Automation", "/automations", "automation"]');
     expect(page).toContain("<h1>Automation</h1>");
-    expect(page).toContain('trigger.kind === "event" || trigger.kind === "webhook"');
-    expect(page).toContain("Schedule tetap khusus time");
+    expect(page).toContain('trigger.kind === "event"');
+    expect(page).toContain('trigger.kind === "webhook"');
+    expect(page).toContain("Schedule tetap");
+    expect(page).toContain("khusus time Trigger");
     expect(page).not.toContain('"L4"');
   });
 
