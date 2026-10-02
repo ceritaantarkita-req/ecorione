@@ -711,8 +711,6 @@ export default function BrainPage() {
                   <p>Tidak ada relationship pada projection saat ini.</p>
                 ) : null}
               </div>
-
-
             </>
           )}
         </aside>
@@ -722,7 +720,11 @@ export default function BrainPage() {
         <div className={styles.assistantHead}>
           <div>
             <strong>Brain AI</strong>
-            <span>{selectedNode === null ? "Pilih connected dot" : `${selectedNode.type} · ${selectedNode.label}`}</span>
+            <span>
+              {selectedNode === null
+                ? "Pilih connected dot"
+                : `${selectedNode.type} · ${selectedNode.label}`}
+            </span>
           </div>
           <code>{assistantSessionId}</code>
         </div>
@@ -747,7 +749,8 @@ export default function BrainPage() {
           ))}
           {assistantTurns.length === 0 ? (
             <p className={styles.assistantEmpty}>
-              Pilih connected dot untuk membatasi chat ke neighborhood Brain yang relevan. Tidak ada fallback ke memori Project yang lebih luas.
+              Pilih connected dot untuk membatasi chat ke neighborhood Brain yang relevan. Tidak
+              ada fallback ke memori Project yang lebih luas.
             </p>
           ) : null}
         </div>
@@ -759,9 +762,7 @@ export default function BrainPage() {
             void askBrain();
           }}
         >
-          <label htmlFor="brain-grounded-question">
-            Ask about selected Brain context
-          </label>
+          <label htmlFor="brain-grounded-question">Ask about selected Brain context</label>
           <textarea
             id="brain-grounded-question"
             value={assistantQuestion}
