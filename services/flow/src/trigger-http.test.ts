@@ -171,6 +171,23 @@ function webhookPayload(hookId = "hook_ecorione_001", enabled = true) {
   };
 }
 
+function conditionPayload(enabled = true) {
+  return {
+    ...manualPayload(enabled),
+    name: "Condition Trigger",
+    kind: "condition",
+    configuration: {
+      source: "github",
+      eventKind: "push",
+      predicate: {
+        field: "payload.score",
+        operator: "GTE",
+        value: 80,
+      },
+    },
+  };
+}
+
 function normalizedEvent(overrides: Record<string, unknown> = {}) {
   return {
     eventId: "evt_delivery001",
@@ -632,6 +649,101 @@ describe("PE-03/PE-05 Trigger HTTP", () => {
       payload: { ...webhookPayload(), name: "Duplicate hook" },
     });
     expect(second.statusCode).toBe(409);
+    await app.close();
+  });
+
+  it("keeps a false condition as a deterministic no-op without execution policy or Temporal dispatch", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app, temporalClient } = build();
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: conditionPayload(),
+    });
+    expect(created.statusCode).toBe(201);
+    expect(created.json()).toMatchObject({ kind: "condition" });
+    const triggerId = (created.json() as { id: string }).id;
+
+    const noMatch = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent({ payload: { score: 79 } }),
+    });
+    expect(noMatch.statusCode).toBe(200);
+    expect(noMatch.json()).toEqual({
+      triggerId,
+      matched: false,
+      dispatched: false,
+    });
+    expect(temporalClient.startGraph).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it("dispatches a matching condition through Hub policy and the exact pinned Temporal Flow", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app, temporalClient } = build();
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: conditionPayload(),
+    });
+    const triggerId = (created.json() as { id: string }).id;
+
+    mockProject();
+    mockPolicyAllow();
+    const matched = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent({
+        payload: { score: 91, subject: "bounded-condition" },
+        dedupeKey: "github:condition-001",
+      }),
+    });
+    expect(matched.statusCode).toBe(202);
+    expect(matched.json()).toMatchObject({ triggerId, deduplicated: false });
+    expect(temporalClient.startGraph).toHaveBeenCalledTimes(1);
+    expect(temporalClient.startGraph).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: { score: 91, subject: "bounded-condition" },
+        triggerId,
+        autonomy: "L2",
+        plan: expect.objectContaining({ graphVersion: 1 }),
+      }),
+    );
+    await app.close();
+  });
+
+  it("does not coerce condition values or bypass the event selector", async () => {
+    mockProject();
+    mockPolicyAllow();
+    const { app, temporalClient } = build();
+
+    const created = await app.inject({
+      method: "POST",
+      url: "/v1/triggers",
+      payload: conditionPayload(),
+    });
+    const triggerId = (created.json() as { id: string }).id;
+
+    const wrongType = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent({ payload: { score: "91" } }),
+    });
+    expect(wrongType.statusCode).toBe(200);
+    expect(wrongType.json()).toMatchObject({ matched: false, dispatched: false });
+
+    const wrongSelector = await app.inject({
+      method: "POST",
+      url: `/v1/triggers/${triggerId}/event`,
+      payload: normalizedEvent({ source: "telegram", payload: { score: 100 } }),
+    });
+    expect(wrongSelector.statusCode).toBe(400);
+    expect(temporalClient.startGraph).not.toHaveBeenCalled();
     await app.close();
   });
 
