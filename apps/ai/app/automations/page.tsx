@@ -581,8 +581,8 @@ export default function AutomationsPage() {
               <p>
                 Event, webhook, dan condition memakai owner Trigger yang sama. External action
                 tetap berada di exact pinned Flow; MCP Tool dikonfigurasi lewat Connect-owned
-                catalog. Condition hanya dievaluasi saat event masuk; polling LLM dan L4 autonomy
-                tetap tidak aktif.
+                catalog. Condition hanya dievaluasi saat event masuk; polling LLM dan L4
+                autonomy tetap tidak aktif.
               </p>
             </div>
             <div className={styles.actions}>
