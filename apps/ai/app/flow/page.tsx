@@ -166,14 +166,13 @@ export default function FlowCanvasPage() {
     if (!workspaceReady) return;
     let cancelled = false;
     setMcpToolsByServer({});
-    void fetch(
-      `/api/mcp-actions/servers?workspaceId=${encodeURIComponent(workspaceId)}`,
-      { cache: "no-store" },
-    )
+    void fetch(`/api/mcp-actions/servers?workspaceId=${encodeURIComponent(workspaceId)}`, {
+      cache: "no-store",
+    })
       .then(async (response) => {
-        const body = (await response.json().catch(() => null)) as
-          | { servers?: McpActionServerOption[] }
-          | null;
+        const body = (await response.json().catch(() => null)) as {
+          servers?: McpActionServerOption[];
+        } | null;
         if (!response.ok || body?.servers === undefined) {
           throw new Error(errorMessage(body, `MCP server list gagal (${response.status}).`));
         }
@@ -797,11 +796,7 @@ export default function FlowCanvasPage() {
   }
 
   async function discoverMcpTools(serverId: string): Promise<void> {
-    if (
-      serverId.length === 0 ||
-      mcpDiscoveryServerId !== null ||
-      !workspaceReady
-    ) {
+    if (serverId.length === 0 || mcpDiscoveryServerId !== null || !workspaceReady) {
       return;
     }
     setMcpDiscoveryServerId(serverId);
@@ -814,12 +809,10 @@ export default function FlowCanvasPage() {
           body: JSON.stringify({ workspaceId, scope, sensitivity }),
         },
       );
-      const body = (await response.json().catch(() => null)) as
-        | {
-            tools?: McpActionToolOption[];
-            errors?: { tools?: string };
-          }
-        | null;
+      const body = (await response.json().catch(() => null)) as {
+        tools?: McpActionToolOption[];
+        errors?: { tools?: string };
+      } | null;
       if (!response.ok || body?.tools === undefined) {
         setMessage(errorMessage(body, `MCP discovery gagal (${response.status}).`));
         return;
