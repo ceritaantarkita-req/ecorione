@@ -27,6 +27,8 @@ describe("PE-06 Brain source contract", () => {
     expect(page).toContain('from "../../lib/project-selection"');
     expect(projectSelection).toContain('PROJECT_STORAGE_KEY = "ecorione.projectId"');
     expect(page).toContain("/api/brain?");
+    expect(page).toContain("<ProjectPicker");
+    expect(page).toContain("onCreated={useCreatedProject}");
     expect(page).toContain("BRAIN_NODE_TYPES");
     expect(page).toContain("BRAIN_EDGE_TYPES");
   });
