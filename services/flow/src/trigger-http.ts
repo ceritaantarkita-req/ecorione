@@ -15,6 +15,7 @@ import {
   makeId,
   type ActionRequest,
   type CompiledFlowGraphPlan,
+  type ConditionTriggerConfiguration,
   type PolicyVerdict,
   type NormalizedTriggerEvent,
   type Project,
@@ -79,7 +80,7 @@ export class TriggerDisabledError extends Error {
   }
 }
 export class TriggerWrongKindError extends Error {
-  constructor(expected: "manual" | "time" | "event" | "webhook") {
+  constructor(expected: "manual" | "time" | "event" | "webhook" | "condition") {
     super(`Trigger harus berjenis ${expected} untuk operasi ini.`);
     this.name = "TriggerWrongKindError";
   }
@@ -278,24 +279,66 @@ function deterministicEventIds(
   };
 }
 
-function triggerAcceptsEvent(
+function triggerSelectorMatchesEvent(
   trigger: TriggerDefinition,
   event: NormalizedTriggerEvent,
 ): boolean {
-  if (trigger.kind === "event") {
-    const config = trigger.configuration as { source: string; eventKind: string };
-    return config.source === event.source && config.eventKind === event.kind;
+  if (trigger.kind !== "event" && trigger.kind !== "webhook" && trigger.kind !== "condition") {
+    return false;
   }
-  if (trigger.kind === "webhook") {
-    const config = trigger.configuration as {
-      adapter: "generic";
-      hookId: string;
-      source: string;
-      eventKind: string;
-    };
-    return event.source === config.source && event.kind === config.eventKind;
+  const config = trigger.configuration as { source: string; eventKind: string };
+  return config.source === event.source && config.eventKind === event.kind;
+}
+
+function conditionFieldValue(event: NormalizedTriggerEvent, field: string): unknown {
+  const [root, ...segments] = field.split(".");
+  let current: unknown = root === "payload" ? event.payload : event.metadata;
+  for (const segment of segments) {
+    if (current === null || typeof current !== "object") return undefined;
+    if (!Object.prototype.hasOwnProperty.call(current, segment)) return undefined;
+    current = (current as Record<string, unknown>)[segment];
   }
-  return false;
+  return current;
+}
+
+function conditionMatchesEvent(
+  trigger: TriggerDefinition,
+  event: NormalizedTriggerEvent,
+): boolean {
+  if (trigger.kind !== "condition") return true;
+  const config = trigger.configuration as ConditionTriggerConfiguration;
+  const actual = conditionFieldValue(event, config.predicate.field);
+  const predicate = config.predicate;
+  switch (predicate.operator) {
+    case "EXISTS":
+      return actual !== undefined;
+    case "EQ":
+      return actual === predicate.value;
+    case "NEQ":
+      return actual !== predicate.value;
+    case "GT":
+      return typeof actual === "number" && typeof predicate.value === "number"
+        ? actual > predicate.value
+        : false;
+    case "GTE":
+      return typeof actual === "number" && typeof predicate.value === "number"
+        ? actual >= predicate.value
+        : false;
+    case "LT":
+      return typeof actual === "number" && typeof predicate.value === "number"
+        ? actual < predicate.value
+        : false;
+    case "LTE":
+      return typeof actual === "number" && typeof predicate.value === "number"
+        ? actual <= predicate.value
+        : false;
+    case "CONTAINS":
+      if (typeof actual === "string" && typeof predicate.value === "string") {
+        return actual.includes(predicate.value);
+      }
+      if (Array.isArray(actual)) return actual.some((item) => item === predicate.value);
+      return false;
+  }
 }
 
 async function startGraphIdempotently(
@@ -494,15 +537,21 @@ export function registerTriggerRoutes(
   async function dispatchNormalizedEvent(
     trigger: TriggerDefinition,
     event: NormalizedTriggerEvent,
-  ): Promise<{ readonly response: TriggerFireResponse; readonly statusCode: 200 | 202 }> {
+  ): Promise<
+    | { readonly response: TriggerFireResponse; readonly statusCode: 200 | 202 }
+    | { readonly response: null; readonly statusCode: 200; readonly conditionMatched: false }
+  > {
     if (trigger.workspaceId !== event.workspaceId) throw new TriggerWorkspaceConflictError();
     if (trigger.projectId !== event.projectId) throw new TriggerProjectConflictError();
-    if (trigger.kind !== "event" && trigger.kind !== "webhook") {
+    if (trigger.kind !== "event" && trigger.kind !== "webhook" && trigger.kind !== "condition") {
       throw new TriggerWrongKindError("event");
     }
     if (!trigger.enabled) throw new TriggerDisabledError();
-    if (!triggerAcceptsEvent(trigger, event)) {
+    if (!triggerSelectorMatchesEvent(trigger, event)) {
       throw new TriggerFlowMismatchError("Event tidak cocok dengan selector Trigger.");
+    }
+    if (trigger.kind === "condition" && !conditionMatchesEvent(trigger, event)) {
+      return { response: null, statusCode: 200, conditionMatched: false };
     }
 
     await validateAuthority(options, trigger);
@@ -596,6 +645,13 @@ export function registerTriggerRoutes(
       const event = parseOrBadRequest(NormalizedTriggerEventSchema, req.body);
       try {
         const result = await dispatchNormalizedEvent(triggers.require(id), event);
+        if (result.response === null) {
+          return reply.code(200).send({
+            triggerId: id,
+            matched: false,
+            dispatched: false,
+          });
+        }
         return reply.code(result.statusCode).send(result.response);
       } catch (error) {
         throw triggerError(error);
@@ -636,6 +692,9 @@ export function registerTriggerRoutes(
           metadata: { ...body.metadata, hookId },
         });
         const result = await dispatchNormalizedEvent(trigger, event);
+        if (result.response === null) {
+          throw new TriggerFlowMismatchError("Webhook Trigger tidak boleh menghasilkan condition no-op.");
+        }
         return reply.code(result.statusCode).send(result.response);
       } catch (error) {
         throw triggerError(error);
