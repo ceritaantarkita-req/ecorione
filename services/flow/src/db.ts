@@ -265,7 +265,9 @@ function migrateConditionTriggerKinds(db: SqliteDatabase): void {
       `);
 
       if (hasEventDeliveries) {
-        db.exec("ALTER TABLE trigger_event_deliveries_condition RENAME TO trigger_event_deliveries;");
+        db.exec(
+          "ALTER TABLE trigger_event_deliveries_condition RENAME TO trigger_event_deliveries;",
+        );
       }
 
       db.exec(`
@@ -289,7 +291,9 @@ function migrateConditionTriggerKinds(db: SqliteDatabase): void {
 
     const violations = db.pragma("foreign_key_check") as unknown[];
     if (violations.length > 0) {
-      throw new Error("Session 10 Condition Trigger migration menghasilkan foreign-key violation.");
+      throw new Error(
+        "Session 10 Condition Trigger migration menghasilkan foreign-key violation.",
+      );
     }
   } finally {
     db.pragma("foreign_keys = ON");
