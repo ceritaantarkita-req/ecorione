@@ -2,17 +2,17 @@
 
 Last updated: **2026-10-02**
 
-Status: **CURRENT / SESSION 8 BRAIN PRODUCT CONVERGENCE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 9 AUTOMATION PRODUCT CONVERGENCE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
 
 ## Repository identity
 
 ```text
 repository                = ceritaantarkita-req/ecorione
 default branch            = main
-runtime-changing main     = a1b9aa6c85f194fe84d0263c4c42fbc7928b0047 (PR #425 merge)
-session 8 reviewed head   = b7698c26e876598b8cb93e914efef2dd9d77d65e (PR #425 head)
-staging-verified runtime  = a1b9aa6c85f194fe84d0263c4c42fbc7928b0047
-staging image             = staging-a1b9aa6c85f1
+runtime-changing main     = 7336a7a71f976c1bd202059b0bf6f0983bf95cfd (PR #427 merge)
+session 9 reviewed head   = 8f4c91c4e39416abae3eafdaa9e40defecd409f4 (PR #427 head)
+staging-verified runtime  = 7336a7a71f976c1bd202059b0bf6f0983bf95cfd
+staging image             = staging-7336a7a71f97
 ```
 
 Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Exact PR head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI #2600, Product Eval #1839, and PCS-06 Integrated Browser Acceptance #371. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI #2601 and Product Eval #1840 passed, and actual Staging Deploy #1950 deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`. Public/auth and MCP smoke passed, Operations reported `healthy: true`, exact-host identity matched with a clean worktree, all **15/15** configured services were running, and capacity stabilized at **29.95 GiB free**.
@@ -27,8 +27,10 @@ Session 7 Schedule Product Convergence is CLOSED / PASS / STAGING VERIFIED throu
 
 Session 8 Brain Product Convergence is CLOSED / PASS / STAGING VERIFIED through PR #425. Brain now reuses the searchable owner-backed Project picker with inline `+ New Project`, preserves its deterministic Project-scoped connected graph, and exposes grounded local Brain AI as a persistent bottom composer that stays disabled until a connected dot is selected. Canonical Project/Schedule/Flow/Context/Connect ownership remains unchanged.
 
+Session 9 Automation Product Convergence is CLOSED / PASS / STAGING VERIFIED through PR #427. Automation is now first-class at `/automations` over the existing Flow-owned `event` and `webhook` Trigger substrate. It reuses the searchable Project picker, exact pinned Flow versions, existing Runs projection and Hub/Temporal authority path. Connect remains webhook-secret/token owner; the public `/webhooks/*` edge is bounded to 96 KiB and cannot let callers choose Workspace, Project, Flow, version, or autonomy. `condition`, polling, provider-specific Gmail/Telegram connectors, Task-domain consolidation, L4/AutoClick, and production cutover remain outside this session.
+
 Current safe-resume checkpoint:
-[verification/session8-brain-product-convergence-closure-2026-10-02.md](verification/session8-brain-product-convergence-closure-2026-10-02.md).
+[verification/session9-automation-product-convergence-closure-2026-10-02.md](verification/session9-automation-product-convergence-closure-2026-10-02.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -37,30 +39,30 @@ The closed ECX Batch 1–7 contracts remain compatibility requirements. The repo
 Latest audited runtime-changing repository/staging convergence:
 
 ```text
-SHA   = a1b9aa6c85f194fe84d0263c4c42fbc7928b0047
-image = staging-a1b9aa6c85f1
+SHA   = 7336a7a71f976c1bd202059b0bf6f0983bf95cfd
+image = staging-7336a7a71f97
 ```
 
 Latest proof:
 
 | Gate / runtime | Result |
 |---|---|
-| PR #425 reviewed head | `b7698c26e876598b8cb93e914efef2dd9d77d65e` |
-| PR-head CI #2632 | PASS |
-| PR-head Product Eval #1871 | PASS |
-| PR-head PCS-06 browser #386 | PASS |
-| merged-main CI #2633 | PASS |
-| merged-main Product Eval #1872 | PASS |
-| Staging Deploy #2013 | gate-only PASS / deploy skipped while peer gate incomplete |
-| Staging Deploy #2014 | actual deploy PASS |
-| expected host SHA | matched `a1b9aa6c85f194fe84d0263c4c42fbc7928b0047` |
-| staging image | `staging-a1b9aa6c85f1` |
+| PR #427 reviewed head | `8f4c91c4e39416abae3eafdaa9e40defecd409f4` |
+| PR-head CI #2651 | PASS |
+| PR-head Product Eval #1890 | PASS |
+| PR-head PCS-06 browser #402 | PASS |
+| merged-main CI #2652 | PASS |
+| merged-main Product Eval #1891 | PASS |
+| Staging Deploy #2051 | gate-only PASS / deploy skipped while peer gate incomplete |
+| Staging Deploy #2052 | actual deploy PASS |
+| expected host SHA | matched `7336a7a71f976c1bd202059b0bf6f0983bf95cfd` |
+| staging image | `staging-7336a7a71f97` |
 | public/auth + MCP smoke | PASS |
 | Operations | `healthy: true`, `unhealthyServices: []` |
 | configured/running services | 15 / 15 |
 | non-running services | 0 |
 | exact-host worktree | clean / DETACHED |
-| stabilized free disk after rollback-set cleanup | 25.34 GiB |
+| stabilized free disk after rollback-set cleanup | 27.44 GiB |
 
 SumoPod remains **staging, not production**.
 
@@ -334,7 +336,7 @@ Canonical Session 4D checkpoint:
 
 ## Current active work
 
-There is **no active implementation queue**. Sessions 4E/4F, Session 5 Project Source Picker, and Session 6 External Source Lifecycle are CLOSED / PASS / STAGING VERIFIED through PR #417 / #419 / #421 and Staging Deploy #1950 / #1958 / #1968.
+There is **no active implementation queue**. Sessions 4E/4F and Sessions 5–9 are CLOSED / PASS / STAGING VERIFIED. Session 9 is closed through runtime PR #427 and Staging Deploy #2052.
 
 Closed current slices that must not be redone:
 
@@ -344,9 +346,12 @@ Closed current slices that must not be redone:
 - multi-credential AI Connections + priority/bounded failover — PR #415;
 - custom OpenAI-compatible onboarding + Local↔Hosted handoff proof + final provider/model polish — PR #417;
 - searchable owner-backed Project Source Picker + normal local owner-service/Temporal bootstrap — PR #419;
-- external-source lifecycle / refresh / indexing productization — PR #421.
+- external-source lifecycle / refresh / indexing productization — PR #421;
+- Schedule product convergence — PR #423;
+- Brain product convergence — PR #425;
+- Automation product convergence over existing event/webhook Triggers — PR #427.
 
-Session 6 is closed. Session 7 remains unopened until explicitly authorized. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
+Session 9 is closed. No Session 10 or other numbered continuation is automatically opened. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
 ## Explicit deferred / separately selectable future scopes
 
@@ -381,7 +386,7 @@ For a new session/agent:
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/session6-external-source-lifecycle-closure-2026-10-01.md](verification/session6-external-source-lifecycle-closure-2026-10-01.md).
+[verification/session9-automation-product-convergence-closure-2026-10-02.md](verification/session9-automation-product-convergence-closure-2026-10-02.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
