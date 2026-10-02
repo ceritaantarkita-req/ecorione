@@ -139,6 +139,19 @@ The automatic CD rule is now:
 
 This restores the intended sequence: runtime/control change -> exact-SHA staging proof -> docs closure, without making docs closure itself a new runtime deployment.
 
+Live verification of the skip rule:
+
+- docs-only closure/hardening evidence PR #434 merged as `f441d72ddd9978f60218b8099fbd73a0150f27c8`;
+- Product Eval #1940 PASS;
+- CI #2701 attempt 1 failed only because `test/phase4-temporal-runtime.test.ts` timed out at 120 seconds during the real Temporal restart acceptance; 290 test files / 1546 tests had already passed around that failure;
+- CI #2701 retry attempt 2 PASS on the exact same SHA with no code change;
+- Staging Deploy #2151 gate PASS;
+- Staging Deploy #2151 deploy job skipped;
+- gate log explicitly recorded: `Skipping docs-only SHA f441d72ddd9978f60218b8099fbd73a0150f27c8; runtime staging stays on the last runtime-changing main.`;
+- therefore the staging-verified runtime/control SHA remains `7130dba720cff37a040ce29620b7902b52691e9c` / image `staging-7130dba720cf`.
+
+This is live execution evidence that the docs-only auto-CD guard works; it is not merely a source-contract assertion.
+
 ## Explicit non-claims
 
 This closure does **not** claim:
