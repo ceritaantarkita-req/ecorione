@@ -777,9 +777,7 @@ export default function BrainPage() {
             <button
               type="submit"
               disabled={
-                assistantBusy ||
-                selectedId === null ||
-                assistantQuestion.trim().length === 0
+                assistantBusy || selectedId === null || assistantQuestion.trim().length === 0
               }
             >
               {assistantBusy ? "Asking…" : "Ask Brain"}
