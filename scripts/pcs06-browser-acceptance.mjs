@@ -1906,7 +1906,7 @@ async function runDesktopJourney() {
     }
     const disabledTool = mcpToolSelect.locator('option[value="delete_everything"]');
     const disabledToolProperty = await disabledTool.evaluate(
-      (option) => option instanceof HTMLOptionElement && option.disabled,
+      (option) => option.disabled === true,
     );
     if (!disabledToolProperty) {
       throw new Error("desktop-flow: disabled MCP tool became selectable");
