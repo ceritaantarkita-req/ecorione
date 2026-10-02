@@ -33,6 +33,42 @@ export function renderGraphTemplate(template: string, input: unknown): string {
   );
 }
 
+const EXACT_GRAPH_TEMPLATE = /^\{\{\s*([a-zA-Z0-9_.-]*)\s*\}\}$/;
+const MAX_GRAPH_TEMPLATE_DEPTH = 16;
+const MAX_GRAPH_TEMPLATE_ENTRIES = 1024;
+
+export function renderGraphValueTemplates(
+  value: unknown,
+  input: unknown,
+  depth = 0,
+  budget = { entries: 0 },
+): unknown {
+  if (depth > MAX_GRAPH_TEMPLATE_DEPTH) {
+    throw new Error("Template arguments melewati batas kedalaman.");
+  }
+  budget.entries += 1;
+  if (budget.entries > MAX_GRAPH_TEMPLATE_ENTRIES) {
+    throw new Error("Template arguments melewati batas jumlah elemen.");
+  }
+  if (typeof value === "string") {
+    const exact = EXACT_GRAPH_TEMPLATE.exec(value);
+    if (exact !== null) return getGraphPath(input, exact[1]);
+    return renderGraphTemplate(value, input);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => renderGraphValueTemplates(item, input, depth + 1, budget));
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+        key,
+        renderGraphValueTemplates(item, input, depth + 1, budget),
+      ]),
+    );
+  }
+  return value;
+}
+
 export function transformGraphValue(input: unknown, rawConfig: unknown): unknown {
   const config = TransformNodeConfigSchema.parse(rawConfig) as z.infer<
     typeof TransformNodeConfigSchema
