@@ -10,10 +10,13 @@
   }
 
   # Public event ingress is intentionally outside the browser Basic-Auth gate.
-  # Connect still performs the PE-05 per-hook token check before Flow sees a delivery.
+  # Ai only proxies the bounded request; Connect still owns the per-hook token check.
   handle_path /webhooks/* {
-    rewrite * /v1/webhooks{path}
-    reverse_proxy connect:17023
+    request_body {
+      max_size 96KB
+    }
+    rewrite * /api/webhooks{path}
+    reverse_proxy ai:3000
   }
 
   @operator path /ops* /api/ops* /settings* /api/settings*
