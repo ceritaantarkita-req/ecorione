@@ -34,12 +34,15 @@ describe("Session 8 Brain product convergence", () => {
     },
   );
 
-  it("preserves canonical Project, Schedule and Flow links without a second graph owner", () => {
+  it(
+    "preserves canonical Project, Schedule and Flow links without a second graph owner",
+    () => {
     expect(projection).toContain('href: "/projects"');
     expect(projection).toContain('href: "/schedule"');
     expect(projection).toContain("href: `/flow?graph=");
-    expect(projection).not.toMatch(/neo4j|falkordb/i);
-  });
+      expect(projection).not.toMatch(/neo4j|falkordb/i);
+    },
+  );
 
   it("keeps grounded Brain chat on the canonical local chat path", () => {
     expect(page).toContain('fetch("/api/chat"');
