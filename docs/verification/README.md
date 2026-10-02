@@ -1,6 +1,6 @@
 # Verification evidence
 
-Current overall resume pointer: [session6-external-source-lifecycle-closure-2026-10-01.md](session6-external-source-lifecycle-closure-2026-10-01.md).
+Current overall resume pointer: [ecorione-safe-resume-checkpoint-2026-10-02.md](ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 This directory contains **dated evidence**, not current planning.
 
@@ -14,7 +14,9 @@ Historical evidence may contain statements that were correct at the time but are
 
 ## Latest repository truth
 
-- [session6-external-source-lifecycle-closure-2026-10-01.md](session6-external-source-lifecycle-closure-2026-10-01.md) — current FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: PR #421 merged as `15f007c5d248...`, merged-main CI #2610, Product Eval #1849, and MCP External HTTPS #1204 passed, Staging Deploy #1968 deployed `staging-15f007c5d248`, public/auth + MCP smoke passed, Operations was healthy, 15/15 services were running, and free disk stabilized at 27.39 GiB.
+- [ecorione-safe-resume-checkpoint-2026-10-02.md](ecorione-safe-resume-checkpoint-2026-10-02.md) — current SAFE RESUME pointer: Git main `81fce027...` is docs-only; staging runtime/control remains `7130dba720cf...` / `staging-7130dba720cf`; Sessions 4E–11 and post-Session-11 CD hardening are closed; no implementation session is active; local laptop sync was not claimed because Desktop Commander was offline.
+- [session11-mcp-action-product-convergence-closure-2026-10-02.md](session11-mcp-action-product-convergence-closure-2026-10-02.md) — current product/runtime closure for Session 11 MCP Action convergence and post-closure CD hardening evidence.
+- [session6-external-source-lifecycle-closure-2026-10-01.md](session6-external-source-lifecycle-closure-2026-10-01.md) — prior FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: PR #421 merged as `15f007c5d248...`, merged-main CI #2610, Product Eval #1849, and MCP External HTTPS #1204 passed, Staging Deploy #1968 deployed `staging-15f007c5d248`, public/auth + MCP smoke passed, Operations was healthy, 15/15 services were running, and free disk stabilized at 27.39 GiB.
 - [session6-external-source-lifecycle-local-acceptance-checkpoint-2026-10-01.md](session6-external-source-lifecycle-local-acceptance-checkpoint-2026-10-01.md) — pre-merge local acceptance evidence for URL/MCP snapshot lifecycle, refresh/index semantics, direct text indexing, re-index, detach provenance, and reversible temporary-Project cleanup.
 - [session5-project-source-picker-closure-2026-10-01.md](session5-project-source-picker-closure-2026-10-01.md) — prior FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: PR #419 merged as `12d62cd436ce...`, merged-main CI #2605 and Product Eval #1844 passed, Staging Deploy #1958 deployed `staging-12d62cd436ce`, public/auth + MCP smoke passed, Operations was healthy, 15/15 services were running, and free disk stabilized at 25.27 GiB.
 - [session5-project-source-picker-local-acceptance-checkpoint-2026-10-01.md](session5-project-source-picker-local-acceptance-checkpoint-2026-10-01.md) — pre-merge local acceptance evidence for the searchable Project Source Picker, owner catalogs, reversible Artifact/Space/Flow binding, and healthy-empty MCP registry.
@@ -85,9 +87,10 @@ Important dated proof includes:
 - ECX Batch 1–7 staging deliveries;
 - NVIDIA provider implementation and rollout;
 - failed Staging Deploy #1505 with successful rollback evidence;
-- current exact staging proof at Staging Deploy #1968.
+- current exact runtime/control staging proof at Staging Deploy #2146;
+- later docs-only main commits are expected to gate-pass and skip deploy.
 
-Current exact runtime/staging identity is recorded in [session6-external-source-lifecycle-closure-2026-10-01.md](session6-external-source-lifecycle-closure-2026-10-01.md), not inferred from older deployment documents.
+Current safe-resume identity and the distinction between Git main and staging runtime are recorded in [ecorione-safe-resume-checkpoint-2026-10-02.md](ecorione-safe-resume-checkpoint-2026-10-02.md), not inferred from older deployment documents.
 
 ## Off-host DR
 
