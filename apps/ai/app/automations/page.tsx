@@ -424,8 +424,8 @@ export default function AutomationsPage() {
           <span className={styles.eyebrow}>Event-driven work</span>
           <h1>Automation</h1>
           <p>
-            Jalankan Flow saat event atau webhook datang, tanpa mengubah Schedule menjadi polling
-            engine.
+            Jalankan Flow saat event atau webhook datang, tanpa mengubah Schedule menjadi
+            polling engine.
           </p>
         </div>
         <ProjectPicker
@@ -462,7 +462,11 @@ export default function AutomationsPage() {
 
       <div className={styles.notice} role="status">
         <span>{loading ? "Refreshing owner state…" : message}</span>
-        <button type="button" disabled={loading} onClick={() => void loadAutomations(projectId)}>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => void loadAutomations(projectId)}
+        >
           Refresh
         </button>
       </div>
@@ -606,7 +610,9 @@ export default function AutomationsPage() {
                   value={draft.eventKind}
                   onChange={(event) =>
                     setDraft((current) =>
-                      current === null ? current : { ...current, eventKind: event.target.value },
+                      current === null
+                        ? current
+                        : { ...current, eventKind: event.target.value },
                     )
                   }
                 />
@@ -624,7 +630,9 @@ export default function AutomationsPage() {
                       value={draft.hookId}
                       onChange={(event) =>
                         setDraft((current) =>
-                          current === null ? current : { ...current, hookId: event.target.value },
+                          current === null
+                            ? current
+                            : { ...current, hookId: event.target.value },
                         )
                       }
                     />
@@ -671,7 +679,9 @@ export default function AutomationsPage() {
                   checked={draft.enabled}
                   onChange={(event) =>
                     setDraft((current) =>
-                      current === null ? current : { ...current, enabled: event.target.checked },
+                      current === null
+                        ? current
+                        : { ...current, enabled: event.target.checked },
                     )
                   }
                 />
@@ -696,7 +706,8 @@ export default function AutomationsPage() {
             {automationTriggers.map((trigger) => {
               const config = automationConfig(trigger);
               const relatedRuns = runs.filter((run) => run.triggerId === trigger.id).length;
-              const webhook = trigger.kind === "webhook" && config !== null && "hookId" in config;
+              const webhook =
+                trigger.kind === "webhook" && config !== null && "hookId" in config;
               const token = revealedTokens[trigger.id];
               return (
                 <article className={styles.card} key={trigger.id}>
@@ -749,8 +760,8 @@ export default function AutomationsPage() {
                         <strong>Public ingress</strong>
                         <code>{`POST /webhooks/${config.hookId}`}</code>
                         <small>
-                          Header: X-ECORIONE-Webhook-Token. Workspace, Project, Flow, dan autonomy
-                          tidak diterima dari caller.
+                          Header: X-ECORIONE-Webhook-Token. Workspace, Project, Flow, dan
+                          autonomy tidak diterima dari caller.
                         </small>
                       </article>
                       {token !== undefined ? (
