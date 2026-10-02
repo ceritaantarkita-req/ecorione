@@ -4,16 +4,16 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-## Current status — 2026-10-01
+## Current status — 2026-10-02
 
 The latest **staging-verified runtime-changing** baseline is:
 
 ```text
-runtime baseline = 15f007c5d248df8319644f2d9a6c4c7905c70681
-image            = staging-15f007c5d248
+runtime/control baseline = 7130dba720cff37a040ce29620b7902b52691e9c
+staging image            = staging-7130dba720cf
 ```
 
-PR #421 final reviewed head `828368eb6eaa00c991e52b0e4cfeea8d3abbfc35` passed CI **#2609**, Product Eval **#1848**, MCP External HTTPS Acceptance **#1203**, and PCS-06 Integrated Browser Acceptance **#374**. It merged to `main` as `15f007c5d248df8319644f2d9a6c4c7905c70681`; merged-main CI **#2610**, Product Eval **#1849**, and MCP External HTTPS Acceptance **#1204** passed. Actual Staging Deploy **#1968** deployed exact SHA `15f007c5...` as `staging-15f007c5d248`; public/auth and MCP smoke passed, Operations reported `healthy: true`, all **15/15** configured services were running, exact-host identity matched with a clean detached worktree, and capacity stabilized at **27.39 GiB free**.
+Session 11 product runtime closed through PR #431 at `9bd2b87fc4f3755b837c74d6b42585e0c5181870`. Post-Session-11 CD hardening PR #433 merged as `7130dba720cff37a040ce29620b7902b52691e9c`; merged-main CI **#2699** and Product Eval **#1938** passed, and actual Staging Deploy **#2146** deployed `staging-7130dba720cf` with exact host SHA, public/auth + MCP smoke PASS, Operations healthy, all **15/15** configured services running, and **27.36 GiB** stabilized free disk. Docs-only main commits are now allowed to advance Git history without redeploying staging; current safe-resume evidence is [docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md](docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -25,7 +25,9 @@ Sessions 4E and 4F are now **CLOSED / PASS / STAGING VERIFIED** through PR #417.
 
 Session 5 — **Project Source Picker** — is **CLOSED / PASS / STAGING VERIFIED** through PR #419 and Staging Deploy #1958. Projects expose a searchable owner-backed picker for Artifact, Space page, Flow graph, and MCP server sources while keeping URL/manual upload paths, Source/Reference roles, exact attach state, and owner-data boundaries intact.
 
-Session 6 — **External Source Lifecycle** — is now **CLOSED / PASS / STAGING VERIFIED** through PR #421 and Staging Deploy #1968. URL/MCP snapshots now carry explicit `SNAPSHOT_READY / INDEXED / DETACHED` lifecycle metadata, refresh/index timestamps, content-addressed refresh semantics, direct text indexing into Project-scoped Context, and Refresh/Index/Re-index UI while preserving Artifact/Context/Connect ownership boundaries. Canonical closure: [docs/verification/session6-external-source-lifecycle-closure-2026-10-01.md](docs/verification/session6-external-source-lifecycle-closure-2026-10-01.md).
+Session 6 — **External Source Lifecycle** — is **CLOSED / PASS / STAGING VERIFIED** through PR #421 and Staging Deploy #1968.
+
+Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED**: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Post-Session-11 docs-only CD hardening is closed through PR #433 and live-verified on later docs-only main commits. There is **no active Session 12**. Current safe-resume checkpoint: [docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md](docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -165,7 +167,7 @@ See:
 
 ## Current active / separate boundaries
 
-Sessions 4E and 4F are **closed / pass / staging verified** through PR #417 and Staging Deploy #1950. Sessions 5 and 6 are also **closed / pass / staging verified** through PR #419 / #421 and Staging Deploy #1958 / #1968. No implementation session is active; any Session 7 work requires explicit operator authorization.
+Sessions 4E–11 are **closed / pass / staging verified** at their documented boundaries. Post-Session-11 docs-only CD hardening is also closed and live-verified. No implementation session is active; any Session 12 work requires explicit operator authorization.
 
 The following remain separate explicit decisions:
 
