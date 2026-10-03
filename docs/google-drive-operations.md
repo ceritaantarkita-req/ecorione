@@ -142,6 +142,31 @@ Ai         3000  (Next dev)
 
 Do not claim PASS if another process silently changes the Ai origin/port. The configured OAuth redirect must match the browser origin exactly.
 
+## Mock acceptance before real Google
+
+Before using any real Google credential, run:
+
+```text
+pnpm acceptance:google-drive:mock
+```
+
+This deterministic suite uses synthetic credentials and mocked Google/owner endpoints. It exercises:
+
+- disconnected -> OAuth start/callback -> connected status;
+- encrypted refresh-token custody and one-time OAuth state;
+- short-lived Picker session without refresh-token disclosure;
+- reconnect-required when Google rejects the stored refresh token;
+- explicit blob-file download;
+- deterministic Google-native document export;
+- Google Drive -> Hub -> Artifact Project Source ingestion;
+- same-origin refresh to a new Artifact;
+- lifecycle reset from `INDEXED` to `SNAPSHOT_READY` when the snapshot changes;
+- idempotent retry of the refreshed operation;
+- disconnect/revoke semantics;
+- callback/Picker browser proxy and source-contract security tests.
+
+Mock acceptance does not prove Google Cloud console configuration, consent audience, real OAuth exchange, Picker iframe rendering, or real Drive permission behavior. Those remain part of the operator local acceptance below.
+
 ## Session 12D acceptance journey
 
 Use the Personal Workspace Project Sources surface.
