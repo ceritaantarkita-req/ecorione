@@ -27,10 +27,10 @@ Historical verification is intentionally preserved even when it contains an olde
 ## Read these first
 
 1. **[current-state-and-next-steps.md](current-state-and-next-steps.md)** — canonical current repository/runtime truth and deferred boundaries.
-2. **[active-work-plan.md](active-work-plan.md)** — current queue and explicit next-scope boundary; no implementation session is active.
+2. **[active-work-plan.md](active-work-plan.md)** — current queue and explicit Session 12/local-first acceptance boundary.
 3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted and fulfilled Session 4E/4F provider-model product contract.
 4. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
-5. **[verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md)** — current safe-resume pointer: exact Git main, runtime/staging identity, Session 11/CD-hardening closure, no-active-session boundary, and local-resume guard.
+5. **[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md)** — current operating transition: SumoPod retired as active staging, Session 12 Native Google Drive active, local-first runtime acceptance.
 6. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
 7. **[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md)** — prior Ai quick-switch boundary.
 8. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — underlying Settings picker closure.
@@ -106,19 +106,16 @@ Use the owner-specific runbook when touching its subsystem:
 
 ## Current staging / DR truth
 
-Latest audited **runtime-changing compatibility baseline**:
+There is currently **no active remote staging target**. The operator retired SumoPod from current staging operations on 2026-10-03 because the VPS will not be renewed.
 
-```text
-runtime/control SHA = 5f1245083047c4014789e90c2ba25b7e16ebe366
-image               = staging-5f1245083047
-```
+Historical evidence remains valid. The last proven actual SumoPod runtime is Session 12A merge `084d669d8631a2590e7a9e88b62e161691bf4fc9` / image `staging-084d669d8631` via Staging Deploy #2183. Later Session 12B/12C remote deploy attempts failed before mutation on the host active-image guard and must not be represented as staging success.
 
-Post-Session-11 CD hardening is now extended through PR #437. PR #436 exposed that root `README.md` and `AGENTS.md` were outside the original `docs/**` automatic skip boundary and therefore caused a successful but unnecessary redeploy. PR #437 merged as `5f1245083047c4014789e90c2ba25b7e16ebe366`; merged-main CI #2707, Product Eval #1946, and Staging Deploy #2163 passed. Exact staging image is `staging-5f1245083047`, Operations is healthy, 15/15 services are running, and free disk stabilized at 29.91 GiB.
+Current GitHub `main` is Session 12C merge `4326e77b2f77aa48a4be075c5fab2ff8b9983655`. Session 12D PR #444 at reviewed head `a6d7073c63d9d0f6581af67c2bef3a599629303e` has CI #2748, Product Eval #1987, MCP #1278, and Browser #446 PASS; local Docker/Compose acceptance is the next gate before merge.
 
-Sessions 4E–11 remain closed at their documented boundaries. The expanded automatic documentation-only boundary `docs/**`, `README.md`, and `AGENTS.md` is live-verified by PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9`; Staging Deploy #2166 and #2167 both skipped deployment, so runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366` / `staging-5f1245083047`.
-[verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
+Current pointer:
+[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
-SumoPod remains staging, not production. DR-2 checkpoint 2 remains deferred and physical independence is not claimed.
+DR-2 checkpoint 2 and production promotion remain deferred; local acceptance does not prove either.
 
 ## Repository hygiene
 
