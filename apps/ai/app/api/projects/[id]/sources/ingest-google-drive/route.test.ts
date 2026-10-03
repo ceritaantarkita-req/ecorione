@@ -96,6 +96,72 @@ describe("/api/projects/:id/sources/ingest-google-drive", () => {
     });
   });
 
+  it("preserves governed Hub failure status and error type at the browser boundary", async () => {
+    const cases = [
+      { status: 429, type: "GOOGLE_DRIVE_SOURCE_REJECTED" },
+      { status: 504, type: "GOOGLE_DRIVE_SOURCE_TIMEOUT" },
+      { status: 502, type: "UPSTREAM_UNAVAILABLE" },
+    ] as const;
+
+    for (const candidate of cases) {
+      hubPool
+        .intercept({
+          path: "/v1/projects/prj_finance/sources/ingest-google-drive",
+          method: "POST",
+        })
+        .reply(candidate.status, {
+          error: {
+            type: candidate.type,
+            message: "Synthetic bounded failure.",
+          },
+        });
+
+      const response = await POST(
+        new Request("http://ai.local/api/projects/prj_finance/sources/ingest-google-drive", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            workspaceId: "ws_personal",
+            fileId: `file-${String(candidate.status)}`,
+            role: "source",
+          }),
+        }),
+        { params: Promise.resolve({ id: "prj_finance" }) },
+      );
+
+      expect(response.status).toBe(candidate.status);
+      expect(await response.json()).toEqual({
+        error: {
+          type: candidate.type,
+          message: "Synthetic bounded failure.",
+        },
+      });
+    }
+  });
+
+  it("maps an unreachable Hub to a sanitized 502", async () => {
+    const response = await POST(
+      new Request("http://ai.local/api/projects/prj_finance/sources/ingest-google-drive", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: "ws_personal",
+          fileId: "file-network-error",
+          role: "source",
+        }),
+      }),
+      { params: Promise.resolve({ id: "prj_finance" }) },
+    );
+
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({
+      error: {
+        type: "UPSTREAM_UNAVAILABLE",
+        message: "Hub tidak bisa dihubungi.",
+      },
+    });
+  });
+
   it("rejects non-Personal Workspace before Hub", async () => {
     const response = await POST(
       new Request("http://ai.local/api/projects/prj_finance/sources/ingest-google-drive", {
