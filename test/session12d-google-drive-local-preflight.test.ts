@@ -76,6 +76,18 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     expect(result.stdout).not.toContain("example-client-id-123456");
   });
 
+  it("rejects an insecure non-loopback Ai origin", () => {
+    const env = {
+      ...baseEnv(),
+      ECORIONE_GOOGLE_DRIVE_REDIRECT_URI:
+        "http://example.test:3000/api/integrations/google-drive/callback",
+    };
+    const result = run(env, "http://example.test:3000");
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("--origin harus HTTPS kecuali loopback localhost");
+  });
+
   it("rejects an OAuth redirect origin that does not match the Ai origin", () => {
     const env = {
       ...baseEnv(),
