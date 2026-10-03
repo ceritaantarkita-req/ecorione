@@ -147,9 +147,7 @@ describe("Google Drive multi-file ingest orchestration", () => {
     const result = await ingestGoogleDriveSelection(
       [file("drive-file-z", "Z.txt")],
       "source",
-      async () => {
-        throw "synthetic non-error";
-      },
+      async () => Promise.reject("synthetic non-error"),
     );
 
     expect(result.successes).toEqual([]);
