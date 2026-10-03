@@ -5,6 +5,7 @@ import {
   GoogleDriveSourceError,
   type GoogleDriveApiTransport,
 } from "./google-drive-source.js";
+import { GoogleDriveOAuthUpstreamError } from "./google-drive-token.js";
 
 function bytes(value: string): Uint8Array {
   return Buffer.from(value, "utf8");
@@ -194,6 +195,51 @@ describe("GoogleDriveSource", () => {
       statusCode: 409,
     });
     expect(calls).toEqual([]);
+  });
+
+  it("sanitizes OAuth refresh failures into source-boundary errors", async () => {
+    const rejected = new GoogleDriveSource({
+      vault: { get: () => "refresh-token-private-123456" },
+      oauthClient: {
+        async refreshAccessToken() {
+          throw new GoogleDriveOAuthUpstreamError(
+            502,
+            "GOOGLE_DRIVE_OAUTH_REJECTED",
+            "private invalid_grant detail",
+          );
+        },
+      },
+      transport: async () => {
+        throw new Error("must not run");
+      },
+    });
+    await expect(
+      rejected.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_NOT_CONNECTED",
+      statusCode: 409,
+      message: "Google Drive authorization perlu dihubungkan ulang.",
+    });
+
+    const timeout = new GoogleDriveSource({
+      vault: { get: () => "refresh-token-private-123456" },
+      oauthClient: {
+        async refreshAccessToken() {
+          throw new GoogleDriveOAuthUpstreamError(
+            504,
+            "GOOGLE_DRIVE_OAUTH_TIMEOUT",
+            "private timeout detail",
+          );
+        },
+      },
+      transport: async () => {
+        throw new Error("must not run");
+      },
+    });
+    await expect(timeout.fetchSelectedFile("ws_personal", "file-123")).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_API_TIMEOUT",
+      statusCode: 504,
+    });
   });
 
   it("rejects non-Personal Workspace and upstream identity mismatch", async () => {
