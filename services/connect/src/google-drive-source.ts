@@ -118,6 +118,7 @@ export function isAllowedGoogleDriveResponseHost(hostname: string): boolean {
 }
 
 async function defaultTransport(
+  fetchImpl: typeof fetch,
   url: URL,
   accessToken: string,
   timeoutMs: number,
@@ -142,7 +143,7 @@ async function defaultTransport(
       };
       if (sendAuthorization) headers.authorization = `Bearer ${accessToken}`;
 
-      const response = await fetch(current, {
+      const response = await fetchImpl(current, {
         method: "GET",
         redirect: "manual",
         headers,
@@ -198,6 +199,13 @@ async function defaultTransport(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export function createGoogleDriveApiTransport(
+  fetchImpl: typeof fetch = fetch,
+): GoogleDriveApiTransport {
+  return async (url, accessToken, timeoutMs, maxBytes) =>
+    await defaultTransport(fetchImpl, url, accessToken, timeoutMs, maxBytes);
 }
 
 function mapHttpStatus(statusCode: number): never {
@@ -322,7 +330,7 @@ export class GoogleDriveSource {
   private readonly maxBytes: number;
 
   constructor(private readonly options: GoogleDriveSourceOptions) {
-    this.transport = options.transport ?? defaultTransport;
+    this.transport = options.transport ?? createGoogleDriveApiTransport();
     this.timeoutMs = options.timeoutMs ?? DEFAULT_GOOGLE_DRIVE_API_TIMEOUT_MS;
     this.maxBytes = options.maxBytes ?? MAX_GOOGLE_DRIVE_SOURCE_BYTES;
     if (
