@@ -29,10 +29,7 @@ import {
   registerGoogleDriveOAuthRoutes,
   type GoogleDriveOAuthHttpOptions,
 } from "./google-drive-http.js";
-import {
-  GoogleDriveSource,
-  type GoogleDriveApiTransport,
-} from "./google-drive-source.js";
+import { GoogleDriveSource, type GoogleDriveApiTransport } from "./google-drive-source.js";
 import { GoogleDriveOAuthClient } from "./google-drive-token.js";
 import {
   OpenRouterModelDiscovery,
