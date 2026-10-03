@@ -671,9 +671,7 @@ export function ProjectSources(props: {
             value={driveRole}
             aria-label="Peran Google Drive source"
             disabled={
-              busyKey !== null ||
-              driveStatus?.connected !== true ||
-              driveReconnectRequired
+              busyKey !== null || driveStatus?.connected !== true || driveReconnectRequired
             }
             onChange={(event) => setDriveRole(event.target.value as ProjectSourceRole)}
           >
