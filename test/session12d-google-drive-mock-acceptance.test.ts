@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { createServer } from "@ecorione/shared-server";
+import { createServer } from "../packages/shared-server/src/index.js";
 import {
   MockAgent,
   getGlobalDispatcher,
