@@ -149,11 +149,11 @@ export function registerGoogleDriveOAuthRoutes(
     requirePersonalWorkspace(consumed.workspaceId);
 
     if (body.error !== undefined) {
-      throw new HttpError(
-        400,
-        "GOOGLE_DRIVE_OAUTH_DENIED",
-        "Otorisasi Google Drive tidak diselesaikan.",
-      );
+      return GoogleDriveOAuthCallbackResponseSchema.parse({
+        workspaceId: DEFAULT_WORKSPACE_ID,
+        connected: false,
+        returnPath: consumed.returnPath,
+      });
     }
 
     try {
