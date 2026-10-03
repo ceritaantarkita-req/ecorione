@@ -88,3 +88,30 @@ export const GoogleDriveConnectionStatusSchema = z
   })
   .strict();
 export type GoogleDriveConnectionStatus = z.infer<typeof GoogleDriveConnectionStatusSchema>;
+
+export const MAX_GOOGLE_DRIVE_SOURCE_BYTES = 20 * 1024 * 1024;
+
+export const GoogleDriveFileFetchRequestSchema = z
+  .object({
+    workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
+    fileId: GoogleDriveFileIdSchema,
+  })
+  .strict();
+export type GoogleDriveFileFetchRequest = z.infer<
+  typeof GoogleDriveFileFetchRequestSchema
+>;
+
+export const GoogleDriveFileFetchResponseSchema = z
+  .object({
+    fileId: GoogleDriveFileIdSchema,
+    name: z.string().trim().min(1).max(1024),
+    sourceMimeType: z.string().trim().min(1).max(255),
+    snapshotMimeType: z.string().trim().min(1).max(255),
+    modifiedTime: z.string().datetime({ offset: false }).nullable(),
+    sizeBytes: z.number().int().positive().max(MAX_GOOGLE_DRIVE_SOURCE_BYTES),
+    contentBase64: z.string().min(1),
+  })
+  .strict();
+export type GoogleDriveFileFetchResponse = z.infer<
+  typeof GoogleDriveFileFetchResponseSchema
+>;
