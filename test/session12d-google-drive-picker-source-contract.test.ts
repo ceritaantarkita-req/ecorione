@@ -2,10 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("Session 12D Google Drive Picker browser boundary", () => {
-  const pickerClient = readFileSync(
-    "apps/ai/lib/google-drive-picker-client.ts",
-    "utf8",
-  );
+  const pickerClient = readFileSync("apps/ai/lib/google-drive-picker-client.ts", "utf8");
   const proxy = readFileSync("apps/ai/lib/google-drive-proxy.ts", "utf8");
   const ui = readFileSync("apps/ai/app/projects/ProjectSources.tsx", "utf8");
   const callback = readFileSync(
