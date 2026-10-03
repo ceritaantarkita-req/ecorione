@@ -5,7 +5,10 @@ import {
   type ProjectGoogleDriveIngestResponse,
   type ProjectSourceRole,
 } from "@ecorione/shared-schema";
-import { ingestGoogleDriveSelection } from "./google-drive-ingest-batch";
+import {
+  GoogleDriveOperationError,
+  ingestGoogleDriveSelection,
+} from "./google-drive-ingest-batch";
 
 function file(id: string, name: string): GoogleDriveSelectedFile {
   return { id, name, mimeType: "text/plain" };
@@ -88,6 +91,7 @@ describe("Google Drive multi-file ingest orchestration", () => {
       {
         file: files[1],
         message: "synthetic permission denied",
+        type: null,
       },
     ]);
     expect(result.feedback).toBe(
@@ -116,6 +120,45 @@ describe("Google Drive multi-file ingest orchestration", () => {
     });
     expect(result.successes).toHaveLength(2);
     expect(result.failures).toHaveLength(1);
+  });
+
+  it("stops after reconnect-required while preserving earlier successes", async () => {
+    const files = [
+      file("drive-file-r1", "Ready.txt"),
+      file("drive-file-r2", "Expired.txt"),
+      file("drive-file-r3", "Skipped.txt"),
+      file("drive-file-r4", "Also skipped.txt"),
+    ];
+    const calls: string[] = [];
+
+    const result = await ingestGoogleDriveSelection(files, "source", async (fileId, role) => {
+      calls.push(fileId);
+      if (fileId === "drive-file-r2") {
+        throw new GoogleDriveOperationError(
+          "GOOGLE_DRIVE_RECONNECT_REQUIRED",
+          "Google Drive authorization perlu dihubungkan ulang.",
+        );
+      }
+      return response(fileId, 0, role);
+    });
+
+    expect(calls).toEqual(["drive-file-r1", "drive-file-r2"]);
+    expect(result.successes.map((item) => item.fileId)).toEqual(["drive-file-r1"]);
+    expect(result.failures).toEqual([
+      {
+        file: files[1],
+        message: "Google Drive authorization perlu dihubungkan ulang.",
+        type: "GOOGLE_DRIVE_RECONNECT_REQUIRED",
+      },
+    ]);
+    expect(result.skipped.map((item) => item.id)).toEqual([
+      "drive-file-r3",
+      "drive-file-r4",
+    ]);
+    expect(result.reconnectRequired).toBe(true);
+    expect(result.feedback).toBe(
+      "Google Drive: 1 snapshot tersimpan. 1 gagal — Expired.txt: Google Drive authorization perlu dihubungkan ulang. 2 belum dicoba karena Google Drive perlu dihubungkan ulang.",
+    );
   });
 
   it("reports a clean all-success batch", async () => {
