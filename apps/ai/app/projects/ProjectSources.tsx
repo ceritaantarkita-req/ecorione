@@ -17,6 +17,7 @@ import {
   type ProjectSourceRole,
   type ProjectSourceView,
 } from "@ecorione/shared-schema";
+import { ingestGoogleDriveSelection } from "../../lib/google-drive-ingest-batch";
 import { pickGoogleDriveFiles } from "../../lib/google-drive-picker-client";
 import styles from "./Projects.module.css";
 
@@ -304,31 +305,16 @@ export function ProjectSources(props: {
         return;
       }
 
-      const successes: ProjectGoogleDriveIngestResponse[] = [];
-      const failures: string[] = [];
-      for (const file of selection.files) {
-        try {
-          successes.push(await ingestGoogleDriveFile(file.id, driveRole));
-        } catch (error) {
-          failures.push(
-            `${file.name}: ${error instanceof Error ? error.message : "ingestion gagal"}`,
-          );
-        }
-      }
+      const batch = await ingestGoogleDriveSelection(
+        selection.files,
+        driveRole,
+        ingestGoogleDriveFile,
+      );
 
-      if (successes.length > 0) {
+      if (batch.successes.length > 0) {
         await Promise.all([load(), loadLifecycle(), loadCatalog(), loadDriveStatus()]);
       }
-      setFeedback(
-        [
-          `Google Drive: ${String(successes.length)} snapshot tersimpan.`,
-          failures.length === 0
-            ? ""
-            : `${String(failures.length)} gagal — ${failures.join("; ")}`,
-        ]
-          .filter((part) => part.length > 0)
-          .join(" "),
-      );
+      setFeedback(batch.feedback);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Google Picker gagal dibuka.");
     } finally {

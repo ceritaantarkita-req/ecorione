@@ -159,6 +159,7 @@ This deterministic suite uses synthetic credentials and mocked Google/owner endp
 - explicit blob-file download;
 - deterministic Google-native document export;
 - duplicate Picker file IDs rejected before ingestion;
+- multi-file Picker orchestration keeps successful snapshots when another selected file fails, calls every selected file once in deterministic order, propagates the chosen source/reference role, and reports per-file failures without silent retry;
 - 413/415/429/504/502 source failures mapped without partial Project lifecycle or Artifact binding;
 - failed refresh after an indexed snapshot preserves the last-good Artifact, Context episode, `INDEXED` state, and existing binding across reconnect/permission/not-found/rate/timeout/upstream errors;
 - downstream Artifact-storage or owner-authorization failure after a successful Drive fetch also preserves the last-good indexed Project lifecycle/binding; owner-side cleanup of a successfully-created but unauthorized candidate Artifact is not claimed by this test;

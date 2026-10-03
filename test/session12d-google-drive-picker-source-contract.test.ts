@@ -32,6 +32,9 @@ describe("Session 12D Google Drive Picker browser boundary", () => {
     expect(pickerClient).toContain("Feature.MULTISELECT_ENABLED");
     expect(pickerClient).toContain("GoogleDrivePickerSelectionSchema.safeParse");
     expect(ui).toContain("Pilih file Drive");
+    expect(ui).toContain("ingestGoogleDriveSelection");
+    expect(ui).toContain("if (batch.successes.length > 0)");
+    expect(ui).toContain("setFeedback(batch.feedback)");
     expect(ui).toContain("/ingest-google-drive");
     expect(ui).not.toContain('{ value: "google-drive"');
     expect(ui).toContain("tidak mengindeks seluruh Drive");
