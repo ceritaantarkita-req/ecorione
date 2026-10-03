@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   GOOGLE_DRIVE_FILE_SCOPE,
   GoogleDriveConnectionStatusSchema,
+  GoogleDriveOAuthCallbackRequestSchema,
   GoogleDriveOAuthStartRequestSchema,
   GoogleDrivePickerSelectionSchema,
 } from "./google-drive.js";
@@ -51,18 +52,43 @@ describe("Google Drive shared contracts", () => {
     ).toThrow();
   });
 
+  it("validates callback code/error exclusivity", () => {
+    expect(
+      GoogleDriveOAuthCallbackRequestSchema.parse({
+        code: "authorization-code",
+        state: "s".repeat(43),
+      }),
+    ).toMatchObject({ code: "authorization-code" });
+    expect(() =>
+      GoogleDriveOAuthCallbackRequestSchema.parse({
+        code: "authorization-code",
+        error: "access_denied",
+        state: "s".repeat(43),
+      }),
+    ).toThrow();
+    expect(() =>
+      GoogleDriveOAuthCallbackRequestSchema.parse({
+        state: "s".repeat(43),
+      }),
+    ).toThrow();
+  });
+
   it("never includes token material in connection status", () => {
     const status = GoogleDriveConnectionStatusSchema.parse({
       provider: "google-drive",
+      workspaceId: "ws_personal",
+      available: true,
       connected: true,
       scope: GOOGLE_DRIVE_FILE_SCOPE,
       updatedAt: "2026-10-03T00:00:00.000Z",
     });
     expect(Object.keys(status).sort()).toEqual([
+      "available",
       "connected",
       "provider",
       "scope",
       "updatedAt",
+      "workspaceId",
     ]);
   });
 });
