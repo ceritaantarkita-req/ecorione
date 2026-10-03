@@ -63,13 +63,17 @@ describe("Google Drive multi-file ingest orchestration", () => {
     ];
     const calls: Array<{ fileId: string; role: ProjectSourceRole }> = [];
 
-    const result = await ingestGoogleDriveSelection(files, "reference", async (fileId, role) => {
-      calls.push({ fileId, role });
-      if (fileId === "drive-file-2") {
-        throw new Error("synthetic permission denied");
-      }
-      return response(fileId, fileId === "drive-file-1" ? 0 : 2, role);
-    });
+    const result = await ingestGoogleDriveSelection(
+      files,
+      "reference",
+      async (fileId, role) => {
+        calls.push({ fileId, role });
+        if (fileId === "drive-file-2") {
+          throw new Error("synthetic permission denied");
+        }
+        return response(fileId, fileId === "drive-file-1" ? 0 : 2, role);
+      },
+    );
 
     expect(calls).toEqual([
       { fileId: "drive-file-1", role: "reference" },
