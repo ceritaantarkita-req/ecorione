@@ -83,6 +83,7 @@ export const GoogleDriveConnectionStatusSchema = z
     workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
     available: z.boolean(),
     connected: z.boolean(),
+    pickerAvailable: z.boolean(),
     scope: z.literal(GOOGLE_DRIVE_FILE_SCOPE),
     updatedAt: z.string().datetime({ offset: false }).nullable(),
   })
@@ -111,3 +112,31 @@ export const GoogleDriveFileFetchResponseSchema = z
   })
   .strict();
 export type GoogleDriveFileFetchResponse = z.infer<typeof GoogleDriveFileFetchResponseSchema>;
+
+export const GoogleDrivePickerSessionRequestSchema = z
+  .object({
+    workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
+  })
+  .strict();
+export type GoogleDrivePickerSessionRequest = z.infer<
+  typeof GoogleDrivePickerSessionRequestSchema
+>;
+
+export const GoogleDrivePickerSessionResponseSchema = z
+  .object({
+    workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
+    scope: z.literal(GOOGLE_DRIVE_FILE_SCOPE),
+    accessToken: z.string().min(1).max(32_768),
+    expiresAt: z.string().datetime({ offset: false }),
+    developerKey: z
+      .string()
+      .trim()
+      .min(16)
+      .max(512)
+      .regex(/^[A-Za-z0-9_-]+$/u),
+    appId: z.string().regex(/^\d{6,32}$/u),
+  })
+  .strict();
+export type GoogleDrivePickerSessionResponse = z.infer<
+  typeof GoogleDrivePickerSessionResponseSchema
+>;
