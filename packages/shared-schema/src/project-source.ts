@@ -7,6 +7,7 @@ import {
   WorkspaceIdSchema,
 } from "./ids.js";
 import { GoogleDriveFileIdSchema } from "./google-drive.js";
+import { DEFAULT_WORKSPACE_ID } from "./project.js";
 import { ArtifactPointerSchema, TimestampSchema } from "./memory.js";
 import { FlowGraphIdSchema } from "./nodes.js";
 import { SpacePageIdSchema } from "./space.js";
@@ -273,7 +274,7 @@ export type ProjectMcpResourceIngestResponse = z.infer<
 export const ProjectGoogleDriveIngestRequestSchema = z
   .object({
     operationId: OperationIdSchema,
-    workspaceId: WorkspaceIdSchema,
+    workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
     fileId: GoogleDriveFileIdSchema,
     role: ProjectSourceRoleSchema.default("source"),
   })
