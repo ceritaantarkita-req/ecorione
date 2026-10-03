@@ -85,7 +85,9 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     const result = run(env, "http://example.test:3000");
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("--origin harus HTTPS kecuali loopback localhost");
+    expect(result.stderr).toContain(
+      "--origin harus HTTPS kecuali loopback localhost",
+    );
   });
 
   it("rejects an OAuth redirect origin that does not match the Ai origin", () => {
@@ -120,7 +122,9 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     const result = run(env);
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID belum diisi");
+    expect(result.stderr).toContain(
+      "ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID belum diisi",
+    );
   });
 
   it("rejects a Vault master key that is not canonical 32-byte base64url", () => {
