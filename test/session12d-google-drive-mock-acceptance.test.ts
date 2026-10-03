@@ -479,5 +479,4 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
     expect(eventTypes).not.toContain("PROJECT_SOURCE_INGESTED");
     expect(eventTypes).not.toContain("PROJECT_SOURCE_ATTACHED");
   });
-
 });
