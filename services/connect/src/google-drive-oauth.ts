@@ -1,5 +1,6 @@
 import { createHash, randomBytes as nodeRandomBytes } from "node:crypto";
 import {
+  DEFAULT_WORKSPACE_ID,
   GOOGLE_DRIVE_FILE_SCOPE,
   GOOGLE_DRIVE_PROVIDER_ID,
   GoogleDriveConnectionStatusSchema,
@@ -165,6 +166,7 @@ export class GoogleDriveOAuthStateStore {
 
 export function googleDriveConnectionStatus(
   vault: Pick<CredentialVaultAdmin, "list">,
+  available = true,
 ): GoogleDriveConnectionStatus {
   const metadata = vault
     .list()
@@ -176,6 +178,8 @@ export function googleDriveConnectionStatus(
     );
   return GoogleDriveConnectionStatusSchema.parse({
     provider: GOOGLE_DRIVE_PROVIDER_ID,
+    workspaceId: DEFAULT_WORKSPACE_ID,
+    available,
     connected: metadata !== undefined,
     scope: GOOGLE_DRIVE_FILE_SCOPE,
     updatedAt: metadata?.updatedAt ?? null,
