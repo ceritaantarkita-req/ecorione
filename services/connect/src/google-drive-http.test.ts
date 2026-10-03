@@ -339,6 +339,35 @@ describe("Google Drive OAuth HTTP boundary", () => {
     expect(vault.get("google-drive", "tokens")).toBeUndefined();
   });
 
+  it("disconnects locally when Google says the token is already invalid", async () => {
+    const transport: GoogleDriveOAuthTransport = async (url) => ({
+      statusCode: url.endsWith("/revoke") ? 400 : 500,
+      bodyText: url.endsWith("/revoke")
+        ? JSON.stringify({
+            error: "invalid_token",
+            error_description: "synthetic already revoked token",
+          })
+        : "",
+    });
+    const { app, vault } = fixture(transport);
+    vault.set(
+      "google-drive",
+      "tokens",
+      "refresh-token-private-123456",
+      "2026-10-03T00:00:00.000Z",
+    );
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/v1/integrations/google-drive?workspaceId=ws_personal",
+      headers: auth,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ disconnected: true });
+    expect(vault.get("google-drive", "tokens")).toBeUndefined();
+  });
+
   it("stays dormant when operator OAuth config is absent", async () => {
     const { app } = fixture(undefined, false);
     const status = await app.inject({
