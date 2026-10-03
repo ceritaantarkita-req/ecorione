@@ -94,7 +94,8 @@
     "staging:dr:loss-marker": "node scripts/staging-offhost-dr-loss-marker.mjs",
     "staging:dr2:host-evidence": "node scripts/staging-dr2-host-evidence.mjs",
     "staging:dr2:physical-preflight": "node scripts/staging-dr2-physical-independence-preflight.mjs",
-    "acceptance:google-drive:preflight": "node --env-file=.env scripts/google-drive-local-acceptance-preflight.mjs"
+    "acceptance:google-drive:preflight": "node --env-file=.env scripts/google-drive-local-acceptance-preflight.mjs",
+    "acceptance:google-drive:mock": "vitest run test/session12d-google-drive-mock-acceptance.test.ts services/connect/src/google-drive-mock-acceptance.test.ts services/connect/src/google-drive-http.test.ts services/connect/src/google-drive-source.test.ts services/connect/src/google-drive-source-http.test.ts services/hub/src/project-source-lifecycle-migration.test.ts services/hub/src/project-source-http.test.ts apps/ai/app/api/integrations/google-drive/callback/route.test.ts apps/ai/app/api/integrations/google-drive/picker-session/route.test.ts test/session12d-google-drive-picker-source-contract.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
