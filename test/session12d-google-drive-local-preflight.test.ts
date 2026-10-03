@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const SCRIPT = "scripts/google-drive-local-acceptance-preflight.mjs";
+const DEFAULT_ORIGIN = "http://localhost:3000";
+const CALLBACK_PATH = "/api/integrations/google-drive/callback";
 const SECRET_NAMES = [
   "ECORIONE_CONNECT_VAULT_MASTER_KEY",
   "ECORIONE_GOOGLE_DRIVE_CLIENT_ID",
@@ -15,21 +17,18 @@ const SECRET_NAMES = [
 function baseEnv(): NodeJS.ProcessEnv {
   const next = { ...process.env };
   for (const name of SECRET_NAMES) delete next[name];
+
   return {
     ...next,
     ECORIONE_CONNECT_VAULT_MASTER_KEY: Buffer.alloc(32, 7).toString("base64url"),
     ECORIONE_GOOGLE_DRIVE_CLIENT_ID: "example-client-id-123456",
-    ECORIONE_GOOGLE_DRIVE_REDIRECT_URI:
-      "http://localhost:3000/api/integrations/google-drive/callback",
+    ECORIONE_GOOGLE_DRIVE_REDIRECT_URI: `${DEFAULT_ORIGIN}${CALLBACK_PATH}`,
     ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY: "picker_example_key_123456",
     ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID: "123456789012",
   };
 }
 
-function run(
-  env: NodeJS.ProcessEnv,
-  origin = "http://localhost:3000",
-): ReturnType<typeof spawnSync> {
+function run(env: NodeJS.ProcessEnv, origin = DEFAULT_ORIGIN) {
   return spawnSync(process.execPath, [SCRIPT, "--origin", origin], {
     env,
     encoding: "utf8",
@@ -38,7 +37,7 @@ function run(
 }
 
 describe("Session 12D Google Drive local acceptance preflight", () => {
-  it("documents every local OAuth/Picker variable and the executable preflight command", () => {
+  it("documents the local operator contract", () => {
     const example = readFileSync(".env.example", "utf8");
     const packageJson = readFileSync("package.json", "utf8");
     const runbook = readFileSync("docs/google-drive-operations.md", "utf8");
@@ -46,6 +45,7 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     for (const name of SECRET_NAMES) {
       expect(example).toContain(name);
     }
+
     expect(example).toContain("ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID=");
     expect(packageJson).toContain('"acceptance:google-drive:preflight"');
     expect(packageJson).toContain(
@@ -58,7 +58,7 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     expect(runbook).toContain("does **not** prove");
   });
 
-  it("passes a complete local OAuth + Picker + Vault configuration", () => {
+  it("passes complete local config", () => {
     const result = run(baseEnv());
 
     expect(result.status).toBe(0);
@@ -69,20 +69,18 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     expect(result.stdout).toContain("oauth_client_secret=absent");
     expect(result.stdout).toContain("picker_configured=1");
     expect(result.stdout).toContain("redirect_origin=http://localhost:3000");
-    expect(result.stdout).toContain(
-      "redirect_path=/api/integrations/google-drive/callback",
-    );
+    expect(result.stdout).toContain(`redirect_path=${CALLBACK_PATH}`);
     expect(result.stdout).not.toContain("picker_example_key_123456");
     expect(result.stdout).not.toContain("example-client-id-123456");
   });
 
-  it("rejects an insecure non-loopback Ai origin", () => {
+  it("rejects insecure non-loopback origin", () => {
+    const origin = "http://example.test:3000";
     const env = {
       ...baseEnv(),
-      ECORIONE_GOOGLE_DRIVE_REDIRECT_URI:
-        "http://example.test:3000/api/integrations/google-drive/callback",
+      ECORIONE_GOOGLE_DRIVE_REDIRECT_URI: `${origin}${CALLBACK_PATH}`,
     };
-    const result = run(env, "http://example.test:3000");
+    const result = run(env, origin);
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
@@ -90,7 +88,7 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     );
   });
 
-  it("rejects an OAuth redirect origin that does not match the Ai origin", () => {
+  it("rejects redirect origin mismatch", () => {
     const env = {
       ...baseEnv(),
       ECORIONE_GOOGLE_DRIVE_REDIRECT_URI:
@@ -105,7 +103,7 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     );
   });
 
-  it("rejects a redirect URI that does not terminate at the Ai callback route", () => {
+  it("rejects the wrong callback path", () => {
     const env = {
       ...baseEnv(),
       ECORIONE_GOOGLE_DRIVE_REDIRECT_URI: "http://localhost:3000/oauth/callback",
@@ -113,12 +111,13 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     const result = run(env);
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("/api/integrations/google-drive/callback");
+    expect(result.stderr).toContain(CALLBACK_PATH);
   });
 
-  it("rejects incomplete Picker configuration", () => {
+  it("rejects incomplete Picker config", () => {
     const env = baseEnv();
     delete env.ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID;
+
     const result = run(env);
 
     expect(result.status).toBe(1);
@@ -127,7 +126,7 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     );
   });
 
-  it("rejects a Vault master key that is not canonical 32-byte base64url", () => {
+  it("rejects an invalid Vault master key", () => {
     const env = {
       ...baseEnv(),
       ECORIONE_CONNECT_VAULT_MASTER_KEY: "not-a-32-byte-key",
