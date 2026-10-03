@@ -5,6 +5,7 @@ describe("Session 12D Google Drive Picker browser boundary", () => {
   const pickerClient = readFileSync("apps/ai/lib/google-drive-picker-client.ts", "utf8");
   const proxy = readFileSync("apps/ai/lib/google-drive-proxy.ts", "utf8");
   const ui = readFileSync("apps/ai/app/projects/ProjectSources.tsx", "utf8");
+  const batch = readFileSync("apps/ai/lib/google-drive-ingest-batch.ts", "utf8");
   const callback = readFileSync(
     "apps/ai/app/api/integrations/google-drive/callback/route.ts",
     "utf8",
@@ -38,6 +39,18 @@ describe("Session 12D Google Drive Picker browser boundary", () => {
     expect(ui).toContain("/ingest-google-drive");
     expect(ui).not.toContain('{ value: "google-drive"');
     expect(ui).toContain("tidak mengindeks seluruh Drive");
+  });
+
+  it("stops multi-file ingestion after auth loss and surfaces reconnect UX", () => {
+    expect(batch).toContain('typed?.type === "GOOGLE_DRIVE_RECONNECT_REQUIRED"');
+    expect(batch).toContain("skipped.push(...files.slice(index + 1))");
+    expect(batch).toContain("reconnectRequired = true");
+    expect(ui).toContain("driveReconnectRequired");
+    expect(ui).toContain('"GOOGLE_DRIVE_RECONNECT_REQUIRED"');
+    expect(ui).toContain("Putuskan untuk hubungkan ulang");
+    expect(ui).toContain(
+      "Perlu dihubungkan ulang. Putuskan koneksi lama lalu hubungkan kembali.",
+    );
   });
 
   it("never persists the Picker bearer token in browser storage", () => {
