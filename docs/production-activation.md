@@ -1,4 +1,7 @@
-# ECORIONE — Production Activation Workstream
+# ECORIONE — Production Activation
+
+> **CURRENT OPERATING NOTICE — 2026-10-03:** the operator retired the current SumoPod VPS from the active staging role and does not plan to renew it. There is currently no active remote staging target. This production runbook remains deferred and must not reinterpret local Docker/Compose acceptance as production or remote-staging proof. A replacement staging/production host requires a new explicit infrastructure decision. Current transition: [verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
+Workstream
 
 Status: **PUBLIC PRODUCTION CUTOVER DEFERRED / SUMOPOD REMOTE STAGING VERIFIED**
 Date: 2026-09-26
