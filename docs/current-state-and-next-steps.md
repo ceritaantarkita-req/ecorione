@@ -1,19 +1,48 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-10-02**
+Last updated: **2026-10-03**
 
-Status: **CURRENT / SESSION 11 MCP ACTION PRODUCT CONVERGENCE CLOSED-PASS-STAGING VERIFIED / DR-2 CHECKPOINT 2 DEFERRED / PRODUCTION CUTOVER DEFERRED**
+Status: **CURRENT / SESSION 12 NATIVE GOOGLE DRIVE ACTIVE / 12A–12C MERGED / 12D EXACT-HEAD GREEN + LOCAL ACCEPTANCE PENDING / SUMOPOD ACTIVE-STAGING ROLE RETIRED / DR-2 + PRODUCTION DEFERRED**
+
+## Current operating override — 2026-10-03
+
+The operator has decided not to renew the current SumoPod VPS when its current paid period ends. **SumoPod is no longer the active staging target for new ECORIONE work.** Do not repair, redeploy, or require new proof from that host unless the operator explicitly reauthorizes it.
+
+Historical SumoPod evidence remains valid at the boundary/date where it was recorded. The last proven actual SumoPod runtime is Session 12A merge `084d669d8631a2590e7a9e88b62e161691bf4fc9` / image `staging-084d669d8631` via Staging Deploy #2183 with 15/15 services running and healthy Operations. Session 12B merge `977689ffff8bdf2d00fd1ed34c172d3452d98d17` and Session 12C merge/current `main` `4326e77b2f77aa48a4be075c5fab2ff8b9983655` passed their repository quality gates, but their real SumoPod deploy attempts #2226/#2228 failed before mutation because the host could not determine the active ECORIONE image. They are **not** staging-verified.
+
+Current Native Google Drive work is Session 12:
+
+```text
+12A OAuth foundation           = MERGED / quality gates PASS
+12B selected-file fetch        = MERGED / quality gates PASS / no new remote-staging proof
+12C Project Source lifecycle   = MERGED / quality gates PASS / current main
+12D Picker/browser UX          = PR #444 DRAFT
+12D reviewed head              = a6d7073c63d9d0f6581af67c2bef3a599629303e
+12D CI                         = #2748 PASS
+12D Product Eval               = #1987 PASS
+12D MCP External HTTPS         = #1278 PASS
+12D browser acceptance         = #446 PASS
+next gate                      = local Docker/Compose acceptance
+```
+
+Until a replacement external staging target is explicitly selected, runtime-changing product closure uses reviewed GitHub gates plus local Docker/Compose acceptance on operator-controlled compute. This is a development/acceptance model only; it does not imply production readiness, remote-host evidence, DR-2 physical independence, or public-production authorization.
+
+Canonical transition record:
+[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 ## Repository identity
 
 ```text
 repository                 = ceritaantarkita-req/ecorione
 default branch             = main
-session 11 product merge   = 9bd2b87fc4f3755b837c74d6b42585e0c5181870 (PR #431)
-latest runtime/control main = 5f1245083047c4014789e90c2ba25b7e16ebe366 (PR #437 CD hardening)
-session 11 reviewed head   = cd57404e767335e46abbdc8bc629774f32ad2b70 (PR #431 head)
-staging-verified current   = 5f1245083047c4014789e90c2ba25b7e16ebe366
-staging image              = staging-5f1245083047
+current main               = 4326e77b2f77aa48a4be075c5fab2ff8b9983655 (Session 12C)
+active implementation      = Session 12 Native Google Drive
+open implementation PR    = #444 (12D Picker/browser UX, DRAFT)
+PR #444 reviewed head      = a6d7073c63d9d0f6581af67c2bef3a599629303e
+active remote staging      = NONE
+last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
+last proven SumoPod image   = staging-084d669d8631
+interim runtime acceptance = local Docker/Compose
 ```
 
 Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Exact PR head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI #2600, Product Eval #1839, and PCS-06 Integrated Browser Acceptance #371. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI #2601 and Product Eval #1840 passed, and actual Staging Deploy #1950 deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`. Public/auth and MCP smoke passed, Operations reported `healthy: true`, exact-host identity matched with a clean worktree, all **15/15** configured services were running, and capacity stabilized at **29.95 GiB free**.
@@ -75,7 +104,7 @@ Latest proof:
 | expanded automatic documentation-only allowlist | `docs/**`, `README.md`, `AGENTS.md`; PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9` LIVE VERIFIED via Staging #2166/#2167 deploy SKIPPED |
 | explicit `workflow_dispatch` | still allowed |
 
-SumoPod remains **staging, not production**.
+SumoPod historical staging evidence remains valid, but the operator retired SumoPod from the active staging role on 2026-10-03. There is currently **no active remote staging target**. Public production remains separate and deferred.
 
 ## Current architecture
 
