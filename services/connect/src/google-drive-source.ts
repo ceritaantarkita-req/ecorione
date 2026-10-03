@@ -10,6 +10,7 @@ import { z } from "zod";
 import type { ProviderCredentialReader } from "./credential-vault.js";
 import {
   GoogleDriveOAuthUpstreamError,
+  type GoogleDriveAccessToken,
   type GoogleDriveOAuthClient,
 } from "./google-drive-token.js";
 
@@ -322,7 +323,7 @@ export class GoogleDriveSource {
         "Google Drive belum terhubung.",
       );
     }
-    let access;
+    let access: GoogleDriveAccessToken;
     try {
       access = await this.options.oauthClient.refreshAccessToken(refreshToken);
     } catch (error) {
