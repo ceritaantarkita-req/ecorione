@@ -31,7 +31,10 @@ export const GoogleDriveOAuthStartRequestSchema = z
       .string()
       .min(1)
       .max(2048)
-      .regex(/^\/(?!\/)[^\r\n]*$/u, "returnPath harus relative path same-origin."),
+      .regex(
+        /^\/(?!\/)[^\\\r\n]*$/u,
+        "returnPath harus relative path same-origin tanpa backslash.",
+      ),
   })
   .strict();
 export type GoogleDriveOAuthStartRequest = z.infer<typeof GoogleDriveOAuthStartRequestSchema>;
