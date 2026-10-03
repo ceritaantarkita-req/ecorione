@@ -95,7 +95,7 @@ describe("GoogleDriveSource", () => {
       {
         sourceMimeType: "application/vnd.google-apps.spreadsheet",
         snapshotMimeType:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "application/pdf",
       },
       {
         sourceMimeType: "application/vnd.google-apps.presentation",
