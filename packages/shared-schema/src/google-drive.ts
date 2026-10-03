@@ -97,9 +97,7 @@ export const GoogleDriveFileFetchRequestSchema = z
     fileId: GoogleDriveFileIdSchema,
   })
   .strict();
-export type GoogleDriveFileFetchRequest = z.infer<
-  typeof GoogleDriveFileFetchRequestSchema
->;
+export type GoogleDriveFileFetchRequest = z.infer<typeof GoogleDriveFileFetchRequestSchema>;
 
 export const GoogleDriveFileFetchResponseSchema = z
   .object({
@@ -112,6 +110,4 @@ export const GoogleDriveFileFetchResponseSchema = z
     contentBase64: z.string().min(1),
   })
   .strict();
-export type GoogleDriveFileFetchResponse = z.infer<
-  typeof GoogleDriveFileFetchResponseSchema
->;
+export type GoogleDriveFileFetchResponse = z.infer<typeof GoogleDriveFileFetchResponseSchema>;
