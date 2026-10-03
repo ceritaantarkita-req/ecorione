@@ -1,14 +1,30 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-10-02**
+Last updated: **2026-10-03**
 
-Status: **SESSION 11 MCP ACTION PRODUCT CONVERGENCE CLOSED / PASS / STAGING VERIFIED / NEXT SESSION NOT YET STARTED**
+Status: **SESSION 12 NATIVE GOOGLE DRIVE ACTIVE / 12A–12C MERGED / 12D EXACT-HEAD GREEN + LOCAL ACCEPTANCE PENDING / SUMOPOD RETIRED AS ACTIVE STAGING**
 
 Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md). Session 11 remains closed through PR #431. PR #437 expanded the automatic documentation-only boundary to `docs/**`, `README.md`, and `AGENTS.md`; PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9` live-verified it with CI #2709 PASS, Product Eval #1948 PASS, and Staging Deploy #2166/#2167 both gate PASS / deploy SKIPPED. Runtime/control therefore remains `5f1245083047c4014789e90c2ba25b7e16ebe366` and image `staging-5f1245083047`.
 
+Current resume pointer: [verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
+
+The operator retired SumoPod from the active staging role on 2026-10-03 because the current VPS will not be renewed. Historical staging evidence remains historical truth; do not retry/repair SumoPod for current feature closure. Until a replacement host is explicitly selected, use exact-head GitHub gates plus local Docker/Compose runtime acceptance.
+
+## Session 12 — Native Google Drive
+
+Current bounded queue:
+
+- **12A OAuth foundation** — MERGED / quality gates PASS through PR #441 / merge `084d669d8631a2590e7a9e88b62e161691bf4fc9`; this is also the last proven actual SumoPod runtime via Staging Deploy #2183.
+- **12B selected-file fetch/export** — MERGED / quality gates PASS through PR #442 / merge `977689ffff8bdf2d00fd1ed34c172d3452d98d17`; no successful new SumoPod runtime proof.
+- **12C governed Project Source lifecycle** — MERGED / quality gates PASS through PR #443 / merge/current `main` `4326e77b2f77aa48a4be075c5fab2ff8b9983655`; no successful new SumoPod runtime proof.
+- **12D Picker/browser UX** — PR #444 DRAFT, exact reviewed head `a6d7073c63d9d0f6581af67c2bef3a599629303e`; CI #2748, Product Eval #1987, MCP #1278, Browser #446 all PASS.
+- **NEXT:** local Docker/Compose acceptance for 12D on operator-controlled compute; then review/merge exact head and run merged-main gates.
+
+Do not open 12E or a broader connector expansion until 12D local acceptance/merge closure is recorded.
+
 ## Current queue
 
-There is **no active Product Evolution, PCS, A-series, original Batch, or ECX numbered implementation batch**.
+There is **no active Product Evolution, PCS, A-series, original Batch, or ECX numbered implementation batch**. Session 12 Native Google Drive is the active explicitly authorized product scope.
 
 Closed current baselines:
 
@@ -39,7 +55,7 @@ Closed current baselines:
 - Session 9 — Automation product convergence (first-class `/automations`, existing event/webhook Triggers, protected token reveal, bounded public webhook ingress) — CLOSED / PASS / STAGING VERIFIED through PR #427.
 - Session 10 — deterministic Condition Trigger convergence (event-driven bounded predicate, false-condition no-op, existing Hub/Temporal authority path, Automation UI) — CLOSED / PASS / STAGING VERIFIED through PR #429.
 - Session 11 — MCP Action product convergence (configured Connect MCP server/tool picker, explicit L0 READ discovery, bounded runtime argument templates, existing Connect/Hub execution governance) — CLOSED / PASS / STAGING VERIFIED through PR #431.
-- Post-Session-11 CD hardening — expanded `docs/**`, `README.md`, and `AGENTS.md` automatic skip boundary is **CLOSED / PASS / LIVE VERIFIED** through PR #438; manual dispatch and non-docs exact-SHA deployment remain intact; this does not open Session 12.
+- Post-Session-11 CD hardening — expanded `docs/**`, `README.md`, and `AGENTS.md` automatic skip boundary is **CLOSED / PASS / LIVE VERIFIED** through PR #438. That historical SumoPod CD path is preserved but is not an active deployment target after the 2026-10-03 operator retirement decision.
 
 No Batch 8, PE-09, PCS-11, Batch 13, next A-series item, or post-4F provider session is automatically opened.
 
@@ -182,7 +198,7 @@ Do not select/provision/pay for external infrastructure without explicit operato
 
 Public production promotion remains **DEFERRED / SEPARATE GATE**.
 
-SumoPod is current verified staging.
+There is currently **no active remote staging target**. SumoPod is retired from current operations; its historical staging evidence remains valid at the dates/revisions recorded.
 
 Do not reinterpret staging Basic Auth, staging runtime evidence, or DR evidence as final production authorization/SLA.
 
@@ -193,7 +209,7 @@ The following remain outside the closed Session 4E/4F roadmap unless explicitly 
 - a newly selected post-4F provider/agentic scope;
 - DR-2 checkpoint 2;
 - production cutover;
-- native Google Drive integration;
+- Native Google Drive work is already active as Session 12; do not reopen it as a separate future scope;
 - Workspace registry/switcher;
 - broader multi-user identity/final RBAC;
 - hosted-provider paid reruns/W18 freshness;
@@ -217,7 +233,7 @@ When the operator selects the next real scope:
 6. require exact-head gates;
 7. merge only reviewed head;
 8. prove merged-main gates;
-9. deploy exact reviewed `main` to staging only when the scope changes runtime;
+9. while no external staging target exists, perform bounded local Docker/Compose acceptance for runtime-changing work; remote staging proof becomes required again only after a replacement target is explicitly selected;
 10. update current docs once, after the real state is known;
 11. keep dated evidence historical.
 
