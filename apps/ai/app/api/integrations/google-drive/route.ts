@@ -9,7 +9,11 @@ export async function DELETE(request: Request): Promise<Response> {
   }
   const workspaceId = url.searchParams.get("workspaceId") ?? DEFAULT_WORKSPACE_ID;
   if (workspaceId !== DEFAULT_WORKSPACE_ID) {
-    return jsonError(400, "BAD_REQUEST", "Native Google Drive V1 hanya untuk Personal Workspace.");
+    return jsonError(
+      400,
+      "BAD_REQUEST",
+      "Native Google Drive V1 hanya untuk Personal Workspace.",
+    );
   }
   return proxyGoogleDriveOwner(
     `/v1/integrations/google-drive?workspaceId=${encodeURIComponent(workspaceId)}`,
