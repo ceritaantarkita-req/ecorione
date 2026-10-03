@@ -4,16 +4,22 @@
 
 ECORIONE is a local-first monorepo that keeps AI context continuous across models/providers while preserving explicit ownership boundaries, approvals, auditability, durable workflows, MCP interoperability, and spend control.
 
-## Current status — 2026-10-02
+## Current status — 2026-10-03
 
-The latest **staging-verified runtime-changing** baseline is:
+Current repository/product boundary:
 
 ```text
-runtime/control baseline = 5f1245083047c4014789e90c2ba25b7e16ebe366
-staging image            = staging-5f1245083047
+GitHub main                 = 4326e77b2f77aa48a4be075c5fab2ff8b9983655 (Session 12C)
+active scope                = Session 12 Native Google Drive
+12D draft PR                = #444
+12D reviewed head           = a6d7073c63d9d0f6581af67c2bef3a599629303e
+12D gates                   = CI #2748 / Eval #1987 / MCP #1278 / Browser #446 PASS
+active remote staging       = NONE
+last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
+next gate                   = local Docker/Compose acceptance
 ```
 
-Session 11 product runtime remains closed through PR #431. PR #436 exposed that the original docs-only CD guard covered only `docs/**`, so its root `README.md` and `AGENTS.md` changes caused a successful but unnecessary staging redeploy. PR #437 expanded the documentation-only boundary to `docs/**`, `README.md`, and `AGENTS.md`, then merged as `5f1245083047c4014789e90c2ba25b7e16ebe366`. Merged-main CI #2707, Product Eval #1946, and Staging Deploy #2163 passed. Current staging image is `staging-5f1245083047`; Operations is healthy, 15/15 services are running, and stabilized free disk is 29.91 GiB.
+The operator retired SumoPod from the active staging role on 2026-10-03 because the current VPS will not be renewed. Historical SumoPod evidence remains valid at its documented boundary; it is no longer the current deployment target. Current transition: [docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md](docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 NVIDIA API Catalog / NIM is now a first-class hosted provider using the existing Connect/Vault/OpenAI-compatible boundary, pinned to `z-ai/glm-5.3`. The staging **operator kill switch was opened** under bounded spend controls; normal runtime activation still happens through Settings when a verified provider is saved/activated. The user's actual NVIDIA secret has **not** been stored or validated by this checkpoint.
 
@@ -27,7 +33,7 @@ Session 5 — **Project Source Picker** — is **CLOSED / PASS / STAGING VERIFIE
 
 Session 6 — **External Source Lifecycle** — is **CLOSED / PASS / STAGING VERIFIED** through PR #421 and Staging Deploy #1968.
 
-Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED**: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Post-Session-11 CD hardening through PR #437 is now **LIVE VERIFIED** by docs-only PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9`: merged-main CI #2709 and Product Eval #1948 passed, while Staging Deploy #2166 and #2167 both gate-passed and skipped deploy. Runtime staging therefore remains `5f1245083047c4014789e90c2ba25b7e16ebe366` / `staging-5f1245083047`. There is **no active Session 12**. Current safe-resume checkpoint: [docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md](docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
+Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED** at their documented historical boundaries: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Session 12 Native Google Drive is now active: 12A–12C are merged, while 12D PR #444 is exact-head green and awaits local runtime acceptance. Current safe-resume checkpoint: [docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md](docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -167,14 +173,14 @@ See:
 
 ## Current active / separate boundaries
 
-Sessions 4E–11 are **closed / pass / staging verified** at their documented boundaries. Post-Session-11 docs-only CD hardening is also closed and live-verified. No implementation session is active; any Session 12 work requires explicit operator authorization.
+Sessions 4E–11 are **closed / pass / staging verified** at their documented historical boundaries. Session 12 Native Google Drive is explicitly authorized and active; 12D local acceptance is the next bounded gate.
 
 The following remain separate explicit decisions:
 
 - any newly selected post-4F provider/agentic scope;
 - **DR-2 checkpoint 2** physical-independence target selection and proof;
 - public production promotion/cutover;
-- native Google Drive integration;
+- Session 12 Native Google Drive is active; any expansion beyond the accepted 12A–12D boundary requires a new explicit decision;
 - broader Workspace registry / multi-user identity / final RBAC;
 - hosted-provider paid reruns / W18 freshness;
 - external A2A interoperability;
@@ -185,7 +191,7 @@ The following remain separate explicit decisions:
 - automatic destructive Historical Ledger purge scheduling;
 - AutoClick / L4 autonomy.
 
-SumoPod is **verified staging, not production**.
+SumoPod is **historical verified staging, not production**, and is no longer the active remote staging target.
 
 ## Repository hygiene
 
@@ -219,7 +225,7 @@ Repository text is normalized by `.gitattributes` to LF, with `.cmd` / `.bat` ma
 
 ## Production / self-host
 
-Repository-side production/self-host tooling exists, but the proven runtime boundary is still **SumoPod staging**.
+Repository-side production/self-host tooling exists. There is currently **no active remote staging target**; current development acceptance is local-first until a replacement host is explicitly selected.
 
 The original total-SumoPod-host-loss Off-host DR drill is CLOSED / PASS at its documented boundary. **DR-2 physical independence is not yet proven** and public production promotion remains a separate explicit gate.
 

@@ -1,14 +1,16 @@
 # ECORIONE — GitHub to SumoPod Staging Continuous Deployment
 
-Last updated: **2026-09-28**
+Last updated: **2026-10-03**
 
-Status: **PCS-08 CLOSED / PASS**
+Status: **HISTORICAL / PCS-08 CLOSED / PASS / CURRENT SUMOPOD TARGET RETIRED**
 
-PCS-08 automates deployment of the current reviewed GitHub `main` revision to the proven SumoPod staging runtime. PCS-09 has since CLOSED / PASS the staging persistence/security/backup/observability boundary. Neither closure promotes staging to production.
+PCS-08 historically automated deployment of reviewed GitHub `main` to the proven SumoPod staging runtime. PCS-09 subsequently CLOSED / PASS the staging persistence/security/backup/observability boundary. Neither closure promotes staging to production.
+
+> **Current operating notice — 2026-10-03:** the operator retired the current SumoPod VPS from the active staging role and does not plan to renew it. This CD implementation is preserved as proven/reusable machinery, but there is currently **no active remote staging target**. Do not retry SumoPod deployment, re-enable it as a release requirement, or provision a replacement host without explicit operator authorization. Current runtime-changing development uses exact-head GitHub gates plus bounded local Docker/Compose acceptance. See [verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 **2026-09-24 auth closure:** the public smoke contract now includes the general Ai human-authentication boundary. Final governed staging acceptance on `b73e885d51e82716d5b29b3b31d207aae5ec95d0` proved the protected login bootstrap, representative unauthenticated Ai read/mutation failures, the separate MCP/OAuth boundary, healthy authenticated Operations, and exact-host identity. This remains staging evidence, not production promotion. Evidence: [verification/ai-human-auth-closure-2026-09-24.md](verification/ai-human-auth-closure-2026-09-24.md).
 
-**Current CD state:** the governed post-merge path remains active/proven. The latest audited **runtime-changing compatibility baseline** `9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7` passed CI #2509 + Product Eval #1748; Staging Deploy #1778 was gate-only and #1779 performed the actual runtime-changing deployment. The host matched the target SHA, all 15 configured services were running, Operations was healthy, public/auth smoke passed, host evidence showed 24.02 GiB free, and capacity stabilized at 25.36 GiB free. Later docs-only merges may advance exact Git/staging SHA without changing this compatibility baseline; exact live revision should be read from the latest successful deploy receipt rather than inferred from this runbook.
+**Historical CD state:** the governed post-merge path is proven but currently dormant because there is no active SumoPod target. The latest audited **runtime-changing compatibility baseline** `9bc4cfd1bbfb2b2aed7bef1ec4de24024bd491d7` passed CI #2509 + Product Eval #1748; Staging Deploy #1778 was gate-only and #1779 performed the actual runtime-changing deployment. The host matched the target SHA, all 15 configured services were running, Operations was healthy, public/auth smoke passed, host evidence showed 24.02 GiB free, and capacity stabilized at 25.36 GiB free. Later docs-only merges may advance exact Git/staging SHA without changing this compatibility baseline; exact live revision should be read from the latest successful deploy receipt rather than inferred from this runbook.
 
 The root Dockerfile now uses a pinned multi-stage build. The builder installs `python3 make g++` so native dependency fallback compilation does not depend on a prebuilt binary being reachable; the final runtime stage remains the pinned slim Node image without the compiler toolchain. #1525 proved this path on SumoPod with `better-sqlite3 install: Done`.
 

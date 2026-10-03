@@ -16,7 +16,23 @@ Before changing the repo:
 
 Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evidence. They are **not current work queues**.
 
-## Current compatibility baseline — 2026-10-02
+## Current compatibility baseline — 2026-10-03
+
+**Current operating override:** SumoPod was retired from the active staging role by operator decision on 2026-10-03. Do not retry/repair/deploy SumoPod for current feature closure unless explicitly reauthorized. Preserve all dated SumoPod evidence as historical truth.
+
+Current product/repository boundary:
+
+```text
+GitHub main                = 4326e77b2f77aa48a4be075c5fab2ff8b9983655 (Session 12C)
+active scope               = Session 12 Native Google Drive
+PR #444 reviewed head      = a6d7073c63d9d0f6581af67c2bef3a599629303e
+PR #444 gates              = CI #2748 / Eval #1987 / MCP #1278 / Browser #446 PASS
+active remote staging      = NONE
+last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
+next runtime gate          = local Docker/Compose acceptance
+```
+
+Until a replacement external staging target is explicitly selected, runtime-changing development work may close branch-level acceptance using deterministic GitHub gates plus bounded local Docker/Compose acceptance. Never relabel such work as `STAGING VERIFIED`.
 
 Latest audited **runtime-changing** repository/staging baseline:
 
@@ -56,7 +72,7 @@ Latest NVIDIA test/runtime checkpoint:
 Underlying provider rollout checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
-Use `docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md` as the overall handoff pointer. No implementation session is active until the operator explicitly opens the next scope.
+Use `docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md` as the overall handoff pointer. Session 12 Native Google Drive is the active explicitly authorized implementation scope.
 
 Closed roadmap families:
 
@@ -88,7 +104,7 @@ Closed roadmap families:
 - Session 11 MCP Action product convergence — **CLOSED / PASS / STAGING VERIFIED** through PR #431;
 - post-Session-11 CD hardening — **CLOSED / PASS / LIVE VERIFIED** through PR #438; automatic documentation-only allowlist is `docs/**`, `README.md`, and `AGENTS.md`; runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366`.
 
-There is no active implementation queue. Session 12 remains unopened until explicit operator authorization. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
+Session 12 Native Google Drive is explicitly authorized and active. 12A–12C are merged; 12D PR #444 is exact-head green and awaits local acceptance. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
 
 Open Issue #277 remains the deferred DR-2 tracker.
 
@@ -201,13 +217,13 @@ Canonical checkpoint:
 
 ## Current active / separate scopes
 
-No implementation session is active. Sessions 4E, 4F, 5, and 6 are closed at their documented boundaries. Open a new session only when the operator explicitly authorizes it; do not widen prior scopes implicitly.
+Session 12 Native Google Drive is active. Sessions 4E–11 remain closed at their documented boundaries. Do not widen Session 12 or open another scope without explicit operator authorization.
 
 Do not start these separate scopes without explicit operator authorization:
 
 - DR-2 checkpoint 2 and physical-independence runtime proof;
 - public production cutover;
-- native Google Drive integration;
+- Session 12 Native Google Drive is active; do not reopen or widen it beyond the accepted scope;
 - Workspace registry/switcher or broader multi-user identity/final RBAC;
 - paid hosted-provider/W18 freshness work;
 - external A2A;
@@ -218,7 +234,7 @@ Do not start these separate scopes without explicit operator authorization:
 - automatic destructive Historical Ledger purge;
 - AutoClick / L4 autonomy.
 
-SumoPod is staging, not production. The staging Basic-Auth human gate is a bounded single-operator staging control, not final multi-user identity/RBAC.
+SumoPod is no longer an active staging target. Its historical Basic-Auth/runtime evidence remains bounded historical staging proof and is not final multi-user identity/RBAC or production proof.
 
 ## Git / closure discipline
 
