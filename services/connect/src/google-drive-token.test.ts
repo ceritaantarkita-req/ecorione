@@ -145,6 +145,41 @@ describe("GoogleDriveOAuthClient", () => {
     ]);
   });
 
+  it("treats an already-invalid Google token as successfully disconnected", async () => {
+    const transport: GoogleDriveOAuthTransport = async () => ({
+      statusCode: 400,
+      bodyText: JSON.stringify({
+        error: "invalid_token",
+        error_description: "synthetic already revoked token",
+      }),
+    });
+    const client = new GoogleDriveOAuthClient(config, { transport });
+
+    await expect(client.revoke("refresh-token-private-123456")).resolves.toBeUndefined();
+  });
+
+  it("still fails closed for non-idempotent revoke errors", async () => {
+    const privateDescription = "synthetic malformed revoke request detail";
+    const transport: GoogleDriveOAuthTransport = async () => ({
+      statusCode: 400,
+      bodyText: JSON.stringify({
+        error: "invalid_request",
+        error_description: privateDescription,
+      }),
+    });
+    const client = new GoogleDriveOAuthClient(config, { transport });
+
+    let thrown: unknown;
+    try {
+      await client.revoke("refresh-token-private-123456");
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(GoogleDriveOAuthUpstreamError);
+    expect(String((thrown as Error).message)).not.toContain(privateDescription);
+  });
+
   it("rejects invalid timeout configuration deterministically", () => {
     expect(() => new GoogleDriveOAuthClient(config, { timeoutMs: 100 })).toThrow(
       GoogleDriveOAuthUpstreamError,
