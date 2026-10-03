@@ -94,8 +94,7 @@ describe("GoogleDriveSource", () => {
       },
       {
         sourceMimeType: "application/vnd.google-apps.spreadsheet",
-        snapshotMimeType:
-          "application/pdf",
+        snapshotMimeType: "application/pdf",
       },
       {
         sourceMimeType: "application/vnd.google-apps.presentation",
@@ -199,9 +198,9 @@ describe("GoogleDriveSource", () => {
 
   it("rejects non-Personal Workspace and upstream identity mismatch", async () => {
     const first = source();
-    await expect(first.adapter.fetchSelectedFile("ws_other", "file-123")).rejects.toBeInstanceOf(
-      GoogleDriveSourceError,
-    );
+    await expect(
+      first.adapter.fetchSelectedFile("ws_other", "file-123"),
+    ).rejects.toBeInstanceOf(GoogleDriveSourceError);
 
     const second = source({
       metadata: {
@@ -212,7 +211,9 @@ describe("GoogleDriveSource", () => {
         capabilities: { canDownload: true },
       },
     });
-    await expect(second.adapter.fetchSelectedFile("ws_personal", "file-123")).rejects.toMatchObject({
+    await expect(
+      second.adapter.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
       code: "GOOGLE_DRIVE_API_INVALID_RESPONSE",
       statusCode: 502,
     });
