@@ -82,6 +82,12 @@ if (
 ) {
   fail("--origin harus origin murni tanpa path, query, fragment, atau credential.");
 }
+const expectedLocalHttp =
+  expectedOrigin.protocol === "http:" && LOCAL_HOSTS.has(expectedOrigin.hostname);
+const expectedSecure = expectedOrigin.protocol === "https:";
+if (!expectedSecure && !expectedLocalHttp) {
+  fail("--origin harus HTTPS kecuali loopback localhost.");
+}
 
 const vaultKey = env("ECORIONE_CONNECT_VAULT_MASTER_KEY");
 validateVaultKey(vaultKey);
