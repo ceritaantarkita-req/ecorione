@@ -4,8 +4,6 @@ Last updated: **2026-10-03**
 
 Status: **SESSION 12 NATIVE GOOGLE DRIVE ACTIVE / 12A–12C MERGED / 12D EXACT-HEAD GREEN + LOCAL ACCEPTANCE PENDING / SUMOPOD RETIRED AS ACTIVE STAGING**
 
-Current resume pointer: [verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md). Session 11 remains closed through PR #431. PR #437 expanded the automatic documentation-only boundary to `docs/**`, `README.md`, and `AGENTS.md`; PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9` live-verified it with CI #2709 PASS, Product Eval #1948 PASS, and Staging Deploy #2166/#2167 both gate PASS / deploy SKIPPED. Runtime/control therefore remains `5f1245083047c4014789e90c2ba25b7e16ebe366` and image `staging-5f1245083047`.
-
 Current resume pointer: [verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 The operator retired SumoPod from the active staging role on 2026-10-03 because the current VPS will not be renewed. Historical staging evidence remains historical truth; do not retry/repair SumoPod for current feature closure. Until a replacement host is explicitly selected, use exact-head GitHub gates plus local Docker/Compose runtime acceptance.
