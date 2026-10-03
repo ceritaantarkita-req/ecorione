@@ -86,12 +86,8 @@ const googleDriveOAuthConfig =
 
 const googleDrivePickerApiKey =
   process.env.ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY || undefined;
-const googleDrivePickerAppId =
-  process.env.ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID || undefined;
-if (
-  (googleDrivePickerApiKey === undefined) !==
-  (googleDrivePickerAppId === undefined)
-) {
+const googleDrivePickerAppId = process.env.ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID || undefined;
+if ((googleDrivePickerApiKey === undefined) !== (googleDrivePickerAppId === undefined)) {
   throw new Error(
     "Google Drive Picker config butuh ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY dan ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID.",
   );
