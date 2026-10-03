@@ -50,6 +50,19 @@ export const GoogleDriveOAuthConfigSchema = z
 
 export type GoogleDriveOAuthConfig = z.infer<typeof GoogleDriveOAuthConfigSchema>;
 
+export const GoogleDrivePickerConfigSchema = z
+  .object({
+    developerKey: z
+      .string()
+      .trim()
+      .min(16)
+      .max(512)
+      .regex(/^[A-Za-z0-9_-]+$/u),
+    appId: z.string().regex(/^\d{6,32}$/u),
+  })
+  .strict();
+export type GoogleDrivePickerConfig = z.infer<typeof GoogleDrivePickerConfigSchema>;
+
 interface PendingGoogleDriveOAuth {
   readonly workspaceId: string;
   readonly returnPath: string;
@@ -167,6 +180,7 @@ export class GoogleDriveOAuthStateStore {
 export function googleDriveConnectionStatus(
   vault: Pick<CredentialVaultAdmin, "list">,
   available = true,
+  pickerAvailable = false,
 ): GoogleDriveConnectionStatus {
   const metadata = vault
     .list()
@@ -181,6 +195,7 @@ export function googleDriveConnectionStatus(
     workspaceId: DEFAULT_WORKSPACE_ID,
     available,
     connected: metadata !== undefined,
+    pickerAvailable,
     scope: GOOGLE_DRIVE_FILE_SCOPE,
     updatedAt: metadata?.updatedAt ?? null,
   });
