@@ -201,7 +201,9 @@ function parseMetadata(body: Uint8Array, expectedFileId: string) {
   return parsed.data;
 }
 
-function snapshotPlan(sourceMimeType: string):
+function snapshotPlan(
+  sourceMimeType: string,
+):
   | { readonly kind: "blob"; readonly snapshotMimeType: string }
   | { readonly kind: "export"; readonly snapshotMimeType: string } {
   switch (sourceMimeType) {
@@ -210,8 +212,7 @@ function snapshotPlan(sourceMimeType: string):
     case GOOGLE_SHEET_MIME:
       return {
         kind: "export",
-        snapshotMimeType:
-          "application/pdf",
+        snapshotMimeType: "application/pdf",
       };
     case GOOGLE_SLIDE_MIME:
       return { kind: "export", snapshotMimeType: "text/plain" };
@@ -239,10 +240,7 @@ function metadataUrl(fileId: string): URL {
   return url;
 }
 
-function contentUrl(
-  fileId: string,
-  plan: ReturnType<typeof snapshotPlan>,
-): URL {
+function contentUrl(fileId: string, plan: ReturnType<typeof snapshotPlan>): URL {
   if (plan.kind === "blob") {
     const url = new URL(
       `/drive/v3/files/${encodeURIComponent(fileId)}`,
