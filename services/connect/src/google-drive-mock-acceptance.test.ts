@@ -6,10 +6,7 @@ import { createServer } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
 import { registerGoogleDriveOAuthRoutes } from "./google-drive-http.js";
 import { GoogleDriveOAuthStateStore } from "./google-drive-oauth.js";
-import {
-  GoogleDriveSource,
-  type GoogleDriveApiTransport,
-} from "./google-drive-source.js";
+import { GoogleDriveSource, type GoogleDriveApiTransport } from "./google-drive-source.js";
 import type { GoogleDriveOAuthTransport } from "./google-drive-token.js";
 
 const INTERNAL_TOKEN = "synthetic-internal-token";
