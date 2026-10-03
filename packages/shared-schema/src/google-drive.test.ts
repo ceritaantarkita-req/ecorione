@@ -7,6 +7,7 @@ import {
   GoogleDriveOAuthCallbackRequestSchema,
   GoogleDriveOAuthStartRequestSchema,
   GoogleDrivePickerSelectionSchema,
+  GoogleDrivePickerSessionResponseSchema,
 } from "./google-drive.js";
 
 describe("Google Drive shared contracts", () => {
@@ -109,6 +110,33 @@ describe("Google Drive shared contracts", () => {
         modifiedTime: null,
         sizeBytes: 20 * 1024 * 1024 + 1,
         contentBase64: "AA==",
+      }),
+    ).toThrow();
+  });
+
+  it("bounds the ephemeral Picker session contract", () => {
+    expect(
+      GoogleDrivePickerSessionResponseSchema.parse({
+        workspaceId: "ws_personal",
+        scope: GOOGLE_DRIVE_FILE_SCOPE,
+        accessToken: "short-lived-access-token",
+        expiresAt: "2026-10-03T05:00:00.000Z",
+        developerKey: "AIzaPickerKey_1234567890",
+        appId: "123456789012",
+      }),
+    ).toMatchObject({
+      workspaceId: "ws_personal",
+      scope: GOOGLE_DRIVE_FILE_SCOPE,
+      appId: "123456789012",
+    });
+    expect(() =>
+      GoogleDrivePickerSessionResponseSchema.parse({
+        workspaceId: "ws_personal",
+        scope: GOOGLE_DRIVE_FILE_SCOPE,
+        accessToken: "token",
+        expiresAt: "2026-10-03T05:00:00.000Z",
+        developerKey: "too short",
+        appId: "not-a-project-number",
       }),
     ).toThrow();
   });
