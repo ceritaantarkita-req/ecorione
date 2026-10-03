@@ -3,6 +3,8 @@ import {
   GOOGLE_DRIVE_API_ORIGIN,
   GoogleDriveSource,
   GoogleDriveSourceError,
+  createGoogleDriveApiTransport,
+  isAllowedGoogleDriveResponseHost,
   type GoogleDriveApiTransport,
 } from "./google-drive-source.js";
 import { GoogleDriveOAuthUpstreamError } from "./google-drive-token.js";
@@ -65,6 +67,89 @@ function source(options?: {
 }
 
 describe("GoogleDriveSource", () => {
+  it("allows only Google-owned HTTPS response hostnames", () => {
+    expect(isAllowedGoogleDriveResponseHost("www.googleapis.com")).toBe(true);
+    expect(isAllowedGoogleDriveResponseHost("content.googleapis.com")).toBe(true);
+    expect(isAllowedGoogleDriveResponseHost("lh3.googleusercontent.com")).toBe(true);
+    expect(isAllowedGoogleDriveResponseHost("evilgoogleapis.com")).toBe(false);
+    expect(isAllowedGoogleDriveResponseHost("googleapis.com.evil.example")).toBe(false);
+  });
+
+  it("follows a bounded trusted content redirect without forwarding Authorization cross-origin", async () => {
+    const requests: Array<{ url: string; authorization: string | null }> = [];
+    const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        input instanceof Request
+          ? input.url
+          : input instanceof URL
+            ? input.toString()
+            : input;
+      const headers = new Headers(init?.headers);
+      requests.push({ url, authorization: headers.get("authorization") });
+      if (requests.length === 1) {
+        return new Response(null, {
+          status: 302,
+          headers: { location: "https://lh3.googleusercontent.com/download/content" },
+        });
+      }
+      return new Response("hello", {
+        status: 200,
+        headers: { "content-length": "5" },
+      });
+    }) as typeof fetch;
+
+    const transport = createGoogleDriveApiTransport(fetchImpl);
+    const response = await transport(
+      new URL("https://www.googleapis.com/drive/v3/files/file-123?alt=media"),
+      "access-token-ephemeral",
+      5000,
+      1024,
+    );
+
+    expect(response.statusCode).toBe(200);
+    expect(Buffer.from(response.body).toString("utf8")).toBe("hello");
+    expect(requests).toEqual([
+      {
+        url: "https://www.googleapis.com/drive/v3/files/file-123?alt=media",
+        authorization: "Bearer access-token-ephemeral",
+      },
+      {
+        url: "https://lh3.googleusercontent.com/download/content",
+        authorization: null,
+      },
+    ]);
+  });
+
+  it("rejects redirects outside the pinned Google host family before following them", async () => {
+    const requests: string[] = [];
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url =
+        input instanceof Request
+          ? input.url
+          : input instanceof URL
+            ? input.toString()
+            : input;
+      requests.push(url);
+      return new Response(null, {
+        status: 302,
+        headers: { location: "https://evil.example/download" },
+      });
+    }) as typeof fetch;
+
+    const transport = createGoogleDriveApiTransport(fetchImpl);
+    await expect(
+      transport(
+        new URL("https://www.googleapis.com/drive/v3/files/file-123?alt=media"),
+        "access-token-ephemeral",
+        5000,
+        1024,
+      ),
+    ).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_API_INVALID_RESPONSE",
+      statusCode: 502,
+    });
+    expect(requests).toHaveLength(1);
+  });
   it("downloads an explicitly selected blob file through fixed Drive endpoints", async () => {
     const { adapter, calls, refreshCalls } = source();
     const result = await adapter.fetchSelectedFile("ws_personal", "file-123");
