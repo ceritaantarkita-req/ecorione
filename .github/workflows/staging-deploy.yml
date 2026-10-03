@@ -90,7 +90,10 @@ jobs:
 
   deploy:
     needs: gate
-    if: needs.gate.outputs.ready == 'true' && vars.ECORIONE_STAGING_CD_ENABLED == '1'
+    if: >-
+      needs.gate.outputs.ready == 'true' &&
+      vars.ECORIONE_STAGING_CD_ENABLED == '1' &&
+      vars.ECORIONE_STAGING_TARGET_ACTIVE == '1'
     runs-on: ubuntu-24.04
     environment: staging
     timeout-minutes: 45
