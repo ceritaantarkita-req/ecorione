@@ -382,4 +382,101 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
       ]),
     );
   });
+
+  it("fails closed on Drive source errors without partial Project state", async () => {
+    const cases = [
+      {
+        fileId: "drive-too-large",
+        upstreamStatus: 413,
+        upstreamType: "GOOGLE_DRIVE_FILE_TOO_LARGE",
+        expectedStatus: 413,
+        expectedType: "GOOGLE_DRIVE_SOURCE_REJECTED",
+      },
+      {
+        fileId: "drive-unsupported",
+        upstreamStatus: 415,
+        upstreamType: "GOOGLE_DRIVE_FILE_UNSUPPORTED",
+        expectedStatus: 415,
+        expectedType: "GOOGLE_DRIVE_SOURCE_REJECTED",
+      },
+      {
+        fileId: "drive-rate-limited",
+        upstreamStatus: 429,
+        upstreamType: "GOOGLE_DRIVE_RATE_LIMITED",
+        expectedStatus: 429,
+        expectedType: "GOOGLE_DRIVE_SOURCE_REJECTED",
+      },
+      {
+        fileId: "drive-timeout",
+        upstreamStatus: 504,
+        upstreamType: "GOOGLE_DRIVE_API_TIMEOUT",
+        expectedStatus: 504,
+        expectedType: "GOOGLE_DRIVE_SOURCE_TIMEOUT",
+      },
+      {
+        fileId: "drive-upstream-down",
+        upstreamStatus: 502,
+        upstreamType: "GOOGLE_DRIVE_API_UPSTREAM",
+        expectedStatus: 502,
+        expectedType: "UPSTREAM_UNAVAILABLE",
+      },
+    ] as const;
+
+    for (const candidate of cases) {
+      connect
+        .intercept({
+          path: "/v1/source-fetch/google-drive",
+          method: "POST",
+          body: JSON.stringify({
+            workspaceId: "ws_personal",
+            fileId: candidate.fileId,
+          }),
+        })
+        .reply(candidate.upstreamStatus, {
+          error: {
+            type: candidate.upstreamType,
+            message: "synthetic upstream detail",
+          },
+        });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/v1/projects/prj_personal/sources/ingest-google-drive",
+        payload: {
+          operationId: `op_drive_failure_${candidate.fileId.replaceAll("-", "_")}`,
+          workspaceId: "ws_personal",
+          fileId: candidate.fileId,
+          role: "source",
+        },
+      });
+
+      expect(response.statusCode).toBe(candidate.expectedStatus);
+      expect(response.json().error.type).toBe(candidate.expectedType);
+    }
+
+    const lifecycleCount = db.raw
+      .prepare(
+        `SELECT COUNT(*) AS count
+         FROM project_external_source_lifecycle
+         WHERE project_id=? AND workspace_id=? AND source_type='google-drive'`,
+      )
+      .get("prj_personal", "ws_personal") as { count: number };
+    expect(lifecycleCount.count).toBe(0);
+
+    const artifactBindingCount = db.raw
+      .prepare(
+        `SELECT COUNT(*) AS count
+         FROM project_source_bindings
+         WHERE project_id=? AND workspace_id=? AND resource_type='artifact'`,
+      )
+      .get("prj_personal", "ws_personal") as { count: number };
+    expect(artifactBindingCount.count).toBe(0);
+
+    const audit = await app.inject({ method: "GET", url: "/v1/audit" });
+    const eventTypes = (audit.json().events as Array<{ type: string }>).map(
+      (event) => event.type,
+    );
+    expect(eventTypes).not.toContain("PROJECT_SOURCE_INGESTED");
+    expect(eventTypes).not.toContain("PROJECT_SOURCE_ATTACHED");
+  });
 });

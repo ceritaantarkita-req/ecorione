@@ -21,7 +21,11 @@ export const GoogleDrivePickerSelectionSchema = z
   .object({
     files: z.array(GoogleDriveSelectedFileSchema).min(1).max(20),
   })
-  .strict();
+  .strict()
+  .refine(({ files }) => new Set(files.map((file) => file.id)).size === files.length, {
+    message: "Pilihan Google Drive tidak boleh berisi file ID duplikat.",
+    path: ["files"],
+  });
 export type GoogleDrivePickerSelection = z.infer<typeof GoogleDrivePickerSelectionSchema>;
 
 export const GoogleDriveOAuthStartRequestSchema = z

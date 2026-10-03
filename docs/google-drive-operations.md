@@ -158,6 +158,8 @@ This deterministic suite uses synthetic credentials and mocked Google/owner endp
 - reconnect-required when Google rejects the stored refresh token;
 - explicit blob-file download;
 - deterministic Google-native document export;
+- duplicate Picker file IDs rejected before ingestion;
+- 413/415/429/504/502 source failures mapped without partial Project lifecycle or Artifact binding;
 - Google Drive -> Hub -> Artifact Project Source ingestion;
 - real Hub `/sources/extract` Index into Context through the direct-text path;
 - same-origin refresh to a new Artifact;
