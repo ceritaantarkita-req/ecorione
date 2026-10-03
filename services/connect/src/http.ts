@@ -29,6 +29,8 @@ import {
   registerGoogleDriveOAuthRoutes,
   type GoogleDriveOAuthHttpOptions,
 } from "./google-drive-http.js";
+import { GoogleDriveSource, type GoogleDriveApiTransport } from "./google-drive-source.js";
+import { GoogleDriveOAuthClient } from "./google-drive-token.js";
 import {
   OpenRouterModelDiscovery,
   OpenRouterModelDiscoveryError,
@@ -79,6 +81,7 @@ import { LocalRuntimeIdSchema, type LocalRuntimeId } from "./providers/local-run
 import { FileSpendBudget, SpendBudgetError, SpendBudgetExceededError } from "./spend-budget.js";
 import {
   registerExternalSourceFetchRoutes,
+  registerGoogleDriveSourceFetchRoutes,
   registerMcpResourceSourceFetchRoutes,
 } from "./source-fetch-http.js";
 import { registerConnectWebhookRoutes } from "./webhook-http.js";
@@ -217,6 +220,7 @@ export interface BuildConnectServerOptions {
     GoogleDriveOAuthHttpOptions["oauthTransport"] | undefined;
   readonly googleDriveOAuthStateStore?:
     GoogleDriveOAuthHttpOptions["oauthStateStore"] | undefined;
+  readonly googleDriveApiTransport?: GoogleDriveApiTransport | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -367,6 +371,21 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     registerMcpResourceSourceFetchRoutes(app, options.mcpManager);
   }
   registerExternalSourceFetchRoutes(app);
+  const googleDriveSource =
+    options.googleDriveOAuthConfig === undefined || options.credentialVaultAdmin === undefined
+      ? undefined
+      : new GoogleDriveSource({
+          vault: options.credentialVaultAdmin,
+          oauthClient: new GoogleDriveOAuthClient(options.googleDriveOAuthConfig, {
+            ...(options.googleDriveOAuthTransport === undefined
+              ? {}
+              : { transport: options.googleDriveOAuthTransport }),
+          }),
+          ...(options.googleDriveApiTransport === undefined
+            ? {}
+            : { transport: options.googleDriveApiTransport }),
+        });
+  registerGoogleDriveSourceFetchRoutes(app, googleDriveSource);
   registerGoogleDriveOAuthRoutes(app, {
     credentialVault: options.credentialVaultAdmin,
     oauthConfig: options.googleDriveOAuthConfig,

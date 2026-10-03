@@ -1,7 +1,11 @@
-import { ExternalUrlFetchRequestSchema } from "@ecorione/shared-schema";
+import {
+  ExternalUrlFetchRequestSchema,
+  GoogleDriveFileFetchRequestSchema,
+} from "@ecorione/shared-schema";
 import { z } from "zod";
 import { HttpError, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
+import { GoogleDriveSourceError, type GoogleDriveSource } from "./google-drive-source.js";
 import { toMcpHttpError } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { McpResourceReadRequestSchema, McpServerIdSchema } from "./mcp-client/types.js";
@@ -43,6 +47,30 @@ export function registerMcpResourceSourceFetchRoutes(
       return snapshotMcpResource(id, body.uri, result.result);
     } catch (error) {
       throw toMcpHttpError(error);
+    }
+  });
+}
+
+export function registerGoogleDriveSourceFetchRoutes(
+  app: FastifyInstance,
+  source?: GoogleDriveSource,
+): void {
+  app.post("/v1/source-fetch/google-drive", async (req) => {
+    const body = parseOrBadRequest(GoogleDriveFileFetchRequestSchema, req.body);
+    if (source === undefined) {
+      throw new HttpError(
+        503,
+        "GOOGLE_DRIVE_NOT_CONFIGURED",
+        "Native Google Drive belum dikonfigurasi operator.",
+      );
+    }
+    try {
+      return await source.fetchSelectedFile(body.workspaceId, body.fileId);
+    } catch (error) {
+      if (error instanceof GoogleDriveSourceError) {
+        throw new HttpError(error.statusCode, error.code, error.message);
+      }
+      throw error;
     }
   });
 }
