@@ -85,6 +85,7 @@ Use the owner-specific runbook when touching its subsystem:
 
 - [production-activation.md](production-activation.md)
 - [production-operations.md](production-operations.md)
+- [google-drive-operations.md](google-drive-operations.md) — Session 12 native Google Drive operator configuration + local acceptance runbook.
 - [release-operations.md](release-operations.md)
 - [staging-continuous-deployment.md](staging-continuous-deployment.md)
 - [sumopod-staging.md](sumopod-staging.md)
