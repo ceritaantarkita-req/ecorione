@@ -159,9 +159,12 @@ This deterministic suite uses synthetic credentials and mocked Google/owner endp
 - explicit blob-file download;
 - deterministic Google-native document export;
 - Google Drive -> Hub -> Artifact Project Source ingestion;
+- real Hub `/sources/extract` Index into Context through the direct-text path;
 - same-origin refresh to a new Artifact;
 - lifecycle reset from `INDEXED` to `SNAPSHOT_READY` when the snapshot changes;
-- idempotent retry of the refreshed operation;
+- real Re-index of the refreshed Artifact into a new Context episode;
+- idempotent refresh retry without regressing the already re-indexed lifecycle;
+- Detach of the latest Drive snapshot through the public Project Source route;
 - disconnect/revoke semantics;
 - callback/Picker browser proxy and source-contract security tests.
 
