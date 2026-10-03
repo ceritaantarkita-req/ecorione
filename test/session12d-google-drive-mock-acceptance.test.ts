@@ -484,9 +484,9 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
       {
         suffix: "reconnect",
         upstreamStatus: 409,
-        upstreamType: "GOOGLE_DRIVE_NOT_CONNECTED",
+        upstreamType: "GOOGLE_DRIVE_RECONNECT_REQUIRED",
         expectedStatus: 409,
-        expectedType: "GOOGLE_DRIVE_SOURCE_REJECTED",
+        expectedType: "GOOGLE_DRIVE_RECONNECT_REQUIRED",
       },
       {
         suffix: "permission",
