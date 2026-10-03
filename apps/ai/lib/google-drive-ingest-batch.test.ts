@@ -151,10 +151,7 @@ describe("Google Drive multi-file ingest orchestration", () => {
         type: "GOOGLE_DRIVE_RECONNECT_REQUIRED",
       },
     ]);
-    expect(result.skipped.map((item) => item.id)).toEqual([
-      "drive-file-r3",
-      "drive-file-r4",
-    ]);
+    expect(result.skipped.map((item) => item.id)).toEqual(["drive-file-r3", "drive-file-r4"]);
     expect(result.reconnectRequired).toBe(true);
     expect(result.feedback).toBe(
       "Google Drive: 1 snapshot tersimpan. 1 gagal — Expired.txt: Google Drive authorization perlu dihubungkan ulang. 2 belum dicoba karena Google Drive perlu dihubungkan ulang.",
