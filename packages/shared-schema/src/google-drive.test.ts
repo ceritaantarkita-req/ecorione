@@ -119,12 +119,14 @@ describe("Google Drive shared contracts", () => {
       workspaceId: "ws_personal",
       available: true,
       connected: true,
+      pickerAvailable: true,
       scope: GOOGLE_DRIVE_FILE_SCOPE,
       updatedAt: "2026-10-03T00:00:00.000Z",
     });
     expect(Object.keys(status).sort()).toEqual([
       "available",
       "connected",
+      "pickerAvailable",
       "provider",
       "scope",
       "updatedAt",
