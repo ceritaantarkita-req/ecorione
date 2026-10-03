@@ -240,7 +240,10 @@ describe("Session 12D Google Drive mock acceptance — Connect", () => {
   it("clears stale source authorization but preserves transient refresh failures", async () => {
     const dir = mkdtempSync(join(tmpdir(), "ecorione-drive-source-reconnect-"));
     dirs.push(dir);
-    const vault = new FileCredentialVault(join(dir, "credentials.vault.json"), Buffer.alloc(32, 23));
+    const vault = new FileCredentialVault(
+      join(dir, "credentials.vault.json"),
+      Buffer.alloc(32, 23),
+    );
     vault.set("google-drive", "tokens", REFRESH_TOKEN, "2026-10-03T06:00:00.000Z");
 
     const rejected = new GoogleDriveSource({
@@ -262,7 +265,9 @@ describe("Session 12D Google Drive mock acceptance — Connect", () => {
       },
     });
 
-    await expect(rejected.fetchSelectedFile("ws_personal", "file-123")).rejects.toMatchObject({
+    await expect(
+      rejected.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
       code: "GOOGLE_DRIVE_NOT_CONNECTED",
       statusCode: 409,
     });
@@ -288,7 +293,9 @@ describe("Session 12D Google Drive mock acceptance — Connect", () => {
       },
     });
 
-    await expect(transient.fetchSelectedFile("ws_personal", "file-123")).rejects.toMatchObject({
+    await expect(
+      transient.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
       code: "GOOGLE_DRIVE_API_TIMEOUT",
       statusCode: 504,
     });
