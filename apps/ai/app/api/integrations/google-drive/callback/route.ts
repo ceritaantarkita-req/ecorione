@@ -43,6 +43,9 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const destination = new URL(result.data.returnPath, url.origin);
+  if (destination.origin !== url.origin) {
+    return jsonError(502, "BAD_GATEWAY", "Tujuan callback Google Drive tidak same-origin.");
+  }
   destination.searchParams.set(
     "googleDrive",
     result.data.connected ? "connected" : "cancelled",
