@@ -32,6 +32,14 @@ describe("Google Drive shared contracts", () => {
     expect(() => GoogleDrivePickerSelectionSchema.parse({ files: [] })).toThrow();
     expect(() =>
       GoogleDrivePickerSelectionSchema.parse({
+        files: [
+          { id: "duplicate-file", name: "First", mimeType: "text/plain" },
+          { id: " duplicate-file ", name: "Second", mimeType: "application/pdf" },
+        ],
+      }),
+    ).toThrow("file ID duplikat");
+    expect(() =>
+      GoogleDrivePickerSelectionSchema.parse({
         files: Array.from({ length: 21 }, (_, index) => ({
           id: `file-${String(index)}`,
           name: `File ${String(index)}`,
