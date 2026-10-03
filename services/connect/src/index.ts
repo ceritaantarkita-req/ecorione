@@ -9,6 +9,7 @@ export * from "./credential-vault.js";
 export * from "./google-drive-oauth.js";
 export * from "./google-drive-token.js";
 export * from "./google-drive-http.js";
+export * from "./google-drive-source.js";
 export * from "./http.js";
 export * from "./provider-types.js";
 export * from "./routing.js";
