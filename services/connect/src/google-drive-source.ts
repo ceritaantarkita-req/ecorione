@@ -136,7 +136,11 @@ async function defaultTransport(
   try {
     let current = url;
     let sendAuthorization = true;
-    for (let redirectCount = 0; redirectCount <= MAX_GOOGLE_DRIVE_REDIRECTS; redirectCount += 1) {
+    for (
+      let redirectCount = 0;
+      redirectCount <= MAX_GOOGLE_DRIVE_REDIRECTS;
+      redirectCount += 1
+    ) {
       const headers: Record<string, string> = {
         accept: "*/*",
         "user-agent": "ECORIONE-GoogleDrive/1.0",
