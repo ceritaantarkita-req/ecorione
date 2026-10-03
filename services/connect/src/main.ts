@@ -5,7 +5,10 @@ import {
   resolveRepoRuntimePath,
 } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
-import { GoogleDriveOAuthConfigSchema } from "./google-drive-oauth.js";
+import {
+  GoogleDriveOAuthConfigSchema,
+  GoogleDrivePickerConfigSchema,
+} from "./google-drive-oauth.js";
 import { FileOpenRouterCertificationStore } from "./openrouter-certification-store.js";
 import { buildConnectServer, type BuildConnectServerOptions } from "./http.js";
 import { parseOptionalLocalModelDigest } from "./local-model-identity.js";
@@ -79,6 +82,26 @@ const googleDriveOAuthConfig =
           ? {}
           : { clientSecret: googleDriveClientSecret }),
         redirectUri: googleDriveRedirectUri,
+      });
+
+const googleDrivePickerApiKey =
+  process.env.ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY || undefined;
+const googleDrivePickerAppId =
+  process.env.ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID || undefined;
+if (
+  (googleDrivePickerApiKey === undefined) !==
+  (googleDrivePickerAppId === undefined)
+) {
+  throw new Error(
+    "Google Drive Picker config butuh ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY dan ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID.",
+  );
+}
+const googleDrivePickerConfig =
+  googleDrivePickerApiKey === undefined || googleDrivePickerAppId === undefined
+    ? undefined
+    : GoogleDrivePickerConfigSchema.parse({
+        developerKey: googleDrivePickerApiKey,
+        appId: googleDrivePickerAppId,
       });
 
 function developmentHostedApiKey(provider = hostedProvider): string | undefined {
@@ -250,6 +273,7 @@ const app = buildConnectServer({
   flowUrl,
   webhookRootSecret,
   googleDriveOAuthConfig,
+  googleDrivePickerConfig,
 });
 
 app
