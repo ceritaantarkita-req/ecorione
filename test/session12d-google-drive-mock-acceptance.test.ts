@@ -601,6 +601,238 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
     expect(eventTypes.filter((type) => type === "PROJECT_SOURCE_EXTRACTED")).toHaveLength(1);
   });
 
+  it("preserves indexed Drive state when downstream snapshot materialization fails", async () => {
+    const fileId = "drive-file-preserve-on-downstream-failure";
+    const artifactA = `art_${"d".repeat(64)}`;
+    const artifactB = `art_${"e".repeat(64)}`;
+    const snapshotA = Buffer.from("# Last good indexed snapshot\n");
+    const snapshotB = Buffer.from("# Candidate refresh snapshot\n");
+    const episodeId = "epi_drive_downstream_failure_baseline";
+    const pointerA = {
+      id: artifactA,
+      path: `cas/${artifactA}`,
+      description: "Google Drive: Durable plan",
+      mimeType: "text/markdown",
+      sizeBytes: snapshotA.byteLength,
+      scope: "personal",
+      sensitivity: "RESTRICTED",
+      syncClass: "LOCAL_ONLY",
+    };
+    const pointerB = {
+      ...pointerA,
+      id: artifactB,
+      path: `cas/${artifactB}`,
+      sizeBytes: snapshotB.byteLength,
+    };
+
+    connect
+      .intercept({
+        path: "/v1/source-fetch/google-drive",
+        method: "POST",
+        body: JSON.stringify({ workspaceId: "ws_personal", fileId }),
+      })
+      .reply(200, {
+        fileId,
+        name: "Durable plan",
+        sourceMimeType: "application/vnd.google-apps.document",
+        snapshotMimeType: "text/markdown",
+        modifiedTime: "2026-10-03T08:00:00.000Z",
+        sizeBytes: snapshotA.byteLength,
+        contentBase64: snapshotA.toString("base64"),
+      });
+    artifact
+      .intercept({
+        path: "/v1/artifacts",
+        method: "POST",
+      })
+      .reply(201, { pointer: pointerA, deduplicated: false });
+    context
+      .intercept({
+        path: `/v1/artifacts/${artifactA}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, pointerA);
+
+    const initial = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-google-drive",
+      payload: {
+        operationId: "op_drive_downstream_failure_initial",
+        workspaceId: "ws_personal",
+        fileId,
+        role: "source",
+      },
+    });
+    expect(initial.statusCode).toBe(200);
+
+    mockDirectTextIndex({
+      artifactId: artifactA,
+      pointer: pointerA,
+      bytes: snapshotA,
+      operationId: "op_drive_downstream_failure_index",
+      episodeId,
+      rawText: "# Last good indexed snapshot\n",
+      ts: "2026-10-03T08:10:00.000Z",
+    });
+
+    const indexed = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/extract",
+      payload: {
+        operationId: "op_drive_downstream_failure_index",
+        workspaceId: "ws_personal",
+        artifactId: artifactA,
+      },
+    });
+    expect(indexed.statusCode).toBe(200);
+
+    const baseline = await lifecycleFor(fileId);
+    expect(baseline).toMatchObject({
+      latestArtifactId: artifactA,
+      latestContextEpisodeId: episodeId,
+      state: "INDEXED",
+      lastRefreshedAt: expect.any(String),
+      lastIndexedAt: expect.any(String),
+      updatedAt: expect.any(String),
+    });
+
+    async function expectBaselinePreserved(operationId: string): Promise<void> {
+      expect(await lifecycleFor(fileId)).toMatchObject({
+        latestArtifactId: artifactA,
+        latestContextEpisodeId: episodeId,
+        state: "INDEXED",
+        lastRefreshedAt: baseline.lastRefreshedAt,
+        lastIndexedAt: baseline.lastIndexedAt,
+        updatedAt: baseline.updatedAt,
+      });
+
+      const bindings = db.raw
+        .prepare(
+          `SELECT resource_id
+           FROM project_source_bindings
+           WHERE project_id=? AND workspace_id=? AND resource_type='artifact'
+           ORDER BY resource_id`,
+        )
+        .all("prj_personal", "ws_personal") as Array<{ resource_id: string }>;
+      expect(bindings.map((row) => row.resource_id)).toEqual([artifactA]);
+
+      const audit = await app.inject({
+        method: "GET",
+        url: `/v1/audit?operationId=${operationId}`,
+      });
+      const eventTypes = (audit.json().events as Array<{ type: string }>).map(
+        (event) => event.type,
+      );
+      expect(eventTypes).not.toContain("PROJECT_SOURCE_INGESTED");
+      expect(eventTypes).not.toContain("PROJECT_SOURCE_ATTACHED");
+    }
+
+    connect
+      .intercept({
+        path: "/v1/source-fetch/google-drive",
+        method: "POST",
+        body: JSON.stringify({ workspaceId: "ws_personal", fileId }),
+      })
+      .reply(200, {
+        fileId,
+        name: "Durable plan",
+        sourceMimeType: "application/vnd.google-apps.document",
+        snapshotMimeType: "text/markdown",
+        modifiedTime: "2026-10-03T08:20:00.000Z",
+        sizeBytes: snapshotB.byteLength,
+        contentBase64: snapshotB.toString("base64"),
+      });
+    artifact
+      .intercept({
+        path: "/v1/artifacts",
+        method: "POST",
+      })
+      .reply(503, {
+        error: {
+          type: "UPSTREAM_UNAVAILABLE",
+          message: "synthetic artifact outage",
+        },
+      });
+
+    const artifactFailureOperation = "op_drive_downstream_artifact_failure";
+    const artifactFailure = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-google-drive",
+      payload: {
+        operationId: artifactFailureOperation,
+        workspaceId: "ws_personal",
+        fileId,
+        role: "source",
+      },
+    });
+    expect(artifactFailure.statusCode).toBe(502);
+    expect(artifactFailure.json().error.type).toBe("UPSTREAM_UNAVAILABLE");
+    await expectBaselinePreserved(artifactFailureOperation);
+
+    connect
+      .intercept({
+        path: "/v1/source-fetch/google-drive",
+        method: "POST",
+        body: JSON.stringify({ workspaceId: "ws_personal", fileId }),
+      })
+      .reply(200, {
+        fileId,
+        name: "Durable plan",
+        sourceMimeType: "application/vnd.google-apps.document",
+        snapshotMimeType: "text/markdown",
+        modifiedTime: "2026-10-03T08:30:00.000Z",
+        sizeBytes: snapshotB.byteLength,
+        contentBase64: snapshotB.toString("base64"),
+      });
+    artifact
+      .intercept({
+        path: "/v1/artifacts",
+        method: "POST",
+      })
+      .reply(201, { pointer: pointerB, deduplicated: false });
+    context
+      .intercept({
+        path: `/v1/artifacts/${artifactB}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(503, {
+        error: {
+          type: "UPSTREAM_UNAVAILABLE",
+          message: "synthetic context authorization outage",
+        },
+      });
+
+    const ownerFailureOperation = "op_drive_downstream_owner_failure";
+    const ownerFailure = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-google-drive",
+      payload: {
+        operationId: ownerFailureOperation,
+        workspaceId: "ws_personal",
+        fileId,
+        role: "source",
+      },
+    });
+    expect(ownerFailure.statusCode).toBe(502);
+    expect(ownerFailure.json().error.type).toBe("UPSTREAM_UNAVAILABLE");
+    await expectBaselinePreserved(ownerFailureOperation);
+
+    const lifecycleRows = db.raw
+      .prepare(
+        `SELECT latest_artifact_id,latest_context_episode_id,state
+         FROM project_external_source_lifecycle
+         WHERE project_id=? AND workspace_id=? AND source_type='google-drive' AND source_key=?`,
+      )
+      .all("prj_personal", "ws_personal", fileId);
+    expect(lifecycleRows).toEqual([
+      {
+        latest_artifact_id: artifactA,
+        latest_context_episode_id: episodeId,
+        state: "INDEXED",
+      },
+    ]);
+  });
+
   it("fails closed on Drive source errors without partial Project state", async () => {
     const cases = [
       {

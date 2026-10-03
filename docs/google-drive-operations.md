@@ -161,6 +161,7 @@ This deterministic suite uses synthetic credentials and mocked Google/owner endp
 - duplicate Picker file IDs rejected before ingestion;
 - 413/415/429/504/502 source failures mapped without partial Project lifecycle or Artifact binding;
 - failed refresh after an indexed snapshot preserves the last-good Artifact, Context episode, `INDEXED` state, and existing binding across reconnect/permission/not-found/rate/timeout/upstream errors;
+- downstream Artifact-storage or owner-authorization failure after a successful Drive fetch also preserves the last-good indexed Project lifecycle/binding; owner-side cleanup of a successfully-created but unauthorized candidate Artifact is not claimed by this test;
 - Google Drive -> Hub -> Artifact Project Source ingestion;
 - real Hub `/sources/extract` Index into Context through the direct-text path;
 - same-origin refresh to a new Artifact;
