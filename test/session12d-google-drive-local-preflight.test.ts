@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const SCRIPT = "scripts/google-drive-local-acceptance-preflight.mjs";
@@ -37,6 +38,27 @@ function run(
 }
 
 describe("Session 12D Google Drive local acceptance preflight", () => {
+  it("documents every local OAuth/Picker variable and the executable preflight command", () => {
+    const example = readFileSync(".env.example", "utf8");
+    const packageJson = readFileSync("package.json", "utf8");
+    const runbook = readFileSync("docs/google-drive-operations.md", "utf8");
+
+    for (const name of SECRET_NAMES) {
+      expect(example).toContain(name);
+    }
+    expect(example).toContain("ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID=");
+    expect(packageJson).toContain('"acceptance:google-drive:preflight"');
+    expect(packageJson).toContain(
+      "node --env-file=.env scripts/google-drive-local-acceptance-preflight.mjs",
+    );
+    expect(runbook).toContain(
+      "pnpm acceptance:google-drive:preflight -- --origin http://localhost:3000",
+    );
+    expect(runbook).toContain("pnpm dev");
+    expect(runbook).toContain("does **not** prove");
+  });
+
+
   it("passes a complete local OAuth + Picker + Vault configuration", () => {
     const result = run(baseEnv());
 
