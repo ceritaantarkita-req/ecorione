@@ -304,7 +304,47 @@ describe("Google Drive OAuth HTTP boundary", () => {
     expect(reconnect.statusCode).toBe(409);
     expect(reconnect.json().error.type).toBe("GOOGLE_DRIVE_RECONNECT_REQUIRED");
     expect(reconnect.body).not.toContain("private-upstream-detail");
+    expect(rejected.vault.get("google-drive", "tokens")).toBeUndefined();
+
+    const status = await rejected.app.inject({
+      method: "GET",
+      url: "/v1/integrations/google-drive/status?workspaceId=ws_personal",
+      headers: auth,
+    });
+    expect(status.statusCode).toBe(200);
+    expect(status.json()).toMatchObject({ connected: false, updatedAt: null });
   });
+
+  it(
+    "preserves the refresh token on transient Picker token refresh failures",
+    async () => {
+      const transient = fixture(async () => ({
+        statusCode: 503,
+        bodyText: JSON.stringify({
+          error: "temporarily_unavailable",
+          error_description: "synthetic transient detail",
+        }),
+      }));
+      transient.vault.set(
+        "google-drive",
+        "tokens",
+        "refresh-token-private-123456",
+        "2026-10-03T00:00:00.000Z",
+      );
+
+      const response = await transient.app.inject({
+        method: "POST",
+        url: "/v1/integrations/google-drive/picker-session",
+        headers: { ...auth, "content-type": "application/json" },
+        payload: { workspaceId: "ws_personal" },
+      });
+
+      expect(response.statusCode).toBe(502);
+      expect(transient.vault.get("google-drive", "tokens")).toBe(
+        "refresh-token-private-123456",
+      );
+    },
+  );
 
   it("revokes remotely before deleting local credential", async () => {
     let revokeAllowed = false;

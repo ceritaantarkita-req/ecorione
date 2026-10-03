@@ -155,7 +155,7 @@ This deterministic suite uses synthetic credentials and mocked Google/owner endp
 - disconnected -> OAuth start/callback -> connected status;
 - encrypted refresh-token custody and one-time OAuth state;
 - short-lived Picker session without refresh-token disclosure;
-- reconnect-required when Google rejects the stored refresh token;
+- reconnect-required when Google rejects the stored refresh token, with the stale credential removed so status returns to disconnected; transient timeout/unavailable refresh failures preserve the credential;
 - explicit blob-file download;
 - deterministic Google-native document export;
 - duplicate Picker file IDs rejected before ingestion;
@@ -204,7 +204,7 @@ Do not work around these failures by broadening scope or weakening security:
 - `GOOGLE_DRIVE_NOT_CONFIGURED`;
 - `GOOGLE_DRIVE_PICKER_NOT_CONFIGURED`;
 - `GOOGLE_DRIVE_NOT_CONNECTED`;
-- `GOOGLE_DRIVE_RECONNECT_REQUIRED`;
+- `GOOGLE_DRIVE_RECONNECT_REQUIRED` — explicit Google rejection invalidates the stale local refresh credential and returns the connector to a reconnectable disconnected state; transient Google outages must not delete the credential;
 - missing refresh token after OAuth;
 - invalid/expired one-time OAuth state;
 - unsafe or cross-origin return path;

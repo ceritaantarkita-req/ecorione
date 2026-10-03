@@ -68,6 +68,14 @@ function errorMessage(body: unknown, fallback: string): string {
   return typeof message === "string" ? message : fallback;
 }
 
+function errorType(body: unknown): string | null {
+  if (typeof body !== "object" || body === null) return null;
+  const error = (body as { error?: unknown }).error;
+  if (typeof error !== "object" || error === null) return null;
+  const type = (error as { type?: unknown }).type;
+  return typeof type === "string" ? type : null;
+}
+
 export function ProjectSources(props: {
   readonly projectId: string;
   readonly workspaceId: string;
@@ -294,6 +302,9 @@ export function ProjectSources(props: {
       });
       const rawSession: unknown = await sessionResponse.json().catch(() => undefined);
       if (!sessionResponse.ok) {
+        if (errorType(rawSession) === "GOOGLE_DRIVE_RECONNECT_REQUIRED") {
+          await loadDriveStatus().catch(() => undefined);
+        }
         throw new Error(errorMessage(rawSession, "Gagal membuat sesi Google Picker."));
       }
       const session = GoogleDrivePickerSessionResponseSchema.safeParse(rawSession);
@@ -313,6 +324,8 @@ export function ProjectSources(props: {
 
       if (batch.successes.length > 0) {
         await Promise.all([load(), loadLifecycle(), loadCatalog(), loadDriveStatus()]);
+      } else if (batch.failures.length > 0) {
+        await loadDriveStatus().catch(() => undefined);
       }
       setFeedback(batch.feedback);
     } catch (error) {
@@ -342,6 +355,7 @@ export function ProjectSources(props: {
       );
       await Promise.all([load(), loadLifecycle(), loadCatalog()]);
     } catch (error) {
+      await loadDriveStatus().catch(() => undefined);
       setFeedback(
         error instanceof Error ? error.message : "Gagal memperbarui Google Drive snapshot.",
       );

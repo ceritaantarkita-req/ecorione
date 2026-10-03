@@ -14,6 +14,8 @@ describe("Session 12D Google Drive Picker browser boundary", () => {
     "utf8",
   );
   const connect = readFileSync("services/connect/src/google-drive-http.ts", "utf8");
+  const connectServer = readFileSync("services/connect/src/http.ts", "utf8");
+  const driveSource = readFileSync("services/connect/src/google-drive-source.ts", "utf8");
   const main = readFileSync("services/connect/src/main.ts", "utf8");
   const nextConfig = readFileSync("apps/ai/next.config.ts", "utf8");
 
@@ -35,6 +37,8 @@ describe("Session 12D Google Drive Picker browser boundary", () => {
     expect(ui).toContain("ingestGoogleDriveSelection");
     expect(ui).toContain("if (batch.successes.length > 0)");
     expect(ui).toContain("setFeedback(batch.feedback)");
+    expect(ui).toContain('errorType(rawSession) === "GOOGLE_DRIVE_RECONNECT_REQUIRED"');
+    expect(ui).toContain("await loadDriveStatus().catch(() => undefined)");
     expect(ui).toContain("/ingest-google-drive");
     expect(ui).not.toContain('{ value: "google-drive"');
     expect(ui).toContain("tidak mengindeks seluruh Drive");
@@ -54,6 +58,10 @@ describe("Session 12D Google Drive Picker browser boundary", () => {
   it("keeps refresh-token custody server-side and mints only ephemeral access", () => {
     expect(connect).toContain('"/v1/integrations/google-drive/picker-session"');
     expect(connect).toContain("client.refreshAccessToken(refreshToken)");
+    expect(connect).toContain("disconnectGoogleDrive(vault)");
+    expect(driveSource).toContain("this.options.onAuthorizationRejected?.()");
+    expect(connectServer).toContain("onAuthorizationRejected:");
+    expect(connectServer).toContain("disconnectGoogleDrive(options.credentialVaultAdmin!)");
     expect(connect).toContain("GoogleDrivePickerSessionResponseSchema.parse");
     expect(main).toContain("ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY");
     expect(main).toContain("ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID");

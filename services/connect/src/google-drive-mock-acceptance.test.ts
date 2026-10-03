@@ -7,7 +7,10 @@ import { FileCredentialVault } from "./credential-vault.js";
 import { registerGoogleDriveOAuthRoutes } from "./google-drive-http.js";
 import { GoogleDriveOAuthStateStore } from "./google-drive-oauth.js";
 import { GoogleDriveSource, type GoogleDriveApiTransport } from "./google-drive-source.js";
-import type { GoogleDriveOAuthTransport } from "./google-drive-token.js";
+import {
+  GoogleDriveOAuthUpstreamError,
+  type GoogleDriveOAuthTransport,
+} from "./google-drive-token.js";
 
 const INTERNAL_TOKEN = "synthetic-internal-token";
 const REFRESH_TOKEN = "synthetic-refresh-token-for-mock-acceptance";
@@ -222,7 +225,81 @@ describe("Session 12D Google Drive mock acceptance — Connect", () => {
     expect(picker.json().error.type).toBe("GOOGLE_DRIVE_RECONNECT_REQUIRED");
     expect(picker.body).not.toContain("synthetic-private-upstream-detail");
     expect(picker.body).not.toContain(REFRESH_TOKEN);
+    expect(vault.get("google-drive", "tokens")).toBeUndefined();
+
+    const status = await app.inject({
+      method: "GET",
+      url: "/v1/integrations/google-drive/status?workspaceId=ws_personal",
+      headers: auth,
+    });
+    expect(status.statusCode).toBe(200);
+    expect(status.json()).toMatchObject({ connected: false, updatedAt: null });
     await app.close();
+  });
+
+  it("clears stale source authorization but preserves transient refresh failures", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "ecorione-drive-source-reconnect-"));
+    dirs.push(dir);
+    const vault = new FileCredentialVault(
+      join(dir, "credentials.vault.json"),
+      Buffer.alloc(32, 23),
+    );
+    vault.set("google-drive", "tokens", REFRESH_TOKEN, "2026-10-03T06:00:00.000Z");
+
+    const rejected = new GoogleDriveSource({
+      vault,
+      oauthClient: {
+        async refreshAccessToken() {
+          throw new GoogleDriveOAuthUpstreamError(
+            502,
+            "GOOGLE_DRIVE_OAUTH_REJECTED",
+            "synthetic rejected refresh",
+          );
+        },
+      },
+      onAuthorizationRejected: () => {
+        vault.remove("google-drive", "tokens");
+      },
+      transport: async () => {
+        throw new Error("must not run");
+      },
+    });
+
+    await expect(
+      rejected.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_NOT_CONNECTED",
+      statusCode: 409,
+    });
+    expect(vault.get("google-drive", "tokens")).toBeUndefined();
+
+    vault.set("google-drive", "tokens", REFRESH_TOKEN, "2026-10-03T06:05:00.000Z");
+    const transient = new GoogleDriveSource({
+      vault,
+      oauthClient: {
+        async refreshAccessToken() {
+          throw new GoogleDriveOAuthUpstreamError(
+            504,
+            "GOOGLE_DRIVE_OAUTH_TIMEOUT",
+            "synthetic timeout",
+          );
+        },
+      },
+      onAuthorizationRejected: () => {
+        vault.remove("google-drive", "tokens");
+      },
+      transport: async () => {
+        throw new Error("must not run");
+      },
+    });
+
+    await expect(
+      transient.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_API_TIMEOUT",
+      statusCode: 504,
+    });
+    expect(vault.get("google-drive", "tokens")).toBe(REFRESH_TOKEN);
   });
 
   it("fetches a blob and exports a Google-native document without leaking tokens", async () => {
