@@ -383,8 +383,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
               ? {}
               : { transport: options.googleDriveOAuthTransport }),
           }),
-          onAuthorizationRejected: () =>
-            disconnectGoogleDrive(options.credentialVaultAdmin!),
+          onAuthorizationRejected: () => disconnectGoogleDrive(options.credentialVaultAdmin!),
           ...(options.googleDriveApiTransport === undefined
             ? {}
             : { transport: options.googleDriveApiTransport }),
