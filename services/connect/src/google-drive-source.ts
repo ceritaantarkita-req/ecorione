@@ -8,7 +8,10 @@ import {
 } from "@ecorione/shared-schema";
 import { z } from "zod";
 import type { ProviderCredentialReader } from "./credential-vault.js";
-import type { GoogleDriveOAuthClient } from "./google-drive-token.js";
+import {
+  GoogleDriveOAuthUpstreamError,
+  type GoogleDriveOAuthClient,
+} from "./google-drive-token.js";
 
 export const GOOGLE_DRIVE_API_ORIGIN = "https://www.googleapis.com" as const;
 export const DEFAULT_GOOGLE_DRIVE_API_TIMEOUT_MS = 15_000;
@@ -319,7 +322,40 @@ export class GoogleDriveSource {
         "Google Drive belum terhubung.",
       );
     }
-    const access = await this.options.oauthClient.refreshAccessToken(refreshToken);
+    let access;
+    try {
+      access = await this.options.oauthClient.refreshAccessToken(refreshToken);
+    } catch (error) {
+      if (error instanceof GoogleDriveOAuthUpstreamError) {
+        if (error.code === "GOOGLE_DRIVE_OAUTH_REJECTED") {
+          throw new GoogleDriveSourceError(
+            409,
+            "GOOGLE_DRIVE_NOT_CONNECTED",
+            "Google Drive authorization perlu dihubungkan ulang.",
+          );
+        }
+        if (error.code === "GOOGLE_DRIVE_OAUTH_TIMEOUT") {
+          throw new GoogleDriveSourceError(
+            504,
+            "GOOGLE_DRIVE_API_TIMEOUT",
+            "Google Drive authorization melewati batas waktu.",
+          );
+        }
+        if (error.code === "GOOGLE_DRIVE_OAUTH_UNAVAILABLE") {
+          throw new GoogleDriveSourceError(
+            503,
+            "GOOGLE_DRIVE_API_UNAVAILABLE",
+            "Google Drive authorization sementara tidak tersedia.",
+          );
+        }
+        throw new GoogleDriveSourceError(
+          502,
+          "GOOGLE_DRIVE_API_INVALID_RESPONSE",
+          "Google Drive authorization mengembalikan respons tidak valid.",
+        );
+      }
+      throw error;
+    }
 
     const metadataResponse = await this.transport(
       metadataUrl(fileId),
