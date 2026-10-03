@@ -69,8 +69,12 @@ export type GoogleDriveOAuthCallbackRequest = z.infer<
 export const GoogleDriveOAuthCallbackResponseSchema = z
   .object({
     workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
-    connected: z.literal(true),
-    returnPath: z.string().min(1).max(2048),
+    connected: z.boolean(),
+    returnPath: z
+      .string()
+      .min(1)
+      .max(2048)
+      .regex(/^\/(?!\/)[^\r\n]*$/u, "returnPath harus relative path same-origin."),
   })
   .strict();
 export type GoogleDriveOAuthCallbackResponse = z.infer<
