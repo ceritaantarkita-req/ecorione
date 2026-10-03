@@ -107,7 +107,7 @@ describe("GoogleDriveSource", () => {
     expect(requests).toEqual([
       {
         url: "https://www.googleapis.com/drive/v3/files/file-123?alt=media",
-        authorization: "Bearer access-token-ephemeral",
+        authorization: "***",
       },
       {
         url: "https://lh3.googleusercontent.com/download/content",
@@ -297,7 +297,9 @@ describe("GoogleDriveSource", () => {
 
   it("maps content-phase permission and rate-limit failures after metadata succeeds", async () => {
     const denied = source({ contentStatus: 403 });
-    await expect(denied.adapter.fetchSelectedFile("ws_personal", "file-123")).rejects.toMatchObject({
+    await expect(
+      denied.adapter.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
       code: "GOOGLE_DRIVE_FILE_DOWNLOAD_DENIED",
       statusCode: 403,
     });
