@@ -633,6 +633,21 @@ async function installApiMocks(context) {
     if (path === "/api/projects/source-catalog" && method === "GET") {
       return json(route, { items: [], warnings: [] });
     }
+    if (
+      path === "/api/integrations/google-drive/status" &&
+      method === "GET" &&
+      url.searchParams.get("workspaceId") === "ws_personal"
+    ) {
+      return json(route, {
+        provider: "google-drive",
+        workspaceId: "ws_personal",
+        available: false,
+        connected: false,
+        pickerAvailable: false,
+        scope: "https://www.googleapis.com/auth/drive.file",
+        updatedAt: null,
+      });
+    }
     if (/^\/api\/projects\/[^/]+\/sources\/lifecycle$/.test(path) && method === "GET") {
       return json(route, { lifecycles: [] });
     }
