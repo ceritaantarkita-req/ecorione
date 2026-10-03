@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const SCRIPT = "scripts/google-drive-local-acceptance-preflight.mjs";
 const DEFAULT_ORIGIN = "http://localhost:3000";
 const CALLBACK_PATH = "/api/integrations/google-drive/callback";
+const PICKER_KEY = "picker_example_key_123456";
 const SECRET_NAMES = [
   "ECORIONE_CONNECT_VAULT_MASTER_KEY",
   "ECORIONE_GOOGLE_DRIVE_CLIENT_ID",
@@ -23,7 +24,7 @@ function baseEnv(): NodeJS.ProcessEnv {
     ECORIONE_CONNECT_VAULT_MASTER_KEY: Buffer.alloc(32, 7).toString("base64url"),
     ECORIONE_GOOGLE_DRIVE_CLIENT_ID: "example-client-id-123456",
     ECORIONE_GOOGLE_DRIVE_REDIRECT_URI: `${DEFAULT_ORIGIN}${CALLBACK_PATH}`,
-    ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY: "picker_example_key_123456",
+    ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY: PICKER_KEY,
     ECORIONE_GOOGLE_DRIVE_PICKER_APP_ID: "123456789012",
   };
 }
@@ -70,7 +71,7 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     expect(result.stdout).toContain("picker_configured=1");
     expect(result.stdout).toContain("redirect_origin=http://localhost:3000");
     expect(result.stdout).toContain(`redirect_path=${CALLBACK_PATH}`);
-    expect(result.stdout).not.toContain("picker_example_key_123456");
+    expect(result.stdout).not.toContain(PICKER_KEY);
     expect(result.stdout).not.toContain("example-client-id-123456");
   });
 
@@ -96,7 +97,7 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Redirect origin http://localhost:3001");
-    expect(result.stderr).not.toContain(String(env.ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY));
+    expect(result.stderr).not.toContain(PICKER_KEY);
   });
 
   it("rejects the wrong callback path", () => {
