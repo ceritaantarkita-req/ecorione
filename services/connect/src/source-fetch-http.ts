@@ -5,10 +5,7 @@ import {
 import { z } from "zod";
 import { HttpError, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
-import {
-  GoogleDriveSourceError,
-  type GoogleDriveSource,
-} from "./google-drive-source.js";
+import { GoogleDriveSourceError, type GoogleDriveSource } from "./google-drive-source.js";
 import { toMcpHttpError } from "./mcp-client/http.js";
 import type { McpManager } from "./mcp-client/manager.js";
 import { McpResourceReadRequestSchema, McpServerIdSchema } from "./mcp-client/types.js";
