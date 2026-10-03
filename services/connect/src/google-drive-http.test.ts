@@ -39,7 +39,7 @@ function fixture(
   registerGoogleDriveOAuthRoutes(app, {
     credentialVault: vault,
     ...(configured ? { oauthConfig: config } : {}),
-    stateStore,
+    oauthStateStore: stateStore,
     ...(transport === undefined ? {} : { oauthTransport: transport }),
     now: () => "2026-10-03T00:10:00.000Z",
   });
