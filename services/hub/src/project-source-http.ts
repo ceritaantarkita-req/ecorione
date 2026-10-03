@@ -3,9 +3,12 @@ import {
   EpisodeSchema,
   ExternalMcpResourceFetchResponseSchema,
   ExternalUrlFetchResponseSchema,
+  GoogleDriveFileFetchResponseSchema,
   MultimodalAdapterResultSchema,
   McpServerRefSchema,
   ProjectExternalSourceLifecycleListResponseSchema,
+  ProjectGoogleDriveIngestRequestSchema,
+  ProjectGoogleDriveIngestResponseSchema,
   ProjectIdSchema,
   ProjectMcpResourceIngestRequestSchema,
   ProjectMcpResourceIngestResponseSchema,
@@ -24,6 +27,7 @@ import {
   type ArtifactId,
   type Episode,
   type MultimodalAdapterResult,
+  type ProjectGoogleDriveIngestResponse,
   type ProjectMcpResourceIngestResponse,
   type ProjectSourceBinding,
   type ProjectSourceExtractResponse,
@@ -562,6 +566,194 @@ export function registerProjectSourceRoutes(
           deduplicated: uploaded.deduplicated,
           sizeBytes: fetched.sizeBytes,
           mimeType: fetched.mimeType,
+        },
+        now,
+      });
+      return response;
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    "/v1/projects/:id/sources/ingest-google-drive",
+    async (req) => {
+      const { id } = parseOrBadRequest(ParamsSchema, req.params);
+      const body = parseOrBadRequest(ProjectGoogleDriveIngestRequestSchema, req.body);
+      try {
+        projects.require(id, body.workspaceId);
+      } catch (error) {
+        throw mapProjectError(error);
+      }
+
+      const idempotencyKey = `project-google-drive-ingest:${body.operationId}`;
+      const prior = repo.getIdempotentResult<ProjectGoogleDriveIngestResponse>(idempotencyKey);
+      if (prior !== null) {
+        repo.recordAuditEvent({
+          type: "ACTION_SKIPPED_IDEMPOTENT",
+          operationId: body.operationId,
+          module: "Hub",
+          detail: {
+            idempotencyKey,
+            projectId: id,
+            fileId: body.fileId,
+          },
+          now: nowIso(),
+        });
+        return ProjectGoogleDriveIngestResponseSchema.parse(prior.result);
+      }
+
+      const now = nowIso();
+      let fetched: ReturnType<typeof GoogleDriveFileFetchResponseSchema.parse>;
+      try {
+        fetched = GoogleDriveFileFetchResponseSchema.parse(
+          await httpJson(`${options.connectUrl}/v1/source-fetch/google-drive`, {
+            method: "POST",
+            token: options.internalToken,
+            body: {
+              workspaceId: body.workspaceId,
+              fileId: body.fileId,
+            },
+          }),
+        );
+      } catch (error) {
+        if (error instanceof RemoteServiceError) {
+          if (error.statusCode >= 400 && error.statusCode < 500) {
+            throw new HttpError(
+              error.statusCode,
+              "GOOGLE_DRIVE_SOURCE_REJECTED",
+              `Connect Google Drive ingestion: ${error.message}`,
+            );
+          }
+          if (error.statusCode === 504) {
+            throw new HttpError(
+              504,
+              "GOOGLE_DRIVE_SOURCE_TIMEOUT",
+              "Connect Google Drive ingestion timeout.",
+            );
+          }
+        }
+        throw new BadGatewayError("Connect Google Drive ingestion tidak tersedia.");
+      }
+
+      let uploaded: ReturnType<typeof ArtifactUploadResponseSchema.parse>;
+      try {
+        uploaded = ArtifactUploadResponseSchema.parse(
+          await httpJson(`${options.artifactUrl}/v1/artifacts`, {
+            method: "POST",
+            token: options.internalToken,
+            body: {
+              contentBase64: fetched.contentBase64,
+              mimeType: fetched.snapshotMimeType,
+              description: `Google Drive: ${fetched.name}`.slice(0, 200),
+              scope: "personal",
+              sensitivity: "RESTRICTED",
+              syncClass: "LOCAL_ONLY",
+            },
+          }),
+        );
+      } catch (error) {
+        if (error instanceof RemoteServiceError) {
+          throw new BadGatewayError(`Artifact Google Drive snapshot gagal: ${error.message}`);
+        }
+        throw error;
+      }
+      if (
+        uploaded.pointer.scope !== "personal" ||
+        uploaded.pointer.sensitivity !== "RESTRICTED" ||
+        uploaded.pointer.syncClass !== "LOCAL_ONLY"
+      ) {
+        throw new BadGatewayError(
+          "Artifact Google Drive snapshot mengembalikan privacy metadata yang tidak sesuai.",
+        );
+      }
+
+      const candidate = ProjectSourceBindingSchema.parse({
+        projectId: id,
+        workspaceId: body.workspaceId,
+        resourceType: "artifact",
+        resourceId: uploaded.pointer.id,
+        owner: projectSourceOwner("artifact"),
+        role: body.role,
+        createdAt: now,
+      });
+      const metadata = await resolveOwner(candidate, options);
+      const attached = sources.attach({
+        projectId: id,
+        workspaceId: body.workspaceId,
+        resourceType: "artifact",
+        resourceId: uploaded.pointer.id,
+        role: body.role,
+        createdAt: candidate.createdAt as Timestamp,
+      });
+      if (attached.created) {
+        repo.recordAuditEvent({
+          type: "PROJECT_SOURCE_ATTACHED",
+          operationId: body.operationId,
+          module: "Hub",
+          detail: {
+            projectId: id,
+            workspaceId: body.workspaceId,
+            resourceType: "artifact",
+            resourceId: uploaded.pointer.id,
+            owner: attached.binding.owner,
+            role: body.role,
+            derivedFromGoogleDrive: {
+              fileId: body.fileId,
+              fileName: fetched.name,
+            },
+          },
+          now,
+        });
+      }
+
+      const source = ProjectSourceViewSchema.parse({
+        binding: attached.binding,
+        availability: "AVAILABLE",
+        metadata,
+        unavailableReason: null,
+      });
+      sources.upsertExternalLifecycle({
+        projectId: id,
+        workspaceId: body.workspaceId,
+        sourceType: "google-drive",
+        sourceKey: body.fileId,
+        role: body.role,
+        latestArtifactId: uploaded.pointer.id,
+        refreshedAt: now as Timestamp,
+      });
+      const response = ProjectGoogleDriveIngestResponseSchema.parse({
+        operationId: body.operationId,
+        projectId: id,
+        workspaceId: body.workspaceId,
+        fileId: body.fileId,
+        fileName: fetched.name,
+        sourceMimeType: fetched.sourceMimeType,
+        snapshotMimeType: fetched.snapshotMimeType,
+        artifact: uploaded.pointer,
+        source,
+        state: "READY",
+      });
+      repo.saveIdempotentResult(
+        idempotencyKey,
+        body.operationId,
+        "project-source.ingest-google-drive",
+        response,
+        now,
+      );
+      repo.recordAuditEvent({
+        type: "PROJECT_SOURCE_INGESTED",
+        operationId: body.operationId,
+        module: "Hub",
+        detail: {
+          projectId: id,
+          workspaceId: body.workspaceId,
+          sourceType: "google-drive",
+          fileId: body.fileId,
+          fileName: fetched.name,
+          sourceMimeType: fetched.sourceMimeType,
+          snapshotMimeType: fetched.snapshotMimeType,
+          artifactId: uploaded.pointer.id,
+          deduplicated: uploaded.deduplicated,
+          sizeBytes: fetched.sizeBytes,
         },
         now,
       });

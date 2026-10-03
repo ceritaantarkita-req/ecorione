@@ -576,6 +576,140 @@ describe("PE-02 Project Sources HTTP", () => {
     expect(retry.json().artifact.id).toBe(ARTIFACT_ID);
   });
 
+  it("ingests a selected Google Drive file into governed Artifact lifecycle idempotently", async () => {
+    const fileId = "file-123";
+    const snapshot = Buffer.from("# Quarterly plan\n");
+    const pointer = {
+      id: ARTIFACT_ID,
+      path: `cas/${ARTIFACT_ID}`,
+      description: "Google Drive: Quarterly plan",
+      mimeType: "text/markdown",
+      sizeBytes: snapshot.byteLength,
+      scope: "personal",
+      sensitivity: "RESTRICTED",
+      syncClass: "LOCAL_ONLY",
+    };
+
+    connect
+      .intercept({
+        path: "/v1/source-fetch/google-drive",
+        method: "POST",
+        body: JSON.stringify({
+          workspaceId: "ws_personal",
+          fileId,
+        }),
+      })
+      .reply(200, {
+        fileId,
+        name: "Quarterly plan",
+        sourceMimeType: "application/vnd.google-apps.document",
+        snapshotMimeType: "text/markdown",
+        modifiedTime: "2026-10-03T01:00:00.000Z",
+        sizeBytes: snapshot.byteLength,
+        contentBase64: snapshot.toString("base64"),
+      });
+    artifact
+      .intercept({
+        path: "/v1/artifacts",
+        method: "POST",
+        body: JSON.stringify({
+          contentBase64: snapshot.toString("base64"),
+          mimeType: "text/markdown",
+          description: "Google Drive: Quarterly plan",
+          scope: "personal",
+          sensitivity: "RESTRICTED",
+          syncClass: "LOCAL_ONLY",
+        }),
+      })
+      .reply(201, { pointer, deduplicated: false });
+    context
+      .intercept({
+        path: `/v1/artifacts/${ARTIFACT_ID}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+        method: "GET",
+      })
+      .reply(200, pointer);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-google-drive",
+      payload: {
+        operationId: "op_projectdriveingest001",
+        workspaceId: "ws_personal",
+        fileId,
+        role: "source",
+      },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      operationId: "op_projectdriveingest001",
+      projectId: "prj_personal",
+      workspaceId: "ws_personal",
+      fileId,
+      fileName: "Quarterly plan",
+      sourceMimeType: "application/vnd.google-apps.document",
+      snapshotMimeType: "text/markdown",
+      artifact: {
+        id: ARTIFACT_ID,
+        sensitivity: "RESTRICTED",
+        syncClass: "LOCAL_ONLY",
+      },
+      source: {
+        availability: "AVAILABLE",
+        binding: {
+          resourceType: "artifact",
+          resourceId: ARTIFACT_ID,
+          role: "source",
+        },
+      },
+      state: "READY",
+    });
+
+    expect(
+      db.raw
+        .prepare(
+          `SELECT source_type,source_key,latest_artifact_id,state
+           FROM project_external_source_lifecycle
+           WHERE project_id=? AND workspace_id=?`,
+        )
+        .get("prj_personal", "ws_personal"),
+    ).toEqual({
+      source_type: "google-drive",
+      source_key: fileId,
+      latest_artifact_id: ARTIFACT_ID,
+      state: "SNAPSHOT_READY",
+    });
+    expect(
+      db.raw
+        .prepare("SELECT COUNT(*) AS count FROM history_events WHERE operation_id=?")
+        .get("op_projectdriveingest001"),
+    ).toEqual({ count: 0 });
+
+    const retry = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/ingest-google-drive",
+      payload: {
+        operationId: "op_projectdriveingest001",
+        workspaceId: "ws_personal",
+        fileId,
+        role: "source",
+      },
+    });
+    expect(retry.statusCode).toBe(200);
+    expect(retry.json().artifact.id).toBe(ARTIFACT_ID);
+
+    const audit = await app.inject({
+      method: "GET",
+      url: "/v1/audit?operationId=op_projectdriveingest001",
+    });
+    expect(audit.json().events.map((event: { type: string }) => event.type)).toEqual(
+      expect.arrayContaining([
+        "PROJECT_SOURCE_ATTACHED",
+        "PROJECT_SOURCE_INGESTED",
+        "ACTION_SKIPPED_IDEMPOTENT",
+      ]),
+    );
+  });
+
   it("rejects MCP resource ingestion when the server is not bound to the Project", async () => {
     const response = await app.inject({
       method: "POST",

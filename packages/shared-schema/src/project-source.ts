@@ -6,6 +6,8 @@ import {
   ProjectIdSchema,
   WorkspaceIdSchema,
 } from "./ids.js";
+import { GoogleDriveFileIdSchema } from "./google-drive.js";
+import { DEFAULT_WORKSPACE_ID } from "./project.js";
 import { ArtifactPointerSchema, TimestampSchema } from "./memory.js";
 import { FlowGraphIdSchema } from "./nodes.js";
 import { SpacePageIdSchema } from "./space.js";
@@ -30,7 +32,7 @@ export const PROJECT_SOURCE_ROLES = ["source", "reference"] as const;
 export const ProjectSourceRoleSchema = z.enum(PROJECT_SOURCE_ROLES);
 export type ProjectSourceRole = z.infer<typeof ProjectSourceRoleSchema>;
 
-export const PROJECT_EXTERNAL_SOURCE_TYPES = ["url", "mcp-resource"] as const;
+export const PROJECT_EXTERNAL_SOURCE_TYPES = ["url", "mcp-resource", "google-drive"] as const;
 export const ProjectExternalSourceTypeSchema = z.enum(PROJECT_EXTERNAL_SOURCE_TYPES);
 export type ProjectExternalSourceType = z.infer<typeof ProjectExternalSourceTypeSchema>;
 
@@ -267,6 +269,36 @@ export const ProjectMcpResourceIngestResponseSchema = z
   .strict();
 export type ProjectMcpResourceIngestResponse = z.infer<
   typeof ProjectMcpResourceIngestResponseSchema
+>;
+
+export const ProjectGoogleDriveIngestRequestSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
+    fileId: GoogleDriveFileIdSchema,
+    role: ProjectSourceRoleSchema.default("source"),
+  })
+  .strict();
+export type ProjectGoogleDriveIngestRequest = z.infer<
+  typeof ProjectGoogleDriveIngestRequestSchema
+>;
+
+export const ProjectGoogleDriveIngestResponseSchema = z
+  .object({
+    operationId: OperationIdSchema,
+    projectId: ProjectIdSchema,
+    workspaceId: WorkspaceIdSchema,
+    fileId: GoogleDriveFileIdSchema,
+    fileName: z.string().trim().min(1).max(1024),
+    sourceMimeType: z.string().trim().min(1).max(255),
+    snapshotMimeType: z.string().trim().min(1).max(255),
+    artifact: ArtifactPointerSchema,
+    source: ProjectSourceViewSchema,
+    state: z.literal("READY"),
+  })
+  .strict();
+export type ProjectGoogleDriveIngestResponse = z.infer<
+  typeof ProjectGoogleDriveIngestResponseSchema
 >;
 
 export const ProjectSourceListResponseSchema = z

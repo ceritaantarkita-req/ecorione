@@ -37,6 +37,8 @@ describe("Session 6 external-source lifecycle contract", () => {
   it("reuses governed ingestion and extraction paths instead of bypassing owners", () => {
     expect(ui).toContain("/ingest-url");
     expect(ui).toContain("/ingest-mcp-resource");
+    expect(hub).toContain("/ingest-google-drive");
+    expect(hub).toContain('sourceType: "google-drive"');
     expect(ui).toContain("/extract");
     expect(hub).toContain("ArtifactUploadResponseSchema");
     expect(hub).toContain("`${options.contextUrl}/v1/episodes`");
