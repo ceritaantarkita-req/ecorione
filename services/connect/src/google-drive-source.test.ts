@@ -107,7 +107,7 @@ describe("GoogleDriveSource", () => {
     expect(requests).toEqual([
       {
         url: "https://www.googleapis.com/drive/v3/files/file-123?alt=media",
-        authorization: "Bearer access-token-ephemeral",
+        authorization: "***",
       },
       {
         url: "https://lh3.googleusercontent.com/download/content",
@@ -250,6 +250,69 @@ describe("GoogleDriveSource", () => {
       statusCode: 413,
     });
     expect(calls).toHaveLength(1);
+  });
+
+  it("maps Drive API status codes to bounded source errors", async () => {
+    const cases = [
+      {
+        upstreamStatus: 404,
+        code: "GOOGLE_DRIVE_FILE_NOT_FOUND",
+        statusCode: 404,
+      },
+      {
+        upstreamStatus: 401,
+        code: "GOOGLE_DRIVE_FILE_DOWNLOAD_DENIED",
+        statusCode: 403,
+      },
+      {
+        upstreamStatus: 403,
+        code: "GOOGLE_DRIVE_FILE_DOWNLOAD_DENIED",
+        statusCode: 403,
+      },
+      {
+        upstreamStatus: 429,
+        code: "GOOGLE_DRIVE_API_UNAVAILABLE",
+        statusCode: 503,
+      },
+      {
+        upstreamStatus: 503,
+        code: "GOOGLE_DRIVE_API_UNAVAILABLE",
+        statusCode: 503,
+      },
+      {
+        upstreamStatus: 418,
+        code: "GOOGLE_DRIVE_API_INVALID_RESPONSE",
+        statusCode: 502,
+      },
+    ] as const;
+
+    for (const candidate of cases) {
+      const { adapter } = source({ metadataStatus: candidate.upstreamStatus });
+      await expect(adapter.fetchSelectedFile("ws_personal", "file-123")).rejects.toMatchObject({
+        code: candidate.code,
+        statusCode: candidate.statusCode,
+      });
+    }
+  });
+
+  it("maps content-phase permission and rate-limit failures after metadata succeeds", async () => {
+    const denied = source({ contentStatus: 403 });
+    await expect(
+      denied.adapter.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_FILE_DOWNLOAD_DENIED",
+      statusCode: 403,
+    });
+    expect(denied.calls).toHaveLength(2);
+
+    const throttled = source({ contentStatus: 429 });
+    await expect(
+      throttled.adapter.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_API_UNAVAILABLE",
+      statusCode: 503,
+    });
+    expect(throttled.calls).toHaveLength(2);
   });
 
   it("requires an existing encrypted refresh-token connection", async () => {
