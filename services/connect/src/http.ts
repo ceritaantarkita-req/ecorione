@@ -220,6 +220,7 @@ export interface BuildConnectServerOptions {
     GoogleDriveOAuthHttpOptions["oauthTransport"] | undefined;
   readonly googleDriveOAuthStateStore?:
     GoogleDriveOAuthHttpOptions["oauthStateStore"] | undefined;
+  readonly googleDrivePickerConfig?: GoogleDriveOAuthHttpOptions["pickerConfig"] | undefined;
   readonly googleDriveApiTransport?: GoogleDriveApiTransport | undefined;
 }
 
@@ -391,6 +392,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     oauthConfig: options.googleDriveOAuthConfig,
     oauthStateStore: options.googleDriveOAuthStateStore,
     oauthTransport: options.googleDriveOAuthTransport,
+    pickerConfig: options.googleDrivePickerConfig,
   });
   async function validateOpenRouterModel(selectionId: string): Promise<unknown> {
     if (

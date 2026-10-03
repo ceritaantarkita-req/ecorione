@@ -88,6 +88,14 @@ function mcpExternalSourceKey(serverId: string, resourceUri: string): string {
   return JSON.stringify([serverId, resourceUri]);
 }
 
+function remoteErrorType(error: RemoteServiceError): string | null {
+  if (typeof error.body !== "object" || error.body === null) return null;
+  const nested = (error.body as { error?: unknown }).error;
+  if (typeof nested !== "object" || nested === null) return null;
+  const type = (nested as { type?: unknown }).type;
+  return typeof type === "string" ? type : null;
+}
+
 export interface ProjectSourceOwnerOptions {
   readonly contextUrl: string;
   readonly spaceUrl: string;
@@ -616,6 +624,16 @@ export function registerProjectSourceRoutes(
         );
       } catch (error) {
         if (error instanceof RemoteServiceError) {
+          if (
+            error.statusCode === 409 &&
+            remoteErrorType(error) === "GOOGLE_DRIVE_RECONNECT_REQUIRED"
+          ) {
+            throw new HttpError(
+              409,
+              "GOOGLE_DRIVE_RECONNECT_REQUIRED",
+              "Google Drive authorization perlu dihubungkan ulang.",
+            );
+          }
           if (error.statusCode >= 400 && error.statusCode < 500) {
             throw new HttpError(
               error.statusCode,

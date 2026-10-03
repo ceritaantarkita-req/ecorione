@@ -291,7 +291,7 @@ describe("GoogleDriveSource", () => {
       },
     });
     await expect(rejected.fetchSelectedFile("ws_personal", "file-123")).rejects.toMatchObject({
-      code: "GOOGLE_DRIVE_NOT_CONNECTED",
+      code: "GOOGLE_DRIVE_RECONNECT_REQUIRED",
       statusCode: 409,
       message: "Google Drive authorization perlu dihubungkan ulang.",
     });

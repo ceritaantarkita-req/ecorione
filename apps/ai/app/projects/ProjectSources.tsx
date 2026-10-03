@@ -1,15 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import type {
-  ProjectExternalSourceLifecycle,
-  ProjectMcpResourceIngestResponse,
-  ProjectSourceExtractResponse,
-  ProjectSourceResourceType,
-  ProjectUrlIngestResponse,
-  ProjectSourceRole,
-  ProjectSourceView,
+import {
+  DEFAULT_WORKSPACE_ID,
+  GoogleDriveConnectionStatusSchema,
+  GoogleDriveOAuthStartResponseSchema,
+  GoogleDrivePickerSessionResponseSchema,
+  ProjectGoogleDriveIngestResponseSchema,
+  type GoogleDriveConnectionStatus,
+  type ProjectExternalSourceLifecycle,
+  type ProjectGoogleDriveIngestResponse,
+  type ProjectMcpResourceIngestResponse,
+  type ProjectSourceExtractResponse,
+  type ProjectSourceResourceType,
+  type ProjectUrlIngestResponse,
+  type ProjectSourceRole,
+  type ProjectSourceView,
 } from "@ecorione/shared-schema";
+import {
+  GoogleDriveOperationError,
+  ingestGoogleDriveSelection,
+} from "../../lib/google-drive-ingest-batch";
+import { pickGoogleDriveFiles } from "../../lib/google-drive-picker-client";
 import styles from "./Projects.module.css";
 
 const RESOURCE_TYPES: Array<{ value: ProjectSourceResourceType; label: string }> = [
@@ -51,12 +63,23 @@ interface McpResourceItem {
   readonly mimeType?: string | undefined;
 }
 
-function errorMessage(body: unknown, fallback: string): string {
-  if (typeof body !== "object" || body === null) return fallback;
+function errorDetails(
+  body: unknown,
+  fallback: string,
+): { readonly type: string | null; readonly message: string } {
+  if (typeof body !== "object" || body === null) return { type: null, message: fallback };
   const error = (body as { error?: unknown }).error;
-  if (typeof error !== "object" || error === null) return fallback;
+  if (typeof error !== "object" || error === null) return { type: null, message: fallback };
+  const type = (error as { type?: unknown }).type;
   const message = (error as { message?: unknown }).message;
-  return typeof message === "string" ? message : fallback;
+  return {
+    type: typeof type === "string" ? type : null,
+    message: typeof message === "string" ? message : fallback,
+  };
+}
+
+function errorMessage(body: unknown, fallback: string): string {
+  return errorDetails(body, fallback).message;
 }
 
 export function ProjectSources(props: {
@@ -76,6 +99,9 @@ export function ProjectSources(props: {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [mcpResources, setMcpResources] = useState<Record<string, McpResourceItem[]>>({});
+  const [driveStatus, setDriveStatus] = useState<GoogleDriveConnectionStatus | null>(null);
+  const [driveReconnectRequired, setDriveReconnectRequired] = useState(false);
+  const [driveRole, setDriveRole] = useState<ProjectSourceRole>("source");
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const endpoint = `/api/projects/${encodeURIComponent(props.projectId)}/sources`;
@@ -130,6 +156,25 @@ export function ProjectSources(props: {
     setLifecycles((body as { lifecycles: ProjectExternalSourceLifecycle[] }).lifecycles);
   }, [endpoint, props.workspaceId]);
 
+  const loadDriveStatus = useCallback(async () => {
+    if (props.workspaceId !== DEFAULT_WORKSPACE_ID) {
+      setDriveStatus(null);
+      return;
+    }
+    const response = await fetch(
+      `/api/integrations/google-drive/status?workspaceId=${encodeURIComponent(props.workspaceId)}`,
+      { cache: "no-store" },
+    );
+    const body: unknown = await response.json().catch(() => undefined);
+    if (!response.ok) {
+      throw new Error(errorMessage(body, "Gagal memuat status Google Drive."));
+    }
+    const parsed = GoogleDriveConnectionStatusSchema.safeParse(body);
+    if (!parsed.success) throw new Error("Status Google Drive tidak sesuai kontrak.");
+    if (!parsed.data.connected) setDriveReconnectRequired(false);
+    setDriveStatus(parsed.data);
+  }, [props.workspaceId]);
+
   const loadCatalog = useCallback(async () => {
     setCatalogLoading(true);
     try {
@@ -149,10 +194,194 @@ export function ProjectSources(props: {
 
   useEffect(() => {
     setFeedback(null);
-    void Promise.all([load(), loadLifecycle(), loadCatalog()]).catch((error: unknown) =>
-      setFeedback(error instanceof Error ? error.message : "Gagal memuat Project Sources."),
+    void Promise.all([load(), loadLifecycle(), loadCatalog(), loadDriveStatus()]).catch(
+      (error: unknown) =>
+        setFeedback(error instanceof Error ? error.message : "Gagal memuat Project Sources."),
     );
-  }, [load, loadCatalog, loadLifecycle]);
+  }, [load, loadCatalog, loadDriveStatus, loadLifecycle]);
+
+  async function connectGoogleDrive(): Promise<void> {
+    if (
+      props.workspaceId !== DEFAULT_WORKSPACE_ID ||
+      busyKey !== null ||
+      driveStatus?.available !== true
+    ) {
+      return;
+    }
+    setBusyKey("drive-connect");
+    setFeedback(null);
+    try {
+      const current = new URL(window.location.href);
+      current.searchParams.delete("googleDrive");
+      const returnPath = `${current.pathname}${current.search}`;
+      const response = await fetch("/api/integrations/google-drive/oauth/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: props.workspaceId,
+          returnPath,
+        }),
+      });
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) {
+        throw new Error(errorMessage(body, "Gagal memulai koneksi Google Drive."));
+      }
+      const parsed = GoogleDriveOAuthStartResponseSchema.safeParse(body);
+      if (!parsed.success) throw new Error("Respons OAuth Google Drive tidak sesuai kontrak.");
+      const authorization = new URL(parsed.data.authorizationUrl);
+      if (
+        authorization.origin !== "https://accounts.google.com" ||
+        authorization.pathname !== "/o/oauth2/v2/auth"
+      ) {
+        throw new Error("Tujuan OAuth Google Drive tidak diizinkan.");
+      }
+      window.location.assign(authorization.toString());
+    } catch (error) {
+      setBusyKey(null);
+      setFeedback(
+        error instanceof Error ? error.message : "Gagal memulai koneksi Google Drive.",
+      );
+    }
+  }
+
+  async function disconnectGoogleDrive(): Promise<void> {
+    if (props.workspaceId !== DEFAULT_WORKSPACE_ID || busyKey !== null) return;
+    setBusyKey("drive-disconnect");
+    setFeedback(null);
+    try {
+      const response = await fetch(
+        `/api/integrations/google-drive?workspaceId=${encodeURIComponent(props.workspaceId)}`,
+        { method: "DELETE" },
+      );
+      const body: unknown = await response.json().catch(() => undefined);
+      if (!response.ok) {
+        throw new Error(errorMessage(body, "Gagal memutus Google Drive."));
+      }
+      await loadDriveStatus();
+      setDriveReconnectRequired(false);
+      setFeedback(
+        "Google Drive terputus. Snapshot Artifact yang sudah tersimpan tetap tersedia di Project.",
+      );
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Gagal memutus Google Drive.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  async function ingestGoogleDriveFile(
+    fileId: string,
+    nextRole: ProjectSourceRole,
+  ): Promise<ProjectGoogleDriveIngestResponse> {
+    const response = await fetch(`${endpoint}/ingest-google-drive`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        workspaceId: props.workspaceId,
+        fileId,
+        role: nextRole,
+      }),
+    });
+    const body: unknown = await response.json().catch(() => undefined);
+    if (!response.ok) {
+      const details = errorDetails(body, "Gagal mengambil file Google Drive.");
+      throw new GoogleDriveOperationError(details.type, details.message);
+    }
+    const parsed = ProjectGoogleDriveIngestResponseSchema.safeParse(body);
+    if (!parsed.success) throw new Error("Snapshot Google Drive tidak sesuai kontrak.");
+    return parsed.data;
+  }
+
+  async function openGoogleDrivePicker(): Promise<void> {
+    if (
+      props.workspaceId !== DEFAULT_WORKSPACE_ID ||
+      busyKey !== null ||
+      driveStatus?.connected !== true ||
+      driveStatus.pickerAvailable !== true
+    ) {
+      return;
+    }
+    setBusyKey("drive-picker");
+    setFeedback(null);
+    try {
+      const sessionResponse = await fetch("/api/integrations/google-drive/picker-session", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ workspaceId: props.workspaceId }),
+        cache: "no-store",
+      });
+      const rawSession: unknown = await sessionResponse.json().catch(() => undefined);
+      if (!sessionResponse.ok) {
+        const details = errorDetails(rawSession, "Gagal membuat sesi Google Picker.");
+        throw new GoogleDriveOperationError(details.type, details.message);
+      }
+      const session = GoogleDrivePickerSessionResponseSchema.safeParse(rawSession);
+      if (!session.success) throw new Error("Sesi Google Picker tidak sesuai kontrak.");
+
+      const selection = await pickGoogleDriveFiles(session.data);
+      if (selection === null) {
+        setFeedback("Pemilihan Google Drive dibatalkan.");
+        return;
+      }
+
+      const batch = await ingestGoogleDriveSelection(
+        selection.files,
+        driveRole,
+        ingestGoogleDriveFile,
+      );
+
+      if (batch.successes.length > 0) {
+        await Promise.all([load(), loadLifecycle(), loadCatalog(), loadDriveStatus()]);
+      }
+      if (batch.reconnectRequired) setDriveReconnectRequired(true);
+      setFeedback(batch.feedback);
+    } catch (error) {
+      if (
+        error instanceof GoogleDriveOperationError &&
+        error.type === "GOOGLE_DRIVE_RECONNECT_REQUIRED"
+      ) {
+        setDriveReconnectRequired(true);
+      }
+      setFeedback(error instanceof Error ? error.message : "Google Picker gagal dibuka.");
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  async function refreshGoogleDriveSnapshot(
+    lifecycle: ProjectExternalSourceLifecycle,
+  ): Promise<void> {
+    if (
+      lifecycle.sourceType !== "google-drive" ||
+      lifecycle.state === "DETACHED" ||
+      busyKey !== null
+    ) {
+      return;
+    }
+    const key = `drive-refresh:${lifecycle.sourceKey}:${lifecycle.role}`;
+    setBusyKey(key);
+    setFeedback(null);
+    try {
+      const refreshed = await ingestGoogleDriveFile(lifecycle.sourceKey, lifecycle.role);
+      setDriveReconnectRequired(false);
+      setFeedback(
+        `Google Drive snapshot diperbarui → Artifact ${refreshed.artifact.id}. Index snapshot terbaru bila diperlukan.`,
+      );
+      await Promise.all([load(), loadLifecycle(), loadCatalog()]);
+    } catch (error) {
+      if (
+        error instanceof GoogleDriveOperationError &&
+        error.type === "GOOGLE_DRIVE_RECONNECT_REQUIRED"
+      ) {
+        setDriveReconnectRequired(true);
+      }
+      setFeedback(
+        error instanceof Error ? error.message : "Gagal memperbarui Google Drive snapshot.",
+      );
+    } finally {
+      setBusyKey(null);
+    }
+  }
 
   async function upload(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -411,6 +640,86 @@ export function ProjectSources(props: {
         >
           {catalogLoading ? "Memuat..." : "Refresh picker"}
         </button>
+      </div>
+
+      <div className={styles.sourceUpload}>
+        <div>
+          <strong>Google Drive</strong>
+          <small>
+            Pilih file secara eksplisit lewat Google Picker. ECORIONE hanya menyimpan snapshot
+            file yang dipilih; tidak mengindeks seluruh Drive atau melakukan sync otomatis.
+          </small>
+          <small>
+            {props.workspaceId !== DEFAULT_WORKSPACE_ID
+              ? "Native Drive V1 hanya tersedia di Personal Workspace."
+              : driveStatus === null
+                ? "Memuat status koneksi..."
+                : !driveStatus.available
+                  ? "Belum dikonfigurasi operator."
+                  : !driveStatus.connected
+                    ? "Belum terhubung."
+                    : driveReconnectRequired
+                      ? "Perlu dihubungkan ulang. Putuskan koneksi lama lalu hubungkan kembali."
+                      : driveStatus.pickerAvailable
+                        ? "Terhubung · Picker siap."
+                        : "Terhubung · konfigurasi Picker belum lengkap."}
+          </small>
+        </div>
+        <div className={styles.sourceUploadForm}>
+          <select
+            className="ecr-input"
+            value={driveRole}
+            aria-label="Peran Google Drive source"
+            disabled={
+              busyKey !== null || driveStatus?.connected !== true || driveReconnectRequired
+            }
+            onChange={(event) => setDriveRole(event.target.value as ProjectSourceRole)}
+          >
+            <option value="source">Source</option>
+            <option value="reference">Reference</option>
+          </select>
+          {driveStatus?.connected === true ? (
+            <>
+              <button
+                className="ecr-btn ecr-btn--primary"
+                type="button"
+                disabled={
+                  busyKey !== null ||
+                  driveStatus.pickerAvailable !== true ||
+                  driveReconnectRequired
+                }
+                onClick={() => void openGoogleDrivePicker()}
+              >
+                {busyKey === "drive-picker" ? "Membuka..." : "Pilih file Drive"}
+              </button>
+              <button
+                className="ecr-btn ecr-btn--secondary"
+                type="button"
+                disabled={busyKey !== null}
+                onClick={() => void disconnectGoogleDrive()}
+              >
+                {busyKey === "drive-disconnect"
+                  ? "Memutus..."
+                  : driveReconnectRequired
+                    ? "Putuskan untuk hubungkan ulang"
+                    : "Putuskan"}
+              </button>
+            </>
+          ) : (
+            <button
+              className="ecr-btn ecr-btn--primary"
+              type="button"
+              disabled={
+                busyKey !== null ||
+                props.workspaceId !== DEFAULT_WORKSPACE_ID ||
+                driveStatus?.available !== true
+              }
+              onClick={() => void connectGoogleDrive()}
+            >
+              {busyKey === "drive-connect" ? "Menghubungkan..." : "Hubungkan Google Drive"}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={styles.sourceUpload}>
@@ -715,6 +1024,21 @@ export function ProjectSources(props: {
                         : sourceLifecycle === undefined
                           ? "Ingest snapshot"
                           : "Refresh snapshot"}
+                    </button>
+                  ) : null}
+                  {source.binding.resourceType === "artifact" &&
+                  sourceLifecycle?.sourceType === "google-drive" &&
+                  sourceLifecycle.state !== "DETACHED" ? (
+                    <button
+                      className="ecr-btn ecr-btn--secondary"
+                      type="button"
+                      disabled={busyKey !== null || driveStatus?.connected !== true}
+                      onClick={() => void refreshGoogleDriveSnapshot(sourceLifecycle)}
+                    >
+                      {busyKey ===
+                      `drive-refresh:${sourceLifecycle.sourceKey}:${sourceLifecycle.role}`
+                        ? "Refreshing..."
+                        : "Refresh Drive snapshot"}
                     </button>
                   ) : null}
                   {source.binding.resourceType === "artifact" ? (

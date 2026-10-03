@@ -21,7 +21,11 @@ export const GoogleDrivePickerSelectionSchema = z
   .object({
     files: z.array(GoogleDriveSelectedFileSchema).min(1).max(20),
   })
-  .strict();
+  .strict()
+  .refine(({ files }) => new Set(files.map((file) => file.id)).size === files.length, {
+    message: "Pilihan Google Drive tidak boleh berisi file ID duplikat.",
+    path: ["files"],
+  });
 export type GoogleDrivePickerSelection = z.infer<typeof GoogleDrivePickerSelectionSchema>;
 
 export const GoogleDriveOAuthStartRequestSchema = z
@@ -31,7 +35,10 @@ export const GoogleDriveOAuthStartRequestSchema = z
       .string()
       .min(1)
       .max(2048)
-      .regex(/^\/(?!\/)[^\r\n]*$/u, "returnPath harus relative path same-origin."),
+      .regex(
+        /^\/(?!\/)[^\\\r\n]*$/u,
+        "returnPath harus relative path same-origin tanpa backslash.",
+      ),
   })
   .strict();
 export type GoogleDriveOAuthStartRequest = z.infer<typeof GoogleDriveOAuthStartRequestSchema>;
@@ -69,8 +76,15 @@ export type GoogleDriveOAuthCallbackRequest = z.infer<
 export const GoogleDriveOAuthCallbackResponseSchema = z
   .object({
     workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
-    connected: z.literal(true),
-    returnPath: z.string().min(1).max(2048),
+    connected: z.boolean(),
+    returnPath: z
+      .string()
+      .min(1)
+      .max(2048)
+      .regex(
+        /^\/(?!\/)[^\\\r\n]*$/u,
+        "returnPath harus relative path same-origin tanpa backslash.",
+      ),
   })
   .strict();
 export type GoogleDriveOAuthCallbackResponse = z.infer<
@@ -83,6 +97,7 @@ export const GoogleDriveConnectionStatusSchema = z
     workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
     available: z.boolean(),
     connected: z.boolean(),
+    pickerAvailable: z.boolean(),
     scope: z.literal(GOOGLE_DRIVE_FILE_SCOPE),
     updatedAt: z.string().datetime({ offset: false }).nullable(),
   })
@@ -111,3 +126,31 @@ export const GoogleDriveFileFetchResponseSchema = z
   })
   .strict();
 export type GoogleDriveFileFetchResponse = z.infer<typeof GoogleDriveFileFetchResponseSchema>;
+
+export const GoogleDrivePickerSessionRequestSchema = z
+  .object({
+    workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
+  })
+  .strict();
+export type GoogleDrivePickerSessionRequest = z.infer<
+  typeof GoogleDrivePickerSessionRequestSchema
+>;
+
+export const GoogleDrivePickerSessionResponseSchema = z
+  .object({
+    workspaceId: z.literal(DEFAULT_WORKSPACE_ID),
+    scope: z.literal(GOOGLE_DRIVE_FILE_SCOPE),
+    accessToken: z.string().min(1).max(32_768),
+    expiresAt: z.string().datetime({ offset: false }),
+    developerKey: z
+      .string()
+      .trim()
+      .min(16)
+      .max(512)
+      .regex(/^[A-Za-z0-9_-]+$/u),
+    appId: z.string().regex(/^\d{6,32}$/u),
+  })
+  .strict();
+export type GoogleDrivePickerSessionResponse = z.infer<
+  typeof GoogleDrivePickerSessionResponseSchema
+>;

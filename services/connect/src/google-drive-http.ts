@@ -6,6 +6,8 @@ import {
   GoogleDriveOAuthCallbackRequestSchema,
   GoogleDriveOAuthCallbackResponseSchema,
   GoogleDriveOAuthStartRequestSchema,
+  GoogleDrivePickerSessionRequestSchema,
+  GoogleDrivePickerSessionResponseSchema,
   WorkspaceIdSchema,
 } from "@ecorione/shared-schema";
 import { HttpError, parseOrBadRequest } from "@ecorione/shared-server";
@@ -19,6 +21,7 @@ import {
   googleDriveConnectionStatus,
   storeGoogleDriveRefreshToken,
   type GoogleDriveOAuthConfig,
+  type GoogleDrivePickerConfig,
 } from "./google-drive-oauth.js";
 import {
   GoogleDriveOAuthClient,
@@ -35,6 +38,7 @@ export interface GoogleDriveOAuthHttpOptions {
   readonly oauthConfig?: GoogleDriveOAuthConfig | undefined;
   readonly oauthStateStore?: GoogleDriveOAuthStateStore | undefined;
   readonly oauthTransport?: GoogleDriveOAuthTransport | undefined;
+  readonly pickerConfig?: GoogleDrivePickerConfig | undefined;
   readonly now?: (() => string) | undefined;
 }
 
@@ -105,12 +109,17 @@ export function registerGoogleDriveOAuthRoutes(
         workspaceId: DEFAULT_WORKSPACE_ID,
         available: false,
         connected: false,
+        pickerAvailable: false,
         scope: GOOGLE_DRIVE_FILE_SCOPE,
         updatedAt: null,
       });
     }
     try {
-      return googleDriveConnectionStatus(options.credentialVault, available());
+      return googleDriveConnectionStatus(
+        options.credentialVault,
+        available(),
+        available() && options.pickerConfig !== undefined,
+      );
     } catch (error) {
       throw mapGoogleDriveError(error);
     }
@@ -140,11 +149,11 @@ export function registerGoogleDriveOAuthRoutes(
     requirePersonalWorkspace(consumed.workspaceId);
 
     if (body.error !== undefined) {
-      throw new HttpError(
-        400,
-        "GOOGLE_DRIVE_OAUTH_DENIED",
-        "Otorisasi Google Drive tidak diselesaikan.",
-      );
+      return GoogleDriveOAuthCallbackResponseSchema.parse({
+        workspaceId: DEFAULT_WORKSPACE_ID,
+        connected: false,
+        returnPath: consumed.returnPath,
+      });
     }
 
     try {
@@ -165,6 +174,61 @@ export function registerGoogleDriveOAuthRoutes(
         returnPath: consumed.returnPath,
       });
     } catch (error) {
+      if (error instanceof HttpError) throw error;
+      throw mapGoogleDriveError(error);
+    }
+  });
+
+  app.post("/v1/integrations/google-drive/picker-session", async (req) => {
+    const body = parseOrBadRequest(GoogleDrivePickerSessionRequestSchema, req.body);
+    requirePersonalWorkspace(body.workspaceId);
+    const { vault, client } = runtime();
+    if (options.pickerConfig === undefined) {
+      throw new HttpError(
+        503,
+        "GOOGLE_DRIVE_PICKER_NOT_CONFIGURED",
+        "Google Drive Picker belum dikonfigurasi operator.",
+      );
+    }
+
+    const refreshToken = vault.get(GOOGLE_DRIVE_PROVIDER_ID, "tokens");
+    if (refreshToken === undefined) {
+      throw new HttpError(
+        409,
+        "GOOGLE_DRIVE_NOT_CONNECTED",
+        "Hubungkan Google Drive sebelum membuka Picker.",
+      );
+    }
+
+    try {
+      const token = await client.refreshAccessToken(refreshToken);
+      const nowMs = Date.parse(now());
+      if (!Number.isFinite(nowMs)) {
+        throw new HttpError(
+          503,
+          "GOOGLE_DRIVE_TIME_INVALID",
+          "Clock Connect tidak dapat digunakan untuk Picker session.",
+        );
+      }
+      return GoogleDrivePickerSessionResponseSchema.parse({
+        workspaceId: DEFAULT_WORKSPACE_ID,
+        scope: GOOGLE_DRIVE_FILE_SCOPE,
+        accessToken: token.accessToken,
+        expiresAt: new Date(nowMs + token.expiresInSeconds * 1000).toISOString(),
+        developerKey: options.pickerConfig.developerKey,
+        appId: options.pickerConfig.appId,
+      });
+    } catch (error) {
+      if (
+        error instanceof GoogleDriveOAuthUpstreamError &&
+        error.code === "GOOGLE_DRIVE_OAUTH_REJECTED"
+      ) {
+        throw new HttpError(
+          409,
+          "GOOGLE_DRIVE_RECONNECT_REQUIRED",
+          "Google Drive authorization perlu dihubungkan ulang.",
+        );
+      }
       if (error instanceof HttpError) throw error;
       throw mapGoogleDriveError(error);
     }

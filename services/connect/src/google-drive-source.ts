@@ -56,6 +56,7 @@ export class GoogleDriveSourceError extends Error {
     readonly statusCode: 403 | 404 | 409 | 413 | 415 | 502 | 503 | 504,
     readonly code:
       | "GOOGLE_DRIVE_NOT_CONNECTED"
+      | "GOOGLE_DRIVE_RECONNECT_REQUIRED"
       | "GOOGLE_DRIVE_FILE_NOT_FOUND"
       | "GOOGLE_DRIVE_FILE_DOWNLOAD_DENIED"
       | "GOOGLE_DRIVE_FILE_TOO_LARGE"
@@ -389,7 +390,7 @@ export class GoogleDriveSource {
         if (error.code === "GOOGLE_DRIVE_OAUTH_REJECTED") {
           throw new GoogleDriveSourceError(
             409,
-            "GOOGLE_DRIVE_NOT_CONNECTED",
+            "GOOGLE_DRIVE_RECONNECT_REQUIRED",
             "Google Drive authorization perlu dihubungkan ulang.",
           );
         }
