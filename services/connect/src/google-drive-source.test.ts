@@ -79,11 +79,7 @@ describe("GoogleDriveSource", () => {
     const requests: Array<{ url: string; authorization: string | null }> = [];
     const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
       const url =
-        input instanceof Request
-          ? input.url
-          : input instanceof URL
-            ? input.toString()
-            : input;
+        input instanceof Request ? input.url : input instanceof URL ? input.toString() : input;
       const headers = new Headers(init?.headers);
       requests.push({ url, authorization: headers.get("authorization") });
       if (requests.length === 1) {
@@ -124,11 +120,7 @@ describe("GoogleDriveSource", () => {
     const requests: string[] = [];
     const fetchImpl = (async (input: string | URL | Request) => {
       const url =
-        input instanceof Request
-          ? input.url
-          : input instanceof URL
-            ? input.toString()
-            : input;
+        input instanceof Request ? input.url : input instanceof URL ? input.toString() : input;
       requests.push(url);
       return new Response(null, {
         status: 302,
