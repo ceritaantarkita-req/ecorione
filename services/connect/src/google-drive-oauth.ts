@@ -20,7 +20,7 @@ export const GOOGLE_DRIVE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
 const DEFAULT_STATE_TTL_MS = 10 * 60 * 1000;
 const MIN_REFRESH_TOKEN_LENGTH = 16;
 
-const GoogleDriveOAuthConfigSchema = z
+export const GoogleDriveOAuthConfigSchema = z
   .object({
     clientId: z.string().trim().min(10).max(4096),
     clientSecret: z.string().min(8).max(4096).optional(),
