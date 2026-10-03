@@ -370,9 +370,9 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
     expect(rows.map((row) => row.resource_id)).toEqual([artifactA]);
 
     const audit = await app.inject({ method: "GET", url: "/v1/audit" });
-    const eventTypes = (
-      audit.json().events as Array<{ type: string }>
-    ).map((event) => event.type);
+    const eventTypes = (audit.json().events as Array<{ type: string }>).map(
+      (event) => event.type,
+    );
     expect(eventTypes).toEqual(
       expect.arrayContaining([
         "PROJECT_SOURCE_INGESTED",
@@ -383,3 +383,4 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
     );
   });
 });
+2026-10-03T15:16:53.2906781Z
