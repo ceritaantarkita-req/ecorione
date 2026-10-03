@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { GOOGLE_DRIVE_FILE_SCOPE } from "@ecorione/shared-schema";
+import { GOOGLE_DRIVE_TOKEN_ENDPOINT } from "./google-drive-oauth.js";
 import {
   GOOGLE_DRIVE_REVOKE_ENDPOINT,
-  GOOGLE_DRIVE_TOKEN_ENDPOINT,
   GoogleDriveOAuthClient,
   GoogleDriveOAuthUpstreamError,
   type GoogleDriveOAuthTransport,
