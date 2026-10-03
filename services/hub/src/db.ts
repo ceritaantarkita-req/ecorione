@@ -54,7 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_project_source_bindings_project
 CREATE TABLE IF NOT EXISTS project_external_source_lifecycle (
   project_id TEXT NOT NULL REFERENCES projects(id),
   workspace_id TEXT NOT NULL,
-  source_type TEXT NOT NULL CHECK(source_type IN ('url','mcp-resource')),
+  source_type TEXT NOT NULL CHECK(source_type IN ('url','mcp-resource','google-drive')),
   source_key TEXT NOT NULL,
   role TEXT NOT NULL CHECK(role IN ('source','reference')),
   latest_artifact_id TEXT NOT NULL,
@@ -400,6 +400,10 @@ interface TableInfoRow {
   readonly name: string;
 }
 
+interface TableSqlRow {
+  readonly sql: string | null;
+}
+
 function hasColumn(db: SqliteDatabase, table: string, column: string): boolean {
   return (db.pragma(`table_info(${table})`) as TableInfoRow[]).some(
     (row) => row.name === column,
@@ -483,6 +487,49 @@ function migrateHistoryLedgerLifecycle(db: SqliteDatabase): void {
   })();
 }
 
+function migrateProjectExternalSourceLifecycle(db: SqliteDatabase): void {
+  const row = db
+    .prepare(
+      "SELECT sql FROM sqlite_master WHERE type='table' AND name='project_external_source_lifecycle'",
+    )
+    .get() as TableSqlRow | undefined;
+  if (row?.sql?.includes("'google-drive'") === true) return;
+
+  db.transaction(() => {
+    db.exec(`
+      DROP INDEX IF EXISTS idx_project_external_source_lifecycle_project;
+      ALTER TABLE project_external_source_lifecycle
+        RENAME TO project_external_source_lifecycle_legacy;
+      CREATE TABLE project_external_source_lifecycle (
+        project_id TEXT NOT NULL REFERENCES projects(id),
+        workspace_id TEXT NOT NULL,
+        source_type TEXT NOT NULL CHECK(source_type IN ('url','mcp-resource','google-drive')),
+        source_key TEXT NOT NULL,
+        role TEXT NOT NULL CHECK(role IN ('source','reference')),
+        latest_artifact_id TEXT NOT NULL,
+        latest_context_episode_id TEXT,
+        state TEXT NOT NULL CHECK(state IN ('SNAPSHOT_READY','INDEXED','DETACHED')),
+        last_refreshed_at TEXT NOT NULL,
+        last_indexed_at TEXT,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY(project_id, source_type, source_key, role)
+      );
+      INSERT INTO project_external_source_lifecycle
+        (project_id,workspace_id,source_type,source_key,role,latest_artifact_id,
+         latest_context_episode_id,state,last_refreshed_at,last_indexed_at,updated_at)
+      SELECT
+        project_id,workspace_id,source_type,source_key,role,latest_artifact_id,
+        latest_context_episode_id,state,last_refreshed_at,last_indexed_at,updated_at
+      FROM project_external_source_lifecycle_legacy;
+      DROP TABLE project_external_source_lifecycle_legacy;
+      CREATE INDEX idx_project_external_source_lifecycle_project
+        ON project_external_source_lifecycle(
+          workspace_id, project_id, updated_at DESC, source_type, source_key
+        );
+    `);
+  })();
+}
+
 function migrateProjectFoundation(db: SqliteDatabase): void {
   db.transaction(() => {
     if (!hasColumn(db, "history_sessions", "workspace_id")) {
@@ -530,6 +577,7 @@ export function openHubDatabase(path: string = IN_MEMORY): HubDatabase {
     raw.pragma("busy_timeout = 5000");
   }
   raw.exec(SCHEMA);
+  migrateProjectExternalSourceLifecycle(raw);
   migrateProjectFoundation(raw);
   migrateHistoryLedgerLifecycle(raw);
   return {
