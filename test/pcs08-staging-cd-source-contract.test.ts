@@ -40,6 +40,7 @@ describe("PCS-08 GitHub-to-staging CD contract", () => {
   it("keeps staging SSH material in the protected staging environment", () => {
     expect(workflow).toContain("environment: staging");
     expect(workflow).toContain("vars.ECORIONE_STAGING_CD_ENABLED == '1'");
+    expect(workflow).toContain("vars.ECORIONE_STAGING_TARGET_ACTIVE == '1'");
     expect(workflow).toContain("secrets.STAGING_SSH_PRIVATE_KEY");
     expect(workflow).toContain("secrets.STAGING_SSH_KNOWN_HOSTS");
     expect(workflow).toContain("secrets.STAGING_SSH_HOST");
