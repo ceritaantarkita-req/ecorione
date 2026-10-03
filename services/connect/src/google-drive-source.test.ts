@@ -236,7 +236,9 @@ describe("GoogleDriveSource", () => {
         throw new Error("must not run");
       },
     });
-    await expect(timeout.fetchSelectedFile("ws_personal", "file-123")).rejects.toMatchObject({
+    await expect(
+      timeout.fetchSelectedFile("ws_personal", "file-123"),
+    ).rejects.toMatchObject({
       code: "GOOGLE_DRIVE_API_TIMEOUT",
       statusCode: 504,
     });
