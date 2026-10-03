@@ -155,7 +155,8 @@ This deterministic suite uses synthetic credentials and mocked Google/owner endp
 - disconnected -> OAuth start/callback -> connected status;
 - encrypted refresh-token custody and one-time OAuth state;
 - short-lived Picker session without refresh-token disclosure;
-- reconnect-required when Google rejects the stored refresh token;
+- reconnect-required when Google rejects the stored refresh token, preserved end-to-end through Hub instead of collapsing into a generic source error;
+- disconnect remains fail-closed on real revocation failures, but treats Google's `invalid_token` response as idempotent success because that token is already expired/revoked; `invalid_request` and other revoke errors still preserve local credential custody;
 - explicit blob-file download;
 - deterministic Google-native document export;
 - duplicate Picker file IDs rejected before ingestion;
