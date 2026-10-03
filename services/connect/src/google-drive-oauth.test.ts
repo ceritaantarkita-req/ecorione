@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { GOOGLE_DRIVE_FILE_SCOPE } from "@ecorione/shared-schema";
+import { DEFAULT_WORKSPACE_ID, GOOGLE_DRIVE_FILE_SCOPE } from "@ecorione/shared-schema";
 import { FileCredentialVault } from "./credential-vault.js";
 import {
   GoogleDriveOAuthStateError,
@@ -42,7 +42,7 @@ describe("Google Drive OAuth foundation", () => {
         redirectUri: "https://ecorione.example/api/integrations/google-drive/callback",
       },
       {
-        workspaceId: "ws_personal",
+        workspaceId: DEFAULT_WORKSPACE_ID,
         returnPath: "/projects/prj_personal",
       },
     );
@@ -60,7 +60,7 @@ describe("Google Drive OAuth foundation", () => {
     if (state === null) throw new Error("fixture state missing");
     const consumed = store.consume(state);
     expect(consumed).toMatchObject({
-      workspaceId: "ws_personal",
+      workspaceId: DEFAULT_WORKSPACE_ID,
       returnPath: "/projects/prj_personal",
     });
     expect(consumed.codeVerifier.length).toBeGreaterThanOrEqual(43);
@@ -82,7 +82,7 @@ describe("Google Drive OAuth foundation", () => {
           clientId: "123456789012-example.apps.googleusercontent.com",
           redirectUri: "http://example.com/oauth/callback",
         },
-        { workspaceId: "ws_personal", returnPath: "/projects" },
+        { workspaceId: DEFAULT_WORKSPACE_ID, returnPath: "/projects" },
       ),
     ).toThrow();
 
@@ -91,7 +91,7 @@ describe("Google Drive OAuth foundation", () => {
         clientId: "123456789012-example.apps.googleusercontent.com",
         redirectUri: "http://localhost:3000/api/integrations/google-drive/callback",
       },
-      { workspaceId: "ws_personal", returnPath: "/projects" },
+      { workspaceId: DEFAULT_WORKSPACE_ID, returnPath: "/projects" },
     );
     const state = new URL(started.authorizationUrl).searchParams.get("state");
     if (state === null) throw new Error("fixture state missing");
@@ -107,7 +107,7 @@ describe("Google Drive OAuth foundation", () => {
 
     expect(googleDriveConnectionStatus(vault)).toEqual({
       provider: "google-drive",
-      workspaceId: "ws_personal",
+      workspaceId: DEFAULT_WORKSPACE_ID,
       available: true,
       connected: false,
       scope: GOOGLE_DRIVE_FILE_SCOPE,
@@ -125,7 +125,7 @@ describe("Google Drive OAuth foundation", () => {
     expect(vault.get("google-drive", "tokens")).toBe(token);
     expect(googleDriveConnectionStatus(vault)).toEqual({
       provider: "google-drive",
-      workspaceId: "ws_personal",
+      workspaceId: DEFAULT_WORKSPACE_ID,
       available: true,
       connected: true,
       scope: GOOGLE_DRIVE_FILE_SCOPE,
