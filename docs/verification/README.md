@@ -1,5 +1,7 @@
 # Verification evidence
 
+- [sumopod-retirement-local-first-transition-2026-10-03.md](sumopod-retirement-local-first-transition-2026-10-03.md) — CURRENT operating transition: SumoPod retired from active staging, Session 12 Native Google Drive active, GitHub + local Docker/Compose acceptance until a replacement remote staging target is explicitly selected.
+
 Current overall resume pointer: [ecorione-safe-resume-checkpoint-2026-10-02.md](ecorione-safe-resume-checkpoint-2026-10-02.md).
 
 This directory contains **dated evidence**, not current planning.

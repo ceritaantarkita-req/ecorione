@@ -1,8 +1,28 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-10-01**
+Last updated: **2026-10-03**
 
-Status: **CURRENT SUMMARY / SESSION 6 CLOSED / PASS / STAGING VERIFIED**
+Status: **CURRENT SUMMARY / SESSION 12 NATIVE GOOGLE DRIVE ACTIVE / SUMOPOD ACTIVE-STAGING ROLE RETIRED / LOCAL ACCEPTANCE NEXT**
+
+## Current operating state — 2026-10-03
+
+```text
+GitHub main                 = 4326e77b2f77aa48a4be075c5fab2ff8b9983655
+active scope                = Session 12 Native Google Drive
+12A                         = MERGED / quality gates PASS
+12B                         = MERGED / quality gates PASS / no successful new remote-staging proof
+12C                         = MERGED / quality gates PASS / current main
+12D                         = PR #444 DRAFT / exact-head full gates PASS
+12D reviewed head           = a6d7073c63d9d0f6581af67c2bef3a599629303e
+active remote staging       = NONE
+last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
+next gate                   = local Docker/Compose acceptance
+```
+
+SumoPod was retired from the active staging role by operator decision on 2026-10-03. Historical PCS/staging/DR evidence below remains valid at its dated boundary; it is not the current deployment target.
+
+Current transition evidence:
+[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 ## Audited repository/staging baseline
 
@@ -23,7 +43,7 @@ free disk               = 27.39 GiB stabilized
 
 This baseline includes closed Sessions 4E/4F, Session 5 Project Source Picker productization, and Session 6 External Source Lifecycle. Session 6 adds explicit URL/MCP snapshot lifecycle metadata, content-addressed refresh semantics, direct text indexing into Context, and Refresh/Index/Re-index UX while preserving owner-backed source boundaries.
 
-There is **no active implementation queue**. Session 7 remains unopened until explicit operator authorization.
+Session 12 Native Google Drive is the active explicitly authorized implementation scope. 12D local acceptance is the next bounded gate.
 
 ## Closed foundational roadmaps
 
@@ -125,9 +145,11 @@ No Batch 8 is active or implied.
 - exactly one parent aggregate continuation;
 - 65,536-byte per-child and 131,072-byte aggregate bounds.
 
-## Staging
+## Historical remote staging
 
-Current exact runtime:
+There is no active remote staging target. The following older runtime record is retained as historical evidence, not current deployment truth.
+
+Historical exact runtime:
 
 ```text
 SHA   = 15f007c5d248df8319644f2d9a6c4c7905c70681
@@ -226,7 +248,7 @@ Evidence:
 
 | Scope | State |
 |---|---|
-| Product/runtime implementation | NONE ACTIVE — SESSION 6 CLOSED / PASS / STAGING VERIFIED |
+| Product/runtime implementation | SESSION 12 ACTIVE — 12A–12C MERGED; 12D PR #444 EXACT-HEAD GREEN / LOCAL ACCEPTANCE PENDING |
 | Repository truth/docs reconciliation | SESSION 6 CURRENT TRUTH CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | NVIDIA hosted-provider trial | CLOSED / PASS |
@@ -241,7 +263,7 @@ Evidence:
 | Session 4E + 4F final integration | CLOSED / PASS / STAGING VERIFIED |
 | Session 5 Project Source Picker | CLOSED / PASS / STAGING VERIFIED |
 | Session 6 External Source Lifecycle | CLOSED / PASS / STAGING VERIFIED |
-| Session 7 | NOT STARTED / ONLY IF EXPLICITLY AUTHORIZED |
+| Session 12 Native Google Drive | ACTIVE / 12D LOCAL ACCEPTANCE NEXT |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |

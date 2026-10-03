@@ -1,10 +1,12 @@
 # ECORIONE — SumoPod Remote Staging Runbook
 
-Last updated: **2026-09-29**
+Last updated: **2026-10-03**
 
-Status: **REMOTE STAGING VERIFIED / PCS-07..PCS-09 CLOSED / PASS / NOT PRODUCTION**
+Status: **HISTORICAL / ACTIVE SUMOPOD STAGING RETIRED 2026-10-03 / PCS-07..PCS-09 EVIDENCE PRESERVED / NOT PRODUCTION**
 
 This runbook covers the first operator-owned SumoPod Ubuntu staging deployment. It does **not** authorize or claim production cutover.
+
+> **Retirement notice — 2026-10-03:** the operator decided not to renew the current SumoPod VPS. The host is no longer the active staging target for new ECORIONE work. Do not repair, redeploy, or treat this runbook as a current resume instruction unless SumoPod is explicitly reauthorized. Historical PCS/staging/DR evidence remains valid at the revision/date where it was recorded. Current transition: [verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 ## Boundary
 
