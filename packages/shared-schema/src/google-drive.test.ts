@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   GOOGLE_DRIVE_FILE_SCOPE,
   GoogleDriveConnectionStatusSchema,
+  GoogleDriveFileFetchRequestSchema,
+  GoogleDriveFileFetchResponseSchema,
   GoogleDriveOAuthCallbackRequestSchema,
   GoogleDriveOAuthStartRequestSchema,
   GoogleDrivePickerSelectionSchema,
@@ -69,6 +71,44 @@ describe("Google Drive shared contracts", () => {
     expect(() =>
       GoogleDriveOAuthCallbackRequestSchema.parse({
         state: "s".repeat(43),
+      }),
+    ).toThrow();
+  });
+
+  it("bounds selected-file fetch contracts to Personal Workspace and 20 MiB", () => {
+    expect(
+      GoogleDriveFileFetchRequestSchema.parse({
+        workspaceId: "ws_personal",
+        fileId: "1AbCdEf_-123",
+      }),
+    ).toMatchObject({ fileId: "1AbCdEf_-123" });
+    expect(() =>
+      GoogleDriveFileFetchRequestSchema.parse({
+        workspaceId: "ws_other",
+        fileId: "1AbCdEf_-123",
+      }),
+    ).toThrow();
+
+    expect(
+      GoogleDriveFileFetchResponseSchema.parse({
+        fileId: "1AbCdEf_-123",
+        name: "Quarterly plan.md",
+        sourceMimeType: "application/vnd.google-apps.document",
+        snapshotMimeType: "text/markdown",
+        modifiedTime: "2026-10-03T00:00:00.000Z",
+        sizeBytes: 12,
+        contentBase64: "SGVsbG8gd29ybGQh",
+      }),
+    ).toMatchObject({ snapshotMimeType: "text/markdown" });
+    expect(() =>
+      GoogleDriveFileFetchResponseSchema.parse({
+        fileId: "1AbCdEf_-123",
+        name: "oversize.bin",
+        sourceMimeType: "application/octet-stream",
+        snapshotMimeType: "application/octet-stream",
+        modifiedTime: null,
+        sizeBytes: 20 * 1024 * 1024 + 1,
+        contentBase64: "AA==",
       }),
     ).toThrow();
   });
