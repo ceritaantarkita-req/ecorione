@@ -20,8 +20,9 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Print exact Prettier output
+      - name: Print exact Prettier diff
         run: |
-          echo '=== PRETTIER BEGIN ==='
-          pnpm exec prettier test/session12d-google-drive-mock-acceptance.test.ts
-          echo '=== PRETTIER END ==='
+          pnpm exec prettier --write test/session12d-google-drive-mock-acceptance.test.ts
+          echo '=== PRETTIER DIFF BEGIN ==='
+          git diff -- test/session12d-google-drive-mock-acceptance.test.ts
+          echo '=== PRETTIER DIFF END ==='
