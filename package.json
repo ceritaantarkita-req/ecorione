@@ -93,7 +93,8 @@
     "staging:dr:closure-evidence": "node scripts/staging-offhost-dr-closure-evidence.mjs",
     "staging:dr:loss-marker": "node scripts/staging-offhost-dr-loss-marker.mjs",
     "staging:dr2:host-evidence": "node scripts/staging-dr2-host-evidence.mjs",
-    "staging:dr2:physical-preflight": "node scripts/staging-dr2-physical-independence-preflight.mjs"
+    "staging:dr2:physical-preflight": "node scripts/staging-dr2-physical-independence-preflight.mjs",
+    "acceptance:google-drive:preflight": "node --env-file=.env scripts/google-drive-local-acceptance-preflight.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
