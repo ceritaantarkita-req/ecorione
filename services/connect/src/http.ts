@@ -29,6 +29,7 @@ import {
   registerGoogleDriveOAuthRoutes,
   type GoogleDriveOAuthHttpOptions,
 } from "./google-drive-http.js";
+import { disconnectGoogleDrive } from "./google-drive-oauth.js";
 import { GoogleDriveSource, type GoogleDriveApiTransport } from "./google-drive-source.js";
 import { GoogleDriveOAuthClient } from "./google-drive-token.js";
 import {
@@ -382,6 +383,8 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
               ? {}
               : { transport: options.googleDriveOAuthTransport }),
           }),
+          onAuthorizationRejected: () =>
+            disconnectGoogleDrive(options.credentialVaultAdmin!),
           ...(options.googleDriveApiTransport === undefined
             ? {}
             : { transport: options.googleDriveApiTransport }),
