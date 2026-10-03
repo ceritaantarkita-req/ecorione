@@ -91,6 +91,28 @@ describe("Google Drive OAuth browser callback", () => {
     expect(response.headers.get("location")).not.toContain("private");
   });
 
+  it("refuses a backslash return path that WHATWG URL would reinterpret cross-origin", async () => {
+    const state = "b".repeat(43);
+    connect
+      .intercept({
+        path: "/v1/integrations/google-drive/oauth/callback",
+        method: "POST",
+      })
+      .reply(200, {
+        workspaceId: "ws_personal",
+        connected: true,
+        returnPath: "/\\evil.example/steal",
+      });
+
+    const response = await GET(
+      new Request(
+        `https://ecorione.example/api/integrations/google-drive/callback?code=authorization-code&state=${state}`,
+      ),
+    );
+    expect(response.status).toBe(502);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
   it("refuses an upstream open-redirect return path", async () => {
     const state = "r".repeat(43);
     connect
