@@ -26,6 +26,10 @@ import {
 } from "./credential-vault.js";
 import { registerConnectControlRoutes } from "./control-http.js";
 import {
+  registerGoogleDriveOAuthRoutes,
+  type GoogleDriveOAuthHttpOptions,
+} from "./google-drive-http.js";
+import {
   OpenRouterModelDiscovery,
   OpenRouterModelDiscoveryError,
   type OpenRouterModelDiscoveryReader,
@@ -208,6 +212,11 @@ export interface BuildConnectServerOptions {
   /** Test seams; production custom providers use DNS-pinned public HTTPS. */
   readonly customOpenAiTransport?: OpenAiCompatibleTransport | undefined;
   readonly customOpenAiResolveHost?: PublicHttpsResolveHost | undefined;
+  readonly googleDriveOAuthConfig?: GoogleDriveOAuthHttpOptions["oauthConfig"] | undefined;
+  readonly googleDriveOAuthTransport?:
+    GoogleDriveOAuthHttpOptions["oauthTransport"] | undefined;
+  readonly googleDriveOAuthStateStore?:
+    GoogleDriveOAuthHttpOptions["oauthStateStore"] | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {
@@ -358,6 +367,12 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     registerMcpResourceSourceFetchRoutes(app, options.mcpManager);
   }
   registerExternalSourceFetchRoutes(app);
+  registerGoogleDriveOAuthRoutes(app, {
+    credentialVault: options.credentialVaultAdmin,
+    oauthConfig: options.googleDriveOAuthConfig,
+    oauthStateStore: options.googleDriveOAuthStateStore,
+    oauthTransport: options.googleDriveOAuthTransport,
+  });
   async function validateOpenRouterModel(selectionId: string): Promise<unknown> {
     if (
       options.openRouterCertificationAdmin === undefined ||

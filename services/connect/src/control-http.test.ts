@@ -538,6 +538,32 @@ describe("Connect Control Center boundary", () => {
     expect(response.body).not.toContain(vaultPath);
   });
 
+  it("menolak manual secret mutation untuk Google Drive yang OAuth-managed", async () => {
+    const { app, vault } = fixture();
+
+    const put = await app.inject({
+      method: "PUT",
+      url: "/v1/settings/credentials/google-drive",
+      headers: { ...auth, "content-type": "application/json" },
+      payload: { secret: "must-not-be-stored-manually" },
+    });
+    expect(put.statusCode).toBe(400);
+    expect(put.json().error).toMatchObject({
+      type: "CREDENTIAL_MANAGED_EXTERNALLY",
+    });
+    expect(vault.get("google-drive", "tokens")).toBeUndefined();
+
+    const remove = await app.inject({
+      method: "DELETE",
+      url: "/v1/settings/credentials/google-drive",
+      headers: auth,
+    });
+    expect(remove.statusCode).toBe(400);
+    expect(remove.json().error).toMatchObject({
+      type: "CREDENTIAL_MANAGED_EXTERNALLY",
+    });
+  });
+
   it("mengelola beberapa AI Connection tanpa meng-echo secret", async () => {
     const { app, vault } = fixture();
     const firstSecret = "openrouter-primary-private";

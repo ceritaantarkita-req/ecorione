@@ -49,11 +49,12 @@ describe("provider catalog", () => {
     expect(providerCredentialLabel("nvidia")).toBe("NVIDIA_API_KEY");
   });
 
-  it("MCP dan webhook tetap integration credentials dan bukan AI routing providers", () => {
+  it("integration credentials tetap terpisah dari AI routing providers", () => {
     const mcp = PROVIDER_CATALOG.find((entry) => entry.id === "mcp");
     expect(mcp).toMatchObject({
       category: "integration",
       credentialPurpose: "tokens",
+      credentialReady: true,
       routingReady: false,
       connectionTestReady: false,
     });
@@ -61,11 +62,22 @@ describe("provider catalog", () => {
     expect(webhook).toMatchObject({
       category: "integration",
       credentialPurpose: "tokens",
+      credentialReady: true,
+      routingReady: false,
+      connectionTestReady: false,
+    });
+    const googleDrive = PROVIDER_CATALOG.find((entry) => entry.id === "google-drive");
+    expect(googleDrive).toMatchObject({
+      displayName: "Google Drive",
+      category: "integration",
+      credentialPurpose: "tokens",
+      credentialReady: false,
       routingReady: false,
       connectionTestReady: false,
     });
     expect(credentialPurposeForProvider("mcp")).toBe("tokens");
     expect(credentialPurposeForProvider("webhook")).toBe("tokens");
+    expect(credentialPurposeForProvider("google-drive")).toBe("tokens");
     expect(credentialPurposeForProvider("openai")).toBe("messages");
   });
 });
