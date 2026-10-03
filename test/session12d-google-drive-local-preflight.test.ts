@@ -58,7 +58,6 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
     expect(runbook).toContain("does **not** prove");
   });
 
-
   it("passes a complete local OAuth + Picker + Vault configuration", () => {
     const result = run(baseEnv());
 
@@ -87,7 +86,9 @@ describe("Session 12D Google Drive local acceptance preflight", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Redirect origin http://localhost:3001");
-    expect(result.stderr).not.toContain(String(env.ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY));
+    expect(result.stderr).not.toContain(
+      String(env.ECORIONE_GOOGLE_DRIVE_PICKER_API_KEY),
+    );
   });
 
   it("rejects a redirect URI that does not terminate at the Ai callback route", () => {
