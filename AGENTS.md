@@ -72,7 +72,7 @@ Latest NVIDIA test/runtime checkpoint:
 Underlying provider rollout checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
-Use `docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md` as the overall handoff pointer. No implementation session is active until the operator explicitly opens the next scope.
+Use `docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md` as the overall handoff pointer. Session 12 Native Google Drive is the active explicitly authorized implementation scope.
 
 Closed roadmap families:
 
@@ -217,7 +217,7 @@ Canonical checkpoint:
 
 ## Current active / separate scopes
 
-No implementation session is active. Sessions 4E, 4F, 5, and 6 are closed at their documented boundaries. Open a new session only when the operator explicitly authorizes it; do not widen prior scopes implicitly.
+Session 12 Native Google Drive is active. Sessions 4E–11 remain closed at their documented boundaries. Do not widen Session 12 or open another scope without explicit operator authorization.
 
 Do not start these separate scopes without explicit operator authorization:
 
