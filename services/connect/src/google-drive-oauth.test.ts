@@ -107,6 +107,8 @@ describe("Google Drive OAuth foundation", () => {
 
     expect(googleDriveConnectionStatus(vault)).toEqual({
       provider: "google-drive",
+      workspaceId: "ws_personal",
+      available: true,
       connected: false,
       scope: GOOGLE_DRIVE_FILE_SCOPE,
       updatedAt: null,
@@ -123,6 +125,8 @@ describe("Google Drive OAuth foundation", () => {
     expect(vault.get("google-drive", "tokens")).toBe(token);
     expect(googleDriveConnectionStatus(vault)).toEqual({
       provider: "google-drive",
+      workspaceId: "ws_personal",
+      available: true,
       connected: true,
       scope: GOOGLE_DRIVE_FILE_SCOPE,
       updatedAt,
