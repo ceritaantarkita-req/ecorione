@@ -105,6 +105,18 @@ async function readBounded(response: Response, maxBytes: number): Promise<Buffer
   return Buffer.concat(chunks, total);
 }
 
+const MAX_GOOGLE_DRIVE_REDIRECTS = 3;
+
+export function isAllowedGoogleDriveResponseHost(hostname: string): boolean {
+  const normalized = hostname.toLowerCase().replace(/\.$/u, "");
+  return (
+    normalized === "googleapis.com" ||
+    normalized.endsWith(".googleapis.com") ||
+    normalized === "googleusercontent.com" ||
+    normalized.endsWith(".googleusercontent.com")
+  );
+}
+
 async function defaultTransport(
   url: URL,
   accessToken: string,
@@ -121,20 +133,54 @@ async function defaultTransport(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      redirect: "error",
-      headers: {
-        authorization: `Bearer ${accessToken}`,
+    let current = url;
+    let sendAuthorization = true;
+    for (let redirectCount = 0; redirectCount <= MAX_GOOGLE_DRIVE_REDIRECTS; redirectCount += 1) {
+      const headers: Record<string, string> = {
         accept: "*/*",
         "user-agent": "ECORIONE-GoogleDrive/1.0",
-      },
-      signal: controller.signal,
-    });
-    return {
-      statusCode: response.status,
-      body: await readBounded(response, maxBytes),
-    };
+      };
+      if (sendAuthorization) headers.authorization = `Bearer ${accessToken}`;
+
+      const response = await fetch(current, {
+        method: "GET",
+        redirect: "manual",
+        headers,
+        signal: controller.signal,
+      });
+      if (response.status < 300 || response.status >= 400) {
+        return {
+          statusCode: response.status,
+          body: await readBounded(response, maxBytes),
+        };
+      }
+
+      const location = response.headers.get("location");
+      await response.body?.cancel().catch(() => undefined);
+      if (location === null || redirectCount === MAX_GOOGLE_DRIVE_REDIRECTS) {
+        throw new GoogleDriveSourceError(
+          502,
+          "GOOGLE_DRIVE_API_INVALID_RESPONSE",
+          "Google Drive download redirect tidak valid atau terlalu banyak.",
+        );
+      }
+      const next = new URL(location, current);
+      if (next.protocol !== "https:" || !isAllowedGoogleDriveResponseHost(next.hostname)) {
+        throw new GoogleDriveSourceError(
+          502,
+          "GOOGLE_DRIVE_API_INVALID_RESPONSE",
+          "Google Drive download redirect keluar dari host Google yang diizinkan.",
+        );
+      }
+      current = next;
+      sendAuthorization =
+        next.hostname === "googleapis.com" || next.hostname.endsWith(".googleapis.com");
+    }
+    throw new GoogleDriveSourceError(
+      502,
+      "GOOGLE_DRIVE_API_INVALID_RESPONSE",
+      "Google Drive download redirect tidak valid.",
+    );
   } catch (error) {
     if (controller.signal.aborted) {
       throw new GoogleDriveSourceError(
