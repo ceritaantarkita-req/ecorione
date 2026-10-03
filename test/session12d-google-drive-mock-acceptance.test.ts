@@ -268,11 +268,7 @@ describe("Session 12D Google Drive mock acceptance", () => {
           ),
         };
       }
-      if (
-        fileId === "blob-file-1" &&
-        !isExport &&
-        url.searchParams.get("alt") === "media"
-      ) {
+      if (fileId === "blob-file-1" && !isExport && url.searchParams.get("alt") === "media") {
         return { statusCode: 200, body: Buffer.from("hello blob!") };
       }
       if (
