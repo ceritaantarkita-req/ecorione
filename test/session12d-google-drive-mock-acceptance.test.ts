@@ -577,9 +577,9 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
         method: "GET",
         url: `/v1/audit?operationId=${operationId}`,
       });
-      const failedEventTypes = (
-        failedAudit.json().events as Array<{ type: string }>
-      ).map((event) => event.type);
+      const failedEventTypes = (failedAudit.json().events as Array<{ type: string }>).map(
+        (event) => event.type,
+      );
       expect(failedEventTypes).not.toContain("PROJECT_SOURCE_INGESTED");
       expect(failedEventTypes).not.toContain("PROJECT_SOURCE_ATTACHED");
     }
@@ -597,12 +597,8 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
     const eventTypes = (audit.json().events as Array<{ type: string }>).map(
       (event) => event.type,
     );
-    expect(
-      eventTypes.filter((type) => type === "PROJECT_SOURCE_INGESTED"),
-    ).toHaveLength(1);
-    expect(
-      eventTypes.filter((type) => type === "PROJECT_SOURCE_EXTRACTED"),
-    ).toHaveLength(1);
+    expect(eventTypes.filter((type) => type === "PROJECT_SOURCE_INGESTED")).toHaveLength(1);
+    expect(eventTypes.filter((type) => type === "PROJECT_SOURCE_EXTRACTED")).toHaveLength(1);
   });
 
   it("fails closed on Drive source errors without partial Project state", async () => {
