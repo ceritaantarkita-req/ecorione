@@ -45,13 +45,81 @@ afterEach(async () => {
   db.close();
 });
 
+function mockDirectTextIndex(input: {
+  artifactId: string;
+  pointer: Record<string, unknown>;
+  bytes: Buffer;
+  operationId: string;
+  episodeId: string;
+  rawText: string;
+  ts: string;
+}): void {
+  context
+    .intercept({
+      path: `/v1/artifacts/${input.artifactId}/authorize?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+      method: "GET",
+    })
+    .reply(200, input.pointer);
+
+  artifact
+    .intercept({
+      path: `/v1/artifacts/${input.artifactId}/content?scope=personal&maxSensitivity=RESTRICTED&hostedEligible=0`,
+      method: "GET",
+    })
+    .reply(200, input.bytes, {
+      headers: { "content-type": "text/markdown" },
+    });
+
+  context.intercept({ path: "/v1/episodes", method: "POST" }).reply(201, {
+    id: input.episodeId,
+    ts: input.ts,
+    rawText: input.rawText,
+    projectId: "prj_personal",
+    provenance: {
+      sourceApp: "hub:project-source",
+      toolCallId: input.operationId,
+      sourceUri: `artifact:${input.artifactId}`,
+    },
+    scope: "personal",
+    sensitivity: "RESTRICTED",
+    syncClass: "LOCAL_ONLY",
+    trust: "THIRD_PARTY",
+    summary: null,
+    consolidatedAt: null,
+  });
+
+  context
+    .intercept({ path: "/v1/multimodal/derivations", method: "POST" })
+    .reply(201, { ok: true });
+}
+
+async function lifecycleFor(fileId: string) {
+  const response = await app.inject({
+    method: "GET",
+    url: "/v1/projects/prj_personal/sources/lifecycle?workspaceId=ws_personal",
+  });
+  expect(response.statusCode).toBe(200);
+  const lifecycle = response
+    .json()
+    .lifecycles.find(
+      (item: { sourceType: string; sourceKey: string }) =>
+        item.sourceType === "google-drive" && item.sourceKey === fileId,
+    );
+  expect(lifecycle).toBeDefined();
+  return lifecycle as Record<string, unknown>;
+}
+
 describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
-  it("refreshes one Drive origin to a new Artifact and resets indexed state", async () => {
+  it("runs Index -> refresh -> Re-index -> idempotent retry -> Detach through public routes", async () => {
     const fileId = "drive-file-refresh-1";
     const artifactA = `art_${"a".repeat(64)}`;
     const artifactB = `art_${"b".repeat(64)}`;
     const snapshotA = Buffer.from("# Version A\n");
     const snapshotB = Buffer.from("# Version B\n");
+    const indexAOperation = "op_drive_mock_acceptance_index_a";
+    const indexBOperation = "op_drive_mock_acceptance_index_b";
+    const episodeA = "epi_drive_mock_acceptance_a";
+    const episodeB = "epi_drive_mock_acceptance_b";
 
     const pointerA = {
       id: artifactA,
@@ -118,22 +186,52 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
     });
     expect(first.statusCode).toBe(200);
     expect(first.json().artifact.id).toBe(artifactA);
+    expect(await lifecycleFor(fileId)).toMatchObject({
+      latestArtifactId: artifactA,
+      latestContextEpisodeId: null,
+      state: "SNAPSHOT_READY",
+      lastIndexedAt: null,
+    });
 
-    db.raw
-      .prepare(
-        `UPDATE project_external_source_lifecycle
-         SET latest_context_episode_id=?, state='INDEXED', last_indexed_at=?, updated_at=?
-         WHERE project_id=? AND workspace_id=? AND source_type='google-drive'
-           AND source_key=? AND role='source'`,
-      )
-      .run(
-        "epi_drive_mock_acceptance",
-        "2026-10-03T06:15:00.000Z",
-        "2026-10-03T06:15:00.000Z",
-        "prj_personal",
-        "ws_personal",
-        fileId,
-      );
+    mockDirectTextIndex({
+      artifactId: artifactA,
+      pointer: pointerA,
+      bytes: snapshotA,
+      operationId: indexAOperation,
+      episodeId: episodeA,
+      rawText: "# Version A\n",
+      ts: "2026-10-03T06:10:00.000Z",
+    });
+
+    const indexedA = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/extract",
+      payload: {
+        operationId: indexAOperation,
+        workspaceId: "ws_personal",
+        artifactId: artifactA,
+      },
+    });
+    expect(indexedA.statusCode).toBe(200);
+    expect(indexedA.json()).toMatchObject({
+      sourceArtifactId: artifactA,
+      task: "ocr",
+      state: "READY",
+      contextEpisodeId: episodeA,
+      result: {
+        routeUsed: "local",
+        adapter: "direct-text",
+        provider: "artifact",
+        model: "utf-8",
+        text: "# Version A\n",
+      },
+    });
+    expect(await lifecycleFor(fileId)).toMatchObject({
+      latestArtifactId: artifactA,
+      latestContextEpisodeId: episodeA,
+      state: "INDEXED",
+      lastIndexedAt: expect.any(String),
+    });
 
     connect
       .intercept({
@@ -183,24 +281,43 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
     });
     expect(refreshed.statusCode).toBe(200);
     expect(refreshed.json().artifact.id).toBe(artifactB);
-
-    const lifecycle = await app.inject({
-      method: "GET",
-      url: "/v1/projects/prj_personal/sources/lifecycle?workspaceId=ws_personal",
+    expect(await lifecycleFor(fileId)).toMatchObject({
+      latestArtifactId: artifactB,
+      latestContextEpisodeId: null,
+      state: "SNAPSHOT_READY",
+      lastIndexedAt: null,
     });
-    expect(lifecycle.statusCode).toBe(200);
-    expect(lifecycle.json()).toMatchObject({
-      lifecycles: [
-        {
-          sourceType: "google-drive",
-          sourceKey: fileId,
-          role: "source",
-          latestArtifactId: artifactB,
-          latestContextEpisodeId: null,
-          state: "SNAPSHOT_READY",
-          lastIndexedAt: null,
-        },
-      ],
+
+    mockDirectTextIndex({
+      artifactId: artifactB,
+      pointer: pointerB,
+      bytes: snapshotB,
+      operationId: indexBOperation,
+      episodeId: episodeB,
+      rawText: "# Version B\n",
+      ts: "2026-10-03T06:30:00.000Z",
+    });
+
+    const indexedB = await app.inject({
+      method: "POST",
+      url: "/v1/projects/prj_personal/sources/extract",
+      payload: {
+        operationId: indexBOperation,
+        workspaceId: "ws_personal",
+        artifactId: artifactB,
+      },
+    });
+    expect(indexedB.statusCode).toBe(200);
+    expect(indexedB.json()).toMatchObject({
+      sourceArtifactId: artifactB,
+      contextEpisodeId: episodeB,
+      result: { routeUsed: "local", text: "# Version B\n" },
+    });
+    expect(await lifecycleFor(fileId)).toMatchObject({
+      latestArtifactId: artifactB,
+      latestContextEpisodeId: episodeB,
+      state: "INDEXED",
+      lastIndexedAt: expect.any(String),
     });
 
     const retry = await app.inject({
@@ -215,6 +332,32 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
     });
     expect(retry.statusCode).toBe(200);
     expect(retry.json().artifact.id).toBe(artifactB);
+    expect(await lifecycleFor(fileId)).toMatchObject({
+      latestArtifactId: artifactB,
+      latestContextEpisodeId: episodeB,
+      state: "INDEXED",
+    });
+
+    const detached = await app.inject({
+      method: "DELETE",
+      url: "/v1/projects/prj_personal/sources",
+      payload: {
+        workspaceId: "ws_personal",
+        resourceType: "artifact",
+        resourceId: artifactB,
+        role: "source",
+      },
+    });
+    expect(detached.statusCode).toBe(200);
+    expect(detached.json()).toMatchObject({
+      detached: true,
+      binding: { resourceType: "artifact", resourceId: artifactB, role: "source" },
+    });
+    expect(await lifecycleFor(fileId)).toMatchObject({
+      latestArtifactId: artifactB,
+      latestContextEpisodeId: episodeB,
+      state: "DETACHED",
+    });
 
     const rows = db.raw
       .prepare(
@@ -224,6 +367,19 @@ describe("Session 12D Google Drive mock acceptance — Hub lifecycle", () => {
          ORDER BY resource_id`,
       )
       .all("prj_personal", "ws_personal") as Array<{ resource_id: string }>;
-    expect(rows.map((row) => row.resource_id)).toEqual([artifactA, artifactB]);
+    expect(rows.map((row) => row.resource_id)).toEqual([artifactA]);
+
+    const audit = await app.inject({ method: "GET", url: "/v1/audit" });
+    const eventTypes = (
+      audit.json().events as Array<{ type: string }>
+    ).map((event) => event.type);
+    expect(eventTypes).toEqual(
+      expect.arrayContaining([
+        "PROJECT_SOURCE_INGESTED",
+        "PROJECT_SOURCE_EXTRACTED",
+        "ACTION_SKIPPED_IDEMPOTENT",
+        "PROJECT_SOURCE_DETACHED",
+      ]),
+    );
   });
 });
