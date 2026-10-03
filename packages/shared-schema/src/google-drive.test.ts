@@ -5,6 +5,7 @@ import {
   GoogleDriveFileFetchRequestSchema,
   GoogleDriveFileFetchResponseSchema,
   GoogleDriveOAuthCallbackRequestSchema,
+  GoogleDriveOAuthCallbackResponseSchema,
   GoogleDriveOAuthStartRequestSchema,
   GoogleDrivePickerSelectionSchema,
   GoogleDrivePickerSessionResponseSchema,
@@ -110,6 +111,23 @@ describe("Google Drive shared contracts", () => {
         modifiedTime: null,
         sizeBytes: 20 * 1024 * 1024 + 1,
         contentBase64: "AA==",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects OAuth return paths that WHATWG URL could reinterpret cross-origin", () => {
+    expect(() =>
+      GoogleDriveOAuthCallbackResponseSchema.parse({
+        workspaceId: "ws_personal",
+        connected: true,
+        returnPath: "/\\evil.example/steal",
+      }),
+    ).toThrow();
+    expect(() =>
+      GoogleDriveOAuthCallbackResponseSchema.parse({
+        workspaceId: "ws_personal",
+        connected: false,
+        returnPath: "//evil.example/steal",
       }),
     ).toThrow();
   });
