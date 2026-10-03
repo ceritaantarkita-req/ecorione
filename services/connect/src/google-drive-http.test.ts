@@ -173,8 +173,12 @@ describe("Google Drive OAuth HTTP boundary", () => {
         state: started.state,
       },
     });
-    expect(denied.statusCode).toBe(400);
-    expect(denied.json().error.type).toBe("GOOGLE_DRIVE_OAUTH_DENIED");
+    expect(denied.statusCode).toBe(200);
+    expect(denied.json()).toEqual({
+      workspaceId: "ws_personal",
+      connected: false,
+      returnPath: "/projects/prj_personal",
+    });
     expect(denied.body).not.toContain("user cancelled");
     expect(calls).toBe(0);
   });
