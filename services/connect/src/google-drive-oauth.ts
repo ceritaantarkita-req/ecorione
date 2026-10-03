@@ -23,6 +23,7 @@ const MIN_REFRESH_TOKEN_LENGTH = 16;
 const GoogleDriveOAuthConfigSchema = z
   .object({
     clientId: z.string().trim().min(10).max(4096),
+    clientSecret: z.string().min(8).max(4096).optional(),
     redirectUri: z.string().url(),
   })
   .strict()
