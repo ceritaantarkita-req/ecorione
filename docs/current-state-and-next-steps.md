@@ -394,7 +394,7 @@ Closed current slices that must not be redone:
 - MCP Action product convergence over existing Flow/Connect outbound MCP authority — PR #431.
 - expanded automatic documentation-only staging redeploy prevention — PR #437 implementation, PR #438 live verification (`docs/**`, `README.md`, `AGENTS.md`); Staging #2166/#2167 deploy SKIPPED.
 
-Session 11 is closed. No Session 12 or other numbered continuation is automatically opened. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
+Session 11 is closed. Session 12 Native Google Drive is explicitly authorized and active; this does not implicitly open any other numbered continuation. There is no active repository-hygiene scope and no implicit Product Evolution, PCS, A-series, ECX, Batch 8, PE-09, PCS-11, Batch 13, or A-12 continuation.
 
 ## Explicit deferred / separately selectable future scopes
 
@@ -403,7 +403,7 @@ Any of the following requires a new explicit operator decision and its own bound
 - a newly selected post-4F provider/agentic scope;
 - DR-2 checkpoint 2 external target selection and later runtime proof;
 - public production promotion/cutover;
-- native Google Drive integration;
+- Session 12 Native Google Drive is already active; any widening beyond the accepted 12A–12D boundary requires a new explicit decision;
 - Workspace registry/switcher;
 - broader multi-user identity/final RBAC;
 - paid hosted-provider/W18 reruns;
@@ -425,11 +425,11 @@ For a new session/agent:
 4. read [ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md);
 5. read [../AGENTS.md](../AGENTS.md);
 6. inspect exact current `main`;
-7. open only the explicitly authorized new scope;
+7. continue only the explicitly authorized Session 12 boundary or another newly authorized scope;
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/session11-mcp-action-product-convergence-closure-2026-10-02.md](verification/session11-mcp-action-product-convergence-closure-2026-10-02.md).
+[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).
