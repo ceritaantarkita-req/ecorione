@@ -71,6 +71,26 @@ describe("GoogleDriveOAuthClient", () => {
     });
   });
 
+  it("fails closed when Google returns a scope outside drive.file", async () => {
+    const transport: GoogleDriveOAuthTransport = async () => ({
+      statusCode: 200,
+      bodyText: JSON.stringify({
+        access_token: "access-token-private",
+        refresh_token: "refresh-token-private-123456",
+        expires_in: 3600,
+        token_type: "Bearer",
+        scope: `${GOOGLE_DRIVE_FILE_SCOPE} openid`,
+      }),
+    });
+    const client = new GoogleDriveOAuthClient(config, { transport });
+    await expect(
+      client.exchangeAuthorizationCode("auth-code", "v".repeat(64)),
+    ).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_OAUTH_INVALID_RESPONSE",
+      statusCode: 502,
+    });
+  });
+
   it("fails closed when Google omits the required Drive scope", async () => {
     const transport: GoogleDriveOAuthTransport = async () => ({
       statusCode: 200,

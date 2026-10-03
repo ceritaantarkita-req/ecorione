@@ -51,7 +51,7 @@ describe("Google Drive OAuth foundation", () => {
     expect(url.origin + url.pathname).toBe("https://accounts.google.com/o/oauth2/v2/auth");
     expect(url.searchParams.get("scope")).toBe(GOOGLE_DRIVE_FILE_SCOPE);
     expect(url.searchParams.get("access_type")).toBe("offline");
-    expect(url.searchParams.get("include_granted_scopes")).toBe("true");
+    expect(url.searchParams.get("include_granted_scopes")).toBeNull();
     expect(url.searchParams.get("prompt")).toBe("consent");
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
     expect(url.searchParams.get("code_challenge")).toMatch(/^[A-Za-z0-9_-]{43}$/u);

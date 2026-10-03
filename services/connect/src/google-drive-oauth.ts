@@ -127,7 +127,6 @@ export class GoogleDriveOAuthStateStore {
     authorization.searchParams.set("response_type", "code");
     authorization.searchParams.set("scope", GOOGLE_DRIVE_FILE_SCOPE);
     authorization.searchParams.set("access_type", "offline");
-    authorization.searchParams.set("include_granted_scopes", "true");
     authorization.searchParams.set("prompt", "consent");
     authorization.searchParams.set("state", state);
     authorization.searchParams.set("code_challenge", codeChallenge(verifier));

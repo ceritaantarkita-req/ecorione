@@ -124,9 +124,10 @@ async function defaultTransport(
   }
 }
 
-function scopeContainsDriveFile(scope: string | undefined): boolean {
+function scopeIsDriveFileOnly(scope: string | undefined): boolean {
   if (scope === undefined) return true;
-  return scope.split(/\s+/u).includes(GOOGLE_DRIVE_FILE_SCOPE);
+  const scopes = scope.split(/\s+/u).filter((candidate) => candidate.length > 0);
+  return scopes.length === 1 && scopes[0] === GOOGLE_DRIVE_FILE_SCOPE;
 }
 
 function parseTokenResponse(
@@ -158,11 +159,11 @@ function parseTokenResponse(
       "Respons token Google OAuth tidak sesuai kontrak.",
     );
   }
-  if (!scopeContainsDriveFile(result.data.scope)) {
+  if (!scopeIsDriveFileOnly(result.data.scope)) {
     throw new GoogleDriveOAuthUpstreamError(
       502,
       "GOOGLE_DRIVE_OAUTH_INVALID_RESPONSE",
-      "Google OAuth tidak mengembalikan scope Drive yang diwajibkan.",
+      "Google OAuth mengembalikan scope di luar Drive file yang diwajibkan.",
     );
   }
   return {
