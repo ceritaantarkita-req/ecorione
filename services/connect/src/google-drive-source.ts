@@ -211,7 +211,7 @@ function snapshotPlan(sourceMimeType: string):
       return {
         kind: "export",
         snapshotMimeType:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "application/pdf",
       };
     case GOOGLE_SLIDE_MIME:
       return { kind: "export", snapshotMimeType: "text/plain" };
