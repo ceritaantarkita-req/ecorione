@@ -14,7 +14,12 @@ export const AI_PROVIDER_IDS = [
 ] as const;
 export type AiProviderId = (typeof AI_PROVIDER_IDS)[number];
 
-export const CREDENTIAL_PROVIDER_IDS = [...AI_PROVIDER_IDS, "mcp", "webhook", "google-drive"] as const;
+export const CREDENTIAL_PROVIDER_IDS = [
+  ...AI_PROVIDER_IDS,
+  "mcp",
+  "webhook",
+  "google-drive",
+] as const;
 export type CredentialProviderId = (typeof CREDENTIAL_PROVIDER_IDS)[number];
 export type CredentialPurpose = "messages" | "tokens";
 

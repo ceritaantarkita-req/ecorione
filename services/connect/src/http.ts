@@ -213,8 +213,10 @@ export interface BuildConnectServerOptions {
   readonly customOpenAiTransport?: OpenAiCompatibleTransport | undefined;
   readonly customOpenAiResolveHost?: PublicHttpsResolveHost | undefined;
   readonly googleDriveOAuthConfig?: GoogleDriveOAuthHttpOptions["oauthConfig"] | undefined;
-  readonly googleDriveOAuthTransport?: GoogleDriveOAuthHttpOptions["oauthTransport"] | undefined;
-  readonly googleDriveOAuthStateStore?: GoogleDriveOAuthHttpOptions["oauthStateStore"] | undefined;
+  readonly googleDriveOAuthTransport?:
+    GoogleDriveOAuthHttpOptions["oauthTransport"] | undefined;
+  readonly googleDriveOAuthStateStore?:
+    GoogleDriveOAuthHttpOptions["oauthStateStore"] | undefined;
 }
 
 export function buildConnectServer(options: BuildConnectServerOptions): FastifyInstance {

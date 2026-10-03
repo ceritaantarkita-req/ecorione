@@ -3,8 +3,7 @@ import { WorkspaceIdSchema } from "./ids.js";
 import { DEFAULT_WORKSPACE_ID } from "./project.js";
 
 export const GOOGLE_DRIVE_PROVIDER_ID = "google-drive" as const;
-export const GOOGLE_DRIVE_FILE_SCOPE =
-  "https://www.googleapis.com/auth/drive.file" as const;
+export const GOOGLE_DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file" as const;
 
 export const GoogleDriveFileIdSchema = z.string().trim().min(1).max(1024);
 export type GoogleDriveFileId = z.infer<typeof GoogleDriveFileIdSchema>;
@@ -35,9 +34,7 @@ export const GoogleDriveOAuthStartRequestSchema = z
       .regex(/^\/(?!\/)[^\r\n]*$/u, "returnPath harus relative path same-origin."),
   })
   .strict();
-export type GoogleDriveOAuthStartRequest = z.infer<
-  typeof GoogleDriveOAuthStartRequestSchema
->;
+export type GoogleDriveOAuthStartRequest = z.infer<typeof GoogleDriveOAuthStartRequestSchema>;
 
 export const GoogleDriveOAuthStartResponseSchema = z
   .object({
@@ -45,9 +42,7 @@ export const GoogleDriveOAuthStartResponseSchema = z
     expiresAt: z.string().datetime({ offset: false }),
   })
   .strict();
-export type GoogleDriveOAuthStartResponse = z.infer<
-  typeof GoogleDriveOAuthStartResponseSchema
->;
+export type GoogleDriveOAuthStartResponse = z.infer<typeof GoogleDriveOAuthStartResponseSchema>;
 
 export const GoogleDriveOAuthCallbackRequestSchema = z
   .object({
@@ -92,6 +87,4 @@ export const GoogleDriveConnectionStatusSchema = z
     updatedAt: z.string().datetime({ offset: false }).nullable(),
   })
   .strict();
-export type GoogleDriveConnectionStatus = z.infer<
-  typeof GoogleDriveConnectionStatusSchema
->;
+export type GoogleDriveConnectionStatus = z.infer<typeof GoogleDriveConnectionStatusSchema>;

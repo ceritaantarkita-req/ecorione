@@ -199,8 +199,6 @@ export function storeGoogleDriveRefreshToken(
   return vault.set(GOOGLE_DRIVE_PROVIDER_ID, "tokens", token, updatedAt);
 }
 
-export function disconnectGoogleDrive(
-  vault: Pick<CredentialVaultAdmin, "remove">,
-): boolean {
+export function disconnectGoogleDrive(vault: Pick<CredentialVaultAdmin, "remove">): boolean {
   return vault.remove(GOOGLE_DRIVE_PROVIDER_ID, "tokens");
 }

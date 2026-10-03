@@ -75,7 +75,9 @@ const googleDriveOAuthConfig =
     ? undefined
     : GoogleDriveOAuthConfigSchema.parse({
         clientId: googleDriveClientId,
-        ...(googleDriveClientSecret === undefined ? {} : { clientSecret: googleDriveClientSecret }),
+        ...(googleDriveClientSecret === undefined
+          ? {}
+          : { clientSecret: googleDriveClientSecret }),
         redirectUri: googleDriveRedirectUri,
       });
 

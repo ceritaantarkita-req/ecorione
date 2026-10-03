@@ -95,7 +95,10 @@ describe("GoogleDriveOAuthClient", () => {
     const secretDescription = "private-upstream-detail";
     const transport: GoogleDriveOAuthTransport = async () => ({
       statusCode: 400,
-      bodyText: JSON.stringify({ error: "invalid_grant", error_description: secretDescription }),
+      bodyText: JSON.stringify({
+        error: "invalid_grant",
+        error_description: secretDescription,
+      }),
     });
     const client = new GoogleDriveOAuthClient(config, { transport });
 
@@ -123,8 +126,8 @@ describe("GoogleDriveOAuthClient", () => {
   });
 
   it("rejects invalid timeout configuration deterministically", () => {
-    expect(
-      () => new GoogleDriveOAuthClient(config, { timeoutMs: 100 }),
-    ).toThrow(GoogleDriveOAuthUpstreamError);
+    expect(() => new GoogleDriveOAuthClient(config, { timeoutMs: 100 })).toThrow(
+      GoogleDriveOAuthUpstreamError,
+    );
   });
 });

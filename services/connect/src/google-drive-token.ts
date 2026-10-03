@@ -13,7 +13,11 @@ const MAX_OAUTH_RESPONSE_BYTES = 64 * 1024;
 const TokenResponseSchema = z
   .object({
     access_token: z.string().min(1).max(32_768),
-    expires_in: z.number().int().positive().max(7 * 24 * 60 * 60),
+    expires_in: z
+      .number()
+      .int()
+      .positive()
+      .max(7 * 24 * 60 * 60),
     refresh_token: z.string().min(16).max(32_768).optional(),
     scope: z.string().max(8192).optional(),
     token_type: z.string().min(1).max(64),
@@ -72,7 +76,10 @@ async function readBoundedText(response: Response): Promise<string> {
     }
     chunks.push(next.value);
   }
-  return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), total).toString("utf8");
+  return Buffer.concat(
+    chunks.map((chunk) => Buffer.from(chunk)),
+    total,
+  ).toString("utf8");
 }
 
 async function defaultTransport(
@@ -122,7 +129,9 @@ function scopeContainsDriveFile(scope: string | undefined): boolean {
   return scope.split(/\s+/u).includes(GOOGLE_DRIVE_FILE_SCOPE);
 }
 
-function parseTokenResponse(response: GoogleDriveOAuthTransportResponse): GoogleDriveAccessToken {
+function parseTokenResponse(
+  response: GoogleDriveOAuthTransportResponse,
+): GoogleDriveAccessToken {
   if (response.statusCode < 200 || response.statusCode >= 300) {
     throw new GoogleDriveOAuthUpstreamError(
       502,

@@ -6,9 +6,7 @@ import { createServer } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
 import { registerGoogleDriveOAuthRoutes } from "./google-drive-http.js";
 import { GoogleDriveOAuthStateStore } from "./google-drive-oauth.js";
-import {
-  type GoogleDriveOAuthTransport,
-} from "./google-drive-token.js";
+import { type GoogleDriveOAuthTransport } from "./google-drive-token.js";
 
 const dirs: string[] = [];
 const auth = { authorization: "Bearer internal-secret" };
@@ -22,10 +20,7 @@ afterEach(() => {
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
-function fixture(
-  transport?: GoogleDriveOAuthTransport,
-  configured = true,
-) {
+function fixture(transport?: GoogleDriveOAuthTransport, configured = true) {
   const dir = mkdtempSync(join(tmpdir(), "ecorione-drive-http-"));
   dirs.push(dir);
   const vaultPath = join(dir, "credentials.vault.json");
@@ -213,9 +208,7 @@ describe("Google Drive OAuth HTTP boundary", () => {
       payload: { code: "authorization-code", state: existingStart.state },
     });
     expect(preserved.statusCode).toBe(200);
-    expect(existing.vault.get("google-drive", "tokens")).toBe(
-      "existing-refresh-token-private",
-    );
+    expect(existing.vault.get("google-drive", "tokens")).toBe("existing-refresh-token-private");
   });
 
   it("revokes remotely before deleting local credential", async () => {

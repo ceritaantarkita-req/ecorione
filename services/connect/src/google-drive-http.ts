@@ -11,10 +11,7 @@ import {
 import { HttpError, parseOrBadRequest } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import {
-  CredentialVaultError,
-  type CredentialVaultAdmin,
-} from "./credential-vault.js";
+import { CredentialVaultError, type CredentialVaultAdmin } from "./credential-vault.js";
 import {
   GoogleDriveOAuthStateError,
   GoogleDriveOAuthStateStore,
