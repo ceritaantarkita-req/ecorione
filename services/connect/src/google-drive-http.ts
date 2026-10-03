@@ -223,6 +223,7 @@ export function registerGoogleDriveOAuthRoutes(
         error instanceof GoogleDriveOAuthUpstreamError &&
         error.code === "GOOGLE_DRIVE_OAUTH_REJECTED"
       ) {
+        disconnectGoogleDrive(vault);
         throw new HttpError(
           409,
           "GOOGLE_DRIVE_RECONNECT_REQUIRED",
