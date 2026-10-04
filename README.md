@@ -9,14 +9,15 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 Current repository/product boundary:
 
 ```text
-GitHub main                 = 4326e77b2f77aa48a4be075c5fab2ff8b9983655 (Session 12C)
-active scope                = Session 12 Native Google Drive
+GitHub main                 = bd8d2513aa21164e5a1f6d36b898d8140b57506a (Session 12 local-acceptance support baseline)
+active scope                = Session 12D Native Google Drive closure
 12D draft PR                = #444
-12D reviewed head           = a6d7073c63d9d0f6581af67c2bef3a599629303e
-12D gates                   = CI #2748 / Eval #1987 / MCP #1278 / Browser #446 PASS
+12D reviewed head           = 1e4f58c7d9dd4dc9f09687fbdd393261f38830f8
+12D gates                   = CI #2819 / Eval #2058 / MCP #1320 / Browser #471 / Desktop #346 PASS
+12D automated/mock          = CLOSED / PASS
 active remote staging       = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
-next gate                   = local Docker/Compose acceptance
+next gate                   = real local Google OAuth + Picker acceptance
 ```
 
 The operator retired SumoPod from the active staging role on 2026-10-03 because the current VPS will not be renewed. Historical SumoPod evidence remains valid at its documented boundary; it is no longer the current deployment target. Current transition: [docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md](docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md).
@@ -33,7 +34,7 @@ Session 5 — **Project Source Picker** — is **CLOSED / PASS / STAGING VERIFIE
 
 Session 6 — **External Source Lifecycle** — is **CLOSED / PASS / STAGING VERIFIED** through PR #421 and Staging Deploy #1968.
 
-Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED** at their documented historical boundaries: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Session 12 Native Google Drive is now active: 12A–12C are merged, while 12D PR #444 is exact-head green and awaits local runtime acceptance. Current safe-resume checkpoint: [docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md](docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md).
+Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED** at their documented historical boundaries: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Session 12 Native Google Drive is now at 12D closure: 12A–12C are merged, local-acceptance support is on current `main` through #448, and PR #444 is repository/mock-acceptance green at exact head `1e4f58c7...`. The only remaining 12D gate is real operator-controlled local Google OAuth + Picker acceptance. Current safe-resume checkpoint: [docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
 
 **Start here:** [docs/README.md](docs/README.md).
 
@@ -173,7 +174,7 @@ See:
 
 ## Current active / separate boundaries
 
-Sessions 4E–11 are **closed / pass / staging verified** at their documented historical boundaries. Session 12 Native Google Drive is explicitly authorized and active; 12D local acceptance is the next bounded gate.
+Sessions 4E–11 are **closed / pass / staging verified** at their documented historical boundaries. Session 12 Native Google Drive is explicitly authorized and active; 12D repository/mock acceptance is closed and real local Google OAuth + Picker acceptance is the next bounded gate.
 
 The following remain separate explicit decisions:
 
