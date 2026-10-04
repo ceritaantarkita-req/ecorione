@@ -112,7 +112,7 @@ There is currently **no active remote staging target**. The operator retired Sum
 
 Historical evidence remains valid. The last proven actual SumoPod runtime is Session 12A merge `084d669d8631a2590e7a9e88b62e161691bf4fc9` / image `staging-084d669d8631` via Staging Deploy #2183. Later Session 12B/12C remote deploy attempts failed before mutation on the host active-image guard and must not be represented as staging success.
 
-Current GitHub `main` is `bd8d2513aa21164e5a1f6d36b898d8140b57506a`, which includes the Session 12D local preflight/runbook support from #448 on top of the merged 12A–12C product foundation. Session 12D PR #444 is DRAFT / UNMERGED at reviewed head `1e4f58c7d9dd4dc9f09687fbdd393261f38830f8`; CI #2819, Product Eval #2058, MCP #1320, Browser #471, and Desktop #346 all PASS, and automated/mock acceptance is CLOSED / PASS. The only remaining 12D closure gate is real operator-controlled local Google OAuth + Picker acceptance.
+The current product/runtime baseline on `main` before this docs-only reconciliation is `bd8d2513aa21164e5a1f6d36b898d8140b57506a`, which includes the Session 12D local preflight/runbook support from #448 on top of the merged 12A–12C product foundation. Session 12D PR #444 is DRAFT / UNMERGED at reviewed head `df87fff76a4b1b5dc251161ff7802b71796360c3`; CI #2830, Product Eval #2069, MCP #1322, Browser #480, and Desktop #348 all PASS, and automated/mock acceptance is CLOSED / PASS after #461/#462 audit hardening. The only remaining 12D closure gate is real operator-controlled local Google OAuth + Picker acceptance.
 
 Current pointer:
 [verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
