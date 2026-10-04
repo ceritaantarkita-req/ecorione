@@ -337,7 +337,8 @@ describe("Google Drive OAuth HTTP boundary", () => {
       payload: { workspaceId: "ws_personal" },
     });
 
-    expect(response.statusCode).toBe(502);
+    expect(response.statusCode).toBe(503);
+    expect(response.json().error.type).toBe("GOOGLE_DRIVE_OAUTH_UNAVAILABLE");
     expect(transient.vault.get("google-drive", "tokens")).toBe("refresh-token-private-123456");
   });
 
