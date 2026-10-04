@@ -97,6 +97,7 @@ describe("Session 12D Google Drive Picker browser boundary", () => {
     expect(ui).toContain("<strong>Google Drive</strong>");
     expect(ui).toContain("Hubungkan Google Drive");
     expect(ui).toContain("Refresh Drive snapshot");
+    expect(ui).toContain("await loadDriveStatus().catch(() => undefined)");
     expect(ui).not.toContain('resourceType: "google-drive"');
   });
 });
