@@ -17,6 +17,12 @@ describe("Session 12D Google Drive Picker browser boundary", () => {
   const connect = readFileSync("services/connect/src/google-drive-http.ts", "utf8");
   const main = readFileSync("services/connect/src/main.ts", "utf8");
   const nextConfig = readFileSync("apps/ai/next.config.ts", "utf8");
+  const packageJson = readFileSync("package.json", "utf8");
+
+  it("keeps executable Picker callback coverage in the mock acceptance command", () => {
+    expect(packageJson).toContain('"acceptance:google-drive:mock"');
+    expect(packageJson).toContain("apps/ai/lib/google-drive-picker-client.test.ts");
+  });
 
   it("uses only the official Google Picker script and iframe origins", () => {
     expect(pickerClient).toContain(
