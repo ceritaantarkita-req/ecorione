@@ -51,7 +51,7 @@ free disk                = 29.91 GiB stabilized
 Documentation-only checkpoint commits may advance Git revision identity without changing product behavior. Sessions 4E–11 remain CLOSED / PASS / STAGING VERIFIED at their documented boundaries. PR #436 exposed that the original `docs/**` classifier did not include root `README.md` and `AGENTS.md`; PR #437 expanded the allowlist to `docs/**`, `README.md`, and `AGENTS.md`. The boundary is now live-verified by PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9`: CI #2709 PASS, Product Eval #1948 PASS, and Staging Deploy #2166/#2167 both gate PASS / deploy SKIPPED. Runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366` / `staging-5f1245083047`. Do not reopen closed sessions for freshness.
 
 Current overall safe-resume pointer:
-`docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md`.
+`docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md`.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
@@ -130,7 +130,7 @@ Current invariants:
 Do **not** hard-code newly discovered GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other catalog models into the static verified registry merely to make them executable. Use the dynamic Connect-owned admission/activation path and preserve fresh dispatch-time validation.
 
 Current checkpoint:
-`docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md`.
+`docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md`.
 
 Prior Ai quick-switch checkpoint:
 `docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md`.
