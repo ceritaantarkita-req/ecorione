@@ -7,15 +7,16 @@ Status: **CURRENT SUMMARY / SESSION 12D REPOSITORY+MOCK GREEN / SUMOPOD ACTIVE-S
 ## Current operating state — 2026-10-04
 
 ```text
-GitHub main                 = bd8d2513aa21164e5a1f6d36b898d8140b57506a
+main product/runtime base   = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448)
 active scope                = Session 12D Native Google Drive closure
 12A                         = MERGED / quality gates PASS
 12B                         = MERGED / quality gates PASS / no successful new remote-staging proof
 12C                         = MERGED / quality gates PASS / base product merge 4326e77...
 12D support                 = #448 MERGED / local preflight + runbook on current main
 12D                         = PR #444 DRAFT / repository+mock acceptance CLOSED / PASS
-12D reviewed head           = 1e4f58c7d9dd4dc9f09687fbdd393261f38830f8
-12D exact-head gates        = CI #2819 / Eval #2058 / MCP #1320 / Browser #471 / Desktop #346 PASS
+12D reviewed head           = df87fff76a4b1b5dc251161ff7802b71796360c3
+12D exact-head gates        = CI #2830 / Eval #2069 / MCP #1322 / Browser #480 / Desktop #348 PASS
+12D audit hardening         = #461 reconnect/OAuth classifier + #462 upstream mapping coverage MERGED
 active remote staging       = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
 next gate                   = real local Google OAuth + Picker acceptance
