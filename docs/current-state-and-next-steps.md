@@ -8,7 +8,7 @@ Status: **CURRENT / SESSION 12D NATIVE GOOGLE DRIVE CLOSURE ACTIVE / 12A–12C M
 
 The operator has decided not to renew the current SumoPod VPS when its current paid period ends. **SumoPod is no longer the active staging target for new ECORIONE work.** Do not repair, redeploy, or require new proof from that host unless the operator explicitly reauthorizes it.
 
-Historical SumoPod evidence remains valid at the boundary/date where it was recorded. The last proven actual SumoPod runtime is Session 12A merge `084d669d8631a2590e7a9e88b62e161691bf4fc9` / image `staging-084d669d8631` via Staging Deploy #2183 with 15/15 services running and healthy Operations. Session 12B merge `977689ffff8bdf2d00fd1ed34c172d3452d98d17` and Session 12C merge `4326e77b2f77aa48a4be075c5fab2ff8b9983655` passed their repository quality gates, but their real SumoPod deploy attempts #2226/#2228 failed before mutation because the host could not determine the active ECORIONE image. They are **not** staging-verified. Current `main` is later support baseline `bd8d2513aa21164e5a1f6d36b898d8140b57506a` from #448 and does not claim a newer remote staging runtime.
+Historical SumoPod evidence remains valid at the boundary/date where it was recorded. The last proven actual SumoPod runtime is Session 12A merge `084d669d8631a2590e7a9e88b62e161691bf4fc9` / image `staging-084d669d8631` via Staging Deploy #2183 with 15/15 services running and healthy Operations. Session 12B merge `977689ffff8bdf2d00fd1ed34c172d3452d98d17` and Session 12C merge `4326e77b2f77aa48a4be075c5fab2ff8b9983655` passed their repository quality gates, but their real SumoPod deploy attempts #2226/#2228 failed before mutation because the host could not determine the active ECORIONE image. They are **not** staging-verified. The product/runtime baseline on `main` before this docs-only reconciliation is `bd8d2513aa21164e5a1f6d36b898d8140b57506a` from #448 and does not claim a newer remote staging runtime.
 
 Current Native Google Drive work is Session 12:
 
@@ -16,15 +16,16 @@ Current Native Google Drive work is Session 12:
 12A OAuth foundation           = MERGED / quality gates PASS
 12B selected-file fetch        = MERGED / quality gates PASS / no new remote-staging proof
 12C Project Source lifecycle   = MERGED / quality gates PASS / merge 4326e77...
-12D local acceptance support   = #448 MERGED / current main bd8d251...
+12D local acceptance support   = #448 MERGED / runtime baseline bd8d251...
 12D Picker/browser UX          = PR #444 DRAFT / UNMERGED
-12D reviewed head              = 1e4f58c7d9dd4dc9f09687fbdd393261f38830f8
-12D CI                         = #2819 PASS
-12D Product Eval               = #2058 PASS
-12D MCP External HTTPS         = #1320 PASS
-12D browser acceptance         = #471 PASS
-12D Desktop Installer          = #346 PASS
+12D reviewed head              = df87fff76a4b1b5dc251161ff7802b71796360c3
+12D CI                         = #2830 PASS
+12D Product Eval               = #2069 PASS
+12D MCP External HTTPS         = #1322 PASS
+12D browser acceptance         = #480 PASS
+12D Desktop Installer          = #348 PASS
 12D automated/mock acceptance  = CLOSED / PASS
+12D audit hardening             = #461 + #462 MERGED into reviewed head
 next gate                      = real local Google OAuth + Picker acceptance
 ```
 
@@ -41,10 +42,10 @@ Historical staging-transition record:
 ```text
 repository                 = ceritaantarkita-req/ecorione
 default branch             = main
-current main               = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448 local-acceptance support)
+main product/runtime base  = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448 local-acceptance support)
 active implementation      = Session 12D Native Google Drive closure
 open implementation PR    = #444 (12D Picker/browser UX, DRAFT / UNMERGED)
-PR #444 reviewed head      = 1e4f58c7d9dd4dc9f09687fbdd393261f38830f8
+PR #444 reviewed head      = df87fff76a4b1b5dc251161ff7802b71796360c3
 PR #444 repository/mock    = CLOSED / PASS
 active remote staging      = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
