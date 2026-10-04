@@ -11,16 +11,16 @@ This file is the canonical safe-resume pointer after the repository-side Session
 ```text
 repository                  = ceritaantarkita-req/ecorione
 default branch              = main
-current main                = bd8d2513aa21164e5a1f6d36b898d8140b57506a
+main product/runtime base   = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448)
 Session 12A merge           = 084d669d8631a2590e7a9e88b62e161691bf4fc9
 Session 12B merge           = 977689ffff8bdf2d00fd1ed34c172d3452d98d17
 Session 12C merge           = 4326e77b2f77aa48a4be075c5fab2ff8b9983655
 12D local-support merge     = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448)
 12D umbrella PR             = #444
 12D PR state                = DRAFT / OPEN / UNMERGED
-12D reviewed head           = 1e4f58c7d9dd4dc9f09687fbdd393261f38830f8
-compare vs main             = ahead 78 / behind 0
+12D reviewed head           = df87fff76a4b1b5dc251161ff7802b71796360c3
 mergeable                   = true
+repository audit hardening = #461 + #462 MERGED into reviewed head
 active remote staging       = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
 ```
@@ -29,17 +29,17 @@ The 78-commit branch history is an umbrella-history detail. The reviewed delta a
 
 ## Exact-head gate proof
 
-PR #444 exact head `1e4f58c7d9dd4dc9f09687fbdd393261f38830f8`:
+PR #444 exact head `df87fff76a4b1b5dc251161ff7802b71796360c3`:
 
 ```text
-CI                          = #2819 PASS
-Product Eval                = #2058 PASS
-MCP External HTTPS          = #1320 PASS
-PCS-06 Integrated Browser   = #471 PASS
-Desktop Installer           = #346 PASS
+CI                          = #2830 PASS
+Product Eval                = #2069 PASS
+MCP External HTTPS          = #1322 PASS
+PCS-06 Integrated Browser   = #480 PASS
+Desktop Installer           = #348 PASS
 ```
 
-## Automated/mock acceptance — CLOSED / PASS
+## Repository + automated/mock acceptance — CLOSED / PASS
 
 The deterministic `pnpm acceptance:google-drive:mock` surface now covers the repository-controlled behavior needed before a real Google run, including:
 
@@ -55,7 +55,7 @@ The deterministic `pnpm acceptance:google-drive:mock` surface now covers the rep
 - bounded provider/error mappings without corrupting last-good Project state;
 - no browser persistence of Google refresh/access tokens as a supported design path.
 
-This is repository/mock proof only. It does **not** prove Google Cloud console configuration or real provider behavior.
+Audit hardening additionally proves explicit `invalid_grant` credential invalidation, transient 408/429/5xx credential preservation, connector-state reload after auth loss, and sanitized upstream metadata/content error mapping. This is repository/mock proof only. It does **not** prove Google Cloud console configuration or real provider behavior.
 
 ## Remaining Session 12D gate — real local Google acceptance
 
