@@ -324,6 +324,7 @@ function contentUrl(fileId: string, plan: ReturnType<typeof snapshotPlan>): URL 
 export interface GoogleDriveSourceOptions {
   readonly vault: Pick<ProviderCredentialReader, "get">;
   readonly oauthClient: Pick<GoogleDriveOAuthClient, "refreshAccessToken">;
+  readonly onAuthorizationRejected?: (() => void) | undefined;
   readonly transport?: GoogleDriveApiTransport | undefined;
   readonly timeoutMs?: number | undefined;
   readonly maxBytes?: number | undefined;
@@ -388,6 +389,7 @@ export class GoogleDriveSource {
     } catch (error) {
       if (error instanceof GoogleDriveOAuthUpstreamError) {
         if (error.code === "GOOGLE_DRIVE_OAUTH_REJECTED") {
+          this.options.onAuthorizationRejected?.();
           throw new GoogleDriveSourceError(
             409,
             "GOOGLE_DRIVE_RECONNECT_REQUIRED",
