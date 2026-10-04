@@ -9,11 +9,11 @@ ECORIONE is a local-first monorepo that keeps AI context continuous across model
 Current repository/product boundary:
 
 ```text
-GitHub main                 = bd8d2513aa21164e5a1f6d36b898d8140b57506a (Session 12 local-acceptance support baseline)
+main product/runtime baseline = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448 local-acceptance support)
 active scope                = Session 12D Native Google Drive closure
 12D draft PR                = #444
-12D reviewed head           = 1e4f58c7d9dd4dc9f09687fbdd393261f38830f8
-12D gates                   = CI #2819 / Eval #2058 / MCP #1320 / Browser #471 / Desktop #346 PASS
+12D reviewed head           = df87fff76a4b1b5dc251161ff7802b71796360c3
+12D gates                   = CI #2830 / Eval #2069 / MCP #1322 / Browser #480 / Desktop #348 PASS
 12D automated/mock          = CLOSED / PASS
 active remote staging       = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
@@ -34,7 +34,7 @@ Session 5 — **Project Source Picker** — is **CLOSED / PASS / STAGING VERIFIE
 
 Session 6 — **External Source Lifecycle** — is **CLOSED / PASS / STAGING VERIFIED** through PR #421 and Staging Deploy #1968.
 
-Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED** at their documented historical boundaries: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Session 12 Native Google Drive is now at 12D closure: 12A–12C are merged, local-acceptance support is on current `main` through #448, and PR #444 is repository/mock-acceptance green at exact head `1e4f58c7...`. The only remaining 12D gate is real operator-controlled local Google OAuth + Picker acceptance. Current safe-resume checkpoint: [docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
+Sessions 7–11 are also **CLOSED / PASS / STAGING VERIFIED** at their documented historical boundaries: Schedule (#423), Brain (#425), Automation (#427), deterministic Condition Trigger (#429), and MCP Action product convergence (#431). Session 12 Native Google Drive is now at 12D closure: 12A–12C are merged, local-acceptance support is in the `main` product/runtime baseline through #448, and PR #444 is repository/mock-acceptance green at exact head `df87fff...`. Repository audit hardening through #461/#462 is included in the reviewed head. The only remaining 12D gate is real operator-controlled local Google OAuth + Picker acceptance. Current safe-resume checkpoint: [docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
 
 **Start here:** [docs/README.md](docs/README.md).
 
