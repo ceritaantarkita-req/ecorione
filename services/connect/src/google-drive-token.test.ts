@@ -147,7 +147,9 @@ describe("GoogleDriveOAuthClient", () => {
       });
       const client = new GoogleDriveOAuthClient(config, { transport });
 
-      await expect(client.refreshAccessToken("refresh-token-private-123456")).rejects.toMatchObject({
+      await expect(
+        client.refreshAccessToken("refresh-token-private-123456"),
+      ).rejects.toMatchObject({
         code: "GOOGLE_DRIVE_OAUTH_UNAVAILABLE",
         statusCode: 503,
       });
@@ -164,7 +166,9 @@ describe("GoogleDriveOAuthClient", () => {
     });
     const client = new GoogleDriveOAuthClient(config, { transport });
 
-    await expect(client.refreshAccessToken("refresh-token-private-123456")).rejects.toMatchObject({
+    await expect(
+        client.refreshAccessToken("refresh-token-private-123456"),
+      ).rejects.toMatchObject({
       code: "GOOGLE_DRIVE_OAUTH_INVALID_RESPONSE",
       statusCode: 502,
     });
