@@ -1,6 +1,6 @@
 # ECORIONE documentation map
 
-Last updated: **2026-10-02**
+Last updated: **2026-10-04**
 
 This is the single navigation entry point for repository documentation.
 
@@ -30,8 +30,9 @@ Historical verification is intentionally preserved even when it contains an olde
 2. **[active-work-plan.md](active-work-plan.md)** — current queue and explicit Session 12/local-first acceptance boundary.
 3. **[ai-provider-model-ux-contract.md](ai-provider-model-ux-contract.md)** — accepted and fulfilled Session 4E/4F provider-model product contract.
 4. **[../AGENTS.md](../AGENTS.md)** — repository invariants and working rules.
-5. **[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md)** — current operating transition: SumoPod retired as active staging, Session 12 Native Google Drive active, local-first runtime acceptance.
-6. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
+5. **[verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md)** — CURRENT Session 12D repository/mock-green checkpoint and exact remaining real-local Google gate.
+6. **[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md)** — historical transition record that retired SumoPod as active staging.
+7. **[EXECUTION-PROGRESS.md](EXECUTION-PROGRESS.md)** — compact milestone matrix.
 7. **[verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md](verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md)** — prior Ai quick-switch boundary.
 8. **[verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md](verification/openrouter-settings-model-picker-session4c-safe-checkpoint-2026-09-29.md)** — underlying Settings picker closure.
 9. **[verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md](verification/openrouter-auto-admission-session4b-safe-checkpoint-2026-09-28.md)** — underlying automatic-admission closure.
@@ -111,10 +112,10 @@ There is currently **no active remote staging target**. The operator retired Sum
 
 Historical evidence remains valid. The last proven actual SumoPod runtime is Session 12A merge `084d669d8631a2590e7a9e88b62e161691bf4fc9` / image `staging-084d669d8631` via Staging Deploy #2183. Later Session 12B/12C remote deploy attempts failed before mutation on the host active-image guard and must not be represented as staging success.
 
-Current GitHub `main` is Session 12C merge `4326e77b2f77aa48a4be075c5fab2ff8b9983655`. Session 12D PR #444 at reviewed head `a6d7073c63d9d0f6581af67c2bef3a599629303e` has CI #2748, Product Eval #1987, MCP #1278, and Browser #446 PASS; local Docker/Compose acceptance is the next gate before merge.
+Current GitHub `main` is `bd8d2513aa21164e5a1f6d36b898d8140b57506a`, which includes the Session 12D local preflight/runbook support from #448 on top of the merged 12A–12C product foundation. Session 12D PR #444 is DRAFT / UNMERGED at reviewed head `1e4f58c7d9dd4dc9f09687fbdd393261f38830f8`; CI #2819, Product Eval #2058, MCP #1320, Browser #471, and Desktop #346 all PASS, and automated/mock acceptance is CLOSED / PASS. The only remaining 12D closure gate is real operator-controlled local Google OAuth + Picker acceptance.
 
 Current pointer:
-[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
+[verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
 
 DR-2 checkpoint 2 and production promotion remain deferred; local acceptance does not prove either.
 
