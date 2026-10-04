@@ -24,7 +24,7 @@ interface GooglePickerBuilder {
   build(): GooglePickerInstance;
 }
 
-interface GooglePickerNamespace {
+export interface GooglePickerNamespace {
   readonly PickerBuilder: new () => GooglePickerBuilder;
   readonly DocsView: new (viewId: unknown) => GooglePickerDocsView;
   readonly ViewId: { readonly DOCS: unknown };
@@ -144,11 +144,10 @@ export function loadGooglePickerApi(): Promise<GooglePickerNamespace> {
   return pickerApiPromise;
 }
 
-export async function pickGoogleDriveFiles(
+export function pickGoogleDriveFilesWithApi(
+  pickerApi: GooglePickerNamespace,
   session: GoogleDrivePickerSessionResponse,
 ): Promise<GoogleDrivePickerSelection | null> {
-  const pickerApi = await loadGooglePickerApi();
-
   return new Promise((resolve, reject) => {
     let settled = false;
     const settle = (value: GoogleDrivePickerSelection | null): void => {
@@ -206,4 +205,10 @@ export async function pickGoogleDriveFiles(
       reject(error);
     }
   });
+}
+
+export async function pickGoogleDriveFiles(
+  session: GoogleDrivePickerSessionResponse,
+): Promise<GoogleDrivePickerSelection | null> {
+  return pickGoogleDriveFilesWithApi(await loadGooglePickerApi(), session);
 }
