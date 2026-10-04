@@ -222,6 +222,15 @@ describe("Session 12D Google Drive mock acceptance — Connect", () => {
     expect(picker.json().error.type).toBe("GOOGLE_DRIVE_RECONNECT_REQUIRED");
     expect(picker.body).not.toContain("synthetic-private-upstream-detail");
     expect(picker.body).not.toContain(REFRESH_TOKEN);
+    expect(vault.get("google-drive", "tokens")).toBeUndefined();
+
+    const status = await app.inject({
+      method: "GET",
+      url: "/v1/integrations/google-drive/status?workspaceId=ws_personal",
+      headers: auth,
+    });
+    expect(status.statusCode).toBe(200);
+    expect(status.json()).toMatchObject({ connected: false, updatedAt: null });
     await app.close();
   });
 
