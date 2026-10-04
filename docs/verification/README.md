@@ -1,6 +1,6 @@
 # Verification evidence
 
-- [session12d-repository-green-local-acceptance-pending-2026-10-04.md](session12d-repository-green-local-acceptance-pending-2026-10-04.md) — CURRENT repository truth: main `bd8d251...`, PR #444 exact head `1e4f58c7...`, all five exact-head gates PASS, automated/mock acceptance CLOSED / PASS, real local Google OAuth + Picker acceptance still pending.
+- [session12d-repository-green-local-acceptance-pending-2026-10-04.md](session12d-repository-green-local-acceptance-pending-2026-10-04.md) — CURRENT repository truth: runtime base `bd8d251...`, PR #444 exact head `df87fff...`, all five exact-head gates PASS, #461/#462 audit hardening merged, automated/mock acceptance CLOSED / PASS, real local Google OAuth + Picker acceptance still pending.
 - [sumopod-retirement-local-first-transition-2026-10-03.md](sumopod-retirement-local-first-transition-2026-10-03.md) — HISTORICAL operating transition that retired SumoPod from active staging.
 
 Current overall resume pointer: [session12d-repository-green-local-acceptance-pending-2026-10-04.md](session12d-repository-green-local-acceptance-pending-2026-10-04.md).
