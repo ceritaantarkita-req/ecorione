@@ -17,7 +17,7 @@ Historical evidence may contain statements that were correct at the time but are
 
 ## Latest repository truth
 
-- [ecorione-safe-resume-checkpoint-2026-10-02.md](ecorione-safe-resume-checkpoint-2026-10-02.md) — current SAFE RESUME pointer: Git main `81fce027...` is docs-only; staging runtime/control remains `7130dba720cf...` / `staging-7130dba720cf`; Sessions 4E–11 and post-Session-11 CD hardening are closed; no implementation session is active; local laptop sync was not claimed because Desktop Commander was offline.
+- [ecorione-safe-resume-checkpoint-2026-10-02.md](ecorione-safe-resume-checkpoint-2026-10-02.md) — historical 2026-10-02 safe-resume checkpoint before Session 12 activation; preserve its Git/staging identities as dated evidence rather than current queue state.
 - [session11-mcp-action-product-convergence-closure-2026-10-02.md](session11-mcp-action-product-convergence-closure-2026-10-02.md) — current product/runtime closure for Session 11 MCP Action convergence and post-closure CD hardening evidence.
 - [session6-external-source-lifecycle-closure-2026-10-01.md](session6-external-source-lifecycle-closure-2026-10-01.md) — prior FINAL / CLOSED / PASS / STAGING VERIFIED runtime checkpoint: PR #421 merged as `15f007c5d248...`, merged-main CI #2610, Product Eval #1849, and MCP External HTTPS #1204 passed, Staging Deploy #1968 deployed `staging-15f007c5d248`, public/auth + MCP smoke passed, Operations was healthy, 15/15 services were running, and free disk stabilized at 27.39 GiB.
 - [session6-external-source-lifecycle-local-acceptance-checkpoint-2026-10-01.md](session6-external-source-lifecycle-local-acceptance-checkpoint-2026-10-01.md) — pre-merge local acceptance evidence for URL/MCP snapshot lifecycle, refresh/index semantics, direct text indexing, re-index, detach provenance, and reversible temporary-Project cleanup.
@@ -93,7 +93,7 @@ Important dated proof includes:
 - current exact runtime/control staging proof at Staging Deploy #2146;
 - later docs-only main commits are expected to gate-pass and skip deploy.
 
-Current safe-resume identity and the distinction between Git main and staging runtime are recorded in [ecorione-safe-resume-checkpoint-2026-10-02.md](ecorione-safe-resume-checkpoint-2026-10-02.md), not inferred from older deployment documents.
+The historical 2026-10-02 Git-main/staging-runtime distinction is recorded in [ecorione-safe-resume-checkpoint-2026-10-02.md](ecorione-safe-resume-checkpoint-2026-10-02.md). The current safe-resume identity is the Session 12D checkpoint at the top of this index.
 
 ## Off-host DR
 
