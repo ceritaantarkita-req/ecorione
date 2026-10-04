@@ -1,10 +1,28 @@
 # ECORIONE — Native Google Drive Operations
 
-Last updated: **2026-10-03**
+Last updated: **2026-10-04**
 
-Status: **SESSION 12D LOCAL ACCEPTANCE SUPPORT / NO REMOTE STAGING REQUIRED**
+Status: **SESSION 12D REPOSITORY/MOCK ACCEPTANCE CLOSED / REAL LOCAL GOOGLE OAUTH + PICKER ACCEPTANCE PENDING / NO REMOTE STAGING REQUIRED**
 
 This runbook covers operator configuration and bounded local acceptance for Native Google Drive. It does not authorize whole-Drive indexing, recursive sync, production cutover, DR-2 proof, or a new connector roadmap.
+
+## Current reviewed baseline — 2026-10-04
+
+```text
+main product/runtime base  = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448)
+PR #444 state              = DRAFT / UNMERGED
+PR #444 accepted head      = df87fff76a4b1b5dc251161ff7802b71796360c3
+CI                         = #2830 PASS
+Product Eval               = #2069 PASS
+MCP External HTTPS         = #1322 PASS
+PCS-06 Integrated Browser  = #480 PASS
+Desktop Installer          = #348 PASS
+automated/mock acceptance  = CLOSED / PASS
+repository audit hardening = #461 reconnect/OAuth classifier + #462 upstream mapping coverage
+remaining gate             = real local Google OAuth + Picker acceptance
+```
+
+The reviewed head also includes the repository-wide audit fixes that invalidate stale credentials only on explicit `invalid_grant`, preserve credentials across transient token-endpoint outages, reload connector state after auth loss, and lock sanitized Drive upstream error mapping. The real run should validate actual Google Cloud console configuration, consent audience/test-user behavior, OAuth exchange, Picker iframe rendering, and real Drive permission behavior. Do not spend the operator run destructively recreating failure cases already locked by deterministic mock acceptance.
 
 ## Architecture boundary
 

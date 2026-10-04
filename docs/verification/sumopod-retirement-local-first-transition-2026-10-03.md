@@ -1,5 +1,7 @@
 # SumoPod Staging Retirement + Local-First Transition — 2026-10-03
 
+> Historical transition checkpoint. For current Session 12D truth, use [session12d-repository-green-local-acceptance-pending-2026-10-04.md](session12d-repository-green-local-acceptance-pending-2026-10-04.md). Exact SHAs and gate numbers below intentionally preserve the 2026-10-03 transition state.
+
 **Status:** OPERATOR DECISION RECORDED / SUMOPOD ACTIVE-STAGING ROLE RETIRED / LOCAL-FIRST DEVELOPMENT ACCEPTANCE ACTIVE / PRODUCTION + DR-2 UNCHANGED
 
 ## Operator decision

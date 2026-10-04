@@ -23,13 +23,14 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Current product/repository boundary:
 
 ```text
-GitHub main                = 4326e77b2f77aa48a4be075c5fab2ff8b9983655 (Session 12C)
-active scope               = Session 12 Native Google Drive
-PR #444 reviewed head      = a6d7073c63d9d0f6581af67c2bef3a599629303e
-PR #444 gates              = CI #2748 / Eval #1987 / MCP #1278 / Browser #446 PASS
+main product/runtime base  = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448)
+active scope               = Session 12D Native Google Drive closure
+PR #444 reviewed head      = df87fff76a4b1b5dc251161ff7802b71796360c3
+PR #444 gates              = CI #2830 / Eval #2069 / MCP #1322 / Browser #480 / Desktop #348 PASS
+PR #444 automated/mock     = CLOSED / PASS
 active remote staging      = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
-next runtime gate          = local Docker/Compose acceptance
+next runtime gate          = real local Google OAuth + Picker acceptance
 ```
 
 Until a replacement external staging target is explicitly selected, runtime-changing development work may close branch-level acceptance using deterministic GitHub gates plus bounded local Docker/Compose acceptance. Never relabel such work as `STAGING VERIFIED`.
@@ -50,7 +51,7 @@ free disk                = 29.91 GiB stabilized
 Documentation-only checkpoint commits may advance Git revision identity without changing product behavior. Sessions 4E–11 remain CLOSED / PASS / STAGING VERIFIED at their documented boundaries. PR #436 exposed that the original `docs/**` classifier did not include root `README.md` and `AGENTS.md`; PR #437 expanded the allowlist to `docs/**`, `README.md`, and `AGENTS.md`. The boundary is now live-verified by PR #438 merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9`: CI #2709 PASS, Product Eval #1948 PASS, and Staging Deploy #2166/#2167 both gate PASS / deploy SKIPPED. Runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366` / `staging-5f1245083047`. Do not reopen closed sessions for freshness.
 
 Current overall safe-resume pointer:
-`docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md`.
+`docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md`.
 
 NVIDIA API Catalog / NIM is now a verified first-class hosted provider under Connect:
 
@@ -72,7 +73,7 @@ Latest NVIDIA test/runtime checkpoint:
 Underlying provider rollout checkpoint:
 `docs/verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md`.
 
-Use `docs/verification/sumopod-retirement-local-first-transition-2026-10-03.md` as the overall handoff pointer. Session 12 Native Google Drive is the active explicitly authorized implementation scope.
+Use `docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md` as the overall handoff pointer. The SumoPod retirement record remains historical evidence. Session 12D Native Google Drive closure is the active explicitly authorized implementation scope.
 
 Closed roadmap families:
 
@@ -104,7 +105,7 @@ Closed roadmap families:
 - Session 11 MCP Action product convergence — **CLOSED / PASS / STAGING VERIFIED** through PR #431;
 - post-Session-11 CD hardening — **CLOSED / PASS / LIVE VERIFIED** through PR #438; automatic documentation-only allowlist is `docs/**`, `README.md`, and `AGENTS.md`; runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366`.
 
-Session 12 Native Google Drive is explicitly authorized and active. 12A–12C are merged; 12D PR #444 is exact-head green and awaits local acceptance. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
+Session 12 Native Google Drive is explicitly authorized and active. 12A–12C are merged; #448 supplies the main product/runtime local acceptance preflight/runbook; 12D PR #444 is exact-head repository/mock green after #461/#462 audit hardening and awaits only real local Google OAuth + Picker acceptance. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
 
 Open Issue #277 remains the deferred DR-2 tracker.
 
@@ -129,7 +130,7 @@ Current invariants:
 Do **not** hard-code newly discovered GPT, DeepSeek, Qwen, GLM, Kimi, Gemini, Llama, or other catalog models into the static verified registry merely to make them executable. Use the dynamic Connect-owned admission/activation path and preserve fresh dispatch-time validation.
 
 Current checkpoint:
-`docs/verification/ecorione-safe-resume-checkpoint-2026-10-02.md`.
+`docs/verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md`.
 
 Prior Ai quick-switch checkpoint:
 `docs/verification/openrouter-ai-chat-quick-switch-session4d-safe-checkpoint-2026-09-29.md`.

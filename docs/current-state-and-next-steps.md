@@ -1,33 +1,40 @@
 # ECORIONE — Current State & Next Steps
 
-Last updated: **2026-10-03**
+Last updated: **2026-10-04**
 
-Status: **CURRENT / SESSION 12 NATIVE GOOGLE DRIVE ACTIVE / 12A–12C MERGED / 12D EXACT-HEAD GREEN + LOCAL ACCEPTANCE PENDING / SUMOPOD ACTIVE-STAGING ROLE RETIRED / DR-2 + PRODUCTION DEFERRED**
+Status: **CURRENT / SESSION 12D NATIVE GOOGLE DRIVE CLOSURE ACTIVE / 12A–12C MERGED / #448 CURRENT-MAIN SUPPORT / 12D REPOSITORY+MOCK CLOSED / REAL LOCAL GOOGLE ACCEPTANCE PENDING / SUMOPOD ACTIVE-STAGING ROLE RETIRED / DR-2 + PRODUCTION DEFERRED**
 
-## Current operating override — 2026-10-03
+## Current operating override — 2026-10-04
 
 The operator has decided not to renew the current SumoPod VPS when its current paid period ends. **SumoPod is no longer the active staging target for new ECORIONE work.** Do not repair, redeploy, or require new proof from that host unless the operator explicitly reauthorizes it.
 
-Historical SumoPod evidence remains valid at the boundary/date where it was recorded. The last proven actual SumoPod runtime is Session 12A merge `084d669d8631a2590e7a9e88b62e161691bf4fc9` / image `staging-084d669d8631` via Staging Deploy #2183 with 15/15 services running and healthy Operations. Session 12B merge `977689ffff8bdf2d00fd1ed34c172d3452d98d17` and Session 12C merge/current `main` `4326e77b2f77aa48a4be075c5fab2ff8b9983655` passed their repository quality gates, but their real SumoPod deploy attempts #2226/#2228 failed before mutation because the host could not determine the active ECORIONE image. They are **not** staging-verified.
+Historical SumoPod evidence remains valid at the boundary/date where it was recorded. The last proven actual SumoPod runtime is Session 12A merge `084d669d8631a2590e7a9e88b62e161691bf4fc9` / image `staging-084d669d8631` via Staging Deploy #2183 with 15/15 services running and healthy Operations. Session 12B merge `977689ffff8bdf2d00fd1ed34c172d3452d98d17` and Session 12C merge `4326e77b2f77aa48a4be075c5fab2ff8b9983655` passed their repository quality gates, but their real SumoPod deploy attempts #2226/#2228 failed before mutation because the host could not determine the active ECORIONE image. They are **not** staging-verified. The product/runtime baseline on `main` before this docs-only reconciliation is `bd8d2513aa21164e5a1f6d36b898d8140b57506a` from #448 and does not claim a newer remote staging runtime.
 
 Current Native Google Drive work is Session 12:
 
 ```text
 12A OAuth foundation           = MERGED / quality gates PASS
 12B selected-file fetch        = MERGED / quality gates PASS / no new remote-staging proof
-12C Project Source lifecycle   = MERGED / quality gates PASS / current main
-12D Picker/browser UX          = PR #444 DRAFT
-12D reviewed head              = a6d7073c63d9d0f6581af67c2bef3a599629303e
-12D CI                         = #2748 PASS
-12D Product Eval               = #1987 PASS
-12D MCP External HTTPS         = #1278 PASS
-12D browser acceptance         = #446 PASS
-next gate                      = local Docker/Compose acceptance
+12C Project Source lifecycle   = MERGED / quality gates PASS / merge 4326e77...
+12D local acceptance support   = #448 MERGED / runtime baseline bd8d251...
+12D Picker/browser UX          = PR #444 DRAFT / UNMERGED
+12D reviewed head              = df87fff76a4b1b5dc251161ff7802b71796360c3
+12D CI                         = #2830 PASS
+12D Product Eval               = #2069 PASS
+12D MCP External HTTPS         = #1322 PASS
+12D browser acceptance         = #480 PASS
+12D Desktop Installer          = #348 PASS
+12D automated/mock acceptance  = CLOSED / PASS
+12D audit hardening             = #461 + #462 MERGED into reviewed head
+next gate                      = real local Google OAuth + Picker acceptance
 ```
 
 Until a replacement external staging target is explicitly selected, runtime-changing product closure uses reviewed GitHub gates plus local Docker/Compose acceptance on operator-controlled compute. This is a development/acceptance model only; it does not imply production readiness, remote-host evidence, DR-2 physical independence, or public-production authorization.
 
-Canonical transition record:
+Canonical current checkpoint:
+[verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
+
+Historical staging-transition record:
 [verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
 
 ## Repository identity
@@ -35,14 +42,15 @@ Canonical transition record:
 ```text
 repository                 = ceritaantarkita-req/ecorione
 default branch             = main
-current main               = 4326e77b2f77aa48a4be075c5fab2ff8b9983655 (Session 12C)
-active implementation      = Session 12 Native Google Drive
-open implementation PR    = #444 (12D Picker/browser UX, DRAFT)
-PR #444 reviewed head      = a6d7073c63d9d0f6581af67c2bef3a599629303e
+main product/runtime base  = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448 local-acceptance support)
+active implementation      = Session 12D Native Google Drive closure
+open implementation PR    = #444 (12D Picker/browser UX, DRAFT / UNMERGED)
+PR #444 reviewed head      = df87fff76a4b1b5dc251161ff7802b71796360c3
+PR #444 repository/mock    = CLOSED / PASS
 active remote staging      = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
 last proven SumoPod image   = staging-084d669d8631
-interim runtime acceptance = local Docker/Compose
+interim runtime acceptance = real local Google OAuth + Picker acceptance
 ```
 
 Sessions 4E and 4F are CLOSED / PASS / STAGING VERIFIED through PR #417. Exact PR head `93c3230b552e479194b756135a5458d8a6fd001e` passed CI #2600, Product Eval #1839, and PCS-06 Integrated Browser Acceptance #371. It merged to `main` as `6170ee5d67ee4b105771d8ce2c348afba6cce896`; merged-main CI #2601 and Product Eval #1840 passed, and actual Staging Deploy #1950 deployed exact SHA `6170ee5d...` as `staging-6170ee5d67ee`. Public/auth and MCP smoke passed, Operations reported `healthy: true`, exact-host identity matched with a clean worktree, all **15/15** configured services were running, and capacity stabilized at **29.95 GiB free**.
@@ -66,7 +74,7 @@ Session 11 MCP Action Product Convergence is CLOSED / PASS / STAGING VERIFIED th
 Post-Session-11 CD hardening remains deployment-control work, not Session 12. PR #436 exposed the incomplete original `docs/**` classifier. PR #437 expanded the automatic documentation-only allowlist to `docs/**`, `README.md`, and `AGENTS.md`. PR #438 then live-verified that boundary: merge `6daea51053ee24ae4aebb5a8c155ff8554da85f9` passed CI #2709 and Product Eval #1948; Staging Deploy #2166 and #2167 both gate-passed and explicitly skipped deploy as docs-only. Runtime/control therefore remains `5f1245083047c4014789e90c2ba25b7e16ebe366`, image `staging-5f1245083047`, with the previously verified healthy 15/15 staging services and 29.91 GiB stabilized free disk.
 
 Current safe-resume checkpoint:
-[verification/ecorione-safe-resume-checkpoint-2026-10-02.md](verification/ecorione-safe-resume-checkpoint-2026-10-02.md).
+[verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
 
 The closed ECX Batch 1–7 contracts remain compatibility requirements. The repository has since added the bounded NVIDIA hosted-provider capability and Docker native-build hardening without changing service ownership or opening a new numbered roadmap.
 
@@ -429,7 +437,7 @@ For a new session/agent:
 8. use dated verification files as evidence, not as the current queue.
 
 Current safe-resume checkpoint:
-[verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
+[verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
 
 Underlying runtime/provider checkpoint:
 [verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md](verification/nvidia-hosted-provider-safe-checkpoint-2026-09-28.md).

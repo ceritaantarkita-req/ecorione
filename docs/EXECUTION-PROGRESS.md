@@ -1,22 +1,25 @@
 # ECORIONE — Execution Progress
 
-Last updated: **2026-10-03**
+Last updated: **2026-10-04**
 
-Status: **CURRENT SUMMARY / SESSION 12 NATIVE GOOGLE DRIVE ACTIVE / SUMOPOD ACTIVE-STAGING ROLE RETIRED / LOCAL ACCEPTANCE NEXT**
+Status: **CURRENT SUMMARY / SESSION 12D REPOSITORY+MOCK GREEN / SUMOPOD ACTIVE-STAGING ROLE RETIRED / REAL LOCAL GOOGLE OAUTH+PICKER ACCEPTANCE NEXT**
 
-## Current operating state — 2026-10-03
+## Current operating state — 2026-10-04
 
 ```text
-GitHub main                 = 4326e77b2f77aa48a4be075c5fab2ff8b9983655
-active scope                = Session 12 Native Google Drive
+main product/runtime base   = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448)
+active scope                = Session 12D Native Google Drive closure
 12A                         = MERGED / quality gates PASS
 12B                         = MERGED / quality gates PASS / no successful new remote-staging proof
-12C                         = MERGED / quality gates PASS / current main
-12D                         = PR #444 DRAFT / exact-head full gates PASS
-12D reviewed head           = a6d7073c63d9d0f6581af67c2bef3a599629303e
+12C                         = MERGED / quality gates PASS / base product merge 4326e77...
+12D support                 = #448 MERGED / local preflight + runbook on current main
+12D                         = PR #444 DRAFT / repository+mock acceptance CLOSED / PASS
+12D reviewed head           = df87fff76a4b1b5dc251161ff7802b71796360c3
+12D exact-head gates        = CI #2830 / Eval #2069 / MCP #1322 / Browser #480 / Desktop #348 PASS
+12D audit hardening         = #461 reconnect/OAuth classifier + #462 upstream mapping coverage MERGED
 active remote staging       = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
-next gate                   = local Docker/Compose acceptance
+next gate                   = real local Google OAuth + Picker acceptance
 ```
 
 SumoPod was retired from the active staging role by operator decision on 2026-10-03. Historical PCS/staging/DR evidence below remains valid at its dated boundary; it is not the current deployment target.
@@ -43,7 +46,7 @@ free disk               = 27.39 GiB stabilized
 
 This baseline includes closed Sessions 4E/4F, Session 5 Project Source Picker productization, and Session 6 External Source Lifecycle. Session 6 adds explicit URL/MCP snapshot lifecycle metadata, content-addressed refresh semantics, direct text indexing into Context, and Refresh/Index/Re-index UX while preserving owner-backed source boundaries.
 
-Session 12 Native Google Drive is the active explicitly authorized implementation scope. 12D local acceptance is the next bounded gate.
+Session 12 Native Google Drive is the active explicitly authorized implementation scope. 12D repository/mock acceptance is closed; real local Google OAuth + Picker acceptance is the next bounded gate.
 
 ## Closed foundational roadmaps
 
@@ -248,7 +251,7 @@ Evidence:
 
 | Scope | State |
 |---|---|
-| Product/runtime implementation | SESSION 12 ACTIVE — 12A–12C MERGED; 12D PR #444 EXACT-HEAD GREEN / LOCAL ACCEPTANCE PENDING |
+| Product/runtime implementation | SESSION 12D CLOSURE ACTIVE — 12A–12C MERGED; #448 ON MAIN; #444 REPOSITORY+MOCK GREEN / REAL LOCAL GOOGLE ACCEPTANCE PENDING |
 | Repository truth/docs reconciliation | SESSION 6 CURRENT TRUTH CLOSED / PASS |
 | Post-ECX branch delta cleanup | CLOSED / PASS |
 | NVIDIA hosted-provider trial | CLOSED / PASS |
@@ -263,7 +266,7 @@ Evidence:
 | Session 4E + 4F final integration | CLOSED / PASS / STAGING VERIFIED |
 | Session 5 Project Source Picker | CLOSED / PASS / STAGING VERIFIED |
 | Session 6 External Source Lifecycle | CLOSED / PASS / STAGING VERIFIED |
-| Session 12 Native Google Drive | ACTIVE / 12D LOCAL ACCEPTANCE NEXT |
+| Session 12 Native Google Drive | ACTIVE / 12D REPOSITORY+MOCK CLOSED / REAL LOCAL GOOGLE OAUTH+PICKER ACCEPTANCE NEXT |
 | Repository-hygiene queue | NONE ACTIVE |
 | DR-2 checkpoint 2 | DEFERRED |
 | Production cutover | DEFERRED |
