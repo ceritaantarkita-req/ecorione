@@ -23,10 +23,10 @@ Dated audits, WIP checkpoints, closure records, and `docs/verification/` are evi
 Current product/repository boundary:
 
 ```text
-GitHub main                = bd8d2513aa21164e5a1f6d36b898d8140b57506a
+main product/runtime base  = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448)
 active scope               = Session 12D Native Google Drive closure
-PR #444 reviewed head      = 1e4f58c7d9dd4dc9f09687fbdd393261f38830f8
-PR #444 gates              = CI #2819 / Eval #2058 / MCP #1320 / Browser #471 / Desktop #346 PASS
+PR #444 reviewed head      = df87fff76a4b1b5dc251161ff7802b71796360c3
+PR #444 gates              = CI #2830 / Eval #2069 / MCP #1322 / Browser #480 / Desktop #348 PASS
 PR #444 automated/mock     = CLOSED / PASS
 active remote staging      = NONE
 last proven SumoPod runtime = 084d669d8631a2590e7a9e88b62e161691bf4fc9
@@ -105,7 +105,7 @@ Closed roadmap families:
 - Session 11 MCP Action product convergence — **CLOSED / PASS / STAGING VERIFIED** through PR #431;
 - post-Session-11 CD hardening — **CLOSED / PASS / LIVE VERIFIED** through PR #438; automatic documentation-only allowlist is `docs/**`, `README.md`, and `AGENTS.md`; runtime remains `5f1245083047c4014789e90c2ba25b7e16ebe366`.
 
-Session 12 Native Google Drive is explicitly authorized and active. 12A–12C are merged; #448 supplies the current-main local acceptance preflight/runbook; 12D PR #444 is exact-head repository/mock green and awaits only real local Google OAuth + Picker acceptance. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
+Session 12 Native Google Drive is explicitly authorized and active. 12A–12C are merged; #448 supplies the main product/runtime local acceptance preflight/runbook; 12D PR #444 is exact-head repository/mock green after #461/#462 audit hardening and awaits only real local Google OAuth + Picker acceptance. There is no implicit Batch 8, PE-09, PCS-11, Batch 13, or next A-series item. The accepted Session 4E product contract remains `docs/ai-provider-model-ux-contract.md`.
 
 Open Issue #277 remains the deferred DR-2 tracker.
 
