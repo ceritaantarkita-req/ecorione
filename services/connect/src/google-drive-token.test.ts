@@ -129,7 +129,49 @@ describe("GoogleDriveOAuthClient", () => {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(GoogleDriveOAuthUpstreamError);
+    expect(thrown).toMatchObject({
+      code: "GOOGLE_DRIVE_OAUTH_REJECTED",
+      statusCode: 502,
+    });
     expect(String((thrown as Error).message)).not.toContain(secretDescription);
+  });
+
+  it("distinguishes transient token endpoint outages from rejected credentials", async () => {
+    for (const statusCode of [429, 503]) {
+      const transport: GoogleDriveOAuthTransport = async () => ({
+        statusCode,
+        bodyText: JSON.stringify({
+          error: "temporarily_unavailable",
+          error_description: "private-transient-detail",
+        }),
+      });
+      const client = new GoogleDriveOAuthClient(config, { transport });
+
+      await expect(
+        client.refreshAccessToken("refresh-token-private-123456"),
+      ).rejects.toMatchObject({
+        code: "GOOGLE_DRIVE_OAUTH_UNAVAILABLE",
+        statusCode: 503,
+      });
+    }
+  });
+
+  it("does not classify arbitrary OAuth 4xx failures as rejected stored grants", async () => {
+    const transport: GoogleDriveOAuthTransport = async () => ({
+      statusCode: 400,
+      bodyText: JSON.stringify({
+        error: "invalid_client",
+        error_description: "private-client-config-detail",
+      }),
+    });
+    const client = new GoogleDriveOAuthClient(config, { transport });
+
+    await expect(
+      client.refreshAccessToken("refresh-token-private-123456"),
+    ).rejects.toMatchObject({
+      code: "GOOGLE_DRIVE_OAUTH_INVALID_RESPONSE",
+      statusCode: 502,
+    });
   });
 
   it("revokes the refresh token through the fixed revoke endpoint", async () => {

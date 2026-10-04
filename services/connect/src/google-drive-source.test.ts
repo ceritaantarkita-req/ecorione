@@ -275,6 +275,7 @@ describe("GoogleDriveSource", () => {
   });
 
   it("sanitizes OAuth refresh failures into source-boundary errors", async () => {
+    let rejectedInvalidations = 0;
     const rejected = new GoogleDriveSource({
       vault: { get: () => "refresh-token-private-123456" },
       oauthClient: {
@@ -286,6 +287,9 @@ describe("GoogleDriveSource", () => {
           );
         },
       },
+      onAuthorizationRejected: () => {
+        rejectedInvalidations += 1;
+      },
       transport: async () => {
         throw new Error("must not run");
       },
@@ -295,7 +299,9 @@ describe("GoogleDriveSource", () => {
       statusCode: 409,
       message: "Google Drive authorization perlu dihubungkan ulang.",
     });
+    expect(rejectedInvalidations).toBe(1);
 
+    let timeoutInvalidations = 0;
     const timeout = new GoogleDriveSource({
       vault: { get: () => "refresh-token-private-123456" },
       oauthClient: {
@@ -307,6 +313,9 @@ describe("GoogleDriveSource", () => {
           );
         },
       },
+      onAuthorizationRejected: () => {
+        timeoutInvalidations += 1;
+      },
       transport: async () => {
         throw new Error("must not run");
       },
@@ -315,6 +324,7 @@ describe("GoogleDriveSource", () => {
       code: "GOOGLE_DRIVE_API_TIMEOUT",
       statusCode: 504,
     });
+    expect(timeoutInvalidations).toBe(0);
   });
 
   it("rejects non-Personal Workspace and upstream identity mismatch", async () => {
