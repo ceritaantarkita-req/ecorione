@@ -9,19 +9,20 @@ This runbook covers operator configuration and bounded local acceptance for Nati
 ## Current reviewed baseline — 2026-10-04
 
 ```text
-main baseline              = bd8d2513aa21164e5a1f6d36b898d8140b57506a
+main product/runtime base  = bd8d2513aa21164e5a1f6d36b898d8140b57506a (#448)
 PR #444 state              = DRAFT / UNMERGED
-PR #444 accepted head      = 1e4f58c7d9dd4dc9f09687fbdd393261f38830f8
-CI                         = #2819 PASS
-Product Eval               = #2058 PASS
-MCP External HTTPS         = #1320 PASS
-PCS-06 Integrated Browser  = #471 PASS
-Desktop Installer          = #346 PASS
+PR #444 accepted head      = df87fff76a4b1b5dc251161ff7802b71796360c3
+CI                         = #2830 PASS
+Product Eval               = #2069 PASS
+MCP External HTTPS         = #1322 PASS
+PCS-06 Integrated Browser  = #480 PASS
+Desktop Installer          = #348 PASS
 automated/mock acceptance  = CLOSED / PASS
+repository audit hardening = #461 reconnect/OAuth classifier + #462 upstream mapping coverage
 remaining gate             = real local Google OAuth + Picker acceptance
 ```
 
-The real run should validate actual Google Cloud console configuration, consent audience/test-user behavior, OAuth exchange, Picker iframe rendering, and real Drive permission behavior. Do not spend the operator run destructively recreating failure cases already locked by deterministic mock acceptance.
+The reviewed head also includes the repository-wide audit fixes that invalidate stale credentials only on explicit `invalid_grant`, preserve credentials across transient token-endpoint outages, reload connector state after auth loss, and lock sanitized Drive upstream error mapping. The real run should validate actual Google Cloud console configuration, consent audience/test-user behavior, OAuth exchange, Picker iframe rendering, and real Drive permission behavior. Do not spend the operator run destructively recreating failure cases already locked by deterministic mock acceptance.
 
 ## Architecture boundary
 
