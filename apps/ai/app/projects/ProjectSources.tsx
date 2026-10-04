@@ -313,6 +313,9 @@ export function ProjectSources(props: {
       const rawSession: unknown = await sessionResponse.json().catch(() => undefined);
       if (!sessionResponse.ok) {
         const details = errorDetails(rawSession, "Gagal membuat sesi Google Picker.");
+        if (details.type === "GOOGLE_DRIVE_RECONNECT_REQUIRED") {
+          await loadDriveStatus().catch(() => undefined);
+        }
         throw new GoogleDriveOperationError(details.type, details.message);
       }
       const session = GoogleDrivePickerSessionResponseSchema.safeParse(rawSession);
@@ -332,6 +335,8 @@ export function ProjectSources(props: {
 
       if (batch.successes.length > 0) {
         await Promise.all([load(), loadLifecycle(), loadCatalog(), loadDriveStatus()]);
+      } else if (batch.failures.length > 0) {
+        await loadDriveStatus().catch(() => undefined);
       }
       if (batch.reconnectRequired) setDriveReconnectRequired(true);
       setFeedback(batch.feedback);
@@ -375,6 +380,7 @@ export function ProjectSources(props: {
       ) {
         setDriveReconnectRequired(true);
       }
+      await loadDriveStatus().catch(() => undefined);
       setFeedback(
         error instanceof Error ? error.message : "Gagal memperbarui Google Drive snapshot.",
       );
