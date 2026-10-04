@@ -1,10 +1,10 @@
 # ECORIONE — Active Work Plan
 
-Last updated: **2026-10-03**
+Last updated: **2026-10-04**
 
-Status: **SESSION 12 NATIVE GOOGLE DRIVE ACTIVE / 12A–12C MERGED / 12D EXACT-HEAD GREEN + LOCAL ACCEPTANCE PENDING / SUMOPOD RETIRED AS ACTIVE STAGING**
+Status: **SESSION 12D NATIVE GOOGLE DRIVE CLOSURE ACTIVE / 12A–12C MERGED / #448 ON MAIN / REPOSITORY+MOCK ACCEPTANCE CLOSED / REAL LOCAL GOOGLE ACCEPTANCE PENDING / SUMOPOD RETIRED AS ACTIVE STAGING**
 
-Current resume pointer: [verification/sumopod-retirement-local-first-transition-2026-10-03.md](verification/sumopod-retirement-local-first-transition-2026-10-03.md).
+Current resume pointer: [verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md](verification/session12d-repository-green-local-acceptance-pending-2026-10-04.md).
 
 The operator retired SumoPod from the active staging role on 2026-10-03 because the current VPS will not be renewed. Historical staging evidence remains historical truth; do not retry/repair SumoPod for current feature closure. Until a replacement host is explicitly selected, use exact-head GitHub gates plus local Docker/Compose runtime acceptance.
 
@@ -14,9 +14,10 @@ Current bounded queue:
 
 - **12A OAuth foundation** — MERGED / quality gates PASS through PR #441 / merge `084d669d8631a2590e7a9e88b62e161691bf4fc9`; this is also the last proven actual SumoPod runtime via Staging Deploy #2183.
 - **12B selected-file fetch/export** — MERGED / quality gates PASS through PR #442 / merge `977689ffff8bdf2d00fd1ed34c172d3452d98d17`; no successful new SumoPod runtime proof.
-- **12C governed Project Source lifecycle** — MERGED / quality gates PASS through PR #443 / merge/current `main` `4326e77b2f77aa48a4be075c5fab2ff8b9983655`; no successful new SumoPod runtime proof.
-- **12D Picker/browser UX** — PR #444 DRAFT, exact reviewed head `a6d7073c63d9d0f6581af67c2bef3a599629303e`; CI #2748, Product Eval #1987, MCP #1278, Browser #446 all PASS.
-- **NEXT:** local Docker/Compose acceptance for 12D on operator-controlled compute; then review/merge exact head and run merged-main gates.
+- **12C governed Project Source lifecycle** — MERGED / quality gates PASS through PR #443 / merge `4326e77b2f77aa48a4be075c5fab2ff8b9983655`; no successful new SumoPod runtime proof.
+- **12D local-acceptance support** — MERGED to current `main` through PR #448 / `bd8d2513aa21164e5a1f6d36b898d8140b57506a`; canonical preflight and runbook use `pnpm acceptance:google-drive:preflight -- --origin http://localhost:3000` followed by root `pnpm dev`.
+- **12D Picker/browser UX** — PR #444 remains DRAFT / UNMERGED at exact reviewed head `1e4f58c7d9dd4dc9f09687fbdd393261f38830f8`; CI #2819, Product Eval #2058, MCP #1320, Browser #471, and Desktop #346 all PASS. Automated/mock acceptance is CLOSED / PASS, including executable Picker callback and governed lifecycle coverage.
+- **NEXT:** real operator-controlled local Google OAuth + Picker acceptance with actual Google Cloud configuration/credentials; then mark #444 ready, merge only the exact accepted head, and run merged-main gates.
 
 Do not open 12E or a broader connector expansion until 12D local acceptance/merge closure is recorded.
 
