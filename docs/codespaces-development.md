@@ -18,7 +18,7 @@ When a Codespace is created:
 
 1. Node **22.20.0** and pnpm **10.28.0** are installed.
 2. `pnpm install --frozen-lockfile` runs.
-3. `.env.example` is copied to local gitignored `.env` only if `.env` does not already exist.
+3. `.env.example` is copied to local gitignored `.env` only if `.env` does not already exist. On first runtime start, the canonical engine fills missing local-only `ECORIONE_INTERNAL_TOKEN` and Connect Vault master key values without committing them.
 4. Docker-in-Docker is available for the existing repository Compose tooling.
 
 When a Codespace starts or resumes, `deploy/local-temporal.yml` is started with Docker Compose and Temporal stays on loopback port `7233`. The application itself is not started as an unattended background process.
@@ -29,7 +29,7 @@ Start ECORIONE with:
 bash .devcontainer/start.sh
 ```
 
-That reuses the existing root `pnpm dev` path and therefore keeps the current service bootstrap behavior.
+That reuses the canonical `pnpm engine:start` path with Codespaces-specific environment overrides. The engine generates missing local-only internal/Vault secrets, keeps Ai on forwarded port `3000`, uses the existing Docker Temporal profile, starts the full Phase 4 service set (including Sandbox), and waits for required-service readiness.
 
 ## Preview
 
@@ -88,6 +88,8 @@ Start ECORIONE:
 ```bash
 bash .devcontainer/start.sh
 ```
+
+The wrapper intentionally calls the canonical engine instead of raw `pnpm dev`, because the engine owns local secret bootstrap and the complete Phase 4 runtime/readiness contract.
 
 Run repository verification:
 
