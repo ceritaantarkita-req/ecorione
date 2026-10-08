@@ -29,6 +29,7 @@ import {
   registerGoogleDriveOAuthRoutes,
   type GoogleDriveOAuthHttpOptions,
 } from "./google-drive-http.js";
+import { disconnectGoogleDrive } from "./google-drive-oauth.js";
 import { GoogleDriveSource, type GoogleDriveApiTransport } from "./google-drive-source.js";
 import { GoogleDriveOAuthClient } from "./google-drive-token.js";
 import {
@@ -220,6 +221,7 @@ export interface BuildConnectServerOptions {
     GoogleDriveOAuthHttpOptions["oauthTransport"] | undefined;
   readonly googleDriveOAuthStateStore?:
     GoogleDriveOAuthHttpOptions["oauthStateStore"] | undefined;
+  readonly googleDrivePickerConfig?: GoogleDriveOAuthHttpOptions["pickerConfig"] | undefined;
   readonly googleDriveApiTransport?: GoogleDriveApiTransport | undefined;
 }
 
@@ -381,6 +383,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
               ? {}
               : { transport: options.googleDriveOAuthTransport }),
           }),
+          onAuthorizationRejected: () => disconnectGoogleDrive(options.credentialVaultAdmin!),
           ...(options.googleDriveApiTransport === undefined
             ? {}
             : { transport: options.googleDriveApiTransport }),
@@ -391,6 +394,7 @@ export function buildConnectServer(options: BuildConnectServerOptions): FastifyI
     oauthConfig: options.googleDriveOAuthConfig,
     oauthStateStore: options.googleDriveOAuthStateStore,
     oauthTransport: options.googleDriveOAuthTransport,
+    pickerConfig: options.googleDrivePickerConfig,
   });
   async function validateOpenRouterModel(selectionId: string): Promise<unknown> {
     if (

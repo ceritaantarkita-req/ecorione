@@ -21,12 +21,13 @@ const isDev = process.env.NODE_ENV === "development";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://apis.google.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "media-src 'self' data: blob:",
   "font-src 'self' data:",
   `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+  "frame-src 'self' https://docs.google.com",
   "object-src 'none'",
   "base-uri 'none'",
   "form-action 'self'",

@@ -110,6 +110,7 @@ describe("Google Drive OAuth foundation", () => {
       workspaceId: DEFAULT_WORKSPACE_ID,
       available: true,
       connected: false,
+      pickerAvailable: false,
       scope: GOOGLE_DRIVE_FILE_SCOPE,
       updatedAt: null,
     });
@@ -128,6 +129,7 @@ describe("Google Drive OAuth foundation", () => {
       workspaceId: DEFAULT_WORKSPACE_ID,
       available: true,
       connected: true,
+      pickerAvailable: false,
       scope: GOOGLE_DRIVE_FILE_SCOPE,
       updatedAt,
     });

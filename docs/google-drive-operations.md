@@ -160,6 +160,42 @@ Ai         3000  (Next dev)
 
 Do not claim PASS if another process silently changes the Ai origin/port. The configured OAuth redirect must match the browser origin exactly.
 
+## Mock acceptance before real Google
+
+Before using any real Google credential, run:
+
+```text
+pnpm acceptance:google-drive:mock
+```
+
+This deterministic suite uses synthetic credentials and mocked Google/owner endpoints. It exercises:
+
+- disconnected -> OAuth start/callback -> connected status;
+- encrypted refresh-token custody and one-time OAuth state;
+- short-lived Picker session without refresh-token disclosure;
+- executable Picker client callback handling: LIST mode + multi-select configuration, `PICKED` metadata mapping, operator `CANCEL`, malformed document payload rejection, duplicate-ID rejection, and the 20-file selection ceiling;
+- reconnect-required when Google rejects the stored refresh token, preserved end-to-end through Hub instead of collapsing into a generic source error; the stale credential is removed so status returns to disconnected, while transient timeout/unavailable refresh failures preserve the credential;
+- disconnect remains fail-closed on real revocation failures, but treats Google's `invalid_token` response as idempotent success because that token is already expired/revoked; `invalid_request` and other revoke errors still preserve local credential custody;
+- explicit blob-file download;
+- deterministic Google-native document export;
+- duplicate Picker file IDs rejected before ingestion;
+- multi-file Picker orchestration keeps successful snapshots when an ordinary selected file fails, calls each attempted file once in deterministic order, propagates the chosen source/reference role, and reports per-file failures without silent retry;
+- reconnect-required is treated as batch-fatal: already-successful snapshots remain, the auth-failed file is reported, later selected files are marked not attempted, and Project Sources reloads the connector into a reconnectable disconnected state;
+- 413/415/429/504/502 source failures mapped without partial Project lifecycle or Artifact binding;
+- failed refresh after an indexed snapshot preserves the last-good Artifact, Context episode, `INDEXED` state, and existing binding across reconnect/permission/not-found/rate/timeout/upstream errors;
+- downstream Artifact-storage or owner-authorization failure after a successful Drive fetch also preserves the last-good indexed Project lifecycle/binding; owner-side cleanup of a successfully-created but unauthorized candidate Artifact is not claimed by this test;
+- Google Drive -> Hub -> Artifact Project Source ingestion;
+- real Hub `/sources/extract` Index into Context through the direct-text path;
+- same-origin refresh to a new Artifact;
+- lifecycle reset from `INDEXED` to `SNAPSHOT_READY` when the snapshot changes;
+- real Re-index of the refreshed Artifact into a new Context episode;
+- idempotent refresh retry without regressing the already re-indexed lifecycle;
+- Detach of the latest Drive snapshot through the public Project Source route;
+- disconnect/revoke semantics;
+- callback/Picker browser proxy and source-contract security tests.
+
+Mock acceptance does not prove Google Cloud console configuration, consent audience, real OAuth exchange, Picker iframe rendering, or real Drive permission behavior. Those remain part of the operator local acceptance below.
+
 ## Session 12D acceptance journey
 
 Use the Personal Workspace Project Sources surface.
@@ -180,7 +216,8 @@ Use the Personal Workspace Project Sources surface.
 12. Use **Refresh Drive snapshot** and confirm lifecycle `latestArtifactId` advances when content changes.
 13. Disconnect Google Drive.
 14. Confirm Connect credential custody is removed/revoked while already-created Artifact snapshots remain available.
-15. Inspect browser storage and confirm no Google refresh/access token is persisted.
+15. If a stored refresh grant becomes invalid, confirm Project Sources shows **Perlu dihubungkan ulang**, stops the remaining multi-file batch, preserves earlier successful snapshots, and keeps **Putuskan untuk hubungkan ulang** available.
+16. Inspect browser storage and confirm no Google refresh/access token is persisted.
 
 ## Fail-closed cases to observe
 
@@ -189,7 +226,7 @@ Do not work around these failures by broadening scope or weakening security:
 - `GOOGLE_DRIVE_NOT_CONFIGURED`;
 - `GOOGLE_DRIVE_PICKER_NOT_CONFIGURED`;
 - `GOOGLE_DRIVE_NOT_CONNECTED`;
-- `GOOGLE_DRIVE_RECONNECT_REQUIRED`;
+- `GOOGLE_DRIVE_RECONNECT_REQUIRED` — explicit Google rejection invalidates the stale local refresh credential and returns the connector to a reconnectable disconnected state; transient Google outages must not delete the credential;
 - missing refresh token after OAuth;
 - invalid/expired one-time OAuth state;
 - unsafe or cross-origin return path;

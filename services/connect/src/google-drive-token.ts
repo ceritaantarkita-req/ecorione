@@ -10,6 +10,18 @@ export const GOOGLE_DRIVE_REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revok
 export const DEFAULT_GOOGLE_DRIVE_OAUTH_TIMEOUT_MS = 15_000;
 const MAX_OAUTH_RESPONSE_BYTES = 64 * 1024;
 
+const RevocationErrorSchema = z
+  .object({
+    error: z.string().min(1).max(128),
+  })
+  .passthrough();
+
+const TokenErrorSchema = z
+  .object({
+    error: z.string().min(1).max(128),
+  })
+  .passthrough();
+
 const TokenResponseSchema = z
   .object({
     access_token: z.string().min(1).max(32_768),
@@ -134,10 +146,37 @@ function parseTokenResponse(
   response: GoogleDriveOAuthTransportResponse,
 ): GoogleDriveAccessToken {
   if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (
+      response.statusCode === 408 ||
+      response.statusCode === 429 ||
+      response.statusCode >= 500
+    ) {
+      throw new GoogleDriveOAuthUpstreamError(
+        503,
+        "GOOGLE_DRIVE_OAUTH_UNAVAILABLE",
+        "Google OAuth sementara tidak tersedia.",
+      );
+    }
+
+    let tokenError: unknown;
+    try {
+      tokenError = JSON.parse(response.bodyText) as unknown;
+    } catch {
+      tokenError = undefined;
+    }
+    const parsedError = TokenErrorSchema.safeParse(tokenError);
+    if (parsedError.success && parsedError.data.error === "invalid_grant") {
+      throw new GoogleDriveOAuthUpstreamError(
+        502,
+        "GOOGLE_DRIVE_OAUTH_REJECTED",
+        "Google OAuth menolak credential yang tersimpan.",
+      );
+    }
+
     throw new GoogleDriveOAuthUpstreamError(
       502,
-      "GOOGLE_DRIVE_OAUTH_REJECTED",
-      "Google OAuth menolak pertukaran credential.",
+      "GOOGLE_DRIVE_OAUTH_INVALID_RESPONSE",
+      "Google OAuth mengembalikan kegagalan yang tidak dikenali.",
     );
   }
 
@@ -270,12 +309,25 @@ export class GoogleDriveOAuthClient {
       new URLSearchParams({ token: refreshToken }),
       this.timeoutMs,
     );
-    if (response.statusCode !== 200) {
-      throw new GoogleDriveOAuthUpstreamError(
-        502,
-        "GOOGLE_DRIVE_OAUTH_REJECTED",
-        "Google OAuth menolak pencabutan credential.",
-      );
+    if (response.statusCode === 200) return;
+
+    if (response.statusCode === 400) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(response.bodyText) as unknown;
+      } catch {
+        parsed = undefined;
+      }
+      const revocationError = RevocationErrorSchema.safeParse(parsed);
+      if (revocationError.success && revocationError.data.error === "invalid_token") {
+        return;
+      }
     }
+
+    throw new GoogleDriveOAuthUpstreamError(
+      502,
+      "GOOGLE_DRIVE_OAUTH_REJECTED",
+      "Google OAuth menolak pencabutan credential.",
+    );
   }
 }
