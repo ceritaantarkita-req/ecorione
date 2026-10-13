@@ -18,7 +18,7 @@ When a Codespace is created:
 
 1. Node **22.20.0** and pnpm **10.28.0** are installed.
 2. `pnpm install --frozen-lockfile` runs.
-3. `.env.example` is copied to local gitignored `.env` only if `.env` does not already exist.
+3. `.env.example` is copied to local gitignored `.env` only if `.env` does not already exist. On first runtime start, the canonical engine fills missing local-only `ECORIONE_INTERNAL_TOKEN` and Connect Vault master key values without committing them.
 4. Docker-in-Docker is available for the existing repository Compose tooling.
 
 When a Codespace starts or resumes, `deploy/local-temporal.yml` is started with Docker Compose and Temporal stays on loopback port `7233`. The application itself is not started as an unattended background process.
@@ -29,7 +29,7 @@ Start ECORIONE with:
 bash .devcontainer/start.sh
 ```
 
-That reuses the existing root `pnpm dev` path and therefore keeps the current service bootstrap behavior.
+That reuses the canonical `pnpm engine:start` path with Codespaces-specific environment overrides. The engine generates missing local-only internal/Vault secrets, keeps Ai on forwarded port `3000`, uses the existing Docker Temporal profile, starts the full Phase 4 service set (including Sandbox), and waits for required-service readiness.
 
 ## Preview
 
@@ -58,6 +58,8 @@ Never commit `.env`, provider API keys, OAuth credentials, Vault material, or ru
 Treat a Codespace as disposable development compute. Gitignored runtime data and nested Docker volumes are useful for development continuity but are not a production persistence or backup boundary.
 
 ## Native Google Drive caveat
+
+The `.env.example` includes a **localhost Google OAuth callback template** even when no Google client ID/secret is configured. That redirect alone is inert: Connect boots with native Google Drive disabled. If a client ID or client secret is supplied, the credentials and redirect must form a valid configuration; incomplete credentials still fail closed.
 
 The current Session 12 local acceptance contract uses an exact localhost OAuth redirect URI. A Codespaces preview URL has a different HTTPS origin.
 
@@ -88,6 +90,8 @@ Start ECORIONE:
 ```bash
 bash .devcontainer/start.sh
 ```
+
+The wrapper intentionally calls the canonical engine instead of raw `pnpm dev`, because the engine owns local secret bootstrap and the complete Phase 4 runtime/readiness contract.
 
 Run repository verification:
 

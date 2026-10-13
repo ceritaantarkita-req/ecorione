@@ -5,7 +5,7 @@ import {
   resolveRepoRuntimePath,
 } from "@ecorione/shared-server";
 import { FileCredentialVault } from "./credential-vault.js";
-import { GoogleDriveOAuthConfigSchema } from "./google-drive-oauth.js";
+import { googleDriveOAuthConfigFromEnv } from "./google-drive-runtime-config.js";
 import { FileOpenRouterCertificationStore } from "./openrouter-certification-store.js";
 import { buildConnectServer, type BuildConnectServerOptions } from "./http.js";
 import { parseOptionalLocalModelDigest } from "./local-model-identity.js";
@@ -54,33 +54,7 @@ const webhookRootSecret =
     : undefined;
 const flowUrl = process.env.ECORIONE_FLOW_URL ?? "http://127.0.0.1:17028";
 
-const googleDriveClientId = process.env.ECORIONE_GOOGLE_DRIVE_CLIENT_ID || undefined;
-const googleDriveClientSecret = process.env.ECORIONE_GOOGLE_DRIVE_CLIENT_SECRET || undefined;
-const googleDriveRedirectUri = process.env.ECORIONE_GOOGLE_DRIVE_REDIRECT_URI || undefined;
-const googleDriveConfiguredPieces = [
-  googleDriveClientId,
-  googleDriveClientSecret,
-  googleDriveRedirectUri,
-].filter((value) => value !== undefined).length;
-if (
-  googleDriveConfiguredPieces > 0 &&
-  (googleDriveClientId === undefined || googleDriveRedirectUri === undefined)
-) {
-  throw new Error(
-    "Google Drive OAuth config butuh ECORIONE_GOOGLE_DRIVE_CLIENT_ID dan ECORIONE_GOOGLE_DRIVE_REDIRECT_URI.",
-  );
-}
-const googleDriveOAuthConfig =
-  googleDriveClientId === undefined || googleDriveRedirectUri === undefined
-    ? undefined
-    : GoogleDriveOAuthConfigSchema.parse({
-        clientId: googleDriveClientId,
-        ...(googleDriveClientSecret === undefined
-          ? {}
-          : { clientSecret: googleDriveClientSecret }),
-        redirectUri: googleDriveRedirectUri,
-      });
-
+const googleDriveOAuthConfig = googleDriveOAuthConfigFromEnv(process.env);
 function developmentHostedApiKey(provider = hostedProvider): string | undefined {
   switch (provider) {
     case "anthropic":
