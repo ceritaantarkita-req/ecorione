@@ -59,6 +59,8 @@ Treat a Codespace as disposable development compute. Gitignored runtime data and
 
 ## Native Google Drive caveat
 
+The `.env.example` includes a **localhost Google OAuth callback template** even when no Google client ID/secret is configured. That redirect alone is inert: Connect boots with native Google Drive disabled. If a client ID or client secret is supplied, the credentials and redirect must form a valid configuration; incomplete credentials still fail closed.
+
 The current Session 12 local acceptance contract uses an exact localhost OAuth redirect URI. A Codespaces preview URL has a different HTTPS origin.
 
 Therefore this profile does **not** silently change the Google OAuth/Picker contract. Real Session 12D Google OAuth + Picker acceptance continues to use the existing local acceptance runbook until a separate, explicit Codespaces-safe redirect/origin adaptation is designed and accepted.
