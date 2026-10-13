@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { resetMcpWorkspaceView } from "./mcp-workspace-view";
 import { ClientResponseError, readJson } from "../../lib/client-response";
 import { credentialSaveReady, type CredentialTestStamp } from "../../lib/credential-onboarding";
 import { canaryStatusFromErrorCode, providerHealth } from "../../lib/provider-health";
@@ -198,10 +199,25 @@ export function useSettingsController(initialWorkspaceId: string) {
   const mcpLoadRequestRef = useRef(0);
   const workspaceIdRef = useRef(workspaceId);
 
+  const changeMcpWorkspace = useCallback((nextWorkspaceId: string) => {
+    const reset = resetMcpWorkspaceView(
+      workspaceIdRef.current,
+      nextWorkspaceId,
+      mcpLoadRequestRef.current,
+    );
+    if (reset === null) return;
+    // Invalidate any response for the previous Workspace before clearing its view.
+    workspaceIdRef.current = reset.workspaceId;
+    mcpLoadRequestRef.current = reset.requestId;
+    setWorkspaceId(reset.workspaceId);
+    setServers(reset.servers);
+    setMcpJson(reset.json);
+    setMcpLoading(reset.loading);
+  }, []);
+
   useEffect(() => {
-    workspaceIdRef.current = initialWorkspaceId;
-    setWorkspaceId(initialWorkspaceId);
-  }, [initialWorkspaceId]);
+    changeMcpWorkspace(initialWorkspaceId);
+  }, [initialWorkspaceId, changeMcpWorkspace]);
 
   function beginAction(action: string): boolean {
     if (actionInFlight.current) return false;
@@ -1065,7 +1081,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     setSecretRevision,
     setSpendDraft,
     setStatus,
-    setWorkspaceId,
+    setWorkspaceId: changeMcpWorkspace,
     status,
     testCredential,
     workspaceId,
