@@ -88,6 +88,7 @@ Use the owner-specific runbook when touching its subsystem:
 - [production-operations.md](production-operations.md)
 - [codespaces-development.md](codespaces-development.md) — online development profile using GitHub Codespaces; development-only, not staging/production proof.
 - [verification/codespaces-development-runtime-acceptance-2026-10-08.md](verification/codespaces-development-runtime-acceptance-2026-10-08.md) — accepted operator-controlled Codespaces runtime proof for the online development profile.
+- [verification/codespaces-full-runtime-closure-2026-10-13.md](verification/codespaces-full-runtime-closure-2026-10-13.md) — observed healthy eight-service Codespaces runtime acceptance after Connect/bootstrap fixes (development-only).
 - [google-drive-operations.md](google-drive-operations.md) — Session 12 native Google Drive operator configuration + local acceptance runbook.
 - [release-operations.md](release-operations.md)
 - [staging-continuous-deployment.md](staging-continuous-deployment.md)
