@@ -172,6 +172,110 @@ describe("automatic cross-session Project memory", () => {
   });
 });
 
+describe("automatic memory local-only safety", () => {
+  it("retries failed local extraction while preventing LOCAL_ONLY facts from entering hosted recall", async () => {
+    const extractLocal = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("sensitive model output must never appear in logs"))
+      .mockResolvedValueOnce(
+        JSON.stringify([
+          {
+            subject: "kode internal",
+            predicate: "adalah",
+            object: "LOKAL-742",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ]),
+      );
+    const autoApp = buildContextServer(repo, vectors, {
+      extractLocal,
+      autoConsolidate: true,
+    });
+    try {
+      const user = await autoApp.inject({
+        method: "POST",
+        url: "/v1/episodes",
+        payload: {
+          ts: T0,
+          rawText: "Kode internal adalah LOKAL-742",
+          projectId: "prj_alpha",
+          provenance: { sourceApp: "ai", sessionId: "sess_alpha_local" },
+          scope: "personal",
+          sensitivity: "INTERNAL",
+          syncClass: "LOCAL_ONLY",
+          trust: "USER",
+        },
+      });
+      expect(user.statusCode).toBe(201);
+
+      const agentPayload = {
+        ts: NOW,
+        rawText: "OK",
+        projectId: "prj_alpha",
+        provenance: { sourceApp: "connect:local", sessionId: "sess_alpha_local" },
+        scope: "personal",
+        sensitivity: "INTERNAL",
+        syncClass: "LOCAL_ONLY",
+        trust: "LOCAL_AGENT",
+      };
+      const first = await autoApp.inject({
+        method: "POST",
+        url: "/v1/episodes",
+        payload: agentPayload,
+      });
+      expect(first.statusCode).toBe(201);
+      await vi.waitFor(() => expect(extractLocal).toHaveBeenCalledTimes(1));
+      expect(repo.listFacts({ projectId: "prj_alpha" as never })).toHaveLength(0);
+      expect(
+        repo.listEpisodes({ projectId: "prj_alpha" as never, onlyUnconsolidated: true }),
+      ).toHaveLength(2);
+
+      const retry = await autoApp.inject({
+        method: "POST",
+        url: "/v1/episodes",
+        payload: agentPayload,
+      });
+      expect(retry.statusCode).toBe(201);
+      await vi.waitFor(() =>
+        expect(repo.listFacts({ projectId: "prj_alpha" as never })).toHaveLength(1),
+      );
+      expect(repo.listFacts({ projectId: "prj_alpha" as never })[0]?.syncClass).toBe(
+        "LOCAL_ONLY",
+      );
+
+      const cloud = await autoApp.inject({
+        method: "POST",
+        url: "/v1/retrieve",
+        payload: {
+          query: "LOKAL-742",
+          scopes: ["personal"],
+          projectId: "prj_alpha",
+          maxSensitivity: "INTERNAL",
+          hostedEligibleOnly: true,
+          now: NOW,
+        },
+      });
+      expect(cloud.json().hits).toEqual([]);
+      const local = await autoApp.inject({
+        method: "POST",
+        url: "/v1/retrieve",
+        payload: {
+          query: "LOKAL-742",
+          scopes: ["personal"],
+          projectId: "prj_alpha",
+          maxSensitivity: "INTERNAL",
+          hostedEligibleOnly: false,
+          now: NOW,
+        },
+      });
+      expect(local.json().hits[0]?.fact.object).toBe("LOKAL-742");
+    } finally {
+      await autoApp.close();
+    }
+  });
+});
+
 describe("facts — propose/promote/forget", () => {
   it("alur lengkap: propose → promote → forget", async () => {
     const proposed = await app.inject({
