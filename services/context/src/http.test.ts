@@ -85,14 +85,16 @@ describe("automatic cross-session Project memory", () => {
       const sourceEpisodeId = match?.[1];
       if (sourceEpisodeId === undefined) throw new Error("missing source episode");
       return JSON.stringify({
-        facts: [{
-          sourceEpisodeId,
-          subject: "kode uji",
-          predicate: "adalah",
-          object: "BIRU-742",
-          confidence: 1,
-          worthRemembering: true,
-        }],
+        facts: [
+          {
+            sourceEpisodeId,
+            subject: "kode uji",
+            predicate: "adalah",
+            object: "BIRU-742",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ],
         summaries: [],
       });
     });
@@ -133,7 +135,9 @@ describe("automatic cross-session Project memory", () => {
         },
       });
       expect(agent.statusCode).toBe(201);
-      await vi.waitFor(() => expect(repo.listFacts({ projectId: "prj_alpha" as never })).toHaveLength(1));
+      await vi.waitFor(() =>
+        expect(repo.listFacts({ projectId: "prj_alpha" as never })).toHaveLength(1),
+      );
       const recall = await autoApp.inject({
         method: "POST",
         url: "/v1/retrieve",
