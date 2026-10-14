@@ -63,24 +63,27 @@ function WorkspaceProjects({
   const activeHistoryScope = JSON.stringify([workspaceId, selectedId]);
   const sessions = historySnapshot.scope === activeHistoryScope ? historySnapshot.sessions : [];
 
-  const loadProjects = useCallback(async (signal?: AbortSignal) => {
-    const generation = ++projectsLoadGeneration.current;
-    setProjectsReady(false);
-    const res = await fetch(`/api/projects?workspaceId=${encodeURIComponent(workspaceId)}`, {
-      cache: "no-store",
-      signal,
-    });
-    const body: unknown = await res.json().catch(() => undefined);
-    if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat Projects."));
-    if (signal?.aborted || generation !== projectsLoadGeneration.current) return;
-    const nextProjects = (body as ProjectList).projects;
-    setProjects(nextProjects);
-    setSelectedId((current) => {
-      if (current === ALL_ID) return current;
-      return resolveActiveProjectId(current, activeProjects(nextProjects)) ?? ALL_ID;
-    });
-    setProjectsReady(true);
-  }, [workspaceId]);
+  const loadProjects = useCallback(
+    async (signal?: AbortSignal) => {
+      const generation = ++projectsLoadGeneration.current;
+      setProjectsReady(false);
+      const res = await fetch(`/api/projects?workspaceId=${encodeURIComponent(workspaceId)}`, {
+        cache: "no-store",
+        signal,
+      });
+      const body: unknown = await res.json().catch(() => undefined);
+      if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat Projects."));
+      if (signal?.aborted || generation !== projectsLoadGeneration.current) return;
+      const nextProjects = (body as ProjectList).projects;
+      setProjects(nextProjects);
+      setSelectedId((current) => {
+        if (current === ALL_ID) return current;
+        return resolveActiveProjectId(current, activeProjects(nextProjects)) ?? ALL_ID;
+      });
+      setProjectsReady(true);
+    },
+    [workspaceId],
+  );
 
   const loadSessions = useCallback(
     async (projectId?: string, signal?: AbortSignal) => {
