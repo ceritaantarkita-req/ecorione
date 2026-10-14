@@ -169,7 +169,8 @@ export async function runConsolidation(
         scopes: [source.scope],
         subject: candidate.subject,
         projectId: source.projectId,
-        includeGlobal: source.projectId !== null,
+        // A Project fact must never dedupe or supersede a shared global fact.
+        includeGlobal: false,
         limit: 100,
       })
       .filter((f) => normalize(f.predicate) === normalize(candidate.predicate));
