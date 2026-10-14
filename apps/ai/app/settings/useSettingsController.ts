@@ -187,7 +187,13 @@ export function useSettingsController(initialWorkspaceId: string) {
   const [openRouterSourceProvider, setOpenRouterSourceProvider] = useState("");
 
   const [localSetupOpen, setLocalSetupOpen] = useState(false);
-  const [mcpJson, setMcpJson] = useState("");
+  const [mcpDraft, setMcpDraft] = useState({
+    workspaceId: initialWorkspaceId,
+    json: "",
+  });
+  // Never render or save a previous Workspace's draft in another Workspace,
+  // even when React has batched state changes or a browser restores form input.
+  const mcpJson = mcpDraft.workspaceId === workspaceId ? mcpDraft.json : "";
   const [status, setStatus] = useState("");
   const [hostedHealth, setHostedHealth] = useState<{
     provider: HostedProviderId;
@@ -198,6 +204,9 @@ export function useSettingsController(initialWorkspaceId: string) {
   const actionInFlight = useRef(false);
   const mcpLoadRequestRef = useRef(0);
   const workspaceIdRef = useRef(workspaceId);
+  const setMcpJson = useCallback((json: string) => {
+    setMcpDraft({ workspaceId: workspaceIdRef.current, json });
+  }, []);
 
   const changeMcpWorkspace = useCallback((nextWorkspaceId: string) => {
     const reset = resetMcpWorkspaceView(
@@ -211,7 +220,7 @@ export function useSettingsController(initialWorkspaceId: string) {
     mcpLoadRequestRef.current = reset.requestId;
     setWorkspaceId(reset.workspaceId);
     setServers(reset.servers);
-    setMcpJson(reset.json);
+    setMcpDraft({ workspaceId: reset.workspaceId, json: reset.json });
     setMcpLoading(reset.loading);
   }, []);
 
