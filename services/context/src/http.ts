@@ -198,7 +198,10 @@ export function buildContextServer(
     }
     const deps: ConsolidateDeps = { repo, extractLocal: options.extractLocal };
     const task = consolidationTail.then(() => runConsolidation(deps, opts));
-    consolidationTail = task.then(() => undefined, () => undefined);
+    consolidationTail = task.then(
+      () => undefined,
+      () => undefined,
+    );
     return task;
   };
   const pendingProjects = new Set<ProjectId>();
