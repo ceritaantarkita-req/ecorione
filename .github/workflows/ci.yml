@@ -29,9 +29,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Project formatting diagnostic (temporary)
-        run: pnpm exec prettier apps/ai/app/projects/page.tsx | diff -u apps/ai/app/projects/page.tsx - || true
-
       - name: Format
         run: pnpm run format:check
 
