@@ -221,7 +221,7 @@ export function buildContextServer(
             const result = await runSerialized({ now: nowIso(), projectId: next, limit: 20 });
             if (result.errors.length > 0) {
               app.log.warn(
-                { projectId: next, errors: result.errors },
+                { projectId: next, errorCount: result.errors.length },
                 "Auto memory consolidation incomplete",
               );
             }
