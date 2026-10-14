@@ -403,10 +403,10 @@ function WorkspaceProjects({
                 <span>Autonomy ceiling: {selected.autonomyCeiling}</span>
               </div>
 
-              <ProjectSettings key={selected.id} project={selected} onSaved={projectSaved} />
+              <ProjectSettings key={`settings:${selected.id}`} project={selected} onSaved={projectSaved} />
 
               <ProjectSources
-                key={selected.id}
+                key={`sources:${selected.id}`}
                 projectId={selected.id}
                 workspaceId={selected.workspaceId}
               />
