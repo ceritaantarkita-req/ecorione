@@ -22,7 +22,11 @@ import {
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { runConsolidation, type ConsolidateDeps, type ConsolidateOptions } from "./consolidate.js";
+import {
+  runConsolidation,
+  type ConsolidateDeps,
+  type ConsolidateOptions,
+} from "./consolidate.js";
 import { nowIso } from "./clock.js";
 import { registerMaintenanceRoutes } from "./maintenance-http.js";
 import { ContextMaintenanceEngine } from "./maintenance.js";
@@ -213,7 +217,10 @@ export function buildContextServer(
           try {
             const result = await runSerialized({ now: nowIso(), projectId: next, limit: 20 });
             if (result.errors.length > 0) {
-              app.log.warn({ projectId: next, errors: result.errors }, "Auto memory consolidation incomplete");
+              app.log.warn(
+                { projectId: next, errors: result.errors },
+                "Auto memory consolidation incomplete",
+              );
             }
           } catch (err) {
             // Chat succeeds after the episode is durably written; local-model outages
@@ -232,7 +239,10 @@ export function buildContextServer(
     const body = parseOrBadRequest(AppendEpisodeBodySchema, req.body);
     try {
       const episode = repo.appendEpisode({ ...body, id: makeId("episode") });
-      if (episode.projectId !== null && (episode.trust === "LOCAL_AGENT" || episode.trust === "HOSTED_AGENT")) {
+      if (
+        episode.projectId !== null &&
+        (episode.trust === "LOCAL_AGENT" || episode.trust === "HOSTED_AGENT")
+      ) {
         scheduleAutoConsolidation(episode.projectId);
       }
       return await reply.code(201).send(episode);
