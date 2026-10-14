@@ -96,17 +96,29 @@ describe("runConsolidation", () => {
     expect(repo.listFacts()).toHaveLength(0);
   });
 
-  it("respons model lokal yang bukan JSON valid tidak menghentikan proses dan tetap menandai episode selesai", async () => {
+  it("invalid extraction remains retryable instead of losing a durable episode", async () => {
     const { repo } = makeRepo();
-    repo.appendEpisode(episodeInput({ id: "epi_a" }));
+    repo.appendEpisode(episodeInput({ id: "epi_a", rawText: "Kode uji BIRU-742" }));
 
-    const extractLocal = vi.fn().mockResolvedValue("bukan json sama sekali {{{");
-    const result = await runConsolidation({ repo, extractLocal }, { now: NOW });
+    const extractLocal = vi.fn()
+      .mockResolvedValueOnce("bukan json sama sekali {{{")
+      .mockResolvedValueOnce(JSON.stringify([{
+        subject: "kode pengujian",
+        predicate: "adalah",
+        object: "BIRU-742",
+        confidence: 1,
+        worthRemembering: true,
+      }]));
+    const first = await runConsolidation({ repo, extractLocal }, { now: NOW });
+    expect(first.processed).toBe(0);
+    expect(first.promoted).toBe(0);
+    expect(first.errors).toHaveLength(1);
+    expect(repo.getEpisode(assertId("episode", "epi_a"))?.consolidatedAt).toBeNull();
 
-    expect(result.processed).toBe(1);
-    expect(result.promoted).toBe(0);
-    expect(result.errors).toHaveLength(1);
-    expect(repo.getEpisode(assertId("episode", "epi_a"))?.consolidatedAt).toBe(NOW);
+    const retry = await runConsolidation({ repo, extractLocal }, { now: NOW });
+    expect(retry.processed).toBe(1);
+    expect(retry.promoted).toBe(1);
+    expect(repo.listFacts()[0]?.object).toBe("BIRU-742");
   });
 
   it("respons model lokal yang tidak cocok skema (bukan array objek yang benar) diskip dengan aman", async () => {
@@ -118,6 +130,30 @@ describe("runConsolidation", () => {
 
     expect(result.promoted).toBe(0);
     expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("consolidation filters to the active Project and never promotes assistant claims", async () => {
+    const { repo } = makeRepo();
+    repo.appendEpisode(episodeInput({ id: "epi_a", projectId: "prj_alpha" as never, rawText: "Kode alpha BIRU-742" }));
+    repo.appendEpisode(episodeInput({ id: "epi_b", projectId: "prj_beta" as never, rawText: "Kode beta MERAH-999" }));
+    repo.appendEpisode(episodeInput({
+      id: "epi_assistant", projectId: "prj_alpha" as never,
+      trust: "HOSTED_AGENT", rawText: "Assistant claims unrelated secret",
+    }));
+
+    const extractLocal = vi.fn().mockResolvedValue(JSON.stringify({
+      facts: [
+        { sourceEpisodeId: "epi_a", subject: "kode alpha", predicate: "adalah", object: "BIRU-742", confidence: 1, worthRemembering: true },
+        { sourceEpisodeId: "epi_assistant", subject: "secret", predicate: "adalah", object: "fake", confidence: 1, worthRemembering: true },
+      ],
+      summaries: [],
+    }));
+    const result = await runConsolidation({ repo, extractLocal }, { now: NOW, projectId: "prj_alpha" as never });
+    expect(result.processed).toBe(2);
+    expect(result.promoted).toBe(1);
+    expect(result.rejected).toBe(1);
+    expect(repo.listFacts().map((fact) => fact.object)).toEqual(["BIRU-742"]);
+    expect(repo.getEpisode(assertId("episode", "epi_b"))?.consolidatedAt).toBeNull();
   });
 
   it("menghormati limit batch", async () => {
