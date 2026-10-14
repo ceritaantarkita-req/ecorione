@@ -2164,7 +2164,8 @@ async function runProjectsScopeIsolation() {
     if ((await sourcesHeadings.count()) !== 1) {
       throw new Error("projects-scope: duplicate Sources after selection change");
     }
-    const renderedName = await headings.locator("xpath=../../..").locator("input").first().inputValue();
+    const settingsInputs = headings.locator("xpath=../../..").locator("input");
+    const renderedName = await settingsInputs.first().inputValue();
     if (renderedName !== expectedName) {
       throw new Error(
         `projects-scope: Project settings belongs to "${renderedName}" not "${expectedName}"`,
