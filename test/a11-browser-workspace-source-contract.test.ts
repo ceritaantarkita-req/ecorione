@@ -47,7 +47,8 @@ describe("A-11 browser Workspace source contract", () => {
 
   it("waits for browser Workspace resolution before Workspace-scoped owner reads", () => {
     expect(chat).toContain("if (!hydrated || !workspaceReady) return;");
-    expect(projects).toContain("if (!workspaceReady) return;");
+    expect(projects).toContain("if (!ready) {");
+    expect(projects).toContain("return <WorkspaceProjects key={workspaceId} workspaceId={workspaceId} />;");
     expect(work).toContain("if (!workspaceReady) return;");
     expect(brain).toContain("if (!workspaceReady) return;");
     expect(space).toContain("if (!workspaceReady) return;");
