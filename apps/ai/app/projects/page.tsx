@@ -61,8 +61,7 @@ function WorkspaceProjects({
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const activeHistoryScope = JSON.stringify([workspaceId, selectedId]);
-  const sessions =
-    historySnapshot.scope === activeHistoryScope ? historySnapshot.sessions : [];
+  const sessions = historySnapshot.scope === activeHistoryScope ? historySnapshot.sessions : [];
 
   const loadProjects = useCallback(async (signal?: AbortSignal) => {
     const generation = ++projectsLoadGeneration.current;
