@@ -100,15 +100,20 @@ describe("runConsolidation", () => {
     const { repo } = makeRepo();
     repo.appendEpisode(episodeInput({ id: "epi_a", rawText: "Kode uji BIRU-742" }));
 
-    const extractLocal = vi.fn()
+    const extractLocal = vi
+      .fn()
       .mockResolvedValueOnce("bukan json sama sekali {{{")
-      .mockResolvedValueOnce(JSON.stringify([{
-        subject: "kode pengujian",
-        predicate: "adalah",
-        object: "BIRU-742",
-        confidence: 1,
-        worthRemembering: true,
-      }]));
+      .mockResolvedValueOnce(
+        JSON.stringify([
+          {
+            subject: "kode pengujian",
+            predicate: "adalah",
+            object: "BIRU-742",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ]),
+      );
     const first = await runConsolidation({ repo, extractLocal }, { now: NOW });
     expect(first.processed).toBe(0);
     expect(first.promoted).toBe(0);
@@ -134,21 +139,56 @@ describe("runConsolidation", () => {
 
   it("consolidation filters to the active Project and never promotes assistant claims", async () => {
     const { repo } = makeRepo();
-    repo.appendEpisode(episodeInput({ id: "epi_a", projectId: "prj_alpha" as never, rawText: "Kode alpha BIRU-742" }));
-    repo.appendEpisode(episodeInput({ id: "epi_b", projectId: "prj_beta" as never, rawText: "Kode beta MERAH-999" }));
-    repo.appendEpisode(episodeInput({
-      id: "epi_assistant", projectId: "prj_alpha" as never,
-      trust: "HOSTED_AGENT", rawText: "Assistant claims unrelated secret",
-    }));
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_a",
+        projectId: "prj_alpha" as never,
+        rawText: "Kode alpha BIRU-742",
+      }),
+    );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_b",
+        projectId: "prj_beta" as never,
+        rawText: "Kode beta MERAH-999",
+      }),
+    );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_assistant",
+        projectId: "prj_alpha" as never,
+        trust: "HOSTED_AGENT",
+        rawText: "Assistant claims unrelated secret",
+      }),
+    );
 
-    const extractLocal = vi.fn().mockResolvedValue(JSON.stringify({
-      facts: [
-        { sourceEpisodeId: "epi_a", subject: "kode alpha", predicate: "adalah", object: "BIRU-742", confidence: 1, worthRemembering: true },
-        { sourceEpisodeId: "epi_assistant", subject: "secret", predicate: "adalah", object: "fake", confidence: 1, worthRemembering: true },
-      ],
-      summaries: [],
-    }));
-    const result = await runConsolidation({ repo, extractLocal }, { now: NOW, projectId: "prj_alpha" as never });
+    const extractLocal = vi.fn().mockResolvedValue(
+      JSON.stringify({
+        facts: [
+          {
+            sourceEpisodeId: "epi_a",
+            subject: "kode alpha",
+            predicate: "adalah",
+            object: "BIRU-742",
+            confidence: 1,
+            worthRemembering: true,
+          },
+          {
+            sourceEpisodeId: "epi_assistant",
+            subject: "secret",
+            predicate: "adalah",
+            object: "fake",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ],
+        summaries: [],
+      }),
+    );
+    const result = await runConsolidation(
+      { repo, extractLocal },
+      { now: NOW, projectId: "prj_alpha" as never },
+    );
     expect(result.processed).toBe(2);
     expect(result.promoted).toBe(1);
     expect(result.rejected).toBe(1);
@@ -158,26 +198,41 @@ describe("runConsolidation", () => {
 
   it("uses a single USER episode when the local extractor omits sourceEpisodeId", async () => {
     const { repo } = makeRepo();
-    repo.appendEpisode(episodeInput({
-      id: "epi_user", projectId: "prj_alpha" as never, rawText: "Kode pengujian BIRU-742",
-    }));
-    repo.appendEpisode(episodeInput({
-      id: "epi_reply", projectId: "prj_alpha" as never, rawText: "OK",
-      trust: "HOSTED_AGENT",
-    }));
-    const extractLocal = vi.fn().mockResolvedValue(JSON.stringify([{
-      subject: "kode pengujian",
-      predicate: "adalah",
-      object: "BIRU-742",
-      confidence: 1,
-      worthRemembering: true,
-    }]));
-    const result = await runConsolidation({ repo, extractLocal }, {
-      now: NOW, projectId: "prj_alpha" as never,
-    });
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_user",
+        projectId: "prj_alpha" as never,
+        rawText: "Kode pengujian BIRU-742",
+      }),
+    );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_reply",
+        projectId: "prj_alpha" as never,
+        rawText: "OK",
+        trust: "HOSTED_AGENT",
+      }),
+    );
+    const extractLocal = vi.fn().mockResolvedValue(
+      JSON.stringify([
+        {
+          subject: "kode pengujian",
+          predicate: "adalah",
+          object: "BIRU-742",
+          confidence: 1,
+          worthRemembering: true,
+        },
+      ]),
+    );
+    const result = await runConsolidation(
+      { repo, extractLocal },
+      { now: NOW, projectId: "prj_alpha" as never },
+    );
     expect(result.processed).toBe(2);
     expect(result.promoted).toBe(1);
-    expect(repo.listFacts({ projectId: "prj_alpha" as never })[0]?.sourceEpisodeIds).toEqual(["epi_user"]);
+    expect(repo.listFacts({ projectId: "prj_alpha" as never })[0]?.sourceEpisodeIds).toEqual([
+      "epi_user",
+    ]);
     expect(extractLocal.mock.calls[0]?.[0]).not.toContain("epi_reply");
   });
 
