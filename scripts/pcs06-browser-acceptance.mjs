@@ -2096,8 +2096,62 @@ async function runNarrowCoverage() {
   }
 }
 
+async function runSettingsMcpWorkspaceIsolation() {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await installApiMocks(context);
+  const checked = await checkedPage(context, "settings-mcp-workspace");
+  const page = checked.page;
+  try {
+    await goto(page, "/settings", "settings-mcp-workspace");
+    await page.getByText("Advanced settings", { exact: true }).click();
+    const workspaceInput = page.getByRole("textbox", { name: "MCP workspace id" });
+    const editor = page.getByRole("textbox", { name: "MCP server JSON" });
+    await workspaceInput.waitFor();
+    await editor.fill("draft-from-personal");
+    if ((await editor.inputValue()) !== "draft-from-personal") {
+      throw new Error("settings-mcp-workspace: initial draft did not render");
+    }
+
+    // This must reset without Save, Load workspace, navigation, or reload.
+    await workspaceInput.fill("ws_test");
+    await page.waitForFunction(() => {
+      const input = document.querySelector('input[aria-label="MCP workspace id"]');
+      const textarea = document.querySelector('textarea[aria-label="MCP server JSON"]');
+      return input?.value === "ws_test" && textarea?.value === "";
+    });
+    if ((await editor.inputValue()) !== "") {
+      throw new Error("settings-mcp-workspace: prior Workspace draft leaked after switch");
+    }
+
+    await editor.fill("draft-from-test");
+    await workspaceInput.fill("ws_personal");
+    await page.waitForFunction(() => {
+      const input = document.querySelector('input[aria-label="MCP workspace id"]');
+      const textarea = document.querySelector('textarea[aria-label="MCP server JSON"]');
+      return input?.value === "ws_personal" && textarea?.value === "";
+    });
+    if ((await editor.inputValue()) !== "") {
+      throw new Error("settings-mcp-workspace: test Workspace draft leaked on return");
+    }
+    await page.screenshot({
+      path: `${outDir}/settings-mcp-workspace-isolation.png`,
+      fullPage: true,
+    });
+    checked.assertClean();
+    console.log("PASS settings MCP Workspace transition clears editor without saving");
+  } finally {
+    await page.close();
+    await context.close();
+  }
+}
+
 try {
   await runDesktopJourney();
+} catch (error) {
+  failures.push(error instanceof Error ? error.message : String(error));
+}
+try {
+  await runSettingsMcpWorkspaceIsolation();
 } catch (error) {
   failures.push(error instanceof Error ? error.message : String(error));
 }
