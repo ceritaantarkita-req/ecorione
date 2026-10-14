@@ -78,6 +78,96 @@ describe("episodes", () => {
   });
 });
 
+describe("automatic cross-session Project memory", () => {
+  it("persists user facts after an assistant reply without blocking the response", async () => {
+    const extractLocal = vi.fn(async (prompt: string) => {
+      const match = /"id":"(epi_[^"]+)"/.exec(prompt);
+      const sourceEpisodeId = match?.[1];
+      if (sourceEpisodeId === undefined) throw new Error("missing source episode");
+      return JSON.stringify({
+        facts: [{
+          sourceEpisodeId,
+          subject: "kode uji",
+          predicate: "adalah",
+          object: "BIRU-742",
+          confidence: 1,
+          worthRemembering: true,
+        }],
+        summaries: [],
+      });
+    });
+    const autoApp = buildContextServer(repo, vectors, {
+      extractLocal,
+      autoConsolidate: true,
+    });
+    try {
+      const user = await autoApp.inject({
+        method: "POST",
+        url: "/v1/episodes",
+        payload: {
+          ts: T0,
+          rawText: "Ingat kode Project ini adalah BIRU-742",
+          projectId: "prj_alpha",
+          provenance: { sourceApp: "ai", sessionId: "sess_alpha_1" },
+          scope: "personal",
+          sensitivity: "INTERNAL",
+          syncClass: "CLOUD_ALLOWED",
+          trust: "USER",
+        },
+      });
+      expect(user.statusCode).toBe(201);
+      expect(extractLocal).not.toHaveBeenCalled();
+
+      const agent = await autoApp.inject({
+        method: "POST",
+        url: "/v1/episodes",
+        payload: {
+          ts: NOW,
+          rawText: "Okay",
+          projectId: "prj_alpha",
+          provenance: { sourceApp: "connect:hosted", sessionId: "sess_alpha_1" },
+          scope: "personal",
+          sensitivity: "INTERNAL",
+          syncClass: "CLOUD_ALLOWED",
+          trust: "HOSTED_AGENT",
+        },
+      });
+      expect(agent.statusCode).toBe(201);
+      await vi.waitFor(() => expect(repo.listFacts({ projectId: "prj_alpha" as never })).toHaveLength(1));
+      const recall = await autoApp.inject({
+        method: "POST",
+        url: "/v1/retrieve",
+        payload: {
+          query: "Apa kode uji Project ini?",
+          scopes: ["personal"],
+          projectId: "prj_alpha",
+          hostedEligibleOnly: true,
+          maxSensitivity: "INTERNAL",
+          now: NOW,
+        },
+      });
+      expect(recall.statusCode).toBe(200);
+      expect(recall.json().hits[0].fact.object).toBe("BIRU-742");
+
+      const sibling = await autoApp.inject({
+        method: "POST",
+        url: "/v1/retrieve",
+        payload: {
+          query: "BIRU-742",
+          scopes: ["personal"],
+          projectId: "prj_beta",
+          hostedEligibleOnly: true,
+          maxSensitivity: "INTERNAL",
+          now: NOW,
+        },
+      });
+      expect(sibling.json().hits).toEqual([]);
+    } finally {
+      await autoApp.close();
+    }
+  });
+});
+
 describe("facts — propose/promote/forget", () => {
   it("alur lengkap: propose → promote → forget", async () => {
     const proposed = await app.inject({
