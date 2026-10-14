@@ -2149,8 +2149,108 @@ async function runSettingsMcpWorkspaceIsolation() {
   }
 }
 
+async function runProjectsScopeIsolation() {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await installApiMocks(context);
+  const checked = await checkedPage(context, "projects-scope-isolation");
+  const page = checked.page;
+  async function assertSingleProjectDetail(expectedName) {
+    await page.getByRole("heading", { name: expectedName, exact: true }).waitFor();
+    const headings = page.getByRole("heading", { name: "Project settings", exact: true });
+    if ((await headings.count()) !== 1) {
+      throw new Error("projects-scope: duplicate Project settings after selection change");
+    }
+    const sourcesHeadings = page.getByRole("heading", { name: "Sources", exact: true });
+    if ((await sourcesHeadings.count()) !== 1) {
+      throw new Error("projects-scope: duplicate Sources after selection change");
+    }
+    const settingsInputs = headings.locator("xpath=../../..").locator("input");
+    const renderedName = await settingsInputs.first().inputValue();
+    if (renderedName !== expectedName) {
+      throw new Error(
+        `projects-scope: Project settings belongs to "${renderedName}" not "${expectedName}"`,
+      );
+    }
+  }
+  let releaseResearch = () => {};
+  const researchGate = new Promise((resolve) => {
+    releaseResearch = resolve;
+  });
+  let signalResearch = () => {};
+  const researchSeen = new Promise((resolve) => {
+    signalResearch = resolve;
+  });
+  try {
+    await goto(page, "/projects", "projects-scope-isolation");
+    await page.getByText("PCS-06 Browser", { exact: true }).waitFor();
+    await assertSingleProjectDetail("Personal");
+
+    // Deliberately return a stale response *after* the user switches back.
+    await context.route("**/api/projects/history?**", async (route) => {
+      const selected = new URL(route.request().url()).searchParams.get("projectId");
+      if (selected === "prj_research") {
+        signalResearch();
+        await researchGate;
+        try {
+          await json(route, {
+            sessions: [
+              {
+                ...historySession,
+                id: "sess_researchscope",
+                projectId: "prj_research",
+                title: "RESEARCH ONLY",
+              },
+            ],
+          });
+        } catch {
+          // The client correctly aborts the stale request on Project change.
+        }
+        return;
+      }
+      if (selected === "prj_personal") {
+        return json(route, { sessions: [historySession] });
+      }
+      return route.fallback();
+    });
+    await context.route("**/api/projects/prj_research/sources?**", (route) =>
+      json(route, { sources: [] }),
+    );
+
+    await page.getByRole("button", { name: /Research prj_research/ }).click();
+    await researchSeen;
+    await assertSingleProjectDetail("Research");
+    if ((await page.getByText("PCS-06 Browser", { exact: true }).count()) !== 0) {
+      throw new Error("projects-scope: previous Project history remained visible");
+    }
+    await page.getByRole("button", { name: /Personal default/ }).click();
+    await page.getByText("PCS-06 Browser", { exact: true }).waitFor();
+    await assertSingleProjectDetail("Personal");
+    releaseResearch();
+    await page.waitForTimeout(200);
+    if ((await page.getByText("RESEARCH ONLY", { exact: true }).count()) !== 0) {
+      throw new Error("projects-scope: stale Research response polluted Personal view");
+    }
+
+    await page.screenshot({
+      path: `${outDir}/projects-scope-isolation.png`,
+      fullPage: true,
+    });
+    checked.assertClean();
+    console.log("PASS Projects rapid-switch history isolation");
+  } finally {
+    releaseResearch();
+    await page.close();
+    await context.close();
+  }
+}
+
 try {
   await runDesktopJourney();
+} catch (error) {
+  failures.push(error instanceof Error ? error.message : String(error));
+}
+try {
+  await runProjectsScopeIsolation();
 } catch (error) {
   failures.push(error instanceof Error ? error.message : String(error));
 }

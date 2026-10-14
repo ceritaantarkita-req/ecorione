@@ -13,7 +13,9 @@ describe("A-02 Projects All aggregate contract", () => {
   });
 
   it("loads workspace aggregate history only when All is selected", () => {
-    expect(page).toContain("loadSessions(selectedId === ALL_ID ? undefined : selectedId)");
+    expect(page).toContain("selectedId === ALL_ID ? undefined : selectedId");
+    expect(page).toContain("scope: JSON.stringify([workspaceId, projectId ?? ALL_ID])");
+    expect(page).toContain("controller.signal");
     expect(historyRoute).toContain('url.searchParams.get("projectId")');
     expect(historyRoute).toContain("ProjectIdSchema.safeParse(rawProjectId)");
     expect(historyRoute).toContain("projectId === null");
