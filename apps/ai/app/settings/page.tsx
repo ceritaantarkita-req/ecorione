@@ -456,6 +456,7 @@ export default function SettingsPage() {
               ))}
             </div>
             <textarea
+              key={workspaceId}
               rows={12}
               spellCheck={false}
               value={mcpJson}
