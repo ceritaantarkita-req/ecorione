@@ -2115,9 +2115,7 @@ async function runSettingsMcpWorkspaceIsolation() {
     // This must reset without Save, Load workspace, navigation, or reload.
     await workspaceInput.fill("ws_test");
     await page.waitForFunction(() => {
-      const input = globalThis.document.querySelector(
-        'input[aria-label="MCP workspace id"]',
-      );
+      const input = globalThis.document.querySelector('input[aria-label="MCP workspace id"]');
       const textarea = globalThis.document.querySelector(
         'textarea[aria-label="MCP server JSON"]',
       );
@@ -2130,9 +2128,7 @@ async function runSettingsMcpWorkspaceIsolation() {
     await editor.fill("draft-from-test");
     await workspaceInput.fill("ws_personal");
     await page.waitForFunction(() => {
-      const input = globalThis.document.querySelector(
-        'input[aria-label="MCP workspace id"]',
-      );
+      const input = globalThis.document.querySelector('input[aria-label="MCP workspace id"]');
       const textarea = globalThis.document.querySelector(
         'textarea[aria-label="MCP server JSON"]',
       );
