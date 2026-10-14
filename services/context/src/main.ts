@@ -67,7 +67,12 @@ async function extractLocal(prompt: string): Promise<string> {
   return res.reply;
 }
 
-const app = buildContextServer(repo, vectors, { token, logger: true, extractLocal });
+const app = buildContextServer(repo, vectors, {
+  token,
+  logger: true,
+  extractLocal,
+  autoConsolidate: true,
+});
 registerArtifactRoutes(app, repo);
 registerMultimodalRoutes(app, repo);
 registerAccessRoutes(app, repo);
