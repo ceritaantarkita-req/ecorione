@@ -124,14 +124,24 @@ export async function runConsolidation(
   const errors: string[] = [];
   if (episodes.length === 0) return { processed: 0, promoted, quarantined, rejected, errors };
 
-  const parsed = parseExtraction(await deps.extractLocal(buildExtractionPrompt(episodes)));
+  // Only user-authored episodes may be used as source material for L1 facts.
+  // A normal chat writes USER + AGENT episodes, so passing both makes local
+  // extractors unnecessarily ambiguous and can teach them their own answers.
+  const userEpisodes = episodes.filter((episode) => episode.trust === "USER");
+  if (userEpisodes.length === 0) {
+    for (const episode of episodes) {
+      deps.repo.markEpisodeConsolidated(episode.id, episode.rawText.slice(0, 300), options.now);
+    }
+    return { processed: episodes.length, promoted, quarantined, rejected, errors };
+  }
+  const parsed = parseExtraction(await deps.extractLocal(buildExtractionPrompt(userEpisodes)));
   if (parsed.error !== null) {
     errors.push(parsed.error);
     // Do not acknowledge episodes on invalid model output. They must remain eligible
     // for a later retry, rather than being permanently lost from L1 extraction.
     return { processed: 0, promoted, quarantined, rejected, errors };
   }
-  const episodeById = new Map(episodes.map((ep) => [ep.id, ep]));
+  const episodeById = new Map(userEpisodes.map((ep) => [ep.id, ep]));
 
   for (const candidate of parsed.candidates) {
     if (!candidate.worthRemembering) {
@@ -139,7 +149,7 @@ export async function runConsolidation(
       continue;
     }
     const sourceId =
-      candidate.sourceEpisodeId ?? (episodes.length === 1 ? episodes[0]?.id : undefined);
+      candidate.sourceEpisodeId ?? (userEpisodes.length === 1 ? userEpisodes[0]?.id : undefined);
     if (sourceId === undefined) {
       rejected += 1;
       errors.push(
