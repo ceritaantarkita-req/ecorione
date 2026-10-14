@@ -156,6 +156,31 @@ describe("runConsolidation", () => {
     expect(repo.getEpisode(assertId("episode", "epi_b"))?.consolidatedAt).toBeNull();
   });
 
+  it("uses a single USER episode when the local extractor omits sourceEpisodeId", async () => {
+    const { repo } = makeRepo();
+    repo.appendEpisode(episodeInput({
+      id: "epi_user", projectId: "prj_alpha" as never, rawText: "Kode pengujian BIRU-742",
+    }));
+    repo.appendEpisode(episodeInput({
+      id: "epi_reply", projectId: "prj_alpha" as never, rawText: "OK",
+      trust: "HOSTED_AGENT",
+    }));
+    const extractLocal = vi.fn().mockResolvedValue(JSON.stringify([{
+      subject: "kode pengujian",
+      predicate: "adalah",
+      object: "BIRU-742",
+      confidence: 1,
+      worthRemembering: true,
+    }]));
+    const result = await runConsolidation({ repo, extractLocal }, {
+      now: NOW, projectId: "prj_alpha" as never,
+    });
+    expect(result.processed).toBe(2);
+    expect(result.promoted).toBe(1);
+    expect(repo.listFacts({ projectId: "prj_alpha" as never })[0]?.sourceEpisodeIds).toEqual(["epi_user"]);
+    expect(extractLocal.mock.calls[0]?.[0]).not.toContain("epi_reply");
+  });
+
   it("menghormati limit batch", async () => {
     const { repo } = makeRepo();
     for (let i = 0; i < 5; i += 1) {
