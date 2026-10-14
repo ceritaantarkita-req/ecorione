@@ -40,7 +40,11 @@ export default function ProjectsPage(): React.JSX.Element {
 
 // Workspace remount prevents a prior Workspace's Projects and pending UI state
 // from appearing in the next Workspace, including while its first fetch runs.
-function WorkspaceProjects({ workspaceId }: { readonly workspaceId: string }): React.JSX.Element {
+function WorkspaceProjects({
+  workspaceId,
+}: {
+  readonly workspaceId: string;
+}): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsReady, setProjectsReady] = useState(false);
   const [selectedId, setSelectedId] = useState<string>(PERSONAL_PROJECT_ID);
@@ -114,14 +118,13 @@ function WorkspaceProjects({ workspaceId }: { readonly workspaceId: string }): R
   useEffect(() => {
     if (!projectsReady) return;
     const controller = new AbortController();
-    void loadSessions(
-      selectedId === ALL_ID ? undefined : selectedId,
-      controller.signal,
-    ).catch((error: unknown) => {
-      if (!controller.signal.aborted) {
-        setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan.");
-      }
-    });
+    void loadSessions(selectedId === ALL_ID ? undefined : selectedId, controller.signal).catch(
+      (error: unknown) => {
+        if (!controller.signal.aborted) {
+          setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan.");
+        }
+      },
+    );
     return () => controller.abort();
   }, [loadSessions, projectsReady, selectedId]);
 
