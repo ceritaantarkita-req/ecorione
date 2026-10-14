@@ -96,8 +96,8 @@ file DB ini.
   BM25/FTS5; jalur vektor aktif begitu ada layanan embedding, itu bukan blocker untuk
   loop inti karena `ContextRetriever` sudah sah jalan tanpa `queryEmbedding`).
 - `GET /v1/artifacts?scope=personal&limit=20` → `{ pointers: ArtifactPointer[] }`
-- `POST /v1/consolidate/run` — body `{ limit?: number, now: string }` → 200
-  `{ processed: number, promoted: number, quarantined: number, rejected: number }`.
+- `POST /v1/consolidate/run` — body `{ limit?: number, projectId?: ProjectId, now: string }` → 200
+  `{ processed: number, promoted: number, quarantined: number, rejected: number, errors: string[] }`.
   Lihat "Konsolidasi" di bawah.
 
 Semua error `ContextError` (dan turunannya) dipetakan di route handler ke `HttpError`
@@ -110,13 +110,15 @@ lainnya→400.
 `POST /v1/consolidate/run` memproses episode dengan `consolidatedAt IS NULL`, dibatch
 (`limit`, default 20):
 
-1. **Gerbang salience** + **ekstraksi** dalam satu panggilan ke Connect
-   (`POST {ECORIONE_CONNECT_URL}/v1/complete` dengan `target: "local"`): prompt minta
-   model mengembalikan JSON array `{ subject, predicate, object, confidence, worthRemembering }`
-   per episode. Respons **divalidasi ketat pakai Zod** (`z.array(...)`) — kalau parse
-   gagal, batch itu ditandai `consolidatedAt` = now dengan `summary` berisi catatan
-   error dan diskip (skema tidak valid **tidak boleh** membuat proses berhenti untuk
-   seluruh batch, tapi juga tidak boleh diam-diam diperlakukan seolah "tidak ada fakta").
+1. **Gerbang salience** + **ekstraksi** lewat Connect
+   (`POST {ECORIONE_CONNECT_URL}/v1/complete` dengan `target: "local"`): hanya
+   episode asal `USER` yang boleh menjadi sumber fakta L1. Model mengembalikan
+   objek JSON `{ facts: [{ sourceEpisodeId, subject, predicate, object, confidence,
+   worthRemembering }], summaries: [...] }`; format array kandidat lama tetap diterima
+   hanya jika pemetaan episode tidak ambigu. Respons divalidasi dengan Zod.
+   Kalau parse gagal, episode **tetap** memiliki `consolidatedAt IS NULL` dan bisa
+   dicoba ulang, bukan diam-diam ditandai berhasil. Tidak ada fallback otomatis ke
+   hosted/OpenRouter atau biaya API tambahan.
 2. Untuk tiap kandidat dengan `worthRemembering === true`:
    - Tolak (skip, catat di hasil `rejected`) kalau lolos `containsImperative(text)`
      (heuristik sederhana dari kata kerja imperatif/pola instruksi — lihat
@@ -129,8 +131,15 @@ lainnya→400.
      ini **adalah** langkah validasi-lalu-promosi yang dimaksud `prd.md` §12.1, bukan
      jalan pintas melewati karantina: proposal singgah di tabel `quarantine` dulu
      (baris 1), baru dipromosikan di baris ini setelah lolos pemeriksaan imperatif.
-3. `repo.markEpisodeConsolidated(id, summary, now)` untuk setiap episode yang diproses,
-   berhasil atau tidak.
+3. `repo.markEpisodeConsolidated(id, summary, now)` hanya setelah hasil ekstraksi
+   valid untuk batch tersebut; episode dengan ekstraksi gagal tetap menunggu retry.
+   Balasan agent tidak dipromosikan menjadi fakta USER.
+4. Dalam runtime Context, penulisan episode balasan assistant yang mempunyai
+   `projectId` memicu konsolidasi asinkron terbatas pada Project tersebut setelah
+   episode disimpan. Panggilan chat tidak menunggu ekstraksi; kegagalan local model
+   dicatat secara ringkas tanpa payload pesan. Penulisan operator dan otomatis
+   diserialkan. Tanpa model lokal yang tersedia, L1 tidak akan terbentuk hanya karena
+   OpenRouter chat sudah Connected.
 
 Biaya panggilan model lokal ke Connect **tetap dicatat** ke cost ledger (akan Rp0 di
 `actualUsd` karena `pricing.ts` memberi harga 0 untuk model lokal, tapi `naiveUsd`
