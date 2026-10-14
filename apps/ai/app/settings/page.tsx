@@ -52,7 +52,6 @@ export default function SettingsPage() {
     status,
     testCredential,
     workspaceId,
-    workspaceIdRef,
   } = controller;
 
   const statusIsWarning = /SPEND_BUDGET|spend budget|plafon spend|COST_KILL_SWITCH/i.test(
@@ -430,10 +429,7 @@ export default function SettingsPage() {
                 aria-label="MCP workspace id"
                 value={workspaceId}
                 disabled={mcpLoading || pendingAction !== null}
-                onChange={(event) => {
-                  workspaceIdRef.current = event.target.value;
-                  setWorkspaceId(event.target.value);
-                }}
+                onChange={(event) => setWorkspaceId(event.target.value)}
               />
               <button
                 type="button"
@@ -460,6 +456,7 @@ export default function SettingsPage() {
               ))}
             </div>
             <textarea
+              key={workspaceId}
               rows={12}
               spellCheck={false}
               value={mcpJson}
