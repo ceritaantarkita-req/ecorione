@@ -149,7 +149,8 @@ export async function runConsolidation(
       continue;
     }
     const sourceId =
-      candidate.sourceEpisodeId ?? (userEpisodes.length === 1 ? userEpisodes[0]?.id : undefined);
+      candidate.sourceEpisodeId ??
+      (userEpisodes.length === 1 ? userEpisodes[0]?.id : undefined);
     if (sourceId === undefined) {
       rejected += 1;
       errors.push(
