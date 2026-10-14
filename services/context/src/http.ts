@@ -5,6 +5,7 @@ import {
   makeId,
   MemoryFactIdSchema,
   ProjectIdSchema,
+  type ProjectId,
   ScopeSchema,
   SensitivitySchema,
   SyncClassSchema,
@@ -21,7 +22,8 @@ import {
 } from "@ecorione/shared-server";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { runConsolidation, type ConsolidateDeps } from "./consolidate.js";
+import { runConsolidation, type ConsolidateDeps, type ConsolidateOptions } from "./consolidate.js";
+import { nowIso } from "./clock.js";
 import { registerMaintenanceRoutes } from "./maintenance-http.js";
 import { ContextMaintenanceEngine } from "./maintenance.js";
 import {
@@ -159,6 +161,7 @@ const ListArtifactsQuerySchema = z.object({
 });
 const ConsolidateBodySchema = z.object({
   now: z.string().datetime({ offset: false }),
+  projectId: ProjectIdSchema.optional(),
   limit: z.number().int().min(1).max(200).default(20),
 });
 
@@ -166,6 +169,8 @@ export interface BuildContextServerOptions {
   readonly token?: string | undefined;
   readonly logger?: boolean | undefined;
   readonly extractLocal?: ((prompt: string) => Promise<string>) | undefined;
+  /** Opt-in for production: queue local L1 extraction once an assistant episode is persisted. */
+  readonly autoConsolidate?: boolean | undefined;
 }
 
 export function buildContextServer(
@@ -180,10 +185,57 @@ export function buildContextServer(
   });
   registerMaintenanceRoutes(app, maintenance);
 
+  // Only the local extractor may derive durable L1 facts. Serialize scheduled and
+  // operator-triggered jobs to avoid processing the same episodes concurrently.
+  let consolidationTail: Promise<void> = Promise.resolve();
+  const runSerialized = (opts: ConsolidateOptions) => {
+    if (options.extractLocal === undefined) {
+      throw new BadRequestError("Context local extractor belum dikonfigurasi.");
+    }
+    const deps: ConsolidateDeps = { repo, extractLocal: options.extractLocal };
+    const task = consolidationTail.then(() => runConsolidation(deps, opts));
+    consolidationTail = task.then(() => undefined, () => undefined);
+    return task;
+  };
+  const pendingProjects = new Set<ProjectId>();
+  let autoRunning = false;
+  function scheduleAutoConsolidation(projectId: ProjectId): void {
+    if (options.autoConsolidate !== true || options.extractLocal === undefined) return;
+    pendingProjects.add(projectId);
+    if (autoRunning) return;
+    autoRunning = true;
+    void Promise.resolve().then(async () => {
+      try {
+        while (pendingProjects.size > 0) {
+          const next = pendingProjects.values().next().value;
+          if (next === undefined) break;
+          pendingProjects.delete(next);
+          try {
+            const result = await runSerialized({ now: nowIso(), projectId: next, limit: 20 });
+            if (result.errors.length > 0) {
+              app.log.warn({ projectId: next, errors: result.errors }, "Auto memory consolidation incomplete");
+            }
+          } catch (err) {
+            // Chat succeeds after the episode is durably written; local-model outages
+            // must not turn a completed chat into a retryable 502. Unprocessed
+            // episodes stay in the database for the next attempt/operator run.
+            app.log.warn({ err, projectId: next }, "Auto memory consolidation deferred");
+          }
+        }
+      } finally {
+        autoRunning = false;
+      }
+    });
+  }
+
   app.post("/v1/episodes", async (req, reply) => {
     const body = parseOrBadRequest(AppendEpisodeBodySchema, req.body);
     try {
-      return await reply.code(201).send(repo.appendEpisode({ ...body, id: makeId("episode") }));
+      const episode = repo.appendEpisode({ ...body, id: makeId("episode") });
+      if (episode.projectId !== null && (episode.trust === "LOCAL_AGENT" || episode.trust === "HOSTED_AGENT")) {
+        scheduleAutoConsolidation(episode.projectId);
+      }
+      return await reply.code(201).send(episode);
     } catch (err) {
       throw toHttpError(err);
     }
@@ -325,8 +377,7 @@ export function buildContextServer(
         "Service ini dijalankan tanpa client Connect (extractLocal) — konsolidasi tidak bisa jalan.",
       );
     }
-    const deps: ConsolidateDeps = { repo, extractLocal: options.extractLocal };
-    return runConsolidation(deps, body);
+    return runSerialized(body);
   });
   return app;
 }
