@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { HistorySession, Project, ProjectAutonomyCeiling } from "@ecorione/shared-schema";
 import {
   PERSONAL_PROJECT_ID,
@@ -26,12 +26,29 @@ function errorMessage(body: unknown, fallback: string): string {
   return typeof message === "string" ? message : fallback;
 }
 
-export default function ProjectsPage() {
-  const { workspaceId, ready: workspaceReady } = useWorkspace();
+export default function ProjectsPage(): React.JSX.Element {
+  const { workspaceId, ready } = useWorkspace();
+  if (!ready) {
+    return (
+      <main className={styles.shell}>
+        <p className={styles.empty}>Memuat Workspace...</p>
+      </main>
+    );
+  }
+  return <WorkspaceProjects key={workspaceId} workspaceId={workspaceId} />;
+}
+
+// Workspace remount prevents a prior Workspace's Projects and pending UI state
+// from appearing in the next Workspace, including while its first fetch runs.
+function WorkspaceProjects({ workspaceId }: { readonly workspaceId: string }): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsReady, setProjectsReady] = useState(false);
   const [selectedId, setSelectedId] = useState<string>(PERSONAL_PROJECT_ID);
-  const [sessions, setSessions] = useState<HistorySession[]>([]);
+  const [historySnapshot, setHistorySnapshot] = useState<{
+    scope: string;
+    sessions: HistorySession[];
+  }>({ scope: "", sessions: [] });
+  const projectsLoadGeneration = useRef(0);
   const [name, setName] = useState("");
   const [createDescription, setCreateDescription] = useState("");
   const [createInstruction, setCreateInstruction] = useState("");
@@ -39,14 +56,20 @@ export default function ProjectsPage() {
     useState<ProjectAutonomyCeiling>("L3");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const activeHistoryScope = JSON.stringify([workspaceId, selectedId]);
+  const sessions =
+    historySnapshot.scope === activeHistoryScope ? historySnapshot.sessions : [];
 
-  const loadProjects = useCallback(async () => {
+  const loadProjects = useCallback(async (signal?: AbortSignal) => {
+    const generation = ++projectsLoadGeneration.current;
     setProjectsReady(false);
-    const res = await fetch(`/api/projects?workspaceId=${workspaceId}`, {
+    const res = await fetch(`/api/projects?workspaceId=${encodeURIComponent(workspaceId)}`, {
       cache: "no-store",
+      signal,
     });
     const body: unknown = await res.json().catch(() => undefined);
     if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat Projects."));
+    if (signal?.aborted || generation !== projectsLoadGeneration.current) return;
     const nextProjects = (body as ProjectList).projects;
     setProjects(nextProjects);
     setSelectedId((current) => {
@@ -57,37 +80,55 @@ export default function ProjectsPage() {
   }, [workspaceId]);
 
   const loadSessions = useCallback(
-    async (projectId?: string) => {
-      const params = new URLSearchParams({ workspaceId: workspaceId });
+    async (projectId?: string, signal?: AbortSignal) => {
+      const params = new URLSearchParams({ workspaceId });
       if (projectId !== undefined) params.set("projectId", projectId);
       const res = await fetch(`/api/projects/history?${params.toString()}`, {
         cache: "no-store",
+        signal,
       });
       const body: unknown = await res.json().catch(() => undefined);
       if (!res.ok) throw new Error(errorMessage(body, "Gagal memuat percakapan Project."));
-      setSessions((body as SessionList).sessions);
+      if (signal?.aborted) return;
+      setHistorySnapshot({
+        scope: JSON.stringify([workspaceId, projectId ?? ALL_ID]),
+        sessions: (body as SessionList).sessions,
+      });
     },
     [workspaceId],
   );
 
   useEffect(() => {
-    if (!workspaceReady) return;
-    void loadProjects().catch((error: unknown) =>
-      setFeedback(error instanceof Error ? error.message : "Gagal memuat Projects."),
-    );
-  }, [loadProjects, workspaceReady]);
+    const controller = new AbortController();
+    void loadProjects(controller.signal).catch((error: unknown) => {
+      if (!controller.signal.aborted) {
+        setFeedback(error instanceof Error ? error.message : "Gagal memuat Projects.");
+      }
+    });
+    return () => {
+      controller.abort();
+      projectsLoadGeneration.current += 1;
+    };
+  }, [loadProjects]);
 
   useEffect(() => {
-    if (!workspaceReady || !projectsReady) return;
-    void loadSessions(selectedId === ALL_ID ? undefined : selectedId).catch((error: unknown) =>
-      setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan."),
-    );
-  }, [loadSessions, projectsReady, selectedId, workspaceReady]);
+    if (!projectsReady) return;
+    const controller = new AbortController();
+    void loadSessions(
+      selectedId === ALL_ID ? undefined : selectedId,
+      controller.signal,
+    ).catch((error: unknown) => {
+      if (!controller.signal.aborted) {
+        setFeedback(error instanceof Error ? error.message : "Gagal memuat percakapan.");
+      }
+    });
+    return () => controller.abort();
+  }, [loadSessions, projectsReady, selectedId]);
 
   async function createProject(event: FormEvent): Promise<void> {
     event.preventDefault();
     const trimmed = name.trim();
-    if (trimmed.length === 0 || busy || !workspaceReady) return;
+    if (trimmed.length === 0 || busy) return;
     setBusy(true);
     setFeedback(null);
     try {
@@ -119,7 +160,7 @@ export default function ProjectsPage() {
   }
 
   async function archiveProject(projectId: string): Promise<void> {
-    if (busy || !workspaceReady || projectId === PERSONAL_PROJECT_ID) return;
+    if (busy || projectId === PERSONAL_PROJECT_ID) return;
     setBusy(true);
     setFeedback(null);
     try {
@@ -357,9 +398,13 @@ export default function ProjectsPage() {
                 <span>Autonomy ceiling: {selected.autonomyCeiling}</span>
               </div>
 
-              <ProjectSettings project={selected} onSaved={projectSaved} />
+              <ProjectSettings key={selected.id} project={selected} onSaved={projectSaved} />
 
-              <ProjectSources projectId={selected.id} workspaceId={selected.workspaceId} />
+              <ProjectSources
+                key={selected.id}
+                projectId={selected.id}
+                workspaceId={selected.workspaceId}
+              />
 
               <section className={styles.recent}>
                 <h3>Recent conversations</h3>
