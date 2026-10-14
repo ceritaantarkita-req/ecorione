@@ -20,6 +20,13 @@ In local ECORIONE, the user wrote a memorable marker in `QA-Audit`, received the
 5. Invalid extractor JSON leaves episodes unconsolidated and retryable. Local extraction runs via Connect with a 60-second request timeout and strict JSON instructions.
 6. Existing `GLOBAL_PLUS_PROJECT`, sensitivity, and `CLOUD_ALLOWED` retrieval filters remain unchanged.
 
+## Runtime dependency and privacy boundary
+
+- Memory extraction is **local-only** by the existing Context/Connect contract (`target: "local"`); it does **not** automatically fall back to OpenRouter/hosted. A green OpenRouter canary proves chat connectivity, **not** successful memory consolidation.
+- The local model configured in **Settings → Local AI** must be reachable and pass its own local canary for automatic L1 facts to materialize. Without it, episode/History writes still succeed, but Memory may remain empty; startup or next-turn backfill cannot be claimed until demonstrated.
+- This preserves the explicit restriction in `docs/api-fase1.md`: no silent hosted-data egress and no unexpected extra hosted API spend. Cloud-eligible derived facts can be recalled by hosted chat only **after** local extraction succeeds and their `syncClass` passes hosted eligibility.
+- Background failures now log only a Project ID, error type, or bounded count, never exception payloads that may include model output. Raw episodes stay eligible for retries.
+
 ## Limits / acceptance
 
 - This is **asynchronous and model-dependent**, not guaranteed immediate recall. Do not claim closure until local/CI tests and browser acceptance show a saved fact is recalled after a new conversation.
@@ -38,4 +45,4 @@ In local ECORIONE, the user wrote a memorable marker in `QA-Audit`, received the
 6. Repeat in a **sibling Project**: no token must appear. Repeat with a `LOCAL_ONLY` episode on hosted chat: the token must not cross into cloud context.
 7. Restart Context, then repeat recall. Record the observed result and cleanup test-only data.
 
-**Status:** branch implementation submitted for CI and local browser verification; not declared production-verified here.
+**Status:** branch implementation submitted for CI and local browser verification. Local-model readiness and real persistent cross-session recall are **not** verified by GitHub CI alone; do not declare production-ready based solely on unit tests.
