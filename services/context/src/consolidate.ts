@@ -18,7 +18,7 @@ export interface ConsolidateDeps {
 }
 export interface ConsolidateOptions {
   readonly limit?: number;
-  readonly projectId?: ProjectId;
+  readonly projectId?: ProjectId | undefined;
   readonly now: Timestamp;
 }
 export interface ConsolidateResult {
