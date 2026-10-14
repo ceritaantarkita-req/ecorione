@@ -229,7 +229,12 @@ export function buildContextServer(
             // Chat succeeds after the episode is durably written; local-model outages
             // must not turn a completed chat into a retryable 502. Unprocessed
             // episodes stay in the database for the next attempt/operator run.
-            app.log.warn({ err, projectId: next }, "Auto memory consolidation deferred");
+            // Upstream errors may contain snippets of model output or episode text.
+            // Log only the error class, never the exception payload.
+            app.log.warn(
+              { projectId: next, errorType: err instanceof Error ? err.name : "unknown" },
+              "Auto memory consolidation deferred",
+            );
           }
         }
       } finally {
