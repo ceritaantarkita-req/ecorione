@@ -2154,6 +2154,23 @@ async function runProjectsScopeIsolation() {
   await installApiMocks(context);
   const checked = await checkedPage(context, "projects-scope-isolation");
   const page = checked.page;
+  async function assertSingleProjectDetail(expectedName) {
+    await page.getByRole("heading", { name: expectedName, exact: true }).waitFor();
+    const headings = page.getByRole("heading", { name: "Project settings", exact: true });
+    if ((await headings.count()) !== 1) {
+      throw new Error("projects-scope: duplicate Project settings after selection change");
+    }
+    const sourcesHeadings = page.getByRole("heading", { name: "Sources", exact: true });
+    if ((await sourcesHeadings.count()) !== 1) {
+      throw new Error("projects-scope: duplicate Sources after selection change");
+    }
+    const renderedName = await headings.locator("xpath=../../..").locator("input").first().inputValue();
+    if (renderedName !== expectedName) {
+      throw new Error(
+        `projects-scope: Project settings belongs to "${renderedName}" not "${expectedName}"`,
+      );
+    }
+  }
   let releaseResearch = () => {};
   const researchGate = new Promise((resolve) => {
     releaseResearch = resolve;
@@ -2165,6 +2182,7 @@ async function runProjectsScopeIsolation() {
   try {
     await goto(page, "/projects", "projects-scope-isolation");
     await page.getByText("PCS-06 Browser", { exact: true }).waitFor();
+    await assertSingleProjectDetail("Personal");
 
     // Deliberately return a stale response *after* the user switches back.
     await context.route("**/api/projects/history?**", async (route) => {
@@ -2199,11 +2217,13 @@ async function runProjectsScopeIsolation() {
 
     await page.getByRole("button", { name: /Research prj_research/ }).click();
     await researchSeen;
+    await assertSingleProjectDetail("Research");
     if ((await page.getByText("PCS-06 Browser", { exact: true }).count()) !== 0) {
       throw new Error("projects-scope: previous Project history remained visible");
     }
     await page.getByRole("button", { name: /Personal default/ }).click();
     await page.getByText("PCS-06 Browser", { exact: true }).waitFor();
+    await assertSingleProjectDetail("Personal");
     releaseResearch();
     await page.waitForTimeout(200);
     if ((await page.getByText("RESEARCH ONLY", { exact: true }).count()) !== 0) {
