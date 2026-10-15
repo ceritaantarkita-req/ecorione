@@ -126,6 +126,36 @@ describe("runConsolidation", () => {
     expect(repo.listFacts()[0]?.object).toBe("BIRU-742");
   });
 
+  it("accepts a strictly fenced JSON object from a local model", async () => {
+    const { repo } = makeRepo();
+    repo.appendEpisode(episodeInput({ id: "epi_a", rawText: "Kode favorit hijau zamrud" }));
+    const payload = JSON.stringify({
+      facts: [{
+        sourceEpisodeId: "epi_a",
+        subject: "warna favorit",
+        predicate: "adalah",
+        object: "hijau zamrud",
+        confidence: 1,
+        worthRemembering: true,
+      }],
+      summaries: [],
+    });
+    const extractLocal = vi.fn().mockResolvedValue(`\`\`\`json\n${payload}\n\`\`\``);
+    const result = await runConsolidation({ repo, extractLocal }, { now: NOW });
+    expect(result.promoted).toBe(1);
+    expect(repo.listFacts()[0]?.object).toBe("hijau zamrud");
+  });
+
+  it("accepts an isolated local thinking block followed by JSON", async () => {
+    const { repo } = makeRepo();
+    repo.appendEpisode(episodeInput({ id: "epi_a", rawText: "Kode project BIRU-742" }));
+    const body = JSON.stringify([{ subject: "kode project", predicate: "adalah", object: "BIRU-742", confidence: 1, worthRemembering: true }]);
+    const extractLocal = vi.fn().mockResolvedValue(`<think>internal model analysis</think>\n${body}`);
+    const result = await runConsolidation({ repo, extractLocal }, { now: NOW });
+    expect(result.promoted).toBe(1);
+    expect(repo.listFacts()[0]?.object).toBe("BIRU-742");
+  });
+
   it("respons model lokal yang tidak cocok skema (bukan array objek yang benar) diskip dengan aman", async () => {
     const { repo } = makeRepo();
     repo.appendEpisode(episodeInput({ id: "epi_a" }));
