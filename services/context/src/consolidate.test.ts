@@ -278,6 +278,110 @@ describe("runConsolidation", () => {
     expect(extractLocal.mock.calls[0]?.[0]).not.toContain("epi_reply");
   });
 
+  it("does not dedupe an explicitly consented cloud fact against prior LOCAL_ONLY memory", async () => {
+    const { repo } = makeRepo();
+    const projectId = "prj_alpha" as never;
+    const extractLocal = vi.fn().mockResolvedValue(
+      JSON.stringify([
+        {
+          subject: "kode proyek",
+          predicate: "adalah",
+          object: "BIRU-742",
+          confidence: 1,
+          worthRemembering: true,
+        },
+      ]),
+    );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_private",
+        projectId,
+        syncClass: "LOCAL_ONLY",
+        rawText: "Kode proyek saya BIRU-742",
+      }),
+    );
+    expect((await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted).toBe(
+      1,
+    );
+
+    // The user explicitly repeats this harmless value in a separately consented turn.
+    // This may become cloud-eligible, but cannot reclassify the original private fact.
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_consented",
+        projectId,
+        syncClass: "CLOUD_ALLOWED",
+        rawText: "Saya mengizinkan kode proyek BIRU-742 untuk model cloud",
+      }),
+    );
+    const consented = await runConsolidation({ repo, extractLocal }, { now: NOW, projectId });
+    expect(consented.promoted).toBe(1);
+    const all = repo.listFacts({ projectId });
+    expect(all).toHaveLength(2);
+    expect(all.map((fact) => fact.syncClass).sort()).toEqual(["CLOUD_ALLOWED", "LOCAL_ONLY"]);
+    expect(
+      repo.listFacts({ projectId, hostedEligibleOnly: true }).map((fact) => fact.object),
+    ).toEqual(["BIRU-742"]);
+  });
+
+  it("does not supersede across sensitivity levels even for the same Project predicate", async () => {
+    const { repo } = makeRepo();
+    const projectId = "prj_alpha" as never;
+    const extractLocal = vi
+      .fn()
+      .mockResolvedValueOnce(
+        JSON.stringify([
+          {
+            subject: "kode proyek",
+            predicate: "adalah",
+            object: "BIRU-742",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(
+        JSON.stringify([
+          {
+            subject: "kode proyek",
+            predicate: "adalah",
+            object: "MERAH-999",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ]),
+      );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_internal",
+        projectId,
+        sensitivity: "INTERNAL",
+        rawText: "Kode proyek internal adalah BIRU-742",
+      }),
+    );
+    expect((await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted).toBe(
+      1,
+    );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_restricted",
+        projectId,
+        sensitivity: "RESTRICTED",
+        rawText: "Kode proyek restricted adalah MERAH-999",
+      }),
+    );
+    expect((await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted).toBe(
+      1,
+    );
+    expect(repo.listFacts({ projectId }).map((fact) => fact.object).sort()).toEqual([
+      "BIRU-742",
+      "MERAH-999",
+    ]);
+    expect(
+      repo.listFacts({ projectId, maxSensitivity: "INTERNAL" }).map((fact) => fact.object),
+    ).toEqual(["BIRU-742"]);
+  });
+
   it("menghormati limit batch", async () => {
     const { repo } = makeRepo();
     for (let i = 0; i < 5; i += 1) {
