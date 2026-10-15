@@ -1246,3 +1246,22 @@ hr {
     width: 100%;
   }
 }
+
+/* Opt-in egress permission is separate from the provider selector. */
+.ai-cloud-share-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.ai-cloud-share-consent input {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
