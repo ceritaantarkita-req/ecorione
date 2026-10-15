@@ -323,10 +323,16 @@ export async function chat(
       episodicSummaries: episodesRes.episodes.map(episodeToSummary),
       artifactPointers: artifactsRes.pointers,
     },
-    { tokenBudget: TOKEN_BUDGET - (projectSettings === "" ? 0 : PROJECT_CONTEXT_TOKEN_RESERVE), now },
+    {
+      tokenBudget: TOKEN_BUDGET - (projectSettings === "" ? 0 : PROJECT_CONTEXT_TOKEN_RESERVE),
+      now,
+    },
   );
   const rendered = renderContextPack(pack);
-  const dynamicText = projectSettings === "" ? rendered.dynamicText : `${projectSettings}\n\n${rendered.dynamicText}`;
+  const dynamicText =
+    projectSettings === ""
+      ? rendered.dynamicText
+      : `${projectSettings}\n\n${rendered.dynamicText}`;
 
   let complete: CompleteResponse;
   try {
