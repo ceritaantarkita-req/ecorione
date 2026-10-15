@@ -122,6 +122,7 @@ export interface ListFactsFilter extends FactLookupOptions {
 }
 export interface ListEpisodesFilter {
   readonly scopes?: readonly Scope[] | undefined;
+  readonly maxSensitivity?: Sensitivity | undefined;
   readonly sessionId?: string | undefined;
   readonly projectId?: ProjectId | null | undefined;
   readonly since?: Timestamp | undefined;
@@ -237,6 +238,12 @@ export class ContextRepository {
     if (filter.scopes !== undefined && filter.scopes.length > 0) {
       clauses.push(`scope IN (${placeholders(filter.scopes.length)})`);
       params.push(...filter.scopes);
+    }
+    const cap = filter.maxSensitivity;
+    if (cap !== undefined) {
+      const eligible = SENSITIVITY.filter((value) => sensitivityRank(value) <= sensitivityRank(cap));
+      clauses.push(`sensitivity IN (${placeholders(eligible.length)})`);
+      params.push(...eligible);
     }
     if (filter.sessionId !== undefined) {
       clauses.push("session_id = ?");
