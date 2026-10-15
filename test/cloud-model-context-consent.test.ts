@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ChatRequestSchema } from "@ecorione/shared-schema";
+import { ChatRequestSchema } from "../packages/shared-schema/src/index.js";
 
 const base = {
   sessionId: "sess_cloud_consent",
