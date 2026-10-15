@@ -99,6 +99,14 @@ export type ProposeFactInput = Omit<
 >;
 export type CoreMemoryBlockInput = z.input<typeof CoreMemoryBlockSchema>;
 export type ArtifactPointerInput = z.input<typeof ArtifactPointerSchema>;
+/** Aggregate-only diagnostics: no raw episode text, fact text, or secrets. */
+export interface ProjectMemoryCounts {
+  readonly pendingEpisodes: number;
+  readonly consolidatedEpisodes: number;
+  readonly savedFacts: number;
+  readonly localOnlyFacts: number;
+  readonly cloudEligibleFacts: number;
+}
 export interface FactLookupOptions {
   readonly includeInvalidated?: boolean | undefined;
 }
@@ -191,6 +199,32 @@ export class ContextRepository {
         consolidated_at: episode.consolidatedAt,
       });
     return episode;
+  }
+  projectMemoryCounts(projectId: ProjectId): ProjectMemoryCounts {
+    const episode = this.raw
+      .prepare(
+        `SELECT
+          COALESCE(SUM(CASE WHEN consolidated_at IS NULL THEN 1 ELSE 0 END), 0) AS pending,
+          COALESCE(SUM(CASE WHEN consolidated_at IS NOT NULL THEN 1 ELSE 0 END), 0) AS consolidated
+         FROM episodes WHERE project_id = ? AND project_state = 'ASSIGNED'`,
+      )
+      .get(projectId) as { pending: number; consolidated: number };
+    const facts = this.raw
+      .prepare(
+        `SELECT COUNT(*) AS saved,
+          COALESCE(SUM(CASE WHEN sync_class = 'LOCAL_ONLY' THEN 1 ELSE 0 END), 0) AS local_only,
+          COALESCE(SUM(CASE WHEN sync_class IN ('CLOUD_ALLOWED','PUBLIC') THEN 1 ELSE 0 END), 0) AS cloud_eligible
+         FROM facts
+         WHERE project_id = ? AND project_state = 'ASSIGNED' AND t_invalid IS NULL`,
+      )
+      .get(projectId) as { saved: number; local_only: number; cloud_eligible: number };
+    return {
+      pendingEpisodes: episode.pending,
+      consolidatedEpisodes: episode.consolidated,
+      savedFacts: facts.saved,
+      localOnlyFacts: facts.local_only,
+      cloudEligibleFacts: facts.cloud_eligible,
+    };
   }
   getEpisode(id: EpisodeId): Episode | null {
     const row = this.raw.prepare("SELECT * FROM episodes WHERE id = ?").get(id) as
