@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import styles from "./Projects.module.css";
 
 type MemoryHealth = {
@@ -49,16 +49,9 @@ export function ProjectMemoryStatus({
     }
   }
 
-  useEffect(() => {
-    const controller = new AbortController();
-    void refresh(controller.signal);
-    return () => controller.abort();
-    // Component is keyed by Project ID to avoid stale state crossing Projects.
-  }, [projectId, workspaceId]);
-
   const state =
     snapshot === null
-      ? "Belum terverifikasi"
+      ? "Belum diperiksa"
       : snapshot.processing
         ? "Processing"
         : snapshot.lastAttempt === "failed"
@@ -82,7 +75,7 @@ export function ProjectMemoryStatus({
           disabled={busy}
           onClick={() => void refresh()}
         >
-          {busy ? "Memeriksa..." : "Refresh"}
+          {busy ? "Memeriksa..." : "Periksa / Refresh"}
         </button>
       </div>
       <p className={styles.memoryStatusState}>
