@@ -300,9 +300,9 @@ describe("runConsolidation", () => {
         rawText: "Kode proyek saya BIRU-742",
       }),
     );
-    expect((await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted).toBe(
-      1,
-    );
+    expect(
+      (await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted,
+    ).toBe(1);
 
     // The user explicitly repeats this harmless value in a separately consented turn.
     // This may become cloud-eligible, but cannot reclassify the original private fact.
@@ -359,9 +359,9 @@ describe("runConsolidation", () => {
         rawText: "Kode proyek internal adalah BIRU-742",
       }),
     );
-    expect((await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted).toBe(
-      1,
-    );
+    expect(
+      (await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted,
+    ).toBe(1);
     repo.appendEpisode(
       episodeInput({
         id: "epi_restricted",
@@ -370,13 +370,15 @@ describe("runConsolidation", () => {
         rawText: "Kode proyek restricted adalah MERAH-999",
       }),
     );
-    expect((await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted).toBe(
-      1,
-    );
-    expect(repo.listFacts({ projectId }).map((fact) => fact.object).sort()).toEqual([
-      "BIRU-742",
-      "MERAH-999",
-    ]);
+    expect(
+      (await runConsolidation({ repo, extractLocal }, { now: NOW, projectId })).promoted,
+    ).toBe(1);
+    expect(
+      repo
+        .listFacts({ projectId })
+        .map((fact) => fact.object)
+        .sort(),
+    ).toEqual(["BIRU-742", "MERAH-999"]);
     expect(
       repo.listFacts({ projectId, maxSensitivity: "INTERNAL" }).map((fact) => fact.object),
     ).toEqual(["BIRU-742"]);
@@ -430,13 +432,15 @@ describe("runConsolidation", () => {
     expect(result.processed).toBe(2);
     expect(result.promoted).toBe(2);
     expect(extractLocal).toHaveBeenCalledTimes(2);
-    expect(repo.listFacts({ projectId, hostedEligibleOnly: true }).map((f) => f.object)).toEqual([
-      "BIRU-742",
-    ]);
-    expect(repo.listFacts({ projectId }).map((f) => f.object).sort()).toEqual([
-      "BIRU-742",
-      "PRIVAT-339",
-    ]);
+    expect(
+      repo.listFacts({ projectId, hostedEligibleOnly: true }).map((f) => f.object),
+    ).toEqual(["BIRU-742"]);
+    expect(
+      repo
+        .listFacts({ projectId })
+        .map((f) => f.object)
+        .sort(),
+    ).toEqual(["BIRU-742", "PRIVAT-339"]);
   });
 
   it("leaves only a failed privacy group pending while processing eligible groups", async () => {
@@ -480,9 +484,9 @@ describe("runConsolidation", () => {
     expect(result.errors).toHaveLength(1);
     expect(repo.getEpisode(assertId("episode", "epi_private"))?.consolidatedAt).toBeNull();
     expect(repo.getEpisode(assertId("episode", "epi_cloud"))?.consolidatedAt).toBe(NOW);
-    expect(repo.listFacts({ projectId, hostedEligibleOnly: true }).map((f) => f.object)).toEqual([
-      "BIRU-742",
-    ]);
+    expect(
+      repo.listFacts({ projectId, hostedEligibleOnly: true }).map((f) => f.object),
+    ).toEqual(["BIRU-742"]);
   });
 
   it("menghormati limit batch", async () => {
