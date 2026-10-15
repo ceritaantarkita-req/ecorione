@@ -64,7 +64,7 @@ function mockHappyPathContextOnly(): void {
     .reply(200, { hits: [], diagnostics: {} });
   contextPool
     .intercept({
-      path: "/v1/episodes?sessionId=sess_abc&projectId=prj_personal&limit=6&hostedEligible=1",
+      path: "/v1/episodes?sessionId=sess_abc&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=1",
       method: "GET",
     })
     .reply(200, { episodes: [] });
