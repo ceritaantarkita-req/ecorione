@@ -165,9 +165,17 @@ export async function runConsolidation(
       processed += groupEpisodes.length;
       continue;
     }
-    const parsed = parseExtraction(
-      await deps.extractLocal(buildExtractionPrompt(userEpisodes)),
-    );
+    // An unavailable local extractor must not block unrelated, differently
+    // classified groups or turn an existing user fact into a cloud fallback.
+    // Never return exception messages: local providers can embed raw input text.
+    let extracted: string;
+    try {
+      extracted = await deps.extractLocal(buildExtractionPrompt(userEpisodes));
+    } catch {
+      errors.push("Model ekstraksi lokal gagal; kelompok episode menunggu retry.");
+      continue;
+    }
+    const parsed = parseExtraction(extracted);
     if (parsed.error !== null) {
       errors.push(parsed.error);
       // Do not acknowledge episodes on invalid model output. They must remain eligible
