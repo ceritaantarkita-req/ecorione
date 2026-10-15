@@ -6,6 +6,34 @@ import type {
   ChatProviderSource,
 } from "../lib/chat-model-routing";
 
+/** Explicit one-turn consent. Local-only content remains private by default. */
+export function LocalCloudShareConsent({
+  checked,
+  disabled,
+  onChange,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="ai-cloud-share-consent">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        disabled={disabled}
+      />
+      <span>
+        Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed agar konteksnya bisa
+        dipakai OpenRouter saat berganti model. Pada giliran ini, Memory Local Only tidak
+        ikut dipakai. Tidak berlaku untuk riwayat lama. Jangan aktifkan untuk informasi
+        rahasia.
+      </span>
+    </label>
+  );
+}
+
 function formatUsd(value: number): string {
   return `$${value.toFixed(4)}`;
 }
