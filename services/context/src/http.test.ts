@@ -78,6 +78,70 @@ describe("episodes", () => {
   });
 });
 
+describe("aggregate Project Memory diagnostics", () => {
+  it("reports only own Project counts, not episode content or sibling facts", async () => {
+    for (const [id, projectId, syncClass] of [
+      ["epi_alpha", "prj_alpha", "LOCAL_ONLY"],
+      ["epi_beta", "prj_beta", "CLOUD_ALLOWED"],
+    ] as const) {
+      const saved = await app.inject({
+        method: "POST",
+        url: "/v1/episodes",
+        payload: {
+          ts: T0,
+          rawText: "private token must not appear in diagnostics",
+          projectId,
+          provenance: { sourceApp: "ai", sessionId: "sess_test" },
+          scope: "personal",
+          sensitivity: "INTERNAL",
+          syncClass,
+          trust: "USER",
+        },
+      });
+      expect(saved.statusCode).toBe(201);
+      expect(saved.json().id).toMatch(/^epi_/);
+      void id;
+    }
+    repo.insertFact(
+      factInput({
+        id: "mem_alpha_local",
+        projectId: "prj_alpha" as never,
+        object: "ALPHA_ONLY",
+        text: "ALPHA_ONLY",
+        syncClass: "LOCAL_ONLY",
+      }),
+    );
+    repo.insertFact(
+      factInput({
+        id: "mem_beta_cloud",
+        projectId: "prj_beta" as never,
+        object: "BETA_ONLY",
+        text: "BETA_ONLY",
+        syncClass: "CLOUD_ALLOWED",
+      }),
+    );
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/memory/status?projectId=prj_alpha",
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      projectId: "prj_alpha",
+      pendingEpisodes: 1,
+      consolidatedEpisodes: 0,
+      savedFacts: 1,
+      localOnlyFacts: 1,
+      cloudEligibleFacts: 0,
+      processing: false,
+      queued: false,
+      lastAttempt: "unknown",
+    });
+    expect(response.body).not.toContain("private token");
+    expect(response.body).not.toContain("BETA_ONLY");
+    expect((await app.inject({ method: "GET", url: "/v1/memory/status" })).statusCode).toBe(400);
+  });
+});
+
 describe("automatic cross-session Project memory", () => {
   it("persists user facts after an assistant reply without blocking the response", async () => {
     const extractLocal = vi.fn(async (prompt: string) => {
