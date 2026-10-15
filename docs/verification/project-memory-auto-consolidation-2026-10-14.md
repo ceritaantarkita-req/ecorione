@@ -36,6 +36,23 @@ In local ECORIONE, the user wrote a memorable marker in `QA-Audit`, received the
 - Follow-up browser acceptance: refresh the Project panel after a Local → Local test. If Pending remains nonzero or lastAttempt=failed, investigate the local extractor. If Saved > 0 and the same local chat cannot retrieve it, investigate retrieval/relevance. If facts are Local Only, an OpenRouter chat must not see them.
 - All changes stay in draft PR #467 until CI, local-model runtime verification, Project isolation and restart acceptance are documented.
 
+## 2026-10-15: model-switch Project continuity (local ↔ local / local ↔ hosted)
+
+- Hub **always resolves the active Workspace/Project** for chat. Ordinary Project chat now renders bounded, user-configured **Project name, description, and instructions** in dynamic per-turn context independent of which model handles the turn. These are user preferences, never a substitute for system/policy/tool authority. Brain-grounded constrained turns intentionally do **not** import wider Project instructions.
+- Provider-independent retrieval still assembles only authorized Core Memory, relevant L1 facts, recent same-session episode summaries, and Artifact pointers, preserving budget limits, Project filtering, and the stable cache prefix. System guidance discourages models from denying facts that were already provided to them; output truthfulness remains model-dependent.
+- **Local → Local:** the new model receives current Project settings and eligible saved facts / bounded session summaries; it does not receive a limitless verbatim context window.
+- **Hosted → Local:** cloud-eligible episodes/facts are still accessible locally.
+- **Local → Hosted:** historical `LOCAL_ONLY` messages/facts are **never** silently exported. The default Local send remains Local Only. The chat composer offers a **per-message, unchecked-by-default** opt-in for future Local turns to be stored `CLOUD_ALLOWED`. Explicitly consented turns consult **only cloud-eligible Context inputs**, even while answered by a local model, to avoid laundering earlier private memory into a cloud-visible reply. Local Only messages written before consent remain Local Only. Attachment-bearing messages do not use this opt-in.
+- The local user must deliberately enable sharing for each eligible Local message; it resets after a send, route change, or session change. Switching to OpenRouter still obeys hosted eligibility on each retrieved fact/episode.
+- This achieves **authorized continuity**, not impossible guarantees of zero context loss across arbitrary long histories or incompatible providers. Exact entire-chat replay, retroactive release of local private context, new tool permissions, and model-internal reasoning transfer are **out of scope**.
+
+Acceptance to run before merge:
+1. Local A → Local B in same Project/session: name, instructions, eligible facts and bounded episodic summaries are in model input; new model responds consistently.
+2. Hosted A → Hosted B and Hosted → Local: same Project context and eligible history; previous cloud turns survive.
+3. Local (no consent) → OpenRouter: private contents absent in any outbound `dynamicText` and retrieval response.
+4. Local (explicit Cloud Allowed opt-in) → Hosted: new permitted facts/episodes may be retrieved later, while all prior Local Only facts/episodes stay excluded.
+5. New session same Project retrieves durable L1, sibling Project does not; shutdown/restart retains it. **Real Windows runtime proof still required.**
+
 ## Limits / acceptance
 
 - This is **asynchronous and model-dependent**, not guaranteed immediate recall. Do not claim closure until local/CI tests and browser acceptance show a saved fact is recalled after a new conversation.
