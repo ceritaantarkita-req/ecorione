@@ -382,6 +382,109 @@ describe("runConsolidation", () => {
     ).toEqual(["BIRU-742"]);
   });
 
+  it("separates extraction prompts by Project, sensitivity, and sync class", async () => {
+    const { repo } = makeRepo();
+    const projectId = "prj_alpha" as never;
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_private",
+        projectId,
+        syncClass: "LOCAL_ONLY",
+        rawText: "Rahasia Project adalah PRIVAT-339",
+      }),
+    );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_cloud",
+        projectId,
+        syncClass: "CLOUD_ALLOWED",
+        rawText: "Kode publik Project adalah BIRU-742",
+      }),
+    );
+    const extractLocal = vi.fn(async (prompt: string) => {
+      const payload = JSON.parse(prompt.slice(prompt.lastIndexOf("\n") + 1)) as {
+        id: string;
+        syncClass: string;
+        text: string;
+      }[];
+      expect(payload).toHaveLength(1);
+      const source = payload[0]!;
+      const isPrivate = source.syncClass === "LOCAL_ONLY";
+      expect(source.id).toBe(isPrivate ? "epi_private" : "epi_cloud");
+      expect(prompt).not.toContain(isPrivate ? "BIRU-742" : "PRIVAT-339");
+      return JSON.stringify({
+        facts: [
+          {
+            sourceEpisodeId: source.id,
+            subject: "kode Project",
+            predicate: "adalah",
+            object: isPrivate ? "PRIVAT-339" : "BIRU-742",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ],
+        summaries: [],
+      });
+    });
+    const result = await runConsolidation({ repo, extractLocal }, { now: NOW, projectId });
+    expect(result.processed).toBe(2);
+    expect(result.promoted).toBe(2);
+    expect(extractLocal).toHaveBeenCalledTimes(2);
+    expect(repo.listFacts({ projectId, hostedEligibleOnly: true }).map((f) => f.object)).toEqual([
+      "BIRU-742",
+    ]);
+    expect(repo.listFacts({ projectId }).map((f) => f.object).sort()).toEqual([
+      "BIRU-742",
+      "PRIVAT-339",
+    ]);
+  });
+
+  it("leaves only a failed privacy group pending while processing eligible groups", async () => {
+    const { repo } = makeRepo();
+    const projectId = "prj_alpha" as never;
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_private",
+        projectId,
+        syncClass: "LOCAL_ONLY",
+        rawText: "Rahasia Project adalah PRIVAT-339",
+      }),
+    );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_cloud",
+        projectId,
+        syncClass: "CLOUD_ALLOWED",
+        rawText: "Kode publik Project adalah BIRU-742",
+      }),
+    );
+    const extractLocal = vi.fn(async (prompt: string) => {
+      if (prompt.includes("PRIVAT-339")) return "bukan JSON valid";
+      return JSON.stringify({
+        facts: [
+          {
+            sourceEpisodeId: "epi_cloud",
+            subject: "kode Project",
+            predicate: "adalah",
+            object: "BIRU-742",
+            confidence: 1,
+            worthRemembering: true,
+          },
+        ],
+        summaries: [],
+      });
+    });
+    const result = await runConsolidation({ repo, extractLocal }, { now: NOW, projectId });
+    expect(result.processed).toBe(1);
+    expect(result.promoted).toBe(1);
+    expect(result.errors).toHaveLength(1);
+    expect(repo.getEpisode(assertId("episode", "epi_private"))?.consolidatedAt).toBeNull();
+    expect(repo.getEpisode(assertId("episode", "epi_cloud"))?.consolidatedAt).toBe(NOW);
+    expect(repo.listFacts({ projectId, hostedEligibleOnly: true }).map((f) => f.object)).toEqual([
+      "BIRU-742",
+    ]);
+  });
+
   it("menghormati limit batch", async () => {
     const { repo } = makeRepo();
     for (let i = 0; i < 5; i += 1) {
