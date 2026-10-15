@@ -11,18 +11,32 @@ const base = {
 
 describe("Local-to-cloud context consent contract", () => {
   it("allows only an explicit local opt-in", () => {
-    expect(ChatRequestSchema.safeParse({
-      ...base, target: "local", cloudShare: true,
-    }).success).toBe(true);
-    expect(ChatRequestSchema.safeParse({
-      ...base, target: "hosted", cloudShare: true,
-    }).success).toBe(false);
-    expect(ChatRequestSchema.safeParse({
-      ...base, cloudShare: true,
-    }).success).toBe(false);
-    expect(ChatRequestSchema.parse({
-      ...base, target: "local",
-    }).cloudShare).toBeUndefined();
+    expect(
+      ChatRequestSchema.safeParse({
+        ...base,
+        target: "local",
+        cloudShare: true,
+      }).success,
+    ).toBe(true);
+    expect(
+      ChatRequestSchema.safeParse({
+        ...base,
+        target: "hosted",
+        cloudShare: true,
+      }).success,
+    ).toBe(false);
+    expect(
+      ChatRequestSchema.safeParse({
+        ...base,
+        cloudShare: true,
+      }).success,
+    ).toBe(false);
+    expect(
+      ChatRequestSchema.parse({
+        ...base,
+        target: "local",
+      }).cloudShare,
+    ).toBeUndefined();
   });
 
   it("shows clear user consent, resets it after each message and on route/session changes", () => {
