@@ -98,7 +98,7 @@ function mockContextBeforeConnect(): void {
     .reply(200, { hits: [], diagnostics: {} });
   contextPool
     .intercept({
-      path: "/v1/episodes?sessionId=sess_abc&projectId=prj_personal&limit=6&hostedEligible=1",
+      path: "/v1/episodes?sessionId=sess_abc&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=1",
       method: "GET",
     })
     .reply(200, { episodes: [] });
@@ -194,7 +194,7 @@ describe("chat", () => {
       });
       contextPool
         .intercept({
-          path: `/v1/episodes?sessionId=sess_route_switch001&projectId=prj_personal&limit=6&hostedEligible=${hostedEligible}`,
+          path: `/v1/episodes?sessionId=sess_route_switch001&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=${hostedEligible}`,
           method: "GET",
         })
         .reply(200, { episodes: [] });
@@ -287,7 +287,7 @@ describe("chat", () => {
         .reply(200, { hits: [], diagnostics: {} });
       contextPool
         .intercept({
-          path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&limit=6&hostedEligible=${req.hostedEligible}`,
+          path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=${req.hostedEligible}`,
           method: "GET",
         })
         .reply(
@@ -380,7 +380,7 @@ describe("chat", () => {
       });
       contextPool
         .intercept({
-          path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&limit=6&hostedEligible=${i === 0 ? "1" : "0"}`,
+          path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&scope=personal&maxSensitivity=INTERNAL&limit=6&hostedEligible=${i === 0 ? "1" : "0"}`,
           method: "GET",
         })
         .reply(200, { episodes: [] });
@@ -511,7 +511,7 @@ describe("chat", () => {
     });
     contextPool
       .intercept({
-        path: "/v1/episodes?sessionId=sess_braingrounded&projectId=prj_personal&limit=6&hostedEligible=0",
+        path: "/v1/episodes?sessionId=sess_braingrounded&projectId=prj_personal&scope=personal&maxSensitivity=RESTRICTED&limit=6&hostedEligible=0",
         method: "GET",
       })
       .reply(200, { episodes: [] });
