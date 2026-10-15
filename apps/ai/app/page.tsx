@@ -47,6 +47,7 @@ import {
 } from "./AiProviderConnectDialog";
 import {
   ChatProviderModelSelectors,
+  ChatRouteStatus,
   LocalCloudShareConsent,
   FileIcon,
   FolderIcon,
@@ -953,17 +954,14 @@ export default function ChatPage() {
                 {modelRouting.feedback.message}
               </p>
             ) : null}
-            <p className="ai-route-status" role="status">
-              {!routeReady
-                ? target === "local"
-                  ? (localRuntimeStatus?.message ?? "Local AI \u00b7 Checking connection\u2026")
-                  : hostedBlockedByOpenRouterPreference
-                    ? "Model OpenRouter yang dipilih tidak lagi tersedia untuk Cloud. Refresh katalog atau pilih model lain."
-                    : "Hosted AI belum aktif. Gunakan + Tambah AI di pilihan Provider / Source."
-                : target === "local"
-                  ? `Pesan berikutnya: Local \u00b7 ${localRuntimeStatus?.configuredModel ?? "model lokal"}. Model dan biaya dicatat per balasan.`
-                  : `Pesan berikutnya: Cloud \u00b7 ${hostedRouteLabel}. Riwayat Local-only tidak dikirim ke Cloud; model dan biaya dicatat per balasan.`}
-            </p>
+            <ChatRouteStatus
+              ready={routeReady}
+              target={target}
+              localMessage={localRuntimeStatus?.message}
+              localModel={localRuntimeStatus?.configuredModel}
+              hostedBlocked={hostedBlockedByOpenRouterPreference}
+              hostedLabel={hostedRouteLabel}
+            />
 
             {target === "local" ? (
               <LocalCloudShareConsent
