@@ -19,6 +19,8 @@ describe("Project Memory diagnostics boundary", () => {
   it("surfaces read-only Project-specific counts with no uncontrolled memory selector", () => {
     expect(page).toContain("<ProjectMemoryStatus");
     expect(page).toContain("key={`memory:${selected.id}`}");
+    expect(component).not.toContain("useEffect(");
+    expect(component).toContain("Periksa / Refresh");
     expect(component).toContain("pendingEpisodes");
     expect(component).toContain("savedFacts");
     expect(component).toContain("localOnlyFacts");
