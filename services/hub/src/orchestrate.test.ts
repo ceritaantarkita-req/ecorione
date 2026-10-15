@@ -368,17 +368,21 @@ describe("chat", () => {
     const sessionId = "sess_cloud_consent" as never;
     for (let i = 0; i < 2; i += 1) {
       contextPool.intercept({
-        path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=0",
+        path: "/v1/core-memory?scope=personal&projectId=prj_personal&maxSensitivity=INTERNAL&hostedEligible=${i === 0 ? "1" : "0"}",
         method: "GET",
       }).reply(200, CORE_MEMORY);
       contextPool.intercept({ path: "/v1/retrieve", method: "POST" })
-        .reply(200, { hits: [], diagnostics: {} });
+        .reply(200, (opts) => {
+          const body = JSON.parse(String(opts.body)) as { hostedEligibleOnly: boolean };
+          expect(body.hostedEligibleOnly).toBe(i === 0);
+          return { hits: [], diagnostics: {} };
+        });
       contextPool.intercept({
-        path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&limit=6&hostedEligible=0`,
+        path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&limit=6&hostedEligible=${i === 0 ? "1" : "0"}`,
         method: "GET",
       }).reply(200, { episodes: [] });
       contextPool.intercept({
-        path: "/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=0",
+        path: "/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=${i === 0 ? "1" : "0"}",
         method: "GET",
       }).reply(200, { pointers: [] });
     }
