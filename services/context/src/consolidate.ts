@@ -156,12 +156,18 @@ export async function runConsolidation(
     const userEpisodes = groupEpisodes.filter((episode) => episode.trust === "USER");
     if (userEpisodes.length === 0) {
       for (const episode of groupEpisodes) {
-        deps.repo.markEpisodeConsolidated(episode.id, episode.rawText.slice(0, 300), options.now);
+        deps.repo.markEpisodeConsolidated(
+          episode.id,
+          episode.rawText.slice(0, 300),
+          options.now,
+        );
       }
       processed += groupEpisodes.length;
       continue;
     }
-    const parsed = parseExtraction(await deps.extractLocal(buildExtractionPrompt(userEpisodes)));
+    const parsed = parseExtraction(
+      await deps.extractLocal(buildExtractionPrompt(userEpisodes)),
+    );
     if (parsed.error !== null) {
       errors.push(parsed.error);
       // Do not acknowledge episodes on invalid model output. They must remain eligible
