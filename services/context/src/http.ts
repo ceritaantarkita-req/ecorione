@@ -26,6 +26,7 @@ import {
   runConsolidation,
   type ConsolidateDeps,
   type ConsolidateOptions,
+  type ConsolidationFailureCode,
 } from "./consolidate.js";
 import { nowIso } from "./clock.js";
 import { registerMaintenanceRoutes } from "./maintenance-http.js";
@@ -208,6 +209,7 @@ export function buildContextServer(
   const pendingProjects = new Set<ProjectId>();
   const processingProjects = new Set<ProjectId>();
   const lastOutcome = new Map<ProjectId, "failed" | "complete">();
+  const lastFailureCodes = new Map<ProjectId, readonly ConsolidationFailureCode[]>();
   let autoRunning = false;
   function scheduleAutoConsolidation(projectId: ProjectId): void {
     if (options.autoConsolidate !== true || options.extractLocal === undefined) return;
@@ -223,22 +225,25 @@ export function buildContextServer(
           processingProjects.add(next);
           try {
             const result = await runSerialized({ now: nowIso(), projectId: next, limit: 20 });
-            lastOutcome.set(next, result.errors.length > 0 ? "failed" : "complete");
-            if (result.errors.length > 0) {
+            const failureCodes = [...new Set(result.errors)];
+            lastOutcome.set(next, failureCodes.length > 0 ? "failed" : "complete");
+            lastFailureCodes.set(next, failureCodes);
+            if (failureCodes.length > 0) {
               app.log.warn(
-                { projectId: next, errorCount: result.errors.length },
+                { projectId: next, errorCount: result.errors.length, failureCodes },
                 "Auto memory consolidation incomplete",
               );
             }
-          } catch (err) {
+          } catch {
             lastOutcome.set(next, "failed");
+            lastFailureCodes.set(next, ["UNEXPECTED_FAILURE"]);
             // Chat succeeds after the episode is durably written; local-model outages
             // must not turn a completed chat into a retryable 502. Unprocessed
             // episodes stay in the database for the next attempt/operator run.
             // Upstream errors may contain snippets of model output or episode text.
             // Log only the error class, never the exception payload.
             app.log.warn(
-              { projectId: next, errorType: err instanceof Error ? err.name : "unknown" },
+              { projectId: next, failureCodes: ["UNEXPECTED_FAILURE"] },
               "Auto memory consolidation deferred",
             );
           } finally {
@@ -261,6 +266,7 @@ export function buildContextServer(
       processing: processingProjects.has(q.projectId),
       queued: pendingProjects.has(q.projectId),
       lastAttempt: lastOutcome.get(q.projectId) ?? "unknown",
+      lastFailureCodes: lastFailureCodes.get(q.projectId) ?? [],
     };
   });
 

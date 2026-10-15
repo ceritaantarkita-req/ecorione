@@ -3,6 +3,17 @@
 import { useState } from "react";
 import styles from "./Projects.module.css";
 
+const FAILURE_LABELS = {
+  LOCAL_MODEL_ERROR: "Model ekstraksi lokal gagal atau tidak merespons.",
+  INVALID_JSON: "Model lokal tidak menghasilkan JSON valid.",
+  INVALID_SCHEMA: "Struktur JSON fakta tidak sesuai format.",
+  SOURCE_EPISODE_REQUIRED: "Fakta tidak mencantumkan referensi episode.",
+  SOURCE_EPISODE_UNKNOWN: "Referensi episode dari model tidak cocok.",
+  SOURCE_EPISODE_UNTRUSTED: "Fakta tidak berasal dari pesan pengguna.",
+  PROMOTION_REJECTED: "Penyimpanan fakta ditolak oleh validasi.",
+  UNEXPECTED_FAILURE: "Proses konsolidasi mengalami gangguan internal.",
+} as const;
+
 type MemoryHealth = {
   projectId: string;
   pendingEpisodes: number;
@@ -13,6 +24,7 @@ type MemoryHealth = {
   processing: boolean;
   queued: boolean;
   lastAttempt: "unknown" | "failed" | "complete";
+  lastFailureCodes?: readonly (keyof typeof FAILURE_LABELS)[];
 };
 
 export function ProjectMemoryStatus({
@@ -101,6 +113,15 @@ export function ProjectMemoryStatus({
               Cloud Allowed: <strong>{snapshot.cloudEligibleFacts}</strong>
             </span>
           </div>
+          {snapshot.lastAttempt === "failed" &&
+          (snapshot.lastFailureCodes?.length ?? 0) > 0 ? (
+            <p className={styles.memoryStatusHint}>
+              Penyebab terakhir:{" "}
+              {snapshot.lastFailureCodes
+                ?.map((code) => FAILURE_LABELS[code] ?? "Kategori tidak dikenal.")
+                .join(" ")}
+            </p>
+          ) : null}
           <p className={styles.memoryStatusHint}>
             {snapshot.queued ? "Konsolidasi menunggu giliran. " : ""}
             Fakta Local Only tidak boleh dibaca OpenRouter. Saved bukan jaminan setiap

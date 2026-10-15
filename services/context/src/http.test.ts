@@ -213,6 +213,7 @@ describe("aggregate Project Memory diagnostics", () => {
       processing: false,
       queued: false,
       lastAttempt: "unknown",
+      lastFailureCodes: [],
     });
     expect(response.body).not.toContain("private token");
     expect(response.body).not.toContain("BETA_ONLY");

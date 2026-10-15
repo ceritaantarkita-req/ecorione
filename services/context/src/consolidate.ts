@@ -21,12 +21,23 @@ export interface ConsolidateOptions {
   readonly projectId?: ProjectId | undefined;
   readonly now: Timestamp;
 }
+/** Stable, non-sensitive codes: never expose model output, episode IDs, or exception text. */
+export type ConsolidationFailureCode =
+  | "LOCAL_MODEL_ERROR"
+  | "INVALID_JSON"
+  | "INVALID_SCHEMA"
+  | "SOURCE_EPISODE_REQUIRED"
+  | "SOURCE_EPISODE_UNKNOWN"
+  | "SOURCE_EPISODE_UNTRUSTED"
+  | "PROMOTION_REJECTED"
+  | "UNEXPECTED_FAILURE";
+
 export interface ConsolidateResult {
   readonly processed: number;
   readonly promoted: number;
   readonly quarantined: number;
   readonly rejected: number;
-  readonly errors: readonly string[];
+  readonly errors: readonly ConsolidationFailureCode[];
 }
 const DEFAULT_BATCH_LIMIT = 20;
 const CandidateSchema = z.object({
@@ -73,7 +84,7 @@ function buildExtractionPrompt(episodes: readonly Episode[]): string {
 function parseExtraction(raw: string): {
   candidates: Candidate[];
   summaries: Map<string, string>;
-  error: string | null;
+  error: ConsolidationFailureCode | null;
 } {
   // On-device models may wrap otherwise-valid JSON in one Markdown fence
   // or prepend a <think> block. Strip only these bounded wrappers.
@@ -91,7 +102,7 @@ function parseExtraction(raw: string): {
     return {
       candidates: [],
       summaries: new Map(),
-      error: "Respons model lokal bukan JSON valid.",
+      error: "INVALID_JSON",
     };
   }
   const modern = ExtractionObjectSchema.safeParse(json);
@@ -109,7 +120,7 @@ function parseExtraction(raw: string): {
   return {
     candidates: [],
     summaries: new Map(),
-    error: "Respons model lokal tidak cocok skema kandidat fakta.",
+    error: "INVALID_SCHEMA",
   };
 }
 function normalize(value: string): string {
@@ -131,7 +142,7 @@ export async function runConsolidation(
   let quarantined = 0;
   let rejected = 0;
   let processed = 0;
-  const errors: string[] = [];
+  const errors: ConsolidationFailureCode[] = [];
   if (episodes.length === 0) return { processed: 0, promoted, quarantined, rejected, errors };
 
   // Each extraction prompt has one authoritative privacy and sensitivity boundary.
@@ -172,7 +183,7 @@ export async function runConsolidation(
     try {
       extracted = await deps.extractLocal(buildExtractionPrompt(userEpisodes));
     } catch {
-      errors.push("Model ekstraksi lokal gagal; kelompok episode menunggu retry.");
+      errors.push("LOCAL_MODEL_ERROR");
       continue;
     }
     const parsed = parseExtraction(extracted);
@@ -194,20 +205,18 @@ export async function runConsolidation(
         (userEpisodes.length === 1 ? userEpisodes[0]?.id : undefined);
       if (sourceId === undefined) {
         rejected += 1;
-        errors.push(
-          "Kandidat tanpa sourceEpisodeId ditolak karena batch berisi lebih dari satu episode.",
-        );
+        errors.push("SOURCE_EPISODE_REQUIRED");
         continue;
       }
       const source = episodeById.get(sourceId);
       if (source === undefined) {
         rejected += 1;
-        errors.push(`sourceEpisodeId kandidat tidak ada di batch: ${sourceId}`);
+        errors.push("SOURCE_EPISODE_UNKNOWN");
         continue;
       }
       if (source.trust !== "USER") {
         rejected += 1;
-        errors.push(`Kandidat fakta dari episode non-USER ditolak: ${sourceId}`);
+        errors.push("SOURCE_EPISODE_UNTRUSTED");
         continue;
       }
       const text = `${candidate.subject} ${candidate.predicate} ${candidate.object}`;
@@ -300,7 +309,7 @@ export async function runConsolidation(
       } catch (err) {
         if (err instanceof ContextError) {
           quarantined += 1;
-          errors.push(err.message);
+          errors.push("PROMOTION_REJECTED");
         } else throw err;
       }
     }

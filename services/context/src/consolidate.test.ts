@@ -117,7 +117,7 @@ describe("runConsolidation", () => {
     const first = await runConsolidation({ repo, extractLocal }, { now: NOW });
     expect(first.processed).toBe(0);
     expect(first.promoted).toBe(0);
-    expect(first.errors).toHaveLength(1);
+    expect(first.errors).toEqual(["INVALID_JSON"]);
     expect(repo.getEpisode(assertId("episode", "epi_a"))?.consolidatedAt).toBeNull();
 
     const retry = await runConsolidation({ repo, extractLocal }, { now: NOW });
@@ -176,7 +176,7 @@ describe("runConsolidation", () => {
     const result = await runConsolidation({ repo, extractLocal }, { now: NOW });
 
     expect(result.promoted).toBe(0);
-    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors).toEqual(["INVALID_SCHEMA"]);
   });
 
   it("consolidation filters to the active Project and never promotes assistant claims", async () => {
@@ -525,7 +525,7 @@ describe("runConsolidation", () => {
     const result = await runConsolidation({ repo, extractLocal }, { now: NOW, projectId });
     expect(result.processed).toBe(1);
     expect(result.promoted).toBe(1);
-    expect(result.errors).toHaveLength(1);
+    expect(result.errors).toEqual(["LOCAL_MODEL_ERROR"]);
     expect(result.errors.join(" ")).not.toContain("PRIVAT-339");
     expect(repo.getEpisode(assertId("episode", "epi_private"))?.consolidatedAt).toBeNull();
     expect(repo.getEpisode(assertId("episode", "epi_cloud"))?.consolidatedAt).toBe(NOW);
