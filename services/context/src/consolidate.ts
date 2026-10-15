@@ -193,7 +193,15 @@ export async function runConsolidation(
         includeGlobal: false,
         limit: 100,
       })
-      .filter((f) => normalize(f.predicate) === normalize(candidate.predicate));
+      // Deduplication and supersession must not cross privacy/sensitivity tiers.
+      // A newly consented CLOUD_ALLOWED fact must not be swallowed by an older
+      // LOCAL_ONLY fact, or invalidate that private fact when the value changes.
+      .filter(
+        (f) =>
+          normalize(f.predicate) === normalize(candidate.predicate) &&
+          f.syncClass === source.syncClass &&
+          f.sensitivity === source.sensitivity,
+      );
     const duplicate = samePredicate.find(
       (f) => normalize(f.object) === normalize(candidate.object),
     );
