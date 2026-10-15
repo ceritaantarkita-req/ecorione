@@ -241,7 +241,9 @@ export class ContextRepository {
     }
     const cap = filter.maxSensitivity;
     if (cap !== undefined) {
-      const eligible = SENSITIVITY.filter((value) => sensitivityRank(value) <= sensitivityRank(cap));
+      const eligible = SENSITIVITY.filter(
+        (value) => sensitivityRank(value) <= sensitivityRank(cap),
+      );
       clauses.push(`sensitivity IN (${placeholders(eligible.length)})`);
       params.push(...eligible);
     }
