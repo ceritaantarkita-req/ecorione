@@ -305,7 +305,7 @@ export async function chat(
   });
   const episodesRes = await callContext<ListEpisodesResponse>(
     deps,
-    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&projectId=${encodeURIComponent(projectId)}&limit=${String(EPISODE_LIMIT)}&hostedEligible=${cloudContext ? "1" : "0"}`,
+    `/v1/episodes?sessionId=${encodeURIComponent(req.sessionId)}&projectId=${encodeURIComponent(projectId)}&scope=${scope}&maxSensitivity=${max}&limit=${String(EPISODE_LIMIT)}&hostedEligible=${cloudContext ? "1" : "0"}`,
     { signal: options.signal },
   );
   const artifactsRes: ListArtifactsResponse = brainGrounded
