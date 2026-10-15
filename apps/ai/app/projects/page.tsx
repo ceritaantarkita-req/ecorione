@@ -9,6 +9,7 @@ import {
   resolveActiveProjectId,
 } from "../../lib/project-selection";
 import { useWorkspace } from "../WorkspaceProvider";
+import { ProjectMemoryStatus } from "./ProjectMemoryStatus";
 import { ProjectSettings } from "./ProjectSettings";
 import { ProjectSources } from "./ProjectSources";
 import styles from "./Projects.module.css";
@@ -407,6 +408,12 @@ function WorkspaceProjects({
                 key={`settings:${selected.id}`}
                 project={selected}
                 onSaved={projectSaved}
+              />
+
+              <ProjectMemoryStatus
+                key={`memory:${selected.id}`}
+                projectId={selected.id}
+                workspaceId={selected.workspaceId}
               />
 
               <ProjectSources
