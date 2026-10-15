@@ -973,10 +973,10 @@ export default function ChatPage() {
                   disabled={sending || preparingAttachments || attachments.length > 0}
                 />
                 <span>
-                  Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed agar
-                  konteksnya bisa dipakai OpenRouter saat berganti model.
-                  Pada giliran ini, Memory Local Only tidak ikut dipakai. Tidak berlaku
-                  untuk riwayat lama. Jangan aktifkan untuk informasi rahasia.
+                  Izinkan pesan Local berikutnya disimpan sebagai Cloud Allowed agar konteksnya
+                  bisa dipakai OpenRouter saat berganti model. Pada giliran ini, Memory Local
+                  Only tidak ikut dipakai. Tidak berlaku untuk riwayat lama. Jangan aktifkan
+                  untuk informasi rahasia.
                 </span>
               </label>
             ) : null}
