@@ -489,6 +489,51 @@ describe("runConsolidation", () => {
     ).toEqual(["BIRU-742"]);
   });
 
+  it("recovers from a thrown local model error without leaking its payload", async () => {
+    const { repo } = makeRepo();
+    const projectId = "prj_alpha" as never;
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_private",
+        projectId,
+        syncClass: "LOCAL_ONLY",
+        rawText: "Kode privat adalah PRIVAT-339",
+      }),
+    );
+    repo.appendEpisode(
+      episodeInput({
+        id: "epi_cloud",
+        projectId,
+        syncClass: "CLOUD_ALLOWED",
+        rawText: "Kode cloud adalah BIRU-742",
+      }),
+    );
+    const extractLocal = vi.fn(async (prompt: string) => {
+      if (prompt.includes("PRIVAT-339")) {
+        throw new Error("untrusted model output PRIVAT-339 must stay local");
+      }
+      return JSON.stringify([
+        {
+          subject: "kode cloud",
+          predicate: "adalah",
+          object: "BIRU-742",
+          confidence: 1,
+          worthRemembering: true,
+        },
+      ]);
+    });
+    const result = await runConsolidation({ repo, extractLocal }, { now: NOW, projectId });
+    expect(result.processed).toBe(1);
+    expect(result.promoted).toBe(1);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors.join(" ")).not.toContain("PRIVAT-339");
+    expect(repo.getEpisode(assertId("episode", "epi_private"))?.consolidatedAt).toBeNull();
+    expect(repo.getEpisode(assertId("episode", "epi_cloud"))?.consolidatedAt).toBe(NOW);
+    expect(
+      repo.listFacts({ projectId, hostedEligibleOnly: true }).map((fact) => fact.object),
+    ).toEqual(["BIRU-742"]);
+  });
+
   it("menghormati limit batch", async () => {
     const { repo } = makeRepo();
     for (let i = 0; i < 5; i += 1) {
