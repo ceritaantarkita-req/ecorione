@@ -205,6 +205,8 @@ export function buildContextServer(
     return task;
   };
   const pendingProjects = new Set<ProjectId>();
+  const processingProjects = new Set<ProjectId>();
+  const lastOutcome = new Map<ProjectId, "failed" | "complete">();
   let autoRunning = false;
   function scheduleAutoConsolidation(projectId: ProjectId): void {
     if (options.autoConsolidate !== true || options.extractLocal === undefined) return;
@@ -217,8 +219,10 @@ export function buildContextServer(
           const next = pendingProjects.values().next().value;
           if (next === undefined) break;
           pendingProjects.delete(next);
+          processingProjects.add(next);
           try {
             const result = await runSerialized({ now: nowIso(), projectId: next, limit: 20 });
+            lastOutcome.set(next, result.errors.length > 0 ? "failed" : "complete");
             if (result.errors.length > 0) {
               app.log.warn(
                 { projectId: next, errorCount: result.errors.length },
@@ -226,6 +230,7 @@ export function buildContextServer(
               );
             }
           } catch (err) {
+            lastOutcome.set(next, "failed");
             // Chat succeeds after the episode is durably written; local-model outages
             // must not turn a completed chat into a retryable 502. Unprocessed
             // episodes stay in the database for the next attempt/operator run.
@@ -235,6 +240,8 @@ export function buildContextServer(
               { projectId: next, errorType: err instanceof Error ? err.name : "unknown" },
               "Auto memory consolidation deferred",
             );
+          } finally {
+            processingProjects.delete(next);
           }
         }
       } finally {
@@ -242,6 +249,22 @@ export function buildContextServer(
       }
     });
   }
+
+  // Owner authorization belongs to the Hub/Next boundary. This internal-only
+  // endpoint exposes counts and ephemeral worker state, never fact or episode text.
+  app.get("/v1/memory/status", async (req) => {
+    const q = parseOrBadRequest(
+      z.object({ projectId: ProjectIdSchema }),
+      req.query,
+    );
+    return {
+      projectId: q.projectId,
+      ...repo.projectMemoryCounts(q.projectId),
+      processing: processingProjects.has(q.projectId),
+      queued: pendingProjects.has(q.projectId),
+      lastAttempt: lastOutcome.get(q.projectId) ?? "unknown",
+    };
+  });
 
   app.post("/v1/episodes", async (req, reply) => {
     const body = parseOrBadRequest(AppendEpisodeBodySchema, req.body);
