@@ -72,3 +72,33 @@ Acceptance to run before merge:
 7. Restart Context, then repeat recall. Record the observed result and cleanup test-only data.
 
 **Status:** branch implementation submitted for CI and local browser verification. Local-model readiness and real persistent cross-session recall are **not** verified by GitHub CI alone; do not declare production-ready based solely on unit tests.
+
+## 2026-10-15: operator screenshot review and remaining acceptance gate
+
+Evidence boundary: the operator supplied screenshots of a Windows local `pnpm engine:start` session, the Projects `QA-Memory` surface, and Local/hosted chat examples. These are visual observations, **not** a remotely executed test or independent review of the laptop database.
+
+Observed in supplied screenshots:
+
+- Engine log included successful `GET /healthz` responses (`200`) and a ready Ai Next.js surface at `127.0.0.1:17020`.
+- The selected `QA-Memory` Project displayed policy `GLOBAL_PLUS_PROJECT` and autonomy ceiling `L3`.
+- Its read-only Memory panel reported `Pending episodes: 0`, `Processed episodes: 12`, `Saved facts: 1`, `Local Only: 1`, and `Cloud Allowed: 0`.
+- A Local Qwen answer reproduced the harmless marker `BIRU-742` after a message explicitly named that marker, while admitting it did not have the fuller definition. This demonstrates a **limited local recall observation**, not complete semantic recall.
+- The screenshots do **not** establish successful new-session recall, nonlexical semantic recall, sibling-Project isolation, actual hosted egress filtering, or durable recall after Context restart. They do **not** establish that the saved fact was used in a different model's actual input.
+
+Exact-head GitHub verification before this documentation update: PR #467 at `3c786df159c8b64643de7cd799119c311bea2ef9` had **CI #2951, Product Eval #2190, PCS-06 Browser #559, and MCP HTTPS #1368 SUCCESS**; CI verify, naming and secret-history jobs were successful. Those CI/mock gates cannot substitute for operator-controlled Windows persistence and model-input observations. A new branch head after this documentation edit requires new exact-head gate review.
+
+### Manual operator acceptance matrix — keep private runtime evidence local
+
+| Case | Execution | Pass criteria |
+|---|---|---|
+| A: new session | In QA-Memory/Local create a harmless unique factual statement; wait for `Saved facts` increase, then open **new** conversation under the **same Project** and ask for the exact code | Answer cites the correct value; `memoryUsed.recalledFacts` or equivalent scoped retrieval shows an authorized hit rather than replay of the original session |
+| B: model switch | Repeat in that Project with Local model A then Local model B, with a question that needs a previously saved fact | Both have the same Project identity/instructions; correct relevant fact retrieved without unrestricted replay |
+| C: sibling isolation | Ask for the distinctive marker from sibling QA-Audit Project (without including the marker in the query) | No sibling Project fact enters retrieval/dynamic context; model must not claim private knowledge |
+| D: Local Only → hosted | Save distinct Local Only marker, switch to OpenRouter/hosted, ask a neutral recall question (do **not** put private marker in outbound user prompt) | LOCAL_ONLY raw text, summaries and facts absent from hosted `dynamicText` and request; lack of recall alone is not proof, inspect sanitized route/trace |
+| E: explicit cloud consent | In Local, explicitly opt in for a **different** harmless test message, wait for local fact extraction, then ask via hosted in the same Project | Only new consented `CLOUD_ALLOWED` fact is retrievable; old Local Only facts stay blocked; consent resets on next send |
+| F: persistence | After backing up test DB and checking for active unsaved work, perform a **controlled** Context restart and re-query from a new Project session | Saved fact and its Project/syncClass survive restart, while transient `lastAttempt` may reset |
+| G: paraphrase diagnostic | In same new session, query the fact without sharing its exact token or key terms | Log lexical `hits` / `memoryUsed` separately from model answer: current Phase-1 chat retrieval is **lexical-only by design** (see `docs/api-fase1.md`), so this is a measured limitation, not grounds to silently inject unrestricted L0 history |
+
+For all cases capture: test case ID, local build/ref, Project pseudonym, session boundary, model/provider, before/after Memory counts, eligible retrieval hit IDs and sanitized model input where allowed, and pass/fail. Do **not** commit local DB, credentials, raw model inputs, identifying screenshots, or personal markers to this public repository. Do not change sync classes to make a failed privacy test green.
+
+**Remaining gate:** independent real-Windows A–F acceptance and reviewed current-head security checks before PR #467 is marked ready/merged. Desktop Commander was offline during this review, so no direct remote laptop actions or live-model calls were executed by the reviewer. Main remains unchanged.
