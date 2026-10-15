@@ -86,6 +86,7 @@ const ListEpisodesQuerySchema = z.object({
   sessionId: z.string().optional(),
   projectId: ProjectIdSchema.nullable().optional(),
   scope: ScopeSchema.optional(),
+  maxSensitivity: SensitivitySchema.optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
   hostedEligible: BoolQuery,
 });
@@ -293,6 +294,7 @@ export function buildContextServer(
     return {
       episodes: repo.listEpisodes({
         scopes: q.scope === undefined ? undefined : [q.scope],
+        maxSensitivity: q.maxSensitivity,
         sessionId: q.sessionId,
         projectId: q.projectId ?? null,
         hostedEligibleOnly: q.hostedEligible,
