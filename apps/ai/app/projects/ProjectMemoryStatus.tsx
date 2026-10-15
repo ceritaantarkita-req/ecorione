@@ -56,17 +56,18 @@ export function ProjectMemoryStatus({
     // Component is keyed by Project ID to avoid stale state crossing Projects.
   }, [projectId, workspaceId]);
 
-  const state = snapshot === null
-    ? "Belum terverifikasi"
-    : snapshot.processing
-      ? "Processing"
-      : snapshot.lastAttempt === "failed"
-        ? "Failed — retry pending"
-        : snapshot.pendingEpisodes > 0
-          ? "Pending"
-          : snapshot.savedFacts > 0
-            ? "Saved"
-            : "Belum ada fakta";
+  const state =
+    snapshot === null
+      ? "Belum terverifikasi"
+      : snapshot.processing
+        ? "Processing"
+        : snapshot.lastAttempt === "failed"
+          ? "Failed — retry pending"
+          : snapshot.pendingEpisodes > 0
+            ? "Pending"
+            : snapshot.savedFacts > 0
+              ? "Saved"
+              : "Belum ada fakta";
 
   return (
     <section className={styles.memoryStatus} aria-label="Status Project Memory">
@@ -84,16 +85,28 @@ export function ProjectMemoryStatus({
           {busy ? "Memeriksa..." : "Refresh"}
         </button>
       </div>
-      <p className={styles.memoryStatusState}>Status: <strong>{state}</strong></p>
+      <p className={styles.memoryStatusState}>
+        Status: <strong>{state}</strong>
+      </p>
       {error !== null ? <p className={styles.memoryStatusHint}>{error}</p> : null}
       {snapshot !== null ? (
         <>
           <div className={styles.memoryStatusCounts}>
-            <span>Pending episodes: <strong>{snapshot.pendingEpisodes}</strong></span>
-            <span>Processed episodes: <strong>{snapshot.consolidatedEpisodes}</strong></span>
-            <span>Saved facts: <strong>{snapshot.savedFacts}</strong></span>
-            <span>Local Only: <strong>{snapshot.localOnlyFacts}</strong></span>
-            <span>Cloud Allowed: <strong>{snapshot.cloudEligibleFacts}</strong></span>
+            <span>
+              Pending episodes: <strong>{snapshot.pendingEpisodes}</strong>
+            </span>
+            <span>
+              Processed episodes: <strong>{snapshot.consolidatedEpisodes}</strong>
+            </span>
+            <span>
+              Saved facts: <strong>{snapshot.savedFacts}</strong>
+            </span>
+            <span>
+              Local Only: <strong>{snapshot.localOnlyFacts}</strong>
+            </span>
+            <span>
+              Cloud Allowed: <strong>{snapshot.cloudEligibleFacts}</strong>
+            </span>
           </div>
           <p className={styles.memoryStatusHint}>
             {snapshot.queued ? "Konsolidasi menunggu giliran. " : ""}
