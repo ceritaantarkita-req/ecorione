@@ -30,6 +30,8 @@ export interface RetrievalOptions {
   readonly queryEmbedding?: Float32Array;
   /** Hosted request may only recall CLOUD_ALLOWED/PUBLIC data. */
   readonly hostedEligibleOnly?: boolean;
+  /** Chat-only bounded L1 context when lexical/vector retrieval finds nothing. */
+  readonly projectFallback?: boolean;
   /** Optional Brain-derived exact provenance source URI constraint. Undefined is baseline; [] is fail-closed empty. */
   readonly candidateSourceUris?: readonly string[] | undefined;
   /** Optional Brain-derived exact Fact ID constraint. Undefined is baseline; [] is fail-closed empty. */
@@ -113,6 +115,23 @@ export class ContextRetriever {
       if (fact === undefined) continue;
       const score = entry.score * recencyDecay(fact.createdAt, options.now) * fact.confidence;
       hits.push({ fact, score, matchedBy: entry.matchedBy });
+    }
+    if (
+      hits.length === 0 &&
+      options.projectFallback === true &&
+      options.projectId != null &&
+      !constraintApplied &&
+      toFtsQuery(options.query) !== null
+    ) {
+      // shortcut: bounded Project L1, not semantic search; add local embeddings for large memories.
+      for (const fact of allowedFacts.values()) {
+        if (fact.projectId !== options.projectId) continue;
+        hits.push({
+          fact,
+          score: fact.salience * fact.confidence * recencyDecay(fact.createdAt, options.now),
+          matchedBy: ["project"],
+        });
+      }
     }
     hits.sort((a, b) => b.score - a.score || (a.fact.id < b.fact.id ? -1 : 1));
     return {

@@ -574,6 +574,46 @@ describe("artifacts", () => {
 });
 
 describe("consolidate", () => {
+  it("clears Project failure diagnostics after a successful explicit retry", async () => {
+    repo.appendEpisode({
+      id: "epi_retry",
+      ts: T0,
+      rawText: "harmless test",
+      provenance: PROVENANCE,
+      projectId: "prj_retry" as never,
+      scope: "personal",
+      sensitivity: "INTERNAL",
+      syncClass: "LOCAL_ONLY",
+      trust: "USER",
+    });
+    let invalid = true;
+    const retryApp = buildContextServer(repo, vectors, {
+      extractLocal: async () => (invalid ? "invalid" : "[]"),
+    });
+    try {
+      for (const expected of ["failed", "complete"]) {
+        const result = await retryApp.inject({
+          method: "POST",
+          url: "/v1/consolidate/run",
+          payload: { now: NOW, projectId: "prj_retry" },
+        });
+        expect(result.statusCode).toBe(200);
+        const status = await retryApp.inject({
+          method: "GET",
+          url: "/v1/memory/status?projectId=prj_retry",
+        });
+        expect(status.json()).toMatchObject({
+          lastAttempt: expected,
+          pendingEpisodes: invalid ? 1 : 0,
+          lastFailureCodes: invalid ? ["INVALID_JSON"] : [],
+        });
+        invalid = false;
+      }
+    } finally {
+      await retryApp.close();
+    }
+  });
+
   it("POST /v1/consolidate/run memproses episode yang belum terkonsolidasi", async () => {
     await app.inject({
       method: "POST",

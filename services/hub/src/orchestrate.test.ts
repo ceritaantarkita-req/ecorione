@@ -376,6 +376,7 @@ describe("chat", () => {
       contextPool.intercept({ path: "/v1/retrieve", method: "POST" }).reply(200, (opts) => {
         const body = JSON.parse(String(opts.body)) as { hostedEligibleOnly: boolean };
         expect(body.hostedEligibleOnly).toBe(i === 0);
+        expect(JSON.parse(String(opts.body)).projectFallback).toBe(true);
         return { hits: [], diagnostics: {} };
       });
       contextPool
@@ -489,6 +490,7 @@ describe("chat", () => {
       const body = JSON.parse(String(opts.body)) as Record<string, unknown>;
       expect(body).toMatchObject({
         query: "Explain the selected fact",
+        projectFallback: false,
         scopes: ["personal"],
         projectId: "prj_personal",
         maxSensitivity: "RESTRICTED",

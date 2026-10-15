@@ -292,6 +292,7 @@ export async function chat(
       scopes: [req.scope],
       maxSensitivity: req.maxSensitivity,
       hostedEligibleOnly: cloudContext,
+      projectFallback: !brainGrounded,
       now,
       projectId,
       ...(req.contextConstraint === undefined

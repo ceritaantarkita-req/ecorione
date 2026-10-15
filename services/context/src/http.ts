@@ -131,6 +131,7 @@ const RetrieveBodySchema = z.object({
   maxSensitivity: SensitivitySchema.default("RESTRICTED"),
   now: z.string().datetime({ offset: false }),
   hostedEligibleOnly: z.boolean().default(false),
+  projectFallback: z.boolean().default(false),
   candidateSourceUris: z.array(z.string().url().max(2048)).max(32).optional(),
   candidateFactIds: z.array(MemoryFactIdSchema).max(32).optional(),
 });
@@ -423,7 +424,13 @@ export function buildContextServer(
         "Service ini dijalankan tanpa client Connect (extractLocal) — konsolidasi tidak bisa jalan.",
       );
     }
-    return runSerialized(body);
+    const result = await runSerialized(body);
+    if (body.projectId !== undefined) {
+      const failureCodes = [...new Set(result.errors)];
+      lastOutcome.set(body.projectId, failureCodes.length > 0 ? "failed" : "complete");
+      lastFailureCodes.set(body.projectId, failureCodes);
+    }
+    return result;
   });
   return app;
 }
