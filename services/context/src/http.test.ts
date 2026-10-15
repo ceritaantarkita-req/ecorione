@@ -76,6 +76,42 @@ describe("episodes", () => {
     expect(res.json().episodes).toHaveLength(1);
     expect(res.json().episodes[0].rawText).toBe("a");
   });
+  it("filters episodic context by project, session, scope, sensitivity and cloud egress", async () => {
+    const cases = [
+      { text: "allowed", projectId: "prj_caps", sessionId: "sess_guard", scope: "personal", sensitivity: "INTERNAL", syncClass: "CLOUD_ALLOWED" },
+      { text: "restricted", projectId: "prj_caps", sessionId: "sess_guard", scope: "personal", sensitivity: "RESTRICTED", syncClass: "CLOUD_ALLOWED" },
+      { text: "local only", projectId: "prj_caps", sessionId: "sess_guard", scope: "personal", sensitivity: "INTERNAL", syncClass: "LOCAL_ONLY" },
+      { text: "other scope", projectId: "prj_caps", sessionId: "sess_guard", scope: "work", sensitivity: "INTERNAL", syncClass: "CLOUD_ALLOWED" },
+      { text: "sibling", projectId: "prj_sibling", sessionId: "sess_guard", scope: "personal", sensitivity: "INTERNAL", syncClass: "CLOUD_ALLOWED" },
+      { text: "other session", projectId: "prj_caps", sessionId: "sess_other", scope: "personal", sensitivity: "INTERNAL", syncClass: "CLOUD_ALLOWED" },
+    ] as const;
+    for (const item of cases) {
+      const created = await app.inject({
+        method: "POST",
+        url: "/v1/episodes",
+        payload: {
+          ts: T0,
+          rawText: item.text,
+          projectId: item.projectId,
+          provenance: { sourceApp: "test", sessionId: item.sessionId },
+          scope: item.scope,
+          sensitivity: item.sensitivity,
+          syncClass: item.syncClass,
+          trust: "USER",
+        },
+      });
+      expect(created.statusCode).toBe(201);
+    }
+
+    const listed = await app.inject({
+      method: "GET",
+      url: "/v1/episodes?sessionId=sess_guard&projectId=prj_caps&scope=personal&maxSensitivity=INTERNAL&hostedEligible=1&limit=6",
+    });
+    expect(listed.statusCode).toBe(200);
+    expect(listed.json().episodes.map((episode: { rawText: string }) => episode.rawText)).toEqual([
+      "allowed",
+    ]);
+  });
 });
 
 describe("aggregate Project Memory diagnostics", () => {
