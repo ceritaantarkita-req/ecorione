@@ -261,9 +261,15 @@ describe("chat", () => {
     ).toThrow(/tidak tersedia/);
   });
   it("keeps Project settings across Local → Hosted model switching while filtering local-only history", async () => {
-    db.raw.prepare(
-      "UPDATE projects SET name=?, description=?, instruction=? WHERE id='prj_personal'",
-    ).run("Ecorione QA", "Platform riset dan analisis", "Bahas konsep dan konten secara konsisten.");
+    db.raw
+      .prepare(
+        "UPDATE projects SET name=?, description=?, instruction=? WHERE id='prj_personal'",
+      )
+      .run(
+        "Ecorione QA",
+        "Platform riset dan analisis",
+        "Bahas konsep dan konten secara konsisten.",
+      );
     const sessionId = "sess_project_switch" as never;
     const requests = [
       { target: "local" as const, hostedEligible: "0" as const },
@@ -284,17 +290,22 @@ describe("chat", () => {
           path: `/v1/episodes?sessionId=${sessionId}&projectId=prj_personal&limit=6&hostedEligible=${req.hostedEligible}`,
           method: "GET",
         })
-        .reply(200, req.target === "local"
-          ? {
-              episodes: [{
-                id: "epi_local_only",
-                ts: NOW,
-                rawText: "rahasia hanya untuk model lokal",
-                summary: null,
-                provenance: { sourceApp: "ai", sessionId },
-              }],
-            }
-          : { episodes: [] });
+        .reply(
+          200,
+          req.target === "local"
+            ? {
+                episodes: [
+                  {
+                    id: "epi_local_only",
+                    ts: NOW,
+                    rawText: "rahasia hanya untuk model lokal",
+                    summary: null,
+                    provenance: { sourceApp: "ai", sessionId },
+                  },
+                ],
+              }
+            : { episodes: [] },
+        );
       contextPool
         .intercept({
           path: `/v1/artifacts?scope=personal&maxSensitivity=INTERNAL&limit=5&hostedEligible=${req.hostedEligible}`,
@@ -302,35 +313,41 @@ describe("chat", () => {
         })
         .reply(200, { pointers: [] });
     }
-    contextPool.intercept({ path: "/v1/episodes", method: "POST" }).reply(201, { id: "epi" }).times(4);
+    contextPool
+      .intercept({ path: "/v1/episodes", method: "POST" })
+      .reply(201, { id: "epi" })
+      .times(4);
     let count = 0;
-    connectPool.intercept({ path: "/v1/complete", method: "POST" }).reply(200, (opts) => {
-      const data = JSON.parse(String(opts.body)) as {
-        target: string;
-        dynamicText: string;
-        prefix: { systemPrompt: string };
-      };
-      count += 1;
-      expect(data.dynamicText).toContain("Ecorione QA");
-      expect(data.dynamicText).toContain("Platform riset dan analisis");
-      expect(data.dynamicText).toContain("Bahas konsep dan konten secara konsisten.");
-      expect(data.prefix.systemPrompt).not.toContain("Ecorione QA");
-      expect(data.dynamicText).toContain("<project_settings>");
-      if (data.target === "hosted") {
-        expect(data.dynamicText).not.toContain("rahasia hanya untuk model lokal");
-      } else {
-        expect(data.dynamicText).toContain("rahasia hanya untuk model lokal");
-      }
-      return {
-        reply: count === 1 ? "Jawaban lokal" : "Jawaban cloud",
-        model: "qa-model",
-        responseModel: "qa-model",
-        cacheHit: false,
-        usage: USAGE,
-        cost: cost(),
-        routeReason: data.target,
-      };
-    }).times(2);
+    connectPool
+      .intercept({ path: "/v1/complete", method: "POST" })
+      .reply(200, (opts) => {
+        const data = JSON.parse(String(opts.body)) as {
+          target: string;
+          dynamicText: string;
+          prefix: { systemPrompt: string };
+        };
+        count += 1;
+        expect(data.dynamicText).toContain("Ecorione QA");
+        expect(data.dynamicText).toContain("Platform riset dan analisis");
+        expect(data.dynamicText).toContain("Bahas konsep dan konten secara konsisten.");
+        expect(data.prefix.systemPrompt).not.toContain("Ecorione QA");
+        expect(data.dynamicText).toContain("<project_settings>");
+        if (data.target === "hosted") {
+          expect(data.dynamicText).not.toContain("rahasia hanya untuk model lokal");
+        } else {
+          expect(data.dynamicText).toContain("rahasia hanya untuk model lokal");
+        }
+        return {
+          reply: count === 1 ? "Jawaban lokal" : "Jawaban cloud",
+          model: "qa-model",
+          responseModel: "qa-model",
+          cacheHit: false,
+          usage: USAGE,
+          cost: cost(),
+          routeReason: data.target,
+        };
+      })
+      .times(2);
     rndPool.intercept({ path: "/v1/traces", method: "POST" }).reply(201, {}).times(2);
     const local = await chat(
       deps,
